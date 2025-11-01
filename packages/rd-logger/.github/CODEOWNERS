@@ -1,0 +1,10 @@
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, they will be requested for
+# review when someone opens a pull request.
+* @joeczar
+
+# Specific ownership for core components
+/src/core/ @joeczar
+
+# Specific ownership for adapters
+/src/adapters/ @joeczar
