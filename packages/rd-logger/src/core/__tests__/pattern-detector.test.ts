@@ -20,8 +20,8 @@ jest.mock('chalk', () => {
   };
 });
 
-import { containsSensitiveData, redactSensitiveData } from '../sensitive';
-import { safeStringify } from '../utils';
+import { containsSensitiveData, redactSensitiveData } from '../sensitive/index.js';
+import { safeStringify } from '../utils.js';
 
 describe('Pattern Detection', () => {
   it('should detect API keys', () => {

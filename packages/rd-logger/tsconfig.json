@@ -11,8 +11,9 @@
     "declaration": true,
     "declarationMap": true,
 
-    // Module resolution for Node.js package
-    "moduleResolution": "Node",
+    // Module resolution for Node.js ESM
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "allowImportingTsExtensions": false,
 
     // Relax some strict checks (original config was less strict)

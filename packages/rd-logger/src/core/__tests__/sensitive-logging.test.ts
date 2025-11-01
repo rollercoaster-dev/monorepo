@@ -20,9 +20,9 @@ jest.mock('chalk', () => {
   };
 });
 
-import { Logger } from '../logger.service';
-import type { SensitiveLoggingApproval } from '../sensitive';
-import { SensitiveValue } from '../sensitive';
+import { Logger } from '../logger.service.js';
+import type { SensitiveLoggingApproval } from '../sensitive/index.js';
+import { SensitiveValue } from '../sensitive/index.js';
 
 describe('Sensitive Logging', () => {
   let logger: Logger;

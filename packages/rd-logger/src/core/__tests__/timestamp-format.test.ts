@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { formatDate } from '../utils';
+import { formatDate } from '../utils.js';
 
 describe('Timestamp Format', () => {
   it('should format dates with precise timestamps instead of relative time', () => {

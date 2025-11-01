@@ -1,10 +1,10 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { Logger } from '../core/logger.service';
-import { type LoggerConfig } from '../core/logger.config';
+import { Logger } from '../core/logger.service.js';
+import { type LoggerConfig } from '../core/logger.config.js';
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context';
+} from '../core/request-context.js';
 
 // Define Hono-specific variables type if needed for c.set/c.get
 type HonoVariables = {
@@ -139,8 +139,8 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
  * Usage:
  * ```typescript
  * import { Hono } from 'hono';
- * import { honoErrorHandler } from './path/to/honoErrorHandler';
- * import { Logger } from './path/to/logger';
+ * import { honoErrorHandler } from './path/to/honoErrorHandler/index.js';
+ * import { Logger } from './path/to/logger/index.js';
  *
  * const app = new Hono();
  * const logger = new Logger();

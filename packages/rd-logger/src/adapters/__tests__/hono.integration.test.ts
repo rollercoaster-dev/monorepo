@@ -3,7 +3,7 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import request from 'supertest';
-import { honoLogger } from '../hono';
+import { honoLogger } from '../hono.js';
 
 
 // Mock chalk to disable color codes in tests for easier string matching

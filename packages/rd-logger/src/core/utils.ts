@@ -1,5 +1,5 @@
-import { SensitiveValue } from './sensitive';
-import { containsSensitiveData, redactSensitiveData } from './sensitive';
+import { SensitiveValue } from './sensitive/index.js';
+import { containsSensitiveData, redactSensitiveData } from './sensitive/index.js';
 
 /**
  * Safely stringify objects for logging, handling circular references and sensitive data

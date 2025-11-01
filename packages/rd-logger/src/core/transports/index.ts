@@ -1,3 +1,3 @@
-export { Transport } from './transport.interface';
-export { ConsoleTransport, ConsoleTransportOptions } from './console.transport';
-export { FileTransport, FileTransportOptions } from './file.transport';
+export { Transport } from './transport.interface.js';
+export { ConsoleTransport, ConsoleTransportOptions } from './console.transport.js';
+export { FileTransport, FileTransportOptions } from './file.transport.js';
