@@ -243,6 +243,51 @@ Steps to verify the change works
 
 **Timeline**: We try to review within 2-3 days. No pressure on you to respond quickly - take the time you need.
 
+## 🔧 Maintenance Tasks
+
+### Updating pnpm Version
+
+We update pnpm frequently (often monthly or more) to get latest features and fixes.
+
+**Automated Method (Recommended):**
+```bash
+pnpm run update-pnpm
+# Then follow the printed instructions:
+# 1. pnpm install
+# 2. Test everything works
+# 3. Commit the changes
+```
+
+**Manual Method:**
+```bash
+# Check latest version
+npm view pnpm version
+
+# Update package.json
+npm pkg set packageManager=pnpm@10.21.0
+
+# Reinstall and test
+pnpm install
+pnpm test
+
+# Commit
+git commit -am "chore: update pnpm to 10.21.0"
+```
+
+**Why Update:**
+- Performance improvements
+- Bug fixes
+- New workspace features
+- Security patches
+
+**Single Source of Truth:**
+The `packageManager` field in `package.json` is automatically used by:
+- GitHub Actions (CI)
+- Local development (via Corepack)
+- All tooling that respects package managers
+
+Change it once, everything updates!
+
 ## 🏷️ Issue Labels
 
 - `good first issue` - Great for newcomers
