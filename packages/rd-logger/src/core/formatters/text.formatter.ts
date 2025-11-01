@@ -1,4 +1,4 @@
-import { Formatter } from './formatter.interface';
+import type { Formatter } from './formatter.interface';
 import { safeStringify } from '../utils';
 
 /**

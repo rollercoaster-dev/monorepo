@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Transport } from './transport.interface';
+import type { Transport } from './transport.interface';
 import { safeStringify } from '../utils';
 
 export interface FileTransportOptions {

@@ -56,10 +56,21 @@ export const node = [
   {
     languageOptions: {
       globals: {
+        // Node.js globals
         process: 'readonly',
         Buffer: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
+        // Web APIs available in Node.js
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
       },
     },
   },

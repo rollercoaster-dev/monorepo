@@ -1,13 +1,16 @@
-import {
+import type {
   LogLevel,
-  LoggerConfig,
+  LoggerConfig} from './logger.config';
+import {
   DEFAULT_LOGGER_CONFIG,
   LOG_LEVEL_PRIORITY,
 } from './logger.config';
-import { Transport, ConsoleTransport, FileTransport } from './transports';
-import { Formatter, TextFormatter } from './formatters';
+import type { Transport} from './transports';
+import { ConsoleTransport, FileTransport } from './transports';
+import type { Formatter} from './formatters';
+import { TextFormatter } from './formatters';
 import { formatError } from './utils';
-import { SensitiveLoggingApproval } from './sensitive';
+import type { SensitiveLoggingApproval } from './sensitive';
 
 /**
  * Enhanced neuro-friendly logger class

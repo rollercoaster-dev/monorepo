@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { Transport } from './transport.interface';
+import type { Transport } from './transport.interface';
+import type {
+  LogLevel} from '../logger.config';
 import {
-  LogLevel,
   DEFAULT_LEVEL_COLORS,
   DEFAULT_LEVEL_ICONS,
 } from '../logger.config';
@@ -108,6 +109,7 @@ export class ConsoleTransport implements Transport {
     consoleOutput += divider;
 
     // Output to console
+    // eslint-disable-next-line no-console
     console.log(consoleOutput);
   }
 }
