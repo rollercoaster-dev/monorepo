@@ -19,28 +19,32 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 ## Getting Started
 
+> **Note:** rd-logger is now part of the [Rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo). The setup process has changed accordingly.
+
 ### Prerequisites
 
-* Node.js (v18 or later)
-* pnpm
+* Node.js (v20 or later)
+* pnpm (v10 or later)
 * TypeScript knowledge
 
 ### Setup
 
-1. Fork the repository on GitHub
+1. Fork the [monorepo](https://github.com/rollercoaster-dev/monorepo) on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/rd-logger.git
-   cd rd-logger
+   git clone https://github.com/YOUR-USERNAME/monorepo.git
+   cd monorepo
    ```
-3. Install dependencies:
+3. Install dependencies (from monorepo root):
    ```bash
    pnpm install
    ```
 4. Add the original repository as an upstream remote:
    ```bash
-   git remote add upstream https://github.com/rollercoaster-dev/rd-logger.git
+   git remote add upstream https://github.com/rollercoaster-dev/monorepo.git
    ```
+
+The rd-logger package is located at `packages/rd-logger/`.
 
 ## Development Workflow
 
@@ -50,27 +54,43 @@ This project adheres to a Code of Conduct that all contributors are expected to 
    # or
    git checkout -b fix/your-bugfix-name
    ```
-2. Make your changes, following the [coding standards](#coding-standards)
 
-3. Run tests to ensure your changes don't break existing functionality:
+2. Make your changes to files in `packages/rd-logger/`, following the [coding standards](#coding-standards)
+
+3. Run tests for rd-logger:
    ```bash
-   pnpm test
+   pnpm --filter @rollercoaster-dev/rd-logger test
+   # Or from anywhere in the monorepo:
+   turbo run test --filter=@rollercoaster-dev/rd-logger
    ```
-4. Run linting to ensure your code follows the style guidelines:
+
+4. Run linting:
    ```bash
-   pnpm lint
+   pnpm --filter @rollercoaster-dev/rd-logger lint
    ```
-5. Commit your changes with a descriptive commit message:
+
+5. When ready to commit, create a changeset to document your changes:
    ```bash
+   pnpm changeset
+   ```
+   - Select `@rollercoaster-dev/rd-logger`
+   - Choose the version bump type (patch/minor/major)
+   - Write a clear description of your changes
+
+6. Commit your changes with a descriptive commit message:
+   ```bash
+   git add .
    git commit -m "feat: add support for new feature"
    # or
    git commit -m "fix: resolve issue with type definition"
    ```
-6. Push your branch to your fork:
+
+7. Push your branch to your fork:
    ```bash
    git push origin feature/your-feature-name
    ```
-7. Create a Pull Request from your fork to the original repository
+
+8. Create a Pull Request from your fork to the original repository
 
 ## Pull Request Process
 
@@ -129,14 +149,20 @@ Documentation is a critical part of this project:
 
 ## Release Process
 
-The release process is handled by the maintainers:
+The monorepo uses [Changesets](https://github.com/changesets/changesets) for version management and publishing:
 
-1. Maintainers will review and merge approved PRs
-2. Maintainers will update the version according to semantic versioning
-3. Maintainers will create a new release on GitHub
-4. The CI/CD pipeline will publish the new version to npm
+1. **Contributors** create changesets when making changes (see Development Workflow step 5)
+2. **Changesets bot** creates a "Version Packages" PR automatically when changesets are merged
+3. **Maintainers** review and merge the "Version Packages" PR when ready to release
+4. **GitHub Actions** automatically publishes the new version to npm and creates a GitHub release
 
-**For a detailed, step-by-step release and changelog workflow, see:** [.github/RELEASE_CHECKLIST.md](.github/RELEASE_CHECKLIST.md)
+### Version Bump Types
+
+- **patch** (0.3.x): Bug fixes, documentation, internal refactoring
+- **minor** (0.x.0): New features (backwards compatible)
+- **major** (x.0.0): Breaking changes
+
+For more details on the Changesets workflow, see the [monorepo documentation](https://github.com/rollercoaster-dev/monorepo#readme).
 
 ## Questions?
 

@@ -2,8 +2,10 @@
 
 A neurodivergent-friendly logger for Rollercoaster.dev projects.
 
-[![CI](https://github.com/rollercoaster-dev/rd-logger/actions/workflows/ci.yml/badge.svg)](https://github.com/rollercoaster-dev/rd-logger/actions/workflows/ci.yml)
-[![PR Checks](https://github.com/rollercoaster-dev/rd-logger/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/rollercoaster-dev/rd-logger/actions/workflows/pr-checks.yml)
+[![CI](https://github.com/rollercoaster-dev/monorepo/actions/workflows/ci.yml/badge.svg)](https://github.com/rollercoaster-dev/monorepo/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/%40rollercoaster-dev%2Frd-logger.svg)](https://www.npmjs.com/package/@rollercoaster-dev/rd-logger)
+
+> **Note:** This package is part of the [Rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo). For development setup and contributing guidelines, please refer to the [monorepo documentation](https://github.com/rollercoaster-dev/monorepo#readme).
 
 ## Installation
 
