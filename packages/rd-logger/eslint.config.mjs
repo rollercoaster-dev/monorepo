@@ -6,6 +6,9 @@
 import { node } from '@rollercoaster-dev/shared-config/eslint';
 
 export default [
+  {
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**', '*.tsbuildinfo'],
+  },
   ...node,
   {
     files: ['**/*.ts'],
