@@ -6,12 +6,12 @@ import type {
   ErrorRequestHandler,
 } from 'express';
 import onFinished from 'on-finished';
-import { Logger } from '../core/logger.service';
-import { type LoggerConfig } from '../core/logger.config';
+import { Logger } from '../core/logger.service.js';
+import { type LoggerConfig } from '../core/logger.config.js';
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context';
+} from '../core/request-context.js';
 
 // Extend Express Request type to include our id
 declare global {
@@ -151,8 +151,8 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
  * Usage:
  * ```typescript
  * import express from 'express';
- * import { expressLogger, expressErrorHandler } from './path/to/expressAdapter';
- * import { Logger } from './path/to/logger';
+ * import { expressLogger, expressErrorHandler } from './path/to/expressAdapter/index.js';
+ * import { Logger } from './path/to/logger/index.js';
  *
  * const app = express();
  * const logger = new Logger();

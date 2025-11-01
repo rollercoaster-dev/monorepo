@@ -1,3 +1,3 @@
-export { Formatter } from './formatter.interface';
-export { JsonFormatter } from './json.formatter';
-export { TextFormatter } from './text.formatter';
+export { Formatter } from './formatter.interface.js';
+export { JsonFormatter } from './json.formatter.js';
+export { TextFormatter } from './text.formatter.js';

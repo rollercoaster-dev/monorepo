@@ -1,0 +1,13 @@
+{
+  "name": "rd-logger-test",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Test consumption of rd-logger package",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "dependencies": {
+    "@rollercoaster-dev/rd-logger": "workspace:*"
+  }
+}

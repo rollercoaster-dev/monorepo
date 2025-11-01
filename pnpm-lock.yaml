@@ -21,6 +21,12 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  experiments/rd-logger-test:
+    dependencies:
+      '@rollercoaster-dev/rd-logger':
+        specifier: workspace:*
+        version: link:../../packages/rd-logger
+
   packages/rd-logger:
     dependencies:
       chalk:

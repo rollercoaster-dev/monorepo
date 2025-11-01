@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import type { Transport } from './transport.interface';
-import { safeStringify } from '../utils';
+import type { Transport } from './transport.interface.js';
+import { safeStringify } from '../utils.js';
 
 export interface FileTransportOptions {
   /**

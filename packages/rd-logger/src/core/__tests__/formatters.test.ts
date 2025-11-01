@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { JsonFormatter, TextFormatter } from '../formatters';
+import { JsonFormatter, TextFormatter } from '../formatters/index.js';
 
 describe('Logger Formatters', () => {
   const testLevel = 'info';

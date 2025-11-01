@@ -1,12 +1,12 @@
 import chalk from 'chalk';
-import type { Transport } from './transport.interface';
+import type { Transport } from './transport.interface.js';
 import type {
-  LogLevel} from '../logger.config';
+  LogLevel} from '../logger.config.js';
 import {
   DEFAULT_LEVEL_COLORS,
   DEFAULT_LEVEL_ICONS,
-} from '../logger.config';
-import { formatDate, safeStringify } from '../utils';
+} from '../logger.config.js';
+import { formatDate, safeStringify } from '../utils.js';
 
 export interface ConsoleTransportOptions {
   /**

@@ -1,11 +1,11 @@
 /// <reference types="jest" />
 
-import { Logger } from '../logger.service';
+import { Logger } from '../logger.service.js';
 // These imports are used in the test setup
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ConsoleTransport, FileTransport } from '../transports';
+import { ConsoleTransport, FileTransport } from '../transports/index.js';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { JsonFormatter } from '../formatters';
+import { JsonFormatter } from '../formatters/index.js';
 import fs from 'fs';
 import path from 'path';
 

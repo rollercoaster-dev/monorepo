@@ -1,16 +1,16 @@
 import type {
   LogLevel,
-  LoggerConfig} from './logger.config';
+  LoggerConfig} from './logger.config.js';
 import {
   DEFAULT_LOGGER_CONFIG,
   LOG_LEVEL_PRIORITY,
-} from './logger.config';
-import type { Transport} from './transports';
-import { ConsoleTransport, FileTransport } from './transports';
-import type { Formatter} from './formatters';
-import { TextFormatter } from './formatters';
-import { formatError } from './utils';
-import type { SensitiveLoggingApproval } from './sensitive';
+} from './logger.config.js';
+import type { Transport} from './transports/index.js';
+import { ConsoleTransport, FileTransport } from './transports/index.js';
+import type { Formatter} from './formatters/index.js';
+import { TextFormatter } from './formatters/index.js';
+import { formatError } from './utils.js';
+import type { SensitiveLoggingApproval } from './sensitive/index.js';
 
 /**
  * Enhanced neuro-friendly logger class

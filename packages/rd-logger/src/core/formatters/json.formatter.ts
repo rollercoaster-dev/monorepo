@@ -1,4 +1,4 @@
-import type { Formatter } from './formatter.interface';
+import type { Formatter } from './formatter.interface.js';
 
 /**
  * JSON formatter for the logger

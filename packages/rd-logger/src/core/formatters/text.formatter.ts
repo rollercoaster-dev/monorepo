@@ -1,5 +1,5 @@
-import type { Formatter } from './formatter.interface';
-import { safeStringify } from '../utils';
+import type { Formatter } from './formatter.interface.js';
+import { safeStringify } from '../utils.js';
 
 /**
  * Text formatter for the logger

@@ -1,8 +1,8 @@
 /// <reference types="jest" />
 
-import { runWithGenericContext } from '../generic';
-import { Logger } from '../../core/logger.service';
-import { getRequestStore } from '../../core/request-context';
+import { runWithGenericContext } from '../generic.js';
+import { Logger } from '../../core/logger.service.js';
+import { getRequestStore } from '../../core/request-context.js';
 
 
 // Mock chalk

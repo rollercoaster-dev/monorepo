@@ -1,9 +1,9 @@
-import { Logger } from '../core/logger.service';
-import { type LoggerConfig } from '../core/logger.config';
+import { Logger } from '../core/logger.service.js';
+import { type LoggerConfig } from '../core/logger.config.js';
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context';
+} from '../core/request-context.js';
 
 export interface GenericContextOptions {
   /**

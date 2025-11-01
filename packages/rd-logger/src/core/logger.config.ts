@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import type { Transport } from './transports';
-import type { Formatter } from './formatters';
+import type { Transport } from './transports/index.js';
+import type { Formatter } from './formatters/index.js';
 
 // Define log levels and their priority (lower number = higher priority)
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';

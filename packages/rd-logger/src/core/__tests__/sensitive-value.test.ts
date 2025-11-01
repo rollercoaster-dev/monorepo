@@ -20,8 +20,8 @@ jest.mock('chalk', () => {
   };
 });
 
-import { SensitiveValue } from '../sensitive';
-import { safeStringify } from '../utils';
+import { SensitiveValue } from '../sensitive/index.js';
+import { safeStringify } from '../utils.js';
 import util from 'util';
 
 describe('SensitiveValue', () => {

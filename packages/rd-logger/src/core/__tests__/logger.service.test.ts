@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { Logger } from '../logger.service';
+import { Logger } from '../logger.service.js';
 import chalk from 'chalk';
 import path from 'path';
 // import fs from 'fs'; // Not used yet

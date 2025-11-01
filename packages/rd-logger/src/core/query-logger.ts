@@ -1,4 +1,4 @@
-import type { Logger } from './logger.service';
+import type { Logger } from './logger.service.js';
 
 export interface QueryLogEntry {
   query: string;
