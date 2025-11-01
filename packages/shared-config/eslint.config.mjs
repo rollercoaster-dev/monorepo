@@ -26,7 +26,7 @@ export const base = [
       '@typescript-eslint': typescript,
     },
     rules: {
-      ...typescript.configs.recommended.rules,
+      ...typescript.configs?.recommended?.rules,
 
       // TypeScript specific
       '@typescript-eslint/no-unused-vars': [

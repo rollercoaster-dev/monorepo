@@ -27,7 +27,7 @@ Extend the base config in your package's `tsconfig.json`:
 
 ### ESLint
 
-Use the shared config in your package's `eslint.config.js`:
+Use the shared config in your package's `eslint.config.mjs`:
 
 ```js
 import { base } from '@rollercoaster-dev/shared-config/eslint';
@@ -48,6 +48,8 @@ import { node } from '@rollercoaster-dev/shared-config/eslint';
 export default [...node];
 ```
 
+> **Note**: We use `.mjs` for config files to avoid TypeScript type declaration issues with ESLint packages.
+
 ### Prettier
 
 Reference the shared config in your package's `package.json`:
@@ -58,7 +60,7 @@ Reference the shared config in your package's `package.json`:
 }
 ```
 
-Or extend it in `prettier.config.js`:
+Or extend it in `prettier.config.mjs`:
 
 ```js
 import baseConfig from '@rollercoaster-dev/shared-config/prettier';
