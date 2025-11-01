@@ -1,6 +1,6 @@
 {
   "name": "@rollercoaster-dev/rd-logger",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "type": "module",
   "description": "A neurodivergent-friendly logger for Rollercoaster.dev projects",
   "main": "dist/index.js",
