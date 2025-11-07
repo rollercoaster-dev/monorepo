@@ -63,6 +63,54 @@ cd monorepo
 pnpm install
 ```
 
+### Environment Setup
+
+The monorepo uses environment variables for configuration. To set up your local environment:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your local settings
+# Most defaults work for local development
+```
+
+**Environment Files:**
+- [.env.example](.env.example) - Root-level monorepo configuration (logging, CI/CD)
+- [packages/rd-logger/.env.example](packages/rd-logger/.env.example) - Logger-specific variables
+
+**Common Variables:**
+- `NODE_ENV` - Environment mode (development, production, test)
+- `LOG_LEVEL` - Logging verbosity (debug, info, warn, error, fatal)
+- `DEBUG_QUERIES` - Enable verbose database query logging (true/false)
+
+Individual packages and apps may have their own `.env.example` files. Check each package's README for specific configuration needs.
+
+### Claude Code on the Web
+
+This monorepo is configured for use with [Claude Code on the Web](https://claude.ai/code).
+
+**Automatic Setup:**
+- Dependencies install automatically when you start a session
+- The SessionStart hook runs `scripts/install-dependencies.sh`
+- Works in both local CLI and web environments
+
+**Environment Variables for Web:**
+1. Visit [claude.ai/code](https://claude.ai/code) and connect your GitHub account
+2. Install the Claude GitHub app in this repository
+3. Select or create an environment
+4. Configure environment variables in the Web UI (use `.env.example` as reference):
+   - `NODE_ENV=development`
+   - `LOG_LEVEL=info`
+   - `DEBUG_QUERIES=false`
+
+**Note**: `.env` files are for local development only. Claude Code on the Web uses environment variables configured in the Web UI.
+
+**Additional Context:**
+- See [CLAUDE.md](CLAUDE.md) for detailed monorepo structure and workflows
+- Team-shared settings are in `.claude/settings.json`
+- Personal settings go in `.claude/settings.local.json` (not committed)
+
 ### Development
 
 ```bash
