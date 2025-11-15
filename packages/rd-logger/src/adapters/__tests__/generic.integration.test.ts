@@ -28,6 +28,15 @@ jest.mock('chalk', () => {
 // Mock Logger methods to simplify testing
 jest.mock('../../core/logger.service');
 
+// Test-specific type for log context arguments
+type MockLogContext = {
+  duration?: string;
+  contextName?: string;
+  requestId?: string;
+  error?: Error;
+  [key: string]: unknown;
+};
+
 describe('Generic Adapter Integration', () => {
   let consoleSpy: jest.SpyInstance;
   let mockLoggerInstance: jest.Mocked<Logger>;
@@ -91,12 +100,8 @@ describe('Generic Adapter Integration', () => {
     );
 
     // Check duration format in end log
-    const endLogArgs = mockLoggerInstance.info.mock.calls[1]?.[1];
-    if (endLogArgs && typeof endLogArgs === 'object' && 'duration' in endLogArgs) {
-      expect(endLogArgs.duration).toMatch(/\d+ms/); // e.g., '15ms'
-    } else {
-      throw new Error('Expected endLogArgs to have duration property');
-    }
+    const endLogArgs = mockLoggerInstance.info.mock.calls[1]?.[1] as MockLogContext;
+    expect(endLogArgs?.duration).toMatch(/\d+ms/); // e.g., '15ms'
   });
 
   it('should log an error if the function throws', async () => {
@@ -129,12 +134,8 @@ describe('Generic Adapter Integration', () => {
     );
 
     // Check duration format in error log
-    const errorLogArgs = mockLoggerInstance.error.mock.calls[0]?.[1];
-    if (errorLogArgs && typeof errorLogArgs === 'object' && 'duration' in errorLogArgs) {
-      expect(errorLogArgs.duration).toMatch(/\d+ms/);
-    } else {
-      throw new Error('Expected errorLogArgs to have duration property');
-    }
+    const errorLogArgs = mockLoggerInstance.error.mock.calls[0]?.[1] as MockLogContext;
+    expect(errorLogArgs?.duration).toMatch(/\d+ms/);
   });
 
   it('should use provided request ID', async () => {
