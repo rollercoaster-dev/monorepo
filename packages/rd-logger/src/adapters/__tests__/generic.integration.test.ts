@@ -91,8 +91,8 @@ describe('Generic Adapter Integration', () => {
     );
 
     // Check duration format in end log
-    const endLogArgs = mockLoggerInstance.info.mock.calls[1][1] as any;
-    expect(endLogArgs.duration).toMatch(/\d+ms/); // e.g., '15ms'
+    const endLogArgs = mockLoggerInstance.info.mock.calls[1]?.[1] as any;
+    expect(endLogArgs?.duration).toMatch(/\d+ms/); // e.g., '15ms'
   });
 
   it('should log an error if the function throws', async () => {
@@ -125,8 +125,8 @@ describe('Generic Adapter Integration', () => {
     );
 
     // Check duration format in error log
-    const errorLogArgs = mockLoggerInstance.error.mock.calls[0][1] as any;
-    expect(errorLogArgs.duration).toMatch(/\d+ms/);
+    const errorLogArgs = mockLoggerInstance.error.mock.calls[0]?.[1] as any;
+    expect(errorLogArgs?.duration).toMatch(/\d+ms/);
   });
 
   it('should use provided request ID', async () => {

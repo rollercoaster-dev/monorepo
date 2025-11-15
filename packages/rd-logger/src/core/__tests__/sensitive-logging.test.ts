@@ -48,7 +48,7 @@ describe('Sensitive Logging', () => {
     logger.logWithSensitiveData('info', 'API key debug', { key: apiKey }, approval);
 
     expect(consoleSpy).toHaveBeenCalled();
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
 
     // Should include warning prefix
     expect(logOutput).toContain('SENSITIVE DATA');
@@ -69,7 +69,7 @@ describe('Sensitive Logging', () => {
     logger.logWithSensitiveData('info', 'API key debug', { key: apiKey }, approval);
 
     expect(consoleSpy).toHaveBeenCalled();
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
 
     // Should not include the sensitive data
     expect(logOutput).not.toContain(apiKey);
@@ -91,7 +91,7 @@ describe('Sensitive Logging', () => {
     logger.logWithSensitiveData('info', 'API key debug', { key: apiKey }, approval);
 
     expect(consoleSpy).toHaveBeenCalled();
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
 
     // Should not include the sensitive data
     expect(logOutput).not.toContain(apiKey);
@@ -109,7 +109,7 @@ describe('Sensitive Logging', () => {
     // Test info level
     logger.infoWithSensitiveData('Info with sensitive data', { key: apiKey }, approval);
     expect(consoleSpy).toHaveBeenCalled();
-    let logOutput = consoleSpy.mock.calls[0][0];
+    let logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('INFO');
     expect(logOutput).toContain(apiKey);
 
@@ -118,7 +118,7 @@ describe('Sensitive Logging', () => {
     // Test error level
     logger.errorWithSensitiveData('Error with sensitive data', { key: apiKey }, approval);
     expect(consoleSpy).toHaveBeenCalled();
-    logOutput = consoleSpy.mock.calls[0][0];
+    logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('ERROR');
     expect(logOutput).toContain(apiKey);
   });
@@ -129,7 +129,7 @@ describe('Sensitive Logging', () => {
     logger.info('API key created', { key: apiKey });
 
     expect(consoleSpy).toHaveBeenCalled();
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
 
     // Should not include the actual sensitive data
     expect(logOutput).not.toContain('secret-api-key-12345');

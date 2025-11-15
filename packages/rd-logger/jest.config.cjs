@@ -13,7 +13,15 @@ module.exports = {
     '**/?(*.)+(spec|test).+(ts|tsx|js)',
   ],
   transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { useESM: true }],
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          isolatedModules: false,
+        },
+      },
+    ],
   },
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {

@@ -16,10 +16,6 @@
     "module": "NodeNext",
     "allowImportingTsExtensions": false,
 
-    // Relax some strict checks (original config was less strict)
-    "noUncheckedIndexedAccess": false,
-    "isolatedModules": false,
-
     // Type definitions
     "types": ["node", "jest"]
   },
