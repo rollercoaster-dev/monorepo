@@ -1,11 +1,6 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest/presets/default-esm',
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: [
@@ -18,6 +13,9 @@ module.exports = {
       {
         useESM: true,
         tsconfig: {
+          // Disable isolatedModules for test compilation
+          // ts-jest with module: "NodeNext" requires this to avoid TS151002 warnings
+          // Production code still uses isolatedModules: true (inherited from shared-config)
           isolatedModules: false,
         },
       },
