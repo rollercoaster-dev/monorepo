@@ -35,6 +35,7 @@ monorepo/
 - **TypeScript**: Project references for instant type checking
 - **Monorepo Pattern**: Shared packages + independent apps
 - **Version Control**: GitHub with Changesets for version management
+- **Strict Typescript**: No any
 
 ## 📦 Current Packages
 

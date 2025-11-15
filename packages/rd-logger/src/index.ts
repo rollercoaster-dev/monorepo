@@ -9,9 +9,8 @@ import { Logger } from './core/logger.service.js';
 export { Logger } from './core/logger.service.js';
 
 // Export config types and defaults
+export type { LogLevel, LoggerConfig } from './core/logger.config.js';
 export {
-  LogLevel,
-  LoggerConfig,
   DEFAULT_LOGGER_CONFIG,
   LOG_LEVEL_PRIORITY,
   DEFAULT_LEVEL_COLORS,
@@ -33,21 +32,21 @@ export type { RequestStore } from './core/request-context.js'; // Export type
 
 // Export core Query Logger class and types/defaults
 export { QueryLogger } from './core/query-logger.js';
-export {
-  QueryLogEntry,
-  QueryLoggerConfig,
-  DEFAULT_QUERY_LOGGER_CONFIG
-} from './core/query-logger.js';
+export type { QueryLogEntry, QueryLoggerConfig } from './core/query-logger.js';
+export { DEFAULT_QUERY_LOGGER_CONFIG } from './core/query-logger.js';
 
 // Export Transports
-export { Transport, ConsoleTransport, FileTransport } from './core/transports/index.js';
+export type { Transport } from './core/transports/index.js';
+export { ConsoleTransport, FileTransport } from './core/transports/index.js';
 export type { ConsoleTransportOptions, FileTransportOptions } from './core/transports/index.js';
 
 // Export Formatters
-export { Formatter, JsonFormatter, TextFormatter } from './core/formatters/index.js';
+export type { Formatter } from './core/formatters/index.js';
+export { JsonFormatter, TextFormatter } from './core/formatters/index.js';
 
 // Export Sensitive Data Protection
-export { SensitiveValue, SensitiveLoggingApproval } from './core/sensitive/index.js';
+export type { SensitiveLoggingApproval } from './core/sensitive/index.js';
+export { SensitiveValue } from './core/sensitive/index.js';
 export { containsSensitiveData, redactSensitiveData, SENSITIVE_PATTERNS } from './core/sensitive/index.js';
 
 // Export Utilities

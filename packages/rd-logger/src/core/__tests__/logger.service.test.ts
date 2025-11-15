@@ -80,7 +80,7 @@ describe('Logger Service', () => {
   it('should log an info message to console', () => {
     logger.info('Test info message');
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('INFO');
     expect(logOutput).toContain('Test info message');
     // Check for human-readable timestamp format (e.g., "Jun 7, 19:01:33.484")
@@ -92,7 +92,7 @@ describe('Logger Service', () => {
   it('should log a warn message to console', () => {
     logger.warn('Test warning message');
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('WARN');
     expect(logOutput).toContain('Test warning message');
   });
@@ -100,7 +100,7 @@ describe('Logger Service', () => {
   it('should log an error message to console', () => {
     logger.error('Test error message');
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('ERROR');
     expect(logOutput).toContain('Test error message');
   });
@@ -109,7 +109,7 @@ describe('Logger Service', () => {
     const context = { userId: 123, data: 'sample' };
     logger.info('Message with context', context);
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('Message with context');
     // Check for bullet list style context output
     expect(logOutput).toMatch(/• userId:\s*123/);
@@ -121,7 +121,7 @@ describe('Logger Service', () => {
     context.self = context;
     logger.info('Circular context test', context);
     expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logOutput = consoleSpy.mock.calls[0][0];
+    const logOutput = consoleSpy.mock.calls[0]?.[0];
     expect(logOutput).toContain('Circular context test');
     expect(logOutput).toContain('"self": "[Circular]"');
     expect(logOutput).not.toContain('crashed'); // Ensure it didn't throw

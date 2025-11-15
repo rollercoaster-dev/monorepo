@@ -81,12 +81,17 @@ describe('Pattern Detection', () => {
   });
 
   it('should handle non-string values', () => {
-    expect(containsSensitiveData(null as any)).toBe(false);
-    expect(containsSensitiveData(undefined as any)).toBe(false);
-    expect(containsSensitiveData(123 as any)).toBe(false);
-    expect(containsSensitiveData({} as any)).toBe(false);
+    // @ts-expect-error - Testing runtime behavior with invalid types
+    expect(containsSensitiveData(null)).toBe(false);
+    // @ts-expect-error - Testing runtime behavior with invalid types
+    expect(containsSensitiveData(undefined)).toBe(false);
+    // @ts-expect-error - Testing runtime behavior with invalid types
+    expect(containsSensitiveData(123)).toBe(false);
+    // @ts-expect-error - Testing runtime behavior with invalid types
+    expect(containsSensitiveData({})).toBe(false);
 
-    expect(redactSensitiveData(123 as any)).toBe(123 as any);
+    // @ts-expect-error - Testing runtime behavior with invalid types
+    expect(redactSensitiveData(123)).toBe(123);
   });
 
   it('should work with safeStringify for automatic pattern detection', () => {
