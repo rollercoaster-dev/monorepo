@@ -28,8 +28,8 @@ coverage = true
 # Coverage directory
 coverageDirectory = "coverage"
 
-# Coverage reporters
-coverageReporter = ["text", "lcov", "html"]
+# Coverage reporters (Bun supports: text, lcov)
+coverageReporter = ["text", "lcov"]
 
 [run]
 # Default shell for bun run scripts (system uses your system's default shell)
