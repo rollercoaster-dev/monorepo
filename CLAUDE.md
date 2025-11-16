@@ -15,9 +15,11 @@ Rollercoaster.dev is building an Open Badges credentialing system with:
 
 ```
 monorepo/
-├── apps/                           # Applications (empty - Phase 3 migration)
+├── apps/                           # Applications
+│   └── openbadges-modular-server/  # ✅ Open Badges 2.0/3.0 API server (Docker + Bun/Hono)
 ├── packages/                       # Shared libraries
 │   ├── rd-logger/                  # ✅ Structured logging with ADHD-friendly formatting
+│   ├── openbadges-types/           # ✅ Open Badges TypeScript type definitions
 │   └── shared-config/              # Shared build/lint configurations
 ├── experiments/                    # Research & prototypes
 ├── scripts/                        # Build and maintenance scripts
@@ -121,21 +123,22 @@ cp .env.example .env
 
 ## 🔄 Migration Status
 
-**Current Phase**: Phase 2 - Migrate Shared Packages (Week 2)
+**Current Phase**: Phase 3 - Migrate Applications
 **Timeline**: 6 weeks (Nov 1 - Dec 12, 2025)
 
 ### Milestones
 
 - ✅ **Phase 1**: Foundation Setup (Complete)
-- 🏗️ **Phase 2**: Migrate Shared Packages (In Progress)
+- ✅ **Phase 2**: Migrate Shared Packages (Complete)
   - ✅ rd-logger (complete with CI/CD)
-  - ⏳ openbadges-types, openbadges-ui
+  - ✅ openbadges-types (complete)
+  - ⏳ openbadges-ui
   - ⏳ skill-tree package
   - ⏳ badge-image-system evaluation
-- ⏳ **Phase 3**: Migrate Applications
-  - openbadges-system (Vue 3 + Bun/Hono)
-  - openbadges-modular-server (Docker)
-  - landing page
+- 🏗️ **Phase 3**: Migrate Applications (In Progress)
+  - ✅ openbadges-modular-server (Docker + Bun/Hono)
+  - ⏳ openbadges-system (Vue 3 + Bun/Hono)
+  - ⏳ landing page
 - ⏳ **Phase 4**: CI/CD & Publishing
 - ⏳ **Phase 5**: Cleanup
 - ⏳ **Phase 5.5**: Documentation Consolidation
