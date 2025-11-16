@@ -1,0 +1,65 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# VSCode IDE settings (personal preferences)
+.vscode/
+
+# Finder (MacOS) folder config
+.DS_Store
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+*.sqlite3*
+*test_database*
+test_database.sqlite
+tests/e2e/test_database.sqlite
+*.pub
+
+
+uploads/*
+
+# Cryptographic keys
+keys/
+test-keys/
+test-keys-jwk/
+*.key
+*.pem
+
+.eslintrc.js
+
+# Cursor editor cache
+.cursor/working/agent/memory/
+failed_release_logs.txt
+server.log
