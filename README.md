@@ -20,7 +20,7 @@ See [apps/docs/vision/](apps/docs/vision/) for detailed roadmap and principles.
 ## 🏗️ Architecture
 
 This monorepo uses:
-- **pnpm workspaces** for package management
+- **Bun 1.3.2** for package management and runtime
 - **Turborepo** for task orchestration and caching
 - **TypeScript project references** for instant type checking
 
@@ -48,19 +48,20 @@ monorepo/
 
 ### Prerequisites
 
-- [pnpm](https://pnpm.io/) >= 8.0.0
-- [Bun](https://bun.sh/) >= 1.0.0 (for backend apps)
-- [Node.js](https://nodejs.org/) >= 20.0.0
+- [Bun](https://bun.sh/) >= 1.3.2
 
 ### Installation
 
 ```bash
+# Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
 # Clone the repository
 gh repo clone rollercoaster-dev/monorepo
 cd monorepo
 
 # Install dependencies
-pnpm install
+bun install
 ```
 
 ### Environment Setup
@@ -115,16 +116,16 @@ This monorepo is configured for use with [Claude Code on the Web](https://claude
 
 ```bash
 # Run all apps in development mode
-pnpm dev
+bun dev
 
 # Run specific app
-pnpm --filter openbadges-system dev
+bun --filter openbadges-system dev
 
 # Build all packages
-pnpm build
+bun run build
 
 # Run tests across all packages
-pnpm test
+bun test
 ```
 
 ## 📦 Packages & Applications

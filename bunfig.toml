@@ -35,8 +35,8 @@ coverageDirectory = "coverage"
 coverageReporter = ["text", "lcov", "html"]
 
 [run]
-# Default shell for bun run scripts
-shell = "bash"
+# Default shell for bun run scripts (system uses your system's default shell)
+shell = "system"
 
 # Use Bun's runtime for all executable files
 bun = true
