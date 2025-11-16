@@ -8,7 +8,7 @@ ARG TARGETARCH
 # Print build information for debugging
 RUN echo "Building on $BUILDPLATFORM for $TARGETPLATFORM ($TARGETARCH)"
 
-WORKDIR /app
+WORKDIR /build
 
 # Install system dependencies for better-sqlite3
 # Use architecture-specific optimizations where possible
@@ -17,16 +17,28 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy package.json and bun.lock
-COPY package.json bun.lock ./
+# Copy monorepo root package files for workspace resolution
+COPY package.json bun.lock* ./
 
-# Install dependencies
+# Copy workspace packages that this app depends on
+COPY packages/rd-logger ./packages/rd-logger
+COPY packages/openbadges-types ./packages/openbadges-types
+
+# Copy the application package
+COPY apps/openbadges-modular-server ./apps/openbadges-modular-server
+
+# Install all dependencies (workspace protocol will resolve correctly)
 RUN bun install
 
-# Copy source code
-COPY . .
+# Build workspace dependencies first
+WORKDIR /build/packages/rd-logger
+RUN bun run build
 
-# Build the application and migrations
+WORKDIR /build/packages/openbadges-types
+RUN bun run build
+
+# Now build the application
+WORKDIR /build/apps/openbadges-modular-server
 RUN bun run build && \
     bun run build:migrations
 
@@ -41,14 +53,18 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/drizzle ./drizzle
+# Copy built application from builder
+COPY --from=builder /build/apps/openbadges-modular-server/node_modules ./node_modules
+COPY --from=builder /build/apps/openbadges-modular-server/package.json ./package.json
+COPY --from=builder /build/apps/openbadges-modular-server/dist ./dist
+COPY --from=builder /build/apps/openbadges-modular-server/drizzle ./drizzle
 
-# Copy scripts
-COPY docker/scripts/health-check.sh /app/health-check.sh
+# Copy workspace dependencies (built packages)
+COPY --from=builder /build/packages/rd-logger/dist ./node_modules/@rollercoaster-dev/rd-logger/dist
+COPY --from=builder /build/packages/openbadges-types/dist ./node_modules/openbadges-types/dist
+
+# Copy scripts from app directory
+COPY --from=builder /build/apps/openbadges-modular-server/docker/scripts/health-check.sh /app/health-check.sh
 RUN chmod +x /app/health-check.sh
 
 # Create data directory for SQLite
