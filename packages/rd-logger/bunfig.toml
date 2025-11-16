@@ -1,9 +1,11 @@
 [test]
-# Exclude dist, node_modules, and e2e from regular test discovery
-# E2E tests run separately after build via test:e2e script
-exclude = [
+# Coverage configuration for this package
+coverageSkipTestFiles = true
+
+# Exclude patterns from coverage calculation (NOT test execution)
+coveragePathIgnorePatterns = [
   "**/node_modules/**",
   "**/dist/**",
   "**/.bun/**",
-  "**/e2e/**"
+  "**/coverage/**"
 ]

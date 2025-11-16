@@ -15,9 +15,12 @@
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
-    "test:watch": "bun test --watch"
+    "test": "bun test src/",
+    "test:unit": "bun test src/core/",
+    "test:integration": "bun test src/adapters/",
+    "test:e2e": "bun test e2e/",
+    "test:coverage": "bun test --coverage src/",
+    "test:watch": "bun test --watch src/"
   },
   "repository": {
     "type": "git",
