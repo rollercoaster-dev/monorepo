@@ -25,9 +25,6 @@ disable = false
 # Enable code coverage by default
 coverage = true
 
-# Preload modules for all tests (can add test setup files here)
-preload = []
-
 # Coverage directory
 coverageDirectory = "coverage"
 
