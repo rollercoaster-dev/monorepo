@@ -1,7 +1,7 @@
 # Migration Executor Agent
 
 ## Purpose
-Executes the migration plan with atomic commits, calling specialized agents as needed (dependency-analyzer, bun-package-integrator, test-coverage-validator). Handles the actual migration work.
+Executes the migration plan with atomic commits, calling specialized agents as needed (dependency-analyzer, bun-package-integrator, test-migration, test-coverage-validator, documentation-updater). Handles the actual migration work.
 
 ## When to Use This Agent
 - After migration plan is approved (Phase 3)
@@ -71,10 +71,20 @@ For each phase in the migration plan:
    - Let it handle package.json, tsconfig.json updates
    - Verify integration successful
 
+   **During Code Adaptation:**
+   - Launch `test-migration` to convert tests from Jest/Vitest to Bun
+   - Let it handle test file conversions, mocks, configuration
+   - Verify all tests passing
+
    **During Validation:**
    - Launch `test-coverage-validator`
    - Compare coverage before/after
    - Ensure no regression
+
+   **During Documentation:**
+   - Launch `documentation-updater`
+   - Update all relevant documentation
+   - Ensure consistency across docs
 
 4. **Validate after each phase:**
    - Run validation commands from plan
@@ -216,15 +226,42 @@ Added .js extensions to all relative imports.
 
 Related to #{issue-number}"
 
-# Task 3: Remove standalone artifacts
+# Task 3: Migrate tests to Bun test runner
+→ Launching test-migration agent...
+→ Will migrate tests from Jest/Vitest to Bun test runner
+→ Agent will handle:
+  - Test file conversions (imports, mocks, matchers)
+  - Directory-based test organization
+  - bunfig.toml configuration
+  - package.json test scripts
+  - turbo.json test task configuration
+
+# Agent completes migration and returns report
+git add packages/{package-name}/
+git commit -m "migrate({package}): migrate tests to Bun test runner
+
+- Converted {n} test files from Jest/Vitest to Bun
+- Updated test imports (bun:test)
+- Converted mock patterns to use spyOn()
+- Configured bunfig.toml for coverage
+- Updated test scripts in package.json
+- All {n} tests passing
+
+Automated by test-migration agent.
+
+Related to #{issue-number}"
+
+# Task 4: Remove standalone artifacts
 rm -rf packages/{package-name}/.github
 rm packages/{package-name}/jest.config.js
+rm packages/{package-name}/vitest.config.js
 git add -A packages/{package-name}/
 git commit -m "migrate({package}): remove standalone repository artifacts
 
 Removed:
 - .github/ workflows (using monorepo CI)
 - jest.config.js (migrated to Bun test)
+- vitest.config.js (migrated to Bun test)
 - Other standalone configs
 
 Related to #{issue-number}"
@@ -385,6 +422,7 @@ After all phases complete:
 
 - dependency-analyzer: Identified 2 conflicts, provided resolutions
 - bun-package-integrator: Configured package for Bun
+- test-migration: Migrated {n} tests from Jest/Vitest to Bun (100% passing)
 - test-coverage-validator: Verified 90.1% coverage (no regression)
 - documentation-updater: Updated all documentation
 
@@ -431,7 +469,7 @@ Migration execution complete! Next:
 - Write (create files)
 
 **Task Tools:**
-- Task (launch specialized agents: dependency-analyzer, bun-package-integrator, test-coverage-validator, documentation-updater)
+- Task (launch specialized agents: dependency-analyzer, bun-package-integrator, test-migration, test-coverage-validator, documentation-updater)
 
 ## Output Format
 

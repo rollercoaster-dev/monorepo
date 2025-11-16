@@ -21,8 +21,7 @@ monorepo/
 │   └── shared-config/              # Shared build/lint configurations
 ├── experiments/                    # Research & prototypes
 ├── scripts/                        # Build and maintenance scripts
-│   ├── install-dependencies.sh     # Auto-run on Claude Code session start
-│   └── update-pnpm.js             # pnpm version updater
+│   └── install-dependencies.sh     # Auto-run on Claude Code session start
 └── .claude/                        # Claude Code configuration
     ├── settings.json               # Team-shared settings (committed)
     └── settings.local.json         # Personal settings (not committed)
@@ -30,12 +29,12 @@ monorepo/
 
 ## 🏗️ Architecture
 
-- **Package Manager**: pnpm v10.20.0 with workspaces
+- **Package Manager**: Bun 1.3.2 with workspaces
 - **Build System**: Turborepo for task orchestration and caching
 - **TypeScript**: Project references for instant type checking
 - **Monorepo Pattern**: Shared packages + independent apps
 - **Version Control**: GitHub with Changesets for version management
-- **Strict Typescript**: No any
+- **Strict TypeScript**: No any
 
 ## 📦 Current Packages
 
@@ -64,37 +63,37 @@ monorepo/
 
 ```bash
 # Development
-pnpm dev              # Start all apps in dev mode
-pnpm build            # Build all packages
-pnpm test             # Run all tests
-pnpm test:coverage    # Run tests with coverage
+bun dev               # Start all apps in dev mode
+bun run build         # Build all packages
+bun test              # Run all tests
+bun test --coverage   # Run tests with coverage
 
 # Code Quality
-pnpm lint             # Lint all packages
-pnpm lint:fix         # Fix linting issues
-pnpm type-check       # TypeScript type checking
-pnpm format           # Format code with Prettier
-pnpm format:check     # Check formatting
+bun run lint          # Lint all packages
+bun run lint:fix      # Fix linting issues
+bun run type-check    # TypeScript type checking
+bun run format        # Format code with Prettier
+bun run format:check  # Check formatting
 
 # Package Management
-pnpm install          # Install dependencies (auto-runs on session start)
-pnpm clean            # Clean build artifacts and node_modules
+bun install           # Install dependencies (auto-runs on session start)
+bun run clean         # Clean build artifacts and node_modules
 
 # Versioning (uses Changesets)
-pnpm changeset        # Create a changeset
-pnpm changeset:version # Bump versions
-pnpm changeset:publish # Publish to npm
+bunx changeset        # Create a changeset
+bunx changeset version # Bump versions
+bunx changeset publish # Publish to npm
 ```
 
 ### Working with Specific Packages
 
 ```bash
 # Run commands in specific packages
-pnpm --filter rd-logger test
-pnpm --filter rd-logger build
+bun --filter rd-logger test
+bun --filter rd-logger run build
 
 # Add dependencies to a package
-pnpm --filter rd-logger add <package-name>
+bun --filter rd-logger add <package-name>
 ```
 
 ## 🌍 Environment Variables
@@ -143,15 +142,15 @@ cp .env.example .env
 
 ## 🧪 Testing
 
-- **Framework**: Vitest (for rd-logger, will expand to other packages)
+- **Framework**: Bun test runner (native Bun testing, migrated from Jest/Vitest)
 - **Coverage**: Aim for high test coverage
 - **Location**: Tests are colocated with source files (`*.test.ts`)
 
 Run tests:
 ```bash
-pnpm test                    # All packages
-pnpm --filter rd-logger test # Specific package
-pnpm test:coverage           # With coverage report
+bun test                     # All packages
+bun --filter rd-logger test  # Specific package
+bun test --coverage          # With coverage report
 ```
 
 ## 📚 Key Documentation
@@ -173,15 +172,15 @@ Will be migrated to `apps/docs/`:
 ### Auto-Installation
 On session start/resume, the `scripts/install-dependencies.sh` script runs automatically to:
 - Detect environment (local vs web)
-- Install pnpm if needed (web only)
-- Run `pnpm install` to update dependencies
+- Install Bun if needed (web only)
+- Run `bun install` to update dependencies
 - Load environment variables from `.env` (if present)
 
 ### Permissions
 Team-shared permissions in `.claude/settings.json`:
 - GitHub CLI operations (`gh issue`, `gh pr`)
 - Tree/cat for file viewing
-- pnpm commands (install, test, build, dev)
+- bun commands (install, test, build, dev)
 
 Personal permissions can be added to `.claude/settings.local.json` (not committed).
 
@@ -200,7 +199,7 @@ This monorepo uses **Changesets** for version management and publishing.
 **1. Create a Changeset (Manual - Required for Each PR)**
 When making changes to a published package, run:
 ```bash
-pnpm changeset
+bunx changeset
 ```
 
 This prompts you to:
@@ -250,10 +249,10 @@ This monorepo uses npm's **Trusted Publishing** (OIDC) for secure, automated rel
 
 ## 💡 Development Tips
 
-1. **First-time setup**: Run `pnpm install` (auto-runs on Claude session start)
+1. **First-time setup**: Run `bun install` (auto-runs on Claude session start)
 2. **Environment config**: Copy `.env.example` to `.env` for local dev
-3. **Working on a package**: Use `pnpm --filter <package-name>` commands
-4. **Creating changes**: Use `pnpm changeset` before committing version changes
+3. **Working on a package**: Use `bun --filter <package-name>` commands
+4. **Creating changes**: Use `bunx changeset` before committing version changes
 5. **Testing**: Write tests alongside features (TDD encouraged)
 6. **Documentation**: Update READMEs when adding features
 

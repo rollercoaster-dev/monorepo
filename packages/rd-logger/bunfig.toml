@@ -1,0 +1,11 @@
+[test]
+# Coverage configuration for this package
+coverageSkipTestFiles = true
+
+# Exclude patterns from coverage calculation (NOT test execution)
+coveragePathIgnorePatterns = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.bun/**",
+  "**/coverage/**"
+]
