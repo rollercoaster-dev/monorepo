@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ob2-assertion.schema.json",
+  "title": "Open Badges 2.0 Assertion",
+  "type": "object",
+  "required": ["@context", "id", "type", "recipient", "badge", "verification", "issuedOn"],
+  "properties": {
+    "@context": { "type": ["string", "array", "object"] },
+    "id": { "type": "string", "format": "uri" },
+    "type": { "type": ["string", "array"], "contains": { "const": "Assertion" } },
+    "recipient": { "$ref": "#/definitions/IdentityObject" },
+    "badge": {
+      "oneOf": [{ "type": "string", "format": "uri" }, { "$ref": "#/definitions/BadgeClass" }]
+    },
+    "verification": { "$ref": "#/definitions/VerificationObject" },
+    "issuedOn": { "type": "string" },
+    "image": { "type": ["string", "object"] },
+    "evidence": {
+      "oneOf": [
+        { "$ref": "#/definitions/Evidence" },
+        { "type": "array", "items": { "$ref": "#/definitions/Evidence" } }
+      ]
+    },
+    "narrative": { "type": "string" },
+    "expires": { "type": "string" },
+    "revoked": { "type": "boolean" },
+    "revocationReason": { "type": "string" }
+  },
+  "definitions": {
+    "IdentityObject": {
+      "type": "object",
+      "required": ["type", "identity"],
+      "properties": {
+        "type": { "type": "string" },
+        "identity": { "type": "string" },
+        "hashed": { "type": "boolean" },
+        "salt": { "type": "string" }
+      }
+    },
+    "BadgeClass": {
+      "type": "object",
+      "required": ["id", "type", "name", "description", "criteria", "issuer"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": ["string", "array"], "contains": { "const": "BadgeClass" } },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": ["string", "object"] },
+        "criteria": { "$ref": "#/definitions/Criteria" },
+        "issuer": {
+          "oneOf": [{ "type": "string", "format": "uri" }, { "$ref": "#/definitions/Profile" }]
+        },
+        "alignment": { "type": "array", "items": { "$ref": "#/definitions/AlignmentObject" } },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "required": ["id", "type", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": ["string", "array"], "contains": { "enum": ["Profile", "Issuer"] } },
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "email": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": ["string", "object"] },
+        "verification": { "$ref": "#/definitions/VerificationObject" },
+        "revocationList": { "type": "string", "format": "uri" }
+      }
+    },
+    "VerificationObject": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": ["string", "array"] },
+        "verificationProperty": { "type": "string" },
+        "startsWith": { "type": ["string", "array"] },
+        "allowedOrigins": { "type": ["string", "array"] },
+        "creator": { "type": "string", "format": "uri" }
+      }
+    },
+    "Evidence": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "narrative": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "genre": { "type": "string" },
+        "audience": { "type": "string" }
+      }
+    },
+    "Criteria": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "narrative": { "type": "string" }
+      }
+    },
+    "AlignmentObject": {
+      "type": "object",
+      "required": ["targetName", "targetUrl"],
+      "properties": {
+        "targetName": { "type": "string" },
+        "targetUrl": { "type": "string", "format": "uri" },
+        "targetDescription": { "type": "string" },
+        "targetFramework": { "type": "string" },
+        "targetCode": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}
