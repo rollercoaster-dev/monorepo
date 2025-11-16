@@ -1,0 +1,7 @@
+[test]
+# Exclude dist and node_modules from test discovery
+exclude = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.bun/**"
+]
