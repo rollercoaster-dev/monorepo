@@ -2,7 +2,6 @@
   "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
     // Project structure
-    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
 
@@ -11,9 +10,10 @@
     "declaration": true,
     "declarationMap": true,
 
-    // Module resolution for Node.js ESM
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
+    // Module resolution - use bundler for compatibility with tsup
+    // tsup handles the actual ESM/CJS output transformation
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
     "allowImportingTsExtensions": false,
 
     // Type definitions
@@ -22,7 +22,7 @@
     // Keep strict settings
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",

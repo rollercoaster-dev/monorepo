@@ -40,9 +40,9 @@ export function getAchievement(badge: Badge): OB3.Achievement | null {
   if (OB3.isVerifiableCredential(badge)) {
     const achievement = badge.credentialSubject.achievement;
     if (Array.isArray(achievement)) {
-      return achievement[0]; // Return the first achievement if it's an array
+      return achievement[0] ?? null; // Return the first achievement if it's an array
     }
-    return achievement;
+    return achievement ?? null;
   }
   return null;
 }
