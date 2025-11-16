@@ -15,7 +15,7 @@
     "test": "DB_TYPE=sqlite bun test",
     "test:unit": "DB_TYPE=sqlite bun test tests/unit tests/infrastructure tests/core tests/domains tests/api tests/auth",
     "test:integration": "DB_TYPE=sqlite bun test tests/integration",
-    "test:coverage": "DB_TYPE=sqlite bun test --coverage",
+    "test:coverage": "DB_TYPE=sqlite bun test tests/unit tests/infrastructure tests/core tests/domains tests/api tests/auth tests/integration --coverage",
     "test:core": "bun test --pattern \"!tests/infrastructure/database/**\"",
     "test:sqlite": "DB_TYPE=sqlite bun test tests/infrastructure/database/modules/sqlite",
     "test:pg": "NODE_ENV=test DB_TYPE=postgresql DATABASE_URL=postgresql://testuser:testpassword@localhost:5433/openbadges_test bun test tests/infrastructure/database/modules/postgresql",
