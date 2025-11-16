@@ -1,8 +1,8 @@
-# Bun 1.3.1 Migration Plan
+# Bun 1.3.2 Migration Plan
 
 **Status**: In Progress
 **Created**: 2025-11-16
-**Target Bun Version**: 1.3.1
+**Target Bun Version**: 1.3.2 (latest stable)
 **Feature Branch**: `feat/migrate-to-bun-1.3.1`
 
 ---
@@ -24,10 +24,10 @@
 
 ## Executive Summary
 
-This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm workspaces** to **Bun 1.3.1 workspaces**, along with the integration of 7 repositories. The migration will result in a fully Bun-based development environment with improved performance and simplified tooling.
+This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm workspaces** to **Bun 1.3.2 workspaces**, along with the integration of 7 repositories. The migration will result in a fully Bun-based development environment with improved performance and simplified tooling.
 
 ### Key Goals
-- ✅ Migrate monorepo package manager from pnpm to Bun 1.3.1
+- ✅ Migrate monorepo package manager from pnpm to Bun 1.3.2
 - ✅ Leverage Bun's native Vue/Vite support (`bunx --bun vite`)
 - ✅ Integrate 7 repositories in order of complexity
 - ✅ Preserve existing publishing workflows (npm via OIDC, Docker to GHCR, Fly.io deployments)
@@ -36,7 +36,7 @@ This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm w
 
 ### Decision Context
 - **Previous setup**: pnpm workspaces was a mistake (per project owner)
-- **Bun maturity**: Vite/Vue fully supported in Bun 1.3.1 with `bunx --bun vite`
+- **Bun maturity**: Vite/Vue fully supported in Bun 1.3.2 with `bunx --bun vite`
 - **Performance**: Bun offers faster installs, builds, and test execution
 - **Simplification**: Single runtime/package manager instead of hybrid pnpm/Bun
 
@@ -54,13 +54,13 @@ The monorepo currently uses:
 
 ### Target State
 After migration:
-- **Package Manager**: Bun 1.3.1
+- **Package Manager**: Bun 1.3.2
 - **Runtime**: Bun for all packages (with native Vite support)
 - **Workspaces**: Bun workspaces
 - **Build Tool**: Turborepo (Bun-compatible configuration)
 - **All Packages**: Fully integrated and using Bun
 
-### Why Bun 1.3.1?
+### Why Bun 1.3.2?
 - Latest stable version as of migration planning
 - Full Vue 3 + Vite support (`bunx --bun vite`)
 - Proven in production by existing repositories (openbadges-modular-server, rd-badge-image-system)
@@ -177,7 +177,7 @@ After migration:
 
 ### Phase 1: Foundation Migration (8 commits)
 
-#### Commit 1: `chore: upgrade to Bun 1.3.1 package manager`
+#### Commit 1: `chore: upgrade to Bun 1.3.2 package manager`
 **Files Changed**:
 - `package.json` (root)
 - `.gitignore`
@@ -186,7 +186,7 @@ After migration:
 ```json
 // package.json
 {
-  "packageManager": "bun@1.3.1",
+  "packageManager": "bun@1.3.2",
   "workspaces": ["packages/*", "apps/*"]
 }
 ```
@@ -265,7 +265,7 @@ shell = "bash"
 
 ---
 
-#### Commit 6: `ci: update GitHub Actions to use Bun 1.3.1`
+#### Commit 6: `ci: update GitHub Actions to use Bun 1.3.2`
 **Files Changed**:
 - `.github/workflows/ci.yml`
 - `.github/workflows/release.yml` (if exists)
@@ -327,14 +327,14 @@ shell = "bash"
 
 ---
 
-#### Commit 10: `chore(openbadges-types): update packageManager to Bun 1.3.1`
+#### Commit 10: `chore(openbadges-types): update packageManager to Bun 1.3.2`
 **Files Changed**:
 - `packages/openbadges-types/package.json`
 
 **Changes**:
 ```json
 {
-  "packageManager": "bun@1.3.1"
+  "packageManager": "bun@1.3.2"
 }
 ```
 
@@ -425,7 +425,7 @@ shell = "bash"
     "build": "bunx --bun vite build",
     "preview": "bunx --bun vite preview"
   },
-  "packageManager": "bun@1.3.1"
+  "packageManager": "bun@1.3.2"
 }
 ```
 
@@ -482,7 +482,7 @@ shell = "bash"
     "build": "bun run build:og && bunx --bun vite-ssg build && bun build src/backend",
     "preview": "bunx --bun vite preview"
   },
-  "packageManager": "bun@1.3.1"
+  "packageManager": "bun@1.3.2"
 }
 ```
 
@@ -576,7 +576,7 @@ CMD ["bun", "run", "start"]
     "build": "bunx --bun vite build && bun build src/server",
     "preview": "bunx --bun vite preview"
   },
-  "packageManager": "bun@1.3.1"
+  "packageManager": "bun@1.3.2"
 }
 ```
 
@@ -699,7 +699,7 @@ bun = true
 {
   "name": "@rollercoaster-dev/monorepo",
   "private": true,
-  "packageManager": "bun@1.3.1",
+  "packageManager": "bun@1.3.2",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -737,7 +737,7 @@ bun = true
 {
   "name": "@rollercoaster-dev/openbadges-ui",
   "version": "1.0.0",
-  "packageManager": "bun@1.3.1",
+  "packageManager": "bun@1.3.2",
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
@@ -962,7 +962,7 @@ jobs:
 
 #### 1. Local Environment Validation
 ```bash
-# Install Bun 1.3.1
+# Install Bun 1.3.2
 curl -fsSL https://bun.sh/install | bash
 bun --version # Should show 1.3.1
 
@@ -1238,7 +1238,7 @@ Initiate rollback if:
 
 ### Performance Improvements (Expected)
 
-| Metric | pnpm (baseline) | Bun 1.3.1 (target) | Improvement |
+| Metric | pnpm (baseline) | Bun 1.3.2 (target) | Improvement |
 |--------|-----------------|-------------------|-------------|
 | Install time | ~30s | ~5s | 6x faster |
 | Test execution | ~10s | ~3s | 3x faster |
