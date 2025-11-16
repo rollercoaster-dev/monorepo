@@ -31,6 +31,15 @@ coverageDirectory = "coverage"
 # Coverage reporters (Bun supports: text, lcov)
 coverageReporter = ["text", "lcov"]
 
+# Exclude e2e tests and build artifacts from regular test discovery
+# E2E tests run separately after build via test:e2e script
+exclude = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/.bun/**",
+  "**/e2e/**"
+]
+
 [run]
 # Default shell for bun run scripts (system uses your system's default shell)
 shell = "system"
