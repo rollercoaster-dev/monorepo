@@ -241,6 +241,75 @@ This monorepo uses npm's **Trusted Publishing** (OIDC) for secure, automated rel
 
 **Note:** Previously used semantic-release; migrated to Changesets for monorepo compatibility.
 
+## 🐳 Publishing Docker Images
+
+The `openbadges-modular-server` application is published as a Docker image to GitHub Container Registry (GHCR).
+
+### Automated Docker Publishing
+
+Docker images are automatically built and published when:
+- A new version is merged to `main` (detected via `package.json` version change)
+- Changes are pushed to `apps/openbadges-modular-server/` or its dependencies
+
+**Workflow:** `.github/workflows/docker-openbadges-modular-server.yml`
+
+### Docker Image Details
+
+**Registry:** `ghcr.io/rollercoaster-dev/openbadges-modular-server`
+
+**Platforms:** Multi-architecture support
+- `linux/amd64` (Intel/AMD 64-bit)
+- `linux/arm64` (ARM 64-bit, including Apple Silicon, AWS Graviton)
+
+**Tags:**
+- `v1.2.3` - Full semantic version
+- `v1.2` - Major.minor version
+- `v1` - Major version only
+- `latest` - Latest release on main branch
+
+### Using the Docker Image
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+
+# Run with SQLite (default)
+docker run -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DB_TYPE=sqlite \
+  -v $(pwd)/data:/data \
+  ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+
+# Run with PostgreSQL
+docker run -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DB_TYPE=postgresql \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
+  ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+```
+
+### Manual Docker Build
+
+You can manually trigger a Docker build from GitHub Actions:
+1. Go to Actions → "Docker - OpenBadges Modular Server"
+2. Click "Run workflow"
+3. Optionally specify a version tag override
+4. Choose whether to push to registry (uncheck for testing)
+
+### Local Docker Development
+
+```bash
+# Build locally (from monorepo root)
+cd apps/openbadges-modular-server
+bun run docker:build                    # Single architecture
+bun run docker:build:multiarch          # Multi-architecture
+
+# Build and push (requires push access to ghcr.io)
+bun run docker:build:multiarch:push
+```
+
+**Note:** The Dockerfile has been adapted for monorepo structure and includes workspace dependencies (`rd-logger`, `openbadges-types`).
+
 ## 🔗 Related Resources
 
 - [Rollercoaster.dev](https://rollercoaster.dev)

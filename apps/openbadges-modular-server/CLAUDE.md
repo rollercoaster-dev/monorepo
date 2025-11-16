@@ -51,9 +51,45 @@ DB_TYPE=postgresql bun run db:studio:pg
 
 # SQLite
 DB_TYPE=sqlite bun run db:generate:sqlite
-DB_TYPE=sqlite bun run db:migrate:sqlite  
+DB_TYPE=sqlite bun run db:migrate:sqlite
 DB_TYPE=sqlite bun run db:studio:sqlite
 ```
+
+**Docker operations:**
+```bash
+# Local testing
+bun run docker:build                    # Build Docker image locally
+bun run docker:build:multiarch          # Build multi-architecture image locally (amd64, arm64)
+
+# Production builds (requires push access to ghcr.io)
+bun run docker:build:multiarch:push     # Build and push multi-arch image to registry
+```
+
+**Automated Docker Publishing:**
+
+Docker images are automatically published to GitHub Container Registry (GHCR) when:
+- A new version is merged to `main` (detected via package.json version change)
+- Changes are pushed to the app or its workspace dependencies
+
+**Registry:** `ghcr.io/rollercoaster-dev/openbadges-modular-server`
+
+**Available tags:**
+- `v1.2.3` - Full semantic version
+- `v1.2` - Major.minor version
+- `v1` - Major version only
+- `latest` - Latest release
+
+**Pull the image:**
+```bash
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+```
+
+**Manual workflow trigger:**
+You can manually trigger a Docker build from the GitHub Actions tab:
+1. Go to Actions → "Docker - OpenBadges Modular Server"
+2. Click "Run workflow"
+3. Optionally specify a version tag override
+4. Choose whether to push to registry (uncheck for testing)
 
 ## Architecture Overview
 
