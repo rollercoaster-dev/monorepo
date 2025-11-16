@@ -1,0 +1,94 @@
+# .dockerignore for OpenBadges Modular Server Docker builds
+# This file optimizes the build context when building from monorepo root
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.changeset
+.claude
+
+# Documentation
+*.md
+!apps/openbadges-modular-server/README.md
+docs/
+LICENSE
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs (except what we explicitly copy)
+dist
+**/dist
+.turbo
+**/.turbo
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+**/tests
+**/test
+**/__tests__
+**/__mocks__
+**/coverage
+**/.nyc_output
+
+# Development files
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store
+**/Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Package manager
+.npm
+.yarn
+.pnpm-store
+bun.lockb
+
+# Exclude other apps (we only need openbadges-modular-server)
+apps/*
+!apps/openbadges-modular-server
+
+# Exclude workspace packages we don't need
+packages/*
+!packages/rd-logger
+!packages/openbadges-types
+
+# Exclude specific directories within included packages
+packages/rd-logger/tests
+packages/rd-logger/coverage
+packages/rd-logger/*.md
+!packages/rd-logger/package.json
+
+packages/openbadges-types/test
+packages/openbadges-types/tests
+packages/openbadges-types/coverage
+packages/openbadges-types/examples
+packages/openbadges-types/docs
+packages/openbadges-types/*.md
+!packages/openbadges-types/package.json
+
+# Scripts and configs not needed in container
+scripts/
+*.config.js
+*.config.ts
+tsconfig*.json
+!apps/openbadges-modular-server/tsconfig.json
+
+# Experiments
+experiments/
