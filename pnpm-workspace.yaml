@@ -1,9 +1,0 @@
-packages:
-  # Applications
-  - 'apps/*'
-
-  # Shared packages
-  - 'packages/*'
-
-  # Experimental projects
-  - 'experiments/*'

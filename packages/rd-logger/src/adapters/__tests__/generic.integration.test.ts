@@ -1,32 +1,8 @@
-/// <reference types="jest" />
-
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { runWithGenericContext } from '../generic.js';
 import { Logger } from '../../core/logger.service.js';
 import { getRequestStore } from '../../core/request-context.js';
-
-
-// Mock chalk
-jest.mock('chalk', () => {
-  const chalkMock = {
-    gray: (msg: string) => msg,
-    whiteBright: (msg: string) => msg,
-    blue: (msg: string) => msg,
-    green: (msg: string) => msg,
-    yellow: (msg: string) => msg,
-    red: (msg: string) => msg,
-    magenta: (msg: string) => msg,
-    dim: (msg: string) => msg,
-    cyan: (msg: string) => msg,
-  };
-  return {
-    __esModule: true,
-    default: chalkMock,
-    ...chalkMock,
-  };
-});
-
-// Mock Logger methods to simplify testing
-jest.mock('../../core/logger.service');
+import type { Spy } from 'bun:test';
 
 // Test-specific type for log context arguments
 type MockLogContext = {
@@ -38,26 +14,26 @@ type MockLogContext = {
 };
 
 describe('Generic Adapter Integration', () => {
-  let consoleSpy: jest.SpyInstance;
-  let mockLoggerInstance: jest.Mocked<Logger>;
+  let consoleSpy: Spy<typeof console.log>;
+  let mockLoggerInstance: Logger;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = spyOn(console, 'log').mockImplementation(() => {});
 
     // Create a fresh mocked logger for each test
-    mockLoggerInstance = new Logger() as jest.Mocked<Logger>;
+    mockLoggerInstance = new Logger();
 
-    // Mock the implementation of log methods
-    mockLoggerInstance.info = jest.fn();
-    mockLoggerInstance.error = jest.fn();
-    mockLoggerInstance.warn = jest.fn();
-    mockLoggerInstance.debug = jest.fn();
-    mockLoggerInstance.fatal = jest.fn();
+    // Mock the implementation of log methods using spyOn for consistency
+    spyOn(mockLoggerInstance, 'info').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'error').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'warn').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'debug').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'fatal').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleSpy.mockRestore();
+    mock.restore();
   });
 
   it('should run a function, log start/end, and provide context', async () => {

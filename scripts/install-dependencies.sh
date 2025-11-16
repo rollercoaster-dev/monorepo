@@ -44,39 +44,46 @@ fi
 
 echo ""
 
-# Check if pnpm is installed
-if ! command -v pnpm &> /dev/null; then
-  echo -e "${YELLOW}⚠${NC}  pnpm not found. Installing pnpm..."
+# Check if Bun is installed
+if ! command -v bun &> /dev/null; then
+  echo -e "${YELLOW}⚠${NC}  Bun not found. Installing Bun..."
 
   if [ "$ENV_TYPE" = "web" ]; then
-    # In web environment, use npm to install pnpm globally
-    npm install -g pnpm@10.20.0
+    # In web environment, install Bun
+    curl -fsSL https://bun.sh/install | bash
+
+    # Add Bun to PATH for current session
+    export BUN_INSTALL="$HOME/.bun"
+    export PATH="$BUN_INSTALL/bin:$PATH"
   else
     # Local environment - suggest manual installation
-    echo -e "${YELLOW}⚠${NC}  Please install pnpm manually:"
-    echo "   npm install -g pnpm@10.20.0"
-    echo "   or visit: https://pnpm.io/installation"
+    echo -e "${YELLOW}⚠${NC}  Please install Bun manually:"
+    echo "   curl -fsSL https://bun.sh/install | bash"
+    echo "   or visit: https://bun.sh"
     exit 1
   fi
 else
-  PNPM_VERSION=$(pnpm --version)
-  echo -e "${GREEN}✓${NC} pnpm detected (version: $PNPM_VERSION)"
+  BUN_VERSION=$(bun --version)
+  echo -e "${GREEN}✓${NC} Bun detected (version: $BUN_VERSION)"
+
+  # Note: Version requirements are enforced by package.json "engines" field
+  # Bun will check compatibility automatically during install
 fi
 
 echo ""
 
 # Check if node_modules exists
 if [ -d "node_modules" ]; then
-  echo -e "${BLUE}📦 node_modules found - running pnpm install to update...${NC}"
+  echo -e "${BLUE}📦 node_modules found - running bun install to update...${NC}"
 else
   echo -e "${BLUE}📦 node_modules not found - running fresh install...${NC}"
 fi
 
 echo ""
 
-# Run pnpm install
-echo -e "${BLUE}Installing dependencies with pnpm...${NC}"
-pnpm install
+# Run bun install
+echo -e "${BLUE}Installing dependencies with Bun...${NC}"
+bun install
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -111,13 +118,14 @@ if [ -n "$CLAUDE_ENV_FILE" ]; then
   # Set common development variables
   echo "export NODE_ENV=${NODE_ENV:-development}" >> "$CLAUDE_ENV_FILE"
   echo "export LOG_LEVEL=${LOG_LEVEL:-info}" >> "$CLAUDE_ENV_FILE"
+  echo "export BUN_ENV=${BUN_ENV:-development}" >> "$CLAUDE_ENV_FILE"
 
   echo -e "${GREEN}✓${NC} Environment variables configured"
   echo ""
 fi
 
 echo -e "${BLUE}You can now start development with:${NC}"
-echo "  pnpm dev      # Start all apps"
-echo "  pnpm build    # Build all packages"
-echo "  pnpm test     # Run all tests"
+echo "  bun dev       # Start all apps"
+echo "  bun build     # Build all packages"
+echo "  bun test      # Run all tests"
 echo ""
