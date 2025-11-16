@@ -23,12 +23,12 @@ describe('Generic Adapter Integration', () => {
     // Create a fresh mocked logger for each test
     mockLoggerInstance = new Logger();
 
-    // Mock the implementation of log methods
-    mockLoggerInstance.info = mock();
-    mockLoggerInstance.error = mock();
-    mockLoggerInstance.warn = mock();
-    mockLoggerInstance.debug = mock();
-    mockLoggerInstance.fatal = mock();
+    // Mock the implementation of log methods using spyOn for consistency
+    spyOn(mockLoggerInstance, 'info').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'error').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'warn').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'debug').mockImplementation(() => {});
+    spyOn(mockLoggerInstance, 'fatal').mockImplementation(() => {});
   });
 
   afterEach(() => {

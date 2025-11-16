@@ -142,15 +142,15 @@ cp .env.example .env
 
 ## 🧪 Testing
 
-- **Framework**: Vitest (for rd-logger, will expand to other packages)
+- **Framework**: Bun test runner (native Bun testing, migrated from Jest/Vitest)
 - **Coverage**: Aim for high test coverage
 - **Location**: Tests are colocated with source files (`*.test.ts`)
 
 Run tests:
 ```bash
-pnpm test                    # All packages
-pnpm --filter rd-logger test # Specific package
-pnpm test:coverage           # With coverage report
+bun test                     # All packages
+bun --filter rd-logger test  # Specific package
+bun test --coverage          # With coverage report
 ```
 
 ## 📚 Key Documentation
@@ -172,15 +172,15 @@ Will be migrated to `apps/docs/`:
 ### Auto-Installation
 On session start/resume, the `scripts/install-dependencies.sh` script runs automatically to:
 - Detect environment (local vs web)
-- Install pnpm if needed (web only)
-- Run `pnpm install` to update dependencies
+- Install Bun if needed (web only)
+- Run `bun install` to update dependencies
 - Load environment variables from `.env` (if present)
 
 ### Permissions
 Team-shared permissions in `.claude/settings.json`:
 - GitHub CLI operations (`gh issue`, `gh pr`)
 - Tree/cat for file viewing
-- pnpm commands (install, test, build, dev)
+- bun commands (install, test, build, dev)
 
 Personal permissions can be added to `.claude/settings.local.json` (not committed).
 
@@ -199,7 +199,7 @@ This monorepo uses **Changesets** for version management and publishing.
 **1. Create a Changeset (Manual - Required for Each PR)**
 When making changes to a published package, run:
 ```bash
-pnpm changeset
+bunx changeset
 ```
 
 This prompts you to:
@@ -249,10 +249,10 @@ This monorepo uses npm's **Trusted Publishing** (OIDC) for secure, automated rel
 
 ## 💡 Development Tips
 
-1. **First-time setup**: Run `pnpm install` (auto-runs on Claude session start)
+1. **First-time setup**: Run `bun install` (auto-runs on Claude session start)
 2. **Environment config**: Copy `.env.example` to `.env` for local dev
-3. **Working on a package**: Use `pnpm --filter <package-name>` commands
-4. **Creating changes**: Use `pnpm changeset` before committing version changes
+3. **Working on a package**: Use `bun --filter <package-name>` commands
+4. **Creating changes**: Use `bunx changeset` before committing version changes
 5. **Testing**: Write tests alongside features (TDD encouraged)
 6. **Documentation**: Update READMEs when adding features
 

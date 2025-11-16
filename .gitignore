@@ -4,7 +4,6 @@ node_modules/
 .pnp.js
 
 # Bun
-bun.lockb
 .bun-cache/
 
 # Build outputs
