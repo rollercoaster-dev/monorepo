@@ -372,10 +372,14 @@ describe('Credential Status Update API', () => {
         );
       }
 
-      // Validate statusPurpose is a valid enum value
-      expect(Object.values(StatusPurpose)).toContain(
-        credential.credentialSubject.statusPurpose
-      );
+      // Validate statusPurpose is a valid enum value (handles both single value and array per W3C spec)
+      const purposes = Array.isArray(credential.credentialSubject.statusPurpose)
+        ? credential.credentialSubject.statusPurpose
+        : [credential.credentialSubject.statusPurpose];
+
+      purposes.forEach(purpose => {
+        expect(Object.values(StatusPurpose)).toContain(purpose);
+      });
     });
   });
 });
