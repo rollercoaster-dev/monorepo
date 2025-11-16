@@ -16,10 +16,6 @@ import { OB2, OB3, Shared } from '../src';
 // Type for badge data that could be either OB2 or OB3
 type BadgeData = OB2.Assertion | OB3.VerifiableCredential;
 
-// Helper function to create branded types
-const createIRI = (value: string): Shared.IRI => value as Shared.IRI;
-const createDateTime = (value: string): Shared.DateTime => value as Shared.DateTime;
-
 /**
  * Component to display badge information
  */

@@ -14,7 +14,7 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { OB2, OB3, Shared, OpenBadgesVersion } from '../src';
+import { OB2, OB3, Shared } from '../src';
 import { convertOB2toOB3, convertOB3toOB2 } from './version-conversion';
 
 // Create Express app

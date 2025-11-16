@@ -11,7 +11,6 @@ import { createOB2Example, createOB3Example } from './basic-usage';
 
 // Helper function to create branded types
 const createIRI = (value: string): Shared.IRI => value as Shared.IRI;
-const createDateTime = (value: string): Shared.DateTime => value as Shared.DateTime;
 
 /**
  * Example 1: Converting from Open Badges 2.0 to 3.0

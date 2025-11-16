@@ -19,13 +19,11 @@ describe('Type Checking Tests', () => {
 
       // TypeScript should catch this error during compilation
       // @ts-expect-error - Missing required properties
-      // We don't need to use this variable, just checking that TypeScript catches the error
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const invalidAssertion: OB2.Assertion = {
+      ({
         id: Shared.createIRI('https://example.org/assertions/123'),
         type: 'Assertion',
         // Missing recipient, issuedOn, verification, badge
-      };
+      }) satisfies OB2.Assertion;
 
       expect(true).toBe(true); // Dummy assertion to satisfy Jest
     });
@@ -39,13 +37,11 @@ describe('Type Checking Tests', () => {
 
       // TypeScript should catch this error during compilation
       // @ts-expect-error - Missing required properties
-      // We don't need to use this variable, just checking that TypeScript catches the error
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const invalidCredential: OB3.VerifiableCredential = {
+      ({
         id: Shared.createIRI('https://example.org/credentials/3732'),
         type: ['VerifiableCredential'],
         // Missing @context, issuer, issuanceDate, credentialSubject
-      };
+      }) satisfies OB3.VerifiableCredential;
 
       expect(true).toBe(true); // Dummy assertion to satisfy Jest
     });
