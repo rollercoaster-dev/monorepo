@@ -1,8 +1,5 @@
 {
   "compilerOptions": {
-    // Project references
-    "composite": true,
-
     // Environment setup & latest features
     "lib": ["ESNext", "DOM"],
     "target": "ES2017",
@@ -49,9 +46,5 @@
     "src/**/*.ts",
     "tests/**/*.ts"
   ],
-  "exclude": ["drizzle.config.ts", "node_modules"],
-  "references": [
-    { "path": "../../packages/rd-logger" },
-    { "path": "../../packages/openbadges-types" }
-  ]
+  "exclude": ["drizzle.config.ts", "node_modules"]
 }

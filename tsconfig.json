@@ -5,10 +5,7 @@
   },
   "include": [],
   "references": [
-    // Packages
-    { "path": "./packages/rd-logger" },
-    { "path": "./packages/openbadges-types" },
-    // Apps
-    { "path": "./apps/openbadges-modular-server" }
+    // References to TypeScript packages will be added as they are migrated
+    // e.g., { "path": "./packages/openbadges-types" }
   ]
 }
