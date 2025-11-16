@@ -44,10 +44,12 @@
   },
   "globalDependencies": [
     "**/.env.*local",
-    "tsconfig.json"
+    "tsconfig.json",
+    "bunfig.toml"
   ],
   "globalEnv": [
     "NODE_ENV",
-    "CI"
+    "CI",
+    "BUN_ENV"
   ]
 }
