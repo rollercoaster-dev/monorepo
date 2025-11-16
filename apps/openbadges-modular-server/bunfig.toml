@@ -1,4 +1,7 @@
 [test]
+# Test timeout in milliseconds (increased for E2E tests that need setup time)
+timeout = 15000
+
 # Specifies the global setup file for tests.
 # This script runs once before all test files.
 globalSetup = "./tests/e2e/setup/globalSetup.ts"

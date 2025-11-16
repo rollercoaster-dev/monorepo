@@ -137,8 +137,8 @@ describe('OpenBadges v3.0 Compliance - E2E', () => {
       const result = await setupTestApp(TEST_PORT);
       server = result.server;
       logger.info('E2E Test: Server started successfully');
-      // Wait longer for the server to be fully ready in CI environments
-      const waitTime = process.env.CI === 'true' ? 5000 : 2000;
+      // Wait for the server to be fully ready (reduced from 5s to 2s with increased timeout buffer)
+      const waitTime = process.env.CI === 'true' ? 2000 : 1000;
       logger.info(`Waiting ${waitTime}ms for server to be fully ready...`);
       await new Promise((resolve) => setTimeout(resolve, waitTime));
 
