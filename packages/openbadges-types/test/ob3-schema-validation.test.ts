@@ -1,6 +1,6 @@
 // NOTE: If you see a TS/ESLint error about tsconfig not including this file, add 'test' to the 'include' array in tsconfig.json.
 import { validateOB3Credential } from '../src/validateWithSchema';
-import { OB3 } from '../src';
+import type { OB3 } from '../src';
 import {
   createOB3VerifiableCredential,
   validOB3Achievement,

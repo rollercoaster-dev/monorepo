@@ -1,5 +1,5 @@
 import { isJsonLdObject, hasJsonLdType, hasJsonLdContext, VCContext, OB3Context } from '../shared';
-import {
+import type {
   VerifiableCredential,
   Issuer,
   CredentialSubject,

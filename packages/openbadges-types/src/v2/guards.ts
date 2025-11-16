@@ -1,5 +1,5 @@
 import { isJsonLdObject, hasJsonLdType } from '../shared';
-import {
+import type {
   Assertion,
   BadgeClass,
   Profile,

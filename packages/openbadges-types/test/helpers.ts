@@ -1,4 +1,5 @@
-import { OB2, OB3, Shared } from '../src';
+import type { OB2, OB3} from '../src';
+import { Shared } from '../src';
 
 /**
  * Helper functions to create valid test objects

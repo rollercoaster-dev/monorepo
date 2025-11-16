@@ -1,4 +1,5 @@
-import { OB3, Shared } from '../src';
+import type { OB3} from '../src';
+import { Shared } from '../src';
 import { createOB3VerifiableCredential, createOB3Achievement } from './helpers';
 
 describe('Open Badges 3.0 Types', () => {

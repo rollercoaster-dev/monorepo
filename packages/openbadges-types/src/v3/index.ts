@@ -1,6 +1,6 @@
 export * from './guards';
-import { IRI, DateTime, MarkdownText, MultiLanguageString, OB3ImageObject } from '../shared/common';
-import { JsonLdObject } from '../shared/jsonld';
+import type { IRI, DateTime, MarkdownText, MultiLanguageString, OB3ImageObject } from '../shared/common';
+import type { JsonLdObject } from '../shared/jsonld';
 
 /**
  * VerifiableCredential interface for Open Badges 3.0

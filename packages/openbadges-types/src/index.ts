@@ -23,8 +23,8 @@ export enum OpenBadgesVersion {
 }
 
 // Import types directly to avoid circular references
-import { Assertion as OB2Assertion } from './v2/index';
-import { VerifiableCredential as OB3VerifiableCredential } from './v3/index';
+import type { Assertion as OB2Assertion } from './v2/index';
+import type { VerifiableCredential as OB3VerifiableCredential } from './v3/index';
 
 // Helper type for version-specific badge operations
 export type VersionedBadge<T extends OpenBadgesVersion> = T extends OpenBadgesVersion.V2
