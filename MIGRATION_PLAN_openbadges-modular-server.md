@@ -391,7 +391,8 @@ This follows the monorepo's convention:
 ### 1. TypeScript Strict Mode Mismatch
 **Risk**: App uses non-strict TypeScript, monorepo may enforce strict mode
 **Mitigation**: Keep `"strict": false` in app's tsconfig.json for now, plan gradual migration
-**Decision Needed**: Should we enforce strict mode immediately or gradually?
+**Decision Needed**: Should we enforce strict mode immediately or gradually? 
+  - set strict to true, evaluate impact. base decision on that
 
 ### 2. Path Alias Conflicts
 **Risk**: App has extensive path aliases that might conflict with monorepo conventions
@@ -401,7 +402,8 @@ This follows the monorepo's convention:
 ### 3. Database Dependencies
 **Risk**: Multi-database testing requires PostgreSQL service
 **Mitigation**: Use Docker Compose for local testing, GitHub Actions services for CI
-**Decision Needed**: How should CI/CD handle PostgreSQL testing?
+**Decision Needed**: How should CI/CD handle PostgreSQL testing? 
+  - Review existing ci. See what we can learn
 
 ### 4. Docker Build Context
 **Risk**: Dockerfile expects certain build context structure
@@ -412,16 +414,19 @@ This follows the monorepo's convention:
 **Risk**: Moving from semantic-release to Changesets
 **Mitigation**: Keep current version, use Changesets going forward
 **Decision Needed**: Should we create an initial changeset for this migration?
+  - evaluate and explain what benefits changesets bring. Why did we switch? 
 
 ### 6. Large Application Size
 **Risk**: 8.2MB is relatively large for a single app
 **Mitigation**: Monitor monorepo performance, use Turborepo caching effectively
 **Decision Needed**: None - size is acceptable
+  - where does the size come from? can we improve?
 
 ### 7. Dependency on openbadges-types
 **Risk**: openbadges-types not yet migrated to monorepo
 **Mitigation**: Keep as external dependency for now, update when migrated
-**Decision Needed**: Should we migrate openbadges-types first, or proceed with external dep?
+**Decision Needed**: Should we migrate openbadges-types first, or proceed with external dep? 
+  - openbadges-types is at packages/openbadges-types
 
 ---
 
