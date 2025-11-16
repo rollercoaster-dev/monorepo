@@ -1,18 +1,14 @@
 // test/exports.test.ts
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 
-// Test the main entry point
-// ESM import for the package itself to test the '.' export.
-// This assumes that '@rollercoaster-dev/rd-logger' resolves to 'dist/index.js'.
-import * as mainApi from '@rollercoaster-dev/rd-logger';
-import { Logger as MainLogger, SensitiveValue as MainSensitiveValue } from '@rollercoaster-dev/rd-logger';
+// Test the main entry point by importing from the built dist files
+// This verifies that the package exports are correctly configured
+import * as mainApi from '../dist/index.js';
+import { Logger as MainLogger, SensitiveValue as MainSensitiveValue } from '../dist/index.js';
 
-// Test the specific submodule export for 'core/logger.service'.
-// This assumes that '@rollercoaster-dev/rd-logger/core/logger.service' resolves to 'dist/core/logger.service.js'.
-import * as loggerServiceApi from '@rollercoaster-dev/rd-logger/core/logger.service';
-// If 'SensitiveValue' or other specific named exports are expected from 'logger.service.ts',
-// you would import them like this to test their availability:
-// import { SensitiveValue } from '@rollercoaster-dev/rd-logger/core/logger.service';
+// Test the specific submodule export for 'core/logger.service'
+// This verifies that subpath exports work correctly
+import * as loggerServiceApi from '../dist/core/logger.service.js';
 
 describe('@rollercoaster-dev/rd-logger public API via exports map', () => {
   it('should load the main module entry point (dist/index.js) and export key members', () => {

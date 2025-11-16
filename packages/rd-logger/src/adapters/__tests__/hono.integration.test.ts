@@ -1,38 +1,16 @@
-/// <reference types="jest" />
-
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import request from 'supertest';
 import { honoLogger } from '../hono.js';
-
-
-// Mock chalk to disable color codes in tests for easier string matching
-jest.mock('chalk', () => {
-  const chalkMock = {
-    gray: (msg: string) => msg,
-    whiteBright: (msg: string) => msg,
-    blue: (msg: string) => msg,
-    green: (msg: string) => msg,
-    yellow: (msg: string) => msg,
-    red: (msg: string) => msg,
-    magenta: (msg: string) => msg,
-    dim: (msg: string) => msg,
-    cyan: (msg: string) => msg,
-  };
-  return {
-    __esModule: true,
-    default: chalkMock,
-    ...chalkMock,
-  };
-});
+import type { Spy } from 'bun:test';
 
 describe('Hono Adapter Integration', () => {
   let server: any;
-  let consoleSpy: jest.SpyInstance;
+  let consoleSpy: Spy<typeof console.log>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = spyOn(console, 'log').mockImplementation(() => {});
     const app = new Hono();
     app.use('*', honoLogger());
     app.get('/test', (c) => c.json({ ok: true }, 200));
