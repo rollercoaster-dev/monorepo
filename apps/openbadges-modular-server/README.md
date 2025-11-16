@@ -1,11 +1,8 @@
 # OpenBadges Modular Server
 
-A stateless, modular API server for issuing and managing Open Badges, with robust Open Badges 2.0 support and a planned roadmap for full Open Badges 3.0 implementation. Built with modern TypeScript, it supports multiple database backends.
+> **Note**: This application is part of the [Rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo). For development setup and CI/CD information, see the [monorepo README](../../README.md).
 
-[![Unified CI Pipeline](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/ci.yml/badge.svg)](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/ci.yml)
-[![CI/CD Pipeline](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/ci-cd.yml)
-[![CodeQL](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/codeql.yml/badge.svg)](https://github.com/rollercoaster-dev/openbadges-modular-server/actions/workflows/codeql.yml)
-[![Token Rotation Reminder](https://img.shields.io/badge/rotate-tokens-yellow)](./docs/pat-token-setup.md)
+A stateless, modular API server for issuing and managing Open Badges, with robust Open Badges 2.0 support and a planned roadmap for full Open Badges 3.0 implementation. Built with modern TypeScript, it supports multiple database backends
 
 ## Features
 
