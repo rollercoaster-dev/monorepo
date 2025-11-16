@@ -66,12 +66,8 @@ else
   BUN_VERSION=$(bun --version)
   echo -e "${GREEN}✓${NC} Bun detected (version: $BUN_VERSION)"
 
-  # Check if version meets minimum requirement
-  REQUIRED_VERSION="1.3.2"
-  if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$BUN_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
-    echo -e "${YELLOW}⚠${NC}  Bun version $BUN_VERSION is older than required $REQUIRED_VERSION"
-    echo -e "${YELLOW}⚠${NC}  Consider upgrading: bun upgrade"
-  fi
+  # Note: Version requirements are enforced by package.json "engines" field
+  # Bun will check compatibility automatically during install
 fi
 
 echo ""

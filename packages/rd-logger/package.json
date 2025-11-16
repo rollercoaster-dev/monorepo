@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:fast": "bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",

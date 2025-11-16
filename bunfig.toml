@@ -3,7 +3,9 @@
 
 [install]
 # Use frozen lockfile in CI/production
-frozen-lockfile = true
+# Set to false for local dev to allow adding dependencies
+# CI uses --frozen-lockfile flag explicitly
+frozen-lockfile = false
 
 # Install dev dependencies by default (not production-only)
 production = false
@@ -22,8 +24,10 @@ dir = ".bun-cache"
 disable = false
 
 [test]
-# Enable code coverage by default
-coverage = true
+# Enable code coverage only when needed (use --coverage flag)
+# Set to false to avoid overhead on every test run
+# CI uses dedicated test:coverage script
+coverage = false
 
 # Coverage directory
 coverageDirectory = "coverage"
