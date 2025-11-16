@@ -2,10 +2,12 @@
 
 A comprehensive TypeScript types package for Open Badges 2.0 and 3.0 specifications.
 
+> **Note:** This package is now part of the [Rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo). The source code has moved from the standalone repository to `packages/openbadges-types/` in the monorepo.
+
 [![npm version](https://img.shields.io/npm/v/openbadges-types.svg)](https://www.npmjs.com/package/openbadges-types)
-[![license](https://img.shields.io/npm/l/openbadges-types.svg)](https://github.com/rollercoaster-dev/openbadges-types/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/openbadges-types.svg)](https://github.com/rollercoaster-dev/monorepo/blob/main/packages/openbadges-types/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.7+-blue)](https://www.typescriptlang.org/)
-[![CI Status](https://img.shields.io/github/actions/workflow/status/rollercoaster-dev/openbadges-types/test.yml?branch=main&label=ci)](https://github.com/rollercoaster-dev/openbadges-types/actions)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/rollercoaster-dev/monorepo/publish-packages.yml?branch=main&label=ci)](https://github.com/rollercoaster-dev/monorepo/actions)
 
 ## Table of Contents
 
@@ -449,18 +451,22 @@ The package is validated using:
 
 ### Testing
 
-This package uses Jest for testing. The tests verify that the type definitions correctly match the OpenBadges 2.0 and 3.0 specifications.
+This package uses Bun's native test runner for testing. The tests verify that the type definitions correctly match the OpenBadges 2.0 and 3.0 specifications.
 
 To run the tests:
 
 ```bash
-npm test
+# From monorepo root
+bun --filter openbadges-types test
+
+# Or from package directory
+bun test
 ```
 
 To run the tests with coverage:
 
 ```bash
-npm run test:coverage
+bun --filter openbadges-types test:coverage
 ```
 
 ### Building
@@ -468,7 +474,11 @@ npm run test:coverage
 To build the package:
 
 ```bash
-npm run build
+# From monorepo root
+bun --filter openbadges-types run build
+
+# Or from package directory
+bun run build
 ```
 
 ### Linting and Formatting
@@ -478,13 +488,13 @@ This package uses ESLint for linting and Prettier for code formatting.
 To lint the code:
 
 ```bash
-npm run lint
+bun --filter openbadges-types run lint
 ```
 
 To format the code:
 
 ```bash
-npm run format
+bun --filter openbadges-types run format
 ```
 
 ### Validation
@@ -492,7 +502,7 @@ npm run format
 To validate the codebase (lint, format check, and test):
 
 ```bash
-npm run validate
+bun --filter openbadges-types run validate
 ```
 
 ## Type Guards and Validation
