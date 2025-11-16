@@ -1,7 +1,9 @@
 [test]
-# Exclude dist and node_modules from test discovery
+# Exclude dist, node_modules, and e2e from regular test discovery
+# E2E tests run separately after build via test:e2e script
 exclude = [
   "**/node_modules/**",
   "**/dist/**",
-  "**/.bun/**"
+  "**/.bun/**",
+  "**/e2e/**"
 ]
