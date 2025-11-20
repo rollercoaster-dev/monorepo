@@ -103,6 +103,8 @@ The library uses CSS variables for theming, making it easy to customize the appe
 - High contrast theme
 - Large text theme
 - Dyslexia-friendly theme
+- Autism-friendly theme
+- Low vision theme
 
 ## Next Steps
 

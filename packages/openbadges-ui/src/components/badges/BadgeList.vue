@@ -55,6 +55,24 @@ watch(
   }
 );
 
+// Watch for filteredBadges or pageSize changes to clamp current page
+watch(
+  () => [filteredBadges.value.length, props.pageSize],
+  () => {
+    if (!props.showPagination) {
+      return;
+    }
+    const total = totalPages.value;
+    if (total < 1) {
+      internalCurrentPage.value = 1;
+      return;
+    }
+    if (internalCurrentPage.value > total) {
+      internalCurrentPage.value = total;
+    }
+  }
+);
+
 // Neurodiversity-focused filter state
 const filterText = ref('');
 const filterEarned = ref('all'); // 'all' | 'earned' | 'not-earned'

@@ -94,7 +94,7 @@ const densityClass = computed(() => {
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
     @click="handleClick"
-    @keydown.enter="handleClick"
+    @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
     @focus="onFocus"
     @blur="onBlur"
@@ -138,9 +138,7 @@ const densityClass = computed(() => {
         <button
           class="manus-badge-verification-toggle-button"
           type="button"
-          @click="toggleVerificationDetails"
-          @keydown.enter.prevent="toggleVerificationDetails"
-          @keydown.space.prevent="toggleVerificationDetails"
+          @click.stop="toggleVerificationDetails"
         >
           {{ showVerificationDetails ? 'Hide Verification Details' : 'Show Verification Details' }}
         </button>
