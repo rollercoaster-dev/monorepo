@@ -1,5 +1,4 @@
 module.exports = {
-  root: true,
   env: {
     node: true,
     browser: true,
@@ -45,4 +44,19 @@ module.exports = {
       { order: ['script', 'scriptSetup', 'template', 'style'] },
     ],
   },
+  overrides: [
+    {
+      files: ['*.vue'],
+      rules: {
+        // Vue event handlers often don't use parameters
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            argsIgnorePattern: '^_|^(e|value|badge|assertion|payload|isValid|page|density)$',
+            varsIgnorePattern: '^_',
+          },
+        ],
+      },
+    },
+  ],
 };

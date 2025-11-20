@@ -223,9 +223,9 @@ const handleDensityChange = (event: Event) => {
         </div>
         <div
           v-if="expandedBadges.has(badge.id)"
+          :id="`badge-details-${badge.id}`"
           class="badge-details"
           tabindex="0"
-          :id="`badge-details-${badge.id}`"
 >
           <pre>{{ badge }}</pre>
         </div>
