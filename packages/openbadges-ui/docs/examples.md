@@ -15,7 +15,7 @@ This example shows how to display a single badge:
 </template>
 
 <script setup>
-import { BadgeDisplay } from 'manus-ai-components';
+import { BadgeDisplay } from 'openbadges-ui';
 import { ref } from 'vue';
 
 // Example badge in Open Badges 2.0 format
@@ -105,7 +105,7 @@ This example shows how to display a collection of badges with filtering and sort
 </template>
 
 <script setup>
-import { BadgeList } from 'manus-ai-components';
+import { BadgeList } from 'openbadges-ui';
 import { ref, watch } from 'vue';
 
 // In a real app, you would fetch these from an API
@@ -250,7 +250,7 @@ This example shows how to display a user profile with their earned badges:
 </template>
 
 <script setup>
-import { ProfileViewer } from 'manus-ai-components';
+import { ProfileViewer } from 'openbadges-ui';
 import { ref, onMounted } from 'vue';
 
 const userProfile = ref(null);
@@ -347,7 +347,7 @@ This example shows how to implement a badge issuer dashboard:
 </template>
 
 <script setup>
-import { IssuerDashboard } from 'manus-ai-components';
+import { IssuerDashboard } from 'openbadges-ui';
 import { ref, onMounted } from 'vue';
 
 const issuerProfile = ref({
@@ -444,7 +444,7 @@ This example shows how to implement theme switching:
 </template>
 
 <script setup>
-import { BadgeDisplay, AccessibilityService } from 'manus-ai-components';
+import { BadgeDisplay, AccessibilityService } from 'openbadges-ui';
 import { ref } from 'vue';
 
 const themes = [
@@ -548,7 +548,7 @@ This example demonstrates how to use the accessibility features:
     <div class="feature-section">
       <h3>Skip Link</h3>
       <p>Press Tab to see the skip link appear at the top of the page.</p>
-      <a href="#main-content" class="manus-skip-link">Skip to main content</a>
+      <a href="#main-content" class="ob-skip-link">Skip to main content</a>
     </div>
 
     <div class="feature-section">
@@ -557,7 +557,7 @@ This example demonstrates how to use the accessibility features:
         This link has additional context for screen readers:
         <a href="#">
           Documentation
-          <span class="manus-visually-hidden">opens in a new tab</span>
+          <span class="ob-visually-hidden">opens in a new tab</span>
         </a>
       </p>
     </div>
@@ -566,16 +566,16 @@ This example demonstrates how to use the accessibility features:
       <h3>Focus Styles</h3>
       <p>Tab through these buttons to see enhanced focus styles:</p>
       <div class="button-group">
-        <button class="manus-focus-visible">Button 1</button>
-        <button class="manus-focus-visible">Button 2</button>
-        <button class="manus-focus-visible">Button 3</button>
+        <button class="ob-focus-visible">Button 1</button>
+        <button class="ob-focus-visible">Button 2</button>
+        <button class="ob-focus-visible">Button 3</button>
       </div>
     </div>
 
     <div class="feature-section">
       <h3>Status Messages</h3>
-      <div class="manus-status" role="status">This is a status message</div>
-      <div class="manus-status" role="alert">This is an alert message</div>
+      <div class="ob-status" role="status">This is a status message</div>
+      <div class="ob-status" role="alert">This is an alert message</div>
     </div>
 
     <div id="main-content" class="feature-section">
@@ -590,7 +590,7 @@ This example demonstrates how to use the accessibility features:
 </template>
 
 <script setup>
-import { AccessibilityService } from 'manus-ai-components';
+import { AccessibilityService } from 'openbadges-ui';
 import { ref, onMounted } from 'vue';
 
 const prefersReducedMotion = ref(false);
@@ -636,7 +636,7 @@ onMounted(() => {
 }
 
 /* Import the accessibility styles */
-@import '@/styles/accessibility.css';
+import 'openbadges-ui/dist/style.css';
 </style>
 ```
 

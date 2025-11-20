@@ -33,7 +33,7 @@ import { AccessibilityService } from 'openbadges-ui';
 
 // Apply a theme
 AccessibilityService.applyTheme('dyslexia-friendly');
-AccessibilityService.applyTheme('adhd-friendly');
+AccessibilityService.applyTheme('high-contrast');
 AccessibilityService.applyTheme('autism-friendly');
 
 // Reset to default theme

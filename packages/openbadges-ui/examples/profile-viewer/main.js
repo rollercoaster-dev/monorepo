@@ -115,9 +115,9 @@ const themes = [
   { id: 'dark', name: 'Dark Theme' },
   { id: 'high-contrast', name: 'High Contrast Theme' },
   { id: 'large-text', name: 'Large Text Theme' },
-  { id: 'dyslexia', name: 'Dyslexia-Friendly Theme' },
-  { id: 'adhd', name: 'ADHD-Friendly Theme' },
-  { id: 'autism', name: 'Autism-Friendly Theme' }
+  { id: 'dyslexia-friendly', name: 'Dyslexia-Friendly Theme' },
+  { id: 'low-info', name: 'ADHD-Friendly Theme' },
+  { id: 'autism-friendly', name: 'Autism-Friendly Theme' }
 ];
 
 // Create the Vue app
@@ -137,12 +137,12 @@ const app = createApp({
   computed: {
     codeExample() {
       return `<template>
-  <profile-viewer 
-    :profile="profile" 
-    :badge-layout="${this.badgeLayout}"
-    :show-description="${this.showDescription}"
-    :show-url="${this.showUrl}"
-    :interactive-badges="${this.interactiveBadges}"
+  <profile-viewer
+    :profile="profile"
+    :badge-layout="badgeLayout"
+    :show-description="showDescription"
+    :show-url="showUrl"
+    :interactive-badges="interactiveBadges"
     title="User Profile"
     @badge-click="handleBadgeClick"
   />

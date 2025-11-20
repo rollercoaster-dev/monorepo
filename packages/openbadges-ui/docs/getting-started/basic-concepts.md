@@ -110,4 +110,4 @@ Now that you understand the basic concepts, you can:
 
 - Follow the [Quick Start Guide](./quick-start.md) to create a simple badge display application
 - Explore the [API Documentation](../api/index.md) to learn about all available components and features
-- Check out the [Examples](../examples/index.md) for more advanced usage scenarios
+- Check out the [Examples](../examples.md) for more advanced usage scenarios
