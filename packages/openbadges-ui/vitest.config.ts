@@ -16,6 +16,11 @@ export default defineConfig({
   },
   test: {
     pool: 'forks', // Use forks instead of threads for Bun compatibility
+    poolOptions: {
+      forks: {
+        singleFork: true, // Use single fork to avoid worker communication issues with Bun
+      },
+    },
     environment: 'jsdom',
     globals: true,
     include: ['tests/**/*.{test,spec}.{js,ts,vue}'],
