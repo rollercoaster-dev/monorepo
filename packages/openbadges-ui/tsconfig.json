@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+
+    /* Bundler mode */
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+
+    /* Path aliases for cleaner imports */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@composables/*": ["src/composables/*"],
+      "@services/*": ["src/services/*"],
+      "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"]
+    },
+
+    /* For declaration files */
+    "declaration": true,
+    "declarationDir": "dist/types",
+    //    "emitDeclarationOnly": true,
+    "outDir": "dist",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true
+  },
+  "include": [
+    "env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts"
+  ],
+  "exclude": ["src/**/*.stories.ts", "src/**/*.story.vue"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

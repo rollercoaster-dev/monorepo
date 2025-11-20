@@ -1,0 +1,12 @@
+// tests/integration/vitest-setup.ts
+import { vi } from 'vitest';
+
+// Make vi available globally
+// We need to make vi available on globalThis
+globalThis.vi = vi;
+
+// Define a module augmentation
+declare global {
+  // eslint-disable-next-line no-var
+  var vi: typeof vi;
+}
