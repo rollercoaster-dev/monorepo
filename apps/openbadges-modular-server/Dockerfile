@@ -65,52 +65,14 @@ COPY --from=builder /build/packages/openbadges-types/dist ./node_modules/openbad
 
 # Copy scripts from app directory
 COPY --from=builder /build/apps/openbadges-modular-server/docker/scripts/health-check.sh /app/health-check.sh
-RUN chmod +x /app/health-check.sh
+COPY --from=builder /build/apps/openbadges-modular-server/docker/scripts/start.sh /app/start.sh
+RUN chmod +x /app/health-check.sh /app/start.sh
 
 # Create data directory for SQLite
 RUN mkdir -p /data && chmod 777 /data
 
 # Expose the port the app runs on
 EXPOSE 3000
-
-# Create a script to run migrations and start the app
-RUN echo '#!/bin/sh\n\
-set -e\n\
-\n\
-# Function to log with timestamp\n\
-log() {\n\
-    echo "$(date -Iseconds) [CONTAINER] $1"\n\
-}\n\
-\n\
-# Function to handle errors\n\
-handle_error() {\n\
-    log "ERROR: $1"\n\
-    log "Container startup failed. Check logs above for details."\n\
-    exit 1\n\
-}\n\
-\n\
-log "Starting OpenBadges container..."\n\
-log "Environment: NODE_ENV=${NODE_ENV:-development}"\n\
-log "Database type: ${DB_TYPE:-sqlite}"\n\
-log "Port: ${PORT:-3000}"\n\
-\n\
-# Check if required files exist\n\
-if [ ! -f "/app/dist/migrations/run.js" ]; then\n\
-    handle_error "Migration file not found: /app/dist/migrations/run.js"\n\
-fi\n\
-\n\
-if [ ! -f "/app/dist/index.js" ]; then\n\
-    handle_error "Application file not found: /app/dist/index.js"\n\
-fi\n\
-\n\
-log "Running database migrations..."\n\
-if ! bun run dist/migrations/run.js; then\n\
-    handle_error "Database migration failed"\n\
-fi\n\
-\n\
-log "Migrations completed successfully"\n\
-log "Starting application server..."\n\
-exec bun run dist/index.js' > /app/start.sh && chmod +x /app/start.sh
 
 # Set health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 CMD ["/app/health-check.sh"]

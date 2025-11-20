@@ -139,7 +139,9 @@ jobs:
           context: .
           file: ./apps/openbadges-modular-server/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ inputs.push != false }}
+          # Push to registry by default. For manual triggers, respects inputs.push.
+          # For push events, inputs.push is undefined, so != false evaluates to true.
+          push: ${{ github.event_name != 'workflow_dispatch' || inputs.push }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -148,13 +150,13 @@ jobs:
             BUILDKIT_MULTI_PLATFORM=1
 
       - name: Verify multi-architecture manifest
-        if: inputs.push != false
+        if: github.event_name != 'workflow_dispatch' || inputs.push
         run: |
           echo "Verifying multi-architecture manifest..."
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
 
       - name: Summary
-        if: inputs.push != false
+        if: github.event_name != 'workflow_dispatch' || inputs.push
         run: |
           echo "## Docker Image Published ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
