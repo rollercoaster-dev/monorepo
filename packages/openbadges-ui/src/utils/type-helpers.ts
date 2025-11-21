@@ -107,14 +107,27 @@ export const OB3Guards = {
   },
 };
 
+// Helper to check if a type value includes a specific type string
+// Handles both string and array forms per OB2/OB3 spec
+function typeIncludes(typeValue: unknown, targetType: string): boolean {
+  if (typeof typeValue === 'string') {
+    return typeValue === targetType;
+  }
+  if (Array.isArray(typeValue)) {
+    return typeValue.includes(targetType);
+  }
+  return false;
+}
+
 // Type guards for runtime type checking
 export function isOB2Assertion(badge: unknown): badge is OB2.Assertion {
   if (typeof badge !== 'object' || badge === null) {return false;}
   const obj = badge as Record<string, unknown>;
 
+  // OB2 spec allows type to be string 'Assertion' or array ['Assertion', ...]
   return (
     'type' in obj &&
-    obj.type === 'Assertion' &&
+    typeIncludes(obj.type, 'Assertion') &&
     'recipient' in obj &&
     'badge' in obj &&
     'verification' in obj &&
@@ -126,11 +139,11 @@ export function isOB3VerifiableCredential(badge: unknown): badge is OB3.Verifiab
   if (typeof badge !== 'object' || badge === null) {return false;}
   const obj = badge as Record<string, unknown>;
 
+  // OB3 spec allows type to be string 'VerifiableCredential' or array ['VerifiableCredential', ...]
   return (
     '@context' in obj &&
     'type' in obj &&
-    Array.isArray(obj.type) &&
-    obj.type.includes('VerifiableCredential') &&
+    typeIncludes(obj.type, 'VerifiableCredential') &&
     'issuer' in obj &&
     'issuanceDate' in obj &&
     'credentialSubject' in obj

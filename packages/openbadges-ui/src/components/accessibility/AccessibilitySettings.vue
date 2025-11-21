@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import FontSelector from './FontSelector.vue';
 import ThemeSelector from './ThemeSelector.vue';
 
@@ -200,6 +200,17 @@ const resetSettings = () => {
   emit('focusModeChange', false);
   emit('resetSettings');
 };
+
+// Cleanup on unmount - remove classes that were added to document.body
+// This prevents class leakage when component is removed (e.g., route change)
+onUnmounted(() => {
+  if (reduceMotion.value) {
+    document.body.classList.remove('ob-animations-none');
+  }
+  if (focusMode.value) {
+    document.body.classList.remove('ob-focus-mode');
+  }
+});
 </script>
 
 <template>

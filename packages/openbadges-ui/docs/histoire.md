@@ -7,7 +7,11 @@ The Open Badges Component Library includes Histoire integration for component de
 To start the Histoire development server:
 
 ```bash
-npm run story:dev
+# From monorepo root
+bun --filter openbadges-ui run story:dev
+
+# Or from the package directory
+bun run story:dev
 ```
 
 This will launch Histoire on port 4000 by default. Open your browser to http://localhost:4000 to view the component stories.
@@ -17,7 +21,11 @@ This will launch Histoire on port 4000 by default. Open your browser to http://l
 To build a static version of Histoire for deployment:
 
 ```bash
-npm run story:build
+# From monorepo root
+bun --filter openbadges-ui run story:build
+
+# Or from the package directory
+bun run story:build
 ```
 
 This will create a `histoire-dist` directory with the built Histoire that can be deployed to any static hosting service.
@@ -27,7 +35,11 @@ This will create a `histoire-dist` directory with the built Histoire that can be
 To preview the built Histoire locally:
 
 ```bash
-npm run story:preview
+# From monorepo root
+bun --filter openbadges-ui run story:preview
+
+# Or from the package directory
+bun run story:preview
 ```
 
 ## Writing Stories

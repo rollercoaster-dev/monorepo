@@ -140,7 +140,7 @@ watch(
       </div>
 
       <div
-        v-if="expirationStatus !== 'not-applicable'"
+        v-if="expirationStatus && expirationStatus !== 'not-applicable'"
         class="ob-badge-verification-expiration"
       >
         <span class="ob-badge-verification-label">Expiration Status:</span>
@@ -153,7 +153,7 @@ watch(
       </div>
 
       <div
-        v-if="revocationStatus !== 'unknown'"
+        v-if="revocationStatus && revocationStatus !== 'unknown'"
         class="ob-badge-verification-revocation"
       >
         <span class="ob-badge-verification-label">Revocation Status:</span>

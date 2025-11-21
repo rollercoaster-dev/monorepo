@@ -122,11 +122,7 @@ import BadgeViewer from './components/BadgeViewer.vue';
 Start your development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+bun run dev
 ```
 
 You should now see the badge displayed in your application!
