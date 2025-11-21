@@ -29,8 +29,9 @@ CREATE TABLE oauth_sessions (
 );
 
 -- Create indexes for better query performance
+-- Note: UNIQUE constraints on (provider, provider_user_id) and (user_id, provider)
+-- already create implicit indexes, so we only add indexes for non-unique lookups
 CREATE INDEX idx_oauth_providers_user_id ON oauth_providers(user_id);
 CREATE INDEX idx_oauth_providers_provider ON oauth_providers(provider);
-CREATE INDEX idx_oauth_providers_provider_user_id ON oauth_providers(provider_user_id);
 CREATE INDEX idx_oauth_sessions_state ON oauth_sessions(state);
 CREATE INDEX idx_oauth_sessions_expires_at ON oauth_sessions(expires_at);
