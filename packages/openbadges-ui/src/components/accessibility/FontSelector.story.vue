@@ -33,8 +33,8 @@ import FontSelector from './FontSelector.vue';
  * | Name | Payload | Description |
  * |------|---------|-------------|
  * | `update:modelValue` | `string` | Emitted when the selected font changes |
- * | `fontSizeChange` | `string` | Emitted when the font size changes |
- * | `textSpacingChange` | `boolean` | Emitted when the text spacing changes |
+ * | `font-size-change` | `string` | Emitted when the font size changes |
+ * | `text-spacing-change` | `boolean` | Emitted when the text spacing changes |
  */
 
 const selectedFont = ref('system');
@@ -183,12 +183,12 @@ function onTextSpacingChange(value: boolean) {
               <td>Emitted when the selected font changes</td>
             </tr>
             <tr>
-              <td><code>fontSizeChange</code></td>
+              <td><code>font-size-change</code></td>
               <td><code>string</code></td>
               <td>Emitted when the font size changes</td>
             </tr>
             <tr>
-              <td><code>textSpacingChange</code></td>
+              <td><code>text-spacing-change</code></td>
               <td><code>boolean</code></td>
               <td>Emitted when the text spacing changes</td>
             </tr>
@@ -216,7 +216,7 @@ function onTextSpacingChange(value: boolean) {
             </tr>
             <tr>
               <td><code>--ob-border-radius-md</code></td>
-              <td><code>4px</code></td>
+              <td><code>0.375rem</code></td>
               <td>The border radius of elements</td>
             </tr>
             <tr>

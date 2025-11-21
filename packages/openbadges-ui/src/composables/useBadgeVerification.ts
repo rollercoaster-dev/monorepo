@@ -88,6 +88,7 @@ export function useBadgeVerification(): UseBadgeVerificationReturn {
         },
       };
       state.value.result = errorResult;
+      state.value.lastVerified = new Date(); // Mark as verified even on error so UI shows the error state
       return errorResult;
     } finally {
       state.value.isVerifying = false;

@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import BadgeDisplay from './BadgeDisplay.vue';
 import { mockAssertions, mockOB3Credential } from '../../services/mockData';
-import type { OB2 } from 'openbadges-types';
+import type { OB2, OB3 } from 'openbadges-types';
+import { createDateTime } from 'openbadges-types';
 
 /**
  * # BadgeDisplay
@@ -66,16 +67,16 @@ const state = ref({
   simplifiedView: false,
 });
 
-const badgeWithExpiry = {
+const badgeWithExpiry: OB2.Assertion = {
   ...mockAssertions[0],
-  expires: '2026-01-15T12:00:00Z',
-} as OB2.Assertion;
+  expires: createDateTime('2026-01-15T12:00:00Z'),
+};
 
-function onBadgeClick(badge) {
+function onBadgeClick(badge: OB2.Assertion | OB3.VerifiableCredential): void {
   console.log('Badge clicked:', badge);
 }
 
-function onVerified(isValid) {
+function onVerified(isValid: boolean): void {
   console.log('Badge verified:', isValid);
 }
 </script>
