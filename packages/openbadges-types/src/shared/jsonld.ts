@@ -94,3 +94,32 @@ export function hasJsonLdContext(value: unknown, context: string): boolean {
 
   return false;
 }
+
+/**
+ * Check if a type value includes a specific type string.
+ * Handles both string and array type values per OB2/OB3 spec.
+ *
+ * Use this when you have a `type` value directly (not a full JSON-LD object).
+ * For full objects, use `hasJsonLdType()` instead.
+ *
+ * @param typeValue The type value to check (string or string[])
+ * @param target The type string to look for
+ * @returns True if the type value includes the target type
+ *
+ * @example
+ * // Both of these work:
+ * typeIncludes('Assertion', 'Assertion') // true
+ * typeIncludes(['Assertion', 'Extension'], 'Assertion') // true
+ */
+export function typeIncludes(
+  typeValue: unknown,
+  target: string
+): boolean {
+  if (typeof typeValue === 'string') {
+    return typeValue === target;
+  }
+  if (Array.isArray(typeValue)) {
+    return typeValue.includes(target);
+  }
+  return false;
+}

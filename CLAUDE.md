@@ -23,7 +23,8 @@ monorepo/
 │   └── shared-config/              # Shared build/lint configurations
 ├── experiments/                    # Research & prototypes
 ├── scripts/                        # Build and maintenance scripts
-│   └── install-dependencies.sh     # Auto-run on Claude Code session start
+│   ├── install-dependencies.sh     # Auto-run on Claude Code session start
+│   └── migration-checklist.sh      # Validates package migrations
 └── .claude/                        # Claude Code configuration
     ├── settings.json               # Team-shared settings (committed)
     └── settings.local.json         # Personal settings (not committed)
@@ -142,6 +143,36 @@ cp .env.example .env
 - ⏳ **Phase 4**: CI/CD & Publishing
 - ⏳ **Phase 5**: Cleanup
 - ⏳ **Phase 5.5**: Documentation Consolidation
+
+### Migration Completion Checklist
+
+Before marking a package migration complete, run:
+
+```bash
+./scripts/migration-checklist.sh packages/<package-name>
+```
+
+The script validates:
+
+**1. Lint & Build**
+- [ ] `bun run lint` passes with 0 errors
+- [ ] `bun run build` succeeds
+- [ ] `package.json` types path matches actual build output
+
+**2. File Cleanup**
+- [ ] No orphaned files (*.fixed, *.new, *.bak, *.orig)
+- [ ] No commented-out code blocks
+- [ ] No TODO comments without issue references
+
+**3. Documentation**
+- [ ] All commands use `bun` (not npm/yarn/pnpm)
+- [ ] README updated for monorepo context
+
+**4. Code Quality**
+- [ ] SSR guards on all DOM/window access (see CONTRIBUTING.md)
+- [ ] Component lifecycle cleanup (`onUnmounted` for DOM modifications)
+- [ ] Type guards handle both string and array values (use `typeIncludes()`)
+- [ ] Template conditions guard against undefined
 
 ## 🧪 Testing
 
