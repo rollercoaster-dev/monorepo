@@ -394,7 +394,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import {
   TrophyIcon,
   ShareIcon,
@@ -700,10 +700,18 @@ function shareToSocial(platform: 'twitter' | 'linkedin' | 'facebook') {
 }
 
 // Close export menu when clicking outside
-document.addEventListener('click', (e: Event) => {
+const handleClickOutside = (e: Event) => {
   const target = e.target as HTMLElement | null
   if (target && target.closest && !target.closest('.relative')) {
     showExportMenu.value = false
   }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>

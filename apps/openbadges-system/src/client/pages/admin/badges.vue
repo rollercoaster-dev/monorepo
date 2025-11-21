@@ -477,6 +477,28 @@ watch(
   { deep: true }
 )
 
+// Populate available issuers from badges for filter dropdown
+watch(
+  badges,
+  newBadges => {
+    if (newBadges && newBadges.length > 0) {
+      const issuers = new Set<string>()
+      for (const badge of newBadges) {
+        if (badge.issuer) {
+          // Handle issuer as string (URL) or object with name
+          const issuerName =
+            typeof badge.issuer === 'string'
+              ? badge.issuer
+              : (badge.issuer as { name?: string }).name || String(badge.issuer)
+          if (issuerName) issuers.add(issuerName)
+        }
+      }
+      availableIssuers.value = Array.from(issuers).sort()
+    }
+  },
+  { immediate: true }
+)
+
 // Auto-clear success message
 watch(successMessage, message => {
   if (message) {
