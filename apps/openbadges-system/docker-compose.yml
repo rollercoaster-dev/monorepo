@@ -1,0 +1,60 @@
+services:
+  openbadges-server:
+    image: ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+    container_name: openbadges_modular_server
+    env_file:
+      - .env
+    ports:
+      - '3000:3000'
+    environment:
+      # Server configuration
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - HOST=${HOST:-0.0.0.0}
+      - BASE_URL=${OPENBADGES_SERVER_URL:-http://localhost:3000}
+
+      # Database configuration (SQLite)
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - SQLITE_FILE=${SQLITE_FILE:-/data/openbadges.sqlite}
+
+      # Authentication configuration
+      - AUTH_ENABLED=${OPENBADGES_AUTH_ENABLED:-true}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-please-change}
+      - AUTH_API_KEY_SYSTEM=${OPENBADGES_API_KEY:-test-api-key-123}:system-user:System integration
+      - AUTH_BASIC_AUTH_ADMIN=${OPENBADGES_BASIC_AUTH_USER:-admin}:${OPENBADGES_BASIC_AUTH_PASS:-admin-user}:Administrator
+
+      # OAuth configuration for service-to-service communication
+      - OAUTH_ENABLED=true
+      - PLATFORM_ID=${PLATFORM_ID:-urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1}
+      - PLATFORM_CLIENT_ID=${PLATFORM_CLIENT_ID:-openbadges-demo-main-app}
+      - PLATFORM_JWT_ISSUER=${PLATFORM_JWT_ISSUER:-openbadges-demo-main-app}
+      - PLATFORM_JWT_AUDIENCE=${PLATFORM_JWT_AUDIENCE:-}
+      - JWT_CLOCK_TOLERANCE_SEC=${JWT_CLOCK_TOLERANCE_SEC:-0}
+
+      # OAuth2 adapter configuration
+      - AUTH_OAUTH2_ENABLED=true
+      - AUTH_OAUTH2_JWKS_URI=${OAUTH2_JWKS_URI:-http://host.docker.internal:8888/.well-known/jwks.json}
+      - AUTH_OAUTH2_ISSUER=${PLATFORM_JWT_ISSUER:-openbadges-demo-main-app}
+      - AUTH_OAUTH2_AUDIENCE=${PLATFORM_JWT_AUDIENCE:-}
+
+      # Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-pretty}
+    volumes:
+      - sqlite_data:/data
+      - ./keys:/app/keys:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', '/app/health-check.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '20m'
+        max-file: '5'
+
+volumes:
+  sqlite_data:

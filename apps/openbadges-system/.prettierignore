@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+.nuxt/
+.output/
+
+# Data and logs
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+data/
+openbadges_server_data/
+
+# Environment files
+.env
+.env.*
+
+# Coverage reports
+coverage/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Generated types and auto-imports
+src/client/auto-imports.d.ts
+src/client/components.d.ts
+src/client/typed-router.d.ts
+
+# Assets
+public/
+static/

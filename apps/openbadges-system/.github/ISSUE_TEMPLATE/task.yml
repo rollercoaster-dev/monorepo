@@ -1,0 +1,137 @@
+name: Task Implementation
+description: Implementation task for OpenBadges system development
+title: "[TASK] "
+labels: ["task", "needs-triage"]
+body:
+  - type: input
+    id: task-id
+    attributes:
+      label: Task ID
+      description: Internal task UUID (required for task tracking)
+      placeholder: "UUID from task management system"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which system component does this task affect?
+      options:
+        - Authentication
+        - Badge Management
+        - Verification
+        - User Management
+        - API
+        - Frontend
+        - Compliance
+        - Security
+        - Documentation
+        - Infrastructure
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task Type
+      description: What type of implementation task is this?
+      options:
+        - Feature Implementation
+        - Bug Fix
+        - Refactoring
+        - Performance Optimization
+        - Security Enhancement
+        - Documentation
+        - Testing
+        - Infrastructure
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Detailed description of what needs to be implemented
+      placeholder: "What needs to be built, fixed, or improved? Include OpenBadges context if relevant."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Specific, measurable criteria for task completion
+      placeholder: |
+        - [ ] Specific deliverable 1
+        - [ ] Specific deliverable 2
+        - [ ] Code review completed
+        - [ ] Tests added and passing
+        - [ ] Documentation updated
+        - [ ] OpenBadges compliance verified (if applicable)
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Task priority level
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+      
+  - type: input
+    id: estimate
+    attributes:
+      label: Time Estimate
+      description: Estimated time to complete this task
+      placeholder: "e.g., 4 hours, 2 days, 1 week"
+    validations:
+      required: true
+      
+  - type: input
+    id: assignee
+    attributes:
+      label: Assignee
+      description: GitHub username of the person assigned to this task
+      placeholder: "@username"
+    validations:
+      required: false
+      
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Other tasks, issues, or external dependencies
+      placeholder: "List any blocking dependencies or related tasks/issues"
+    validations:
+      required: false
+      
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Implementation Notes
+      description: Technical details, approach, or constraints
+      placeholder: "Implementation approach, technical constraints, API changes, etc."
+    validations:
+      required: false
+      
+  - type: checkboxes
+    id: compliance-requirements
+    attributes:
+      label: Compliance Requirements
+      description: Check all that apply to this task
+      options:
+        - label: Must maintain OpenBadges 2.x compatibility
+        - label: Must support OpenBadges 3.0 features
+        - label: Requires cryptographic security review
+        - label: Involves user data handling (privacy considerations)
+        - label: Affects badge verification process
+        - label: Changes public API endpoints
+        - label: Requires performance testing
+        - label: Needs accessibility review
