@@ -258,10 +258,14 @@ export const useAuth = () => {
         if (platformRes && platformRes.success) {
           token.value = platformRes.token
         } else {
-          // Fallback: create a temporary session token
+          // Fallback: create a local-only session marker (not a valid JWT)
+          // This allows offline-first usage but won't authenticate with backend
+          console.warn('Platform token unavailable, using local session marker')
           token.value = `local-session-${Date.now()}`
         }
-      } catch {
+      } catch (err) {
+        // Network error: create a local-only session marker
+        console.warn('Failed to get platform token:', err)
         token.value = `local-session-${Date.now()}`
       }
 
@@ -479,8 +483,10 @@ export const useAuth = () => {
           if (res.status === 401 || res.status === 403) {
             throw new Error('Unauthorized')
           }
-        } catch {
-          // Keep local session on network/other errors; do not clear here
+        } catch (err) {
+          // Keep local session on network/other errors for offline-first support
+          // Log warning so developers are aware of potential stale sessions
+          console.warn('Session validation failed (network error), keeping local session:', err)
         }
       } catch {
         // Clear invalid JSON storage

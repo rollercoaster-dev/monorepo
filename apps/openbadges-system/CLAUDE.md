@@ -126,7 +126,7 @@ bun run docker:logs
 
 ### Directory Structure
 
-```
+```text
 src/
 ├── client/           # Vue 3 frontend application
 │   ├── components/   # Reusable Vue components organized by domain

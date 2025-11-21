@@ -37,7 +37,7 @@ fi
 
 # Variables
 ORG="rollercoaster-dev"
-REPO="openbadges-system"
+REPO="monorepo"
 PROJECT_TITLE="OpenBadges System Development"
 PROJECT_DESCRIPTION="Main project board for tracking OpenBadges digital credential system development progress"
 

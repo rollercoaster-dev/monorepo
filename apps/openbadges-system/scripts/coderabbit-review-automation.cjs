@@ -61,14 +61,15 @@ class CodeRabbitReviewAutomation {
       console.log(`Fetching CodeRabbit comments for PR #${this.prNumber}...`);
       
       // Fetch PR review comments
+      // Use jq -s 'add // []' to handle paginated output (multiple JSON arrays)
       const reviewComments = execSync(
-        `gh api repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/pulls/${this.prNumber}/comments --paginate`,
+        `gh api repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/pulls/${this.prNumber}/comments --paginate | jq -s 'add // []'`,
         { encoding: 'utf8' }
       );
-      
+
       // Fetch PR issue comments
       const issueComments = execSync(
-        `gh api repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/issues/${this.prNumber}/comments --paginate`,
+        `gh api repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/issues/${this.prNumber}/comments --paginate | jq -s 'add // []'`,
         { encoding: 'utf8' }
       );
 

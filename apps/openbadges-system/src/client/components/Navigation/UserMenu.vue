@@ -37,6 +37,7 @@
         <!-- User avatar and dropdown -->
         <div class="relative">
           <button
+            id="user-menu-button"
             class="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             :aria-expanded="isUserDropdownOpen"
             aria-haspopup="true"

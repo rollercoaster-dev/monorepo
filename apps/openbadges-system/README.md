@@ -105,7 +105,7 @@ bun run preview
 
 ## Project Structure
 
-```
+```text
 openbadges-system/
 ├── src/
 │   ├── client/           # Vue frontend

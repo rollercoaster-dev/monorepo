@@ -1,6 +1,6 @@
 # Task: Fix test configuration — bun:sqlite externalization errors (Issue #22)
 
-Source: [GitHub Issue #22](https://github.com/rollercoaster-dev/openbadges-system/issues/22)
+Source: [GitHub Issue #22](https://github.com/rollercoaster-dev/openbadges-system/issues/22) *(legacy repo)*
 
 ## Problem Summary
 
@@ -68,12 +68,12 @@ Source: [GitHub Issue #22](https://github.com/rollercoaster-dev/openbadges-syste
 
 ## Acceptance Checklist
 
-- [ ] `pnpm test` passes locally without externalization errors
+- [ ] `bun test` passes locally without externalization errors
 - [ ] Server endpoint tests (`src/server/__tests__/endpoints.test.ts`) pass
 - [ ] Pre-push hooks pass
 - [ ] CI green
 
 ## References
 
-- Issue context and root cause notes: [#22](https://github.com/rollercoaster-dev/openbadges-system/issues/22)
+- Issue context and root cause notes: [#22](https://github.com/rollercoaster-dev/openbadges-system/issues/22) *(legacy repo)*
 
