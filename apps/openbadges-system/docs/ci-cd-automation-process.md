@@ -138,21 +138,21 @@ CodeRabbit Comments → Fetch & Categorize → Track Progress → Implement Fixe
 
 ```bash
 # Available commands
-pnpm run review:fetch          # Fetch latest CodeRabbit comments
-pnpm run review:update         # Update tracking document
-pnpm run review:fix            # Implement all fixes
-pnpm run review:fix:critical   # Fix only critical issues
-pnpm run review:fix:security   # Fix only security issues
-pnpm run review:auto           # Run full automation cycle
+bun run review:fetch          # Fetch latest CodeRabbit comments
+bun run review:update         # Update tracking document
+bun run review:fix            # Implement all fixes
+bun run review:fix:critical   # Fix only critical issues
+bun run review:fix:security   # Fix only security issues
+bun run review:auto           # Run full automation cycle
 ```
 
 ## 📋 Process Documentation
 
 ### Daily Workflow
 
-1. **Morning Check**: Run `pnpm run review:update` to fetch latest comments
+1. **Morning Check**: Run `bun run review:update` to fetch latest comments
 2. **Priority Review**: Address critical and security issues first
-3. **Systematic Fixes**: Use `pnpm run review:fix` for automated resolution
+3. **Systematic Fixes**: Use `bun run review:fix` for automated resolution
 4. **CI Validation**: Ensure all checks pass after fixes
 5. **Documentation**: Update tracking document with progress
 
@@ -180,38 +180,38 @@ pnpm run review:auto           # Run full automation cycle
 # Clone and setup
 git clone <repo>
 cd openbadges-system
-pnpm install
+bun install
 
 # Test CI locally
-pnpm run lint
-pnpm run type-check
-pnpm run test:run
-pnpm run build
+bun run lint
+bun run type-check
+bun run test:run
+bun run build
 ```
 
 #### Daily Usage
 
 ```bash
 # Check for new CodeRabbit comments
-pnpm run review:update
+bun run review:update
 
 # Fix critical issues immediately
-pnpm run review:fix:critical
+bun run review:fix:critical
 
 # Run full automation when ready
-pnpm run review:auto
+bun run review:auto
 ```
 
 #### Before Committing
 
 ```bash
 # Ensure all CI checks pass
-pnpm run lint
-pnpm run type-check
-pnpm run test:run
+bun run lint
+bun run type-check
+bun run test:run
 
 # Update review tracking
-pnpm run review:update
+bun run review:update
 ```
 
 ### For Project Managers

@@ -36,11 +36,11 @@
 **Status**: All CI checks passing locally
 
 ```bash
-✅ pnpm run lint          # 0 errors, 0 warnings
-✅ pnpm run type-check    # 0 errors, 0 warnings
-✅ pnpm run test:run      # 72 tests passing
-✅ pnpm run build         # Successful compilation
-✅ pnpm audit --audit-level high  # No high/critical vulnerabilities
+✅ bun run lint          # 0 errors, 0 warnings
+✅ bun run type-check    # 0 errors, 0 warnings
+✅ bun run test:run      # 72 tests passing
+✅ bun run build         # Successful compilation
+✅ bun audit             # No high/critical vulnerabilities
 ```
 
 ### ✅ Phase 2: Code Review Automation System
@@ -79,12 +79,12 @@
 **Available Commands**:
 
 ```bash
-pnpm run review:fetch          # Fetch latest CodeRabbit comments
-pnpm run review:update         # Update tracking document
-pnpm run review:fix            # Implement all fixes
-pnpm run review:fix:critical   # Fix only critical issues
-pnpm run review:fix:security   # Fix only security issues
-pnpm run review:auto           # Run full automation cycle
+bun run review:fetch          # Fetch latest CodeRabbit comments
+bun run review:update         # Update tracking document
+bun run review:fix            # Implement all fixes
+bun run review:fix:critical   # Fix only critical issues
+bun run review:fix:security   # Fix only security issues
+bun run review:auto           # Run full automation cycle
 ```
 
 #### 3.2 CI Validation Loop
@@ -174,12 +174,12 @@ graph LR
 
 ```bash
 # Daily workflow
-pnpm run review:update        # Check for new comments
-pnpm run review:fix:critical  # Address critical issues
-pnpm run lint && pnpm run type-check  # Validate locally
+bun run review:update        # Check for new comments
+bun run review:fix:critical  # Address critical issues
+bun run lint && bun run type-check  # Validate locally
 
 # Before committing
-pnpm run review:auto          # Full automation cycle
+bun run review:auto          # Full automation cycle
 git add . && git commit       # Commit with descriptive messages
 ```
 

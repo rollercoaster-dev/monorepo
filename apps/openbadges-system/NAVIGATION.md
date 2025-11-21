@@ -252,19 +252,19 @@ await page.click('[aria-label="Toggle navigation menu"]')
 
 ## Getting Started
 
-1. **Install Dependencies:**
+1. **Install Dependencies** (from monorepo root):
 ```bash
-pnpm install
+bun install
 ```
 
 2. **Run Development Server:**
 ```bash
-pnpm dev
+bun dev
 ```
 
 3. **Build for Production:**
 ```bash
-pnpm build
+bun run build
 ```
 
 The navigation system is now fully integrated and ready for use!

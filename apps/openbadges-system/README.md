@@ -8,15 +8,14 @@ An implementation of the OpenBadges standard for managing digital credentials.
 
 - **Frontend**: Vue 3 with Vue Router, Pinia, and TailwindCSS
 - **Backend**: Bun runtime with Hono framework
-- **Package Management**: pnpm
+- **Package Management**: Bun (monorepo workspaces)
 - **Build Tool**: Vite
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (v1.2.10+)
-- [pnpm](https://pnpm.io/)
+- [Bun](https://bun.sh) (v1.3.2+)
 - [Docker](https://www.docker.com/) (for badge server integration)
 
 ### OAuth Integration
@@ -27,7 +26,7 @@ This system integrates with the OpenBadges modular server for badge management. 
 
 1. Start the badge server: `docker-compose up -d`
 2. Configure OAuth settings in `.env` (see `.env.example`)
-3. Start the main application: `pnpm dev`
+3. Start the main application: `bun dev`
 
 For detailed OAuth configuration and troubleshooting, see:
 
@@ -36,12 +35,11 @@ For detailed OAuth configuration and troubleshooting, see:
 
 ### Installation
 
-Clone the repository and install dependencies:
+This app is part of the **rollercoaster.dev monorepo**. Install dependencies from the monorepo root:
 
 ```bash
-git clone https://github.com/rollercoaster-dev/openbadges-system.git
-cd openbadges-system
-pnpm install
+cd monorepo
+bun install
 ```
 
 ### Running the Development Environment
@@ -49,7 +47,7 @@ pnpm install
 Start both the client and server in development mode:
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 This will start:
@@ -62,13 +60,13 @@ This will start:
 Run only the server:
 
 ```bash
-pnpm server
+bun run server
 ```
 
 Run only the client:
 
 ```bash
-pnpm client
+bun run client
 ```
 
 ### Docker Support
@@ -76,19 +74,19 @@ pnpm client
 Start the containerized environment:
 
 ```bash
-pnpm docker:up
+bun run docker:up
 ```
 
 Stop containers:
 
 ```bash
-pnpm docker:down
+bun run docker:down
 ```
 
 View logs:
 
 ```bash
-pnpm docker:logs
+bun run docker:logs
 ```
 
 ### Building for Production
@@ -96,13 +94,13 @@ pnpm docker:logs
 Build the frontend for production:
 
 ```bash
-pnpm build
+bun run build
 ```
 
 Preview the production build:
 
 ```bash
-pnpm preview
+bun run preview
 ```
 
 ## Project Structure

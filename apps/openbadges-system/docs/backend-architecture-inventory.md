@@ -94,8 +94,8 @@ graph TB
   - `scripts/dev-local.sh` - Local development with standalone OpenBadges server
   - `scripts/dev-docker.sh` - Docker-based development environment
 - **Commands**:
-  - `pnpm dev` - Concurrent client and server development
-  - `pnpm server` - Server-only development with hot reload
+  - `bun dev` - Concurrent client and server development
+  - `bun run server` - Server-only development with hot reload
   - `bun run --hot src/server/index.ts` - Direct server execution
 
 ## Route Modules
@@ -293,7 +293,7 @@ CREATE TABLE user_credentials (
 ### Package.json Scripts
 | Script | Command | Description |
 |--------|---------|-------------|
-| `dev` | `concurrently "pnpm run server" "pnpm run client"` | Start both frontend and backend in development |
+| `dev` | `concurrently "bun run server" "bun run client"` | Start both frontend and backend in development |
 | `dev:local` | `./scripts/dev-local.sh` | Local development with standalone OpenBadges server |
 | `dev:docker` | `./scripts/dev-docker.sh` | Docker-based development environment |
 | `server` | `bun run --hot src/server/index.ts` | Start backend server with hot reload |

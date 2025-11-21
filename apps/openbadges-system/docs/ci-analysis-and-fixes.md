@@ -60,7 +60,7 @@ Analysis of GitHub Actions workflows for the OpenBadges system reveals multiple 
 
 **Issues**:
 
-- `pnpm audit --audit-level high` exits with code 0 but script expects failures
+- `bun audit` exits with code 0 but script expects failures
 - Secret scanning JavaScript has syntax/logic issues
 
 #### 4. Workflow Configuration Issues (Medium)

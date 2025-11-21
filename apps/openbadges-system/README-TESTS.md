@@ -77,16 +77,16 @@ End-to-end tests for authentication flows:
 
 ```bash
 # Run all tests
-npm run test
+bun run test
 
 # Run tests with UI
-npm run test:ui
+bun run test:ui
 
 # Run tests once
-npm run test:run
+bun run test:run
 
 # Run tests with coverage
-npm run test:coverage
+bun run test:coverage
 ```
 
 ## Test Structure

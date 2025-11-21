@@ -225,7 +225,7 @@ node -e "console.log(process.env.OPENBADGES_AUTH_MODE)"
 
 ```bash
 # Restart main application
-# (Ctrl+C and npm run dev)
+# (Ctrl+C and bun dev)
 
 # Restart badge server
 docker-compose down && docker-compose up -d
