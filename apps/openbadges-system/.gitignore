@@ -1,0 +1,55 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+mcp-server.log
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Database files
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite.backup
+openbadges_server_data/
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+auto-imports.d.ts
+components.d.ts
+typed-router.d.ts
+
+# AI working directory artifacts
+.claude/working/
+.augment/
+.cursor/
+.tasks/
+
+# Private keys and certificates (generate locally or use env vars)
+keys/
+*.pem
