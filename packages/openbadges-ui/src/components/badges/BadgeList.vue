@@ -55,24 +55,6 @@ watch(
   }
 );
 
-// Watch for filteredBadges or pageSize changes to clamp current page
-watch(
-  () => [filteredBadges.value.length, props.pageSize],
-  () => {
-    if (!props.showPagination) {
-      return;
-    }
-    const total = totalPages.value;
-    if (total < 1) {
-      internalCurrentPage.value = 1;
-      return;
-    }
-    if (internalCurrentPage.value > total) {
-      internalCurrentPage.value = total;
-    }
-  }
-);
-
 // Neurodiversity-focused filter state
 const filterText = ref('');
 const filterEarned = ref('all'); // 'all' | 'earned' | 'not-earned'
@@ -88,14 +70,14 @@ const toggleExpanded = (id: string) => {
   expandedBadges.value = next;
 };
 
-// Filtering logic
+// Filtering logic - defined before watchers that use it
 const filteredBadges = computed(() => {
   let filtered = props.badges;
   if (filterText.value) {
     filtered = filtered.filter(badge => {
       // Use type guards to check the badge structure
-      const name = 'badge' in badge && badge.badge && typeof badge.badge === 'object' && 'name' in badge.badge 
-        ? String(badge.badge.name) 
+      const name = 'badge' in badge && badge.badge && typeof badge.badge === 'object' && 'name' in badge.badge
+        ? String(badge.badge.name)
         : 'name' in badge ? String(badge.name) : '';
       return name.toLowerCase().includes(filterText.value.toLowerCase());
     });
@@ -115,6 +97,24 @@ const filteredBadges = computed(() => {
 const totalPages = computed(() => {
   return Math.ceil(filteredBadges.value.length / props.pageSize);
 });
+
+// Watch for filteredBadges or pageSize changes to clamp current page
+watch(
+  () => [filteredBadges.value.length, props.pageSize],
+  () => {
+    if (!props.showPagination) {
+      return;
+    }
+    const total = totalPages.value;
+    if (total < 1) {
+      internalCurrentPage.value = 1;
+      return;
+    }
+    if (internalCurrentPage.value > total) {
+      internalCurrentPage.value = total;
+    }
+  }
+);
 
 // Get current page of badges
 const paginatedBadges = computed(() => {

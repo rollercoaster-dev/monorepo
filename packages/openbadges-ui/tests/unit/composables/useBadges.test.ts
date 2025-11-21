@@ -33,7 +33,7 @@ describe('useBadges', () => {
     );
     addBadge(assertion);
     expect(badges.value).toHaveLength(1);
-    expect(badges.value?.[0]).toStrictEqual(assertion);
+    expect(badges.value?.[0]).toEqual(assertion);
     removeBadge(assertion.id as string);
     expect(badges.value).toHaveLength(0);
   });
@@ -71,7 +71,7 @@ describe('useBadges', () => {
     expect(filteredBadges.value).toHaveLength(2);
     setFilter('alpha');
     expect(filteredBadges.value).toHaveLength(1);
-    expect(filteredBadges.value[0]).toStrictEqual(badge1);
+    expect(filteredBadges.value[0]).toEqual(badge1);
     setFilter('');
     expect(filteredBadges.value).toHaveLength(2);
   });

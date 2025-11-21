@@ -15,7 +15,12 @@ export default defineConfig({
     },
   },
   test: {
-    threads: false, // Disable threading for Bun compatibility
+    pool: 'forks', // Use forks pool for Vue SFC compatibility
+    poolOptions: {
+      forks: {
+        singleFork: true, // Run all tests in a single fork for consistency
+      },
+    },
     environment: 'jsdom',
     globals: true,
     include: ['tests/**/*.{test,spec}.{js,ts,vue}'],
@@ -36,7 +41,7 @@ export default defineConfig({
       ],
     },
     deps: {
-      inline: ['vue', 'primevue'],
+      inline: ['vue', 'primevue', '@vue/test-utils'],
     },
   },
 });
