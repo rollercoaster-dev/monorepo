@@ -1,0 +1,308 @@
+
+/**
+ * Rollercoaster.dev Open Badges Component Library - Accessibility Styles
+ *
+ * This file provides additional CSS to enhance accessibility across components.
+ */
+
+/* Import font definitions */
+@import './fonts.css';
+
+/* Visually hidden content (for screen readers) */
+.ob-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus styles */
+.ob-focus-visible:focus-visible {
+  outline: 2px solid var(--ob-border-color-focus, #3182ce);
+  outline-offset: 2px;
+}
+
+/* Ensure all interactive elements have visible focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ob-border-color-focus, #3182ce);
+  outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.ob-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--ob-primary, #3182ce);
+  color: white;
+  padding: 8px;
+  z-index: var(--ob-z-index-modal, 1300);
+  transition: top 0.2s;
+}
+
+.ob-skip-link:focus {
+  top: 0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+  .ob-badge-display,
+  .ob-badge-list-item,
+  .ob-profile-viewer,
+  .ob-badge-issuer-form,
+  .ob-issuer-dashboard {
+    border: 1px solid CanvasText;
+  }
+
+  .ob-button {
+    border: 1px solid CanvasText;
+  }
+
+  .ob-tab-button.active {
+    border-bottom: 3px solid CanvasText;
+  }
+}
+
+/* Improve text readability */
+.ob-badge-description,
+.ob-profile-description,
+.ob-form-label,
+.ob-form-help {
+  max-width: 65ch; /* Optimal line length for readability */
+}
+
+/* Ensure sufficient color contrast */
+.ob-form-error {
+  color: var(--ob-error, #e53e3e);
+  font-weight: var(--ob-font-weight-medium, 500);
+}
+
+.ob-form-success {
+  color: var(--ob-success, #38a169);
+  font-weight: var(--ob-font-weight-medium, 500);
+}
+
+/* Ensure form fields have sufficient spacing for touch targets */
+.ob-form-input,
+.ob-form-textarea,
+.ob-button,
+.ob-tab-button {
+  min-height: 44px; /* Minimum touch target size */
+}
+
+/* Improve focus visibility for form elements */
+.ob-form-input:focus,
+.ob-form-textarea:focus {
+  outline: none;
+  border-color: var(--ob-form-input-focus, #3182ce);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.3);
+}
+
+/* Status messages for screen readers */
+.ob-status {
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 16px;
+}
+
+.ob-status[aria-live="polite"] {
+  background-color: var(--ob-info-light, #bee3f8);
+  color: var(--ob-text-primary, #1a202c);
+}
+
+.ob-status[role="alert"] {
+  background-color: var(--ob-error-light, #fed7d7);
+  color: var(--ob-text-primary, #1a202c);
+}
+
+.ob-status[role="status"] {
+  background-color: var(--ob-success-light, #c6f6d5);
+  color: var(--ob-text-primary, #1a202c);
+}
+
+/* Neurodiversity-specific styles */
+
+/* Content density adjustments */
+.ob-density-compact {
+  --ob-space-1: 0.125rem;
+  --ob-space-2: 0.25rem;
+  --ob-space-3: 0.5rem;
+  --ob-space-4: 0.75rem;
+  --ob-space-5: 1rem;
+  --ob-space-6: 1.25rem;
+  --ob-space-8: 1.5rem;
+  --ob-space-10: 2rem;
+  --ob-space-12: 2.5rem;
+  --ob-space-16: 3rem;
+}
+
+.ob-density-spacious {
+  --ob-space-1: 0.5rem;
+  --ob-space-2: 0.75rem;
+  --ob-space-3: 1rem;
+  --ob-space-4: 1.5rem;
+  --ob-space-5: 2rem;
+  --ob-space-6: 2.5rem;
+  --ob-space-8: 3rem;
+  --ob-space-10: 3.5rem;
+  --ob-space-12: 4rem;
+  --ob-space-16: 5rem;
+  --ob-line-height-normal: 1.8;
+  --ob-line-height-relaxed: 2;
+}
+
+/* Focus mode to reduce distractions */
+.ob-focus-mode {
+  /* Dim non-focused content */
+  --ob-focus-mode-opacity: 0.7;
+  --ob-focus-mode-transition: opacity 0.3s ease;
+}
+
+.ob-focus-mode .ob-badge-list-item:not(:hover):not(:focus-within),
+.ob-focus-mode .ob-form-group:not(:focus-within) {
+  opacity: var(--ob-focus-mode-opacity);
+  transition: var(--ob-focus-mode-transition);
+}
+
+.ob-focus-mode .ob-badge-list-item:hover,
+.ob-focus-mode .ob-badge-list-item:focus-within,
+.ob-focus-mode .ob-form-group:focus-within {
+  opacity: 1;
+  transition: var(--ob-focus-mode-transition);
+  box-shadow: 0 0 0 2px var(--ob-primary);
+}
+
+/* Animation control for vestibular disorders and sensory sensitivities */
+.ob-animations-none * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+.ob-animations-minimal * {
+  animation-duration: 0.3s !important;
+  transition-duration: 0.3s !important;
+}
+
+/* Reading modes for dyslexia and visual processing */
+
+/* Bionic reading - highlight first part of words to aid reading flow */
+.ob-reading-bionic p,
+.ob-reading-bionic li,
+.ob-reading-bionic h1,
+.ob-reading-bionic h2,
+.ob-reading-bionic h3,
+.ob-reading-bionic h4,
+.ob-reading-bionic h5,
+.ob-reading-bionic h6 {
+  font-weight: 400;
+}
+
+.ob-reading-bionic p span.ob-bionic-highlight,
+.ob-reading-bionic li span.ob-bionic-highlight,
+.ob-reading-bionic h1 span.ob-bionic-highlight,
+.ob-reading-bionic h2 span.ob-bionic-highlight,
+.ob-reading-bionic h3 span.ob-bionic-highlight,
+.ob-reading-bionic h4 span.ob-bionic-highlight,
+.ob-reading-bionic h5 span.ob-bionic-highlight,
+.ob-reading-bionic h6 span.ob-bionic-highlight {
+  font-weight: 700;
+}
+
+/* Reading ruler - helps track lines of text */
+.ob-reading-ruler {
+  --ob-ruler-height: 2.5em;
+  --ob-ruler-color: rgba(255, 255, 0, 0.1);
+  --ob-ruler-border: rgba(0, 0, 0, 0.1);
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect x="0" y="14" width="32" height="4" fill="yellow" opacity="0.3"/></svg>'), auto;
+}
+
+/* Paragraph focus - highlights the paragraph being read */
+.ob-reading-paragraph-focus p:hover,
+.ob-reading-paragraph-focus li:hover {
+  background-color: rgba(255, 255, 0, 0.1);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+/* Number formatting for dyscalculia */
+.ob-number-separator {
+  color: var(--ob-secondary);
+  margin: 0 0.1em;
+  font-weight: normal;
+}
+
+.ob-number-highlight {
+  font-weight: bold;
+  color: var(--ob-primary);
+}
+
+/* Font Family Utility Classes */
+.ob-font-dyslexic {
+  font-family: var(--ob-font-opendyslexic);
+  letter-spacing: var(--ob-letter-spacing, 0.05em);
+  word-spacing: var(--ob-word-spacing, 0.1em);
+}
+
+.ob-font-accessible {
+  font-family: var(--ob-font-atkinson);
+}
+
+.ob-font-readable {
+  font-family: var(--ob-font-lexend);
+  letter-spacing: 0.01em;
+}
+
+.ob-font-standard {
+  font-family: var(--ob-font-inter);
+}
+
+/* Text Spacing Adjustments for Cognitive Accessibility */
+.ob-text-spacing-enhanced {
+  line-height: var(--ob-line-height-relaxed, 1.8);
+  letter-spacing: var(--ob-letter-spacing, 0.05em);
+  word-spacing: var(--ob-word-spacing, 0.1em);
+}
+
+/* Font Size Adjustments */
+.ob-text-size-base {
+  font-size: var(--ob-font-size-md, 1rem);
+}
+
+.ob-text-size-large {
+  font-size: var(--ob-font-size-lg, 1.25rem);
+}
+
+.ob-text-size-xl {
+  font-size: var(--ob-font-size-xl, 1.5rem);
+}
+
+/* Ensure sufficient touch target size for mobile */
+@media (pointer: coarse) {
+  .ob-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -1,0 +1,352 @@
+// tests/integration/composables/useBadgeVerificationService.test.ts
+
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { nextTick } from 'vue';
+
+// Mock must be defined before importing the module
+vi.mock('@/services/BadgeVerificationService');
+
+// Now import the mocked module and other modules
+import { BadgeVerificationService } from '@/services/BadgeVerificationService';
+import type { VerificationResult } from '@/services/BadgeVerificationService';
+import { useBadgeVerification } from '@/composables/useBadgeVerification';
+import { createMockOB2Badge, createMockOB3Badge } from '../utils';
+
+// Define type for the mocked service
+type MockedVerifyBadge = {
+  mockResolvedValueOnce: (result: VerificationResult) => unknown;
+  mockRejectedValueOnce: (error: Error) => unknown;
+};
+
+describe('useBadgeVerification and BadgeVerificationService Integration', () => {
+  const mockOB2Badge = createMockOB2Badge();
+  const mockOB3Badge = createMockOB3Badge();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call BadgeVerificationService.verifyBadge when verifyBadge is called', async () => {
+    // Mock a successful verification
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Call verifyBadge
+    const result = await verifyBadge(mockOB2Badge);
+
+    // Check that BadgeVerificationService.verifyBadge was called with the correct badge
+    expect(BadgeVerificationService.verifyBadge).toHaveBeenCalledWith(mockOB2Badge);
+    
+    // Check that the result is correct
+    expect(result).toBe(true);
+    
+    // Check that the state is updated correctly
+    expect(state.isVerified).toBe(true);
+    expect(state.isValid).toBe(true);
+    expect(state.isVerifying).toBe(false);
+    expect(state.errors).toEqual([]);
+    expect(state.warnings).toEqual([]);
+  });
+
+  it('should update state with a failed verification', async () => {
+    // Mock a failed verification
+    const errors = ['Invalid signature', 'Expired badge'];
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: false,
+      errors,
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'expired',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: false,
+        errors,
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Call verifyBadge
+    const result = await verifyBadge(mockOB2Badge);
+
+    // Check that the result is correct
+    expect(result).toBe(false);
+    
+    // Check that the state is updated correctly
+    expect(state.isVerified).toBe(true);
+    expect(state.isValid).toBe(false);
+    expect(state.isVerifying).toBe(false);
+    expect(state.errors).toEqual(errors);
+  });
+
+  it('should update state with warnings and validation details', async () => {
+    // Mock a verification with warnings
+    const warnings = ['Certificate will expire soon'];
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings,
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings,
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Call verifyBadge
+    await verifyBadge(mockOB2Badge);
+
+    // Check that the state is updated correctly
+    expect(state.isVerified).toBe(true);
+    expect(state.isValid).toBe(true);
+    expect(state.isVerifying).toBe(false);
+    expect(state.warnings).toEqual(warnings);
+    expect(state.validationDetails).toEqual({
+      verificationMethod: 'hosted',
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings,
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+  });
+
+  it('should handle network errors and other exceptions', async () => {
+    // Mock a network error
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockRejectedValueOnce(new Error('Network error'));
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Call verifyBadge
+    const result = await verifyBadge(mockOB2Badge);
+
+    // Check that the result is correct
+    expect(result).toBe(false);
+    
+    // Check that the state is updated correctly
+    expect(state.isVerified).toBe(false);
+    expect(state.isValid).toBe(false);
+    expect(state.isVerifying).toBe(false);
+    expect(state.errors).toEqual(['Verification failed: Network error']);
+  });
+
+  it('should track verification state during the process', async () => {
+    // Mock a successful verification that takes some time
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Start verification but don't await it yet
+    const verificationPromise = verifyBadge(mockOB2Badge);
+    
+    // Check that isVerifying is true
+    expect(state.isVerifying).toBe(true);
+    expect(state.isVerified).toBe(false);
+    
+    // Now await the verification
+    await verificationPromise;
+    
+    // Check that the verification is complete
+    expect(state.isVerifying).toBe(false);
+    expect(state.isVerified).toBe(true);
+    expect(state.isValid).toBe(true);
+  });
+
+  it('should support both OB2 and OB3 badge formats', async () => {
+    // Mock successful verifications for both formats
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Verify an OB2 badge
+    await verifyBadge(mockOB2Badge);
+    
+    // Check that BadgeVerificationService.verifyBadge was called with the OB2 badge
+    expect(BadgeVerificationService.verifyBadge).toHaveBeenCalledWith(mockOB2Badge);
+    
+    // Reset mocks
+    vi.clearAllMocks();
+    
+    // Mock for OB3 badge
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      verificationMethod: 'signed' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+    
+    // Verify an OB3 badge
+    await verifyBadge(mockOB3Badge);
+    
+    // Check that BadgeVerificationService.verifyBadge was called with the OB3 badge
+    expect(BadgeVerificationService.verifyBadge).toHaveBeenCalledWith(mockOB3Badge);
+    
+    // Check that the verification method was updated
+    expect(state.validationDetails?.verificationMethod).toBe('signed');
+  });
+
+  it('should clear previous results when starting a new verification', async () => {
+    // First, mock a failed verification to populate errors
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: false,
+      errors: ['Invalid signature'],
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: false,
+        errors: ['Invalid signature'],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+
+    // Use the composable
+    const { verifyBadge, state } = useBadgeVerification();
+
+    // Verify a badge and get a failure
+    await verifyBadge(mockOB2Badge);
+    
+    // Verify that we have errors
+    expect(state.errors).toHaveLength(1);
+    expect(state.isValid).toBe(false);
+    
+    // Reset the mock for a successful verification
+    vi.clearAllMocks();
+    
+    // Mock a successful verification
+    (BadgeVerificationService.verifyBadge as unknown as MockedVerifyBadge).mockResolvedValueOnce({
+      isValid: true,
+      errors: [],
+      warnings: [],
+      verificationMethod: 'hosted' as const,
+      expirationStatus: 'valid',
+      revocationStatus: 'valid',
+      structureValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+      contentValidation: {
+        isValid: true,
+        errors: [],
+        warnings: [],
+      },
+    });
+    
+    // Start a new verification
+    const verificationPromise = verifyBadge(mockOB3Badge);
+    
+    // After starting but before completion, state should be reset
+    expect(state.isVerifying).toBe(true);
+    expect(state.errors).toEqual([]);
+    expect(state.warnings).toEqual([]);
+    
+    // Complete the verification
+    await verificationPromise;
+    
+    // State should now show success
+    expect(state.isVerifying).toBe(false);
+    expect(state.isVerified).toBe(true);
+    expect(state.isValid).toBe(true);
+    expect(state.errors).toEqual([]);
+  });
+});

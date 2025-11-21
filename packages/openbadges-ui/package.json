@@ -1,0 +1,88 @@
+{
+  "name": "openbadges-ui",
+  "version": "0.1.0",
+  "description": "Vue 3 component library for implementing Open Badges functionality with accessibility and customization",
+  "homepage": "https://rollercoaster-dev.github.io/openbadges-ui/",
+  "main": "dist/openbadges-ui.umd.js",
+  "module": "dist/openbadges-ui.es.js",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "preview": "vite preview",
+    "lint": "eslint --ext .js,.ts,.vue --ignore-path .gitignore .",
+    "format": "prettier --write \"src/**/*.{js,ts,vue}\"",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "check": "bun run lint --fix && bun run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
+    "story:preview": "histoire preview"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "component",
+    "open-badges",
+    "badges",
+    "accessibility",
+    "a11y",
+    "theming"
+  ],
+  "author": "Manus AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rollercoaster-dev/monorepo.git",
+    "directory": "packages/openbadges-ui"
+  },
+  "bugs": {
+    "url": "https://github.com/rollercoaster-dev/monorepo/issues"
+  },
+  "engines": {
+    "node": ">=20.8.1"
+  },
+  "peerDependencies": {
+    "primevue": "^3.0.0",
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "openbadges-types": "workspace:*",
+    "uuid": "^9.0.0"
+  },
+  "sideEffects": [
+    "src/styles/index.ts",
+    "src/styles/*.css"
+  ],
+  "devDependencies": {
+    "@histoire/plugin-vue": "^0.17.6",
+    "@types/uuid": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vitest/coverage-istanbul": "^0.34.0",
+    "@vue/test-utils": "^2.4.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-vue": "^9.0.0",
+    "histoire": "^0.17.6",
+    "jsdom": "^22.1.0",
+    "prettier": "^2.0.0",
+    "primeicons": "^6.0.0",
+    "primevue": "^3.0.0",
+    "terser": "^5.39.0",
+    "typescript": "^5.8.3",
+    "vite": "^4.5.14",
+    "vitest": "^0.34.0",
+    "vue": "^3.0.0",
+    "vue-eslint-parser": "^9.0.0"
+  }
+}

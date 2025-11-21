@@ -1,0 +1,34 @@
+/**
+ * Rollercoaster.dev Open Badges Component Library - Main CSS
+ *
+ * This file imports all the CSS files used in the component library.
+ */
+
+/* Import theme variables */
+@import './themes.css';
+
+/* Import font definitions */
+@import './fonts.css';
+
+/* Import accessibility styles */
+@import './accessibility.css';
+
+/* Default theme class */
+.ob-default-theme {
+  /* Use default variables from :root */
+}
+
+/* Apply base styles to all components */
+[class^="ob-"] {
+  box-sizing: border-box;
+  font-family: var(--ob-font-family);
+}
+
+/* Ensure all components inherit theme variables */
+.ob-component {
+  color: var(--ob-text-primary);
+  background-color: var(--ob-bg-primary);
+  font-family: var(--ob-font-family);
+  font-size: var(--ob-font-size-md);
+  line-height: var(--ob-line-height-normal);
+}
