@@ -106,7 +106,7 @@ WRONG_PM=$(grep -rn "npm run\|npm install\|yarn \|yarn install\|pnpm " "$PACKAGE
 if [ -n "$WRONG_PM" ]; then
   echo -e "${YELLOW}⚠${NC}  Found non-bun package manager references:"
   echo "$WRONG_PM" | head -10
-  if [ $(echo "$WRONG_PM" | wc -l) -gt 10 ]; then
+  if [ "$(echo "$WRONG_PM" | wc -l)" -gt 10 ]; then
     echo "    ... and more"
   fi
   ISSUES_FOUND=$((ISSUES_FOUND + 1))
@@ -120,12 +120,12 @@ echo ""
 #
 echo -e "${BLUE}🎨 Checking CSS @import ordering...${NC}"
 CSS_ISSUES=0
-for file in $(find "$PACKAGE_DIR" -name "*.css" -o -name "*.scss" 2>/dev/null); do
+while IFS= read -r -d '' file; do
   if grep -q "@import" "$file" 2>/dev/null; then
     # Check if any non-comment, non-import content appears before imports
     # Get line number of first @import
     FIRST_IMPORT=$(grep -n "@import" "$file" | head -1 | cut -d: -f1)
-    # Get first non-comment, non-empty line
+    # Get first non-comment, non-empty line (heuristic - may have false positives)
     FIRST_CONTENT=$(grep -n "^[^/*@]" "$file" | grep -v "^\s*$" | head -1 | cut -d: -f1 || echo "999999")
 
     if [ -n "$FIRST_CONTENT" ] && [ "$FIRST_CONTENT" -lt "$FIRST_IMPORT" ] 2>/dev/null; then
@@ -133,7 +133,7 @@ for file in $(find "$PACKAGE_DIR" -name "*.css" -o -name "*.scss" 2>/dev/null); 
       CSS_ISSUES=1
     fi
   fi
-done
+done < <(find "$PACKAGE_DIR" \( -name "*.css" -o -name "*.scss" \) -print0 2>/dev/null)
 if [ $CSS_ISSUES -eq 0 ]; then
   echo -e "${GREEN}✓${NC} CSS @import ordering correct"
 else
@@ -149,7 +149,7 @@ SSR_ISSUES=$(grep -rn "document\.\|window\." "$PACKAGE_DIR/src" --include="*.ts"
 if [ -n "$SSR_ISSUES" ]; then
   echo -e "${YELLOW}⚠${NC}  Found potential SSR safety issues (document/window access without guards):"
   echo "$SSR_ISSUES" | head -5
-  if [ $(echo "$SSR_ISSUES" | wc -l) -gt 5 ]; then
+  if [ "$(echo "$SSR_ISSUES" | wc -l)" -gt 5 ]; then
     echo "    ... and more ($(echo "$SSR_ISSUES" | wc -l) total)"
   fi
   echo -e "${YELLOW}   Consider adding: if (typeof document === 'undefined') return;${NC}"
