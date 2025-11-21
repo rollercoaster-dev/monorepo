@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "pnpm exec concurrently \"pnpm run server\" \"pnpm run client\"",
+    "dev": "concurrently \"bun run server\" \"bun run client\"",
     "dev:local": "./scripts/dev-local.sh",
     "dev:docker": "./scripts/dev-docker.sh",
     "server": "bun run --hot src/server/index.ts",
@@ -12,34 +12,23 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "bun run src/server/index.ts",
-    "test": "pnpm run test:client && pnpm run test:server",
+    "test": "bun run test:client && bun run test:server",
     "test:ui": "vitest --ui",
-    "test:run": "pnpm run test:client -- --run && pnpm run test:server -- --run",
+    "test:run": "bun run test:client -- --run && bun run test:server",
     "test:coverage": "vitest run --coverage",
     "test:client": "vitest -c vitest.client.config.ts",
     "test:server": "bun test src/server/**/*.bun.test.ts",
     "test:server:vitest": "vitest -c vitest.server.config.ts",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "lint": "eslint . --ext .vue,.ts,.js",
     "lint:fix": "eslint . --ext .vue,.ts,.js --fix",
     "format": "prettier --write \"src/**/*.{ts,vue,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,vue,js,json}\"",
-    "type-check": "vue-tsc --noEmit",
-    "pre-commit": "lint-staged",
-    "commitlint": "commitlint --edit",
-    "prepare": "husky",
-    "review:fetch": "node scripts/coderabbit-review-automation.cjs fetch",
-    "review:update": "node scripts/coderabbit-review-automation.cjs update",
-    "review:fix": "node scripts/coderabbit-review-automation.cjs fix",
-    "review:fix:critical": "node scripts/coderabbit-review-automation.cjs fix --priority=Critical",
-    "review:fix:security": "node scripts/coderabbit-review-automation.cjs fix --priority=High",
-    "review:auto": "node scripts/coderabbit-review-automation.cjs auto"
+    "type-check": "vue-tsc --noEmit"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.31.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "latest",
@@ -57,10 +46,8 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-vue": "^10.3.0",
     "happy-dom": "^18.0.1",
-    "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "kysely": "^0.28.5",
-    "lint-staged": "^16.1.2",
     "pg": "^8.16.3",
     "postcss": "8.4.31",
     "prettier": "^3.6.2",
@@ -86,27 +73,12 @@
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "nanoid": "^5.1.5",
-    "openbadges-types": "^3.2.3",
-    "openbadges-ui": "^1.0.3",
+    "openbadges-types": "workspace:*",
+    "openbadges-ui": "workspace:*",
     "pinia": "^3.0.2",
-    "sqlite3": "^5.1.7",
     "vue": "^3.4.0",
     "vue-router": "^4.3.0",
     "zod": "^4.0.15",
     "zod-form-data": "^3.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,js,vue}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
-  "pnpm": {
-    "overrides": {
-      "brace-expansion": "2.0.2"
-    }
   }
 }
