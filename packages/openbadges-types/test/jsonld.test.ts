@@ -132,6 +132,31 @@ describe('JSON-LD Type Guards', () => {
     });
   });
 
+  describe('typeIncludes', () => {
+    test('should handle string type values', () => {
+      expect(Shared.typeIncludes('Assertion', 'Assertion')).toBe(true);
+      expect(Shared.typeIncludes('Assertion', 'BadgeClass')).toBe(false);
+      expect(Shared.typeIncludes('VerifiableCredential', 'VerifiableCredential')).toBe(true);
+    });
+
+    test('should handle array type values', () => {
+      expect(Shared.typeIncludes(['Assertion', 'Extension'], 'Assertion')).toBe(true);
+      expect(Shared.typeIncludes(['Assertion', 'Extension'], 'Extension')).toBe(true);
+      expect(Shared.typeIncludes(['Assertion', 'Extension'], 'BadgeClass')).toBe(false);
+      expect(Shared.typeIncludes(['VerifiableCredential', 'OpenBadgeCredential'], 'OpenBadgeCredential')).toBe(true);
+    });
+
+    test('should handle edge cases', () => {
+      expect(Shared.typeIncludes(null, 'Assertion')).toBe(false);
+      expect(Shared.typeIncludes(undefined, 'Assertion')).toBe(false);
+      expect(Shared.typeIncludes(123, 'Assertion')).toBe(false);
+      expect(Shared.typeIncludes({}, 'Assertion')).toBe(false);
+      expect(Shared.typeIncludes([], 'Assertion')).toBe(false);
+      expect(Shared.typeIncludes('', '')).toBe(true);
+      expect(Shared.typeIncludes([''], '')).toBe(true);
+    });
+  });
+
   describe('Integration with OB2 and OB3', () => {
     test('should work with OB2 Assertion objects', () => {
       const assertion = createOB2Assertion();

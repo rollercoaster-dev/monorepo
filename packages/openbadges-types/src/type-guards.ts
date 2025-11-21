@@ -18,7 +18,7 @@ import {
 } from './v3/guards';
 
 // Import from shared
-import { isJsonLdObject, hasJsonLdType, hasJsonLdContext } from './shared/jsonld';
+import { isJsonLdObject, hasJsonLdType, hasJsonLdContext, typeIncludes } from './shared/jsonld';
 import { isIRI, isDateTime } from './shared/common';
 
 // Import from composite-guards
@@ -40,6 +40,7 @@ export {
   isJsonLdObject,
   hasJsonLdType,
   hasJsonLdContext,
+  typeIncludes,
   isIRI,
   isDateTime,
 

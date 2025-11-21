@@ -28,20 +28,20 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 
 2. **Install Dependencies**
    ```bash
-   # Install pnpm if you don't have it
-   npm install -g pnpm
+   # Install Bun if you don't have it
+   curl -fsSL https://bun.sh/install | bash
 
    # Install all dependencies
-   pnpm install
+   bun install
    ```
 
 3. **Verify Setup**
    ```bash
    # Run tests
-   pnpm test
+   bun test
 
    # Build everything
-   pnpm build
+   bun run build
    ```
 
 ### Making Changes
@@ -61,13 +61,13 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 3. **Test Your Changes**
    ```bash
    # Run tests for affected packages
-   pnpm test
+   bun test
 
    # Run linting
-   pnpm lint
+   bun run lint
 
    # Type check
-   pnpm type-check
+   bun run type-check
    ```
 
 4. **Commit Your Changes**
@@ -119,16 +119,16 @@ monorepo/
 
 ```bash
 # All tests
-pnpm test
+bun test
 
 # Specific package
-pnpm --filter openbadges-types test
+bun --filter openbadges-types test
 
 # Watch mode
-pnpm test --watch
+bun test --watch
 
 # Coverage
-pnpm test:coverage
+bun test --coverage
 ```
 
 ### Writing Tests
@@ -148,10 +148,10 @@ pnpm test:coverage
 ### Formatting
 ```bash
 # Check formatting
-pnpm format:check
+bun run format:check
 
 # Auto-fix formatting
-pnpm format
+bun run format
 ```
 
 We use Prettier - don't fight it, let it handle formatting.
@@ -159,10 +159,10 @@ We use Prettier - don't fight it, let it handle formatting.
 ### Linting
 ```bash
 # Check linting
-pnpm lint
+bun run lint
 
 # Auto-fix linting issues
-pnpm lint:fix
+bun run lint:fix
 ```
 
 ## 📋 Commit Message Format
@@ -208,9 +208,9 @@ chore(deps): upgrade vue to 3.4.0
 ## 🔄 Pull Request Process
 
 ### Before Submitting
-- [ ] Tests pass (`pnpm test`)
-- [ ] Linting passes (`pnpm lint`)
-- [ ] Type checking passes (`pnpm type-check`)
+- [ ] Tests pass (`bun test`)
+- [ ] Linting passes (`bun run lint`)
+- [ ] Type checking passes (`bun run type-check`)
 - [ ] Documentation updated if needed
 - [ ] Commit messages follow convention
 
@@ -245,33 +245,24 @@ Steps to verify the change works
 
 ## 🔧 Maintenance Tasks
 
-### Updating pnpm Version
+### Updating Bun Version
 
-We update pnpm frequently (often monthly or more) to get latest features and fixes.
+We update Bun regularly to get latest features and fixes.
 
-**Automated Method (Recommended):**
+**Update Method:**
 ```bash
-pnpm run update-pnpm
-# Then follow the printed instructions:
-# 1. pnpm install
-# 2. Test everything works
-# 3. Commit the changes
-```
+# Update Bun to latest
+bun upgrade
 
-**Manual Method:**
-```bash
-# Check latest version
-npm view pnpm version
-
-# Update package.json
-npm pkg set packageManager=pnpm@10.21.0
+# Verify installation
+bun --version
 
 # Reinstall and test
-pnpm install
-pnpm test
+bun install
+bun test
 
-# Commit
-git commit -am "chore: update pnpm to 10.21.0"
+# Commit if needed
+git commit -am "chore: update Bun to X.Y.Z"
 ```
 
 **Why Update:**
@@ -280,13 +271,70 @@ git commit -am "chore: update pnpm to 10.21.0"
 - New workspace features
 - Security patches
 
-**Single Source of Truth:**
-The `packageManager` field in `package.json` is automatically used by:
-- GitHub Actions (CI)
-- Local development (via Corepack)
-- All tooling that respects package managers
+## 🌐 SSR Safety Requirements
 
-Change it once, everything updates!
+When writing code that runs in both browser and server environments (SSR/SSG):
+
+### DOM/Window Access
+
+Any code that accesses `document` or `window` must include guards:
+
+```typescript
+// Always guard direct DOM access
+if (typeof document === 'undefined') return;
+
+// Or use optional chaining for simple access
+const width = typeof window !== 'undefined' ? window.innerWidth : 0;
+```
+
+### Vue Component Lifecycle Cleanup
+
+If a component modifies `document.body` or creates global event listeners, add cleanup:
+
+```vue
+<script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
+
+onMounted(() => {
+  // SSR guard
+  if (typeof document === 'undefined') return;
+
+  document.body.classList.add('modal-open');
+});
+
+onUnmounted(() => {
+  // Clean up DOM modifications
+  if (typeof document === 'undefined') return;
+
+  document.body.classList.remove('modal-open');
+});
+</script>
+```
+
+### Template Defensive Coding
+
+Always guard against undefined values before comparison:
+
+```vue
+<!-- Bad - may error if status is undefined -->
+<div v-if="status !== 'not-applicable'">
+
+<!-- Good - guard against undefined first -->
+<div v-if="status && status !== 'not-applicable'">
+```
+
+### Type Guards for Open Badges
+
+Use `typeIncludes()` from `openbadges-types` for checking badge types (handles both string and array per OB2/OB3 spec):
+
+```typescript
+import { typeIncludes } from 'openbadges-types';
+
+// Works with both string and array type values
+if (typeIncludes(badge.type, 'Assertion')) {
+  // Handle OB2 Assertion
+}
+```
 
 ## 🏷️ Issue Labels
 
@@ -343,7 +391,7 @@ When contributing design changes:
 - [Open Badges 3.0 Spec](https://www.imsglobal.org/spec/ob/v3p0/)
 - [Verifiable Credentials](https://www.w3.org/TR/vc-data-model/)
 - [DIDs](https://www.w3.org/TR/did-core/)
-- [pnpm Workspaces](https://pnpm.io/workspaces)
+- [Bun Workspaces](https://bun.sh/docs/install/workspaces)
 - [Turborepo](https://turbo.build/repo/docs)
 
 ### Tools
