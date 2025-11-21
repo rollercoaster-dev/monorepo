@@ -38,7 +38,7 @@ Acceptance Criteria (from issue):
 
 Endpoints used (externally proxied/consumed):
 
-- Authenticated badge server base: VITE_BADGE_SERVER_URL (default http://localhost:3000)
+- Authenticated badge server base: `VITE_BADGE_SERVER_URL` (default `http://localhost:3000`)
   - POST /api/v2/badge-classes (create)
   - GET /api/v2/badge-classes (list)
   - POST /api/v2/assertions (issue)

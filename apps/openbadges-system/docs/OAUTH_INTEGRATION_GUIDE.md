@@ -12,7 +12,7 @@ The OpenBadges system uses a hybrid OAuth approach:
 
 ## Architecture
 
-```
+```text
 ┌─────────────────┐    GitHub OAuth    ┌─────────────────┐
 │     User        │ ──────────────────► │  Main App       │
 │                 │                     │  (Port 8888)    │
