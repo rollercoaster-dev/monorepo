@@ -15,8 +15,9 @@ export default defineConfig({
     },
   },
   test: {
-    // Note: Removed 'forks' pool - it has compatibility issues with Bun in CI
-    // Default 'threads' pool works with both Node.js and Bun
+    // Use single-threaded mode for Bun compatibility in CI
+    // Bun doesn't fully support Node.js worker_threads APIs used by vitest pools
+    threads: false,
     environment: 'jsdom',
     globals: true,
     include: ['tests/**/*.{test,spec}.{js,ts,vue}'],
