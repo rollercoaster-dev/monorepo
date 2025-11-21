@@ -1,5 +1,6 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from './useAuth'
 
 export interface NavigationItem {
   id: string
@@ -14,19 +15,20 @@ export interface NavigationItem {
 export const useNavigation = () => {
   const route = useRoute()
   const router = useRouter()
+  const { user: authUser, isAuthenticated } = useAuth()
 
   // Navigation state
   const isMobileMenuOpen = ref(false)
   const activeDropdowns = ref(new Set<string>())
 
-  // User state (would typically come from auth store)
-  const user = ref({
-    isLoggedIn: false,
-    isAdmin: false,
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: null,
-  })
+  // User state derived from auth composable
+  const user = computed(() => ({
+    isLoggedIn: isAuthenticated.value,
+    isAdmin: authUser.value?.role === 'admin',
+    name: authUser.value?.displayName || authUser.value?.email || '',
+    email: authUser.value?.email || '',
+    avatar: authUser.value?.avatarUrl || null,
+  }))
 
   // Toggle mobile menu
   const toggleMobileMenu = () => {
