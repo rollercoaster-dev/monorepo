@@ -15,12 +15,8 @@ export default defineConfig({
     },
   },
   test: {
-    pool: 'forks', // Use forks pool for Vue SFC compatibility
-    poolOptions: {
-      forks: {
-        singleFork: true, // Run all tests in a single fork for consistency
-      },
-    },
+    // Note: Removed 'forks' pool - it has compatibility issues with Bun in CI
+    // Default 'threads' pool works with both Node.js and Bun
     environment: 'jsdom',
     globals: true,
     include: ['tests/**/*.{test,spec}.{js,ts,vue}'],
