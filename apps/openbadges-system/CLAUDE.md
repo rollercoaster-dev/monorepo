@@ -1,105 +1,125 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (<https://claude.ai/code>) when working with code in this repository.
+This file provides guidance to Claude Code (<https://claude.ai/code>) when working with code in this application.
+
+## Monorepo Context
+
+This app is part of the **rollercoaster.dev monorepo**. It uses workspace dependencies from:
+- `packages/openbadges-types` - OpenBadges TypeScript type definitions
+- `packages/openbadges-ui` - Vue 3 component library for OpenBadges
+
+**Important:** Run all commands from the monorepo root or use `bun --filter openbadges-system`.
 
 ## Project Overview
 
-OpenBadges System is a Vue 3 + Bun/Hono application implementing the OpenBadges standard for digital credentials. The project uses a monorepo structure with client and server code in the same repository.
+OpenBadges System is a Vue 3 + Bun/Hono application implementing the OpenBadges standard for digital credentials.
 
 **Tech Stack:**
 
 - Frontend: Vue 3, Vue Router, Pinia, TailwindCSS, TypeScript
 - Backend: Bun runtime, Hono framework, SQLite/PostgreSQL via Kysely
 - Build: Vite for frontend, Bun for backend
-- Package Manager: pnpm
+- Package Manager: Bun (monorepo workspaces)
 
 ## Development Commands
 
-### Core Development
+### From Monorepo Root
+
+```bash
+# Install dependencies
+bun install
+
+# Run specific to this app
+bun --filter openbadges-system dev
+bun --filter openbadges-system test
+bun --filter openbadges-system build
+```
+
+### From App Directory
 
 ```bash
 # Start full development environment (client + server)
-pnpm dev
+bun run dev
 
 # Start only server (Bun with hot reload)
-pnpm server
+bun run server
 
 # Start only client (Vite dev server)
-pnpm client
+bun run client
 
 # Alternative dev setups
-pnpm dev:local    # Local development script
-pnpm dev:docker   # Docker-based development
+bun run dev:local    # Local development script
+bun run dev:docker   # Docker-based development
 ```
 
 ### Testing
 
 ```bash
 # Run all tests (client + server)
-pnpm test
+bun run test
 
 # Run tests with UI
-pnpm test:ui
+bun run test:ui
 
 # Run tests once without watch mode
-pnpm test:run
+bun run test:run
 
 # Test coverage
-pnpm test:coverage
+bun run test:coverage
 
 # Client-only tests (Vitest + jsdom)
-pnpm test:client
+bun run test:client
 
 # Server-only tests (Bun test)
-pnpm test:server
+bun run test:server
 
 # Server tests via Vitest (alternative)
-pnpm test:server:vitest
+bun run test:server:vitest
 ```
 
 ### Code Quality
 
 ```bash
 # Lint code
-pnpm lint
+bun run lint
 
 # Fix linting issues
-pnpm lint:fix
+bun run lint:fix
 
 # Format code
-pnpm format
+bun run format
 
 # Check formatting
-pnpm format:check
+bun run format:check
 
 # Type checking
-pnpm type-check
+bun run type-check
 ```
 
 ### Build & Deploy
 
 ```bash
 # Build for production
-pnpm build
+bun run build
 
 # Preview production build
-pnpm preview
+bun run preview
 
 # Start production server
-pnpm start
+bun run start
 ```
 
 ### Docker Operations
 
 ```bash
 # Start containers
-pnpm docker:up
+bun run docker:up
 
 # Stop containers
-pnpm docker:down
+bun run docker:down
 
 # View logs
-pnpm docker:logs
+bun run docker:logs
 ```
 
 ## Architecture Overview
@@ -122,6 +142,18 @@ src/
 │   └── __tests__/    # Backend test files
 ├── test/             # Shared test utilities and integration tests
 └── types/            # Shared TypeScript types
+```
+
+### Workspace Dependencies
+
+This app uses workspace packages:
+
+```typescript
+// From openbadges-types
+import type { BadgeClass, Assertion } from 'openbadges-types'
+
+// From openbadges-ui
+import { ObBadgeCard, ObBadgeList } from 'openbadges-ui'
 ```
 
 ### Key Architectural Patterns
@@ -150,17 +182,19 @@ src/
 
 ### Testing Strategy
 
-**Client Tests:**
+**Client Tests (Vitest):**
 
-- Vitest with jsdom environment
+- jsdom environment
 - Vue Test Utils for component testing
 - Tests in `src/client/**/*.{test,spec}.ts`
+- Run with: `bun run test:client`
 
-**Server Tests:**
+**Server Tests (Bun test):**
 
-- Bun test for unit tests (`**/*.bun.test.ts`)
+- Bun native test runner for unit tests (`**/*.bun.test.ts`)
 - Vitest for integration tests (`**/*.{test,spec}.ts`)
 - Test stubs for Bun-specific modules in `src/server/test-stubs/`
+- Run with: `bun run test:server`
 
 **Integration Tests:**
 
@@ -193,17 +227,19 @@ The system integrates with an external OpenBadges server via:
 
 **Package Management:**
 
-- Use pnpm for all dependency management
-- Lock file is committed (`pnpm-lock.yaml`)
+- Part of Bun workspaces monorepo
+- Run `bun install` from monorepo root
+- Workspace dependencies resolve to local packages
 
 **Code Style:**
 
 - ESLint + Prettier configuration
-- Pre-commit hooks via Husky and lint-staged
 - TypeScript strict mode enabled
+- Run `bun run lint` before committing
 
 **Environment:**
 
+- Copy `.env.example` to `.env` for local development
 - Environment variables for OAuth, JWT keys, database URLs
 - Docker Compose for local badge server development
 - Supports both local and containerized development
