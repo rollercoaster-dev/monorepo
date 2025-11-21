@@ -44,9 +44,31 @@ export const useAuth = () => {
   const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
   const isPlatformAuthAvailable = ref(false)
 
+  // Local session marker prefix for offline-first support
+  const LOCAL_SESSION_PREFIX = 'local-session-'
+  // Maximum age for local sessions (24 hours) before requiring re-authentication
+  const LOCAL_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+  // Helper function to check if this is a local-only session marker
+  const isLocalSession = (tokenValue: string | null): boolean => {
+    return tokenValue !== null && tokenValue.startsWith(LOCAL_SESSION_PREFIX)
+  }
+
+  // Helper function to check if a local session is still valid (not too old)
+  const isLocalSessionValid = (tokenValue: string | null): boolean => {
+    if (!tokenValue || !isLocalSession(tokenValue)) return false
+    const timestamp = parseInt(tokenValue.replace(LOCAL_SESSION_PREFIX, ''), 10)
+    if (isNaN(timestamp)) return false
+    return Date.now() - timestamp < LOCAL_SESSION_MAX_AGE_MS
+  }
+
   // Helper function to check if JWT token is valid and not expired
   const isTokenValid = (tokenValue: string | null): boolean => {
     if (!tokenValue) return false
+    // Allow local session markers (limited functionality, offline-first)
+    if (isLocalSession(tokenValue)) {
+      return isLocalSessionValid(tokenValue)
+    }
     try {
       const decoded = jwtDecode<{ exp: number }>(tokenValue)
       return decoded.exp * 1000 > Date.now()
@@ -58,6 +80,8 @@ export const useAuth = () => {
   // Computed
   const isAuthenticated = computed(() => !!user.value && !!token.value && isTokenValid(token.value))
   const isAdmin = computed(() => user.value?.isAdmin || false)
+  // Indicates if user is in offline/local-only mode (limited backend functionality)
+  const hasLocalSession = computed(() => isLocalSession(token.value))
 
   // Check platform authenticator availability
   const checkPlatformAuth = async () => {
@@ -473,9 +497,29 @@ export const useAuth = () => {
     if (storedToken && storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser)
+
+        // First check if token is locally valid (handles both JWT expiration and local session age)
+        if (!isTokenValid(storedToken)) {
+          console.warn('Stored session expired, clearing local state')
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('user_data')
+          token.value = null
+          user.value = null
+          await checkPlatformAuth()
+          return
+        }
+
         token.value = storedToken
         user.value = parsedUser
-        // Best-effort validation; only clear on explicit unauthorized
+
+        // Skip server validation for local sessions (offline-first)
+        if (isLocalSession(storedToken)) {
+          console.info('Using local session (offline mode)')
+          await checkPlatformAuth()
+          return
+        }
+
+        // Best-effort validation for JWT tokens; only clear on explicit unauthorized
         try {
           const res = await fetch('/api/auth/validate', {
             headers: { Authorization: `Bearer ${storedToken}` },
@@ -738,12 +782,16 @@ export const useAuth = () => {
   }
 
   // Process OAuth callback (typically handled by backend, but can be used for SPA flows)
-  const processOAuthCallback = async (code: string, state: string): Promise<boolean> => {
+  const processOAuthCallback = async (
+    code: string,
+    state: string,
+    provider: string = 'github'
+  ): Promise<boolean> => {
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await fetch(`/api/oauth/github/callback?code=${code}&state=${state}`)
+      const response = await fetch(`/api/oauth/${provider}/callback?code=${code}&state=${state}`)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
@@ -799,6 +847,7 @@ export const useAuth = () => {
     // Computed
     isAuthenticated,
     isAdmin,
+    hasLocalSession,
 
     // Actions
     login,

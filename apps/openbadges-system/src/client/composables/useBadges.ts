@@ -95,12 +95,14 @@ export const useBadges = () => {
 
   // API calls with platform authentication
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    // Compute merged headers first to ensure Content-Type isn't accidentally dropped
+    const mergedHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...((options.headers as Record<string, string>) ?? {}),
+    }
     const response = await fetch(`/api/badges${endpoint}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers as Record<string, string>),
-      },
+      headers: mergedHeaders,
     })
 
     if (!response.ok) {
@@ -117,12 +119,14 @@ export const useBadges = () => {
 
   // API calls with basic authentication (for public badge data)
   const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
+    // Compute merged headers first to ensure Content-Type isn't accidentally dropped
+    const mergedHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...((options.headers as Record<string, string>) ?? {}),
+    }
     const response = await fetch(`/api/bs${endpoint}`, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers as Record<string, string>),
-      },
+      headers: mergedHeaders,
     })
 
     if (!response.ok) {
@@ -134,6 +138,20 @@ export const useBadges = () => {
     const ct = response.headers.get('content-type') || ''
     if (!ct.includes('application/json')) return null
     return response.json()
+  }
+
+  // Helper to get platform token for authenticated badge operations
+  const getPlatformToken = async (user: User): Promise<string> => {
+    const response = await fetch('/api/auth/platform-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user }),
+    })
+    if (!response.ok) {
+      throw new Error('Failed to get platform token')
+    }
+    const { token } = await response.json()
+    return token
   }
 
   // Fetch badge classes with pagination and filters
@@ -190,20 +208,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      // Get platform token for authentication
-      const tokenResponse = await fetch('/api/auth/platform-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      })
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get platform token')
-      }
-
-      const { token } = await tokenResponse.json()
+      const token = await getPlatformToken(user)
 
       // Create badge class
       const response = await apiCall('/v2/badge-classes', {
@@ -252,20 +257,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      // Get platform token for authentication
-      const tokenResponse = await fetch('/api/auth/platform-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      })
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get platform token')
-      }
-
-      const { token } = await tokenResponse.json()
+      const token = await getPlatformToken(user)
 
       // Update badge class
       const response = await apiCall(`/v2/badge-classes/${badgeId}`, {
@@ -300,20 +292,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      // Get platform token for authentication
-      const tokenResponse = await fetch('/api/auth/platform-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      })
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get platform token')
-      }
-
-      const { token } = await tokenResponse.json()
+      const token = await getPlatformToken(user)
 
       // Delete badge class
       await apiCall(`/v2/badge-classes/${badgeId}`, {
@@ -323,9 +302,12 @@ export const useBadges = () => {
         },
       })
 
-      // Remove from local badges array
+      // Remove from local badges array, only decrement if badge was actually present
+      const originalLength = badges.value.length
       badges.value = badges.value.filter(b => b.id !== badgeId)
-      totalBadges.value--
+      if (badges.value.length < originalLength) {
+        totalBadges.value = Math.max(0, totalBadges.value - 1)
+      }
 
       return true
     } catch (err) {
@@ -363,20 +345,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      // Get platform token for authentication
-      const tokenResponse = await fetch('/api/auth/platform-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      })
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get platform token')
-      }
-
-      const { token } = await tokenResponse.json()
+      const token = await getPlatformToken(user)
 
       // Issue badge
       const response = await apiCall('/v2/assertions', {
@@ -451,20 +420,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      // Get platform token for authentication
-      const tokenResponse = await fetch('/api/auth/platform-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user }),
-      })
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get platform token')
-      }
-
-      const { token } = await tokenResponse.json()
+      const token = await getPlatformToken(user)
 
       // Revoke assertion
       await apiCall(`/v2/assertions/${assertionId}/revoke`, {
