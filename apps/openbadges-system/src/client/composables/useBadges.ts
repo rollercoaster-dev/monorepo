@@ -96,11 +96,11 @@ export const useBadges = () => {
   // API calls with platform authentication
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(`/api/badges${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
       },
-      ...options,
     })
 
     if (!response.ok) {
@@ -118,11 +118,11 @@ export const useBadges = () => {
   // API calls with basic authentication (for public badge data)
   const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(`/api/bs${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
       },
-      ...options,
     })
 
     if (!response.ok) {

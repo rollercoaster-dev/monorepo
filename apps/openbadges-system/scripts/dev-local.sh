@@ -8,7 +8,9 @@ echo "🚀 Starting local development setup..."
 # Load environment variables
 if [ -f .env ]; then
     echo "📁 Loading environment variables..."
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    source .env
+    set +a
 else
     echo "⚠️  No .env file found, using defaults"
 fi
@@ -30,7 +32,7 @@ fi
 
 # Start the development servers
 echo "🏃 Starting development servers..."
-pnpm dev
+bun dev
 
 echo "🎉 Local development setup complete!"
 echo "Frontend: http://localhost:${VITE_PORT:-7777}"

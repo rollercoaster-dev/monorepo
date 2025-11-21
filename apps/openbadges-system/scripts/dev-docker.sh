@@ -36,7 +36,9 @@ fi
 # Load environment variables
 if [ -f .env ]; then
     echo "📁 Loading environment variables..."
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    source .env
+    set +a
 else
     echo "❌ No .env file found"
     exit 1
@@ -44,7 +46,7 @@ fi
 
 # Start the development servers
 echo "🏃 Starting development servers..."
-pnpm dev
+bun dev
 
 echo "🎉 Docker development setup complete!"
 echo "Frontend: http://localhost:7777"

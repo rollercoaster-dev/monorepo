@@ -51,8 +51,12 @@ export const useImageUpload = (options: ImageUploadOptions = {}) => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       const img = new globalThis.Image()
+      const objectUrl = URL.createObjectURL(file)
 
       img.onload = () => {
+        // Clean up object URL to prevent memory leak
+        URL.revokeObjectURL(objectUrl)
+
         // Calculate new dimensions
         let { width, height } = img
 
@@ -96,8 +100,12 @@ export const useImageUpload = (options: ImageUploadOptions = {}) => {
         )
       }
 
-      img.onerror = () => reject(new Error('Failed to load image'))
-      img.src = URL.createObjectURL(file)
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl)
+        reject(new Error('Failed to load image'))
+      }
+
+      img.src = objectUrl
     })
   }
 
@@ -108,15 +116,16 @@ export const useImageUpload = (options: ImageUploadOptions = {}) => {
     isUploading.value = true
     progress.value = 0
 
+    let progressInterval: ReturnType<typeof globalThis.setInterval> | null = null
+
     try {
       // Simulate upload progress
-      const progressInterval = globalThis.setInterval(() => {
+      progressInterval = globalThis.setInterval(() => {
         progress.value = Math.min(progress.value + 20, 90)
       }, 100)
 
       const result = await resizeImage(file)
 
-      globalThis.clearInterval(progressInterval)
       progress.value = 100
 
       return result
@@ -124,6 +133,10 @@ export const useImageUpload = (options: ImageUploadOptions = {}) => {
       error.value = err instanceof Error ? err.message : 'Upload failed'
       return null
     } finally {
+      // Always clear interval to prevent memory leak
+      if (progressInterval) {
+        globalThis.clearInterval(progressInterval)
+      }
       isUploading.value = false
       setTimeout(() => {
         progress.value = 0
