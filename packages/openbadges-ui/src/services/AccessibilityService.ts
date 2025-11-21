@@ -95,7 +95,9 @@ export class AccessibilityService {
       | 'dyslexia-friendly'
       | 'autism-friendly'
   ): void {
-    if (!isBrowser) return;
+    if (!isBrowser) {
+      return;
+    }
 
     // Remove any existing theme classes
     document.body.classList.remove(
@@ -117,7 +119,9 @@ export class AccessibilityService {
    * @returns Whether reduced motion is preferred
    */
   static prefersReducedMotion(): boolean {
-    if (!isBrowser) return false;
+    if (!isBrowser) {
+      return false;
+    }
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -179,7 +183,9 @@ export class AccessibilityService {
    * @param density The content density preference
    */
   static setContentDensity(density: 'compact' | 'normal' | 'spacious'): void {
-    if (!isBrowser) return;
+    if (!isBrowser) {
+      return;
+    }
 
     // Remove any existing density classes
     document.body.classList.remove(
@@ -198,7 +204,9 @@ export class AccessibilityService {
    * @param enabled Whether focus mode is enabled
    */
   static setFocusMode(enabled: boolean): void {
-    if (!isBrowser) return;
+    if (!isBrowser) {
+      return;
+    }
 
     if (enabled) {
       document.body.classList.add('ob-focus-mode');
@@ -213,7 +221,9 @@ export class AccessibilityService {
    * @param level The level of animation (none, minimal, full)
    */
   static setAnimationLevel(level: 'none' | 'minimal' | 'full'): void {
-    if (!isBrowser) return;
+    if (!isBrowser) {
+      return;
+    }
 
     // Remove any existing animation classes
     document.body.classList.remove(
@@ -232,7 +242,9 @@ export class AccessibilityService {
    * @param mode The reading mode to apply
    */
   static setReadingMode(mode: 'default' | 'bionic' | 'ruler' | 'paragraph-focus'): void {
-    if (!isBrowser) return;
+    if (!isBrowser) {
+      return;
+    }
 
     // Remove any existing reading mode classes
     document.body.classList.remove(
