@@ -4,7 +4,9 @@ This document describes the multi-agent architecture for migrating packages into
 
 ## Overview
 
-The migration system uses **10 specialized agents** that work together to migrate packages from standalone repositories into the monorepo. The architecture follows Unix philosophy: each agent does one thing well, and agents can be composed for complex workflows.
+The migration system uses **10 specialized agents** that work together to migrate packages from standalone repositories into the monorepo. Each agent does one thing well and can be invoked independently.
+
+**Important**: Claude Code subagents cannot call other subagents. The main Claude session orchestrates the workflow by invoking agents sequentially based on guidance from the orchestrator.
 
 ## Quick Start
 
@@ -14,28 +16,41 @@ The migration system uses **10 specialized agents** that work together to migrat
 User: "Migrate {package-name} from {repo-url}"
 ```
 
-The **migration-orchestrator** will automatically:
-1. Analyze the package (complexity, Bun compatibility)
-2. Create a detailed migration plan
-3. Execute the migration with atomic commits
-4. Create a PR and close issues
+The main Claude session will guide you through:
+1. **Phase 1**: Invoke `migration-analyzer` → get complexity assessment
+2. **Phase 2**: Invoke `migration-planner` → get detailed plan
+3. **Phase 3**: Invoke `migration-executor` → execute with atomic commits
+4. **Phase 4**: Invoke `migration-finalizer` → create PR, close issues
+
+Use `migration-orchestrator` to check current state and get the next step.
 
 **Estimated time**: Varies by complexity (EASY: 1-2 days, MEDIUM: 3-5 days, HARD: 1-2 weeks)
 
 ## Architecture Diagram
 
 ```
-migration-orchestrator (main entry point)
-├─► migration-analyzer
-│   └─► dependency-analyzer (parallel)
-├─► migration-planner
-├─► migration-executor
-│   ├─► dependency-analyzer (as needed)
-│   ├─► bun-package-integrator
-│   ├─► test-coverage-validator
-│   └─► documentation-updater
-└─► migration-finalizer
+Main Claude Session (orchestrates workflow)
+│
+├─► migration-orchestrator (advisory - guides next steps)
+│
+├─► Phase 1: migration-analyzer (analyzes package)
+│
+├─► Phase 2: migration-planner (creates plan)
+│
+├─► Phase 3: migration-executor (executes plan)
+│   (handles deps, Bun config, tests, docs internally)
+│
+├─► Phase 4: migration-finalizer (creates PR)
+│
+└─► Utility agents (invoke as needed for complex issues):
+    ├─► dependency-analyzer
+    ├─► bun-package-integrator
+    ├─► test-migration
+    ├─► test-coverage-validator
+    └─► documentation-updater
 ```
+
+**Note**: Agents do not call each other. The main session invokes them sequentially.
 
 ## Agent Catalog
 
@@ -199,22 +214,22 @@ These agents handle specific tasks and can be called independently:
 ### Orchestrator
 
 #### 9. migration-orchestrator
-**Purpose**: Coordinates complete migration workflow
-**Calls**: All 4 core workflow agents + specialized agents (via executor)
+**Purpose**: Guides migration workflow (advisory role)
+**Does NOT call other agents** - returns instructions for what to invoke next
 
 **What it does**:
-- Single entry point for migrations
-- Launches agents in correct sequence
+- Entry point for understanding migration state
+- Checks current progress and determines next step
+- Returns clear instructions: "Invoke X agent next"
 - Handles approval gates (interactive mode)
 - Manages state between phases
 - Provides progress updates
-- Handles errors gracefully
 
 **Modes**:
-- **Interactive** (default): Pause after each major agent for approval
-- **Full-Auto**: Run all agents without pausing (only stop on errors)
+- **Interactive** (default): User confirms before each phase
+- **Guided**: Returns next step, user/main agent invokes it
 
-**Can resume**: Yes, from any phase if migration is interrupted
+**Can resume**: Yes, checks state and tells you where to continue
 
 ## Usage Examples
 
@@ -223,29 +238,27 @@ These agents handle specific tasks and can be called independently:
 ```
 User: "Migrate openbadges-types from https://github.com/rollercoaster-dev/openbadges-types"
 
-→ migration-orchestrator launches:
+→ Main Claude session orchestrates:
 
-  [1/4] migration-analyzer
-  Analysis: EASY complexity, FULL Bun compat, 2 dependency conflicts
-  Continue? → User: yes
+  [Phase 1] User: "Use migration-analyzer"
+  → migration-analyzer runs
+  → Analysis: EASY complexity, FULL Bun compat, 2 dependency conflicts
+  → "Ready for planning. Invoke migration-planner next."
 
-  [2/4] migration-planner
-  Plan: 8 phases, ~22 commits, 12-16 hours estimated
-  Approve? → User: yes
+  [Phase 2] User: "Use migration-planner" (or Claude invokes automatically)
+  → migration-planner runs
+  → Plan: 8 phases, ~22 commits, 12-16 hours estimated
+  → "Plan created. Invoke migration-executor next."
 
-  [3/4] migration-executor
-  Executing 8 phases...
-  Phase 1: ✅ Setup complete
-  Phase 2: ✅ Dependencies resolved
-  Phase 3: ✅ Bun integrated
-  Phase 4: ✅ Code adapted
-  Phase 5: ✅ Tests passing, coverage 91.2%
-  Phase 6: ✅ Documentation updated
-  Phase 7: ✅ Integrated to monorepo
-  Phase 8: ✅ Finalization complete
+  [Phase 3] User: "Use migration-executor"
+  → migration-executor runs
+  → Executes 8 phases with atomic commits...
+  → All tests passing, coverage 91.2%
+  → "Execution complete. Invoke migration-finalizer next."
 
-  [4/4] migration-finalizer
-  PR created: #48
+  [Phase 4] User: "Use migration-finalizer"
+  → migration-finalizer runs
+  → PR created: #48
 
 🎉 Migration complete!
 PR: https://github.com/rollercoaster-dev/monorepo/pull/48

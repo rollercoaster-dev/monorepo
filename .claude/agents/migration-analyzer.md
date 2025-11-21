@@ -1,3 +1,10 @@
+---
+name: migration-analyzer
+description: Analyzes repositories for migration feasibility into the Bun monorepo. Assesses complexity, dependencies, Bun compatibility, and estimates effort. Use when evaluating a package or at the start of any migration (Phase 1).
+tools: Bash, Read, Glob, Grep, WebSearch, WebFetch
+model: sonnet
+---
+
 # Migration Analyzer Agent
 
 ## Purpose
@@ -54,11 +61,13 @@ Optional:
 
 ### Phase 2: Dependency Analysis
 
-1. **Launch dependency-analyzer agent in parallel:**
+1. **Analyze dependencies directly:**
    - Analyze all dependencies for version conflicts
    - Check Bun compatibility
    - Identify Node.js-only packages
-   - Get dependency risk assessment
+   - Assess dependency risks
+
+   *Note: For deep dependency analysis, the main agent can invoke `dependency-analyzer` separately after this analysis completes.*
 
 2. **Check for workspace dependencies:**
    - Internal package references
@@ -434,11 +443,10 @@ If proceeding with migration:
 - Glob (find files by pattern)
 - WebFetch (fetch repo info if URL provided)
 
-**Task Tools:**
-- Task (launch dependency-analyzer agent in parallel)
-
 **Write Tools:**
 - None (analysis only, doesn't modify anything)
+
+*Note: This agent performs dependency analysis inline. For complex dependency issues, recommend invoking `dependency-analyzer` separately.*
 
 ## Output Format
 

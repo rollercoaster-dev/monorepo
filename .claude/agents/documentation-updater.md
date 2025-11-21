@@ -1,3 +1,10 @@
+---
+name: documentation-updater
+description: Updates project documentation for migrations, features, and structural changes. Ensures consistency across CLAUDE.md, README, MIGRATION.md, and package READMEs. Use after completing migrations or adding new features.
+tools: Read, Edit, Write, Bash, Grep, Glob
+model: haiku
+---
+
 # Documentation Updater Agent
 
 ## Purpose

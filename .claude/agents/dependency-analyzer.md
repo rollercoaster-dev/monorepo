@@ -1,3 +1,10 @@
+---
+name: dependency-analyzer
+description: Analyzes package dependencies for version conflicts, peer dependency issues, and Bun compatibility. Use during migrations, dependency updates, PR reviews, or when troubleshooting dependency-related build failures.
+tools: Bash, Read, Glob, Grep, WebSearch, WebFetch
+model: haiku
+---
+
 # Dependency Analyzer Agent
 
 ## Purpose

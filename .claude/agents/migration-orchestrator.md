@@ -1,13 +1,22 @@
+---
+name: migration-orchestrator
+description: Guides complete package migrations into the Bun monorepo. Use as the entry point when migrating a package. Returns instructions for which agent to invoke next. Triggers on "migrate package", "full migration", or "start migration".
+tools: Bash, Read, Glob, Grep, WebSearch, WebFetch
+model: sonnet
+---
+
 # Migration Orchestrator Agent
 
 ## Purpose
-Coordinates the complete package migration workflow by launching the four core migration agents in sequence. Provides a single entry point for migrating packages into the Bun-based monorepo.
+Guides the complete package migration workflow by coordinating the four phases. This agent is **advisory** - it analyzes the current state and tells you which specialized agent to invoke next. The main Claude session handles invoking each agent sequentially.
+
+**Important**: This agent does NOT directly call other agents. It returns instructions for what to run next.
 
 ## When to Use This Agent
-- To migrate a complete package from start to finish
-- When you want the full automated migration workflow
-- For straightforward migrations that don't need custom handling
-- As the primary migration entry point
+- To start a new package migration
+- To check migration status and get next steps
+- To resume an interrupted migration
+- As the primary migration coordinator
 
 ## Inputs
 
@@ -22,17 +31,27 @@ Optional:
 
 ## Workflow
 
-The orchestrator launches the four core agents in sequence:
+The orchestrator guides you through four phases. After each phase, invoke the next agent:
 
 ```
-1. migration-analyzer → Analyze package and assess feasibility
-   ↓
-2. migration-planner → Create detailed migration plan
-   ↓
-3. migration-executor → Execute migration with atomic commits
-   ↓
-4. migration-finalizer → Create PR and close issues
+Phase 1: ANALYZE
+  → Invoke: migration-analyzer
+  → Output: Analysis report with complexity score
+
+Phase 2: PLAN
+  → Invoke: migration-planner
+  → Output: MIGRATION_PLAN_{package}.md
+
+Phase 3: EXECUTE
+  → Invoke: migration-executor
+  → Output: Migrated package with atomic commits
+
+Phase 4: FINALIZE
+  → Invoke: migration-finalizer
+  → Output: PR created, issues closed
 ```
+
+**How it works**: This orchestrator checks the current state and tells you which agent to run next.
 
 ### Phase 1: Analysis
 
@@ -342,14 +361,15 @@ The orchestrator tracks migration state:
 
 ## Tools Required
 
-**Task Tools:**
-- Task (launch the 4 core migration agents)
-
 **Readonly Tools:**
-- Read (agent reports, check state)
+- Read (check migration state, read reports)
+- Bash (check git status, current branch)
+- Glob, Grep (find migration artifacts)
 
 **Write Tools:**
-- None (orchestrator doesn't modify files, agents do)
+- None (orchestrator guides workflow, doesn't modify files)
+
+*This agent is advisory - it tells you which agent to invoke next rather than calling agents directly.*
 
 ## Output Format
 

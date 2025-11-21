@@ -1,3 +1,10 @@
+---
+name: test-migration
+description: Migrates test suites from Jest/Vitest to Bun's native test runner. Handles test organization, configuration, mock patterns, and CI integration. Use when migrating a package's tests or setting up tests for new packages.
+tools: Bash, Read, Edit, Write, Glob, Grep
+model: sonnet
+---
+
 # Test Migration Agent
 
 ## Purpose

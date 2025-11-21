@@ -1,3 +1,10 @@
+---
+name: migration-planner
+description: Creates detailed step-by-step migration plans with atomic commits, risk assessment, and rollback strategies. Use after migration-analyzer to create a structured plan before executing migration work.
+tools: Read, Write, Bash
+model: sonnet
+---
+
 # Migration Planner Agent
 
 ## Purpose

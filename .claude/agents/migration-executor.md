@@ -1,7 +1,22 @@
+---
+name: migration-executor
+description: Executes migration plans with atomic commits (Phase 3). Handles dependency resolution, Bun integration, code adaptation, test migration, and validation directly. Use after migration-planner creates the plan.
+tools: Bash, Read, Write, Edit, Glob, Grep
+model: sonnet
+---
+
 # Migration Executor Agent
 
 ## Purpose
-Executes the migration plan with atomic commits, calling specialized agents as needed (dependency-analyzer, bun-package-integrator, test-migration, test-coverage-validator, documentation-updater). Handles the actual migration work.
+Executes the migration plan with atomic commits. This agent handles all execution tasks directly:
+- Dependency resolution
+- Bun integration (package.json, tsconfig.json)
+- Code adaptation (TypeScript fixes, ESM imports)
+- Test migration (Jest/Vitest → Bun)
+- Coverage validation
+- Documentation updates
+
+**Note**: This agent performs these tasks inline rather than calling sub-agents. For complex issues in specific areas, the main agent can invoke specialized agents (dependency-analyzer, bun-package-integrator, test-migration, etc.) separately.
 
 ## When to Use This Agent
 - After migration plan is approved (Phase 3)
@@ -59,32 +74,34 @@ For each phase in the migration plan:
    - Make one commit per logical change
    - Use commit format: `migrate({package}): {description}`
 
-3. **Call specialized agents as needed:**
+3. **Handle specialized tasks directly:**
 
    **During Dependency Resolution:**
-   - Launch `dependency-analyzer` if new conflicts arise
-   - Get resolution recommendations
-   - Apply fixes
+   - Analyze dependencies for version conflicts
+   - Apply resolution strategies from migration plan
+   - Update package.json files as needed
 
    **During Bun Integration:**
-   - Launch `bun-package-integrator`
-   - Let it handle package.json, tsconfig.json updates
-   - Verify integration successful
+   - Update package.json (packageManager, scripts)
+   - Configure tsconfig.json for Bun (moduleResolution: Bundler)
+   - Set up workspace dependencies
 
    **During Code Adaptation:**
-   - Launch `test-migration` to convert tests from Jest/Vitest to Bun
-   - Let it handle test file conversions, mocks, configuration
-   - Verify all tests passing
+   - Fix TypeScript strict mode errors
+   - Update imports for ESM compatibility
+   - Convert test files from Jest/Vitest to Bun test
+   - Update mock patterns to use spyOn()
 
    **During Validation:**
-   - Launch `test-coverage-validator`
-   - Compare coverage before/after
-   - Ensure no regression
+   - Run tests and verify all pass
+   - Check coverage metrics
+   - Verify build succeeds
 
    **During Documentation:**
-   - Launch `documentation-updater`
-   - Update all relevant documentation
-   - Ensure consistency across docs
+   - Update package README
+   - Update monorepo docs (CLAUDE.md, README.md)
+
+   *For complex issues in any area, recommend invoking the specialized agent (dependency-analyzer, bun-package-integrator, test-migration, etc.) for deeper assistance.*
 
 4. **Validate after each phase:**
    - Run validation commands from plan
@@ -468,8 +485,7 @@ Migration execution complete! Next:
 - Edit (update files)
 - Write (create files)
 
-**Task Tools:**
-- Task (launch specialized agents: dependency-analyzer, bun-package-integrator, test-migration, test-coverage-validator, documentation-updater)
+*Note: This agent handles all execution tasks directly. For complex issues, recommend the main agent invoke specialized agents separately.*
 
 ## Output Format
 

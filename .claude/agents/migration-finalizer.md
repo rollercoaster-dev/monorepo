@@ -1,3 +1,10 @@
+---
+name: migration-finalizer
+description: Finalizes completed migrations by creating comprehensive PRs, updating documentation, and closing sub-issues. Use after migration-executor completes successfully to create the PR and wrap up the migration.
+tools: Bash, Read, Edit, Grep
+model: sonnet
+---
+
 # Migration Finalizer Agent
 
 ## Purpose

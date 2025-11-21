@@ -1,3 +1,10 @@
+---
+name: bun-package-integrator
+description: Integrates packages into the Bun monorepo with proper TypeScript configuration, Bun tooling, and workspace setup. Use after migrating a package, when creating new packages, or fixing Bun configuration issues.
+tools: Bash, Read, Edit, Write, Glob, Grep
+model: sonnet
+---
+
 # Bun Package Integrator Agent
 
 ## Purpose

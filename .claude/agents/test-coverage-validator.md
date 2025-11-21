@@ -1,3 +1,10 @@
+---
+name: test-coverage-validator
+description: Validates test coverage before and after changes, compares metrics, and identifies regressions. Use during migrations, PR reviews, refactoring, or as a CI quality gate.
+tools: Bash, Read, Write, Glob, Grep
+model: haiku
+---
+
 # Test Coverage Validator Agent
 
 ## Purpose
