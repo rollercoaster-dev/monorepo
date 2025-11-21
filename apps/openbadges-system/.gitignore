@@ -46,3 +46,10 @@ typed-router.d.ts
 
 # AI working directory artifacts
 .claude/working/
+.augment/
+.cursor/
+.tasks/
+
+# Private keys and certificates (generate locally or use env vars)
+keys/
+*.pem
