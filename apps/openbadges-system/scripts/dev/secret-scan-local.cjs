@@ -3,12 +3,13 @@ const fs = require('fs');
 const path = require('path');
 
 const secretPatterns = [
-  { name: 'API Key', pattern: /api[_-]?key\s*[:=]\s*['"]\w{20,}['"]/ },
-  { name: 'Password', pattern: /password\s*[:=]\s*['"]\w{8,}['"]/ },
-  { name: 'Secret', pattern: /secret\s*[:=]\s*['"]\w{20,}['"]/ },
-  { name: 'Token', pattern: /token\s*[:=]\s*['"]\w{20,}['"]/ },
-  { name: 'Private Key', pattern: /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/ },
-  { name: 'JWT Token', pattern: /eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*/ }
+  // Match both quoted and unquoted values
+  { name: 'API Key', pattern: /api[_-]?key\s*[:=]\s*['"]?\w{20,}['"]?/gi },
+  { name: 'Password', pattern: /password\s*[:=]\s*['"]?\w{8,}['"]?/gi },
+  { name: 'Secret', pattern: /secret\s*[:=]\s*['"]?\w{20,}['"]?/gi },
+  { name: 'Token', pattern: /token\s*[:=]\s*['"]?\w{20,}['"]?/gi },
+  { name: 'Private Key', pattern: /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----/g },
+  { name: 'JWT Token', pattern: /eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*/g }
 ];
 
 const excludePatterns = [
@@ -48,9 +49,10 @@ function scanDirectory(dir) {
       try {
         const content = fs.readFileSync(fullPath, 'utf8');
         for (const { name, pattern } of secretPatterns) {
-          const match = content.match(pattern);
-          if (match) {
-            const line = content.substring(0, content.indexOf(match[0])).split('\n').length;
+          // Use matchAll to find ALL occurrences, not just the first
+          const matches = [...content.matchAll(pattern)];
+          for (const match of matches) {
+            const line = content.substring(0, match.index).split('\n').length;
             findings.push({ file: relativePath, type: name, line, snippet: match[0] });
           }
         }

@@ -10,7 +10,11 @@ CREATE TABLE oauth_providers (
     profile_data TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    -- Prevent same external account linking to multiple local users
+    UNIQUE(provider, provider_user_id),
+    -- Prevent user from linking multiple accounts from same provider
+    UNIQUE(user_id, provider)
 );
 
 -- Create oauth_sessions table
