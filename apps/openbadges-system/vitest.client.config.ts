@@ -18,6 +18,16 @@ export default defineConfig({
       'src/test/integration/**/*.{test,spec}.ts?(x)',
     ],
     exclude: ['src/server/**'],
+    coverage: {
+      provider: 'istanbul',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/**',
+        '**/*.d.ts',
+        '**/*.config.{js,ts}',
+      ],
+    },
   },
 })
 
