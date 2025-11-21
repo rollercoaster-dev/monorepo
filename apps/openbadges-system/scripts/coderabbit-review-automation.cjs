@@ -18,7 +18,7 @@ const _path = require('path');
 // Configuration
 const CONFIG = {
   REPO_OWNER: 'rollercoaster-dev',
-  REPO_NAME: 'openbadges-system',
+  REPO_NAME: 'monorepo',
   TRACKING_DOC: 'docs/coderabbit-review-tracking.md',
   CODERABBIT_BOT: 'coderabbitai[bot]',
   CATEGORIES: {

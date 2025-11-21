@@ -7,7 +7,7 @@
           <select
             v-model="itemsPerPage"
             class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            @change="changePage(1)"
+            @change="handleItemsPerPageChange"
           >
             <option value="10">10 per page</option>
             <option value="25">25 per page</option>
@@ -288,7 +288,10 @@ function changePage(page: number | string) {
   }
 }
 
-// changeItemsPerPage function removed as it's not used
+function handleItemsPerPageChange() {
+  emits('changeItemsPerPage', itemsPerPage.value)
+  emits('changePage', 1)
+}
 
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()

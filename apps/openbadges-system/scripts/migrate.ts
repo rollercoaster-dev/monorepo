@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env bun
 
 import { Command } from 'commander';
 import { DatabaseMigrator, validateMigrations } from '../database/migrations/migrator';

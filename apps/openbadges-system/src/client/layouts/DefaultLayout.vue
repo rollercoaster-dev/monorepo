@@ -33,7 +33,7 @@
           </div>
           <div class="flex space-x-6">
             <a
-              href="https://github.com/rollercoaster-dev/openbadges-system"
+              href="https://github.com/rollercoaster-dev/monorepo/tree/main/apps/openbadges-system"
               target="_blank"
               rel="noopener noreferrer"
               class="text-gray-400 hover:text-gray-500 transition-colors duration-200"

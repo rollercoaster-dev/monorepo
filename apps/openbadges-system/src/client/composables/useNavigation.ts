@@ -88,20 +88,18 @@ export const useNavigation = () => {
     return true
   }
 
-  // Filter navigation items based on permissions
+  // Filter navigation items based on permissions (immutable - returns new array)
   const filterNavigationItems = (items: NavigationItem[]): NavigationItem[] => {
-    return items.filter(item => {
-      if (!canAccessRoute(item)) {
-        return false
-      }
-
-      if (item.children) {
-        item.children = filterNavigationItems(item.children)
-        return item.children.length > 0
-      }
-
-      return true
-    })
+    return items
+      .filter(item => canAccessRoute(item))
+      .map(item => {
+        if (item.children) {
+          const filteredChildren = filterNavigationItems(item.children)
+          return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null
+        }
+        return item
+      })
+      .filter((item): item is NavigationItem => item !== null)
   }
 
   // Page title helper

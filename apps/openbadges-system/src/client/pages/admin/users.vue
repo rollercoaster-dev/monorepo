@@ -60,7 +60,7 @@
         <div class="p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-semibold text-gray-900">User Details</h2>
-            <button class="text-gray-400 hover:text-gray-600" @click="showViewModal = false">
+            <button class="text-gray-400 hover:text-gray-600" @click="closeViewModal">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -317,6 +317,11 @@ function handleRemoveCredential(userId: string, credentialId: string) {
 function closeForm() {
   showCreateForm.value = false
   showEditForm.value = false
+  selectedUser.value = null
+}
+
+function closeViewModal() {
+  showViewModal.value = false
   selectedUser.value = null
 }
 

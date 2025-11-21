@@ -45,7 +45,7 @@
             </RouterLink>
 
             <!-- Dropdown menu -->
-            <div v-else ref="dropdownRefs" class="relative">
+            <div v-else class="relative">
               <button
                 :id="`menu-button-${item.id}`"
                 class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"

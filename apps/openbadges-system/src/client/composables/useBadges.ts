@@ -162,6 +162,13 @@ export const useBadges = () => {
 
       const response = await basicApiCall(`/v2/badge-classes?${params}`)
 
+      // Guard against null/undefined response (204 or non-JSON)
+      if (!response) {
+        badges.value = []
+        totalBadges.value = 0
+        return
+      }
+
       badges.value = response.badges || response // Handle different response formats
       totalBadges.value = response.total || badges.value.length
       currentPage.value = page
@@ -414,6 +421,13 @@ export const useBadges = () => {
       })
 
       const response = await basicApiCall(`/v2/assertions?${params}`)
+
+      // Guard against null/undefined response (204 or non-JSON)
+      if (!response) {
+        assertions.value = []
+        totalAssertions.value = 0
+        return
+      }
 
       assertions.value = response.assertions || response
       totalAssertions.value = response.total || assertions.value.length

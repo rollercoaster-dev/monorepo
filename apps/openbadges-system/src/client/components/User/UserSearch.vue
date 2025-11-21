@@ -270,6 +270,8 @@ function clearFilters() {
     sortBy: 'createdAt',
     sortOrder: 'desc',
   }
+  // Notify parent that filters were cleared
+  emits('search', searchQuery.value, filters.value)
 }
 
 function applyFilters() {
