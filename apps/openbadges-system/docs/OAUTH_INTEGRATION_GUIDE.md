@@ -215,7 +215,7 @@ curl -s http://localhost:8888/api/bs/badge-classes
 Run the integration tests to verify OAuth setup:
 
 ```bash
-npm test -- src/test/integration/auth-flow.test.ts
+bun run test -- src/test/integration/auth-flow.test.ts
 ```
 
 The tests verify:
