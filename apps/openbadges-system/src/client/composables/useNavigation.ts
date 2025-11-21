@@ -68,7 +68,7 @@ export const useNavigation = () => {
     if (item.to) {
       return isActiveRoute(item.to)
     }
-    return item.children?.some(child => isActiveRoute(child.to || '')) || false
+    return item.children?.some(child => child.to && isActiveRoute(child.to)) || false
   }
 
   // Navigation helpers
