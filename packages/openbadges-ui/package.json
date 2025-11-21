@@ -5,7 +5,7 @@
   "homepage": "https://rollercoaster-dev.github.io/openbadges-ui/",
   "main": "dist/openbadges-ui.umd.js",
   "module": "dist/openbadges-ui.es.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"

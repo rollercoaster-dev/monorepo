@@ -5,7 +5,13 @@
  * It uses font-display: swap to ensure text remains visible during font loading.
  */
 
-/* 
+/*
+ * Inter (Google Fonts import - must be at top of file before @font-face rules)
+ * A modern, highly legible sans-serif font designed for computer screens.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/*
  * Atkinson Hyperlegible
  * A highly accessible font designed specifically for low vision readers
  * by the Braille Institute. It features distinct letterforms that are
@@ -128,16 +134,6 @@
 }
 
 /*
- * Inter
- * A modern, highly legible sans-serif font designed for computer screens.
- * It features a tall x-height and open forms, making it highly readable
- * at small sizes and in low-resolution environments.
- *
- * We import Inter from Google Fonts which provides optimized font files for each weight.
- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* 
  * Font Family Variables
  * These variables make it easy to apply different font families
  * throughout the component library.

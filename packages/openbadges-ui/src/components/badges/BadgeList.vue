@@ -83,10 +83,14 @@ const filteredBadges = computed(() => {
     });
   }
   if (filterEarned.value !== 'all') {
+    // TODO: Implement actual earned/not-earned filtering logic
+    // This requires determining badge ownership which depends on:
+    // 1. Having a current user context
+    // 2. Matching badge recipient to user identity
+    // Currently returns all badges for 'earned', none for 'not-earned'
     filtered = filtered.filter(() => {
-      // Assume OB2/OB3 badges have a 'recipient' or 'status' property for demo
-      if (filterEarned.value === 'earned') {return true;} // Placeholder logic
-      if (filterEarned.value === 'not-earned') {return false;} // Placeholder logic
+      if (filterEarned.value === 'earned') {return true;}
+      if (filterEarned.value === 'not-earned') {return false;}
       return true;
     });
   }

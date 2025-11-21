@@ -167,11 +167,13 @@ export class AccessibilityAudit {
     elementsWithAriaLabel.forEach((el) => {
       const ariaLabelledby = el.getAttribute('aria-labelledby');
       if (ariaLabelledby) {
-        const labelElement = document.getElementById(ariaLabelledby);
-        if (!labelElement) {
+        // aria-labelledby can contain space-separated list of IDs
+        const ids = ariaLabelledby.trim().split(/\s+/);
+        const missingIds = ids.filter((id) => !document.getElementById(id));
+        if (missingIds.length > 0) {
           issues.push({
             severity: 'error',
-            message: `aria-labelledby references non-existent ID: ${ariaLabelledby}`,
+            message: `aria-labelledby references non-existent ID(s): ${missingIds.join(', ')}`,
             element: el as HTMLElement,
           });
         }
