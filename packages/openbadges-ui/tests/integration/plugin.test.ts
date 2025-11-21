@@ -2,15 +2,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createApp } from 'vue';
 import OpenBadgesUIPlugin from '@/plugin';
-import BadgeDisplay from '@/components/badges/BadgeDisplay.vue';
-import BadgeList from '@/components/badges/BadgeList.vue';
-import ProfileViewer from '@/components/badges/ProfileViewer.vue';
-import BadgeVerification from '@/components/badges/BadgeVerification.vue';
-import BadgeIssuerForm from '@/components/issuing/BadgeIssuerForm.vue';
-import IssuerDashboard from '@/components/issuing/IssuerDashboard.vue';
-import FontSelector from '@/components/accessibility/FontSelector.vue';
-import ThemeSelector from '@/components/accessibility/ThemeSelector.vue';
-import AccessibilitySettings from '@/components/accessibility/AccessibilitySettings.vue';
 
 // Mock PrimeVue with install function
 vi.mock('primevue/config', () => ({
