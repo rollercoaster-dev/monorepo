@@ -17,19 +17,19 @@ The OpenBadges system consists of:
 
 ### 1. Public Key Storage
 
-**Current Implementation:**
+#### Current Implementation
 - RSA private key: `./keys/platform-private.pem`
 - RSA public key: `./keys/platform-public.pem`
 - Keys loaded synchronously at service initialization
 - No encryption at rest for private keys
 
-**Threats:**
+#### Threats
 - **T1.1**: Private key exposure through file system access
 - **T1.2**: Private key theft through container compromise
 - **T1.3**: Private key leakage through logs or error messages
 - **T1.4**: Weak key generation or storage practices
 
-**Risk Rating: HIGH (7.5/10)**
+#### Risk Rating: HIGH (7.5/10)
 - **Attack Vector**: Local/Network
 - **Attack Complexity**: Low
 - **Privileges Required**: Low
@@ -39,19 +39,19 @@ The OpenBadges system consists of:
 
 ### 2. Passwordless Authentication (WebAuthn)
 
-**Current Implementation:**
+#### Current Implementation
 - WebAuthn/FIDO2 for user authentication
 - Credentials stored in SQLite database
 - Challenge-response authentication flow
 - Platform authenticator preference
 
-**Threats:**
+#### Threats
 - **T2.1**: Credential database compromise
 - **T2.2**: Man-in-the-middle attacks during registration
 - **T2.3**: Replay attacks on authentication challenges
 - **T2.4**: Cross-origin attacks due to domain mismatch
 
-**Risk Rating: MEDIUM (5.5/10)**
+#### Risk Rating: MEDIUM (5.5/10)
 - **Attack Vector**: Network
 - **Attack Complexity**: High
 - **Privileges Required**: None
@@ -61,19 +61,19 @@ The OpenBadges system consists of:
 
 ### 3. JWT Secrets and Token Management
 
-**Current Implementation:**
+#### Current Implementation
 - RS256 algorithm with RSA key pair
 - 1-hour token expiration
 - No token refresh mechanism
 - No token blacklisting/revocation
 
-**Threats:**
+#### Threats
 - **T3.1**: JWT token theft and replay
 - **T3.2**: JWT secret compromise
 - **T3.3**: Token manipulation and privilege escalation
 - **T3.4**: Timing attacks on token validation
 
-**Risk Rating: MEDIUM-HIGH (6.5/10)**
+#### Risk Rating: MEDIUM-HIGH (6.5/10)
 - **Attack Vector**: Network/Local
 - **Attack Complexity**: Medium
 - **Privileges Required**: Low
@@ -83,7 +83,7 @@ The OpenBadges system consists of:
 
 ### 4. CORS Configuration
 
-**Current Implementation:**
+#### Current Implementation
 ```javascript
 cors({
   origin: ['http://localhost:7777'],
@@ -92,13 +92,13 @@ cors({
 })
 ```
 
-**Threats:**
+#### Threats
 - **T4.1**: Cross-origin request forgery (CSRF)
 - **T4.2**: Credentials exposure in cross-origin requests
 - **T4.3**: Preflight bypass attacks
 - **T4.4**: Origin validation bypass
 
-**Risk Rating: LOW-MEDIUM (4.0/10)**
+#### Risk Rating: LOW-MEDIUM (4.0/10)
 - **Attack Vector**: Network
 - **Attack Complexity**: Medium
 - **Privileges Required**: None
@@ -108,19 +108,19 @@ cors({
 
 ### 5. Basic Auth Proxy
 
-**Current Implementation:**
+#### Current Implementation
 - Hardcoded credentials: `admin:admin-user`
 - Basic Auth for OpenBadges server proxy
 - No rate limiting or brute force protection
 - Credentials transmitted in base64 encoding
 
-**Threats:**
+#### Threats
 - **T5.1**: Credential brute force attacks
 - **T5.2**: Credential interception in transit
 - **T5.3**: Credential exposure in logs
 - **T5.4**: Replay attacks with stolen credentials
 
-**Risk Rating: HIGH (7.0/10)**
+#### Risk Rating: HIGH (7.0/10)
 - **Attack Vector**: Network
 - **Attack Complexity**: Low
 - **Privileges Required**: None
