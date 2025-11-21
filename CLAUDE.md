@@ -152,24 +152,19 @@ Before marking a package migration complete, run:
 ./scripts/migration-checklist.sh packages/<package-name>
 ```
 
-The script validates:
-
-**1. Lint & Build**
-- [ ] `bun run lint` passes with 0 errors
+**Automated checks** (script enforces):
+- [ ] `bun run lint` passes
 - [ ] `bun run build` succeeds
-- [ ] `package.json` types path matches actual build output
-
-**2. File Cleanup**
+- [ ] `package.json` types path exists after build
 - [ ] No orphaned files (*.fixed, *.new, *.bak, *.orig)
+- [ ] Documentation uses `bun` (not npm/yarn/pnpm)
+- [ ] CSS @import rules at top of files
+- [ ] SSR safety hints (warns on unguarded document/window access)
+
+**Manual review** (verify yourself):
 - [ ] No commented-out code blocks
 - [ ] No TODO comments without issue references
-
-**3. Documentation**
-- [ ] All commands use `bun` (not npm/yarn/pnpm)
 - [ ] README updated for monorepo context
-
-**4. Code Quality**
-- [ ] SSR guards on all DOM/window access (see CONTRIBUTING.md)
 - [ ] Component lifecycle cleanup (`onUnmounted` for DOM modifications)
 - [ ] Type guards handle both string and array values (use `typeIncludes()`)
 - [ ] Template conditions guard against undefined
