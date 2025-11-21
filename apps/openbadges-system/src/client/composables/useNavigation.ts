@@ -24,10 +24,10 @@ export const useNavigation = () => {
   // User state derived from auth composable
   const user = computed(() => ({
     isLoggedIn: isAuthenticated.value,
-    isAdmin: authUser.value?.role === 'admin',
-    name: authUser.value?.displayName || authUser.value?.email || '',
+    isAdmin: authUser.value?.isAdmin ?? false,
+    name: authUser.value?.firstName || authUser.value?.username || authUser.value?.email || '',
     email: authUser.value?.email || '',
-    avatar: authUser.value?.avatarUrl || null,
+    avatar: authUser.value?.avatar || null,
   }))
 
   // Toggle mobile menu
