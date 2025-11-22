@@ -10,7 +10,8 @@ export interface CacheInterface {
    * Stores a value in the cache
    * @param key The cache key
    * @param value The value to store
-   * @param ttl Time to live in seconds (optional)
+   * @param ttl Time to live in seconds (optional) - Note: TTL support depends on implementation.
+   *            The default CacheService uses lru.min which does NOT support TTL.
    * @returns True if the value was stored successfully
    */
   set<T>(key: string, value: T, ttl?: number): boolean;

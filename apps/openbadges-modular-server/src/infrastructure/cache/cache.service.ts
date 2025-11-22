@@ -30,12 +30,6 @@ export interface CacheOptions {
   max?: number;
 
   /**
-   * Default TTL (Time To Live) in seconds
-   * @default 3600 (1 hour)
-   */
-  ttl?: number;
-
-  /**
    * Whether to update item age on get operations
    * @default true
    */
@@ -46,16 +40,13 @@ export class CacheService implements CacheInterface {
   private cache: LRUType;
   private hits: number = 0;
   private misses: number = 0;
-  // TODO(#99): defaultTtl is stored but never used - lru.min doesn't support TTL
-  // @ts-expect-error - Intentionally unused, see issue #99 for discussion
-  private defaultTtl: number;
 
   /**
    * Creates a new cache service
    * @param options Cache options
    */
   constructor(options: CacheOptions = {}) {
-    const { max = 1000, ttl = 3600 } = options;
+    const { max = 1000 } = options;
 
     // Create a new LRU cache instance using the createLRU function
     this.cache = createLRU({
@@ -63,23 +54,21 @@ export class CacheService implements CacheInterface {
       // Note: lru.min doesn't support updateAgeOnGet directly
       // It always updates age on get by design
     });
-
-    this.defaultTtl = ttl;
   }
 
   /**
    * Stores a value in the cache
    * @param key The cache key
    * @param value The value to store
-   * @param ttl Time to live in seconds (optional) - Note: lru.min doesn't support TTL directly
+   * @param _ttl Time to live in seconds (optional) - NOT IMPLEMENTED: lru.min doesn't support TTL.
+   *             Cache entries expire only by LRU eviction (when max items reached).
    * @returns True if the value was stored successfully
    */
   set<T>(key: string, value: T, _ttl?: number): boolean {
-    // Note: lru.min's createLRU doesn't support maxAge parameter
-    // We're ignoring ttl for now as the library doesn't support it
-    // If we needed to use ttl, we would use: const maxAge = (_ttl || this.defaultTtl) * 1000;
+    // Note: TTL parameter is accepted for interface compatibility but not used.
+    // lru.min doesn't support time-based expiration - items expire only by LRU eviction.
     this.cache.set(key, value);
-    return true; // Always return true as the set operation doesn't return a value
+    return true;
   }
 
   /**
