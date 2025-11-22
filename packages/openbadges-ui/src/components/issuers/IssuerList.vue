@@ -55,10 +55,34 @@ watch(
 // Search filter state
 const searchText = ref('');
 
+/**
+ * Get a localized string from a value that may be a plain string or a JSON-LD language map.
+ * OB3 supports multi-language fields as `{ "en": "English", "es": "Spanish" }`.
+ * @param value - A string or language map object
+ * @param fallback - Default value if extraction fails
+ * @returns The extracted string value
+ */
+const getLocalizedString = (
+  value: string | Record<string, string> | undefined,
+  fallback = ''
+): string => {
+  if (!value) return fallback;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    // Try common language codes in order of preference
+    const preferredLangs = ['en', 'en-US', 'en-GB', Object.keys(value)[0]];
+    for (const lang of preferredLangs) {
+      if (lang && value[lang]) return value[lang];
+    }
+  }
+  return fallback;
+};
+
 // Normalize issuer for search/display
 const normalizeIssuer = (issuer: OB2.Profile | OB3.Profile) => {
-  const name = issuer.name || 'Unknown Issuer';
-  const description = issuer.description || '';
+  // Use getLocalizedString to handle OB3 multi-language fields
+  const name = getLocalizedString(issuer.name as string | Record<string, string>, 'Unknown Issuer');
+  const description = getLocalizedString(issuer.description as string | Record<string, string>, '');
   const id = issuer.id || '';
 
   let image = '';
@@ -81,8 +105,9 @@ const filteredIssuers = computed(() => {
 
   const search = searchText.value.toLowerCase();
   return props.issuers.filter((issuer) => {
-    const name = (issuer.name || '').toLowerCase();
-    const description = (issuer.description || '').toLowerCase();
+    // Use getLocalizedString to handle OB3 multi-language fields in search
+    const name = getLocalizedString(issuer.name as string | Record<string, string>, '').toLowerCase();
+    const description = getLocalizedString(issuer.description as string | Record<string, string>, '').toLowerCase();
     return name.includes(search) || description.includes(search);
   });
 });

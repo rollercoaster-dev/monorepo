@@ -193,10 +193,10 @@ export const badgeApi = {
       return allBadgeClasses.filter((badgeClass) => {
         const issuer = badgeClass.issuer;
         if (typeof issuer === 'string') {
-          return issuer === issuerId || issuer.includes(issuerId);
+          return issuer === issuerId;
         }
         if (typeof issuer === 'object' && 'id' in issuer) {
-          return issuer.id === issuerId || issuer.id?.includes(issuerId);
+          return issuer.id === issuerId;
         }
         return false;
       });
