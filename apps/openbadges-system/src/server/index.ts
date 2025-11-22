@@ -117,6 +117,10 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
   const openbadgesUrl = process.env.OPENBADGES_SERVER_URL || 'http://localhost:3000'
   const url = new URL(c.req.path.replace('/api/bs', ''), openbadgesUrl)
 
+  // Preserve query parameters from the original request
+  const originalUrl = new URL(c.req.url)
+  url.search = originalUrl.search
+
   try {
     // Configure headers based on environment
     const headers = new Headers(c.req.raw.headers)
