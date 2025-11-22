@@ -4,7 +4,7 @@ Welcome to the documentation for **Rollercoaster.dev** — an Open Badges creden
 
 ## Quick Links
 
-- [[Vision: Now / Next / Later|now-next-later]] — Strategic roadmap and principles
+- [[Vision: Now / Next / Later|now-next-later]] — Strategic priorities
 - [[Architecture Overview|overview]] — System design with diagrams
 - [[User Stories|user-stories]] — Real scenarios driving product decisions
 
@@ -16,7 +16,7 @@ Welcome to the documentation for **Rollercoaster.dev** — an Open Badges creden
 
 ## Current Work
 
-- [[2025 Q3 Roadmap|2025-Q3]] — End-to-end self-signed badge flow
+- [[2025 Q3 Roadmap|2025-Q3]] — Implementation timeline and milestones
 - [[Gap Analysis|open-badges-gap-analysis]] — Open Badges ecosystem research
 
 ## Work in Progress
