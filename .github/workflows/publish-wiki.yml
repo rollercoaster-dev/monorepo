@@ -1,0 +1,26 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/docs/**'
+      - '.github/workflows/publish-wiki.yml'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Publish to Wiki
+        uses: Andrew-Chen-Wang/github-wiki-action@v5
+        with:
+          path: 'apps/docs'
+          # IMPORTANT: This requires a Personal Access Token (PAT) with 'repo' scope
+          # added to the repository secrets as WIKI_ACTION_TOKEN.
+          # The default GITHUB_TOKEN cannot push to the wiki repository.
+          token: ${{ secrets.WIKI_ACTION_TOKEN }}
+          commit-message: 'chore: sync wiki from apps/docs'
