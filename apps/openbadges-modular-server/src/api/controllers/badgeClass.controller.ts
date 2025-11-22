@@ -218,9 +218,16 @@ export class BadgeClassController {
     issuerId?: string
   ): Promise<BadgeClassResponseDto[]> {
     // If issuerId is provided, filter by issuer using existing repository method
-    const badgeClasses = issuerId
-      ? await this.badgeClassRepository.findByIssuer(toIRI(issuerId) as Shared.IRI)
-      : await this.badgeClassRepository.findAll();
+    let badgeClasses;
+    if (issuerId) {
+      const issuerIRI = toIRI(issuerId);
+      if (!issuerIRI) {
+        throw new BadRequestError(`Invalid issuer ID format: '${issuerId}'`);
+      }
+      badgeClasses = await this.badgeClassRepository.findByIssuer(issuerIRI);
+    } else {
+      badgeClasses = await this.badgeClassRepository.findAll();
+    }
     return badgeClasses.map(
       (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto
     );
