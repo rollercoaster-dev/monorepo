@@ -3,12 +3,18 @@
   "compilerOptions": {
     /* Environment overrides for Vue/Vite */
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "target": "ESNext",
+    "module": "ESNext",
     "jsx": "preserve",
     "allowJs": true,
 
     /* Module resolution for Vite bundler */
     "moduleResolution": "Bundler",
     "noEmit": true,
+
+    /* Disable declaration emit - shared-config enables it but Vue SFCs can't emit declarations for external types */
+    "declaration": false,
+    "declarationMap": false,
 
     /* Strict settings - keep project's existing strictness */
     "noUncheckedIndexedAccess": true,
