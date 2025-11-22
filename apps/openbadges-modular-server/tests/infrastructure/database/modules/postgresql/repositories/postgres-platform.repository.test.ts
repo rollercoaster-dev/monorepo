@@ -5,7 +5,7 @@
  */
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { Platform } from '@domains/backpack/platform.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { PlatformStatus } from '@domains/backpack/backpack.types';
 
 // Mock the PostgresPlatformRepository

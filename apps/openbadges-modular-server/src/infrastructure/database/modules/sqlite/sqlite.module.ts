@@ -1,5 +1,5 @@
-import { DatabaseModuleInterface } from '../../interfaces/database-module.interface';
-import { DatabaseInterface } from '../../interfaces/database.interface';
+import type { DatabaseModuleInterface } from '../../interfaces/database-module.interface';
+import type { DatabaseInterface } from '../../interfaces/database.interface';
 import { Database } from 'bun:sqlite';
 import { SqliteDatabase } from './sqlite.database';
 import { logger } from '../../../../utils/logging/logger.service';

@@ -17,7 +17,7 @@ type ValidationResponse = {
   error?: string;
   details?: Record<string, string[]>;
 };
-import { Context } from 'hono';
+import type { Context } from 'hono';
 
 // Since formatValidationErrors is not exported, we'll test it indirectly through validateIssuerMiddleware
 

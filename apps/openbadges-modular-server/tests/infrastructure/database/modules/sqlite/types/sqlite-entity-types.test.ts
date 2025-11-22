@@ -17,9 +17,10 @@
  */
 
 import { describe, it, expect } from 'bun:test';
+import type {
+  SqliteEntityType} from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
 import {
-  SQLITE_ENTITY_TYPES,
-  SqliteEntityType,
+  SQLITE_ENTITY_TYPES
 } from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
 
 describe('SQLite Entity Types', () => {

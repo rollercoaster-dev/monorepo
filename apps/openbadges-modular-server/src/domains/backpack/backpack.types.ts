@@ -1,7 +1,7 @@
 /**
  * Type definitions for the backpack feature
  */
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Platform status enum

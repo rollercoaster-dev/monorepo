@@ -46,7 +46,7 @@ function loadEnvFile(filePath: string): void {
   }
 }
 
-export let runningApp: Hono | null = null;
+export const runningApp: Hono | null = null;
 export const TEST_PORT = parseInt(process.env.TEST_PORT || '3000');
 export const API_URL = `http://${process.env.HOST || '0.0.0.0'}:${TEST_PORT}`;
 

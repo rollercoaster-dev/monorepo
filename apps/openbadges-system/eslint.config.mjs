@@ -1,33 +1,45 @@
-import js from '@eslint/js'
-import vue from 'eslint-plugin-vue'
-import ts from '@typescript-eslint/eslint-plugin'
-import tsParser from '@typescript-eslint/parser'
-import vueParser from 'vue-eslint-parser'
-import prettierConfig from 'eslint-config-prettier'
+import { vue } from '@rollercoaster-dev/shared-config/eslint';
 
 export default [
-  // Base JavaScript rules
-  js.configs.recommended,
+  // Base Vue configuration from shared-config
+  ...vue,
 
-  // Vue recommended rules
-  ...vue.configs['flat/recommended'],
+  // Global ignores
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '.nuxt/**',
+      '*.min.js',
+      'public/**',
+      'coverage/**',
+      'openbadges_server_data/**',
+      'data/**',
+      'eslint.config.mjs',
+      'vite.config.js',
+      'vitest.config.ts',
+      'vitest.client.config.ts',
+      'vitest.server.config.ts',
+      'tailwind.config.js',
+      'postcss.config.cjs',
+      'commitlint.config.js',
+      // Auto-generated files
+      'src/client/auto-imports.d.ts',
+      'src/client/components.d.ts',
+      'src/client/typed-router.d.ts',
+      // Type declaration files (often have necessary any types)
+      'src/types/**/*.d.ts',
+    ],
+  },
 
-  // Prettier config to disable conflicting rules
-  prettierConfig,
-
-  // Global configuration for browser environment
+  // Browser environment with Vue auto-imports for client files
   {
     files: ['src/client/**/*.{ts,js,vue}'],
     languageOptions: {
       globals: {
-        console: 'readonly',
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
+        // Additional browser globals not in shared-config
         localStorage: 'readonly',
-        fetch: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
         btoa: 'readonly',
         atob: 'readonly',
         crypto: 'readonly',
@@ -41,9 +53,9 @@ export default [
         Event: 'readonly',
         HTMLElement: 'readonly',
         KeyboardEvent: 'readonly',
-        setTimeout: 'readonly',
         confirm: 'readonly',
         prompt: 'readonly',
+        // WebAuthn types
         PublicKeyCredential: 'readonly',
         AuthenticatorTransport: 'readonly',
         PublicKeyCredentialParameters: 'readonly',
@@ -78,20 +90,18 @@ export default [
     files: ['src/server/**/*.ts', 'database/**/*.ts', 'scripts/**/*.ts', '*.ts'],
     languageOptions: {
       globals: {
-        console: 'readonly',
         process: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
         Buffer: 'readonly',
         global: 'readonly',
-        URL: 'readonly',
         btoa: 'readonly',
         atob: 'readonly',
-        fetch: 'readonly',
         Headers: 'readonly',
         Request: 'readonly',
         Response: 'readonly',
         ReadableStream: 'readonly',
+        console: 'readonly',
       },
     },
   },
@@ -101,17 +111,12 @@ export default [
     files: ['**/*.test.ts', '**/*.spec.ts', 'src/test/**/*.ts'],
     languageOptions: {
       globals: {
-        console: 'readonly',
         global: 'readonly',
         localStorage: 'readonly',
-        window: 'readonly',
-        document: 'readonly',
-        fetch: 'readonly',
         Headers: 'readonly',
         Request: 'readonly',
         Response: 'readonly',
         ReadableStream: 'readonly',
-        URL: 'readonly',
         vi: 'readonly',
         describe: 'readonly',
         it: 'readonly',
@@ -123,54 +128,21 @@ export default [
         afterAll: 'readonly',
       },
     },
-  },
-
-  // TypeScript files
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
-    plugins: {
-      '@typescript-eslint': ts,
-    },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      'no-unused-vars': 'off', // Turn off base rule as it can conflict with TypeScript rule
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any type in tests for flexibility with mocks
     },
   },
 
-  // Vue files with TypeScript
+  // Vue files override - use template-first block order (project preference)
   {
     files: ['**/*.vue'],
-    languageOptions: {
-      parser: vueParser,
-      parserOptions: {
-        parser: tsParser,
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        extraFileExtensions: ['.vue'],
-      },
-    },
-    plugins: {
-      vue,
-      '@typescript-eslint': ts,
-    },
     rules: {
-      'vue/multi-word-component-names': 'off',
-      'vue/no-v-html': 'warn',
+      // Override shared-config's block order to match project convention
+      'vue/component-tags-order': 'off',
+      'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
       'vue/component-definition-name-casing': ['error', 'PascalCase'],
       'vue/component-name-in-template-casing': ['error', 'PascalCase'],
       'vue/attributes-order': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-unused-vars': 'off',
-      // Enforce block order: template, script, style
-      'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
     },
   },
 
@@ -224,7 +196,6 @@ export default [
     },
     rules: {
       'no-console': 'off',
-      // Allow unused vars if prefixed with _; warn otherwise
       'no-unused-vars': [
         'warn',
         {
@@ -232,53 +203,9 @@ export default [
           varsIgnorePattern: '^_',
         },
       ],
-      // Allow lexical declarations in case blocks for Node scripts
+      // Allow lexical declarations in case blocks (common pattern in this codebase)
       'no-case-declarations': 'off',
-      // Some scripts run in Node contexts where globals are provided
       'no-undef': 'off',
     },
   },
-
-  // Global ignores
-  {
-    ignores: [
-      'node_modules/**',
-      'dist/**',
-      'build/**',
-      '.nuxt/**',
-      '*.min.js',
-      'public/**',
-      'coverage/**',
-      'openbadges_server_data/**',
-      'data/**',
-      'eslint.config.js',
-      'vite.config.js',
-      'vitest.config.ts',
-      'tailwind.config.js',
-      'postcss.config.cjs',
-      'commitlint.config.js',
-      // Auto-generated files
-      'src/client/auto-imports.d.ts',
-      'src/client/components.d.ts',
-      'src/client/typed-router.d.ts',
-    ],
-  },
-
-  // Test files configuration - allow any type for mocking and test data
-  {
-    files: [
-      '**/*.test.ts',
-      '**/*.test.js',
-      '**/test/**/*.ts',
-      '**/test/**/*.js',
-      '**/__tests__/**/*.ts',
-      '**/__tests__/**/*.js',
-    ],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any type in tests for flexibility with mocks
-    },
-  },
-
-  // Prettier config at the end to override any conflicting rules
-  prettierConfig,
-]
+];

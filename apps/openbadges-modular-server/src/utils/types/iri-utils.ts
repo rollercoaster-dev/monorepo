@@ -5,8 +5,8 @@
  * between string and Shared.IRI types.
  */
 
-import { Shared } from 'openbadges-types';
-import { IRICompatible, ObjectWithIRIs, ObjectWithStrings } from './iri.types';
+import type { Shared } from 'openbadges-types';
+import type { IRICompatible, ObjectWithIRIs, ObjectWithStrings } from './iri.types';
 import { logger } from '../logging/logger.service';
 import { v4 as uuidv4 } from 'uuid';
 

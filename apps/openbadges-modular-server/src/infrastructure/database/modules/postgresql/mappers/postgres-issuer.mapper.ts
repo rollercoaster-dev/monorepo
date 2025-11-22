@@ -6,14 +6,14 @@
  */
 
 import { Issuer } from '@domains/issuer/issuer.entity';
-import { Shared } from 'openbadges-types'; // Import Shared namespace from package root
+import type { Shared } from 'openbadges-types'; // Import Shared namespace from package root
 import {
   convertJson,
   convertUuid,
 } from '@infrastructure/database/utils/type-conversion';
 import { safeParseJson } from '@utils/json-utils';
-import { InferInsertModel } from 'drizzle-orm';
-import { issuers } from '../schema';
+import type { InferInsertModel } from 'drizzle-orm';
+import type { issuers } from '../schema';
 import { logger } from '@utils/logging/logger.service';
 
 /**

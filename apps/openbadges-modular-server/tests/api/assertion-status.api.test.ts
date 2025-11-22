@@ -14,7 +14,7 @@ import type { IssuerController } from '@/api/controllers/issuer.controller';
 import type { BadgeClassController } from '@/api/controllers/badgeClass.controller';
 import type { AssertionController } from '@/api/controllers/assertion.controller';
 import type { StatusListController } from '@/api/controllers/status-list.controller';
-import {
+import type {
   StatusUpdateResponseDto,
   BitstringStatusListCredentialResponseDto,
 } from '@/api/dtos';

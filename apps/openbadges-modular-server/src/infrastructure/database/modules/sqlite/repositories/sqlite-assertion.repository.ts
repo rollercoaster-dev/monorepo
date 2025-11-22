@@ -10,10 +10,10 @@ import { Assertion } from '@domains/assertion/assertion.entity';
 import type { AssertionRepository } from '@domains/assertion/assertion.repository';
 import { assertions } from '../schema';
 import { SqliteAssertionMapper } from '../mappers/sqlite-assertion.mapper';
-import { Shared } from 'openbadges-types';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { Shared } from 'openbadges-types';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { BaseSqliteRepository } from './base-sqlite.repository';
-import { SqlitePaginationParams } from '../types/sqlite-database.types';
+import type { SqlitePaginationParams } from '../types/sqlite-database.types';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger'; // Correctly placed import
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 

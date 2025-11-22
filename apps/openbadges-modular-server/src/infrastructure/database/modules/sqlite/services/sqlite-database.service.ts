@@ -5,22 +5,22 @@
  * across SQLite repositories with proper type safety and error handling.
  */
 
-import { Issuer } from '@domains/issuer/issuer.entity';
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import { Assertion } from '@domains/assertion/assertion.entity';
-import {
+import type { Issuer } from '@domains/issuer/issuer.entity';
+import type { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
+import type { Assertion } from '@domains/assertion/assertion.entity';
+import type {
   DatabaseInterface,
   DatabaseQueryOptions,
   DatabaseHealth,
 } from '@infrastructure/database/interfaces/database.interface';
-import { Shared } from 'openbadges-types';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { Shared } from 'openbadges-types';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { SqliteRepositoryCoordinator } from '../repositories/sqlite-repository.coordinator';
 import { SqliteIssuerRepository } from '../repositories/sqlite-issuer.repository';
 import { SqliteBadgeClassRepository } from '../repositories/sqlite-badge-class.repository';
 import { SqliteAssertionRepository } from '../repositories/sqlite-assertion.repository';
 import { logger } from '@utils/logging/logger.service';
-import {
+import type {
   SqliteOperationContext,
   SqlitePaginationParams,
 } from '../types/sqlite-database.types';

@@ -7,10 +7,11 @@
 
 import { Assertion } from '@domains/assertion/assertion.entity';
 import { KeyService } from '@core/key.service';
+import type {
+  DataIntegrityProof} from '@utils/crypto/signature';
 import {
   createVerification,
-  verifyAssertion,
-  DataIntegrityProof, // Import local DataIntegrityProof
+  verifyAssertion, // Import local DataIntegrityProof
   Cryptosuite,
   KeyType,
   detectKeyType,
@@ -23,15 +24,17 @@ import {
   type JWTProofVerificationOptions,
   type SupportedJWTAlgorithm,
 } from '@utils/crypto/jwt-proof';
+import type {
+  JWTProof} from '@utils/types/proof.types';
 import {
-  JWTProof,
   isJWTProof,
   type VerifiableCredentialClaims,
 } from '@utils/types/proof.types';
 import { logger } from '@utils/logging/logger.service';
 import type { OB3, Shared } from 'openbadges-types'; // For OB3.Proof and Shared types
+import type {
+  VerificationStatus} from '@utils/types/verification-status';
 import {
-  VerificationStatus,
   VerificationErrorCode,
   createVerificationError,
   createSuccessfulVerification,
@@ -306,7 +309,7 @@ export class VerificationService {
       // Attempt to extract keyId from the verificationMethod IRI
       // Example: https://example.com/public-keys/someKeyId#fragment
       // Example: /public-keys/someKeyId
-      const match = verificationMethod.match(/\/public-keys\/([^#\/]+)/);
+      const match = verificationMethod.match(/\/public-keys\/([^#/]+)/);
       if (match && match[1]) {
         return match[1];
       }

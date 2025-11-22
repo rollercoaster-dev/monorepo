@@ -6,26 +6,27 @@
  */
 
 import { Assertion } from '../../domains/assertion/assertion.entity';
-import { AssertionRepository } from '../../domains/assertion/assertion.repository';
-import { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
-import { IssuerRepository } from '../../domains/issuer/issuer.repository';
-import { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
-import { Issuer } from '../../domains/issuer/issuer.entity';
+import type { AssertionRepository } from '../../domains/assertion/assertion.repository';
+import type { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
+import type { IssuerRepository } from '../../domains/issuer/issuer.repository';
+import type { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
+import type { Issuer } from '../../domains/issuer/issuer.entity';
 import { BadgeVersion } from '../../utils/version/badge-version';
 import { toIRI } from '../../utils/types/iri-utils';
-import { Shared, OB2, OB3 } from 'openbadges-types';
+import type { Shared, OB2, OB3 } from 'openbadges-types';
 import { VerificationService } from '../../core/verification.service';
 import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
+import type {
+  VerificationStatus} from '../../utils/types/verification-status';
 import {
-  VerificationStatus,
   VerificationErrorCode,
   createVerificationError,
 } from '../../utils/types/verification-status';
 import { KeyService } from '../../core/key.service';
-import { CredentialStatusService } from '../../core/credential-status.service';
+import type { CredentialStatusService } from '../../core/credential-status.service';
 import { StatusPurpose } from '../../domains/status-list/status-list.types';
 import { logger } from '../../utils/logging/logger.service';
-import {
+import type {
   CreateAssertionDto,
   UpdateAssertionDto,
   AssertionResponseDto,
@@ -487,8 +488,7 @@ export class AssertionController {
       );
       throw new BadRequestError('Insufficient permissions to update assertion');
     }
-    try {
-      // Note: Validation is already done by the validation middleware
+    // Note: Validation is already done by the validation middleware
       // The data parameter is already validated and potentially mapped
 
       // Map incoming data to internal format using validated data
@@ -532,9 +532,6 @@ export class AssertionController {
       }
 
       return convertAssertionToJsonLd(updatedAssertion, version);
-    } catch (error) {
-      throw error;
-    }
   }
 
   /**

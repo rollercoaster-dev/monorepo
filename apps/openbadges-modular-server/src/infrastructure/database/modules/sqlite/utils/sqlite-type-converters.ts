@@ -5,18 +5,19 @@
  * ensuring proper handling of OpenBadges types and database-specific conversions.
  */
 
-import { Shared, OB2 } from 'openbadges-types';
+import type { Shared, OB2 } from 'openbadges-types';
 // OB3 imports available for future use if needed
 import { logger } from '@utils/logging/logger.service';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
-import {
+import type {
   TypeConversionResult,
   OpenBadgesImageType,
   OpenBadgesRecipientType,
   OpenBadgesVerificationType,
   OpenBadgesEvidenceType,
   OpenBadgesCriteriaType,
-  OpenBadgesAlignmentType,
+  OpenBadgesAlignmentType} from '../types/sqlite-database.types';
+import {
   SqliteTypeConversionError,
   SqliteValidationError,
 } from '../types/sqlite-database.types';

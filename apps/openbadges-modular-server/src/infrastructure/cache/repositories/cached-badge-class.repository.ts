@@ -5,9 +5,9 @@
  * It caches badge class entities to improve read performance.
  */
 
-import { BadgeClass } from '../../../domains/badgeClass/badgeClass.entity';
-import { BadgeClassRepository } from '../../../domains/badgeClass/badgeClass.repository';
-import { Shared } from 'openbadges-types';
+import type { BadgeClass } from '../../../domains/badgeClass/badgeClass.entity';
+import type { BadgeClassRepository } from '../../../domains/badgeClass/badgeClass.repository';
+import type { Shared } from 'openbadges-types';
 import { CacheRepositoryWrapper } from './cache-repository.wrapper';
 
 export class CachedBadgeClassRepository extends CacheRepositoryWrapper<BadgeClass, BadgeClassRepository> implements BadgeClassRepository {

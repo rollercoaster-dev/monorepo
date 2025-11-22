@@ -7,7 +7,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { JwksController } from '../../../src/api/controllers/jwks.controller';
-import { KeyService, KeyStatus, JsonWebKeySet, JsonWebKey } from '../../../src/core/key.service';
+import type { JsonWebKeySet, JsonWebKey } from '../../../src/core/key.service';
+import { KeyService, KeyStatus } from '../../../src/core/key.service';
 import { KeyType } from '../../../src/utils/crypto/signature';
 import * as fs from 'fs';
 import * as path from 'path';

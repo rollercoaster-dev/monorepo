@@ -5,10 +5,11 @@
  * Open Badges 2.0 and 3.0 specifications.
  */
 
-import { Shared, OB2, OB3, createDateTime } from 'openbadges-types';
+import type { Shared, OB2, OB3} from 'openbadges-types';
+import { createDateTime } from 'openbadges-types';
 import { BadgeVersion } from '../../utils/version/badge-version';
 import { BadgeSerializerFactory } from '../../utils/version/badge-serializer';
-import {
+import type {
   AssertionData,
   RecipientData,
   VerificationData,
@@ -17,12 +18,12 @@ import type {
   BadgeClassData,
   IssuerData,
 } from '../../utils/types/badge-data.types';
-import { BadgeClass } from '../badgeClass/badgeClass.entity';
-import { Issuer } from '../issuer/issuer.entity';
+import type { BadgeClass } from '../badgeClass/badgeClass.entity';
+import type { Issuer } from '../issuer/issuer.entity';
 import { VC_V2_CONTEXT_URL } from '@/constants/urls';
 import { createOrGenerateIRI, isValidIRI } from '@utils/types/iri-utils';
-import { BitstringStatusListEntry } from '../status-list/status-list.types';
-import { ProofType, ProofArray } from '../../utils/types/proof.types';
+import type { BitstringStatusListEntry } from '../status-list/status-list.types';
+import type { ProofType, ProofArray } from '../../utils/types/proof.types';
 
 /**
  * Assertion entity representing a badge awarded to a recipient

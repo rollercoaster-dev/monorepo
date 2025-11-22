@@ -5,7 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { AuthController } from '../auth/auth.controller';
+import type { AuthController } from '../auth/auth.controller';
 import { requireAuth } from '../auth/middleware/rbac.middleware';
 import { extractLoggingContext } from '../utils/logging.utils';
 

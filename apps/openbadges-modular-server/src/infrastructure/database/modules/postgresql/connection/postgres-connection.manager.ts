@@ -9,11 +9,12 @@
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { logger } from '@utils/logging/logger.service';
-import {
+import type {
   PostgresConnectionConfig,
   PostgresConnectionState,
   PostgresDatabaseHealth,
-  PostgresConnectionError,
+  PostgresConnectionError} from '../types/postgres-database.types';
+import {
   createPostgresConnectionConfig,
 } from '../types/postgres-database.types';
 

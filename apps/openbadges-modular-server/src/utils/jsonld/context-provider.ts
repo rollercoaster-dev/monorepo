@@ -5,8 +5,8 @@
  * according to the Open Badges 3.0 specification.
  */
 
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   IssuerData,
   BadgeClassData,
   AssertionData,

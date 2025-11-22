@@ -5,7 +5,8 @@
  * the expected types from the openbadges-types package.
  */
 
-import { OB2, OB3, Shared, isIRI, createIRI } from 'openbadges-types';
+import type { OB2, OB3, Shared} from 'openbadges-types';
+import { isIRI, createIRI } from 'openbadges-types';
 import { isValidUrl } from './type-utils';
 
 /**

@@ -6,17 +6,18 @@
  */
 
 import { logger, queryLogger } from '@utils/logging/logger.service';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import {
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type {
   SqliteOperationContext,
   SqliteQueryMetrics,
   DrizzleTransaction,
   SqliteEntityType,
-  SqlitePaginationParams,
+  SqlitePaginationParams} from '../types/sqlite-database.types';
+import {
   DEFAULT_PAGINATION,
   MAX_PAGINATION_LIMIT,
 } from '../types/sqlite-database.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import type { drizzle as DrizzleFn } from 'drizzle-orm/bun-sqlite';
 
 // Create compile-time type alias to avoid runtime import dependency

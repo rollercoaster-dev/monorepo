@@ -9,13 +9,14 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import type { Database } from 'bun:sqlite';
 import { logger } from '@utils/logging/logger.service';
 import { SqlitePragmaManager } from '../utils/sqlite-pragma.manager';
-import {
+import type {
   SqliteConnectionConfig,
   SqliteConnectionConfigInput,
   SqliteConnectionState,
   SqliteDatabaseClient,
+  SqliteDatabaseHealth} from '../types/sqlite-database.types';
+import {
   SqliteConnectionError,
-  SqliteDatabaseHealth,
   createSqliteConnectionConfig,
 } from '../types/sqlite-database.types';
 

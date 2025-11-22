@@ -6,9 +6,10 @@
  * It supports Bearer token validation against the provider's endpoints.
  */
 
-import { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
+import type { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
 import { logger } from '../../utils/logging/logger.service';
-import { createRemoteJWKSet, jwtVerify, errors as joseErrors, JWTPayload } from 'jose';
+import type { JWTPayload } from 'jose';
+import { createRemoteJWKSet, jwtVerify, errors as joseErrors } from 'jose';
 
 interface OAuth2Config {
   /**

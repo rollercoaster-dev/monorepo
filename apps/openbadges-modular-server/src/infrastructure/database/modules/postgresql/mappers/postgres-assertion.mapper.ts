@@ -12,9 +12,9 @@ import {
   convertUuid,
 } from '@infrastructure/database/utils/type-conversion';
 import { toIRI } from '@utils/types/iri-utils';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { assertions } from '../schema';
-import { OB2, OB3 } from 'openbadges-types';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { assertions } from '../schema';
+import type { OB2, OB3 } from 'openbadges-types';
 
 // Define the type for the database record using Drizzle's InferSelectModel
 type PostgresAssertionRecord = InferSelectModel<typeof assertions>;

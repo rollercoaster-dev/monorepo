@@ -10,10 +10,10 @@ import { Issuer } from '@domains/issuer/issuer.entity';
 import type { IssuerRepository } from '@domains/issuer/issuer.repository';
 import { issuers } from '../schema';
 import { SqliteIssuerMapper } from '../mappers/sqlite-issuer.mapper';
-import { Shared } from 'openbadges-types';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { Shared } from 'openbadges-types';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { BaseSqliteRepository } from './base-sqlite.repository';
-import { SqlitePaginationParams } from '../types/sqlite-database.types';
+import type { SqlitePaginationParams } from '../types/sqlite-database.types';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 
 export class SqliteIssuerRepository

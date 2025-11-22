@@ -5,7 +5,7 @@
 import { describe, it, beforeAll, afterAll, expect, mock } from 'bun:test';
 import { testClient } from 'hono/testing';
 import { Hono } from 'hono';
-import { UserService } from '@/domains/user/user.service';
+import type { UserService } from '@/domains/user/user.service';
 import { JwtService } from '@/auth/services/jwt.service';
 import { TEST_TOKENS } from '../test-utils/constants';
 

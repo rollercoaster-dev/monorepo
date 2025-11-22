@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { Shared, OB2 } from 'openbadges-types';
+import type { Shared, OB2 } from 'openbadges-types';
 import { Assertion } from '../../../src/domains/assertion/assertion.entity';
-import { AssertionRepository } from '../../../src/domains/assertion/assertion.repository';
+import type { AssertionRepository } from '../../../src/domains/assertion/assertion.repository';
 
 // Mock implementation of AssertionRepository for testing
 class MockAssertionRepository implements Partial<AssertionRepository> {

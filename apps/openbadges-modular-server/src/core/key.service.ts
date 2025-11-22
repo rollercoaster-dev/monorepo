@@ -79,7 +79,7 @@ interface KeyPair {
   metadata?: KeyMetadata;
 }
 
-let keyPairs: Map<string, KeyPair> = new Map();
+const keyPairs: Map<string, KeyPair> = new Map();
 
 /**
  * Key service class

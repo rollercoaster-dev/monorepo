@@ -6,11 +6,12 @@
  */
 
 import { describe, it, expect } from 'bun:test';
+import type {
+  CreateStatusListParams,
+  UpdateCredentialStatusParams} from '../../../src/domains/status-list/status-list.types';
 import {
   StatusPurpose,
-  StatusValue,
-  CreateStatusListParams,
-  UpdateCredentialStatusParams,
+  StatusValue
 } from '../../../src/domains/status-list/status-list.types';
 
 describe('StatusListService', () => {

@@ -8,17 +8,17 @@
 import { eq, and, ne, sql } from 'drizzle-orm';
 import { UserAssertion } from '@domains/backpack/user-assertion.entity';
 import type { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
 import { UserAssertionStatus } from '@domains/backpack/backpack.types';
-import {
+import type {
   UserAssertionCreateParams,
   UserAssertionQueryParams,
 } from '@domains/backpack/repository.types';
 import { userAssertions } from '../schema';
 import { SqliteUserAssertionMapper } from '../mappers/sqlite-user-assertion.mapper';
 import { createId } from '@paralleldrive/cuid2';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 import { SqliteTypeConverters } from '../utils/sqlite-type-converters';
 
@@ -333,7 +333,7 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
           );
 
       // Build the query with the condition
-      let query = db.select().from(userAssertions).where(whereCondition);
+      const query = db.select().from(userAssertions).where(whereCondition);
 
       // Execute the query with pagination if provided
       let result: (typeof userAssertions.$inferSelect)[];

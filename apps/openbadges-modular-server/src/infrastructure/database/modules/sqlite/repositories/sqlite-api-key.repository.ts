@@ -6,11 +6,11 @@
  */
 
 // import { drizzle } from 'drizzle-orm/bun-sqlite'; // Will be used in future implementation
-import { ApiKey } from '@domains/auth/apiKey.entity';
+import type { ApiKey } from '@domains/auth/apiKey.entity';
 import type { ApiKeyRepository } from '@domains/auth/apiKey.repository';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 // These imports will be used in the full implementation
 // import { eq } from 'drizzle-orm';
 // import { apiKeys } from '../schema';

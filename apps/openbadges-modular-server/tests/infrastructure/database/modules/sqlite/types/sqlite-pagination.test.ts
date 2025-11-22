@@ -3,10 +3,11 @@
  */
 
 import { describe, it, expect } from 'bun:test';
+import type {
+  SqlitePaginationParams} from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
 import {
   DEFAULT_PAGINATION,
-  MAX_PAGINATION_LIMIT,
-  SqlitePaginationParams,
+  MAX_PAGINATION_LIMIT
 } from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
 
 describe('SQLite Pagination Types', () => {

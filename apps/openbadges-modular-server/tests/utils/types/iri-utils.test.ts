@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import {
   toIRI,
   toString,

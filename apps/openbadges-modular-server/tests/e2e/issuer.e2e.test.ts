@@ -18,7 +18,7 @@ import { TestDataHelper } from './helpers/test-data.helper';
 import { resetDatabase } from './helpers/database-reset.helper';
 import { setupTestApp, stopTestServer } from './setup-test-app';
 // Import only the types we need
-import { IssuerResponseDto } from '@/api/dtos';
+import type { IssuerResponseDto } from '@/api/dtos';
 import { getAvailablePort, releasePort } from './helpers/port-manager.helper';
 import { headersToObject } from '../test-utils/headers.helper';
 

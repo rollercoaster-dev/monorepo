@@ -1,17 +1,9 @@
 {
+  "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
-    "target": "ES2020",
     "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "allowJs": true,
-    "checkJs": false,
-
-    /* Bundler mode */
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "preserve",
 
     /* Path aliases for cleaner imports */
@@ -25,18 +17,17 @@
       "@types/*": ["src/types/*"]
     },
 
-    /* For declaration files */
+    /* Override shared-config for declaration output */
+    "noEmit": false,
+    /* Disable strict indexed access to maintain compatibility */
+    "noUncheckedIndexedAccess": false,
     "declaration": true,
     "declarationDir": "dist/types",
-    //    "emitDeclarationOnly": true,
     "outDir": "dist",
 
-    /* Linting */
-    "strict": true,
+    /* Additional strict settings */
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true
+    "noUnusedParameters": true
   },
   "include": [
     "env.d.ts",

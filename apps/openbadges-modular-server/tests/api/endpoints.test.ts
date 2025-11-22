@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('API Endpoints with Shared.IRI Types', () => {
   // Test that Shared.IRI types can be used in place of strings

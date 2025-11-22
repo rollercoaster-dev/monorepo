@@ -61,6 +61,6 @@ router.isReady().then(() => {
 
 // Export for testing
 if (import.meta.env.DEV) {
-  // @ts-ignore
+  // @ts-expect-error - accessing non-standard window property for dev testing
   window.__app__ = app
 }

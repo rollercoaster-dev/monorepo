@@ -1,10 +1,10 @@
 /**
  * Interface for UserAssertion repositories
  */
-import { UserAssertion } from './user-assertion.entity';
-import { Shared } from 'openbadges-types';
-import { UserAssertionStatus } from './backpack.types';
-import { UserAssertionCreateParams, UserAssertionQueryParams } from './repository.types';
+import type { UserAssertion } from './user-assertion.entity';
+import type { Shared } from 'openbadges-types';
+import type { UserAssertionStatus } from './backpack.types';
+import type { UserAssertionCreateParams, UserAssertionQueryParams } from './repository.types';
 
 export interface UserAssertionRepository {
   /**

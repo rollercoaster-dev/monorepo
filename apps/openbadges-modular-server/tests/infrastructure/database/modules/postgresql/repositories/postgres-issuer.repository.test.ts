@@ -1,8 +1,8 @@
 import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'bun:test';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { PostgresIssuerRepository } from '@infrastructure/database/modules/postgresql/repositories/postgres-issuer.repository';
 import { Issuer } from '@domains/issuer/issuer.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { 
   createPostgresClient, 
   createTestTables, 

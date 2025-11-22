@@ -6,16 +6,16 @@
  */
 
 import { eq, sql, inArray } from 'drizzle-orm';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { Assertion } from '@domains/assertion/assertion.entity';
 import type { AssertionRepository } from '@domains/assertion/assertion.repository';
 import { assertions } from '../schema';
 import { PostgresAssertionMapper } from '../mappers/postgres-assertion.mapper';
 
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
 import { BasePostgresRepository } from './base-postgres.repository';
-import { PostgresEntityType } from '../types/postgres-database.types';
+import type { PostgresEntityType } from '../types/postgres-database.types';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 import { batchInsert } from '@infrastructure/database/utils/batch-operations';
 

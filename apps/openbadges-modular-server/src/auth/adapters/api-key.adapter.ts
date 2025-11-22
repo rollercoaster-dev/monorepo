@@ -5,8 +5,8 @@
  * API keys are passed in the X-API-Key header and validated against configured keys.
  */
 
-import { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
-import { ApiKeyRepository } from '../../domains/auth/apiKey.repository';
+import type { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
+import type { ApiKeyRepository } from '../../domains/auth/apiKey.repository';
 import { logger } from '../../utils/logging/logger.service';
 
 interface ApiKeyConfig {

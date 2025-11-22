@@ -10,10 +10,10 @@ import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
 import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
 import { badgeClasses } from '../schema';
 import { SqliteBadgeClassMapper } from '../mappers/sqlite-badge-class.mapper';
-import { Shared } from 'openbadges-types';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { Shared } from 'openbadges-types';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { BaseSqliteRepository } from './base-sqlite.repository';
-import { SqlitePaginationParams } from '../types/sqlite-database.types';
+import type { SqlitePaginationParams } from '../types/sqlite-database.types';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 
 export class SqliteBadgeClassRepository

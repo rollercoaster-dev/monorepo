@@ -1,8 +1,8 @@
 /**
  * Type definitions for authentication
  */
-import { Shared } from 'openbadges-types';
-import { AuthResponse, AuthSuccess, AuthFailure } from './backpack.types';
+import type { Shared } from 'openbadges-types';
+import type { AuthResponse, AuthSuccess, AuthFailure } from './backpack.types';
 
 /**
  * Platform JWT payload

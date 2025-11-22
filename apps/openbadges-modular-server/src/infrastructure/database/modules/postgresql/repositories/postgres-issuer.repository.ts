@@ -6,15 +6,15 @@
  */
 
 import { eq } from 'drizzle-orm';
-import postgres from 'postgres';
-import { Issuer } from '@domains/issuer/issuer.entity';
+import type postgres from 'postgres';
+import type { Issuer } from '@domains/issuer/issuer.entity';
 import type { IssuerRepository } from '@domains/issuer/issuer.repository';
 import { issuers } from '../schema';
 import { PostgresIssuerMapper } from '../mappers/postgres-issuer.mapper';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
 import { BasePostgresRepository } from './base-postgres.repository';
-import { PostgresEntityType } from '../types/postgres-database.types';
+import type { PostgresEntityType } from '../types/postgres-database.types';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 
 export class PostgresIssuerRepository

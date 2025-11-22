@@ -2,7 +2,6 @@
 
 declare global {
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/ban-types
     interface Mock<T = unknown, Y extends unknown[] = unknown[]> {
       mockImplementation: (fn: (...args: Y) => T) => this;
       mockImplementationOnce: (fn: (...args: Y) => T) => this;

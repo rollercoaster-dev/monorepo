@@ -6,15 +6,15 @@
  */
 
 import { Assertion } from '@domains/assertion/assertion.entity';
-import { Shared, OB2, OB3 } from 'openbadges-types';
+import type { Shared, OB2, OB3 } from 'openbadges-types';
 import {
   convertBoolean,
   convertJson,
   convertTimestamp,
   convertUuid,
 } from '@infrastructure/database/utils/type-conversion';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { assertions } from '../schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { assertions } from '../schema';
 import { logger } from '@utils/logging/logger.service';
 
 /**

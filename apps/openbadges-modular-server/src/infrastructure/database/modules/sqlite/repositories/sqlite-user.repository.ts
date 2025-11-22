@@ -6,19 +6,20 @@
  */
 
 import { eq, and, like, sql } from 'drizzle-orm';
-import { User, UserRole, UserPermission } from '@domains/user/user.entity';
-import {
+import type { UserRole, UserPermission } from '@domains/user/user.entity';
+import { User } from '@domains/user/user.entity';
+import type {
   UserRepository,
   UserCreateParams,
   UserUpdateParams,
   UserQueryParams,
 } from '@domains/user/user.repository';
 import { users } from '../schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger, queryLogger } from '@utils/logging/logger.service';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
 import { createId } from '@paralleldrive/cuid2';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import type { drizzle as DrizzleFn } from 'drizzle-orm/bun-sqlite';
 
 // Create compile-time type alias to avoid runtime import dependency

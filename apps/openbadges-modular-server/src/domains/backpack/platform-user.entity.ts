@@ -1,9 +1,9 @@
 /**
  * PlatformUser entity representing a user from an external platform
  */
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
-import { PlatformUserMetadata } from './backpack.types';
+import type { PlatformUserMetadata } from './backpack.types';
 
 export class PlatformUser {
   id: Shared.IRI;

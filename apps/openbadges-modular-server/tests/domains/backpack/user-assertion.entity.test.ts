@@ -4,7 +4,7 @@
 import { describe, test, expect } from 'bun:test';
 import { UserAssertion } from '@/domains/backpack/user-assertion.entity';
 import { UserAssertionStatus } from '@/domains/backpack/backpack.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('UserAssertion Entity', () => {
   // Test data

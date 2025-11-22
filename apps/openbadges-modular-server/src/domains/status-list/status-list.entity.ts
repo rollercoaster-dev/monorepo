@@ -5,14 +5,15 @@
  * verifiable credentials using a compressed bitstring format.
  */
 
-import { Shared } from 'openbadges-types';
-import {
-  StatusPurpose,
+import type { Shared } from 'openbadges-types';
+import type {
   StatusListData,
   BitstringStatusList,
   BitstringStatusListCredential,
   CreateStatusListParams,
-  StatusMessage,
+  StatusMessage} from './status-list.types';
+import {
+  StatusPurpose
 } from './status-list.types';
 import { createOrGenerateIRI } from '../../utils/types/type-utils';
 import { logger } from '../../utils/logging/logger.service';

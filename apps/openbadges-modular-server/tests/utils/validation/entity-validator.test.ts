@@ -10,7 +10,7 @@ import { validateIssuer, validateBadgeClass, validateAssertion } from '@/utils/v
 import { Issuer } from '@/domains/issuer/issuer.entity';
 import { BadgeClass } from '@/domains/badgeClass/badgeClass.entity';
 import { Assertion } from '@/domains/assertion/assertion.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { EXAMPLE_EDU_URL } from '@/constants/urls';
 
 // Define input types for accurate casting

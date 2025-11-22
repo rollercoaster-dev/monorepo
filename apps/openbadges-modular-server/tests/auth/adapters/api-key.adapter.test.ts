@@ -6,9 +6,9 @@
 
 import { describe, test, mock } from 'bun:test';
 import { ApiKeyAdapter } from '@/auth/adapters/api-key.adapter';
-import { ApiKeyRepository } from '@/domains/auth/apiKey.repository';
+import type { ApiKeyRepository } from '@/domains/auth/apiKey.repository';
 import { ApiKey } from '@/domains/auth/apiKey.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('API Key Adapter', () => {
   test('should authenticate with a valid API key', async () => {

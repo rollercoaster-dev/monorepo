@@ -4,7 +4,7 @@
 import { describe, test, expect } from 'bun:test';
 import { Platform } from '@/domains/backpack/platform.entity';
 import { PlatformStatus } from '@/domains/backpack/backpack.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('Platform Entity', () => {
   // Test data

@@ -5,8 +5,8 @@
  * across different database implementations.
  */
 
-import { StatusList } from './status-list.entity';
-import {
+import type { StatusList } from './status-list.entity';
+import type {
   StatusPurpose,
   StatusListQueryParams,
   CredentialStatusEntryData,

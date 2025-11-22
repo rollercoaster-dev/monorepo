@@ -5,8 +5,8 @@
  * by the Open Badges 3.0 specification, including DataIntegrityProof and JWT proofs.
  */
 
-import { Shared } from 'openbadges-types';
-import { DataIntegrityProof } from '../crypto/signature';
+import type { Shared } from 'openbadges-types';
+import type { DataIntegrityProof } from '../crypto/signature';
 
 /**
  * JWT Header for Open Badges JWT proofs

@@ -1,8 +1,9 @@
-import { Kysely, Migrator, FileMigrationProvider } from 'kysely';
+import type { Kysely} from 'kysely';
+import { Migrator, FileMigrationProvider } from 'kysely';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { getDatabaseInstance, getDatabaseConfig } from '../factory';
-import { DatabaseSchema } from '../schema';
+import type { DatabaseSchema } from '../schema';
 
 export interface MigrationResult {
   success: boolean;

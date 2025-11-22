@@ -3,12 +3,12 @@
  */
 
 import { StatusList } from '@domains/status-list/status-list.entity';
-import {
+import type {
   StatusListData,
   CredentialStatusEntryData,
   StatusPurpose,
 } from '@domains/status-list/status-list.types';
-import { statusLists, credentialStatusEntries } from '../schema';
+import type { statusLists, credentialStatusEntries } from '../schema';
 import { logger } from '@utils/logging/logger.service';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 

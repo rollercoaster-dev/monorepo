@@ -5,8 +5,8 @@
  */
 
 import { BadgeVersion, BADGE_VERSION_CONTEXTS } from './badge-version';
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   IssuerData,
   BadgeClassData,
   AssertionData,

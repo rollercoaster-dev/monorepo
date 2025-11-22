@@ -6,9 +6,9 @@
  */
 
 import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import type { InferInsertModel } from 'drizzle-orm';
-import { badgeClasses } from '../schema';
+import type { badgeClasses } from '../schema';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 import { safeParseJson } from '@utils/json-utils';
 

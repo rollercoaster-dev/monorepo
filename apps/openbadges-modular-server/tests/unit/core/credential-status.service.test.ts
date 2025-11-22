@@ -4,9 +4,9 @@
 
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { CredentialStatusService } from '../../../src/core/credential-status.service';
-import { StatusListService } from '../../../src/core/status-list.service';
+import type { StatusListService } from '../../../src/core/status-list.service';
 import { StatusPurpose } from '../../../src/domains/status-list/status-list.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('CredentialStatusService', () => {
   let credentialStatusService: CredentialStatusService;

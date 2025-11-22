@@ -5,17 +5,18 @@
  * It supports both Open Badges 2.0 and 3.0 specifications.
  */
 
-import {
-  BadgeClass,
+import type {
   Related,
-  EndorsementCredential,
+  EndorsementCredential} from '../../domains/badgeClass/badgeClass.entity';
+import {
+  BadgeClass
 } from '../../domains/badgeClass/badgeClass.entity';
-import { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
-import { IssuerRepository } from '../../domains/issuer/issuer.repository';
+import type { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
+import type { IssuerRepository } from '../../domains/issuer/issuer.repository';
 import { BadgeVersion } from '../../utils/version/badge-version';
 import { toIRI } from '../../utils/types/iri-utils';
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   CreateBadgeClassDto,
   BadgeClassResponseDto,
   UpdateBadgeClassDto,
@@ -25,7 +26,7 @@ import {
   UpdateBadgeClassSchema,
 } from '../validation/badgeClass.schemas';
 import { logger } from '../../utils/logging/logger.service';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { UserPermission } from '../../domains/user/user.entity';
 import { AchievementRelationshipService } from '../../services/achievement-relationship.service';
 import { BadRequestError } from '../../infrastructure/errors/bad-request.error';

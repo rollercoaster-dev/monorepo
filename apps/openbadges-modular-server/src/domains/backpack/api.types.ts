@@ -1,8 +1,9 @@
 /**
  * Type definitions for API requests and responses
  */
-import { Shared } from 'openbadges-types';
-import { PlatformStatus, UserAssertionStatus, ApiResponse } from './backpack.types';
+import type { Shared } from 'openbadges-types';
+import type { ApiResponse } from './backpack.types';
+import { PlatformStatus, UserAssertionStatus } from './backpack.types';
 import { z } from 'zod';
 
 // Base IRI schema for reusability

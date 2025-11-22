@@ -7,9 +7,10 @@
 
 import { describe, expect, it, mock, beforeEach } from 'bun:test';
 import { AchievementRelationshipService } from '@/services/achievement-relationship.service';
-import { BadgeClass, Related } from '@/domains/badgeClass/badgeClass.entity';
-import { BadgeClassRepository } from '@/domains/badgeClass/badgeClass.repository';
-import { Shared } from 'openbadges-types';
+import type { Related } from '@/domains/badgeClass/badgeClass.entity';
+import { BadgeClass } from '@/domains/badgeClass/badgeClass.entity';
+import type { BadgeClassRepository } from '@/domains/badgeClass/badgeClass.repository';
+import type { Shared } from 'openbadges-types';
 
 describe('AchievementRelationshipService', () => {
   let service: AchievementRelationshipService;

@@ -6,15 +6,15 @@
  */
 
 import { eq } from 'drizzle-orm';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
 import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
 import { badgeClasses } from '../schema';
 import { PostgresBadgeClassMapper } from '../mappers/postgres-badge-class.mapper';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
 import { BasePostgresRepository } from './base-postgres.repository';
-import { PostgresEntityType } from '../types/postgres-database.types';
+import type { PostgresEntityType } from '../types/postgres-database.types';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 
 export class PostgresBadgeClassRepository

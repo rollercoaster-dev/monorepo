@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { EndorsementCredentialDto } from '@/api/validation/badgeClass.schemas';
+import type { EndorsementCredentialDto } from '@/api/validation/badgeClass.schemas';
 
 // We need to access the private function for testing, so we'll create a test version
 // This simulates the fixed logic from the convertToEndorsementCredential function
 import { toIRI } from '@/utils/types/iri-utils';
-import { OB3, Shared } from 'openbadges-types';
-import { EndorsementCredential } from '@/domains/badgeClass/badgeClass.entity';
+import type { OB3, Shared } from 'openbadges-types';
+import type { EndorsementCredential } from '@/domains/badgeClass/badgeClass.entity';
 
 function testConvertToEndorsementCredential(
   dto: EndorsementCredentialDto

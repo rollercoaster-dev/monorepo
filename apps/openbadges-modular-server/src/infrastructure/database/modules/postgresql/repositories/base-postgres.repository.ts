@@ -8,13 +8,14 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import type postgres from 'postgres';
 import { logger, queryLogger } from '@utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   PostgresOperationContext,
   PostgresEntityType,
   PostgresQueryMetrics,
   PostgresPaginationParams,
-  PostgresTransaction,
+  PostgresTransaction} from '../types/postgres-database.types';
+import {
   DEFAULT_POSTGRES_PAGINATION,
   MAX_POSTGRES_PAGINATION_LIMIT,
 } from '../types/postgres-database.types';

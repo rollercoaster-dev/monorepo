@@ -6,10 +6,10 @@
  * Enhanced with health monitoring, transaction support, and configuration management.
  */
 
-import { Issuer } from '../../../domains/issuer/issuer.entity';
-import { BadgeClass } from '../../../domains/badgeClass/badgeClass.entity';
-import { Assertion } from '../../../domains/assertion/assertion.entity';
-import { Shared } from 'openbadges-types';
+import type { Issuer } from '../../../domains/issuer/issuer.entity';
+import type { BadgeClass } from '../../../domains/badgeClass/badgeClass.entity';
+import type { Assertion } from '../../../domains/assertion/assertion.entity';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Serializable error information for database health

@@ -3,16 +3,10 @@ import { existsSync } from 'fs';
 import { dirname } from 'path';
 import { databaseConfig } from './drizzle-config-helper';
 
-// Use console for logging in drizzle.config.ts to avoid module resolution issues
+// Use console for logging in drizzle.config.ts (runs before logger module is available)
 const logger = {
-  // eslint-disable-next-line no-console
   error: console.error,
-  // eslint-disable-next-line no-console
   warn: console.warn,
-  // eslint-disable-next-line no-console
-  info: console.info,
-  // eslint-disable-next-line no-console
-  debug: console.debug,
 };
 
 /**

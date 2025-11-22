@@ -4,7 +4,7 @@
  * This file contains the OpenAPI/Swagger documentation for the API endpoints.
  */
 
-import { OpenAPIObject } from 'openapi3-ts/oas30';
+import type { OpenAPIObject } from 'openapi3-ts/oas30';
 import { config } from '../config/config';
 import { EXAMPLE_EDU_EVIDENCE_URL, EXAMPLE_EDU_KEYS_URL, EXAMPLE_EDU_URL, GITHUB_REPO_URL, MIT_LICENSE_URL, OPENBADGES_V3_CONTEXT_EXAMPLE } from '@/constants/urls';
 import { getAppVersion } from '../utils/version/app-version';

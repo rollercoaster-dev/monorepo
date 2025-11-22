@@ -6,8 +6,8 @@
  * for accessing the database regardless of the underlying implementation.
  */
 
-import { DatabaseInterface } from './interfaces/database.interface';
-import { DatabaseModuleInterface } from './interfaces/database-module.interface';
+import type { DatabaseInterface } from './interfaces/database.interface';
+import type { DatabaseModuleInterface } from './interfaces/database-module.interface';
 import { SqliteModule } from './modules/sqlite/sqlite.module';
 import { PostgresqlModule } from './modules/postgresql/postgresql.module';
 import { config } from '@/config/config';

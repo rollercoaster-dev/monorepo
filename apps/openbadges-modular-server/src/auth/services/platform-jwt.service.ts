@@ -3,7 +3,7 @@
  */
 import * as jose from 'jose';
 
-import { PlatformJwtPayload } from '../../domains/backpack/auth.types';
+import type { PlatformJwtPayload } from '../../domains/backpack/auth.types';
 
 /**
  * Service for handling platform JWT tokens

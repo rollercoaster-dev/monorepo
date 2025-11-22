@@ -6,8 +6,8 @@
  */
 
 import { Platform } from '@domains/backpack/platform.entity';
-import { PlatformStatus } from '@domains/backpack/backpack.types';
-import { Shared } from 'openbadges-types';
+import type { PlatformStatus } from '@domains/backpack/backpack.types';
+import type { Shared } from 'openbadges-types';
 
 export class PostgresPlatformMapper {
   /**

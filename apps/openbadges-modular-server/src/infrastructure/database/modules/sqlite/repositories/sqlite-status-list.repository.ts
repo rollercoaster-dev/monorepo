@@ -3,9 +3,9 @@
  */
 
 import { eq, and, sql, lt, desc, asc } from 'drizzle-orm';
-import { StatusList } from '@domains/status-list/status-list.entity';
+import type { StatusList } from '@domains/status-list/status-list.entity';
 import type { StatusListRepository } from '@domains/status-list/status-list.repository';
-import {
+import type {
   StatusPurpose,
   StatusListQueryParams,
   CredentialStatusEntryData,
@@ -14,7 +14,7 @@ import {
 } from '@domains/status-list/status-list.types';
 import { statusLists, credentialStatusEntries } from '../schema';
 import { SqliteStatusListMapper } from '../mappers/sqlite-status-list.mapper';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { BaseSqliteRepository } from './base-sqlite.repository';
 import { logger } from '@utils/logging/logger.service';
 import {
@@ -24,8 +24,8 @@ import {
 } from '@utils/bitstring/bitstring.utils';
 import { createOrGenerateIRI } from '@utils/types/type-utils';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { Shared } from 'openbadges-types';
-import { SqliteEntityType } from '../types/sqlite-database.types';
+import type { Shared } from 'openbadges-types';
+import type { SqliteEntityType } from '../types/sqlite-database.types';
 
 /**
  * SQLite StatusList repository implementation

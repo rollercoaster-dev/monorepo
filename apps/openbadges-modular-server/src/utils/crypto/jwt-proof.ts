@@ -5,22 +5,24 @@
  * according to the W3C VC-JOSE-COSE specification and Open Badges 3.0 requirements.
  */
 
+import type {
+  JWTPayload,
+  JWTHeaderParameters} from 'jose';
 import {
   SignJWT,
   jwtVerify,
   importJWK,
   importPKCS8,
-  importSPKI,
-  JWTPayload,
-  JWTHeaderParameters,
+  importSPKI
 } from 'jose';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '../logging/logger.service';
-import {
+import type {
   JWTProof,
   JWTProofPayload,
   VerifiableCredentialClaims,
-  ProofVerificationResult,
+  ProofVerificationResult} from '../types/proof.types';
+import {
   ProofFormat,
 } from '../types/proof.types';
 

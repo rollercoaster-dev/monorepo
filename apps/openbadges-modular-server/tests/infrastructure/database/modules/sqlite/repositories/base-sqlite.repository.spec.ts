@@ -8,8 +8,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Database } from 'bun:sqlite';
 import { BaseSqliteRepository } from '@infrastructure/database/modules/sqlite/repositories/base-sqlite.repository';
 import { SqliteConnectionManager } from '@infrastructure/database/modules/sqlite/connection/sqlite-connection.manager';
-import { SqliteOperationContext } from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
-import { Shared } from 'openbadges-types';
+import type { SqliteOperationContext } from '@infrastructure/database/modules/sqlite/types/sqlite-database.types';
+import type { Shared } from 'openbadges-types';
 
 // Test implementation of BaseSqliteRepository
 class TestSqliteRepository extends BaseSqliteRepository {

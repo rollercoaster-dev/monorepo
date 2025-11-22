@@ -12,7 +12,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import { SqliteRepositoryCoordinator } from '../sqlite-repository.coordinator';
 import { SqliteConnectionManager } from '../../connection/sqlite-connection.manager';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import * as schema from '../../schema';
 import { getMigrationsPath } from '@tests/test-utils/migrations-path';
 import { logger } from '@utils/logging/logger.service';

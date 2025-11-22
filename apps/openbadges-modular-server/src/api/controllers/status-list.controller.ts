@@ -6,17 +6,18 @@
  */
 
 import { StatusListService } from '../../core/status-list.service';
-import { StatusListRepository } from '../../domains/status-list/status-list.repository';
+import type { StatusListRepository } from '../../domains/status-list/status-list.repository';
 
-import {
-  StatusPurpose,
+import type {
   CreateStatusListParams,
   UpdateCredentialStatusParams,
   StatusListQueryParams,
   StatusListData,
-  CredentialStatusEntryData,
-} from '../../domains/status-list/status-list.types';
+  CredentialStatusEntryData} from '../../domains/status-list/status-list.types';
 import {
+  StatusPurpose
+} from '../../domains/status-list/status-list.types';
+import type {
   CreateStatusListDto,
   UpdateCredentialStatusDto,
   StatusListQueryDto,

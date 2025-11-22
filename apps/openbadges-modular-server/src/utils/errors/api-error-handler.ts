@@ -5,7 +5,7 @@
  * eliminating duplicate error-handling logic and ensuring consistent responses.
  */
 
-import { Context } from 'hono';
+import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { logger } from '../logging/logger.service';
 import { BadRequestError } from '../../infrastructure/errors/bad-request.error';

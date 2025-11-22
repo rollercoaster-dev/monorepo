@@ -3,10 +3,10 @@
  */
 
 import { eq, and, sql, lt, desc, asc } from 'drizzle-orm';
-import postgres from 'postgres';
-import { StatusList } from '@domains/status-list/status-list.entity';
+import type postgres from 'postgres';
+import type { StatusList } from '@domains/status-list/status-list.entity';
 import type { StatusListRepository } from '@domains/status-list/status-list.repository';
-import {
+import type {
   StatusPurpose,
   StatusListQueryParams,
   CredentialStatusEntryData,
@@ -16,7 +16,7 @@ import {
 import { statusLists, credentialStatusEntries } from '../schema';
 import { PostgresStatusListMapper } from '../mappers/postgres-status-list.mapper';
 import { BasePostgresRepository } from './base-postgres.repository';
-import { PostgresEntityType } from '../types/postgres-database.types';
+import type { PostgresEntityType } from '../types/postgres-database.types';
 import { logger } from '@utils/logging/logger.service';
 import {
   decodeBitstring,
@@ -25,7 +25,7 @@ import {
 } from '@utils/bitstring/bitstring.utils';
 import { createOrGenerateIRI } from '@utils/types/type-utils';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * PostgreSQL StatusList repository implementation

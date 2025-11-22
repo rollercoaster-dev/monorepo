@@ -1,8 +1,9 @@
 /**
  * Platform entity representing an external platform that can integrate with the backpack
  */
-import { Shared } from 'openbadges-types';
-import { PlatformStatus, PlatformMetadata } from './backpack.types';
+import type { Shared } from 'openbadges-types';
+import type { PlatformMetadata } from './backpack.types';
+import { PlatformStatus } from './backpack.types';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
 
 export class Platform {

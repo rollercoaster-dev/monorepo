@@ -5,9 +5,9 @@
  * It caches assertion entities to improve read performance.
  */
 
-import { Assertion } from '../../../domains/assertion/assertion.entity';
-import { AssertionRepository } from '../../../domains/assertion/assertion.repository';
-import { Shared } from 'openbadges-types';
+import type { Assertion } from '../../../domains/assertion/assertion.entity';
+import type { AssertionRepository } from '../../../domains/assertion/assertion.repository';
+import type { Shared } from 'openbadges-types';
 import { CacheRepositoryWrapper } from './cache-repository.wrapper';
 
 export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion, AssertionRepository> implements AssertionRepository {

@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { SqliteIssuerRepository } from '@/infrastructure/database/modules/sqlite/repositories/sqlite-issuer.repository';
 import { SqliteConnectionManager } from '@/infrastructure/database/modules/sqlite/connection/sqlite-connection.manager';
 import { Issuer } from '@/domains/issuer/issuer.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 describe('SqliteIssuerRepository', () => {
   let db: Database;

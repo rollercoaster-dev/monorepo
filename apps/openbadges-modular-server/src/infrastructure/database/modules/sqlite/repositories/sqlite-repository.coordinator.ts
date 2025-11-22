@@ -5,18 +5,18 @@
  * providing transaction support and unified error handling.
  */
 import { eq, inArray, sql } from 'drizzle-orm';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { Issuer } from '@domains/issuer/issuer.entity';
 import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
 import { Assertion } from '@domains/assertion/assertion.entity';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import { SqliteIssuerRepository } from './sqlite-issuer.repository';
 import { SqliteBadgeClassRepository } from './sqlite-badge-class.repository';
 import { SqliteAssertionRepository } from './sqlite-assertion.repository';
 import { SqliteAssertionMapper } from '../mappers/sqlite-assertion.mapper';
 import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
 import { logger } from '@utils/logging/logger.service';
-import {
+import type {
   SqliteTransactionContext,
   SqliteOperationContext,
   DrizzleTransaction,

@@ -5,10 +5,10 @@
  * the Open Badges 3.0 specification using the openbadges-types package.
  */
 
-import { Issuer } from '../../domains/issuer/issuer.entity';
-import { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
-import { Assertion } from '../../domains/assertion/assertion.entity';
-import { Shared, OB3 } from 'openbadges-types';
+import type { Issuer } from '../../domains/issuer/issuer.entity';
+import type { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
+import type { Assertion } from '../../domains/assertion/assertion.entity';
+import type { Shared, OB3 } from 'openbadges-types';
 
 /**
  * Validates a URL

@@ -1,11 +1,11 @@
 /**
  * Platform authentication middleware
  */
-import { MiddlewareHandler } from 'hono';
-import { PlatformRepository } from '../../domains/backpack/platform.repository';
+import type { MiddlewareHandler } from 'hono';
+import type { PlatformRepository } from '../../domains/backpack/platform.repository';
 import { PlatformJwtService } from '../services/platform-jwt.service';
 import { PlatformUser } from '../../domains/backpack/platform-user.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { decodeJwt } from 'jose';
 import { createMiddleware } from 'hono/factory';
 

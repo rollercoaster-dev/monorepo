@@ -5,8 +5,8 @@
  * ensuring type safety throughout the database layer.
  */
 
-import { Shared, OB2, OB3 } from 'openbadges-types';
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
+import type { Shared, OB2, OB3 } from 'openbadges-types';
+import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 import type { Database } from 'bun:sqlite';
 
 /**

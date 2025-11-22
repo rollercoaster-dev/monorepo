@@ -6,7 +6,7 @@
  * for user-facing authentication due to security limitations.
  */
 
-import { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
+import type { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
 import { logger } from '../../utils/logging/logger.service';
 
 interface BasicAuthCredential {

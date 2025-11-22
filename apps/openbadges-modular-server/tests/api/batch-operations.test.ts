@@ -3,15 +3,15 @@
  */
 
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { Shared, OB2 } from 'openbadges-types';
+import type { Shared, OB2 } from 'openbadges-types';
 import { AssertionController } from '../../src/api/controllers/assertion.controller';
-import { AssertionRepository } from '../../src/domains/assertion/assertion.repository';
-import { BadgeClassRepository } from '../../src/domains/badgeClass/badgeClass.repository';
-import { IssuerRepository } from '../../src/domains/issuer/issuer.repository';
+import type { AssertionRepository } from '../../src/domains/assertion/assertion.repository';
+import type { BadgeClassRepository } from '../../src/domains/badgeClass/badgeClass.repository';
+import type { IssuerRepository } from '../../src/domains/issuer/issuer.repository';
 import { Assertion } from '../../src/domains/assertion/assertion.entity';
 import { BadgeClass } from '../../src/domains/badgeClass/badgeClass.entity';
 import { BadgeVersion } from '../../src/utils/version/badge-version';
-import {
+import type {
   BatchCreateCredentialsDto,
   BatchRetrieveCredentialsDto,
   BatchUpdateCredentialStatusDto,

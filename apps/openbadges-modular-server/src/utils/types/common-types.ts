@@ -2,9 +2,9 @@
  * Common type definitions to replace 'any' types throughout the codebase
  */
 
-import { DrizzleError } from 'drizzle-orm';
-import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
+import type { DrizzleError } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 
 /**
  * Database client types
