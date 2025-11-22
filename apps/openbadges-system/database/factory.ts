@@ -1,7 +1,7 @@
 import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
 import { Pool } from 'pg';
 import Database from 'better-sqlite3';
-import { DatabaseSchema } from './schema';
+import type { DatabaseSchema } from './schema';
 
 export type DatabaseType = 'sqlite' | 'postgres';
 

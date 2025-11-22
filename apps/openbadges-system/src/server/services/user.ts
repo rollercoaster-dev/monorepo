@@ -296,7 +296,7 @@ export class UserService {
     filters?: UserSearchFilters
   ): Promise<{ users: User[]; total: number }> {
     let whereClause = 'WHERE 1=1'
-    let params: unknown[] = []
+    const params: unknown[] = []
 
     // Add search filter
     if (search) {

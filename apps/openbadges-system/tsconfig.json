@@ -1,44 +1,32 @@
 {
+  "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
-    // Environment setup & latest features
+    /* Environment overrides for Vue/Vite */
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleDetection": "force",
     "jsx": "preserve",
     "allowJs": true,
-    "esModuleInterop": true,
 
-    // Module resolution
+    /* Module resolution for Vite bundler */
     "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "noEmit": true,
 
-    // Type checking
-    "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
+    /* Strict settings - keep project's existing strictness */
     "noUncheckedIndexedAccess": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+
+    /* Vite-specific types */
     "types": ["unplugin-vue-router/client", "vite/client"],
 
-    // Path aliases
+    /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/client/*"],
       "@server/*": ["src/server/*"]
     },
 
-    // Some stricter flags (disabled by default)
+    /* Disable unused vars checking (handled by ESLint) */
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false

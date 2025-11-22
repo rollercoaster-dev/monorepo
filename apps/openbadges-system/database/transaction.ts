@@ -1,5 +1,5 @@
-import { Transaction } from 'kysely'
-import { DatabaseSchema } from './schema'
+import type { Transaction } from 'kysely'
+import type { DatabaseSchema } from './schema'
 import { getDatabaseInstance } from './factory'
 
 export type TransactionCallback<T> = (trx: Transaction<DatabaseSchema>) => Promise<T>
