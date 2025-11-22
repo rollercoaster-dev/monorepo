@@ -180,26 +180,28 @@ export const badgeApi = {
   },
 
   /**
-   * Get badge classes by issuer ID
+   * Get badge classes by issuer ID using server-side filtering
    */
   async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
     try {
-      // TODO: Add server-side filtering endpoint to badge server
-      // Currently fetches all badge classes and filters client-side,
-      // which is inefficient for large datasets.
-      // See: https://github.com/rollercoaster-dev/monorepo/issues/106
-      const allBadgeClasses = await this.getBadgeClasses();
+      const response = await fetch(
+        `/api/bs/v2/badge-classes?issuer=${encodeURIComponent(issuerId)}`,
+        {
+          method: 'GET',
+          headers: this.getHeaders(),
+        }
+      );
 
-      return allBadgeClasses.filter((badgeClass) => {
-        const issuer = badgeClass.issuer;
-        if (typeof issuer === 'string') {
-          return issuer === issuerId;
-        }
-        if (typeof issuer === 'object' && 'id' in issuer) {
-          return issuer.id === issuerId;
-        }
-        return false;
-      });
+      if (!response.ok) {
+        await this.handleError(response);
+      }
+
+      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>;
+      // Handle both array and object with items property
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return data.items || data.data || [];
     } catch (error) {
       if (error instanceof Error) {
         throw error;
