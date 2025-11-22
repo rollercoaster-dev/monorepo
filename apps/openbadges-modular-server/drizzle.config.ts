@@ -4,14 +4,11 @@ import { dirname } from 'path';
 import { databaseConfig } from './drizzle-config-helper';
 
 // Use console for logging in drizzle.config.ts to avoid module resolution issues
+// eslint-disable-next-line no-console -- Config file runs before logger module is available
 const logger = {
-   
   error: console.error,
-   
   warn: console.warn,
-  // eslint-disable-next-line no-console
   info: console.info,
-  // eslint-disable-next-line no-console
   debug: console.debug,
 };
 

@@ -203,6 +203,7 @@ export default [
           varsIgnorePattern: '^_',
         },
       ],
+      // Allow lexical declarations in case blocks (common pattern in this codebase)
       'no-case-declarations': 'off',
       'no-undef': 'off',
     },

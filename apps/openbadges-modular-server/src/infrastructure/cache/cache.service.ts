@@ -46,8 +46,8 @@ export class CacheService implements CacheInterface {
   private cache: LRUType;
   private hits: number = 0;
   private misses: number = 0;
-  // Note: defaultTtl is kept for API compatibility but not used with lru.min
-  // @ts-expect-error - This is intentionally unused but kept for future compatibility
+  // TODO(#99): defaultTtl is stored but never used - lru.min doesn't support TTL
+  // @ts-expect-error - Intentionally unused, see issue #99 for discussion
   private defaultTtl: number;
 
   /**
