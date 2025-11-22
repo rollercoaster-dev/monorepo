@@ -5,18 +5,19 @@
  * including platform management and user assertions.
  */
 
-import { BackpackService } from './backpack.service';
-import { PlatformUser } from './platform-user.entity';
+import type { BackpackService } from './backpack.service';
+import type { PlatformUser } from './platform-user.entity';
 import { logger } from '../../utils/logging/logger.service';
 import { BadgeVersion } from '../../utils/version/badge-version';
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   UserAssertionStatus,
-  UserAssertionMetadata,
+  UserAssertionMetadata} from './backpack.types';
+import {
   PlatformStatus,
 } from './backpack.types';
 import { UserPermission } from '../user/user.entity';
-import {
+import type {
   CreatePlatformRequest,
   UpdatePlatformRequest,
   TypedApiResponse,
@@ -32,7 +33,7 @@ type PlatformApiResponse = TypedApiResponse<{
   platform?: PlatformResponse;
   error?: string;
 }>;
-import { PlatformCreateParams, PlatformUpdateParams } from './repository.types';
+import type { PlatformCreateParams, PlatformUpdateParams } from './repository.types';
 
 export class BackpackController {
   constructor(private backpackService: BackpackService) {}

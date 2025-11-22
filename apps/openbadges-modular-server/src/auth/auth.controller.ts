@@ -4,11 +4,11 @@
  * This controller handles authentication-related HTTP requests.
  */
 
-import { UserService } from '../domains/user/user.service';
+import type { UserService } from '../domains/user/user.service';
 import { PasswordService } from './services/password.service';
 import { JwtService } from './services/jwt.service';
 import { logger } from '../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

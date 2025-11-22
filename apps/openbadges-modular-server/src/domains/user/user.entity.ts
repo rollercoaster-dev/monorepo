@@ -5,7 +5,7 @@
  * It includes user identity, credentials, roles, and permissions.
  */
 
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
 
 /**

@@ -6,9 +6,9 @@
 
 import { describe, test, expect, beforeAll, afterAll, mock } from 'bun:test';
 import { createAuthMiddleware, registerAuthAdapter } from '@/auth/middleware/auth.middleware';
-import { AuthAdapter } from '@/auth/adapters/auth-adapter.interface';
+import type { AuthAdapter } from '@/auth/adapters/auth-adapter.interface';
 import { JwtService } from '@/auth/services/jwt.service';
-import { Context } from 'hono';
+import type { Context } from 'hono';
 import { TEST_TOKENS } from '../../test-utils/constants';
 
 describe('Authentication Middleware', () => {

@@ -7,12 +7,13 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import {
-  BadgeClass,
+import type {
   Related,
-  EndorsementCredential,
+  EndorsementCredential} from '@/domains/badgeClass/badgeClass.entity';
+import {
+  BadgeClass
 } from '@/domains/badgeClass/badgeClass.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { BadgeVersion } from '@/utils/version/badge-version';
 
 describe('BadgeClass Entity', () => {

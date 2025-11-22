@@ -5,17 +5,17 @@
  * including managing platform users and their assertions.
  */
 
-import { PlatformRepository } from './platform.repository';
-import { PlatformUserRepository } from './platform-user.repository';
-import { UserAssertionRepository } from './user-assertion.repository';
-import { AssertionRepository } from '../assertion/assertion.repository';
-import { Platform } from './platform.entity';
-import { PlatformUser } from './platform-user.entity';
-import { UserAssertion } from './user-assertion.entity';
+import type { PlatformRepository } from './platform.repository';
+import type { PlatformUserRepository } from './platform-user.repository';
+import type { UserAssertionRepository } from './user-assertion.repository';
+import type { AssertionRepository } from '../assertion/assertion.repository';
+import type { Platform } from './platform.entity';
+import type { PlatformUser } from './platform-user.entity';
+import type { UserAssertion } from './user-assertion.entity';
 import { logger } from '../../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
-import { UserAssertionStatus } from './backpack.types';
-import {
+import type { Shared } from 'openbadges-types';
+import type { UserAssertionStatus } from './backpack.types';
+import type {
   PlatformCreateParams,
   PlatformUpdateParams,
   PlatformQueryParams,

@@ -13,7 +13,7 @@ import { SqliteConnectionManager } from '@infrastructure/database/modules/sqlite
 import { UserAssertionStatus } from '@domains/backpack/backpack.types';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import * as schema from '@infrastructure/database/modules/sqlite/schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { createId } from '@paralleldrive/cuid2';
 import { getMigrationsPath } from '@tests/test-utils/migrations-path';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';

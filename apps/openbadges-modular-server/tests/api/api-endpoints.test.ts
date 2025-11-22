@@ -6,10 +6,10 @@
  */
 
 import { describe, expect, it, mock, beforeAll } from 'bun:test';
-import { Shared, OB2, OB3 } from 'openbadges-types';
-import { IssuerController } from '@/api/controllers/issuer.controller';
-import { BadgeClassController } from '@/api/controllers/badgeClass.controller';
-import { AssertionController } from '@/api/controllers/assertion.controller';
+import type { Shared, OB2, OB3 } from 'openbadges-types';
+import type { IssuerController } from '@/api/controllers/issuer.controller';
+import type { BadgeClassController } from '@/api/controllers/badgeClass.controller';
+import type { AssertionController } from '@/api/controllers/assertion.controller';
 import { toIRI } from '@/utils/types/iri-utils';
 import { toDateTime } from '@/utils/types/type-utils';
 import {
@@ -726,7 +726,7 @@ describe('API Endpoints', () => {
     });
 
     describe('GET /v3/credentials/batch', () => {
-      let createdCredentialIds: string[] = [];
+      const createdCredentialIds: string[] = [];
 
       beforeAll(async () => {
         // Create some test credentials first
@@ -866,7 +866,7 @@ describe('API Endpoints', () => {
     });
 
     describe('PUT /v3/credentials/batch/status', () => {
-      let testCredentialIds: string[] = [];
+      const testCredentialIds: string[] = [];
 
       beforeAll(async () => {
         // Create test credentials for status updates

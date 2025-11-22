@@ -5,7 +5,8 @@
  * in JSON Web Key format as specified in RFC 7517.
  */
 
-import { KeyService, JsonWebKeySet } from '../../core/key.service';
+import type { JsonWebKeySet } from '../../core/key.service';
+import { KeyService } from '../../core/key.service';
 import { logger } from '../../utils/logging/logger.service';
 
 /**

@@ -7,13 +7,13 @@
 
 import { eq, like, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { Platform } from '@domains/backpack/platform.entity';
 import type { PlatformRepository } from '@domains/backpack/platform.repository';
 import { platforms } from '../schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
-import { PlatformCreateParams, PlatformUpdateParams, PlatformQueryParams, PlatformStatus } from '@domains/backpack/repository.types';
+import type { PlatformCreateParams, PlatformUpdateParams, PlatformQueryParams, PlatformStatus } from '@domains/backpack/repository.types';
 import { convertTimestamp, convertUuid } from '@infrastructure/database/utils/type-conversion';
 import { toIRI } from '@utils/types/iri-utils';
 

@@ -6,10 +6,10 @@
  */
 
 // import { drizzle } from 'drizzle-orm/postgres-js'; // Will be used in future implementation
-import postgres from 'postgres';
-import { ApiKey } from '@domains/auth/apiKey.entity';
+import type postgres from 'postgres';
+import type { ApiKey } from '@domains/auth/apiKey.entity';
 import type { ApiKeyRepository } from '@domains/auth/apiKey.repository';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
 // These imports will be used in the full implementation
 // import { eq } from 'drizzle-orm';

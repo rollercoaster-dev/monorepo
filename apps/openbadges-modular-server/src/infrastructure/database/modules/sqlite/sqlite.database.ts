@@ -7,16 +7,16 @@
  */
 
 import type { Database } from 'bun:sqlite';
-import { Issuer } from '@domains/issuer/issuer.entity';
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import { Assertion } from '@domains/assertion/assertion.entity';
-import { DatabaseInterface } from '@infrastructure/database/interfaces/database.interface';
-import { Shared } from 'openbadges-types';
+import type { Issuer } from '@domains/issuer/issuer.entity';
+import type { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
+import type { Assertion } from '@domains/assertion/assertion.entity';
+import type { DatabaseInterface } from '@infrastructure/database/interfaces/database.interface';
+import type { Shared } from 'openbadges-types';
 import { SqliteConnectionManager } from './connection/sqlite-connection.manager';
 import { SqliteDatabaseService } from './services/sqlite-database.service';
 import { logger } from '@utils/logging/logger.service';
-import { SqliteConnectionConfig } from './types/sqlite-database.types';
-import {
+import type { SqliteConnectionConfig } from './types/sqlite-database.types';
+import type {
   DatabaseHealth,
   DatabaseQueryOptions,
 } from '@infrastructure/database/interfaces/database.interface';

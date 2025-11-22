@@ -6,8 +6,8 @@
  * Assertion repository implementations must fulfill.
  */
 
-import { Assertion } from './assertion.entity';
-import { Shared } from 'openbadges-types';
+import type { Assertion } from './assertion.entity';
+import type { Shared } from 'openbadges-types';
 
 export interface AssertionRepository {
   /**

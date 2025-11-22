@@ -13,7 +13,7 @@ import {
 import { Issuer } from '../../domains/issuer/issuer.entity';
 import { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
 import { Assertion } from '../../domains/assertion/assertion.entity';
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { CreateIssuerSchema } from '../../api/validation/issuer.schemas';
 import {

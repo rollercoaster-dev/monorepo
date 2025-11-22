@@ -5,14 +5,15 @@
  * It provides automatic status list assignment and BitstringStatusListEntry generation.
  */
 
-import { StatusListService } from './status-list.service';
-import {
-  StatusPurpose,
+import type { StatusListService } from './status-list.service';
+import type {
   BitstringStatusListEntry,
-  CredentialStatusEntryData,
+  CredentialStatusEntryData} from '../domains/status-list/status-list.types';
+import {
+  StatusPurpose
 } from '../domains/status-list/status-list.types';
 import { logger } from '../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Parameters for assigning credential status

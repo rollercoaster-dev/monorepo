@@ -1,9 +1,9 @@
 /**
  * Interface for Platform repositories
  */
-import { Platform } from './platform.entity';
-import { Shared } from 'openbadges-types';
-import { PlatformCreateParams, PlatformUpdateParams, PlatformQueryParams } from './repository.types';
+import type { Platform } from './platform.entity';
+import type { Shared } from 'openbadges-types';
+import type { PlatformCreateParams, PlatformUpdateParams, PlatformQueryParams } from './repository.types';
 
 export interface PlatformRepository {
   /**

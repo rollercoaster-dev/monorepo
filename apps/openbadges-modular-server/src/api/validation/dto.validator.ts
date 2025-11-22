@@ -7,7 +7,7 @@
 
 import { logger } from '../../utils/logging/logger.service';
 import { MissingRequiredFieldsError } from '../../utils/errors/validation.errors';
-import {
+import type {
   CreateIssuerDto,
   UpdateIssuerDto,
   CreateBadgeClassDto,

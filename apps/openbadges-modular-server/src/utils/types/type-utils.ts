@@ -5,7 +5,8 @@
  * from the openbadges-types package, ensuring proper validation and conversion.
  */
 
-import { Shared, createIRI, isIRI } from 'openbadges-types';
+import type { Shared} from 'openbadges-types';
+import { createIRI, isIRI } from 'openbadges-types';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../logging/logger.service';
 

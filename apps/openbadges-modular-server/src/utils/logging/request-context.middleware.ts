@@ -5,7 +5,7 @@
  * throughout the request lifecycle. It also adds the request ID to response headers.
  */
 
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { randomUUID } from 'crypto';
 import { logger } from './logger.service';

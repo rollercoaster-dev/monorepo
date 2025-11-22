@@ -5,8 +5,8 @@
  * It creates and configures PostgreSQL database instances.
  */
 
-import { DatabaseInterface } from '../../interfaces/database.interface';
-import { DatabaseModuleInterface } from '../../interfaces/database-module.interface';
+import type { DatabaseInterface } from '../../interfaces/database.interface';
+import type { DatabaseModuleInterface } from '../../interfaces/database-module.interface';
 import { PostgresqlDatabase } from './postgresql.database';
 
 export class PostgresqlModule implements DatabaseModuleInterface {

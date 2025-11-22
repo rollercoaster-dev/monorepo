@@ -11,8 +11,8 @@ import postgres from 'postgres';
 import { Issuer } from '../../../../domains/issuer/issuer.entity';
 import { BadgeClass } from '../../../../domains/badgeClass/badgeClass.entity';
 import { Assertion } from '../../../../domains/assertion/assertion.entity';
-import { Shared } from 'openbadges-types';
-import {
+import type { Shared } from 'openbadges-types';
+import type {
   DatabaseInterface,
   DatabaseQueryOptions,
   DatabaseHealth,

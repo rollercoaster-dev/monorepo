@@ -8,7 +8,7 @@
 import { performance } from 'perf_hooks';
 import { config } from '../../config/config';
 import { logger } from '../logging/logger.service';
-import { CacheService } from '../../infrastructure/cache/cache.service';
+import type { CacheService } from '../../infrastructure/cache/cache.service';
 import { QueryLoggerService } from '../../infrastructure/database/utils/query-logger.service';
 import { PreparedStatementManager } from '../../infrastructure/database/utils/prepared-statements';
 import { type DatabaseInterface } from '../../infrastructure/database/interfaces/database.interface';

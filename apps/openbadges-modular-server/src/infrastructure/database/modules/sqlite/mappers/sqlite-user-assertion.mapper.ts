@@ -6,17 +6,17 @@
  */
 
 import { UserAssertion } from '@domains/backpack/user-assertion.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import {
   convertJson,
   convertTimestamp,
   convertUuid,
 } from '@infrastructure/database/utils/type-conversion';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { userAssertions } from '../schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { userAssertions } from '../schema';
 // Import logger if needed for error handling
 // import { logger } from '@utils/logging/logger.service';
-import { UserAssertionStatus } from '@domains/backpack/backpack.types';
+import type { UserAssertionStatus } from '@domains/backpack/backpack.types';
 
 /**
  * SQLite mapper for the UserAssertion domain entity

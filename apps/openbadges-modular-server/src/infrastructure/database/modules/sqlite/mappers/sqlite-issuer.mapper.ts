@@ -6,11 +6,11 @@
  */
 
 import { Issuer } from '@domains/issuer/issuer.entity';
-import { issuers } from '../schema';
+import type { issuers } from '../schema';
 import { SqliteTypeConverters } from '../utils/sqlite-type-converters';
 import { logger } from '@utils/logging/logger.service';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 export class SqliteIssuerMapper {
   /**

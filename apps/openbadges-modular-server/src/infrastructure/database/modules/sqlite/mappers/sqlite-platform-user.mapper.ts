@@ -6,10 +6,10 @@
  */
 
 import { PlatformUser } from '@domains/backpack/platform-user.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { convertJson, convertTimestamp, convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import { platformUsers } from '../schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+import type { platformUsers } from '../schema';
 // Import logger if needed for error handling
 // import { logger } from '@utils/logging/logger.service';
 

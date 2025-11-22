@@ -7,15 +7,15 @@
  */
 
 import postgres from 'postgres';
-import { IssuerRepository } from '@domains/issuer/issuer.repository';
-import { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
-import { AssertionRepository } from '@domains/assertion/assertion.repository';
-import { StatusListRepository } from '@domains/status-list/status-list.repository';
-import { ApiKeyRepository } from '@domains/auth/apiKey.repository';
-import { UserRepository } from '@domains/user/user.repository';
-import { PlatformRepository } from '@domains/backpack/platform.repository';
-import { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
-import { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
+import type { IssuerRepository } from '@domains/issuer/issuer.repository';
+import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
+import type { AssertionRepository } from '@domains/assertion/assertion.repository';
+import type { StatusListRepository } from '@domains/status-list/status-list.repository';
+import type { ApiKeyRepository } from '@domains/auth/apiKey.repository';
+import type { UserRepository } from '@domains/user/user.repository';
+import type { PlatformRepository } from '@domains/backpack/platform.repository';
+import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
+import type { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
 import { PostgresIssuerRepository } from './database/modules/postgresql/repositories/postgres-issuer.repository';
 import { PostgresBadgeClassRepository } from './database/modules/postgresql/repositories/postgres-badge-class.repository';
 import { PostgresAssertionRepository } from './database/modules/postgresql/repositories/postgres-assertion.repository';

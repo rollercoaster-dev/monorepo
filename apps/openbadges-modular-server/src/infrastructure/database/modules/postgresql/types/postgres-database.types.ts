@@ -6,7 +6,7 @@
 
 import type { drizzle } from 'drizzle-orm/postgres-js';
 import type postgres from 'postgres';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * PostgreSQL database client wrapper

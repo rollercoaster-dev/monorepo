@@ -6,8 +6,8 @@
  */
 
 import { StatusList } from '../domains/status-list/status-list.entity';
-import { StatusListRepository } from '../domains/status-list/status-list.repository';
-import {
+import type { StatusListRepository } from '../domains/status-list/status-list.repository';
+import type {
   StatusPurpose,
   CreateStatusListParams,
   UpdateCredentialStatusParams,
@@ -26,7 +26,7 @@ import {
   getBitstringCapacity,
 } from '../utils/bitstring/bitstring.utils';
 import { logger } from '../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * StatusList Service class

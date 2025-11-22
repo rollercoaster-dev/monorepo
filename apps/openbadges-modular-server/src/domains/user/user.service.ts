@@ -5,11 +5,12 @@
  * user creation, authentication, and authorization.
  */
 
-import { User, UserRole, UserPermission } from './user.entity';
-import { UserRepository, UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
+import type { User, UserPermission } from './user.entity';
+import { UserRole } from './user.entity';
+import type { UserRepository, UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
 import { PasswordService } from '../../auth/services/password.service';
 import { logger } from '../../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * User service for managing users

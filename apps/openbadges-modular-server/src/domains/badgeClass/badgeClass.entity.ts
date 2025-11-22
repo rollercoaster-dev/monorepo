@@ -5,10 +5,10 @@
  * Open Badges 2.0 and 3.0 specifications.
  */
 
-import { OB2, OB3, Shared } from 'openbadges-types';
+import type { OB2, OB3, Shared } from 'openbadges-types';
 import { BadgeVersion } from '../../utils/version/badge-version';
 import { BadgeSerializerFactory } from '../../utils/version/badge-serializer';
-import { BadgeClassData } from '../../utils/types/badge-data.types';
+import type { BadgeClassData } from '../../utils/types/badge-data.types';
 import { VC_V2_CONTEXT_URL } from '@/constants/urls';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
 

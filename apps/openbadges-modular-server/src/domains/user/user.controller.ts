@@ -4,11 +4,11 @@
  * This controller handles HTTP requests related to user management.
  */
 
-import { UserService } from './user.service';
-import { UserRole, UserPermission } from './user.entity';
-import { UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
+import type { UserService } from './user.service';
+import type { UserRole, UserPermission } from './user.entity';
+import type { UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
 import { logger } from '../../utils/logging/logger.service';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { PasswordService } from '../../auth/services/password.service';
 
 /**

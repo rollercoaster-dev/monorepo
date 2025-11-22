@@ -7,14 +7,15 @@
 
 import { describe, expect, it, mock, beforeEach } from 'bun:test';
 import { BadgeClassController } from '@/api/controllers/badgeClass.controller';
-import { BadgeClassRepository } from '@/domains/badgeClass/badgeClass.repository';
-import { IssuerRepository } from '@/domains/issuer/issuer.repository';
-import {
-  BadgeClass,
+import type { BadgeClassRepository } from '@/domains/badgeClass/badgeClass.repository';
+import type { IssuerRepository } from '@/domains/issuer/issuer.repository';
+import type {
   Related,
-  EndorsementCredential,
+  EndorsementCredential} from '@/domains/badgeClass/badgeClass.entity';
+import {
+  BadgeClass
 } from '@/domains/badgeClass/badgeClass.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { BadgeVersion } from '@/utils/version/badge-version';
 import { UserPermission } from '@/domains/user/user.entity';
 

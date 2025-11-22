@@ -5,7 +5,7 @@
  * They provide type safety and validation for the API.
  */
 
-import {
+import type {
   StatusPurpose,
   BitstringStatusListCredential,
   BitstringStatusListEntry,

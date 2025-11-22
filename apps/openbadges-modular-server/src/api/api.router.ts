@@ -8,7 +8,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 
-import {
+import type {
   CreateIssuerDto,
   UpdateIssuerDto,
   CreateBadgeClassDto,
@@ -22,24 +22,24 @@ import {
   UpdateCredentialStatusDto,
   StatusListQueryDto,
 } from './dtos';
-import {
+import type {
   RelatedAchievementDto,
   EndorsementCredentialDto,
 } from './validation/badgeClass.schemas';
-import {
+import type {
   Related,
   EndorsementCredential,
 } from '../domains/badgeClass/badgeClass.entity';
 import { toIRI } from '../utils/types/iri-utils';
 import { logger } from '../utils/logging/logger.service';
 import { config } from '../config/config';
-import { OB3, Shared } from 'openbadges-types';
-import { IssuerController } from './controllers/issuer.controller';
-import { BadgeClassController } from './controllers/badgeClass.controller';
-import { AssertionController } from './controllers/assertion.controller';
+import type { OB3, Shared } from 'openbadges-types';
+import type { IssuerController } from './controllers/issuer.controller';
+import type { BadgeClassController } from './controllers/badgeClass.controller';
+import type { AssertionController } from './controllers/assertion.controller';
 import { StatusListController } from './controllers/status-list.controller';
 import { VersionController } from './controllers/version.controller';
-import { JwksController } from './controllers/jwks.controller';
+import type { JwksController } from './controllers/jwks.controller';
 import { BadgeVersion } from '../utils/version/badge-version';
 import { openApiConfig } from './openapi';
 import { HealthCheckService } from '../utils/monitoring/health-check.service';
@@ -54,9 +54,9 @@ import {
   validateRelatedAchievementMiddleware,
   validateEndorsementCredentialMiddleware,
 } from '../utils/validation/validation-middleware';
-import { BackpackController } from '../domains/backpack/backpack.controller';
-import { UserController } from '../domains/user/user.controller';
-import { AuthController } from '../auth/auth.controller';
+import type { BackpackController } from '../domains/backpack/backpack.controller';
+import type { UserController } from '../domains/user/user.controller';
+import type { AuthController } from '../auth/auth.controller';
 import { createBackpackRouter } from './backpack.router';
 import { createUserRouter } from './user.router';
 import { createAuthRouter } from './auth.router';

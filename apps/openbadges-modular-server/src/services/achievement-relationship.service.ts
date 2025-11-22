@@ -9,9 +9,9 @@
  * Implements Open Badges 3.0 relationship validation requirements.
  */
 
-import { BadgeClass, Related } from '../domains/badgeClass/badgeClass.entity';
-import { BadgeClassRepository } from '../domains/badgeClass/badgeClass.repository';
-import { Shared } from 'openbadges-types';
+import type { BadgeClass, Related } from '../domains/badgeClass/badgeClass.entity';
+import type { BadgeClassRepository } from '../domains/badgeClass/badgeClass.repository';
+import type { Shared } from 'openbadges-types';
 import { logger } from '../utils/logging/logger.service';
 
 export interface RelationshipValidationResult {

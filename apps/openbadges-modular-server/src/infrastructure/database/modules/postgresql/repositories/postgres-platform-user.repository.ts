@@ -7,13 +7,13 @@
 
 import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { PlatformUser } from '@domains/backpack/platform-user.entity';
 import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
 import { platformUsers } from '../schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
-import { PlatformUserCreateParams, PlatformUserUpdateParams } from '@domains/backpack/repository.types';
+import type { PlatformUserCreateParams, PlatformUserUpdateParams } from '@domains/backpack/repository.types';
 
 export class PostgresPlatformUserRepository implements PlatformUserRepository {
   private db: ReturnType<typeof drizzle>;

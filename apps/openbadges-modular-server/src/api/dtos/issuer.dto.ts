@@ -5,7 +5,7 @@
  * They provide type safety and validation for the API.
  */
 
-import { OB2, OB3 } from 'openbadges-types';
+import type { OB2, OB3 } from 'openbadges-types';
 
 /**
  * Base DTO for issuer creation and update operations

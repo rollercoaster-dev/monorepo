@@ -789,7 +789,7 @@ async function isDatabaseAvailableInternal(
     return true;
   } catch (error) {
     // Provide more detailed error message based on the error type
-    let errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     let detailedMessage = '';
     let helpMessage =
       'Run "bun run test:pg:setup" to start a PostgreSQL container for testing';

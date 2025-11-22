@@ -11,11 +11,12 @@ import { VerificationService } from '@/core/verification.service';
 import { VerificationErrorCode } from '@/utils/types/verification-status';
 import { KeyService } from '@/core/key.service';
 import { Assertion } from '@/domains/assertion/assertion.entity';
-import { Shared, OB3 } from 'openbadges-types'; // Use correct imports
+import type { Shared, OB3 } from 'openbadges-types'; // Use correct imports
+import type {
+  ProofType} from '@/utils/types/proof.types';
 import {
   isJWTProof,
-  isDataIntegrityProof,
-  ProofType,
+  isDataIntegrityProof
 } from '@/utils/types/proof.types';
 import * as fs from 'fs';
 import * as path from 'path';

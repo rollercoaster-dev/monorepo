@@ -1,9 +1,9 @@
 /**
  * Interface for PlatformUser repositories
  */
-import { PlatformUser } from './platform-user.entity';
-import { Shared } from 'openbadges-types';
-import { PlatformUserCreateParams, PlatformUserUpdateParams } from './repository.types';
+import type { PlatformUser } from './platform-user.entity';
+import type { Shared } from 'openbadges-types';
+import type { PlatformUserCreateParams, PlatformUserUpdateParams } from './repository.types';
 
 export interface PlatformUserRepository {
   /**

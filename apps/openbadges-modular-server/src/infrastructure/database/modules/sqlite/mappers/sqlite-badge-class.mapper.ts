@@ -5,12 +5,13 @@
  * handling the conversion between domain entities and database records.
  */
 
-import {
-  BadgeClass,
+import type {
   Related,
-  EndorsementCredential,
+  EndorsementCredential} from '@domains/badgeClass/badgeClass.entity';
+import {
+  BadgeClass
 } from '@domains/badgeClass/badgeClass.entity';
-import { Shared, OB2, OB3 } from 'openbadges-types';
+import type { Shared, OB2, OB3 } from 'openbadges-types';
 import {
   convertJson,
   convertTimestamp,

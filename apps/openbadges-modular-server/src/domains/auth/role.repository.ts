@@ -5,8 +5,8 @@
  * It provides methods for creating, retrieving, updating, and deleting Roles.
  */
 
-import { Shared } from 'openbadges-types';
-import { Role } from './role.entity';
+import type { Shared } from 'openbadges-types';
+import type { Role } from './role.entity';
 
 /**
  * Interface for Role repositories

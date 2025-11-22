@@ -6,17 +6,17 @@
  */
 
 import { Issuer } from '../../domains/issuer/issuer.entity';
-import { IssuerRepository } from '../../domains/issuer/issuer.repository';
+import type { IssuerRepository } from '../../domains/issuer/issuer.repository';
 import { BadgeVersion } from '../../utils/version/badge-version';
 import { toIssuerId } from '../../utils/types/iri-utils';
-import { Shared, OB2 } from 'openbadges-types';
-import { CreateIssuerDto, IssuerResponseDto, UpdateIssuerDto } from '../dtos';
+import type { Shared, OB2 } from 'openbadges-types';
+import type { CreateIssuerDto, IssuerResponseDto, UpdateIssuerDto } from '../dtos';
 import {
   CreateIssuerSchema,
   UpdateIssuerSchema,
 } from '../validation/issuer.schemas';
 import { logger } from '../../utils/logging/logger.service';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { UserPermission } from '../../domains/user/user.entity';
 import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
 

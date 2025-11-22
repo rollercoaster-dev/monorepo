@@ -14,7 +14,7 @@ import { UserRole, UserPermission } from '@domains/user/user.entity';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import * as schema from '@infrastructure/database/modules/sqlite/schema';
 import { getMigrationsPath } from '@tests/test-utils/migrations-path';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 let db: ReturnType<typeof drizzle<typeof schema>>;
 let repository: SqliteUserRepository;

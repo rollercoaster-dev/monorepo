@@ -5,8 +5,9 @@
  * It provides a centralized way to access caches for different entities.
  */
 
-import { CacheInterface } from './cache.interface';
-import { CacheOptions, CacheService } from './cache.service';
+import type { CacheInterface } from './cache.interface';
+import type { CacheOptions} from './cache.service';
+import { CacheService } from './cache.service';
 import { config } from '../../config/config';
 
 export class CacheFactory {

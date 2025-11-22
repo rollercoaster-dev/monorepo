@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { Issuer } from '@/domains/issuer/issuer.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { EXAMPLE_EDU_URL } from '@/constants/urls';
 
 describe('Issuer Entity', () => {

@@ -8,12 +8,12 @@
 import { eq, and } from 'drizzle-orm';
 import { PlatformUser } from '@domains/backpack/platform-user.entity';
 import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
 import { platformUsers } from '../schema';
 import { SqlitePlatformUserMapper } from '../mappers/sqlite-platform-user.mapper';
 import { createId } from '@paralleldrive/cuid2';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 
 export class SqlitePlatformUserRepository implements PlatformUserRepository {
   private mapper: SqlitePlatformUserMapper;

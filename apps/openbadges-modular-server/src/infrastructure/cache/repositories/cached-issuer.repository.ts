@@ -5,9 +5,9 @@
  * It caches issuer entities to improve read performance.
  */
 
-import { Issuer } from '../../../domains/issuer/issuer.entity';
-import { IssuerRepository } from '../../../domains/issuer/issuer.repository';
-import { Shared } from 'openbadges-types';
+import type { Issuer } from '../../../domains/issuer/issuer.entity';
+import type { IssuerRepository } from '../../../domains/issuer/issuer.repository';
+import type { Shared } from 'openbadges-types';
 import { CacheRepositoryWrapper } from './cache-repository.wrapper';
 
 export class CachedIssuerRepository extends CacheRepositoryWrapper<Issuer, IssuerRepository> implements IssuerRepository {

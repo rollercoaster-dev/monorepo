@@ -7,12 +7,13 @@
 
 import { describe, expect, it, beforeEach, mock } from 'bun:test';
 import { StatusList } from '@domains/status-list/status-list.entity';
-import {
-  StatusPurpose,
+import type {
   StatusListData,
-  CreateStatusListParams,
+  CreateStatusListParams} from '@domains/status-list/status-list.types';
+import {
+  StatusPurpose
 } from '@domains/status-list/status-list.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 // Mock the logger to avoid console output during tests
 mock.module('@utils/logging/logger.service', () => ({

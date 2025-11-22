@@ -8,9 +8,9 @@
  * It also provides role-based access control functionality.
  */
 
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
-import { AuthAdapter } from '../adapters/auth-adapter.interface';
+import type { AuthAdapter } from '../adapters/auth-adapter.interface';
 import { JwtService } from '../services/jwt.service';
 import { logger } from '../../utils/logging/logger.service';
 import { config } from '../../config/config';

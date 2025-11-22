@@ -5,8 +5,8 @@
  * persistence of user entities.
  */
 
-import { User, UserRole, UserPermission } from './user.entity';
-import { Shared } from 'openbadges-types';
+import type { User, UserRole, UserPermission } from './user.entity';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Parameters for creating a user

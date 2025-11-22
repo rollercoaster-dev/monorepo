@@ -6,8 +6,8 @@
  * Issuer repository implementations must fulfill.
  */
 
-import { Issuer } from './issuer.entity';
-import { Shared } from 'openbadges-types';
+import type { Issuer } from './issuer.entity';
+import type { Shared } from 'openbadges-types';
 
 export interface IssuerRepository {
   /**

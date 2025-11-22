@@ -6,9 +6,9 @@
 
 import { Platform } from '@domains/backpack/platform.entity';
 import type { PlatformRepository } from '@domains/backpack/platform.repository';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
-import {
+import type {
   PlatformCreateParams,
   PlatformUpdateParams,
   PlatformQueryParams,
@@ -19,7 +19,7 @@ import {
   convertUuid,
 } from '@infrastructure/database/utils/type-conversion';
 import { toIRI } from '@utils/types/iri-utils';
-import { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
 import {
   DuplicateClientIdError,
   PlatformOperationError,

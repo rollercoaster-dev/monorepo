@@ -5,7 +5,7 @@
  * Each database module must provide a factory that implements this interface.
  */
 
-import { DatabaseInterface } from './database.interface';
+import type { DatabaseInterface } from './database.interface';
 
 export interface DatabaseModuleInterface {
   /**

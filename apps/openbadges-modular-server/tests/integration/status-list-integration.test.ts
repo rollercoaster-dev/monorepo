@@ -6,11 +6,12 @@
 import { describe, it, expect } from 'bun:test';
 import { Assertion } from '../../src/domains/assertion/assertion.entity';
 import { BadgeVersion } from '../../src/utils/version/badge-version';
+import type {
+  BitstringStatusListEntry} from '../../src/domains/status-list/status-list.types';
 import {
-  StatusPurpose,
-  BitstringStatusListEntry,
+  StatusPurpose
 } from '../../src/domains/status-list/status-list.types';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 interface TestCredentialStatus {
   type: string;

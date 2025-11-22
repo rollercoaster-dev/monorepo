@@ -5,10 +5,10 @@
  */
 
 import { Hono } from 'hono';
-import { UserController } from '../domains/user/user.controller';
+import type { UserController } from '../domains/user/user.controller';
 import { UserRole, UserPermission } from '../domains/user/user.entity';
 import { requireAdmin, requirePermissions, requireAuth } from '../auth/middleware/rbac.middleware';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Create a router for user management endpoints

@@ -2,13 +2,13 @@
  * Backpack API router
  */
 import { Hono } from 'hono';
-import { BackpackController } from '../domains/backpack/backpack.controller';
+import type { BackpackController } from '../domains/backpack/backpack.controller';
 import { createPlatformAuthMiddleware } from '../auth/middleware/platform-auth.middleware';
-import { PlatformRepository } from '../domains/backpack/platform.repository';
+import type { PlatformRepository } from '../domains/backpack/platform.repository';
 
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { BadgeVersion } from '../utils/version/badge-version';
-import {
+import type {
   CreatePlatformRequest,
   UpdatePlatformRequest,
   AddAssertionRequest,

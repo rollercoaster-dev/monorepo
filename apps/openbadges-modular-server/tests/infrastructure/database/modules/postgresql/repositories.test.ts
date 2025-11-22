@@ -26,7 +26,7 @@ import { Issuer } from '@/domains/issuer/issuer.entity';
 import { BadgeClass } from '@/domains/badgeClass/badgeClass.entity';
 import { Assertion } from '@/domains/assertion/assertion.entity';
 import * as schema from '@/infrastructure/database/modules/postgresql/schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@/utils/logging/logger.service';
 import { describePostgres as getDescribePostgres } from '../../../../helpers/database-test-filter';
 

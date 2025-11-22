@@ -8,15 +8,16 @@
 import * as crypto from 'crypto';
 import { logger } from '../logging/logger.service';
 import { config } from '../../config/config';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { toIRI } from '../types/iri-utils';
 import {
   generateJWTProof,
   getRecommendedAlgorithm,
   type JWTProofGenerationOptions,
 } from './jwt-proof';
+import type {
+  ProofArray} from '../types/proof.types';
 import {
-  ProofArray,
   ProofFormat,
   type VerifiableCredentialClaims,
 } from '../types/proof.types';

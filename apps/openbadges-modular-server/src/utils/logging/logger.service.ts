@@ -4,9 +4,10 @@
  * This provides a wrapper around the Rollercoaster.dev logger package,
  * exposing the standard logging interface used throughout the application.
  */
+import type {
+  LogLevel} from '@rollercoaster-dev/rd-logger';
 import {
   Logger as RdLogger,
-  LogLevel,
   QueryLogger as RdQueryLogger, // Renamed to avoid conflict
   DEFAULT_QUERY_LOGGER_CONFIG,
   type QueryLogEntry, // Import the type for return values

@@ -33,7 +33,7 @@ export function createStaticAssetsRouter(): Hono {
       // First, sanitize the filename to remove any path traversal attempts and disallow special characters
       const filename = c.req.param('filename');
       // Only allow alphanumeric characters, hyphens, underscores, and periods
-      if (!/^[a-zA-Z0-9_\-\.]+$/.test(filename)) {
+      if (!/^[a-zA-Z0-9_\-.]+$/.test(filename)) {
         return c.json({ error: 'Invalid filename format' }, 400);
       }
       const sanitizedFilename = filename;

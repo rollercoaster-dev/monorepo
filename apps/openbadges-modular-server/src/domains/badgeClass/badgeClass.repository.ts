@@ -6,8 +6,8 @@
  * BadgeClass repository implementations must fulfill.
  */
 
-import { BadgeClass } from './badgeClass.entity';
-import { Shared } from 'openbadges-types';
+import type { BadgeClass } from './badgeClass.entity';
+import type { Shared } from 'openbadges-types';
 
 export interface BadgeClassRepository {
   /**

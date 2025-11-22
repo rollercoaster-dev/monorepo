@@ -5,9 +5,10 @@
  * It works with the authentication middleware to enforce authorization rules.
  */
 
-import { UserRole, UserPermission } from '../../domains/user/user.entity';
+import type { UserPermission } from '../../domains/user/user.entity';
+import { UserRole } from '../../domains/user/user.entity';
 import { logger } from '../../utils/logging/logger.service';
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { config } from '../../config/config';
 import { extractLoggingContext } from '../../utils/logging.utils';

@@ -1,5 +1,5 @@
-import { AssetStorageInterface } from './interfaces/asset-storage.interface';
-import { AssetResolver } from './interfaces/asset-resolver.interface';
+import type { AssetStorageInterface } from './interfaces/asset-storage.interface';
+import type { AssetResolver } from './interfaces/asset-resolver.interface';
 import { LocalAssetStorageAdapter } from './local/local-storage.adapter';
 
 export type AssetProvider = AssetStorageInterface & AssetResolver;

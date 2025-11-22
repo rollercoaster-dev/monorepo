@@ -5,7 +5,7 @@
  * common web vulnerabilities like XSS, clickjacking, and other security issues.
  */
 
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { config } from '@/config/config';
 

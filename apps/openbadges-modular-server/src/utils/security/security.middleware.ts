@@ -4,7 +4,7 @@
  * This file centralizes all security-related middleware for the API.
  */
 
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 // Implement a simple compose function since Hono doesn't export one
 function compose(middlewares: MiddlewareHandler[]): MiddlewareHandler {
   return async (c, next) => {

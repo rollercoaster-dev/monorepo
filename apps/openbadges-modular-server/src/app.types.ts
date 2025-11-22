@@ -1,6 +1,6 @@
-import { Context } from 'hono';
-import { User } from './domains/user/user.entity';
-import { PlatformUser } from './domains/backpack/platform-user.entity';
+import type { Context } from 'hono';
+import type { User } from './domains/user/user.entity';
+import type { PlatformUser } from './domains/backpack/platform-user.entity';
 
 // Define your Bindings and Variables here if you have them for Hono's context
 // For example:

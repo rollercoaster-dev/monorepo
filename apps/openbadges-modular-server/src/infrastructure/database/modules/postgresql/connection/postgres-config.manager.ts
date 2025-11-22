@@ -5,7 +5,7 @@
  * Provides centralized configuration management similar to SqlitePragmaManager.
  */
 
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { logger } from '@utils/logging/logger.service';
 
 /**

@@ -7,16 +7,17 @@
 
 import { eq, and, like, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { User, UserRole, UserPermission } from '@domains/user/user.entity';
-import {
+import type postgres from 'postgres';
+import type { UserRole, UserPermission } from '@domains/user/user.entity';
+import { User } from '@domains/user/user.entity';
+import type {
   UserRepository,
   UserCreateParams,
   UserUpdateParams,
   UserQueryParams,
 } from '@domains/user/user.repository';
 import { users } from '../schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
 import { convertUuid } from '@infrastructure/database/utils/type-conversion';
 

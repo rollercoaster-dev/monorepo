@@ -7,14 +7,14 @@
 
 import { eq, and, ne, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import type postgres from 'postgres';
 import { UserAssertion } from '@domains/backpack/user-assertion.entity';
 import type { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
 import { userAssertions } from '../schema';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { logger } from '@utils/logging/logger.service';
 import { UserAssertionStatus } from '@domains/backpack/backpack.types';
-import { UserAssertionCreateParams, UserAssertionQueryParams } from '@domains/backpack/repository.types';
+import type { UserAssertionCreateParams, UserAssertionQueryParams } from '@domains/backpack/repository.types';
 
 // Define the type for user assertion insert values
 type UserAssertionInsertValues = {

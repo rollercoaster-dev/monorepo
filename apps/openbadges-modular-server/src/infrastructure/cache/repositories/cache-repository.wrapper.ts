@@ -5,7 +5,7 @@
  * It wraps a repository instance and adds caching functionality.
  */
 
-import { CacheInterface } from '../cache.interface';
+import type { CacheInterface } from '../cache.interface';
 import { CacheFactory } from '../cache.factory';
 import { config } from '@/config/config';
 

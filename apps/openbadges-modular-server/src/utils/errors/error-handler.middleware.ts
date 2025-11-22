@@ -1,4 +1,4 @@
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import type { Context } from 'hono'; // Import Context for handleNotFound
 import type { ContentfulStatusCode } from 'hono/utils/http-status'; // Import ContentfulStatusCode
 import { logger } from '../logging/logger.service';

@@ -1,5 +1,5 @@
-import { AssetStorageInterface } from '../interfaces/asset-storage.interface';
-import { AssetResolver } from '../interfaces/asset-resolver.interface';
+import type { AssetStorageInterface } from '../interfaces/asset-storage.interface';
+import type { AssetResolver } from '../interfaces/asset-resolver.interface';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';

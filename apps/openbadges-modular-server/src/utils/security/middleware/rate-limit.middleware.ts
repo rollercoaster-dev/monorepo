@@ -4,7 +4,7 @@
  * This middleware applies rate limiting to API endpoints to prevent abuse.
  */
 
-import { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import { rateLimiter } from 'hono-rate-limiter';
 import { logger } from '../../logging/logger.service';
 

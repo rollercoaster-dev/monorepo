@@ -5,7 +5,7 @@
  * https://www.w3.org/TR/vc-bitstring-status-list/
  */
 
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 
 /**
  * Status purposes as defined in the Bitstring Status List specification

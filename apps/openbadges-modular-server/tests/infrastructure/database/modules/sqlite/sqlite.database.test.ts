@@ -1,7 +1,7 @@
 import { it, expect, beforeEach, afterEach } from 'bun:test';
 import { Database } from 'bun:sqlite';
 import { SqliteDatabase } from '@/infrastructure/database/modules/sqlite/sqlite.database';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import { describeSqlite as getDescribeSqlite } from '../../../../helpers/database-test-filter';
 
 // Get the describe function for SQLite tests

@@ -31,7 +31,7 @@ import { TestDataHelper } from './helpers/test-data.helper';
 import { resetDatabase } from './helpers/database-reset.helper';
 import { setupTestApp, stopTestServer } from './setup-test-app';
 // Import only the types we need
-import { BadgeClassResponseDto } from '@/api/dtos';
+import type { BadgeClassResponseDto } from '@/api/dtos';
 import { getAvailablePort, releasePort } from './helpers/port-manager.helper';
 import { config } from '@/config/config'; // safe to import after env is prepared
 import { RepositoryFactory } from '@/infrastructure/repository.factory';

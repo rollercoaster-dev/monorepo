@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'bun:test';
 import { Assertion } from '@/domains/assertion/assertion.entity';
-import { Shared } from 'openbadges-types';
+import type { Shared } from 'openbadges-types';
 import {
   EXAMPLE_EDU_EVIDENCE_URL,
   EXAMPLE_EDU_KEYS_URL,

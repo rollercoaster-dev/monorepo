@@ -5,8 +5,8 @@
  * It provides methods for creating, retrieving, updating, and deleting API Keys.
  */
 
-import { Shared } from 'openbadges-types';
-import { ApiKey } from './apiKey.entity';
+import type { Shared } from 'openbadges-types';
+import type { ApiKey } from './apiKey.entity';
 
 /**
  * Interface for API Key repositories
