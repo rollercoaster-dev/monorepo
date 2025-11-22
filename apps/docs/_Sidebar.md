@@ -1,15 +1,24 @@
 * [[Home]]
-* **Strategy**
-  * [[vision/now-next-later|Vision]]
-  * [[roadmap/2025-Q3|Roadmap]]
+* **Vision**
+  * [[vision-now-next-later|Now / Next / Later]]
+  * [[vision-distributed-badges-overview|Concept Overview]] *(WIP)*
+* **Architecture**
+  * [[architecture-overview|System Overview]]
+  * [[architecture-distributed-badges|Components]] *(WIP)*
+  * [[architecture-distributed-badges-sync|Sync Patterns]] *(WIP)*
+* **Decisions**
+  * [[decisions-ADR-0001-self-signed-badges|ADR-0001: Self-Signed Badges]]
+  * [[decisions-ADR-0002-local-first-optional-sync|ADR-0002: Local-First Storage]]
+  * [[decisions-ADR-0003-federation-core-architecture|ADR-0003: Federation]]
 * **Product**
-  * [[product/user-stories|User Stories]]
-  * [[research/open-badges-gap-analysis|Research]]
-* **Technical**
-  * [[architecture/overview|Architecture]]
-  * [[decisions/ADR-0001-self-signed-badges|Decisions (ADRs)]]
-  * [[security/distributed-badges-privacy|Security]]
+  * [[product-user-stories|User Stories]]
 * **Design**
-  * [[design/distributed-badges-ux|Design System]]
-* **Team**
-  * [[processes/triage|Processes]]
+  * [[design-distributed-badges-ux|UX Guidelines]] *(WIP)*
+* **Security**
+  * [[security-distributed-badges-privacy|Privacy & Security]] *(WIP)*
+* **Roadmap**
+  * [[roadmap-2025-Q3|2025 Q3]]
+* **Research**
+  * [[research-open-badges-gap-analysis|Gap Analysis]]
+* **Process**
+  * [[processes-triage|Triage & Linking]]
