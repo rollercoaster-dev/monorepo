@@ -2,7 +2,7 @@
 
 **Branch:** `feat/directory-components`
 **Created:** 2025-11-22
-**Status:** In Progress
+**Status:** Complete (PR #105)
 
 ---
 
@@ -227,13 +227,13 @@ Uses existing proxy at `/api/bs/` with auth headers.
 
 ## Checklist
 
-- [ ] Commit 1: IssuerCard component
-- [ ] Commit 2: IssuerList component
-- [ ] Commit 3: BadgeClassCard component
-- [ ] Commit 4: BadgeClassList + exports
-- [ ] Commit 5: API service
-- [ ] Commit 6: Badge Directory page
-- [ ] Commit 7: Issuer Directory page
-- [ ] Commit 8: Tests
-- [ ] Commit 9: Stories
-- [ ] Create PR
+- [x] Commit 1: IssuerCard component
+- [x] Commit 2: IssuerList component
+- [x] Commit 3: BadgeClassCard component
+- [x] Commit 4: BadgeClassList + exports
+- [x] Commit 5: API service
+- [x] Commit 6: Badge Directory page
+- [x] Commit 7: Issuer Directory page
+- [x] Commit 8: Tests (IssuerCard, BadgeClassCard)
+- [x] Commit 9: Stories
+- [x] Create PR (#105)

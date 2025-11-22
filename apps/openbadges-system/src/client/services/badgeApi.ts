@@ -18,6 +18,13 @@ interface ApiError {
   status?: number;
 }
 
+// API response wrapper interface for paginated/wrapped responses
+interface ApiListResponse<T> {
+  items?: T[];
+  data?: T[];
+  [key: string]: unknown;
+}
+
 /**
  * Badge API service for directory operations
  */
@@ -30,8 +37,10 @@ export const badgeApi = {
       'Content-Type': 'application/json',
     };
 
-    // Add auth token if available
-    const token = localStorage.getItem('auth_token');
+    // Add auth token if available (guard for SSR)
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('auth_token')
+      : null;
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -74,9 +83,12 @@ export const badgeApi = {
         await this.handleError(response);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as Issuer[] | ApiListResponse<Issuer>;
       // Handle both array and object with items property
-      return Array.isArray(data) ? data : (data.items || []);
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return data.items || data.data || [];
     } catch (error) {
       if (error instanceof Error) {
         throw error;
@@ -126,9 +138,12 @@ export const badgeApi = {
         await this.handleError(response);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>;
       // Handle both array and object with items property
-      return Array.isArray(data) ? data : (data.items || []);
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return data.items || data.data || [];
     } catch (error) {
       if (error instanceof Error) {
         throw error;
@@ -169,8 +184,10 @@ export const badgeApi = {
    */
   async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
     try {
-      // First get all badge classes, then filter by issuer
-      // This could be optimized with a server-side filter in the future
+      // TODO: Add server-side filtering endpoint to badge server
+      // Currently fetches all badge classes and filters client-side,
+      // which is inefficient for large datasets.
+      // See: https://github.com/rollercoaster-dev/monorepo/issues/106
       const allBadgeClasses = await this.getBadgeClasses();
 
       return allBadgeClasses.filter((badgeClass) => {
