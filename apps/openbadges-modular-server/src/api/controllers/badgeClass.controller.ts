@@ -208,14 +208,19 @@ export class BadgeClassController {
   }
 
   /**
-   * Gets all badge classes
+   * Gets all badge classes, optionally filtered by issuer
    * @param version The badge version to use for the response
-   * @returns All badge classes
+   * @param issuerId Optional issuer ID to filter by
+   * @returns All badge classes (or filtered by issuer if provided)
    */
   async getAllBadgeClasses(
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
+    issuerId?: string
   ): Promise<BadgeClassResponseDto[]> {
-    const badgeClasses = await this.badgeClassRepository.findAll();
+    // If issuerId is provided, filter by issuer using existing repository method
+    const badgeClasses = issuerId
+      ? await this.badgeClassRepository.findByIssuer(toIRI(issuerId) as Shared.IRI)
+      : await this.badgeClassRepository.findAll();
     return badgeClasses.map(
       (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto
     );

@@ -368,7 +368,9 @@ export function createVersionedRouter(
 
   router.get('/achievements', requireAuth(), async (c) => {
     try {
-      const result = await badgeClassController.getAllBadgeClasses(version);
+      // Support filtering by issuer via query parameter
+      const issuerId = c.req.query('issuer');
+      const result = await badgeClassController.getAllBadgeClasses(version, issuerId);
       return c.json(result);
     } catch (error) {
       return sendApiError(c, error, { endpoint: 'GET /achievements' });
@@ -381,7 +383,9 @@ export function createVersionedRouter(
     requireAuth(),
     async (c) => {
       try {
-        const result = await badgeClassController.getAllBadgeClasses(version);
+        // Support filtering by issuer via query parameter
+        const issuerId = c.req.query('issuer');
+        const result = await badgeClassController.getAllBadgeClasses(version, issuerId);
         return c.json(result);
       } catch (error) {
         return sendApiError(c, error, { endpoint: 'GET /badge-classes' });
