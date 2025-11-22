@@ -15,4 +15,4 @@
 - Customizable dashboards, widget arrangements, and layouts
 
 ## Future Considerations
-- Placeholder for additional UI components, plugins, and custom views 
+- Placeholder for additional UI components, plugins, and custom views

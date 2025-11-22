@@ -14,4 +14,4 @@
 - Data partitioning per user and selective sync
 
 ## Future Exploration
-- Placeholder for sync testing and benchmarking 
+- Placeholder for sync testing and benchmarking

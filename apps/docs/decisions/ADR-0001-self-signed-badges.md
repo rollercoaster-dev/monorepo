@@ -1,8 +1,4 @@
-Here’s the revised ADR-0001 with Open Badges 3.0 as the foundation and 2.0 included only for compatibility:
-
-⸻
-
-ADR-0001: Self-Signed Badges Are First-Class Citizens
+# ADR-0001: Self-Signed Badges Are First-Class Citizens
 
 Date: 2025-08-13
 Status: Accepted
