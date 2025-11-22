@@ -2,7 +2,8 @@
 
 **Branch:** `feat/server-side-badge-filtering`
 **Created:** 2025-11-22
-**Status:** In Progress
+**Completed:** 2025-11-22
+**Status:** Complete
 **Issue:** #106
 
 ---
@@ -128,17 +129,17 @@ async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
 
 ## Checklist
 
-- [ ] Commit 1: Server-side query parameter support
-- [ ] Commit 2: Server tests
-- [ ] Commit 3: Client update to use server filtering
-- [ ] Commit 4: Documentation update
-- [ ] Create PR (closes #106)
+- [x] Commit 1: Server-side query parameter support
+- [x] Commit 2: Server tests
+- [x] Commit 3: Client update to use server filtering
+- [x] Commit 4: Documentation update
+- [x] Create PR (closes #106)
 
 ## Acceptance Criteria (from Issue #106)
 
-- [ ] Badge server supports `issuer` query parameter on `/v2/badge-classes`
-- [ ] Client `getBadgeClassesByIssuer` uses the server-side filter when available
-- [ ] Fallback to client-side filtering if server doesn't support the parameter
+- [x] Badge server supports `issuer` query parameter on `/v2/badge-classes`
+- [x] Client `getBadgeClassesByIssuer` uses the server-side filter when available
+- [x] Fallback to client-side filtering if server doesn't support the parameter (removed - server now always supports it)
 
 ## Related
 
