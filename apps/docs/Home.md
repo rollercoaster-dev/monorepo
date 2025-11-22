@@ -4,29 +4,29 @@ Welcome to the documentation for **Rollercoaster.dev** — an Open Badges creden
 
 ## Quick Links
 
-- [[now-next-later|Vision: Now / Next / Later]] — Strategic roadmap and principles
-- [[overview|Architecture Overview]] — System design with diagrams
-- [[user-stories|User Stories]] — Real scenarios driving product decisions
+- [[Vision: Now / Next / Later|now-next-later]] — Strategic roadmap and principles
+- [[Architecture Overview|overview]] — System design with diagrams
+- [[User Stories|user-stories]] — Real scenarios driving product decisions
 
 ## Key Decisions
 
-- [[ADR-0001-self-signed-badges|ADR-0001: Self-Signed Badges]] — Badges as first-class citizens
-- [[ADR-0002-local-first-optional-sync|ADR-0002: Local-First Storage]] — User data ownership
-- [[ADR-0003-federation-core-architecture|ADR-0003: Federation]] — Multi-node architecture
+- [[ADR-0001: Self-Signed Badges|ADR-0001-self-signed-badges]] — Badges as first-class citizens
+- [[ADR-0002: Local-First Storage|ADR-0002-local-first-optional-sync]] — User data ownership
+- [[ADR-0003: Federation|ADR-0003-federation-core-architecture]] — Multi-node architecture
 
 ## Current Work
 
-- [[2025-Q3|2025 Q3 Roadmap]] — End-to-end self-signed badge flow
-- [[open-badges-gap-analysis|Gap Analysis]] — Open Badges ecosystem research
+- [[2025 Q3 Roadmap|2025-Q3]] — End-to-end self-signed badge flow
+- [[Gap Analysis|open-badges-gap-analysis]] — Open Badges ecosystem research
 
 ## Work in Progress
 
 These sections are being developed:
 
-- [[distributed-badges-ux|UX Guidelines]] — Accessibility and interface design
-- [[distributed-badges-privacy|Privacy & Security]] — Encryption and data ownership
-- [[distributed-badges|Architecture Components]] — Module breakdown
-- [[distributed-badges-sync|Sync Patterns]] — Offline-first strategies
+- [[UX Guidelines|distributed-badges-ux]] — Accessibility and interface design
+- [[Privacy & Security|distributed-badges-privacy]] — Encryption and data ownership
+- [[Architecture Components|distributed-badges]] — Module breakdown
+- [[Sync Patterns|distributed-badges-sync]] — Offline-first strategies
 
 ## Contributing
 
