@@ -84,7 +84,6 @@ A lightweight 5-step process for managing ideas, decisions, and work items in th
 
 **Weekly Review Checklist**:
 - [ ] Review [`/vision/now-next-later.md`](../vision/now-next-later.md) — still aligned with current work?
-- [ ] Update [`/status/weekly-YYYY-WW.md`](../status/weekly-template.md) — progress, blockers, next steps
 - [ ] Check [`/roadmap/2025-Q3.md`](../roadmap/2025-Q3.md) — on track for quarterly goals?
 - [ ] Scan open ADRs in [`/decisions/`](../decisions/) — any need status updates?
 - [ ] Review recent PRs — are documentation links current?

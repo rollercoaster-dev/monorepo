@@ -13,4 +13,3 @@
   * [[design/distributed-badges-ux|Design System]]
 * **Team**
   * [[processes/triage|Processes]]
-  * [[templates/weekly-template|Status Updates]]
