@@ -108,6 +108,32 @@ describe('IssuerCard', () => {
       });
       expect(wrapper.attributes('tabindex')).toBe('0');
     });
+
+    it('emits click on Enter key when interactive', async () => {
+      const wrapper = mount(IssuerCard, {
+        props: { issuer: mockOB2Issuer, interactive: true },
+      });
+      await wrapper.trigger('keydown.enter');
+      expect(wrapper.emitted('click')).toBeTruthy();
+      expect(wrapper.emitted('click')![0]).toEqual([mockOB2Issuer]);
+    });
+
+    it('emits click on Space key when interactive', async () => {
+      const wrapper = mount(IssuerCard, {
+        props: { issuer: mockOB2Issuer, interactive: true },
+      });
+      await wrapper.trigger('keydown.space');
+      expect(wrapper.emitted('click')).toBeTruthy();
+      expect(wrapper.emitted('click')![0]).toEqual([mockOB2Issuer]);
+    });
+
+    it('does not emit click on Enter key when not interactive', async () => {
+      const wrapper = mount(IssuerCard, {
+        props: { issuer: mockOB2Issuer, interactive: false },
+      });
+      await wrapper.trigger('keydown.enter');
+      expect(wrapper.emitted('click')).toBeFalsy();
+    });
   });
 
   describe('density', () => {

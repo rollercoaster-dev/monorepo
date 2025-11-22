@@ -135,6 +135,39 @@ describe('BadgeClassCard', () => {
       await wrapper.trigger('click');
       expect(wrapper.emitted('click')).toBeFalsy();
     });
+
+    it('has tabindex when interactive', () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB2BadgeClass, interactive: true },
+      });
+      expect(wrapper.attributes('tabindex')).toBe('0');
+    });
+
+    it('emits click on Enter key when interactive', async () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB2BadgeClass, interactive: true },
+      });
+      await wrapper.trigger('keydown.enter');
+      expect(wrapper.emitted('click')).toBeTruthy();
+      expect(wrapper.emitted('click')![0]).toEqual([mockOB2BadgeClass]);
+    });
+
+    it('emits click on Space key when interactive', async () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB2BadgeClass, interactive: true },
+      });
+      await wrapper.trigger('keydown.space');
+      expect(wrapper.emitted('click')).toBeTruthy();
+      expect(wrapper.emitted('click')![0]).toEqual([mockOB2BadgeClass]);
+    });
+
+    it('does not emit click on Enter key when not interactive', async () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB2BadgeClass, interactive: false },
+      });
+      await wrapper.trigger('keydown.enter');
+      expect(wrapper.emitted('click')).toBeFalsy();
+    });
   });
 
   describe('density', () => {
