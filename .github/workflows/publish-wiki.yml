@@ -16,14 +16,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Publish to Wiki
-        uses: Andrew-Chen-Wang/github-wiki-action@v4
-        env:
+        uses: Andrew-Chen-Wang/github-wiki-action@v5
+        with:
+          path: 'apps/docs'
           # IMPORTANT: This requires a Personal Access Token (PAT) with 'repo' scope
           # added to the repository secrets as WIKI_ACTION_TOKEN.
           # The default GITHUB_TOKEN cannot push to the wiki repository.
-          GH_TOKEN: ${{ secrets.WIKI_ACTION_TOKEN }}
-          GH_MAIL: "actions@github.com"
-          GH_NAME: "GitHub Actions"
-        with:
-          wiki-src-path: 'apps/docs'
+          token: ${{ secrets.WIKI_ACTION_TOKEN }}
           commit-message: 'chore: sync wiki from apps/docs'
