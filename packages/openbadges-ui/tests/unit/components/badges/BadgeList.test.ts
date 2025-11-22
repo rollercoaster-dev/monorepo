@@ -1,4 +1,4 @@
-import { describe, it, expect, vi as _vi } from 'vitest'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import BadgeList from '@/components/badges/BadgeList.vue';
 import BadgeDisplay from '@/components/badges/BadgeDisplay.vue';
