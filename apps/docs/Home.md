@@ -30,4 +30,4 @@ These sections are being developed:
 
 ## Contributing
 
-See the [README](https://github.com/rollercoaster-dev/monorepo/blob/main/apps/docs/README.md) for how to update these docs.
+See the [monorepo README](https://github.com/rollercoaster-dev/monorepo) for contribution guidelines.
