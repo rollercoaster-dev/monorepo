@@ -351,6 +351,122 @@ describe('Badge Class API - E2E', () => {
         expect(badgeClass['@context']).toBeDefined();
       });
     });
+
+    it('should filter badge classes by issuer query parameter', async () => {
+      // Reset database to ensure a clean state
+      await resetDatabase();
+
+      // Create two different issuers
+      const { id: issuerId1 } = await TestDataHelper.createIssuer({
+        name: 'Issuer One',
+      });
+      const { id: issuerId2 } = await TestDataHelper.createIssuer({
+        name: 'Issuer Two',
+      });
+
+      // Create badge classes for each issuer
+      await TestDataHelper.createBadgeClass(issuerId1, {
+        name: 'Badge from Issuer One - A',
+      });
+      await TestDataHelper.createBadgeClass(issuerId1, {
+        name: 'Badge from Issuer One - B',
+      });
+      await TestDataHelper.createBadgeClass(issuerId2, {
+        name: 'Badge from Issuer Two',
+      });
+
+      // Filter by issuer 1
+      const res = await fetch(`${BADGE_CLASSES_ENDPOINT}?issuer=${issuerId1}`, {
+        method: 'GET',
+        headers: { 'X-API-Key': API_KEY },
+      });
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as BadgeClassResponseDto[];
+
+      // Log the response for debugging
+      logger.debug('Filter by issuer response:', {
+        status: res.status,
+        bodyLength: body.length,
+        issuerId: issuerId1,
+      });
+
+      // Verify we only get badge classes from issuer 1
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBe(2);
+
+      // All returned badge classes should belong to issuer 1
+      body.forEach((badgeClass) => {
+        expect(badgeClass.issuer.toString()).toBe(issuerId1);
+      });
+    });
+
+    it('should return empty array when filtering by non-existent issuer', async () => {
+      // Reset database to ensure a clean state
+      await resetDatabase();
+
+      // Create an issuer and badge class to ensure there's data
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+      await TestDataHelper.createBadgeClass(issuerId);
+
+      // Filter by a non-existent issuer ID
+      const nonExistentIssuerId = '00000000-0000-4000-a000-000000000999';
+      const res = await fetch(
+        `${BADGE_CLASSES_ENDPOINT}?issuer=${nonExistentIssuerId}`,
+        {
+          method: 'GET',
+          headers: { 'X-API-Key': API_KEY },
+        }
+      );
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as BadgeClassResponseDto[];
+
+      // Log the response for debugging
+      logger.debug('Filter by non-existent issuer response:', {
+        status: res.status,
+        bodyLength: body.length,
+        nonExistentIssuerId,
+      });
+
+      // Should return an empty array
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBe(0);
+    });
+
+    it('should return all badge classes when no issuer filter is provided', async () => {
+      // Reset database to ensure a clean state
+      await resetDatabase();
+
+      // Create two different issuers with badge classes
+      const { id: issuerId1 } = await TestDataHelper.createIssuer({
+        name: 'Issuer A',
+      });
+      const { id: issuerId2 } = await TestDataHelper.createIssuer({
+        name: 'Issuer B',
+      });
+
+      await TestDataHelper.createBadgeClass(issuerId1, { name: 'Badge A' });
+      await TestDataHelper.createBadgeClass(issuerId2, { name: 'Badge B' });
+
+      // Request without issuer filter
+      const res = await fetch(BADGE_CLASSES_ENDPOINT, {
+        method: 'GET',
+        headers: { 'X-API-Key': API_KEY },
+      });
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as BadgeClassResponseDto[];
+
+      // Should return all badge classes
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBe(2);
+
+      // Should contain badge classes from both issuers
+      const issuerIds = body.map((bc) => bc.issuer.toString());
+      expect(issuerIds).toContain(issuerId1);
+      expect(issuerIds).toContain(issuerId2);
+    });
   });
 
   describe('Update Badge Class', () => {

@@ -68,6 +68,16 @@ import {
   sendApiError,
   sendNotFoundError,
 } from '../utils/errors/api-error-handler';
+import { z } from 'zod';
+import { BadRequestError } from '../infrastructure/errors/bad-request.error';
+
+/**
+ * Schema for badge class query parameters
+ * Note: issuer can be a URI (http://...) or URN (urn:uuid:...), not just a UUID
+ */
+const BadgeClassQuerySchema = z.object({
+  issuer: z.string().min(1, 'Issuer ID cannot be empty').optional(),
+});
 
 /**
  * Type-safe helper to get validated body from Hono context
@@ -368,7 +378,14 @@ export function createVersionedRouter(
 
   router.get('/achievements', requireAuth(), async (c) => {
     try {
-      const result = await badgeClassController.getAllBadgeClasses(version);
+      // Validate query parameters using Zod schema
+      const queryResult = BadgeClassQuerySchema.safeParse({
+        issuer: c.req.query('issuer'),
+      });
+      if (!queryResult.success) {
+        throw new BadRequestError(queryResult.error.errors[0]?.message || 'Invalid query parameters');
+      }
+      const result = await badgeClassController.getAllBadgeClasses(version, queryResult.data.issuer);
       return c.json(result);
     } catch (error) {
       return sendApiError(c, error, { endpoint: 'GET /achievements' });
@@ -381,7 +398,14 @@ export function createVersionedRouter(
     requireAuth(),
     async (c) => {
       try {
-        const result = await badgeClassController.getAllBadgeClasses(version);
+        // Validate query parameters using Zod schema
+        const queryResult = BadgeClassQuerySchema.safeParse({
+          issuer: c.req.query('issuer'),
+        });
+        if (!queryResult.success) {
+          throw new BadRequestError(queryResult.error.errors[0]?.message || 'Invalid query parameters');
+        }
+        const result = await badgeClassController.getAllBadgeClasses(version, queryResult.data.issuer);
         return c.json(result);
       } catch (error) {
         return sendApiError(c, error, { endpoint: 'GET /badge-classes' });
