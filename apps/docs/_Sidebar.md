@@ -1,17 +1,16 @@
 * [[Home]]
 * **Strategy**
-  * [[Vision/Home|Vision]]
-  * [[Roadmap/Home|Roadmap]]
+  * [[vision/now-next-later|Vision]]
+  * [[roadmap/2025-Q3|Roadmap]]
 * **Product**
-  * [[Product/Home|User Stories]]
-  * [[Research/Home|Research]]
+  * [[product/user-stories|User Stories]]
+  * [[research/open-badges-gap-analysis|Research]]
 * **Technical**
-  * [[Architecture/Home|Architecture]]
-  * [[Decisions/Home|Decisions (ADRs)]]
-  * [[Security/Home|Security]]
+  * [[architecture/overview|Architecture]]
+  * [[decisions/ADR-0001-self-signed-badges|Decisions (ADRs)]]
+  * [[security/distributed-badges-privacy|Security]]
 * **Design**
-  * [[Design/Home|Design System]]
-  * [[Flows/Home|User Flows]]
+  * [[design/distributed-badges-ux|Design System]]
 * **Team**
-  * [[Processes/Home|Processes]]
-  * [[Status/Home|Status Updates]]
+  * [[processes/triage|Processes]]
+  * [[templates/weekly-template|Status Updates]]
