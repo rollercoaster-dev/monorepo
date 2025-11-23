@@ -14,7 +14,13 @@ import {
   keyPairWithJWKToKeyPair,
   keyPairToJWK,
 } from '../../../src/services/key-management/key-generator';
-import { isRSAKey, isOKPKey, isPrivateKey } from '../../../src/services/key-management/types';
+import {
+  isRSAKey,
+  isOKPKey,
+  isPrivateKey,
+  type RSAPublicKey,
+  type OKPPublicKey,
+} from '../../../src/services/key-management/types';
 
 describe('Key Generator Service', () => {
   describe('generateRSAKeyPair', () => {
@@ -33,9 +39,10 @@ describe('Key Generator Service', () => {
       expect(keyPair.privateKey).toContain('-----BEGIN PRIVATE KEY-----');
 
       // Check JWK format
-      expect(keyPair.publicJwk.kty).toBe('RSA');
-      expect(keyPair.publicJwk.n).toBeDefined();
-      expect(keyPair.publicJwk.e).toBeDefined();
+      const rsaPublicJwk = keyPair.publicJwk as RSAPublicKey;
+      expect(rsaPublicJwk.kty).toBe('RSA');
+      expect(rsaPublicJwk.n).toBeDefined();
+      expect(rsaPublicJwk.e).toBeDefined();
       expect(keyPair.publicJwk.kid).toBe(keyPair.id);
       expect(keyPair.publicJwk.alg).toBe('RS256');
       expect(keyPair.publicJwk.use).toBe('sig');
@@ -74,6 +81,20 @@ describe('Key Generator Service', () => {
         'Unsupported RSA algorithm'
       );
     });
+
+    it('should throw error for modulus length below 2048 bits', async () => {
+      await expect(generateRSAKeyPair({ modulusLength: 1024 })).rejects.toThrow(
+        'RSA modulus length must be at least 2048 bits'
+      );
+    });
+
+    it('should accept custom modulus length >= 2048', async () => {
+      const keyPair = await generateRSAKeyPair({ modulusLength: 3072 });
+      expect(keyPair.keyType).toBe('RSA');
+      // 3072-bit keys have longer n values
+      const rsaPublicJwk = keyPair.publicJwk as RSAPublicKey;
+      expect(rsaPublicJwk.n.length).toBeGreaterThan(300);
+    });
   });
 
   describe('generateEdDSAKeyPair', () => {
@@ -92,9 +113,10 @@ describe('Key Generator Service', () => {
       expect(keyPair.privateKey).toContain('-----BEGIN PRIVATE KEY-----');
 
       // Check JWK format
-      expect(keyPair.publicJwk.kty).toBe('OKP');
-      expect(keyPair.publicJwk.crv).toBe('Ed25519');
-      expect(keyPair.publicJwk.x).toBeDefined();
+      const okpPublicJwk = keyPair.publicJwk as OKPPublicKey;
+      expect(okpPublicJwk.kty).toBe('OKP');
+      expect(okpPublicJwk.crv).toBe('Ed25519');
+      expect(okpPublicJwk.x).toBeDefined();
       expect(keyPair.publicJwk.kid).toBe(keyPair.id);
       expect(keyPair.publicJwk.alg).toBe('EdDSA');
       expect(keyPair.publicJwk.use).toBe('sig');

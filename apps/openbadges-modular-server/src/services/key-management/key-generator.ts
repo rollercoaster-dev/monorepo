@@ -5,7 +5,7 @@
  * following RFC 7517 (JSON Web Key) specifications.
  */
 
-import { generateKeyPair, randomUUID } from 'crypto';
+import { generateKeyPair, randomUUID, createPublicKey, createPrivateKey } from 'crypto';
 import { promisify } from 'util';
 import type {
   KeyPair,
@@ -28,18 +28,21 @@ const generateKeyPairAsync = promisify(generateKeyPair);
 // =============================================================================
 
 /**
- * Default RSA modulus length for key generation
+ * Default RSA modulus length for key generation.
+ * 2048 bits is the minimum secure size per NIST recommendations.
+ * Consider 3072+ for keys used beyond 2030.
  */
 const DEFAULT_RSA_MODULUS_LENGTH = 2048;
 
 /**
- * Supported RSA algorithms and their corresponding hash algorithms
+ * Minimum RSA modulus length for security compliance
  */
-const RSA_ALGORITHMS: Record<string, string> = {
-  RS256: 'sha256',
-  RS384: 'sha384',
-  RS512: 'sha512',
-};
+const MIN_RSA_MODULUS_LENGTH = 2048;
+
+/**
+ * Supported RSA algorithms for digital signatures
+ */
+const SUPPORTED_RSA_ALGORITHMS = new Set(['RS256', 'RS384', 'RS512']);
 
 // =============================================================================
 // Internal Helper Functions (defined first to avoid use-before-define)
@@ -54,11 +57,9 @@ function rsaKeyPairToJWK(
   algorithm: KeyAlgorithm,
   keyId: string
 ): { publicJwk: RSAPublicKey; privateJwk: RSAPrivateKey } {
-  const crypto = require('crypto');
-
-  // Import keys as CryptoKey objects
-  const publicKeyObject = crypto.createPublicKey(publicKeyPem);
-  const privateKeyObject = crypto.createPrivateKey(privateKeyPem);
+  // Import keys as KeyObject instances
+  const publicKeyObject = createPublicKey(publicKeyPem);
+  const privateKeyObject = createPrivateKey(privateKeyPem);
 
   // Export as JWK
   const publicJwkRaw = publicKeyObject.export({ format: 'jwk' }) as {
@@ -113,11 +114,9 @@ function eddsaKeyPairToJWK(
   privateKeyPem: string,
   keyId: string
 ): { publicJwk: OKPPublicKey; privateJwk: OKPPrivateKey } {
-  const crypto = require('crypto');
-
-  // Import keys as CryptoKey objects
-  const publicKeyObject = crypto.createPublicKey(publicKeyPem);
-  const privateKeyObject = crypto.createPrivateKey(privateKeyPem);
+  // Import keys as KeyObject instances
+  const publicKeyObject = createPublicKey(publicKeyPem);
+  const privateKeyObject = createPrivateKey(privateKeyPem);
 
   // Export as JWK
   const publicJwkRaw = publicKeyObject.export({ format: 'jwk' }) as {
@@ -172,8 +171,14 @@ export async function generateRSAKeyPair(
   const modulusLength = options.modulusLength ?? DEFAULT_RSA_MODULUS_LENGTH;
   const keyId = options.keyId ?? randomUUID();
 
-  if (!RSA_ALGORITHMS[algorithm]) {
+  if (!SUPPORTED_RSA_ALGORITHMS.has(algorithm)) {
     throw new Error(`Unsupported RSA algorithm: ${algorithm}. Supported: RS256, RS384, RS512`);
+  }
+
+  if (modulusLength < MIN_RSA_MODULUS_LENGTH) {
+    throw new Error(
+      `RSA modulus length must be at least ${MIN_RSA_MODULUS_LENGTH} bits. Got: ${modulusLength}`
+    );
   }
 
   const { publicKey, privateKey } = await generateKeyPairAsync('rsa', {
