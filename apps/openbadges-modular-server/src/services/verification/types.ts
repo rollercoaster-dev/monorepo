@@ -18,11 +18,16 @@ export type VerificationStatus = 'valid' | 'invalid' | 'indeterminate' | 'error'
 
 /**
  * Proof type identifier for OB 3.0 verification
- * Supports both JWT-based and Linked Data (DataIntegrity) proofs
+ * Supports W3C Data Integrity proofs and legacy linked-data signatures
+ *
+ * Note: JWT-based credentials use the VC-JWT envelope format (typ: "vc+jwt")
+ * rather than an embedded proof type, so are handled separately from this enum.
+ *
+ * @see https://www.w3.org/TR/vc-data-integrity/
+ * @see https://www.w3.org/TR/vc-jose-cose/ (for JWT/JOSE envelope format)
  */
 export type ProofType =
   | 'DataIntegrityProof'
-  | 'JwtProof2020'
   | 'JsonWebSignature2020'
   | 'Ed25519Signature2020'
   | 'EcdsaSecp256k1Signature2019';
