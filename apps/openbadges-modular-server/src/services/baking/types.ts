@@ -9,7 +9,7 @@
  * verification, making badges portable and shareable.
  */
 
-import type { OB2, OB3 } from 'openbadges-types';
+import type { OB2, OB3, OpenBadgesVersion } from 'openbadges-types';
 
 /**
  * Supported image formats for badge baking
@@ -45,6 +45,7 @@ export interface BakeOptions {
 
   /**
    * Whether to preserve existing embedded credentials
+   * When true, throws an error if credential data already exists
    * When false, any existing baked data will be replaced
    * @default false
    */
@@ -106,7 +107,7 @@ export interface UnbakeResult {
   /**
    * The detected Open Badges version of the credential
    */
-  version?: '2.0' | '3.0';
+  version?: OpenBadgesVersion;
 
   /**
    * The format of the source image
