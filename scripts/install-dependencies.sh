@@ -72,6 +72,40 @@ fi
 
 echo ""
 
+# Check if GitHub CLI is installed
+if ! command -v gh &> /dev/null; then
+  echo -e "${YELLOW}⚠${NC}  GitHub CLI (gh) not found. Installing..."
+
+  if [ "$ENV_TYPE" = "web" ]; then
+    # In web environment, install gh using the official method for Linux
+    (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
+      && mkdir -p -m 755 /etc/apt/keyrings \
+      && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      && cat $out | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+      && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+      && apt-get update \
+      && apt-get install gh -y
+
+    if command -v gh &> /dev/null; then
+      GH_VERSION=$(gh --version | head -n 1)
+      echo -e "${GREEN}✓${NC} GitHub CLI installed ($GH_VERSION)"
+    else
+      echo -e "${YELLOW}⚠${NC}  GitHub CLI installation failed - some features may be unavailable"
+    fi
+  else
+    # Local environment - suggest manual installation
+    echo -e "${YELLOW}ℹ${NC}  Please install GitHub CLI manually:"
+    echo "   brew install gh    # macOS"
+    echo "   or visit: https://cli.github.com"
+  fi
+else
+  GH_VERSION=$(gh --version | head -n 1)
+  echo -e "${GREEN}✓${NC} GitHub CLI detected ($GH_VERSION)"
+fi
+
+echo ""
+
 # Check if node_modules exists
 if [ -d "node_modules" ]; then
   echo -e "${BLUE}📦 node_modules found - running bun install to update...${NC}"
