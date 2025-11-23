@@ -14,7 +14,7 @@
 /**
  * Supported key algorithms for digital signatures
  */
-export type KeyAlgorithm = 'RS256' | 'RS384' | 'RS512' | 'ES256' | 'ES384' | 'EdDSA';
+export type KeyAlgorithm = 'RS256' | 'RS384' | 'RS512' | 'ES256' | 'ES384' | 'ES512' | 'EdDSA';
 
 /**
  * Key type identifiers as defined in RFC 7517
