@@ -45,6 +45,25 @@ Each commit must be:
 3. **Buildable**: Code compiles/passes type-check
 4. **Testable**: Related tests included (when applicable)
 
+#### Good vs Bad Atomic Commits
+
+**GOOD** (single purpose):
+```
+feat(keys): add KeyPair type definition
+feat(keys): implement RSA key generation
+feat(keys): add JWKS serialization
+test(keys): add key generation tests
+```
+
+**BAD** (mixed concerns):
+```
+feat(keys): add types, implement generation, add tests
+feat: various improvements to key management
+wip: work in progress
+```
+
+**Grouping Rule**: Related changes that MUST be together (e.g., type definition + its tests) can share a commit. Separate concerns that COULD work independently should be separate commits.
+
 ### Commit Message Format
 
 ```

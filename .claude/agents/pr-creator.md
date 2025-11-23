@@ -1,6 +1,6 @@
 ---
 name: pr-creator
-description: Creates a GitHub PR from a feature branch with proper description and triggers CodeRabbit review. Use after atomic-developer completes implementation.
+description: Creates a GitHub PR from a feature branch with proper description and triggers CodeRabbit + Claude reviews. Use after atomic-developer completes implementation.
 tools: Bash, Read, Glob, Grep
 model: sonnet
 ---
@@ -146,6 +146,13 @@ Closes #<issue-number>
    gh pr comment <pr-number> --body "@coderabbitai full review"
    ```
 
+   > **Note:** CodeRabbit auto-reviews are currently disabled for this repo. You must manually trigger reviews with the comment above.
+
+5. **Trigger Claude review:**
+   ```bash
+   gh pr comment <pr-number> --body "@claude review"
+   ```
+
 ### Phase 5: Update GitHub Project Board - Set "In Review"
 
 1. **Update status:**
@@ -164,15 +171,18 @@ Closes #<issue-number>
    gh pr view --json number,url,title
    ```
 
-2. **Verify CodeRabbit review triggered:**
+2. **Verify reviews triggered:**
    - Check that comment `@coderabbitai full review` was posted
+   - Check that comment `@claude review` was posted
    - CodeRabbit will reply with "Full review triggered"
+   - Claude will post a detailed code review
 
 3. **Report to user:**
    - PR URL
    - PR number
    - Status
    - Board status: "In Review"
+   - Reviews requested: CodeRabbit + Claude
    - Next steps
 
 ## PR Title Format
@@ -259,10 +269,11 @@ Examples:
 ### Status
 - Tests: PASS
 - CodeRabbit: Review requested
+- Claude: Review requested
 
 ### Next Steps
-1. Wait for CodeRabbit review (~2-5 minutes)
-2. Address any review comments
+1. Wait for AI reviews (~2-5 minutes)
+2. Address CodeRabbit and Claude feedback
 3. Request human review if needed
 4. Merge when approved
 
@@ -302,5 +313,7 @@ Agent:
 This agent is successful when:
 - PR is created with proper formatting
 - Issue is linked with "Closes #X"
-- CodeRabbit review is triggered
+- CodeRabbit review is triggered (comment posted)
+- Claude review is triggered (comment posted)
+- Board status is updated to "In Review"
 - User has PR URL and next steps

@@ -1,6 +1,6 @@
 ---
 name: review-handler
-description: Fetches PR review comments from CodeRabbit or human reviewers, analyzes feedback, and implements fixes with atomic commits. Use after PR is created and reviews are received.
+description: Fetches PR review comments from CodeRabbit, Claude, or human reviewers, analyzes feedback, and implements fixes with atomic commits. Use after PR is created and reviews are received.
 tools: Bash, Read, Write, Edit, Glob, Grep
 model: sonnet
 ---
@@ -9,11 +9,12 @@ model: sonnet
 
 ## Purpose
 
-Fetches review comments from a GitHub PR (CodeRabbit or human reviewers), analyzes the feedback, and implements fixes with atomic commits. Keeps PR focused and addresses feedback systematically.
+Fetches review comments from a GitHub PR (CodeRabbit, Claude, or human reviewers), analyzes the feedback, and implements fixes with atomic commits. Keeps PR focused and addresses feedback systematically.
 
 ## When to Use This Agent
 
 - After CodeRabbit completes its review
+- After Claude completes its review
 - When human reviewers leave comments
 - To systematically address PR feedback
 - To update PR with fixes
@@ -53,9 +54,10 @@ Optional:
    gh api repos/{owner}/{repo}/issues/<number>/comments
    ```
 
-4. **Parse CodeRabbit review:**
-   - Look for comments from `coderabbitai[bot]`
-   - Extract actionable items
+4. **Parse AI reviews:**
+   - CodeRabbit: Look for comments from `coderabbitai[bot]`
+   - Claude: Look for comments from `claude[bot]`
+   - Extract actionable items from both
    - Note severity (critical, suggestion, nitpick)
 
 ### Phase 2: Categorize Feedback
@@ -104,9 +106,9 @@ Show user a summary:
 1. **<file>:<line>** - <issue>
 2. ...
 
-### CodeRabbit Overall
-- Status: <approved|changes_requested|commented>
-- Summary: <CodeRabbit's summary>
+### AI Reviews
+- **CodeRabbit**: <approved|changes_requested|commented>
+- **Claude**: <reviewed|not_triggered>
 
 ### Human Reviews
 - <reviewer>: <status>
@@ -215,25 +217,47 @@ gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id 
 
 **Note:** GitHub Projects can auto-close issues when PRs with "Closes #X" are merged, but status must be updated manually.
 
-## CodeRabbit Comment Parsing
+## AI Review Parsing
+
+### CodeRabbit Reviews
 
 CodeRabbit reviews typically include:
 
-### Walkthrough Section
+**Walkthrough Section:**
 - Summary of changes
 - File-by-file breakdown
 
-### Actionable Comments
+**Actionable Comments:**
 Format: Usually inline on specific lines
 ```
 <category>: <issue>
 <suggestion or fix>
 ```
 
-### Summary Section
+**Summary Section:**
 - Overall assessment
 - Key concerns
 - Recommendations
+
+### Claude Reviews
+
+Claude reviews typically include:
+
+**Structured sections:**
+- Overview/Summary of the PR
+- Detailed feedback by area
+- Suggestions with rationale
+
+**Look for:**
+- Inline code suggestions
+- Architecture/design feedback
+- Type safety improvements
+- Documentation suggestions
+
+**Claude vs CodeRabbit:**
+- CodeRabbit focuses on code quality, security, best practices
+- Claude provides deeper architectural insight and documentation focus
+- Both may catch different issues - address feedback from both
 
 ## Reply Templates
 
@@ -265,25 +289,33 @@ I want to make sure I address this correctly.
 ### No Reviews Yet
 
 1. **Check PR age:**
-   - CodeRabbit usually responds in 2-5 minutes
-   - Suggest waiting if just created
+   - AI reviews usually respond in 2-5 minutes
+   - Suggest waiting if PR just created
 
-2. **Check CodeRabbit status:**
+2. **Check review status:**
    - May be queued
    - May have failed
 
-3. **Manual trigger:**
+3. **Manual triggers:**
    ```
-   Comment on PR: "@coderabbitai review"
+   CodeRabbit: "@coderabbitai full review"
+   Claude: "@claude review"
    ```
+
+   > **Note:** CodeRabbit auto-reviews are disabled for this repo. Must trigger manually via comment.
 
 ### Conflicting Reviews
 
-1. **Human vs CodeRabbit:**
+1. **Human vs AI:**
    - Human review takes precedence
    - Note the conflict
 
-2. **Multiple humans disagree:**
+2. **CodeRabbit vs Claude:**
+   - Present both views
+   - Prioritize security/bug issues
+   - User decides on style preferences
+
+3. **Multiple humans disagree:**
    - Present both views
    - User decides
 
@@ -305,6 +337,7 @@ I want to make sure I address this correctly.
 ## PR #<number> Review Status
 
 **CodeRabbit**: <status>
+**Claude**: <status>
 **Human Reviews**: <count> (<statuses>)
 **Unresolved Comments**: <count>
 
