@@ -116,10 +116,6 @@ Generate PR body following this template:
 ## Related Issues
 
 Closes #<issue-number>
-
----
-
-@coderabbitai full review
 ```
 
 ### Phase 4: Create PR
@@ -145,6 +141,11 @@ Closes #<issue-number>
    gh pr edit <pr-number> --add-reviewer "<username>"
    ```
 
+4. **Trigger CodeRabbit review (IMPORTANT - must be a comment, not in body):**
+   ```bash
+   gh pr comment <pr-number> --body "@coderabbitai full review"
+   ```
+
 ### Phase 5: Update GitHub Project Board - Set "In Review"
 
 1. **Update status:**
@@ -163,9 +164,9 @@ Closes #<issue-number>
    gh pr view --json number,url,title
    ```
 
-2. **Verify CodeRabbit comment:**
-   - Check that `@coderabbitai full review` is in the body
-   - CodeRabbit will automatically pick it up
+2. **Verify CodeRabbit review triggered:**
+   - Check that comment `@coderabbitai full review` was posted
+   - CodeRabbit will reply with "Full review triggered"
 
 3. **Report to user:**
    - PR URL
