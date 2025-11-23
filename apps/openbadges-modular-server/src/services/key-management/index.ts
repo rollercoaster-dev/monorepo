@@ -5,3 +5,5 @@
  */
 
 export * from './types';
+export * from './key-generator';
+export * from './key-storage';
