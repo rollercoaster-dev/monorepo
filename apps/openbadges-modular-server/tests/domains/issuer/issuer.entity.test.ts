@@ -107,4 +107,72 @@ describe('Issuer Entity', () => {
     expect(issuer.getProperty('image')).toBe(validIssuerData.image);
     expect(issuer.getProperty('nonExistentProperty')).toBeUndefined();
   });
+
+  describe('DID (Decentralized Identifier)', () => {
+    it('should generate did:web from issuer URL', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com/issuers/123' as Shared.IRI,
+      });
+      expect(issuer.did).toBe('did:web:example.com:issuers:123');
+    });
+
+    it('should handle URL with port number', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com:8080/issuers/123' as Shared.IRI,
+      });
+      expect(issuer.did).toBe('did:web:example.com%3A8080:issuers:123');
+    });
+
+    it('should handle URL without path', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com' as Shared.IRI,
+      });
+      expect(issuer.did).toBe('did:web:example.com');
+    });
+
+    it('should handle URL with trailing slash', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com/' as Shared.IRI,
+      });
+      expect(issuer.did).toBe('did:web:example.com');
+    });
+
+    it('should return null for invalid URL', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'not-a-valid-url' as Shared.IRI,
+      });
+      expect(issuer.did).toBeNull();
+    });
+
+    it('should include DID in toObject() for OB3', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com/issuers/123' as Shared.IRI,
+      });
+      const obj = issuer.toObject();
+      expect((obj as Record<string, unknown>).did).toBe('did:web:example.com:issuers:123');
+    });
+
+    it('should include DID in toJsonLd() for OB3', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: 'https://example.com/issuers/123' as Shared.IRI,
+      });
+      const jsonLd = issuer.toJsonLd();
+      expect(jsonLd.did).toBe('did:web:example.com:issuers:123');
+    });
+
+    it('should compute DID dynamically based on URL', () => {
+      const issuer = Issuer.create({
+        name: 'Test Issuer',
+        url: EXAMPLE_EDU_URL as Shared.IRI,
+      });
+      expect(issuer.did).toBe('did:web:example.edu');
+    });
+  });
 });

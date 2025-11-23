@@ -11,6 +11,7 @@ import { BadgeVersion } from '../../utils/version/badge-version';
 import { BadgeSerializerFactory } from '../../utils/version/badge-serializer';
 import { VC_V2_CONTEXT_URL } from '@/constants/urls';
 import { createOrGenerateIRI } from '@utils/types/iri-utils';
+import { generateDidWeb } from '../../utils/did';
 
 /**
  * Issuer entity representing an organization or individual that issues badges
@@ -22,15 +23,24 @@ export class Issuer
     Omit<Partial<OB3.Issuer>, 'image'>
 {
   id: Shared.IRI;
-  type: string = 'Issuer'; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
+  type: string = 'Issuer';
   name: string | Shared.MultiLanguageString;
   url: Shared.IRI;
   email?: string;
   description?: string | Shared.MultiLanguageString;
   image?: Shared.IRI | OB2.Image | Shared.OB3ImageObject;
-  telephone?: string; // Added for OBv3 compliance
+  telephone?: string;
   publicKey?: Record<string, unknown>;
   [key: string]: unknown;
+
+  /**
+   * Returns the DID (Decentralized Identifier) for this issuer.
+   * Generated from the issuer's URL using the did:web method.
+   * @returns The DID string or null if URL is invalid
+   */
+  get did(): string | null {
+    return generateDidWeb(this.url as string);
+  }
 
   /**
    * Private constructor to enforce creation through factory method
@@ -45,32 +55,26 @@ export class Issuer
    * @returns A new Issuer instance
    */
   static create(data: Partial<Issuer>): Issuer {
-    // Generate ID if not provided
     if (!data.id) {
       data.id = createOrGenerateIRI();
     }
-
-    // Set default type if not provided
     if (!data.type) {
-      data.type = 'Issuer'; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
+      data.type = 'Issuer';
     }
-
     return new Issuer(data);
   }
 
   /**
    * Converts the issuer to a plain object
    * @param version The badge version to use (defaults to 3.0)
-   * @returns A plain object representation of the issuer, properly typed as OB2.Profile or OB3.Issuer
+   * @returns A plain object representation of the issuer
    */
   toObject(version: BadgeVersion = BadgeVersion.V3): OB2.Profile | OB3.Issuer {
-    // For OB2, ensure name and description are strings
     let nameValue: string | Shared.MultiLanguageString = this.name;
     let descriptionValue: string | Shared.MultiLanguageString =
       this.description || '';
 
     if (version === BadgeVersion.V2) {
-      // Convert MultiLanguageString to string for OB2
       nameValue =
         typeof this.name === 'string'
           ? this.name
@@ -79,11 +83,10 @@ export class Issuer
         typeof this.description === 'string'
           ? this.description
           : this.description
-          ? Object.values(this.description)[0] || ''
-          : '';
+            ? Object.values(this.description)[0] || ''
+            : '';
     }
 
-    // Create a base object with common properties
     const baseObject = {
       id: this.id,
       name: nameValue,
@@ -93,30 +96,31 @@ export class Issuer
       image: this.image,
     };
 
-    // Add version-specific properties
     if (version === BadgeVersion.V2) {
-      // OB2 Profile
       return {
         ...baseObject,
-        type: 'Issuer', // Consistent with OB2 spec
+        type: 'Issuer',
       } as OB2.Profile;
     } else {
-      // OB3 Issuer
-      return {
+      // OB3 Issuer - include DID if available
+      const ob3Response: Record<string, unknown> = {
         ...baseObject,
-        type: 'Issuer', // Changed from 'Profile' to 'Issuer' for OBv3 compliance
-        telephone: this.telephone, // Add telephone for OB3
-      } as OB3.Issuer;
+        type: 'Issuer',
+        telephone: this.telephone,
+      };
+      const did = this.did;
+      if (did) {
+        ob3Response.did = did;
+      }
+      return ob3Response as OB3.Issuer;
     }
   }
 
   /**
    * Returns a partial representation of the issuer's internal state.
-   * Suitable for use cases like updates where only a subset of properties is needed.
    * @returns A shallow copy of the issuer object as Partial<Issuer>.
    */
   toPartial(): Partial<Issuer> {
-    // Return a shallow copy of the internal state
     return { ...this };
   }
 
@@ -128,12 +132,10 @@ export class Issuer
   toJsonLd(version: BadgeVersion = BadgeVersion.V3): Record<string, unknown> {
     const serializer = BadgeSerializerFactory.createSerializer(version);
 
-    // Handle name and description based on version
     let nameValue: string | Shared.MultiLanguageString;
     let descriptionValue: string | Shared.MultiLanguageString;
 
     if (version === BadgeVersion.V2) {
-      // For OB2, ensure name and description are strings
       nameValue =
         typeof this.name === 'string'
           ? this.name
@@ -142,38 +144,31 @@ export class Issuer
         typeof this.description === 'string'
           ? this.description
           : this.description
-          ? Object.values(this.description)[0] || ''
-          : '';
+            ? Object.values(this.description)[0] || ''
+            : '';
     } else {
-      // For OB3, we can use MultiLanguageString
       nameValue = this.name;
       descriptionValue = this.description || '';
     }
 
-    // Use direct properties instead of typedData to avoid type issues
     const dataForSerializer: IssuerData = {
       id: this.id,
       name: nameValue,
       url: this.url as Shared.IRI,
-      // Add other fields
       email: this.email,
       description: descriptionValue,
       image: this.image,
-      telephone: version === BadgeVersion.V3 ? this.telephone : undefined, // Only include for OB3
-      type: version === BadgeVersion.V2 ? 'Issuer' : 'Issuer', // Consistent type for both versions
+      telephone: version === BadgeVersion.V3 ? this.telephone : undefined,
+      type: 'Issuer',
     };
 
-    // Pass the properly typed data to the serializer
     const jsonLd = serializer.serializeIssuer(dataForSerializer);
 
-    // Ensure the context is set correctly for tests
     if (version === BadgeVersion.V3) {
-      // Make sure context is an array for OB3
       if (!Array.isArray(jsonLd['@context'])) {
         jsonLd['@context'] = [jsonLd['@context']].filter(Boolean);
       }
 
-      // Ensure both required contexts are present
       if (
         !jsonLd['@context'].includes(
           'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
@@ -186,6 +181,12 @@ export class Issuer
 
       if (!jsonLd['@context'].includes(VC_V2_CONTEXT_URL)) {
         jsonLd['@context'].push(VC_V2_CONTEXT_URL);
+      }
+
+      // Add DID for OB3
+      const did = this.did;
+      if (did) {
+        jsonLd.did = did;
       }
     }
 
