@@ -40,6 +40,7 @@ import type { AssertionController } from './controllers/assertion.controller';
 import { StatusListController } from './controllers/status-list.controller';
 import { VersionController } from './controllers/version.controller';
 import type { JwksController } from './controllers/jwks.controller';
+import { WellKnownController } from './controllers/well-known.controller';
 import { BadgeVersion } from '../utils/version/badge-version';
 import { openApiConfig } from './openapi';
 import { HealthCheckService } from '../utils/monitoring/health-check.service';
@@ -1687,6 +1688,22 @@ export async function createApiRouter(
       return c.json(result.body, result.status as 200 | 500);
     } catch (error) {
       return sendApiError(c, error, { endpoint: 'GET /.well-known/jwks.json' });
+    }
+  });
+
+  // Add DID:web document endpoint - W3C DID Method Web
+  const wellKnownController = new WellKnownController();
+  router.get('/.well-known/did.json', async (c) => {
+    try {
+      const result = await wellKnownController.getDidDocument();
+
+      // Set appropriate headers for DID document
+      c.header('Content-Type', 'application/did+ld+json');
+      c.header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+
+      return c.json(result.body, result.status as 200 | 500);
+    } catch (error) {
+      return sendApiError(c, error, { endpoint: 'GET /.well-known/did.json' });
     }
   });
 
