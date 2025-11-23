@@ -10,7 +10,16 @@ get_repo() {
   if [ -n "$GITHUB_REPOSITORY" ]; then
     echo "$GITHUB_REPOSITORY"
   else
-    git remote get-url origin 2>/dev/null | sed -E 's|.*github.com[:/](.+/.+)(\.git)?$|\1|' | sed 's/\.git$//'
+    # Handle various URL formats: github.com, local proxy, etc.
+    local url
+    url=$(git remote get-url origin 2>/dev/null)
+    # Try github.com format first
+    if echo "$url" | grep -q "github.com"; then
+      echo "$url" | sed -E 's|.*github.com[:/](.+/.+)(\.git)?$|\1|' | sed 's/\.git$//'
+    else
+      # Fallback: extract last two path segments (owner/repo)
+      echo "$url" | sed -E 's|.*/([^/]+/[^/]+)$|\1|' | sed 's/\.git$//'
+    fi
   fi
 }
 
@@ -32,6 +41,8 @@ if [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; t
   echo "  pr-list [state]                 List pull requests"
   echo "  pr-view <number>                View PR details"
   echo "  pr-create \"title\" \"body\" <head> Create PR"
+  echo "  project-list <org>              List organization projects"
+  echo "  project-items <project-num> <org> List items in a project"
   echo "  repo                            Show repository info"
   echo "  whoami                          Show authenticated user"
   echo ""
@@ -69,6 +80,12 @@ api_patch() {
   curl -sS -X PATCH -H "$AUTH_HEADER" -H "$ACCEPT_HEADER" -H "Content-Type: application/json" -d "$2" "$1"
 }
 
+# GraphQL helper for Projects v2
+graphql() {
+  curl -sS -X POST -H "$AUTH_HEADER" -H "Content-Type: application/json" \
+    -d "{\"query\": \"$1\"}" "https://api.github.com/graphql"
+}
+
 # Commands
 case "$1" in
   issue-list|issues)
@@ -81,9 +98,20 @@ case "$1" in
     ;;
 
   issue-view|issue)
-    # View issue: github-api.sh issue-view <number>
-    [ -z "$2" ] && echo "Usage: github-api.sh issue-view <number>" >&2 && exit 1
-    api_get "$API_BASE/repos/$REPO/issues/$2" | jq -r '"#\(.number) \(.title)\nState: \(.state)\nAuthor: \(.user.login)\nLabels: \(.labels | map(.name) | join(", "))\nCreated: \(.created_at)\n\n\(.body)"'
+    # View issue: github-api.sh issue-view <number> [owner/repo]
+    [ -z "$2" ] && echo "Usage: github-api.sh issue-view <number> [owner/repo]" >&2 && exit 1
+    ISSUE_NUM="$2"
+    if [ -n "$3" ]; then
+      OWNER=$(echo "$3" | cut -d'/' -f1)
+      REPO_NAME=$(echo "$3" | cut -d'/' -f2)
+    else
+      OWNER=$(echo "$REPO" | cut -d'/' -f1)
+      REPO_NAME=$(echo "$REPO" | cut -d'/' -f2)
+    fi
+    # Use GraphQL for better reliability
+    curl -sS -X POST -H "$AUTH_HEADER" -H "Content-Type: application/json" \
+      -d "{\"query\": \"query { repository(owner: \\\"$OWNER\\\", name: \\\"$REPO_NAME\\\") { issue(number: $ISSUE_NUM) { number title state body url author { login } labels(first: 10) { nodes { name } } createdAt } } }\"}" \
+      https://api.github.com/graphql | jq -r '.data.repository.issue | "#\(.number) \(.title)\nState: \(.state)\nAuthor: \(.author.login)\nLabels: \(.labels.nodes | map(.name) | join(", "))\nCreated: \(.createdAt)\nURL: \(.url)\n\n\(.body)"'
     ;;
 
   issue-create)
@@ -145,6 +173,29 @@ case "$1" in
     BASE="${5:-main}"
     DATA=$(jq -n --arg t "$TITLE" --arg b "$BODY" --arg h "$HEAD" --arg base "$BASE" '{title: $t, body: $b, head: $h, base: $base}')
     api_post "$API_BASE/repos/$REPO/pulls" "$DATA" | jq -r '"Created PR #\(.number): \(.html_url)"'
+    ;;
+
+  project-list|projects)
+    # List org projects: github-api.sh project-list <org>
+    ORG="${2:-rollercoaster-dev}"
+    QUERY="query { organization(login: \\\"$ORG\\\") { projectsV2(first: 20) { nodes { number title url } } } }"
+    graphql "$QUERY" | jq -r '.data.organization.projectsV2.nodes[] | "#\(.number) \(.title)\n   \(.url)"'
+    ;;
+
+  project-items|project)
+    # List project items: github-api.sh project-items <number> [org]
+    [ -z "$2" ] && echo "Usage: github-api.sh project-items <project-number> [org]" >&2 && exit 1
+    PROJECT_NUM="$2"
+    ORG="${3:-rollercoaster-dev}"
+    QUERY="query { organization(login: \\\"$ORG\\\") { projectV2(number: $PROJECT_NUM) { title items(first: 50) { nodes { content { ... on Issue { number title state url } ... on PullRequest { number title state url } } fieldValues(first: 10) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { name field { ... on ProjectV2SingleSelectField { name } } } } } } } } } }"
+    graphql "$QUERY" | jq -r '
+      .data.organization.projectV2 as $proj |
+      "Project: \($proj.title)\n" +
+      (.data.organization.projectV2.items.nodes[] |
+        .content as $c |
+        (.fieldValues.nodes | map(select(.name != null) | "\(.field.name): \(.name)") | join(" | ")) as $fields |
+        "#\($c.number) [\($c.state)] \($c.title)\n   \($c.url)\n   \($fields)\n"
+      )'
     ;;
 
   repo)
