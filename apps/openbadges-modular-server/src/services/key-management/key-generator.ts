@@ -330,7 +330,7 @@ export function keyPairWithJWKToKeyPair(keyPairWithJwk: KeyPairWithJWK): KeyPair
  * @param keyType - Type of key (RSA or OKP)
  * @param algorithm - Algorithm used for the key
  * @param keyId - Key ID for the JWK
- * @returns Promise resolving to public and private JWKs
+ * @returns Public and private JWKs
  */
 export function keyPairToJWK(
   publicKeyPem: string,
@@ -340,10 +340,16 @@ export function keyPairToJWK(
   keyId: string
 ): { publicJwk: JWKPublic; privateJwk: JWKPrivate } {
   if (keyType === 'RSA') {
+    if (!SUPPORTED_RSA_ALGORITHMS.has(algorithm)) {
+      throw new Error(`Invalid algorithm ${algorithm} for RSA key type`);
+    }
     return rsaKeyPairToJWK(publicKeyPem, privateKeyPem, algorithm, keyId);
   }
 
   if (keyType === 'OKP') {
+    if (algorithm !== 'EdDSA') {
+      throw new Error(`Invalid algorithm ${algorithm} for OKP key type. Use EdDSA.`);
+    }
     return eddsaKeyPairToJWK(publicKeyPem, privateKeyPem, keyId);
   }
 

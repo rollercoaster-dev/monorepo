@@ -256,6 +256,20 @@ describe('Key Generator Service', () => {
         expect(privateJwk.d).toBeDefined();
       });
 
+      it('should throw error for invalid RSA algorithm', async () => {
+        const keyPair = await generateRSAKeyPair();
+        expect(() =>
+          keyPairToJWK(keyPair.publicKey, keyPair.privateKey, 'RSA', 'EdDSA', 'key-id')
+        ).toThrow('Invalid algorithm EdDSA for RSA key type');
+      });
+
+      it('should throw error for invalid OKP algorithm', async () => {
+        const keyPair = await generateEdDSAKeyPair();
+        expect(() =>
+          keyPairToJWK(keyPair.publicKey, keyPair.privateKey, 'OKP', 'RS256', 'key-id')
+        ).toThrow('Invalid algorithm RS256 for OKP key type. Use EdDSA.');
+      });
+
       it('should throw error for unsupported key type', () => {
         expect(() =>
           keyPairToJWK('pem', 'pem', 'EC' as 'RSA', 'ES256' as 'RS256', 'key-id')
