@@ -144,7 +144,10 @@ export interface VerificationResult {
   /** Overall verification status */
   status: VerificationStatus;
 
-  /** Whether the credential is valid */
+  /**
+   * Whether the credential is valid
+   * Invariant: isValid === (status === 'valid')
+   */
   isValid: boolean;
 
   /** Detailed verification checks by category */
@@ -199,8 +202,8 @@ export interface VerificationMetadata {
  * Input for batch verification operations
  */
 export interface BatchVerificationInput {
-  /** Credential to verify (as JSON or compact JWT) */
-  credential: unknown;
+  /** Credential to verify (JSON-LD object or compact JWT string) */
+  credential: Record<string, unknown> | string;
 
   /** Optional verification options for this credential */
   options?: VerificationOptions;
@@ -213,11 +216,17 @@ export interface BatchVerificationResult {
   /** Total number of credentials verified */
   total: number;
 
-  /** Number of valid credentials */
+  /** Number of valid credentials (status === 'valid') */
   valid: number;
 
-  /** Number of invalid credentials */
+  /** Number of invalid credentials (status === 'invalid') */
   invalid: number;
+
+  /** Number of indeterminate results (status === 'indeterminate') */
+  indeterminate: number;
+
+  /** Number of errors during verification (status === 'error') */
+  errors: number;
 
   /** Individual verification results */
   results: VerificationResult[];
