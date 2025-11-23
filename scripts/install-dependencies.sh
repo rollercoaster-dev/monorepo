@@ -72,6 +72,59 @@ fi
 
 echo ""
 
+# Check if GitHub CLI is installed
+if ! command -v gh &> /dev/null; then
+  echo -e "${YELLOW}⚠${NC}  GitHub CLI (gh) not found. Installing..."
+
+  if [ "$ENV_TYPE" = "web" ]; then
+    # In web environment, install gh binary directly (no root required)
+    GH_VERSION_TAG="v2.63.2"
+    GH_ARCHIVE="gh_${GH_VERSION_TAG#v}_linux_amd64.tar.gz"
+    GH_URL="https://github.com/cli/cli/releases/download/${GH_VERSION_TAG}/${GH_ARCHIVE}"
+    GH_INSTALL_DIR="$HOME/.local"
+
+    mkdir -p "$GH_INSTALL_DIR/bin"
+
+    echo -e "${BLUE}Downloading GitHub CLI ${GH_VERSION_TAG}...${NC}"
+    if curl -fsSL "$GH_URL" -o "/tmp/${GH_ARCHIVE}" 2>/dev/null; then
+      tar -xzf "/tmp/${GH_ARCHIVE}" -C /tmp
+      cp "/tmp/gh_${GH_VERSION_TAG#v}_linux_amd64/bin/gh" "$GH_INSTALL_DIR/bin/"
+      chmod +x "$GH_INSTALL_DIR/bin/gh"
+      rm -rf "/tmp/${GH_ARCHIVE}" "/tmp/gh_${GH_VERSION_TAG#v}_linux_amd64"
+
+      # Add to PATH for current session
+      export PATH="$GH_INSTALL_DIR/bin:$PATH"
+
+      if command -v gh &> /dev/null; then
+        GH_VERSION=$(gh --version | head -n 1)
+        echo -e "${GREEN}✓${NC} GitHub CLI installed ($GH_VERSION)"
+      else
+        echo -e "${YELLOW}⚠${NC}  GitHub CLI installation failed"
+        echo -e "${YELLOW}ℹ${NC}  Alternative: Use GitHub API via curl with GH_TOKEN"
+      fi
+    else
+      echo -e "${YELLOW}⚠${NC}  GitHub CLI download blocked (binary downloads restricted)"
+      echo -e "${YELLOW}ℹ${NC}  Alternative: Use ./scripts/github-api.sh with GH_TOKEN"
+      echo "     ./scripts/github-api.sh help    # Show available commands"
+    fi
+  else
+    # Local environment - suggest manual installation
+    echo -e "${YELLOW}ℹ${NC}  Please install GitHub CLI manually:"
+    echo "   brew install gh    # macOS"
+    echo "   or visit: https://cli.github.com"
+  fi
+else
+  GH_VERSION=$(gh --version | head -n 1)
+  echo -e "${GREEN}✓${NC} GitHub CLI detected ($GH_VERSION)"
+fi
+
+# Ensure ~/.local/bin is in PATH (for gh and other user-installed binaries)
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+echo ""
+
 # Check if node_modules exists
 if [ -d "node_modules" ]; then
   echo -e "${BLUE}📦 node_modules found - running bun install to update...${NC}"
@@ -119,6 +172,17 @@ if [ -n "$CLAUDE_ENV_FILE" ]; then
   echo "export NODE_ENV=${NODE_ENV:-development}" >> "$CLAUDE_ENV_FILE"
   echo "export LOG_LEVEL=${LOG_LEVEL:-info}" >> "$CLAUDE_ENV_FILE"
   echo "export BUN_ENV=${BUN_ENV:-development}" >> "$CLAUDE_ENV_FILE"
+
+  # Ensure ~/.local/bin is in PATH for gh and other user binaries
+  echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+
+  # GitHub CLI authentication via GH_TOKEN
+  if [ -n "$GH_TOKEN" ]; then
+    echo "export GH_TOKEN='$GH_TOKEN'" >> "$CLAUDE_ENV_FILE"
+    echo -e "${GREEN}✓${NC} GitHub CLI authentication configured via GH_TOKEN"
+  else
+    echo -e "${YELLOW}ℹ${NC}  GH_TOKEN not set - configure in Web UI for GitHub issue/PR access"
+  fi
 
   echo -e "${GREEN}✓${NC} Environment variables configured"
   echo ""
