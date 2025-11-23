@@ -37,6 +37,74 @@ Optional:
 
 ## Core Principles
 
+### MINIMAL Implementation
+
+**CRITICAL: Only implement the bare minimum to fulfill requirements.**
+
+1. **No "nice to have" features** - If it's not explicitly required, don't build it
+2. **No premature abstraction** - Don't create helpers/utilities for one-time operations
+3. **No extra options/parameters** - Add configuration only when explicitly needed
+4. **No defensive coding for impossible cases** - Trust internal code
+
+**Before writing ANY code, ask:**
+- Is this explicitly required by the issue?
+- Would the feature work without this?
+- Am I adding this "just in case"?
+
+**Examples:**
+
+```
+Issue: "Load keys from environment variables"
+
+WRONG (over-engineered):
+- loadKeyPairFromEnv()
+- loadKeyPairFromFile()        ← Not requested
+- loadKeyPairFromEnvPath()     ← Not requested
+- saveKeyPairToFile()          ← Not requested
+- hasKeyConfigured()           ← Not requested
+- GetActiveKeyOptions interface with 5 options ← Not requested
+
+RIGHT (minimal):
+- loadKeyPairFromEnv()
+- getActiveKey()
+```
+
+### Minimal Tests
+
+**Only test what matters:**
+
+1. **Happy path** - Does it work with valid input?
+2. **Key error cases** - What happens with obviously wrong input?
+3. **Edge cases only if likely** - Don't test impossible scenarios
+
+**Test count guideline:**
+- Simple function: 2-4 tests
+- Complex function: 5-8 tests
+- Full service: 8-15 tests
+
+**WRONG (over-tested):**
+```typescript
+// 33 tests for a storage service that has 3 functions
+it('should handle empty string')
+it('should handle null')
+it('should handle undefined')
+it('should handle whitespace-only string')
+it('should handle very long string')
+// ... 28 more tests
+```
+
+**RIGHT (focused):**
+```typescript
+// 8 tests covering real behavior
+it('should return null when no env vars set')
+it('should throw when only private key set')
+it('should load valid PEM keys')
+it('should load base64-encoded keys')
+it('should cache the loaded key')
+it('should auto-generate when enabled')
+it('should throw when no key available')
+```
+
 ### Atomic Commits
 
 Each commit must be:
