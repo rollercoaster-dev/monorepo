@@ -159,8 +159,9 @@ export const config = {
       process.env['BASE_URL'] ||
       'http://localhost:3000',
     // Public paths (no authentication required)
+    // Note: /.well-known/* is public by default for JWKS/DID document verification
     publicPaths: (
-      process.env['AUTH_PUBLIC_PATHS'] || '/docs,/swagger,/swagger-ui*,/health,/public'
+      process.env['AUTH_PUBLIC_PATHS'] || '/docs,/swagger,/swagger-ui*,/health,/public,/.well-known/*'
     ).split(',').map(path => path.trim()),
     // Admin user configuration
     adminUser: {
