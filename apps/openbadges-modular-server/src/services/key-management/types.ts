@@ -308,3 +308,39 @@ export function isOKPKey(jwk: JWK): jwk is OKPPublicKey | OKPPrivateKey {
 export function isPrivateKey(jwk: JWK): jwk is JWKPrivate {
   return 'd' in jwk;
 }
+
+// =============================================================================
+// File Storage Types
+// =============================================================================
+
+/**
+ * JSON format for key file storage (minimal, without JWK)
+ *
+ * This is the format used when persisting keys to disk via OB_SIGNING_KEY.
+ * JWKs are regenerated on load to keep the file format simple.
+ */
+export interface KeyFileFormat {
+  id: string;
+  publicKey: string;
+  privateKey: string;
+  keyType: KeyType;
+  algorithm: KeyAlgorithm;
+  createdAt: string;
+}
+
+/**
+ * Type guard to validate KeyFileFormat structure
+ */
+export function isValidKeyFileFormat(data: unknown): data is KeyFileFormat {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.publicKey === 'string' &&
+    typeof obj.privateKey === 'string' &&
+    typeof obj.keyType === 'string' &&
+    ['RSA', 'EC', 'OKP'].includes(obj.keyType as string) &&
+    typeof obj.algorithm === 'string' &&
+    typeof obj.createdAt === 'string'
+  );
+}
