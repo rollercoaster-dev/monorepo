@@ -53,7 +53,7 @@ describe('BadgeService', () => {
           id: 'http://example.org/issuers/1',
           name: 'Test Issuer',
         },
-        issuanceDate: '2023-01-01T00:00:00Z',
+        validFrom: '2023-01-01T00:00:00Z',
         credentialSubject: {
           id: 'did:example:123',
           achievement: {
@@ -61,6 +61,7 @@ describe('BadgeService', () => {
             name: 'Test Achievement',
             description: 'A test achievement',
             image: 'http://example.org/badge.png',
+            criteria: { narrative: 'Test criteria' },
           },
         },
       } as OB3.VerifiableCredential;
@@ -203,8 +204,8 @@ describe('BadgeService', () => {
           name: 'Test Issuer',
           url: 'http://example.org',
         },
-        issuanceDate: '2023-01-01T00:00:00Z',
-        expirationDate: '2024-01-01T00:00:00Z',
+        validFrom: '2023-01-01T00:00:00Z',
+        validUntil: '2024-01-01T00:00:00Z',
         credentialSubject: {
           id: 'did:example:123',
           achievement: {
@@ -212,6 +213,7 @@ describe('BadgeService', () => {
             name: 'Test Achievement',
             description: 'A test achievement',
             image: 'http://example.org/badge.png',
+            criteria: { narrative: 'Test criteria' },
           },
         },
       } as OB3.VerifiableCredential;
