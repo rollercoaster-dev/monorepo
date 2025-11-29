@@ -97,9 +97,9 @@ function getTaskName(issue: z.ZodIssue): string {
     case 'invalid_type':
       return `VALIDATE_TYPE_${pathStr}`
     case 'invalid_string': {
-      const stringIssue = issue as z.ZodIssue & { validation?: string }
-      if (stringIssue.validation === 'url') return `VALIDATE_IRI_${pathStr}`
-      if (stringIssue.validation === 'email') return `VALIDATE_EMAIL_${pathStr}`
+      // Use runtime check for 'validation' property (not part of Zod's public API)
+      if ('validation' in issue && issue.validation === 'url') return `VALIDATE_IRI_${pathStr}`
+      if ('validation' in issue && issue.validation === 'email') return `VALIDATE_EMAIL_${pathStr}`
       return `VALIDATE_STRING_${pathStr}`
     }
     case 'too_small':

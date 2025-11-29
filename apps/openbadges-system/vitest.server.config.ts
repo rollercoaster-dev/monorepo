@@ -15,6 +15,7 @@ export default defineConfig({
     exclude: ['src/client/**', 'src/test/integration/**', '**/*.bun.test.ts'],
     deps: {
       // Inline zod to avoid ESM resolution issues in CI
+      // See: https://github.com/colinhacks/zod/issues/1958
       inline: ['zod'],
     },
   },

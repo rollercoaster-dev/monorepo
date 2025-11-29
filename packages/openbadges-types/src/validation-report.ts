@@ -25,7 +25,7 @@ export interface ValidationMessage {
   messageLevel: MessageLevel;
   /** Path to nested properties (e.g., ["criteria", "narrative"]) */
   node_path?: Array<string | number>;
-  /** Whether task succeeded - only included if task failed (false) */
+  /** Whether task succeeded - always false for error messages */
   success?: boolean;
   /** Human-readable description of the problem or message */
   result: string;
