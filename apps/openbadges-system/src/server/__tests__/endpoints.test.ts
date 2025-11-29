@@ -52,6 +52,42 @@ describe('Server Endpoints', () => {
     vi.clearAllMocks()
     // Reset modules to ensure mocks are applied fresh in CI environments
     vi.resetModules()
+
+    // Re-register mocks after resetModules (hoisted vi.mock doesn't survive reset)
+    vi.doMock('../services/jwt', () => ({
+      jwtService: {
+        createOpenBadgesApiClient: vi.fn(() => ({
+          token: 'mock-jwt-token',
+          headers: {
+            Authorization: 'Bearer mock-jwt-token',
+            'Content-Type': 'application/json',
+          },
+        })),
+        verifyToken: vi.fn(() => ({
+          sub: 'test-user',
+          platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
+          displayName: 'Test User',
+          email: 'test@example.com',
+          metadata: { isAdmin: true },
+        })),
+      },
+    }))
+
+    vi.doMock('sqlite3', () => ({
+      Database: vi.fn().mockImplementation(() => ({
+        prepare: vi.fn().mockReturnValue({
+          get: vi.fn(),
+          all: vi.fn(),
+          run: vi.fn(),
+          finalize: vi.fn(),
+        }),
+        exec: vi.fn(),
+        close: vi.fn(),
+      })),
+    }))
+
+    // Reset global fetch mock
+    global.fetch = vi.fn()
     mockFetch = vi.mocked(fetch)
 
     // Import the server app dynamically to ensure mocks are applied
