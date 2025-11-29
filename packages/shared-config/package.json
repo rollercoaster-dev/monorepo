@@ -28,6 +28,9 @@
     "eslint-plugin-vue": "^9.32.0",
     "vue-eslint-parser": "^9.4.3"
   },
+  "scripts": {
+    "type-check": "echo 'No types to check'"
+  },
   "peerDependencies": {
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
