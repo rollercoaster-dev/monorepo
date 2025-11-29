@@ -165,5 +165,31 @@ describe('OB3 Type Guards', () => {
     });
   });
 
-  // Additional tests for other type guards can be added here
+  describe('isCriteria', () => {
+    test('should reject empty objects', () => {
+      expect(OB3.isCriteria({})).toBe(false);
+    });
+
+    test('should reject null and undefined', () => {
+      expect(OB3.isCriteria(null)).toBe(false);
+      expect(OB3.isCriteria(undefined)).toBe(false);
+    });
+
+    test('should accept objects with id property', () => {
+      expect(OB3.isCriteria({ id: 'https://example.com/criteria' })).toBe(true);
+    });
+
+    test('should accept objects with narrative property', () => {
+      expect(OB3.isCriteria({ narrative: 'Must complete all assignments' })).toBe(true);
+    });
+
+    test('should accept objects with both id and narrative', () => {
+      expect(
+        OB3.isCriteria({
+          id: 'https://example.com/criteria',
+          narrative: 'Must complete all assignments',
+        })
+      ).toBe(true);
+    });
+  });
 });

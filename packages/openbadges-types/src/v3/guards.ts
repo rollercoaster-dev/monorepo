@@ -205,6 +205,7 @@ export function isEvidence(value: unknown): value is Evidence {
 
 /**
  * Type guard to check if a value is an OB3 Criteria
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#criteria
  * @param value The value to check
  * @returns True if the value is a valid OB3 Criteria, false otherwise
  */
@@ -231,7 +232,8 @@ export function isCriteria(value: unknown): value is Criteria {
     return false;
   }
 
-  return true;
+  // OB3 Criteria requires id (URL) OR narrative per spec
+  return 'id' in value || 'narrative' in value;
 }
 
 /**
