@@ -12,6 +12,7 @@ import {
   saveKeyPairToFile,
   getActiveKey,
   clearKeyCache,
+  KeyFileNotFoundError,
 } from '../../../src/services/key-management/key-storage';
 import { generateRSAKeyPair } from '../../../src/services/key-management/key-generator';
 
@@ -125,9 +126,9 @@ describe('Key Storage Service', () => {
         expect(loaded.status).toBe('active');
       });
 
-      it('should throw for non-existent file', async () => {
+      it('should throw KeyFileNotFoundError for non-existent file', async () => {
         await expect(loadKeyPairFromFile('/nonexistent/path.json')).rejects.toThrow(
-          'Key file not found'
+          KeyFileNotFoundError
         );
       });
 
@@ -141,6 +142,40 @@ describe('Key Storage Service', () => {
       it('should throw for invalid format', async () => {
         const filePath = path.join(tempDir, 'invalid-format.json');
         await fs.promises.writeFile(filePath, JSON.stringify({ foo: 'bar' }));
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
+      });
+
+      it('should throw for invalid algorithm', async () => {
+        const filePath = path.join(tempDir, 'invalid-algorithm.json');
+        await fs.promises.writeFile(
+          filePath,
+          JSON.stringify({
+            id: 'test-id',
+            publicKey: '-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----',
+            privateKey: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----',
+            keyType: 'RSA',
+            algorithm: 'INVALID',
+            createdAt: new Date().toISOString(),
+          })
+        );
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
+      });
+
+      it('should throw for invalid date', async () => {
+        const filePath = path.join(tempDir, 'invalid-date.json');
+        await fs.promises.writeFile(
+          filePath,
+          JSON.stringify({
+            id: 'test-id',
+            publicKey: '-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----',
+            privateKey: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----',
+            keyType: 'RSA',
+            algorithm: 'RS256',
+            createdAt: 'not-a-date',
+          })
+        );
 
         await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
       });

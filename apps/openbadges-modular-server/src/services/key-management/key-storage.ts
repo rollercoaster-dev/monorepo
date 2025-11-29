@@ -1,7 +1,22 @@
 /**
  * Key Storage Service
  *
- * Handles loading cryptographic key pairs from environment variables.
+ * Handles loading cryptographic key pairs from environment variables and files.
+ *
+ * Key Loading Priority:
+ * 1. Cached key (memory)
+ * 2. Environment variables (KEY_PRIVATE + KEY_PUBLIC)
+ * 3. File path (OB_SIGNING_KEY)
+ * 4. Auto-generate (if KEY_AUTO_GENERATE=true)
+ *
+ * Platform Notes:
+ * - File permissions (0o600) are enforced on Unix systems
+ * - On Windows, file permissions are not enforced; consider using ACLs
+ *
+ * Multi-Process Deployments:
+ * - When using KEY_AUTO_GENERATE with OB_SIGNING_KEY, ensure only one process
+ *   generates the key to avoid race conditions. Use a shared key file or
+ *   external key management for clustered deployments.
  */
 
 import { randomUUID } from 'crypto';
@@ -9,6 +24,20 @@ import * as fs from 'fs';
 import type { KeyPairWithJWK, KeyType, KeyAlgorithm, KeyFileFormat } from './types';
 import { isValidKeyFileFormat } from './types';
 import { keyPairToJWK, generateRSAKeyPair } from './key-generator';
+
+// =============================================================================
+// Custom Errors
+// =============================================================================
+
+/**
+ * Error thrown when a key file is not found
+ */
+export class KeyFileNotFoundError extends Error {
+  constructor(filePath: string) {
+    super(`Key file not found: ${filePath}`);
+    this.name = 'KeyFileNotFoundError';
+  }
+}
 
 // =============================================================================
 // Environment Variable Loading
@@ -121,7 +150,7 @@ export async function loadKeyPairFromFile(
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
-      throw new Error(`Key file not found: ${filePath}`);
+      throw new KeyFileNotFoundError(filePath);
     }
     if (code === 'EACCES') {
       throw new Error(`Permission denied reading key file: ${filePath}`);
@@ -164,8 +193,12 @@ export async function loadKeyPairFromFile(
 /**
  * Saves a key pair to a JSON file
  *
- * The file is written with restricted permissions (0o600) since it contains
- * the private key.
+ * Uses atomic write (temp file + rename) to prevent corruption if the process
+ * crashes during write. The file is written with restricted permissions (0o600)
+ * since it contains the private key.
+ *
+ * Note: On Windows, file permissions (mode) are not enforced by the filesystem.
+ * Consider using Windows ACLs for production deployments on Windows.
  *
  * @param keyPair - The key pair to save
  * @param filePath - Path where the key file should be written
@@ -184,12 +217,31 @@ export async function saveKeyPairToFile(
     createdAt: keyPair.createdAt,
   };
 
+  const content = JSON.stringify(fileData, null, 2);
+  const tempPath = `${filePath}.tmp.${process.pid}`;
+
   try {
-    await fs.promises.writeFile(filePath, JSON.stringify(fileData, null, 2), {
+    // Write to temp file first (atomic write pattern)
+    await fs.promises.writeFile(tempPath, content, {
       encoding: 'utf-8',
       mode: 0o600,
     });
+
+    // Rename is atomic on most filesystems
+    await fs.promises.rename(tempPath, filePath);
+
+    // Ensure permissions on Unix (rename preserves temp file permissions)
+    if (process.platform !== 'win32') {
+      await fs.promises.chmod(filePath, 0o600);
+    }
   } catch (error) {
+    // Clean up temp file if it exists
+    try {
+      await fs.promises.unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
+
     const code = (error as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
       throw new Error(`Directory does not exist for key file: ${filePath}`);
@@ -238,7 +290,8 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
       return fileKey;
     } catch (error) {
       // File doesn't exist - fall through to auto-generate if enabled
-      if (!(error instanceof Error) || !error.message.includes('not found')) {
+      // Re-throw all other errors (permission denied, invalid format, etc.)
+      if (!(error instanceof KeyFileNotFoundError)) {
         throw error;
       }
     }
