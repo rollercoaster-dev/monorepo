@@ -48,7 +48,7 @@ describe('BadgeList.vue', () => {
       type: 'Profile',
       url: createIRI('http://example.org/issuers/1'),
     },
-    issuanceDate: createDateTime('2023-02-01T00:00:00Z'),
+    validFrom: createDateTime('2023-02-01T00:00:00Z'),
     credentialSubject: {
       id: createIRI('did:example:123'),
       achievement: {
