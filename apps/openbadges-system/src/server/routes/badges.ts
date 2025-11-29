@@ -94,7 +94,8 @@ badgesRoutes.get('/assertions/:id', async c => {
   }
 
   try {
-    const response = await fetch(`${openbadgesUrl}/api/v1/assertions/${assertionId}`, {
+    // Re-encode the assertion ID for the URL path
+    const response = await fetch(`${openbadgesUrl}/api/v1/assertions/${encodeURIComponent(assertionId)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
