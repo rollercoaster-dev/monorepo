@@ -5,18 +5,17 @@
  * verifiable credentials using a compressed bitstring format.
  */
 
-import type { Shared } from 'openbadges-types';
+import type { Shared } from "openbadges-types";
 import type {
   StatusListData,
   BitstringStatusList,
   BitstringStatusListCredential,
   CreateStatusListParams,
-  StatusMessage} from './status-list.types';
-import {
-  StatusPurpose
-} from './status-list.types';
-import { createOrGenerateIRI } from '../../utils/types/type-utils';
-import { logger } from '../../utils/logging/logger.service';
+  StatusMessage,
+} from "./status-list.types";
+import { StatusPurpose } from "./status-list.types";
+import { createOrGenerateIRI } from "../../utils/types/type-utils";
+import { logger } from "../../utils/logging/logger.service";
 
 /**
  * StatusList entity class
@@ -64,7 +63,7 @@ export class StatusList {
 
     // Generate initial empty bitstring
     const initialBitstring = new Uint8Array(
-      Math.ceil((totalEntries * statusSize) / 8)
+      Math.ceil((totalEntries * statusSize) / 8),
     );
     const encodedList = await StatusList.encodeBitstring(initialBitstring);
 
@@ -82,7 +81,7 @@ export class StatusList {
       metadata: params.metadata,
     };
 
-    logger.info('Created new StatusList', {
+    logger.info("Created new StatusList", {
       id,
       issuerId: params.issuerId,
       purpose: params.purpose,
@@ -128,7 +127,7 @@ export class StatusList {
    */
   getNextAvailableIndex(): number {
     if (!this.hasCapacity()) {
-      throw new Error('Status list is at full capacity');
+      throw new Error("Status list is at full capacity");
     }
     return this.usedEntries;
   }
@@ -139,7 +138,7 @@ export class StatusList {
   toBitstringStatusList(): BitstringStatusList {
     const statusList: BitstringStatusList = {
       id: this.id as Shared.IRI,
-      type: 'BitstringStatusList',
+      type: "BitstringStatusList",
       statusPurpose: this.purpose,
       encodedList: this.encodedList,
     };
@@ -166,9 +165,9 @@ export class StatusList {
     url?: string;
   }): BitstringStatusListCredential {
     const credential: BitstringStatusListCredential = {
-      '@context': ['https://www.w3.org/ns/credentials/v2'],
+      "@context": ["https://www.w3.org/ns/credentials/v2"],
       id: this.id as Shared.IRI,
-      type: ['VerifiableCredential', 'BitstringStatusListCredential'],
+      type: ["VerifiableCredential", "BitstringStatusListCredential"],
       issuer: issuerData.id as Shared.IRI,
       validFrom: this.createdAt.toISOString(),
       credentialSubject: this.toBitstringStatusList(),
@@ -196,19 +195,19 @@ export class StatusList {
 
       switch (this.purpose) {
         case StatusPurpose.REVOCATION:
-          message = i === 0 ? 'not_revoked' : 'revoked';
+          message = i === 0 ? "not_revoked" : "revoked";
           break;
         case StatusPurpose.SUSPENSION:
-          message = i === 0 ? 'not_suspended' : 'suspended';
+          message = i === 0 ? "not_suspended" : "suspended";
           break;
         case StatusPurpose.REFRESH:
-          message = i === 0 ? 'no_refresh_needed' : 'refresh_available';
+          message = i === 0 ? "no_refresh_needed" : "refresh_available";
           break;
         case StatusPurpose.MESSAGE:
-          message = i === 0 ? 'no_message' : `message_${i}`;
+          message = i === 0 ? "no_message" : `message_${i}`;
           break;
         default:
-          message = i === 0 ? 'unset' : 'set';
+          message = i === 0 ? "unset" : "set";
       }
 
       messages.push({
@@ -225,7 +224,7 @@ export class StatusList {
    */
   static async encodeBitstring(bitstring: Uint8Array): Promise<string> {
     const { encodeBitstring } = await import(
-      '@/utils/bitstring/bitstring.utils'
+      "@/utils/bitstring/bitstring.utils"
     );
     return encodeBitstring(bitstring);
   }
@@ -235,7 +234,7 @@ export class StatusList {
    */
   static async decodeBitstring(encodedList: string): Promise<Uint8Array> {
     const { decodeBitstring } = await import(
-      '@/utils/bitstring/bitstring.utils'
+      "@/utils/bitstring/bitstring.utils"
     );
     return decodeBitstring(encodedList);
   }
@@ -245,7 +244,7 @@ export class StatusList {
    */
   static validateParams(params: CreateStatusListParams): void {
     if (!params.issuerId) {
-      throw new Error('issuerId is required');
+      throw new Error("issuerId is required");
     }
 
     if (!Object.values(StatusPurpose).includes(params.purpose)) {
@@ -253,15 +252,15 @@ export class StatusList {
     }
 
     if (params.statusSize && (params.statusSize < 1 || params.statusSize > 8)) {
-      throw new Error('statusSize must be between 1 and 8 bits');
+      throw new Error("statusSize must be between 1 and 8 bits");
     }
 
     if (params.totalEntries && params.totalEntries < 131072) {
-      throw new Error('totalEntries must be at least 131,072 for privacy');
+      throw new Error("totalEntries must be at least 131,072 for privacy");
     }
 
     if (params.ttl && params.ttl < 0) {
-      throw new Error('ttl must be non-negative');
+      throw new Error("ttl must be non-negative");
     }
   }
 

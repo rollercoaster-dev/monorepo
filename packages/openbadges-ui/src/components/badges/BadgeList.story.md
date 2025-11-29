@@ -49,30 +49,30 @@ Use the controls in the right panel to customize the component behavior.
 
 ## Props
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `badges` | `(OB2.Assertion \| OB3.VerifiableCredential)[]` | Required | Array of badges to display |
-| `layout` | `'grid' \| 'list'` | `'grid'` | Layout mode for displaying badges |
-| `interactive` | `boolean` | `true` | Whether badges are clickable |
-| `loading` | `boolean` | `false` | Whether to show loading state |
-| `pageSize` | `number` | `9` | Number of badges to display per page |
-| `currentPage` | `number` | `1` | Current page number |
-| `showPagination` | `boolean` | `false` | Whether to show pagination controls |
-| `ariaLabel` | `string` | `'List of badges'` | Accessibility label for the badge list |
+| Name             | Type                                            | Default            | Description                            |
+| ---------------- | ----------------------------------------------- | ------------------ | -------------------------------------- |
+| `badges`         | `(OB2.Assertion \| OB3.VerifiableCredential)[]` | Required           | Array of badges to display             |
+| `layout`         | `'grid' \| 'list'`                              | `'grid'`           | Layout mode for displaying badges      |
+| `interactive`    | `boolean`                                       | `true`             | Whether badges are clickable           |
+| `loading`        | `boolean`                                       | `false`            | Whether to show loading state          |
+| `pageSize`       | `number`                                        | `9`                | Number of badges to display per page   |
+| `currentPage`    | `number`                                        | `1`                | Current page number                    |
+| `showPagination` | `boolean`                                       | `false`            | Whether to show pagination controls    |
+| `ariaLabel`      | `string`                                        | `'List of badges'` | Accessibility label for the badge list |
 
 ## Events
 
-| Name | Payload | Description |
-|------|---------|-------------|
-| `badge-click` | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when a badge is clicked |
-| `page-change` | `number` | Emitted when the current page changes |
+| Name          | Payload                                     | Description                           |
+| ------------- | ------------------------------------------- | ------------------------------------- |
+| `badge-click` | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when a badge is clicked       |
+| `page-change` | `number`                                    | Emitted when the current page changes |
 
 ## Slots
 
-| Name | Props | Description |
-|------|-------|-------------|
-| `empty` | None | Content to display when there are no badges |
-| `badge` | `{ badge, normalized }` | Custom badge rendering |
+| Name    | Props                   | Description                                 |
+| ------- | ----------------------- | ------------------------------------------- |
+| `empty` | None                    | Content to display when there are no badges |
+| `badge` | `{ badge, normalized }` | Custom badge rendering                      |
 
 ## Accessibility
 

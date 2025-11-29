@@ -10,10 +10,10 @@ The Open Badges Modular Server Docker images are built for multiple CPU architec
 
 Our Docker images currently support the following architectures:
 
-| Architecture | Description | Common Platforms |
-|--------------|-------------|------------------|
-| `linux/amd64` | 64-bit x86 | Intel/AMD processors, most cloud VMs, Windows/Linux PCs |
-| `linux/arm64` | 64-bit ARM | Apple Silicon Macs (M1/M2/M3), AWS Graviton, ARM servers |
+| Architecture  | Description | Common Platforms                                         |
+| ------------- | ----------- | -------------------------------------------------------- |
+| `linux/amd64` | 64-bit x86  | Intel/AMD processors, most cloud VMs, Windows/Linux PCs  |
+| `linux/arm64` | 64-bit ARM  | Apple Silicon Macs (M1/M2/M3), AWS Graviton, ARM servers |
 
 ## Benefits of Multi-Architecture Support
 
@@ -106,9 +106,9 @@ spec:
   template:
     spec:
       containers:
-      - name: api
-        image: ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
-        # ... other configuration
+        - name: api
+          image: ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+          # ... other configuration
 ```
 
 No special configuration is needed for multi-architecture support in Kubernetes.

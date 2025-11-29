@@ -7,18 +7,21 @@ This guide explains how to use our integrated development workflow that seamless
 ## 🎯 Integration Benefits
 
 ### Automated Workflow
+
 - **Bidirectional Sync**: Tasks and GitHub issues stay synchronized automatically
-- **Status Updates**: Progress updates flow between systems seamlessly  
+- **Status Updates**: Progress updates flow between systems seamlessly
 - **Label Management**: Automatic labeling based on component, priority, and OpenBadges compliance
 - **Project Tracking**: GitHub Projects automatically reflect task progress
 
 ### OpenBadges Quality Assurance
+
 - **Compliance Validation**: Automated OpenBadges 2.x/3.0 specification compliance checking
 - **Security Scanning**: Automatic security vulnerability detection for credential systems
 - **Cryptographic Validation**: Verification of cryptographic operations and key management
 - **Template Enforcement**: Issue and PR templates ensure OpenBadges context is captured
 
 ### Developer Experience
+
 - **Clear Guidelines**: Augment rules provide consistent OpenBadges development standards
 - **Automated Checks**: Pre-commit hooks and CI/CD validation
 - **Documentation**: Comprehensive OpenBadges-specific documentation and examples
@@ -56,6 +59,7 @@ The system includes specialized components for digital credential management:
 ### 3. GitHub Templates for OpenBadges
 
 Three specialized issue templates are available:
+
 - **Feature Request** (`.github/ISSUE_TEMPLATE/feature.yml`) - OpenBadges feature development
 - **Bug Report** (`.github/ISSUE_TEMPLATE/bug.yml`) - Credential/badge-related bugs
 - **Task Implementation** (`.github/ISSUE_TEMPLATE/task.yml`) - Implementation tasks with compliance tracking
@@ -72,6 +76,7 @@ Three specialized issue templates are available:
 ### Step 2: GitHub Issue Creation
 
 **Option A: Automatic Creation**
+
 ```bash
 # Use the task sync workflow
 gh workflow run task-sync.yml \
@@ -81,6 +86,7 @@ gh workflow run task-sync.yml \
 ```
 
 **Option B: Manual Creation**
+
 1. Go to GitHub Issues → New Issue
 2. Select appropriate template (Feature/Bug/Task)
 3. Fill in OpenBadges-specific fields:
@@ -92,6 +98,7 @@ gh workflow run task-sync.yml \
 ### Step 3: Development Process
 
 1. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/123-badge-verification-api
    ```
@@ -102,13 +109,14 @@ gh workflow run task-sync.yml \
    - `compliance/789-openbadges-3-support` - Compliance-related work
 
 3. **Make Commits with OpenBadges Context**
+
    ```bash
    git commit -m "feat(verification): implement cryptographic badge validation
-   
+
    - Add RSA signature verification for OpenBadges 2.x
    - Implement proof validation for OpenBadges 3.0
    - Add comprehensive error handling for invalid badges
-   
+
    Closes #123
    Task: badge-verification-001"
    ```
@@ -116,6 +124,7 @@ gh workflow run task-sync.yml \
 ### Step 4: Pull Request Creation
 
 1. **Push Branch and Create PR**
+
    ```bash
    git push origin feature/123-badge-verification-api
    gh pr create --title "feat(verification): OpenBadges Cryptographic Validation"
@@ -154,18 +163,21 @@ gh workflow run task-sync.yml \
 ### Issue Management Automation
 
 **When OpenBadges Issue is Created:**
+
 - Auto-assign component labels (badge-management, verification, etc.)
 - Add OpenBadges compliance labels
 - Add to project board with proper priority
 - Sync with internal task system
 
 **When Security Issue is Identified:**
+
 - Auto-assign critical priority
 - Add security review requirements
 - Notify security team
 - Track compliance impact
 
 **When PR Affects Compliance:**
+
 - Trigger OpenBadges compliance validation
 - Run security scans
 - Verify cryptographic operations
@@ -175,17 +187,18 @@ gh workflow run task-sync.yml \
 
 Labels automatically sync between GitHub and tasks:
 
-| GitHub Label | Task Field | OpenBadges Context |
-|--------------|------------|-------------------|
-| `component: badge-management` | component | Badge CRUD operations |
-| `component: verification` | component | Cryptographic validation |
-| `openbadges-compliance` | compliance | Specification adherence |
-| `security-review` | security | Cryptographic security |
-| `priority: critical` | priority | Security/compliance issues |
+| GitHub Label                  | Task Field | OpenBadges Context         |
+| ----------------------------- | ---------- | -------------------------- |
+| `component: badge-management` | component  | Badge CRUD operations      |
+| `component: verification`     | component  | Cryptographic validation   |
+| `openbadges-compliance`       | compliance | Specification adherence    |
+| `security-review`             | security   | Cryptographic security     |
+| `priority: critical`          | priority   | Security/compliance issues |
 
 ### Project Board Integration for OpenBadges
 
 Issues automatically move through specialized columns:
+
 1. **Backlog** - New OpenBadges issues
 2. **Compliance Review** - Specification review needed
 3. **In Progress** - Active development
@@ -213,12 +226,14 @@ Issues automatically move through specialized columns:
 ## 📊 Monitoring OpenBadges Development
 
 ### Development Velocity
+
 - OpenBadges features completed per sprint
 - Compliance issues resolved
 - Security vulnerabilities fixed
 - Badge verification accuracy
 
 ### Quality Metrics
+
 - OpenBadges specification compliance rate
 - Security issue resolution time
 - Cryptographic operation test coverage
@@ -229,16 +244,19 @@ Issues automatically move through specialized columns:
 ### Common Issues
 
 **Issue: OpenBadges compliance validation fails**
+
 - Check that badge schemas include all required fields
 - Verify JSON-LD context URLs are correct
 - Ensure cryptographic operations use approved algorithms
 
 **Issue: Security scan detects vulnerabilities**
+
 - Review cryptographic key management
 - Check for hardcoded secrets or credentials
 - Validate input sanitization in API endpoints
 
 **Issue: Task sync not working**
+
 - Check Task ID format in issue body
 - Verify OpenBadges component labels are correct
 - Check GitHub Actions logs for errors

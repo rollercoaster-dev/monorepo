@@ -5,12 +5,12 @@
  * handling the conversion between domain entities and database records.
  */
 
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import type { Shared } from 'openbadges-types';
-import type { InferInsertModel } from 'drizzle-orm';
-import type { badgeClasses } from '../schema';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { safeParseJson } from '@utils/json-utils';
+import { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import type { Shared } from "openbadges-types";
+import type { InferInsertModel } from "drizzle-orm";
+import type { badgeClasses } from "../schema";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
+import { safeParseJson } from "@utils/json-utils";
 
 export class PostgresBadgeClassMapper {
   /**
@@ -22,35 +22,35 @@ export class PostgresBadgeClassMapper {
     if (!record) return null as unknown as BadgeClass;
 
     // Extract the standard fields from the record, asserting types
-    const id = record['id'] as string | undefined;
-    const issuerId = record['issuerId'] as string | undefined;
-    const name = (record['name'] as string) ?? ''; // Provide default for notNull
-    const description = (record['description'] as string) ?? ''; // Provide default for notNull
-    const image = record['image']; // Keep as is, BadgeClass.create handles IRI | OB3ImageObject
-    const criteria = safeParseJson(record['criteria'], {}); // Provide default for notNull
-    const alignment = safeParseJson(record['alignment'], null);
-    const tags = safeParseJson(record['tags'], null);
+    const id = record["id"] as string | undefined;
+    const issuerId = record["issuerId"] as string | undefined;
+    const name = (record["name"] as string) ?? ""; // Provide default for notNull
+    const description = (record["description"] as string) ?? ""; // Provide default for notNull
+    const image = record["image"]; // Keep as is, BadgeClass.create handles IRI | OB3ImageObject
+    const criteria = safeParseJson(record["criteria"], {}); // Provide default for notNull
+    const alignment = safeParseJson(record["alignment"], null);
+    const tags = safeParseJson(record["tags"], null);
     const additionalFieldsRecord = safeParseJson(
-      record['additionalFields'],
-      {}
+      record["additionalFields"],
+      {},
     ); // Provide default
 
     // Extract versioning fields (OB 3.0)
-    const version = record['version'] as string | undefined;
-    const previousVersion = record['previousVersion'] as string | undefined;
+    const version = record["version"] as string | undefined;
+    const previousVersion = record["previousVersion"] as string | undefined;
 
     // Extract relationship fields (OB 3.0)
-    const related = safeParseJson(record['related'], null);
-    const endorsement = safeParseJson(record['endorsement'], null);
+    const related = safeParseJson(record["related"], null);
+    const endorsement = safeParseJson(record["endorsement"], null);
 
     // Create and return the domain entity
     return BadgeClass.create({
-      id: convertUuid(id, 'postgresql', 'from') as Shared.IRI, // Convert UUID to URN
-      issuer: convertUuid(issuerId, 'postgresql', 'from') as Shared.IRI, // Convert UUID to URN
+      id: convertUuid(id, "postgresql", "from") as Shared.IRI, // Convert UUID to URN
+      issuer: convertUuid(issuerId, "postgresql", "from") as Shared.IRI, // Convert UUID to URN
       name,
       description,
       image:
-        typeof image === 'string'
+        typeof image === "string"
           ? (image as Shared.IRI)
           : (image as Shared.OB3ImageObject), // Assert based on type
       criteria,
@@ -59,7 +59,7 @@ export class PostgresBadgeClassMapper {
       // Versioning fields (OB 3.0)
       version,
       previousVersion: previousVersion
-        ? (convertUuid(previousVersion, 'postgresql', 'from') as Shared.IRI)
+        ? (convertUuid(previousVersion, "postgresql", "from") as Shared.IRI)
         : undefined,
       // Relationship fields (OB 3.0)
       related,
@@ -80,7 +80,7 @@ export class PostgresBadgeClassMapper {
     // Provide default '{}' for criteria as it's notNull in schema
     const criteriaJson = entity.criteria
       ? JSON.stringify(entity.criteria)
-      : '{}';
+      : "{}";
     const alignmentJson = entity.alignment
       ? JSON.stringify(entity.alignment)
       : null;
@@ -88,26 +88,26 @@ export class PostgresBadgeClassMapper {
 
     // Prepare additionalFields, excluding standard ones already mapped
     const standardKeys = [
-      'id',
-      'issuer',
-      'name',
-      'description',
-      'image',
-      'criteria',
-      'alignment',
-      'tags',
-      'type',
+      "id",
+      "issuer",
+      "name",
+      "description",
+      "image",
+      "criteria",
+      "alignment",
+      "tags",
+      "type",
       // Versioning fields
-      'version',
-      'previousVersion',
+      "version",
+      "previousVersion",
       // Relationship fields
-      'related',
-      'endorsement',
+      "related",
+      "endorsement",
     ];
     // Use direct property assignment for better performance (O(n) vs O(n²))
     const additionalFields: Record<string, unknown> = {};
     for (const key of Object.keys(entity)) {
-      if (!standardKeys.includes(key) && key !== 'constructor') {
+      if (!standardKeys.includes(key) && key !== "constructor") {
         additionalFields[key] = entity[key];
       }
     }
@@ -136,26 +136,26 @@ export class PostgresBadgeClassMapper {
       endorsement: string | null;
     } = {
       ...(entity.id && {
-        id: convertUuid(entity.id as string, 'postgresql', 'to'),
+        id: convertUuid(entity.id as string, "postgresql", "to"),
       }),
-      issuerId: convertUuid(entity.issuer as string, 'postgresql', 'to'),
+      issuerId: convertUuid(entity.issuer as string, "postgresql", "to"),
       name:
-        typeof entity.name === 'object'
+        typeof entity.name === "object"
           ? JSON.stringify(entity.name)
           : String(entity.name),
       description:
-        typeof entity.description === 'object'
+        typeof entity.description === "object"
           ? JSON.stringify(entity.description)
-          : String(entity.description || ''),
+          : String(entity.description || ""),
       // Handle image type, provide default empty string for notNull schema field
       image:
-        typeof entity.image === 'string'
+        typeof entity.image === "string"
           ? entity.image
-          : typeof entity.image === 'object' &&
-            entity.image !== null &&
-            'id' in entity.image
-          ? entity.image.id
-          : '', // Default empty string for notNull image field
+          : typeof entity.image === "object" &&
+              entity.image !== null &&
+              "id" in entity.image
+            ? entity.image.id
+            : "", // Default empty string for notNull image field
       criteria: criteriaJson, // Already stringified, defaults to '{}' for notNull
       alignment: alignmentJson, // Stringified or null
       tags: tagsJson, // Stringified or null
@@ -163,7 +163,7 @@ export class PostgresBadgeClassMapper {
       // Versioning fields (OB 3.0)
       version: entity.version || null,
       previousVersion: entity.previousVersion
-        ? convertUuid(entity.previousVersion as string, 'postgresql', 'to')
+        ? convertUuid(entity.previousVersion as string, "postgresql", "to")
         : null,
       // Relationship fields (OB 3.0)
       related: entity.related ? JSON.stringify(entity.related) : null,

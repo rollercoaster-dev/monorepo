@@ -47,19 +47,19 @@ bun --filter openbadges-ui run build
 ## Quick Start
 
 ```javascript
-import { createApp } from 'vue';
-import App from './App.vue';
-import { OpenBadgesUIPlugin } from 'openbadges-ui';
+import { createApp } from "vue";
+import App from "./App.vue";
+import { OpenBadgesUIPlugin } from "openbadges-ui";
 
 // Import styles
-import 'openbadges-ui/dist/style.css';
+import "openbadges-ui/dist/style.css";
 
 const app = createApp(App);
 
 // Use the plugin (configures PrimeVue in unstyled mode)
 app.use(OpenBadgesUIPlugin);
 
-app.mount('#app');
+app.mount("#app");
 ```
 
 ## Components
@@ -98,10 +98,10 @@ The library includes several built-in themes:
 To apply a theme:
 
 ```javascript
-import { AccessibilityService } from 'openbadges-ui';
+import { AccessibilityService } from "openbadges-ui";
 
 // Apply dark theme
-AccessibilityService.applyTheme('dark');
+AccessibilityService.applyTheme("dark");
 ```
 
 Or use CSS classes directly:
@@ -167,6 +167,7 @@ bun run test:watch
 **Test Results:** ✅ 120/120 tests passing (100%)
 
 **Important:** Always use `bun run test` (not `bun test`). The difference:
+
 - `bun run test` → Runs Vitest (✅ all tests pass)
 - `bun test` → Runs Bun's native test runner (❌ fails with `.vue` files)
 

@@ -1,9 +1,9 @@
 /**
  * Platform JWT service
  */
-import * as jose from 'jose';
+import * as jose from "jose";
 
-import type { PlatformJwtPayload } from '../../domains/backpack/auth.types';
+import type { PlatformJwtPayload } from "../../domains/backpack/auth.types";
 
 /**
  * Service for handling platform JWT tokens
@@ -15,8 +15,8 @@ export class PlatformJwtService {
    * @returns The token or null if not found
    */
   static extractTokenFromHeader(authHeader: string): string | null {
-    const [type, token] = authHeader.split(' ');
-    return type === 'Bearer' ? token : null;
+    const [type, token] = authHeader.split(" ");
+    return type === "Bearer" ? token : null;
   }
 
   /**
@@ -25,10 +25,13 @@ export class PlatformJwtService {
    * @param publicKey The public key to verify with
    * @returns The decoded token payload
    */
-  static async verifyToken(token: string, publicKey: string): Promise<PlatformJwtPayload> {
+  static async verifyToken(
+    token: string,
+    publicKey: string,
+  ): Promise<PlatformJwtPayload> {
     try {
       // Import public key
-      const key = await jose.importSPKI(publicKey, 'RS256');
+      const key = await jose.importSPKI(publicKey, "RS256");
 
       // Verify token
       const { payload } = await jose.jwtVerify(token, key);

@@ -50,14 +50,18 @@ This project uses **organization-level encrypted secrets** for better security a
 ## Migration from Repository-Level to Organization-Level Secrets
 
 ### Current State (To Be Deprecated)
+
 This repository currently uses `PAT_TOKEN` as a repository-level secret. This approach has several limitations:
+
 - Secret management scattered across repositories
 - Potential for inconsistent token permissions
 - Difficult to audit and rotate secrets
 - Higher risk of accidental exposure
 
 ### Target State (Recommended)
+
 Using `ORG_RELEASE_PAT` as an organization-level secret provides:
+
 - Centralized secret management
 - Consistent permissions across repositories
 - Easier audit trail and compliance
@@ -76,20 +80,22 @@ Using `ORG_RELEASE_PAT` as an organization-level secret provides:
 The token is used in `.github/workflows/release.yml` and `.github/workflows/main.yml`:
 
 **Current usage (to be updated):**
+
 ```yaml
 - name: Checkout
   uses: actions/checkout@v4
   with:
-    token: ${{ secrets.PAT_TOKEN }}  # OLD - repository-level
+    token: ${{ secrets.PAT_TOKEN }} # OLD - repository-level
     persist-credentials: false
 ```
 
 **Recommended usage:**
+
 ```yaml
 - name: Checkout
   uses: actions/checkout@v4
   with:
-    token: ${{ secrets.ORG_RELEASE_PAT }}  # NEW - organization-level
+    token: ${{ secrets.ORG_RELEASE_PAT }} # NEW - organization-level
     persist-credentials: false
 ```
 
@@ -103,18 +109,21 @@ The token is used in `.github/workflows/release.yml` and `.github/workflows/main
 ## Troubleshooting
 
 ### Token Not Working
+
 - Verify the token has the correct scopes
 - Check if the token has expired
 - Ensure the token is added to the correct organization or repository
 - Verify the repository has access to the organization-level secret
 
 ### Workflow Still Failing
+
 - Check the workflow logs for specific error messages
 - Verify the token name matches exactly: `ORG_RELEASE_PAT` (new) or `PAT_TOKEN` (legacy)
 - Ensure the repository has the necessary permissions
 - For organization-level secrets, verify the repository is included in the allowed list
 
 ### Permission Denied Errors
+
 - The token may need additional scopes
 - Check if the repository is private (requires `repo` scope)
 - Verify the token owner has the necessary repository permissions

@@ -9,11 +9,13 @@ The OpenBadges server supports multiple database backends (SQLite and PostgreSQL
 ## How It Works
 
 The system:
+
 1. Checks which database is currently connected
 2. Only runs tests configured for that database
 3. Skips tests for databases that aren't connected
 
 This ensures that:
+
 - Tests don't fail because a specific database isn't available
 - You can write database-specific tests without worrying about other database types
 - CI/CD pipelines can run tests for different database types in parallel
@@ -23,15 +25,17 @@ This ensures that:
 ### Basic Usage
 
 ```typescript
-import { describe, beforeAll } from 'bun:test';
+import { describe, beforeAll } from "bun:test";
 import {
   describeSqlite,
-  describePostgres
-} from '../helpers/database-test-filter';
+  describePostgres,
+} from "../helpers/database-test-filter";
 
 // Variables to hold the database-specific test functions
-let describeSqliteTests: (label: string, fn: () => void) => void = describe.skip;
-let describePostgresTests: (label: string, fn: () => void) => void = describe.skip;
+let describeSqliteTests: (label: string, fn: () => void) => void =
+  describe.skip;
+let describePostgresTests: (label: string, fn: () => void) => void =
+  describe.skip;
 
 // Initialize the test functions before running any tests
 beforeAll(async () => {
@@ -40,15 +44,15 @@ beforeAll(async () => {
 });
 
 // SQLite-specific tests
-describeSqliteTests('SQLite-Specific Tests', () => {
-  it('should run only when SQLite is connected', () => {
+describeSqliteTests("SQLite-Specific Tests", () => {
+  it("should run only when SQLite is connected", () => {
     // This test only runs when SQLite is connected
   });
 });
 
 // PostgreSQL-specific tests
-describePostgresTests('PostgreSQL-Specific Tests', () => {
-  it('should run only when PostgreSQL is connected', () => {
+describePostgresTests("PostgreSQL-Specific Tests", () => {
+  it("should run only when PostgreSQL is connected", () => {
     // This test only runs when PostgreSQL is connected
   });
 });
@@ -59,15 +63,14 @@ describePostgresTests('PostgreSQL-Specific Tests', () => {
 You can also conditionally run individual test cases:
 
 ```typescript
-import { describe, it, beforeAll } from 'bun:test';
-import {
-  itSqlite,
-  itPostgres
-} from '../helpers/database-test-filter';
+import { describe, it, beforeAll } from "bun:test";
+import { itSqlite, itPostgres } from "../helpers/database-test-filter";
 
 // Variables to hold the database-specific test functions
-let itSqliteTest: (label: string, fn: () => void | Promise<unknown>) => void = it.skip;
-let itPostgresTest: (label: string, fn: () => void | Promise<unknown>) => void = it.skip;
+let itSqliteTest: (label: string, fn: () => void | Promise<unknown>) => void =
+  it.skip;
+let itPostgresTest: (label: string, fn: () => void | Promise<unknown>) => void =
+  it.skip;
 
 // Initialize the test functions before running any tests
 beforeAll(async () => {
@@ -75,19 +78,19 @@ beforeAll(async () => {
   itPostgresTest = await itPostgres();
 });
 
-describe('Mixed Database Tests', () => {
+describe("Mixed Database Tests", () => {
   // This test only runs for SQLite
-  itSqliteTest('should run only for SQLite', () => {
+  itSqliteTest("should run only for SQLite", () => {
     // SQLite-specific test
   });
 
   // This test only runs for PostgreSQL
-  itPostgresTest('should run only for PostgreSQL', () => {
+  itPostgresTest("should run only for PostgreSQL", () => {
     // PostgreSQL-specific test
   });
 
   // This test runs for all database types
-  it('should run for all database types', () => {
+  it("should run for all database types", () => {
     // Database-agnostic test
   });
 });

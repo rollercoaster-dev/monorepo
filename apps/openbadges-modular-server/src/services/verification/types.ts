@@ -8,13 +8,17 @@
  * @see https://www.w3.org/TR/vc-data-model-2.0/
  */
 
-import type { Shared } from 'openbadges-types';
+import type { Shared } from "openbadges-types";
 
 /**
  * Overall verification status enumeration
  * Represents the final result of the verification process
  */
-export type VerificationStatus = 'valid' | 'invalid' | 'indeterminate' | 'error';
+export type VerificationStatus =
+  | "valid"
+  | "invalid"
+  | "indeterminate"
+  | "error";
 
 /**
  * Proof type identifier for OB 3.0 verification
@@ -27,10 +31,10 @@ export type VerificationStatus = 'valid' | 'invalid' | 'indeterminate' | 'error'
  * @see https://www.w3.org/TR/vc-jose-cose/ (for JWT/JOSE envelope format)
  */
 export type ProofType =
-  | 'DataIntegrityProof'
-  | 'JsonWebSignature2020'
-  | 'Ed25519Signature2020'
-  | 'EcdsaSecp256k1Signature2019';
+  | "DataIntegrityProof"
+  | "JsonWebSignature2020"
+  | "Ed25519Signature2020"
+  | "EcdsaSecp256k1Signature2019";
 
 /**
  * Individual verification check result
@@ -113,7 +117,7 @@ export interface VerificationOptions {
  * Function type for resolving verification methods to public keys
  */
 export type VerificationMethodResolver = (
-  verificationMethod: Shared.IRI
+  verificationMethod: Shared.IRI,
 ) => Promise<CryptoKey | string | null>;
 
 /**

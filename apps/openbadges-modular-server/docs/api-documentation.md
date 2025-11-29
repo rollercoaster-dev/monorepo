@@ -11,6 +11,7 @@ The Open Badges API is a stateless, modular API built using Bun and Hono, with s
 ### Current Status: Open Badges 2.0 "Hosted" Implementation
 
 The current version provides a robust implementation of the Open Badges 2.0 specification for "hosted" badges, including:
+
 - Core entities (Issuer, BadgeClass, Assertion) structured according to the OB2 JSON-LD schema
 - Issuance workflow for creating issuers, defining badge classes, and issuing assertions
 - Hosted verification with proper verification objects and programmatic status checks
@@ -30,6 +31,7 @@ The API provides versioned endpoints for both Open Badges 2.0 and 3.0 specificat
 4. **Format Conversion**: Utilities for converting between 2.0 and 3.0 formats
 
 **Current OB 3.0 Implementation Status (as of version 1.0.1)**:
+
 - ✅ **Core v3 Endpoints**: All basic CRUD operations for issuers, achievements, and credentials
 - ✅ **v3.0 Compliant Naming**: `/achievements` and `/credentials` endpoints (with legacy `/badge-classes` and `/assertions` deprecated)
 - ✅ **JSON-LD Context**: Updated to use official OB 3.0 context URLs
@@ -118,22 +120,24 @@ The following endpoints use the Open Badges 3.0 compliant naming convention, whe
 ⚠️ **DEPRECATED**: The following endpoints are deprecated and will be removed in a future version. Please use the v3.0 compliant endpoints above.
 
 **Badge Classes (Legacy)**
-- `POST /v3/badge-classes` - Create a new badge class *(Use `/v3/achievements` instead)*
-- `GET /v3/badge-classes` - Get all badge classes *(Use `/v3/achievements` instead)*
-- `GET /v3/badge-classes/:id` - Get a badge class by ID *(Use `/v3/achievements/:id` instead)*
-- `GET /v3/issuers/:id/badge-classes` - Get badge classes by issuer *(Use `/v3/issuers/:id/achievements` instead)*
-- `PUT /v3/badge-classes/:id` - Update a badge class *(Use `/v3/achievements/:id` instead)*
-- `DELETE /v3/badge-classes/:id` - Delete a badge class *(Use `/v3/achievements/:id` instead)*
+
+- `POST /v3/badge-classes` - Create a new badge class _(Use `/v3/achievements` instead)_
+- `GET /v3/badge-classes` - Get all badge classes _(Use `/v3/achievements` instead)_
+- `GET /v3/badge-classes/:id` - Get a badge class by ID _(Use `/v3/achievements/:id` instead)_
+- `GET /v3/issuers/:id/badge-classes` - Get badge classes by issuer _(Use `/v3/issuers/:id/achievements` instead)_
+- `PUT /v3/badge-classes/:id` - Update a badge class _(Use `/v3/achievements/:id` instead)_
+- `DELETE /v3/badge-classes/:id` - Delete a badge class _(Use `/v3/achievements/:id` instead)_
 
 **Assertions (Legacy)**
-- `POST /v3/assertions` - Create a new assertion *(Use `/v3/credentials` instead)*
-- `GET /v3/assertions` - Get all assertions *(Use `/v3/credentials` instead)*
-- `GET /v3/assertions/:id` - Get an assertion by ID *(Use `/v3/credentials/:id` instead)*
-- `GET /v3/badge-classes/:id/assertions` - Get assertions by badge class *(Use `/v3/achievements/:id/credentials` instead)*
-- `PUT /v3/assertions/:id` - Update an assertion *(Use `/v3/credentials/:id` instead)*
-- `POST /v3/assertions/:id/revoke` - Revoke an assertion *(Use `/v3/credentials/:id/revoke` instead)*
-- `GET /v3/assertions/:id/verify` - Verify an assertion *(Use `/v3/credentials/:id/verify` instead)*
-- `POST /v3/assertions/:id/sign` - Sign an assertion *(Use `/v3/credentials/:id/sign` instead)*
+
+- `POST /v3/assertions` - Create a new assertion _(Use `/v3/credentials` instead)_
+- `GET /v3/assertions` - Get all assertions _(Use `/v3/credentials` instead)_
+- `GET /v3/assertions/:id` - Get an assertion by ID _(Use `/v3/credentials/:id` instead)_
+- `GET /v3/badge-classes/:id/assertions` - Get assertions by badge class _(Use `/v3/achievements/:id/credentials` instead)_
+- `PUT /v3/assertions/:id` - Update an assertion _(Use `/v3/credentials/:id` instead)_
+- `POST /v3/assertions/:id/revoke` - Revoke an assertion _(Use `/v3/credentials/:id/revoke` instead)_
+- `GET /v3/assertions/:id/verify` - Verify an assertion _(Use `/v3/credentials/:id/verify` instead)_
+- `POST /v3/assertions/:id/sign` - Sign an assertion _(Use `/v3/credentials/:id/sign` instead)_
 
 > **Note**: Legacy endpoints include deprecation warnings in response headers and response bodies. The `Deprecation` header is set to `true`, and a `Link` header points to the successor endpoint. Response bodies include a `_deprecation` object with migration information.
 
@@ -152,11 +156,11 @@ The API uses the `openbadges-types` package as the single source of truth for ty
 One of the key shared types is `Shared.IRI` (Internationalized Resource Identifier), which is used for all identifiers and URLs in the API. This type is a branded string type that ensures type safety when working with IRIs.
 
 ```typescript
-import { Shared } from 'openbadges-types';
+import { Shared } from "openbadges-types";
 
 // Creating an IRI from a string
-const id: Shared.IRI = '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI;
-const url: Shared.IRI = 'https://example.org/badges/1' as Shared.IRI;
+const id: Shared.IRI = "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI;
+const url: Shared.IRI = "https://example.org/badges/1" as Shared.IRI;
 
 // Using IRIs in API calls
 const issuer = await issuerRepository.findById(id);
@@ -338,19 +342,19 @@ The API provides utility functions for working with `Shared.IRI` types. These fu
 ### Converting Between String and IRI
 
 ```typescript
-import { toIRI, toString } from '../utils/types/iri-utils';
+import { toIRI, toString } from "../utils/types/iri-utils";
 
 // Convert a string to an IRI (returns null if the string is not a valid IRI)
-const id = toIRI('123e4567-e89b-12d3-a456-426614174000');
+const id = toIRI("123e4567-e89b-12d3-a456-426614174000");
 
 // Convert an IRI to a string
 const idString = toString(id);
 
 // Creating an IRI with validation
-import { createOrGenerateIRI } from '../utils/types/type-utils';
+import { createOrGenerateIRI } from "../utils/types/type-utils";
 
 // Create an IRI from a string (throws an error if invalid)
-const validIRI = createOrGenerateIRI('https://example.org/badges/1');
+const validIRI = createOrGenerateIRI("https://example.org/badges/1");
 
 // Generate a new random UUID as an IRI
 const newIRI = createOrGenerateIRI();
@@ -359,10 +363,10 @@ const newIRI = createOrGenerateIRI();
 ### Validating IRIs
 
 ```typescript
-import { isValidIRI, ensureValidIRI } from '../utils/types/iri-utils';
+import { isValidIRI, ensureValidIRI } from "../utils/types/iri-utils";
 
 // Check if a value is a valid IRI
-if (isValidIRI('https://example.org/badges/1')) {
+if (isValidIRI("https://example.org/badges/1")) {
   // Do something with the IRI
 }
 
@@ -370,30 +374,38 @@ if (isValidIRI('https://example.org/badges/1')) {
 const validIRI = ensureValidIRI(possibleIRI);
 
 // Create a URL IRI (returns undefined if not a valid URL)
-import { toUrlIRI } from '../utils/types/type-utils';
-const urlIRI = toUrlIRI('https://example.org/badges/1');
+import { toUrlIRI } from "../utils/types/type-utils";
+const urlIRI = toUrlIRI("https://example.org/badges/1");
 ```
 
 ### Working with Arrays and Objects
 
 ```typescript
-import { toIRIArray, toStringArray, objectWithIRIToString, objectWithStringToIRI } from '../utils/types/iri-utils';
+import {
+  toIRIArray,
+  toStringArray,
+  objectWithIRIToString,
+  objectWithStringToIRI,
+} from "../utils/types/iri-utils";
 
 // Convert an array of strings to an array of IRIs (filters out invalid IRIs)
-const iriArray = toIRIArray(['https://example.org/badges/1', 'https://example.org/badges/2']);
+const iriArray = toIRIArray([
+  "https://example.org/badges/1",
+  "https://example.org/badges/2",
+]);
 
 // Convert an array of IRIs to an array of strings
 const stringArray = toStringArray(iriArray);
 
 // Convert IRI properties in an object to string properties
-const stringObject = objectWithIRIToString(iriObject, ['id', 'url']);
+const stringObject = objectWithIRIToString(iriObject, ["id", "url"]);
 
 // Convert string properties in an object to IRI properties
 // This will throw an error if any of the properties are not valid IRIs
 try {
-  const iriObject = objectWithStringToIRI(stringObject, ['id', 'url']);
+  const iriObject = objectWithStringToIRI(stringObject, ["id", "url"]);
 } catch (error) {
-  console.error('Failed to convert properties to IRIs:', error.message);
+  console.error("Failed to convert properties to IRIs:", error.message);
 }
 ```
 
@@ -414,12 +426,12 @@ The API provides utilities for converting between Open Badges 2.0 and 3.0 format
 The API can automatically detect the version of a badge from its JSON-LD context:
 
 ```typescript
-import { detectBadgeVersion } from '../utils/version/badge-version';
+import { detectBadgeVersion } from "../utils/version/badge-version";
 
 const badgeData = {
   "@context": "https://w3id.org/openbadges/v2",
-  "id": "https://example.org/assertions/1",
-  "type": "Assertion",
+  id: "https://example.org/assertions/1",
+  type: "Assertion",
   // ...
 };
 
@@ -431,8 +443,8 @@ const version = detectBadgeVersion(badgeData); // Returns BadgeVersion.V2
 The API provides serializers for converting between domain entities and version-specific JSON-LD formats:
 
 ```typescript
-import { BadgeSerializerFactory } from '../utils/version/badge-serializer';
-import { BadgeVersion } from '../utils/version/badge-version';
+import { BadgeSerializerFactory } from "../utils/version/badge-serializer";
+import { BadgeVersion } from "../utils/version/badge-version";
 
 // Create a serializer for Open Badges 2.0
 const v2Serializer = BadgeSerializerFactory.createSerializer(BadgeVersion.V2);

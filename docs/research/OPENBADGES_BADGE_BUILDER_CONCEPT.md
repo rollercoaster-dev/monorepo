@@ -43,10 +43,10 @@ packages/
 ```json
 {
   "dependencies": {
-    "openbadges-ui": "workspace:*",      // Theme system, accessibility
-    "openbadges-types": "workspace:*",   // TypeScript types
-    "@vueuse/core": "^10.x",             // Composables
-    "fabric": "^6.x"                      // Canvas library (or konva)
+    "openbadges-ui": "workspace:*", // Theme system, accessibility
+    "openbadges-types": "workspace:*", // TypeScript types
+    "@vueuse/core": "^10.x", // Composables
+    "fabric": "^6.x" // Canvas library (or konva)
   }
 }
 ```
@@ -59,12 +59,12 @@ Understanding where the Badge Builder fits in the credential lifecycle is critic
 
 ### Image vs Credential Distinction
 
-| Concept | Created By | Contains | Purpose |
-|---------|------------|----------|---------|
-| **Badge Image** | Badge Builder | Visual design (SVG/PNG) | Display asset for BadgeClass |
-| **BadgeClass** | Server | Achievement definition + image URL | Template for badges |
-| **Credential (VC)** | Server | Assertion + cryptographic proof | The actual verifiable credential |
-| **Baked Image** | Server | Image + embedded signed VC | Portable credential |
+| Concept             | Created By    | Contains                           | Purpose                          |
+| ------------------- | ------------- | ---------------------------------- | -------------------------------- |
+| **Badge Image**     | Badge Builder | Visual design (SVG/PNG)            | Display asset for BadgeClass     |
+| **BadgeClass**      | Server        | Achievement definition + image URL | Template for badges              |
+| **Credential (VC)** | Server        | Assertion + cryptographic proof    | The actual verifiable credential |
+| **Baked Image**     | Server        | Image + embedded signed VC         | Portable credential              |
 
 ### End-to-End Flow
 
@@ -164,12 +164,14 @@ Understanding where the Badge Builder fits in the credential lifecycle is critic
 ```
 
 **Props:**
+
 - `modelValue` - Current badge design state
 - `badgeClass` - Optional BadgeClass for dynamic fields
 - `theme` - Accessibility theme (inherits from openbadges-ui)
 - `assets` - Custom asset library (optional)
 
 **Emits:**
+
 - `update:modelValue` - Design state changes
 - `save` - User saves design
 - `export` - Export triggered (format, data)
@@ -177,6 +179,7 @@ Understanding where the Badge Builder fits in the credential lifecycle is critic
 ### 2. BuilderCanvas
 
 Central editing area with:
+
 - SVG/Canvas rendering
 - Element selection
 - Drag-and-drop positioning
@@ -209,6 +212,7 @@ Collapsible panels:
 ### 4. BuilderToolbar
 
 Top toolbar with:
+
 - Undo/Redo buttons
 - Export buttons (SVG/PNG)
 - Zoom controls
@@ -218,6 +222,7 @@ Top toolbar with:
 ### 5. PropertyPanel
 
 Context-sensitive panel showing:
+
 - Color pickers (with accessible color choices)
 - Opacity slider
 - Font controls (for text)
@@ -282,12 +287,12 @@ interface BadgeDesign {
 interface CanvasSettings {
   width: number;
   height: number;
-  backgroundColor: string | null;  // null = transparent
+  backgroundColor: string | null; // null = transparent
 }
 
 interface Layer {
   id: string;
-  type: 'shape' | 'text' | 'image' | 'icon' | 'ribbon';
+  type: "shape" | "text" | "image" | "icon" | "ribbon";
   visible: boolean;
   locked: boolean;
   opacity: number;
@@ -309,26 +314,26 @@ interface TextProperties {
   content: string;
   fontFamily: string;
   fontSize: number;
-  fontWeight: 'normal' | 'bold';
-  fontStyle: 'normal' | 'italic';
-  textAlign: 'left' | 'center' | 'right';
+  fontWeight: "normal" | "bold";
+  fontStyle: "normal" | "italic";
+  textAlign: "left" | "center" | "right";
   color: string;
   curved: boolean;
   curveRadius?: number;
   curveStartAngle?: number;
   isDynamic: boolean;
-  dynamicField?: 'badge_name' | 'issue_date' | 'recipient_name' | 'issuer_name';
+  dynamicField?: "badge_name" | "issue_date" | "recipient_name" | "issuer_name";
 }
 
 interface ShapeProperties {
-  assetId: string;  // Reference to built-in asset
+  assetId: string; // Reference to built-in asset
   colors: string[]; // Array for multi-zone shapes
 }
 
 interface ImageProperties {
-  src: string;      // Data URL or external URL
+  src: string; // Data URL or external URL
   alt: string;
-  objectFit: 'contain' | 'cover' | 'fill';
+  objectFit: "contain" | "cover" | "fill";
 }
 
 interface DesignMetadata {
@@ -346,13 +351,13 @@ Support template variables that resolve at export/display:
 
 ```typescript
 type DynamicField =
-  | '{{badge_name}}'      // From BadgeClass.name
-  | '{{issue_date}}'      // Formatted date
-  | '{{recipient_name}}'  // From Assertion recipient
-  | '{{issuer_name}}'     // From Issuer Profile
-  | '{{criteria}}'        // From BadgeClass.criteria
-  | '{{level}}'           // Custom attribute
-  | '{{custom:key}}';     // Custom extension field
+  | "{{badge_name}}" // From BadgeClass.name
+  | "{{issue_date}}" // Formatted date
+  | "{{recipient_name}}" // From Assertion recipient
+  | "{{issuer_name}}" // From Issuer Profile
+  | "{{criteria}}" // From BadgeClass.criteria
+  | "{{level}}" // Custom attribute
+  | "{{custom:key}}"; // Custom extension field
 ```
 
 ---
@@ -440,6 +445,7 @@ function useAssetLibrary() {
 ### Built-in Assets
 
 #### Shapes (50+ planned)
+
 - Circles (plain, bordered, decorative)
 - Hexagons (various border styles)
 - Shields (classic, modern)
@@ -447,6 +453,7 @@ function useAssetLibrary() {
 - Custom shapes (medals, seals)
 
 #### Icons (30+ planned)
+
 - Education (graduation cap, book, diploma)
 - Achievement (trophy, medal, star)
 - Skills (lightbulb, gear, wrench)
@@ -454,6 +461,7 @@ function useAssetLibrary() {
 - Technology (code, computer, cloud)
 
 #### Ribbons (20+ planned)
+
 - Horizontal banners
 - Curved ribbons
 - Bookmark ribbons
@@ -465,12 +473,12 @@ function useAssetLibrary() {
 interface BuiltInAsset {
   id: string;
   name: string;
-  category: 'shape' | 'icon' | 'ribbon';
+  category: "shape" | "icon" | "ribbon";
   subcategory: string;
-  svg: string;             // SVG markup
-  colorZones: number;      // Number of customizable colors
+  svg: string; // SVG markup
+  colorZones: number; // Number of customizable colors
   defaultColors: string[]; // Default color palette
-  tags: string[];          // For search
+  tags: string[]; // For search
 }
 ```
 
@@ -483,24 +491,27 @@ interface BuiltInAsset {
 ```vue
 <!-- In apps/openbadges-system - BadgeClass Creation Flow -->
 <script setup lang="ts">
-import { BadgeBuilder } from 'openbadges-badge-builder';
-import { ref } from 'vue';
+import { BadgeBuilder } from "openbadges-badge-builder";
+import { ref } from "vue";
 
 const newBadgeClass = ref({
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   image: null as string | null,
-  criteria: {}
+  criteria: {},
 });
 
 async function handleExport({ svg, png }: { svg: string; png: Blob }) {
   // 1. Upload image to server
   const formData = new FormData();
-  formData.append('file', svg ? new Blob([svg], { type: 'image/svg+xml' }) : png);
+  formData.append(
+    "file",
+    svg ? new Blob([svg], { type: "image/svg+xml" }) : png,
+  );
 
-  const response = await fetch('/api/assets/upload', {
-    method: 'POST',
-    body: formData
+  const response = await fetch("/api/assets/upload", {
+    method: "POST",
+    body: formData,
   });
   const { url } = await response.json();
 
@@ -510,10 +521,7 @@ async function handleExport({ svg, png }: { svg: string; png: Blob }) {
 </script>
 
 <template>
-  <BadgeBuilder
-    v-model="badgeDesign"
-    @export="handleExport"
-  />
+  <BadgeBuilder v-model="badgeDesign" @export="handleExport" />
 
   <!-- Then create BadgeClass with the image URL -->
   <button @click="createBadgeClass">Create Badge Class</button>
@@ -599,6 +607,7 @@ The Badge Builder should integrate with verification display:
 ## Implementation Phases
 
 ### Phase 1: Core Editor (MVP)
+
 - [ ] Basic canvas with layer support
 - [ ] Shape library (10 shapes)
 - [ ] Text tool (basic)
@@ -607,6 +616,7 @@ The Badge Builder should integrate with verification display:
 - [ ] Local storage persistence
 
 ### Phase 2: Enhanced Editing
+
 - [ ] Curved text on paths
 - [ ] Icon library (20 icons)
 - [ ] Ribbon library (10 ribbons)
@@ -615,6 +625,7 @@ The Badge Builder should integrate with verification display:
 - [ ] Keyboard shortcuts
 
 ### Phase 3: Templates & Assets
+
 - [ ] Template system
 - [ ] Full asset library
 - [ ] Asset search
@@ -622,12 +633,14 @@ The Badge Builder should integrate with verification display:
 - [ ] Asset favoriting
 
 ### Phase 4: Dynamic Content
+
 - [ ] Dynamic text fields
 - [ ] BadgeClass integration
 - [ ] Preview with sample data
 - [ ] Server-side rendering
 
 ### Phase 5: Collaboration (Future)
+
 - [ ] Design sharing
 - [ ] Team asset libraries
 - [ ] Design versioning
@@ -639,12 +652,12 @@ The Badge Builder should integrate with verification display:
 
 ### Canvas Library Options
 
-| Library | Pros | Cons |
-|---------|------|------|
-| **Fabric.js** | Mature, rich API, good docs | Large bundle, canvas-based |
-| **Konva.js** | React/Vue bindings, performant | Less features than Fabric |
-| **SVG.js** | Native SVG, smaller bundle | Less manipulation features |
-| **Custom SVG** | Full control, tiny bundle | More development effort |
+| Library        | Pros                           | Cons                       |
+| -------------- | ------------------------------ | -------------------------- |
+| **Fabric.js**  | Mature, rich API, good docs    | Large bundle, canvas-based |
+| **Konva.js**   | React/Vue bindings, performant | Less features than Fabric  |
+| **SVG.js**     | Native SVG, smaller bundle     | Less manipulation features |
+| **Custom SVG** | Full control, tiny bundle      | More development effort    |
 
 **Recommendation:** Start with Fabric.js for rapid development, consider custom SVG for production to reduce bundle size.
 
@@ -686,18 +699,18 @@ The Badge Builder should integrate with verification display:
 
 Before the Badge Builder can fully integrate with OB 3.0 baking:
 
-| Server Feature | Phase | Status | Required For |
-|----------------|-------|--------|--------------|
-| JWT Proof Generation | 5 | ✅ Done | Signing credentials |
-| JWKS/DID:web Endpoint | 6 | ⏳ Pending | Verification |
-| Baking Service | 4 | ⏳ Pending | Portable credentials |
-| Verification Endpoint | 6 | ⏳ Pending | UI verification display |
+| Server Feature        | Phase | Status     | Required For            |
+| --------------------- | ----- | ---------- | ----------------------- |
+| JWT Proof Generation  | 5     | ✅ Done    | Signing credentials     |
+| JWKS/DID:web Endpoint | 6     | ⏳ Pending | Verification            |
+| Baking Service        | 4     | ⏳ Pending | Portable credentials    |
+| Verification Endpoint | 6     | ⏳ Pending | UI verification display |
 
 See [BADGE_VISUAL_EFFECTS_RESEARCH.md](./BADGE_VISUAL_EFFECTS_RESEARCH.md#current-openbadges-modular-server-status) for detailed server implementation plan.
 
 ---
 
-*Concept Version: 1.1*
-*Date: November 2025*
-*Updated: November 2025 (OB 3.0 Credential Workflow, Integration Points)*
-*Author: Rollercoaster.dev Team*
+_Concept Version: 1.1_
+_Date: November 2025_
+_Updated: November 2025 (OB 3.0 Credential Workflow, Integration Points)_
+_Author: Rollercoaster.dev Team_

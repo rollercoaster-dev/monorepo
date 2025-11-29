@@ -1,6 +1,6 @@
 /**
  * Custom error classes for validation errors
- * 
+ *
  * These error classes provide more specific error types for validation failures,
  * making error handling more robust and explicit.
  */
@@ -11,7 +11,7 @@
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -20,10 +20,10 @@ export class ValidationError extends Error {
  */
 export class InvalidDateFormatError extends ValidationError {
   public readonly value: unknown;
-  
+
   constructor(message: string, value: unknown) {
     super(message);
-    this.name = 'InvalidDateFormatError';
+    this.name = "InvalidDateFormatError";
     this.value = value;
   }
 }
@@ -33,10 +33,10 @@ export class InvalidDateFormatError extends ValidationError {
  */
 export class MissingRequiredFieldError extends ValidationError {
   public readonly field: string;
-  
+
   constructor(field: string) {
     super(`Missing required field: ${field}`);
-    this.name = 'MissingRequiredFieldError';
+    this.name = "MissingRequiredFieldError";
     this.field = field;
   }
 }
@@ -46,10 +46,10 @@ export class MissingRequiredFieldError extends ValidationError {
  */
 export class MissingRequiredFieldsError extends ValidationError {
   public readonly fields: string[];
-  
+
   constructor(fields: string[]) {
-    super(`Missing required fields: ${fields.join(', ')}`);
-    this.name = 'MissingRequiredFieldsError';
+    super(`Missing required fields: ${fields.join(", ")}`);
+    this.name = "MissingRequiredFieldsError";
     this.fields = fields;
   }
 }

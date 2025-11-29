@@ -5,16 +5,16 @@
  * and the Data Mapper pattern with enhanced type safety.
  */
 
-import { eq } from 'drizzle-orm';
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
-import { badgeClasses } from '../schema';
-import { SqliteBadgeClassMapper } from '../mappers/sqlite-badge-class.mapper';
-import type { Shared } from 'openbadges-types';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { BaseSqliteRepository } from './base-sqlite.repository';
-import type { SqlitePaginationParams } from '../types/sqlite-database.types';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+import { eq } from "drizzle-orm";
+import { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import type { BadgeClassRepository } from "@domains/badgeClass/badgeClass.repository";
+import { badgeClasses } from "../schema";
+import { SqliteBadgeClassMapper } from "../mappers/sqlite-badge-class.mapper";
+import type { Shared } from "openbadges-types";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { BaseSqliteRepository } from "./base-sqlite.repository";
+import type { SqlitePaginationParams } from "../types/sqlite-database.types";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 export class SqliteBadgeClassRepository
   extends BaseSqliteRepository
@@ -27,12 +27,12 @@ export class SqliteBadgeClassRepository
     this.mapper = new SqliteBadgeClassMapper();
   }
 
-  protected getEntityType(): 'badgeClass' {
-    return 'badgeClass';
+  protected getEntityType(): "badgeClass" {
+    return "badgeClass";
   }
 
   protected getTableName(): string {
-    return 'badgeClasses';
+    return "badgeClasses";
   }
 
   /**
@@ -43,7 +43,7 @@ export class SqliteBadgeClassRepository
   }
 
   async create(badgeClass: Partial<BadgeClass>): Promise<BadgeClass> {
-    const context = this.createOperationContext('INSERT BadgeClass');
+    const context = this.createOperationContext("INSERT BadgeClass");
 
     return this.executeTransaction(context, async (tx) => {
       // Create a full badge class entity with generated ID for mapping
@@ -68,7 +68,7 @@ export class SqliteBadgeClassRepository
    * @returns Promise resolving to array of BadgeClass entities
    */
   async findAll(pagination?: SqlitePaginationParams): Promise<BadgeClass[]> {
-    const context = this.createOperationContext('SELECT All BadgeClasses');
+    const context = this.createOperationContext("SELECT All BadgeClasses");
 
     const result = await this.executeQuery(context, async (db) => {
       const { limit, offset } = this.validatePagination(pagination);
@@ -76,7 +76,7 @@ export class SqliteBadgeClassRepository
     });
 
     return result.map((record: typeof badgeClasses.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
@@ -87,7 +87,7 @@ export class SqliteBadgeClassRepository
    */
   async findAllUnbounded(): Promise<BadgeClass[]> {
     const context = this.createOperationContext(
-      'SELECT All BadgeClasses (Unbounded)'
+      "SELECT All BadgeClasses (Unbounded)",
     );
 
     const result = await this.executeQuery(context, async (db) => {
@@ -95,25 +95,25 @@ export class SqliteBadgeClassRepository
     });
 
     return result.map((record: typeof badgeClasses.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
   async findById(id: string): Promise<BadgeClass | null> {
-    this.validateEntityId(id as Shared.IRI, 'find badge class by ID');
+    this.validateEntityId(id as Shared.IRI, "find badge class by ID");
     const context = this.createOperationContext(
-      'SELECT BadgeClass by ID',
-      id as Shared.IRI
+      "SELECT BadgeClass by ID",
+      id as Shared.IRI,
     );
 
     const result = await this.executeSingleQuery(
       context,
       async (db) => {
         // Convert URN to UUID for SQLite query
-        const dbId = convertUuid(id, 'sqlite', 'to');
+        const dbId = convertUuid(id, "sqlite", "to");
         return db.select().from(badgeClasses).where(eq(badgeClasses.id, dbId));
       },
-      [id] // Forward ID parameter to logger
+      [id], // Forward ID parameter to logger
     );
 
     return result
@@ -122,43 +122,43 @@ export class SqliteBadgeClassRepository
   }
 
   async findByIssuer(issuerId: Shared.IRI): Promise<BadgeClass[]> {
-    this.validateEntityId(issuerId, 'find badge classes by issuer');
+    this.validateEntityId(issuerId, "find badge classes by issuer");
     const context = this.createOperationContext(
-      'SELECT BadgeClasses by Issuer',
-      issuerId
+      "SELECT BadgeClasses by Issuer",
+      issuerId,
     );
 
     const result = await this.executeQuery(
       context,
       async (db) => {
         // Convert URN to UUID for SQLite query
-        const dbIssuerId = convertUuid(issuerId as string, 'sqlite', 'to');
+        const dbIssuerId = convertUuid(issuerId as string, "sqlite", "to");
         return db
           .select()
           .from(badgeClasses)
           .where(eq(badgeClasses.issuerId, dbIssuerId));
       },
-      [issuerId] // Forward issuer ID parameter to logger
+      [issuerId], // Forward issuer ID parameter to logger
     );
 
     return result.map((record: typeof badgeClasses.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
   async update(
     id: string,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null> {
     const context = this.createOperationContext(
-      'UPDATE BadgeClass',
-      id as Shared.IRI
+      "UPDATE BadgeClass",
+      id as Shared.IRI,
     );
 
     return this.executeTransaction(context, async (tx) => {
       // Perform SELECT and UPDATE within the same transaction to prevent TOCTOU race condition
       // Convert URN to UUID for SQLite query
-      const dbId = convertUuid(id, 'sqlite', 'to');
+      const dbId = convertUuid(id, "sqlite", "to");
       const existing = await tx
         .select()
         .from(badgeClasses)
@@ -198,15 +198,15 @@ export class SqliteBadgeClassRepository
   }
 
   async delete(id: string): Promise<boolean> {
-    this.validateEntityId(id as Shared.IRI, 'delete badge class');
+    this.validateEntityId(id as Shared.IRI, "delete badge class");
     const context = this.createOperationContext(
-      'DELETE BadgeClass',
-      id as Shared.IRI
+      "DELETE BadgeClass",
+      id as Shared.IRI,
     );
 
     return this.executeDelete(context, async (db): Promise<unknown[]> => {
       // Convert URN to UUID for SQLite query
-      const dbId = convertUuid(id, 'sqlite', 'to');
+      const dbId = convertUuid(id, "sqlite", "to");
       const result = await db
         .delete(badgeClasses)
         .where(eq(badgeClasses.id, dbId))

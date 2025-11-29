@@ -4,10 +4,10 @@
  * This router handles authentication-related endpoints.
  */
 
-import { Hono } from 'hono';
-import type { AuthController } from '../auth/auth.controller';
-import { requireAuth } from '../auth/middleware/rbac.middleware';
-import { extractLoggingContext } from '../utils/logging.utils';
+import { Hono } from "hono";
+import type { AuthController } from "../auth/auth.controller";
+import { requireAuth } from "../auth/middleware/rbac.middleware";
+import { extractLoggingContext } from "../utils/logging.utils";
 
 /**
  * Create a router for authentication endpoints
@@ -18,7 +18,7 @@ export function createAuthRouter(authController: AuthController): Hono {
   const router = new Hono();
 
   // Login endpoint
-  router.post('/login', async (c) => {
+  router.post("/login", async (c) => {
     const body = await c.req.json();
     const { usernameOrEmail, password } = body;
 
@@ -30,14 +30,14 @@ export function createAuthRouter(authController: AuthController): Hono {
       password,
       requestId,
       clientIp,
-      userAgent
+      userAgent,
     });
 
     return c.json(result.body, result.status as 200 | 400 | 401 | 500);
   });
 
   // Registration endpoint
-  router.post('/register', async (c) => {
+  router.post("/register", async (c) => {
     const body = await c.req.json();
     const { username, email, password, firstName, lastName } = body;
 
@@ -52,34 +52,34 @@ export function createAuthRouter(authController: AuthController): Hono {
       lastName,
       requestId,
       clientIp,
-      userAgent
+      userAgent,
     });
 
     return c.json(result.body, result.status as 200 | 201 | 400 | 409 | 500);
   });
 
   // Profile endpoint (requires authentication)
-  router.get('/profile', requireAuth(), async (c) => {
+  router.get("/profile", requireAuth(), async (c) => {
     // The user ID should be available from the JWT token
-    const userId = c.get('user')?.claims?.sub;
+    const userId = c.get("user")?.claims?.sub;
     if (!userId) {
-      return c.json({
-        success: false,
-        error: 'User not authenticated'
-      }, 401);
+      return c.json(
+        {
+          success: false,
+          error: "User not authenticated",
+        },
+        401,
+      );
     }
 
     // Extract request information for logging
     const { requestId, clientIp, userAgent } = extractLoggingContext(c);
 
-    const result = await authController.getProfile(
-      userId as string,
-      {
-        requestId,
-        clientIp,
-        userAgent
-      }
-    );
+    const result = await authController.getProfile(userId as string, {
+      requestId,
+      clientIp,
+      userAgent,
+    });
 
     return c.json(result.body, result.status as 200 | 404 | 500);
   });

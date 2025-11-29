@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import { BadgeService } from '@services/BadgeService';
-import BadgeDisplay from '@components/badges/BadgeDisplay.vue';
+import { computed, ref, watch } from "vue";
+import type { OB2, OB3 } from "@/types";
+import { BadgeService } from "@services/BadgeService";
+import BadgeDisplay from "@components/badges/BadgeDisplay.vue";
 
 interface Props {
   badges: (OB2.Assertion | OB3.VerifiableCredential)[];
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
   interactive?: boolean;
   loading?: boolean;
   pageSize?: number;
   currentPage?: number;
   showPagination?: boolean;
   ariaLabel?: string;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  layout: 'grid',
+  layout: "grid",
   interactive: true,
   loading: false,
   pageSize: 9,
   currentPage: 1,
   showPagination: false,
-  ariaLabel: 'List of badges',
-  density: 'normal',
+  ariaLabel: "List of badges",
+  density: "normal",
 });
 
 const emit = defineEmits<{
-  (e: 'badge-click', badge: OB2.Assertion | OB3.VerifiableCredential): void;
-  (e: 'page-change', page: number): void;
-  (e: 'update:density', density: 'compact' | 'normal' | 'spacious'): void;
+  (e: "badge-click", badge: OB2.Assertion | OB3.VerifiableCredential): void;
+  (e: "page-change", page: number): void;
+  (e: "update:density", density: "compact" | "normal" | "spacious"): void;
 }>();
 
 // Internal state for pagination
 const internalCurrentPage = ref(props.currentPage);
 
 // Internal state for density
-const internalDensity = ref<'compact' | 'normal' | 'spacious'>(props.density);
+const internalDensity = ref<"compact" | "normal" | "spacious">(props.density);
 
 // Watch for external currentPage changes
 watch(
   () => props.currentPage,
   (newPage) => {
     internalCurrentPage.value = newPage;
-  }
+  },
 );
 
 // Watch for external density changes
@@ -52,12 +52,12 @@ watch(
   () => props.density,
   (newValue) => {
     internalDensity.value = newValue;
-  }
+  },
 );
 
 // Neurodiversity-focused filter state
-const filterText = ref('');
-const filterEarned = ref('all'); // 'all' | 'earned' | 'not-earned'
+const filterText = ref("");
+const filterEarned = ref("all"); // 'all' | 'earned' | 'not-earned'
 const expandedBadges = ref<Set<string>>(new Set());
 
 const toggleExpanded = (id: string) => {
@@ -74,23 +74,33 @@ const toggleExpanded = (id: string) => {
 const filteredBadges = computed(() => {
   let filtered = props.badges;
   if (filterText.value) {
-    filtered = filtered.filter(badge => {
+    filtered = filtered.filter((badge) => {
       // Use type guards to check the badge structure
-      const name = 'badge' in badge && badge.badge && typeof badge.badge === 'object' && 'name' in badge.badge
-        ? String(badge.badge.name)
-        : 'name' in badge ? String(badge.name) : '';
+      const name =
+        "badge" in badge &&
+        badge.badge &&
+        typeof badge.badge === "object" &&
+        "name" in badge.badge
+          ? String(badge.badge.name)
+          : "name" in badge
+            ? String(badge.name)
+            : "";
       return name.toLowerCase().includes(filterText.value.toLowerCase());
     });
   }
-  if (filterEarned.value !== 'all') {
+  if (filterEarned.value !== "all") {
     // TODO: Implement actual earned/not-earned filtering logic
     // This requires determining badge ownership which depends on:
     // 1. Having a current user context
     // 2. Matching badge recipient to user identity
     // Currently returns all badges for 'earned', none for 'not-earned'
     filtered = filtered.filter(() => {
-      if (filterEarned.value === 'earned') {return true;}
-      if (filterEarned.value === 'not-earned') {return false;}
+      if (filterEarned.value === "earned") {
+        return true;
+      }
+      if (filterEarned.value === "not-earned") {
+        return false;
+      }
       return true;
     });
   }
@@ -117,7 +127,7 @@ watch(
     if (internalCurrentPage.value > total) {
       internalCurrentPage.value = total;
     }
-  }
+  },
 );
 
 // Get current page of badges
@@ -141,7 +151,7 @@ const normalizedBadges = computed(() => {
 
 // Handle badge click
 const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
-  emit('badge-click', badge);
+  emit("badge-click", badge);
 };
 
 // Handle page change
@@ -151,25 +161,32 @@ const handlePageChange = (page: number) => {
   }
 
   internalCurrentPage.value = page;
-  emit('page-change', page);
+  emit("page-change", page);
 };
 
 // Handle density change
 const handleDensityChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
-  const value = target.value as 'compact' | 'normal' | 'spacious';
+  const value = target.value as "compact" | "normal" | "spacious";
   internalDensity.value = value;
-  emit('update:density', value);
+  emit("update:density", value);
 };
 </script>
 
 <template>
   <div
     class="manus-badge-list"
-    :class="[`density-${internalDensity}`, { 'grid-layout': layout === 'grid' }]"
+    :class="[
+      `density-${internalDensity}`,
+      { 'grid-layout': layout === 'grid' },
+    ]"
   >
     <!-- Neurodiversity filter and density controls -->
-    <div class="manus-badge-list-controls" role="region" aria-label="Badge list controls">
+    <div
+      class="manus-badge-list-controls"
+      role="region"
+      aria-label="Badge list controls"
+    >
       <input
         v-model="filterText"
         class="manus-badge-list-filter-input"
@@ -177,12 +194,21 @@ const handleDensityChange = (event: Event) => {
         :placeholder="'Filter badges by keyword'"
         aria-label="Filter badges by keyword"
       />
-      <select v-model="filterEarned" class="manus-badge-list-filter-select" aria-label="Filter by earned status">
+      <select
+        v-model="filterEarned"
+        class="manus-badge-list-filter-select"
+        aria-label="Filter by earned status"
+      >
         <option value="all">All</option>
         <option value="earned">Earned</option>
         <option value="not-earned">Not Earned</option>
       </select>
-      <select :value="internalDensity" class="manus-badge-list-density-select" aria-label="Display density" @change="handleDensityChange">
+      <select
+        :value="internalDensity"
+        class="manus-badge-list-density-select"
+        aria-label="Display density"
+        @change="handleDensityChange"
+      >
         <option value="compact">Compact</option>
         <option value="normal">Normal</option>
         <option value="spacious">Spacious</option>
@@ -208,11 +234,7 @@ const handleDensityChange = (event: Event) => {
       </slot>
     </div>
 
-    <ul
-      v-else
-      class="manus-badge-list-items"
-      :aria-label="ariaLabel"
-    >
+    <ul v-else class="manus-badge-list-items" :aria-label="ariaLabel">
       <li
         v-for="badge in normalizedBadges"
         :key="badge.id"
@@ -221,11 +243,7 @@ const handleDensityChange = (event: Event) => {
         :class="{ 'is-expanded': expandedBadges.has(badge.id) }"
       >
         <div class="badge-summary" tabindex="0">
-          <slot
-            name="badge"
-            :badge="badge.original"
-            :normalized="badge"
-          >
+          <slot name="badge" :badge="badge.original" :normalized="badge">
             <BadgeDisplay
               :badge="badge.original"
               :interactive="interactive"
@@ -237,10 +255,14 @@ const handleDensityChange = (event: Event) => {
             type="button"
             :aria-expanded="expandedBadges.has(badge.id)"
             :aria-controls="`badge-details-${badge.id}`"
-            :aria-label="expandedBadges.has(badge.id) ? 'Collapse details' : 'Expand details'"
+            :aria-label="
+              expandedBadges.has(badge.id)
+                ? 'Collapse details'
+                : 'Expand details'
+            "
             @click="toggleExpanded(badge.id)"
           >
-            {{ expandedBadges.has(badge.id) ? 'Show Less' : 'Show More' }}
+            {{ expandedBadges.has(badge.id) ? "Show Less" : "Show More" }}
           </button>
         </div>
         <div
@@ -248,7 +270,7 @@ const handleDensityChange = (event: Event) => {
           :id="`badge-details-${badge.id}`"
           class="badge-details"
           tabindex="0"
->
+        >
           <pre>{{ badge }}</pre>
         </div>
       </li>
@@ -270,7 +292,9 @@ const handleDensityChange = (event: Event) => {
         Previous
       </button>
 
-      <span class="manus-pagination-info"> Page {{ internalCurrentPage }} of {{ totalPages }} </span>
+      <span class="manus-pagination-info">
+        Page {{ internalCurrentPage }} of {{ totalPages }}
+      </span>
 
       <button
         class="manus-pagination-button"

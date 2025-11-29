@@ -15,6 +15,7 @@ This document provides detailed instructions for backing up and restoring the Op
 ## Overview
 
 The Open Badges API supports two database types:
+
 - **SQLite**: File-based database, suitable for small to medium deployments
 - **PostgreSQL**: Client-server database, suitable for larger deployments
 
@@ -61,6 +62,7 @@ Backups are stored in the `backups/` directory, which is mounted as a volume in 
 To manually create a SQLite backup:
 
 1. Using Docker Compose:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm backup /scripts/backup.sh
    ```
@@ -76,6 +78,7 @@ To manually create a SQLite backup:
 To manually create a PostgreSQL backup:
 
 1. Using Docker Compose:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm backup /scripts/backup.sh
    ```
@@ -103,11 +106,13 @@ find /path/to/backups -name "*.gz" -type f -mtime +7 -delete
 To restore a SQLite database from backup:
 
 1. Stop the API service:
+
    ```bash
    docker-compose -f docker-compose.prod.yml stop api
    ```
 
 2. Restore the database:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm -v ./backups:/backups backup /scripts/restore.sh /backups/sqlite_backup_YYYY-MM-DD.db.gz
    ```
@@ -122,11 +127,13 @@ To restore a SQLite database from backup:
 To restore a PostgreSQL database from backup:
 
 1. Stop the API service:
+
    ```bash
    docker-compose -f docker-compose.prod.yml stop api
    ```
 
 2. Restore the database:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm -v ./backups:/backups backup /scripts/restore.sh /backups/postgres_backup_YYYY-MM-DD.sql.gz
    ```
@@ -141,11 +148,13 @@ To restore a PostgreSQL database from backup:
 It's important to regularly verify that your backups are valid and can be restored. Here's a procedure for backup verification:
 
 1. Create a test environment:
+
    ```bash
    docker-compose -f docker-compose.test.yml up -d
    ```
 
 2. Restore a backup to the test environment:
+
    ```bash
    docker-compose -f docker-compose.test.yml run --rm -v ./backups:/backups backup /scripts/restore.sh /backups/your-backup-file.gz
    ```
@@ -167,12 +176,14 @@ In case of a complete system failure, follow these steps to recover:
 1. Set up a new server with Docker and Docker Compose
 
 2. Clone the repository:
+
    ```bash
    git clone https://github.com/your-org/openbadges-modular-server.git
    cd openbadges-modular-server
    ```
 
 3. Copy your backup files to the new server:
+
    ```bash
    mkdir -p backups
    # Copy backup files to the backups directory
@@ -181,11 +192,13 @@ In case of a complete system failure, follow these steps to recover:
 4. Create a `.env` file with your configuration
 
 5. Restore the database:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm -v ./backups:/backups backup /scripts/restore.sh /backups/your-latest-backup.gz
    ```
 
 6. Start the services:
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```

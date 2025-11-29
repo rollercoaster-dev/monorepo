@@ -74,18 +74,25 @@ The `resetDatabase` function in `tests/e2e/helpers/database-reset.helper.ts` is 
 E2E tests should follow this structure:
 
 ```typescript
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
-import { TestDataHelper } from './helpers/test-data.helper';
-import { resetDatabase } from './helpers/database-reset.helper';
-import { config } from '@/config/config';
-import { setupTestApp, stopTestServer } from './setup-test-app';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from "bun:test";
+import { TestDataHelper } from "./helpers/test-data.helper";
+import { resetDatabase } from "./helpers/database-reset.helper";
+import { config } from "@/config/config";
+import { setupTestApp, stopTestServer } from "./setup-test-app";
 
 // Use SQLite by default for tests, but allow overriding via environment variables
 if (!process.env.DB_TYPE) {
-  process.env.DB_TYPE = 'sqlite';
+  process.env.DB_TYPE = "sqlite";
 }
-if (process.env.DB_TYPE === 'sqlite' && !process.env.SQLITE_DB_PATH) {
-  process.env.SQLITE_DB_PATH = ':memory:';
+if (process.env.DB_TYPE === "sqlite" && !process.env.SQLITE_DB_PATH) {
+  process.env.SQLITE_DB_PATH = ":memory:";
 }
 
 // Use a random port for testing to avoid conflicts
@@ -97,24 +104,24 @@ const API_URL = `http://${config.server.host}:${TEST_PORT}`;
 const ENDPOINT = `${API_URL}/v3/your-endpoint`;
 
 // API key for protected endpoints
-const API_KEY = 'verysecretkeye2e';
+const API_KEY = "verysecretkeye2e";
 
 // Server instance for the test
 let server: { stop: () => void } | null = null;
 
-describe('Your Entity API - E2E', () => {
+describe("Your Entity API - E2E", () => {
   // Start the server before all tests
   beforeAll(async () => {
-    process.env['NODE_ENV'] = 'test';
-    
+    process.env["NODE_ENV"] = "test";
+
     const result = await setupTestApp();
     server = result.server as { stop: () => void };
-    
+
     // Initialize test data helper
     TestDataHelper.initialize(API_URL, API_KEY);
-    
+
     // Wait for the server to be fully ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   // Reset database before each test to ensure isolation
@@ -125,7 +132,7 @@ describe('Your Entity API - E2E', () => {
   // Stop the server and clean up test data after all tests
   afterAll(async () => {
     await TestDataHelper.cleanup();
-    
+
     if (server) {
       stopTestServer(server);
     }
@@ -153,6 +160,7 @@ bun run test:e2e:sqlite
 ```
 
 This command:
+
 1. Sets `DB_TYPE=sqlite` in the environment
 2. Uses an in-memory SQLite database by default
 3. Runs all tests in the `tests/e2e` directory
@@ -177,6 +185,7 @@ bun run test:e2e:pg
 ```
 
 The PostgreSQL test setup:
+
 1. Starts a Docker container with PostgreSQL
 2. Applies migrations to create the schema
 3. Sets `DB_TYPE=postgresql` and `DATABASE_URL` in the environment

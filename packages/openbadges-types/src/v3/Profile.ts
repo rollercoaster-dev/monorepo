@@ -40,8 +40,8 @@ export interface Profile {
     /**
      * @minItems 2
      */
-    '@context': [
-      'https://www.w3.org/ns/credentials/v2',
+    "@context": [
+      "https://www.w3.org/ns/credentials/v2",
       string,
       ...(
         | string
@@ -213,7 +213,7 @@ export interface Profile {
     /**
      * MUST be the IRI 'Image'.
      */
-    type: 'Image';
+    type: "Image";
     /**
      * The caption for the image.
      */
@@ -266,7 +266,7 @@ export interface Profile {
       /**
        * The value of the type property MUST be an unordered set. One of the items MUST be the IRI 'GeoCoordinates'.
        */
-      type: 'GeoCoordinates';
+      type: "GeoCoordinates";
       /**
        * The latitude of the location [[WGS84]].
        */
@@ -283,7 +283,7 @@ export interface Profile {
     /**
      * The value of the type property MUST be an unordered set. One of the items MUST be the IRI 'IdentifierEntry'.
      */
-    type: 'IdentifierEntry';
+    type: "IdentifierEntry";
     /**
      * An identifier.
      */
@@ -293,25 +293,25 @@ export interface Profile {
      */
     identifierType:
       | (
-          | 'name'
-          | 'sourcedId'
-          | 'systemId'
-          | 'productId'
-          | 'userName'
-          | 'accountId'
-          | 'emailAddress'
-          | 'nationalIdentityNumber'
-          | 'isbn'
-          | 'issn'
-          | 'lisSourcedId'
-          | 'oneRosterSourcedId'
-          | 'sisSourcedId'
-          | 'ltiContextId'
-          | 'ltiDeploymentId'
-          | 'ltiToolId'
-          | 'ltiPlatformId'
-          | 'ltiUserId'
-          | 'identifier'
+          | "name"
+          | "sourcedId"
+          | "systemId"
+          | "productId"
+          | "userName"
+          | "accountId"
+          | "emailAddress"
+          | "nationalIdentityNumber"
+          | "isbn"
+          | "issn"
+          | "lisSourcedId"
+          | "oneRosterSourcedId"
+          | "sisSourcedId"
+          | "ltiContextId"
+          | "ltiDeploymentId"
+          | "ltiToolId"
+          | "ltiPlatformId"
+          | "ltiUserId"
+          | "identifier"
         )
       | string;
   }[];

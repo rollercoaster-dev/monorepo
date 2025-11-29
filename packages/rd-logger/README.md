@@ -22,45 +22,45 @@ pnpm add @rollercoaster-dev/rd-logger
 Import the logger and start logging:
 
 ```typescript
-import { Logger } from '@rollercoaster-dev/rd-logger';
+import { Logger } from "@rollercoaster-dev/rd-logger";
 
 const logger = new Logger({
-  level: 'debug', // Set the desired log level
+  level: "debug", // Set the desired log level
 });
 
-logger.info('Application starting...');
-logger.debug('Debugging some initial setup.');
-logger.warn('Something seems off.');
-logger.error('An error occurred!', new Error('Example error'));
+logger.info("Application starting...");
+logger.debug("Debugging some initial setup.");
+logger.warn("Something seems off.");
+logger.error("An error occurred!", new Error("Example error"));
 ```
 
 ## Features
 
 The logger provides several features designed for clarity and ease of use:
 
-*   **Neuro-friendly formatting:** Uses colors, icons, and consistent spacing to improve readability, especially for neurodivergent developers.
-*   **Multiple log levels:** Supports standard levels like `debug`, `info`, `warn`, `error`, `fatal`.
-*   **Human-readable timestamps:** Displays timestamps in a clear, understandable format.
-*   **Structured context:** Allows attaching additional key-value data to log messages.
-*   **Request context propagation (optional):** Integrates with web frameworks to automatically include request IDs in logs for easier tracing.
-*   **Framework adapters:** Provides specific adapters for seamless integration:
-    *   **Hono:** Middleware for the Hono framework.
-    *   **Express:** Middleware for the Express framework.
-    *   **Generic:** Functions for wrapping arbitrary code blocks or background tasks in a logging context.
-*   **Customizable:** Allows configuration of log levels, formatting, and more.
-*   **Accessible:** Aims to follow accessibility best practices in output formatting.
+- **Neuro-friendly formatting:** Uses colors, icons, and consistent spacing to improve readability, especially for neurodivergent developers.
+- **Multiple log levels:** Supports standard levels like `debug`, `info`, `warn`, `error`, `fatal`.
+- **Human-readable timestamps:** Displays timestamps in a clear, understandable format.
+- **Structured context:** Allows attaching additional key-value data to log messages.
+- **Request context propagation (optional):** Integrates with web frameworks to automatically include request IDs in logs for easier tracing.
+- **Framework adapters:** Provides specific adapters for seamless integration:
+  - **Hono:** Middleware for the Hono framework.
+  - **Express:** Middleware for the Express framework.
+  - **Generic:** Functions for wrapping arbitrary code blocks or background tasks in a logging context.
+- **Customizable:** Allows configuration of log levels, formatting, and more.
+- **Accessible:** Aims to follow accessibility best practices in output formatting.
 
 ## Query Logger
 
 The package includes an optional `QueryLogger` to help track database query performance.
 
 ```typescript
-import { Logger, QueryLogger } from '@rollercoaster-dev/rd-logger';
+import { Logger, QueryLogger } from "@rollercoaster-dev/rd-logger";
 
 const logger = new Logger();
 const queryLogger = new QueryLogger(logger, {
   slowQueryThreshold: 150, // Log queries slower than 150ms as warnings
-  logDebugQueries: true,   // Log all queries at debug level
+  logDebugQueries: true, // Log all queries at debug level
 });
 
 // Example usage (e.g., inside a database adapter)
@@ -70,11 +70,11 @@ const duration = Date.now() - startTime;
 
 // The `requestId` typically comes from the framework adapter's context (e.g., req.id)
 const requestId = getCurrentRequestId(); // Replace with your actual method to get the ID
-queryLogger.logQuery(sql, params, duration, 'PostgreSQL', requestId);
+queryLogger.logQuery(sql, params, duration, "PostgreSQL", requestId);
 
 // Later, you can retrieve stats:
 const stats = queryLogger.getStats();
-console.log('Query Stats:', stats);
+console.log("Query Stats:", stats);
 ```
 
 ## Contributing

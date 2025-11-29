@@ -9,25 +9,25 @@ import {
   validateIssuer,
   validateBadgeClass,
   validateAssertion,
-} from './entity-validator';
-import { Issuer } from '../../domains/issuer/issuer.entity';
-import { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
-import { Assertion } from '../../domains/assertion/assertion.entity';
-import type { MiddlewareHandler } from 'hono';
-import { createMiddleware } from 'hono/factory';
-import { CreateIssuerSchema } from '../../api/validation/issuer.schemas';
+} from "./entity-validator";
+import { Issuer } from "../../domains/issuer/issuer.entity";
+import { BadgeClass } from "../../domains/badgeClass/badgeClass.entity";
+import { Assertion } from "../../domains/assertion/assertion.entity";
+import type { MiddlewareHandler } from "hono";
+import { createMiddleware } from "hono/factory";
+import { CreateIssuerSchema } from "../../api/validation/issuer.schemas";
 import {
   CreateBadgeClassSchema,
   RelatedAchievementSchema,
   EndorsementCredentialSchema,
-} from '../../api/validation/badgeClass.schemas';
+} from "../../api/validation/badgeClass.schemas";
 import {
   CreateAssertionSchema,
   BatchCreateCredentialsSchema,
   BatchRetrieveCredentialsSchema,
   UpdateCredentialStatusSchema,
   BatchUpdateCredentialStatusSchema,
-} from '../../api/validation/assertion.schemas';
+} from "../../api/validation/assertion.schemas";
 
 // Define the variables that will be set in the context by validation middleware
 export type ValidationVariables = {
@@ -44,22 +44,22 @@ function formatValidationErrors(errors: string[]): Record<string, string[]> {
 
   // Common field names in validation errors
   const knownFields = [
-    'name',
-    'url',
-    'email',
-    'image',
-    'description',
-    'criteria',
-    'issuer',
-    'badgeClass',
-    'recipient',
-    'issuedOn',
-    'expires',
-    'verification',
-    'alignment',
-    'evidence',
-    'id',
-    'type',
+    "name",
+    "url",
+    "email",
+    "image",
+    "description",
+    "criteria",
+    "issuer",
+    "badgeClass",
+    "recipient",
+    "issuedOn",
+    "expires",
+    "verification",
+    "alignment",
+    "evidence",
+    "id",
+    "type",
   ];
 
   // Group errors by field or use 'general' for generic errors
@@ -68,7 +68,7 @@ function formatValidationErrors(errors: string[]): Record<string, string[]> {
     const matchedField = knownFields.find(
       (field) =>
         error.toLowerCase().includes(`${field.toLowerCase()} is required`) ||
-        error.toLowerCase().includes(`${field.toLowerCase()} must be`)
+        error.toLowerCase().includes(`${field.toLowerCase()} must be`),
     );
 
     if (matchedField) {
@@ -79,16 +79,16 @@ function formatValidationErrors(errors: string[]): Record<string, string[]> {
       formattedErrors[matchedField].push(error);
     } else {
       // Use 'general' for errors that don't match a specific field
-      if (!formattedErrors['general']) {
-        formattedErrors['general'] = [];
+      if (!formattedErrors["general"]) {
+        formattedErrors["general"] = [];
       }
-      formattedErrors['general'].push(error);
+      formattedErrors["general"].push(error);
     }
   });
 
   // If no errors were categorized, fall back to the previous behavior
   if (Object.keys(formattedErrors).length === 0) {
-    formattedErrors['validation'] = errors;
+    formattedErrors["validation"] = errors;
   }
 
   return formattedErrors;
@@ -110,13 +110,13 @@ function formatZodErrors(result: any): Record<string, string[]> {
     !result.error ||
     !result.error.errors
   ) {
-    return { general: ['Unknown validation error'] };
+    return { general: ["Unknown validation error"] };
   }
 
   // Process the errors
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result.error.errors.forEach((err: any) => {
-    const path = err.path.join('.') || 'general';
+    const path = err.path.join(".") || "general";
     if (!formattedErrors[path]) {
       formattedErrors[path] = [];
     }
@@ -145,15 +145,15 @@ export function validateIssuerMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Then validate with entity validator for additional checks
-      if (body && typeof body === 'object') {
+      if (body && typeof body === "object") {
         const issuerData = Issuer.create(body);
         const { isValid, errors } = validateIssuer(issuerData);
 
@@ -161,26 +161,26 @@ export function validateIssuerMiddleware(): MiddlewareHandler<{
           return c.json(
             {
               success: false,
-              error: 'Validation error',
+              error: "Validation error",
               details: formatValidationErrors(errors),
             },
-            400
+            400,
           );
         }
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', body);
+      c.set("validatedBody", body);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -205,15 +205,15 @@ export function validateBadgeClassMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Then validate with entity validator for additional checks
-      if (body && typeof body === 'object') {
+      if (body && typeof body === "object") {
         const badgeClassData = BadgeClass.create(body);
         const { isValid, errors } = validateBadgeClass(badgeClassData);
 
@@ -221,26 +221,26 @@ export function validateBadgeClassMiddleware(): MiddlewareHandler<{
           return c.json(
             {
               success: false,
-              error: 'Validation error',
+              error: "Validation error",
               details: formatValidationErrors(errors),
             },
-            400
+            400,
           );
         }
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', body);
+      c.set("validatedBody", body);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -265,18 +265,18 @@ export function validateAssertionMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Then validate with entity validator for additional checks
-      if (body && typeof body === 'object') {
+      if (body && typeof body === "object") {
         // Map 'badge' to 'badgeClass' for proper validation
         const mappedBody = { ...body };
-        if ('badge' in mappedBody && !('badgeClass' in mappedBody)) {
+        if ("badge" in mappedBody && !("badgeClass" in mappedBody)) {
           mappedBody.badgeClass = mappedBody.badge;
         }
 
@@ -287,18 +287,18 @@ export function validateAssertionMiddleware(): MiddlewareHandler<{
           return c.json(
             {
               success: false,
-              error: 'Validation error',
+              error: "Validation error",
               details: formatValidationErrors(errors),
             },
-            400
+            400,
           );
         }
 
         // Store the (potentially) mapped, fully-validated body
-        c.set('validatedBody', mappedBody);
+        c.set("validatedBody", mappedBody);
       } else {
         // Store the original body if no mapping was needed
-        c.set('validatedBody', body);
+        c.set("validatedBody", body);
       }
 
       await next();
@@ -306,10 +306,10 @@ export function validateAssertionMiddleware(): MiddlewareHandler<{
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -334,25 +334,25 @@ export function validateBatchCreateCredentialsMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', body);
+      c.set("validatedBody", body);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -370,21 +370,21 @@ export function validateBatchRetrieveCredentialsMiddleware(): MiddlewareHandler<
   }>(async (c, next) => {
     try {
       // For GET requests, parse query parameters
-      const idsParam = c.req.query('ids');
+      const idsParam = c.req.query("ids");
       if (!idsParam) {
         return c.json(
           {
             success: false,
-            error: 'Validation error',
-            details: { ids: ['ids query parameter is required'] },
+            error: "Validation error",
+            details: { ids: ["ids query parameter is required"] },
           },
-          400
+          400,
         );
       }
 
       // Parse comma-separated IDs
       const ids = idsParam
-        .split(',')
+        .split(",")
         .map((id) => id.trim())
         .filter((id) => id.length > 0);
       const body = { ids };
@@ -395,25 +395,25 @@ export function validateBatchRetrieveCredentialsMiddleware(): MiddlewareHandler<
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', body);
+      c.set("validatedBody", body);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Invalid query parameters'] },
+          error: "Invalid request body",
+          details: { general: ["Invalid query parameters"] },
         },
-        400
+        400,
       );
     }
   });
@@ -438,25 +438,25 @@ export function validateUpdateCredentialStatusMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', body);
+      c.set("validatedBody", body);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -481,25 +481,25 @@ export function validateBatchUpdateCredentialStatusMiddleware(): MiddlewareHandl
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', result.data);
+      c.set("validatedBody", result.data);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -524,25 +524,25 @@ export function validateRelatedAchievementMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', result.data);
+      c.set("validatedBody", result.data);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });
@@ -567,25 +567,25 @@ export function validateEndorsementCredentialMiddleware(): MiddlewareHandler<{
         return c.json(
           {
             success: false,
-            error: 'Validation error',
+            error: "Validation error",
             details: formatZodErrors(result),
           },
-          400
+          400,
         );
       }
 
       // Store the validated body in context for route handlers to use
-      c.set('validatedBody', result.data);
+      c.set("validatedBody", result.data);
 
       await next();
     } catch (_error) {
       return c.json(
         {
           success: false,
-          error: 'Invalid request body',
-          details: { general: ['Request body must be valid JSON'] },
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
         },
-        400
+        400,
       );
     }
   });

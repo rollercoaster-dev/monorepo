@@ -7,9 +7,9 @@
 
 This analysis is based on the troubleshooting session log (`ci-cd-troubleshooting-session-2025-06-09-15-06.md`) and an inspection of the repository's CI/CD configuration.
 
-*   **CI/CD Platform**: **GitHub Actions** is used for all CI and release workflows.
-*   **Application Stack**: The project is a **TypeScript/Node.js** application built using the **Bun** runtime.
-*   **Deployment Target**: The pipeline is configured to build and push multi-arch **Docker images** to the **GitHub Container Registry (GHCR)**.
+- **CI/CD Platform**: **GitHub Actions** is used for all CI and release workflows.
+- **Application Stack**: The project is a **TypeScript/Node.js** application built using the **Bun** runtime.
+- **Deployment Target**: The pipeline is configured to build and push multi-arch **Docker images** to the **GitHub Container Registry (GHCR)**.
 
 ### Point of Failure
 
@@ -73,69 +73,74 @@ These changes will ensure the release workflow is reliable, atomic, and verifiab
 To enhance the security, efficiency, and reliability of your CI/CD pipeline, I recommend the following high-impact improvements:
 
 ### 1. Pin Action Versions
-*   **Recommendation**: Pin GitHub Actions to specific immutable versions (e.g., a specific commit SHA or a tagged version like `v4.1.1`) instead of floating tags like `@v4`.
-*   **Benefit**: This prevents unexpected build failures caused by breaking changes introduced in new minor or major versions of an action. It guarantees workflow stability and reproducibility.
-*   **Example (`.github/workflows/ci.yml`)**:
-    ```yaml
-    # Unsafe - subject to breaking changes
-    - uses: actions/checkout@v4
 
-    # Secure - pinned to a specific version
-    - uses: actions/checkout@v4.1.7 # Or use a specific commit SHA
-    ```
+- **Recommendation**: Pin GitHub Actions to specific immutable versions (e.g., a specific commit SHA or a tagged version like `v4.1.1`) instead of floating tags like `@v4`.
+- **Benefit**: This prevents unexpected build failures caused by breaking changes introduced in new minor or major versions of an action. It guarantees workflow stability and reproducibility.
+- **Example (`.github/workflows/ci.yml`)**:
+
+  ```yaml
+  # Unsafe - subject to breaking changes
+  - uses: actions/checkout@v4
+
+  # Secure - pinned to a specific version
+  - uses: actions/checkout@v4.1.7 # Or use a specific commit SHA
+  ```
 
 ### 2. Implement Docker Layer Caching
-*   **Recommendation**: Introduce caching for Docker layers in your Docker build process.
-*   **Benefit**: Drastically reduces build times for Docker images, as unchanged layers are pulled from the cache instead of being rebuilt. This leads to faster releases and lower costs for GitHub-hosted runners.
-*   **Example (using `docker/build-push-action`)**:
-    ```yaml
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    ```
+
+- **Recommendation**: Introduce caching for Docker layers in your Docker build process.
+- **Benefit**: Drastically reduces build times for Docker images, as unchanged layers are pulled from the cache instead of being rebuilt. This leads to faster releases and lower costs for GitHub-hosted runners.
+- **Example (using `docker/build-push-action`)**:
+  ```yaml
+  - name: Build and push Docker image
+    uses: docker/build-push-action@v5
+    with:
+      context: .
+      push: true
+      tags: ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
+  ```
 
 ### 3. Use GitHub Environments for Secret Protection
-*   **Recommendation**: Leverage GitHub Environments to protect branches and manage secrets. Create separate environments for `beta` and `main`.
-*   **Benefit**: Environments allow you to add protection rules, such as requiring a manual approval from a specific team member before a workflow can access environment-specific secrets (like production tokens). This is a critical security control for preventing unauthorized or accidental deployments.
-*   **Example**:
-    1.  In repository settings, go to **Environments** and create a `Production` environment.
-    2.  Add a protection rule for the `main` branch and add any required reviewers.
-    3.  Store production-level secrets in this environment.
-    4.  Update the release workflow to reference this environment.
-    ```yaml
-    jobs:
-      release:
-        name: Release
-        runs-on: ubuntu-latest
-        environment: Production
-    ```
+
+- **Recommendation**: Leverage GitHub Environments to protect branches and manage secrets. Create separate environments for `beta` and `main`.
+- **Benefit**: Environments allow you to add protection rules, such as requiring a manual approval from a specific team member before a workflow can access environment-specific secrets (like production tokens). This is a critical security control for preventing unauthorized or accidental deployments.
+- **Example**:
+  1.  In repository settings, go to **Environments** and create a `Production` environment.
+  2.  Add a protection rule for the `main` branch and add any required reviewers.
+  3.  Store production-level secrets in this environment.
+  4.  Update the release workflow to reference this environment.
+  ```yaml
+  jobs:
+    release:
+      name: Release
+      runs-on: ubuntu-latest
+      environment: Production
+  ```
 
 ### 4. Consolidate Setup with Reusable Workflows or Composite Actions
-*   **Recommendation**: The setup, install, and build steps are duplicated across `ci.yml` and `release.yml`. Consolidate this logic into a reusable workflow or a composite action.
-*   **Benefit**: Reduces code duplication, simplifies maintenance, and ensures consistency. A change to the build process only needs to be made in one place.
-*   **Example (Composite Action `.github/actions/setup-and-build/action.yml`)**:
-    ```yaml
-    name: 'Setup and Build'
-    description: 'Checks out code, installs dependencies, and builds the application'
-    runs:
-      using: "composite"
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-        - name: Setup Bun
-          uses: oven-sh/setup-bun@v1
-        - name: Install dependencies
-          run: bun install --frozen-lockfile
-          shell: bash
-        - name: Build application
-          run: bun run build
-          shell: bash
-    ```
-    This can then be called in any workflow with a single line: `- uses: ./.github/actions/setup-and-build`
+
+- **Recommendation**: The setup, install, and build steps are duplicated across `ci.yml` and `release.yml`. Consolidate this logic into a reusable workflow or a composite action.
+- **Benefit**: Reduces code duplication, simplifies maintenance, and ensures consistency. A change to the build process only needs to be made in one place.
+- **Example (Composite Action `.github/actions/setup-and-build/action.yml`)**:
+  ```yaml
+  name: "Setup and Build"
+  description: "Checks out code, installs dependencies, and builds the application"
+  runs:
+    using: "composite"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        shell: bash
+      - name: Build application
+        run: bun run build
+        shell: bash
+  ```
+  This can then be called in any workflow with a single line: `- uses: ./.github/actions/setup-and-build`

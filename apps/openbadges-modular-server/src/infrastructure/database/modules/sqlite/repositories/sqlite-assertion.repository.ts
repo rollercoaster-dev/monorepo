@@ -5,17 +5,17 @@
  * and the Data Mapper pattern.
  */
 
-import { eq, sql, inArray } from 'drizzle-orm';
-import { Assertion } from '@domains/assertion/assertion.entity';
-import type { AssertionRepository } from '@domains/assertion/assertion.repository';
-import { assertions } from '../schema';
-import { SqliteAssertionMapper } from '../mappers/sqlite-assertion.mapper';
-import type { Shared } from 'openbadges-types';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { BaseSqliteRepository } from './base-sqlite.repository';
-import type { SqlitePaginationParams } from '../types/sqlite-database.types';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger'; // Correctly placed import
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+import { eq, sql, inArray } from "drizzle-orm";
+import { Assertion } from "@domains/assertion/assertion.entity";
+import type { AssertionRepository } from "@domains/assertion/assertion.repository";
+import { assertions } from "../schema";
+import { SqliteAssertionMapper } from "../mappers/sqlite-assertion.mapper";
+import type { Shared } from "openbadges-types";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { BaseSqliteRepository } from "./base-sqlite.repository";
+import type { SqlitePaginationParams } from "../types/sqlite-database.types";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger"; // Correctly placed import
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 export class SqliteAssertionRepository
   extends BaseSqliteRepository
@@ -28,12 +28,12 @@ export class SqliteAssertionRepository
     this.mapper = new SqliteAssertionMapper();
   }
 
-  protected getEntityType(): 'assertion' {
-    return 'assertion';
+  protected getEntityType(): "assertion" {
+    return "assertion";
   }
 
   protected getTableName(): string {
-    return 'assertions';
+    return "assertions";
   }
 
   /**
@@ -43,8 +43,8 @@ export class SqliteAssertionRepository
     return this.mapper;
   }
 
-  async create(assertion: Omit<Assertion, 'id'>): Promise<Assertion> {
-    const context = this.createOperationContext('INSERT Assertion');
+  async create(assertion: Omit<Assertion, "id">): Promise<Assertion> {
+    const context = this.createOperationContext("INSERT Assertion");
 
     return this.executeTransaction(context, async (tx) => {
       const assertionWithId = Assertion.create(assertion);
@@ -65,7 +65,7 @@ export class SqliteAssertionRepository
    * @returns Promise resolving to array of Assertion entities
    */
   async findAll(pagination?: SqlitePaginationParams): Promise<Assertion[]> {
-    const context = this.createOperationContext('SELECT All Assertions');
+    const context = this.createOperationContext("SELECT All Assertions");
 
     const result = await this.executeQuery(context, async (db) => {
       const { limit, offset } = this.validatePagination(pagination);
@@ -73,7 +73,7 @@ export class SqliteAssertionRepository
     });
 
     return result.map((record: typeof assertions.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
@@ -84,7 +84,7 @@ export class SqliteAssertionRepository
    */
   async findAllUnbounded(): Promise<Assertion[]> {
     const context = this.createOperationContext(
-      'SELECT All Assertions (Unbounded)'
+      "SELECT All Assertions (Unbounded)",
     );
 
     const result = await this.executeQuery(context, async (db) => {
@@ -95,17 +95,17 @@ export class SqliteAssertionRepository
   }
 
   async findById(id: Shared.IRI): Promise<Assertion | null> {
-    this.validateEntityId(id, 'find assertion by ID');
-    const context = this.createOperationContext('SELECT Assertion by ID', id);
+    this.validateEntityId(id, "find assertion by ID");
+    const context = this.createOperationContext("SELECT Assertion by ID", id);
 
     const result = await this.executeSingleQuery(
       context,
       async (db) => {
         // Convert URN to UUID for SQLite query
-        const dbId = convertUuid(id as string, 'sqlite', 'to');
+        const dbId = convertUuid(id as string, "sqlite", "to");
         return db.select().from(assertions).where(eq(assertions.id, dbId));
       },
-      [id]
+      [id],
     );
 
     return result
@@ -114,10 +114,10 @@ export class SqliteAssertionRepository
   }
 
   async findByBadgeClass(badgeClassId: Shared.IRI): Promise<Assertion[]> {
-    this.validateEntityId(badgeClassId, 'find assertions by badge class');
+    this.validateEntityId(badgeClassId, "find assertions by badge class");
     const context = this.createOperationContext(
-      'SELECT Assertions by BadgeClass',
-      badgeClassId
+      "SELECT Assertions by BadgeClass",
+      badgeClassId,
     );
 
     const result = await this.executeQuery(
@@ -126,26 +126,26 @@ export class SqliteAssertionRepository
         // Convert URN to UUID for SQLite query
         const dbBadgeClassId = convertUuid(
           badgeClassId as string,
-          'sqlite',
-          'to'
+          "sqlite",
+          "to",
         );
         return db
           .select()
           .from(assertions)
           .where(eq(assertions.badgeClassId, dbBadgeClassId));
       },
-      [badgeClassId]
+      [badgeClassId],
     );
 
     return result.map((record: typeof assertions.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
   async findByRecipient(recipientId: Shared.IRI): Promise<Assertion[]> {
     const context = this.createOperationContext(
-      'SELECT Assertions by Recipient',
-      recipientId
+      "SELECT Assertions by Recipient",
+      recipientId,
     );
 
     const result = await this.executeQuery(
@@ -157,27 +157,27 @@ export class SqliteAssertionRepository
           .select()
           .from(assertions)
           .where(
-            sql`json_extract(${assertions.recipient}, '$.identity') = ${recipientId}`
+            sql`json_extract(${assertions.recipient}, '$.identity') = ${recipientId}`,
           );
       },
-      [new SensitiveValue(recipientId)] // Wrap recipientId in SensitiveValue for logging
+      [new SensitiveValue(recipientId)], // Wrap recipientId in SensitiveValue for logging
     );
 
     return result.map((record: typeof assertions.$inferSelect) =>
-      this.mapper.toDomain(record)
+      this.mapper.toDomain(record),
     );
   }
 
   async update(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null> {
-    const context = this.createOperationContext('UPDATE Assertion', id);
+    const context = this.createOperationContext("UPDATE Assertion", id);
 
     return this.executeTransaction(context, async (tx) => {
       // Perform SELECT and UPDATE within the same transaction to prevent TOCTOU race condition
       // Convert URN to UUID for SQLite query
-      const dbId = convertUuid(id as string, 'sqlite', 'to');
+      const dbId = convertUuid(id as string, "sqlite", "to");
       const existing = await tx
         .select()
         .from(assertions)
@@ -213,17 +213,17 @@ export class SqliteAssertionRepository
   }
 
   async delete(id: Shared.IRI): Promise<boolean> {
-    const context = this.createOperationContext('DELETE Assertion', id);
+    const context = this.createOperationContext("DELETE Assertion", id);
 
     return this.executeDelete(context, async (db) => {
       // Convert URN to UUID for SQLite query
-      const dbId = convertUuid(id as string, 'sqlite', 'to');
+      const dbId = convertUuid(id as string, "sqlite", "to");
       return db.delete(assertions).where(eq(assertions.id, dbId)).returning();
     });
   }
 
   async revoke(id: Shared.IRI, reason?: string): Promise<Assertion | null> {
-    const context = this.createOperationContext('REVOKE Assertion', id);
+    const context = this.createOperationContext("REVOKE Assertion", id);
 
     return this.executeTransaction(context, async () => {
       const existingAssertion = await this.findById(id);
@@ -239,19 +239,19 @@ export class SqliteAssertionRepository
   }
 
   async verify(id: Shared.IRI): Promise<{ isValid: boolean; reason?: string }> {
-    const context = this.createOperationContext('VERIFY Assertion', id);
+    const context = this.createOperationContext("VERIFY Assertion", id);
 
     try {
       const assertion = await this.findById(id);
 
       if (!assertion) {
-        return { isValid: false, reason: 'Assertion not found' };
+        return { isValid: false, reason: "Assertion not found" };
       }
 
       if (assertion.revoked) {
         return {
           isValid: false,
-          reason: assertion.revocationReason || 'Assertion has been revoked',
+          reason: assertion.revocationReason || "Assertion has been revoked",
         };
       }
 
@@ -259,7 +259,7 @@ export class SqliteAssertionRepository
         const expiryDate = new Date(assertion.expires);
         const now = new Date();
         if (expiryDate < now) {
-          return { isValid: false, reason: 'Assertion has expired' };
+          return { isValid: false, reason: "Assertion has expired" };
         }
       }
 
@@ -270,7 +270,7 @@ export class SqliteAssertionRepository
     }
   }
 
-  async createBatch(assertionList: Omit<Assertion, 'id'>[]): Promise<
+  async createBatch(assertionList: Omit<Assertion, "id">[]): Promise<
     Array<{
       success: boolean;
       assertion?: Assertion;
@@ -281,7 +281,7 @@ export class SqliteAssertionRepository
       return [];
     }
 
-    const context = this.createOperationContext('BATCH CREATE Assertions');
+    const context = this.createOperationContext("BATCH CREATE Assertions");
 
     return this.executeTransaction(context, async (tx) => {
       const results: Array<{
@@ -309,7 +309,7 @@ export class SqliteAssertionRepository
         } catch (error) {
           results.push({
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -323,7 +323,7 @@ export class SqliteAssertionRepository
       return [];
     }
 
-    const context = this.createOperationContext('SELECT Assertions by IDs');
+    const context = this.createOperationContext("SELECT Assertions by IDs");
 
     const result = await this.executeQuery(
       context,
@@ -334,7 +334,7 @@ export class SqliteAssertionRepository
           .from(assertions)
           .where(inArray(assertions.id, stringIds));
       },
-      ids
+      ids,
     );
 
     // Create a map for quick lookup
@@ -351,9 +351,9 @@ export class SqliteAssertionRepository
   async updateStatusBatch(
     updates: Array<{
       id: Shared.IRI;
-      status: 'revoked' | 'suspended' | 'active';
+      status: "revoked" | "suspended" | "active";
       reason?: string;
-    }>
+    }>,
   ): Promise<
     Array<{
       id: Shared.IRI;
@@ -367,7 +367,7 @@ export class SqliteAssertionRepository
     }
 
     const context = this.createOperationContext(
-      'BATCH UPDATE Assertion Status'
+      "BATCH UPDATE Assertion Status",
     );
 
     return this.executeTransaction(context, async () => {
@@ -386,7 +386,7 @@ export class SqliteAssertionRepository
             results.push({
               id: update.id,
               success: false,
-              error: 'Assertion not found',
+              error: "Assertion not found",
             });
             continue;
           }
@@ -395,16 +395,16 @@ export class SqliteAssertionRepository
           const updateData: Partial<Assertion> = {};
 
           switch (update.status) {
-            case 'revoked':
+            case "revoked":
               updateData.revoked = true;
-              updateData.revocationReason = update.reason || 'Revoked';
+              updateData.revocationReason = update.reason || "Revoked";
               break;
-            case 'suspended':
+            case "suspended":
               // For now, treat suspended as revoked with a specific reason
               updateData.revoked = true;
-              updateData.revocationReason = update.reason || 'Suspended';
+              updateData.revocationReason = update.reason || "Suspended";
               break;
-            case 'active':
+            case "active":
               updateData.revoked = false;
               updateData.revocationReason = undefined;
               break;
@@ -421,14 +421,14 @@ export class SqliteAssertionRepository
             results.push({
               id: update.id,
               success: false,
-              error: 'Failed to update assertion',
+              error: "Failed to update assertion",
             });
           }
         } catch (error) {
           results.push({
             id: update.id,
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }

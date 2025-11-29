@@ -1,17 +1,20 @@
 # VS Code Extension Setup
 
 ## Overview
+
 Create a VS Code extension that provides UI and commands for managing your `.cursor/working` structure directly within the editor.
 
 ## Implementation Steps
 
 1. **Initialize a VS Code extension project**
+
    ```bash
    npm install -g yo generator-code
    yo code
    ```
 
 2. **Define commands in package.json**
+
    ```json
    "contributes": {
      "commands": [
@@ -64,6 +67,7 @@ Create a VS Code extension that provides UI and commands for managing your `.cur
    ```
 
 ## Benefits
+
 - Integrated directly into your development environment
 - Visual interface for managing tasks and ideas
 - Quick commands for common operations

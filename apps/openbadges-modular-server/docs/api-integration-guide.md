@@ -96,44 +96,44 @@ curl -X GET https://badges.example.com/v2/issuers \
 
 ### Issuers
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/issuers` | GET | List all issuers |
-| `/v2/issuers` | POST | Create a new issuer |
-| `/v2/issuers/{issuerId}` | GET | Get issuer details |
-| `/v2/issuers/{issuerId}` | PUT | Update an issuer |
-| `/v2/issuers/{issuerId}` | DELETE | Delete an issuer |
+| Endpoint                 | Method | Description         |
+| ------------------------ | ------ | ------------------- |
+| `/v2/issuers`            | GET    | List all issuers    |
+| `/v2/issuers`            | POST   | Create a new issuer |
+| `/v2/issuers/{issuerId}` | GET    | Get issuer details  |
+| `/v2/issuers/{issuerId}` | PUT    | Update an issuer    |
+| `/v2/issuers/{issuerId}` | DELETE | Delete an issuer    |
 
 ### Badge Classes
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/issuers/{issuerId}/badge-classes` | GET | List badge classes for an issuer |
-| `/v2/issuers/{issuerId}/badge-classes` | POST | Create a new badge class |
-| `/v2/badge-classes/{badgeClassId}` | GET | Get badge class details |
-| `/v2/badge-classes/{badgeClassId}` | PUT | Update a badge class |
-| `/v2/badge-classes/{badgeClassId}` | DELETE | Delete a badge class |
+| Endpoint                               | Method | Description                      |
+| -------------------------------------- | ------ | -------------------------------- |
+| `/v2/issuers/{issuerId}/badge-classes` | GET    | List badge classes for an issuer |
+| `/v2/issuers/{issuerId}/badge-classes` | POST   | Create a new badge class         |
+| `/v2/badge-classes/{badgeClassId}`     | GET    | Get badge class details          |
+| `/v2/badge-classes/{badgeClassId}`     | PUT    | Update a badge class             |
+| `/v2/badge-classes/{badgeClassId}`     | DELETE | Delete a badge class             |
 
 ### Assertions
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/badge-classes/{badgeClassId}/assertions` | GET | List assertions for a badge class |
-| `/v2/badge-classes/{badgeClassId}/assertions` | POST | Issue a new assertion |
-| `/v2/assertions/{assertionId}` | GET | Get assertion details |
-| `/v2/assertions/{assertionId}` | PUT | Update an assertion |
-| `/v2/assertions/{assertionId}` | DELETE | Revoke an assertion |
+| Endpoint                                      | Method | Description                       |
+| --------------------------------------------- | ------ | --------------------------------- |
+| `/v2/badge-classes/{badgeClassId}/assertions` | GET    | List assertions for a badge class |
+| `/v2/badge-classes/{badgeClassId}/assertions` | POST   | Issue a new assertion             |
+| `/v2/assertions/{assertionId}`                | GET    | Get assertion details             |
+| `/v2/assertions/{assertionId}`                | PUT    | Update an assertion               |
+| `/v2/assertions/{assertionId}`                | DELETE | Revoke an assertion               |
 
 ### Public Endpoints
 
 These endpoints are accessible without authentication:
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/issuers/{issuerId}/public` | GET | Get public issuer details |
-| `/v2/badge-classes/{badgeClassId}/public` | GET | Get public badge class details |
-| `/v2/assertions/{assertionId}/public` | GET | Get public assertion details |
-| `/health` | GET | Check API health |
+| Endpoint                                  | Method | Description                    |
+| ----------------------------------------- | ------ | ------------------------------ |
+| `/v2/issuers/{issuerId}/public`           | GET    | Get public issuer details      |
+| `/v2/badge-classes/{badgeClassId}/public` | GET    | Get public badge class details |
+| `/v2/assertions/{assertionId}/public`     | GET    | Get public assertion details   |
+| `/health`                                 | GET    | Check API health               |
 
 ## Integration Examples
 
@@ -142,35 +142,35 @@ These endpoints are accessible without authentication:
 ```typescript
 // Using fetch API
 async function getIssuers(apiKey: string): Promise<any> {
-  const response = await fetch('https://badges.example.com/v2/issuers', {
+  const response = await fetch("https://badges.example.com/v2/issuers", {
     headers: {
-      'Authorization': `ApiKey ${apiKey}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `ApiKey ${apiKey}`,
+      "Content-Type": "application/json",
+    },
   });
-  
+
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
-  
+
   return response.json();
 }
 
 // Create an issuer
 async function createIssuer(apiKey: string, issuerData: any): Promise<any> {
-  const response = await fetch('https://badges.example.com/v2/issuers', {
-    method: 'POST',
+  const response = await fetch("https://badges.example.com/v2/issuers", {
+    method: "POST",
     headers: {
-      'Authorization': `ApiKey ${apiKey}`,
-      'Content-Type': 'application/json'
+      Authorization: `ApiKey ${apiKey}`,
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(issuerData)
+    body: JSON.stringify(issuerData),
   });
-  
+
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
-  
+
   return response.json();
 }
 ```

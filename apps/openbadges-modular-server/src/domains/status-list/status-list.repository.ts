@@ -5,14 +5,14 @@
  * across different database implementations.
  */
 
-import type { StatusList } from './status-list.entity';
+import type { StatusList } from "./status-list.entity";
 import type {
   StatusPurpose,
   StatusListQueryParams,
   CredentialStatusEntryData,
   UpdateCredentialStatusParams,
   StatusUpdateResult,
-} from './status-list.types';
+} from "./status-list.types";
 
 /**
  * StatusList repository interface
@@ -49,7 +49,7 @@ export interface StatusListRepository {
   findAvailableStatusList(
     issuerId: string,
     purpose: StatusPurpose,
-    statusSize: number
+    statusSize: number,
   ): Promise<StatusList | null>;
 
   /**
@@ -72,7 +72,7 @@ export interface StatusListRepository {
    * @returns Created credential status entry
    */
   createStatusEntry(
-    entry: Omit<CredentialStatusEntryData, 'id' | 'createdAt' | 'updatedAt'>
+    entry: Omit<CredentialStatusEntryData, "id" | "createdAt" | "updatedAt">,
   ): Promise<CredentialStatusEntryData>;
 
   /**
@@ -83,7 +83,7 @@ export interface StatusListRepository {
    */
   findStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose
+    purpose: StatusPurpose,
   ): Promise<CredentialStatusEntryData | null>;
 
   /**
@@ -92,7 +92,7 @@ export interface StatusListRepository {
    * @returns Array of credential status entries
    */
   findStatusEntriesByList(
-    statusListId: string
+    statusListId: string,
   ): Promise<CredentialStatusEntryData[]>;
 
   /**
@@ -101,7 +101,7 @@ export interface StatusListRepository {
    * @returns Updated credential status entry
    */
   updateStatusEntry(
-    entry: CredentialStatusEntryData
+    entry: CredentialStatusEntryData,
   ): Promise<CredentialStatusEntryData>;
 
   /**
@@ -110,7 +110,7 @@ export interface StatusListRepository {
    * @returns Result of the status update operation
    */
   updateCredentialStatus(
-    params: UpdateCredentialStatusParams
+    params: UpdateCredentialStatusParams,
   ): Promise<StatusUpdateResult>;
 
   /**
@@ -149,7 +149,7 @@ export interface StatusListRepository {
    */
   hasStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose
+    purpose: StatusPurpose,
   ): Promise<boolean>;
 
   /**
@@ -174,6 +174,6 @@ export interface StatusListRepository {
   findCredentialsNeedingStatus(
     issuerId: string,
     purpose: StatusPurpose,
-    limit?: number
+    limit?: number,
   ): Promise<string[]>;
 }

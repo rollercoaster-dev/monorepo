@@ -13,6 +13,7 @@ This document provides guidelines for securely managing database credentials in 
 ## Overview
 
 The Open Badges API supports two database types:
+
 - **SQLite**: File-based database that doesn't require credentials
 - **PostgreSQL**: Client-server database that requires username and password
 
@@ -32,6 +33,7 @@ The following environment variables are used for PostgreSQL credentials:
 - `DATABASE_URL`: Full PostgreSQL connection string (default: "postgres://postgres:postgres@db:5432/openbadges")
 
 Example `.env` file:
+
 ```
 DB_TYPE=postgresql
 POSTGRES_USER=openbadges_user
@@ -92,6 +94,7 @@ secrets:
 Regularly rotating database credentials is a security best practice. Here's how to rotate PostgreSQL credentials:
 
 1. Create a new PostgreSQL user:
+
    ```sql
    CREATE USER new_user WITH PASSWORD 'new_password';
    GRANT ALL PRIVILEGES ON DATABASE openbadges TO new_user;
@@ -102,6 +105,7 @@ Regularly rotating database credentials is a security best practice. Here's how 
    - If using Docker Secrets, create new secrets and update the Docker Compose file
 
 3. Restart the application to use the new credentials:
+
    ```bash
    docker-compose -f docker-compose.prod.yml down
    docker-compose -f docker-compose.prod.yml up -d
@@ -125,6 +129,7 @@ Regularly rotating database credentials is a security best practice. Here's how 
 - Use a password generator for maximum security
 
 Example of generating a secure password:
+
 ```bash
 openssl rand -base64 24
 ```

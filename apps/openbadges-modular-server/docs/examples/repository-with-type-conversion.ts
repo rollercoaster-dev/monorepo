@@ -9,25 +9,25 @@
 // This is an example file and doesn't need to import actual modules
 // In a real implementation, you would import from the actual paths
 
-import { Issuer } from '@/domains/issuer/issuer.entity';
+import { Issuer } from "@/domains/issuer/issuer.entity";
 import {
   convertJson,
   convertTimestamp,
   convertUuid,
-} from '@/infrastructure/database/utils/type-conversion';
-import { config } from '@/config/config';
-import { logger } from '@/utils/logging/logger.service';
+} from "@/infrastructure/database/utils/type-conversion";
+import { config } from "@/config/config";
+import { logger } from "@/utils/logging/logger.service";
 
 /**
  * Example repository implementation that uses type conversion utilities
  */
 // This is just an example implementation
 export class ExampleIssuerRepository {
-  private dbType: 'postgresql' | 'sqlite';
+  private dbType: "postgresql" | "sqlite";
 
   constructor() {
     // Determine database type from config
-    this.dbType = (config.database.type as 'postgresql' | 'sqlite') || 'sqlite';
+    this.dbType = (config.database.type as "postgresql" | "sqlite") || "sqlite";
   }
 
   /**
@@ -39,19 +39,19 @@ export class ExampleIssuerRepository {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _entityToRecord(issuer: Issuer): any {
     return {
-      id: convertUuid(issuer.id, this.dbType, 'to'),
+      id: convertUuid(issuer.id, this.dbType, "to"),
       name: issuer.name,
       url: issuer.url,
       email: issuer.email,
       description: issuer.description,
       image: issuer.image,
       // Convert JSON data for storage
-      publicKey: convertJson(issuer.publicKey, this.dbType, 'to'),
+      publicKey: convertJson(issuer.publicKey, this.dbType, "to"),
       // Convert timestamps for storage
-      createdAt: convertTimestamp(issuer.createdAt as Date, this.dbType, 'to'),
-      updatedAt: convertTimestamp(issuer.updatedAt as Date, this.dbType, 'to'),
+      createdAt: convertTimestamp(issuer.createdAt as Date, this.dbType, "to"),
+      updatedAt: convertTimestamp(issuer.updatedAt as Date, this.dbType, "to"),
       // Convert additional fields for storage
-      additionalFields: convertJson(issuer.additionalFields, this.dbType, 'to'),
+      additionalFields: convertJson(issuer.additionalFields, this.dbType, "to"),
     };
   }
 
@@ -65,30 +65,30 @@ export class ExampleIssuerRepository {
   private _recordToEntity(record: any): any {
     // Create a mock Issuer object with toObject method
     const issuer = {
-      id: convertUuid(record.id, this.dbType, 'from') as string,
-      name: record.name ?? '',
-      url: record.url ?? '',
+      id: convertUuid(record.id, this.dbType, "from") as string,
+      name: record.name ?? "",
+      url: record.url ?? "",
       email: record.email,
       description: record.description,
       image: record.image,
       // Convert JSON data from storage
-      publicKey: convertJson(record.publicKey, this.dbType, 'from'),
+      publicKey: convertJson(record.publicKey, this.dbType, "from"),
       // Convert timestamps from storage
       createdAt: convertTimestamp(
         record.createdAt,
         this.dbType,
-        'from'
+        "from",
       ) as Date | null,
       updatedAt: convertTimestamp(
         record.updatedAt,
         this.dbType,
-        'from'
+        "from",
       ) as Date | null,
       // Convert additional fields from storage
       additionalFields: convertJson(
         record.additionalFields,
         this.dbType,
-        'from'
+        "from",
       ),
       toObject: () => ({
         id: record.id,
@@ -117,14 +117,14 @@ export class ExampleIssuerRepository {
       // 2. Convert the database record to an entity using recordToEntity
 
       // Example with PostgreSQL:
-      if (this.dbType === 'postgresql') {
+      if (this.dbType === "postgresql") {
         // const result = await pgClient.query('SELECT * FROM issuers WHERE id = $1', [_id]);
         // if (result.rows.length === 0) return null;
         // return this.recordToEntity(result.rows[0]);
       }
 
       // Example with SQLite:
-      if (this.dbType === 'sqlite') {
+      if (this.dbType === "sqlite") {
         // const result = sqliteDb.query('SELECT * FROM issuers WHERE id = ?', [_id]);
         // if (!result) return null;
         // return this.recordToEntity(result);
@@ -132,7 +132,7 @@ export class ExampleIssuerRepository {
 
       return null;
     } catch (error) {
-      logger.logError('Error finding issuer by ID', error as Error);
+      logger.logError("Error finding issuer by ID", error as Error);
       throw error;
     }
   }
@@ -153,7 +153,7 @@ export class ExampleIssuerRepository {
       // 2. Return the created entity
 
       // Example with PostgreSQL:
-      if (this.dbType === 'postgresql') {
+      if (this.dbType === "postgresql") {
         // const result = await pgClient.query(
         //   'INSERT INTO issuers (id, name, url, email, description, image, public_key, created_at, updated_at, additional_fields) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
         //   [_record.id, _record.name, _record.url, _record.email, _record.description, _record.image, _record.publicKey, _record.createdAt, _record.updatedAt, _record.additionalFields]
@@ -162,7 +162,7 @@ export class ExampleIssuerRepository {
       }
 
       // Example with SQLite:
-      if (this.dbType === 'sqlite') {
+      if (this.dbType === "sqlite") {
         // sqliteDb.query(
         //   'INSERT INTO issuers (id, name, url, email, description, image, public_key, created_at, updated_at, additional_fields) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         //   [_record.id, _record.name, _record.url, _record.email, _record.description, _record.image, _record.publicKey, _record.createdAt, _record.updatedAt, _record.additionalFields]
@@ -173,7 +173,7 @@ export class ExampleIssuerRepository {
 
       return issuer;
     } catch (error) {
-      logger.logError('Error creating issuer', error as Error);
+      logger.logError("Error creating issuer", error as Error);
       throw error;
     }
   }

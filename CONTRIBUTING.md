@@ -5,12 +5,14 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 ## 🎯 Philosophy
 
 **Low Barrier to Entry**
+
 - Clear, step-by-step instructions
 - No assumed knowledge
 - Patient, supportive review process
 - Multiple ways to contribute (not just code!)
 
 **Neurodivergent-Friendly Process**
+
 - Predictable workflows
 - Written documentation over synchronous meetings
 - Time to process and respond (no pressure)
@@ -21,12 +23,14 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 ### First Time Setup
 
 1. **Fork and Clone**
+
    ```bash
    gh repo fork rollercoaster-dev/monorepo --clone
    cd monorepo
    ```
 
 2. **Install Dependencies**
+
    ```bash
    # Install Bun if you don't have it
    curl -fsSL https://bun.sh/install | bash
@@ -36,6 +40,7 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
    ```
 
 3. **Verify Setup**
+
    ```bash
    # Run tests
    bun test
@@ -47,6 +52,7 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 ### Making Changes
 
 1. **Create a Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -59,6 +65,7 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
    - Update documentation
 
 3. **Test Your Changes**
+
    ```bash
    # Run tests for affected packages
    bun test
@@ -71,6 +78,7 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
    ```
 
 4. **Commit Your Changes**
+
    ```bash
    git add .
    git commit -m "feat: your feature description"
@@ -87,12 +95,14 @@ Thank you for your interest in contributing to Rollercoaster.dev! This project i
 ## 📝 Ways to Contribute
 
 ### Code Contributions
+
 - **Bug fixes** - Found something broken? Fix it!
 - **New features** - Check [Issues](https://github.com/rollercoaster-dev/monorepo/issues) for planned work
 - **Tests** - Improve test coverage
 - **Performance** - Make things faster
 
 ### Non-Code Contributions
+
 - **Documentation** - Improve clarity, fix typos, add examples
 - **Design** - UX improvements, accessibility feedback
 - **Testing** - Manual testing, bug reports
@@ -109,6 +119,7 @@ monorepo/
 ```
 
 **When making changes:**
+
 - Applications go in `apps/`
 - Reusable code goes in `packages/`
 - Experimental ideas go in `experiments/`
@@ -141,11 +152,13 @@ bun test --coverage
 ## 📐 Code Style
 
 ### TypeScript
+
 - **Strict mode enabled** - Fix type errors, don't use `any`
 - **Explicit types** - Prefer explicit over inferred when it aids clarity
 - **Functional when possible** - Pure functions, immutability
 
 ### Formatting
+
 ```bash
 # Check formatting
 bun run format:check
@@ -157,6 +170,7 @@ bun run format
 We use Prettier - don't fight it, let it handle formatting.
 
 ### Linting
+
 ```bash
 # Check linting
 bun run lint
@@ -170,6 +184,7 @@ bun run lint:fix
 We use [Conventional Commits](https://www.conventionalcommits.org/) for clear, scannable history.
 
 ### Format
+
 ```
 <type>(<scope>): <description>
 
@@ -179,6 +194,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for clear, s
 ```
 
 ### Types
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation only
@@ -189,7 +205,9 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for clear, s
 - `chore:` - Maintenance tasks, dependencies
 
 ### Scope
+
 The package or app affected:
+
 - `openbadges-system`
 - `openbadges-ui`
 - `skill-tree`
@@ -197,6 +215,7 @@ The package or app affected:
 - `ci`
 
 ### Examples
+
 ```bash
 feat(openbadges-system): add self-signed badge creation
 fix(openbadges-ui): correct dyslexia theme font loading
@@ -208,6 +227,7 @@ chore(deps): upgrade vue to 3.4.0
 ## 🔄 Pull Request Process
 
 ### Before Submitting
+
 - [ ] Tests pass (`bun test`)
 - [ ] Linting passes (`bun run lint`)
 - [ ] Type checking passes (`bun run type-check`)
@@ -220,21 +240,26 @@ When you create a PR, include:
 
 ```markdown
 ## What does this PR do?
+
 Brief description of the change
 
 ## Why?
+
 What problem does this solve?
 
 ## How to test?
+
 Steps to verify the change works
 
 ## Checklist
+
 - [ ] Tests added/updated
 - [ ] Documentation updated
 - [ ] Breaking changes noted
 ```
 
 ### Review Process
+
 1. **Automated checks** - CI runs tests, linting, type checking
 2. **Code review** - Maintainer reviews code
 3. **Feedback** - Address comments (no pressure, take your time)
@@ -250,6 +275,7 @@ Steps to verify the change works
 We update Bun regularly to get latest features and fixes.
 
 **Update Method:**
+
 ```bash
 # Update Bun to latest
 bun upgrade
@@ -266,6 +292,7 @@ git commit -am "chore: update Bun to X.Y.Z"
 ```
 
 **Why Update:**
+
 - Performance improvements
 - Bug fixes
 - New workspace features
@@ -281,10 +308,10 @@ Any code that accesses `document` or `window` must include guards:
 
 ```typescript
 // Always guard direct DOM access
-if (typeof document === 'undefined') return;
+if (typeof document === "undefined") return;
 
 // Or use optional chaining for simple access
-const width = typeof window !== 'undefined' ? window.innerWidth : 0;
+const width = typeof window !== "undefined" ? window.innerWidth : 0;
 ```
 
 ### Vue Component Lifecycle Cleanup
@@ -293,20 +320,20 @@ If a component modifies `document.body` or creates global event listeners, add c
 
 ```vue
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted } from "vue";
 
 onMounted(() => {
   // SSR guard
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
 
-  document.body.classList.add('modal-open');
+  document.body.classList.add("modal-open");
 });
 
 onUnmounted(() => {
   // Clean up DOM modifications
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
 
-  document.body.classList.remove('modal-open');
+  document.body.classList.remove("modal-open");
 });
 </script>
 ```
@@ -317,10 +344,7 @@ Always guard against undefined values before comparison:
 
 ```vue
 <!-- Bad - may error if status is undefined -->
-<div v-if="status !== 'not-applicable'">
-
-<!-- Good - guard against undefined first -->
-<div v-if="status && status !== 'not-applicable'">
+<div v-if="status !== 'not-applicable'"></div>
 ```
 
 ### Type Guards for Open Badges
@@ -328,10 +352,10 @@ Always guard against undefined values before comparison:
 Use `typeIncludes()` from `openbadges-types` for checking badge types (handles both string and array per OB2/OB3 spec):
 
 ```typescript
-import { typeIncludes } from 'openbadges-types';
+import { typeIncludes } from "openbadges-types";
 
 // Works with both string and array type values
-if (typeIncludes(badge.type, 'Assertion')) {
+if (typeIncludes(badge.type, "Assertion")) {
   // Handle OB2 Assertion
 }
 ```
@@ -351,6 +375,7 @@ if (typeIncludes(badge.type, 'Assertion')) {
 We use [openbadges-ui](https://github.com/rollercoaster-dev/openbadges-ui) for our design system.
 
 **7 Neurodivergent Themes:**
+
 1. Dyslexia-friendly
 2. Autism-friendly
 3. Low vision
@@ -360,6 +385,7 @@ We use [openbadges-ui](https://github.com/rollercoaster-dev/openbadges-ui) for o
 7. Classic
 
 When contributing design changes:
+
 - Follow existing design system
 - Test with multiple themes
 - Consider cognitive load
@@ -368,6 +394,7 @@ When contributing design changes:
 ## 🧠 Neurodivergent-Friendly Guidelines
 
 ### For Contributors
+
 - **No deadlines unless critical** - Work at your pace
 - **Written > verbal** - All important info documented
 - **Questions welcome** - There are no "dumb" questions
@@ -375,6 +402,7 @@ When contributing design changes:
 - **Context switching is hard** - We get it, we design for it
 
 ### For Reviewers
+
 - **Specific feedback** - "The error message is unclear" not "This needs work"
 - **Assume good intent** - Everyone's trying their best
 - **Tone matters** - Be kind, be patient
@@ -383,11 +411,13 @@ When contributing design changes:
 ## 📚 Resources
 
 ### Project Documentation
+
 - [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10) - Current work
 - [Issues](https://github.com/rollercoaster-dev/monorepo/issues) - Tasks and bugs
 - [Vision Docs](apps/docs/vision/) - Where we're going (after Phase 5.5)
 
 ### Technical
+
 - [Open Badges 3.0 Spec](https://www.imsglobal.org/spec/ob/v3p0/)
 - [Verifiable Credentials](https://www.w3.org/TR/vc-data-model/)
 - [DIDs](https://www.w3.org/TR/did-core/)
@@ -395,6 +425,7 @@ When contributing design changes:
 - [Turborepo](https://turbo.build/repo/docs)
 
 ### Tools
+
 - [Bun](https://bun.sh/) - JavaScript runtime
 - [Hono](https://hono.dev/) - Web framework
 - [Vue 3](https://vuejs.org/) - Frontend framework
@@ -403,18 +434,21 @@ When contributing design changes:
 ## 🤝 Code of Conduct
 
 ### Our Standards
+
 - **Respectful** - Treat everyone with dignity
 - **Inclusive** - Welcome diverse perspectives
 - **Patient** - Everyone learns at different speeds
 - **Kind** - Assume good intentions
 
 ### Unacceptable Behavior
+
 - Harassment, discrimination, or hate speech
 - Personal attacks or insults
 - Pressure tactics or demanding behavior
 - Gatekeeping or elitism
 
 ### Enforcement
+
 If you experience or witness unacceptable behavior, please report it to the maintainers. All reports will be handled with discretion.
 
 ## ❓ Questions?

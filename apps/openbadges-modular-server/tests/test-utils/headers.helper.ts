@@ -22,7 +22,7 @@ export function headersToObject(headers: Headers): Record<string, string> {
     });
   } catch (_error) {
     // If forEach is not available, return an empty object with a note
-    result['__error__'] = 'Failed to convert headers';
+    result["__error__"] = "Failed to convert headers";
   }
 
   return result;

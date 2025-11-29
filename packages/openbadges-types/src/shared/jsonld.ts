@@ -2,20 +2,21 @@
  * JSON-LD related types for Open Badges
  */
 export interface JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   type?: string | string[];
   id?: string;
   [key: string]: unknown;
 }
 
 // Type for JSON-LD context specifically for Open Badges 2.0
-export const OB2Context = 'https://w3id.org/openbadges/v2';
+export const OB2Context = "https://w3id.org/openbadges/v2";
 
 // Type for JSON-LD context specifically for Open Badges 3.0
-export const OB3Context = 'https://purl.imsglobal.org/spec/ob/v3p0/context.json';
+export const OB3Context =
+  "https://purl.imsglobal.org/spec/ob/v3p0/context.json";
 
 // Type for W3C Verifiable Credentials context
-export const VCContext = 'https://www.w3.org/2018/credentials/v1';
+export const VCContext = "https://www.w3.org/2018/credentials/v1";
 
 // Helper type for JSON-LD arrays
 export type JsonLdArray<T> = T | T[];
@@ -26,12 +27,12 @@ export type JsonLdArray<T> = T | T[];
  * @returns True if the value is a valid JsonLdObject, false otherwise
  */
 export function isJsonLdObject(value: unknown): value is JsonLdObject {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // According to the Open Badges specification, a valid JSON-LD object must have both @context and type
-  return '@context' in value && 'type' in value;
+  return "@context" in value && "type" in value;
 }
 
 /**
@@ -42,14 +43,14 @@ export function isJsonLdObject(value: unknown): value is JsonLdObject {
  */
 export function isJsonLdArray<T>(
   value: unknown,
-  itemGuard?: (item: unknown) => item is T
+  itemGuard?: (item: unknown) => item is T,
 ): value is JsonLdArray<T> {
   if (value === null || value === undefined) {
     return false;
   }
 
   if (Array.isArray(value)) {
-    return itemGuard ? value.every(item => itemGuard(item)) : true;
+    return itemGuard ? value.every((item) => itemGuard(item)) : true;
   }
 
   return itemGuard ? itemGuard(value) : true;
@@ -84,12 +85,12 @@ export function hasJsonLdContext(value: unknown, context: string): boolean {
     return false;
   }
 
-  if (Array.isArray(value['@context'])) {
-    return value['@context'].includes(context);
+  if (Array.isArray(value["@context"])) {
+    return value["@context"].includes(context);
   }
 
-  if (typeof value['@context'] === 'string') {
-    return value['@context'] === context;
+  if (typeof value["@context"] === "string") {
+    return value["@context"] === context;
   }
 
   return false;
@@ -111,11 +112,8 @@ export function hasJsonLdContext(value: unknown, context: string): boolean {
  * typeIncludes('Assertion', 'Assertion') // true
  * typeIncludes(['Assertion', 'Extension'], 'Assertion') // true
  */
-export function typeIncludes(
-  typeValue: unknown,
-  target: string
-): boolean {
-  if (typeof typeValue === 'string') {
+export function typeIncludes(typeValue: unknown, target: string): boolean {
+  if (typeof typeValue === "string") {
     return typeValue === target;
   }
   if (Array.isArray(typeValue)) {

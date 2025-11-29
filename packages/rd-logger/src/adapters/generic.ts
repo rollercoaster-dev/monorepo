@@ -1,9 +1,9 @@
-import { Logger } from '../core/logger.service.js';
-import { type LoggerConfig } from '../core/logger.config.js';
+import { Logger } from "../core/logger.service.js";
+import { type LoggerConfig } from "../core/logger.config.js";
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context.js';
+} from "../core/request-context.js";
 
 export interface GenericContextOptions {
   /**
@@ -43,11 +43,11 @@ export interface GenericContextOptions {
  */
 export async function runWithGenericContext<T>(
   fn: () => Promise<T> | T,
-  options: GenericContextOptions = {}
+  options: GenericContextOptions = {},
 ): Promise<T> {
   const logger = options.loggerInstance || new Logger(options.loggerOptions);
   const logStartEnd = options.logStartEnd !== false; // Default to true
-  const contextName = options.contextName || 'GenericContext';
+  const contextName = options.contextName || "GenericContext";
 
   // Wrap the execution in our core request context function
   return runWithRequestContext(async () => {

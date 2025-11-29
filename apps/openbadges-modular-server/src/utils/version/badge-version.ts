@@ -7,16 +7,19 @@
 import { VC_V2_CONTEXT_URL } from "@/constants/urls";
 
 export enum BadgeVersion {
-  V2 = '2.0',
-  V3 = '3.0'
+  V2 = "2.0",
+  V3 = "3.0",
 }
 
 /**
  * Badge version context URLs
  */
 export const BADGE_VERSION_CONTEXTS = {
-  [BadgeVersion.V2]: 'https://w3id.org/openbadges/v2',
-  [BadgeVersion.V3]: ['https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json', VC_V2_CONTEXT_URL]
+  [BadgeVersion.V2]: "https://w3id.org/openbadges/v2",
+  [BadgeVersion.V3]: [
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+    VC_V2_CONTEXT_URL,
+  ],
 };
 
 /**
@@ -24,13 +27,15 @@ export const BADGE_VERSION_CONTEXTS = {
  * @param obj The JSON-LD object to check
  * @returns The detected badge version or undefined if not detected
  */
-export function detectBadgeVersion(obj: Record<string, unknown>): BadgeVersion | undefined {
-  if (!obj || typeof obj !== 'object') {
+export function detectBadgeVersion(
+  obj: Record<string, unknown>,
+): BadgeVersion | undefined {
+  if (!obj || typeof obj !== "object") {
     return undefined;
   }
 
   // Check context
-  const context = obj['@context'];
+  const context = obj["@context"];
   if (!context) {
     return undefined;
   }
@@ -47,19 +52,21 @@ export function detectBadgeVersion(obj: Record<string, unknown>): BadgeVersion |
   }
 
   // Handle string context
-  if (typeof context === 'string') {
+  if (typeof context === "string") {
     if (context === BADGE_VERSION_CONTEXTS[BadgeVersion.V2]) {
       return BadgeVersion.V2;
     }
     // For V3, check if the string matches any context in the array
-    if (Array.isArray(BADGE_VERSION_CONTEXTS[BadgeVersion.V3]) && 
-        BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(context)) {
+    if (
+      Array.isArray(BADGE_VERSION_CONTEXTS[BadgeVersion.V3]) &&
+      BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(context)
+    ) {
       return BadgeVersion.V3;
     }
   }
 
   // Handle object context
-  if (typeof context === 'object') {
+  if (typeof context === "object") {
     const contextValues = Object.values(context);
     if (contextValues.includes(BADGE_VERSION_CONTEXTS[BadgeVersion.V3])) {
       return BadgeVersion.V3;

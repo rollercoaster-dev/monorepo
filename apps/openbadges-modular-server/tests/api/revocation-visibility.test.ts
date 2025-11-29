@@ -5,20 +5,20 @@
  * when accessed via GET endpoints, ensuring Open Badges compliance.
  */
 
-import { describe, expect, it, beforeAll, afterAll } from 'bun:test';
-import { setupTestApp, stopTestServer } from '../e2e/setup-test-app';
+import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { setupTestApp, stopTestServer } from "../e2e/setup-test-app";
 import {
   getAvailablePort,
   releasePort,
-} from '../e2e/helpers/port-manager.helper';
-import { resetDatabase } from '../e2e/helpers/database-reset.helper';
-import { logger } from '@/utils/logging/logger.service';
+} from "../e2e/helpers/port-manager.helper";
+import { resetDatabase } from "../e2e/helpers/database-reset.helper";
+import { logger } from "@/utils/logging/logger.service";
 
-describe('Revocation Visibility Compliance', () => {
+describe("Revocation Visibility Compliance", () => {
   let TEST_PORT: number;
   let API_URL: string;
   let server: unknown = null;
-  const API_KEY = 'verysecretkeye2e';
+  const API_KEY = "verysecretkeye2e";
 
   // Store created resources for cleanup
   const createdResources: {
@@ -39,19 +39,19 @@ describe('Revocation Visibility Compliance', () => {
     const { app: _app, server: testServer } = await setupTestApp(TEST_PORT);
     server = testServer;
 
-    logger.info('Test server started', { port: TEST_PORT, url: API_URL });
+    logger.info("Test server started", { port: TEST_PORT, url: API_URL });
 
     // Create test issuer
     const issuerResponse = await fetch(`${API_URL}/v3/issuers`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY,
+        "Content-Type": "application/json",
+        "X-API-Key": API_KEY,
       },
       body: JSON.stringify({
-        name: 'Revocation Test Issuer',
-        url: 'https://example.com/issuer',
-        email: 'issuer@example.com',
+        name: "Revocation Test Issuer",
+        url: "https://example.com/issuer",
+        email: "issuer@example.com",
       }),
     });
     expect(issuerResponse.status).toBe(201);
@@ -60,16 +60,16 @@ describe('Revocation Visibility Compliance', () => {
 
     // Create test badge class
     const badgeClassResponse = await fetch(`${API_URL}/v3/achievements`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY,
+        "Content-Type": "application/json",
+        "X-API-Key": API_KEY,
       },
       body: JSON.stringify({
-        name: 'Revocation Test Badge',
-        description: 'A test badge for revocation testing',
-        image: 'https://example.com/badge.png',
-        criteria: 'https://example.com/criteria',
+        name: "Revocation Test Badge",
+        description: "A test badge for revocation testing",
+        image: "https://example.com/badge.png",
+        criteria: "https://example.com/criteria",
         issuer: issuer.id,
       }),
     });
@@ -79,15 +79,15 @@ describe('Revocation Visibility Compliance', () => {
 
     // Create test assertion
     const assertionResponse = await fetch(`${API_URL}/v3/credentials`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY,
+        "Content-Type": "application/json",
+        "X-API-Key": API_KEY,
       },
       body: JSON.stringify({
         recipient: {
-          type: 'email',
-          identity: 'recipient@example.com',
+          type: "email",
+          identity: "recipient@example.com",
           hashed: false,
         },
         badge: badgeClass.id,
@@ -103,23 +103,23 @@ describe('Revocation Visibility Compliance', () => {
     // Clean up test data
     if (createdResources.assertionId) {
       await fetch(`${API_URL}/v3/credentials/${createdResources.assertionId}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       });
     }
     if (createdResources.badgeClassId) {
       await fetch(
         `${API_URL}/v3/achievements/${createdResources.badgeClassId}`,
         {
-          method: 'DELETE',
-          headers: { 'X-API-Key': API_KEY },
-        }
+          method: "DELETE",
+          headers: { "X-API-Key": API_KEY },
+        },
       );
     }
     if (createdResources.issuerId) {
       await fetch(`${API_URL}/v3/issuers/${createdResources.issuerId}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       });
     }
 
@@ -128,16 +128,16 @@ describe('Revocation Visibility Compliance', () => {
     await releasePort(TEST_PORT);
   });
 
-  describe('GET /v3/credentials/:id', () => {
-    it('should return 200 for active (non-revoked) credentials', async () => {
+  describe("GET /v3/credentials/:id", () => {
+    it("should return 200 for active (non-revoked) credentials", async () => {
       const response = await fetch(
         `${API_URL}/v3/credentials/${createdResources.assertionId}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       expect(response.status).toBe(200);
@@ -145,20 +145,20 @@ describe('Revocation Visibility Compliance', () => {
       expect(credential.id).toBe(createdResources.assertionId);
     });
 
-    it('should return 410 Gone for revoked credentials', async () => {
+    it("should return 410 Gone for revoked credentials", async () => {
       // First revoke the assertion
       const revokeResponse = await fetch(
         `${API_URL}/v3/credentials/${createdResources.assertionId}/revoke`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify({
-            reason: 'Test revocation for compliance',
+            reason: "Test revocation for compliance",
           }),
-        }
+        },
       );
       expect(revokeResponse.status).toBe(200);
 
@@ -166,52 +166,52 @@ describe('Revocation Visibility Compliance', () => {
       const response = await fetch(
         `${API_URL}/v3/credentials/${createdResources.assertionId}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       expect(response.status).toBe(410);
       const errorResponse = await response.json();
-      expect(errorResponse.error).toBe('Credential has been revoked');
-      expect(errorResponse.code).toBe('CREDENTIAL_REVOKED');
+      expect(errorResponse.error).toBe("Credential has been revoked");
+      expect(errorResponse.code).toBe("CREDENTIAL_REVOKED");
       expect(errorResponse.details.id).toBe(createdResources.assertionId);
       expect(errorResponse.details.revocationReason).toBe(
-        'Test revocation for compliance'
+        "Test revocation for compliance",
       );
     });
 
-    it('should return 404 for non-existent credentials', async () => {
-      const nonExistentId = 'urn:uuid:00000000-0000-4000-a000-000000000999';
+    it("should return 404 for non-existent credentials", async () => {
+      const nonExistentId = "urn:uuid:00000000-0000-4000-a000-000000000999";
       const response = await fetch(
         `${API_URL}/v3/credentials/${nonExistentId}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       expect(response.status).toBe(404);
       const errorResponse = await response.json();
-      expect(errorResponse.error.toLowerCase()).toContain('not found');
+      expect(errorResponse.error.toLowerCase()).toContain("not found");
     });
   });
 
-  describe('Verification endpoint behavior', () => {
-    it('should still detect revoked status via verification endpoint', async () => {
+  describe("Verification endpoint behavior", () => {
+    it("should still detect revoked status via verification endpoint", async () => {
       // The credential should already be revoked from the previous test
       const response = await fetch(
         `${API_URL}/v3/credentials/${createdResources.assertionId}/verify`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       expect(response.status).toBe(200);
@@ -219,7 +219,7 @@ describe('Revocation Visibility Compliance', () => {
       expect(verificationResult.isValid).toBe(false);
       // Note: The verification result structure may vary, so we check for revocation indication
       expect(verificationResult.details || verificationResult.reason).toContain(
-        'revoked'
+        "revoked",
       );
     });
   });

@@ -4,12 +4,16 @@
  * This controller handles HTTP requests related to user management.
  */
 
-import type { UserService } from './user.service';
-import type { UserRole, UserPermission } from './user.entity';
-import type { UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
-import { logger } from '../../utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
-import { PasswordService } from '../../auth/services/password.service';
+import type { UserService } from "./user.service";
+import type { UserRole, UserPermission } from "./user.entity";
+import type {
+  UserCreateParams,
+  UserUpdateParams,
+  UserQueryParams,
+} from "./user.repository";
+import { logger } from "../../utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
+import { PasswordService } from "../../auth/services/password.service";
 
 /**
  * User controller for handling user-related HTTP requests
@@ -39,20 +43,20 @@ export class UserController {
           status: 400,
           body: {
             success: false,
-            error: 'Password does not meet security requirements'
-          }
+            error: "Password does not meet security requirements",
+          },
         };
       }
 
       // Create user params
-      const userParams: Omit<UserCreateParams, 'passwordHash'> = {
+      const userParams: Omit<UserCreateParams, "passwordHash"> = {
         username: data.username,
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         roles: data.roles,
         isActive: data.isActive,
-        metadata: data.metadata
+        metadata: data.metadata,
       };
 
       // Create user
@@ -62,20 +66,20 @@ export class UserController {
         status: 201,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to create user', error as Error);
+      logger.logError("Failed to create user", error as Error);
 
       // Handle specific errors
-      if ((error as Error).message.includes('already exists')) {
+      if ((error as Error).message.includes("already exists")) {
         return {
           status: 409,
           body: {
             success: false,
-            error: (error as Error).message
-          }
+            error: (error as Error).message,
+          },
         };
       }
 
@@ -83,8 +87,8 @@ export class UserController {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to create user'
-        }
+          error: "Failed to create user",
+        },
       };
     }
   }
@@ -94,7 +98,9 @@ export class UserController {
    * @param id User ID
    * @returns The user
    */
-  async getUserById(id: Shared.IRI): Promise<{ status: number; body: Record<string, unknown> }> {
+  async getUserById(
+    id: Shared.IRI,
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const user = await this.userService.getUserById(id);
 
@@ -103,8 +109,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -112,18 +118,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to get user by ID', error as Error);
+      logger.logError("Failed to get user by ID", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to get user'
-        }
+          error: "Failed to get user",
+        },
       };
     }
   }
@@ -134,19 +140,22 @@ export class UserController {
    * @param data User update data
    * @returns The updated user
    */
-  async updateUser(id: Shared.IRI, data: {
-    username?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-    roles?: UserRole[];
-    isActive?: boolean;
-    metadata?: Record<string, unknown>;
-  }): Promise<{ status: number; body: Record<string, unknown> }> {
+  async updateUser(
+    id: Shared.IRI,
+    data: {
+      username?: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      roles?: UserRole[];
+      isActive?: boolean;
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       // Create update params
-      const updateParams: Omit<UserUpdateParams, 'passwordHash'> = {
-        ...data
+      const updateParams: Omit<UserUpdateParams, "passwordHash"> = {
+        ...data,
       };
 
       // Update user
@@ -157,8 +166,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -166,18 +175,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to update user', error as Error);
+      logger.logError("Failed to update user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to update user'
-        }
+          error: "Failed to update user",
+        },
       };
     }
   }
@@ -188,10 +197,13 @@ export class UserController {
    * @param data Password change data
    * @returns Success status
    */
-  async changePassword(id: Shared.IRI, data: {
-    currentPassword?: string;
-    newPassword: string;
-  }): Promise<{ status: number; body: Record<string, unknown> }> {
+  async changePassword(
+    id: Shared.IRI,
+    data: {
+      currentPassword?: string;
+      newPassword: string;
+    },
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       // Validate new password
       if (!PasswordService.isPasswordSecure(data.newPassword)) {
@@ -199,8 +211,8 @@ export class UserController {
           status: 400,
           body: {
             success: false,
-            error: 'New password does not meet security requirements'
-          }
+            error: "New password does not meet security requirements",
+          },
         };
       }
 
@@ -212,8 +224,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -224,20 +236,23 @@ export class UserController {
             status: 400,
             body: {
               success: false,
-              error: 'User does not have a password set'
-            }
+              error: "User does not have a password set",
+            },
           };
         }
 
-        const isValid = await PasswordService.verifyPassword(data.currentPassword, user.passwordHash);
+        const isValid = await PasswordService.verifyPassword(
+          data.currentPassword,
+          user.passwordHash,
+        );
 
         if (!isValid) {
           return {
             status: 401,
             body: {
               success: false,
-              error: 'Current password is incorrect'
-            }
+              error: "Current password is incorrect",
+            },
           };
         }
       }
@@ -249,18 +264,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          message: 'Password updated successfully'
-        }
+          message: "Password updated successfully",
+        },
       };
     } catch (error) {
-      logger.logError('Failed to change password', error as Error);
+      logger.logError("Failed to change password", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to change password'
-        }
+          error: "Failed to change password",
+        },
       };
     }
   }
@@ -270,7 +285,9 @@ export class UserController {
    * @param id User ID
    * @returns Success status
    */
-  async deleteUser(id: Shared.IRI): Promise<{ status: number; body: Record<string, unknown> }> {
+  async deleteUser(
+    id: Shared.IRI,
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const success = await this.userService.deleteUser(id);
 
@@ -279,8 +296,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -288,18 +305,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          message: 'User deleted successfully'
-        }
+          message: "User deleted successfully",
+        },
       };
     } catch (error) {
-      logger.logError('Failed to delete user', error as Error);
+      logger.logError("Failed to delete user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to delete user'
-        }
+          error: "Failed to delete user",
+        },
       };
     }
   }
@@ -330,37 +347,37 @@ export class UserController {
         role: query.role,
         isActive: query.isActive,
         limit,
-        offset
+        offset,
       };
 
       // Get users and count
       const [users, total] = await Promise.all([
         this.userService.findUsers(queryParams),
-        this.userService.countUsers(queryParams)
+        this.userService.countUsers(queryParams),
       ]);
 
       return {
         status: 200,
         body: {
           success: true,
-          users: users.map(user => user.toPublicObject()),
+          users: users.map((user) => user.toPublicObject()),
           pagination: {
             page,
             limit,
             total,
-            totalPages: Math.ceil(total / limit)
-          }
-        }
+            totalPages: Math.ceil(total / limit),
+          },
+        },
       };
     } catch (error) {
-      logger.logError('Failed to get users', error as Error);
+      logger.logError("Failed to get users", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to get users'
-        }
+          error: "Failed to get users",
+        },
       };
     }
   }
@@ -371,7 +388,10 @@ export class UserController {
    * @param roles Roles to add
    * @returns The updated user
    */
-  async addRoles(id: Shared.IRI, roles: UserRole[]): Promise<{ status: number; body: Record<string, unknown> }> {
+  async addRoles(
+    id: Shared.IRI,
+    roles: UserRole[],
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const user = await this.userService.addRoles(id, roles);
 
@@ -380,8 +400,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -389,18 +409,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to add roles to user', error as Error);
+      logger.logError("Failed to add roles to user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to add roles to user'
-        }
+          error: "Failed to add roles to user",
+        },
       };
     }
   }
@@ -411,7 +431,10 @@ export class UserController {
    * @param roles Roles to remove
    * @returns The updated user
    */
-  async removeRoles(id: Shared.IRI, roles: UserRole[]): Promise<{ status: number; body: Record<string, unknown> }> {
+  async removeRoles(
+    id: Shared.IRI,
+    roles: UserRole[],
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const user = await this.userService.removeRoles(id, roles);
 
@@ -420,8 +443,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -429,18 +452,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to remove roles from user', error as Error);
+      logger.logError("Failed to remove roles from user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to remove roles from user'
-        }
+          error: "Failed to remove roles from user",
+        },
       };
     }
   }
@@ -451,7 +474,10 @@ export class UserController {
    * @param permissions Permissions to add
    * @returns The updated user
    */
-  async addPermissions(id: Shared.IRI, permissions: UserPermission[]): Promise<{ status: number; body: Record<string, unknown> }> {
+  async addPermissions(
+    id: Shared.IRI,
+    permissions: UserPermission[],
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const user = await this.userService.addPermissions(id, permissions);
 
@@ -460,8 +486,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -469,18 +495,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to add permissions to user', error as Error);
+      logger.logError("Failed to add permissions to user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to add permissions to user'
-        }
+          error: "Failed to add permissions to user",
+        },
       };
     }
   }
@@ -491,7 +517,10 @@ export class UserController {
    * @param permissions Permissions to remove
    * @returns The updated user
    */
-  async removePermissions(id: Shared.IRI, permissions: UserPermission[]): Promise<{ status: number; body: Record<string, unknown> }> {
+  async removePermissions(
+    id: Shared.IRI,
+    permissions: UserPermission[],
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       const user = await this.userService.removePermissions(id, permissions);
 
@@ -500,8 +529,8 @@ export class UserController {
           status: 404,
           body: {
             success: false,
-            error: 'User not found'
-          }
+            error: "User not found",
+          },
         };
       }
 
@@ -509,18 +538,18 @@ export class UserController {
         status: 200,
         body: {
           success: true,
-          user: user.toPublicObject()
-        }
+          user: user.toPublicObject(),
+        },
       };
     } catch (error) {
-      logger.logError('Failed to remove permissions from user', error as Error);
+      logger.logError("Failed to remove permissions from user", error as Error);
 
       return {
         status: 500,
         body: {
           success: false,
-          error: 'Failed to remove permissions from user'
-        }
+          error: "Failed to remove permissions from user",
+        },
       };
     }
   }

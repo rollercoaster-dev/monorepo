@@ -5,18 +5,21 @@
  * It caches issuer entities to improve read performance.
  */
 
-import type { Issuer } from '../../../domains/issuer/issuer.entity';
-import type { IssuerRepository } from '../../../domains/issuer/issuer.repository';
-import type { Shared } from 'openbadges-types';
-import { CacheRepositoryWrapper } from './cache-repository.wrapper';
+import type { Issuer } from "../../../domains/issuer/issuer.entity";
+import type { IssuerRepository } from "../../../domains/issuer/issuer.repository";
+import type { Shared } from "openbadges-types";
+import { CacheRepositoryWrapper } from "./cache-repository.wrapper";
 
-export class CachedIssuerRepository extends CacheRepositoryWrapper<Issuer, IssuerRepository> implements IssuerRepository {
+export class CachedIssuerRepository
+  extends CacheRepositoryWrapper<Issuer, IssuerRepository>
+  implements IssuerRepository
+{
   /**
    * Creates a new cached issuer repository
    * @param repository The issuer repository to wrap
    */
   constructor(repository: IssuerRepository) {
-    super(repository, 'issuer');
+    super(repository, "issuer");
   }
 
   /**
@@ -24,7 +27,7 @@ export class CachedIssuerRepository extends CacheRepositoryWrapper<Issuer, Issue
    * @param issuer The issuer to create
    * @returns The created issuer with its ID
    */
-  async create(issuer: Omit<Issuer, 'id'>): Promise<Issuer> {
+  async create(issuer: Omit<Issuer, "id">): Promise<Issuer> {
     const result = await this.repository.create(issuer);
 
     // Invalidate cache after creation
@@ -42,7 +45,7 @@ export class CachedIssuerRepository extends CacheRepositoryWrapper<Issuer, Issue
       return this.repository.findAll();
     }
 
-    const cacheKey = 'collection:all';
+    const cacheKey = "collection:all";
 
     // Try to get from cache
     const cached = this.cache.get<Issuer[]>(cacheKey);
@@ -99,7 +102,10 @@ export class CachedIssuerRepository extends CacheRepositoryWrapper<Issuer, Issue
    * @param issuer The updated issuer data
    * @returns The updated issuer if found, null otherwise
    */
-  async update(id: Shared.IRI, issuer: Partial<Issuer>): Promise<Issuer | null> {
+  async update(
+    id: Shared.IRI,
+    issuer: Partial<Issuer>,
+  ): Promise<Issuer | null> {
     // Invalidate the cache for the ID before updating
     // This ensures we don't have stale data even if the ID changes
     this.cache.delete(this.generateIdKey(id as string));

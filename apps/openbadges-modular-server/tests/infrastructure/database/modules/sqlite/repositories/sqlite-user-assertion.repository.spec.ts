@@ -5,18 +5,18 @@ import {
   beforeAll,
   beforeEach,
   afterAll,
-} from 'bun:test';
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { SqliteUserAssertionRepository } from '@infrastructure/database/modules/sqlite/repositories/sqlite-user-assertion.repository';
-import { SqliteConnectionManager } from '@infrastructure/database/modules/sqlite/connection/sqlite-connection.manager';
-import { UserAssertionStatus } from '@domains/backpack/backpack.types';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import * as schema from '@infrastructure/database/modules/sqlite/schema';
-import type { Shared } from 'openbadges-types';
-import { createId } from '@paralleldrive/cuid2';
-import { getMigrationsPath } from '@tests/test-utils/migrations-path';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+} from "bun:test";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import { SqliteUserAssertionRepository } from "@infrastructure/database/modules/sqlite/repositories/sqlite-user-assertion.repository";
+import { SqliteConnectionManager } from "@infrastructure/database/modules/sqlite/connection/sqlite-connection.manager";
+import { UserAssertionStatus } from "@domains/backpack/backpack.types";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import * as schema from "@infrastructure/database/modules/sqlite/schema";
+import type { Shared } from "openbadges-types";
+import { createId } from "@paralleldrive/cuid2";
+import { getMigrationsPath } from "@tests/test-utils/migrations-path";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 let db: ReturnType<typeof drizzle<typeof schema>>;
 let repository: SqliteUserAssertionRepository;
@@ -27,25 +27,25 @@ const MIGRATIONS_PATH = getMigrationsPath();
 
 // Test data
 const createTestPlatformUser = async (
-  db: ReturnType<typeof drizzle<typeof schema>>
+  db: ReturnType<typeof drizzle<typeof schema>>,
 ) => {
   const platformId = `urn:uuid:${createId()}` as Shared.IRI;
   const userId = `urn:uuid:${createId()}` as Shared.IRI;
 
   // Insert platform with unique name to avoid conflicts
   await db.insert(schema.platforms).values({
-    id: convertUuid(platformId as string, 'sqlite', 'to') as string,
+    id: convertUuid(platformId as string, "sqlite", "to") as string,
     name: `Test Platform ${platformId}`, // Ensure name is unique
     clientId: `client-${platformId}`,
-    publicKey: 'test-public-key',
+    publicKey: "test-public-key",
     createdAt: Date.now(),
     updatedAt: Date.now(),
   });
 
   // Insert platform user
   await db.insert(schema.platformUsers).values({
-    id: convertUuid(userId as string, 'sqlite', 'to') as string,
-    platformId: convertUuid(platformId as string, 'sqlite', 'to') as string,
+    id: convertUuid(userId as string, "sqlite", "to") as string,
+    platformId: convertUuid(platformId as string, "sqlite", "to") as string,
     externalUserId: `ext-${userId}`,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -55,7 +55,7 @@ const createTestPlatformUser = async (
 };
 
 const createTestAssertion = async (
-  db: ReturnType<typeof drizzle<typeof schema>>
+  db: ReturnType<typeof drizzle<typeof schema>>,
 ) => {
   const issuerId = `urn:uuid:${createId()}` as Shared.IRI;
   const badgeClassId = `urn:uuid:${createId()}` as Shared.IRI;
@@ -63,20 +63,20 @@ const createTestAssertion = async (
 
   // Insert issuer
   await db.insert(schema.issuers).values({
-    id: convertUuid(issuerId as string, 'sqlite', 'to') as string,
-    name: 'Test Issuer',
-    url: 'https://example.com',
+    id: convertUuid(issuerId as string, "sqlite", "to") as string,
+    name: "Test Issuer",
+    url: "https://example.com",
     createdAt: Date.now(),
     updatedAt: Date.now(),
   });
 
   // Insert badge class
   await db.insert(schema.badgeClasses).values({
-    id: convertUuid(badgeClassId as string, 'sqlite', 'to') as string,
-    issuerId: convertUuid(issuerId as string, 'sqlite', 'to') as string,
-    name: 'Test Badge',
-    description: 'Test Badge Description',
-    image: 'badge.png',
+    id: convertUuid(badgeClassId as string, "sqlite", "to") as string,
+    issuerId: convertUuid(issuerId as string, "sqlite", "to") as string,
+    name: "Test Badge",
+    description: "Test Badge Description",
+    image: "badge.png",
     criteria: '{"id": "https://example.com/criteria"}',
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -84,11 +84,11 @@ const createTestAssertion = async (
 
   // Insert assertion
   await db.insert(schema.assertions).values({
-    id: convertUuid(assertionId as string, 'sqlite', 'to') as string,
-    badgeClassId: convertUuid(badgeClassId as string, 'sqlite', 'to') as string,
+    id: convertUuid(assertionId as string, "sqlite", "to") as string,
+    badgeClassId: convertUuid(badgeClassId as string, "sqlite", "to") as string,
     recipient: JSON.stringify({
-      identity: 'sha256$abcdef',
-      type: 'email',
+      identity: "sha256$abcdef",
+      type: "email",
       hashed: true,
     }),
     issuedOn: Date.now(),
@@ -99,10 +99,10 @@ const createTestAssertion = async (
   return assertionId;
 };
 
-describe('SqliteUserAssertionRepository Integration', () => {
+describe("SqliteUserAssertionRepository Integration", () => {
   beforeAll(async () => {
     // Initialize in-memory SQLite database
-    testDbInstance = new Database(':memory:');
+    testDbInstance = new Database(":memory:");
     db = drizzle(testDbInstance, { schema });
 
     try {
@@ -110,7 +110,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
       migrate(db, { migrationsFolder: MIGRATIONS_PATH });
     } catch (_error) {
       // Fail fast if migrations don't work
-      throw new Error('SQLite migration failed, cannot run integration tests.');
+      throw new Error("SQLite migration failed, cannot run integration tests.");
     }
 
     // Create connection manager for the new pattern
@@ -141,7 +141,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     testDbInstance.close();
   });
 
-  it('should add an assertion to a user', async () => {
+  it("should add an assertion to a user", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
@@ -157,17 +157,17 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(userAssertion.status).toBe(UserAssertionStatus.ACTIVE);
   });
 
-  it('should add an assertion with metadata', async () => {
+  it("should add an assertion with metadata", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
-    const metadata = { source: 'test', importDate: new Date().toISOString() };
+    const metadata = { source: "test", importDate: new Date().toISOString() };
 
     // Add assertion with metadata
     const userAssertion = await repository.addAssertion(
       userId,
       assertionId,
-      metadata
+      metadata,
     );
 
     // Verify assertion was added with metadata
@@ -175,11 +175,11 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(userAssertion.metadata).toEqual(metadata);
   });
 
-  it('should add an assertion using params object', async () => {
+  it("should add an assertion using params object", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
-    const metadata = { source: 'params' };
+    const metadata = { source: "params" };
 
     // Add assertion using params object
     const userAssertion = await repository.addAssertion({
@@ -195,7 +195,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(userAssertion.metadata).toEqual(metadata);
   });
 
-  it('should remove an assertion from a user', async () => {
+  it("should remove an assertion from a user", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
@@ -214,7 +214,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(hasAssertion).toBe(false);
   });
 
-  it('should update assertion status', async () => {
+  it("should update assertion status", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
@@ -226,7 +226,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     const updated = await repository.updateStatus(
       userId,
       assertionId,
-      UserAssertionStatus.DELETED
+      UserAssertionStatus.DELETED,
     );
 
     // Verify status was updated
@@ -235,12 +235,12 @@ describe('SqliteUserAssertionRepository Integration', () => {
     // Verify assertion has new status
     const userAssertion = await repository.findByUserAndAssertion(
       userId,
-      assertionId
+      assertionId,
     );
     expect(userAssertion?.status).toBe(UserAssertionStatus.DELETED);
   });
 
-  it('should get user assertions', async () => {
+  it("should get user assertions", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertion1Id = await createTestAssertion(db);
@@ -256,7 +256,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     await repository.updateStatus(
       userId,
       assertion3Id,
-      UserAssertionStatus.DELETED
+      UserAssertionStatus.DELETED,
     );
 
     // Get all assertions (not deleted)
@@ -277,7 +277,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(deletedAssertions.length).toBe(1);
   });
 
-  it('should check if user has assertion', async () => {
+  it("should check if user has assertion", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
@@ -297,7 +297,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     await repository.updateStatus(
       userId,
       assertionId,
-      UserAssertionStatus.DELETED
+      UserAssertionStatus.DELETED,
     );
 
     // Check after deleting (should be false)
@@ -305,35 +305,35 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(hasAfterDelete).toBe(false);
   });
 
-  it('should find by user and assertion', async () => {
+  it("should find by user and assertion", async () => {
     // Create test data
     const userId = await createTestPlatformUser(db);
     const assertionId = await createTestAssertion(db);
 
     // Add assertion
-    await repository.addAssertion(userId, assertionId, { note: 'test note' });
+    await repository.addAssertion(userId, assertionId, { note: "test note" });
 
     // Find by user and assertion
     const userAssertion = await repository.findByUserAndAssertion(
       userId,
-      assertionId
+      assertionId,
     );
 
     // Verify found
     expect(userAssertion).toBeDefined();
     expect(userAssertion?.userId).toBe(userId);
     expect(userAssertion?.assertionId).toBe(assertionId);
-    expect(userAssertion?.metadata).toEqual({ note: 'test note' });
+    expect(userAssertion?.metadata).toEqual({ note: "test note" });
 
     // Check for non-existent
     const notFound = await repository.findByUserAndAssertion(
       userId,
-      'non-existent' as Shared.IRI
+      "non-existent" as Shared.IRI,
     );
     expect(notFound).toBeNull();
   });
 
-  it('should get assertion users', async () => {
+  it("should get assertion users", async () => {
     // Create test data
     const user1Id = await createTestPlatformUser(db);
     const user2Id = await createTestPlatformUser(db);
@@ -352,7 +352,7 @@ describe('SqliteUserAssertionRepository Integration', () => {
     expect(users.map((u) => u.userId)).toContain(user2Id);
   });
 
-  it('should expose a mapper through getMapper()', () => {
+  it("should expose a mapper through getMapper()", () => {
     // Verify the mapper is accessible
     const mapper = repository.getMapper();
     expect(mapper).toBeDefined();

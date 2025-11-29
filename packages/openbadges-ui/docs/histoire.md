@@ -50,14 +50,14 @@ Histoire uses a Vue-based approach to writing stories. Stories are defined in `.
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import MyComponent from './MyComponent.vue'
+import { ref } from "vue";
+import MyComponent from "./MyComponent.vue";
 
 // Define reactive state for controls
 const state = ref({
-  prop1: 'value1',
-  prop2: true
-})
+  prop1: "value1",
+  prop2: true,
+});
 </script>
 
 <template>
@@ -70,17 +70,11 @@ const state = ref({
 
     <!-- Variants -->
     <Variant title="Default">
-      <MyComponent
-        :prop1="state.prop1"
-        :prop2="state.prop2"
-      />
+      <MyComponent :prop1="state.prop1" :prop2="state.prop2" />
     </Variant>
 
     <Variant title="Another Variant">
-      <MyComponent
-        :prop1="state.prop1"
-        :prop2="!state.prop2"
-      />
+      <MyComponent :prop1="state.prop1" :prop2="!state.prop2" />
     </Variant>
   </Story>
 </template>
@@ -109,6 +103,7 @@ You can customize the layout of your stories using the `layout` prop on the `<St
 ```
 
 Available layouts:
+
 - `single`: Display one variant at a time (default)
 - `grid`: Display all variants in a grid
 

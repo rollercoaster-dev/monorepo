@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BadgeDisplay from './BadgeDisplay.vue';
-import { mockAssertions, mockOB3Credential } from '../../services/mockData';
-import type { OB2, OB3 } from 'openbadges-types';
-import { createDateTime } from 'openbadges-types';
+import { ref } from "vue";
+import BadgeDisplay from "./BadgeDisplay.vue";
+import { mockAssertions, mockOB3Credential } from "../../services/mockData";
+import type { OB2, OB3 } from "openbadges-types";
+import { createDateTime } from "openbadges-types";
 
 /**
  * # BadgeDisplay
@@ -63,21 +63,21 @@ const state = ref({
   showVerification: false,
   autoVerify: false,
   // Neurodiversity enhancements
-  contentDensity: 'normal',
+  contentDensity: "normal",
   simplifiedView: false,
 });
 
 const badgeWithExpiry: OB2.Assertion = {
   ...mockAssertions[0],
-  expires: createDateTime('2026-01-15T12:00:00Z'),
+  expires: createDateTime("2026-01-15T12:00:00Z"),
 };
 
 function onBadgeClick(badge: OB2.Assertion | OB3.VerifiableCredential): void {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
 }
 
 function onVerified(isValid: boolean): void {
-  console.log('Badge verified:', isValid);
+  console.log("Badge verified:", isValid);
 }
 </script>
 
@@ -91,19 +91,26 @@ function onVerified(isValid: boolean): void {
         <h1>BadgeDisplay</h1>
 
         <p>
-          The <code>BadgeDisplay</code> component renders a single badge with its image, name,
-          description, issuer information, and dates.
+          The <code>BadgeDisplay</code> component renders a single badge with
+          its image, name, description, issuer information, and dates.
         </p>
 
         <h2>When To Use</h2>
         <ul>
           <li>When you need to display a single badge with its details</li>
-          <li>When you want to show badge information in a consistent format</li>
-          <li>When you need to display badges from different formats (OB2 and OB3)</li>
+          <li>
+            When you want to show badge information in a consistent format
+          </li>
+          <li>
+            When you need to display badges from different formats (OB2 and OB3)
+          </li>
         </ul>
 
         <h2>Examples</h2>
-        <p>Use the controls in the right panel to customize the component behavior.</p>
+        <p>
+          Use the controls in the right panel to customize the component
+          behavior.
+        </p>
 
         <h3>Basic Usage</h3>
         <pre><code>&lt;BadgeDisplay :badge="myBadge" /&gt;</code></pre>
@@ -196,7 +203,9 @@ function onVerified(isValid: boolean): void {
             <tr>
               <td><code>click</code></td>
               <td><code>OB2.Assertion | OB3.VerifiableCredential</code></td>
-              <td>Emitted when the badge is clicked (if interactive is true)</td>
+              <td>
+                Emitted when the badge is clicked (if interactive is true)
+              </td>
             </tr>
             <tr>
               <td><code>verified</code></td>
@@ -224,8 +233,8 @@ function onVerified(isValid: boolean): void {
 
         <h2>CSS Variables</h2>
         <p>
-          The component uses CSS variables for styling, which can be overridden to customize its
-          appearance:
+          The component uses CSS variables for styling, which can be overridden
+          to customize its appearance:
         </p>
         <table>
           <thead>
@@ -267,8 +276,14 @@ function onVerified(isValid: boolean): void {
         <h2>Accessibility</h2>
         <p>The component includes several accessibility features:</p>
         <ul>
-          <li>When interactive, the component receives a <code>tabindex="0"</code> attribute</li>
-          <li>The component responds to both click and Enter key events when interactive</li>
+          <li>
+            When interactive, the component receives a
+            <code>tabindex="0"</code> attribute
+          </li>
+          <li>
+            The component responds to both click and Enter key events when
+            interactive
+          </li>
           <li>Badge images have descriptive alt text</li>
           <li>Dates are formatted in a readable format</li>
           <li>Focus states are visually indicated with an outline</li>
@@ -276,43 +291,22 @@ function onVerified(isValid: boolean): void {
       </div>
     </template>
     <template #controls>
-      <HstCheckbox
-        v-model="state.showDescription"
-        title="Show Description"
-      />
-      <HstCheckbox
-        v-model="state.showIssuedDate"
-        title="Show Issued Date"
-      />
-      <HstCheckbox
-        v-model="state.showExpiryDate"
-        title="Show Expiry Date"
-      />
-      <HstCheckbox
-        v-model="state.interactive"
-        title="Interactive"
-      />
-      <HstCheckbox
-        v-model="state.showVerification"
-        title="Show Verification"
-      />
-      <HstCheckbox
-        v-model="state.autoVerify"
-        title="Auto Verify"
-      />
+      <HstCheckbox v-model="state.showDescription" title="Show Description" />
+      <HstCheckbox v-model="state.showIssuedDate" title="Show Issued Date" />
+      <HstCheckbox v-model="state.showExpiryDate" title="Show Expiry Date" />
+      <HstCheckbox v-model="state.interactive" title="Interactive" />
+      <HstCheckbox v-model="state.showVerification" title="Show Verification" />
+      <HstCheckbox v-model="state.autoVerify" title="Auto Verify" />
       <HstSelect
         v-model="state.contentDensity"
         title="Content Density"
         :options="[
           { label: 'Normal', value: 'normal' },
           { label: 'Compact', value: 'compact' },
-          { label: 'Spacious', value: 'spacious' }
+          { label: 'Spacious', value: 'spacious' },
         ]"
       />
-      <HstCheckbox
-        v-model="state.simplifiedView"
-        title="Simplified View"
-      />
+      <HstCheckbox v-model="state.simplifiedView" title="Simplified View" />
     </template>
 
     <Variant title="Default">

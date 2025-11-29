@@ -25,6 +25,7 @@ This document provides instructions for deploying the Open Badges API in a produ
 ### Option 1: Docker Compose (Recommended)
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/your-org/openbadges-modular-server.git
    cd openbadges-modular-server
@@ -46,12 +47,14 @@ For Kubernetes deployment, we provide Helm charts in the `kubernetes/` directory
 The following environment variables can be set to configure the application:
 
 ### Server Configuration
+
 - `PORT`: Server port (default: 3000)
 - `HOST`: Server host (default: 0.0.0.0)
 - `NODE_ENV`: Environment (set to "production")
 - `BASE_URL`: Public URL of the API (default: http://localhost:3000)
 
 ### Database Configuration
+
 - `DB_TYPE`: Database type ("sqlite" or "postgresql", default: "sqlite")
 - `SQLITE_FILE`: SQLite database file path (default: "/data/sqlite.db")
 - `SQLITE_BUSY_TIMEOUT`: SQLite busy timeout in ms (default: 10000)
@@ -64,6 +67,7 @@ The following environment variables can be set to configure the application:
 - `POSTGRES_PORT`: PostgreSQL port (default: 5432)
 
 ### Query Optimization
+
 - `DB_QUERY_LOGGING`: Enable query logging (default: "true")
 - `DB_SLOW_QUERY_THRESHOLD`: Slow query threshold in ms (default: 200)
 - `DB_MAX_QUERY_LOGS`: Maximum number of query logs to keep (default: 2000)
@@ -73,6 +77,7 @@ The following environment variables can be set to configure the application:
 - `DB_SAVE_QUERY_LOGS_ON_SHUTDOWN`: Save query logs on shutdown (default: "true")
 
 ### Cache Configuration
+
 - `CACHE_ENABLED`: Enable caching (default: "true")
 - `CACHE_MAX_ITEMS`: Maximum number of items in cache (default: 5000)
 - `CACHE_TTL`: Default cache TTL in seconds (default: 3600)
@@ -90,6 +95,7 @@ The following environment variables can be set to configure the application:
 SQLite is the default database and requires minimal configuration. It's suitable for small to medium deployments.
 
 Key configuration options:
+
 - `SQLITE_FILE`: Path to the SQLite database file
 - `SQLITE_BUSY_TIMEOUT`: Timeout for busy connections
 - `SQLITE_SYNC_MODE`: Synchronization mode (NORMAL, FULL, OFF)
@@ -100,6 +106,7 @@ Key configuration options:
 For larger deployments, PostgreSQL is recommended. It provides better concurrency and scalability.
 
 Key configuration options:
+
 - `DATABASE_URL`: PostgreSQL connection string
 - `POSTGRES_USER`: PostgreSQL username
 - `POSTGRES_PASSWORD`: PostgreSQL password
@@ -114,6 +121,7 @@ The PostgreSQL configuration file (`docker/postgres/postgresql.conf`) is optimiz
 The production Docker Compose configuration includes an automated backup service that runs daily. Backups are stored in the `backups/` directory.
 
 To configure backups:
+
 - `BACKUP_RETENTION_DAYS`: Number of days to keep backups (default: 7)
 
 ### Manual Backup
@@ -129,11 +137,13 @@ docker-compose -f docker-compose.prod.yml run --rm backup
 To restore from a backup:
 
 1. Stop the API service:
+
    ```bash
    docker-compose -f docker-compose.prod.yml stop api
    ```
 
 2. Run the restore script:
+
    ```bash
    docker-compose -f docker-compose.prod.yml run --rm -v ./backups:/backups backup /scripts/restore.sh /backups/your-backup-file.gz
    ```
@@ -148,11 +158,13 @@ To restore from a backup:
 ### Database Performance
 
 #### SQLite
+
 - Increase `SQLITE_CACHE_SIZE` for better performance (default: 20000)
 - Set `SQLITE_SYNC_MODE` to "NORMAL" for a balance of safety and performance
 - Use `SQLITE_BUSY_TIMEOUT` to handle concurrent access (default: 10000ms)
 
 #### PostgreSQL
+
 - Adjust `shared_buffers` in postgresql.conf based on available memory
 - Increase `work_mem` for complex queries
 - Adjust `max_connections` based on expected load
@@ -180,10 +192,10 @@ Adjust the resource limits in `docker-compose.prod.yml` based on your server cap
 deploy:
   resources:
     limits:
-      cpus: '1'
+      cpus: "1"
       memory: 1G
     reservations:
-      cpus: '0.5'
+      cpus: "0.5"
       memory: 512M
 ```
 
@@ -194,6 +206,7 @@ deploy:
 The API provides a health check endpoint at `/health` that returns detailed information about the system status.
 
 Example health check response:
+
 ```json
 {
   "status": "ok",

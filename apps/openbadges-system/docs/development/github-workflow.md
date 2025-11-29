@@ -19,7 +19,7 @@ graph TB
     REVIEW --> MERGE[Merge to Main]
     MERGE --> CLOSE[Close Issue]
     CLOSE --> UPDATE[Update Task Status]
-    
+
     subgraph "OpenBadges Automation"
         AUTO1[Auto-create Issues]
         AUTO2[Compliance Validation]
@@ -65,7 +65,7 @@ body:
         - Compliance
         - Security
         - Documentation
-        
+
   - type: dropdown
     id: openbadges-version
     attributes:
@@ -75,7 +75,7 @@ body:
         - OpenBadges 3.0
         - Both
         - Not Applicable
-        
+
   - type: checkboxes
     id: compliance-checklist
     attributes:
@@ -103,11 +103,11 @@ body:
     attributes:
       label: OpenBadges Compliance Impact
       options:
-        - "Yes - Breaks compliance"
-        - "Yes - Affects compliance"
-        - "No - Internal issue only"
-        - "Unknown"
-        
+        - 'Yes - Breaks compliance'
+        - 'Yes - Affects compliance'
+        - 'No - Internal issue only'
+        - 'Unknown'
+
   - type: checkboxes
     id: security-impact
     attributes:
@@ -124,6 +124,7 @@ body:
 # .github/pull_request_template.md
 
 ## OpenBadges Compliance
+
 - [ ] Maintains OpenBadges 2.x compatibility
 - [ ] Supports OpenBadges 3.0 features (if applicable)
 - [ ] Follows OpenBadges specification requirements
@@ -132,6 +133,7 @@ body:
 - [ ] API endpoints follow OpenBadges standards
 
 ## Security Review
+
 - [ ] No sensitive data exposed in logs or responses
 - [ ] Input validation implemented
 - [ ] Authentication/authorization properly handled
@@ -140,6 +142,7 @@ body:
 - [ ] OWASP guidelines followed
 
 ## Component Areas
+
 - [ ] Authentication (OAuth, JWT, user auth)
 - [ ] Badge Management (CRUD, metadata, storage)
 - [ ] Verification (cryptographic validation, badge verification)
@@ -172,14 +175,14 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const body = issue.body || '';
-            
+
             // Extract component and add appropriate labels
             const componentMap = {
               'badge management': 'component: badge-management',
               'verification': 'component: verification',
               'authentication': 'component: authentication'
             };
-            
+
             // Add OpenBadges compliance label if mentioned
             if (body.toLowerCase().includes('openbadges') || 
                 body.toLowerCase().includes('compliance')) {
@@ -210,7 +213,7 @@ jobs:
         uses: ./.github/actions/validate-openbadges-compliance
         with:
           pr-files: ${{ github.event.pull_request.changed_files }}
-          
+
   security-scan:
     runs-on: ubuntu-latest
     steps:
@@ -228,9 +231,9 @@ name: Security Scan
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   openbadges-security:
@@ -245,6 +248,7 @@ jobs:
 ## OpenBadges Label System
 
 ### Component Labels
+
 - `component: authentication` - OAuth, JWT, user authentication
 - `component: badge-management` - Badge CRUD, metadata handling
 - `component: verification` - Cryptographic validation, badge verification
@@ -255,12 +259,14 @@ jobs:
 - `component: security` - Cryptography, data protection
 
 ### Priority Labels (Security-Focused)
+
 - `priority: critical` - Security vulnerabilities, compliance violations
 - `priority: high` - Core functionality, user-facing features
 - `priority: medium` - Enhancements, performance improvements
 - `priority: low` - Documentation, minor improvements
 
 ### OpenBadges-Specific Labels
+
 - `openbadges-compliance` - Requires specification compliance review
 - `security-review` - Needs cryptographic/security validation
 - `openbadges-2x` - Related to OpenBadges 2.x specification

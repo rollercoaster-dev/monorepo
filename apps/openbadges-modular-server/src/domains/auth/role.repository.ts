@@ -1,12 +1,12 @@
 /**
  * Role Repository Interface
- * 
+ *
  * This file defines the interface for Role repositories.
  * It provides methods for creating, retrieving, updating, and deleting Roles.
  */
 
-import type { Shared } from 'openbadges-types';
-import type { Role } from './role.entity';
+import type { Shared } from "openbadges-types";
+import type { Role } from "./role.entity";
 
 /**
  * Interface for Role repositories
@@ -18,34 +18,34 @@ export interface RoleRepository {
    * @returns The created Role
    */
   create(role: Role): Promise<Role>;
-  
+
   /**
    * Find a Role by its ID
    * @param id The ID of the Role to find
    * @returns The Role if found, null otherwise
    */
   findById(id: Shared.IRI): Promise<Role | null>;
-  
+
   /**
    * Find a Role by its name
    * @param name The name of the Role to find
    * @returns The Role if found, null otherwise
    */
   findByName(name: string): Promise<Role | null>;
-  
+
   /**
    * Find all Roles
    * @returns An array of all Roles
    */
   findAll(): Promise<Role[]>;
-  
+
   /**
    * Find Roles for a user
    * @param userId The user ID to find Roles for
    * @returns An array of Roles
    */
   findByUserId(userId: string): Promise<Role[]>;
-  
+
   /**
    * Update a Role
    * @param id The ID of the Role to update
@@ -53,14 +53,14 @@ export interface RoleRepository {
    * @returns The updated Role if found, null otherwise
    */
   update(id: Shared.IRI, data: Partial<Role>): Promise<Role | null>;
-  
+
   /**
    * Delete a Role
    * @param id The ID of the Role to delete
    * @returns True if the Role was deleted, false otherwise
    */
   delete(id: Shared.IRI): Promise<boolean>;
-  
+
   /**
    * Assign a Role to a user
    * @param roleId The ID of the Role to assign
@@ -68,7 +68,7 @@ export interface RoleRepository {
    * @returns True if the Role was assigned, false otherwise
    */
   assignToUser(roleId: Shared.IRI, userId: string): Promise<boolean>;
-  
+
   /**
    * Remove a Role from a user
    * @param roleId The ID of the Role to remove

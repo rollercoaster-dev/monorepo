@@ -5,9 +5,9 @@
  * handling the conversion between domain entities and database records.
  */
 
-import { Platform } from '@domains/backpack/platform.entity';
-import type { PlatformStatus } from '@domains/backpack/backpack.types';
-import type { Shared } from 'openbadges-types';
+import { Platform } from "@domains/backpack/platform.entity";
+import type { PlatformStatus } from "@domains/backpack/backpack.types";
+import type { Shared } from "openbadges-types";
 
 export class PostgresPlatformMapper {
   /**
@@ -28,7 +28,7 @@ export class PostgresPlatformMapper {
       webhookUrl,
       status,
       createdAt,
-      updatedAt
+      updatedAt,
     } = record;
 
     // Create and return the domain entity
@@ -40,8 +40,14 @@ export class PostgresPlatformMapper {
       publicKey: publicKey as string,
       webhookUrl: webhookUrl as string,
       status: status as PlatformStatus,
-      createdAt: createdAt instanceof Date ? createdAt : new Date(createdAt as string | number),
-      updatedAt: updatedAt instanceof Date ? updatedAt : new Date(updatedAt as string | number)
+      createdAt:
+        createdAt instanceof Date
+          ? createdAt
+          : new Date(createdAt as string | number),
+      updatedAt:
+        updatedAt instanceof Date
+          ? updatedAt
+          : new Date(updatedAt as string | number),
     });
   }
 
@@ -65,7 +71,7 @@ export class PostgresPlatformMapper {
       publicKey,
       webhookUrl,
       status,
-      createdAt
+      createdAt,
       // updatedAt is intentionally omitted as we always set it to the current date
     } = obj;
 
@@ -78,8 +84,13 @@ export class PostgresPlatformMapper {
       publicKey,
       webhookUrl,
       status,
-      createdAt: createdAt instanceof Date ? createdAt : (typeof createdAt === 'string' || typeof createdAt === 'number' ? new Date(createdAt) : new Date()),
-      updatedAt: new Date() // Always update the updatedAt field
+      createdAt:
+        createdAt instanceof Date
+          ? createdAt
+          : typeof createdAt === "string" || typeof createdAt === "number"
+            ? new Date(createdAt)
+            : new Date(),
+      updatedAt: new Date(), // Always update the updatedAt field
     };
   }
 }

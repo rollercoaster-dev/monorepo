@@ -5,7 +5,7 @@
  * They provide type safety and validation for the API.
  */
 
-import type { OB2, OB3 } from 'openbadges-types';
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * Base DTO for badge class creation and update operations
@@ -43,12 +43,12 @@ export interface BadgeClassBaseDto {
   // Achievement relationship fields (OB 3.0)
   related?: Array<{
     id: string; // IRI of related achievement
-    type: ['Related'];
+    type: ["Related"];
     inLanguage?: string; // BCP47 language code
     version?: string; // Version of related achievement
   }>;
   endorsement?: Array<{
-    '@context': string[];
+    "@context": string[];
     id: string;
     type: string[];
     issuer:

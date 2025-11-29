@@ -17,6 +17,7 @@ User: "Migrate {package-name} from {repo-url}"
 ```
 
 The main Claude session will guide you through:
+
 1. **Phase 1**: Invoke `migration-analyzer` → get complexity assessment
 2. **Phase 2**: Invoke `migration-planner` → get detailed plan
 3. **Phase 3**: Invoke `migration-executor` → execute with atomic commits
@@ -59,11 +60,13 @@ Main Claude Session (orchestrates workflow)
 These agents run in sequence for every migration:
 
 #### 1. migration-analyzer
+
 **Purpose**: Analyzes repository for migration feasibility
 **Calls**: dependency-analyzer (parallel)
 **Output**: Analysis report with complexity score and recommendation
 
 **What it does**:
+
 - Clones and analyzes repository structure
 - Detects Bun API usage and compatibility
 - Identifies Node.js-specific code
@@ -72,6 +75,7 @@ These agents run in sequence for every migration:
 - Recommends: PROCEED | PROCEED_WITH_CAUTION | NEEDS_WORK | DO_NOT_MIGRATE
 
 **Complexity Scoring**:
+
 - 0-10: TRIVIAL (few hours)
 - 11-25: EASY (1-2 days)
 - 26-50: MEDIUM (3-5 days)
@@ -79,11 +83,13 @@ These agents run in sequence for every migration:
 - 76+: VERY HARD (2+ weeks)
 
 #### 2. migration-planner
+
 **Purpose**: Creates detailed step-by-step migration plan
 **Input**: Analysis report
-**Output**: MIGRATION_PLAN_{package}.md
+**Output**: MIGRATION*PLAN*{package}.md
 
 **What it does**:
+
 - Defines 8 migration phases with atomic commits
 - Plans dependency resolution strategy
 - Plans Bun integration steps
@@ -93,6 +99,7 @@ These agents run in sequence for every migration:
 - Estimates timeline
 
 **8 Standard Phases**:
+
 1. Initial Setup (3-5 commits)
 2. Dependency Resolution (2-4 commits)
 3. Bun Integration (4-6 commits)
@@ -103,12 +110,14 @@ These agents run in sequence for every migration:
 8. Finalization (1-2 commits)
 
 #### 3. migration-executor
+
 **Purpose**: Executes migration plan with atomic commits
 **Calls**: dependency-analyzer, bun-package-integrator, test-coverage-validator, documentation-updater
 **Input**: Migration plan
 **Output**: Execution report
 
 **What it does**:
+
 - Creates migration branch
 - Creates sub-issues for tracking
 - Executes each phase sequentially
@@ -118,15 +127,18 @@ These agents run in sequence for every migration:
 - Reports progress
 
 **Modes**:
+
 - **Interactive** (default): Pause after each phase for approval
 - **Auto**: Execute entire plan without pausing
 
 #### 4. migration-finalizer
+
 **Purpose**: Creates PR and finalizes migration
 **Input**: Execution report
 **Output**: PR URL and finalization report
 
 **What it does**:
+
 - Runs final validation (tests, build, type-check, lint)
 - Creates comprehensive PR description
 - Pushes branch to remote
@@ -139,10 +151,12 @@ These agents run in sequence for every migration:
 These agents handle specific tasks and can be called independently:
 
 #### 5. dependency-analyzer
+
 **Purpose**: Analyzes dependencies for conflicts and Bun compatibility
 **Reusable**: ✅ (dependency updates, troubleshooting, PR reviews)
 
 **What it analyzes**:
+
 - Version conflicts across packages
 - Peer dependency issues
 - Circular dependencies
@@ -152,16 +166,19 @@ These agents handle specific tasks and can be called independently:
 - Security vulnerabilities
 
 **Output**: Dependency analysis report with:
+
 - Conflict severity (CRITICAL | WARNING | INFO)
 - Resolution strategies
 - Risk assessment
 - Recommended actions
 
 #### 6. bun-package-integrator
+
 **Purpose**: Integrates package into Bun monorepo
 **Reusable**: ✅ (new packages, Bun upgrades)
 
 **What it configures**:
+
 - package.json for Bun (packageManager, scripts)
 - TypeScript for Bun (moduleResolution: Bundler)
 - Bun test runner migration
@@ -170,16 +187,19 @@ These agents handle specific tasks and can be called independently:
 - Workspace dependencies
 
 **Handles**:
+
 - Library vs application configuration
 - Bun API detection and usage
 - Test migration (Jest/Vitest → Bun test)
 - Declaration file generation
 
 #### 7. test-coverage-validator
+
 **Purpose**: Validates test coverage before/after changes
 **Reusable**: ✅ (PR reviews, refactoring, any code changes)
 
 **What it validates**:
+
 - Test execution (all tests pass)
 - Coverage metrics (lines, statements, functions, branches)
 - Coverage comparison (before/after)
@@ -187,6 +207,7 @@ These agents handle specific tasks and can be called independently:
 - Threshold compliance
 
 **Output**: Coverage validation report with:
+
 - Overall coverage percentages
 - Delta from baseline
 - File-level coverage
@@ -194,10 +215,12 @@ These agents handle specific tasks and can be called independently:
 - Recommendations
 
 #### 8. documentation-updater
+
 **Purpose**: Updates all documentation for migrations and changes
 **Reusable**: ✅ (features, version bumps, any structural changes)
 
 **What it updates**:
+
 - CLAUDE.md (package status, migration progress)
 - README.md (package list, structure)
 - MIGRATION.md (audit trail)
@@ -206,6 +229,7 @@ These agents handle specific tasks and can be called independently:
 - Cross-references
 
 **Validates**:
+
 - No broken links
 - Consistent formatting
 - Correct package manager commands (Bun)
@@ -214,10 +238,12 @@ These agents handle specific tasks and can be called independently:
 ### Orchestrator
 
 #### 9. migration-orchestrator
+
 **Purpose**: Guides migration workflow (advisory role)
 **Does NOT call other agents** - returns instructions for what to invoke next
 
 **What it does**:
+
 - Entry point for understanding migration state
 - Checks current progress and determines next step
 - Returns clear instructions: "Invoke X agent next"
@@ -226,6 +252,7 @@ These agents handle specific tasks and can be called independently:
 - Provides progress updates
 
 **Modes**:
+
 - **Interactive** (default): User confirms before each phase
 - **Guided**: Returns next step, user/main agent invokes it
 
@@ -372,6 +399,7 @@ All migrations follow atomic commit standards:
 **Format**: `migrate({package}): {specific change description}`
 
 **Examples**:
+
 ```
 migrate(openbadges-types): add raw repository to monorepo
 migrate(openbadges-types): resolve zod version conflict
@@ -382,6 +410,7 @@ migrate(openbadges-types): remove standalone repository artifacts
 ```
 
 **For documentation**:
+
 ```
 docs: create migration plan for openbadges-types
 docs: update monorepo docs for openbadges-types migration
@@ -389,6 +418,7 @@ docs: archive openbadges-types migration plan
 ```
 
 **For build/CI**:
+
 ```
 build: add openbadges-types to Turborepo pipeline
 ci: configure CI/CD for openbadges-types
@@ -397,26 +427,31 @@ ci: configure CI/CD for openbadges-types
 ## Benefits of Multi-Agent Architecture
 
 **Speed**:
+
 - ✅ Parallel execution (dependency analysis + coverage check simultaneously)
 - ✅ Faster than sequential monolith
 
 **Quality**:
+
 - ✅ Each agent is expert in one domain
 - ✅ Deeper analysis without bloating
 - ✅ Easier to test and validate
 
 **Reusability**:
+
 - ✅ dependency-analyzer: Every dependency change
 - ✅ test-coverage-validator: Every PR, refactor
 - ✅ documentation-updater: Every feature, version bump
 - ✅ bun-package-integrator: Every new package
 
 **Maintainability**:
+
 - ✅ Small, focused agents (~200-400 lines)
 - ✅ Fix/improve one without affecting others
 - ✅ Easy to add new agents
 
 **Developer Experience**:
+
 - ✅ Single command for full migration (orchestrator)
 - ✅ Can use agents individually for specific tasks
 - ✅ Clear progress through phases
@@ -427,12 +462,14 @@ ci: configure CI/CD for openbadges-types
 ### Old Architecture (rd-logger)
 
 **Single Agent**: monorepo-migration-orchestrator
+
 - Monolithic, did everything
 - pnpm-focused
 - Sequential execution
 - Manual PR creation
 
 **Result**: ✅ Successful migration but had gaps:
+
 - TypeScript references incomplete
 - Migration plan not archived
 - No coverage comparison
@@ -441,12 +478,14 @@ ci: configure CI/CD for openbadges-types
 ### New Architecture (openbadges-types onward)
 
 **10 Specialized Agents**: Composable, focused
+
 - Bun-focused design
 - Parallel execution where possible
 - Automatic PR creation
 - Comprehensive validation
 
 **Expected Result**: ✅ Complete migrations with:
+
 - TypeScript references integrated
 - Migration plans archived
 - Coverage validated
@@ -458,21 +497,25 @@ ci: configure CI/CD for openbadges-types
 All agents are in `.claude/agents/`:
 
 **Core Workflow**:
+
 - `migration-analyzer.md`
 - `migration-planner.md`
 - `migration-executor.md`
 - `migration-finalizer.md`
 
 **Specialized Tasks**:
+
 - `dependency-analyzer.md`
 - `bun-package-integrator.md`
 - `test-coverage-validator.md`
 - `documentation-updater.md`
 
 **Orchestrator**:
+
 - `migration-orchestrator.md`
 
 **Archived**:
+
 - See `docs/migrations/ARCHIVED-original-migration-agent.md`
 
 ## Next Steps
@@ -492,6 +535,7 @@ All agents are in `.claude/agents/`:
 ### For Continuous Improvement
 
 Track migration metrics to improve agents:
+
 - Actual vs estimated time
 - Common errors encountered
 - Agent effectiveness

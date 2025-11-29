@@ -7,15 +7,15 @@
 
 // Ensure DB-related env-vars are set **before** any module import that may read them
 if (!process.env.DB_TYPE) {
-  process.env.DB_TYPE = 'sqlite';
+  process.env.DB_TYPE = "sqlite";
 }
-if (process.env.DB_TYPE === 'sqlite' && !process.env.SQLITE_DB_PATH) {
-  process.env.SQLITE_DB_PATH = ':memory:';
+if (process.env.DB_TYPE === "sqlite" && !process.env.SQLITE_DB_PATH) {
+  process.env.SQLITE_DB_PATH = ":memory:";
 }
 
 // Tests must run in "test" mode *before* config is imported
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'test';
+  process.env.NODE_ENV = "test";
 }
 
 import {
@@ -25,17 +25,17 @@ import {
   afterAll,
   beforeAll,
   beforeEach,
-} from 'bun:test';
-import { logger } from '@/utils/logging/logger.service';
-import { TestDataHelper } from './helpers/test-data.helper';
-import { resetDatabase } from './helpers/database-reset.helper';
-import { setupTestApp, stopTestServer } from './setup-test-app';
+} from "bun:test";
+import { logger } from "@/utils/logging/logger.service";
+import { TestDataHelper } from "./helpers/test-data.helper";
+import { resetDatabase } from "./helpers/database-reset.helper";
+import { setupTestApp, stopTestServer } from "./setup-test-app";
 // Import only the types we need
-import type { BadgeClassResponseDto } from '@/api/dtos';
-import { getAvailablePort, releasePort } from './helpers/port-manager.helper';
-import { config } from '@/config/config'; // safe to import after env is prepared
-import { RepositoryFactory } from '@/infrastructure/repository.factory';
-import { headersToObject } from '../test-utils/headers.helper';
+import type { BadgeClassResponseDto } from "@/api/dtos";
+import { getAvailablePort, releasePort } from "./helpers/port-manager.helper";
+import { config } from "@/config/config"; // safe to import after env is prepared
+import { RepositoryFactory } from "@/infrastructure/repository.factory";
+import { headersToObject } from "../test-utils/headers.helper";
 
 // Use getPort to reliably get an available port to avoid conflicts
 let TEST_PORT: number;
@@ -44,7 +44,7 @@ let BADGE_CLASSES_ENDPOINT: string;
 
 // API key for protected endpoints - use the one from environment variables
 const API_KEY =
-  process.env.AUTH_API_KEY_E2E?.split(':')[0] || 'verysecretkeye2e';
+  process.env.AUTH_API_KEY_E2E?.split(":")[0] || "verysecretkeye2e";
 
 // Server instance for the test
 // Define BunServer type based on what's used in stopTestServer
@@ -53,7 +53,7 @@ type BunServer = {
 };
 let server: BunServer | null = null;
 
-describe('Badge Class API - E2E', () => {
+describe("Badge Class API - E2E", () => {
   // Start the server before all tests
   beforeAll(async () => {
     // Get an available port to avoid conflicts
@@ -62,7 +62,7 @@ describe('Badge Class API - E2E', () => {
      * to global process.env to keep the scope local to this suite */
 
     // Set up API URLs after getting the port
-    const host = config.server.host ?? '127.0.0.1';
+    const host = config.server.host ?? "127.0.0.1";
     API_URL = `http://${host}:${TEST_PORT}`;
     BADGE_CLASSES_ENDPOINT = `${API_URL}/v3/badge-classes`;
 
@@ -73,20 +73,20 @@ describe('Badge Class API - E2E', () => {
       logger.info(`E2E Test: Starting server on port ${TEST_PORT}`);
       const result = await setupTestApp(TEST_PORT);
       server = result.server as BunServer;
-      logger.info('E2E Test: Server started successfully');
+      logger.info("E2E Test: Server started successfully");
 
       // Initialize test data helper
       TestDataHelper.initialize(API_URL, API_KEY);
-      logger.info('Badge Class E2E tests: Initialized test data helper', {
+      logger.info("Badge Class E2E tests: Initialized test data helper", {
         apiUrl: API_URL,
-        apiKey: API_KEY ? 'set' : 'not set',
+        apiKey: API_KEY ? "set" : "not set",
       });
 
       // Wait for server to be ready with health check
       let retries = 50; // 5 seconds max
       while (retries > 0) {
         try {
-          const healthRes = await fetch(`${API_URL}/health`, { method: 'GET' });
+          const healthRes = await fetch(`${API_URL}/health`, { method: "GET" });
           if (healthRes.status === 200) break;
         } catch {
           // Server not ready yet
@@ -94,9 +94,9 @@ describe('Badge Class API - E2E', () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         retries--;
       }
-      if (retries === 0) throw new Error('Server failed to become ready');
+      if (retries === 0) throw new Error("Server failed to become ready");
     } catch (error) {
-      logger.error('E2E Test: Failed to start server', {
+      logger.error("E2E Test: Failed to start server", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -108,9 +108,9 @@ describe('Badge Class API - E2E', () => {
   beforeEach(async () => {
     try {
       await resetDatabase();
-      logger.info('Badge Class E2E tests: Reset database');
+      logger.info("Badge Class E2E tests: Reset database");
     } catch (error) {
-      logger.error('Failed to reset database', {
+      logger.error("Failed to reset database", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -121,15 +121,15 @@ describe('Badge Class API - E2E', () => {
   // Stop the server and clean up test data after all tests
   afterAll(async () => {
     await TestDataHelper.cleanup();
-    logger.info('Badge Class E2E tests: Cleaned up test data');
+    logger.info("Badge Class E2E tests: Cleaned up test data");
 
     if (server) {
       try {
-        logger.info('E2E Test: Stopping server');
+        logger.info("E2E Test: Stopping server");
         stopTestServer(server);
-        logger.info('E2E Test: Server stopped successfully');
+        logger.info("E2E Test: Server stopped successfully");
       } catch (error) {
-        logger.error('E2E Test: Error stopping server', {
+        logger.error("E2E Test: Error stopping server", {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         });
@@ -145,44 +145,44 @@ describe('Badge Class API - E2E', () => {
     }
   });
 
-  describe('Create Badge Class', () => {
-    it('should create a badge class with valid data', async () => {
+  describe("Create Badge Class", () => {
+    it("should create a badge class with valid data", async () => {
       // Create a test issuer first
       const { id: issuerId } = await TestDataHelper.createIssuer();
 
       // Prepare test data
       const badgeClassData = {
-        type: 'BadgeClass',
-        name: 'E2E Test Badge Class',
-        description: 'Badge class for E2E test.',
+        type: "BadgeClass",
+        name: "E2E Test Badge Class",
+        description: "Badge class for E2E test.",
         issuer: issuerId,
         criteria: {
-          narrative: 'Complete the E2E test requirements',
+          narrative: "Complete the E2E test requirements",
         },
-        image: 'https://example.com/badge.png',
+        image: "https://example.com/badge.png",
       };
 
       // Execute test
       const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify(badgeClassData),
       });
 
       const responseBody = await res.clone().text();
-      logger.debug('Create badge class response:', {
+      logger.debug("Create badge class response:", {
         status: res.status,
         statusText: res.statusText,
         body: responseBody,
         headers: headersToObject(res.headers),
         requestUrl: BADGE_CLASSES_ENDPOINT,
-        requestMethod: 'POST',
+        requestMethod: "POST",
         requestHeaders: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY ? 'provided' : 'not provided',
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY ? "provided" : "not provided",
         },
         requestBody: JSON.stringify(badgeClassData),
       });
@@ -196,27 +196,27 @@ describe('Badge Class API - E2E', () => {
       expect(body.description).toBe(badgeClassData.description);
       expect(body.issuer.toString()).toBe(issuerId);
       // API intentionally maps BadgeClass input → Achievement output (OBv3 specification)
-      expect(body.type).toEqual(['Achievement']);
+      expect(body.type).toEqual(["Achievement"]);
     });
 
-    it('should fail to create badge class with invalid issuer', async () => {
+    it("should fail to create badge class with invalid issuer", async () => {
       // Prepare test data with invalid issuer
       const invalidBadgeClassData = {
-        type: 'BadgeClass',
-        name: 'Bad Issuer Badge Class',
-        description: 'Badge class with invalid issuer.',
-        issuer: '00000000-0000-4000-a000-000000000999', // Non-existent issuer
+        type: "BadgeClass",
+        name: "Bad Issuer Badge Class",
+        description: "Badge class with invalid issuer.",
+        issuer: "00000000-0000-4000-a000-000000000999", // Non-existent issuer
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       };
 
       // Execute test
       const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify(invalidBadgeClassData),
       });
@@ -227,20 +227,20 @@ describe('Badge Class API - E2E', () => {
       expect(body.error).toBeDefined();
     });
 
-    it('should fail to create badge class without required fields', async () => {
+    it("should fail to create badge class without required fields", async () => {
       // Prepare test data with missing required fields
       const incompleteBadgeClassData = {
-        type: 'BadgeClass',
+        type: "BadgeClass",
         // Missing name, description, issuer, and criteria
-        image: 'https://example.com/badge.png',
+        image: "https://example.com/badge.png",
       };
 
       // Execute test
       const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify(incompleteBadgeClassData),
       });
@@ -252,31 +252,30 @@ describe('Badge Class API - E2E', () => {
     });
   });
 
-  describe('Read Badge Class', () => {
-    it('should retrieve a badge class by ID', async () => {
+  describe("Read Badge Class", () => {
+    it("should retrieve a badge class by ID", async () => {
       // Create test issuer and badge class
       const { id: issuerId } = await TestDataHelper.createIssuer();
-      const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
-        issuerId
-      );
+      const { id: badgeClassId } =
+        await TestDataHelper.createBadgeClass(issuerId);
 
       // Execute test
       const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       // Log the response for debugging
       const responseText = await res.clone().text();
-      logger.debug('Get badge class response:', {
+      logger.debug("Get badge class response:", {
         status: res.status,
         statusText: res.statusText,
         responseText,
         headers: headersToObject(res.headers),
         requestUrl: `${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`,
-        requestMethod: 'GET',
+        requestMethod: "GET",
         requestHeaders: {
-          'X-API-Key': API_KEY ? 'provided' : 'not provided',
+          "X-API-Key": API_KEY ? "provided" : "not provided",
         },
         badgeClassId,
       });
@@ -290,22 +289,22 @@ describe('Badge Class API - E2E', () => {
       expect(body.description).toBeDefined();
       expect(body.issuer.toString()).toBe(issuerId);
       // Badge classes are returned as Achievement type in Open Badges 3.0
-      expect(body.type).toEqual(['Achievement']);
+      expect(body.type).toEqual(["Achievement"]);
     });
 
-    it('should handle non-existent badge class gracefully', async () => {
+    it("should handle non-existent badge class gracefully", async () => {
       // Execute test with non-existent ID (using a valid UUID format)
-      const nonexistentId = '00000000-0000-4000-a000-000000000002';
+      const nonexistentId = "00000000-0000-4000-a000-000000000002";
       const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${nonexistentId}`, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       // The API should return 404 for a non-existent resource
       expect(res.status).toBe(404);
     });
 
-    it('should list all badge classes', async () => {
+    it("should list all badge classes", async () => {
       // Reset database to ensure a clean state
       await resetDatabase();
 
@@ -317,8 +316,8 @@ describe('Badge Class API - E2E', () => {
 
       // Execute test
       const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       // Verify response
@@ -326,7 +325,7 @@ describe('Badge Class API - E2E', () => {
       const body = (await res.json()) as Record<string, unknown>[];
 
       // Log the response for debugging
-      logger.debug('List badge classes response:', {
+      logger.debug("List badge classes response:", {
         status: res.status,
         bodyLength: body.length,
         responseType: typeof body,
@@ -343,49 +342,49 @@ describe('Badge Class API - E2E', () => {
       body.forEach((badgeClass: Record<string, unknown>) => {
         expect(badgeClass.id).toBeDefined();
         // Badge classes are returned as Achievement type in Open Badges 3.0
-        expect(badgeClass.type).toEqual(['Achievement']);
+        expect(badgeClass.type).toEqual(["Achievement"]);
         expect(badgeClass.name).toBeDefined();
         expect(badgeClass.description).toBeDefined();
         expect(badgeClass.issuer).toBeDefined();
         // Check for JSON-LD context which should be present
-        expect(badgeClass['@context']).toBeDefined();
+        expect(badgeClass["@context"]).toBeDefined();
       });
     });
 
-    it('should filter badge classes by issuer query parameter', async () => {
+    it("should filter badge classes by issuer query parameter", async () => {
       // Reset database to ensure a clean state
       await resetDatabase();
 
       // Create two different issuers
       const { id: issuerId1 } = await TestDataHelper.createIssuer({
-        name: 'Issuer One',
+        name: "Issuer One",
       });
       const { id: issuerId2 } = await TestDataHelper.createIssuer({
-        name: 'Issuer Two',
+        name: "Issuer Two",
       });
 
       // Create badge classes for each issuer
       await TestDataHelper.createBadgeClass(issuerId1, {
-        name: 'Badge from Issuer One - A',
+        name: "Badge from Issuer One - A",
       });
       await TestDataHelper.createBadgeClass(issuerId1, {
-        name: 'Badge from Issuer One - B',
+        name: "Badge from Issuer One - B",
       });
       await TestDataHelper.createBadgeClass(issuerId2, {
-        name: 'Badge from Issuer Two',
+        name: "Badge from Issuer Two",
       });
 
       // Filter by issuer 1
       const res = await fetch(`${BADGE_CLASSES_ENDPOINT}?issuer=${issuerId1}`, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       expect(res.status).toBe(200);
       const body = (await res.json()) as BadgeClassResponseDto[];
 
       // Log the response for debugging
-      logger.debug('Filter by issuer response:', {
+      logger.debug("Filter by issuer response:", {
         status: res.status,
         bodyLength: body.length,
         issuerId: issuerId1,
@@ -401,7 +400,7 @@ describe('Badge Class API - E2E', () => {
       });
     });
 
-    it('should return empty array when filtering by non-existent issuer', async () => {
+    it("should return empty array when filtering by non-existent issuer", async () => {
       // Reset database to ensure a clean state
       await resetDatabase();
 
@@ -410,20 +409,20 @@ describe('Badge Class API - E2E', () => {
       await TestDataHelper.createBadgeClass(issuerId);
 
       // Filter by a non-existent issuer ID
-      const nonExistentIssuerId = '00000000-0000-4000-a000-000000000999';
+      const nonExistentIssuerId = "00000000-0000-4000-a000-000000000999";
       const res = await fetch(
         `${BADGE_CLASSES_ENDPOINT}?issuer=${nonExistentIssuerId}`,
         {
-          method: 'GET',
-          headers: { 'X-API-Key': API_KEY },
-        }
+          method: "GET",
+          headers: { "X-API-Key": API_KEY },
+        },
       );
 
       expect(res.status).toBe(200);
       const body = (await res.json()) as BadgeClassResponseDto[];
 
       // Log the response for debugging
-      logger.debug('Filter by non-existent issuer response:', {
+      logger.debug("Filter by non-existent issuer response:", {
         status: res.status,
         bodyLength: body.length,
         nonExistentIssuerId,
@@ -434,25 +433,25 @@ describe('Badge Class API - E2E', () => {
       expect(body.length).toBe(0);
     });
 
-    it('should return all badge classes when no issuer filter is provided', async () => {
+    it("should return all badge classes when no issuer filter is provided", async () => {
       // Reset database to ensure a clean state
       await resetDatabase();
 
       // Create two different issuers with badge classes
       const { id: issuerId1 } = await TestDataHelper.createIssuer({
-        name: 'Issuer A',
+        name: "Issuer A",
       });
       const { id: issuerId2 } = await TestDataHelper.createIssuer({
-        name: 'Issuer B',
+        name: "Issuer B",
       });
 
-      await TestDataHelper.createBadgeClass(issuerId1, { name: 'Badge A' });
-      await TestDataHelper.createBadgeClass(issuerId2, { name: 'Badge B' });
+      await TestDataHelper.createBadgeClass(issuerId1, { name: "Badge A" });
+      await TestDataHelper.createBadgeClass(issuerId2, { name: "Badge B" });
 
       // Request without issuer filter
       const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       expect(res.status).toBe(200);
@@ -469,8 +468,8 @@ describe('Badge Class API - E2E', () => {
     });
   });
 
-  describe('Update Badge Class', () => {
-    it('should update an existing badge class with valid data', async () => {
+  describe("Update Badge Class", () => {
+    it("should update an existing badge class with valid data", async () => {
       try {
         // Reset database to ensure a clean state
         await resetDatabase();
@@ -482,19 +481,19 @@ describe('Badge Class API - E2E', () => {
 
         const badgeClassData = {
           name: uniqueName,
-          type: 'BadgeClass',
-          description: 'Test badge class for E2E tests',
+          type: "BadgeClass",
+          description: "Test badge class for E2E tests",
           issuer: issuerId,
           criteria: {
-            narrative: 'Complete the test requirements',
+            narrative: "Complete the test requirements",
           },
         };
 
-        logger.debug('Creating badge class with data:', { badgeClassData });
+        logger.debug("Creating badge class with data:", { badgeClassData });
 
         const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
           issuerId,
-          badgeClassData
+          badgeClassData,
         );
 
         logger.info(`Created test badge class with ID: ${badgeClassId}`);
@@ -503,14 +502,14 @@ describe('Badge Class API - E2E', () => {
         const checkRes = await fetch(
           `${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`,
           {
-            method: 'GET',
-            headers: { 'X-API-Key': API_KEY },
-          }
+            method: "GET",
+            headers: { "X-API-Key": API_KEY },
+          },
         );
 
         const checkBody = await checkRes.clone().text();
         logger.info(
-          `Verify badge class exists response: status=${checkRes.status}, body=${checkBody}`
+          `Verify badge class exists response: status=${checkRes.status}, body=${checkBody}`,
         );
 
         // If the badge class doesn't exist, fail the test
@@ -519,27 +518,27 @@ describe('Badge Class API - E2E', () => {
         // Prepare update data with all required fields
         const updateData = {
           name: `Updated Badge Class Name ${Date.now().toString()}`,
-          description: 'Updated description.',
-          type: 'BadgeClass',
+          description: "Updated description.",
+          type: "BadgeClass",
           issuer: issuerId,
-          image: 'https://example.com/updated-badge.png',
+          image: "https://example.com/updated-badge.png",
           criteria: {
-            narrative: 'Updated test requirements',
+            narrative: "Updated test requirements",
           },
         };
 
         logger.info(
           `Updating badge class with ID: ${badgeClassId}, data: ${JSON.stringify(
-            updateData
-          )}`
+            updateData,
+          )}`,
         );
 
         // Execute test
         const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(updateData),
         });
@@ -547,19 +546,19 @@ describe('Badge Class API - E2E', () => {
         // Log the response for debugging
         const responseText = await res.text();
         logger.info(
-          `Update badge class response: status=${res.status}, body=${responseText}`
+          `Update badge class response: status=${res.status}, body=${responseText}`,
         );
 
-        logger.debug('Update badge class response details:', {
+        logger.debug("Update badge class response details:", {
           status: res.status,
           statusText: res.statusText,
           responseText,
           headers: headersToObject(res.headers),
           requestUrl: `${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`,
-          requestMethod: 'PUT',
+          requestMethod: "PUT",
           requestHeaders: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY ? 'provided' : 'not provided',
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY ? "provided" : "not provided",
           },
           requestBody: JSON.stringify(updateData),
           badgeClassId,
@@ -572,14 +571,14 @@ describe('Badge Class API - E2E', () => {
         const getRes = await fetch(
           `${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`,
           {
-            method: 'GET',
-            headers: { 'X-API-Key': API_KEY },
-          }
+            method: "GET",
+            headers: { "X-API-Key": API_KEY },
+          },
         );
 
         const getBody = await getRes.clone().text();
         logger.info(
-          `Get updated badge class response: status=${getRes.status}, body=${getBody}`
+          `Get updated badge class response: status=${getRes.status}, body=${getBody}`,
         );
 
         expect(getRes.status).toBe(200);
@@ -592,7 +591,7 @@ describe('Badge Class API - E2E', () => {
         // Verify the ID hasn't changed
         expect(body.id.toString()).toBe(badgeClassId);
       } catch (error) {
-        logger.error('Error in update badge class test', {
+        logger.error("Error in update badge class test", {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         });
@@ -600,49 +599,48 @@ describe('Badge Class API - E2E', () => {
       }
     });
 
-    it('should fail to update badge class with invalid data', async () => {
+    it("should fail to update badge class with invalid data", async () => {
       // Create test issuer and badge class
       const { id: issuerId } = await TestDataHelper.createIssuer();
-      const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
-        issuerId
-      );
+      const { id: badgeClassId } =
+        await TestDataHelper.createBadgeClass(issuerId);
 
       // Test cases for invalid data
       const invalidUpdateTests = [
         {
-          name: 'missing required name field',
+          name: "missing required name field",
           data: {
-            description: 'Updated description.',
-            type: 'BadgeClass',
+            description: "Updated description.",
+            type: "BadgeClass",
             issuer: issuerId,
-            image: 'https://example.com/badge.png',
+            image: "https://example.com/badge.png",
             criteria: {
-              narrative: 'Updated requirements',
+              narrative: "Updated requirements",
             },
             // name is missing
           },
         },
         {
-          name: 'invalid issuer ID',
+          name: "invalid issuer ID",
           data: {
-            name: 'Updated Badge Class Name',
-            description: 'Updated description.',
-            type: 'BadgeClass',
-            issuer: '00000000-0000-4000-a000-000000000999', // Non-existent issuer
-            image: 'https://example.com/badge.png',
+            name: "Updated Badge Class Name",
+            description: "Updated description.",
+            type: "BadgeClass",
+            issuer: "00000000-0000-4000-a000-000000000999", // Non-existent issuer
+            image: "https://example.com/badge.png",
             criteria: {
-              narrative: 'Updated requirements',
+              narrative: "Updated requirements",
             },
           },
         },
         {
-          name: 'missing required criteria field',
+          name: "missing required criteria field",
           data: {
-            name: 'Updated Badge Class Name',
-            description: 'Updated description.',
-            type: 'BadgeClass',
+            name: "Updated Badge Class Name",
+            description: "Updated description.",
+            type: "BadgeClass",
             issuer: issuerId,
-            image: 'https://example.com/badge.png',
+            image: "https://example.com/badge.png",
             // criteria is missing
           },
         },
@@ -653,10 +651,10 @@ describe('Badge Class API - E2E', () => {
 
         // Execute test with invalid data
         const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(testCase.data),
         });
@@ -664,7 +662,7 @@ describe('Badge Class API - E2E', () => {
         // Log the response for debugging
         const responseText = await res.text();
         logger.debug(
-          `Invalid update test '${testCase.name}' response: status=${res.status}, body=${responseText}`
+          `Invalid update test '${testCase.name}' response: status=${res.status}, body=${responseText}`,
         );
 
         // Verify response status - expect validation error for invalid data
@@ -682,29 +680,29 @@ describe('Badge Class API - E2E', () => {
       }
     });
 
-    it('should handle updating non-existent badge class appropriately', async () => {
+    it("should handle updating non-existent badge class appropriately", async () => {
       // Create a test issuer for the update data
       const { id: issuerId } = await TestDataHelper.createIssuer();
 
       // Prepare update data
       const updateData = {
-        name: 'Updated Badge Class Name',
-        description: 'Updated description.',
-        type: 'BadgeClass',
+        name: "Updated Badge Class Name",
+        description: "Updated description.",
+        type: "BadgeClass",
         issuer: issuerId,
-        image: 'https://example.com/updated-badge.png',
+        image: "https://example.com/updated-badge.png",
         criteria: {
-          narrative: 'Updated requirements',
+          narrative: "Updated requirements",
         },
       };
 
       // Execute test with non-existent ID (using a valid UUID format)
-      const nonexistentId = '00000000-0000-4000-a000-000000000000';
+      const nonexistentId = "00000000-0000-4000-a000-000000000000";
       const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${nonexistentId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify(updateData),
       });
@@ -714,21 +712,20 @@ describe('Badge Class API - E2E', () => {
     });
   });
 
-  describe('Delete Badge Class', () => {
-    it('should delete an existing badge class', async () => {
+  describe("Delete Badge Class", () => {
+    it("should delete an existing badge class", async () => {
       // Create test issuer and badge class
       const { id: issuerId } = await TestDataHelper.createIssuer();
-      const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
-        issuerId
-      );
+      const { id: badgeClassId } =
+        await TestDataHelper.createBadgeClass(issuerId);
 
       // Execute delete
       const deleteRes = await fetch(
         `${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`,
         {
-          method: 'DELETE',
-          headers: { 'X-API-Key': API_KEY },
-        }
+          method: "DELETE",
+          headers: { "X-API-Key": API_KEY },
+        },
       );
 
       // Verify delete response - DELETE operations should return 204 for successful deletions
@@ -736,20 +733,20 @@ describe('Badge Class API - E2E', () => {
 
       // Verify badge class is deleted by trying to fetch it
       const getRes = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
-        method: 'GET',
-        headers: { 'X-API-Key': API_KEY },
+        method: "GET",
+        headers: { "X-API-Key": API_KEY },
       });
 
       // After deletion, the API should return 404 (not found)
       expect(getRes.status).toBe(404);
     });
 
-    it('should handle deleting non-existent badge class gracefully', async () => {
+    it("should handle deleting non-existent badge class gracefully", async () => {
       // Execute test with non-existent ID (using a valid UUID format)
-      const nonexistentId = '00000000-0000-4000-a000-000000000001';
+      const nonexistentId = "00000000-0000-4000-a000-000000000001";
       const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${nonexistentId}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       });
 
       // The API may return 200 (idempotent delete) or 404 (not found)
@@ -758,31 +755,31 @@ describe('Badge Class API - E2E', () => {
     });
   });
 
-  describe('Achievement Versioning and Relationships (OB 3.0)', () => {
-    describe('Achievement Versioning', () => {
-      it('should create badge class with version field', async () => {
+  describe("Achievement Versioning and Relationships (OB 3.0)", () => {
+    describe("Achievement Versioning", () => {
+      it("should create badge class with version field", async () => {
         // Create a test issuer first
         const { id: issuerId } = await TestDataHelper.createIssuer();
 
         // Prepare test data with version field
         const badgeClassData = {
-          type: 'BadgeClass',
-          name: 'Versioned Achievement v1.0',
-          description: 'First version of this achievement.',
+          type: "BadgeClass",
+          name: "Versioned Achievement v1.0",
+          description: "First version of this achievement.",
           issuer: issuerId,
           criteria: {
-            narrative: 'Complete the versioned requirements',
+            narrative: "Complete the versioned requirements",
           },
-          image: 'https://example.com/versioned-badge.png',
-          version: '1.0',
+          image: "https://example.com/versioned-badge.png",
+          version: "1.0",
         };
 
         // Execute test
         const res = await fetch(BADGE_CLASSES_ENDPOINT, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(badgeClassData),
         });
@@ -791,31 +788,31 @@ describe('Badge Class API - E2E', () => {
         const body = (await res.json()) as BadgeClassResponseDto;
 
         // Verify version field is included in OB 3.0 output
-        expect(body.version).toBe('1.0');
-        expect(body.type).toEqual(['Achievement']);
+        expect(body.version).toBe("1.0");
+        expect(body.type).toEqual(["Achievement"]);
         expect(body.name).toBe(badgeClassData.name);
       });
 
-      it('should create version chain with previousVersion field', async () => {
+      it("should create version chain with previousVersion field", async () => {
         // Create a test issuer first
         const { id: issuerId } = await TestDataHelper.createIssuer();
 
         // Create first version
         const v1Data = {
-          type: 'BadgeClass',
-          name: 'Achievement v1.0',
-          description: 'First version of this achievement.',
+          type: "BadgeClass",
+          name: "Achievement v1.0",
+          description: "First version of this achievement.",
           issuer: issuerId,
-          criteria: { narrative: 'Complete v1 requirements' },
-          image: 'https://example.com/badge-v1.png',
-          version: '1.0',
+          criteria: { narrative: "Complete v1 requirements" },
+          image: "https://example.com/badge-v1.png",
+          version: "1.0",
         };
 
         const v1Res = await fetch(BADGE_CLASSES_ENDPOINT, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(v1Data),
         });
@@ -825,21 +822,21 @@ describe('Badge Class API - E2E', () => {
 
         // Create second version with previousVersion reference
         const v2Data = {
-          type: 'BadgeClass',
-          name: 'Achievement v2.0',
-          description: 'Second version of this achievement.',
+          type: "BadgeClass",
+          name: "Achievement v2.0",
+          description: "Second version of this achievement.",
           issuer: issuerId,
-          criteria: { narrative: 'Complete v2 requirements' },
-          image: 'https://example.com/badge-v2.png',
-          version: '2.0',
+          criteria: { narrative: "Complete v2 requirements" },
+          image: "https://example.com/badge-v2.png",
+          version: "2.0",
           previousVersion: v1Body.id,
         };
 
         const v2Res = await fetch(BADGE_CLASSES_ENDPOINT, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(v2Data),
         });
@@ -848,52 +845,52 @@ describe('Badge Class API - E2E', () => {
         const v2Body = (await v2Res.json()) as BadgeClassResponseDto;
 
         // Verify version fields
-        expect(v2Body.version).toBe('2.0');
-        expect(v2Body.type).toEqual(['Achievement']);
+        expect(v2Body.version).toBe("2.0");
+        expect(v2Body.type).toEqual(["Achievement"]);
         // Note: previousVersion is for internal tracking, not in JSON-LD output
         expect(v2Body.previousVersion).toBeUndefined();
       });
     });
 
-    describe('Related Achievements', () => {
-      it('should manage related achievements through API endpoints', async () => {
+    describe("Related Achievements", () => {
+      it("should manage related achievements through API endpoints", async () => {
         // Create a test issuer first
         const { id: issuerId } = await TestDataHelper.createIssuer();
 
         // Create two achievements
         const achievement1Data = {
-          type: 'BadgeClass',
-          name: 'Primary Achievement',
-          description: 'The main achievement.',
+          type: "BadgeClass",
+          name: "Primary Achievement",
+          description: "The main achievement.",
           issuer: issuerId,
-          criteria: { narrative: 'Complete primary requirements' },
-          image: 'https://example.com/primary-badge.png',
+          criteria: { narrative: "Complete primary requirements" },
+          image: "https://example.com/primary-badge.png",
         };
 
         const achievement2Data = {
-          type: 'BadgeClass',
-          name: 'Related Achievement',
-          description: 'A related achievement.',
+          type: "BadgeClass",
+          name: "Related Achievement",
+          description: "A related achievement.",
           issuer: issuerId,
-          criteria: { narrative: 'Complete related requirements' },
-          image: 'https://example.com/related-badge.png',
+          criteria: { narrative: "Complete related requirements" },
+          image: "https://example.com/related-badge.png",
         };
 
         // Create both achievements
         const res1 = await fetch(BADGE_CLASSES_ENDPOINT, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(achievement1Data),
         });
 
         const res2 = await fetch(BADGE_CLASSES_ENDPOINT, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify(achievement2Data),
         });
@@ -907,21 +904,21 @@ describe('Badge Class API - E2E', () => {
         // Add relationship using the new API endpoint
         const relatedData = {
           id: achievement2.id,
-          type: ['Related'],
-          inLanguage: 'en-US',
-          version: '1.0',
+          type: ["Related"],
+          inLanguage: "en-US",
+          version: "1.0",
         };
 
         const addRelatedRes = await fetch(
           `${BADGE_CLASSES_ENDPOINT}/${achievement1.id}/related`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'X-API-Key': API_KEY,
+              "Content-Type": "application/json",
+              "X-API-Key": API_KEY,
             },
             body: JSON.stringify(relatedData),
-          }
+          },
         );
 
         expect(addRelatedRes.status).toBe(200);
@@ -936,9 +933,9 @@ describe('Badge Class API - E2E', () => {
         const getRelatedRes = await fetch(
           `${BADGE_CLASSES_ENDPOINT}/${achievement1.id}/related`,
           {
-            method: 'GET',
-            headers: { 'X-API-Key': API_KEY },
-          }
+            method: "GET",
+            headers: { "X-API-Key": API_KEY },
+          },
         );
 
         expect(getRelatedRes.status).toBe(200);
@@ -952,9 +949,9 @@ describe('Badge Class API - E2E', () => {
         const removeRelatedRes = await fetch(
           `${BADGE_CLASSES_ENDPOINT}/${achievement1.id}/related/${achievement2.id}`,
           {
-            method: 'DELETE',
-            headers: { 'X-API-Key': API_KEY },
-          }
+            method: "DELETE",
+            headers: { "X-API-Key": API_KEY },
+          },
         );
 
         expect(removeRelatedRes.status).toBe(200);

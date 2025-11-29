@@ -5,8 +5,8 @@
  * JSON-LD context handling, and API responses.
  */
 
-import type { Shared, OB2 } from 'openbadges-types';
-import type { BitstringStatusListEntry } from '../../domains/status-list/status-list.types';
+import type { Shared, OB2 } from "openbadges-types";
+import type { BitstringStatusListEntry } from "../../domains/status-list/status-list.types";
 
 /**
  * Common data structure for issuers
@@ -88,7 +88,7 @@ export interface VerificationData {
  * Data structure for verifiable credentials
  */
 export interface VerifiableCredentialData {
-  '@context': string | string[];
+  "@context": string | string[];
   id: Shared.IRI;
   type: string | string[];
   issuer: Shared.IRI | Partial<IssuerData>;

@@ -5,12 +5,17 @@
  * user creation, authentication, and authorization.
  */
 
-import type { User, UserPermission } from './user.entity';
-import { UserRole } from './user.entity';
-import type { UserRepository, UserCreateParams, UserUpdateParams, UserQueryParams } from './user.repository';
-import { PasswordService } from '../../auth/services/password.service';
-import { logger } from '../../utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
+import type { User, UserPermission } from "./user.entity";
+import { UserRole } from "./user.entity";
+import type {
+  UserRepository,
+  UserCreateParams,
+  UserUpdateParams,
+  UserQueryParams,
+} from "./user.repository";
+import { PasswordService } from "../../auth/services/password.service";
+import { logger } from "../../utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
 
 /**
  * User service for managing users
@@ -24,23 +29,28 @@ export class UserService {
    * @param password Plain text password (will be hashed)
    * @returns The created user
    */
-  async createUser(params: Omit<UserCreateParams, 'passwordHash'>, password?: string): Promise<User> {
+  async createUser(
+    params: Omit<UserCreateParams, "passwordHash">,
+    password?: string,
+  ): Promise<User> {
     try {
       // Check if username already exists
-      const existingUsername = await this.userRepository.findByUsername(params.username);
+      const existingUsername = await this.userRepository.findByUsername(
+        params.username,
+      );
       if (existingUsername) {
-        throw new Error('Username already exists');
+        throw new Error("Username already exists");
       }
 
       // Check if email already exists
       const existingEmail = await this.userRepository.findByEmail(params.email);
       if (existingEmail) {
-        throw new Error('Email already exists');
+        throw new Error("Email already exists");
       }
 
       // Create user params object
       const userParams: UserCreateParams = {
-        ...params
+        ...params,
       };
 
       // Hash password if provided
@@ -51,10 +61,12 @@ export class UserService {
 
       // Create user
       const user = await this.userRepository.create(userParams);
-      logger.debug(`User created: ${user.id} (${user.username}) with passwordHash: ${user.passwordHash ? 'yes' : 'no'}`);
+      logger.debug(
+        `User created: ${user.id} (${user.username}) with passwordHash: ${user.passwordHash ? "yes" : "no"}`,
+      );
       return user;
     } catch (error) {
-      logger.logError('Failed to create user', error as Error);
+      logger.logError("Failed to create user", error as Error);
       throw error;
     }
   }
@@ -68,7 +80,7 @@ export class UserService {
     try {
       return await this.userRepository.findById(id);
     } catch (error) {
-      logger.logError('Failed to get user by ID', error as Error);
+      logger.logError("Failed to get user by ID", error as Error);
       throw error;
     }
   }
@@ -82,7 +94,7 @@ export class UserService {
     try {
       return await this.userRepository.findByUsername(username);
     } catch (error) {
-      logger.logError('Failed to get user by username', error as Error);
+      logger.logError("Failed to get user by username", error as Error);
       throw error;
     }
   }
@@ -96,7 +108,7 @@ export class UserService {
     try {
       return await this.userRepository.findByEmail(email);
     } catch (error) {
-      logger.logError('Failed to get user by email', error as Error);
+      logger.logError("Failed to get user by email", error as Error);
       throw error;
     }
   }
@@ -107,7 +119,10 @@ export class UserService {
    * @param params User update parameters
    * @returns The updated user if found, null otherwise
    */
-  async updateUser(id: Shared.IRI, params: Omit<UserUpdateParams, 'passwordHash'>): Promise<User | null> {
+  async updateUser(
+    id: Shared.IRI,
+    params: Omit<UserUpdateParams, "passwordHash">,
+  ): Promise<User | null> {
     try {
       // Check if user exists
       const existingUser = await this.userRepository.findById(id);
@@ -117,13 +132,13 @@ export class UserService {
 
       // Create update params
       const updateParams: UserUpdateParams = {
-        ...params
+        ...params,
       };
 
       // Update user
       return await this.userRepository.update(id, updateParams);
     } catch (error) {
-      logger.logError('Failed to update user', error as Error);
+      logger.logError("Failed to update user", error as Error);
       throw error;
     }
   }
@@ -148,7 +163,7 @@ export class UserService {
       // Update user
       return await this.userRepository.update(id, { passwordHash });
     } catch (error) {
-      logger.logError('Failed to update password', error as Error);
+      logger.logError("Failed to update password", error as Error);
       throw error;
     }
   }
@@ -162,7 +177,7 @@ export class UserService {
     try {
       return await this.userRepository.delete(id);
     } catch (error) {
-      logger.logError('Failed to delete user', error as Error);
+      logger.logError("Failed to delete user", error as Error);
       throw error;
     }
   }
@@ -173,10 +188,13 @@ export class UserService {
    * @param password Password
    * @returns The authenticated user if successful, null otherwise
    */
-  async authenticateUser(usernameOrEmail: string, password: string): Promise<User | null> {
+  async authenticateUser(
+    usernameOrEmail: string,
+    password: string,
+  ): Promise<User | null> {
     try {
       // Find user by username or email
-      const isEmail = usernameOrEmail.includes('@');
+      const isEmail = usernameOrEmail.includes("@");
       const user = isEmail
         ? await this.userRepository.findByEmail(usernameOrEmail)
         : await this.userRepository.findByUsername(usernameOrEmail);
@@ -193,7 +211,10 @@ export class UserService {
       }
 
       // Verify password
-      const isPasswordValid = await PasswordService.verifyPassword(password, user.passwordHash);
+      const isPasswordValid = await PasswordService.verifyPassword(
+        password,
+        user.passwordHash,
+      );
       if (!isPasswordValid) {
         return null;
       }
@@ -203,7 +224,7 @@ export class UserService {
 
       return user;
     } catch (error) {
-      logger.logError('Failed to authenticate user', error as Error);
+      logger.logError("Failed to authenticate user", error as Error);
       throw error;
     }
   }
@@ -217,7 +238,7 @@ export class UserService {
     try {
       return await this.userRepository.findByQuery(params);
     } catch (error) {
-      logger.logError('Failed to find users', error as Error);
+      logger.logError("Failed to find users", error as Error);
       throw error;
     }
   }
@@ -231,7 +252,7 @@ export class UserService {
     try {
       return await this.userRepository.countByQuery(params);
     } catch (error) {
-      logger.logError('Failed to count users', error as Error);
+      logger.logError("Failed to count users", error as Error);
       throw error;
     }
   }
@@ -256,7 +277,7 @@ export class UserService {
       // Update user
       return await this.userRepository.update(id, { roles: updatedRoles });
     } catch (error) {
-      logger.logError('Failed to add roles to user', error as Error);
+      logger.logError("Failed to add roles to user", error as Error);
       throw error;
     }
   }
@@ -276,7 +297,7 @@ export class UserService {
       }
 
       // Remove roles
-      const updatedRoles = user.roles.filter(role => !roles.includes(role));
+      const updatedRoles = user.roles.filter((role) => !roles.includes(role));
 
       // Ensure user has at least one role
       if (updatedRoles.length === 0) {
@@ -286,7 +307,7 @@ export class UserService {
       // Update user
       return await this.userRepository.update(id, { roles: updatedRoles });
     } catch (error) {
-      logger.logError('Failed to remove roles from user', error as Error);
+      logger.logError("Failed to remove roles from user", error as Error);
       throw error;
     }
   }
@@ -297,7 +318,10 @@ export class UserService {
    * @param permissions Permissions to add
    * @returns The updated user if found, null otherwise
    */
-  async addPermissions(id: Shared.IRI, permissions: UserPermission[]): Promise<User | null> {
+  async addPermissions(
+    id: Shared.IRI,
+    permissions: UserPermission[],
+  ): Promise<User | null> {
     try {
       // Check if user exists
       const user = await this.userRepository.findById(id);
@@ -306,12 +330,16 @@ export class UserService {
       }
 
       // Add permissions
-      const updatedPermissions = [...new Set([...user.permissions, ...permissions])];
+      const updatedPermissions = [
+        ...new Set([...user.permissions, ...permissions]),
+      ];
 
       // Update user
-      return await this.userRepository.update(id, { permissions: updatedPermissions });
+      return await this.userRepository.update(id, {
+        permissions: updatedPermissions,
+      });
     } catch (error) {
-      logger.logError('Failed to add permissions to user', error as Error);
+      logger.logError("Failed to add permissions to user", error as Error);
       throw error;
     }
   }
@@ -322,7 +350,10 @@ export class UserService {
    * @param permissions Permissions to remove
    * @returns The updated user if found, null otherwise
    */
-  async removePermissions(id: Shared.IRI, permissions: UserPermission[]): Promise<User | null> {
+  async removePermissions(
+    id: Shared.IRI,
+    permissions: UserPermission[],
+  ): Promise<User | null> {
     try {
       // Check if user exists
       const user = await this.userRepository.findById(id);
@@ -332,13 +363,15 @@ export class UserService {
 
       // Remove permissions
       const updatedPermissions = user.permissions.filter(
-        permission => !permissions.includes(permission)
+        (permission) => !permissions.includes(permission),
       );
 
       // Update user
-      return await this.userRepository.update(id, { permissions: updatedPermissions });
+      return await this.userRepository.update(id, {
+        permissions: updatedPermissions,
+      });
     } catch (error) {
-      logger.logError('Failed to remove permissions from user', error as Error);
+      logger.logError("Failed to remove permissions from user", error as Error);
       throw error;
     }
   }

@@ -83,9 +83,9 @@ The cache TTL can be configured in the database configuration:
 ```typescript
 // Example configuration
 const config = {
-  type: 'sqlite',
-  sqliteFile: './badges.db',
-  cacheTtl: 300000 // 5 minutes in milliseconds
+  type: "sqlite",
+  sqliteFile: "./badges.db",
+  cacheTtl: 300000, // 5 minutes in milliseconds
 };
 ```
 

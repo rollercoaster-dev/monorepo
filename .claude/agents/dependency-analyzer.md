@@ -8,9 +8,11 @@ model: haiku
 # Dependency Analyzer Agent
 
 ## Purpose
+
 Analyzes package dependencies to detect version conflicts, peer dependency issues, and circular dependency risks in a Bun-based monorepo context.
 
 ## When to Use This Agent
+
 - Before migrating a package into the monorepo
 - When adding new dependencies to existing packages
 - During dependency updates or version bumps
@@ -20,11 +22,13 @@ Analyzes package dependencies to detect version conflicts, peer dependency issue
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of the package being analyzed
 - **Package path**: Path to package.json (or git repository URL if not yet migrated)
 - **Context**: What triggered this analysis (migration, dependency update, troubleshooting)
 
 Optional:
+
 - **Focus area**: Specific dependency to analyze (if troubleshooting)
 - **Include dev dependencies**: Whether to analyze devDependencies (default: true)
 
@@ -55,6 +59,7 @@ Optional:
 
 1. **Check for version conflicts:**
    For each dependency in target package:
+
    ```
    - Compare version with same dependency in other packages
    - Identify version mismatches
@@ -76,7 +81,7 @@ Optional:
 
 4. **Check for Node.js-only packages:**
    - Identify packages that may not work with Bun runtime
-   - Common issues: native addons, node:* imports without polyfills
+   - Common issues: native addons, node:\* imports without polyfills
    - Suggest Bun-compatible alternatives
 
 ### Phase 3: Peer Dependency Validation
@@ -100,9 +105,9 @@ Optional:
 2. **Detect cycles:**
    - Check for circular dependencies
    - Categorize by severity:
-     * CRITICAL: Runtime circular dependency
-     * WARNING: Dev dependency circular dependency
-     * INFO: Peer dependency cycle (may be acceptable)
+     - CRITICAL: Runtime circular dependency
+     - WARNING: Dev dependency circular dependency
+     - INFO: Peer dependency cycle (may be acceptable)
 
 3. **Suggest resolution strategies:**
    - Extract shared code to new package
@@ -117,7 +122,7 @@ Optional:
    - Flag deprecated Bun APIs
 
 2. **Check for Node.js compatibility issues:**
-   - Packages using node:* imports
+   - Packages using node:\* imports
    - Native Node.js addons
    - Packages that may need Bun's node compatibility mode
 
@@ -142,7 +147,7 @@ Optional:
    - Suggest lighter alternatives if available
 
 3. **Check TypeScript type definitions:**
-   - Verify @types/* packages are included for TypeScript dependencies
+   - Verify @types/\* packages are included for TypeScript dependencies
    - Flag missing type definitions
    - Note: Bun has built-in TypeScript support
 
@@ -156,10 +161,11 @@ Optional:
 
 Create comprehensive dependency analysis report:
 
-```markdown
+````markdown
 # Dependency Analysis Report: {package-name}
 
 ## Summary
+
 - Total dependencies: {count}
 - Version conflicts: {count} (CRITICAL: {n}, WARNING: {n})
 - Peer dependency issues: {count}
@@ -170,6 +176,7 @@ Create comprehensive dependency analysis report:
 ## Version Conflicts
 
 ### CRITICAL
+
 - **{dependency-name}**:
   - Target package: v{x.y.z}
   - Existing in {other-package}: v{a.b.c}
@@ -177,16 +184,19 @@ Create comprehensive dependency analysis report:
   - Resolution: {strategy}
 
 ### WARNING
+
 - ...
 
 ## Peer Dependencies
 
 ### Missing
+
 - **{peer-dep}**: Required by target, not provided by monorepo
 - Resolution: Add to root package.json or {package}
 - Note: Bun will auto-install peer deps
 
 ### Incompatible
+
 - **{peer-dep}**: Target requires v{x}, monorepo has v{y}
 - Resolution: {strategy}
 
@@ -197,23 +207,28 @@ Create comprehensive dependency analysis report:
 ## Bun-Specific Issues
 
 ### Bun API Compatibility
+
 - ✅ Uses Bun 1.3 APIs correctly
 - ⚠️ Uses deprecated Bun.write (should use Bun.file().write())
 
 ### Node.js Compatibility
+
 - ✅ No native Node.js addons detected
 - ⚠️ Uses 'fs/promises' - Bun has native support
 
 ### Trusted Dependencies
+
 {List of packages needing trustedDependencies}
 
 ## Recommendations
 
 ### Required Actions
+
 1. {Action with specific commands}
 2. ...
 
 ### Optional Improvements
+
 1. {Suggestion}
 2. ...
 
@@ -225,14 +240,11 @@ Create comprehensive dependency analysis report:
   "dependencies": {
     "{package}": "^{version}"
   },
-  "workspaces": [
-    "packages/*"
-  ],
-  "trustedDependencies": [
-    "{package-with-scripts}"
-  ]
+  "workspaces": ["packages/*"],
+  "trustedDependencies": ["{package-with-scripts}"]
 }
 ```
+````
 
 ## Risk Assessment
 
@@ -247,6 +259,7 @@ Create comprehensive dependency analysis report:
 
 1. {Concrete next step}
 2. ...
+
 ```
 
 ## Tools Required
@@ -281,9 +294,11 @@ If analysis fails:
 
 ### During Migration
 ```
+
 User: "Analyze dependencies for openbadges-types package before migration"
 
 Agent:
+
 1. Reads openbadges-types/package.json from original repo
 2. Compares with monorepo packages
 3. Detects zod v3.22.0 in target vs v3.21.0 in rd-logger
@@ -291,19 +306,23 @@ Agent:
 5. Checks for Bun compatibility: ✅ zod works with Bun
 6. Suggests: "Upgrade rd-logger to zod ^3.22.0"
 7. Reports: Overall Risk: LOW, Bun compatible, safe to proceed
+
 ```
 
 ### During Dependency Update
 ```
+
 User: "Check if upgrading Hono to v4.0.0 will cause issues"
 
 Agent:
+
 1. Reads current Hono versions across packages
 2. Checks peer dependencies
 3. Searches for breaking changes (WebSearch)
 4. Verifies Bun 1.3 compatibility
 5. Reports: "Hono v4 is Bun-optimized, recommended upgrade"
 6. Provides: Migration guide and affected files
+
 ```
 
 ## Success Criteria
@@ -324,3 +343,4 @@ This agent is designed to be called:
 - During PR reviews for dependency changes
 - As part of regular dependency audits
 - By other agents that need dependency validation
+```

@@ -20,6 +20,7 @@ See [apps/docs/vision/](apps/docs/vision/) for detailed roadmap and principles.
 ## 🏗️ Architecture
 
 This monorepo uses:
+
 - **Bun 1.3.2** for package management and runtime
 - **Turborepo** for task orchestration and caching
 - **TypeScript project references** for instant type checking
@@ -77,10 +78,12 @@ cp .env.example .env
 ```
 
 **Environment Files:**
+
 - [.env.example](.env.example) - Root-level monorepo configuration (logging, CI/CD)
 - [packages/rd-logger/.env.example](packages/rd-logger/.env.example) - Logger-specific variables
 
 **Common Variables:**
+
 - `NODE_ENV` - Environment mode (development, production, test)
 - `LOG_LEVEL` - Logging verbosity (debug, info, warn, error, fatal)
 - `DEBUG_QUERIES` - Enable verbose database query logging (true/false)
@@ -92,11 +95,13 @@ Individual packages and apps may have their own `.env.example` files. Check each
 This monorepo is configured for use with [Claude Code on the Web](https://claude.ai/code).
 
 **Automatic Setup:**
+
 - Dependencies install automatically when you start a session
 - The SessionStart hook runs `scripts/install-dependencies.sh`
 - Works in both local CLI and web environments
 
 **Environment Variables for Web:**
+
 1. Visit [claude.ai/code](https://claude.ai/code) and connect your GitHub account
 2. Install the Claude GitHub app in this repository
 3. Select or create an environment
@@ -108,6 +113,7 @@ This monorepo is configured for use with [Claude Code on the Web](https://claude
 **Note**: `.env` files are for local development only. Claude Code on the Web uses environment variables configured in the Web UI.
 
 **Additional Context:**
+
 - See [CLAUDE.md](CLAUDE.md) for detailed monorepo structure and workflows
 - Team-shared settings are in `.claude/settings.json`
 - Personal settings go in `.claude/settings.local.json` (not committed)
@@ -189,12 +195,14 @@ This monorepo is actively being migrated from multiple repositories. See our [mi
 Comprehensive living documentation will be available in `apps/docs/` after Phase 5.5 migration.
 
 **Key Documents** (coming from rc-living-docs-starter):
+
 - Vision & Strategy - now/next/later roadmap
 - Architecture Decisions (ADRs) - self-signed badges, local-first, federation
 - User Stories - rich narratives for neurodivergent users
 - Development Processes - weekly rituals, triage, contribution guidelines
 
 **For Now:**
+
 - [Migration Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
 - [All Issues](https://github.com/rollercoaster-dev/monorepo/issues)
 - Individual repo CLAUDE.md files (in each package/app after migration)
@@ -210,6 +218,7 @@ Individual packages and applications maintain their original licenses. See each 
 ## 🔬 Research & Future Work
 
 ### Federation Protocol (Next Phase: 6-12 weeks)
+
 Federation is a core vision component but not yet implemented. Research notes are in `experiments/distributed-badges-concept/`. Key questions:
 
 - **Protocol**: AT Protocol, ActivityPub, or custom DID-based?
@@ -220,6 +229,7 @@ Federation is a core vision component but not yet implemented. Research notes ar
 See [ADR-0003-federation-core-architecture](apps/docs/decisions/ADR-0003-federation-core-architecture.md) (after Phase 5.5) for detailed architectural thinking.
 
 ### Data Marketplace (Later: 12+ weeks)
+
 User-controlled credential sharing with consent-based monetization.
 
 ### Potential Architecture Gaps (To Be Evaluated)

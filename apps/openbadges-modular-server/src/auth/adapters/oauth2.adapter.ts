@@ -6,10 +6,14 @@
  * It supports Bearer token validation against the provider's endpoints.
  */
 
-import type { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
-import { logger } from '../../utils/logging/logger.service';
-import type { JWTPayload } from 'jose';
-import { createRemoteJWKSet, jwtVerify, errors as joseErrors } from 'jose';
+import type {
+  AuthAdapter,
+  AuthAdapterOptions,
+  AuthenticationResult,
+} from "./auth-adapter.interface";
+import { logger } from "../../utils/logging/logger.service";
+import type { JWTPayload } from "jose";
+import { createRemoteJWKSet, jwtVerify, errors as joseErrors } from "jose";
 
 interface OAuth2Config {
   /**
@@ -49,7 +53,7 @@ interface OAuth2Config {
 }
 
 export class OAuth2Adapter implements AuthAdapter {
-  private readonly providerName: string = 'oauth2';
+  private readonly providerName: string = "oauth2";
   private readonly config: OAuth2Config;
   private jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 
@@ -62,7 +66,9 @@ export class OAuth2Adapter implements AuthAdapter {
 
     // Validate required configuration
     if (!this.config.jwksUri && !this.config.introspectionEndpoint) {
-      logger.warn(`OAuth2 adapter ${this.providerName} requires either jwksUri or introspectionEndpoint`);
+      logger.warn(
+        `OAuth2 adapter ${this.providerName} requires either jwksUri or introspectionEndpoint`,
+      );
     }
 
     // Initialize JWKS client if URI is provided
@@ -71,10 +77,13 @@ export class OAuth2Adapter implements AuthAdapter {
         this.jwks = createRemoteJWKSet(new URL(this.config.jwksUri));
         logger.info(`JWKS client initialized for ${this.providerName}`);
       } catch (error) {
-        logger.error(`Failed to initialize JWKS client for ${this.providerName}`, {
-          error: (error as Error).message,
-          jwksUri: this.config.jwksUri
-        });
+        logger.error(
+          `Failed to initialize JWKS client for ${this.providerName}`,
+          {
+            error: (error as Error).message,
+            jwksUri: this.config.jwksUri,
+          },
+        );
       }
     }
   }
@@ -84,18 +93,18 @@ export class OAuth2Adapter implements AuthAdapter {
   }
 
   canHandle(request: Request): boolean {
-    const authHeader = request.headers.get('Authorization');
-    return authHeader !== null && authHeader.startsWith('Bearer ');
+    const authHeader = request.headers.get("Authorization");
+    return authHeader !== null && authHeader.startsWith("Bearer ");
   }
 
   async authenticate(request: Request): Promise<AuthenticationResult> {
-    const authHeader = request.headers.get('Authorization');
+    const authHeader = request.headers.get("Authorization");
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return {
         isAuthenticated: false,
-        error: 'No Bearer token provided',
-        provider: this.providerName
+        error: "No Bearer token provided",
+        provider: this.providerName,
       };
     }
 
@@ -107,21 +116,23 @@ export class OAuth2Adapter implements AuthAdapter {
       if (!tokenPayload) {
         return {
           isAuthenticated: false,
-          error: 'Invalid or expired token',
-          provider: this.providerName
+          error: "Invalid or expired token",
+          provider: this.providerName,
         };
       }
 
       // Extract the user ID using the configured claim
-      const userIdClaim = this.config.userIdClaim || 'sub';
+      const userIdClaim = this.config.userIdClaim || "sub";
       // Safely access the claim using type assertion to Record<string, unknown>
-      const userIdValue = (tokenPayload as Record<string, unknown>)[userIdClaim];
+      const userIdValue = (tokenPayload as Record<string, unknown>)[
+        userIdClaim
+      ];
 
       if (!userIdValue) {
         return {
           isAuthenticated: false,
           error: `Token missing required claim: ${userIdClaim}`,
-          provider: this.providerName
+          provider: this.providerName,
         };
       }
 
@@ -137,14 +148,17 @@ export class OAuth2Adapter implements AuthAdapter {
         isAuthenticated: true,
         userId,
         claims: otherClaims,
-        provider: this.providerName
+        provider: this.providerName,
       };
     } catch (error) {
-      logger.logError(`OAuth2 token validation failed: ${this.providerName}`, error as Error);
+      logger.logError(
+        `OAuth2 token validation failed: ${this.providerName}`,
+        error as Error,
+      );
       return {
         isAuthenticated: false,
-        error: 'Token validation failed',
-        provider: this.providerName
+        error: "Token validation failed",
+        provider: this.providerName,
       };
     }
   }
@@ -163,71 +177,92 @@ export class OAuth2Adapter implements AuthAdapter {
             audience: this.config.audience,
             issuer: this.config.issuer,
           });
-          logger.debug('Token verified successfully using JWKS');
+          logger.debug("Token verified successfully using JWKS");
           return payload;
         } catch (error) {
           if (error instanceof joseErrors.JWTExpired) {
-            logger.debug('Token expired');
+            logger.debug("Token expired");
             return null;
           } else if (error instanceof joseErrors.JWTClaimValidationFailed) {
-            logger.debug('JWT claim validation failed', { error: (error as Error).message });
+            logger.debug("JWT claim validation failed", {
+              error: (error as Error).message,
+            });
             return null;
           } else {
-            logger.warn('JWKS token validation failed, trying fallback methods', {
-              error: (error as Error).message
-            });
+            logger.warn(
+              "JWKS token validation failed, trying fallback methods",
+              {
+                error: (error as Error).message,
+              },
+            );
             // Continue to try other methods
           }
         }
       }
 
       // Fallback verification: Token introspection
-      if (this.config.introspectionEndpoint && this.config.clientId && this.config.clientSecret) {
+      if (
+        this.config.introspectionEndpoint &&
+        this.config.clientId &&
+        this.config.clientSecret
+      ) {
         try {
           const response = await fetch(this.config.introspectionEndpoint, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Authorization': `Basic ${Buffer.from(
-                `${this.config.clientId}:${this.config.clientSecret}`
-              ).toString('base64')}`
+              "Content-Type": "application/x-www-form-urlencoded",
+              Authorization: `Basic ${Buffer.from(
+                `${this.config.clientId}:${this.config.clientSecret}`,
+              ).toString("base64")}`,
             },
             body: new URLSearchParams({
               token,
-              token_type_hint: 'access_token'
-            })
+              token_type_hint: "access_token",
+            }),
           });
 
           if (!response.ok) {
-            logger.warn('Introspection endpoint returned error', {
+            logger.warn("Introspection endpoint returned error", {
               status: response.status,
-              statusText: response.statusText
+              statusText: response.statusText,
             });
             return null;
           }
 
-          const introspectionResult = await response.json() as { active?: boolean };
+          const introspectionResult = (await response.json()) as {
+            active?: boolean;
+          };
           if (!introspectionResult.active) {
-            logger.debug('Token is not active according to introspection');
+            logger.debug("Token is not active according to introspection");
             return null;
           }
 
-          logger.debug('Token verified successfully using introspection endpoint');
+          logger.debug(
+            "Token verified successfully using introspection endpoint",
+          );
           return introspectionResult as JWTPayload;
         } catch (error) {
-          logger.error('Token introspection failed', { error: (error as Error).message });
+          logger.error("Token introspection failed", {
+            error: (error as Error).message,
+          });
           return null;
         }
       }
 
       // If we reach here, we don't have any valid verification method
-      logger.error('No valid token verification method available', {
+      logger.error("No valid token verification method available", {
         hasJwks: !!this.jwks,
-        hasIntrospection: !!(this.config.introspectionEndpoint && this.config.clientId && this.config.clientSecret)
+        hasIntrospection: !!(
+          this.config.introspectionEndpoint &&
+          this.config.clientId &&
+          this.config.clientSecret
+        ),
       });
       return null;
     } catch (error) {
-      logger.error('Token verification failed', { error: (error as Error).message });
+      logger.error("Token verification failed", {
+        error: (error as Error).message,
+      });
       return null;
     }
   }

@@ -5,9 +5,9 @@
  * the expected types from the openbadges-types package.
  */
 
-import type { OB2, OB3, Shared} from 'openbadges-types';
-import { isIRI, createIRI } from 'openbadges-types';
-import { isValidUrl } from './type-utils';
+import type { OB2, OB3, Shared } from "openbadges-types";
+import { isIRI, createIRI } from "openbadges-types";
+import { isValidUrl } from "./type-utils";
 
 /**
  * Type guard to check if a value is a valid OB2.Image
@@ -15,17 +15,17 @@ import { isValidUrl } from './type-utils';
  * @returns True if the value is a valid OB2.Image
  */
 export function isOB2Image(value: unknown): value is OB2.Image {
-  if (!value || typeof value !== 'object') return false;
+  if (!value || typeof value !== "object") return false;
 
   const img = value as Partial<OB2.Image>;
 
   // Check if it has the basic structure of an OB2.Image
   return (
     // Either has an id that's a string
-    (typeof img.id === 'string') ||
+    typeof img.id === "string" ||
     // Or has a caption or author
-    (typeof img.caption === 'string') ||
-    (typeof img.author === 'string')
+    typeof img.caption === "string" ||
+    typeof img.author === "string"
   );
 }
 
@@ -34,8 +34,10 @@ export function isOB2Image(value: unknown): value is OB2.Image {
  * @param value Value to check
  * @returns True if the value is a valid OB3.OB3ImageObject
  */
-export function isOB3ImageObject(value: unknown): value is Shared.OB3ImageObject {
-  if (!value || typeof value !== 'object') return false;
+export function isOB3ImageObject(
+  value: unknown,
+): value is Shared.OB3ImageObject {
+  if (!value || typeof value !== "object") return false;
 
   const img = value as Partial<Shared.OB3ImageObject>;
 
@@ -44,7 +46,7 @@ export function isOB3ImageObject(value: unknown): value is Shared.OB3ImageObject
     // Must have an id that's a valid IRI
     isIRI(img.id as string) &&
     // Must have type = 'Image'
-    img.type === 'Image'
+    img.type === "Image"
   );
 }
 
@@ -54,12 +56,12 @@ export function isOB3ImageObject(value: unknown): value is Shared.OB3ImageObject
  * @returns Normalized image as IRI or OB3ImageObject
  */
 export function normalizeImage(
-  image: string | OB2.Image | Shared.OB3ImageObject | undefined
+  image: string | OB2.Image | Shared.OB3ImageObject | undefined,
 ): Shared.IRI | Shared.OB3ImageObject | undefined {
   if (!image) return undefined;
 
   // If it's a string, convert to IRI if it's a valid URL
-  if (typeof image === 'string') {
+  if (typeof image === "string") {
     if (isValidUrl(image)) {
       return createIRI(image);
     }
@@ -71,9 +73,9 @@ export function normalizeImage(
     if (image.id && isValidUrl(image.id)) {
       return {
         id: createIRI(image.id),
-        type: 'Image',
+        type: "Image",
         caption: image.caption,
-        author: image.author
+        author: image.author,
       };
     }
     // If it doesn't have a valid ID, we can't convert it properly
@@ -94,15 +96,16 @@ export function normalizeImage(
  * @param value Value to check
  * @returns True if the value is a valid OB2.IdentityObject
  */
-export function isOB2IdentityObject(value: unknown): value is OB2.IdentityObject {
-  if (!value || typeof value !== 'object') return false;
+export function isOB2IdentityObject(
+  value: unknown,
+): value is OB2.IdentityObject {
+  if (!value || typeof value !== "object") return false;
 
   const identity = value as Partial<OB2.IdentityObject>;
 
   // Check required properties according to OB2 spec
   return (
-    typeof identity.type === 'string' &&
-    typeof identity.identity === 'string'
+    typeof identity.type === "string" && typeof identity.identity === "string"
   );
 }
 
@@ -111,13 +114,15 @@ export function isOB2IdentityObject(value: unknown): value is OB2.IdentityObject
  * @param value Value to check
  * @returns True if the value is a valid OB3.IdentityObject
  */
-export function isOB3IdentityObject(value: unknown): value is OB3.IdentityObject {
-  if (!value || typeof value !== 'object') return false;
+export function isOB3IdentityObject(
+  value: unknown,
+): value is OB3.IdentityObject {
+  if (!value || typeof value !== "object") return false;
 
   const identity = value as Partial<OB3.IdentityObject>;
 
   // Check required properties according to OB3 spec
-  return typeof identity.identityHash === 'string';
+  return typeof identity.identityHash === "string";
 }
 
 /**
@@ -126,16 +131,16 @@ export function isOB3IdentityObject(value: unknown): value is OB3.IdentityObject
  * @returns True if the value is a valid OB2.Criteria
  */
 export function isOB2Criteria(value: unknown): value is OB2.Criteria {
-  if (!value || typeof value !== 'object') return false;
+  if (!value || typeof value !== "object") return false;
 
   const criteria = value as Partial<OB2.Criteria>;
 
   // Check if it has the basic structure of OB2.Criteria
   return (
     // Either has an id that's a string
-    (typeof criteria.id === 'string') ||
+    typeof criteria.id === "string" ||
     // Or has a narrative
-    (typeof criteria.narrative === 'string')
+    typeof criteria.narrative === "string"
   );
 }
 
@@ -145,18 +150,19 @@ export function isOB2Criteria(value: unknown): value is OB2.Criteria {
  * @returns True if the value is a valid OB3.Criteria
  */
 export function isOB3Criteria(value: unknown): value is OB3.Criteria {
-  if (!value || typeof value !== 'object') return false;
+  if (!value || typeof value !== "object") return false;
 
   const criteria = value as Partial<OB3.Criteria>;
 
   // Check if it has the basic structure of OB3.Criteria
   return (
     // Either has an id that's a string
-    (typeof criteria.id === 'string') ||
+    typeof criteria.id === "string" ||
     // Or has a narrative
-    (typeof criteria.narrative === 'string') ||
+    typeof criteria.narrative === "string" ||
     // Or has a type
-    (typeof criteria.type === 'string' || Array.isArray(criteria.type))
+    typeof criteria.type === "string" ||
+    Array.isArray(criteria.type)
   );
 }
 
@@ -166,12 +172,12 @@ export function isOB3Criteria(value: unknown): value is OB3.Criteria {
  * @returns Normalized criteria
  */
 export function normalizeCriteria(
-  criteria: string | OB2.Criteria | OB3.Criteria | undefined
+  criteria: string | OB2.Criteria | OB3.Criteria | undefined,
 ): OB2.Criteria | OB3.Criteria | Shared.IRI | undefined {
   if (!criteria) return undefined;
 
   // If it's a string, treat it as an IRI if it's a valid URL
-  if (typeof criteria === 'string') {
+  if (typeof criteria === "string") {
     if (isValidUrl(criteria)) {
       return createIRI(criteria);
     }

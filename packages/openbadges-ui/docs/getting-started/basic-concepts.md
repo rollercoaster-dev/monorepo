@@ -21,6 +21,7 @@ The OpenBadges UI library supports two versions of the Open Badges standard:
 ### Open Badges 2.0 (OB2)
 
 OB2 is a widely adopted standard that uses JSON-LD for badge data. In OB2, badges consist of three linked JSON objects:
+
 - Assertion
 - BadgeClass
 - Issuer
@@ -28,6 +29,7 @@ OB2 is a widely adopted standard that uses JSON-LD for badge data. In OB2, badge
 ### Open Badges 3.0 (OB3)
 
 OB3 is based on the W3C Verifiable Credentials standard. It uses a more flexible structure that can accommodate a wider range of credential types. OB3 credentials include:
+
 - Verifiable Credential
 - Credential Subject
 - Issuer
@@ -73,6 +75,7 @@ Badge verification is a crucial aspect of the Open Badges standard. It ensures t
 ### Hosted Verification
 
 In hosted verification, the badge assertion is hosted at a URL that matches the badge's ID. The verification process involves:
+
 1. Retrieving the badge from its ID URL
 2. Comparing it with the badge being verified
 3. Checking if the issuer is authorized to issue the badge
@@ -80,6 +83,7 @@ In hosted verification, the badge assertion is hosted at a URL that matches the 
 ### Signed Verification
 
 In signed verification, the badge assertion includes a digital signature created by the issuer. The verification process involves:
+
 1. Retrieving the issuer's public key
 2. Verifying the signature using the public key
 3. Checking if the issuer is authorized to issue the badge

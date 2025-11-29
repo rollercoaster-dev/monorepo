@@ -1,8 +1,8 @@
 // src/composables/useBadgeIssuer.ts
-import { reactive, computed } from 'vue';
-import type { ComputedRef } from 'vue';
-import type { OB2 } from '@/types';
-import { BadgeService } from '@services/BadgeService';
+import { reactive, computed } from "vue";
+import type { ComputedRef } from "vue";
+import type { OB2 } from "@/types";
+import { BadgeService } from "@services/BadgeService";
 
 export interface BadgeIssuerState {
   // Badge Class fields
@@ -29,7 +29,7 @@ export function useBadgeIssuer(): {
   // Initialize state with default values
   const state = reactive<BadgeIssuerState>({
     badgeClass: BadgeService.createBadgeClassTemplate(),
-    recipientEmail: '',
+    recipientEmail: "",
     isSubmitting: false,
     errors: [],
     success: false,
@@ -44,7 +44,7 @@ export function useBadgeIssuer(): {
   // Methods
   const resetForm = () => {
     state.badgeClass = BadgeService.createBadgeClassTemplate();
-    state.recipientEmail = '';
+    state.recipientEmail = "";
     state.errors = [];
     state.success = false;
   };
@@ -58,9 +58,9 @@ export function useBadgeIssuer(): {
 
     // Validate recipient email
     if (!state.recipientEmail) {
-      state.errors.push('Recipient email is required');
+      state.errors.push("Recipient email is required");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.recipientEmail)) {
-      state.errors.push('Invalid email format');
+      state.errors.push("Invalid email format");
     }
 
     return state.errors.length === 0;
@@ -80,7 +80,7 @@ export function useBadgeIssuer(): {
       // Create assertion from badge class and recipient
       const assertion = BadgeService.createAssertionTemplate(
         state.badgeClass,
-        state.recipientEmail
+        state.recipientEmail,
       );
 
       // In a real implementation, this would likely call an API
@@ -92,7 +92,7 @@ export function useBadgeIssuer(): {
       if (error instanceof Error) {
         state.errors.push(error.message);
       } else {
-        state.errors.push('An unknown error occurred');
+        state.errors.push("An unknown error occurred");
       }
       return null;
     } finally {

@@ -4,17 +4,18 @@
  * Script to update E2E tests to use the new test setup
  */
 
-import { readdir, readFile, writeFile } from 'fs/promises';
-import { join } from 'path';
+import { readdir, readFile, writeFile } from "fs/promises";
+import { join } from "path";
 
 // Simple logger for this script to avoid console usage
 const logger = {
   info: (message) => process.stdout.write(`[INFO] ${message}\n`),
-  error: (message) => process.stderr.write(`[ERROR] ${message}\n`)
+  error: (message) => process.stderr.write(`[ERROR] ${message}\n`),
 };
 
-const E2E_TEST_DIR = 'test/e2e';
-const SETUP_IMPORT = "import { setupTestApp, stopTestServer } from './setup-test-app';";
+const E2E_TEST_DIR = "test/e2e";
+const SETUP_IMPORT =
+  "import { setupTestApp, stopTestServer } from './setup-test-app';";
 const PORT_CONFIG = `
 // Use a random port for testing to avoid conflicts
 const TEST_PORT = Math.floor(Math.random() * 10000) + 10000; // Random port between 10000-20000
@@ -70,62 +71,66 @@ async function updateE2ETests() {
   try {
     // Get all E2E test files
     const files = await readdir(E2E_TEST_DIR);
-    const testFiles = files.filter(file => file.endsWith('.e2e.test.ts') && file !== 'issuer.e2e.test.ts' && file !== 'assertion.e2e.test.ts');
+    const testFiles = files.filter(
+      (file) =>
+        file.endsWith(".e2e.test.ts") &&
+        file !== "issuer.e2e.test.ts" &&
+        file !== "assertion.e2e.test.ts",
+    );
 
     for (const file of testFiles) {
       const filePath = join(E2E_TEST_DIR, file);
       logger.info(`Updating ${filePath}...`);
 
       // Read the file content
-      let content = await readFile(filePath, 'utf8');
+      let content = await readFile(filePath, "utf8");
 
       // Update imports
-      if (!content.includes('afterAll, beforeAll')) {
+      if (!content.includes("afterAll, beforeAll")) {
         content = content.replace(
           /import { describe, it, expect([^}]*) } from 'bun:test';/,
-          "import { describe, it, expect, afterAll, beforeAll$1 } from 'bun:test';"
+          "import { describe, it, expect, afterAll, beforeAll$1 } from 'bun:test';",
         );
       }
 
       // Add setup import
-      if (!content.includes('setupTestApp')) {
-        const importLines = content.split('\n').filter(line => line.startsWith('import '));
+      if (!content.includes("setupTestApp")) {
+        const importLines = content
+          .split("\n")
+          .filter((line) => line.startsWith("import "));
         const lastImportLine = importLines[importLines.length - 1];
-        content = content.replace(lastImportLine, `${lastImportLine}\n${SETUP_IMPORT}`);
+        content = content.replace(
+          lastImportLine,
+          `${lastImportLine}\n${SETUP_IMPORT}`,
+        );
       }
 
       // Update port configuration
-      if (!content.includes('TEST_PORT')) {
-        content = content.replace(
-          /const API_URL = [^\n]+/,
-          PORT_CONFIG
-        );
+      if (!content.includes("TEST_PORT")) {
+        content = content.replace(/const API_URL = [^\n]+/, PORT_CONFIG);
       }
 
       // Add server setup
-      if (!content.includes('server: unknown')) {
-        content = content.replace(
-          /describe\('([^']+)'/,
-          `${SERVER_SETUP}$1'`
-        );
+      if (!content.includes("server: unknown")) {
+        content = content.replace(/describe\('([^']+)'/, `${SERVER_SETUP}$1'`);
       }
 
       // Add beforeAll and afterAll
-      if (!content.includes('beforeAll')) {
+      if (!content.includes("beforeAll")) {
         content = content.replace(
           /describe\('[^']+'\) => {[^\n]*/,
-          `$&\n${BEFORE_ALL}`
+          `$&\n${BEFORE_ALL}`,
         );
       }
 
       // Write the updated content back to the file
-      await writeFile(filePath, content, 'utf8');
+      await writeFile(filePath, content, "utf8");
       logger.info(`Updated ${filePath}`);
     }
 
-    logger.info('All E2E tests updated successfully!');
+    logger.info("All E2E tests updated successfully!");
   } catch (error) {
-    logger.error('Error updating E2E tests:', error);
+    logger.error("Error updating E2E tests:", error);
     process.exit(1);
   }
 }

@@ -5,6 +5,7 @@ This document analyzes Accredible's badge.design tool to inform the development 
 ## Overview
 
 **badge.design** (https://badge.design) is a free online badge designer tool by Accredible that provides:
+
 - A web-based visual badge editor
 - Design guide with best practices
 - Downloadable design assets
@@ -41,11 +42,14 @@ The designer uses a **left-sidebar + canvas** layout:
 ### Feature Breakdown
 
 #### 1. Templates (Requires Account)
+
 - Pre-built badge designs as starting points
 - Organized by style/category
 
 #### 2. Background Shapes (~90+ options)
+
 Shape categories include:
+
 - **Hexagons** - Classic badge shape, various border styles
 - **Shields** - Traditional heraldic shapes
 - **Circles** - With decorative borders, ribbons
@@ -53,16 +57,20 @@ Shape categories include:
 - **Custom shapes** - Stars, medals, etc.
 
 Each shape features:
+
 - Multiple color zones (2-3 customizable colors)
 - Transparent areas for layering
 - Consistent sizing for the canvas
 
 #### 3. Text Tools
+
 Two text modes:
+
 - **Add Text** - Standard horizontal text
 - **Add Text on Circle** - Curved text for circular badges
 
 Text editing options:
+
 - Font family selection
 - Font weight (Normal/Bold)
 - Italic and Underline
@@ -73,12 +81,15 @@ Text editing options:
 - **Dynamic date format** - Placeholder for badge issue date (multiple formats)
 
 #### 4. Images
+
 - Upload custom images (logos, photos)
 - Drag to position
 - Resize with handles
 
 #### 5. Icons (~50+ options)
+
 Categories include:
+
 - Geometric shapes (circles, shields, stars)
 - Education (graduation cap, diploma, books)
 - Achievement (trophies, ribbons, medals)
@@ -87,18 +98,22 @@ Categories include:
 - 3D cubes (colorful blocks)
 
 All icons:
+
 - Monochromatic (single color)
 - Scalable
 - Customizable color
 
 #### 6. Ribbons (~25 options)
+
 Types:
+
 - Horizontal banners (various styles)
 - Vertical bookmarks/ribbons
 - Decorative swirl ribbons
 - Various colors (blue, green, gold, red)
 
 #### 7. Document Settings
+
 - **Language selection** - 35+ languages for localization
 - Sets the badge's language metadata
 
@@ -107,11 +122,13 @@ Types:
 When an element is selected:
 
 **Toolbar shows:**
+
 - Opacity slider
 - Color swatches (1-3 depending on element)
 - Color picker/eyedropper tool
 
 **Canvas controls:**
+
 - Resize handles (corners/edges)
 - Rotation point (center)
 - Layer controls (forward/backward)
@@ -119,6 +136,7 @@ When an element is selected:
 - Duplicate button
 
 **Keyboard shortcuts:**
+
 - Undo: ⌘+Z
 - Redo: ⌘+Y
 - Arrange Forward: ⌘+]
@@ -129,6 +147,7 @@ When an element is selected:
 - Underline: ⌘+U
 
 ### Export Options
+
 - **SVG** - Vector format, scalable
 - **PNG** - Raster format with transparency
 
@@ -141,6 +160,7 @@ When an element is selected:
 **Purpose:** Communicate badge hierarchy when courses "stack" (Level 1 → Level 2 → etc.)
 
 **Visual indicators:**
+
 - Stars (★★★)
 - Dots (●●●)
 - Level numbers (L1, L2)
@@ -148,6 +168,7 @@ When an element is selected:
 - Text labels ("Level 2", "Black Belt")
 
 **Best Practices:**
+
 - Use consistent shape/branding across levels
 - Make level indicator prominent
 - Consider both visual + text indicators
@@ -157,6 +178,7 @@ When an element is selected:
 **Purpose:** Distinguish low-stakes modules from high-stakes certifications
 
 **Approaches:**
+
 - **Different shapes** - Prerequisites use simple logos, capstones use full badge designs
 - **Different visual weight** - Prerequisites are understated, capstones are bold/eye-catching
 - **Color differentiation** - Muted vs vibrant
@@ -167,6 +189,7 @@ When an element is selected:
 **Purpose:** Visual grouping for related courses or different brands
 
 **Methods:**
+
 - Color coding (different color rings/accents)
 - Consistent logo placement
 - Text labels indicating stream ("Professional", "Associate")
@@ -177,6 +200,7 @@ When an element is selected:
 **Purpose:** Reuse one design across multiple badges
 
 **Implementation:**
+
 - Template variables/attributes
 - Same design, different course names
 - Maintains visual consistency at scale
@@ -188,13 +212,14 @@ When an element is selected:
 
 ### Available Downloads (PNG + SVG)
 
-| Category | Count | Description |
-|----------|-------|-------------|
-| Badge Shapes | 90+ | Circles, hexagons, shields, ornate frames |
-| Ribbons | 24+ | Banners, bookmarks, decorative |
-| Icons | 50+ | Educational, achievement, geometric |
+| Category     | Count | Description                               |
+| ------------ | ----- | ----------------------------------------- |
+| Badge Shapes | 90+   | Circles, hexagons, shields, ornate frames |
+| Ribbons      | 24+   | Banners, bookmarks, decorative            |
+| Icons        | 50+   | Educational, achievement, geometric       |
 
 All assets are:
+
 - Free to use
 - Available in both PNG and SVG
 - Designed for badge creation
@@ -250,6 +275,6 @@ Based on this analysis, our badge builder should:
 
 ---
 
-*Analysis Date: November 2025*
-*Updated: November 2025 (OB 3.0 workflow clarification)*
-*Source: https://badge.design*
+_Analysis Date: November 2025_
+_Updated: November 2025 (OB 3.0 workflow clarification)_
+_Source: https://badge.design_

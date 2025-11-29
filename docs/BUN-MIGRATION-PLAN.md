@@ -27,6 +27,7 @@
 This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm workspaces** to **Bun 1.3.2 workspaces**, along with the integration of 7 repositories. The migration will result in a fully Bun-based development environment with improved performance and simplified tooling.
 
 ### Key Goals
+
 - ✅ Migrate monorepo package manager from pnpm to Bun 1.3.2
 - ✅ Leverage Bun's native Vue/Vite support (`bunx --bun vite`)
 - ✅ Integrate 7 repositories in order of complexity
@@ -35,6 +36,7 @@ This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm w
 - ✅ Eliminate all pnpm dependencies
 
 ### Decision Context
+
 - **Previous setup**: pnpm workspaces was a mistake (per project owner)
 - **Bun maturity**: Vite/Vue fully supported in Bun 1.3.2 with `bunx --bun vite`
 - **Performance**: Bun offers faster installs, builds, and test execution
@@ -45,7 +47,9 @@ This plan outlines the migration of the rollercoaster.dev monorepo from **pnpm w
 ## Background & Context
 
 ### Current State
+
 The monorepo currently uses:
+
 - **Package Manager**: pnpm v10.20.0
 - **Runtime**: Mixed (Node.js for frontend, Bun for some backends)
 - **Workspaces**: pnpm workspaces
@@ -53,7 +57,9 @@ The monorepo currently uses:
 - **Migrated Packages**: rd-logger (only package currently in monorepo)
 
 ### Target State
+
 After migration:
+
 - **Package Manager**: Bun 1.3.2
 - **Runtime**: Bun for all packages (with native Vite support)
 - **Workspaces**: Bun workspaces
@@ -61,6 +67,7 @@ After migration:
 - **All Packages**: Fully integrated and using Bun
 
 ### Why Bun 1.3.2?
+
 - Latest stable version as of migration planning
 - Full Vue 3 + Vite support (`bunx --bun vite`)
 - Proven in production by existing repositories (openbadges-modular-server, rd-badge-image-system)
@@ -72,17 +79,18 @@ After migration:
 
 ### Repositories to Integrate
 
-| Repository | Type | Current State | Bun Compat | Complexity | Must Keep pnpm? |
-|------------|------|---------------|------------|------------|-----------------|
-| **openbadges-types** | Package (npm) | pnpm + Node | High | 15/100 | ❌ No |
-| **openbadges-ui** | Package (npm) | pnpm + Node | Medium | 35/100 | ❌ No (Bun supports Vite) |
-| **openbadges-system** | App | pnpm + Bun (backend) | High | 30/100 | ❌ No (Bun supports Vite) |
-| **openbadges-modular-server** | App (Docker) | 100% Bun | 100% | 8/100 | ❌ No |
-| **skill-tree** | Docs | Documentation only | N/A | 0/100 | N/A |
-| **rd-landing** | App (Fly.io) | pnpm + Bun (backend) | Medium | 65/100 | ❌ No (Bun supports Vite) |
-| **rd-badge-image-system** | Experiment | Bun + Nx monorepo | 100% | N/A | ❌ Excluded |
+| Repository                    | Type          | Current State        | Bun Compat | Complexity | Must Keep pnpm?           |
+| ----------------------------- | ------------- | -------------------- | ---------- | ---------- | ------------------------- |
+| **openbadges-types**          | Package (npm) | pnpm + Node          | High       | 15/100     | ❌ No                     |
+| **openbadges-ui**             | Package (npm) | pnpm + Node          | Medium     | 35/100     | ❌ No (Bun supports Vite) |
+| **openbadges-system**         | App           | pnpm + Bun (backend) | High       | 30/100     | ❌ No (Bun supports Vite) |
+| **openbadges-modular-server** | App (Docker)  | 100% Bun             | 100%       | 8/100      | ❌ No                     |
+| **skill-tree**                | Docs          | Documentation only   | N/A        | 0/100      | N/A                       |
+| **rd-landing**                | App (Fly.io)  | pnpm + Bun (backend) | Medium     | 65/100     | ❌ No (Bun supports Vite) |
+| **rd-badge-image-system**     | Experiment    | Bun + Nx monorepo    | 100%       | N/A        | ❌ Excluded               |
 
 ### Exclusions
+
 - **rd-badge-image-system**: Experimental repo, already a Bun + Nx monorepo, keeping separate
 
 ---
@@ -92,9 +100,11 @@ After migration:
 ### Phased Approach
 
 #### Phase 1: Foundation (Week 1) - 8 commits
+
 **Goal**: Migrate monorepo base from pnpm to Bun
 
 **Changes**:
+
 1. Update root `package.json` for Bun workspaces
 2. Create `bunfig.toml` configuration
 3. Update Turborepo for Bun compatibility
@@ -105,14 +115,17 @@ After migration:
 8. Update documentation
 
 **Success Criteria**:
+
 - `bun install` works across all current packages
 - CI/CD pipelines pass with Bun
 - rd-logger builds and tests with Bun
 
 #### Phase 2: Pure TypeScript Packages (Week 2) - 9 commits
+
 **Goal**: Integrate backend packages with minimal frontend dependencies
 
 **Repositories**:
+
 1. **openbadges-types** (5 commits)
    - Pure TypeScript, no frontend
    - Migrate Jest → Bun test
@@ -124,14 +137,17 @@ After migration:
    - Preserve Docker publishing
 
 **Success Criteria**:
+
 - Both packages build with Bun
 - Tests pass with Bun test
 - Publishing workflows functional
 
 #### Phase 3: Frontend Packages (Week 3) - 21 commits
+
 **Goal**: Integrate Vue/Vite applications using Bun's native support
 
 **Repositories**:
+
 1. **openbadges-ui** (6 commits)
    - Vue 3 component library
    - Use `bunx --bun vite`
@@ -151,21 +167,25 @@ After migration:
    - Dual test framework unification
 
 **Success Criteria**:
+
 - All frontends work with `bunx --bun vite`
 - Dev servers start correctly
 - Production builds succeed
 - Deployments work (Fly.io, npm)
 
 #### Phase 4: Documentation & Validation (Week 4-5) - 3 commits
+
 **Goal**: Finalize migration and validate
 
 **Tasks**:
+
 1. Migrate skill-tree documentation
 2. Full system integration testing
 3. Documentation updates
 4. Performance benchmarking
 
 **Success Criteria**:
+
 - All packages build and test
 - CI/CD fully green
 - Documentation accurate
@@ -178,11 +198,14 @@ After migration:
 ### Phase 1: Foundation Migration (8 commits)
 
 #### Commit 1: `chore: upgrade to Bun 1.3.2 package manager`
+
 **Files Changed**:
+
 - `package.json` (root)
 - `.gitignore`
 
 **Changes**:
+
 ```json
 // package.json
 {
@@ -192,10 +215,12 @@ After migration:
 ```
 
 **Remove**:
+
 - `pnpm-lock.yaml`
 - `pnpm-workspace.yaml` (if exists)
 
 **Add to .gitignore**:
+
 ```
 bun.lockb
 ```
@@ -203,10 +228,13 @@ bun.lockb
 ---
 
 #### Commit 2: `chore: create bunfig.toml with workspace configuration`
+
 **Files Created**:
+
 - `bunfig.toml`
 
 **Content**:
+
 ```toml
 [install]
 frozen-lockfile = true
@@ -225,10 +253,13 @@ shell = "bash"
 ---
 
 #### Commit 3: `chore: update Turborepo for Bun compatibility`
+
 **Files Changed**:
+
 - `turbo.json`
 
 **Changes**:
+
 - Update cache outputs for Bun
 - Add Bun-specific environment variables
 - Optimize for Bun's faster execution
@@ -236,10 +267,13 @@ shell = "bash"
 ---
 
 #### Commit 4: `chore: migrate scripts from pnpm to bun`
+
 **Files Changed**:
+
 - `package.json` (root)
 
 **Script Updates**:
+
 ```json
 {
   "scripts": {
@@ -255,10 +289,13 @@ shell = "bash"
 ---
 
 #### Commit 5: `chore: update install-dependencies.sh for Bun`
+
 **Files Changed**:
+
 - `scripts/install-dependencies.sh`
 
 **Changes**:
+
 - Replace pnpm installation with Bun
 - Update install commands
 - Remove pnpm-specific checks
@@ -266,12 +303,15 @@ shell = "bash"
 ---
 
 #### Commit 6: `ci: update GitHub Actions to use Bun 1.3.2`
+
 **Files Changed**:
+
 - `.github/workflows/ci.yml`
 - `.github/workflows/release.yml` (if exists)
 - Any other workflow files
 
 **Changes**:
+
 ```yaml
 - uses: oven-sh/setup-bun@v2
   with:
@@ -284,12 +324,15 @@ shell = "bash"
 ---
 
 #### Commit 7: `test(rd-logger): migrate from Vitest to Bun test`
+
 **Files Changed**:
+
 - `packages/rd-logger/package.json`
 - `packages/rd-logger/bun.config.ts` (create if needed)
 - Test files (if syntax changes needed)
 
 **Changes**:
+
 - Update test scripts to use `bun test`
 - Remove Vitest if solely used for testing
 - Update test configuration
@@ -297,12 +340,15 @@ shell = "bash"
 ---
 
 #### Commit 8: `docs: update README and CLAUDE.md for Bun`
+
 **Files Changed**:
+
 - `README.md`
 - `CLAUDE.md`
 - `packages/rd-logger/README.md`
 
 **Changes**:
+
 - Update installation instructions
 - Replace pnpm commands with bun
 - Add Bun version requirement
@@ -313,25 +359,31 @@ shell = "bash"
 ### Phase 2: openbadges-types Migration (5 commits)
 
 #### Commit 9: `feat(openbadges-types): migrate repository structure`
+
 **Source**: https://github.com/rollercoaster-dev/openbadges-types
 **Destination**: `packages/openbadges-types/`
 
 **Files Copied**:
+
 - All source files
 - Tests
 - Configuration files
 - README.md
 
 **Files Changed**:
+
 - `package.json` (update for monorepo)
 
 ---
 
 #### Commit 10: `chore(openbadges-types): update packageManager to Bun 1.3.2`
+
 **Files Changed**:
+
 - `packages/openbadges-types/package.json`
 
 **Changes**:
+
 ```json
 {
   "packageManager": "bun@1.3.2"
@@ -339,17 +391,21 @@ shell = "bash"
 ```
 
 **Remove**:
+
 - `pnpm-lock.yaml`
 
 ---
 
 #### Commit 11: `test(openbadges-types): migrate Jest to Bun test`
+
 **Files Changed**:
+
 - `packages/openbadges-types/package.json`
 - Test files (convert to Bun test syntax)
 - `jest.config.js` (remove)
 
 **Changes**:
+
 - Remove Jest dependencies
 - Update test scripts
 - Convert test syntax if needed
@@ -357,12 +413,15 @@ shell = "bash"
 ---
 
 #### Commit 12: `ci(openbadges-types): integrate with monorepo CI/CD`
+
 **Files Changed**:
+
 - Root `turbo.json`
 - Root `.changeset/config.json`
 - Remove `packages/openbadges-types/.github/workflows/`
 
 **Changes**:
+
 - Add to Turborepo pipeline
 - Configure Changesets
 - Remove standalone CI
@@ -370,7 +429,9 @@ shell = "bash"
 ---
 
 #### Commit 13: `docs(openbadges-types): update for monorepo context`
+
 **Files Changed**:
+
 - `packages/openbadges-types/README.md`
 - `packages/openbadges-types/package.json` (homepage, repository fields)
 
@@ -379,27 +440,34 @@ shell = "bash"
 ### Phase 3: openbadges-modular-server Migration (4 commits)
 
 #### Commit 14: `feat(openbadges-modular-server): migrate repository structure`
+
 **Source**: https://github.com/rollercoaster-dev/openbadges-modular-server
 **Destination**: `apps/openbadges-modular-server/`
 
 ---
 
 #### Commit 15: `ci(openbadges-modular-server): preserve Docker publishing`
+
 **Files Changed/Created**:
+
 - `.github/workflows/docker-publish.yml` or integrate into main workflows
 - `apps/openbadges-modular-server/Dockerfile`
 
 ---
 
 #### Commit 16: `chore(openbadges-modular-server): integrate with Turborepo`
+
 **Files Changed**:
+
 - Root `turbo.json`
 - `apps/openbadges-modular-server/package.json`
 
 ---
 
 #### Commit 17: `docs(openbadges-modular-server): update for monorepo`
+
 **Files Changed**:
+
 - `apps/openbadges-modular-server/README.md`
 
 ---
@@ -407,17 +475,21 @@ shell = "bash"
 ### Phase 4: openbadges-ui Migration (6 commits)
 
 #### Commit 18: `feat(openbadges-ui): migrate repository structure`
+
 **Source**: https://github.com/rollercoaster-dev/openbadges-ui
 **Destination**: `packages/openbadges-ui/`
 
 ---
 
 #### Commit 19: `chore(openbadges-ui): migrate to Bun with Vue/Vite support`
+
 **Files Changed**:
+
 - `packages/openbadges-ui/package.json`
 - `packages/openbadges-ui/vite.config.ts`
 
 **Script Updates**:
+
 ```json
 {
   "scripts": {
@@ -432,21 +504,27 @@ shell = "bash"
 ---
 
 #### Commit 20: `test(openbadges-ui): verify Vitest with Bun`
+
 **Files Changed**:
+
 - `packages/openbadges-ui/vitest.config.ts` (if needed)
 - Test scripts
 
 ---
 
 #### Commit 21: `chore(openbadges-ui): update Histoire for Bun`
+
 **Files Changed**:
+
 - `packages/openbadges-ui/histoire.config.ts`
 - `packages/openbadges-ui/.github/workflows/` (GitHub Pages workflow)
 
 ---
 
 #### Commit 22: `ci(openbadges-ui): integrate with monorepo publishing`
+
 **Files Changed**:
+
 - Remove `packages/openbadges-ui/.github/workflows/release.yml`
 - Update root Changesets config
 - Remove semantic-release config
@@ -454,7 +532,9 @@ shell = "bash"
 ---
 
 #### Commit 23: `docs(openbadges-ui): update for monorepo and Bun`
+
 **Files Changed**:
+
 - `packages/openbadges-ui/README.md`
 
 ---
@@ -462,17 +542,21 @@ shell = "bash"
 ### Phase 5: rd-landing Migration (8 commits)
 
 #### Commit 24: `feat(rd-landing): migrate repository structure`
+
 **Source**: https://github.com/rollercoaster-dev/rd-landing
 **Destination**: `apps/landing/`
 
 ---
 
 #### Commit 25: `chore(rd-landing): migrate frontend to Bun + Vite`
+
 **Files Changed**:
+
 - `apps/landing/package.json`
 - `apps/landing/vite.config.ts`
 
 **Script Updates**:
+
 ```json
 {
   "scripts": {
@@ -489,11 +573,14 @@ shell = "bash"
 ---
 
 #### Commit 26: `chore(rd-landing): update vite-ssg for Bun`
+
 **Files Changed**:
+
 - `apps/landing/vite.config.ts`
 - Build scripts
 
 **Changes**:
+
 - Verify vite-ssg works with Bun
 - Test static site generation
 - Update configuration if needed
@@ -501,16 +588,21 @@ shell = "bash"
 ---
 
 #### Commit 27: `chore(rd-landing): update backend for Bun (already compatible)`
+
 **Files Changed**:
+
 - `apps/landing/src/backend/` (minimal changes, already Bun)
 
 ---
 
 #### Commit 28: `build(rd-landing): update Dockerfile for pure Bun`
+
 **Files Changed**:
+
 - `apps/landing/Dockerfile`
 
 **Changes**:
+
 ```dockerfile
 FROM oven/bun:1.3.1 AS builder
 WORKDIR /app
@@ -529,10 +621,13 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 29: `ci(rd-landing): update workflows for Bun`
+
 **Files Changed**:
+
 - `.github/workflows/` (landing-specific workflows or path-filtered root workflows)
 
 **Changes**:
+
 - Replace pnpm with Bun
 - Update Fly.io deployment
 - Preserve auto-release functionality
@@ -540,7 +635,9 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 30: `chore(rd-landing): migrate from semantic-release to Changesets`
+
 **Files Changed**:
+
 - Remove `.releaserc` or semantic-release config
 - Remove semantic-release from dependencies
 - Integrate with root Changesets
@@ -548,7 +645,9 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 31: `docs(rd-landing): update for monorepo and Bun`
+
 **Files Changed**:
+
 - `apps/landing/README.md`
 - `apps/landing/.env.example`
 
@@ -557,16 +656,20 @@ CMD ["bun", "run", "start"]
 ### Phase 6: openbadges-system Migration (7 commits)
 
 #### Commit 32: `feat(openbadges-system): migrate repository structure`
+
 **Source**: https://github.com/rollercoaster-dev/openbadges-system
 **Destination**: `apps/openbadges-system/`
 
 ---
 
 #### Commit 33: `chore(openbadges-system): update frontend to bunx --bun vite`
+
 **Files Changed**:
+
 - `apps/openbadges-system/package.json`
 
 **Script Updates**:
+
 ```json
 {
   "scripts": {
@@ -583,36 +686,46 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 34: `test(openbadges-system): unify test framework to Bun test`
+
 **Files Changed**:
+
 - `apps/openbadges-system/package.json`
 - Test files (client tests if migrating from Vitest)
 
 **Changes**:
+
 - Backend already uses Bun test
 - Migrate frontend tests to Bun test or verify Vitest compatibility
 
 ---
 
 #### Commit 35: `chore(openbadges-system): update inter-package dependencies`
+
 **Files Changed**:
+
 - `apps/openbadges-system/package.json`
 - Import statements throughout codebase
 
 **Changes**:
+
 - Update to workspace references
 - Verify OAuth integration with openbadges-modular-server
 
 ---
 
 #### Commit 36: `ci(openbadges-system): integrate with monorepo CI/CD`
+
 **Files Changed**:
+
 - Root `turbo.json`
 - Remove standalone workflows
 
 ---
 
 #### Commit 37: `docs(openbadges-system): update for monorepo`
+
 **Files Changed**:
+
 - `apps/openbadges-system/README.md`
 
 ---
@@ -620,10 +733,12 @@ CMD ["bun", "run", "start"]
 ### Phase 7: Cleanup & Documentation (3 commits)
 
 #### Commit 38: `docs(skill-tree): migrate planning documentation`
+
 **Source**: https://github.com/rollercoaster-dev/skill-tree
 **Destination**: `docs/skill-tree/` or `experiments/skill-tree-planning/`
 
 **Files Copied**:
+
 - All markdown documentation
 - Research findings
 - Architecture diagrams
@@ -631,10 +746,13 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 39: `ci: validate full monorepo build with Bun`
+
 **Files Changed**:
+
 - `.github/workflows/ci.yml`
 
 **Changes**:
+
 - Add full integration test job
 - Verify all packages build
 - Test all publishing workflows
@@ -642,13 +760,16 @@ CMD ["bun", "run", "start"]
 ---
 
 #### Commit 40: `docs: comprehensive Bun migration documentation`
+
 **Files Changed**:
+
 - `README.md`
 - `CONTRIBUTING.md`
 - `CLAUDE.md`
 - Create `docs/BUN-MIGRATION-GUIDE.md`
 
 **Content**:
+
 - Installation with Bun
 - Development workflow updates
 - Common commands
@@ -662,6 +783,7 @@ CMD ["bun", "run", "start"]
 ### Bun Configuration
 
 #### bunfig.toml
+
 ```toml
 [install]
 # Freeze lockfile in CI
@@ -695,15 +817,13 @@ bun = true
 ### Package.json Updates
 
 #### Root package.json
+
 ```json
 {
   "name": "@rollercoaster-dev/monorepo",
   "private": true,
   "packageManager": "bun@1.3.2",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "dev": "bun run turbo dev",
     "build": "bun run turbo build",
@@ -733,6 +853,7 @@ bun = true
 ### Vue/Vite Package Configuration
 
 #### Example: openbadges-ui package.json
+
 ```json
 {
   "name": "@rollercoaster-dev/openbadges-ui",
@@ -762,6 +883,7 @@ bun = true
 ```
 
 **Key Points**:
+
 - `bunx --bun vite` runs Vite with Bun runtime instead of Node.js
 - Vitest works with Bun out of the box
 - No need for separate Node.js installation
@@ -771,6 +893,7 @@ bun = true
 ### Turborepo Configuration
 
 #### turbo.json
+
 ```json
 {
   "$schema": "https://turbo.build/schema.json",
@@ -804,6 +927,7 @@ bun = true
 ### CI/CD Configuration
 
 #### .github/workflows/ci.yml
+
 ```yaml
 name: CI
 
@@ -876,9 +1000,11 @@ jobs:
 ### High Risk Items
 
 #### 1. vite-ssg Compatibility with Bun (rd-landing)
+
 **Risk Level**: 🔴 High
 **Impact**: rd-landing deployment could fail
 **Mitigation**:
+
 - Test vite-ssg with Bun in isolated environment first
 - Have fallback to Node.js + pnpm if needed
 - Consider alternative SSG solutions (Astro, Vite's built-in SSG)
@@ -888,9 +1014,11 @@ jobs:
 ---
 
 #### 2. CI/CD Publishing Workflows
+
 **Risk Level**: 🟡 Medium
 **Impact**: npm/Docker publishing could break
 **Mitigation**:
+
 - Test publishing in draft PRs
 - Verify npm OIDC still works with Bun
 - Test Docker multi-arch builds
@@ -901,9 +1029,11 @@ jobs:
 ---
 
 #### 3. Histoire Component Documentation
+
 **Risk Level**: 🟡 Medium
 **Impact**: Component documentation unavailable
 **Mitigation**:
+
 - Test Histoire with Bun before migration
 - Alternative: Use Storybook if Histoire incompatible
 - Document any configuration changes
@@ -915,9 +1045,11 @@ jobs:
 ### Medium Risk Items
 
 #### 4. PrimeVue Compatibility
+
 **Risk Level**: 🟢 Low-Medium
 **Impact**: openbadges-ui components broken
 **Mitigation**:
+
 - PrimeVue is Vue 3 compatible, should work
 - Test thoroughly before migration
 - Review PrimeVue docs for Bun compatibility
@@ -925,9 +1057,11 @@ jobs:
 ---
 
 #### 5. OAuth Integration Between Apps
+
 **Risk Level**: 🟢 Low-Medium
 **Impact**: Authentication flow breaks
 **Mitigation**:
+
 - Test openbadges-system ↔ openbadges-modular-server OAuth
 - Verify WebAuthn flows work
 - Update environment variables carefully
@@ -937,9 +1071,11 @@ jobs:
 ### Low Risk Items
 
 #### 6. Bun Test Migration from Jest
+
 **Risk Level**: 🟢 Low
 **Impact**: Some tests might need syntax updates
 **Mitigation**:
+
 - Bun test is Jest-compatible
 - Syntax changes minimal
 - Good documentation available
@@ -947,9 +1083,11 @@ jobs:
 ---
 
 #### 7. TypeScript Compilation
+
 **Risk Level**: 🟢 Low
 **Impact**: Build failures
 **Mitigation**:
+
 - Bun has excellent TypeScript support
 - tsup already Bun-compatible
 - Project references should work
@@ -961,6 +1099,7 @@ jobs:
 ### Pre-Migration Testing
 
 #### 1. Local Environment Validation
+
 ```bash
 # Install Bun 1.3.2
 curl -fsSL https://bun.sh/install | bash
@@ -978,6 +1117,7 @@ bun run build
 ---
 
 #### 2. Vite + Bun Integration Test
+
 ```bash
 # Test Vue 3 + Vite with Bun
 bun create vite@latest test-vue-app -- --template vue-ts
@@ -990,6 +1130,7 @@ bunx --bun vite build # Should build successfully
 ---
 
 #### 3. vite-ssg Compatibility Test
+
 ```bash
 # Test vite-ssg with Bun
 bun add -D vite-ssg
@@ -1002,6 +1143,7 @@ bunx --bun vite-ssg build # Test if SSG works
 ### Post-Migration Validation
 
 #### 1. Package Build Verification
+
 ```bash
 # Build all packages
 bun run build
@@ -1018,6 +1160,7 @@ bun run build
 ---
 
 #### 2. Test Suite Execution
+
 ```bash
 # Run all tests
 bun test
@@ -1031,6 +1174,7 @@ bun test --coverage
 ---
 
 #### 3. Development Server Validation
+
 ```bash
 # Test each app's dev server
 bun --filter openbadges-system dev
@@ -1043,6 +1187,7 @@ bun --filter landing dev
 ---
 
 #### 4. CI/CD Pipeline Testing
+
 - Create draft PR on feature branch
 - Verify all GitHub Actions workflows pass
 - Test publishing workflows (without actual publish)
@@ -1052,6 +1197,7 @@ bun --filter landing dev
 ---
 
 #### 5. Integration Testing
+
 ```bash
 # Test OAuth flow
 # 1. Start openbadges-modular-server
@@ -1065,6 +1211,7 @@ bun --filter landing dev
 ---
 
 #### 6. Performance Benchmarking
+
 ```bash
 # Compare install times
 time bun install # Bun
@@ -1164,11 +1311,13 @@ Initiate rollback if:
 ## Timeline & Milestones
 
 ### Week 1: Foundation
+
 **Dates**: Nov 16 - Nov 22, 2025
 **Commits**: 1-8
 **Milestone**: Monorepo base migrated to Bun
 
 **Deliverables**:
+
 - ✅ Root package.json using Bun
 - ✅ bunfig.toml created
 - ✅ CI/CD using Bun
@@ -1178,11 +1327,13 @@ Initiate rollback if:
 ---
 
 ### Week 2: Backend Packages
+
 **Dates**: Nov 23 - Nov 29, 2025
 **Commits**: 9-17
 **Milestone**: openbadges-types and openbadges-modular-server integrated
 
 **Deliverables**:
+
 - ✅ openbadges-types in `packages/`
 - ✅ openbadges-modular-server in `apps/`
 - ✅ Both building with Bun
@@ -1192,11 +1343,13 @@ Initiate rollback if:
 ---
 
 ### Week 3: Frontend Packages
+
 **Dates**: Nov 30 - Dec 6, 2025
 **Commits**: 18-37
 **Milestone**: All Vue/Vite apps using Bun
 
 **Deliverables**:
+
 - ✅ openbadges-ui using `bunx --bun vite`
 - ✅ rd-landing migrated with SSG working
 - ✅ openbadges-system fully integrated
@@ -1206,11 +1359,13 @@ Initiate rollback if:
 ---
 
 ### Week 4-5: Validation & Documentation
+
 **Dates**: Dec 7 - Dec 19, 2025
 **Commits**: 38-40
 **Milestone**: Migration complete and validated
 
 **Deliverables**:
+
 - ✅ skill-tree docs migrated
 - ✅ Full test suite passing
 - ✅ Performance benchmarks completed
@@ -1222,9 +1377,11 @@ Initiate rollback if:
 ---
 
 ### Post-Migration (Ongoing)
+
 **Dates**: Dec 20+, 2025
 
 **Tasks**:
+
 - Monitor production deployments
 - Address any issues quickly
 - Gather performance metrics
@@ -1238,12 +1395,12 @@ Initiate rollback if:
 
 ### Performance Improvements (Expected)
 
-| Metric | pnpm (baseline) | Bun 1.3.2 (target) | Improvement |
-|--------|-----------------|-------------------|-------------|
-| Install time | ~30s | ~5s | 6x faster |
-| Test execution | ~10s | ~3s | 3x faster |
-| Build time | ~45s | ~20s | 2x faster |
-| Dev server start | ~5s | ~2s | 2.5x faster |
+| Metric           | pnpm (baseline) | Bun 1.3.2 (target) | Improvement |
+| ---------------- | --------------- | ------------------ | ----------- |
+| Install time     | ~30s            | ~5s                | 6x faster   |
+| Test execution   | ~10s            | ~3s                | 3x faster   |
+| Build time       | ~45s            | ~20s               | 2x faster   |
+| Dev server start | ~5s             | ~2s                | 2.5x faster |
 
 ---
 
@@ -1268,18 +1425,22 @@ Initiate rollback if:
 
 ## Lessons Learned (Post-Migration)
 
-*This section will be filled after migration completion*
+_This section will be filled after migration completion_
 
 ### What Went Well
+
 - TBD
 
 ### Challenges Encountered
+
 - TBD
 
 ### Unexpected Benefits
+
 - TBD
 
 ### Recommendations for Future
+
 - TBD
 
 ---
@@ -1287,6 +1448,7 @@ Initiate rollback if:
 ## References
 
 ### Documentation
+
 - [Bun Official Docs](https://bun.sh/docs)
 - [Bun with Vite](https://bun.sh/guides/ecosystem/vite)
 - [Bun Workspaces](https://bun.sh/docs/install/workspaces)
@@ -1294,10 +1456,12 @@ Initiate rollback if:
 - [Changesets](https://github.com/changesets/changesets)
 
 ### Related Repositories
+
 - [openbadges-modular-server](https://github.com/rollercoaster-dev/openbadges-modular-server) - Already Bun-native
 - [rd-badge-image-system](https://github.com/rollercoaster-dev/rd-badge-image-system) - Bun + Nx example
 
 ### Internal Documentation
+
 - [CLAUDE.md](../CLAUDE.md)
 - [README.md](../README.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md)
@@ -1308,39 +1472,41 @@ Initiate rollback if:
 
 ### Appendix A: Bun vs pnpm Comparison
 
-| Feature | pnpm | Bun |
-|---------|------|-----|
-| **Install Speed** | Fast | **Faster** (native) |
-| **Disk Usage** | Efficient (hardlinks) | Similar |
-| **Workspace Support** | ✅ Excellent | ✅ Native |
-| **Vue/Vite Support** | ✅ Via Node.js | ✅ Native (`bunx --bun`) |
-| **Test Runner** | Vitest/Jest | **Built-in** |
-| **TypeScript** | Via tsc | **Native** |
-| **Package Scripts** | ✅ Full | ✅ Full |
-| **Lock File** | pnpm-lock.yaml | bun.lockb (binary) |
-| **Ecosystem** | Mature | Growing |
+| Feature               | pnpm                  | Bun                      |
+| --------------------- | --------------------- | ------------------------ |
+| **Install Speed**     | Fast                  | **Faster** (native)      |
+| **Disk Usage**        | Efficient (hardlinks) | Similar                  |
+| **Workspace Support** | ✅ Excellent          | ✅ Native                |
+| **Vue/Vite Support**  | ✅ Via Node.js        | ✅ Native (`bunx --bun`) |
+| **Test Runner**       | Vitest/Jest           | **Built-in**             |
+| **TypeScript**        | Via tsc               | **Native**               |
+| **Package Scripts**   | ✅ Full               | ✅ Full                  |
+| **Lock File**         | pnpm-lock.yaml        | bun.lockb (binary)       |
+| **Ecosystem**         | Mature                | Growing                  |
 
 ---
 
 ### Appendix B: Command Migration Reference
 
-| pnpm Command | Bun Equivalent |
-|-------------|----------------|
-| `pnpm install` | `bun install` |
-| `pnpm add <pkg>` | `bun add <pkg>` |
-| `pnpm remove <pkg>` | `bun remove <pkg>` |
-| `pnpm run <script>` | `bun run <script>` or `bun <script>` |
-| `pnpm exec <cmd>` | `bunx <cmd>` |
-| `pnpm test` | `bun test` |
-| `pnpm --filter <pkg> <cmd>` | `bun --filter <pkg> <cmd>` |
-| `pnpm -r <cmd>` | `bun -r <cmd>` (recursive) |
+| pnpm Command                | Bun Equivalent                       |
+| --------------------------- | ------------------------------------ |
+| `pnpm install`              | `bun install`                        |
+| `pnpm add <pkg>`            | `bun add <pkg>`                      |
+| `pnpm remove <pkg>`         | `bun remove <pkg>`                   |
+| `pnpm run <script>`         | `bun run <script>` or `bun <script>` |
+| `pnpm exec <cmd>`           | `bunx <cmd>`                         |
+| `pnpm test`                 | `bun test`                           |
+| `pnpm --filter <pkg> <cmd>` | `bun --filter <pkg> <cmd>`           |
+| `pnpm -r <cmd>`             | `bun -r <cmd>` (recursive)           |
 
 ---
 
 ### Appendix C: Troubleshooting Guide
 
 #### Issue: `bun install` fails
+
 **Solution**:
+
 ```bash
 # Clear cache
 rm -rf .bun-cache node_modules
@@ -1348,7 +1514,9 @@ bun install --force
 ```
 
 #### Issue: Vite dev server won't start
+
 **Solution**:
+
 ```bash
 # Ensure using --bun flag
 bunx --bun vite
@@ -1359,7 +1527,9 @@ bun = true
 ```
 
 #### Issue: Tests failing after migration
+
 **Solution**:
+
 ```bash
 # Check test syntax compatibility
 # Bun test is Jest-compatible, but verify:
@@ -1369,7 +1539,9 @@ bun = true
 ```
 
 #### Issue: Docker build fails
+
 **Solution**:
+
 ```bash
 # Ensure Dockerfile uses Bun image
 FROM oven/bun:1.3.1

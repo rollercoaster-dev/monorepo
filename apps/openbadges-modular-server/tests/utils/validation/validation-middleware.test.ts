@@ -5,11 +5,11 @@
  * it correctly formats validation errors.
  */
 
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from "bun:test";
 import {
   validateIssuerMiddleware,
   validateUpdateCredentialStatusMiddleware,
-} from '@/utils/validation/validation-middleware';
+} from "@/utils/validation/validation-middleware";
 
 // Define the ValidationResponse type for testing
 type ValidationResponse = {
@@ -17,19 +17,19 @@ type ValidationResponse = {
   error?: string;
   details?: Record<string, string[]>;
 };
-import type { Context } from 'hono';
+import type { Context } from "hono";
 
 // Since formatValidationErrors is not exported, we'll test it indirectly through validateIssuerMiddleware
 
-describe('Validation Middleware', () => {
-  describe('validateIssuerMiddleware', () => {
-    it('should return validation errors grouped by field', async () => {
+describe("Validation Middleware", () => {
+  describe("validateIssuerMiddleware", () => {
+    it("should return validation errors grouped by field", async () => {
       // Create a mock context with invalid issuer data
       const mockContext = {
         req: {
           json: async () => ({
             // Missing name and URL to trigger validation errors
-            email: 'not-an-email', // Invalid email to trigger another error
+            email: "not-an-email", // Invalid email to trigger another error
           }),
         },
 
@@ -44,7 +44,7 @@ describe('Validation Middleware', () => {
       // Call the middleware
       const result = (await handler(
         mockContext,
-        async () => {}
+        async () => {},
       )) as unknown as { body: ValidationResponse; status: number };
 
       // Check that the result has the expected structure
@@ -52,7 +52,7 @@ describe('Validation Middleware', () => {
       expect(result.body).toBeDefined();
       expect(result.status).toBe(400);
       expect(result.body.success).toBe(false);
-      expect(result.body.error).toBe('Validation error');
+      expect(result.body.error).toBe("Validation error");
       expect(result.body.details).toBeDefined();
 
       // Check that errors are grouped by field
@@ -64,19 +64,19 @@ describe('Validation Middleware', () => {
 
       // Check that at least one error array has content
       const hasErrors = Object.values(details).some(
-        (errors) => errors.length > 0
+        (errors) => errors.length > 0,
       );
       expect(hasErrors).toBe(true);
     });
 
-    it('should return success for valid data', async () => {
+    it("should return success for valid data", async () => {
       // Create a mock context with valid issuer data
       const mockContext = {
         req: {
           json: async () => ({
-            name: 'Test Issuer',
-            url: 'https://example.com',
-            email: 'valid@example.com',
+            name: "Test Issuer",
+            url: "https://example.com",
+            email: "valid@example.com",
           }),
         },
 
@@ -106,15 +106,15 @@ describe('Validation Middleware', () => {
     });
   });
 
-  describe('validateUpdateCredentialStatusMiddleware', () => {
-    it('should return validation errors for invalid status update data', async () => {
+  describe("validateUpdateCredentialStatusMiddleware", () => {
+    it("should return validation errors for invalid status update data", async () => {
       // Create a mock context with invalid status update data
       const mockContext = {
         req: {
           json: async () => ({
             // Missing required fields and invalid data
             status: -1, // Invalid negative status
-            purpose: 'invalid-purpose', // Invalid purpose
+            purpose: "invalid-purpose", // Invalid purpose
           }),
         },
 
@@ -129,7 +129,7 @@ describe('Validation Middleware', () => {
       // Call the middleware
       const result = (await handler(
         mockContext,
-        async () => {}
+        async () => {},
       )) as unknown as { body: ValidationResponse; status: number };
 
       // Check that the result has the expected structure
@@ -137,7 +137,7 @@ describe('Validation Middleware', () => {
       expect(result.body).toBeDefined();
       expect(result.status).toBe(400);
       expect(result.body.success).toBe(false);
-      expect(result.body.error).toBe('Validation error');
+      expect(result.body.error).toBe("Validation error");
       expect(result.body.details).toBeDefined();
 
       // Check that errors are present
@@ -145,14 +145,14 @@ describe('Validation Middleware', () => {
       expect(Object.keys(details).length).toBeGreaterThan(0);
     });
 
-    it('should return success for valid status update data', async () => {
+    it("should return success for valid status update data", async () => {
       // Create a mock context with valid status update data
       const mockContext = {
         req: {
           json: async () => ({
-            status: '1',
-            reason: 'Test revocation',
-            purpose: 'revocation',
+            status: "1",
+            reason: "Test revocation",
+            purpose: "revocation",
           }),
         },
 

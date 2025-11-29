@@ -1,6 +1,12 @@
-export * from './guards';
-import type { IRI, DateTime, MarkdownText, MultiLanguageString, OB3ImageObject } from '../shared/common';
-import type { JsonLdObject } from '../shared/jsonld';
+export * from "./guards";
+import type {
+  IRI,
+  DateTime,
+  MarkdownText,
+  MultiLanguageString,
+  OB3ImageObject,
+} from "../shared/common";
+import type { JsonLdObject } from "../shared/jsonld";
 
 /**
  * VerifiableCredential interface for Open Badges 3.0
@@ -8,7 +14,7 @@ import type { JsonLdObject } from '../shared/jsonld';
  * @see https://www.imsglobal.org/spec/ob/v3p0/#openbadgecredential
  */
 export interface VerifiableCredential extends JsonLdObject {
-  '@context': string | string[] | Record<string, unknown>;
+  "@context": string | string[] | Record<string, unknown>;
   id: IRI;
   /** Must include both 'VerifiableCredential' and 'OpenBadgeCredential' */
   type: string[];

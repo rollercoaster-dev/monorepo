@@ -4,9 +4,9 @@
  * This utility manages prepared statements for database queries to improve performance.
  */
 
-import { config } from '@/config/config';
-import { QueryLoggerService } from './query-logger.service';
-import { logger } from '@/utils/logging/logger.service';
+import { config } from "@/config/config";
+import { QueryLoggerService } from "./query-logger.service";
+import { logger } from "@/utils/logging/logger.service";
 
 // Database client types
 type PostgresClient = {
@@ -54,7 +54,7 @@ export class PreparedStatementManager {
     name: string,
     query: string,
     // Types parameter is reserved for future use when implementing proper type handling
-    _types?: unknown[]
+    _types?: unknown[],
   ): PreparedStatementFn<T> {
     if (!this.enabled) {
       // If prepared statements are disabled, just execute the query directly
@@ -67,7 +67,7 @@ export class PreparedStatementManager {
             `DIRECT: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
           return result as T;
         } catch (error) {
@@ -76,7 +76,7 @@ export class PreparedStatementManager {
             `ERROR: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
           throw error;
         }
@@ -103,7 +103,7 @@ export class PreparedStatementManager {
             `PREPARED ${name}: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
 
           // Update usage statistics
@@ -119,7 +119,7 @@ export class PreparedStatementManager {
             `ERROR PREPARED ${name}: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
           throw error;
         }
@@ -135,7 +135,7 @@ export class PreparedStatementManager {
       return preparedFn as PreparedStatementFn<T>;
     } catch (error) {
       logger.error(`Failed to prepare statement`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         name,
         query,
       });
@@ -150,7 +150,7 @@ export class PreparedStatementManager {
             `FALLBACK ${name}: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
           return result as T;
         } catch (error) {
@@ -159,7 +159,7 @@ export class PreparedStatementManager {
             `ERROR FALLBACK ${name}: ${query}`,
             params,
             duration,
-            'postgresql'
+            "postgresql",
           );
           throw error;
         }
@@ -177,7 +177,7 @@ export class PreparedStatementManager {
   static prepareSqlite<T = unknown>(
     client: SqliteClient,
     name: string,
-    query: string
+    query: string,
   ): PreparedStatementFn<T> {
     if (!this.enabled) {
       // If prepared statements are disabled, just execute the query directly
@@ -186,13 +186,13 @@ export class PreparedStatementManager {
         try {
           // For SQLite, we need to determine if this is a query or an execution
           let result: unknown;
-          if (query.trim().toLowerCase().startsWith('select')) {
+          if (query.trim().toLowerCase().startsWith("select")) {
             result = client.prepare(query).all(...params);
           } else {
             result = client.prepare(query).run(...params);
           }
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(query, params, duration, 'sqlite');
+          QueryLoggerService.logQuery(query, params, duration, "sqlite");
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
@@ -200,7 +200,7 @@ export class PreparedStatementManager {
             `ERROR: ${query}`,
             params,
             duration,
-            'sqlite'
+            "sqlite",
           );
           throw error;
         }
@@ -222,7 +222,7 @@ export class PreparedStatementManager {
         try {
           // Determine if this is a query or an execution
           let result: unknown;
-          if (query.trim().toLowerCase().startsWith('select')) {
+          if (query.trim().toLowerCase().startsWith("select")) {
             result = stmt.all(...params);
           } else {
             result = stmt.run(...params);
@@ -232,7 +232,7 @@ export class PreparedStatementManager {
             `PREPARED ${name}: ${query}`,
             params,
             duration,
-            'sqlite'
+            "sqlite",
           );
 
           // Update usage statistics
@@ -248,7 +248,7 @@ export class PreparedStatementManager {
             `ERROR PREPARED ${name}: ${query}`,
             params,
             duration,
-            'sqlite'
+            "sqlite",
           );
           throw error;
         }
@@ -264,7 +264,7 @@ export class PreparedStatementManager {
       return preparedFn as PreparedStatementFn<T>;
     } catch (error) {
       logger.error(`Failed to prepare statement`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         name,
         query,
       });
@@ -275,7 +275,7 @@ export class PreparedStatementManager {
         try {
           // For SQLite, we need to determine if this is a query or an execution
           let result: unknown;
-          if (query.trim().toLowerCase().startsWith('select')) {
+          if (query.trim().toLowerCase().startsWith("select")) {
             result = client.prepare(query).all(...params);
           } else {
             result = client.prepare(query).run(...params);
@@ -285,7 +285,7 @@ export class PreparedStatementManager {
             `FALLBACK ${name}: ${query}`,
             params,
             duration,
-            'sqlite'
+            "sqlite",
           );
           return result as T;
         } catch (error) {
@@ -294,7 +294,7 @@ export class PreparedStatementManager {
             `ERROR FALLBACK ${name}: ${query}`,
             params,
             duration,
-            'sqlite'
+            "sqlite",
           );
           throw error;
         }
@@ -320,12 +320,12 @@ export class PreparedStatementManager {
 
     const totalUsageCount = statements.reduce(
       (sum, stmt) => sum + stmt.usageCount,
-      0
+      0,
     );
 
     // Sort by usage count (descending)
     const sortedByUsage = [...statements].sort(
-      (a, b) => b.usageCount - a.usageCount
+      (a, b) => b.usageCount - a.usageCount,
     );
 
     return {

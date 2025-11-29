@@ -5,15 +5,18 @@
  * and the Data Mapper pattern.
  */
 
-import { eq, and } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import type postgres from 'postgres';
-import { PlatformUser } from '@domains/backpack/platform-user.entity';
-import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
-import { platformUsers } from '../schema';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@utils/logging/logger.service';
-import type { PlatformUserCreateParams, PlatformUserUpdateParams } from '@domains/backpack/repository.types';
+import { eq, and } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import type postgres from "postgres";
+import { PlatformUser } from "@domains/backpack/platform-user.entity";
+import type { PlatformUserRepository } from "@domains/backpack/platform-user.repository";
+import { platformUsers } from "../schema";
+import type { Shared } from "openbadges-types";
+import { logger } from "@utils/logging/logger.service";
+import type {
+  PlatformUserCreateParams,
+  PlatformUserUpdateParams,
+} from "@domains/backpack/repository.types";
 
 export class PostgresPlatformUserRepository implements PlatformUserRepository {
   private db: ReturnType<typeof drizzle>;
@@ -29,22 +32,27 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
       const obj = newUser.toObject();
 
       // Insert into database
-      const result = await this.db.insert(platformUsers).values({
-        platformId: obj['platformId'] as string,
-        externalUserId: obj['externalUserId'] as string,
-        // Optional fields
-        ...(obj['displayName'] ? { displayName: obj['displayName'] as string } : {}),
-        ...(obj['email'] ? { email: obj['email'] as string } : {}),
-        ...(obj['metadata'] ? { metadata: obj['metadata'] } : {}),
-        // id, createdAt and updatedAt will be set by default values in the schema
-      }).returning();
+      const result = await this.db
+        .insert(platformUsers)
+        .values({
+          platformId: obj["platformId"] as string,
+          externalUserId: obj["externalUserId"] as string,
+          // Optional fields
+          ...(obj["displayName"]
+            ? { displayName: obj["displayName"] as string }
+            : {}),
+          ...(obj["email"] ? { email: obj["email"] as string } : {}),
+          ...(obj["metadata"] ? { metadata: obj["metadata"] } : {}),
+          // id, createdAt and updatedAt will be set by default values in the schema
+        })
+        .returning();
 
       // Convert database record back to domain entity
       return this.rowToDomain(result[0]);
     } catch (error) {
-      logger.error('Error creating platform user in PostgreSQL repository', {
+      logger.error("Error creating platform user in PostgreSQL repository", {
         error: error instanceof Error ? error.message : String(error),
-        params
+        params,
       });
       throw error;
     }
@@ -53,7 +61,10 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
   async findById(id: Shared.IRI): Promise<PlatformUser | null> {
     try {
       // Query database
-      const result = await this.db.select().from(platformUsers).where(eq(platformUsers.id, id as string));
+      const result = await this.db
+        .select()
+        .from(platformUsers)
+        .where(eq(platformUsers.id, id as string));
 
       // Return null if not found
       if (!result.length) {
@@ -63,23 +74,32 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
       // Convert database record to domain entity
       return this.rowToDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding platform user by ID in PostgreSQL repository', {
-        error: error instanceof Error ? error.message : String(error),
-        id
-      });
+      logger.error(
+        "Error finding platform user by ID in PostgreSQL repository",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          id,
+        },
+      );
       throw error;
     }
   }
 
-  async findByPlatformAndExternalId(platformId: Shared.IRI, externalUserId: string): Promise<PlatformUser | null> {
+  async findByPlatformAndExternalId(
+    platformId: Shared.IRI,
+    externalUserId: string,
+  ): Promise<PlatformUser | null> {
     try {
       // Query database
-      const result = await this.db.select().from(platformUsers).where(
-        and(
-          eq(platformUsers.platformId, platformId as string),
-          eq(platformUsers.externalUserId, externalUserId)
-        )
-      );
+      const result = await this.db
+        .select()
+        .from(platformUsers)
+        .where(
+          and(
+            eq(platformUsers.platformId, platformId as string),
+            eq(platformUsers.externalUserId, externalUserId),
+          ),
+        );
 
       // Return null if not found
       if (!result.length) {
@@ -89,16 +109,22 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
       // Convert database record to domain entity
       return this.rowToDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding platform user by platform and external ID in PostgreSQL repository', {
-        error: error instanceof Error ? error.message : String(error),
-        platformId,
-        externalUserId
-      });
+      logger.error(
+        "Error finding platform user by platform and external ID in PostgreSQL repository",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          platformId,
+          externalUserId,
+        },
+      );
       throw error;
     }
   }
 
-  async update(id: Shared.IRI, params: PlatformUserUpdateParams): Promise<PlatformUser | null> {
+  async update(
+    id: Shared.IRI,
+    params: PlatformUserUpdateParams,
+  ): Promise<PlatformUser | null> {
     try {
       // Check if user exists
       const existingUser = await this.findById(id);
@@ -109,25 +135,29 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
       // Create a merged entity
       const mergedUser = PlatformUser.create({
         ...existingUser.toObject(),
-        ...params as Partial<PlatformUser>,
-        updatedAt: new Date()
+        ...(params as Partial<PlatformUser>),
+        updatedAt: new Date(),
       });
       const obj = mergedUser.toObject();
 
       // Prepare update values
       const updateValues: Record<string, unknown> = {
-        platformId: obj['platformId'] as string,
-        externalUserId: obj['externalUserId'] as string,
-        updatedAt: new Date()
+        platformId: obj["platformId"] as string,
+        externalUserId: obj["externalUserId"] as string,
+        updatedAt: new Date(),
       };
 
       // Add optional fields if they exist
-      if (obj['displayName'] !== undefined) updateValues['displayName'] = obj['displayName'] as string;
-      if (obj['email'] !== undefined) updateValues['email'] = obj['email'] as string;
-      if (obj['metadata'] !== undefined) updateValues['metadata'] = obj['metadata'];
+      if (obj["displayName"] !== undefined)
+        updateValues["displayName"] = obj["displayName"] as string;
+      if (obj["email"] !== undefined)
+        updateValues["email"] = obj["email"] as string;
+      if (obj["metadata"] !== undefined)
+        updateValues["metadata"] = obj["metadata"];
 
       // Update in database
-      const result = await this.db.update(platformUsers)
+      const result = await this.db
+        .update(platformUsers)
         .set(updateValues)
         .where(eq(platformUsers.id, id as string))
         .returning();
@@ -135,10 +165,10 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
       // Convert database record back to domain entity
       return this.rowToDomain(result[0]);
     } catch (error) {
-      logger.error('Error updating platform user in PostgreSQL repository', {
+      logger.error("Error updating platform user in PostgreSQL repository", {
         error: error instanceof Error ? error.message : String(error),
         id,
-        params
+        params,
       });
       throw error;
     }
@@ -147,14 +177,17 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
   async delete(id: Shared.IRI): Promise<boolean> {
     try {
       // Delete from database
-      const result = await this.db.delete(platformUsers).where(eq(platformUsers.id, id as string)).returning();
+      const result = await this.db
+        .delete(platformUsers)
+        .where(eq(platformUsers.id, id as string))
+        .returning();
 
       // Return true if something was deleted
       return result.length > 0;
     } catch (error) {
-      logger.error('Error deleting platform user in PostgreSQL repository', {
+      logger.error("Error deleting platform user in PostgreSQL repository", {
         error: error instanceof Error ? error.message : String(error),
-        id
+        id,
       });
       throw error;
     }
@@ -167,17 +200,28 @@ export class PostgresPlatformUserRepository implements PlatformUserRepository {
    */
   private rowToDomain(row: unknown): PlatformUser {
     // Cast row to the expected type
-    const typedRow = row as Record<string, string | number | null | Date | Record<string, unknown>>;
+    const typedRow = row as Record<
+      string,
+      string | number | null | Date | Record<string, unknown>
+    >;
 
     return PlatformUser.create({
-      id: String(typedRow['id']) as Shared.IRI,
-      platformId: String(typedRow['platformId']) as Shared.IRI,
-      externalUserId: String(typedRow['externalUserId']),
-      displayName: typedRow['displayName'] ? String(typedRow['displayName']) : undefined,
-      email: typedRow['email'] ? String(typedRow['email']) : undefined,
-      metadata: typedRow['metadata'] as Record<string, unknown> | undefined,
-      createdAt: typedRow['createdAt'] instanceof Date ? typedRow['createdAt'] : new Date(String(typedRow['createdAt'])),
-      updatedAt: typedRow['updatedAt'] instanceof Date ? typedRow['updatedAt'] : new Date(String(typedRow['updatedAt']))
+      id: String(typedRow["id"]) as Shared.IRI,
+      platformId: String(typedRow["platformId"]) as Shared.IRI,
+      externalUserId: String(typedRow["externalUserId"]),
+      displayName: typedRow["displayName"]
+        ? String(typedRow["displayName"])
+        : undefined,
+      email: typedRow["email"] ? String(typedRow["email"]) : undefined,
+      metadata: typedRow["metadata"] as Record<string, unknown> | undefined,
+      createdAt:
+        typedRow["createdAt"] instanceof Date
+          ? typedRow["createdAt"]
+          : new Date(String(typedRow["createdAt"])),
+      updatedAt:
+        typedRow["updatedAt"] instanceof Date
+          ? typedRow["updatedAt"]
+          : new Date(String(typedRow["updatedAt"])),
     });
   }
 }

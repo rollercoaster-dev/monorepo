@@ -5,15 +5,14 @@
  * It provides automatic status list assignment and BitstringStatusListEntry generation.
  */
 
-import type { StatusListService } from './status-list.service';
+import type { StatusListService } from "./status-list.service";
 import type {
   BitstringStatusListEntry,
-  CredentialStatusEntryData} from '../domains/status-list/status-list.types';
-import {
-  StatusPurpose
-} from '../domains/status-list/status-list.types';
-import { logger } from '../utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
+  CredentialStatusEntryData,
+} from "../domains/status-list/status-list.types";
+import { StatusPurpose } from "../domains/status-list/status-list.types";
+import { logger } from "../utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
 
 /**
  * Parameters for assigning credential status
@@ -68,10 +67,10 @@ export class CredentialStatusService {
    * @returns Assignment result with BitstringStatusListEntry
    */
   async assignCredentialStatus(
-    params: AssignCredentialStatusParams
+    params: AssignCredentialStatusParams,
   ): Promise<CredentialStatusAssignmentResult> {
     try {
-      logger.debug('Assigning credential status', {
+      logger.debug("Assigning credential status", {
         credentialId: params.credentialId,
         issuerId: params.issuerId,
         purpose: params.purpose || StatusPurpose.REVOCATION,
@@ -85,16 +84,16 @@ export class CredentialStatusService {
       const statusList = await this.statusListService.findOrCreateStatusList(
         params.issuerId,
         purpose,
-        statusSize
+        statusSize,
       );
 
       // Find the next available index in the status list
       const nextIndex = await this.statusListService.getNextAvailableIndex(
-        statusList.id
+        statusList.id,
       );
 
       if (nextIndex === null) {
-        throw new Error('No available slots in status list');
+        throw new Error("No available slots in status list");
       }
 
       // Create the status entry
@@ -109,16 +108,16 @@ export class CredentialStatusService {
 
       // Generate the BitstringStatusListEntry for the credential
       const credentialStatus: BitstringStatusListEntry = {
-        type: 'BitstringStatusListEntry',
+        type: "BitstringStatusListEntry",
         statusPurpose: purpose,
         statusListIndex: nextIndex.toString(),
         statusListCredential: this.generateStatusListCredentialUrl(
-          statusList.id
+          statusList.id,
         ),
         statusSize,
       };
 
-      logger.info('Credential status assigned successfully', {
+      logger.info("Credential status assigned successfully", {
         credentialId: params.credentialId,
         statusListId: statusList.id,
         statusListIndex: nextIndex,
@@ -131,7 +130,7 @@ export class CredentialStatusService {
         statusEntry,
       };
     } catch (error) {
-      logger.error('Failed to assign credential status', {
+      logger.error("Failed to assign credential status", {
         error: error instanceof Error ? error.message : String(error),
         credentialId: params.credentialId,
         issuerId: params.issuerId,
@@ -139,7 +138,7 @@ export class CredentialStatusService {
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -156,10 +155,10 @@ export class CredentialStatusService {
     credentialId: string,
     status: number,
     reason?: string,
-    purpose: StatusPurpose = StatusPurpose.REVOCATION
+    purpose: StatusPurpose = StatusPurpose.REVOCATION,
   ): Promise<CredentialStatusAssignmentResult> {
     try {
-      logger.debug('Updating credential status', {
+      logger.debug("Updating credential status", {
         credentialId,
         status,
         reason,
@@ -176,7 +175,7 @@ export class CredentialStatusService {
       if (!result.success) {
         return {
           success: false,
-          error: result.error || 'Failed to update credential status',
+          error: result.error || "Failed to update credential status",
         };
       }
 
@@ -185,7 +184,7 @@ export class CredentialStatusService {
         statusEntry: result.statusEntry,
       };
     } catch (error) {
-      logger.error('Failed to update credential status', {
+      logger.error("Failed to update credential status", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         status,
@@ -193,7 +192,7 @@ export class CredentialStatusService {
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -205,7 +204,7 @@ export class CredentialStatusService {
    */
   private generateStatusListCredentialUrl(statusListId: string): Shared.IRI {
     // This should be configurable based on the server's base URL
-    const baseUrl = process.env.BASE_URL || 'https://localhost:3000';
+    const baseUrl = process.env.BASE_URL || "https://localhost:3000";
     return `${baseUrl}/v3/status-lists/${statusListId}` as Shared.IRI;
   }
 
@@ -215,14 +214,14 @@ export class CredentialStatusService {
    * @returns BitstringStatusListEntry
    */
   createBitstringStatusListEntry(
-    statusEntry: CredentialStatusEntryData
+    statusEntry: CredentialStatusEntryData,
   ): BitstringStatusListEntry {
     return {
-      type: 'BitstringStatusListEntry',
+      type: "BitstringStatusListEntry",
       statusPurpose: statusEntry.purpose,
       statusListIndex: statusEntry.statusListIndex.toString(),
       statusListCredential: this.generateStatusListCredentialUrl(
-        statusEntry.statusListId
+        statusEntry.statusListId,
       ),
       statusSize: statusEntry.statusSize,
     };
@@ -236,16 +235,16 @@ export class CredentialStatusService {
    */
   async hasAssignedStatus(
     credentialId: string,
-    purpose: StatusPurpose = StatusPurpose.REVOCATION
+    purpose: StatusPurpose = StatusPurpose.REVOCATION,
   ): Promise<boolean> {
     try {
       const statusEntry = await this.statusListService.getStatusEntry(
         credentialId,
-        purpose
+        purpose,
       );
       return statusEntry !== null;
     } catch (error) {
-      logger.error('Failed to check credential status assignment', {
+      logger.error("Failed to check credential status assignment", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         purpose,
@@ -262,12 +261,12 @@ export class CredentialStatusService {
    */
   async getCredentialStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose = StatusPurpose.REVOCATION
+    purpose: StatusPurpose = StatusPurpose.REVOCATION,
   ): Promise<CredentialStatusEntryData | null> {
     try {
       return await this.statusListService.getStatusEntry(credentialId, purpose);
     } catch (error) {
-      logger.error('Failed to get credential status entry', {
+      logger.error("Failed to get credential status entry", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         purpose,
@@ -284,12 +283,12 @@ export class CredentialStatusService {
    */
   async getCredentialStatusListEntry(
     credentialId: string,
-    purpose: StatusPurpose = StatusPurpose.REVOCATION
+    purpose: StatusPurpose = StatusPurpose.REVOCATION,
   ): Promise<BitstringStatusListEntry | null> {
     try {
       const statusEntry = await this.getCredentialStatusEntry(
         credentialId,
-        purpose
+        purpose,
       );
 
       if (!statusEntry) {
@@ -298,7 +297,7 @@ export class CredentialStatusService {
 
       return this.createBitstringStatusListEntry(statusEntry);
     } catch (error) {
-      logger.error('Failed to get credential status list entry', {
+      logger.error("Failed to get credential status list entry", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         purpose,

@@ -5,21 +5,21 @@
  * according to the Open Badges 3.0 specification.
  */
 
-import type { Shared } from 'openbadges-types';
+import type { Shared } from "openbadges-types";
 import type {
   IssuerData,
   BadgeClassData,
   AssertionData,
   VerifiableCredentialData,
-} from '../types/badge-data.types';
-import { StatusPurpose } from '../../domains/status-list/status-list.types';
-import { VC_V2_CONTEXT_URL } from '@/constants/urls';
+} from "../types/badge-data.types";
+import { StatusPurpose } from "../../domains/status-list/status-list.types";
+import { VC_V2_CONTEXT_URL } from "@/constants/urls";
 
 /**
  * The Open Badges 3.0 JSON-LD context
  */
 export const OPEN_BADGES_CONTEXT =
-  'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json';
+  "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json";
 
 /**
  * Adds JSON-LD context to an object
@@ -27,10 +27,10 @@ export const OPEN_BADGES_CONTEXT =
  * @returns The object with context added
  */
 export function addContext<T extends Record<string, unknown>>(
-  obj: T
-): T & { '@context': string } {
+  obj: T,
+): T & { "@context": string } {
   return {
-    '@context': OPEN_BADGES_CONTEXT,
+    "@context": OPEN_BADGES_CONTEXT,
     ...obj,
   };
 }
@@ -41,10 +41,10 @@ export function addContext<T extends Record<string, unknown>>(
  * @returns A JSON-LD representation of the issuer
  */
 export function createIssuerJsonLd(
-  issuer: IssuerData
-): IssuerData & { '@context': string; type: string } {
+  issuer: IssuerData,
+): IssuerData & { "@context": string; type: string } {
   return addContext({
-    type: 'Profile',
+    type: "Profile",
     id: issuer.id,
     name: issuer.name,
     url: issuer.url,
@@ -61,10 +61,10 @@ export function createIssuerJsonLd(
  * @returns A JSON-LD representation of the badge class
  */
 export function createBadgeClassJsonLd(
-  badgeClass: BadgeClassData
-): BadgeClassData & { '@context': string; type: string } {
+  badgeClass: BadgeClassData,
+): BadgeClassData & { "@context": string; type: string } {
   return addContext({
-    type: 'BadgeClass',
+    type: "BadgeClass",
     id: badgeClass.id,
     issuer: badgeClass.issuer,
     name: badgeClass.name,
@@ -82,10 +82,10 @@ export function createBadgeClassJsonLd(
  * @returns A JSON-LD representation of the assertion
  */
 export function createAssertionJsonLd(
-  assertion: AssertionData
-): AssertionData & { '@context': string; type: string } {
+  assertion: AssertionData,
+): AssertionData & { "@context": string; type: string } {
   return addContext({
-    type: 'Assertion',
+    type: "Assertion",
     id: assertion.id,
     badgeClass: assertion.badgeClass,
     recipient: assertion.recipient,
@@ -110,18 +110,18 @@ export function createAssertionJsonLd(
 export function createVerifiableCredential(
   assertion: AssertionData,
   badgeClass: BadgeClassData,
-  issuer: IssuerData
+  issuer: IssuerData,
 ): VerifiableCredentialData {
   return {
-    '@context': [
+    "@context": [
       VC_V2_CONTEXT_URL,
-      'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+      "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
     ],
     id: assertion.id,
-    type: ['VerifiableCredential', 'OpenBadgeCredential'],
+    type: ["VerifiableCredential", "OpenBadgeCredential"],
     issuer: {
       id: issuer.id,
-      type: issuer.type || 'Profile',
+      type: issuer.type || "Profile",
       name: issuer.name,
       url: issuer.url,
       ...(issuer.email && { email: issuer.email }),
@@ -132,10 +132,10 @@ export function createVerifiableCredential(
     ...(assertion.expires && { expirationDate: assertion.expires }),
     credentialSubject: {
       id: assertion.recipient.identity,
-      type: 'AchievementSubject',
+      type: "AchievementSubject",
       achievement: {
         id: badgeClass.id,
-        type: 'Achievement',
+        type: "Achievement",
         name: badgeClass.name,
         description: badgeClass.description,
         image: badgeClass.image,
@@ -151,16 +151,16 @@ export function createVerifiableCredential(
         type: assertion.verification.type,
         created: assertion.verification.created,
         verificationMethod: assertion.verification.creator,
-        proofPurpose: 'assertionMethod',
+        proofPurpose: "assertionMethod",
         proofValue: assertion.verification.signatureValue,
       },
     }),
     ...(assertion.revoked !== undefined && {
       credentialStatus: {
         id: `${assertion.id}#status` as Shared.IRI,
-        type: 'BitstringStatusListEntry',
+        type: "BitstringStatusListEntry",
         statusPurpose: StatusPurpose.REVOCATION,
-        statusListIndex: '0',
+        statusListIndex: "0",
         statusListCredential: `${assertion.id}#list` as Shared.IRI,
       },
     }),

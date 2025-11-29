@@ -8,9 +8,11 @@ model: sonnet
 # Test Migration Agent
 
 ## Purpose
+
 Migrates test suites from Jest/Vitest to Bun's native test runner in the Bun Turborepo monorepo, ensuring proper organization, configuration, and CI integration.
 
 ## When to Use This Agent
+
 - When migrating a package's test suite to Bun test runner
 - When setting up tests for a new package in the monorepo
 - When fixing Bun test configuration issues
@@ -20,6 +22,7 @@ Migrates test suites from Jest/Vitest to Bun's native test runner in the Bun Tur
 ## Context: Bun Turborepo Testing Architecture
 
 ### Test Organization Strategy
+
 Tests are organized by **directory structure**, not naming patterns:
 
 ```
@@ -36,6 +39,7 @@ packages/{package-name}/
 **Key Principle:** Use directory paths in test commands, NOT glob patterns or exclude patterns.
 
 ### Why This Matters
+
 - Bun's `exclude` in bunfig.toml **only affects coverage calculation**, NOT test discovery
 - Glob patterns don't expand reliably in all contexts
 - Directory-based filtering is explicit and predictable
@@ -44,11 +48,13 @@ packages/{package-name}/
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of the package (e.g., "rd-logger")
 - **Package path**: Relative path from monorepo root (e.g., "packages/rd-logger")
 - **Current test runner**: jest | vitest | none
 
 Optional:
+
 - **Test types present**: unit, integration, e2e (auto-detect if not specified)
 - **Mocking library used**: jest.mock | vi.mock | none
 - **Coverage threshold**: Default 80%
@@ -58,6 +64,7 @@ Optional:
 ### Phase 1: Analyze Current Test Setup
 
 1. **Read test configuration:**
+
    ```bash
    # Look for existing test configs
    - jest.config.js/ts/cjs
@@ -66,6 +73,7 @@ Optional:
    ```
 
 2. **Scan for test files:**
+
    ```bash
    # Find all test files
    find src/ e2e/ -name "*.test.ts" -o -name "*.spec.ts"
@@ -87,6 +95,7 @@ Optional:
 #### 1. Update package.json Scripts
 
 **Before (Jest/Vitest):**
+
 ```json
 {
   "scripts": {
@@ -98,6 +107,7 @@ Optional:
 ```
 
 **After (Bun - Directory-based):**
+
 ```json
 {
   "scripts": {
@@ -112,6 +122,7 @@ Optional:
 ```
 
 **Key Points:**
+
 - Use explicit directory paths (`src/core/`, `src/adapters/`, `e2e/`)
 - **DO NOT** use glob patterns like `**/*.test.ts` (unreliable)
 - **DO NOT** use `--exclude` flag (not supported)
@@ -120,6 +131,7 @@ Optional:
 #### 2. Update devDependencies
 
 **Add:**
+
 ```json
 {
   "devDependencies": {
@@ -129,6 +141,7 @@ Optional:
 ```
 
 **Remove (if present):**
+
 ```json
 {
   "devDependencies": {
@@ -142,6 +155,7 @@ Optional:
 ```
 
 **Keep (may be needed for testing):**
+
 - Testing utilities: `supertest`, `@types/supertest`
 - Framework packages: `express`, `hono`, etc. (if testing framework adapters)
 
@@ -201,10 +215,10 @@ auto-install = false
 ```json
 {
   "compilerOptions": {
-    "types": ["bun"]  // Changed from "jest" or "vitest"
+    "types": ["bun"] // Changed from "jest" or "vitest"
   },
   "exclude": [
-    "**/*.test.ts",      // Exclude tests from build
+    "**/*.test.ts", // Exclude tests from build
     "**/__tests__/**",
     "**/e2e/**",
     "dist",
@@ -218,21 +232,39 @@ auto-install = false
 #### 1. Update Test Imports
 
 **Before (Jest):**
+
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from "@jest/globals";
 // or
 /// <reference types="jest" />
 ```
 
 **Before (Vitest):**
+
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 ```
 
 **After (Bun):**
+
 ```typescript
-import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
-import type { Mock, Spy } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  mock,
+  spyOn,
+} from "bun:test";
+import type { Mock, Spy } from "bun:test";
 ```
 
 #### 2. Convert Mock Patterns
@@ -240,26 +272,29 @@ import type { Mock, Spy } from 'bun:test';
 **Pattern 1: Module Mocks**
 
 Before (Jest):
+
 ```typescript
-jest.mock('../logger', () => ({
-  Logger: jest.fn()
+jest.mock("../logger", () => ({
+  Logger: jest.fn(),
 }));
 ```
 
 Before (Vitest):
+
 ```typescript
-vi.mock('../logger', () => ({
-  Logger: vi.fn()
+vi.mock("../logger", () => ({
+  Logger: vi.fn(),
 }));
 ```
 
 After (Bun):
+
 ```typescript
-import { mock } from 'bun:test';
+import { mock } from "bun:test";
 
 // Option 1: Mock the module
-mock.module('../logger', () => ({
-  Logger: mock(() => {})
+mock.module("../logger", () => ({
+  Logger: mock(() => {}),
 }));
 
 // Option 2: Create standalone mock
@@ -269,39 +304,44 @@ const MockLogger = mock(() => {});
 **Pattern 2: Function Spies**
 
 Before (Jest):
+
 ```typescript
-const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+const spy = jest.spyOn(console, "log").mockImplementation(() => {});
 spy.mockRestore();
 ```
 
 Before (Vitest):
+
 ```typescript
-const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 spy.mockRestore();
 ```
 
 After (Bun):
-```typescript
-import { spyOn } from 'bun:test';
 
-const spy = spyOn(console, 'log').mockImplementation(() => {});
+```typescript
+import { spyOn } from "bun:test";
+
+const spy = spyOn(console, "log").mockImplementation(() => {});
 spy.mockRestore();
 ```
 
 **Pattern 3: Instance Method Mocking (IMPORTANT)**
 
 ❌ **WRONG (inconsistent pattern):**
+
 ```typescript
 const instance = new MyClass();
-instance.method = mock();  // Direct assignment
+instance.method = mock(); // Direct assignment
 ```
 
 ✅ **CORRECT (use spyOn):**
+
 ```typescript
-import { spyOn } from 'bun:test';
+import { spyOn } from "bun:test";
 
 const instance = new MyClass();
-spyOn(instance, 'method').mockImplementation(() => {});
+spyOn(instance, "method").mockImplementation(() => {});
 ```
 
 **Why:** Using `spyOn()` provides consistent mock tracking, proper restoration, and aligns with Bun's recommended patterns.
@@ -309,8 +349,9 @@ spyOn(instance, 'method').mockImplementation(() => {});
 #### 3. Convert Async Test Patterns
 
 Before (Jest/Vitest with done):
+
 ```typescript
-it('handles async', (done) => {
+it("handles async", (done) => {
   asyncFunction().then(() => {
     expect(true).toBe(true);
     done();
@@ -319,8 +360,9 @@ it('handles async', (done) => {
 ```
 
 After (Bun - use async/await):
+
 ```typescript
-it('handles async', async () => {
+it("handles async", async () => {
   await asyncFunction();
   expect(true).toBe(true);
 });
@@ -329,6 +371,7 @@ it('handles async', async () => {
 #### 4. Update Test Matchers
 
 Most Jest/Vitest matchers work in Bun:
+
 ```typescript
 expect(value).toBe(expected);
 expect(value).toEqual(expected);
@@ -361,7 +404,7 @@ Check Bun docs for any differences in edge cases.
       "outputs": ["coverage/**"]
     },
     "test:e2e": {
-      "dependsOn": ["build"],  // E2E requires build artifacts
+      "dependsOn": ["build"], // E2E requires build artifacts
       "cache": true,
       "outputs": ["coverage/**"]
     },
@@ -374,6 +417,7 @@ Check Bun docs for any differences in edge cases.
 ```
 
 **Key Points:**
+
 - Only `test:e2e` depends on `build` (needs dist/)
 - Unit and integration tests run independently (no build dependency)
 - This allows parallel execution in CI for faster feedback
@@ -445,18 +489,19 @@ jobs:
   test-e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [build]  # IMPORTANT: E2E runs AFTER build
+    needs: [build] # IMPORTANT: E2E runs AFTER build
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.2
       - run: bun install --frozen-lockfile
-      - run: bun run build  # Build before E2E
+      - run: bun run build # Build before E2E
       - run: bun run test:e2e
 ```
 
 **Benefits:**
+
 - Unit/integration run in parallel with build (fast feedback)
 - E2E runs only after build succeeds (has dist/ available)
 - Separate coverage uploads for different test types
@@ -483,6 +528,7 @@ bun run test:coverage
 Compare test counts before/after migration:
 
 Before (Jest/Vitest):
+
 ```bash
 jest --listTests | wc -l
 # or
@@ -490,6 +536,7 @@ vitest run --reporter=verbose
 ```
 
 After (Bun):
+
 ```bash
 bun test src/ --dry-run  # Lists tests without running
 ```
@@ -513,6 +560,7 @@ bun test --coverage src/
 #### 4. Verify CI Integration
 
 Push to branch and check GitHub Actions:
+
 - ✅ Unit tests pass
 - ✅ Integration tests pass
 - ✅ E2E tests pass (after build)
@@ -538,21 +586,24 @@ bun remove vitest @vitest/ui
 #### 3. Update Documentation
 
 Update package README.md:
+
 ```markdown
 ## Testing
 
 This package uses Bun's native test runner.
 
 ### Run tests
+
 \`\`\`bash
-bun test              # All tests
-bun test:unit         # Unit tests only
-bun test:integration  # Integration tests only
-bun test:e2e          # E2E tests only
-bun test --coverage   # With coverage
+bun test # All tests
+bun test:unit # Unit tests only
+bun test:integration # Integration tests only
+bun test:e2e # E2E tests only
+bun test --coverage # With coverage
 \`\`\`
 
 ### Test organization
+
 - Unit tests: `src/core/**/*.test.ts`
 - Integration tests: `src/adapters/__tests__/*.test.ts`
 - E2E tests: `e2e/**/*.test.ts`
@@ -563,6 +614,7 @@ bun test --coverage   # With coverage
 ### Issue 1: Tests Not Found
 
 **Symptom:**
+
 ```
 error: No tests found
 ```
@@ -570,6 +622,7 @@ error: No tests found
 **Cause:** Glob pattern used instead of directory path, or wrong directory specified.
 
 **Solution:**
+
 ```bash
 # ❌ Don't use glob patterns
 bun test "**/*.test.ts"
@@ -582,6 +635,7 @@ bun test src/core/
 ### Issue 2: E2E Tests Fail in CI
 
 **Symptom:**
+
 ```
 Cannot find module '../dist/index.js'
 ```
@@ -589,6 +643,7 @@ Cannot find module '../dist/index.js'
 **Cause:** E2E tests running before build completes.
 
 **Solution:**
+
 - Ensure E2E CI job has `needs: [build]`
 - Run `bun run build` before `bun run test:e2e`
 - Check turbo.json: `test:e2e` should have `dependsOn: ["build"]`
@@ -599,6 +654,7 @@ Cannot find module '../dist/index.js'
 
 **Solution:**
 Add to bunfig.toml:
+
 ```toml
 [test]
 coverageSkipTestFiles = true
@@ -607,6 +663,7 @@ coverageSkipTestFiles = true
 ### Issue 4: Turbo Doesn't Understand --coverage Flag
 
 **Symptom:**
+
 ```
 ERROR unexpected argument '--coverage' found
 ```
@@ -614,6 +671,7 @@ ERROR unexpected argument '--coverage' found
 **Cause:** Running `bun run test:unit --coverage` passes `--coverage` to Turbo, not Bun.
 
 **Solution:**
+
 ```bash
 # ❌ Don't pass flags through turbo
 bun run test:unit --coverage
@@ -628,16 +686,17 @@ bun run test:coverage
 
 **Solution:**
 Use consistent mock patterns:
+
 ```typescript
-import { spyOn, mock } from 'bun:test';
+import { spyOn, mock } from "bun:test";
 
 beforeEach(() => {
   // Use spyOn for instance methods
-  spyOn(instance, 'method').mockImplementation(() => {});
+  spyOn(instance, "method").mockImplementation(() => {});
 });
 
 afterEach(() => {
-  mock.restore();  // Restore all mocks
+  mock.restore(); // Restore all mocks
 });
 ```
 
@@ -661,6 +720,7 @@ afterEach(() => {
 ## Reference: rd-logger Migration
 
 The rd-logger package serves as the reference implementation:
+
 - Location: `packages/rd-logger/`
 - Test types: Unit (42), Integration (6), E2E (2)
 - Total: 50 tests, 100% pass rate

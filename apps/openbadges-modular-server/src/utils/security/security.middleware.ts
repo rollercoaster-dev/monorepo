@@ -4,7 +4,7 @@
  * This file centralizes all security-related middleware for the API.
  */
 
-import type { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler } from "hono";
 // Implement a simple compose function since Hono doesn't export one
 function compose(middlewares: MiddlewareHandler[]): MiddlewareHandler {
   return async (c, next) => {
@@ -18,9 +18,9 @@ function compose(middlewares: MiddlewareHandler[]): MiddlewareHandler {
     await dispatch(0);
   };
 }
-import { createRateLimitMiddleware } from './middleware/rate-limit.middleware';
-import { createSecurityHeadersMiddleware } from './middleware/security-headers.middleware';
-import { createCorsMiddleware } from './middleware/cors.middleware';
+import { createRateLimitMiddleware } from "./middleware/rate-limit.middleware";
+import { createSecurityHeadersMiddleware } from "./middleware/security-headers.middleware";
+import { createCorsMiddleware } from "./middleware/cors.middleware";
 
 /**
  * Configures and exports security middleware for the Open Badges API
@@ -35,5 +35,9 @@ export function createSecurityMiddleware(): MiddlewareHandler {
   const securityHeadersMiddleware = createSecurityHeadersMiddleware();
 
   // Compose middleware functions into a single middleware
-  return compose([corsMiddleware, rateLimitMiddleware, securityHeadersMiddleware]);
+  return compose([
+    corsMiddleware,
+    rateLimitMiddleware,
+    securityHeadersMiddleware,
+  ]);
 }

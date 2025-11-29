@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid'
 import { URLSearchParams } from 'url'
 import { webcrypto } from 'crypto'
 import { TextEncoder } from 'util'
-import type { User, OAuthProvider, OAuthSession } from './user';
+import type { User, OAuthProvider, OAuthSession } from './user'
 import { userService } from './user'
 import { oauthConfig } from '../config/oauth'
 

@@ -4,14 +4,14 @@ import type {
   NextFunction,
   RequestHandler,
   ErrorRequestHandler,
-} from 'express';
-import onFinished from 'on-finished';
-import { Logger } from '../core/logger.service.js';
-import { type LoggerConfig } from '../core/logger.config.js';
+} from "express";
+import onFinished from "on-finished";
+import { Logger } from "../core/logger.service.js";
+import { type LoggerConfig } from "../core/logger.config.js";
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context.js';
+} from "../core/request-context.js";
 
 // Extend Express Request type to include our id
 declare global {
@@ -61,7 +61,7 @@ export interface ExpressLoggerOptions {
     res: Response,
     store: { requestId: string },
     duration: number,
-    status: number
+    status: number,
   ) => string;
 }
 
@@ -71,11 +71,13 @@ export interface ExpressLoggerOptions {
  * @param options Configuration options for the logger middleware.
  * @returns Express RequestHandler.
  */
-export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandler => {
+export const expressLogger = (
+  options: ExpressLoggerOptions = {},
+): RequestHandler => {
   const logger = options.loggerInstance || new Logger(options.loggerOptions);
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const existingRequestId = req.header('x-request-id');
+    const existingRequestId = req.header("x-request-id");
 
     // Wrap the request handling in the async context
     runWithRequestContext(() => {
@@ -87,7 +89,7 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
       req.id = requestId;
 
       // Set response header
-      res.setHeader('x-request-id', requestId);
+      res.setHeader("x-request-id", requestId);
 
       // Check if logging should be skipped
       if (options.skip?.(req, res)) {
@@ -117,7 +119,8 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
           ? options.responseMessage(req, finishedRes, store, duration, status)
           : `◀ Request completed`;
 
-        const logLevel = status >= 500 ? 'error' : status >= 400 ? 'warn' : 'info';
+        const logLevel =
+          status >= 500 ? "error" : status >= 400 ? "warn" : "info";
 
         const logContext: Record<string, any> = {
           method,
@@ -130,7 +133,10 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
         // Include error in log if onFinished reported one
         if (err) {
           logContext.error = err;
-          logger.error(`Error during response finish: ${err.message}`, logContext);
+          logger.error(
+            `Error during response finish: ${err.message}`,
+            logContext,
+          );
         } else {
           logger[logLevel](responseMsg, logContext);
         }
@@ -138,7 +144,6 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
 
       // Continue to the next middleware
       next();
-
     }, existingRequestId);
   };
 };
@@ -165,18 +170,22 @@ export const expressLogger = (options: ExpressLoggerOptions = {}): RequestHandle
  * @param loggerInstance An instance of the Logger.
  * @returns Express ErrorRequestHandler.
  */
-export const expressErrorHandler = (loggerInstance: Logger): ErrorRequestHandler => {
+export const expressErrorHandler = (
+  loggerInstance: Logger,
+): ErrorRequestHandler => {
   return (
     err: any, // Express errors can be of any type
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) => {
     const store = getRequestStore(); // Get context established by expressLogger middleware
     // Fallback to req.id or header if context is somehow lost
-    const requestId = store?.requestId || req.id || req.header('x-request-id') || 'unknown';
+    const requestId =
+      store?.requestId || req.id || req.header("x-request-id") || "unknown";
 
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+    const errorMessage =
+      err instanceof Error ? err.message : "Unknown error occurred";
 
     loggerInstance.error(`Unhandled Express error: ${errorMessage}`, {
       error: err, // Pass the raw error object

@@ -5,6 +5,7 @@ This file provides context for Claude Code when working in this monorepo.
 ## 🎯 Project Overview
 
 Rollercoaster.dev is building an Open Badges credentialing system with:
+
 - **Self-signed badges** using Open Badges 3.0 (Verifiable Credentials + DIDs)
 - **Local-first architecture** - user data ownership with optional sync
 - **Federation capabilities** - interoperable badge networks
@@ -46,6 +47,7 @@ monorepo/
 ### Published Packages (npm)
 
 #### @rollercoaster-dev/rd-logger
+
 - **Purpose**: Structured logging with neurodivergent-friendly formatting
 - **Location**: `packages/rd-logger/`
 - **Status**: ✅ Migrated, published, full CI/CD
@@ -59,6 +61,7 @@ monorepo/
 ### Internal Packages
 
 #### shared-config
+
 - **Purpose**: Shared TypeScript/build configurations
 - **Location**: `packages/shared-config/`
 
@@ -104,6 +107,7 @@ bun --filter rd-logger add <package-name>
 ## 🌍 Environment Variables
 
 ### Local Development
+
 Copy `.env.example` to `.env` and customize:
 
 ```bash
@@ -111,16 +115,19 @@ cp .env.example .env
 ```
 
 **Common Variables:**
+
 - `NODE_ENV` - Environment mode (development/production/test)
 - `LOG_LEVEL` - Logging verbosity (debug/info/warn/error/fatal)
 - `DEBUG_QUERIES` - Enable verbose database query logging (true/false)
 
 ### Claude Code on the Web
+
 - Environment variables are configured in the Web UI (not .env files)
 - The SessionStart hook loads `.env` in local environments
 - See `.env.example` for available variables
 
 **Package-Specific Variables:**
+
 - Check `packages/[package-name]/.env.example` for package-specific configuration
 - Example: `packages/rd-logger/.env.example`
 
@@ -155,15 +162,17 @@ Before marking a package migration complete, run:
 ```
 
 **Automated checks** (script enforces):
+
 - [ ] `bun run lint` passes
 - [ ] `bun run build` succeeds
 - [ ] `package.json` types path exists after build
-- [ ] No orphaned files (*.fixed, *.new, *.bak, *.orig)
+- [ ] No orphaned files (_.fixed, _.new, _.bak, _.orig)
 - [ ] Documentation uses `bun` (not npm/yarn/pnpm)
 - [ ] CSS @import rules at top of files
 - [ ] SSR safety hints (warns on unguarded document/window access)
 
 **Manual review** (verify yourself):
+
 - [ ] No commented-out code blocks
 - [ ] No TODO comments without issue references
 - [ ] README updated for monorepo context
@@ -178,6 +187,7 @@ Before marking a package migration complete, run:
 - **Location**: Tests are colocated with source files (`*.test.ts`)
 
 Run tests:
+
 ```bash
 bun test                     # All packages
 bun --filter rd-logger test  # Specific package
@@ -192,7 +202,9 @@ bun test --coverage          # With coverage report
 - Package-specific READMEs in each `packages/*/README.md`
 
 ### Future Documentation (Phase 5.5)
+
 Will be migrated to `apps/docs/`:
+
 - Vision & Strategy docs
 - Architecture Decision Records (ADRs)
 - User Stories
@@ -201,14 +213,18 @@ Will be migrated to `apps/docs/`:
 ## 🤖 Claude Code Configuration
 
 ### Auto-Installation
+
 On session start/resume, the `scripts/install-dependencies.sh` script runs automatically to:
+
 - Detect environment (local vs web)
 - Install Bun if needed (web only)
 - Run `bun install` to update dependencies
 - Load environment variables from `.env` (if present)
 
 ### Permissions
+
 Team-shared permissions in `.claude/settings.json`:
+
 - GitHub CLI operations (`gh issue`, `gh pr`)
 - Tree/cat for file viewing
 - bun commands (install, test, build, dev)
@@ -216,6 +232,7 @@ Team-shared permissions in `.claude/settings.json`:
 Personal permissions can be added to `.claude/settings.local.json` (not committed).
 
 ### Hooks
+
 - **SessionStart**: Runs dependency installation
 - Uses `$CLAUDE_PROJECT_DIR` for reliable script paths
 - Uses `CLAUDE_CODE_REMOTE` to detect web vs local
@@ -229,11 +246,13 @@ This monorepo uses **Changesets** for version management and publishing.
 
 **1. Create a Changeset (Manual - Required for Each PR)**
 When making changes to a published package, run:
+
 ```bash
 bunx changeset
 ```
 
 This prompts you to:
+
 - Select which packages changed
 - Choose version bump type (patch/minor/major)
 - Write a changelog entry
@@ -242,12 +261,14 @@ Commit the generated `.changeset/*.md` file with your PR.
 
 **2. Automated Release Process**
 When your PR is merged to `main`:
+
 - Changesets action detects changeset files
 - Creates/updates "Version Packages" PR automatically
 - PR includes version bumps and updated CHANGELOGs
 
 **3. Publish to npm**
 When "Version Packages" PR is merged:
+
 - Packages are built automatically
 - Published to npm using **OIDC Trusted Publishing** (no tokens needed!)
 - GitHub releases created automatically
@@ -263,6 +284,7 @@ This monorepo uses npm's **Trusted Publishing** (OIDC) for secure, automated rel
 ✅ Cryptographically verified package origins
 
 **Configuration:**
+
 - Trusted Publisher set up on npmjs.com for each package
 - GitHub Actions workflow uses `id-token: write` permission
 - npm CLI 11.5.1+ automatically detects and uses OIDC
@@ -276,6 +298,7 @@ The `openbadges-modular-server` application is published as a Docker image to Gi
 ### Automated Docker Publishing
 
 Docker images are automatically built and published when:
+
 - A new version is merged to `main` (detected via `package.json` version change)
 - Changes are pushed to `apps/openbadges-modular-server/` or its dependencies
 
@@ -286,10 +309,12 @@ Docker images are automatically built and published when:
 **Registry:** `ghcr.io/rollercoaster-dev/openbadges-modular-server`
 
 **Platforms:** Multi-architecture support
+
 - `linux/amd64` (Intel/AMD 64-bit)
 - `linux/arm64` (ARM 64-bit, including Apple Silicon, AWS Graviton)
 
 **Tags:**
+
 - `v1.2.3` - Full semantic version
 - `v1.2` - Major.minor version
 - `v1` - Major version only
@@ -319,6 +344,7 @@ docker run -p 3000:3000 \
 ### Manual Docker Build
 
 You can manually trigger a Docker build from GitHub Actions:
+
 1. Go to Actions → "Docker - OpenBadges Modular Server"
 2. Click "Run workflow"
 3. Optionally specify a version tag override
@@ -359,6 +385,7 @@ bun run docker:build:multiarch:push
 ## 🎓 Learning Philosophy
 
 This project follows a learning-focused approach:
+
 - Test-driven development (TDD) encouraged
 - Design before implementation
 - Clear documentation for future maintainers

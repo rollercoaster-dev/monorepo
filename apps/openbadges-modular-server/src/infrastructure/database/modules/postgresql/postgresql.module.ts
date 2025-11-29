@@ -5,9 +5,9 @@
  * It creates and configures PostgreSQL database instances.
  */
 
-import type { DatabaseInterface } from '../../interfaces/database.interface';
-import type { DatabaseModuleInterface } from '../../interfaces/database-module.interface';
-import { PostgresqlDatabase } from './postgresql.database';
+import type { DatabaseInterface } from "../../interfaces/database.interface";
+import type { DatabaseModuleInterface } from "../../interfaces/database-module.interface";
+import { PostgresqlDatabase } from "./postgresql.database";
 
 export class PostgresqlModule implements DatabaseModuleInterface {
   /**
@@ -16,21 +16,21 @@ export class PostgresqlModule implements DatabaseModuleInterface {
    * @returns A promise that resolves to a DatabaseInterface implementation
    */
   async createDatabase(
-    config: Record<string, unknown>
+    config: Record<string, unknown>,
   ): Promise<DatabaseInterface> {
     // Build connection string from environment variables with secure defaults
-    const dbUser = process.env.POSTGRES_USER || 'postgres';
-    const dbPassword = process.env.POSTGRES_PASSWORD || '';
-    const dbHost = process.env.POSTGRES_HOST || 'localhost';
-    const dbPort = process.env.POSTGRES_PORT || '5432';
-    const dbName = process.env.POSTGRES_DB || 'openbadges_dev';
+    const dbUser = process.env.POSTGRES_USER || "postgres";
+    const dbPassword = process.env.POSTGRES_PASSWORD || "";
+    const dbHost = process.env.POSTGRES_HOST || "localhost";
+    const dbPort = process.env.POSTGRES_PORT || "5432";
+    const dbName = process.env.POSTGRES_DB || "openbadges_dev";
 
     // Construct default connection string from environment variables
     const defaultConnectionString = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`;
 
     // Use type-safe config access with runtime guards
     const connectionString =
-      (typeof config.connectionString === 'string'
+      (typeof config.connectionString === "string"
         ? config.connectionString
         : process.env.DATABASE_URL) || defaultConnectionString;
 
@@ -49,6 +49,6 @@ export class PostgresqlModule implements DatabaseModuleInterface {
    * @returns The string "postgresql"
    */
   getModuleName(): string {
-    return 'postgresql';
+    return "postgresql";
   }
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import type { OB2, OB3, Shared } from '@/types';
-import BadgeIssuerForm from '@components/issuing/BadgeIssuerForm.vue';
-import BadgeList from '@components/badges/BadgeList.vue';
-import { BadgeService } from '@services/BadgeService';
+import { ref, computed, watch, onMounted } from "vue";
+import type { OB2, OB3, Shared } from "@/types";
+import BadgeIssuerForm from "@components/issuing/BadgeIssuerForm.vue";
+import BadgeList from "@components/badges/BadgeList.vue";
+import { BadgeService } from "@services/BadgeService";
 
 interface Props {
   issuerProfile?: {
@@ -24,15 +24,19 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'badge-issued', assertion: OB2.Assertion): void;
-  (e: 'badge-click', badge: OB2.Assertion | OB3.VerifiableCredential): void;
+  (e: "badge-issued", assertion: OB2.Assertion): void;
+  (e: "badge-click", badge: OB2.Assertion | OB3.VerifiableCredential): void;
 }>();
 
 // State
-const activeTab = ref<'issue' | 'badges'>('issue');
-const badges = ref<(OB2.Assertion | OB3.VerifiableCredential)[]>([...props.initialBadges]);
-const filterText = ref('');
-const sortOption = ref<'newest' | 'oldest' | 'name-asc' | 'name-desc'>('newest');
+const activeTab = ref<"issue" | "badges">("issue");
+const badges = ref<(OB2.Assertion | OB3.VerifiableCredential)[]>([
+  ...props.initialBadges,
+]);
+const filterText = ref("");
+const sortOption = ref<"newest" | "oldest" | "name-asc" | "name-desc">(
+  "newest",
+);
 
 // Create initial badge class with issuer info if available
 const initialBadgeClass = computed<Partial<OB2.BadgeClass>>(() => {
@@ -42,7 +46,7 @@ const initialBadgeClass = computed<Partial<OB2.BadgeClass>>(() => {
   return {
     issuer: {
       id: props.issuerProfile.id as Shared.IRI,
-      type: 'Profile',
+      type: "Profile",
       name: props.issuerProfile.name,
       url: props.issuerProfile.url as Shared.IRI | undefined,
       email: props.issuerProfile.email,
@@ -70,12 +74,14 @@ const filteredBadges = computed(() => {
 
   // Apply sort
   result.sort((a, b) => {
-    if (sortOption.value === 'newest' || sortOption.value === 'oldest') {
+    if (sortOption.value === "newest" || sortOption.value === "oldest") {
       // Handle OB2 Assertion
-      const getDateValue = (badge: OB2.Assertion | OB3.VerifiableCredential): number => {
-        if ('issuedOn' in badge && badge.issuedOn) {
+      const getDateValue = (
+        badge: OB2.Assertion | OB3.VerifiableCredential,
+      ): number => {
+        if ("issuedOn" in badge && badge.issuedOn) {
           return new Date(badge.issuedOn as string).getTime();
-        } else if ('issuanceDate' in badge && badge.issuanceDate) {
+        } else if ("issuanceDate" in badge && badge.issuanceDate) {
           return new Date(badge.issuanceDate as string).getTime();
         }
         return 0;
@@ -84,12 +90,12 @@ const filteredBadges = computed(() => {
       const dateA = getDateValue(a);
       const dateB = getDateValue(b);
 
-      return sortOption.value === 'newest' ? dateB - dateA : dateA - dateB;
+      return sortOption.value === "newest" ? dateB - dateA : dateA - dateB;
     } else {
       // Sort by normalized badge name
       const nameA = BadgeService.normalizeBadge(a).name;
       const nameB = BadgeService.normalizeBadge(b).name;
-      return sortOption.value === 'name-asc'
+      return sortOption.value === "name-asc"
         ? nameA.localeCompare(nameB)
         : nameB.localeCompare(nameA);
     }
@@ -104,11 +110,11 @@ watch(
   (newBadges) => {
     badges.value = [...newBadges];
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Methods
-const setActiveTab = (tab: 'issue' | 'badges') => {
+const setActiveTab = (tab: "issue" | "badges") => {
   activeTab.value = tab;
 };
 
@@ -117,10 +123,10 @@ const handleBadgeIssued = (assertion: OB2.Assertion) => {
   badges.value.unshift(assertion);
 
   // Switch to the badges tab to show the newly issued badge
-  setActiveTab('badges');
+  setActiveTab("badges");
 
   // Emit the event to parent
-  emit('badge-issued', assertion);
+  emit("badge-issued", assertion);
 };
 
 const handleFormReset = () => {
@@ -128,14 +134,14 @@ const handleFormReset = () => {
 };
 
 const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
-  emit('badge-click', badge);
+  emit("badge-click", badge);
 };
 
 // Initialize
 onMounted(() => {
   // If there are badges, start on the badges tab
   if (badges.value.length > 0) {
-    setActiveTab('badges');
+    setActiveTab("badges");
   }
 });
 </script>
@@ -213,7 +219,11 @@ onMounted(() => {
 
           <div class="manus-dashboard-sort">
             <label for="badge-sort" class="manus-sort-label">Sort by:</label>
-            <select id="badge-sort" v-model="sortOption" class="manus-sort-select">
+            <select
+              id="badge-sort"
+              v-model="sortOption"
+              class="manus-sort-select"
+            >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="name-asc">Name (A-Z)</option>
@@ -222,14 +232,26 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="loading" class="manus-dashboard-loading" role="status" aria-live="polite">
+        <div
+          v-if="loading"
+          class="manus-dashboard-loading"
+          role="status"
+          aria-live="polite"
+        >
           <span>Loading badges...</span>
         </div>
 
-        <div v-else-if="filteredBadges.length === 0" class="manus-dashboard-empty" role="status">
+        <div
+          v-else-if="filteredBadges.length === 0"
+          class="manus-dashboard-empty"
+          role="status"
+        >
           <p v-if="filterText">No badges match your search.</p>
           <p v-else>You haven't issued any badges yet.</p>
-          <button class="manus-button manus-button-primary" @click="setActiveTab('issue')">
+          <button
+            class="manus-button manus-button-primary"
+            @click="setActiveTab('issue')"
+          >
             Issue Your First Badge
           </button>
         </div>

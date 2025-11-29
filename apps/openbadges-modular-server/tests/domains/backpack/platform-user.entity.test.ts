@@ -1,27 +1,29 @@
 /**
  * Tests for the PlatformUser entity
  */
-import { describe, test, expect } from 'bun:test';
-import { PlatformUser } from '@/domains/backpack/platform-user.entity';
-import type { Shared } from 'openbadges-types';
+import { describe, test, expect } from "bun:test";
+import { PlatformUser } from "@/domains/backpack/platform-user.entity";
+import type { Shared } from "openbadges-types";
 
-describe('PlatformUser Entity', () => {
+describe("PlatformUser Entity", () => {
   // Test data
   const validPlatformUserData = {
-    platformId: 'platform-id' as Shared.IRI,
-    externalUserId: 'external-user-id',
-    displayName: 'Test User',
-    email: 'test@example.com',
-    metadata: { role: 'user' }
+    platformId: "platform-id" as Shared.IRI,
+    externalUserId: "external-user-id",
+    displayName: "Test User",
+    email: "test@example.com",
+    metadata: { role: "user" },
   };
 
-  test('should create a platform user with factory method', () => {
+  test("should create a platform user with factory method", () => {
     const platformUser = PlatformUser.create(validPlatformUserData);
 
     expect(platformUser).toBeDefined();
     expect(platformUser.id).toBeDefined();
     expect(platformUser.platformId).toBe(validPlatformUserData.platformId);
-    expect(platformUser.externalUserId).toBe(validPlatformUserData.externalUserId);
+    expect(platformUser.externalUserId).toBe(
+      validPlatformUserData.externalUserId,
+    );
     expect(platformUser.displayName).toBe(validPlatformUserData.displayName);
     expect(platformUser.email).toBe(validPlatformUserData.email);
     expect(platformUser.metadata).toEqual(validPlatformUserData.metadata);
@@ -29,18 +31,23 @@ describe('PlatformUser Entity', () => {
     expect(platformUser.updatedAt).toBeInstanceOf(Date);
   });
 
-  test('should create a platform user with custom ID', () => {
-    const customId = 'custom-id' as Shared.IRI;
+  test("should create a platform user with custom ID", () => {
+    const customId = "custom-id" as Shared.IRI;
     const platformUser = PlatformUser.create({
       ...validPlatformUserData,
-      id: customId
+      id: customId,
     });
 
     expect(platformUser.id).toBe(customId);
   });
 
-  test('should create a platform user without optional fields', () => {
-    const { displayName: _displayName, email: _email, metadata: _metadata, ...requiredData } = validPlatformUserData;
+  test("should create a platform user without optional fields", () => {
+    const {
+      displayName: _displayName,
+      email: _email,
+      metadata: _metadata,
+      ...requiredData
+    } = validPlatformUserData;
     const platformUser = PlatformUser.create(requiredData);
 
     expect(platformUser).toBeDefined();
@@ -52,7 +59,7 @@ describe('PlatformUser Entity', () => {
     expect(platformUser.metadata).toBeUndefined();
   });
 
-  test('should convert to plain object', () => {
+  test("should convert to plain object", () => {
     const platformUser = PlatformUser.create(validPlatformUserData);
     const obj = platformUser.toObject();
 

@@ -67,12 +67,14 @@ The OpenBadges Modular Server implements a **dual-database architecture** suppor
 ### SQLite Module (`src/infrastructure/database/modules/sqlite/`)
 
 **Characteristics:**
+
 - File-based or in-memory database
 - JSON stored as text, timestamps as integers
 - Single connection with transaction support
 - Ideal for development and small deployments
 
 **Key Components:**
+
 - `SqliteConnectionManager`: Manages connection lifecycle and health
 - `SqlitePragmaManager`: Centralized PRAGMA configuration
 - `BaseSqliteRepository`: Abstract base with common SQLite patterns
@@ -81,12 +83,14 @@ The OpenBadges Modular Server implements a **dual-database architecture** suppor
 ### PostgreSQL Module (`src/infrastructure/database/modules/postgresql/`)
 
 **Characteristics:**
+
 - Network-based relational database
 - Native UUID, JSONB, and timestamp support
 - Connection pooling with health monitoring
 - Production-ready with advanced features
 
 **Key Components:**
+
 - `PostgresConnectionManager`: Connection pooling and state management
 - `PostgresConfigManager`: Session-level configuration management
 - `BasePostgresRepository`: Abstract base with PostgreSQL patterns
@@ -102,16 +106,18 @@ Both database types implement base repository classes that provide:
 // Common functionality across all repositories
 abstract class BaseRepository {
   // Error handling and logging
-  protected handleError(error: Error, context: OperationContext): void
-  
+  protected handleError(error: Error, context: OperationContext): void;
+
   // Query execution with metrics
-  protected executeQuery<T>(query: Query): Promise<T>
-  
+  protected executeQuery<T>(query: Query): Promise<T>;
+
   // Transaction support
-  protected withTransaction<T>(operation: (tx: Transaction) => Promise<T>): Promise<T>
-  
+  protected withTransaction<T>(
+    operation: (tx: Transaction) => Promise<T>,
+  ): Promise<T>;
+
   // Health monitoring
-  protected createOperationContext(operation: string): OperationContext
+  protected createOperationContext(operation: string): OperationContext;
 }
 ```
 
@@ -146,18 +152,19 @@ class SqliteConnectionManager {
   // Single connection with state tracking
   private client: Database | null = null;
   private connectionState: SqliteConnectionState;
-  
+
   // Health monitoring
-  async getHealth(): Promise<SqliteDatabaseHealth>
-  
+  async getHealth(): Promise<SqliteDatabaseHealth>;
+
   // Resource management
-  async connect(): Promise<void>
-  async disconnect(): Promise<void>
-  async reconnect(): Promise<void>
+  async connect(): Promise<void>;
+  async disconnect(): Promise<void>;
+  async reconnect(): Promise<void>;
 }
 ```
 
 **Features:**
+
 - Single connection per manager instance
 - Automatic reconnection with exponential backoff
 - PRAGMA configuration management
@@ -170,16 +177,17 @@ class PostgresConnectionManager {
   // Connection pooling
   private client: postgres.Sql;
   private connectionState: PostgresConnectionState;
-  
+
   // Pool management
-  async getPoolStatus(): Promise<PoolStatus>
-  
+  async getPoolStatus(): Promise<PoolStatus>;
+
   // Health monitoring
-  async getHealth(): Promise<PostgresDatabaseHealth>
+  async getHealth(): Promise<PostgresDatabaseHealth>;
 }
 ```
 
 **Features:**
+
 - Connection pooling with configurable limits
 - Advanced health monitoring and diagnostics
 - Session-level configuration management
@@ -208,11 +216,13 @@ await database.withTransaction(async (tx) => {
 ### Database-Specific Implementation
 
 **SQLite Transactions:**
+
 - Uses Drizzle's transaction helper
 - Automatic rollback on errors
 - Nested transaction support
 
 **PostgreSQL Transactions:**
+
 - Connection pool-aware transactions
 - Advanced isolation level support
 - Distributed transaction capabilities
@@ -247,7 +257,7 @@ await database.withTransaction(async (tx) => {
 DB_TYPE=sqlite
 SQLITE_FILE=./data/openbadges.sqlite
 
-# PostgreSQL Configuration  
+# PostgreSQL Configuration
 DB_TYPE=postgresql
 DATABASE_URL=postgres://user:pass@host:5432/db
 ```
@@ -256,7 +266,7 @@ DATABASE_URL=postgres://user:pass@host:5432/db
 
 ```typescript
 // Automatic registration based on DB_TYPE
-if (dbType === 'postgresql') {
+if (dbType === "postgresql") {
   DatabaseFactory.registerModule(new PostgresqlModule(), true);
   DatabaseFactory.registerModule(new SqliteModule());
 } else {
@@ -279,7 +289,8 @@ if (dbType === 'postgresql') {
 
 ```typescript
 // Always use the repository interface, never concrete implementations
-const issuerRepo: IssuerRepository = await RepositoryFactory.createIssuerRepository();
+const issuerRepo: IssuerRepository =
+  await RepositoryFactory.createIssuerRepository();
 
 // Operations work identically regardless of database
 const issuer = await issuerRepo.create(issuerData);
@@ -296,11 +307,13 @@ const found = await issuerRepo.findById(issuer.id);
 
 ---
 
-**Related Documentation**: 
-- [UUID Conversion Guide](./uuid-conversion-guide.md) *(if available)*
-- Repository Implementation Guide *(planned)*
-- Connection Manager Deep Dive *(planned)*
+**Related Documentation**:
+
+- [UUID Conversion Guide](./uuid-conversion-guide.md) _(if available)_
+- Repository Implementation Guide _(planned)_
+- Connection Manager Deep Dive _(planned)_
 
 **See Also**:
+
 - [Database Refactor Plan](../.cursor/working/tasks/archive/database-refactoring/db-system-refactor.md)
 - [Project Status Summary](../.cursor/working/tasks/project-status-summary.md)

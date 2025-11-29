@@ -5,18 +5,21 @@
  * It caches assertion entities to improve read performance.
  */
 
-import type { Assertion } from '../../../domains/assertion/assertion.entity';
-import type { AssertionRepository } from '../../../domains/assertion/assertion.repository';
-import type { Shared } from 'openbadges-types';
-import { CacheRepositoryWrapper } from './cache-repository.wrapper';
+import type { Assertion } from "../../../domains/assertion/assertion.entity";
+import type { AssertionRepository } from "../../../domains/assertion/assertion.repository";
+import type { Shared } from "openbadges-types";
+import { CacheRepositoryWrapper } from "./cache-repository.wrapper";
 
-export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion, AssertionRepository> implements AssertionRepository {
+export class CachedAssertionRepository
+  extends CacheRepositoryWrapper<Assertion, AssertionRepository>
+  implements AssertionRepository
+{
   /**
    * Creates a new cached assertion repository
    * @param repository The assertion repository to wrap
    */
   constructor(repository: AssertionRepository) {
-    super(repository, 'assertion');
+    super(repository, "assertion");
   }
 
   /**
@@ -24,15 +27,17 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
    * @param assertion The assertion to create
    * @returns The created assertion with its ID
    */
-  async create(assertion: Omit<Assertion, 'id'>): Promise<Assertion> {
+  async create(assertion: Omit<Assertion, "id">): Promise<Assertion> {
     const result = await this.repository.create(assertion);
 
     // Invalidate cache after creation
     this.invalidateEntity(result);
 
     // Also invalidate badge class-related caches
-    if ('badgeClassId' in assertion) {
-      this.cache.delete(`badgeClass:${(assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`);
+    if ("badgeClassId" in assertion) {
+      this.cache.delete(
+        `badgeClass:${(assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`,
+      );
     }
 
     return result;
@@ -47,7 +52,7 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
       return this.repository.findAll();
     }
 
-    const cacheKey = 'collection:all';
+    const cacheKey = "collection:all";
 
     // Try to get from cache
     const cached = this.cache.get<Assertion[]>(cacheKey);
@@ -168,7 +173,10 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
    * @param assertion The updated assertion data
    * @returns The updated assertion if found, null otherwise
    */
-  async update(id: Shared.IRI, assertion: Partial<Assertion>): Promise<Assertion | null> {
+  async update(
+    id: Shared.IRI,
+    assertion: Partial<Assertion>,
+  ): Promise<Assertion | null> {
     // Invalidate the cache for the ID before updating
     // This ensures we don't have stale data even if the ID changes
     this.cache.delete(this.generateIdKey(id as string));
@@ -178,8 +186,8 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
     const existingAssertion = await this.findById(id);
     if (existingAssertion) {
       // Invalidate badge class-related caches
-      if (existingAssertion['badgeClassId']) {
-        this.cache.delete(`badgeClass:${existingAssertion['badgeClassId']}`);
+      if (existingAssertion["badgeClassId"]) {
+        this.cache.delete(`badgeClass:${existingAssertion["badgeClassId"]}`);
       }
 
       // Invalidate recipient-related caches
@@ -195,10 +203,12 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
       this.invalidateEntity(result);
 
       // Also invalidate badge class-related caches
-      if ('badgeClassId' in assertion) {
-        this.cache.delete(`badgeClass:${(assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`);
-      } else if (result['badgeClassId']) {
-        this.cache.delete(`badgeClass:${result['badgeClassId']}`);
+      if ("badgeClassId" in assertion) {
+        this.cache.delete(
+          `badgeClass:${(assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`,
+        );
+      } else if (result["badgeClassId"]) {
+        this.cache.delete(`badgeClass:${result["badgeClassId"]}`);
       }
 
       // Also invalidate recipient-related caches
@@ -227,8 +237,8 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
       this.invalidateCollections();
 
       // Also invalidate badge class-related caches
-      if (assertion && assertion['badgeClassId']) {
-        this.cache.delete(`badgeClass:${assertion['badgeClassId']}`);
+      if (assertion && assertion["badgeClassId"]) {
+        this.cache.delete(`badgeClass:${assertion["badgeClassId"]}`);
       }
 
       // Also invalidate recipient-related caches
@@ -281,11 +291,13 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
    * @param assertions The assertions to create
    * @returns An array of results indicating success/failure for each assertion
    */
-  async createBatch(assertions: Omit<Assertion, 'id'>[]): Promise<Array<{
-    success: boolean;
-    assertion?: Assertion;
-    error?: string;
-  }>> {
+  async createBatch(assertions: Omit<Assertion, "id">[]): Promise<
+    Array<{
+      success: boolean;
+      assertion?: Assertion;
+      error?: string;
+    }>
+  > {
     const results = await this.repository.createBatch(assertions);
 
     // Invalidate cache after batch creation
@@ -294,12 +306,15 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
     // Cache successful assertions
     for (const result of results) {
       if (result.success && result.assertion) {
-        this.cache.set(this.generateIdKey(result.assertion.id), result.assertion);
+        this.cache.set(
+          this.generateIdKey(result.assertion.id),
+          result.assertion,
+        );
 
         // Also invalidate badge class-related caches
-        if ('badgeClassId' in result.assertion) {
+        if ("badgeClassId" in result.assertion) {
           this.cache.delete(
-            `badgeClass:${(result.assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`
+            `badgeClass:${(result.assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`,
           );
         }
         // Invalidate recipient-related caches
@@ -367,16 +382,20 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
    * @param updates Array of status updates to apply
    * @returns An array of results indicating success/failure for each update
    */
-  async updateStatusBatch(updates: Array<{
-    id: Shared.IRI;
-    status: 'revoked' | 'suspended' | 'active';
-    reason?: string;
-  }>): Promise<Array<{
-    id: Shared.IRI;
-    success: boolean;
-    assertion?: Assertion;
-    error?: string;
-  }>> {
+  async updateStatusBatch(
+    updates: Array<{
+      id: Shared.IRI;
+      status: "revoked" | "suspended" | "active";
+      reason?: string;
+    }>,
+  ): Promise<
+    Array<{
+      id: Shared.IRI;
+      success: boolean;
+      assertion?: Assertion;
+      error?: string;
+    }>
+  > {
     // Invalidate cache for all IDs before updating
     for (const update of updates) {
       this.cache.delete(this.generateIdKey(update.id as string));
@@ -388,11 +407,16 @@ export class CachedAssertionRepository extends CacheRepositoryWrapper<Assertion,
     // Cache successful updates
     for (const result of results) {
       if (result.success && result.assertion) {
-        this.cache.set(this.generateIdKey(result.assertion.id), result.assertion);
+        this.cache.set(
+          this.generateIdKey(result.assertion.id),
+          result.assertion,
+        );
 
         // Also invalidate badge class-related caches
-        if ('badgeClassId' in result.assertion) {
-          this.cache.delete(`badgeClass:${(result.assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`);
+        if ("badgeClassId" in result.assertion) {
+          this.cache.delete(
+            `badgeClass:${(result.assertion as { badgeClassId?: Shared.IRI }).badgeClassId}`,
+          );
         }
 
         // Also invalidate recipient-related caches

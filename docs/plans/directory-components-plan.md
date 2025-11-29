@@ -12,10 +12,10 @@ Implement reusable list components in `openbadges-ui` for displaying Badge Class
 
 ## Open Badges Protocol Compliance
 
-| OB2 Type | OB3 Equivalent | Key Display Fields |
-|----------|----------------|-------------------|
-| `Profile` | `Issuer` | id, name, url, email, description, image |
-| `BadgeClass` | `Achievement` | id, name, description, image, criteria, issuer, tags, alignment |
+| OB2 Type     | OB3 Equivalent | Key Display Fields                                              |
+| ------------ | -------------- | --------------------------------------------------------------- |
+| `Profile`    | `Issuer`       | id, name, url, email, description, image                        |
+| `BadgeClass` | `Achievement`  | id, name, description, image, criteria, issuer, tags, alignment |
 
 Components will normalize between OB2/OB3 formats using existing `BadgeService` patterns.
 
@@ -28,20 +28,23 @@ Components will normalize between OB2/OB3 formats using existing `BadgeService` 
 **File:** `packages/openbadges-ui/src/components/issuers/IssuerCard.vue`
 
 **Props:**
+
 ```typescript
 interface Props {
   issuer: OB2.Profile | OB3.Issuer;
-  interactive?: boolean;        // default: false
-  showDescription?: boolean;    // default: true
-  showContact?: boolean;        // default: false
-  density?: 'compact' | 'normal' | 'spacious'; // default: 'normal'
+  interactive?: boolean; // default: false
+  showDescription?: boolean; // default: true
+  showContact?: boolean; // default: false
+  density?: "compact" | "normal" | "spacious"; // default: 'normal'
 }
 ```
 
 **Events:**
+
 - `@click` - emits issuer object
 
 **Display:**
+
 - Image/logo with fallback
 - Name (required)
 - Description (truncated)
@@ -55,25 +58,28 @@ interface Props {
 **File:** `packages/openbadges-ui/src/components/issuers/IssuerList.vue`
 
 **Props:**
+
 ```typescript
 interface Props {
   issuers: (OB2.Profile | OB3.Issuer)[];
-  layout?: 'grid' | 'list';     // default: 'grid'
-  loading?: boolean;            // default: false
-  pageSize?: number;            // default: 9
-  currentPage?: number;         // default: 1
-  showPagination?: boolean;     // default: false
-  density?: 'compact' | 'normal' | 'spacious';
+  layout?: "grid" | "list"; // default: 'grid'
+  loading?: boolean; // default: false
+  pageSize?: number; // default: 9
+  currentPage?: number; // default: 1
+  showPagination?: boolean; // default: false
+  density?: "compact" | "normal" | "spacious";
   ariaLabel?: string;
 }
 ```
 
 **Events:**
+
 - `@issuer-click` - emits issuer object
 - `@page-change` - emits page number
 - `@update:density` - emits density value
 
 **Features:**
+
 - Search filter (name, description)
 - Grid/list layout toggle
 - Pagination
@@ -87,22 +93,25 @@ interface Props {
 **File:** `packages/openbadges-ui/src/components/badges/BadgeClassCard.vue`
 
 **Props:**
+
 ```typescript
 interface Props {
   badgeClass: OB2.BadgeClass | OB3.Achievement;
-  interactive?: boolean;        // default: false
-  showDescription?: boolean;    // default: true
-  showCriteria?: boolean;       // default: false
-  showIssuer?: boolean;         // default: true
-  showTags?: boolean;           // default: true
-  density?: 'compact' | 'normal' | 'spacious';
+  interactive?: boolean; // default: false
+  showDescription?: boolean; // default: true
+  showCriteria?: boolean; // default: false
+  showIssuer?: boolean; // default: true
+  showTags?: boolean; // default: true
+  density?: "compact" | "normal" | "spacious";
 }
 ```
 
 **Events:**
+
 - `@click` - emits badge class object
 
 **Display:**
+
 - Badge image with fallback
 - Name (required)
 - Description (truncated)
@@ -119,25 +128,28 @@ interface Props {
 **File:** `packages/openbadges-ui/src/components/badges/BadgeClassList.vue`
 
 **Props:**
+
 ```typescript
 interface Props {
   badgeClasses: (OB2.BadgeClass | OB3.Achievement)[];
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
   loading?: boolean;
   pageSize?: number;
   currentPage?: number;
   showPagination?: boolean;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
   ariaLabel?: string;
 }
 ```
 
 **Events:**
+
 - `@badge-class-click` - emits badge class object
 - `@page-change` - emits page number
 - `@update:density` - emits density value
 
 **Features:**
+
 - Search filter (name, description)
 - Issuer filter dropdown
 - Tags filter
@@ -156,6 +168,7 @@ interface Props {
 **File:** `apps/openbadges-system/src/client/services/badgeApi.ts`
 
 **Methods:**
+
 ```typescript
 export const badgeApi = {
   getIssuers(): Promise<Issuer[]>;
@@ -175,6 +188,7 @@ Uses existing proxy at `/api/bs/` with auth headers.
 **File:** `apps/openbadges-system/src/client/pages/badges/index.vue`
 
 **Implementation:**
+
 - Import `BadgeClassList` from `openbadges-ui`
 - Fetch badge classes on mount using `badgeApi`
 - Handle loading state
@@ -188,6 +202,7 @@ Uses existing proxy at `/api/bs/` with auth headers.
 **File:** `apps/openbadges-system/src/client/pages/issuers/index.vue`
 
 **Implementation:**
+
 - Import `IssuerList` from `openbadges-ui`
 - Fetch issuers on mount using `badgeApi`
 - Handle loading state
@@ -201,12 +216,14 @@ Uses existing proxy at `/api/bs/` with auth headers.
 ### Commit 8: `test(openbadges-ui): Add tests for directory components`
 
 **Files:**
+
 - `src/components/issuers/IssuerCard.test.ts`
 - `src/components/issuers/IssuerList.test.ts`
 - `src/components/badges/BadgeClassCard.test.ts`
 - `src/components/badges/BadgeClassList.test.ts`
 
 **Test Coverage:**
+
 - Rendering with OB2 and OB3 data
 - Event emissions
 - Filtering functionality
@@ -218,6 +235,7 @@ Uses existing proxy at `/api/bs/` with auth headers.
 ### Commit 9: `docs(openbadges-ui): Add stories for directory components`
 
 **Files:**
+
 - `src/components/issuers/IssuerCard.story.vue`
 - `src/components/issuers/IssuerList.story.vue`
 - `src/components/badges/BadgeClassCard.story.vue`

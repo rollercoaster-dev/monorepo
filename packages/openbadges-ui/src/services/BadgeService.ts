@@ -1,7 +1,11 @@
 // src/services/BadgeService.ts
-import type { OB2, OB3, Shared } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
-import { createIRI, isOB2Assertion, isOB3VerifiableCredential } from '@utils/type-helpers';
+import type { OB2, OB3, Shared } from "@/types";
+import { v4 as uuidv4 } from "uuid";
+import {
+  createIRI,
+  isOB2Assertion,
+  isOB3VerifiableCredential,
+} from "@utils/type-helpers";
 
 /**
  * Utility service for badge-related operations
@@ -14,20 +18,20 @@ export class BadgeService {
     const id = createIRI(`urn:uuid:${uuidv4()}`);
     const emptyImage = {
       id,
-      type: 'Image',
+      type: "Image",
     } as OB2.Image;
     return {
-      '@context': 'https://w3id.org/openbadges/v2',
+      "@context": "https://w3id.org/openbadges/v2",
       id,
-      type: 'BadgeClass',
-      name: '',
-      description: '',
+      type: "BadgeClass",
+      name: "",
+      description: "",
       image: emptyImage,
-      criteria: { narrative: '' },
+      criteria: { narrative: "" },
       issuer: {
         id,
-        type: 'Profile',
-        name: '',
+        type: "Profile",
+        name: "",
       },
     };
   }
@@ -37,23 +41,23 @@ export class BadgeService {
    */
   static createAssertionTemplate(
     badgeClass: OB2.BadgeClass,
-    recipientEmail: string
+    recipientEmail: string,
   ): OB2.Assertion {
     const id = `urn:uuid:${uuidv4()}` as Shared.IRI;
     const now = new Date().toISOString() as Shared.DateTime;
     return {
-      '@context': 'https://w3id.org/openbadges/v2',
+      "@context": "https://w3id.org/openbadges/v2",
       id,
-      type: 'Assertion',
+      type: "Assertion",
       recipient: {
         identity: recipientEmail,
-        type: 'email',
+        type: "email",
         hashed: false,
       },
       badge: badgeClass,
       issuedOn: now,
       verification: {
-        type: 'hosted',
+        type: "hosted",
       },
     };
   }
@@ -66,22 +70,22 @@ export class BadgeService {
     const errors: string[] = [];
 
     if (!badgeClass.id) {
-      errors.push('Badge ID is required');
+      errors.push("Badge ID is required");
     }
     if (!badgeClass.name) {
-      errors.push('Badge name is required');
+      errors.push("Badge name is required");
     }
     if (!badgeClass.description) {
-      errors.push('Badge description is required');
+      errors.push("Badge description is required");
     }
     if (!badgeClass.image) {
-      errors.push('Badge image is required');
+      errors.push("Badge image is required");
     }
     if (!badgeClass.issuer) {
-      errors.push('Issuer is required');
+      errors.push("Issuer is required");
     }
-    if (typeof badgeClass.issuer === 'object' && !badgeClass.issuer.name) {
-      errors.push('Issuer name is required');
+    if (typeof badgeClass.issuer === "object" && !badgeClass.issuer.name) {
+      errors.push("Issuer name is required");
     }
 
     return errors;
@@ -95,16 +99,16 @@ export class BadgeService {
     const errors: string[] = [];
 
     if (!assertion.id) {
-      errors.push('Assertion ID is required');
+      errors.push("Assertion ID is required");
     }
     if (!assertion.badge) {
-      errors.push('Badge reference is required');
+      errors.push("Badge reference is required");
     }
     if (!assertion.issuedOn) {
-      errors.push('Issue date is required');
+      errors.push("Issue date is required");
     }
     if (!assertion.recipient?.identity) {
-      errors.push('Recipient identity is required');
+      errors.push("Recipient identity is required");
     }
 
     return errors;
@@ -129,30 +133,33 @@ export class BadgeService {
     if (isOB2Assertion(badge)) {
       // Handle OB2 Assertion
       const badgeClass =
-        typeof badge.badge === 'string'
-          ? { name: 'Unknown Badge', description: '', image: '' }
+        typeof badge.badge === "string"
+          ? { name: "Unknown Badge", description: "", image: "" }
           : badge.badge;
 
       // Handle issuer which could be a string or Profile object
-      let issuerName = 'Unknown Issuer';
+      let issuerName = "Unknown Issuer";
       let issuerUrl: string | undefined;
       let issuerImage: string | undefined;
 
-      if (typeof badgeClass === 'object' && 'issuer' in badgeClass) {
-        if (typeof badgeClass.issuer === 'string') {
+      if (typeof badgeClass === "object" && "issuer" in badgeClass) {
+        if (typeof badgeClass.issuer === "string") {
           // Issuer is a string reference
-          issuerName = 'Unknown Issuer';
-        } else if (typeof badgeClass.issuer === 'object') {
+          issuerName = "Unknown Issuer";
+        } else if (typeof badgeClass.issuer === "object") {
           // Issuer is a Profile object
           issuerName = badgeClass.issuer.name;
-          issuerUrl = typeof badgeClass.issuer.url === 'string' ? badgeClass.issuer.url : undefined;
+          issuerUrl =
+            typeof badgeClass.issuer.url === "string"
+              ? badgeClass.issuer.url
+              : undefined;
 
           if (badgeClass.issuer.image) {
-            if (typeof badgeClass.issuer.image === 'string') {
+            if (typeof badgeClass.issuer.image === "string") {
               issuerImage = badgeClass.issuer.image;
             } else if (
-              typeof badgeClass.issuer.image === 'object' &&
-              'id' in badgeClass.issuer.image
+              typeof badgeClass.issuer.image === "object" &&
+              "id" in badgeClass.issuer.image
             ) {
               issuerImage = badgeClass.issuer.image.id as string;
             }
@@ -161,11 +168,14 @@ export class BadgeService {
       }
 
       // Handle image which could be a string or Image object
-      let badgeImage = '';
-      if (typeof badgeClass === 'object' && 'image' in badgeClass) {
-        if (typeof badgeClass.image === 'string') {
+      let badgeImage = "";
+      if (typeof badgeClass === "object" && "image" in badgeClass) {
+        if (typeof badgeClass.image === "string") {
           badgeImage = badgeClass.image;
-        } else if (typeof badgeClass.image === 'object' && 'id' in badgeClass.image) {
+        } else if (
+          typeof badgeClass.image === "object" &&
+          "id" in badgeClass.image
+        ) {
           badgeImage = badgeClass.image.id as string;
         }
       }
@@ -173,13 +183,13 @@ export class BadgeService {
       return {
         id: badge.id as string,
         name:
-          typeof badgeClass === 'object' && 'name' in badgeClass
+          typeof badgeClass === "object" && "name" in badgeClass
             ? badgeClass.name
-            : 'Unknown Badge',
+            : "Unknown Badge",
         description:
-          typeof badgeClass === 'object' && 'description' in badgeClass
+          typeof badgeClass === "object" && "description" in badgeClass
             ? badgeClass.description
-            : '',
+            : "",
         image: badgeImage,
         issuer: {
           name: issuerName,
@@ -195,73 +205,74 @@ export class BadgeService {
       const issuer = badge.issuer;
 
       // Handle achievement name which could be a string or array
-      let achievementName = 'Unknown Badge';
-      if (typeof achievement === 'object') {
+      let achievementName = "Unknown Badge";
+      if (typeof achievement === "object") {
         if (Array.isArray(achievement)) {
           // If achievement is an array, use the first one's name
-          if (achievement.length > 0 && 'name' in achievement[0]) {
+          if (achievement.length > 0 && "name" in achievement[0]) {
             const name = achievement[0].name;
-            achievementName = typeof name === 'string' ? name : 'Unknown Badge';
+            achievementName = typeof name === "string" ? name : "Unknown Badge";
           }
-        } else if ('name' in achievement) {
+        } else if ("name" in achievement) {
           // Single achievement object
           const name = achievement.name;
-          if (typeof name === 'string') {
+          if (typeof name === "string") {
             achievementName = name;
           } else if (Array.isArray(name) && name.length > 0) {
-            achievementName = typeof name[0] === 'string' ? name[0] : 'Unknown Badge';
+            achievementName =
+              typeof name[0] === "string" ? name[0] : "Unknown Badge";
           }
         }
       }
 
       // Handle achievement description
-      let achievementDescription = '';
+      let achievementDescription = "";
       if (
-        typeof achievement === 'object' &&
+        typeof achievement === "object" &&
         !Array.isArray(achievement) &&
-        'description' in achievement
+        "description" in achievement
       ) {
         const description = achievement.description;
-        if (typeof description === 'string') {
+        if (typeof description === "string") {
           achievementDescription = description;
         }
       }
 
       // Handle achievement image
-      let achievementImage = '';
+      let achievementImage = "";
       if (
-        typeof achievement === 'object' &&
+        typeof achievement === "object" &&
         !Array.isArray(achievement) &&
-        'image' in achievement
+        "image" in achievement
       ) {
         const image = achievement.image;
-        if (typeof image === 'string') {
+        if (typeof image === "string") {
           achievementImage = image;
-        } else if (typeof image === 'object' && image && 'id' in image) {
+        } else if (typeof image === "object" && image && "id" in image) {
           achievementImage = image.id as string;
         }
       }
 
       // Handle issuer information
-      let issuerName = 'Unknown Issuer';
+      let issuerName = "Unknown Issuer";
       let issuerUrl: string | undefined;
       let issuerImage: string | undefined;
 
-      if (typeof issuer === 'object') {
-        if ('name' in issuer) {
+      if (typeof issuer === "object") {
+        if ("name" in issuer) {
           const name = issuer.name;
-          issuerName = typeof name === 'string' ? name : 'Unknown Issuer';
+          issuerName = typeof name === "string" ? name : "Unknown Issuer";
         }
 
-        if ('url' in issuer) {
+        if ("url" in issuer) {
           issuerUrl = issuer.url as string;
         }
 
-        if ('image' in issuer) {
+        if ("image" in issuer) {
           const image = issuer.image;
-          if (typeof image === 'string') {
+          if (typeof image === "string") {
             issuerImage = image;
-          } else if (typeof image === 'object' && image && 'id' in image) {
+          } else if (typeof image === "object" && image && "id" in image) {
             issuerImage = image.id as string;
           }
         }
@@ -279,18 +290,20 @@ export class BadgeService {
         },
         // VC Data Model 2.0 uses validFrom/validUntil, fallback to legacy issuanceDate/expirationDate
         issuedOn: (badge.validFrom || badge.issuanceDate) as string,
-        expires: (badge.validUntil || badge.expirationDate) as string | undefined,
+        expires: (badge.validUntil || badge.expirationDate) as
+          | string
+          | undefined,
       };
     }
 
     // Fallback for unknown format
     return {
-      id: 'unknown',
-      name: 'Unknown Badge',
-      description: 'Badge format not recognized',
-      image: '',
+      id: "unknown",
+      name: "Unknown Badge",
+      description: "Badge format not recognized",
+      image: "",
       issuer: {
-        name: 'Unknown Issuer',
+        name: "Unknown Issuer",
       },
       issuedOn: new Date().toISOString(),
     };

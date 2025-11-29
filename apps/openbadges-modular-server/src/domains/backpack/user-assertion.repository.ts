@@ -1,10 +1,13 @@
 /**
  * Interface for UserAssertion repositories
  */
-import type { UserAssertion } from './user-assertion.entity';
-import type { Shared } from 'openbadges-types';
-import type { UserAssertionStatus } from './backpack.types';
-import type { UserAssertionCreateParams, UserAssertionQueryParams } from './repository.types';
+import type { UserAssertion } from "./user-assertion.entity";
+import type { Shared } from "openbadges-types";
+import type { UserAssertionStatus } from "./backpack.types";
+import type {
+  UserAssertionCreateParams,
+  UserAssertionQueryParams,
+} from "./repository.types";
 
 export interface UserAssertionRepository {
   /**
@@ -14,7 +17,11 @@ export interface UserAssertionRepository {
    * @param metadata Optional metadata about the user-assertion relationship
    * @returns The created user assertion
    */
-  addAssertion(userId: Shared.IRI, assertionId: Shared.IRI, metadata?: Record<string, unknown>): Promise<UserAssertion>;
+  addAssertion(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+    metadata?: Record<string, unknown>,
+  ): Promise<UserAssertion>;
 
   /**
    * Adds an assertion to a user's backpack using params object
@@ -29,7 +36,10 @@ export interface UserAssertionRepository {
    * @param assertionId The ID of the assertion to remove
    * @returns True if the assertion was removed, false otherwise
    */
-  removeAssertion(userId: Shared.IRI, assertionId: Shared.IRI): Promise<boolean>;
+  removeAssertion(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+  ): Promise<boolean>;
 
   /**
    * Updates the status of an assertion in a user's backpack
@@ -38,14 +48,21 @@ export interface UserAssertionRepository {
    * @param status The new status of the assertion
    * @returns True if the assertion status was updated, false otherwise
    */
-  updateStatus(userId: Shared.IRI, assertionId: Shared.IRI, status: UserAssertionStatus): Promise<boolean>;
+  updateStatus(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+    status: UserAssertionStatus,
+  ): Promise<boolean>;
 
   /**
    * Gets all assertions in a user's backpack
    * @param userId The ID of the platform user
    * @returns An array of assertions in the user's backpack
    */
-  getUserAssertions(userId: Shared.IRI, params?: UserAssertionQueryParams): Promise<UserAssertion[]>;
+  getUserAssertions(
+    userId: Shared.IRI,
+    params?: UserAssertionQueryParams,
+  ): Promise<UserAssertion[]>;
 
   /**
    * Checks if a user has a specific assertion in their backpack
@@ -61,5 +78,8 @@ export interface UserAssertionRepository {
    * @param assertionId The ID of the assertion
    * @returns The user assertion if found, null otherwise
    */
-  findByUserAndAssertion(userId: Shared.IRI, assertionId: Shared.IRI): Promise<UserAssertion | null>;
+  findByUserAndAssertion(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+  ): Promise<UserAssertion | null>;
 }

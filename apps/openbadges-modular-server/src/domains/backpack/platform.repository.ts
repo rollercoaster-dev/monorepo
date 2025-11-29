@@ -1,9 +1,13 @@
 /**
  * Interface for Platform repositories
  */
-import type { Platform } from './platform.entity';
-import type { Shared } from 'openbadges-types';
-import type { PlatformCreateParams, PlatformUpdateParams, PlatformQueryParams } from './repository.types';
+import type { Platform } from "./platform.entity";
+import type { Shared } from "openbadges-types";
+import type {
+  PlatformCreateParams,
+  PlatformUpdateParams,
+  PlatformQueryParams,
+} from "./repository.types";
 
 export interface PlatformRepository {
   /**
@@ -39,7 +43,10 @@ export interface PlatformRepository {
    * @param platform The updated platform data
    * @returns The updated platform if found, null otherwise
    */
-  update(id: Shared.IRI, params: PlatformUpdateParams): Promise<Platform | null>;
+  update(
+    id: Shared.IRI,
+    params: PlatformUpdateParams,
+  ): Promise<Platform | null>;
 
   /**
    * Deletes a platform

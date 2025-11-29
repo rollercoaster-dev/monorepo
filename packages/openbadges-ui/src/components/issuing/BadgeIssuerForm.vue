@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from 'vue';
-import { useBadgeIssuer } from '@composables/useBadgeIssuer';
-import type { OB2 } from '@/types';
-import { createIRI } from '@/utils/type-helpers';
+import { ref, watch, onBeforeUnmount } from "vue";
+import { useBadgeIssuer } from "@composables/useBadgeIssuer";
+import type { OB2 } from "@/types";
+import { createIRI } from "@/utils/type-helpers";
 
 interface Props {
   initialBadgeClass?: Partial<OB2.BadgeClass>;
@@ -13,14 +13,14 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   initialBadgeClass: () => ({}),
-  initialRecipientEmail: '',
+  initialRecipientEmail: "",
   updateDebounceMs: 300,
 });
 
 const emit = defineEmits<{
-  (e: 'badge-issued', assertion: OB2.Assertion): void;
-  (e: 'reset'): void;
-  (e: 'update', payload: { badge: Partial<OB2.BadgeClass> }): void;
+  (e: "badge-issued", assertion: OB2.Assertion): void;
+  (e: "reset"): void;
+  (e: "update", payload: { badge: Partial<OB2.BadgeClass> }): void;
 }>();
 
 // Use the badge issuer composable
@@ -37,7 +37,7 @@ if (props.initialRecipientEmail) {
 // Debounced update emission for live preview
 const updateTimer = ref<ReturnType<typeof setTimeout> | undefined>(undefined);
 const emitUpdate = () => {
-  emit('update', { badge: { ...state.badgeClass } });
+  emit("update", { badge: { ...state.badgeClass } });
 };
 const scheduleEmitUpdate = () => {
   if (updateTimer.value) {
@@ -52,38 +52,40 @@ onBeforeUnmount(() => {
   }
 });
 
-
 // Helper refs for form fields that need special handling
-const tagsInput = ref('');
-const criteriaText = ref('');
-const issuerName = ref('');
-const issuerUrl = ref('');
-const badgeImageUrl = ref('');
+const tagsInput = ref("");
+const criteriaText = ref("");
+const issuerName = ref("");
+const issuerUrl = ref("");
+const badgeImageUrl = ref("");
 
 // Initialize from badge class if available
 if (state.badgeClass.tags && state.badgeClass.tags.length > 0) {
-  tagsInput.value = state.badgeClass.tags.join(', ');
+  tagsInput.value = state.badgeClass.tags.join(", ");
 }
 if (
   state.badgeClass.criteria &&
-  typeof state.badgeClass.criteria === 'object' &&
-  'narrative' in state.badgeClass.criteria
+  typeof state.badgeClass.criteria === "object" &&
+  "narrative" in state.badgeClass.criteria
 ) {
   criteriaText.value = state.badgeClass.criteria.narrative as string;
 }
-if (typeof state.badgeClass.issuer === 'object') {
-  issuerName.value = state.badgeClass.issuer.name || '';
-  issuerUrl.value = state.badgeClass.issuer.url || '';
-} else if (typeof state.badgeClass.issuer === 'string') {
+if (typeof state.badgeClass.issuer === "object") {
+  issuerName.value = state.badgeClass.issuer.name || "";
+  issuerUrl.value = state.badgeClass.issuer.url || "";
+} else if (typeof state.badgeClass.issuer === "string") {
   // If issuer is a string (URL), we'll need to fetch it or allow user to enter details
-  issuerName.value = 'Unknown Issuer';
+  issuerName.value = "Unknown Issuer";
 }
 
 // Handle badge image which could be a string or an object with an id field
 if (state.badgeClass.image) {
-  if (typeof state.badgeClass.image === 'string') {
+  if (typeof state.badgeClass.image === "string") {
     badgeImageUrl.value = state.badgeClass.image;
-  } else if (typeof state.badgeClass.image === 'object' && 'id' in state.badgeClass.image) {
+  } else if (
+    typeof state.badgeClass.image === "object" &&
+    "id" in state.badgeClass.image
+  ) {
     badgeImageUrl.value = state.badgeClass.image.id as string;
   }
 }
@@ -92,7 +94,7 @@ if (state.badgeClass.image) {
 watch(tagsInput, (newValue) => {
   if (newValue.trim()) {
     state.badgeClass.tags = newValue
-      .split(',')
+      .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
   } else {
@@ -103,10 +105,10 @@ watch(tagsInput, (newValue) => {
 
 watch(criteriaText, (newValue) => {
   if (!state.badgeClass.criteria) {
-    state.badgeClass.criteria = { narrative: '' };
+    state.badgeClass.criteria = { narrative: "" };
   }
 
-  if (typeof state.badgeClass.criteria === 'object') {
+  if (typeof state.badgeClass.criteria === "object") {
     (state.badgeClass.criteria as OB2.Criteria).narrative = newValue;
   } else {
     // If criteria is an IRI, replace it with an object
@@ -116,16 +118,16 @@ watch(criteriaText, (newValue) => {
 });
 
 watch([issuerName, issuerUrl], ([newName, newUrl]) => {
-  if (typeof state.badgeClass.issuer !== 'object') {
+  if (typeof state.badgeClass.issuer !== "object") {
     state.badgeClass.issuer = {
-      id: createIRI(state.badgeClass.id.replace(/\/badge\/.*$/, '/issuer')),
-      type: 'Profile',
-      name: '',
+      id: createIRI(state.badgeClass.id.replace(/\/badge\/.*$/, "/issuer")),
+      type: "Profile",
+      name: "",
     };
   }
 
   // Ensure issuer is an object before setting properties
-  if (typeof state.badgeClass.issuer === 'object') {
+  if (typeof state.badgeClass.issuer === "object") {
     (state.badgeClass.issuer as OB2.Profile).name = newName;
     if (newUrl) {
       (state.badgeClass.issuer as OB2.Profile).url = createIRI(newUrl);
@@ -140,13 +142,13 @@ watch(badgeImageUrl, (newValue) => {
     // Create an Image object with the URL as the id
     state.badgeClass.image = {
       id: createIRI(newValue),
-      type: 'Image',
+      type: "Image",
     };
   } else {
     // If image is required, provide a default empty image instead of undefined
     state.badgeClass.image = {
-      id: createIRI(''),
-      type: 'Image',
+      id: createIRI(""),
+      type: "Image",
     };
   }
   scheduleEmitUpdate();
@@ -154,57 +156,50 @@ watch(badgeImageUrl, (newValue) => {
 // Watch name and description changes to emit updates
 watch(
   () => state.badgeClass.name,
-  () => scheduleEmitUpdate()
+  () => scheduleEmitUpdate(),
 );
 
 watch(
   () => state.badgeClass.description,
-  () => scheduleEmitUpdate()
+  () => scheduleEmitUpdate(),
 );
-
 
 // Check if a specific field has an error
 const hasError = (field: string): boolean => {
-  return state.errors.some((error) => error.toLowerCase().includes(field.toLowerCase()));
+  return state.errors.some((error) =>
+    error.toLowerCase().includes(field.toLowerCase()),
+  );
 };
 
 // Handle form submission
 const handleSubmit = async () => {
   const assertion = await issueBadge();
   if (assertion) {
-    emit('badge-issued', assertion);
+    emit("badge-issued", assertion);
   }
 };
 
 // Reset the form
 const resetForm = () => {
   resetIssuerForm();
-  tagsInput.value = '';
-  criteriaText.value = '';
-  issuerName.value = '';
-  issuerUrl.value = '';
-  badgeImageUrl.value = '';
-  emit('reset');
+  tagsInput.value = "";
+  criteriaText.value = "";
+  issuerName.value = "";
+  issuerUrl.value = "";
+  badgeImageUrl.value = "";
+  emit("reset");
 };
 </script>
 
 <template>
   <div class="manus-badge-issuer-form">
-    <form
-      novalidate
-      @submit.prevent="handleSubmit"
-    >
+    <form novalidate @submit.prevent="handleSubmit">
       <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">
-          Badge Information
-        </legend>
+        <legend class="manus-form-section-title">Badge Information</legend>
 
         <!-- Badge Name -->
         <div class="manus-form-field">
-          <label
-            for="badge-name"
-            class="manus-form-label"
-          >Badge Name *</label>
+          <label for="badge-name" class="manus-form-label">Badge Name *</label>
           <input
             id="badge-name"
             v-model="state.badgeClass.name"
@@ -213,7 +208,7 @@ const resetForm = () => {
             :class="{ 'manus-form-input-error': hasError('name') }"
             required
             aria-describedby="badge-name-error"
-          >
+          />
           <div
             v-if="hasError('name')"
             id="badge-name-error"
@@ -226,10 +221,9 @@ const resetForm = () => {
 
         <!-- Badge Description -->
         <div class="manus-form-field">
-          <label
-            for="badge-description"
-            class="manus-form-label"
-          >Description *</label>
+          <label for="badge-description" class="manus-form-label"
+            >Description *</label
+          >
           <textarea
             id="badge-description"
             v-model="state.badgeClass.description"
@@ -251,10 +245,7 @@ const resetForm = () => {
 
         <!-- Badge Image URL -->
         <div class="manus-form-field">
-          <label
-            for="badge-image"
-            class="manus-form-label"
-          >Image URL *</label>
+          <label for="badge-image" class="manus-form-label">Image URL *</label>
           <input
             id="badge-image"
             v-model="badgeImageUrl"
@@ -264,7 +255,7 @@ const resetForm = () => {
             placeholder="https://example.com/badge-image.png"
             required
             aria-describedby="badge-image-error badge-image-help"
-          >
+          />
           <div
             v-if="hasError('image')"
             id="badge-image-error"
@@ -273,20 +264,15 @@ const resetForm = () => {
           >
             Valid badge image URL is required
           </div>
-          <div
-            id="badge-image-help"
-            class="manus-form-help"
-          >
-            Provide a URL to an image for this badge (PNG, SVG, or JPEG recommended)
+          <div id="badge-image-help" class="manus-form-help">
+            Provide a URL to an image for this badge (PNG, SVG, or JPEG
+            recommended)
           </div>
         </div>
 
         <!-- Badge Criteria -->
         <div class="manus-form-field">
-          <label
-            for="badge-criteria"
-            class="manus-form-label"
-          >Criteria</label>
+          <label for="badge-criteria" class="manus-form-label">Criteria</label>
           <textarea
             id="badge-criteria"
             v-model="criteriaText"
@@ -298,10 +284,7 @@ const resetForm = () => {
 
         <!-- Badge Tags -->
         <div class="manus-form-field">
-          <label
-            for="badge-tags"
-            class="manus-form-label"
-          >Tags</label>
+          <label for="badge-tags" class="manus-form-label">Tags</label>
           <input
             id="badge-tags"
             v-model="tagsInput"
@@ -309,27 +292,21 @@ const resetForm = () => {
             class="manus-form-input"
             placeholder="Enter comma-separated tags"
             aria-describedby="badge-tags-help"
-          >
-          <div
-            id="badge-tags-help"
-            class="manus-form-help"
-          >
+          />
+          <div id="badge-tags-help" class="manus-form-help">
             Optional: Add comma-separated tags to help categorize this badge
           </div>
         </div>
       </fieldset>
 
       <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">
-          Issuer Information
-        </legend>
+        <legend class="manus-form-section-title">Issuer Information</legend>
 
         <!-- Issuer Name -->
         <div class="manus-form-field">
-          <label
-            for="issuer-name"
-            class="manus-form-label"
-          >Issuer Name *</label>
+          <label for="issuer-name" class="manus-form-label"
+            >Issuer Name *</label
+          >
           <input
             id="issuer-name"
             v-model="issuerName"
@@ -338,7 +315,7 @@ const resetForm = () => {
             :class="{ 'manus-form-input-error': hasError('issuer') }"
             required
             aria-describedby="issuer-name-error"
-          >
+          />
           <div
             v-if="hasError('issuer')"
             id="issuer-name-error"
@@ -351,31 +328,25 @@ const resetForm = () => {
 
         <!-- Issuer URL -->
         <div class="manus-form-field">
-          <label
-            for="issuer-url"
-            class="manus-form-label"
-          >Issuer URL</label>
+          <label for="issuer-url" class="manus-form-label">Issuer URL</label>
           <input
             id="issuer-url"
             v-model="issuerUrl"
             type="url"
             class="manus-form-input"
             placeholder="https://example.org"
-          >
+          />
         </div>
       </fieldset>
 
       <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">
-          Recipient Information
-        </legend>
+        <legend class="manus-form-section-title">Recipient Information</legend>
 
         <!-- Recipient Email -->
         <div class="manus-form-field">
-          <label
-            for="recipient-email"
-            class="manus-form-label"
-          >Recipient Email *</label>
+          <label for="recipient-email" class="manus-form-label"
+            >Recipient Email *</label
+          >
           <input
             id="recipient-email"
             v-model="state.recipientEmail"
@@ -384,7 +355,7 @@ const resetForm = () => {
             :class="{ 'manus-form-input-error': hasError('recipient') }"
             required
             aria-describedby="recipient-email-error"
-          >
+          />
           <div
             v-if="hasError('recipient')"
             id="recipient-email-error"
@@ -425,10 +396,7 @@ const resetForm = () => {
       >
         <p>Please correct the following errors:</p>
         <ul>
-          <li
-            v-for="(error, index) in state.errors"
-            :key="index"
-          >
+          <li v-for="(error, index) in state.errors" :key="index">
             {{ error }}
           </li>
         </ul>

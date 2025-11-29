@@ -5,20 +5,21 @@
  * Includes standardized error handling, logging, transaction support, and query execution patterns.
  */
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import type postgres from 'postgres';
-import { logger, queryLogger } from '@utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
+import { drizzle } from "drizzle-orm/postgres-js";
+import type postgres from "postgres";
+import { logger, queryLogger } from "@utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
 import type {
   PostgresOperationContext,
   PostgresEntityType,
   PostgresQueryMetrics,
   PostgresPaginationParams,
-  PostgresTransaction} from '../types/postgres-database.types';
+  PostgresTransaction,
+} from "../types/postgres-database.types";
 import {
   DEFAULT_POSTGRES_PAGINATION,
   MAX_POSTGRES_PAGINATION_LIMIT,
-} from '../types/postgres-database.types';
+} from "../types/postgres-database.types";
 
 /**
  * Abstract base class for PostgreSQL repositories
@@ -51,7 +52,7 @@ export abstract class BasePostgresRepository {
    */
   protected createOperationContext(
     operation: string,
-    entityId?: Shared.IRI
+    entityId?: Shared.IRI,
   ): PostgresOperationContext {
     return {
       operation,
@@ -77,7 +78,7 @@ export abstract class BasePostgresRepository {
   protected logQueryMetrics(
     context: PostgresOperationContext,
     rowsAffected: number,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): PostgresQueryMetrics {
     const metrics: PostgresQueryMetrics = {
       duration: Date.now() - context.startTime,
@@ -94,7 +95,7 @@ export abstract class BasePostgresRepository {
       context.operation,
       logParams,
       metrics.duration,
-      'postgresql'
+      "postgresql",
     );
 
     return metrics;
@@ -104,17 +105,17 @@ export abstract class BasePostgresRepository {
    * Determines query type from operation string using word boundary regex for accuracy
    */
   private determineQueryType(
-    operation: string
-  ): 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'UNKNOWN' {
+    operation: string,
+  ): "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "UNKNOWN" {
     const upperOp = operation.toUpperCase();
 
     // Use word boundaries to ensure we match complete words, not substrings
-    if (/\bSELECT\b/.test(upperOp)) return 'SELECT';
-    if (/\bINSERT\b/.test(upperOp)) return 'INSERT';
-    if (/\bUPDATE\b/.test(upperOp)) return 'UPDATE';
-    if (/\bDELETE\b/.test(upperOp)) return 'DELETE';
+    if (/\bSELECT\b/.test(upperOp)) return "SELECT";
+    if (/\bINSERT\b/.test(upperOp)) return "INSERT";
+    if (/\bUPDATE\b/.test(upperOp)) return "UPDATE";
+    if (/\bDELETE\b/.test(upperOp)) return "DELETE";
 
-    return 'UNKNOWN'; // Return UNKNOWN instead of guessing
+    return "UNKNOWN"; // Return UNKNOWN instead of guessing
   }
 
   /**
@@ -123,7 +124,7 @@ export abstract class BasePostgresRepository {
   protected async executeOperation<T>(
     context: PostgresOperationContext,
     operation: () => Promise<T>,
-    rowsAffected?: number
+    rowsAffected?: number,
   ): Promise<T> {
     try {
       const result = await operation();
@@ -144,7 +145,7 @@ export abstract class BasePostgresRepository {
   protected async executeTransaction<T>(
     context: PostgresOperationContext,
     operation: (tx: PostgresTransaction) => Promise<T>,
-    rowsAffected?: number
+    rowsAffected?: number,
   ): Promise<T> {
     try {
       const db = this.getDatabase();
@@ -187,7 +188,7 @@ export abstract class BasePostgresRepository {
   protected async executeQuery<T>(
     context: PostgresOperationContext,
     query: (db: ReturnType<typeof drizzle>) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T[]> {
     try {
       const db = this.getDatabase();
@@ -209,7 +210,7 @@ export abstract class BasePostgresRepository {
   protected async executeSingleQuery<T>(
     context: PostgresOperationContext,
     query: (db: ReturnType<typeof drizzle>) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T | null> {
     try {
       const db = this.getDatabase();
@@ -232,7 +233,7 @@ export abstract class BasePostgresRepository {
   protected async executeUpdate<T>(
     context: PostgresOperationContext,
     update: (db: ReturnType<typeof drizzle>) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T | null> {
     try {
       const db = this.getDatabase();
@@ -254,7 +255,7 @@ export abstract class BasePostgresRepository {
    */
   protected async executeDelete(
     context: PostgresOperationContext,
-    deleteOp: (db: ReturnType<typeof drizzle>) => Promise<unknown[]>
+    deleteOp: (db: ReturnType<typeof drizzle>) => Promise<unknown[]>,
   ): Promise<boolean> {
     try {
       const db = this.getDatabase();
@@ -276,7 +277,7 @@ export abstract class BasePostgresRepository {
    * Helper method to validate entity ID format
    */
   protected validateEntityId(id: Shared.IRI, operation: string): void {
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+    if (!id || typeof id !== "string" || id.trim().length === 0) {
       throw new Error(`Invalid entity ID provided for ${operation}: ${id}`);
     }
   }
@@ -301,7 +302,7 @@ export abstract class BasePostgresRepository {
    * Validates and normalizes pagination parameters
    */
   protected validatePagination(
-    params?: PostgresPaginationParams
+    params?: PostgresPaginationParams,
   ): Required<PostgresPaginationParams> {
     const limit = params?.limit ?? DEFAULT_POSTGRES_PAGINATION.limit;
     const offset = params?.offset ?? DEFAULT_POSTGRES_PAGINATION.offset;
@@ -309,19 +310,19 @@ export abstract class BasePostgresRepository {
     // Validate limit
     if (limit <= 0) {
       throw new Error(
-        `Invalid pagination limit: ${limit}. Must be greater than 0.`
+        `Invalid pagination limit: ${limit}. Must be greater than 0.`,
       );
     }
     if (limit > MAX_POSTGRES_PAGINATION_LIMIT) {
       throw new Error(
-        `Pagination limit ${limit} exceeds maximum allowed limit of ${MAX_POSTGRES_PAGINATION_LIMIT}.`
+        `Pagination limit ${limit} exceeds maximum allowed limit of ${MAX_POSTGRES_PAGINATION_LIMIT}.`,
       );
     }
 
     // Validate offset
     if (offset < 0) {
       throw new Error(
-        `Invalid pagination offset: ${offset}. Must be 0 or greater.`
+        `Invalid pagination offset: ${offset}. Must be 0 or greater.`,
       );
     }
 
@@ -339,8 +340,8 @@ export abstract class BasePostgresRepository {
         entityType: this.getEntityType(),
         tableName: this.getTableName(),
         recommendation:
-          'Consider adding pagination parameters to prevent memory issues with large datasets',
-      }
+          "Consider adding pagination parameters to prevent memory issues with large datasets",
+      },
     );
   }
 }

@@ -5,17 +5,17 @@
  * and the Data Mapper pattern with the base repository class.
  */
 
-import { eq } from 'drizzle-orm';
-import type postgres from 'postgres';
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
-import { badgeClasses } from '../schema';
-import { PostgresBadgeClassMapper } from '../mappers/postgres-badge-class.mapper';
-import type { Shared } from 'openbadges-types';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import { BasePostgresRepository } from './base-postgres.repository';
-import type { PostgresEntityType } from '../types/postgres-database.types';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+import { eq } from "drizzle-orm";
+import type postgres from "postgres";
+import { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import type { BadgeClassRepository } from "@domains/badgeClass/badgeClass.repository";
+import { badgeClasses } from "../schema";
+import { PostgresBadgeClassMapper } from "../mappers/postgres-badge-class.mapper";
+import type { Shared } from "openbadges-types";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import { BasePostgresRepository } from "./base-postgres.repository";
+import type { PostgresEntityType } from "../types/postgres-database.types";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 export class PostgresBadgeClassRepository
   extends BasePostgresRepository
@@ -32,18 +32,18 @@ export class PostgresBadgeClassRepository
    * Returns the entity type for this repository
    */
   protected getEntityType(): PostgresEntityType {
-    return 'badgeClass';
+    return "badgeClass";
   }
 
   /**
    * Returns the table name for this repository
    */
   protected getTableName(): string {
-    return 'badge_classes';
+    return "badge_classes";
   }
 
-  async create(badgeClass: Omit<BadgeClass, 'id'>): Promise<BadgeClass> {
-    const context = this.createOperationContext('CREATE BadgeClass');
+  async create(badgeClass: Omit<BadgeClass, "id">): Promise<BadgeClass> {
+    const context = this.createOperationContext("CREATE BadgeClass");
 
     // Use BadgeClass.create to ensure defaults and ID
     const newEntity = BadgeClass.create(badgeClass);
@@ -60,15 +60,15 @@ export class PostgresBadgeClassRepository
           .returning();
         return this.mapper.toDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async findAll(): Promise<BadgeClass[]> {
-    const context = this.createOperationContext('SELECT All BadgeClasses');
+    const context = this.createOperationContext("SELECT All BadgeClasses");
 
     // Log warning for unbounded query
-    this.logUnboundedQueryWarning('findAll');
+    this.logUnboundedQueryWarning("findAll");
 
     return this.executeQuery(context, async (db) => {
       const result = await db.select().from(badgeClasses);
@@ -77,52 +77,52 @@ export class PostgresBadgeClassRepository
   }
 
   async findById(id: Shared.IRI): Promise<BadgeClass | null> {
-    this.validateEntityId(id, 'findById');
-    const context = this.createOperationContext('SELECT BadgeClass by ID', id);
+    this.validateEntityId(id, "findById");
+    const context = this.createOperationContext("SELECT BadgeClass by ID", id);
 
     return this.executeSingleQuery(
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .select()
           .from(badgeClasses)
           .where(eq(badgeClasses.id, dbId));
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id]
+      [id],
     );
   }
 
   async findByIssuer(issuerId: Shared.IRI): Promise<BadgeClass[]> {
-    this.validateEntityId(issuerId, 'findByIssuer');
+    this.validateEntityId(issuerId, "findByIssuer");
     const context = this.createOperationContext(
-      'SELECT BadgeClasses by Issuer',
-      issuerId
+      "SELECT BadgeClasses by Issuer",
+      issuerId,
     );
 
     return this.executeQuery(
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbIssuerId = convertUuid(issuerId as string, 'postgresql', 'to');
+        const dbIssuerId = convertUuid(issuerId as string, "postgresql", "to");
         const result = await db
           .select()
           .from(badgeClasses)
           .where(eq(badgeClasses.issuerId, dbIssuerId));
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [issuerId]
+      [issuerId],
     );
   }
 
   async update(
     id: Shared.IRI,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null> {
-    this.validateEntityId(id, 'update');
-    const context = this.createOperationContext('UPDATE BadgeClass', id);
+    this.validateEntityId(id, "update");
+    const context = this.createOperationContext("UPDATE BadgeClass", id);
 
     // Check if badge class exists
     const existingBadgeClass = await this.findById(id);
@@ -145,7 +145,7 @@ export class PostgresBadgeClassRepository
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .update(badgeClasses)
           .set(record)
@@ -153,17 +153,17 @@ export class PostgresBadgeClassRepository
           .returning();
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id, SensitiveValue.from(record)]
+      [id, SensitiveValue.from(record)],
     );
   }
 
   async delete(id: Shared.IRI): Promise<boolean> {
-    this.validateEntityId(id, 'delete');
-    const context = this.createOperationContext('DELETE BadgeClass', id);
+    this.validateEntityId(id, "delete");
+    const context = this.createOperationContext("DELETE BadgeClass", id);
 
     return this.executeDelete(context, async (db) => {
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
       return await db
         .delete(badgeClasses)
         .where(eq(badgeClasses.id, dbId))

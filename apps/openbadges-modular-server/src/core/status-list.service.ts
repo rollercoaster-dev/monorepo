@@ -5,8 +5,8 @@
  * according to the W3C Bitstring Status List v1.0 specification.
  */
 
-import { StatusList } from '../domains/status-list/status-list.entity';
-import type { StatusListRepository } from '../domains/status-list/status-list.repository';
+import { StatusList } from "../domains/status-list/status-list.entity";
+import type { StatusListRepository } from "../domains/status-list/status-list.repository";
 import type {
   StatusPurpose,
   CreateStatusListParams,
@@ -16,7 +16,7 @@ import type {
   BitstringStatusListEntry,
   BitstringStatusListCredential,
   CredentialStatusEntryData,
-} from '../domains/status-list/status-list.types';
+} from "../domains/status-list/status-list.types";
 import {
   validateBitstringParams,
   createEmptyBitstring,
@@ -24,9 +24,9 @@ import {
   encodeBitstring,
   decodeBitstring,
   getBitstringCapacity,
-} from '../utils/bitstring/bitstring.utils';
-import { logger } from '../utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
+} from "../utils/bitstring/bitstring.utils";
+import { logger } from "../utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
 
 /**
  * StatusList Service class
@@ -45,7 +45,7 @@ export class StatusListService {
    */
   async createStatusList(params: CreateStatusListParams): Promise<StatusList> {
     try {
-      logger.info('Creating new status list', {
+      logger.info("Creating new status list", {
         issuerId: params.issuerId,
         purpose: params.purpose,
         statusSize: params.statusSize,
@@ -61,7 +61,7 @@ export class StatusListService {
       // Save to repository
       const savedStatusList = await this.repository.create(statusList);
 
-      logger.info('Status list created successfully', {
+      logger.info("Status list created successfully", {
         id: savedStatusList.id,
         issuerId: savedStatusList.issuerId,
         purpose: savedStatusList.purpose,
@@ -70,7 +70,7 @@ export class StatusListService {
 
       return savedStatusList;
     } catch (error) {
-      logger.error('Failed to create status list', {
+      logger.error("Failed to create status list", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
@@ -85,11 +85,11 @@ export class StatusListService {
    */
   async getStatusList(id: string): Promise<StatusList | null> {
     try {
-      logger.debug('Retrieving status list', { id });
+      logger.debug("Retrieving status list", { id });
 
       return await this.repository.findById(id);
     } catch (error) {
-      logger.error('Failed to retrieve status list', {
+      logger.error("Failed to retrieve status list", {
         error: error instanceof Error ? error.message : String(error),
         id,
       });
@@ -104,11 +104,11 @@ export class StatusListService {
    */
   async findStatusLists(params: StatusListQueryParams): Promise<StatusList[]> {
     try {
-      logger.debug('Finding status lists', { ...params });
+      logger.debug("Finding status lists", { ...params });
 
       return await this.repository.findMany(params);
     } catch (error) {
-      logger.error('Failed to find status lists', {
+      logger.error("Failed to find status lists", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
@@ -126,10 +126,10 @@ export class StatusListService {
   async findOrCreateStatusList(
     issuerId: string,
     purpose: StatusPurpose,
-    statusSize: number = 1
+    statusSize: number = 1,
   ): Promise<StatusList> {
     try {
-      logger.debug('Finding or creating status list', {
+      logger.debug("Finding or creating status list", {
         issuerId,
         purpose,
         statusSize,
@@ -139,11 +139,11 @@ export class StatusListService {
       const existingStatusList = await this.repository.findAvailableStatusList(
         issuerId,
         purpose,
-        statusSize
+        statusSize,
       );
 
       if (existingStatusList) {
-        logger.info('Found existing status list with capacity', {
+        logger.info("Found existing status list with capacity", {
           id: existingStatusList.id,
           usedEntries: existingStatusList.usedEntries,
           totalEntries: existingStatusList.totalEntries,
@@ -158,7 +158,7 @@ export class StatusListService {
         statusSize,
       });
 
-      logger.info('Created new status list', {
+      logger.info("Created new status list", {
         id: newStatusList.id,
         issuerId,
         purpose,
@@ -167,7 +167,7 @@ export class StatusListService {
 
       return newStatusList;
     } catch (error) {
-      logger.error('Failed to find or create status list', {
+      logger.error("Failed to find or create status list", {
         error: error instanceof Error ? error.message : String(error),
         issuerId,
         purpose,
@@ -187,10 +187,10 @@ export class StatusListService {
   static async generateBitstring(
     entries: Array<{ index: number; value: number }>,
     totalEntries: number = 131072,
-    statusSize: number = 1
+    statusSize: number = 1,
   ): Promise<string> {
     try {
-      logger.debug('Generating bitstring', {
+      logger.debug("Generating bitstring", {
         entriesCount: entries.length,
         totalEntries,
         statusSize,
@@ -208,14 +208,14 @@ export class StatusListService {
           bitstring,
           entry.index,
           entry.value,
-          statusSize
+          statusSize,
         );
       }
 
       // Encode the bitstring
       const encodedList = await encodeBitstring(bitstring);
 
-      logger.info('Bitstring generated successfully', {
+      logger.info("Bitstring generated successfully", {
         entriesCount: entries.length,
         totalEntries,
         statusSize,
@@ -224,7 +224,7 @@ export class StatusListService {
 
       return encodedList;
     } catch (error) {
-      logger.error('Failed to generate bitstring', {
+      logger.error("Failed to generate bitstring", {
         error: error instanceof Error ? error.message : String(error),
         entriesCount: entries.length,
         totalEntries,
@@ -242,17 +242,17 @@ export class StatusListService {
    */
   static async expandBitstring(
     encodedList: string,
-    statusSize: number = 1
+    statusSize: number = 1,
   ): Promise<Uint8Array> {
     try {
-      logger.debug('Expanding bitstring', {
+      logger.debug("Expanding bitstring", {
         encodedLength: encodedList.length,
         statusSize,
       });
 
       const bitstring = await decodeBitstring(encodedList);
 
-      logger.debug('Bitstring expanded successfully', {
+      logger.debug("Bitstring expanded successfully", {
         encodedLength: encodedList.length,
         decodedSize: bitstring.length,
         capacity: getBitstringCapacity(bitstring, statusSize),
@@ -260,7 +260,7 @@ export class StatusListService {
 
       return bitstring;
     } catch (error) {
-      logger.error('Failed to expand bitstring', {
+      logger.error("Failed to expand bitstring", {
         error: error instanceof Error ? error.message : String(error),
         encodedLength: encodedList.length,
         statusSize,
@@ -275,10 +275,10 @@ export class StatusListService {
    * @returns Result of the status update operation
    */
   async updateCredentialStatus(
-    params: UpdateCredentialStatusParams
+    params: UpdateCredentialStatusParams,
   ): Promise<StatusUpdateResult> {
     try {
-      logger.info('Updating credential status', {
+      logger.info("Updating credential status", {
         credentialId: params.credentialId,
         status: params.status,
         purpose: params.purpose,
@@ -287,7 +287,7 @@ export class StatusListService {
 
       return await this.repository.updateCredentialStatus(params);
     } catch (error) {
-      logger.error('Failed to update credential status', {
+      logger.error("Failed to update credential status", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
@@ -309,10 +309,10 @@ export class StatusListService {
   createStatusListEntry(
     credentialId: string,
     statusList: StatusList,
-    index: number
+    index: number,
   ): BitstringStatusListEntry {
     try {
-      logger.debug('Creating status list entry', {
+      logger.debug("Creating status list entry", {
         credentialId,
         statusListId: statusList.id,
         index,
@@ -321,7 +321,7 @@ export class StatusListService {
 
       const entry: BitstringStatusListEntry = {
         id: `${credentialId}#status-${statusList.purpose}` as Shared.IRI,
-        type: 'BitstringStatusListEntry',
+        type: "BitstringStatusListEntry",
         statusPurpose: statusList.purpose,
         statusListIndex: index.toString(),
         statusListCredential: statusList.id as Shared.IRI,
@@ -333,7 +333,7 @@ export class StatusListService {
         entry.statusMessage = statusList.generateDefaultStatusMessages();
       }
 
-      logger.debug('Status list entry created', {
+      logger.debug("Status list entry created", {
         credentialId,
         entryId: entry.id,
         statusListIndex: entry.statusListIndex,
@@ -341,7 +341,7 @@ export class StatusListService {
 
       return entry;
     } catch (error) {
-      logger.error('Failed to create status list entry', {
+      logger.error("Failed to create status list entry", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         statusListId: statusList.id,
@@ -359,17 +359,17 @@ export class StatusListService {
    */
   toStatusListCredential(
     statusList: StatusList,
-    issuerData: { id: string; name?: string; url?: string }
+    issuerData: { id: string; name?: string; url?: string },
   ): BitstringStatusListCredential {
     try {
-      logger.debug('Converting to status list credential', {
+      logger.debug("Converting to status list credential", {
         statusListId: statusList.id,
         issuerId: issuerData.id,
       });
 
       const credential = statusList.toBitstringStatusListCredential(issuerData);
 
-      logger.debug('Status list credential created', {
+      logger.debug("Status list credential created", {
         credentialId: credential.id,
         issuerId: credential.issuer,
         purpose: credential.credentialSubject.statusPurpose,
@@ -377,7 +377,7 @@ export class StatusListService {
 
       return credential;
     } catch (error) {
-      logger.error('Failed to convert to status list credential', {
+      logger.error("Failed to convert to status list credential", {
         error: error instanceof Error ? error.message : String(error),
         statusListId: statusList.id,
         issuerId: issuerData.id,
@@ -393,16 +393,16 @@ export class StatusListService {
    */
   async getNextAvailableIndex(statusListId: string): Promise<number | null> {
     try {
-      logger.debug('Getting next available index', { statusListId });
+      logger.debug("Getting next available index", { statusListId });
 
       const statusList = await this.repository.findById(statusListId);
       if (!statusList) {
-        throw new Error('Status list not found');
+        throw new Error("Status list not found");
       }
 
       // Check if there's capacity
       if (statusList.usedEntries >= statusList.totalEntries) {
-        logger.warn('Status list is at capacity', {
+        logger.warn("Status list is at capacity", {
           statusListId,
           usedEntries: statusList.usedEntries,
           totalEntries: statusList.totalEntries,
@@ -413,7 +413,7 @@ export class StatusListService {
       // Get the next available index (simple sequential allocation)
       const nextIndex = statusList.usedEntries;
 
-      logger.debug('Next available index found', {
+      logger.debug("Next available index found", {
         statusListId,
         nextIndex,
         usedEntries: statusList.usedEntries,
@@ -421,7 +421,7 @@ export class StatusListService {
 
       return nextIndex;
     } catch (error) {
-      logger.error('Failed to get next available index', {
+      logger.error("Failed to get next available index", {
         error: error instanceof Error ? error.message : String(error),
         statusListId,
       });
@@ -443,7 +443,7 @@ export class StatusListService {
     currentStatus: number;
   }): Promise<CredentialStatusEntryData> {
     try {
-      logger.debug('Creating status entry', params);
+      logger.debug("Creating status entry", params);
 
       const statusEntry = await this.repository.createStatusEntry({
         credentialId: params.credentialId,
@@ -461,7 +461,7 @@ export class StatusListService {
         await this.repository.update(statusList);
       }
 
-      logger.info('Status entry created successfully', {
+      logger.info("Status entry created successfully", {
         entryId: statusEntry.id,
         credentialId: params.credentialId,
         statusListId: params.statusListId,
@@ -470,7 +470,7 @@ export class StatusListService {
 
       return statusEntry;
     } catch (error) {
-      logger.error('Failed to create status entry', {
+      logger.error("Failed to create status entry", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
@@ -486,29 +486,29 @@ export class StatusListService {
    */
   async getStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose
+    purpose: StatusPurpose,
   ): Promise<CredentialStatusEntryData | null> {
     try {
-      logger.debug('Getting status entry', { credentialId, purpose });
+      logger.debug("Getting status entry", { credentialId, purpose });
 
       const statusEntry = await this.repository.findStatusEntry(
         credentialId,
-        purpose
+        purpose,
       );
 
       if (statusEntry) {
-        logger.debug('Status entry found', {
+        logger.debug("Status entry found", {
           entryId: statusEntry.id,
           credentialId,
           statusListIndex: statusEntry.statusListIndex,
         });
       } else {
-        logger.debug('No status entry found', { credentialId, purpose });
+        logger.debug("No status entry found", { credentialId, purpose });
       }
 
       return statusEntry;
     } catch (error) {
-      logger.error('Failed to get status entry', {
+      logger.error("Failed to get status entry", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         purpose,
@@ -523,61 +523,61 @@ export class StatusListService {
    * @returns True if valid, throws error if invalid
    */
   async validateStatusListCredential(
-    credential: BitstringStatusListCredential
+    credential: BitstringStatusListCredential,
   ): Promise<boolean> {
     try {
       // Validate required fields
       if (!credential.id) {
-        throw new Error('Status list credential must have an id');
+        throw new Error("Status list credential must have an id");
       }
 
       if (
         !Array.isArray(credential.type) ||
-        !credential.type.includes('BitstringStatusListCredential')
+        !credential.type.includes("BitstringStatusListCredential")
       ) {
         throw new Error(
-          'Status list credential must have type BitstringStatusListCredential'
+          "Status list credential must have type BitstringStatusListCredential",
         );
       }
 
       if (!credential.issuer) {
-        throw new Error('Status list credential must have an issuer');
+        throw new Error("Status list credential must have an issuer");
       }
 
       if (!credential.validFrom) {
-        throw new Error('Status list credential must have validFrom');
+        throw new Error("Status list credential must have validFrom");
       }
 
       if (!credential.credentialSubject) {
-        throw new Error('Status list credential must have credentialSubject');
+        throw new Error("Status list credential must have credentialSubject");
       }
 
       const subject = credential.credentialSubject;
-      if (subject.type !== 'BitstringStatusList') {
+      if (subject.type !== "BitstringStatusList") {
         throw new Error(
-          'Credential subject must have type BitstringStatusList'
+          "Credential subject must have type BitstringStatusList",
         );
       }
 
       if (!subject.statusPurpose) {
-        throw new Error('Status list must have statusPurpose');
+        throw new Error("Status list must have statusPurpose");
       }
 
       if (!subject.encodedList) {
-        throw new Error('Status list must have encodedList');
+        throw new Error("Status list must have encodedList");
       }
 
       // Validate encoded list format
       await decodeBitstring(subject.encodedList);
 
-      logger.debug('Status list credential validation passed', {
+      logger.debug("Status list credential validation passed", {
         credentialId: credential.id,
         purpose: subject.statusPurpose,
       });
 
       return true;
     } catch (error) {
-      logger.error('Status list credential validation failed', {
+      logger.error("Status list credential validation failed", {
         error: error instanceof Error ? error.message : String(error),
         credentialId: credential.id,
       });

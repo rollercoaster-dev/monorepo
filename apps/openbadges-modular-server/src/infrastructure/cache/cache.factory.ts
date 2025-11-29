@@ -5,10 +5,10 @@
  * It provides a centralized way to access caches for different entities.
  */
 
-import type { CacheInterface } from './cache.interface';
-import type { CacheOptions} from './cache.service';
-import { CacheService } from './cache.service';
-import { config } from '../../config/config';
+import type { CacheInterface } from "./cache.interface";
+import type { CacheOptions } from "./cache.service";
+import { CacheService } from "./cache.service";
+import { config } from "../../config/config";
 
 export class CacheFactory {
   private static caches: Map<string, CacheInterface> = new Map();
@@ -22,7 +22,8 @@ export class CacheFactory {
   static getCache(name: string, options?: CacheOptions): CacheInterface {
     if (!this.caches.has(name)) {
       // Use options from config if available
-      const configOptions = config.cache?.entities?.[name] || config.cache?.default || {};
+      const configOptions =
+        config.cache?.entities?.[name] || config.cache?.default || {};
 
       // Merge with provided options, with provided options taking precedence
       const mergedOptions = { ...configOptions, ...options };

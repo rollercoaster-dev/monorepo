@@ -5,16 +5,20 @@
  * between string and Shared.IRI types.
  */
 
-import type { Shared } from 'openbadges-types';
-import type { IRICompatible, ObjectWithIRIs, ObjectWithStrings } from './iri.types';
-import { logger } from '../logging/logger.service';
-import { v4 as uuidv4 } from 'uuid';
+import type { Shared } from "openbadges-types";
+import type {
+  IRICompatible,
+  ObjectWithIRIs,
+  ObjectWithStrings,
+} from "./iri.types";
+import { logger } from "../logging/logger.service";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Checks if a value is a valid IRI (strict: URL or UUID)
  */
 export function isValidIRI(value: unknown): boolean {
-  if (value == null || value === '') return false;
+  if (value == null || value === "") return false;
   try {
     new URL(value.toString());
     return true;
@@ -30,10 +34,10 @@ export function isValidIRI(value: unknown): boolean {
  * Use for Open Badges and general IRI validation.
  */
 export function toIRI(value: IRICompatible): Shared.IRI | null {
-  if (value == null || value === '') return null;
-  if (typeof value === 'object' && value !== null) return value;
+  if (value == null || value === "") return null;
+  if (typeof value === "object" && value !== null) return value;
   if (isValidIRI(value)) return value as Shared.IRI;
-  logger.warn('Invalid IRI value', { value });
+  logger.warn("Invalid IRI value", { value });
   return null;
 }
 
@@ -43,7 +47,7 @@ export function toIRI(value: IRICompatible): Shared.IRI | null {
  * @returns The converted string
  */
 export function toString(value: IRICompatible): string | null {
-  if (value == null || value === '') {
+  if (value == null || value === "") {
     return null;
   }
   return value.toString();
@@ -60,7 +64,7 @@ export function toString(value: IRICompatible): string | null {
  * Use ONLY for issuer resource lookups, not for Open Badges data validation.
  */
 export function toIssuerId(value: IRICompatible): Shared.IRI | null {
-  if (value == null || value === '') return null;
+  if (value == null || value === "") return null;
   return value as Shared.IRI;
 }
 
@@ -74,8 +78,8 @@ export function toIssuerId(value: IRICompatible): Shared.IRI | null {
  */
 export function ensureValidIRI(value: unknown): Shared.IRI | null {
   if (
-    typeof value === 'string' ||
-    (typeof value === 'object' && value !== null)
+    typeof value === "string" ||
+    (typeof value === "object" && value !== null)
   ) {
     return toIRI(value as IRICompatible);
   }
@@ -91,7 +95,7 @@ export function ensureValidIRI(value: unknown): Shared.IRI | null {
  * Converts an array of strings to an array of Shared.IRIs (strict)
  */
 export function toIRIArray(
-  values: IRICompatible[] | null | undefined
+  values: IRICompatible[] | null | undefined,
 ): Shared.IRI[] {
   return (values ?? []).map(toIRI).filter(Boolean) as Shared.IRI[];
 }
@@ -102,7 +106,7 @@ export function toIRIArray(
  * @returns The converted array of strings
  */
 export function toStringArray(
-  values: IRICompatible[] | null | undefined
+  values: IRICompatible[] | null | undefined,
 ): string[] {
   if (values == null) {
     return [];
@@ -118,7 +122,7 @@ export function toStringArray(
  */
 export function objectWithIRIToString<T extends Record<string, unknown>>(
   obj: T,
-  iriProperties: string[]
+  iriProperties: string[],
 ): ObjectWithStrings<T> {
   const result: Record<string, unknown> = { ...obj };
 
@@ -140,7 +144,7 @@ export function objectWithIRIToString<T extends Record<string, unknown>>(
  */
 export function objectWithStringToIRI<T extends Record<string, unknown>>(
   obj: T,
-  iriProperties: string[]
+  iriProperties: string[],
 ): ObjectWithIRIs<T> {
   const result: Record<string, unknown> = { ...obj };
   const invalidProps: string[] = [];
@@ -160,7 +164,7 @@ export function objectWithStringToIRI<T extends Record<string, unknown>>(
   // If any properties couldn't be converted, throw an error
   if (invalidProps.length > 0) {
     throw new Error(
-      `Failed to convert properties to IRI: ${invalidProps.join(', ')}`
+      `Failed to convert properties to IRI: ${invalidProps.join(", ")}`,
     );
   }
 

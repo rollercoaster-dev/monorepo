@@ -6,19 +6,19 @@ Brief description of the composable and its purpose.
 
 ```vue
 <script setup>
-import { composableName } from 'openbadges-ui';
+import { composableName } from "openbadges-ui";
 
 const {
   // State
   state,
-  
+
   // Computed properties
   computedProperty1,
   computedProperty2,
-  
+
   // Methods
   method1,
-  method2
+  method2,
 } = composableName(param1, param2);
 </script>
 
@@ -32,20 +32,20 @@ const {
 
 ## Parameters
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `param1` | `Type` | Required | Description of the parameter and its purpose. |
+| Name     | Type   | Default        | Description                                   |
+| -------- | ------ | -------------- | --------------------------------------------- |
+| `param1` | `Type` | Required       | Description of the parameter and its purpose. |
 | `param2` | `Type` | `defaultValue` | Description of the parameter and its purpose. |
 
 ## Returns
 
-| Name | Type | Description |
-|------|------|-------------|
-| `state` | `Ref<StateType>` | Reactive state object containing... |
-| `computedProperty1` | `ComputedRef<Type>` | Description of the computed property. |
-| `computedProperty2` | `ComputedRef<Type>` | Description of the computed property. |
-| `method1` | `(param: Type) => ReturnType` | Description of the method, its parameters, and return value. |
-| `method2` | `(param: Type) => ReturnType` | Description of the method, its parameters, and return value. |
+| Name                | Type                          | Description                                                  |
+| ------------------- | ----------------------------- | ------------------------------------------------------------ |
+| `state`             | `Ref<StateType>`              | Reactive state object containing...                          |
+| `computedProperty1` | `ComputedRef<Type>`           | Description of the computed property.                        |
+| `computedProperty2` | `ComputedRef<Type>`           | Description of the computed property.                        |
+| `method1`           | `(param: Type) => ReturnType` | Description of the method, its parameters, and return value. |
+| `method2`           | `(param: Type) => ReturnType` | Description of the method, its parameters, and return value. |
 
 ## State Structure
 
@@ -65,7 +65,7 @@ Description of the state structure and its properties.
 
 ```vue
 <script setup>
-import { composableName } from 'openbadges-ui';
+import { composableName } from "openbadges-ui";
 
 const { state, computedProperty1 } = composableName();
 </script>
@@ -79,16 +79,12 @@ const { state, computedProperty1 } = composableName();
 
 ```vue
 <script setup>
-import { composableName } from 'openbadges-ui';
+import { composableName } from "openbadges-ui";
 
-const {
-  state,
-  computedProperty1,
-  method1
-} = composableName({
+const { state, computedProperty1, method1 } = composableName({
   // Custom configuration
-  option1: 'value1',
-  option2: 'value2'
+  option1: "value1",
+  option2: "value2",
 });
 
 // Custom logic using the composable

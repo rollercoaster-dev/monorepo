@@ -48,18 +48,17 @@ openbadges-types/
 ## Type Hierarchy
 
 ### Open Badges 2.0
+
 - Base types:
   - `JsonLdContext` (shared)
   - `IRI` (shared)
   - `DateTime` (shared)
-  
 - Core types:
   - `Assertion`
   - `BadgeClass`
   - `Profile` / `Issuer`
   - `VerificationObject`
   - `IdentityObject`
-  
 - Supporting types:
   - `Evidence`
   - `AlignmentObject`
@@ -70,17 +69,16 @@ openbadges-types/
   - `Extension`
 
 ### Open Badges 3.0
+
 - Base types:
   - `JsonLdContext` (shared)
   - `IRI` (shared)
   - `DateTime` (shared)
-  
 - Core types:
   - `VerifiableCredential`
   - `Achievement`
   - `Issuer`
   - `Proof`
-  
 - Supporting types:
   - `Recipient`
   - `Evidence`
@@ -90,6 +88,7 @@ openbadges-types/
   - `Extension`
 
 ### Shared Types
+
 - `IRI` - URI/URL type
 - `JsonLdContext` - JSON-LD context type
 - `DateTime` - ISO 8601 date format
@@ -98,6 +97,7 @@ openbadges-types/
 - Utility types for type guards and validation
 
 ## Module Organization
+
 - Each file should export related types
 - Index files should re-export all types from their directory
 - Main index.ts should provide a clean API for importing types

@@ -4,6 +4,6 @@
  * Exports for cryptographic key management supporting Open Badges 3.0.
  */
 
-export * from './types';
-export * from './key-generator';
-export * from './key-storage';
+export * from "./types";
+export * from "./key-generator";
+export * from "./key-storage";

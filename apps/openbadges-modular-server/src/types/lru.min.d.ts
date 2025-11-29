@@ -1,4 +1,4 @@
-declare module 'lru.min' {
+declare module "lru.min" {
   type LRUType = {
     get: (key: string) => unknown;
     set: (key: string, value: unknown) => void;

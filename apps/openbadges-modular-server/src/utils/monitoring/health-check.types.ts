@@ -1,6 +1,6 @@
 /**
  * Type definitions for health check related structures
- * 
+ *
  * These types are used in the health check service to provide
  * type safety for database clients, metrics, and results.
  */
@@ -39,14 +39,20 @@ export interface DatabaseClient {
  * Database metrics interface
  */
 export interface DatabaseMetrics {
-  [key: string]: string | number | boolean | Record<string, unknown> | Array<Record<string, unknown>> | undefined;
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | Record<string, unknown>
+    | Array<Record<string, unknown>>
+    | undefined;
 }
 
 /**
  * Health check result interface
  */
 export interface HealthCheckResult {
-  status: 'ok' | 'error' | 'degraded';
+  status: "ok" | "error" | "degraded";
   timestamp: string;
   uptime: number;
   database: {

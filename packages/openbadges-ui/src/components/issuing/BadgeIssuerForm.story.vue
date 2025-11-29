@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BadgeIssuerForm from './BadgeIssuerForm.vue';
-import { mockBadgeClasses } from '../../services/mockData';
-import type { OB2 } from '@/types';
+import { ref } from "vue";
+import BadgeIssuerForm from "./BadgeIssuerForm.vue";
+import { mockBadgeClasses } from "../../services/mockData";
+import type { OB2 } from "@/types";
 
 const state = ref({
   initialBadgeClass: {},
-  initialRecipientEmail: '',
+  initialRecipientEmail: "",
 });
 
 const livePreview = ref<Partial<OB2.BadgeClass>>({});
@@ -14,36 +14,36 @@ const livePreview = ref<Partial<OB2.BadgeClass>>({});
 const prefilledState = {
   initialBadgeClass: {
     ...mockBadgeClasses[0],
-    name: 'Programming Excellence',
-    description: 'Awarded for demonstrating exceptional programming skills',
+    name: "Programming Excellence",
+    description: "Awarded for demonstrating exceptional programming skills",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Rollercoaster.dev',
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Rollercoaster.dev",
     },
   },
-  initialRecipientEmail: 'recipient@example.org',
+  initialRecipientEmail: "recipient@example.org",
 };
 
 const validationErrorState = {
   initialBadgeClass: {
-    name: '', // Empty name to trigger validation error
-    description: 'This badge will show validation errors',
+    name: "", // Empty name to trigger validation error
+    description: "This badge will show validation errors",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Rollercoaster.dev',
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Rollercoaster.dev",
     },
   },
-  initialRecipientEmail: 'invalid-email', // Invalid email to trigger validation error
+  initialRecipientEmail: "invalid-email", // Invalid email to trigger validation error
 };
 
 function onBadgeIssued(assertion) {
-  console.log('Badge issued:', assertion);
+  console.log("Badge issued:", assertion);
 }
 
 function onReset() {
-  console.log('Form reset');
+  console.log("Form reset");
 }
 </script>
 
@@ -53,7 +53,7 @@ function onReset() {
     :layout="{ type: 'single', iframe: true }"
   >
     <Variant title="Empty">
-      <div style="display:flex; gap: 1rem; align-items:flex-start;">
+      <div style="display: flex; gap: 1rem; align-items: flex-start">
         <BadgeIssuerForm
           :initial-badge-class="state.initialBadgeClass"
           :initial-recipient-email="state.initialRecipientEmail"
@@ -61,13 +61,40 @@ function onReset() {
           @reset="onReset"
           @update="(p) => (livePreview = p.badge)"
         />
-        <div style="flex:1; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
-          <h4 style="margin-top:0;">Live Preview</h4>
-          <div><strong>Name:</strong> {{ livePreview.name || '—' }}</div>
-          <div><strong>Description:</strong> {{ livePreview.description || '—' }}</div>
-          <div><strong>Issuer:</strong> {{ typeof livePreview.issuer === 'object' ? livePreview.issuer?.name : '—' }}</div>
-          <div><strong>Image URL:</strong> {{ typeof livePreview.image === 'object' ? livePreview.image?.id : (typeof livePreview.image === 'string' ? livePreview.image : '—') }}</div>
-          <div><strong>Tags:</strong> {{ (livePreview.tags || []).join(', ') }}</div>
+        <div
+          style="
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+          "
+        >
+          <h4 style="margin-top: 0">Live Preview</h4>
+          <div><strong>Name:</strong> {{ livePreview.name || "—" }}</div>
+          <div>
+            <strong>Description:</strong> {{ livePreview.description || "—" }}
+          </div>
+          <div>
+            <strong>Issuer:</strong>
+            {{
+              typeof livePreview.issuer === "object"
+                ? livePreview.issuer?.name
+                : "—"
+            }}
+          </div>
+          <div>
+            <strong>Image URL:</strong>
+            {{
+              typeof livePreview.image === "object"
+                ? livePreview.image?.id
+                : typeof livePreview.image === "string"
+                  ? livePreview.image
+                  : "—"
+            }}
+          </div>
+          <div>
+            <strong>Tags:</strong> {{ (livePreview.tags || []).join(", ") }}
+          </div>
         </div>
       </div>
     </Variant>
@@ -99,12 +126,16 @@ function onReset() {
       <div class="histoire-docs">
         <h1>BadgeIssuerForm</h1>
         <p>
-          The <code>BadgeIssuerForm</code> component provides a form for creating and issuing new badges. It supports validation, prefilled values, and accessibility features for all users.
+          The <code>BadgeIssuerForm</code> component provides a form for
+          creating and issuing new badges. It supports validation, prefilled
+          values, and accessibility features for all users.
         </p>
         <h2>When To Use</h2>
         <ul>
           <li>To allow issuers to create and issue badges to recipients</li>
-          <li>To provide a user-friendly, accessible badge issuance workflow</li>
+          <li>
+            To provide a user-friendly, accessible badge issuance workflow
+          </li>
         </ul>
         <h2>Examples</h2>
         <p>Use the controls and variants to see different form states.</p>
@@ -115,21 +146,48 @@ function onReset() {
         <h2>Props</h2>
         <table>
           <thead>
-            <tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td><code>initial-badge-class</code></td><td><code>object</code></td><td><code>{}</code></td><td>Initial badge class data</td></tr>
-            <tr><td><code>initial-recipient-email</code></td><td><code>string</code></td><td><code>''</code></td><td>Initial recipient email</td></tr>
+            <tr>
+              <td><code>initial-badge-class</code></td>
+              <td><code>object</code></td>
+              <td><code>{}</code></td>
+              <td>Initial badge class data</td>
+            </tr>
+            <tr>
+              <td><code>initial-recipient-email</code></td>
+              <td><code>string</code></td>
+              <td><code>''</code></td>
+              <td>Initial recipient email</td>
+            </tr>
           </tbody>
         </table>
         <h2>Events</h2>
         <table>
           <thead>
-            <tr><th>Name</th><th>Payload</th><th>Description</th></tr>
+            <tr>
+              <th>Name</th>
+              <th>Payload</th>
+              <th>Description</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td><code>badge-issued</code></td><td><code>object</code></td><td>Emitted when a badge is successfully issued</td></tr>
-            <tr><td><code>reset</code></td><td><code>-</code></td><td>Emitted when the form is reset</td></tr>
+            <tr>
+              <td><code>badge-issued</code></td>
+              <td><code>object</code></td>
+              <td>Emitted when a badge is successfully issued</td>
+            </tr>
+            <tr>
+              <td><code>reset</code></td>
+              <td><code>-</code></td>
+              <td>Emitted when the form is reset</td>
+            </tr>
           </tbody>
         </table>
         <h2>Accessibility</h2>

@@ -17,7 +17,7 @@
  * @param delayMs Optional delay in milliseconds (default: 10ms)
  */
 export async function ensureTransactionCommitted(
-  delayMs: number = 10
+  delayMs: number = 10,
 ): Promise<void> {
   // Simple delay to allow database operations to complete
   await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -37,7 +37,7 @@ export async function ensureTransactionCommitted(
 export async function retryWithBackoff<T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelayMs: number = 100
+  baseDelayMs: number = 100,
 ): Promise<T> {
   let lastError: Error | undefined;
 
@@ -58,7 +58,7 @@ export async function retryWithBackoff<T>(
   }
 
   // This should never be reached, but TypeScript requires it
-  throw lastError || new Error('Unknown error in retry operation');
+  throw lastError || new Error("Unknown error in retry operation");
 }
 
 /**
@@ -75,7 +75,7 @@ export async function retryWithBackoff<T>(
 export async function pollUntilCondition(
   checkFunction: () => Promise<boolean>,
   maxAttempts: number = 10,
-  delayMs: number = 50
+  delayMs: number = 50,
 ): Promise<void> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {

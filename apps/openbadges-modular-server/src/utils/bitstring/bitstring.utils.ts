@@ -5,9 +5,9 @@
  * W3C Bitstring Status List v1.0 specification.
  */
 
-import { gzip, gunzip } from 'zlib';
-import { promisify } from 'util';
-import { logger } from '@/utils/logging/logger.service';
+import { gzip, gunzip } from "zlib";
+import { promisify } from "util";
+import { logger } from "@/utils/logging/logger.service";
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
@@ -36,22 +36,22 @@ export const MAX_STATUS_SIZE = 8;
  */
 export function createEmptyBitstring(
   totalEntries: number = DEFAULT_BITSTRING_SIZE,
-  statusSize: number = 1
+  statusSize: number = 1,
 ): Uint8Array {
   if (totalEntries < MIN_BITSTRING_SIZE) {
     throw new Error(
-      `Bitstring must have at least ${MIN_BITSTRING_SIZE} entries for privacy`
+      `Bitstring must have at least ${MIN_BITSTRING_SIZE} entries for privacy`,
     );
   }
 
   if (![1, 2, 4, 8].includes(statusSize)) {
-    throw new Error('Status size must be 1, 2, 4, or 8 bits');
+    throw new Error("Status size must be 1, 2, 4, or 8 bits");
   }
 
   const totalBits = totalEntries * statusSize;
   const totalBytes = Math.ceil(totalBits / 8);
 
-  logger.debug('Creating empty bitstring', {
+  logger.debug("Creating empty bitstring", {
     totalEntries,
     statusSize,
     totalBits,
@@ -73,20 +73,20 @@ export function setStatusAtIndex(
   bitstring: Uint8Array,
   index: number,
   value: number,
-  statusSize: number = 1
+  statusSize: number = 1,
 ): Uint8Array {
   if (index < 0) {
-    throw new Error('Index must be non-negative');
+    throw new Error("Index must be non-negative");
   }
 
   if (![1, 2, 4, 8].includes(statusSize)) {
-    throw new Error('Status size must be 1, 2, 4, or 8 bits');
+    throw new Error("Status size must be 1, 2, 4, or 8 bits");
   }
 
   const maxValue = Math.pow(2, statusSize) - 1;
   if (value < 0 || value > maxValue) {
     throw new Error(
-      `Value must be between 0 and ${maxValue} for ${statusSize}-bit status`
+      `Value must be between 0 and ${maxValue} for ${statusSize}-bit status`,
     );
   }
 
@@ -95,7 +95,7 @@ export function setStatusAtIndex(
 
   if (index >= totalEntries) {
     throw new Error(
-      `Index ${index} exceeds bitstring capacity of ${totalEntries} entries`
+      `Index ${index} exceeds bitstring capacity of ${totalEntries} entries`,
     );
   }
 
@@ -130,7 +130,7 @@ export function setStatusAtIndex(
   if (remainingBits > 0) {
     if (byteIndex + 1 >= result.length) {
       throw new Error(
-        `Index ${index} causes overflow; bitstring too small for ${statusSize}-bit status`
+        `Index ${index} causes overflow; bitstring too small for ${statusSize}-bit status`,
       );
     }
     const nextByteClearMask = ~(
@@ -144,7 +144,7 @@ export function setStatusAtIndex(
     result[byteIndex + 1] |= nextByteValueMask;
   }
 
-  logger.debug('Set status at index', {
+  logger.debug("Set status at index", {
     index,
     value,
     statusSize,
@@ -166,14 +166,14 @@ export function setStatusAtIndex(
 export function getStatusAtIndex(
   bitstring: Uint8Array,
   index: number,
-  statusSize: number = 1
+  statusSize: number = 1,
 ): number {
   if (index < 0) {
-    throw new Error('Index must be non-negative');
+    throw new Error("Index must be non-negative");
   }
 
   if (![1, 2, 4, 8].includes(statusSize)) {
-    throw new Error('Status size must be 1, 2, 4, or 8 bits');
+    throw new Error("Status size must be 1, 2, 4, or 8 bits");
   }
 
   const totalBits = bitstring.length * 8;
@@ -181,7 +181,7 @@ export function getStatusAtIndex(
 
   if (index >= totalEntries) {
     throw new Error(
-      `Index ${index} exceeds bitstring capacity of ${totalEntries} entries`
+      `Index ${index} exceeds bitstring capacity of ${totalEntries} entries`,
     );
   }
 
@@ -219,7 +219,7 @@ export function getStatusAtIndex(
  * @returns Compressed bitstring
  */
 export async function compressBitstring(
-  bitstring: Uint8Array
+  bitstring: Uint8Array,
 ): Promise<Buffer> {
   try {
     const compressed = await gzipAsync(bitstring, {
@@ -228,7 +228,7 @@ export async function compressBitstring(
       memLevel: 8,
     });
 
-    logger.debug('Compressed bitstring', {
+    logger.debug("Compressed bitstring", {
       originalSize: bitstring.length,
       compressedSize: compressed.length,
       compressionRatio: (compressed.length / bitstring.length).toFixed(3),
@@ -236,8 +236,8 @@ export async function compressBitstring(
 
     return compressed;
   } catch (error) {
-    logger.error('Failed to compress bitstring', { error });
-    throw new Error('Failed to compress bitstring');
+    logger.error("Failed to compress bitstring", { error });
+    throw new Error("Failed to compress bitstring");
   }
 }
 
@@ -247,20 +247,20 @@ export async function compressBitstring(
  * @returns Decompressed bitstring
  */
 export async function decompressBitstring(
-  compressedData: Buffer
+  compressedData: Buffer,
 ): Promise<Uint8Array> {
   try {
     const decompressed = await gunzipAsync(compressedData);
 
-    logger.debug('Decompressed bitstring', {
+    logger.debug("Decompressed bitstring", {
       compressedSize: compressedData.length,
       decompressedSize: decompressed.length,
     });
 
     return new Uint8Array(decompressed);
   } catch (error) {
-    logger.error('Failed to decompress bitstring', { error });
-    throw new Error('Failed to decompress bitstring');
+    logger.error("Failed to decompress bitstring", { error });
+    throw new Error("Failed to decompress bitstring");
   }
 }
 
@@ -273,23 +273,23 @@ export async function encodeBitstring(bitstring: Uint8Array): Promise<string> {
   try {
     // Validate input
     if (!bitstring || !(bitstring instanceof Uint8Array)) {
-      throw new Error('Bitstring must be a valid Uint8Array');
+      throw new Error("Bitstring must be a valid Uint8Array");
     }
 
     // First compress the bitstring
     const compressed = await compressBitstring(bitstring);
 
     // Convert to base64url (no padding)
-    const base64 = compressed.toString('base64');
+    const base64 = compressed.toString("base64");
     const base64url = base64
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
 
     // Add multibase prefix 'u' for base64url
-    const encoded = 'u' + base64url;
+    const encoded = "u" + base64url;
 
-    logger.debug('Encoded bitstring', {
+    logger.debug("Encoded bitstring", {
       originalSize: bitstring.length,
       compressedSize: compressed.length,
       encodedLength: encoded.length,
@@ -297,8 +297,8 @@ export async function encodeBitstring(bitstring: Uint8Array): Promise<string> {
 
     return encoded;
   } catch (error) {
-    logger.error('Failed to encode bitstring', { error });
-    throw new Error('Failed to encode bitstring');
+    logger.error("Failed to encode bitstring", { error });
+    throw new Error("Failed to encode bitstring");
   }
 }
 
@@ -319,39 +319,39 @@ export function isValidBase64url(value: string): boolean {
  * @returns Decoded bitstring
  */
 export async function decodeBitstring(
-  encodedList: string
+  encodedList: string,
 ): Promise<Uint8Array> {
   try {
     // Validate input format
-    if (!encodedList || typeof encodedList !== 'string') {
-      throw new Error('Encoded list must be a non-empty string');
+    if (!encodedList || typeof encodedList !== "string") {
+      throw new Error("Encoded list must be a non-empty string");
     }
 
     // Remove multibase prefix if present
     let base64url = encodedList;
-    if (encodedList.startsWith('u')) {
+    if (encodedList.startsWith("u")) {
       base64url = encodedList.slice(1);
     }
 
     // Validate base64url format
     if (!isValidBase64url(base64url)) {
-      throw new Error('Invalid base64url format: contains invalid characters');
+      throw new Error("Invalid base64url format: contains invalid characters");
     }
 
     // Convert from base64url to base64
-    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
 
     // Add padding if needed
-    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
     const paddedBase64 = base64 + padding;
 
     // Decode from base64
-    const compressed = Buffer.from(paddedBase64, 'base64');
+    const compressed = Buffer.from(paddedBase64, "base64");
 
     // Decompress the bitstring
     const bitstring = await decompressBitstring(compressed);
 
-    logger.debug('Decoded bitstring', {
+    logger.debug("Decoded bitstring", {
       encodedLength: encodedList.length,
       compressedSize: compressed.length,
       decompressedSize: bitstring.length,
@@ -359,13 +359,14 @@ export async function decodeBitstring(
 
     return bitstring;
   } catch (error) {
-    logger.error('Failed to decode bitstring', {
+    logger.error("Failed to decode bitstring", {
       error,
-      encodedList: encodedList.length > 50
-        ? encodedList.substring(0, 50) + '...'
-        : encodedList,
+      encodedList:
+        encodedList.length > 50
+          ? encodedList.substring(0, 50) + "..."
+          : encodedList,
     });
-    throw new Error('Failed to decode bitstring');
+    throw new Error("Failed to decode bitstring");
   }
 }
 
@@ -376,21 +377,21 @@ export async function decodeBitstring(
  */
 export function validateBitstringParams(
   totalEntries: number,
-  statusSize: number
+  statusSize: number,
 ): void {
   if (!Number.isInteger(totalEntries) || totalEntries < MIN_BITSTRING_SIZE) {
     throw new Error(
-      `Total entries must be an integer >= ${MIN_BITSTRING_SIZE}`
+      `Total entries must be an integer >= ${MIN_BITSTRING_SIZE}`,
     );
   }
 
   if (![1, 2, 4, 8].includes(statusSize)) {
-    throw new Error('Status size must be 1, 2, 4, or 8 bits');
+    throw new Error("Status size must be 1, 2, 4, or 8 bits");
   }
 
   const totalBits = totalEntries * statusSize;
   if (totalBits % 8 !== 0) {
-    logger.warn('Bitstring size is not byte-aligned', {
+    logger.warn("Bitstring size is not byte-aligned", {
       totalEntries,
       statusSize,
       totalBits,
@@ -406,7 +407,7 @@ export function validateBitstringParams(
  */
 export function getBitstringCapacity(
   bitstring: Uint8Array,
-  statusSize: number = 1
+  statusSize: number = 1,
 ): number {
   const totalBits = bitstring.length * 8;
   return Math.floor(totalBits / statusSize);
@@ -420,7 +421,7 @@ export function getBitstringCapacity(
  */
 export function countSetEntries(
   bitstring: Uint8Array,
-  statusSize: number = 1
+  statusSize: number = 1,
 ): number {
   const capacity = getBitstringCapacity(bitstring, statusSize);
   let setCount = 0;

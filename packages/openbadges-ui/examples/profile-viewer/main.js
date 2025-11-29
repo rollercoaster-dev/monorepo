@@ -1,123 +1,130 @@
-import { createApp } from 'vue';
-import { OpenBadgesUIPlugin } from '../../dist/openbadges-ui.es.js';
-import '../../dist/style.css';
+import { createApp } from "vue";
+import { OpenBadgesUIPlugin } from "../../dist/openbadges-ui.es.js";
+import "../../dist/style.css";
 
 // Sample profile data with OB2 badges
 const profileData = {
-  id: 'profile123',
-  name: 'Jane Doe',
-  email: 'jane.doe@example.org',
-  image: 'https://via.placeholder.com/150?text=Jane+Doe',
-  description: 'Software developer and open badges enthusiast with expertise in web technologies and a passion for digital credentials.',
-  url: 'https://example.org/jane',
+  id: "profile123",
+  name: "Jane Doe",
+  email: "jane.doe@example.org",
+  image: "https://via.placeholder.com/150?text=Jane+Doe",
+  description:
+    "Software developer and open badges enthusiast with expertise in web technologies and a passion for digital credentials.",
+  url: "https://example.org/jane",
   badges: [
     // OB2 Badge 1
     {
       "@context": "https://w3id.org/openbadges/v2",
-      "type": "Assertion",
-      "id": "http://example.org/assertions/123",
-      "recipient": {
-        "identity": "jane.doe@example.org",
-        "type": "email",
-        "hashed": false
+      type: "Assertion",
+      id: "http://example.org/assertions/123",
+      recipient: {
+        identity: "jane.doe@example.org",
+        type: "email",
+        hashed: false,
       },
-      "badge": {
-        "type": "BadgeClass",
-        "id": "http://example.org/badges/coding-skills",
-        "name": "Coding Skills",
-        "description": "This badge recognizes exceptional coding skills and problem-solving abilities.",
-        "image": "https://via.placeholder.com/150?text=Coding+Skills",
-        "criteria": {
-          "narrative": "The recipient demonstrated proficiency in JavaScript, TypeScript, and Vue.js."
+      badge: {
+        type: "BadgeClass",
+        id: "http://example.org/badges/coding-skills",
+        name: "Coding Skills",
+        description:
+          "This badge recognizes exceptional coding skills and problem-solving abilities.",
+        image: "https://via.placeholder.com/150?text=Coding+Skills",
+        criteria: {
+          narrative:
+            "The recipient demonstrated proficiency in JavaScript, TypeScript, and Vue.js.",
         },
-        "issuer": {
-          "type": "Profile",
-          "id": "http://example.org/issuers/tech-academy",
-          "name": "Tech Academy",
-          "url": "http://example.org/tech-academy"
-        }
+        issuer: {
+          type: "Profile",
+          id: "http://example.org/issuers/tech-academy",
+          name: "Tech Academy",
+          url: "http://example.org/tech-academy",
+        },
       },
-      "issuedOn": "2023-05-15T12:00:00Z",
-      "expires": "2025-05-15T12:00:00Z",
-      "verification": {
-        "type": "hosted"
-      }
+      issuedOn: "2023-05-15T12:00:00Z",
+      expires: "2025-05-15T12:00:00Z",
+      verification: {
+        type: "hosted",
+      },
     },
     // OB2 Badge 2
     {
       "@context": "https://w3id.org/openbadges/v2",
-      "type": "Assertion",
-      "id": "http://example.org/assertions/456",
-      "recipient": {
-        "identity": "jane.doe@example.org",
-        "type": "email",
-        "hashed": false
+      type: "Assertion",
+      id: "http://example.org/assertions/456",
+      recipient: {
+        identity: "jane.doe@example.org",
+        type: "email",
+        hashed: false,
       },
-      "badge": {
-        "type": "BadgeClass",
-        "id": "http://example.org/badges/design-thinking",
-        "name": "Design Thinking",
-        "description": "This badge certifies proficiency in design thinking methodologies and user-centered design.",
-        "image": "https://via.placeholder.com/150?text=Design+Thinking",
-        "criteria": {
-          "narrative": "The recipient demonstrated expertise in user research, prototyping, and iterative design."
+      badge: {
+        type: "BadgeClass",
+        id: "http://example.org/badges/design-thinking",
+        name: "Design Thinking",
+        description:
+          "This badge certifies proficiency in design thinking methodologies and user-centered design.",
+        image: "https://via.placeholder.com/150?text=Design+Thinking",
+        criteria: {
+          narrative:
+            "The recipient demonstrated expertise in user research, prototyping, and iterative design.",
         },
-        "issuer": {
-          "type": "Profile",
-          "id": "http://example.org/issuers/design-institute",
-          "name": "Design Institute",
-          "url": "http://example.org/design-institute"
-        }
+        issuer: {
+          type: "Profile",
+          id: "http://example.org/issuers/design-institute",
+          name: "Design Institute",
+          url: "http://example.org/design-institute",
+        },
       },
-      "issuedOn": "2023-07-20T12:00:00Z",
-      "verification": {
-        "type": "hosted"
-      }
+      issuedOn: "2023-07-20T12:00:00Z",
+      verification: {
+        type: "hosted",
+      },
     },
     // OB3 Badge
     {
       "@context": [
         "https://www.w3.org/2018/credentials/v1",
-        "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
+        "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
       ],
-      "id": "http://example.org/credentials/3732",
-      "type": ["VerifiableCredential", "OpenBadgeCredential"],
-      "issuer": {
-        "id": "http://example.org/issuers/tech-university",
-        "type": "Profile",
-        "name": "Tech University",
-        "url": "http://example.org/tech-university",
-        "image": "https://via.placeholder.com/50?text=TU"
+      id: "http://example.org/credentials/3732",
+      type: ["VerifiableCredential", "OpenBadgeCredential"],
+      issuer: {
+        id: "http://example.org/issuers/tech-university",
+        type: "Profile",
+        name: "Tech University",
+        url: "http://example.org/tech-university",
+        image: "https://via.placeholder.com/50?text=TU",
       },
-      "issuanceDate": "2023-08-10T12:00:00Z",
-      "expirationDate": "2026-08-10T12:00:00Z",
-      "credentialSubject": {
-        "id": "did:example:jane.doe",
-        "type": ["AchievementSubject"],
-        "achievement": {
-          "id": "http://example.org/achievements/advanced-web-dev",
-          "type": ["Achievement"],
-          "name": "Advanced Web Development",
-          "description": "This credential certifies advanced knowledge and skills in modern web development technologies.",
-          "image": "https://via.placeholder.com/150?text=Web+Dev",
-          "criteria": {
-            "narrative": "The recipient demonstrated expertise in HTML5, CSS3, JavaScript, and modern frameworks."
-          }
-        }
-      }
-    }
-  ]
+      issuanceDate: "2023-08-10T12:00:00Z",
+      expirationDate: "2026-08-10T12:00:00Z",
+      credentialSubject: {
+        id: "did:example:jane.doe",
+        type: ["AchievementSubject"],
+        achievement: {
+          id: "http://example.org/achievements/advanced-web-dev",
+          type: ["Achievement"],
+          name: "Advanced Web Development",
+          description:
+            "This credential certifies advanced knowledge and skills in modern web development technologies.",
+          image: "https://via.placeholder.com/150?text=Web+Dev",
+          criteria: {
+            narrative:
+              "The recipient demonstrated expertise in HTML5, CSS3, JavaScript, and modern frameworks.",
+          },
+        },
+      },
+    },
+  ],
 };
 
 // Available themes
 const themes = [
-  { id: 'default', name: 'Default Theme' },
-  { id: 'dark', name: 'Dark Theme' },
-  { id: 'high-contrast', name: 'High Contrast Theme' },
-  { id: 'large-text', name: 'Large Text Theme' },
-  { id: 'dyslexia-friendly', name: 'Dyslexia-Friendly Theme' },
-  { id: 'low-info', name: 'ADHD-Friendly Theme' },
-  { id: 'autism-friendly', name: 'Autism-Friendly Theme' }
+  { id: "default", name: "Default Theme" },
+  { id: "dark", name: "Dark Theme" },
+  { id: "high-contrast", name: "High Contrast Theme" },
+  { id: "large-text", name: "Large Text Theme" },
+  { id: "dyslexia-friendly", name: "Dyslexia-Friendly Theme" },
+  { id: "low-info", name: "ADHD-Friendly Theme" },
+  { id: "autism-friendly", name: "Autism-Friendly Theme" },
 ];
 
 // Create the Vue app
@@ -126,12 +133,12 @@ const app = createApp({
     return {
       profile: profileData,
       themes,
-      selectedTheme: 'default',
-      badgeLayout: 'grid',
+      selectedTheme: "default",
+      badgeLayout: "grid",
       showDescription: true,
       showUrl: true,
       interactiveBadges: true,
-      selectedBadge: null
+      selectedBadge: null,
     };
   },
   computed: {
@@ -163,20 +170,20 @@ export default {
   }
 }
 </script>`;
-    }
+    },
   },
   methods: {
     applyTheme() {
       // Apply the selected theme
-      document.body.className = '';
-      if (this.selectedTheme !== 'default') {
+      document.body.className = "";
+      if (this.selectedTheme !== "default") {
         document.body.classList.add(`ob-${this.selectedTheme}-theme`);
       }
     },
     handleBadgeClick(badge) {
-      console.log('Badge clicked:', badge);
+      console.log("Badge clicked:", badge);
       this.selectedBadge = badge;
-    }
+    },
   },
   template: `
     <div>
@@ -245,11 +252,11 @@ export default {
         </div>
       </section>
     </div>
-  `
+  `,
 });
 
 // Use the OpenBadges UI plugin
 app.use(OpenBadgesUIPlugin);
 
 // Mount the app
-app.mount('#app');
+app.mount("#app");

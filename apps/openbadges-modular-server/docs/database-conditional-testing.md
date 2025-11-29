@@ -5,6 +5,7 @@ This document explains how to write E2E tests that conditionally run based on da
 ## Problem
 
 Previously, the E2E test setup would call `process.exit(0)` when PostgreSQL was not available, which would:
+
 - Terminate the entire test process
 - Prevent SQLite tests from running
 - Make CI logs opaque
@@ -32,7 +33,7 @@ import {
   getCurrentDatabaseType,
   isPostgresqlAvailable,
   isSqliteInUse,
-} from './helpers/database-conditional.helper';
+} from "./helpers/database-conditional.helper";
 ```
 
 ### Database-Agnostic Tests
@@ -40,8 +41,8 @@ import {
 For tests that should run with any available database:
 
 ```typescript
-describeAnyDatabase('My Test Suite', () => {
-  it('should work with any database', async () => {
+describeAnyDatabase("My Test Suite", () => {
+  it("should work with any database", async () => {
     // This test runs with SQLite or PostgreSQL
     const dbType = getCurrentDatabaseType();
     console.log(`Running with ${dbType}`);
@@ -54,16 +55,16 @@ describeAnyDatabase('My Test Suite', () => {
 For tests that require PostgreSQL:
 
 ```typescript
-describePostgreSQL('PostgreSQL Features', () => {
-  it('should test PostgreSQL-specific functionality', async () => {
+describePostgreSQL("PostgreSQL Features", () => {
+  it("should test PostgreSQL-specific functionality", async () => {
     // This test only runs when PostgreSQL is available
-    expect(getCurrentDatabaseType()).toBe('postgresql');
+    expect(getCurrentDatabaseType()).toBe("postgresql");
   });
 });
 
 // Or for individual tests
-describe('Mixed Tests', () => {
-  itPostgreSQL('should use PostgreSQL arrays', async () => {
+describe("Mixed Tests", () => {
+  itPostgreSQL("should use PostgreSQL arrays", async () => {
     // PostgreSQL-specific test
   });
 });
@@ -74,16 +75,16 @@ describe('Mixed Tests', () => {
 For tests that require SQLite:
 
 ```typescript
-describeSQLite('SQLite Features', () => {
-  it('should test SQLite-specific functionality', async () => {
+describeSQLite("SQLite Features", () => {
+  it("should test SQLite-specific functionality", async () => {
     // This test only runs when SQLite is in use
-    expect(getCurrentDatabaseType()).toBe('sqlite');
+    expect(getCurrentDatabaseType()).toBe("sqlite");
   });
 });
 
 // Or for individual tests
-describe('Mixed Tests', () => {
-  itSQLite('should use SQLite pragmas', async () => {
+describe("Mixed Tests", () => {
+  itSQLite("should use SQLite pragmas", async () => {
     // SQLite-specific test
   });
 });
@@ -94,17 +95,17 @@ describe('Mixed Tests', () => {
 For more complex scenarios:
 
 ```typescript
-describe('Complex Conditional Tests', () => {
-  it('should handle different databases differently', async () => {
+describe("Complex Conditional Tests", () => {
+  it("should handle different databases differently", async () => {
     const dbType = getCurrentDatabaseType();
-    
-    if (dbType === 'postgresql' && isPostgresqlAvailable()) {
+
+    if (dbType === "postgresql" && isPostgresqlAvailable()) {
       // PostgreSQL-specific logic
-    } else if (dbType === 'sqlite' && isSqliteInUse()) {
+    } else if (dbType === "sqlite" && isSqliteInUse()) {
       // SQLite-specific logic
     } else {
       // Skip or handle unavailable database
-      console.log('Database not available, skipping test');
+      console.log("Database not available, skipping test");
       return;
     }
   });
@@ -142,16 +143,16 @@ The `setup-test-app.ts` file checks PostgreSQL availability:
 
 ```typescript
 const checkPgAvailability = async (): Promise<boolean> => {
-  if (process.env.DB_TYPE === 'postgresql') {
+  if (process.env.DB_TYPE === "postgresql") {
     try {
       isPgAvailable = await isPostgresAvailable(pgConnectionString);
       if (!isPgAvailable) {
-        logger.warn('PostgreSQL not available, tests will be skipped');
+        logger.warn("PostgreSQL not available, tests will be skipped");
         return false;
       }
       return true;
     } catch (error) {
-      logger.warn('PostgreSQL not available, tests will be skipped');
+      logger.warn("PostgreSQL not available, tests will be skipped");
       isPgAvailable = false;
       return false;
     }
@@ -205,11 +206,11 @@ if (!isPgAvailable) {
 
 ```typescript
 // This skips only PostgreSQL tests
-describePostgreSQL('PostgreSQL Tests', () => {
+describePostgreSQL("PostgreSQL Tests", () => {
   // Tests that require PostgreSQL
 });
 
-describeAnyDatabase('General Tests', () => {
+describeAnyDatabase("General Tests", () => {
   // Tests that work with any database
 });
 ```

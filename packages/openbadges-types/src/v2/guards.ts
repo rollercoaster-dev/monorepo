@@ -1,4 +1,4 @@
-import { isJsonLdObject, hasJsonLdType } from '../shared';
+import { isJsonLdObject, hasJsonLdType } from "../shared";
 import type {
   Assertion,
   BadgeClass,
@@ -11,7 +11,7 @@ import type {
   Criteria,
   RevocationList,
   CryptographicKey,
-} from './index';
+} from "./index";
 
 /**
  * Type guard to check if a value is an OB2 Assertion
@@ -24,42 +24,42 @@ export function isAssertion(value: unknown): value is Assertion {
   }
 
   // Check for required properties
-  if (!hasJsonLdType(value, 'Assertion')) {
+  if (!hasJsonLdType(value, "Assertion")) {
     return false;
   }
 
   // Check for required fields
   if (
-    !('id' in value) ||
-    !('recipient' in value) ||
-    !('badge' in value) ||
-    !('verification' in value) ||
-    !('issuedOn' in value)
+    !("id" in value) ||
+    !("recipient" in value) ||
+    !("badge" in value) ||
+    !("verification" in value) ||
+    !("issuedOn" in value)
   ) {
     return false;
   }
 
   // issuedOn must be a string
-  if (!('issuedOn' in value) || typeof value.issuedOn !== 'string') {
+  if (!("issuedOn" in value) || typeof value.issuedOn !== "string") {
     return false;
   }
 
   // recipient must be a valid IdentityObject
-  if (!('recipient' in value) || !isIdentityObject(value.recipient)) {
+  if (!("recipient" in value) || !isIdentityObject(value.recipient)) {
     return false;
   }
 
   // badge must be a string (IRI) or valid BadgeClass
-  if (!('badge' in value)) {
+  if (!("badge" in value)) {
     return false;
   }
   const badge = value.badge;
-  if (!(typeof badge === 'string' || isBadgeClass(badge))) {
+  if (!(typeof badge === "string" || isBadgeClass(badge))) {
     return false;
   }
 
   // verification must be a valid VerificationObject
-  if (!('verification' in value) || !isVerificationObject(value.verification)) {
+  if (!("verification" in value) || !isVerificationObject(value.verification)) {
     return false;
   }
 
@@ -72,7 +72,7 @@ export function isAssertion(value: unknown): value is Assertion {
  * @returns True if the value is a valid OB2 BadgeClass, false otherwise
  */
 export function isBadgeClass(value: unknown): value is BadgeClass {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
@@ -80,19 +80,21 @@ export function isBadgeClass(value: unknown): value is BadgeClass {
   // For embedded BadgeClass objects, they might not have @context,
   // but they should have type property
   if (
-    !('type' in value) ||
-    (Array.isArray(value.type) ? !value.type.includes('BadgeClass') : value.type !== 'BadgeClass')
+    !("type" in value) ||
+    (Array.isArray(value.type)
+      ? !value.type.includes("BadgeClass")
+      : value.type !== "BadgeClass")
   ) {
     return false;
   }
 
   return !(
-    !('id' in value) ||
-    !('name' in value) ||
-    !('description' in value) ||
-    !('image' in value) ||
-    !('criteria' in value) ||
-    !('issuer' in value)
+    !("id" in value) ||
+    !("name" in value) ||
+    !("description" in value) ||
+    !("image" in value) ||
+    !("criteria" in value) ||
+    !("issuer" in value)
   );
 }
 
@@ -102,28 +104,28 @@ export function isBadgeClass(value: unknown): value is BadgeClass {
  * @returns True if the value is a valid OB2 Profile, false otherwise
  */
 export function isProfile(value: unknown): value is Profile {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // Check for required properties
   // For embedded Profile objects, they might not have @context,
   // but they should have type property
-  if (!('type' in value)) {
+  if (!("type" in value)) {
     return false;
   }
 
   // Check if type is Profile or Issuer
   const type = value.type;
   const isProfileType = Array.isArray(type)
-    ? type.includes('Profile') || type.includes('Issuer')
-    : type === 'Profile' || type === 'Issuer';
+    ? type.includes("Profile") || type.includes("Issuer")
+    : type === "Profile" || type === "Issuer";
 
   if (!isProfileType) {
     return false;
   }
 
-  return !(!('id' in value) || !('name' in value));
+  return !(!("id" in value) || !("name" in value));
 }
 
 /**
@@ -132,15 +134,15 @@ export function isProfile(value: unknown): value is Profile {
  * @returns True if the value is a valid OB2 IdentityObject, false otherwise
  */
 export function isIdentityObject(value: unknown): value is IdentityObject {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // Check for required properties and types
-  if (!('type' in value) || typeof value.type !== 'string') {
+  if (!("type" in value) || typeof value.type !== "string") {
     return false;
   }
-  if (!('identity' in value) || typeof value.identity !== 'string') {
+  if (!("identity" in value) || typeof value.identity !== "string") {
     return false;
   }
 
@@ -152,13 +154,15 @@ export function isIdentityObject(value: unknown): value is IdentityObject {
  * @param value The value to check
  * @returns True if the value is a valid OB2 VerificationObject, false otherwise
  */
-export function isVerificationObject(value: unknown): value is VerificationObject {
-  if (typeof value !== 'object' || value === null) {
+export function isVerificationObject(
+  value: unknown,
+): value is VerificationObject {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // Check for required properties
-  return 'type' in value;
+  return "type" in value;
 }
 
 /**
@@ -169,7 +173,7 @@ export function isVerificationObject(value: unknown): value is VerificationObjec
 export function isEvidence(value: unknown): value is Evidence {
   // OB2 Evidence has no required properties per spec
   // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Evidence
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 /**
@@ -178,12 +182,12 @@ export function isEvidence(value: unknown): value is Evidence {
  * @returns True if the value is a valid OB2 AlignmentObject, false otherwise
  */
 export function isAlignmentObject(value: unknown): value is AlignmentObject {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // Check for required properties
-  return !(!('targetName' in value) || !('targetUrl' in value));
+  return !(!("targetName" in value) || !("targetUrl" in value));
 }
 
 /**
@@ -192,13 +196,15 @@ export function isAlignmentObject(value: unknown): value is AlignmentObject {
  * @returns True if the value is a valid OB2 Image, false otherwise
  */
 export function isImage(value: unknown): value is Image {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   // OB2 Image requires id (the image URL) per spec
   // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Image
-  return 'id' in value && typeof (value as Record<string, unknown>).id === 'string';
+  return (
+    "id" in value && typeof (value as Record<string, unknown>).id === "string"
+  );
 }
 
 /**
@@ -209,7 +215,7 @@ export function isImage(value: unknown): value is Image {
 export function isCriteria(value: unknown): value is Criteria {
   // OB2 Criteria has no required properties per spec
   // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Criteria
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 /**
@@ -223,11 +229,11 @@ export function isRevocationList(value: unknown): value is RevocationList {
   }
 
   // Check for required properties
-  if (!hasJsonLdType(value, 'RevocationList')) {
+  if (!hasJsonLdType(value, "RevocationList")) {
     return false;
   }
 
-  return !(!('id' in value) || !('revokedAssertions' in value));
+  return !(!("id" in value) || !("revokedAssertions" in value));
 }
 
 /**
@@ -241,9 +247,9 @@ export function isCryptographicKey(value: unknown): value is CryptographicKey {
   }
 
   // Check for required properties
-  if (!hasJsonLdType(value, 'CryptographicKey')) {
+  if (!hasJsonLdType(value, "CryptographicKey")) {
     return false;
   }
 
-  return !(!('id' in value) || !('owner' in value));
+  return !(!("id" in value) || !("owner" in value));
 }

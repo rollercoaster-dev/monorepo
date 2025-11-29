@@ -5,11 +5,11 @@
  * throughout the request lifecycle. It also adds the request ID to response headers.
  */
 
-import type { MiddlewareHandler } from 'hono';
-import { createMiddleware } from 'hono/factory';
-import { randomUUID } from 'crypto';
-import { logger } from './logger.service';
-import { config } from '../../config/config';
+import type { MiddlewareHandler } from "hono";
+import { createMiddleware } from "hono/factory";
+import { randomUUID } from "crypto";
+import { logger } from "./logger.service";
+import { config } from "../../config/config";
 
 // Define the variables that will be set in the context
 type RequestContextVariables = {
@@ -28,20 +28,20 @@ export function createRequestContextMiddleware(): MiddlewareHandler<{
     Variables: RequestContextVariables;
   }>(async (c, next) => {
     // Generate or use existing request ID
-    const requestId = c.req.header('x-request-id') || randomUUID();
+    const requestId = c.req.header("x-request-id") || randomUUID();
 
     // Store in context for other middleware and handlers
-    c.set('requestId', requestId);
+    c.set("requestId", requestId);
 
     // Add to response headers
-    c.header('x-request-id', requestId);
+    c.header("x-request-id", requestId);
 
     // Store request start time for duration calculation
     const requestStartTime = Date.now();
-    c.set('requestStartTime', requestStartTime);
+    c.set("requestStartTime", requestStartTime);
 
     // Log incoming request if debug logging is enabled
-    if (config.logging.level === 'debug') {
+    if (config.logging.level === "debug") {
       const method = c.req.method;
       const url = new URL(c.req.url);
       const path = url.pathname;
@@ -49,7 +49,7 @@ export function createRequestContextMiddleware(): MiddlewareHandler<{
       logger.debug(`Incoming request`, {
         method,
         path,
-        requestId
+        requestId,
       });
     }
 
@@ -58,7 +58,7 @@ export function createRequestContextMiddleware(): MiddlewareHandler<{
 
     // Skip logging for certain paths (like health checks) to reduce noise
     const path = new URL(c.req.url).pathname;
-    if (path === '/health' || path === '/favicon.ico') {
+    if (path === "/health" || path === "/favicon.ico") {
       return;
     }
 
@@ -72,7 +72,7 @@ export function createRequestContextMiddleware(): MiddlewareHandler<{
       path,
       status,
       duration: `${duration}ms`,
-      requestId
+      requestId,
     });
   });
 }
@@ -82,10 +82,13 @@ export function createRequestContextMiddleware(): MiddlewareHandler<{
  * @param c Hono context with RequestContextVariables or at least c.req.header
  * @returns Request ID or 'unknown' if not available
  */
-export function getRequestId(c: { get: (key: string) => unknown; req?: { header: (key: string) => string | undefined } }): string {
-  let requestId = c.get('requestId') as string;
+export function getRequestId(c: {
+  get: (key: string) => unknown;
+  req?: { header: (key: string) => string | undefined };
+}): string {
+  let requestId = c.get("requestId") as string;
   if (!requestId && c.req) {
-    requestId = c.req.header('x-request-id');
+    requestId = c.req.header("x-request-id");
   }
-  return requestId ?? 'unknown';
+  return requestId ?? "unknown";
 }

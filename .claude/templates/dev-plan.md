@@ -15,13 +15,16 @@ Use this template when planning implementation work for GitHub issues.
 ## Context
 
 ### Issue Summary
+
 [1-2 sentences describing what the issue asks for]
 
 ### Dependencies
+
 - **Depends on:** #X, #Y (if any)
 - **Blocks:** #A, #B (if any)
 
 ### Related Code
+
 - `path/to/relevant/file.ts` - [what it does]
 - `path/to/another/file.ts` - [what it does]
 
@@ -34,13 +37,16 @@ Use this template when planning implementation work for GitHub issues.
 **Commit:** `<type>(<scope>): <description>`
 
 **Files:**
+
 - [ ] `path/to/file.ts` - [action: create/modify/delete]
 
 **Changes:**
+
 - [What this step accomplishes]
 - [Key implementation details]
 
 **Validation:**
+
 ```bash
 bun run type-check
 ```
@@ -52,12 +58,15 @@ bun run type-check
 **Commit:** `<type>(<scope>): <description>`
 
 **Files:**
+
 - [ ] `path/to/file.ts` - [action]
 
 **Changes:**
+
 - [What this step accomplishes]
 
 **Validation:**
+
 ```bash
 bun run type-check
 bun test path/to/relevant.test.ts
@@ -70,12 +79,15 @@ bun test path/to/relevant.test.ts
 **Commit:** `<type>(<scope>): <description>`
 
 **Files:**
+
 - [ ] `path/to/file.ts` - [action]
 
 **Changes:**
+
 - [What this step accomplishes]
 
 **Validation:**
+
 ```bash
 bun run type-check && bun run lint && bun test
 ```
@@ -114,6 +126,7 @@ bun run build
 ## Post-Implementation
 
 After PR is created:
+
 1. Trigger `@coderabbitai full review` (comment)
 2. Trigger `@claude review` (comment)
 3. Update board status to "In Review"

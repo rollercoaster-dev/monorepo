@@ -1,19 +1,19 @@
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import VueRouter from 'unplugin-vue-router/vite';
-import AutoImport from 'unplugin-auto-import/vite';
-import Components from 'unplugin-vue-components/vite';
-import { VueRouterAutoImports } from 'unplugin-vue-router';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import VueRouter from 'unplugin-vue-router/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { VueRouterAutoImports } from 'unplugin-vue-router'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import { createRequire } from 'node:module'
 
-const require = createRequire(import.meta.url);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const isProduction = mode === 'production';
+  const isProduction = mode === 'production'
 
   return {
     root: __dirname,
@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
           target: `http://localhost:${process.env.PORT || '8888'}`,
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path,
+          rewrite: path => path,
         },
       },
     },
@@ -86,7 +86,7 @@ export default defineConfig(({ mode }) => {
       vue({
         template: {
           compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith('ob-'),
+            isCustomElement: tag => tag.startsWith('ob-'),
           },
         },
       }),
@@ -101,9 +101,9 @@ export default defineConfig(({ mode }) => {
         dts: 'src/client/components.d.ts',
         resolvers: [
           // Auto import components from openbadges-ui
-          (componentName) => {
+          componentName => {
             if (componentName.startsWith('Ob')) {
-              return { name: componentName, from: 'openbadges-ui' };
+              return { name: componentName, from: 'openbadges-ui' }
             }
           },
         ],
@@ -113,11 +113,8 @@ export default defineConfig(({ mode }) => {
     // CSS configuration
     css: {
       postcss: {
-        plugins: [
-          require('tailwindcss'),
-          require('autoprefixer'),
-        ],
+        plugins: [require('tailwindcss'), require('autoprefixer')],
       },
     },
-  };
-});
+  }
+})

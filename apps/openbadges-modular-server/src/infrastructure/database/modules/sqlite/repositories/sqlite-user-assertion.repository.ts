@@ -5,22 +5,22 @@
  * and the Data Mapper pattern with Drizzle ORM.
  */
 
-import { eq, and, ne, sql } from 'drizzle-orm';
-import { UserAssertion } from '@domains/backpack/user-assertion.entity';
-import type { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@utils/logging/logger.service';
-import { UserAssertionStatus } from '@domains/backpack/backpack.types';
+import { eq, and, ne, sql } from "drizzle-orm";
+import { UserAssertion } from "@domains/backpack/user-assertion.entity";
+import type { UserAssertionRepository } from "@domains/backpack/user-assertion.repository";
+import type { Shared } from "openbadges-types";
+import { logger } from "@utils/logging/logger.service";
+import { UserAssertionStatus } from "@domains/backpack/backpack.types";
 import type {
   UserAssertionCreateParams,
   UserAssertionQueryParams,
-} from '@domains/backpack/repository.types';
-import { userAssertions } from '../schema';
-import { SqliteUserAssertionMapper } from '../mappers/sqlite-user-assertion.mapper';
-import { createId } from '@paralleldrive/cuid2';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { SqliteTypeConverters } from '../utils/sqlite-type-converters';
+} from "@domains/backpack/repository.types";
+import { userAssertions } from "../schema";
+import { SqliteUserAssertionMapper } from "../mappers/sqlite-user-assertion.mapper";
+import { createId } from "@paralleldrive/cuid2";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
+import { SqliteTypeConverters } from "../utils/sqlite-type-converters";
 
 export class SqliteUserAssertionRepository implements UserAssertionRepository {
   private mapper: SqliteUserAssertionMapper;
@@ -66,22 +66,22 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
     if (record.metadata !== undefined) {
       // Use proper JSON conversion to prevent data loss
       updateSet.metadata =
-        typeof record.metadata === 'string'
+        typeof record.metadata === "string"
           ? record.metadata
           : SqliteTypeConverters.safeJsonStringify(
               record.metadata,
-              'metadata'
-            ) || '{}';
+              "metadata",
+            ) || "{}";
     }
 
     // Handle updatedAt field
     if (record.updatedAt !== undefined) {
       updateSet.updatedAt =
-        typeof record.updatedAt === 'number'
+        typeof record.updatedAt === "number"
           ? record.updatedAt
           : record.updatedAt instanceof Date
-          ? record.updatedAt.getTime()
-          : Date.now();
+            ? record.updatedAt.getTime()
+            : Date.now();
     }
 
     return updateSet;
@@ -90,27 +90,27 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
   async addAssertion(
     userIdOrParams: Shared.IRI | UserAssertionCreateParams,
     assertionId?: Shared.IRI,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<UserAssertion> {
     try {
       // Handle params object
-      if (typeof userIdOrParams !== 'string') {
+      if (typeof userIdOrParams !== "string") {
         const params = userIdOrParams;
         return this.createUserAssertion(
           params.userId,
           params.assertionId,
-          params.metadata
+          params.metadata,
         );
       }
 
       // Handle individual parameters
       if (!assertionId) {
-        throw new Error('Assertion ID is required when userId is provided');
+        throw new Error("Assertion ID is required when userId is provided");
       }
 
       return this.createUserAssertion(userIdOrParams, assertionId, metadata);
     } catch (error) {
-      logger.error('Error adding assertion to user in SQLite repository', {
+      logger.error("Error adding assertion to user in SQLite repository", {
         error: error instanceof Error ? error.message : String(error),
         userIdOrParams,
         assertionId,
@@ -125,7 +125,7 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
   private async createUserAssertion(
     userId: Shared.IRI,
     assertionId: Shared.IRI,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<UserAssertion> {
     try {
       // Create a new user assertion entity with a generated ID
@@ -175,7 +175,7 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
         if (entityData.metadata) {
           const metadataString = SqliteTypeConverters.safeJsonStringify(
             entityData.metadata,
-            'metadata'
+            "metadata",
           );
           if (metadataString) {
             updateValues.metadata = metadataString;
@@ -196,25 +196,25 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
       // Fetch the persisted entity to ensure canonical data is returned
       const persistedAssertion = await this.findByUserAndAssertion(
         userId,
-        assertionId
+        assertionId,
       );
 
       if (!persistedAssertion) {
         // This should ideally not happen if the transaction was successful
-        logger.error('Failed to fetch user assertion after creation/update', {
+        logger.error("Failed to fetch user assertion after creation/update", {
           userId,
           assertionId,
         });
         // Throw an error to indicate an inconsistency, as returning the potentially
         // stale in-memory 'userAssertion' would defeat the purpose of this change.
         throw new Error(
-          'Failed to retrieve user assertion after persistence operation.'
+          "Failed to retrieve user assertion after persistence operation.",
         );
       }
 
       return persistedAssertion;
     } catch (error) {
-      logger.error('Error creating user assertion in SQLite repository', {
+      logger.error("Error creating user assertion in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         userId,
         assertionId,
@@ -225,18 +225,18 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
 
   async removeAssertion(
     userId: Shared.IRI,
-    assertionId: Shared.IRI
+    assertionId: Shared.IRI,
   ): Promise<boolean> {
     try {
       // Get database with connection validation
       const db = this.getDatabase();
 
       // Convert IDs to database format for querying
-      const dbUserId = convertUuid(userId as string, 'sqlite', 'to') as string;
+      const dbUserId = convertUuid(userId as string, "sqlite", "to") as string;
       const dbAssertionId = convertUuid(
         assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
 
       // Delete from database using Drizzle ORM
@@ -245,15 +245,15 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
         .where(
           and(
             eq(userAssertions.userId, dbUserId),
-            eq(userAssertions.assertionId, dbAssertionId)
-          )
+            eq(userAssertions.assertionId, dbAssertionId),
+          ),
         )
         .returning();
 
       // Return true if something was deleted
       return result.length > 0;
     } catch (error) {
-      logger.error('Error removing assertion from user in SQLite repository', {
+      logger.error("Error removing assertion from user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         userId,
         assertionId,
@@ -265,7 +265,7 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
   async updateStatus(
     userId: Shared.IRI,
     assertionId: Shared.IRI,
-    status: UserAssertionStatus
+    status: UserAssertionStatus,
   ): Promise<boolean> {
     try {
       // Get database with connection validation
@@ -279,11 +279,11 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
       });
 
       // Convert IDs to database format for querying
-      const dbUserId = convertUuid(userId as string, 'sqlite', 'to') as string;
+      const dbUserId = convertUuid(userId as string, "sqlite", "to") as string;
       const dbAssertionId = convertUuid(
         assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
 
       const result = await db
@@ -292,15 +292,15 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
         .where(
           and(
             eq(userAssertions.userId, dbUserId),
-            eq(userAssertions.assertionId, dbAssertionId)
-          )
+            eq(userAssertions.assertionId, dbAssertionId),
+          ),
         )
         .returning();
 
       // Return true if something was updated
       return result.length > 0;
     } catch (error) {
-      logger.error('Error updating assertion status in SQLite repository', {
+      logger.error("Error updating assertion status in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         userId,
         assertionId,
@@ -312,24 +312,24 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
 
   async getUserAssertions(
     userId: Shared.IRI,
-    params?: UserAssertionQueryParams
+    params?: UserAssertionQueryParams,
   ): Promise<UserAssertion[]> {
     try {
       // Get database with connection validation
       const db = this.getDatabase();
 
       // Convert user ID to database format for querying
-      const dbUserId = convertUuid(userId as string, 'sqlite', 'to') as string;
+      const dbUserId = convertUuid(userId as string, "sqlite", "to") as string;
 
       // Build the where conditions
       const whereCondition = params?.status
         ? and(
             eq(userAssertions.userId, dbUserId),
-            eq(userAssertions.status, params.status as string)
+            eq(userAssertions.status, params.status as string),
           )
         : and(
             eq(userAssertions.userId, dbUserId),
-            ne(userAssertions.status, UserAssertionStatus.DELETED as string)
+            ne(userAssertions.status, UserAssertionStatus.DELETED as string),
           );
 
       // Build the query with the condition
@@ -359,10 +359,10 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
 
       // Convert database records to domain entities
       return result.map((record: typeof userAssertions.$inferSelect) =>
-        this.mapper.toDomain(record)
+        this.mapper.toDomain(record),
       );
     } catch (error) {
-      logger.error('Error getting user assertions in SQLite repository', {
+      logger.error("Error getting user assertions in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         userId,
         params,
@@ -379,8 +379,8 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
       // Convert assertion ID to database format for querying
       const dbAssertionId = convertUuid(
         assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
 
       // Query database using Drizzle ORM
@@ -392,7 +392,7 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
       // Convert database records to domain entities
       return result.map((record) => this.mapper.toDomain(record));
     } catch (error) {
-      logger.error('Error getting assertion users in SQLite repository', {
+      logger.error("Error getting assertion users in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         assertionId,
       });
@@ -402,18 +402,18 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
 
   async hasAssertion(
     userId: Shared.IRI,
-    assertionId: Shared.IRI
+    assertionId: Shared.IRI,
   ): Promise<boolean> {
     try {
       // Get database with connection validation
       const db = this.getDatabase();
 
       // Convert IDs to database format for querying
-      const dbUserId = convertUuid(userId as string, 'sqlite', 'to') as string;
+      const dbUserId = convertUuid(userId as string, "sqlite", "to") as string;
       const dbAssertionId = convertUuid(
         assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
 
       // Query database using Drizzle ORM
@@ -424,20 +424,20 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
           and(
             eq(userAssertions.userId, dbUserId),
             eq(userAssertions.assertionId, dbAssertionId),
-            ne(userAssertions.status, UserAssertionStatus.DELETED as string)
-          )
+            ne(userAssertions.status, UserAssertionStatus.DELETED as string),
+          ),
         );
 
       // Return true if found
       return result.length > 0;
     } catch (error) {
       logger.error(
-        'Error checking if user has assertion in SQLite repository',
+        "Error checking if user has assertion in SQLite repository",
         {
           error: error instanceof Error ? error.stack : String(error),
           userId,
           assertionId,
-        }
+        },
       );
       throw error;
     }
@@ -445,18 +445,18 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
 
   async findByUserAndAssertion(
     userId: Shared.IRI,
-    assertionId: Shared.IRI
+    assertionId: Shared.IRI,
   ): Promise<UserAssertion | null> {
     try {
       // Get database with connection validation
       const db = this.getDatabase();
 
       // Convert IDs to database format for querying
-      const dbUserId = convertUuid(userId as string, 'sqlite', 'to') as string;
+      const dbUserId = convertUuid(userId as string, "sqlite", "to") as string;
       const dbAssertionId = convertUuid(
         assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
 
       // Query database using Drizzle ORM
@@ -466,8 +466,8 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
         .where(
           and(
             eq(userAssertions.userId, dbUserId),
-            eq(userAssertions.assertionId, dbAssertionId)
-          )
+            eq(userAssertions.assertionId, dbAssertionId),
+          ),
         );
 
       // Return null if not found
@@ -479,12 +479,12 @@ export class SqliteUserAssertionRepository implements UserAssertionRepository {
       return this.mapper.toDomain(result[0]);
     } catch (error) {
       logger.error(
-        'Error finding user assertion by user and assertion ID in SQLite repository',
+        "Error finding user assertion by user and assertion ID in SQLite repository",
         {
           error: error instanceof Error ? error.stack : String(error),
           userId,
           assertionId,
-        }
+        },
       );
       throw error;
     }

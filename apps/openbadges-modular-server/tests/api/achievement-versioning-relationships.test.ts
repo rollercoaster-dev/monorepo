@@ -5,71 +5,70 @@
  * features including related achievements and endorsements.
  */
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test';
-import { BadgeClassController } from '@/api/controllers/badgeClass.controller';
-import type { BadgeClassRepository } from '@/domains/badgeClass/badgeClass.repository';
-import type { IssuerRepository } from '@/domains/issuer/issuer.repository';
+import { describe, expect, it, mock, beforeEach } from "bun:test";
+import { BadgeClassController } from "@/api/controllers/badgeClass.controller";
+import type { BadgeClassRepository } from "@/domains/badgeClass/badgeClass.repository";
+import type { IssuerRepository } from "@/domains/issuer/issuer.repository";
 import type {
   Related,
-  EndorsementCredential} from '@/domains/badgeClass/badgeClass.entity';
-import {
-  BadgeClass
-} from '@/domains/badgeClass/badgeClass.entity';
-import type { Shared } from 'openbadges-types';
-import { BadgeVersion } from '@/utils/version/badge-version';
-import { UserPermission } from '@/domains/user/user.entity';
+  EndorsementCredential,
+} from "@/domains/badgeClass/badgeClass.entity";
+import { BadgeClass } from "@/domains/badgeClass/badgeClass.entity";
+import type { Shared } from "openbadges-types";
+import { BadgeVersion } from "@/utils/version/badge-version";
+import { UserPermission } from "@/domains/user/user.entity";
 
-describe('Achievement Versioning and Relationships API', () => {
+describe("Achievement Versioning and Relationships API", () => {
   let controller: BadgeClassController;
   let mockBadgeClassRepository: Partial<BadgeClassRepository>;
   let mockIssuerRepository: Partial<IssuerRepository>;
 
   // Test data
   const testAchievement = BadgeClass.create({
-    id: 'urn:uuid:achievement-1' as Shared.IRI,
-    issuer: 'urn:uuid:issuer-1' as Shared.IRI,
-    name: 'Test Achievement',
-    description: 'A test achievement',
-    image: 'https://example.com/badge.png' as Shared.IRI,
-    criteria: { narrative: 'Complete the test' },
+    id: "urn:uuid:achievement-1" as Shared.IRI,
+    issuer: "urn:uuid:issuer-1" as Shared.IRI,
+    name: "Test Achievement",
+    description: "A test achievement",
+    image: "https://example.com/badge.png" as Shared.IRI,
+    criteria: { narrative: "Complete the test" },
   });
 
   const relatedAchievement = BadgeClass.create({
-    id: 'urn:uuid:achievement-2' as Shared.IRI,
-    issuer: 'urn:uuid:issuer-1' as Shared.IRI,
-    name: 'Related Achievement',
-    description: 'A related achievement',
-    image: 'https://example.com/related-badge.png' as Shared.IRI,
-    criteria: { narrative: 'Complete the related test' },
+    id: "urn:uuid:achievement-2" as Shared.IRI,
+    issuer: "urn:uuid:issuer-1" as Shared.IRI,
+    name: "Related Achievement",
+    description: "A related achievement",
+    image: "https://example.com/related-badge.png" as Shared.IRI,
+    criteria: { narrative: "Complete the related test" },
   });
 
   const testUser = {
     claims: {
-      sub: 'test-user-id',
+      sub: "test-user-id",
       permissions: [UserPermission.UPDATE_BADGE_CLASS],
     },
   };
 
   const relatedData: Related = {
     id: relatedAchievement.id,
-    type: ['Related'],
-    inLanguage: 'en-US',
-    version: '1.0',
+    type: ["Related"],
+    inLanguage: "en-US",
+    version: "1.0",
   };
 
   const endorsementCredential: EndorsementCredential = {
-    '@context': [
-      'https://www.w3.org/2018/credentials/v1',
-      'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
     ],
-    id: 'urn:uuid:endorsement-1' as Shared.IRI,
-    type: ['VerifiableCredential', 'EndorsementCredential'],
-    issuer: 'urn:uuid:endorser-1' as Shared.IRI,
-    validFrom: '2023-01-01T00:00:00Z',
+    id: "urn:uuid:endorsement-1" as Shared.IRI,
+    type: ["VerifiableCredential", "EndorsementCredential"],
+    issuer: "urn:uuid:endorser-1" as Shared.IRI,
+    validFrom: "2023-01-01T00:00:00Z",
     credentialSubject: {
       id: testAchievement.id,
-      type: ['Achievement'],
-      endorsementComment: 'This is an excellent achievement program.',
+      type: ["Achievement"],
+      endorsementComment: "This is an excellent achievement program.",
     },
   };
 
@@ -94,13 +93,13 @@ describe('Achievement Versioning and Relationships API', () => {
 
     controller = new BadgeClassController(
       mockBadgeClassRepository as BadgeClassRepository,
-      mockIssuerRepository as IssuerRepository
+      mockIssuerRepository as IssuerRepository,
     );
   });
 
-  describe('Related Achievements API', () => {
-    describe('getRelatedAchievements', () => {
-      it('should return related achievements', async () => {
+  describe("Related Achievements API", () => {
+    describe("getRelatedAchievements", () => {
+      it("should return related achievements", async () => {
         const achievementWithRelated = BadgeClass.create({
           id: testAchievement.id,
           issuer: testAchievement.issuer,
@@ -118,41 +117,41 @@ describe('Achievement Versioning and Relationships API', () => {
 
         const result = await controller.getRelatedAchievements(
           testAchievement.id,
-          BadgeVersion.V3
+          BadgeVersion.V3,
         );
 
         expect(result).toHaveLength(1);
         expect(result[0].id).toBe(relatedAchievement.id);
-        expect(result[0].type).toEqual(['Achievement']);
+        expect(result[0].type).toEqual(["Achievement"]);
       });
 
-      it('should return empty array when no related achievements exist', async () => {
+      it("should return empty array when no related achievements exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(testAchievement);
 
         const result = await controller.getRelatedAchievements(
-          testAchievement.id
+          testAchievement.id,
         );
 
         expect(result).toHaveLength(0);
       });
 
-      it('should return empty array when achievement does not exist', async () => {
+      it("should return empty array when achievement does not exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(null);
 
         const result = await controller.getRelatedAchievements(
-          'urn:uuid:non-existent' as Shared.IRI
+          "urn:uuid:non-existent" as Shared.IRI,
         );
 
         expect(result).toHaveLength(0);
       });
     });
 
-    describe('addRelatedAchievement', () => {
-      it('should add a related achievement successfully', async () => {
+    describe("addRelatedAchievement", () => {
+      it("should add a related achievement successfully", async () => {
         // Mock validation to pass
         (mockBadgeClassRepository.findById as ReturnType<typeof mock>)
           .mockResolvedValueOnce(relatedAchievement) // Related achievement exists
@@ -178,7 +177,7 @@ describe('Achievement Versioning and Relationships API', () => {
           testAchievement.id,
           relatedData,
           BadgeVersion.V3,
-          testUser
+          testUser,
         );
 
         expect(result).toBeDefined();
@@ -186,15 +185,15 @@ describe('Achievement Versioning and Relationships API', () => {
         expect(result?.related?.[0]).toEqual(relatedData);
       });
 
-      it('should reject request without proper permissions', async () => {
+      it("should reject request without proper permissions", async () => {
         // Ensure RBAC is not disabled for this test
-        const originalRbacSetting = process.env['AUTH_DISABLE_RBAC'];
-        delete process.env['AUTH_DISABLE_RBAC'];
+        const originalRbacSetting = process.env["AUTH_DISABLE_RBAC"];
+        delete process.env["AUTH_DISABLE_RBAC"];
 
         try {
           const unauthorizedUser = {
             claims: {
-              sub: 'test-user-id',
+              sub: "test-user-id",
               permissions: [], // No UPDATE_BADGE_CLASS permission
             },
           };
@@ -204,20 +203,20 @@ describe('Achievement Versioning and Relationships API', () => {
               testAchievement.id,
               relatedData,
               BadgeVersion.V3,
-              unauthorizedUser
-            )
+              unauthorizedUser,
+            ),
           ).rejects.toThrow(
-            'Insufficient permissions to modify badge class relationships'
+            "Insufficient permissions to modify badge class relationships",
           );
         } finally {
           // Restore original setting
           if (originalRbacSetting !== undefined) {
-            process.env['AUTH_DISABLE_RBAC'] = originalRbacSetting;
+            process.env["AUTH_DISABLE_RBAC"] = originalRbacSetting;
           }
         }
       });
 
-      it('should return null when achievement does not exist', async () => {
+      it("should return null when achievement does not exist", async () => {
         // Mock validation to pass but achievement not found
         (mockBadgeClassRepository.findById as ReturnType<typeof mock>)
           .mockResolvedValueOnce(relatedAchievement) // Related achievement exists
@@ -228,15 +227,15 @@ describe('Achievement Versioning and Relationships API', () => {
           testAchievement.id,
           relatedData,
           BadgeVersion.V3,
-          testUser
+          testUser,
         );
 
         expect(result).toBeNull();
       });
     });
 
-    describe('removeRelatedAchievement', () => {
-      it('should remove a related achievement successfully', async () => {
+    describe("removeRelatedAchievement", () => {
+      it("should remove a related achievement successfully", async () => {
         const achievementWithRelated = BadgeClass.create({
           id: testAchievement.id,
           issuer: testAchievement.issuer,
@@ -268,22 +267,22 @@ describe('Achievement Versioning and Relationships API', () => {
           testAchievement.id,
           relatedAchievement.id,
           BadgeVersion.V3,
-          testUser
+          testUser,
         );
 
         expect(result).toBeDefined();
         expect(result?.related).toHaveLength(0);
       });
 
-      it('should reject request without proper permissions', async () => {
+      it("should reject request without proper permissions", async () => {
         // Ensure RBAC is not disabled for this test
-        const originalRbacSetting = process.env['AUTH_DISABLE_RBAC'];
-        delete process.env['AUTH_DISABLE_RBAC'];
+        const originalRbacSetting = process.env["AUTH_DISABLE_RBAC"];
+        delete process.env["AUTH_DISABLE_RBAC"];
 
         try {
           const unauthorizedUser = {
             claims: {
-              sub: 'test-user-id',
+              sub: "test-user-id",
               permissions: [], // No UPDATE_BADGE_CLASS permission
             },
           };
@@ -293,20 +292,20 @@ describe('Achievement Versioning and Relationships API', () => {
               testAchievement.id,
               relatedAchievement.id,
               BadgeVersion.V3,
-              unauthorizedUser
-            )
+              unauthorizedUser,
+            ),
           ).rejects.toThrow(
-            'Insufficient permissions to modify badge class relationships'
+            "Insufficient permissions to modify badge class relationships",
           );
         } finally {
           // Restore original setting
           if (originalRbacSetting !== undefined) {
-            process.env['AUTH_DISABLE_RBAC'] = originalRbacSetting;
+            process.env["AUTH_DISABLE_RBAC"] = originalRbacSetting;
           }
         }
       });
 
-      it('should return null when achievement does not exist', async () => {
+      it("should return null when achievement does not exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(null);
@@ -315,7 +314,7 @@ describe('Achievement Versioning and Relationships API', () => {
           testAchievement.id,
           relatedAchievement.id,
           BadgeVersion.V3,
-          testUser
+          testUser,
         );
 
         expect(result).toBeNull();
@@ -323,9 +322,9 @@ describe('Achievement Versioning and Relationships API', () => {
     });
   });
 
-  describe('Endorsements API', () => {
-    describe('getEndorsements', () => {
-      it('should return endorsements for an achievement', async () => {
+  describe("Endorsements API", () => {
+    describe("getEndorsements", () => {
+      it("should return endorsements for an achievement", async () => {
         const achievementWithEndorsement = BadgeClass.create({
           id: testAchievement.id,
           issuer: testAchievement.issuer,
@@ -346,7 +345,7 @@ describe('Achievement Versioning and Relationships API', () => {
         expect(result[0]).toEqual(endorsementCredential);
       });
 
-      it('should return empty array when no endorsements exist', async () => {
+      it("should return empty array when no endorsements exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(testAchievement);
@@ -356,21 +355,21 @@ describe('Achievement Versioning and Relationships API', () => {
         expect(result).toHaveLength(0);
       });
 
-      it('should return empty array when achievement does not exist', async () => {
+      it("should return empty array when achievement does not exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(null);
 
         const result = await controller.getEndorsements(
-          'urn:uuid:non-existent'
+          "urn:uuid:non-existent",
         );
 
         expect(result).toHaveLength(0);
       });
     });
 
-    describe('addEndorsement', () => {
-      it('should add an endorsement successfully', async () => {
+    describe("addEndorsement", () => {
+      it("should add an endorsement successfully", async () => {
         const updatedAchievement = BadgeClass.create({
           id: testAchievement.id,
           issuer: testAchievement.issuer,
@@ -391,7 +390,7 @@ describe('Achievement Versioning and Relationships API', () => {
         const result = await controller.addEndorsement(
           testAchievement.id,
           endorsementCredential,
-          testUser
+          testUser,
         );
 
         expect(result).toBeDefined();
@@ -399,15 +398,15 @@ describe('Achievement Versioning and Relationships API', () => {
         expect(result?.endorsement?.[0]).toEqual(endorsementCredential);
       });
 
-      it('should reject request without proper permissions', async () => {
+      it("should reject request without proper permissions", async () => {
         // Ensure RBAC is not disabled for this test
-        const originalRbacSetting = process.env['AUTH_DISABLE_RBAC'];
-        delete process.env['AUTH_DISABLE_RBAC'];
+        const originalRbacSetting = process.env["AUTH_DISABLE_RBAC"];
+        delete process.env["AUTH_DISABLE_RBAC"];
 
         try {
           const unauthorizedUser = {
             claims: {
-              sub: 'test-user-id',
+              sub: "test-user-id",
               permissions: [], // No UPDATE_BADGE_CLASS permission
             },
           };
@@ -416,20 +415,20 @@ describe('Achievement Versioning and Relationships API', () => {
             controller.addEndorsement(
               testAchievement.id,
               endorsementCredential,
-              unauthorizedUser
-            )
+              unauthorizedUser,
+            ),
           ).rejects.toThrow(
-            'Insufficient permissions to modify badge class endorsements'
+            "Insufficient permissions to modify badge class endorsements",
           );
         } finally {
           // Restore original setting
           if (originalRbacSetting !== undefined) {
-            process.env['AUTH_DISABLE_RBAC'] = originalRbacSetting;
+            process.env["AUTH_DISABLE_RBAC"] = originalRbacSetting;
           }
         }
       });
 
-      it('should return null when achievement does not exist', async () => {
+      it("should return null when achievement does not exist", async () => {
         (
           mockBadgeClassRepository.findById as ReturnType<typeof mock>
         ).mockResolvedValueOnce(null);
@@ -437,7 +436,7 @@ describe('Achievement Versioning and Relationships API', () => {
         const result = await controller.addEndorsement(
           testAchievement.id,
           endorsementCredential,
-          testUser
+          testUser,
         );
 
         expect(result).toBeNull();

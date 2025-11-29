@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import FontSelector from './FontSelector.vue';
+import { ref } from "vue";
+import FontSelector from "./FontSelector.vue";
 
 /**
  * # FontSelector
@@ -37,20 +37,20 @@ import FontSelector from './FontSelector.vue';
  * | `text-spacing-change` | `boolean` | Emitted when the text spacing changes |
  */
 
-const selectedFont = ref('system');
+const selectedFont = ref("system");
 const showFontSize = ref(true);
 const showTextSpacing = ref(true);
 
 function onFontChange(value: string) {
-  console.log('Font changed:', value);
+  console.log("Font changed:", value);
 }
 
 function onFontSizeChange(value: string) {
-  console.log('Font size changed:', value);
+  console.log("Font size changed:", value);
 }
 
 function onTextSpacingChange(value: boolean) {
-  console.log('Text spacing changed:', value);
+  console.log("Text spacing changed:", value);
 }
 </script>
 
@@ -64,21 +64,26 @@ function onTextSpacingChange(value: boolean) {
         <h1>FontSelector</h1>
 
         <p>
-          The <code>FontSelector</code> component allows users to choose from a selection of
-          accessible fonts, adjust font size, and enable enhanced text spacing for improved
-          readability.
+          The <code>FontSelector</code> component allows users to choose from a
+          selection of accessible fonts, adjust font size, and enable enhanced
+          text spacing for improved readability.
         </p>
 
         <h2>When To Use</h2>
         <ul>
           <li>When you want to provide users with accessible font options</li>
-          <li>When you need to support users with dyslexia or visual impairments</li>
+          <li>
+            When you need to support users with dyslexia or visual impairments
+          </li>
           <li>When you want to give users control over text presentation</li>
           <li>As part of a comprehensive accessibility settings panel</li>
         </ul>
 
         <h2>Examples</h2>
-        <p>Use the controls in the right panel to customize the component behavior.</p>
+        <p>
+          Use the controls in the right panel to customize the component
+          behavior.
+        </p>
 
         <h3>Basic Usage</h3>
         <pre><code>&lt;FontSelector v-model="selectedFont" /&gt;</code></pre>
@@ -140,8 +145,10 @@ function onTextSpacingChange(value: boolean) {
             <tr>
               <td><code>availableFonts</code></td>
               <td>
-                <code>Array&lt;{id: string, name: string, description?: string, className:
-                  string}&gt;</code>
+                <code
+                  >Array&lt;{id: string, name: string, description?: string,
+                  className: string}&gt;</code
+                >
               </td>
               <td>All fonts</td>
               <td>The available font options to display</td>
@@ -197,8 +204,8 @@ function onTextSpacingChange(value: boolean) {
 
         <h2>CSS Variables</h2>
         <p>
-          The component uses CSS variables for styling, which can be overridden to customize its
-          appearance:
+          The component uses CSS variables for styling, which can be overridden
+          to customize its appearance:
         </p>
         <table>
           <thead>
@@ -248,7 +255,10 @@ function onTextSpacingChange(value: boolean) {
           <li>All form controls have proper labels</li>
           <li>The component uses semantic HTML elements</li>
           <li>The preview section demonstrates the selected font settings</li>
-          <li>Font options include descriptions to help users understand their purpose</li>
+          <li>
+            Font options include descriptions to help users understand their
+            purpose
+          </li>
           <li>The component supports keyboard navigation</li>
         </ul>
 
@@ -257,22 +267,25 @@ function onTextSpacingChange(value: boolean) {
         <ul>
           <li><strong>System Font</strong>: Your device's default font</li>
           <li>
-            <strong>Atkinson Hyperlegible</strong>: Designed for low vision readers by the Braille
-            Institute
+            <strong>Atkinson Hyperlegible</strong>: Designed for low vision
+            readers by the Braille Institute
           </li>
-          <li><strong>OpenDyslexic</strong>: Designed specifically for readers with dyslexia</li>
           <li>
-            <strong>Lexend</strong>: Designed to reduce visual stress and improve reading fluency
+            <strong>OpenDyslexic</strong>: Designed specifically for readers
+            with dyslexia
           </li>
-          <li><strong>Inter</strong>: Modern, highly legible sans-serif font</li>
+          <li>
+            <strong>Lexend</strong>: Designed to reduce visual stress and
+            improve reading fluency
+          </li>
+          <li>
+            <strong>Inter</strong>: Modern, highly legible sans-serif font
+          </li>
         </ul>
       </div>
     </template>
     <template #controls>
-      <HstCheckbox
-        v-model="showFontSize"
-        title="Show Font Size Controls"
-      />
+      <HstCheckbox v-model="showFontSize" title="Show Font Size Controls" />
       <HstCheckbox
         v-model="showTextSpacing"
         title="Show Text Spacing Controls"

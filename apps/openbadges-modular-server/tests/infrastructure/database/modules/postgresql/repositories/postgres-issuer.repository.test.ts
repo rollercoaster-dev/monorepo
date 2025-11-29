@@ -1,21 +1,28 @@
-import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'bun:test';
-import type postgres from 'postgres';
-import { PostgresIssuerRepository } from '@infrastructure/database/modules/postgresql/repositories/postgres-issuer.repository';
-import { Issuer } from '@domains/issuer/issuer.entity';
-import type { Shared } from 'openbadges-types';
-import { 
-  createPostgresClient, 
-  createTestTables, 
-  dropTestTables, 
+import {
+  describe,
+  expect,
+  it,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from "bun:test";
+import type postgres from "postgres";
+import { PostgresIssuerRepository } from "@infrastructure/database/modules/postgresql/repositories/postgres-issuer.repository";
+import { Issuer } from "@domains/issuer/issuer.entity";
+import type { Shared } from "openbadges-types";
+import {
+  createPostgresClient,
+  createTestTables,
+  dropTestTables,
   cleanupTestData,
-  isDatabaseAvailable
-} from '../postgres-test-helper';
+  isDatabaseAvailable,
+} from "../postgres-test-helper";
 
 // Skip tests if PostgreSQL is not available
 const runTests = await isDatabaseAvailable();
 
 // Conditional test suite that only runs if PostgreSQL is available
-(runTests ? describe : describe.skip)('PostgresIssuerRepository', () => {
+(runTests ? describe : describe.skip)("PostgresIssuerRepository", () => {
   let client: postgres.Sql;
   let repository: PostgresIssuerRepository;
 
@@ -42,14 +49,14 @@ const runTests = await isDatabaseAvailable();
     await client.end();
   });
 
-  it('should create an issuer', async () => {
+  it("should create an issuer", async () => {
     // Create a test issuer
     const issuer = Issuer.create({
-      name: 'Test Issuer',
-      url: 'https://example.com' as Shared.IRI,
-      email: 'test@example.com',
-      description: 'A test issuer',
-      image: 'https://example.com/image.png' as Shared.IRI
+      name: "Test Issuer",
+      url: "https://example.com" as Shared.IRI,
+      email: "test@example.com",
+      description: "A test issuer",
+      image: "https://example.com/image.png" as Shared.IRI,
     });
 
     // Create the issuer in the database
@@ -58,36 +65,38 @@ const runTests = await isDatabaseAvailable();
     // Verify the issuer was created
     expect(createdIssuer).toBeDefined();
     expect(createdIssuer.id).toBeDefined();
-    expect(createdIssuer.name).toBe('Test Issuer');
+    expect(createdIssuer.name).toBe("Test Issuer");
     expect(createdIssuer.url).toBeDefined();
-    expect(createdIssuer.url.toString()).toBe('https://example.com');
-    expect(createdIssuer.email).toBe('test@example.com');
-    expect(createdIssuer.description).toBe('A test issuer');
+    expect(createdIssuer.url.toString()).toBe("https://example.com");
+    expect(createdIssuer.email).toBe("test@example.com");
+    expect(createdIssuer.description).toBe("A test issuer");
     expect(createdIssuer.image).toBeDefined();
-    expect(createdIssuer.image.toString()).toBe('https://example.com/image.png');
+    expect(createdIssuer.image.toString()).toBe(
+      "https://example.com/image.png",
+    );
 
     // Verify the issuer can be retrieved
     const retrievedIssuer = await repository.findById(createdIssuer.id);
     expect(retrievedIssuer).toBeDefined();
     expect(retrievedIssuer?.id).toBe(createdIssuer.id);
-    expect(retrievedIssuer?.name).toBe('Test Issuer');
+    expect(retrievedIssuer?.name).toBe("Test Issuer");
   });
 
-  it('should return null when finding a non-existent issuer by ID', async () => {
+  it("should return null when finding a non-existent issuer by ID", async () => {
     // Attempt to find an issuer with a non-existent ID
-    const nonExistentId = '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+    const nonExistentId = "00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const foundIssuer = await repository.findById(nonExistentId);
 
     // Verify
     expect(foundIssuer).toBeNull();
   });
 
-  it('should update an issuer', async () => {
+  it("should update an issuer", async () => {
     // Create a test issuer
     const issuer = Issuer.create({
-      name: 'Update Test',
-      url: 'https://update.example.com' as Shared.IRI,
-      email: 'update@example.com'
+      name: "Update Test",
+      url: "https://update.example.com" as Shared.IRI,
+      email: "update@example.com",
     });
 
     // Create the issuer in the database
@@ -95,36 +104,36 @@ const runTests = await isDatabaseAvailable();
 
     // Update the issuer
     const updatedIssuer = await repository.update(createdIssuer.id, {
-      name: 'Updated Name',
-      description: 'Updated description'
+      name: "Updated Name",
+      description: "Updated description",
     });
 
     // Verify the issuer was updated
     expect(updatedIssuer).toBeDefined();
     expect(updatedIssuer?.id).toBe(createdIssuer.id);
-    expect(updatedIssuer?.name).toBe('Updated Name');
+    expect(updatedIssuer?.name).toBe("Updated Name");
     expect(updatedIssuer?.url).toBeDefined();
-    expect(updatedIssuer?.url.toString()).toBe('https://update.example.com');
-    expect(updatedIssuer?.email).toBe('update@example.com');
-    expect(updatedIssuer?.description).toBe('Updated description');
+    expect(updatedIssuer?.url.toString()).toBe("https://update.example.com");
+    expect(updatedIssuer?.email).toBe("update@example.com");
+    expect(updatedIssuer?.description).toBe("Updated description");
   });
 
-  it('should return null when updating a non-existent issuer', async () => {
+  it("should return null when updating a non-existent issuer", async () => {
     // Attempt to update an issuer with a non-existent ID
-    const nonExistentId = '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+    const nonExistentId = "00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const updatedIssuer = await repository.update(nonExistentId, {
-      name: 'Updated Name'
+      name: "Updated Name",
     });
 
     // Verify
     expect(updatedIssuer).toBeNull();
   });
 
-  it('should delete an issuer', async () => {
+  it("should delete an issuer", async () => {
     // Create a test issuer
     const issuer = Issuer.create({
-      name: 'Delete Test',
-      url: 'https://delete.example.com' as Shared.IRI
+      name: "Delete Test",
+      url: "https://delete.example.com" as Shared.IRI,
     });
 
     // Create the issuer in the database
@@ -141,26 +150,30 @@ const runTests = await isDatabaseAvailable();
     expect(retrievedIssuer).toBeNull();
   });
 
-  it('should return false when deleting a non-existent issuer', async () => {
+  it("should return false when deleting a non-existent issuer", async () => {
     // Attempt to delete an issuer with a non-existent ID
-    const nonExistentId = '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+    const nonExistentId = "00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const deleted = await repository.delete(nonExistentId);
 
     // Verify
     expect(deleted).toBe(false);
   });
 
-  it('should find all issuers', async () => {
+  it("should find all issuers", async () => {
     // Create multiple test issuers
-    await repository.create(Issuer.create({
-      name: 'Issuer 1',
-      url: 'https://issuer1.example.com' as Shared.IRI
-    }));
+    await repository.create(
+      Issuer.create({
+        name: "Issuer 1",
+        url: "https://issuer1.example.com" as Shared.IRI,
+      }),
+    );
 
-    await repository.create(Issuer.create({
-      name: 'Issuer 2',
-      url: 'https://issuer2.example.com' as Shared.IRI
-    }));
+    await repository.create(
+      Issuer.create({
+        name: "Issuer 2",
+        url: "https://issuer2.example.com" as Shared.IRI,
+      }),
+    );
 
     // Find all issuers
     const issuers = await repository.findAll();
@@ -168,11 +181,11 @@ const runTests = await isDatabaseAvailable();
     // Verify issuers were found
     expect(issuers).toBeDefined();
     expect(issuers.length).toBeGreaterThanOrEqual(2);
-    expect(issuers.some(i => i.name === 'Issuer 1')).toBe(true);
-    expect(issuers.some(i => i.name === 'Issuer 2')).toBe(true);
+    expect(issuers.some((i) => i.name === "Issuer 1")).toBe(true);
+    expect(issuers.some((i) => i.name === "Issuer 2")).toBe(true);
   });
 
-  it('should handle errors gracefully', async () => {
+  it("should handle errors gracefully", async () => {
     // Create a test issuer with invalid data
     const invalidIssuer = {
       // Missing required fields

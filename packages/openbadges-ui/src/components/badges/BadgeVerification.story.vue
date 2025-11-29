@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BadgeVerification from './BadgeVerification.vue';
-import { mockAssertions, mockOB3Credential } from '../../services/mockData';
+import { ref } from "vue";
+import BadgeVerification from "./BadgeVerification.vue";
+import { mockAssertions, mockOB3Credential } from "../../services/mockData";
 
 /**
  * # BadgeVerification
@@ -55,18 +55,18 @@ const state = ref({
 // Create a badge with expiration
 const expiredBadge = {
   ...mockAssertions[0],
-  expires: '2020-01-01T00:00:00Z', // Past date
+  expires: "2020-01-01T00:00:00Z", // Past date
 };
 
 // Create a badge with revocation
 const revokedBadge = {
   ...mockAssertions[0],
   revoked: true,
-  revocationReason: 'Badge was issued in error',
+  revocationReason: "Badge was issued in error",
 };
 
 function onVerified(isValid) {
-  console.log('Badge verified:', isValid);
+  console.log("Badge verified:", isValid);
 }
 </script>
 
@@ -76,22 +76,13 @@ function onVerified(isValid) {
     :layout="{ type: 'single', iframe: true }"
   >
     <template #controls>
-      <HstCheckbox
-        v-model="state.showStatus"
-        title="Show Status"
-      />
-      <HstCheckbox
-        v-model="state.showDetails"
-        title="Show Details"
-      />
+      <HstCheckbox v-model="state.showStatus" title="Show Status" />
+      <HstCheckbox v-model="state.showDetails" title="Show Details" />
       <HstCheckbox
         v-model="state.showLastVerified"
         title="Show Last Verified"
       />
-      <HstCheckbox
-        v-model="state.autoVerify"
-        title="Auto Verify"
-      />
+      <HstCheckbox v-model="state.autoVerify" title="Auto Verify" />
     </template>
 
     <Variant title="Default">

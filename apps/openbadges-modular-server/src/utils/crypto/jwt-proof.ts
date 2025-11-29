@@ -5,38 +5,29 @@
  * according to the W3C VC-JOSE-COSE specification and Open Badges 3.0 requirements.
  */
 
-import type {
-  JWTPayload,
-  JWTHeaderParameters} from 'jose';
-import {
-  SignJWT,
-  jwtVerify,
-  importJWK,
-  importPKCS8,
-  importSPKI
-} from 'jose';
-import type { Shared } from 'openbadges-types';
-import { logger } from '../logging/logger.service';
+import type { JWTPayload, JWTHeaderParameters } from "jose";
+import { SignJWT, jwtVerify, importJWK, importPKCS8, importSPKI } from "jose";
+import type { Shared } from "openbadges-types";
+import { logger } from "../logging/logger.service";
 import type {
   JWTProof,
   JWTProofPayload,
   VerifiableCredentialClaims,
-  ProofVerificationResult} from '../types/proof.types';
-import {
-  ProofFormat,
-} from '../types/proof.types';
+  ProofVerificationResult,
+} from "../types/proof.types";
+import { ProofFormat } from "../types/proof.types";
 
 /**
  * Supported JWT algorithms for Open Badges
  */
 export const SUPPORTED_JWT_ALGORITHMS = [
-  'RS256',
-  'RS384',
-  'RS512', // RSA with SHA
-  'ES256',
-  'ES384',
-  'ES512', // ECDSA with SHA
-  'EdDSA', // EdDSA (Ed25519/Ed448)
+  "RS256",
+  "RS384",
+  "RS512", // RSA with SHA
+  "ES256",
+  "ES384",
+  "ES512", // ECDSA with SHA
+  "EdDSA", // EdDSA (Ed25519/Ed448)
 ] as const;
 
 export type SupportedJWTAlgorithm = (typeof SUPPORTED_JWT_ALGORITHMS)[number];
@@ -50,9 +41,9 @@ export type SupportedJWTAlgorithm = (typeof SUPPORTED_JWT_ALGORITHMS)[number];
  */
 async function importPrivateKey(
   key: string | Record<string, unknown>,
-  algorithm: SupportedJWTAlgorithm
+  algorithm: SupportedJWTAlgorithm,
 ): Promise<CryptoKey> {
-  if (typeof key === 'string') {
+  if (typeof key === "string") {
     // PEM format
     return await importPKCS8(key, algorithm);
   } else {
@@ -61,7 +52,7 @@ async function importPrivateKey(
     if (importedKey instanceof CryptoKey) {
       return importedKey;
     }
-    throw new Error('Imported JWK is not a CryptoKey');
+    throw new Error("Imported JWK is not a CryptoKey");
   }
 }
 
@@ -74,9 +65,9 @@ async function importPrivateKey(
  */
 async function importPublicKey(
   key: string | Record<string, unknown>,
-  algorithm: string = 'RS256'
+  algorithm: string = "RS256",
 ): Promise<CryptoKey> {
-  if (typeof key === 'string') {
+  if (typeof key === "string") {
     // PEM format - try SPKI first
     return await importSPKI(key, algorithm);
   } else {
@@ -85,7 +76,7 @@ async function importPublicKey(
     if (importedKey instanceof CryptoKey) {
       return importedKey;
     }
-    throw new Error('Imported JWK is not a CryptoKey');
+    throw new Error("Imported JWK is not a CryptoKey");
   }
 }
 
@@ -107,11 +98,11 @@ export interface JWTProofGenerationOptions {
 
   /** Proof purpose */
   proofPurpose?:
-    | 'assertionMethod'
-    | 'authentication'
-    | 'keyAgreement'
-    | 'capabilityInvocation'
-    | 'capabilityDelegation';
+    | "assertionMethod"
+    | "authentication"
+    | "keyAgreement"
+    | "capabilityInvocation"
+    | "capabilityDelegation";
 
   /** Issuer IRI */
   issuer: Shared.IRI;
@@ -155,10 +146,10 @@ export interface JWTProofVerificationOptions {
  */
 export async function generateJWTProof(
   credentialData: VerifiableCredentialClaims,
-  options: JWTProofGenerationOptions
+  options: JWTProofGenerationOptions,
 ): Promise<JWTProof> {
   try {
-    logger.info('Generating JWT proof', {
+    logger.info("Generating JWT proof", {
       algorithm: options.algorithm,
       keyId: options.keyId,
       verificationMethod: options.verificationMethod,
@@ -167,7 +158,7 @@ export async function generateJWTProof(
     // Import the private key
     const privateKey = await importPrivateKey(
       options.privateKey,
-      options.algorithm
+      options.algorithm,
     );
 
     // Prepare JWT payload
@@ -188,35 +179,35 @@ export async function generateJWTProof(
     const jwt = await new SignJWT(payload as JWTPayload)
       .setProtectedHeader({
         alg: options.algorithm,
-        typ: 'JWT',
+        typ: "JWT",
         ...(options.keyId && { kid: options.keyId }),
       } as JWTHeaderParameters)
       .sign(privateKey);
 
     // Create the JWT proof object
     const jwtProof: JWTProof = {
-      type: 'JwtProof2020',
+      type: "JwtProof2020",
       created: new Date().toISOString() as Shared.DateTime,
       verificationMethod: options.verificationMethod,
-      proofPurpose: options.proofPurpose || 'assertionMethod',
+      proofPurpose: options.proofPurpose || "assertionMethod",
       jws: jwt,
     };
 
-    logger.info('JWT proof generated successfully', {
+    logger.info("JWT proof generated successfully", {
       proofType: jwtProof.type,
       verificationMethod: jwtProof.verificationMethod,
     });
 
     return jwtProof;
   } catch (error) {
-    logger.error('Failed to generate JWT proof', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Failed to generate JWT proof", {
+      error: error instanceof Error ? error.message : "Unknown error",
       algorithm: options.algorithm,
     });
     throw new Error(
       `JWT proof generation failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
     );
   }
 }
@@ -230,10 +221,10 @@ export async function generateJWTProof(
  */
 export async function verifyJWTProof(
   jwtProof: JWTProof,
-  options: JWTProofVerificationOptions
+  options: JWTProofVerificationOptions,
 ): Promise<ProofVerificationResult> {
   try {
-    logger.info('Verifying JWT proof', {
+    logger.info("Verifying JWT proof", {
       proofType: jwtProof.type,
       verificationMethod: jwtProof.verificationMethod,
     });
@@ -249,15 +240,15 @@ export async function verifyJWTProof(
         issuer: options.expectedIssuer,
         audience: options.expectedAudience,
         clockTolerance: options.clockTolerance || 60,
-      }
+      },
     );
 
     // Validate the payload structure
     if (!payload.vc) {
-      throw new Error('JWT payload missing vc claim');
+      throw new Error("JWT payload missing vc claim");
     }
 
-    logger.info('JWT proof verified successfully', {
+    logger.info("JWT proof verified successfully", {
       algorithm: protectedHeader.alg,
       issuer: payload.iss,
     });
@@ -276,8 +267,8 @@ export async function verifyJWTProof(
       },
     };
   } catch (error) {
-    logger.warn('JWT proof verification failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.warn("JWT proof verification failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
       verificationMethod: jwtProof.verificationMethod,
     });
 
@@ -286,7 +277,7 @@ export async function verifyJWTProof(
       format: ProofFormat.JWT,
       verificationMethod: jwtProof.verificationMethod,
       error:
-        error instanceof Error ? error.message : 'Unknown verification error',
+        error instanceof Error ? error.message : "Unknown verification error",
     };
   }
 }
@@ -298,32 +289,32 @@ export async function verifyJWTProof(
  * @returns The extracted Verifiable Credential claims
  */
 export function extractCredentialFromJWT(
-  jwtProof: JWTProof
+  jwtProof: JWTProof,
 ): VerifiableCredentialClaims | null {
   try {
     // Validate JWT structure first
-    const parts = jwtProof.jws.split('.');
+    const parts = jwtProof.jws.split(".");
     if (parts.length !== 3) {
-      logger.error('Invalid JWT structure: must have exactly 3 parts');
+      logger.error("Invalid JWT structure: must have exactly 3 parts");
       return null;
     }
 
     const [, payloadBase64] = parts;
     if (!payloadBase64) {
-      logger.error('Invalid JWT: missing payload');
+      logger.error("Invalid JWT: missing payload");
       return null;
     }
 
     // Decode JWT payload without verification (for extraction only)
-    const payloadJson = Buffer.from(payloadBase64, 'base64url').toString(
-      'utf-8'
+    const payloadJson = Buffer.from(payloadBase64, "base64url").toString(
+      "utf-8",
     );
     const payload = JSON.parse(payloadJson) as JWTProofPayload;
 
     return payload.vc || null;
   } catch (error) {
-    logger.error('Failed to extract credential from JWT', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Failed to extract credential from JWT", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     return null;
   }
@@ -336,7 +327,7 @@ export function extractCredentialFromJWT(
  * @returns True if the algorithm is supported
  */
 export function isSupportedJWTAlgorithm(
-  algorithm: string
+  algorithm: string,
 ): algorithm is SupportedJWTAlgorithm {
   return SUPPORTED_JWT_ALGORITHMS.includes(algorithm as SupportedJWTAlgorithm);
 }
@@ -348,18 +339,18 @@ export function isSupportedJWTAlgorithm(
  * @returns The recommended algorithm
  */
 export function getRecommendedAlgorithm(
-  keyType: string
+  keyType: string,
 ): SupportedJWTAlgorithm {
   switch (keyType.toLowerCase()) {
-    case 'rsa':
-      return 'RS256';
-    case 'ec':
-    case 'ecdsa':
-      return 'ES256';
-    case 'ed25519':
-    case 'eddsa':
-      return 'EdDSA';
+    case "rsa":
+      return "RS256";
+    case "ec":
+    case "ecdsa":
+      return "ES256";
+    case "ed25519":
+    case "eddsa":
+      return "EdDSA";
     default:
-      return 'RS256'; // Default fallback
+      return "RS256"; // Default fallback
   }
 }

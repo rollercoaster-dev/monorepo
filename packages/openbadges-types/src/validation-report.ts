@@ -13,7 +13,7 @@
  * - WARNING: Non-critical issues (badge remains valid)
  * - INFO: Informational messages
  */
-export type MessageLevel = 'ERROR' | 'WARNING' | 'INFO';
+export type MessageLevel = "ERROR" | "WARNING" | "INFO";
 
 /**
  * Individual validation message following 1EdTech format
@@ -44,5 +44,5 @@ export interface ValidationReportContent {
   /** Array of validation messages */
   messages: ValidationMessage[];
   /** Optional: Detected Open Badges version */
-  openBadgesVersion?: '2.0' | '3.0';
+  openBadgesVersion?: "2.0" | "3.0";
 }

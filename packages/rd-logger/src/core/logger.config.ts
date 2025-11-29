@@ -1,9 +1,9 @@
-import chalk from 'chalk';
-import type { Transport } from './transports/index.js';
-import type { Formatter } from './formatters/index.js';
+import chalk from "chalk";
+import type { Transport } from "./transports/index.js";
+import type { Formatter } from "./formatters/index.js";
 
 // Define log levels and their priority (lower number = higher priority)
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
 export const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   debug: 0,
@@ -25,11 +25,11 @@ export const DEFAULT_LEVEL_COLORS: Record<LogLevel, (text: string) => string> =
 
 // Define icons for each log level
 export const DEFAULT_LEVEL_ICONS: Record<LogLevel, string> = {
-  debug: '🔍',
-  info: '🟢',
-  warn: '🟡',
-  error: '🔴',
-  fatal: '💀',
+  debug: "🔍",
+  info: "🟢",
+  warn: "🟡",
+  error: "🔴",
+  fatal: "💀",
 };
 
 export interface LoggerConfig {
@@ -47,11 +47,11 @@ export interface LoggerConfig {
 }
 
 export const DEFAULT_LOGGER_CONFIG: LoggerConfig = {
-  level: (process.env.LOG_LEVEL as LogLevel) || 'info', // Default level
-  prettyPrint: process.env.NODE_ENV !== 'production', // Pretty print in dev, plain in prod
+  level: (process.env.LOG_LEVEL as LogLevel) || "info", // Default level
+  prettyPrint: process.env.NODE_ENV !== "production", // Pretty print in dev, plain in prod
   colorize: true, // Only colorize if output is a TTY
-  includeStackTrace: process.env.NODE_ENV !== 'production', // Show stack trace in dev
+  includeStackTrace: process.env.NODE_ENV !== "production", // Show stack trace in dev
   logToFile: false, // Default to console logging
-  logFilePath: './app.log', // Default log file path
+  logFilePath: "./app.log", // Default log file path
   use24HourFormat: true, // Default to 24-hour format
 };

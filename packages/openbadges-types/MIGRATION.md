@@ -55,14 +55,14 @@ Open Badges 3.0 represents a significant evolution from version 2.0, adopting th
 
 ### Core Structure
 
-| Open Badges 2.0 | Open Badges 3.0 | Notes |
-|-----------------|-----------------|-------|
-| `Assertion` | `VerifiableCredential` | Top-level credential object |
-| `BadgeClass` | `Achievement` | Description of the achievement |
-| `recipient` | `credentialSubject` | Recipient information |
-| `verification` | `proof` | Verification method |
-| `issuedOn` | `issuanceDate` | Issue date |
-| `expires` | `expirationDate` | Expiration date |
+| Open Badges 2.0 | Open Badges 3.0        | Notes                          |
+| --------------- | ---------------------- | ------------------------------ |
+| `Assertion`     | `VerifiableCredential` | Top-level credential object    |
+| `BadgeClass`    | `Achievement`          | Description of the achievement |
+| `recipient`     | `credentialSubject`    | Recipient information          |
+| `verification`  | `proof`                | Verification method            |
+| `issuedOn`      | `issuanceDate`         | Issue date                     |
+| `expires`       | `expirationDate`       | Expiration date                |
 
 ### Recipient Identification
 
@@ -114,57 +114,61 @@ Open Badges 3.0 represents a significant evolution from version 2.0, adopting th
 #### Open Badges 2.0 Assertion
 
 ```typescript
-import { OB2 } from 'openbadges-types';
+import { OB2 } from "openbadges-types";
 
 const badgeClass: OB2.BadgeClass = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/badges/5',
-  type: 'BadgeClass',
-  name: '3-D Printmaster',
-  description: 'This badge is awarded for passing the 3-D printing knowledge and safety test.',
-  image: 'https://example.org/badges/5/image',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/badges/5",
+  type: "BadgeClass",
+  name: "3-D Printmaster",
+  description:
+    "This badge is awarded for passing the 3-D printing knowledge and safety test.",
+  image: "https://example.org/badges/5/image",
   criteria: {
-    narrative: 'Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.'
+    narrative:
+      "Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.",
   },
   issuer: {
-    id: 'https://example.org/issuer',
-    type: 'Profile',
-    name: 'Example Maker Society',
-    url: 'https://example.org',
-    email: 'contact@example.org'
-  }
+    id: "https://example.org/issuer",
+    type: "Profile",
+    name: "Example Maker Society",
+    url: "https://example.org",
+    email: "contact@example.org",
+  },
 };
 
 const assertion: OB2.Assertion = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    type: 'email',
-    identity: 'alice@example.org'
+    type: "email",
+    identity: "alice@example.org",
   },
-  issuedOn: '2016-12-31T23:59:59+00:00',
+  issuedOn: "2016-12-31T23:59:59+00:00",
   verification: {
-    type: 'hosted'
+    type: "hosted",
   },
-  badge: badgeClass
+  badge: badgeClass,
 };
 ```
 
 #### Equivalent Open Badges 3.0 Verifiable Credential
 
 ```typescript
-import { OB3, IRI, OB3ImageObject } from 'openbadges-types';
+import { OB3, IRI, OB3ImageObject } from "openbadges-types";
 
 const achievement: OB3.Achievement = {
-  type: ['Achievement'],
-  name: '3-D Printmaster',
-  description: 'This badge is awarded for passing the 3-D printing knowledge and safety test.',
+  type: ["Achievement"],
+  name: "3-D Printmaster",
+  description:
+    "This badge is awarded for passing the 3-D printing knowledge and safety test.",
   criteria: {
-    narrative: 'Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.'
+    narrative:
+      "Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.",
   },
   // image can be a string IRI or an object
-  image: 'https://example.org/badges/5/image'
+  image: "https://example.org/badges/5/image",
   // or
   // image: {
   //   id: 'https://example.org/badges/5/image',
@@ -173,103 +177,107 @@ const achievement: OB3.Achievement = {
 };
 
 const credential: OB3.VerifiableCredential = {
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    'https://purl.imsglobal.org/spec/ob/v3p0/context.json'
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
   ],
-  id: 'https://example.org/assertions/123',
-  type: ['VerifiableCredential'],
+  id: "https://example.org/assertions/123",
+  type: ["VerifiableCredential"],
   issuer: {
-    id: 'https://example.org/issuer',
-    type: ['Profile'],
-    name: 'Example Maker Society',
-    url: 'https://example.org',
-    email: 'contact@example.org',
+    id: "https://example.org/issuer",
+    type: ["Profile"],
+    name: "Example Maker Society",
+    url: "https://example.org",
+    email: "contact@example.org",
     // image can be a string IRI or an object
     image: {
-      id: 'https://example.org/logo.png',
-      type: 'Image',
-      caption: 'Logo'
-    }
+      id: "https://example.org/logo.png",
+      type: "Image",
+      caption: "Logo",
+    },
   },
-  issuanceDate: '2016-12-31T23:59:59+00:00',
+  issuanceDate: "2016-12-31T23:59:59+00:00",
   credentialSubject: {
-    id: 'did:example:ebfeb1f712ebc6f1c276e12ec21', // Modern identifier for Alice
-    achievement: achievement
+    id: "did:example:ebfeb1f712ebc6f1c276e12ec21", // Modern identifier for Alice
+    achievement: achievement,
   },
   proof: {
-    type: 'Ed25519Signature2020',
-    created: '2016-12-31T23:59:59+00:00',
-    verificationMethod: 'https://example.org/issuer#keys-1',
-    proofPurpose: 'assertionMethod',
-    proofValue: 'z58DAdFfa9SkqZMVPxAQpic6FPCsJWa6SpsfDqwmUbHEVnWxeh'
-  }
+    type: "Ed25519Signature2020",
+    created: "2016-12-31T23:59:59+00:00",
+    verificationMethod: "https://example.org/issuer#keys-1",
+    proofPurpose: "assertionMethod",
+    proofValue: "z58DAdFfa9SkqZMVPxAQpic6FPCsJWa6SpsfDqwmUbHEVnWxeh",
+  },
 };
 ```
 
 ### Conversion Function Example
 
 ```typescript
-import { OB2, OB3, Shared } from 'openbadges-types';
+import { OB2, OB3, Shared } from "openbadges-types";
 
 /**
  * Converts an Open Badges 2.0 Assertion to an Open Badges 3.0 VerifiableCredential
  */
 function convertOB2toOB3(assertion: OB2.Assertion): OB3.VerifiableCredential {
   // Extract the BadgeClass (either directly or by reference)
-  const badgeClass = typeof assertion.badge === 'string' 
-    ? { /* You would need to fetch the BadgeClass by its IRI */ } 
-    : assertion.badge;
-  
+  const badgeClass =
+    typeof assertion.badge === "string"
+      ? {
+          /* You would need to fetch the BadgeClass by its IRI */
+        }
+      : assertion.badge;
+
   // Create the Achievement from the BadgeClass
   const achievement: OB3.Achievement = {
-    type: ['Achievement'],
+    type: ["Achievement"],
     name: badgeClass.name,
     description: badgeClass.description,
     criteria: badgeClass.criteria,
-    image: badgeClass.image
+    image: badgeClass.image,
   };
-  
+
   // Create the issuer from the BadgeClass issuer
-  const issuer = typeof badgeClass.issuer === 'string'
-    ? { id: badgeClass.issuer }
-    : {
-        id: badgeClass.issuer.id,
-        type: Array.isArray(badgeClass.issuer.type) 
-          ? badgeClass.issuer.type 
-          : [badgeClass.issuer.type],
-        name: badgeClass.issuer.name,
-        url: badgeClass.issuer.url,
-        email: badgeClass.issuer.email
-      };
-  
+  const issuer =
+    typeof badgeClass.issuer === "string"
+      ? { id: badgeClass.issuer }
+      : {
+          id: badgeClass.issuer.id,
+          type: Array.isArray(badgeClass.issuer.type)
+            ? badgeClass.issuer.type
+            : [badgeClass.issuer.type],
+          name: badgeClass.issuer.name,
+          url: badgeClass.issuer.url,
+          email: badgeClass.issuer.email,
+        };
+
   // Convert recipient to credentialSubject
   // Note: In a real implementation, you might want to convert email identities to DIDs
-  const recipientId = `did:example:${Buffer.from(assertion.recipient.identity).toString('hex')}`;
-  
+  const recipientId = `did:example:${Buffer.from(assertion.recipient.identity).toString("hex")}`;
+
   // Create the VerifiableCredential
   const credential: OB3.VerifiableCredential = {
-    '@context': [
-      'https://www.w3.org/2018/credentials/v1',
-      'https://purl.imsglobal.org/spec/ob/v3p0/context.json'
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
     ],
     id: assertion.id,
-    type: ['VerifiableCredential'],
+    type: ["VerifiableCredential"],
     issuer: issuer,
     issuanceDate: assertion.issuedOn,
     expirationDate: assertion.expires,
     credentialSubject: {
       id: recipientId,
-      achievement: achievement
-    }
+      achievement: achievement,
+    },
     // Note: You would need to generate a proper proof for a real implementation
   };
-  
+
   // Copy over evidence if it exists
   if (assertion.evidence) {
     credential.evidence = assertion.evidence;
   }
-  
+
   return credential;
 }
 ```
@@ -279,31 +287,34 @@ function convertOB2toOB3(assertion: OB2.Assertion): OB3.VerifiableCredential {
 The `openbadges-types` package provides utilities to work with both versions simultaneously:
 
 ```typescript
-import { OpenBadgesVersion, VersionedBadge, OB2, OB3 } from 'openbadges-types';
+import { OpenBadgesVersion, VersionedBadge, OB2, OB3 } from "openbadges-types";
 
 // Function that works with either version
 function getBadgeName<T extends OpenBadgesVersion>(
   badge: VersionedBadge<T>,
-  version: T
+  version: T,
 ): string {
   if (version === OpenBadgesVersion.V2) {
     // badge is typed as OB2.Assertion
     const ob2Badge = badge as OB2.Assertion;
-    const badgeClass = typeof ob2Badge.badge === 'string'
-      ? { /* You would need to fetch the BadgeClass by its IRI */ }
-      : ob2Badge.badge;
+    const badgeClass =
+      typeof ob2Badge.badge === "string"
+        ? {
+            /* You would need to fetch the BadgeClass by its IRI */
+          }
+        : ob2Badge.badge;
     return badgeClass.name;
   } else {
     // badge is typed as OB3.VerifiableCredential
     const ob3Badge = badge as OB3.VerifiableCredential;
     const achievement = ob3Badge.credentialSubject.achievement;
-    
+
     if (Array.isArray(achievement)) {
-      return typeof achievement[0].name === 'string'
+      return typeof achievement[0].name === "string"
         ? achievement[0].name
         : Object.values(achievement[0].name)[0]; // Get first language value
     } else {
-      return typeof achievement.name === 'string'
+      return typeof achievement.name === "string"
         ? achievement.name
         : Object.values(achievement.name)[0]; // Get first language value
     }
@@ -318,7 +329,7 @@ function processBadge(badgeData: unknown) {
   } else if (OB3.isVerifiableCredential(badgeData)) {
     return getBadgeName(badgeData, OpenBadgesVersion.V3);
   } else {
-    throw new Error('Invalid badge format');
+    throw new Error("Invalid badge format");
   }
 }
 ```

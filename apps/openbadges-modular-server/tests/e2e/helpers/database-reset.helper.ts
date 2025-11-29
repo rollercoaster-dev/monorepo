@@ -5,8 +5,8 @@
  * to ensure a clean state for each test.
  */
 
-import { DatabaseFactory } from '@/infrastructure/database/database.factory';
-import { logger } from '@/utils/logging/logger.service';
+import { DatabaseFactory } from "@/infrastructure/database/database.factory";
+import { logger } from "@/utils/logging/logger.service";
 
 /**
  * Reset a SQLite database by deleting all data
@@ -16,38 +16,38 @@ import { logger } from '@/utils/logging/logger.service';
  */
 async function resetSqliteDatabase(): Promise<void> {
   try {
-    logger.info('Resetting SQLite database...');
+    logger.info("Resetting SQLite database...");
 
     // Get database instance
-    await DatabaseFactory.createDatabase('sqlite');
+    await DatabaseFactory.createDatabase("sqlite");
 
     // Tables to clean up (in order to avoid foreign key constraints)
     const tables = [
-      'credential_status_entries',
-      'status_lists',
-      'user_assertions',
-      'user_roles',
-      'platform_users',
-      'assertions',
-      'badge_classes',
-      'issuers',
-      'platforms',
-      'roles',
-      'api_keys',
-      'users',
+      "credential_status_entries",
+      "status_lists",
+      "user_assertions",
+      "user_roles",
+      "platform_users",
+      "assertions",
+      "badge_classes",
+      "issuers",
+      "platforms",
+      "roles",
+      "api_keys",
+      "users",
     ];
 
-    logger.info('Resetting database tables', { tables });
+    logger.info("Resetting database tables", { tables });
 
     // Get direct access to the SQLite database
-    const { Database } = require('bun:sqlite');
+    const { Database } = require("bun:sqlite");
     const sqliteFile =
-      process.env.SQLITE_DB_PATH || process.env.SQLITE_FILE || ':memory:';
+      process.env.SQLITE_DB_PATH || process.env.SQLITE_FILE || ":memory:";
     logger.debug(`Using SQLite database at: ${sqliteFile}`);
     const sqliteDb = new Database(sqliteFile);
 
     // Disable foreign key constraints temporarily
-    sqliteDb.run('PRAGMA foreign_keys = OFF');
+    sqliteDb.run("PRAGMA foreign_keys = OFF");
 
     // Delete all data from each table
     for (const table of tables) {
@@ -63,7 +63,7 @@ async function resetSqliteDatabase(): Promise<void> {
           logger.debug(
             `Deleted all data from ${table}, remaining rows: ${
               count?.count || 0
-            }`
+            }`,
           );
         } catch (countError) {
           logger.debug(`Could not count rows in ${table}`, {
@@ -82,11 +82,11 @@ async function resetSqliteDatabase(): Promise<void> {
     }
 
     // Re-enable foreign key constraints
-    sqliteDb.run('PRAGMA foreign_keys = ON');
+    sqliteDb.run("PRAGMA foreign_keys = ON");
 
-    logger.info('SQLite database reset successfully');
+    logger.info("SQLite database reset successfully");
   } catch (error) {
-    logger.error('Failed to reset SQLite database', {
+    logger.error("Failed to reset SQLite database", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
@@ -102,32 +102,32 @@ async function resetSqliteDatabase(): Promise<void> {
  */
 async function resetPostgresDatabase(): Promise<void> {
   try {
-    logger.info('Resetting PostgreSQL database...');
+    logger.info("Resetting PostgreSQL database...");
 
     // Get database instance - this line establishes connection and ensures DB is available
-    await DatabaseFactory.createDatabase('postgresql');
+    await DatabaseFactory.createDatabase("postgresql");
 
     // Tables to clean up (in order to avoid foreign key constraints)
     const tables = [
-      'credential_status_entries',
-      'status_lists',
-      'user_assertions',
-      'user_roles',
-      'platform_users',
-      'assertions',
-      'badge_classes',
-      'issuers',
-      'platforms',
-      'roles',
-      'api_keys',
-      'users',
+      "credential_status_entries",
+      "status_lists",
+      "user_assertions",
+      "user_roles",
+      "platform_users",
+      "assertions",
+      "badge_classes",
+      "issuers",
+      "platforms",
+      "roles",
+      "api_keys",
+      "users",
     ];
 
     // Get direct access to the PostgreSQL database
-    const postgres = await import('postgres');
+    const postgres = await import("postgres");
     const connectionString =
       process.env.DATABASE_URL ||
-      'postgresql://postgres:postgres@localhost:5432/openbadges_test';
+      "postgresql://postgres:postgres@localhost:5432/openbadges_test";
 
     try {
       const pgClient = postgres.default(connectionString, {
@@ -162,7 +162,7 @@ async function resetPostgresDatabase(): Promise<void> {
         try {
           await pgClient.end();
         } catch (closeError) {
-          logger.warn('Error closing PostgreSQL connection', {
+          logger.warn("Error closing PostgreSQL connection", {
             error:
               closeError instanceof Error
                 ? closeError.message
@@ -171,7 +171,7 @@ async function resetPostgresDatabase(): Promise<void> {
         }
       }
     } catch (error) {
-      logger.error('Failed to connect to PostgreSQL database', {
+      logger.error("Failed to connect to PostgreSQL database", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -179,9 +179,9 @@ async function resetPostgresDatabase(): Promise<void> {
       throw error;
     }
 
-    logger.info('PostgreSQL database reset successfully');
+    logger.info("PostgreSQL database reset successfully");
   } catch (error) {
-    logger.error('Failed to reset PostgreSQL database', {
+    logger.error("Failed to reset PostgreSQL database", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
@@ -194,23 +194,23 @@ async function resetPostgresDatabase(): Promise<void> {
  */
 export async function resetDatabase(): Promise<void> {
   // Use DB_TYPE environment variable to determine which database to reset
-  const dbType = process.env.DB_TYPE || 'sqlite';
+  const dbType = process.env.DB_TYPE || "sqlite";
 
-  logger.info('Resetting database', {
+  logger.info("Resetting database", {
     dbType,
   });
 
   try {
-    if (dbType === 'sqlite') {
+    if (dbType === "sqlite") {
       await resetSqliteDatabase();
-    } else if (dbType === 'postgresql') {
+    } else if (dbType === "postgresql") {
       await resetPostgresDatabase();
     } else {
       throw new Error(`Unsupported database type: ${dbType}`);
     }
-    logger.info('Database reset completed successfully');
+    logger.info("Database reset completed successfully");
   } catch (error) {
-    logger.error('Failed to reset database', {
+    logger.error("Failed to reset database", {
       // Changed from warn to error
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

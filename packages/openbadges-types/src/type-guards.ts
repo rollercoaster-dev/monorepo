@@ -8,21 +8,26 @@ import {
   isAssertion as isOB2Assertion,
   isBadgeClass as isOB2BadgeClass,
   isProfile as isOB2Profile,
-} from './v2/guards';
+} from "./v2/guards";
 
 // Import from OB3
 import {
   isVerifiableCredential as isOB3VerifiableCredential,
   isAchievement as isOB3Achievement,
   isIssuer as isOB3Issuer,
-} from './v3/guards';
+} from "./v3/guards";
 
 // Import from shared
-import { isJsonLdObject, hasJsonLdType, hasJsonLdContext, typeIncludes } from './shared/jsonld';
-import { isIRI, isDateTime } from './shared/common';
+import {
+  isJsonLdObject,
+  hasJsonLdType,
+  hasJsonLdContext,
+  typeIncludes,
+} from "./shared/jsonld";
+import { isIRI, isDateTime } from "./shared/common";
 
 // Import from composite-guards
-import { isBadge } from './composite-guards';
+import { isBadge } from "./composite-guards";
 
 // Re-export all type guards
 export {

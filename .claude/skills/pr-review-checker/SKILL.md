@@ -22,21 +22,25 @@ Automatically fetch and summarize PR review comments when the user asks about re
 ## Instructions
 
 ### Get PR Review Status
+
 ```bash
 gh pr view <number> --json reviews,reviewDecision,state
 ```
 
 ### Get Review Comments (Inline)
+
 ```bash
 gh api repos/rollercoaster-dev/monorepo/pulls/<number>/comments
 ```
 
 ### Get Issue Comments (Includes CodeRabbit/Claude)
+
 ```bash
 gh api repos/rollercoaster-dev/monorepo/issues/<number>/comments
 ```
 
 ### Identify Reviewers
+
 - `coderabbitai[bot]` - CodeRabbit AI review
 - `claude[bot]` - Claude Code review
 - Other usernames - Human reviewers
@@ -44,11 +48,13 @@ gh api repos/rollercoaster-dev/monorepo/issues/<number>/comments
 ## Parsing CodeRabbit Reviews
 
 CodeRabbit reviews typically include:
+
 - **Walkthrough** - Summary of changes
 - **Actionable Comments** - Issues to address (look for severity indicators)
 - **Pre-merge Checks** - Title, description, linked issues checks
 
 Look for these patterns:
+
 - `_Potential issue_` or red indicators = Critical
 - `_Nitpick_` = Optional/Low priority
 - Checkmarks = Approvals
@@ -63,11 +69,13 @@ Look for these patterns:
 **Human Reviews:** <count>
 
 ### Actionable Items
-| # | File | Issue | Severity | Status |
-|---|------|-------|----------|--------|
-| 1 | path/file.ts:42 | Description | Critical | Unresolved |
+
+| #   | File            | Issue       | Severity | Status     |
+| --- | --------------- | ----------- | -------- | ---------- |
+| 1   | path/file.ts:42 | Description | Critical | Unresolved |
 
 ### Summary
+
 - <n> critical issues
 - <n> suggestions
 - <n> approvals

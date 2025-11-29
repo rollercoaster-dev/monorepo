@@ -6,20 +6,20 @@
  * type safety and proper separation of concerns.
  */
 
-import type { Database } from 'bun:sqlite';
-import type { Issuer } from '@domains/issuer/issuer.entity';
-import type { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import type { Assertion } from '@domains/assertion/assertion.entity';
-import type { DatabaseInterface } from '@infrastructure/database/interfaces/database.interface';
-import type { Shared } from 'openbadges-types';
-import { SqliteConnectionManager } from './connection/sqlite-connection.manager';
-import { SqliteDatabaseService } from './services/sqlite-database.service';
-import { logger } from '@utils/logging/logger.service';
-import type { SqliteConnectionConfig } from './types/sqlite-database.types';
+import type { Database } from "bun:sqlite";
+import type { Issuer } from "@domains/issuer/issuer.entity";
+import type { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import type { Assertion } from "@domains/assertion/assertion.entity";
+import type { DatabaseInterface } from "@infrastructure/database/interfaces/database.interface";
+import type { Shared } from "openbadges-types";
+import { SqliteConnectionManager } from "./connection/sqlite-connection.manager";
+import { SqliteDatabaseService } from "./services/sqlite-database.service";
+import { logger } from "@utils/logging/logger.service";
+import type { SqliteConnectionConfig } from "./types/sqlite-database.types";
 import type {
   DatabaseHealth,
   DatabaseQueryOptions,
-} from '@infrastructure/database/interfaces/database.interface';
+} from "@infrastructure/database/interfaces/database.interface";
 
 /**
  * SQLite Database implementation using the service layer pattern
@@ -39,7 +39,7 @@ export class SqliteDatabase implements DatabaseInterface {
     try {
       if (!client) {
         throw new Error(
-          'SQLite client is required for database initialization'
+          "SQLite client is required for database initialization",
         );
       }
 
@@ -49,24 +49,24 @@ export class SqliteDatabase implements DatabaseInterface {
         maxConnectionAttempts: Math.max(1, config?.maxConnectionAttempts ?? 3),
         connectionRetryDelayMs: Math.max(
           100,
-          config?.connectionRetryDelayMs ?? 1000
+          config?.connectionRetryDelayMs ?? 1000,
         ),
 
         // Critical SQLite settings (with type checking)
         sqliteBusyTimeout:
-          typeof config?.sqliteBusyTimeout === 'number'
+          typeof config?.sqliteBusyTimeout === "number"
             ? Math.max(100, config.sqliteBusyTimeout)
             : 5000, // Default 5 seconds
 
         sqliteSyncMode:
           config?.sqliteSyncMode &&
-          ['OFF', 'NORMAL', 'FULL'].includes(config.sqliteSyncMode)
+          ["OFF", "NORMAL", "FULL"].includes(config.sqliteSyncMode)
             ? config.sqliteSyncMode
-            : 'NORMAL',
+            : "NORMAL",
 
         // Optional performance settings (passed through as-is)
         sqliteCacheSize:
-          typeof config?.sqliteCacheSize === 'number' &&
+          typeof config?.sqliteCacheSize === "number" &&
           config.sqliteCacheSize > 0
             ? config.sqliteCacheSize
             : undefined,
@@ -76,7 +76,7 @@ export class SqliteDatabase implements DatabaseInterface {
       // This may throw if critical settings cannot be applied
       this.connectionManager = new SqliteConnectionManager(
         client,
-        connectionConfig
+        connectionConfig,
       );
       this.databaseService = new SqliteDatabaseService(this.connectionManager);
     } catch (error) {
@@ -115,7 +115,7 @@ export class SqliteDatabase implements DatabaseInterface {
   }
 
   // Issuer operations - delegate to service
-  async createIssuer(issuerData: Omit<Issuer, 'id'>): Promise<Issuer> {
+  async createIssuer(issuerData: Omit<Issuer, "id">): Promise<Issuer> {
     return this.databaseService.createIssuer(issuerData);
   }
 
@@ -129,7 +129,7 @@ export class SqliteDatabase implements DatabaseInterface {
 
   async updateIssuer(
     id: Shared.IRI,
-    issuer: Partial<Issuer>
+    issuer: Partial<Issuer>,
   ): Promise<Issuer | null> {
     return this.databaseService.updateIssuer(id, issuer);
   }
@@ -140,7 +140,7 @@ export class SqliteDatabase implements DatabaseInterface {
 
   // BadgeClass operations - delegate to service
   async createBadgeClass(
-    badgeClassData: Omit<BadgeClass, 'id'>
+    badgeClassData: Omit<BadgeClass, "id">,
   ): Promise<BadgeClass> {
     return this.databaseService.createBadgeClass(badgeClassData);
   }
@@ -150,21 +150,21 @@ export class SqliteDatabase implements DatabaseInterface {
   }
 
   async getAllBadgeClasses(
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]> {
     return this.databaseService.getAllBadgeClasses(options);
   }
 
   async getBadgeClassesByIssuer(
     issuerId: Shared.IRI,
-    _options?: DatabaseQueryOptions
+    _options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]> {
     return this.databaseService.getBadgeClassesByIssuer(issuerId);
   }
 
   async updateBadgeClass(
     id: Shared.IRI,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null> {
     return this.databaseService.updateBadgeClass(id, badgeClass);
   }
@@ -175,7 +175,7 @@ export class SqliteDatabase implements DatabaseInterface {
 
   // Assertion operations
   async createAssertion(
-    assertionData: Omit<Assertion, 'id'>
+    assertionData: Omit<Assertion, "id">,
   ): Promise<Assertion> {
     return this.databaseService.createAssertion(assertionData);
   }
@@ -190,21 +190,21 @@ export class SqliteDatabase implements DatabaseInterface {
 
   async getAssertionsByBadgeClass(
     badgeClassId: Shared.IRI,
-    _options?: DatabaseQueryOptions
+    _options?: DatabaseQueryOptions,
   ): Promise<Assertion[]> {
     return this.databaseService.getAssertionsByBadgeClass(badgeClassId);
   }
 
   async getAssertionsByRecipient(
     recipientId: string,
-    _options?: DatabaseQueryOptions
+    _options?: DatabaseQueryOptions,
   ): Promise<Assertion[]> {
     return this.databaseService.getAssertionsByRecipient(recipientId);
   }
 
   async updateAssertion(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null> {
     return this.databaseService.updateAssertion(id, assertion);
   }
@@ -215,13 +215,13 @@ export class SqliteDatabase implements DatabaseInterface {
 
   async revokeAssertion(
     id: Shared.IRI,
-    reason?: string
+    reason?: string,
   ): Promise<Assertion | null> {
     return this.databaseService.revokeAssertion(id, reason);
   }
 
   async verifyAssertion(
-    id: Shared.IRI
+    id: Shared.IRI,
   ): Promise<{ isValid: boolean; reason?: string }> {
     return this.databaseService.verifyAssertion(id);
   }
@@ -254,9 +254,9 @@ export class SqliteDatabase implements DatabaseInterface {
 
   // Utility methods for coordinated operations
   async createBadgeEcosystem(
-    issuerData: Omit<Issuer, 'id'>,
-    badgeClassData: Omit<BadgeClass, 'id' | 'issuer'>,
-    assertionData: Omit<Assertion, 'id' | 'badgeClass'>
+    issuerData: Omit<Issuer, "id">,
+    badgeClassData: Omit<BadgeClass, "id" | "issuer">,
+    assertionData: Omit<Assertion, "id" | "badgeClass">,
   ): Promise<{
     issuer: Issuer;
     badgeClass: BadgeClass;
@@ -265,7 +265,7 @@ export class SqliteDatabase implements DatabaseInterface {
     return this.databaseService.createBadgeEcosystem(
       issuerData,
       badgeClassData,
-      assertionData
+      assertionData,
     );
   }
 

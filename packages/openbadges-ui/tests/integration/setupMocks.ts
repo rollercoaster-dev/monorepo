@@ -1,7 +1,7 @@
 // tests/integration/setupMocks.ts
-import { vi } from 'vitest';
-import type { OB2, OB3 } from '@/types';
-import type { VerificationResult } from '@/services/BadgeVerificationService';
+import { vi } from "vitest";
+import type { OB2, OB3 } from "@/types";
+import type { VerificationResult } from "@/services/BadgeVerificationService";
 
 // Create a mock handler with type-safe methods
 interface TypedMock<TArgs extends unknown[], TReturn> {
@@ -13,14 +13,20 @@ interface TypedMock<TArgs extends unknown[], TReturn> {
 }
 
 // Create a type-safe mock function factory
-export function createTypedMock<TArgs extends unknown[], TReturn>(): TypedMock<TArgs, TReturn> {
+export function createTypedMock<TArgs extends unknown[], TReturn>(): TypedMock<
+  TArgs,
+  TReturn
+> {
   const mock = vi.fn() as unknown as TypedMock<TArgs, TReturn>;
   return mock;
 }
 
 // Create mock BadgeVerificationService
 export const createMockBadgeVerificationService = (): {
-  verifyBadge: TypedMock<[OB2.Assertion | OB3.VerifiableCredential], Promise<VerificationResult>>;
+  verifyBadge: TypedMock<
+    [OB2.Assertion | OB3.VerifiableCredential],
+    Promise<VerificationResult>
+  >;
 } => {
   return {
     verifyBadge: createTypedMock<

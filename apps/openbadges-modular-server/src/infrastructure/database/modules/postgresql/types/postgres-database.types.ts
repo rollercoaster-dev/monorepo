@@ -4,9 +4,9 @@
  * Type definitions for PostgreSQL database operations, connections, and configurations.
  */
 
-import type { drizzle } from 'drizzle-orm/postgres-js';
-import type postgres from 'postgres';
-import type { Shared } from 'openbadges-types';
+import type { drizzle } from "drizzle-orm/postgres-js";
+import type postgres from "postgres";
+import type { Shared } from "openbadges-types";
 
 /**
  * PostgreSQL database client wrapper
@@ -25,18 +25,18 @@ export interface PostgresConnectionConfig {
   idleTimeout?: number;
   connectTimeout?: number;
   maxLifetime?: number;
-  ssl?: boolean | postgres.Options<{}>['ssl'];
+  ssl?: boolean | postgres.Options<{}>["ssl"];
 }
 
 /**
  * PostgreSQL connection state
  */
 export type PostgresConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'connected'
-  | 'error'
-  | 'closed';
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "error"
+  | "closed";
 
 /**
  * PostgreSQL operation context for logging and monitoring
@@ -52,15 +52,15 @@ export interface PostgresOperationContext {
  * PostgreSQL entity types
  */
 export type PostgresEntityType =
-  | 'issuer'
-  | 'badgeClass'
-  | 'assertion'
-  | 'user'
-  | 'apiKey'
-  | 'platform'
-  | 'platformUser'
-  | 'userAssertion'
-  | 'statusList';
+  | "issuer"
+  | "badgeClass"
+  | "assertion"
+  | "user"
+  | "apiKey"
+  | "platform"
+  | "platformUser"
+  | "userAssertion"
+  | "statusList";
 
 /**
  * PostgreSQL query metrics
@@ -68,7 +68,7 @@ export type PostgresEntityType =
 export interface PostgresQueryMetrics {
   duration: number;
   rowsAffected: number;
-  queryType: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'UNKNOWN';
+  queryType: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "UNKNOWN";
   tableName: string;
 }
 
@@ -132,14 +132,14 @@ export const MAX_POSTGRES_PAGINATION_LIMIT = 1000;
  * PostgreSQL transaction type
  */
 export type PostgresTransaction = Parameters<
-  Parameters<ReturnType<typeof drizzle>['transaction']>[0]
+  Parameters<ReturnType<typeof drizzle>["transaction"]>[0]
 >[0];
 
 /**
  * Factory function to create PostgreSQL connection config with defaults
  */
 export function createPostgresConnectionConfig(
-  input: Partial<PostgresConnectionConfig> & { connectionString: string }
+  input: Partial<PostgresConnectionConfig> & { connectionString: string },
 ): PostgresConnectionConfig {
   return {
     connectionString: input.connectionString,

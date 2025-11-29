@@ -5,7 +5,7 @@
  * when working with both PostgreSQL and SQLite.
  */
 
-import { logger } from '@utils/logging/logger.service';
+import { logger } from "@utils/logging/logger.service";
 
 /**
  * Validates if a string is a valid UUID format
@@ -14,9 +14,9 @@ import { logger } from '@utils/logging/logger.service';
  * @returns True if the string is a valid UUID format
  */
 export function isValidUuid(
-  value: string | null | undefined | number
+  value: string | null | undefined | number,
 ): boolean {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return false;
   }
 
@@ -33,12 +33,12 @@ export function isValidUuid(
  * @returns The plain UUID string (e.g., "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx") or original value if not URN format
  */
 export function urnToUuid(
-  urn: string | null | undefined | number
+  urn: string | null | undefined | number,
 ): string | null | undefined | number {
-  if (typeof urn !== 'string') {
+  if (typeof urn !== "string") {
     // Only warn on unexpected object values, not expected null/undefined/number
-    if (urn !== null && urn !== undefined && typeof urn === 'object') {
-      logger.warn('urnToUuid received unexpected object value', {
+    if (urn !== null && urn !== undefined && typeof urn === "object") {
+      logger.warn("urnToUuid received unexpected object value", {
         type: typeof urn,
         value: urn,
       });
@@ -47,14 +47,14 @@ export function urnToUuid(
   }
 
   // Check if it's already in URN format
-  if (urn.startsWith('urn:uuid:')) {
+  if (urn.startsWith("urn:uuid:")) {
     const uuid = urn.substring(9); // Remove 'urn:uuid:' prefix
 
     // Validate the extracted UUID format
     if (isValidUuid(uuid)) {
       return uuid;
     } else {
-      logger.warn('Invalid UUID extracted from URN', {
+      logger.warn("Invalid UUID extracted from URN", {
         urn,
         extractedUuid: uuid,
       });
@@ -68,7 +68,7 @@ export function urnToUuid(
   }
 
   // If it's neither URN nor valid UUID, log warning and return original
-  logger.warn('Value is neither valid URN nor UUID format', { value: urn });
+  logger.warn("Value is neither valid URN nor UUID format", { value: urn });
   return urn;
 }
 
@@ -79,12 +79,12 @@ export function urnToUuid(
  * @returns The URN format string (e.g., "urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
  */
 export function uuidToUrn(
-  uuid: string | null | undefined | number
+  uuid: string | null | undefined | number,
 ): string | null | undefined | number {
-  if (typeof uuid !== 'string') {
+  if (typeof uuid !== "string") {
     // Only warn on unexpected object values, not expected null/undefined/number
-    if (uuid !== null && uuid !== undefined && typeof uuid === 'object') {
-      logger.warn('uuidToUrn received unexpected object value', {
+    if (uuid !== null && uuid !== undefined && typeof uuid === "object") {
+      logger.warn("uuidToUrn received unexpected object value", {
         type: typeof uuid,
         value: uuid,
       });
@@ -93,7 +93,7 @@ export function uuidToUrn(
   }
 
   // If it's already in URN format, return as-is
-  if (uuid.startsWith('urn:uuid:')) {
+  if (uuid.startsWith("urn:uuid:")) {
     return uuid;
   }
 
@@ -103,7 +103,7 @@ export function uuidToUrn(
   }
 
   // If it's not a valid UUID, log warning and return original
-  logger.warn('Value is not a valid UUID for URN conversion', { value: uuid });
+  logger.warn("Value is not a valid UUID for URN conversion", { value: uuid });
   return uuid;
 }
 
@@ -120,8 +120,8 @@ export function uuidToUrn(
  */
 export function convertJson<T>(
   value: T | string | null | undefined,
-  dbType: 'postgresql' | 'sqlite',
-  direction: 'to' | 'from'
+  dbType: "postgresql" | "sqlite",
+  direction: "to" | "from",
 ): T | string | null | undefined {
   // Handle null/undefined
   if (value == null) {
@@ -129,21 +129,21 @@ export function convertJson<T>(
   }
 
   // For PostgreSQL, no conversion needed as it handles JSON natively
-  if (dbType === 'postgresql') {
+  if (dbType === "postgresql") {
     return value;
   }
 
   // For SQLite, convert between string and object
-  if (dbType === 'sqlite') {
-    if (direction === 'to') {
+  if (dbType === "sqlite") {
+    if (direction === "to") {
       // Convert from app object to DB string
-      return typeof value === 'string' ? value : JSON.stringify(value);
+      return typeof value === "string" ? value : JSON.stringify(value);
     } else {
       // Convert from DB string to app object
-      if (typeof value !== 'string') {
+      if (typeof value !== "string") {
         // If the value is not a string, log a warning and return null
         // This handles the edge case where a non-string value is passed
-        logger.warn('Expected string for JSON parsing from SQLite, got', {
+        logger.warn("Expected string for JSON parsing from SQLite, got", {
           type: typeof value,
           value,
         });
@@ -154,14 +154,14 @@ export function convertJson<T>(
         return JSON.parse(value) as T;
       } catch (error) {
         // Use logger instead of console.error
-        logger.error('Error parsing JSON from database', { error });
+        logger.error("Error parsing JSON from database", { error });
         return null;
       }
     }
   }
 
   // Explicit exhaustiveness check - fail fast for unsupported dbType
-  logger.error('convertJson received unknown dbType', {
+  logger.error("convertJson received unknown dbType", {
     dbType,
     direction,
     valueType: typeof value,
@@ -182,8 +182,8 @@ export function convertJson<T>(
  */
 export function convertTimestamp(
   value: Date | number | string | null | undefined,
-  dbType: 'postgresql' | 'sqlite',
-  direction: 'to' | 'from'
+  dbType: "postgresql" | "sqlite",
+  direction: "to" | "from",
 ): Date | number | null | undefined {
   // FIX 1: Handle null/undefined correctly
   if (value === null) {
@@ -195,16 +195,16 @@ export function convertTimestamp(
   // At this point, value is: Date | number | string
 
   // --- Handle 'to' direction (App -> DB) ---
-  if (direction === 'to') {
+  if (direction === "to") {
     let dateObj: Date | null = null;
 
     // Convert input to a Date object if it's not already one
     if (value instanceof Date) {
       dateObj = value;
-    } else if (typeof value === 'number') {
+    } else if (typeof value === "number") {
       // Ensure number is treated as milliseconds epoch
       dateObj = new Date(value);
-    } else if (typeof value === 'string') {
+    } else if (typeof value === "string") {
       try {
         dateObj = new Date(value);
         // Check if the date is valid after parsing
@@ -228,7 +228,7 @@ export function convertTimestamp(
     }
 
     // Now convert the Date object to the target DB format
-    if (dbType === 'postgresql') {
+    if (dbType === "postgresql") {
       return dateObj; // PG uses Date objects
     } else {
       // dbType === 'sqlite'
@@ -239,7 +239,7 @@ export function convertTimestamp(
   // --- Handle 'from' direction (DB -> App) ---
   else {
     // direction === 'from'
-    if (dbType === 'postgresql') {
+    if (dbType === "postgresql") {
       // Assume PG returns a Date object or something parsable by Date constructor
       if (value instanceof Date) {
         // Already a Date object
@@ -247,7 +247,7 @@ export function convertTimestamp(
         return isNaN(value.getTime()) ? null : value;
       }
       // Explicitly check if it's string or number before parsing
-      if (typeof value === 'string' || typeof value === 'number') {
+      if (typeof value === "string" || typeof value === "number") {
         try {
           const dateObj = new Date(value);
           // Check if date is valid
@@ -255,7 +255,7 @@ export function convertTimestamp(
             // Use logger instead of console.warn
             logger.warn(
               `Invalid date value received from PostgreSQL after parsing`,
-              { value }
+              { value },
             );
             return null;
           }
@@ -276,7 +276,7 @@ export function convertTimestamp(
     } else {
       // dbType === 'sqlite'
       // Assume SQLite returns a number (epoch ms)
-      if (typeof value === 'number') {
+      if (typeof value === "number") {
         // Check for non-finite numbers before creating Date
         if (!Number.isFinite(value)) {
           logger.warn(`Non-finite timestamp number received from SQLite`, {
@@ -291,7 +291,7 @@ export function convertTimestamp(
             // Use logger instead of console.warn
             logger.warn(
               `Invalid timestamp number received from SQLite after parsing`,
-              { value }
+              { value },
             );
             return null;
           }
@@ -343,8 +343,8 @@ export function safeConvertToDate(value: unknown): Date | undefined {
  */
 export function convertUuid(
   value: string | null | undefined,
-  dbType: 'postgresql' | 'sqlite',
-  direction: 'to' | 'from'
+  dbType: "postgresql" | "sqlite",
+  direction: "to" | "from",
 ): string | null | undefined {
   // Handle null/undefined
   if (value == null) {
@@ -352,11 +352,11 @@ export function convertUuid(
   }
 
   // For SQLite, handle URN ↔ UUID conversion for consistency
-  if (dbType === 'sqlite') {
-    if (direction === 'to') {
+  if (dbType === "sqlite") {
+    if (direction === "to") {
       // Convert from app (URN format) to SQLite (plain UUID for consistency)
       // But handle CUID2 IDs gracefully by extracting the ID part
-      if (value.startsWith('urn:uuid:')) {
+      if (value.startsWith("urn:uuid:")) {
         const extractedId = value.substring(9); // Remove 'urn:uuid:' prefix
         return extractedId; // Return the ID part (UUID or CUID2)
       }
@@ -364,7 +364,7 @@ export function convertUuid(
     } else {
       // Convert from SQLite (plain UUID/CUID2) to app (URN format)
       // Handle both standard UUIDs and CUID2 IDs
-      if (value.startsWith('urn:uuid:')) {
+      if (value.startsWith("urn:uuid:")) {
         return value; // Already in URN format
       }
       // Add URN prefix for both UUIDs and CUID2 IDs
@@ -373,8 +373,8 @@ export function convertUuid(
   }
 
   // For PostgreSQL, handle URN ↔ UUID conversion
-  if (dbType === 'postgresql') {
-    if (direction === 'to') {
+  if (dbType === "postgresql") {
+    if (direction === "to") {
       // Convert from app (URN format) to PostgreSQL (plain UUID)
       return urnToUuid(value) as string;
     } else {
@@ -384,10 +384,10 @@ export function convertUuid(
   }
 
   // Explicit exhaustiveness check - fail fast for unsupported dbType
-  logger.error('convertUuid received unknown dbType', {
+  logger.error("convertUuid received unknown dbType", {
     dbType,
     direction,
-    value: value ? '[REDACTED]' : value,
+    value: value ? "[REDACTED]" : value,
   });
   return value; // Return original value but log the configuration error
 }
@@ -399,12 +399,12 @@ export function convertUuid(
  * @returns True if the string is a valid URN format
  */
 export function isValidUrn(value: string | null | undefined | number): boolean {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return false;
   }
 
   // Check if it starts with 'urn:uuid:' and has a valid UUID after
-  if (value.startsWith('urn:uuid:')) {
+  if (value.startsWith("urn:uuid:")) {
     const uuid = value.substring(9);
     return isValidUuid(uuid);
   }
@@ -425,8 +425,8 @@ export function isValidUrn(value: string | null | undefined | number): boolean {
  */
 export function convertBoolean(
   value: boolean | number | null | undefined,
-  dbType: 'postgresql' | 'sqlite',
-  direction: 'to' | 'from'
+  dbType: "postgresql" | "sqlite",
+  direction: "to" | "from",
 ): boolean | number | null | undefined {
   // Handle null/undefined
   if (value == null) {
@@ -434,19 +434,19 @@ export function convertBoolean(
   }
 
   // For PostgreSQL
-  if (dbType === 'postgresql') {
-    if (direction === 'to') {
+  if (dbType === "postgresql") {
+    if (direction === "to") {
       // Convert to PostgreSQL boolean
-      if (typeof value === 'number') {
+      if (typeof value === "number") {
         return value !== 0;
       }
       return value;
     } else {
       // Add safety check
-      if (typeof value === 'boolean') {
+      if (typeof value === "boolean") {
         return value;
       } else {
-        logger.warn('Unexpected boolean type received from PostgreSQL', {
+        logger.warn("Unexpected boolean type received from PostgreSQL", {
           type: typeof value,
           value,
         });
@@ -456,28 +456,28 @@ export function convertBoolean(
   }
 
   // For SQLite
-  if (dbType === 'sqlite') {
-    if (direction === 'to') {
+  if (dbType === "sqlite") {
+    if (direction === "to") {
       // Convert App -> DB (SQLite integer)
-      if (typeof value === 'boolean') {
+      if (typeof value === "boolean") {
         return value ? 1 : 0;
       } // If already number (0/1), pass through
       return value;
     } else {
       // Convert DB (SQLite integer) -> App (boolean)
-      if (typeof value === 'number') {
+      if (typeof value === "number") {
         // Add safety check for valid integer boolean
         if (value === 0 || value === 1) {
           return value === 1;
         } else {
           logger.warn(
-            'Unexpected integer value received for boolean from SQLite',
-            { value }
+            "Unexpected integer value received for boolean from SQLite",
+            { value },
           );
           return null; // Or default to false?
         }
       } else {
-        logger.warn('Unexpected boolean type received from SQLite', {
+        logger.warn("Unexpected boolean type received from SQLite", {
           type: typeof value,
           value,
         });
@@ -487,7 +487,7 @@ export function convertBoolean(
   }
 
   // Explicit exhaustiveness check - fail fast for unsupported dbType
-  logger.error('convertBoolean received unknown dbType', {
+  logger.error("convertBoolean received unknown dbType", {
     dbType,
     direction,
     valueType: typeof value,

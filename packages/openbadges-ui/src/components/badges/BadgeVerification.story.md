@@ -21,7 +21,11 @@ Use the controls in the right panel to customize the component behavior.
 ### Auto-Verify
 
 ```vue
-<BadgeVerification :badge="myBadge" :auto-verify="true" @verified="handleVerified" />
+<BadgeVerification
+  :badge="myBadge"
+  :auto-verify="true"
+  @verified="handleVerified"
+/>
 ```
 
 ### Custom Display Options
@@ -38,18 +42,18 @@ Use the controls in the right panel to customize the component behavior.
 
 ## Props
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `badge` | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to verify |
-| `showStatus` | `boolean` | `true` | Whether to show verification status |
-| `showDetails` | `boolean` | `true` | Whether to show verification details |
-| `showLastVerified` | `boolean` | `true` | Whether to show when the badge was last verified |
-| `autoVerify` | `boolean` | `false` | Whether to automatically verify the badge when mounted |
+| Name               | Type                                        | Default  | Description                                            |
+| ------------------ | ------------------------------------------- | -------- | ------------------------------------------------------ |
+| `badge`            | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to verify                                    |
+| `showStatus`       | `boolean`                                   | `true`   | Whether to show verification status                    |
+| `showDetails`      | `boolean`                                   | `true`   | Whether to show verification details                   |
+| `showLastVerified` | `boolean`                                   | `true`   | Whether to show when the badge was last verified       |
+| `autoVerify`       | `boolean`                                   | `false`  | Whether to automatically verify the badge when mounted |
 
 ## Events
 
-| Name | Payload | Description |
-|------|---------|-------------|
+| Name       | Payload   | Description                                                         |
+| ---------- | --------- | ------------------------------------------------------------------- |
 | `verified` | `boolean` | Emitted when verification is complete, with the verification result |
 
 ## Verification Process

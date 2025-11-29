@@ -5,17 +5,17 @@
  * with the new Shared.IRI types.
  */
 
-import { describe, expect, it, mock, beforeAll } from 'bun:test';
-import type { Shared, OB2, OB3 } from 'openbadges-types';
-import type { IssuerController } from '@/api/controllers/issuer.controller';
-import type { BadgeClassController } from '@/api/controllers/badgeClass.controller';
-import type { AssertionController } from '@/api/controllers/assertion.controller';
-import { toIRI } from '@/utils/types/iri-utils';
-import { toDateTime } from '@/utils/types/type-utils';
+import { describe, expect, it, mock, beforeAll } from "bun:test";
+import type { Shared, OB2, OB3 } from "openbadges-types";
+import type { IssuerController } from "@/api/controllers/issuer.controller";
+import type { BadgeClassController } from "@/api/controllers/badgeClass.controller";
+import type { AssertionController } from "@/api/controllers/assertion.controller";
+import { toIRI } from "@/utils/types/iri-utils";
+import { toDateTime } from "@/utils/types/type-utils";
 import {
   BadgeVersion,
   BADGE_VERSION_CONTEXTS,
-} from '@/utils/version/badge-version';
+} from "@/utils/version/badge-version";
 
 // Types for mock responses
 interface MockBatchResult {
@@ -50,7 +50,7 @@ const app = {
   request: mock(
     async (
       url: string,
-      options?: unknown
+      options?: unknown,
     ): Promise<{
       status: number;
       json: () => Promise<
@@ -72,14 +72,14 @@ const app = {
           json: mock(
             async (): Promise<MockErrorResponse> => ({
               success: false,
-              error: 'Unauthorized',
-            })
+              error: "Unauthorized",
+            }),
           ),
         };
       }
 
       // Check for validation errors (empty arrays or missing query params)
-      if (url.includes('/batch')) {
+      if (url.includes("/batch")) {
         // POST/PUT requests with empty arrays
         if (
           (body.credentials && body.credentials.length === 0) ||
@@ -90,21 +90,21 @@ const app = {
             json: mock(
               async (): Promise<MockErrorResponse> => ({
                 success: false,
-                error: 'Validation error',
-              })
+                error: "Validation error",
+              }),
             ),
           };
         }
 
         // GET requests without query parameters
-        if (opts?.method === 'GET' && !url.includes('ids=')) {
+        if (opts?.method === "GET" && !url.includes("ids=")) {
           return {
             status: 400,
             json: mock(
               async (): Promise<MockErrorResponse> => ({
                 success: false,
-                error: 'Validation error',
-              })
+                error: "Validation error",
+              }),
             ),
           };
         }
@@ -113,13 +113,13 @@ const app = {
       // Default success response
       let status = 200;
       if (
-        opts?.method === 'POST' &&
-        (url.includes('/batch') || url.includes('/badge-classes'))
+        opts?.method === "POST" &&
+        (url.includes("/batch") || url.includes("/badge-classes"))
       ) {
         status = 201;
-      } else if (opts?.method === 'GET' && url.includes('/batch')) {
+      } else if (opts?.method === "GET" && url.includes("/batch")) {
         status = 200;
-      } else if (opts?.method === 'PUT' && url.includes('/batch')) {
+      } else if (opts?.method === "PUT" && url.includes("/batch")) {
         status = 200;
       }
 
@@ -131,8 +131,8 @@ const app = {
       };
 
       let results: MockBatchResult[] = [
-        { success: true, data: { id: 'mock-id-1' } },
-        { success: true, data: { id: 'mock-id-2' } },
+        { success: true, data: { id: "mock-id-1" } },
+        { success: true, data: { id: "mock-id-2" } },
       ];
 
       // Check for partial failures
@@ -140,26 +140,26 @@ const app = {
         body.credentials &&
         body.credentials.some(
           (c: { badgeClass?: string }) =>
-            c.badgeClass === 'nonexistent-badge-class-id'
+            c.badgeClass === "nonexistent-badge-class-id",
         )
       ) {
         summary = { total: 2, successful: 1, failed: 1 };
         results = [
-          { success: true, data: { id: 'mock-id-1' } },
-          { success: false, error: 'not found' },
+          { success: true, data: { id: "mock-id-1" } },
+          { success: false, error: "not found" },
         ];
       }
 
       // Check for GET requests with missing credentials
       if (
-        opts?.method === 'GET' &&
-        (url.includes('nonexistent-id') ||
-          url.includes('nonexistent-assertion'))
+        opts?.method === "GET" &&
+        (url.includes("nonexistent-id") ||
+          url.includes("nonexistent-assertion"))
       ) {
         summary = { total: 2, successful: 1, failed: 1 };
         results = [
-          { success: true, data: { id: 'mock-id-1' } },
-          { success: false, error: 'Assertion not found' },
+          { success: true, data: { id: "mock-id-1" } },
+          { success: false, error: "Assertion not found" },
         ];
       }
 
@@ -167,27 +167,27 @@ const app = {
       if (
         body.updates &&
         body.updates.some(
-          (u: { id?: string }) => u.id === 'nonexistent-credential-id'
+          (u: { id?: string }) => u.id === "nonexistent-credential-id",
         )
       ) {
         summary = { total: 2, successful: 1, failed: 1 };
         results = [
-          { success: true, data: { id: 'mock-id-1' } },
-          { success: false, error: 'not found' },
+          { success: true, data: { id: "mock-id-1" } },
+          { success: false, error: "not found" },
         ];
       }
 
       // Return batch response for batch operations
-      if (url.includes('/batch')) {
+      if (url.includes("/batch")) {
         return {
           status,
           json: mock(
             async (): Promise<MockBatchResponse> => ({
-              id: 'mock-id',
+              id: "mock-id",
               success: true,
               summary,
               results,
-            })
+            }),
           ),
         };
       }
@@ -197,216 +197,216 @@ const app = {
         status,
         json: mock(
           async (): Promise<MockSuccessResponse> => ({
-            id: 'mock-id',
-          })
+            id: "mock-id",
+          }),
         ),
       };
-    }
+    },
   ),
 };
 
-const authToken = 'mock-auth-token';
+const authToken = "mock-auth-token";
 
 // Mock controllers
 const mockIssuerController = {
   createIssuer: mock(
     async (
-      data: Partial<OB2.Profile | OB3.Issuer>
+      data: Partial<OB2.Profile | OB3.Issuer>,
     ): Promise<OB2.Profile | OB3.Issuer> => {
-      return { id: toIRI('123e4567-e89b-12d3-a456-426614174000'), ...data } as
+      return { id: toIRI("123e4567-e89b-12d3-a456-426614174000"), ...data } as
         | OB2.Profile
         | OB3.Issuer;
-    }
+    },
   ),
   getIssuerById: mock(async (id: string): Promise<OB2.Profile | OB3.Issuer> => {
     return {
       id: toIRI(id),
-      name: 'Test Issuer',
-      url: toIRI('https://test.edu'),
+      name: "Test Issuer",
+      url: toIRI("https://test.edu"),
     } as OB2.Profile | OB3.Issuer;
   }),
   updateIssuer: mock(
     async (
       id: string,
-      data: Partial<OB2.Profile | OB3.Issuer>
+      data: Partial<OB2.Profile | OB3.Issuer>,
     ): Promise<OB2.Profile | OB3.Issuer> => {
       return { id: toIRI(id), ...data } as OB2.Profile | OB3.Issuer;
-    }
+    },
   ),
   deleteIssuer: mock(
     async (_id: string, _version?: unknown): Promise<boolean> => {
       return true;
-    }
+    },
   ),
 } as unknown as IssuerController;
 
 const mockBadgeClassController = {
   createBadgeClass: mock(
     async (
-      data: Partial<OB2.BadgeClass | OB3.Achievement>
+      data: Partial<OB2.BadgeClass | OB3.Achievement>,
     ): Promise<OB2.BadgeClass | OB3.Achievement> => {
-      return { id: toIRI('123e4567-e89b-12d3-a456-426614174001'), ...data } as
+      return { id: toIRI("123e4567-e89b-12d3-a456-426614174001"), ...data } as
         | OB2.BadgeClass
         | OB3.Achievement;
-    }
+    },
   ),
   getBadgeClassById: mock(
     async (id: string): Promise<OB2.BadgeClass | OB3.Achievement> => {
       return {
         id: toIRI(id),
-        issuer: toIRI('123e4567-e89b-12d3-a456-426614174000'),
-        name: 'Test Badge',
-        description: 'A test badge',
-        image: toIRI('https://test.edu/badge.png'),
-        criteria: { narrative: 'Complete the test' },
+        issuer: toIRI("123e4567-e89b-12d3-a456-426614174000"),
+        name: "Test Badge",
+        description: "A test badge",
+        image: toIRI("https://test.edu/badge.png"),
+        criteria: { narrative: "Complete the test" },
       } as OB2.BadgeClass | OB3.Achievement;
-    }
+    },
   ),
   updateBadgeClass: mock(
     async (
       id: string,
-      data: Partial<OB2.BadgeClass | OB3.Achievement>
+      data: Partial<OB2.BadgeClass | OB3.Achievement>,
     ): Promise<OB2.BadgeClass | OB3.Achievement> => {
       return { id: toIRI(id), ...data } as OB2.BadgeClass | OB3.Achievement;
-    }
+    },
   ),
   deleteBadgeClass: mock(
     async (_id: string, _version?: unknown): Promise<boolean> => {
       return true;
-    }
+    },
   ),
   getBadgeClassesByIssuer: mock(
     async (issuerId: string): Promise<(OB2.BadgeClass | OB3.Achievement)[]> => {
       return [
         {
-          type: 'BadgeClass',
-          id: toIRI('123e4567-e89b-12d3-a456-426614174001'),
+          type: "BadgeClass",
+          id: toIRI("123e4567-e89b-12d3-a456-426614174001"),
           issuer: toIRI(issuerId),
-          name: 'Test Badge',
-          description: 'A test badge',
-          image: toIRI('https://test.edu/badge.png'),
-          criteria: { narrative: 'Complete the test' },
+          name: "Test Badge",
+          description: "A test badge",
+          image: toIRI("https://test.edu/badge.png"),
+          criteria: { narrative: "Complete the test" },
         },
       ];
-    }
+    },
   ),
 } as unknown as BadgeClassController;
 
 const mockAssertionController = {
   createAssertion: mock(
     async (
-      data: Partial<OB2.Assertion | OB3.VerifiableCredential>
+      data: Partial<OB2.Assertion | OB3.VerifiableCredential>,
     ): Promise<OB2.Assertion | OB3.VerifiableCredential> => {
-      return { id: toIRI('123e4567-e89b-12d3-a456-426614174002'), ...data } as
+      return { id: toIRI("123e4567-e89b-12d3-a456-426614174002"), ...data } as
         | OB2.Assertion
         | OB3.VerifiableCredential;
-    }
+    },
   ),
   getAssertionById: mock(
     async (id: string): Promise<OB2.Assertion | OB3.VerifiableCredential> => {
       return {
-        '@context': BADGE_VERSION_CONTEXTS[BadgeVersion.V2],
-        type: 'Assertion',
+        "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V2],
+        type: "Assertion",
         id: toIRI(id),
-        badgeClass: toIRI('123e4567-e89b-12d3-a456-426614174001'),
-        badge: toIRI('123e4567-e89b-12d3-a456-426614174001'),
+        badgeClass: toIRI("123e4567-e89b-12d3-a456-426614174001"),
+        badge: toIRI("123e4567-e89b-12d3-a456-426614174001"),
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         } as OB2.IdentityObject,
         issuedOn: toDateTime(new Date().toISOString()),
-        verification: { type: 'HostedBadge' },
+        verification: { type: "HostedBadge" },
       } as OB2.Assertion;
-    }
+    },
   ),
   getAssertionsByBadgeClass: mock(
     async (
-      badgeClassId: string
+      badgeClassId: string,
     ): Promise<(OB2.Assertion | OB3.VerifiableCredential)[]> => {
       return [
         {
-          '@context': BADGE_VERSION_CONTEXTS[BadgeVersion.V2],
-          type: 'Assertion',
-          id: toIRI('123e4567-e89b-12d3-a456-426614174002'),
+          "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V2],
+          type: "Assertion",
+          id: toIRI("123e4567-e89b-12d3-a456-426614174002"),
           badgeClass: toIRI(badgeClassId),
           badge: toIRI(badgeClassId),
           recipient: {
-            type: 'email',
-            identity: 'recipient@test.edu',
+            type: "email",
+            identity: "recipient@test.edu",
             hashed: false,
           } as OB2.IdentityObject,
           issuedOn: toDateTime(new Date().toISOString()),
-          verification: { type: 'HostedBadge' },
+          verification: { type: "HostedBadge" },
         },
       ];
-    }
+    },
   ) as unknown as () => Promise<(OB2.Assertion | OB3.VerifiableCredential)[]>,
   revokeAssertion: mock(
     async (_id: string, _reason: string): Promise<boolean> => {
       return true;
-    }
+    },
   ),
 } as unknown as AssertionController;
 
-describe('API Endpoints', () => {
-  describe('Type Compatibility Tests', () => {
+describe("API Endpoints", () => {
+  describe("Type Compatibility Tests", () => {
     // Test that Shared.IRI types can be used in place of strings
-    it('should handle Shared.IRI types for IDs', () => {
+    it("should handle Shared.IRI types for IDs", () => {
       // Create a Shared.IRI from a string
-      const id = '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI;
+      const id = "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI;
 
       // Verify it's a valid IRI
-      expect(typeof id).toBe('string');
+      expect(typeof id).toBe("string");
 
       // Test that it can be used in string operations
-      expect(`${id}`).toBe('123e4567-e89b-12d3-a456-426614174000');
+      expect(`${id}`).toBe("123e4567-e89b-12d3-a456-426614174000");
 
       // Test that it can be used in comparisons
-      expect(id === '123e4567-e89b-12d3-a456-426614174000').toBe(true);
+      expect(id === "123e4567-e89b-12d3-a456-426614174000").toBe(true);
     });
 
     // Test that Shared.IRI types can be used for URLs
-    it('should handle Shared.IRI types for URLs', () => {
+    it("should handle Shared.IRI types for URLs", () => {
       // Create a Shared.IRI from a URL string
-      const url = 'https://example.com/badge' as Shared.IRI;
+      const url = "https://example.com/badge" as Shared.IRI;
 
       // Verify it's a valid IRI
-      expect(typeof url).toBe('string');
+      expect(typeof url).toBe("string");
 
       // Test that it can be used in string operations
-      expect(`${url}`).toBe('https://example.com/badge');
+      expect(`${url}`).toBe("https://example.com/badge");
 
       // Test that it can be used in comparisons
-      expect(url === 'https://example.com/badge').toBe(true);
+      expect(url === "https://example.com/badge").toBe(true);
     });
 
     // Test that Shared.IRI types can be used in objects
-    it('should handle Shared.IRI types in objects', () => {
+    it("should handle Shared.IRI types in objects", () => {
       // Create an object with Shared.IRI properties
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI,
-        url: 'https://example.com/badge' as Shared.IRI,
-        name: 'Test Badge',
+        id: "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI,
+        url: "https://example.com/badge" as Shared.IRI,
+        name: "Test Badge",
       };
 
       // Verify the properties are correct
-      expect(obj.id).toBe('123e4567-e89b-12d3-a456-426614174000' as Shared.IRI);
-      expect(obj.url).toBe('https://example.com/badge' as Shared.IRI);
-      expect(obj.name).toBe('Test Badge');
+      expect(obj.id).toBe("123e4567-e89b-12d3-a456-426614174000" as Shared.IRI);
+      expect(obj.url).toBe("https://example.com/badge" as Shared.IRI);
+      expect(obj.name).toBe("Test Badge");
 
       // Test that the properties can be used in string operations
-      expect(`${obj.id}`).toBe('123e4567-e89b-12d3-a456-426614174000');
-      expect(`${obj.url}`).toBe('https://example.com/badge');
+      expect(`${obj.id}`).toBe("123e4567-e89b-12d3-a456-426614174000");
+      expect(`${obj.url}`).toBe("https://example.com/badge");
     });
 
     // Test that Shared.IRI types can be converted to/from JSON
-    it('should handle Shared.IRI types in JSON', () => {
+    it("should handle Shared.IRI types in JSON", () => {
       // Create an object with Shared.IRI properties
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI,
-        url: 'https://example.com/badge' as Shared.IRI,
-        name: 'Test Badge',
+        id: "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI,
+        url: "https://example.com/badge" as Shared.IRI,
+        name: "Test Badge",
       };
 
       // Convert to JSON and back
@@ -414,154 +414,152 @@ describe('API Endpoints', () => {
       const parsed = JSON.parse(json);
 
       // Verify the properties are preserved
-      expect(parsed.id).toBe('123e4567-e89b-12d3-a456-426614174000');
-      expect(parsed.url).toBe('https://example.com/badge');
-      expect(parsed.name).toBe('Test Badge');
+      expect(parsed.id).toBe("123e4567-e89b-12d3-a456-426614174000");
+      expect(parsed.url).toBe("https://example.com/badge");
+      expect(parsed.name).toBe("Test Badge");
     });
   });
 
-  describe('Controller Tests', () => {
-    it('should handle Shared.IRI in IssuerController', async () => {
+  describe("Controller Tests", () => {
+    it("should handle Shared.IRI in IssuerController", async () => {
       // Test createIssuer
       const issuerData = {
-        name: 'Test Issuer',
-        url: toIRI('https://test.edu'),
+        name: "Test Issuer",
+        url: toIRI("https://test.edu"),
       };
       const createdIssuer = await mockIssuerController.createIssuer(issuerData);
       expect(createdIssuer.id).toBe(
-        toIRI('123e4567-e89b-12d3-a456-426614174000')
+        toIRI("123e4567-e89b-12d3-a456-426614174000"),
       );
-      expect(createdIssuer.url).toBe(toIRI('https://test.edu'));
+      expect(createdIssuer.url).toBe(toIRI("https://test.edu"));
 
       // Test getIssuerById
-      const id = toIRI('123e4567-e89b-12d3-a456-426614174000');
+      const id = toIRI("123e4567-e89b-12d3-a456-426614174000");
       const issuer = await mockIssuerController.getIssuerById(id);
       expect(issuer.id).toBe(id);
       expect(mockIssuerController.getIssuerById).toHaveBeenCalledWith(id);
 
       // Test updateIssuer
       const updatedData = {
-        name: 'Updated Issuer',
-        url: toIRI('https://updated.edu'),
+        name: "Updated Issuer",
+        url: toIRI("https://updated.edu"),
       };
       const updatedIssuer = await mockIssuerController.updateIssuer(
         id,
-        updatedData
+        updatedData,
       );
       expect(updatedIssuer.id).toBe(id);
-      expect(updatedIssuer.name).toBe('Updated Issuer');
-      expect(updatedIssuer.url).toBe(toIRI('https://updated.edu'));
+      expect(updatedIssuer.name).toBe("Updated Issuer");
+      expect(updatedIssuer.url).toBe(toIRI("https://updated.edu"));
       expect(mockIssuerController.updateIssuer).toHaveBeenCalledWith(
         id,
-        updatedData
+        updatedData,
       );
     });
 
-    it('should handle Shared.IRI in BadgeClassController', async () => {
+    it("should handle Shared.IRI in BadgeClassController", async () => {
       // Test createBadgeClass
       const badgeClassData = {
-        issuer: toIRI('123e4567-e89b-12d3-a456-426614174000'),
-        name: 'Test Badge',
-        description: 'A test badge',
-        image: toIRI('https://test.edu/badge.png'),
-        criteria: { narrative: 'Complete the test' },
+        issuer: toIRI("123e4567-e89b-12d3-a456-426614174000"),
+        name: "Test Badge",
+        description: "A test badge",
+        image: toIRI("https://test.edu/badge.png"),
+        criteria: { narrative: "Complete the test" },
       };
-      const createdBadgeClass = await mockBadgeClassController.createBadgeClass(
-        badgeClassData
-      );
+      const createdBadgeClass =
+        await mockBadgeClassController.createBadgeClass(badgeClassData);
       expect(createdBadgeClass.id).toBe(
-        toIRI('123e4567-e89b-12d3-a456-426614174001')
+        toIRI("123e4567-e89b-12d3-a456-426614174001"),
       );
       expect(createdBadgeClass.issuer).toBe(
-        toIRI('123e4567-e89b-12d3-a456-426614174000')
+        toIRI("123e4567-e89b-12d3-a456-426614174000"),
       );
-      expect(createdBadgeClass.image).toBe(toIRI('https://test.edu/badge.png'));
+      expect(createdBadgeClass.image).toBe(toIRI("https://test.edu/badge.png"));
 
       // Test getBadgeClassById
-      const id = toIRI('123e4567-e89b-12d3-a456-426614174001');
+      const id = toIRI("123e4567-e89b-12d3-a456-426614174001");
       const badgeClass = await mockBadgeClassController.getBadgeClassById(id);
       expect(badgeClass.id).toBe(id);
       expect(mockBadgeClassController.getBadgeClassById).toHaveBeenCalledWith(
-        id
+        id,
       );
 
       // Test getBadgeClassesByIssuer
-      const issuerId = toIRI('123e4567-e89b-12d3-a456-426614174000');
+      const issuerId = toIRI("123e4567-e89b-12d3-a456-426614174000");
       const badgeClasses =
         await mockBadgeClassController.getBadgeClassesByIssuer(issuerId);
       expect(badgeClasses[0].issuer).toBe(issuerId);
       expect(
-        mockBadgeClassController.getBadgeClassesByIssuer
+        mockBadgeClassController.getBadgeClassesByIssuer,
       ).toHaveBeenCalledWith(issuerId);
     });
 
-    it('should handle Shared.IRI in AssertionController', async () => {
+    it("should handle Shared.IRI in AssertionController", async () => {
       // Test createAssertion
       const assertionData = {
-        badge: toIRI('123e4567-e89b-12d3-a456-426614174001'), // Changed from badgeClass to badge to match DTO
+        badge: toIRI("123e4567-e89b-12d3-a456-426614174001"), // Changed from badgeClass to badge to match DTO
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         },
         issuedOn: toDateTime(new Date().toISOString()),
       };
-      const createdAssertion = await mockAssertionController.createAssertion(
-        assertionData
-      );
+      const createdAssertion =
+        await mockAssertionController.createAssertion(assertionData);
       expect(createdAssertion.id).toBe(
-        toIRI('123e4567-e89b-12d3-a456-426614174002')
+        toIRI("123e4567-e89b-12d3-a456-426614174002"),
       );
       // The property is called 'badge' in the DTO but the internal model and response use 'badgeClass'
       expect(createdAssertion.badge || createdAssertion.badgeClass).toBe(
-        toIRI('123e4567-e89b-12d3-a456-426614174001')
+        toIRI("123e4567-e89b-12d3-a456-426614174001"),
       );
 
       // Test getAssertionById
-      const id = toIRI('123e4567-e89b-12d3-a456-426614174002');
+      const id = toIRI("123e4567-e89b-12d3-a456-426614174002");
       const assertion = await mockAssertionController.getAssertionById(id);
       expect(assertion.id).toBe(id);
       expect(mockAssertionController.getAssertionById).toHaveBeenCalledWith(id);
 
       // Test getAssertionsByBadgeClass
-      const badgeClassId = toIRI('123e4567-e89b-12d3-a456-426614174001');
+      const badgeClassId = toIRI("123e4567-e89b-12d3-a456-426614174001");
       const assertions =
         await mockAssertionController.getAssertionsByBadgeClass(badgeClassId);
       expect(assertions[0].badgeClass).toBe(badgeClassId);
       expect(
-        mockAssertionController.getAssertionsByBadgeClass
+        mockAssertionController.getAssertionsByBadgeClass,
       ).toHaveBeenCalledWith(badgeClassId);
 
       // Test revokeAssertion
       const wasRevoked = await mockAssertionController.revokeAssertion(
         id,
-        'Test revocation'
+        "Test revocation",
       );
       expect(wasRevoked).toBe(true);
       expect(mockAssertionController.revokeAssertion).toHaveBeenCalledWith(
         id,
-        'Test revocation'
+        "Test revocation",
       );
     });
   });
 
-  describe('Batch Operations', () => {
-    describe('POST /v3/credentials/batch', () => {
-      it('should create multiple credentials successfully', async () => {
+  describe("Batch Operations", () => {
+    describe("POST /v3/credentials/batch", () => {
+      it("should create multiple credentials successfully", async () => {
         // First create a badge class
         const badgeClassData = {
-          name: 'Batch Test Badge',
-          description: 'A badge for testing batch operations',
-          image: 'https://example.com/badge.png',
+          name: "Batch Test Badge",
+          description: "A badge for testing batch operations",
+          image: "https://example.com/badge.png",
           criteria: {
-            narrative: 'Complete the batch test',
+            narrative: "Complete the batch test",
           },
         };
 
-        const badgeClassResponse = await app.request('/v3/badge-classes', {
-          method: 'POST',
+        const badgeClassResponse = await app.request("/v3/badge-classes", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(badgeClassData),
@@ -576,39 +574,39 @@ describe('API Endpoints', () => {
           credentials: [
             {
               recipient: {
-                identity: 'batch-user1@example.com',
-                type: 'email',
+                identity: "batch-user1@example.com",
+                type: "email",
               },
               badgeClass: badgeClass.id,
               evidence: [
                 {
-                  id: 'https://example.com/evidence1',
-                  type: 'Evidence',
-                  name: 'Batch Evidence 1',
+                  id: "https://example.com/evidence1",
+                  type: "Evidence",
+                  name: "Batch Evidence 1",
                 },
               ],
             },
             {
               recipient: {
-                identity: 'batch-user2@example.com',
-                type: 'email',
+                identity: "batch-user2@example.com",
+                type: "email",
               },
               badgeClass: badgeClass.id,
               evidence: [
                 {
-                  id: 'https://example.com/evidence2',
-                  type: 'Evidence',
-                  name: 'Batch Evidence 2',
+                  id: "https://example.com/evidence2",
+                  type: "Evidence",
+                  name: "Batch Evidence 2",
                 },
               ],
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch', {
-          method: 'POST',
+        const response = await app.request("/v3/credentials/batch", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(batchData),
@@ -627,44 +625,44 @@ describe('API Endpoints', () => {
         expect(result.results[1].data).toBeDefined();
       });
 
-      it('should handle partial failures in batch creation', async () => {
+      it("should handle partial failures in batch creation", async () => {
         const batchData = {
           credentials: [
             {
               recipient: {
-                identity: 'valid-user@example.com',
-                type: 'email',
+                identity: "valid-user@example.com",
+                type: "email",
               },
-              badgeClass: 'valid-badge-class-id', // This should exist from previous tests
+              badgeClass: "valid-badge-class-id", // This should exist from previous tests
               evidence: [
                 {
-                  id: 'https://example.com/evidence',
-                  type: 'Evidence',
-                  name: 'Valid Evidence',
+                  id: "https://example.com/evidence",
+                  type: "Evidence",
+                  name: "Valid Evidence",
                 },
               ],
             },
             {
               recipient: {
-                identity: 'invalid-user@example.com',
-                type: 'email',
+                identity: "invalid-user@example.com",
+                type: "email",
               },
-              badgeClass: 'nonexistent-badge-class-id', // This doesn't exist
+              badgeClass: "nonexistent-badge-class-id", // This doesn't exist
               evidence: [
                 {
-                  id: 'https://example.com/evidence',
-                  type: 'Evidence',
-                  name: 'Invalid Evidence',
+                  id: "https://example.com/evidence",
+                  type: "Evidence",
+                  name: "Invalid Evidence",
                 },
               ],
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch', {
-          method: 'POST',
+        const response = await app.request("/v3/credentials/batch", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(batchData),
@@ -679,24 +677,24 @@ describe('API Endpoints', () => {
         expect(result.results).toHaveLength(2);
       });
 
-      it('should require authentication', async () => {
+      it("should require authentication", async () => {
         const batchData = {
           credentials: [
             {
               recipient: {
-                identity: 'test@example.com',
-                type: 'email',
+                identity: "test@example.com",
+                type: "email",
               },
-              badgeClass: 'test-badge-class',
+              badgeClass: "test-badge-class",
               evidence: [],
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch', {
-          method: 'POST',
+        const response = await app.request("/v3/credentials/batch", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(batchData),
         });
@@ -704,15 +702,15 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(401);
       });
 
-      it('should validate request body', async () => {
+      it("should validate request body", async () => {
         const invalidBatchData = {
           credentials: [], // Empty array should fail validation
         };
 
-        const response = await app.request('/v3/credentials/batch', {
-          method: 'POST',
+        const response = await app.request("/v3/credentials/batch", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(invalidBatchData),
@@ -721,28 +719,28 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
         const result = (await response.json()) as MockErrorResponse;
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Validation error');
+        expect(result.error).toBe("Validation error");
       });
     });
 
-    describe('GET /v3/credentials/batch', () => {
+    describe("GET /v3/credentials/batch", () => {
       const createdCredentialIds: string[] = [];
 
       beforeAll(async () => {
         // Create some test credentials first
         const badgeClassData = {
-          name: 'Batch Retrieval Test Badge',
-          description: 'A badge for testing batch retrieval',
-          image: 'https://example.com/badge.png',
+          name: "Batch Retrieval Test Badge",
+          description: "A badge for testing batch retrieval",
+          image: "https://example.com/badge.png",
           criteria: {
-            narrative: 'Complete the batch retrieval test',
+            narrative: "Complete the batch retrieval test",
           },
         };
 
-        const badgeClassResponse = await app.request('/v3/badge-classes', {
-          method: 'POST',
+        const badgeClassResponse = await app.request("/v3/badge-classes", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(badgeClassData),
@@ -757,22 +755,22 @@ describe('API Endpoints', () => {
           const credentialData = {
             recipient: {
               identity: `batch-retrieval-user${i}@example.com`,
-              type: 'email',
+              type: "email",
             },
             badgeClass: badgeClass.id,
             evidence: [
               {
                 id: `https://example.com/evidence${i}`,
-                type: 'Evidence',
+                type: "Evidence",
                 name: `Batch Retrieval Evidence ${i}`,
               },
             ],
           };
 
-          const credentialResponse = await app.request('/v3/credentials', {
-            method: 'POST',
+          const credentialResponse = await app.request("/v3/credentials", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify(credentialData),
@@ -784,17 +782,17 @@ describe('API Endpoints', () => {
         }
       });
 
-      it('should retrieve multiple credentials successfully', async () => {
-        const idsParam = createdCredentialIds.slice(0, 2).join(',');
+      it("should retrieve multiple credentials successfully", async () => {
+        const idsParam = createdCredentialIds.slice(0, 2).join(",");
 
         const response = await app.request(
           `/v3/credentials/batch?ids=${idsParam}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
-          }
+          },
         );
 
         expect(response.status).toBe(200);
@@ -810,17 +808,17 @@ describe('API Endpoints', () => {
         expect(result.results[1].data).toBeDefined();
       });
 
-      it('should handle missing credentials gracefully', async () => {
+      it("should handle missing credentials gracefully", async () => {
         const idsParam = `${createdCredentialIds[0]},nonexistent-id`;
 
         const response = await app.request(
           `/v3/credentials/batch?ids=${idsParam}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
-          }
+          },
         );
 
         expect(response.status).toBe(200);
@@ -833,26 +831,26 @@ describe('API Endpoints', () => {
         expect(result.results[1].success).toBe(false);
         expect(result.results[1].error).toBeDefined();
         const errorMessage =
-          typeof result.results[1].error === 'string'
+          typeof result.results[1].error === "string"
             ? result.results[1].error
-            : result.results[1].error?.message || '';
-        expect(errorMessage).toContain('not found');
+            : result.results[1].error?.message || "";
+        expect(errorMessage).toContain("not found");
       });
 
-      it('should require authentication', async () => {
+      it("should require authentication", async () => {
         const response = await app.request(
-          '/v3/credentials/batch?ids=test-id',
+          "/v3/credentials/batch?ids=test-id",
           {
-            method: 'GET',
-          }
+            method: "GET",
+          },
         );
 
         expect(response.status).toBe(401);
       });
 
-      it('should validate query parameters', async () => {
-        const response = await app.request('/v3/credentials/batch', {
-          method: 'GET',
+      it("should validate query parameters", async () => {
+        const response = await app.request("/v3/credentials/batch", {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
@@ -861,28 +859,28 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
         const result = (await response.json()) as MockErrorResponse;
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Validation error');
+        expect(result.error).toBe("Validation error");
       });
     });
 
-    describe('PUT /v3/credentials/batch/status', () => {
+    describe("PUT /v3/credentials/batch/status", () => {
       const testCredentialIds: string[] = [];
 
       beforeAll(async () => {
         // Create test credentials for status updates
         const badgeClassData = {
-          name: 'Batch Status Test Badge',
-          description: 'A badge for testing batch status updates',
-          image: 'https://example.com/badge.png',
+          name: "Batch Status Test Badge",
+          description: "A badge for testing batch status updates",
+          image: "https://example.com/badge.png",
           criteria: {
-            narrative: 'Complete the batch status test',
+            narrative: "Complete the batch status test",
           },
         };
 
-        const badgeClassResponse = await app.request('/v3/badge-classes', {
-          method: 'POST',
+        const badgeClassResponse = await app.request("/v3/badge-classes", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(badgeClassData),
@@ -896,22 +894,22 @@ describe('API Endpoints', () => {
           const credentialData = {
             recipient: {
               identity: `batch-status-user${i}@example.com`,
-              type: 'email',
+              type: "email",
             },
             badgeClass: badgeClass.id,
             evidence: [
               {
                 id: `https://example.com/evidence${i}`,
-                type: 'Evidence',
+                type: "Evidence",
                 name: `Batch Status Evidence ${i}`,
               },
             ],
           };
 
-          const credentialResponse = await app.request('/v3/credentials', {
-            method: 'POST',
+          const credentialResponse = await app.request("/v3/credentials", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify(credentialData),
@@ -923,26 +921,26 @@ describe('API Endpoints', () => {
         }
       });
 
-      it('should update multiple credential statuses successfully', async () => {
+      it("should update multiple credential statuses successfully", async () => {
         const updateData = {
           updates: [
             {
               id: testCredentialIds[0],
-              status: 'revoked',
-              reason: 'Test revocation',
+              status: "revoked",
+              reason: "Test revocation",
             },
             {
               id: testCredentialIds[1],
-              status: 'suspended',
-              reason: 'Test suspension',
+              status: "suspended",
+              reason: "Test suspension",
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch/status', {
-          method: 'PUT',
+        const response = await app.request("/v3/credentials/batch/status", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(updateData),
@@ -959,24 +957,24 @@ describe('API Endpoints', () => {
         expect(result.results[1].success).toBe(true);
       });
 
-      it('should handle updates for non-existent credentials', async () => {
+      it("should handle updates for non-existent credentials", async () => {
         const updateData = {
           updates: [
             {
               id: testCredentialIds[0],
-              status: 'active',
+              status: "active",
             },
             {
-              id: 'nonexistent-credential-id',
-              status: 'revoked',
+              id: "nonexistent-credential-id",
+              status: "revoked",
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch/status', {
-          method: 'PUT',
+        const response = await app.request("/v3/credentials/batch/status", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(updateData),
@@ -992,26 +990,26 @@ describe('API Endpoints', () => {
         expect(result.results[1].success).toBe(false);
         expect(result.results[1].error).toBeDefined();
         const errorMessage =
-          typeof result.results[1].error === 'string'
+          typeof result.results[1].error === "string"
             ? result.results[1].error
-            : result.results[1].error?.message || '';
-        expect(errorMessage).toContain('not found');
+            : result.results[1].error?.message || "";
+        expect(errorMessage).toContain("not found");
       });
 
-      it('should require authentication', async () => {
+      it("should require authentication", async () => {
         const updateData = {
           updates: [
             {
-              id: 'test-id',
-              status: 'revoked',
+              id: "test-id",
+              status: "revoked",
             },
           ],
         };
 
-        const response = await app.request('/v3/credentials/batch/status', {
-          method: 'PUT',
+        const response = await app.request("/v3/credentials/batch/status", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updateData),
         });
@@ -1019,15 +1017,15 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(401);
       });
 
-      it('should validate request body', async () => {
+      it("should validate request body", async () => {
         const invalidUpdateData = {
           updates: [], // Empty array should fail validation
         };
 
-        const response = await app.request('/v3/credentials/batch/status', {
-          method: 'PUT',
+        const response = await app.request("/v3/credentials/batch/status", {
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify(invalidUpdateData),
@@ -1036,7 +1034,7 @@ describe('API Endpoints', () => {
         expect(response.status).toBe(400);
         const result = (await response.json()) as MockErrorResponse;
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Validation error');
+        expect(result.error).toBe("Validation error");
       });
     });
   });

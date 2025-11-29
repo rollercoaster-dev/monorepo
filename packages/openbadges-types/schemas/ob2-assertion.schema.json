@@ -3,14 +3,28 @@
   "$id": "ob2-assertion.schema.json",
   "title": "Open Badges 2.0 Assertion",
   "type": "object",
-  "required": ["@context", "id", "type", "recipient", "badge", "verification", "issuedOn"],
+  "required": [
+    "@context",
+    "id",
+    "type",
+    "recipient",
+    "badge",
+    "verification",
+    "issuedOn"
+  ],
   "properties": {
     "@context": { "type": ["string", "array", "object"] },
     "id": { "type": "string", "format": "uri" },
-    "type": { "type": ["string", "array"], "contains": { "const": "Assertion" } },
+    "type": {
+      "type": ["string", "array"],
+      "contains": { "const": "Assertion" }
+    },
     "recipient": { "$ref": "#/definitions/IdentityObject" },
     "badge": {
-      "oneOf": [{ "type": "string", "format": "uri" }, { "$ref": "#/definitions/BadgeClass" }]
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/BadgeClass" }
+      ]
     },
     "verification": { "$ref": "#/definitions/VerificationObject" },
     "issuedOn": { "type": "string" },
@@ -42,15 +56,24 @@
       "required": ["id", "type", "name", "description", "criteria", "issuer"],
       "properties": {
         "id": { "type": "string", "format": "uri" },
-        "type": { "type": ["string", "array"], "contains": { "const": "BadgeClass" } },
+        "type": {
+          "type": ["string", "array"],
+          "contains": { "const": "BadgeClass" }
+        },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "image": { "type": ["string", "object"] },
         "criteria": { "$ref": "#/definitions/Criteria" },
         "issuer": {
-          "oneOf": [{ "type": "string", "format": "uri" }, { "$ref": "#/definitions/Profile" }]
+          "oneOf": [
+            { "type": "string", "format": "uri" },
+            { "$ref": "#/definitions/Profile" }
+          ]
         },
-        "alignment": { "type": "array", "items": { "$ref": "#/definitions/AlignmentObject" } },
+        "alignment": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AlignmentObject" }
+        },
         "tags": { "type": "array", "items": { "type": "string" } }
       }
     },
@@ -59,7 +82,10 @@
       "required": ["id", "type", "name"],
       "properties": {
         "id": { "type": "string", "format": "uri" },
-        "type": { "type": ["string", "array"], "contains": { "enum": ["Profile", "Issuer"] } },
+        "type": {
+          "type": ["string", "array"],
+          "contains": { "enum": ["Profile", "Issuer"] }
+        },
         "name": { "type": "string" },
         "url": { "type": "string", "format": "uri" },
         "email": { "type": "string" },

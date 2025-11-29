@@ -9,19 +9,20 @@ This document outlines the improvements that have been implemented for the `@rol
 - Ensured internal state is properly updated when configuration changes.
 
 Example usage:
-```typescript
-import { Logger, LogLevel } from '@rollercoaster-dev/rd-logger';
 
-const logger = new Logger({ level: 'info' });
+```typescript
+import { Logger, LogLevel } from "@rollercoaster-dev/rd-logger";
+
+const logger = new Logger({ level: "info" });
 
 // Later in the code, change the log level
-logger.setLevel('debug');
+logger.setLevel("debug");
 
 // Or update multiple configuration options at once
 logger.updateConfig({
-  level: 'warn',
+  level: "warn",
   prettyPrint: false,
-  colorize: true
+  colorize: true,
 });
 ```
 
@@ -33,16 +34,17 @@ logger.updateConfig({
 - Added a `cleanup()` method to properly close file streams when the logger is no longer needed.
 
 Example usage:
+
 ```typescript
-import { Logger } from '@rollercoaster-dev/rd-logger';
+import { Logger } from "@rollercoaster-dev/rd-logger";
 
 const logger = new Logger({
   logToFile: true,
-  logFilePath: './logs/app.log'
+  logFilePath: "./logs/app.log",
 });
 
 // Log messages are now written asynchronously
-logger.info('This will be written to the file without blocking');
+logger.info("This will be written to the file without blocking");
 
 // When the application is shutting down
 logger.cleanup();
@@ -57,34 +59,35 @@ logger.cleanup();
 - Added methods to add/remove transports dynamically.
 
 Example usage:
+
 ```typescript
-import { 
-  Logger, 
-  ConsoleTransport, 
+import {
+  Logger,
+  ConsoleTransport,
   FileTransport,
-  JsonFormatter 
-} from '@rollercoaster-dev/rd-logger';
+  JsonFormatter,
+} from "@rollercoaster-dev/rd-logger";
 
 // Create a logger with custom transports
 const logger = new Logger({
   transports: [
     new ConsoleTransport({ colorize: true }),
-    new FileTransport({ filePath: './logs/app.log' })
+    new FileTransport({ filePath: "./logs/app.log" }),
   ],
-  formatter: new JsonFormatter()
+  formatter: new JsonFormatter(),
 });
 
 // Add a custom transport at runtime
 logger.addTransport({
-  name: 'custom',
+  name: "custom",
   log: (level, message, timestamp, context) => {
     // Custom logging logic (e.g., send to a database or external service)
     console.log(`Custom transport: ${level} - ${message}`);
-  }
+  },
 });
 
 // Remove a transport by name
-logger.removeTransport('console');
+logger.removeTransport("console");
 ```
 
 ## Benefits

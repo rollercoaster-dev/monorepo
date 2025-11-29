@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import { BadgeService } from '@services/BadgeService';
-import BadgeVerification from '@components/badges/BadgeVerification.vue';
+import { computed, ref } from "vue";
+import type { OB2, OB3 } from "@/types";
+import { BadgeService } from "@services/BadgeService";
+import BadgeVerification from "@components/badges/BadgeVerification.vue";
 
 interface Props {
   badge: OB2.Assertion | OB3.VerifiableCredential;
@@ -13,7 +13,7 @@ interface Props {
   showVerification?: boolean;
   autoVerify?: boolean;
   // Neurodiversity enhancements
-  contentDensity?: 'compact' | 'normal' | 'spacious';
+  contentDensity?: "compact" | "normal" | "spacious";
   simplifiedView?: boolean;
 }
 
@@ -24,13 +24,13 @@ const props = withDefaults(defineProps<Props>(), {
   interactive: false,
   showVerification: false,
   autoVerify: false,
-  contentDensity: 'normal',
+  contentDensity: "normal",
   simplifiedView: false,
 });
 
 const emit = defineEmits<{
-  (e: 'click', badge: OB2.Assertion | OB3.VerifiableCredential): void;
-  (e: 'verified', isValid: boolean): void;
+  (e: "click", badge: OB2.Assertion | OB3.VerifiableCredential): void;
+  (e: "verified", isValid: boolean): void;
 }>();
 
 // Normalize the badge for display
@@ -42,10 +42,10 @@ const normalizedBadge = computed(() => {
 const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     }).format(date);
   } catch (_e) {
     return dateString;
@@ -60,13 +60,13 @@ const generateAltText = (badgeName: string): string => {
 // Handle click events when badge is interactive
 const handleClick = () => {
   if (props.interactive) {
-    emit('click', props.badge);
+    emit("click", props.badge);
   }
 };
 
 // Handle verification events
 const handleVerified = (isValid: boolean) => {
-  emit('verified', isValid);
+  emit("verified", isValid);
 };
 
 // Control whether to show verification details
@@ -79,8 +79,12 @@ const toggleVerificationDetails = () => {
 
 // Focus state for accessibility
 const isFocused = ref(false);
-const onFocus = () => { isFocused.value = true; };
-const onBlur = () => { isFocused.value = false; };
+const onFocus = () => {
+  isFocused.value = true;
+};
+const onBlur = () => {
+  isFocused.value = false;
+};
 
 // Computed classes for content density
 const densityClass = computed(() => {
@@ -104,7 +108,7 @@ const densityClass = computed(() => {
         :src="normalizedBadge.image"
         :alt="generateAltText(normalizedBadge.name)"
         class="manus-badge-img"
-      >
+      />
     </div>
     <div class="manus-badge-content">
       <h3 class="manus-badge-title">
@@ -119,10 +123,7 @@ const densityClass = computed(() => {
       <div v-if="!simplifiedView" class="manus-badge-issuer">
         <span>Issued by: {{ normalizedBadge.issuer.name }}</span>
       </div>
-      <div
-        v-if="showIssuedDate && !simplifiedView"
-        class="manus-badge-date"
-      >
+      <div v-if="showIssuedDate && !simplifiedView" class="manus-badge-date">
         <span>Issued: {{ formatDate(normalizedBadge.issuedOn) }}</span>
       </div>
       <div
@@ -140,7 +141,11 @@ const densityClass = computed(() => {
           type="button"
           @click.stop="toggleVerificationDetails"
         >
-          {{ showVerificationDetails ? 'Hide Verification Details' : 'Show Verification Details' }}
+          {{
+            showVerificationDetails
+              ? "Hide Verification Details"
+              : "Show Verification Details"
+          }}
         </button>
       </div>
       <div
@@ -301,6 +306,8 @@ const densityClass = computed(() => {
 }
 
 .manus-badge-verification-toggle-button {
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 </style>

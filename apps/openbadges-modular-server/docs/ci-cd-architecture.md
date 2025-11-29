@@ -9,18 +9,22 @@ The new CI/CD system uses a **single, sequential workflow** that ensures quality
 ## 🏗️ **Architecture Principles**
 
 ### **1. Sequential Quality Gates**
+
 Each stage must pass before proceeding to the next:
+
 ```
 Lint & TypeCheck → SQLite Tests → PostgreSQL Tests → E2E Tests → Build → Release → Docker
 ```
 
 ### **2. Fail Fast Strategy**
+
 - **Linting & Type Checking**: Fastest feedback on code quality
 - **SQLite Tests**: Quick database testing (no external dependencies)
 - **PostgreSQL Tests**: Comprehensive database testing
 - **E2E Tests**: Full application testing
 
 ### **3. Secure Release Process**
+
 - Releases only happen on `main` branch
 - All tests must pass before release
 - Semantic versioning with conventional commits
@@ -29,6 +33,7 @@ Lint & TypeCheck → SQLite Tests → PostgreSQL Tests → E2E Tests → Build �
 ## 📋 **Workflow Stages**
 
 ### **Stage 1: Code Quality** 🔍
+
 ```yaml
 lint-and-typecheck:
   - ESLint validation
@@ -39,6 +44,7 @@ lint-and-typecheck:
 **Purpose**: Catch syntax errors, style issues, and type problems early.
 
 ### **Stage 2: SQLite Tests** 🗄️
+
 ```yaml
 test-sqlite:
   needs: lint-and-typecheck
@@ -50,6 +56,7 @@ test-sqlite:
 **Purpose**: Fast database testing without external dependencies.
 
 ### **Stage 3: PostgreSQL Tests** 🐘
+
 ```yaml
 test-postgresql:
   needs: test-sqlite
@@ -61,6 +68,7 @@ test-postgresql:
 **Purpose**: Ensure compatibility with production database.
 
 ### **Stage 4: End-to-End Tests** 🧪
+
 ```yaml
 test-e2e:
   needs: test-postgresql
@@ -75,6 +83,7 @@ test-e2e:
 **Purpose**: Validate complete application functionality.
 
 ### **Stage 5: Build** 🏗️
+
 ```yaml
 build:
   needs: test-e2e
@@ -86,6 +95,7 @@ build:
 **Purpose**: Prepare application for deployment.
 
 ### **Stage 6: Release** 🚀
+
 ```yaml
 release:
   needs: build
@@ -99,6 +109,7 @@ release:
 **Purpose**: Automated versioning and release management.
 
 ### **Stage 7: Docker Build** 🐳
+
 ```yaml
 docker:
   needs: release
@@ -113,43 +124,50 @@ docker:
 ## 🔧 **Configuration**
 
 ### **Triggers**
+
 - **Push to main**: Full pipeline including release
 - **Pull Request**: All stages except release and docker
 - **Manual Dispatch**: Full pipeline with optional force release
 
 ### **Environment Variables**
+
 ```yaml
-NODE_VERSION: '20'
-BUN_VERSION: 'latest'
+NODE_VERSION: "20"
+BUN_VERSION: "latest"
 ```
 
 ### **Permissions**
+
 ```yaml
-contents: write      # For creating releases and tags
-issues: write        # For release comments
+contents: write # For creating releases and tags
+issues: write # For release comments
 pull-requests: write # For PR comments
-packages: write      # For container registry
-id-token: write      # For provenance
+packages: write # For container registry
+id-token: write # For provenance
 ```
 
 ## 📊 **Benefits**
 
 ### **Reliability**
+
 - ✅ No releases without passing tests
 - ✅ Clear dependency chain
 - ✅ Atomic operations
 
 ### **Performance**
+
 - ⚡ Fail fast on code quality issues
 - ⚡ Optimized caching strategy
 - ⚡ Parallel E2E testing
 
 ### **Maintainability**
+
 - 📝 Single workflow file
 - 📝 Clear stage dependencies
 - 📝 Comprehensive logging
 
 ### **Security**
+
 - 🔒 Minimal permissions
 - 🔒 Secure token handling
 - 🔒 Verified multi-arch builds
@@ -157,24 +175,30 @@ id-token: write      # For provenance
 ## 🔄 **Migration Guide**
 
 ### **From Old System**
+
 The previous system had separate workflows:
+
 - `ci.yml` - Testing
 - `release.yml` - Releases
 - `docker-build.yml` - Container builds
 - `test-release.yml` - Release testing
 
 ### **Migration Steps**
+
 1. **Backup existing workflows**:
+
    ```bash
    bun run scripts/migrate-workflows.js backup
    ```
 
 2. **Run full migration**:
+
    ```bash
    bun run scripts/migrate-workflows.js migrate
    ```
 
 3. **Verify migration**:
+
    ```bash
    bun run scripts/migrate-workflows.js status
    ```
@@ -189,6 +213,7 @@ The previous system had separate workflows:
 ### **Common Issues**
 
 #### **Tests Failing**
+
 ```bash
 # Check specific test stage
 gh run list --workflow=main.yml
@@ -196,16 +221,19 @@ gh run view <run-id>
 ```
 
 #### **Release Not Created**
+
 - Ensure commits follow conventional commit format
 - Check semantic-release configuration
 - Verify GitHub token permissions
 
 #### **Docker Build Failing**
+
 - Check multi-architecture support
 - Verify container registry permissions
 - Review Dockerfile compatibility
 
 ### **Debug Commands**
+
 ```bash
 # Local testing
 bun run test:sqlite
@@ -223,12 +251,14 @@ bun run scripts/migrate-workflows.js status
 ## 📈 **Monitoring**
 
 ### **Key Metrics**
+
 - **Pipeline Duration**: Target <15 minutes
 - **Success Rate**: Target >99% for valid code
 - **Test Coverage**: Maintain >80%
 - **Release Frequency**: Automated on every merge
 
 ### **Alerts**
+
 - Failed releases
 - Test failures
 - Security vulnerabilities
@@ -237,6 +267,7 @@ bun run scripts/migrate-workflows.js status
 ## 🔮 **Future Enhancements**
 
 ### **Planned Improvements**
+
 - [ ] Parallel test execution optimization
 - [ ] Advanced caching strategies
 - [ ] Integration with external monitoring
@@ -244,7 +275,9 @@ bun run scripts/migrate-workflows.js status
 - [ ] Performance benchmarking
 
 ### **Beta/Alpha Branches**
+
 The system supports prerelease branches:
+
 - `beta` branch → beta releases (e.g., 1.2.0-beta.1)
 - `alpha` branch → alpha releases (e.g., 1.2.0-alpha.1)
 

@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import type { Transport } from './transport.interface.js';
-import { safeStringify } from '../utils.js';
+import fs from "fs";
+import path from "path";
+import type { Transport } from "./transport.interface.js";
+import { safeStringify } from "../utils.js";
 
 export interface FileTransportOptions {
   /**
@@ -19,7 +19,7 @@ export interface FileTransportOptions {
  * File transport for the logger
  */
 export class FileTransport implements Transport {
-  public name = 'file';
+  public name = "file";
   private filePath: string;
   private initialized = false;
   private fileStream: fs.WriteStream | null = null;
@@ -46,13 +46,18 @@ export class FileTransport implements Transport {
   /**
    * Log a message to the file
    */
-  public log(level: string, message: string, timestamp: string, context: Record<string, any>): void {
+  public log(
+    level: string,
+    message: string,
+    timestamp: string,
+    context: Record<string, any>,
+  ): void {
     // Initialize lazily on first log attempt
     if (!this.initialized) {
       this.initialize();
       // If initialization failed, fileStream will be null, and we can't log
       if (!this.initialized) {
-        console.warn('FileTransport: Cannot log, initialization failed.');
+        console.warn("FileTransport: Cannot log, initialization failed.");
         return;
       }
     }
@@ -62,7 +67,7 @@ export class FileTransport implements Transport {
     if (Object.keys(context).length) {
       fileEntry += ` | ${safeStringify(context)}`;
     }
-    
+
     // Add to queue and process asynchronously
     this.logQueue.push(fileEntry);
     this.processLogQueue();
@@ -76,11 +81,11 @@ export class FileTransport implements Transport {
       // Process any remaining logs in the queue
       if (this.logQueue.length > 0) {
         for (const entry of this.logQueue) {
-          this.fileStream.write(entry + '\n');
+          this.fileStream.write(entry + "\n");
         }
         this.logQueue = [];
       }
-      
+
       // Close the file stream
       this.fileStream.end();
       this.fileStream = null;
@@ -107,20 +112,22 @@ export class FileTransport implements Transport {
     }
 
     try {
-      this.fileStream = fs.createWriteStream(this.filePath, { flags: 'a' });
-      
+      this.fileStream = fs.createWriteStream(this.filePath, { flags: "a" });
+
       // Handle stream errors
-      this.fileStream.on('error', (error) => {
+      this.fileStream.on("error", (error) => {
         console.error(`Error writing to log file: ${error.message}`);
         this.fileStream = null;
       });
 
       // Process any queued logs once the stream is ready
-      this.fileStream.on('ready', () => {
+      this.fileStream.on("ready", () => {
         this.processLogQueue();
       });
     } catch (error: any) {
-      console.error(`Failed to create write stream for '${this.filePath}': ${error.message}`);
+      console.error(
+        `Failed to create write stream for '${this.filePath}': ${error.message}`,
+      );
     }
   }
 
@@ -128,7 +135,11 @@ export class FileTransport implements Transport {
    * Process the log queue asynchronously
    */
   private async processLogQueue(): Promise<void> {
-    if (this.isProcessingQueue || this.logQueue.length === 0 || !this.fileStream) {
+    if (
+      this.isProcessingQueue ||
+      this.logQueue.length === 0 ||
+      !this.fileStream
+    ) {
       return;
     }
 
@@ -139,12 +150,12 @@ export class FileTransport implements Transport {
         const entry = this.logQueue.shift();
         if (entry && this.fileStream) {
           // Use a promise to handle backpressure
-          const canContinue = this.fileStream.write(entry + '\n');
+          const canContinue = this.fileStream.write(entry + "\n");
           if (!canContinue) {
             // Wait for drain event before continuing
             await new Promise<void>((resolve) => {
               if (this.fileStream) {
-                this.fileStream.once('drain', resolve);
+                this.fileStream.once("drain", resolve);
               } else {
                 resolve();
               }
@@ -156,7 +167,7 @@ export class FileTransport implements Transport {
       console.error(`Error processing log queue: ${error.message}`);
     } finally {
       this.isProcessingQueue = false;
-      
+
       // Check if more entries were added while processing
       if (this.logQueue.length > 0) {
         this.processLogQueue();

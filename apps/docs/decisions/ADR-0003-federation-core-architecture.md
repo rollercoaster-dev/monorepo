@@ -13,6 +13,7 @@ The Open Badges ecosystem currently suffers from fragmentation, with isolated ba
 While much of the discussion around federation focuses on formal education, Rollercoaster.dev aims to **empower alternative skill and learning communities** — makerspaces, youth centers, church groups, grassroots clubs, small businesses, and employers — to issue, verify, and endorse badges on their own terms.
 
 These organizations often:
+
 - Operate without dedicated IT staff
 - Offer high-value but informal skill-building opportunities
 - Want to recognize achievements that fall outside traditional education frameworks
@@ -21,6 +22,7 @@ These organizations often:
 Open Badges 3.0 with Verifiable Credentials (VC) and Decentralized Identifiers (DIDs) provides the technical foundation for federation, but the ecosystem lacks practical, low-barrier implementations demonstrating multi-node interoperability for **non-traditional issuers**.
 
 **Current Problems:**
+
 - Badge silos prevent comprehensive skill representation
 - Users lose badges when platforms shut down or change policies
 - Informal learning orgs have no easy, trusted way to issue interoperable badges
@@ -29,6 +31,7 @@ Open Badges 3.0 with Verifiable Credentials (VC) and Decentralized Identifiers (
 - Limited discovery of relevant issuers outside formal education
 
 **Federation Requirements:**
+
 - Multiple independent nodes (issuers/backpacks) must interoperate
 - Trust, endorsements, and provenance must be verifiable across nodes
 - Simple onboarding for non-technical administrators (e.g., one-command Docker deploy, managed hosting option)
@@ -37,6 +40,7 @@ Open Badges 3.0 with Verifiable Credentials (VC) and Decentralized Identifiers (
 - Conflict resolution for competing or contradictory badges
 
 **Technical Constraints:**
+
 - Must work with existing Open Badges 2.0 systems (backward compatibility)
 - Cannot require centralized authority or single point of failure
 - Must preserve local-first principles and user data ownership
@@ -44,6 +48,7 @@ Open Badges 3.0 with Verifiable Credentials (VC) and Decentralized Identifiers (
 - Must handle network partitions and offline operation
 
 **Prior Art:**
+
 - **Email federation**: SMTP/IMAP protocols enable cross-provider messaging
 - **ActivityPub**: Mastodon/fediverse social network federation
 - **Matrix protocol**: Federated real-time communication
@@ -58,6 +63,7 @@ Open Badges 3.0 with Verifiable Credentials (VC) and Decentralized Identifiers (
 Rollercoaster.dev will implement **federation as a core architectural goal** from the beginning, designing all systems to support multi-node badge networks with decentralized trust, discovery, and endorsement mechanisms — **optimized for alternative skill and learning communities**.
 
 **Core Federation Architecture:**
+
 - **Node-based design**: Each Rollercoaster.dev instance is an independent node
 - **DID-based identity**: Users have portable identities across nodes
 - **Badge synchronization**: Badges can be shared and verified across nodes
@@ -67,6 +73,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 - **Audience-first design**: Simplified onboarding for non-technical administrators (e.g., one-command deploy, hosted option)
 
 **Technical Implementation:**
+
 - **DID Method**: Use `did:web` for node identity, `did:key` for user identity
 - **Federation Protocol**: Custom protocol built on ActivityPub patterns
 - **Trust Mechanism**: Web-of-trust with cryptographic verification and endorsements
@@ -74,6 +81,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 - **Conflict Resolution**: User-controlled with reputation-weighted suggestions
 
 **Phased Rollout Strategy:**
+
 1. **Phase 1**: Single-node operation with federation-ready architecture
 2. **Phase 2**: Two-node federation with manual trust establishment
 3. **Phase 3**: Multi-node network with automated discovery
@@ -84,6 +92,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 ## Consequences
 
 **Positive:**
+
 - **Network effects**: Value increases with each additional federated node
 - **User freedom**: Users can migrate between nodes without losing badges
 - **Resilience**: No single point of failure for the badge ecosystem
@@ -93,6 +102,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 - **Accessibility**: Onboarding path designed for non-technical community organizations
 
 **Negative / Risks:**
+
 - **Complexity**: Federation adds significant technical and UX complexity
 - **Trust challenges**: Establishing trust between unknown nodes is difficult
 - **Spam/abuse**: Open federation enables badge spam and fraudulent credentials
@@ -101,6 +111,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 - **Support burden**: Debugging issues across federated nodes is complex
 
 **Risk Mitigations:**
+
 - **Gradual rollout**: Start with trusted partners, expand slowly
 - **Trust controls**: Users control which nodes they trust and federate with
 - **Spam prevention**: Reputation systems, endorsements, and rate limiting
@@ -113,48 +124,56 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 ## Alternatives Considered
 
 **Option A: Centralized hub model**
-- *Pros*: Simpler trust model, easier discovery, consistent performance
-- *Cons*: Single point of failure, vendor lock-in, scaling bottlenecks
-- *Rejected*: Conflicts with decentralization and user ownership goals
+
+- _Pros_: Simpler trust model, easier discovery, consistent performance
+- _Cons_: Single point of failure, vendor lock-in, scaling bottlenecks
+- _Rejected_: Conflicts with decentralization and user ownership goals
 
 **Option B: Blockchain-based federation**
-- *Pros*: Immutable trust records, built-in consensus mechanisms
-- *Cons*: High energy costs, transaction fees, scalability limits, complexity
-- *Rejected*: Environmental concerns and user experience friction
+
+- _Pros_: Immutable trust records, built-in consensus mechanisms
+- _Cons_: High energy costs, transaction fees, scalability limits, complexity
+- _Rejected_: Environmental concerns and user experience friction
 
 **Option C: Email-style federation (SMTP/IMAP)**
-- *Pros*: Proven federation model, well-understood protocols
-- *Cons*: Not designed for credential verification, limited trust mechanisms
-- *Considered*: May inform protocol design but insufficient alone
+
+- _Pros_: Proven federation model, well-understood protocols
+- _Cons_: Not designed for credential verification, limited trust mechanisms
+- _Considered_: May inform protocol design but insufficient alone
 
 **Option D: Pure peer-to-peer (BitTorrent-style)**
-- *Pros*: Maximum decentralization, no server requirements
-- *Cons*: NAT traversal issues, discovery problems, offline challenges
-- *Deferred*: Consider for future mobile/offline scenarios
+
+- _Pros_: Maximum decentralization, no server requirements
+- _Cons_: NAT traversal issues, discovery problems, offline challenges
+- _Deferred_: Consider for future mobile/offline scenarios
 
 ---
 
 ## Implementation Plan
 
 **Phase 1: Federation-Ready Architecture (Q3 2025)**
+
 - Design all APIs with federation in mind
 - Implement DID-based user and node identity
 - Create badge export/import with full provenance tracking
 - Build trust scoring framework (local-only initially)
 
 **Phase 2: Two-Node Federation (Q4 2025)**
+
 - Implement federation protocol between two trusted nodes
 - Create cross-node badge verification and display
 - Build trust establishment, endorsement, and management UI
 - Test conflict resolution mechanisms
 
 **Phase 3: Multi-Node Network (Q1 2026)**
+
 - Expand to 5+ federated nodes with diverse use cases
 - Implement automated node discovery mechanisms
 - Create reputation and endorsement propagation across network
 - Build federated search and badge discovery
 
 **Phase 4: Open Federation (Q2 2026)**
+
 - Launch public node registry and discovery service
 - Create self-service node onboarding process
 - Implement advanced spam and abuse prevention
@@ -165,17 +184,20 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 ## Technical Specifications
 
 **DID Methods:**
+
 - **Node Identity**: `did:web` for verifiable node credentials and policies
 - **User Identity**: `did:key` for portable user identity across nodes
 - **Badge Identity**: Unique identifiers with issuer node provenance
 
 **Federation Protocol:**
+
 - **Transport**: HTTPS with JSON-LD payloads
 - **Authentication**: DID-based signatures for all cross-node communications
 - **Synchronization**: Event-driven with eventual consistency guarantees
 - **Discovery**: DHT-based node discovery with manual trust establishment
 
 **Trust & Endorsement Mechanisms:**
+
 - **Node Trust**: Manual trust establishment with cryptographic verification
 - **Badge Trust**: Issuer reputation, endorsement records, verification evidence, community validation
 - **User Trust**: Portable reputation scores with decay over time
@@ -187,20 +209,24 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 ## Links
 
 **Specifications:**
+
 - [Open Badges 3.0 Specification](https://www.imsglobal.org/spec/ob/v3p0/) — credential format
 - [W3C Verifiable Credentials](https://www.w3.org/TR/vc-data-model-2.0/) — trust framework
 - [W3C DID Core](https://www.w3.org/TR/did-core/) — decentralized identity
 - [ActivityPub](https://www.w3.org/TR/activitypub/) — federation protocol patterns
 
 **Related ADRs:**
+
 - [ADR-0001: Self-Signed Badges](ADR-0001-self-signed-badges.md) — badge model foundation
 - [ADR-0002: Local-First Optional Sync](ADR-0002-local-first-optional-sync.md) — data architecture
 
 **Architecture:**
+
 - [Architecture Overview](../architecture/overview.md) — system design context
 - [Vision: Now/Next/Later](../vision/now-next-later.md) — strategic timeline
 
 **User Stories:**
+
 - [User Stories](../product/user-stories.md) — Carmen's mentorship story demonstrates federation use case
 
 **Related Issues:** (link once created)
@@ -210,9 +236,10 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
 
 ## Open Questions & Future Considerations
 
-*These questions emerged during review and should be addressed in future iterations:*
+_These questions emerged during review and should be addressed in future iterations:_
 
 ### UX & Conflict Resolution
+
 - **Conflict presentation**: How do we present conflicting badges to users without overwhelming them?
   - Consider Sofia's "garden in pieces" story - overwhelming choices can trigger analysis paralysis
   - Need clear, simple UI for "Badge A says X, Badge B says Y - which do you trust?"
@@ -224,6 +251,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
   - Need fallback to local-first behavior when federation is unavailable
 
 ### Performance & Scalability
+
 - **Cross-node verification speed**: 10 seconds might feel slow for real-time interactions
   - Consider background verification with immediate display + "verifying..." indicator
   - Could we pre-verify badges from trusted nodes to reduce latency?
@@ -235,6 +263,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
   - Consider hybrid approach: registry + DHT for redundancy
 
 ### Technical Implementation Details
+
 - **Federation handshake example**: Need concrete example of node-to-node communication
   - What does the initial trust establishment look like in practice?
   - How do we handle version mismatches between federated nodes?
@@ -246,6 +275,7 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
   - Should reputation decay over time or with inactivity?
 
 ### Security & Privacy
+
 - **Node identity verification**: How do we prevent malicious nodes from impersonating trusted ones?
   - Should we require HTTPS certificates that match DID documents?
   - What's our plan for certificate rotation and key management?
@@ -257,9 +287,10 @@ Rollercoaster.dev will implement **federation as a core architectural goal** fro
   - How do we handle GDPR "right to be forgotten" across federated nodes?
 
 ### Ecosystem & Adoption
+
 - **Incentive alignment**: Why would organizations run federation nodes?
   - What's the value proposition for becoming a federation participant?
   - Should there be economic incentives or is reputation/community value enough?
   - How do we prevent the "tragedy of the commons" in federation maintenance?
 
-*These questions should inform future ADRs, user research, and technical spikes as the federation implementation progresses.*
+_These questions should inform future ADRs, user research, and technical spikes as the federation implementation progresses._

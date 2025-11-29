@@ -8,19 +8,19 @@
  * - Delete issuer with active badges constraint error
  */
 
-import { describe, expect, it, beforeAll, afterAll } from 'bun:test';
-import { setupTestApp, stopTestServer } from '../e2e/setup-test-app';
+import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { setupTestApp, stopTestServer } from "../e2e/setup-test-app";
 import {
   getAvailablePort,
   releasePort,
-} from '../e2e/helpers/port-manager.helper';
-import { logger } from '@/utils/logging/logger.service';
+} from "../e2e/helpers/port-manager.helper";
+import { logger } from "@/utils/logging/logger.service";
 
-describe('Open Badges Compliance Edge Cases', () => {
+describe("Open Badges Compliance Edge Cases", () => {
   let TEST_PORT: number;
   let API_URL: string;
   let server: unknown = null;
-  const API_KEY = 'verysecretkeye2e';
+  const API_KEY = "verysecretkeye2e";
 
   // Store created resources for cleanup
   const createdResources: {
@@ -41,19 +41,19 @@ describe('Open Badges Compliance Edge Cases', () => {
       fetch: app.fetch,
     });
 
-    logger.info('Test server started', { port: TEST_PORT, url: API_URL });
+    logger.info("Test server started", { port: TEST_PORT, url: API_URL });
 
     // Create test issuer for tests that need it
     const issuerResponse = await fetch(`${API_URL}/v3/issuers`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY,
+        "Content-Type": "application/json",
+        "X-API-Key": API_KEY,
       },
       body: JSON.stringify({
-        name: 'Edge Case Test Issuer',
-        url: 'https://example.com/issuer',
-        email: 'issuer@example.com',
+        name: "Edge Case Test Issuer",
+        url: "https://example.com/issuer",
+        email: "issuer@example.com",
       }),
     });
     expect(issuerResponse.status).toBe(201);
@@ -65,23 +65,23 @@ describe('Open Badges Compliance Edge Cases', () => {
     // Clean up test data
     if (createdResources.assertionId) {
       await fetch(`${API_URL}/v3/credentials/${createdResources.assertionId}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       }).catch(() => {}); // Ignore errors during cleanup
     }
     if (createdResources.badgeClassId) {
       await fetch(
         `${API_URL}/v3/achievements/${createdResources.badgeClassId}`,
         {
-          method: 'DELETE',
-          headers: { 'X-API-Key': API_KEY },
-        }
+          method: "DELETE",
+          headers: { "X-API-Key": API_KEY },
+        },
       ).catch(() => {}); // Ignore errors during cleanup
     }
     if (createdResources.issuerId) {
       await fetch(`${API_URL}/v3/issuers/${createdResources.issuerId}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       }).catch(() => {}); // Ignore errors during cleanup
     }
 
@@ -90,19 +90,19 @@ describe('Open Badges Compliance Edge Cases', () => {
     await releasePort(TEST_PORT);
   });
 
-  describe('BadgeClass validation edge cases', () => {
-    it('should return 400 when creating BadgeClass missing required name field', async () => {
+  describe("BadgeClass validation edge cases", () => {
+    it("should return 400 when creating BadgeClass missing required name field", async () => {
       const response = await fetch(`${API_URL}/v3/achievements`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
           // Missing required 'name' field
-          description: 'A test badge without a name',
-          image: 'https://example.com/badge.png',
-          criteria: 'https://example.com/criteria',
+          description: "A test badge without a name",
+          image: "https://example.com/badge.png",
+          criteria: "https://example.com/criteria",
           issuer: createdResources.issuerId,
         }),
       });
@@ -111,22 +111,22 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
 
-    it('should return 400 when creating BadgeClass missing required description field', async () => {
+    it("should return 400 when creating BadgeClass missing required description field", async () => {
       const response = await fetch(`${API_URL}/v3/achievements`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          name: 'Test Badge Without Description',
+          name: "Test Badge Without Description",
           // Missing required 'description' field
-          image: 'https://example.com/badge.png',
-          criteria: 'https://example.com/criteria',
+          image: "https://example.com/badge.png",
+          criteria: "https://example.com/criteria",
           issuer: createdResources.issuerId,
         }),
       });
@@ -135,21 +135,21 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
 
-    it('should return 400 when creating BadgeClass missing required criteria field', async () => {
+    it("should return 400 when creating BadgeClass missing required criteria field", async () => {
       const response = await fetch(`${API_URL}/v3/achievements`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          name: 'Test Badge Without Criteria',
-          description: 'A test badge without criteria',
-          image: 'https://example.com/badge.png',
+          name: "Test Badge Without Criteria",
+          description: "A test badge without criteria",
+          image: "https://example.com/badge.png",
           // Missing required 'criteria' field
           issuer: createdResources.issuerId,
         }),
@@ -159,22 +159,22 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
 
-    it('should return 400 when creating BadgeClass missing required issuer field', async () => {
+    it("should return 400 when creating BadgeClass missing required issuer field", async () => {
       const response = await fetch(`${API_URL}/v3/achievements`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          name: 'Test Badge Without Issuer',
-          description: 'A test badge without an issuer',
-          image: 'https://example.com/badge.png',
-          criteria: 'https://example.com/criteria',
+          name: "Test Badge Without Issuer",
+          description: "A test badge without an issuer",
+          image: "https://example.com/badge.png",
+          criteria: "https://example.com/criteria",
           // Missing required 'issuer' field
         }),
       });
@@ -183,25 +183,25 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
   });
 
-  describe('Assertion validation edge cases', () => {
+  describe("Assertion validation edge cases", () => {
     beforeAll(async () => {
       // Create a valid badge class for assertion tests
       const badgeClassResponse = await fetch(`${API_URL}/v3/achievements`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          name: 'Valid Test Badge',
-          description: 'A valid test badge for assertion tests',
-          image: 'https://example.com/badge.png',
-          criteria: { id: 'https://example.com/criteria' },
+          name: "Valid Test Badge",
+          description: "A valid test badge for assertion tests",
+          image: "https://example.com/badge.png",
+          criteria: { id: "https://example.com/criteria" },
           issuer: createdResources.issuerId,
         }),
       });
@@ -210,19 +210,19 @@ describe('Open Badges Compliance Edge Cases', () => {
       createdResources.badgeClassId = badgeClass.id;
     });
 
-    it('should return 400 when creating assertion with invalid badgeClassId', async () => {
+    it("should return 400 when creating assertion with invalid badgeClassId", async () => {
       const invalidBadgeClassId =
-        'urn:uuid:00000000-0000-4000-a000-000000000999';
+        "urn:uuid:00000000-0000-4000-a000-000000000999";
       const response = await fetch(`${API_URL}/v3/credentials`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
           recipient: {
-            type: 'email',
-            identity: 'recipient@example.com',
+            type: "email",
+            identity: "recipient@example.com",
             hashed: false,
           },
           badge: invalidBadgeClassId,
@@ -234,16 +234,16 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // The error is correctly returned as 400 Bad Request for invalid badge class
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /bad request/i
+        /bad request/i,
       );
     });
 
-    it('should return 400 when creating assertion missing required recipient field', async () => {
+    it("should return 400 when creating assertion missing required recipient field", async () => {
       const response = await fetch(`${API_URL}/v3/credentials`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
           // Missing required 'recipient' field
@@ -256,21 +256,21 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
 
-    it('should return 400 when creating assertion missing required badge field', async () => {
+    it("should return 400 when creating assertion missing required badge field", async () => {
       const response = await fetch(`${API_URL}/v3/credentials`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
           recipient: {
-            type: 'email',
-            identity: 'recipient@example.com',
+            type: "email",
+            identity: "recipient@example.com",
             hashed: false,
           },
           // Missing required 'badge' field
@@ -282,27 +282,27 @@ describe('Open Badges Compliance Edge Cases', () => {
       const errorResponse = await response.json();
       // Validation is working correctly, even if message is generic
       expect(errorResponse.error || errorResponse.message).toMatch(
-        /validation error/i
+        /validation error/i,
       );
     });
   });
 
-  describe('Expired assertion verification', () => {
-    it('should detect expired assertion during verification', async () => {
+  describe("Expired assertion verification", () => {
+    it("should detect expired assertion during verification", async () => {
       // Create an assertion with expiration date in the past
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1); // Yesterday
 
       const assertionResponse = await fetch(`${API_URL}/v3/credentials`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
           recipient: {
-            type: 'email',
-            identity: 'expired@example.com',
+            type: "email",
+            identity: "expired@example.com",
             hashed: false,
           },
           badge: createdResources.badgeClassId,
@@ -318,41 +318,41 @@ describe('Open Badges Compliance Edge Cases', () => {
       const verifyResponse = await fetch(
         `${API_URL}/v3/credentials/${assertion.id}/verify`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       expect(verifyResponse.status).toBe(200);
       const verificationResult = await verifyResponse.json();
       expect(verificationResult.isValid).toBe(false);
       expect(verificationResult.details || verificationResult.reason).toMatch(
-        /expired/i
+        /expired/i,
       );
 
       // Clean up
       await fetch(`${API_URL}/v3/credentials/${assertion.id}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       }).catch(() => {}); // Ignore errors during cleanup
     });
   });
 
-  describe('Constraint validation edge cases', () => {
-    it('should prevent deleting issuer with active badge classes', async () => {
+  describe("Constraint validation edge cases", () => {
+    it("should prevent deleting issuer with active badge classes", async () => {
       // Create a new issuer and badge class specifically for this test
       const constraintIssuerResponse = await fetch(`${API_URL}/v3/issuers`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          name: 'Constraint Test Issuer',
-          url: 'https://example.com/constraint-issuer',
-          email: 'constraint@example.com',
+          name: "Constraint Test Issuer",
+          url: "https://example.com/constraint-issuer",
+          email: "constraint@example.com",
         }),
       });
       expect(constraintIssuerResponse.status).toBe(201);
@@ -362,19 +362,19 @@ describe('Open Badges Compliance Edge Cases', () => {
       const constraintBadgeResponse = await fetch(
         `${API_URL}/v3/achievements`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': API_KEY,
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
           },
           body: JSON.stringify({
-            name: 'Constraint Test Badge',
-            description: 'A badge to test foreign key constraints',
-            image: 'https://example.com/constraint-badge.png',
-            criteria: 'https://example.com/constraint-criteria',
+            name: "Constraint Test Badge",
+            description: "A badge to test foreign key constraints",
+            image: "https://example.com/constraint-badge.png",
+            criteria: "https://example.com/constraint-criteria",
             issuer: constraintIssuer.id,
           }),
-        }
+        },
       );
       expect(constraintBadgeResponse.status).toBe(201);
       const constraintBadge = await constraintBadgeResponse.json();
@@ -383,11 +383,11 @@ describe('Open Badges Compliance Edge Cases', () => {
       const deleteResponse = await fetch(
         `${API_URL}/v3/issuers/${constraintIssuer.id}`,
         {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
 
       // The response depends on database configuration:
@@ -398,19 +398,19 @@ describe('Open Badges Compliance Edge Cases', () => {
       if (deleteResponse.status === 400) {
         const errorResponse = await deleteResponse.json();
         expect(errorResponse.error || errorResponse.message).toMatch(
-          /constraint|foreign key|cannot delete|has.*badge/i
+          /constraint|foreign key|cannot delete|has.*badge/i,
         );
       }
 
       // Clean up - delete badge class first, then issuer
       await fetch(`${API_URL}/v3/achievements/${constraintBadge.id}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       }).catch(() => {}); // Ignore errors during cleanup
 
       await fetch(`${API_URL}/v3/issuers/${constraintIssuer.id}`, {
-        method: 'DELETE',
-        headers: { 'X-API-Key': API_KEY },
+        method: "DELETE",
+        headers: { "X-API-Key": API_KEY },
       }).catch(() => {}); // Ignore errors during cleanup
     });
   });

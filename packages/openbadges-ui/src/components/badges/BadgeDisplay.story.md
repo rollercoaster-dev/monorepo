@@ -48,40 +48,40 @@ Use the controls in the right panel to customize the component behavior.
 
 ## Props
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `badge` | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to display |
-| `showDescription` | `boolean` | `true` | Whether to show the badge description |
-| `showIssuedDate` | `boolean` | `true` | Whether to show the badge issue date |
-| `showExpiryDate` | `boolean` | `false` | Whether to show the badge expiry date |
-| `interactive` | `boolean` | `false` | Whether the badge is clickable |
-| `showVerification` | `boolean` | `false` | Whether to show badge verification controls |
-| `autoVerify` | `boolean` | `false` | Whether to automatically verify the badge |
+| Name               | Type                                        | Default  | Description                                 |
+| ------------------ | ------------------------------------------- | -------- | ------------------------------------------- |
+| `badge`            | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to display                        |
+| `showDescription`  | `boolean`                                   | `true`   | Whether to show the badge description       |
+| `showIssuedDate`   | `boolean`                                   | `true`   | Whether to show the badge issue date        |
+| `showExpiryDate`   | `boolean`                                   | `false`  | Whether to show the badge expiry date       |
+| `interactive`      | `boolean`                                   | `false`  | Whether the badge is clickable              |
+| `showVerification` | `boolean`                                   | `false`  | Whether to show badge verification controls |
+| `autoVerify`       | `boolean`                                   | `false`  | Whether to automatically verify the badge   |
 
 ## Events
 
-| Name | Payload | Description |
-|------|---------|-------------|
-| `click` | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when the badge is clicked (if interactive is true) |
-| `verified` | `boolean` | Emitted when a badge has been verified |
+| Name       | Payload                                     | Description                                                |
+| ---------- | ------------------------------------------- | ---------------------------------------------------------- |
+| `click`    | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when the badge is clicked (if interactive is true) |
+| `verified` | `boolean`                                   | Emitted when a badge has been verified                     |
 
 ## Slots
 
-| Name | Description |
-|------|-------------|
+| Name            | Description                                           |
+| --------------- | ----------------------------------------------------- |
 | `badge-actions` | Additional actions to display below the badge content |
 
 ## CSS Variables
 
 The component uses CSS variables for styling, which can be overridden to customize its appearance:
 
-| Name | Default | Description |
-|------|---------|-------------|
-| `--badge-border-color` | `#e2e8f0` | The color of the badge border |
-| `--badge-border-radius` | `8px` | The border radius of the badge |
-| `--badge-background` | `#ffffff` | The background color of the badge |
-| `--badge-title-color` | `#1a202c` | The color of the badge title |
-| `--badge-text-color` | `#4a5568` | The color of the badge text |
+| Name                    | Default   | Description                       |
+| ----------------------- | --------- | --------------------------------- |
+| `--badge-border-color`  | `#e2e8f0` | The color of the badge border     |
+| `--badge-border-radius` | `8px`     | The border radius of the badge    |
+| `--badge-background`    | `#ffffff` | The background color of the badge |
+| `--badge-title-color`   | `#1a202c` | The color of the badge title      |
+| `--badge-text-color`    | `#4a5568` | The color of the badge text       |
 
 ## Accessibility
 

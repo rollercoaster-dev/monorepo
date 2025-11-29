@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import IssuerList from './IssuerList.vue';
-import type { OB2, OB3 } from 'openbadges-types';
+import { ref } from "vue";
+import IssuerList from "./IssuerList.vue";
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * # IssuerList
@@ -43,80 +43,80 @@ import type { OB2, OB3 } from 'openbadges-types';
 // Mock issuers for stories
 const mockIssuers: (OB2.Profile | OB3.Profile)[] = [
   {
-    id: 'https://example.org/issuers/1',
-    type: 'Profile',
-    name: 'Tech Academy',
-    url: 'https://tech-academy.edu',
-    email: 'badges@tech-academy.edu',
-    description: 'A leading technology education institution.',
-    image: 'https://placehold.co/200x200/3182ce/white?text=TA',
+    id: "https://example.org/issuers/1",
+    type: "Profile",
+    name: "Tech Academy",
+    url: "https://tech-academy.edu",
+    email: "badges@tech-academy.edu",
+    description: "A leading technology education institution.",
+    image: "https://placehold.co/200x200/3182ce/white?text=TA",
   } as OB2.Profile,
   {
-    id: 'https://example.org/issuers/2',
-    type: ['Profile'] as [string, ...string[]],
-    name: 'Digital Skills Institute',
-    url: 'https://digital-skills.org',
-    description: 'Empowering professionals with verified digital competencies.',
+    id: "https://example.org/issuers/2",
+    type: ["Profile"] as [string, ...string[]],
+    name: "Digital Skills Institute",
+    url: "https://digital-skills.org",
+    description: "Empowering professionals with verified digital competencies.",
     image: {
-      id: 'https://placehold.co/200x200/38a169/white?text=DSI',
-      type: 'Image' as const,
+      id: "https://placehold.co/200x200/38a169/white?text=DSI",
+      type: "Image" as const,
     },
   } as OB3.Profile,
   {
-    id: 'https://example.org/issuers/3',
-    type: 'Profile',
-    name: 'Open Learning Foundation',
-    url: 'https://open-learning.org',
-    description: 'Promoting open education and accessible credentials.',
+    id: "https://example.org/issuers/3",
+    type: "Profile",
+    name: "Open Learning Foundation",
+    url: "https://open-learning.org",
+    description: "Promoting open education and accessible credentials.",
   } as OB2.Profile,
   {
-    id: 'https://example.org/issuers/4',
-    type: 'Profile',
-    name: 'Cloud Certifications Inc',
-    url: 'https://cloud-certs.com',
-    description: 'Industry-recognized cloud computing certifications.',
-    image: 'https://placehold.co/200x200/805ad5/white?text=CC',
+    id: "https://example.org/issuers/4",
+    type: "Profile",
+    name: "Cloud Certifications Inc",
+    url: "https://cloud-certs.com",
+    description: "Industry-recognized cloud computing certifications.",
+    image: "https://placehold.co/200x200/805ad5/white?text=CC",
   } as OB2.Profile,
   {
-    id: 'https://example.org/issuers/5',
-    type: 'Profile',
-    name: 'Data Science Academy',
-    url: 'https://ds-academy.io',
-    description: 'Comprehensive data science and analytics training.',
-    image: 'https://placehold.co/200x200/d53f8c/white?text=DSA',
+    id: "https://example.org/issuers/5",
+    type: "Profile",
+    name: "Data Science Academy",
+    url: "https://ds-academy.io",
+    description: "Comprehensive data science and analytics training.",
+    image: "https://placehold.co/200x200/d53f8c/white?text=DSA",
   } as OB2.Profile,
   {
-    id: 'https://example.org/issuers/6',
-    type: 'Profile',
-    name: 'Cybersecurity Institute',
-    url: 'https://cyber-institute.net',
-    description: 'Professional cybersecurity certifications and training.',
-    image: 'https://placehold.co/200x200/2c5282/white?text=CI',
+    id: "https://example.org/issuers/6",
+    type: "Profile",
+    name: "Cybersecurity Institute",
+    url: "https://cyber-institute.net",
+    description: "Professional cybersecurity certifications and training.",
+    image: "https://placehold.co/200x200/2c5282/white?text=CI",
   } as OB2.Profile,
 ];
 
 const state = ref({
   issuers: mockIssuers,
-  layout: 'grid' as 'grid' | 'list',
+  layout: "grid" as "grid" | "list",
   loading: false,
   pageSize: 4,
   currentPage: 1,
   showPagination: false,
-  density: 'normal' as 'compact' | 'normal' | 'spacious',
-  ariaLabel: 'List of badge issuers',
+  density: "normal" as "compact" | "normal" | "spacious",
+  ariaLabel: "List of badge issuers",
 });
 
 function onIssuerClick(issuer: OB2.Profile | OB3.Profile): void {
-  console.log('Issuer clicked:', issuer);
+  console.log("Issuer clicked:", issuer);
 }
 
 function onPageChange(page: number): void {
-  console.log('Page changed:', page);
+  console.log("Page changed:", page);
   state.value.currentPage = page;
 }
 
-function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
-  console.log('Density changed:', density);
+function onDensityChange(density: "compact" | "normal" | "spacious"): void {
+  console.log("Density changed:", density);
   state.value.density = density;
 }
 </script>
@@ -131,8 +131,9 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         <h1>IssuerList</h1>
 
         <p>
-          The <code>IssuerList</code> component displays a searchable, filterable
-          collection of badge issuers with support for both grid and list layouts.
+          The <code>IssuerList</code> component displays a searchable,
+          filterable collection of badge issuers with support for both grid and
+          list layouts.
         </p>
 
         <h2>When To Use</h2>
@@ -172,7 +173,7 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         title="Layout"
         :options="[
           { label: 'Grid', value: 'grid' },
-          { label: 'List', value: 'list' }
+          { label: 'List', value: 'list' },
         ]"
       />
       <HstSelect
@@ -181,21 +182,12 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         :options="[
           { label: 'Compact', value: 'compact' },
           { label: 'Normal', value: 'normal' },
-          { label: 'Spacious', value: 'spacious' }
+          { label: 'Spacious', value: 'spacious' },
         ]"
       />
-      <HstCheckbox
-        v-model="state.loading"
-        title="Loading"
-      />
-      <HstCheckbox
-        v-model="state.showPagination"
-        title="Show Pagination"
-      />
-      <HstNumber
-        v-model="state.pageSize"
-        title="Page Size"
-      />
+      <HstCheckbox v-model="state.loading" title="Loading" />
+      <HstCheckbox v-model="state.showPagination" title="Show Pagination" />
+      <HstNumber v-model="state.pageSize" title="Page Size" />
     </template>
 
     <Variant title="Grid Layout">
@@ -293,9 +285,13 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         @update:density="onDensityChange"
       >
         <template #empty>
-          <div style="padding: 2rem; text-align: center;">
-            <p style="font-size: 1.25rem; margin-bottom: 1rem;">No issuers found</p>
-            <p style="color: #666;">Try adjusting your search or become an issuer yourself!</p>
+          <div style="padding: 2rem; text-align: center">
+            <p style="font-size: 1.25rem; margin-bottom: 1rem">
+              No issuers found
+            </p>
+            <p style="color: #666">
+              Try adjusting your search or become an issuer yourself!
+            </p>
           </div>
         </template>
       </IssuerList>

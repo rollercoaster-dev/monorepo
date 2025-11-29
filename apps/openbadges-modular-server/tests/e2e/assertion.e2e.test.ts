@@ -1,10 +1,10 @@
 // test/e2e/assertion.e2e.test.ts
-import { describe, it, expect, afterAll, beforeAll } from 'bun:test';
-import { createHash } from 'crypto';
-import { logger } from '@/utils/logging/logger.service';
-import { setupTestApp, stopTestServer } from './setup-test-app';
-import { OPENBADGES_V3_CONTEXT_EXAMPLE } from '@/constants/urls';
-import { getAvailablePort, releasePort } from './helpers/port-manager.helper';
+import { describe, it, expect, afterAll, beforeAll } from "bun:test";
+import { createHash } from "crypto";
+import { logger } from "@/utils/logging/logger.service";
+import { setupTestApp, stopTestServer } from "./setup-test-app";
+import { OPENBADGES_V3_CONTEXT_EXAMPLE } from "@/constants/urls";
+import { getAvailablePort, releasePort } from "./helpers/port-manager.helper";
 
 // Use getPort to reliably get an available port to avoid conflicts
 let TEST_PORT: number;
@@ -12,27 +12,27 @@ let API_URL: string;
 let ASSERTIONS_ENDPOINT: string;
 
 // API key for protected endpoints
-const API_KEY = 'verysecretkeye2e';
+const API_KEY = "verysecretkeye2e";
 
 // Ensure DB-related env-vars are set **before** any module import that may read them
 if (!process.env.DB_TYPE) {
-  process.env.DB_TYPE = 'sqlite';
+  process.env.DB_TYPE = "sqlite";
 }
-if (process.env.DB_TYPE === 'sqlite' && !process.env.SQLITE_DB_PATH) {
-  process.env.SQLITE_DB_PATH = ':memory:';
+if (process.env.DB_TYPE === "sqlite" && !process.env.SQLITE_DB_PATH) {
+  process.env.SQLITE_DB_PATH = ":memory:";
 }
 
 // Tests must run in "test" mode *before* config is imported
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = 'test';
+  process.env.NODE_ENV = "test";
 }
 
-import { config } from '@/config/config'; // safe to import after env is prepared
+import { config } from "@/config/config"; // safe to import after env is prepared
 
 // Server instance for the test
 let server: unknown = null;
 
-describe('Assertion API - E2E', () => {
+describe("Assertion API - E2E", () => {
   // Start the server before all tests
   beforeAll(async () => {
     // Get an available port to avoid conflicts
@@ -41,7 +41,7 @@ describe('Assertion API - E2E', () => {
      * to global process.env to keep the scope local to this suite */
 
     // Set up API URLs after getting the port
-    const host = config.server.host ?? '127.0.0.1';
+    const host = config.server.host ?? "127.0.0.1";
     API_URL = `http://${host}:${TEST_PORT}`;
     ASSERTIONS_ENDPOINT = `${API_URL}/v3/assertions`;
 
@@ -52,11 +52,11 @@ describe('Assertion API - E2E', () => {
       logger.info(`E2E Test: Starting server on port ${TEST_PORT}`);
       const result = await setupTestApp(TEST_PORT);
       server = result.server;
-      logger.info('E2E Test: Server started successfully');
+      logger.info("E2E Test: Server started successfully");
       // Wait for the server to be fully ready
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      logger.error('E2E Test: Failed to start server', {
+      logger.error("E2E Test: Failed to start server", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -68,11 +68,11 @@ describe('Assertion API - E2E', () => {
   afterAll(async () => {
     if (server) {
       try {
-        logger.info('E2E Test: Stopping server');
+        logger.info("E2E Test: Stopping server");
         stopTestServer(server);
-        logger.info('E2E Test: Server stopped successfully');
+        logger.info("E2E Test: Server stopped successfully");
       } catch (error) {
-        logger.error('E2E Test: Error stopping server', {
+        logger.error("E2E Test: Error stopping server", {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         });
@@ -87,18 +87,18 @@ describe('Assertion API - E2E', () => {
 
   // No resources to clean up in this simplified test
 
-  it('should verify assertion API endpoints', async () => {
+  it("should verify assertion API endpoints", async () => {
     // Test the assertions endpoint
     let assertionsResponse: Response;
     try {
       assertionsResponse = await fetch(ASSERTIONS_ENDPOINT, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'X-API-Key': API_KEY,
+          "X-API-Key": API_KEY,
         },
       });
     } catch (error) {
-      logger.error('Failed to fetch assertions', { error });
+      logger.error("Failed to fetch assertions", { error });
       throw error;
     }
 
@@ -112,35 +112,35 @@ describe('Assertion API - E2E', () => {
     }
     expect(assertionsResponse.status).toBe(200);
     logger.info(
-      `Assertions endpoint responded with status ${assertionsResponse.status}`
+      `Assertions endpoint responded with status ${assertionsResponse.status}`,
     );
 
     // Test the assertion POST endpoint
     let assertionPostResponse: Response;
     try {
       assertionPostResponse = await fetch(ASSERTIONS_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': API_KEY,
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
         },
         body: JSON.stringify({
-          '@context': OPENBADGES_V3_CONTEXT_EXAMPLE,
-          type: 'Assertion',
+          "@context": OPENBADGES_V3_CONTEXT_EXAMPLE,
+          type: "Assertion",
           recipient: {
-            type: 'email',
+            type: "email",
             identity:
-              'sha256$' +
-              createHash('sha256').update('test@example.com').digest('hex'),
+              "sha256$" +
+              createHash("sha256").update("test@example.com").digest("hex"),
             hashed: true,
-            salt: 'test',
+            salt: "test",
           },
-          badge: '00000000-0000-4000-a000-000000000004', // A valid UUID format
+          badge: "00000000-0000-4000-a000-000000000004", // A valid UUID format
           issuedOn: new Date().toISOString(),
         }),
       });
     } catch (error) {
-      logger.error('Failed to test assertion POST endpoint', { error });
+      logger.error("Failed to test assertion POST endpoint", { error });
       throw error;
     }
 
@@ -154,21 +154,21 @@ describe('Assertion API - E2E', () => {
     }
     expect(assertionPostResponse.status).toBe(400);
     logger.info(
-      `Assertion POST endpoint responded with status ${assertionPostResponse.status}`
+      `Assertion POST endpoint responded with status ${assertionPostResponse.status}`,
     );
 
     // Test the verification endpoint with a dummy assertion ID
-    const dummyAssertionId = '00000000-0000-4000-a000-000000000005'; // A valid UUID format
+    const dummyAssertionId = "00000000-0000-4000-a000-000000000005"; // A valid UUID format
     let verifyResponse: Response;
     try {
       verifyResponse = await fetch(
         `${ASSERTIONS_ENDPOINT}/${dummyAssertionId}/verify`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'X-API-Key': API_KEY,
+            "X-API-Key": API_KEY,
           },
-        }
+        },
       );
     } catch (error) {
       logger.error(`Failed to test verification endpoint`, { error });
@@ -185,7 +185,7 @@ describe('Assertion API - E2E', () => {
     }
     expect(verifyResponse.status).toBe(404);
     logger.info(
-      `Verification endpoint responded with status ${verifyResponse.status}`
+      `Verification endpoint responded with status ${verifyResponse.status}`,
     );
   });
 

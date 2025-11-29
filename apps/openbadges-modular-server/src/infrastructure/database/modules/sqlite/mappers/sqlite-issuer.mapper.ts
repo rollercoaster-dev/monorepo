@@ -5,12 +5,12 @@
  * handling the conversion between domain entities and database records with enhanced type safety.
  */
 
-import { Issuer } from '@domains/issuer/issuer.entity';
-import type { issuers } from '../schema';
-import { SqliteTypeConverters } from '../utils/sqlite-type-converters';
-import { logger } from '@utils/logging/logger.service';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import type { Shared } from 'openbadges-types';
+import { Issuer } from "@domains/issuer/issuer.entity";
+import type { issuers } from "../schema";
+import { SqliteTypeConverters } from "../utils/sqlite-type-converters";
+import { logger } from "@utils/logging/logger.service";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
+import type { Shared } from "openbadges-types";
 
 export class SqliteIssuerMapper {
   /**
@@ -21,7 +21,7 @@ export class SqliteIssuerMapper {
   toDomain(record: typeof issuers.$inferSelect): Issuer {
     if (!record) {
       throw new Error(
-        'Cannot convert null or undefined record to Issuer domain entity'
+        "Cannot convert null or undefined record to Issuer domain entity",
       );
     }
 
@@ -35,11 +35,11 @@ export class SqliteIssuerMapper {
         description,
         image,
         publicKey,
-        additionalFields = '{}', // Default to empty JSON string if null from DB
+        additionalFields = "{}", // Default to empty JSON string if null from DB
       } = record;
 
       // Convert ID from UUID to URN format for domain entity
-      const convertedId = convertUuid(id, 'sqlite', 'from') as Shared.IRI;
+      const convertedId = convertUuid(id, "sqlite", "from") as Shared.IRI;
 
       // Validate and convert URL
       const urlResult = SqliteTypeConverters.validateAndConvertIRI(url);
@@ -53,20 +53,20 @@ export class SqliteIssuerMapper {
       // Convert public key with type safety
       const convertedPublicKey = SqliteTypeConverters.safeJsonParse<
         Record<string, unknown>
-      >(publicKey, 'publicKey');
+      >(publicKey, "publicKey");
 
       // Handle additional fields with validation
       const additionalFieldsResult =
         SqliteTypeConverters.validateAdditionalFields(
           SqliteTypeConverters.safeJsonParse<Record<string, unknown>>(
             additionalFields,
-            'additionalFields'
-          ) || {}
+            "additionalFields",
+          ) || {},
         );
 
       if (!additionalFieldsResult.success) {
         throw new Error(
-          `Invalid additionalFields: ${additionalFieldsResult.error}`
+          `Invalid additionalFields: ${additionalFieldsResult.error}`,
         );
       }
 
@@ -87,7 +87,7 @@ export class SqliteIssuerMapper {
       // or exclude duplicate keys altogether.
       return Issuer.create({ ...additionalFieldsResult.data, ...baseData });
     } catch (error) {
-      logger.error('Error converting database record to Issuer domain entity', {
+      logger.error("Error converting database record to Issuer domain entity", {
         error: error instanceof Error ? error.message : String(error),
         recordId: record.id,
       });
@@ -102,7 +102,7 @@ export class SqliteIssuerMapper {
    */
   toPersistence(
     entity: Issuer,
-    preserveTimestamps = false
+    preserveTimestamps = false,
   ): {
     id: string;
     name: string;
@@ -117,7 +117,7 @@ export class SqliteIssuerMapper {
   } {
     if (!entity) {
       throw new Error(
-        'Cannot convert null or undefined entity to database record'
+        "Cannot convert null or undefined entity to database record",
       );
     }
 
@@ -139,53 +139,53 @@ export class SqliteIssuerMapper {
 
       // Extract and validate name as a string for the database
       let dbName: string;
-      if (typeof name === 'object' && name !== null) {
+      if (typeof name === "object" && name !== null) {
         // Try English version first
-        if (name.en && typeof name.en === 'string' && name.en.trim() !== '') {
+        if (name.en && typeof name.en === "string" && name.en.trim() !== "") {
           dbName = name.en;
         }
         // Then try any other language key
         else if (Object.keys(name).length > 0) {
           const firstKey = Object.keys(name)[0];
           const firstValue = name[firstKey];
-          if (typeof firstValue === 'string' && firstValue.trim() !== '') {
+          if (typeof firstValue === "string" && firstValue.trim() !== "") {
             dbName = firstValue;
           } else {
             throw new Error(
-              'Issuer name must contain at least one non-empty string value'
+              "Issuer name must contain at least one non-empty string value",
             );
           }
         }
         // No valid keys found
         else {
           throw new Error(
-            'Issuer name object must contain at least one language key with non-empty string value'
+            "Issuer name object must contain at least one language key with non-empty string value",
           );
         }
       }
       // Handle direct string value
-      else if (typeof name === 'string' && name.trim() !== '') {
+      else if (typeof name === "string" && name.trim() !== "") {
         dbName = name;
       }
       // No valid name found
       else {
         throw new Error(
-          'Issuer name is required and must be a non-empty string or a multilingual object with at least one non-empty string value'
+          "Issuer name is required and must be a non-empty string or a multilingual object with at least one non-empty string value",
         );
       }
 
       // Ensure description is a string for the database (can be null)
       let dbDescription: string | null;
-      if (typeof description === 'object' && description !== null) {
+      if (typeof description === "object" && description !== null) {
         // Try English version first
-        if (description.en && typeof description.en === 'string') {
+        if (description.en && typeof description.en === "string") {
           dbDescription = description.en;
         }
         // Then try any other language key
         else if (Object.keys(description).length > 0) {
           const firstKey = Object.keys(description)[0];
           const firstValue = description[firstKey];
-          dbDescription = typeof firstValue === 'string' ? firstValue : null;
+          dbDescription = typeof firstValue === "string" ? firstValue : null;
         }
         // No valid keys found
         else {
@@ -193,7 +193,7 @@ export class SqliteIssuerMapper {
         }
       }
       // Handle direct string value
-      else if (typeof description === 'string') {
+      else if (typeof description === "string") {
         dbDescription = description;
       }
       // No description or invalid type
@@ -209,8 +209,8 @@ export class SqliteIssuerMapper {
       if (!additionalFieldsResult.success) {
         throw new Error(
           `Invalid additional fields in Issuer: ${
-            additionalFieldsResult.error || 'Unknown validation error'
-          }`
+            additionalFieldsResult.error || "Unknown validation error"
+          }`,
         );
       }
 
@@ -221,13 +221,13 @@ export class SqliteIssuerMapper {
       const entityObj = entity.toObject();
       const createdAt =
         preserveTimestamps && entityObj.createdAt
-          ? typeof entityObj.createdAt === 'number'
+          ? typeof entityObj.createdAt === "number"
             ? entityObj.createdAt
             : now
           : now;
 
       return {
-        id: convertUuid(id as string, 'sqlite', 'to') as string, // Convert URN to UUID for SQLite storage
+        id: convertUuid(id as string, "sqlite", "to") as string, // Convert URN to UUID for SQLite storage
         name: dbName,
         url: url as string,
         email: email || null,
@@ -235,23 +235,23 @@ export class SqliteIssuerMapper {
         image: SqliteTypeConverters.convertImageToString(image),
         publicKey: SqliteTypeConverters.safeJsonStringify(
           publicKey,
-          'publicKey'
+          "publicKey",
         ),
         additionalFields: SqliteTypeConverters.safeJsonStringify(
           // At this point we've verified additionalFieldsResult.success is true,
           // so we can safely access additionalFieldsResult.data
           additionalFieldsResult.data || {},
-          'additionalFields'
+          "additionalFields",
         ),
         createdAt,
         updatedAt: now,
       };
     } catch (error) {
-      logger.error('Error converting Issuer domain entity to database record', {
+      logger.error("Error converting Issuer domain entity to database record", {
         error: error instanceof Error ? error.message : String(error),
         entityId: entity.id,
         entityName:
-          typeof entity.name === 'object'
+          typeof entity.name === "object"
             ? JSON.stringify(entity.name)
             : entity.name,
       });

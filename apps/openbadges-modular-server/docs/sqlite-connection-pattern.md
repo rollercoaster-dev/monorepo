@@ -23,7 +23,7 @@ export class SqliteConnectionManager {
     this.ensureConnected();
     return this.db;
   }
-  
+
   // Connection management methods
   async connect(): Promise<void> { ... }
   async disconnect(): Promise<void> { ... }
@@ -42,18 +42,18 @@ export class SqliteExampleRepository implements ExampleRepository {
   constructor(private readonly connectionManager: SqliteConnectionManager) {
     this.mapper = new SqliteExampleMapper();
   }
-  
+
   // Get database with connection validation
   private getDatabase() {
     this.connectionManager.ensureConnected();
     return this.connectionManager.getDatabase();
   }
-  
+
   // Public mapper access
   getMapper(): SqliteExampleMapper {
     return this.mapper;
   }
-  
+
   // Repository methods using getDatabase()
   async findById(id: Shared.IRI): Promise<Example | null> {
     const db = this.getDatabase();
@@ -69,26 +69,26 @@ The `RepositoryFactory` manages a single shared `SqliteConnectionManager`:
 ```typescript
 export class RepositoryFactory {
   private static sqliteConnectionManager: SqliteConnectionManager | null = null;
-  
+
   static async initialize(config: {...}): Promise<void> {
     // Initialize the shared connection manager
     RepositoryFactory.sqliteConnectionManager = new SqliteConnectionManager(client, {
       maxConnectionAttempts: 3,
       connectionRetryDelayMs: 1000,
     });
-    
+
     await RepositoryFactory.sqliteConnectionManager.connect();
   }
-  
+
   static async createExampleRepository(): Promise<ExampleRepository> {
     if (!RepositoryFactory.sqliteConnectionManager) {
       throw new Error('SQLite connection manager not initialized');
     }
-    
+
     // Pass the connection manager to the repository
     return new SqliteExampleRepository(RepositoryFactory.sqliteConnectionManager);
   }
-  
+
   static async close(): Promise<void> {
     if (RepositoryFactory.sqliteConnectionManager) {
       await RepositoryFactory.sqliteConnectionManager.disconnect();
@@ -129,11 +129,11 @@ For repositories still using direct Database access, update them to follow this 
 ```typescript
 export class OldStyleRepository implements Repository {
   private db: ReturnType<typeof drizzle>;
-  
+
   constructor(client: Database) {
     this.db = drizzle(client);
   }
-  
+
   async findById(id: string): Promise<Entity | null> {
     const result = await this.db.select()...
   }
@@ -145,12 +145,12 @@ export class OldStyleRepository implements Repository {
 ```typescript
 export class NewStyleRepository implements Repository {
   constructor(private readonly connectionManager: SqliteConnectionManager) {}
-  
+
   private getDatabase() {
     this.connectionManager.ensureConnected();
     return this.connectionManager.getDatabase();
   }
-  
+
   async findById(id: string): Promise<Entity | null> {
     const db = this.getDatabase();
     const result = await db.select()...

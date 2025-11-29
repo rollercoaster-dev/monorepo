@@ -7,29 +7,28 @@
 
 import type {
   Related,
-  EndorsementCredential} from '../../domains/badgeClass/badgeClass.entity';
-import {
-  BadgeClass
-} from '../../domains/badgeClass/badgeClass.entity';
-import type { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
-import type { IssuerRepository } from '../../domains/issuer/issuer.repository';
-import { BadgeVersion } from '../../utils/version/badge-version';
-import { toIRI } from '../../utils/types/iri-utils';
-import type { Shared } from 'openbadges-types';
+  EndorsementCredential,
+} from "../../domains/badgeClass/badgeClass.entity";
+import { BadgeClass } from "../../domains/badgeClass/badgeClass.entity";
+import type { BadgeClassRepository } from "../../domains/badgeClass/badgeClass.repository";
+import type { IssuerRepository } from "../../domains/issuer/issuer.repository";
+import { BadgeVersion } from "../../utils/version/badge-version";
+import { toIRI } from "../../utils/types/iri-utils";
+import type { Shared } from "openbadges-types";
 import type {
   CreateBadgeClassDto,
   BadgeClassResponseDto,
   UpdateBadgeClassDto,
-} from '../dtos';
+} from "../dtos";
 import {
   CreateBadgeClassSchema,
   UpdateBadgeClassSchema,
-} from '../validation/badgeClass.schemas';
-import { logger } from '../../utils/logging/logger.service';
-import type { z } from 'zod';
-import { UserPermission } from '../../domains/user/user.entity';
-import { AchievementRelationshipService } from '../../services/achievement-relationship.service';
-import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
+} from "../validation/badgeClass.schemas";
+import { logger } from "../../utils/logging/logger.service";
+import type { z } from "zod";
+import { UserPermission } from "../../domains/user/user.entity";
+import { AchievementRelationshipService } from "../../services/achievement-relationship.service";
+import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
 
 // Define types inferred from Zod schemas
 type ValidatedCreateBadgeClassData = z.infer<typeof CreateBadgeClassSchema>;
@@ -44,7 +43,7 @@ type ValidatedUpdateBadgeClassData = z.infer<typeof UpdateBadgeClassSchema>;
  */
 function mapToBadgeClassEntity(
   data: ValidatedCreateBadgeClassData | ValidatedUpdateBadgeClassData,
-  { allowId = false } = {}
+  { allowId = false } = {},
 ): Partial<BadgeClass> {
   // Create a clean object with only the properties needed for the BadgeClass entity
   const mappedData: Partial<BadgeClass> = {};
@@ -70,7 +69,7 @@ function mapToBadgeClassEntity(
   }
 
   // Handle other properties
-  if (allowId && 'id' in data && data.id !== undefined) {
+  if (allowId && "id" in data && data.id !== undefined) {
     mappedData.id = data.id as Shared.IRI;
   }
   if (data.tags !== undefined) mappedData.tags = data.tags;
@@ -81,18 +80,18 @@ function mapToBadgeClassEntity(
   }
 
   // Handle versioning fields (OB 3.0)
-  if ('version' in data && data.version !== undefined) {
+  if ("version" in data && data.version !== undefined) {
     mappedData.version = data.version;
   }
-  if ('previousVersion' in data && data.previousVersion !== undefined) {
+  if ("previousVersion" in data && data.previousVersion !== undefined) {
     mappedData.previousVersion = data.previousVersion as Shared.IRI;
   }
 
   // Handle relationship fields (OB 3.0)
-  if ('related' in data && data.related !== undefined) {
+  if ("related" in data && data.related !== undefined) {
     mappedData.related = data.related as Related[];
   }
-  if ('endorsement' in data && data.endorsement !== undefined) {
+  if ("endorsement" in data && data.endorsement !== undefined) {
     mappedData.endorsement = data.endorsement as EndorsementCredential[];
   }
 
@@ -113,10 +112,10 @@ export class BadgeClassController {
    */
   constructor(
     private badgeClassRepository: BadgeClassRepository,
-    private issuerRepository?: IssuerRepository
+    private issuerRepository?: IssuerRepository,
   ) {
     this.relationshipService = new AchievementRelationshipService(
-      badgeClassRepository
+      badgeClassRepository,
     );
   }
 
@@ -128,12 +127,12 @@ export class BadgeClassController {
    */
   private hasPermission(
     user: { claims?: Record<string, unknown> } | null,
-    permission: UserPermission
+    permission: UserPermission,
   ): boolean {
     // Check if RBAC is disabled for testing
     // SECURITY WARNING: This bypasses all authorization checks when AUTH_DISABLE_RBAC=true.
     // This should ONLY be used in testing environments. Ensure this is never enabled in production.
-    if (process.env['AUTH_DISABLE_RBAC'] === 'true') {
+    if (process.env["AUTH_DISABLE_RBAC"] === "true") {
       return true;
     }
 
@@ -141,7 +140,7 @@ export class BadgeClassController {
       return false;
     }
 
-    const raw = user.claims['permissions'];
+    const raw = user.claims["permissions"];
     return Array.isArray(raw) && raw.includes(permission);
   }
 
@@ -155,17 +154,17 @@ export class BadgeClassController {
   async createBadgeClass(
     data: CreateBadgeClassDto,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BadgeClassResponseDto> {
     // Check if user has permission to create badge classes
     if (user && !this.hasPermission(user, UserPermission.CREATE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to create a badge class without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to create a badge class without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to create badge class'
+        "Insufficient permissions to create badge class",
       );
     }
     try {
@@ -177,29 +176,28 @@ export class BadgeClassController {
         const issuerIRI = toIRI(validatedData.issuer);
         if (!issuerIRI) {
           throw new BadRequestError(
-            `Invalid issuer ID format: '${validatedData.issuer}'`
+            `Invalid issuer ID format: '${validatedData.issuer}'`,
           );
         }
         const issuer = await this.issuerRepository.findById(issuerIRI);
         if (!issuer) {
           throw new BadRequestError(
-            `Referenced issuer '${validatedData.issuer}' does not exist`
+            `Referenced issuer '${validatedData.issuer}' does not exist`,
           );
         }
       }
 
       // Create badge class entity using the mapping function
       const badgeClass = BadgeClass.create(
-        mapToBadgeClassEntity(validatedData)
+        mapToBadgeClassEntity(validatedData),
       );
-      const createdBadgeClass = await this.badgeClassRepository.create(
-        badgeClass
-      );
+      const createdBadgeClass =
+        await this.badgeClassRepository.create(badgeClass);
 
       // Return formatted response
       return createdBadgeClass.toJsonLd(version) as BadgeClassResponseDto;
     } catch (error) {
-      logger.error('Error creating badge class', {
+      logger.error("Error creating badge class", {
         error: error instanceof Error ? error.message : String(error),
         data,
       });
@@ -215,7 +213,7 @@ export class BadgeClassController {
    */
   async getAllBadgeClasses(
     version: BadgeVersion = BadgeVersion.V3,
-    issuerId?: string
+    issuerId?: string,
   ): Promise<BadgeClassResponseDto[]> {
     // If issuerId is provided, filter by issuer using existing repository method
     let badgeClasses;
@@ -229,7 +227,7 @@ export class BadgeClassController {
       badgeClasses = await this.badgeClassRepository.findAll();
     }
     return badgeClasses.map(
-      (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto
+      (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto,
     );
   }
 
@@ -241,10 +239,10 @@ export class BadgeClassController {
    */
   async getBadgeClassById(
     id: string,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<BadgeClassResponseDto | null> {
     const badgeClass = await this.badgeClassRepository.findById(
-      toIRI(id) as Shared.IRI
+      toIRI(id) as Shared.IRI,
     );
     if (!badgeClass) {
       return null;
@@ -260,13 +258,13 @@ export class BadgeClassController {
    */
   async getBadgeClassesByIssuer(
     issuerId: string,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<BadgeClassResponseDto[]> {
     const badgeClasses = await this.badgeClassRepository.findByIssuer(
-      toIRI(issuerId) as Shared.IRI
+      toIRI(issuerId) as Shared.IRI,
     );
     return badgeClasses.map(
-      (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto
+      (badgeClass) => badgeClass.toJsonLd(version) as BadgeClassResponseDto,
     );
   }
 
@@ -282,17 +280,17 @@ export class BadgeClassController {
     id: string,
     data: UpdateBadgeClassDto,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BadgeClassResponseDto | null> {
     // Check if user has permission to update badge classes
     if (user && !this.hasPermission(user, UserPermission.UPDATE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to update badge class ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to update badge class ${id} without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to update badge class'
+        "Insufficient permissions to update badge class",
       );
     }
     try {
@@ -304,13 +302,13 @@ export class BadgeClassController {
         const issuerIRI = toIRI(validatedData.issuer);
         if (!issuerIRI) {
           throw new BadRequestError(
-            `Invalid issuer ID format: '${validatedData.issuer}'`
+            `Invalid issuer ID format: '${validatedData.issuer}'`,
           );
         }
         const issuer = await this.issuerRepository.findById(issuerIRI);
         if (!issuer) {
           throw new BadRequestError(
-            `Referenced issuer '${validatedData.issuer}' does not exist`
+            `Referenced issuer '${validatedData.issuer}' does not exist`,
           );
         }
       }
@@ -318,14 +316,14 @@ export class BadgeClassController {
       // Use validated data mapped to entity format
       const updatedBadgeClass = await this.badgeClassRepository.update(
         toIRI(id) as Shared.IRI,
-        mapToBadgeClassEntity(validatedData, { allowId: true })
+        mapToBadgeClassEntity(validatedData, { allowId: true }),
       );
       if (!updatedBadgeClass) {
         return null;
       }
       return updatedBadgeClass.toJsonLd(version) as BadgeClassResponseDto;
     } catch (error) {
-      logger.error('Error updating badge class', {
+      logger.error("Error updating badge class", {
         id,
         error: error instanceof Error ? error.message : String(error),
         data,
@@ -344,27 +342,27 @@ export class BadgeClassController {
   async deleteBadgeClass(
     id: string,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<boolean> {
     // Check if user has permission to delete badge classes
     if (user && !this.hasPermission(user, UserPermission.DELETE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to delete badge class ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to delete badge class ${id} without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to delete badge class'
+        "Insufficient permissions to delete badge class",
       );
     }
 
     const iri = toIRI(id) as Shared.IRI;
 
     // Log the delete operation with version information for audit purposes
-    logger.info('Deleting badge class', {
+    logger.info("Deleting badge class", {
       id: iri,
       version,
-      user: user?.claims?.['sub'] || 'unknown',
+      user: user?.claims?.["sub"] || "unknown",
     });
 
     return await this.badgeClassRepository.delete(iri);
@@ -378,10 +376,10 @@ export class BadgeClassController {
    */
   async getRelatedAchievements(
     id: string,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<BadgeClassResponseDto[]> {
     const badgeClass = await this.badgeClassRepository.findById(
-      toIRI(id) as Shared.IRI
+      toIRI(id) as Shared.IRI,
     );
     if (!badgeClass || !badgeClass.related) {
       return [];
@@ -390,11 +388,11 @@ export class BadgeClassController {
     const relatedAchievements: BadgeClassResponseDto[] = [];
     for (const related of badgeClass.related) {
       const relatedAchievement = await this.badgeClassRepository.findById(
-        related.id
+        related.id,
       );
       if (relatedAchievement) {
         relatedAchievements.push(
-          relatedAchievement.toJsonLd(version) as BadgeClassResponseDto
+          relatedAchievement.toJsonLd(version) as BadgeClassResponseDto,
         );
       }
     }
@@ -414,17 +412,17 @@ export class BadgeClassController {
     id: string,
     relatedData: Related,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BadgeClassResponseDto | null> {
     // Check permissions
     if (user && !this.hasPermission(user, UserPermission.UPDATE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to add relationship to badge class ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to add relationship to badge class ${id} without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to modify badge class relationships'
+        "Insufficient permissions to modify badge class relationships",
       );
     }
 
@@ -433,22 +431,22 @@ export class BadgeClassController {
       const updatedBadgeClass =
         await this.relationshipService.addRelatedAchievement(
           achievementId,
-          relatedData
+          relatedData,
         );
 
       if (!updatedBadgeClass) {
         return null;
       }
 
-      logger.info('Added related achievement', {
+      logger.info("Added related achievement", {
         achievementId,
         relatedId: relatedData.id,
-        user: user?.claims?.['sub'] || 'unknown',
+        user: user?.claims?.["sub"] || "unknown",
       });
 
       return updatedBadgeClass.toJsonLd(version) as BadgeClassResponseDto;
     } catch (error) {
-      logger.error('Error adding related achievement', {
+      logger.error("Error adding related achievement", {
         error: error instanceof Error ? error.message : String(error),
         id,
         relatedData,
@@ -469,17 +467,17 @@ export class BadgeClassController {
     id: string,
     relatedId: string,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BadgeClassResponseDto | null> {
     // Check permissions
     if (user && !this.hasPermission(user, UserPermission.UPDATE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to remove relationship from badge class ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to remove relationship from badge class ${id} without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to modify badge class relationships'
+        "Insufficient permissions to modify badge class relationships",
       );
     }
 
@@ -490,22 +488,22 @@ export class BadgeClassController {
       const updatedBadgeClass =
         await this.relationshipService.removeRelatedAchievement(
           achievementId,
-          relatedIRI
+          relatedIRI,
         );
 
       if (!updatedBadgeClass) {
         return null;
       }
 
-      logger.info('Removed related achievement', {
+      logger.info("Removed related achievement", {
         achievementId,
         relatedId: relatedIRI,
-        user: user?.claims?.['sub'] || 'unknown',
+        user: user?.claims?.["sub"] || "unknown",
       });
 
       return updatedBadgeClass.toJsonLd(version) as BadgeClassResponseDto;
     } catch (error) {
-      logger.error('Error removing related achievement', {
+      logger.error("Error removing related achievement", {
         error: error instanceof Error ? error.message : String(error),
         id,
         relatedId,
@@ -521,7 +519,7 @@ export class BadgeClassController {
    */
   async getEndorsements(id: string): Promise<EndorsementCredential[]> {
     const badgeClass = await this.badgeClassRepository.findById(
-      toIRI(id) as Shared.IRI
+      toIRI(id) as Shared.IRI,
     );
     return badgeClass?.endorsement || [];
   }
@@ -536,25 +534,24 @@ export class BadgeClassController {
   async addEndorsement(
     id: string,
     endorsement: EndorsementCredential,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BadgeClass | null> {
     // Check permissions
     if (user && !this.hasPermission(user, UserPermission.UPDATE_BADGE_CLASS)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to add endorsement to badge class ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to add endorsement to badge class ${id} without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to modify badge class endorsements'
+        "Insufficient permissions to modify badge class endorsements",
       );
     }
 
     try {
       const achievementId = toIRI(id) as Shared.IRI;
-      const badgeClass = await this.badgeClassRepository.findById(
-        achievementId
-      );
+      const badgeClass =
+        await this.badgeClassRepository.findById(achievementId);
 
       if (!badgeClass) {
         return null;
@@ -567,18 +564,18 @@ export class BadgeClassController {
         achievementId,
         {
           endorsement: updatedEndorsements,
-        }
+        },
       );
 
-      logger.info('Added endorsement to badge class', {
+      logger.info("Added endorsement to badge class", {
         achievementId,
         endorsementId: endorsement.id,
-        user: user?.claims?.['sub'] || 'unknown',
+        user: user?.claims?.["sub"] || "unknown",
       });
 
       return updatedBadgeClass;
     } catch (error) {
-      logger.error('Error adding endorsement', {
+      logger.error("Error adding endorsement", {
         error: error instanceof Error ? error.message : String(error),
         id,
         endorsement,

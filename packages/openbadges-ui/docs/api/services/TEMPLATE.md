@@ -10,9 +10,9 @@ Description of the method and its purpose.
 
 #### Parameters
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `param1` | `Type` | Required | Description of the parameter and its purpose. |
+| Name     | Type   | Default        | Description                                   |
+| -------- | ------ | -------------- | --------------------------------------------- |
+| `param1` | `Type` | Required       | Description of the parameter and its purpose. |
 | `param2` | `Type` | `defaultValue` | Description of the parameter and its purpose. |
 
 #### Returns
@@ -26,13 +26,13 @@ Description of the method and its purpose.
 #### Example
 
 ```typescript
-import { ServiceName } from 'openbadges-ui';
+import { ServiceName } from "openbadges-ui";
 
 try {
   const result = ServiceName.methodName(param1, param2);
-  console.log('Result:', result);
+  console.log("Result:", result);
 } catch (error) {
-  console.error('Error:', error);
+  console.error("Error:", error);
 }
 ```
 
@@ -42,8 +42,8 @@ Description of the method and its purpose.
 
 #### Parameters
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
+| Name    | Type   | Default  | Description                                   |
+| ------- | ------ | -------- | --------------------------------------------- |
 | `param` | `Type` | Required | Description of the parameter and its purpose. |
 
 #### Returns
@@ -53,7 +53,7 @@ Description of the method and its purpose.
 #### Example
 
 ```typescript
-import { ServiceName } from 'openbadges-ui';
+import { ServiceName } from "openbadges-ui";
 
 const result = ServiceName.anotherMethod(param);
 ```
@@ -77,7 +77,7 @@ Description of the type and its properties.
 ### Basic Example
 
 ```typescript
-import { ServiceName } from 'openbadges-ui';
+import { ServiceName } from "openbadges-ui";
 
 // Basic usage example
 const result = ServiceName.methodName(param1, param2);
@@ -86,13 +86,13 @@ const result = ServiceName.methodName(param1, param2);
 ### Advanced Example
 
 ```typescript
-import { ServiceName } from 'openbadges-ui';
+import { ServiceName } from "openbadges-ui";
 
 // Advanced usage example
 try {
   const result1 = ServiceName.methodName(param1, param2);
   const result2 = ServiceName.anotherMethod(result1);
-  
+
   // Process results...
 } catch (error) {
   // Handle errors...

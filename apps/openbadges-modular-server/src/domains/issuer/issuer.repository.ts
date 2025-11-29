@@ -6,8 +6,8 @@
  * Issuer repository implementations must fulfill.
  */
 
-import type { Issuer } from './issuer.entity';
-import type { Shared } from 'openbadges-types';
+import type { Issuer } from "./issuer.entity";
+import type { Shared } from "openbadges-types";
 
 export interface IssuerRepository {
   /**
@@ -15,7 +15,7 @@ export interface IssuerRepository {
    * @param issuer The issuer to create
    * @returns The created issuer with its ID
    */
-  create(issuer: Omit<Issuer, 'id'>): Promise<Issuer>;
+  create(issuer: Omit<Issuer, "id">): Promise<Issuer>;
 
   /**
    * Finds all issuers

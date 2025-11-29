@@ -8,9 +8,11 @@ model: haiku
 # Test Coverage Validator Agent
 
 ## Purpose
+
 Validates test coverage before and after changes, compares coverage metrics, identifies regressions, and ensures quality standards are maintained.
 
 ## When to Use This Agent
+
 - During package migrations (before/after comparison)
 - During PR reviews for code changes
 - When refactoring code
@@ -21,11 +23,13 @@ Validates test coverage before and after changes, compares coverage metrics, ide
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of the package to validate
 - **Package path**: Path to the package (e.g., "packages/rd-logger")
 - **Context**: What triggered validation (migration, PR, refactor)
 
 Optional:
+
 - **Baseline coverage**: Previous coverage metrics (if comparing)
 - **Minimum thresholds**: Required coverage percentages
 - **Focus areas**: Specific files or modules to check
@@ -35,7 +39,7 @@ Optional:
 ### Phase 1: Setup and Environment Check
 
 1. **Verify test configuration exists:**
-   - Check for test files (*.test.ts, *.spec.ts)
+   - Check for test files (_.test.ts, _.spec.ts)
    - Verify test runner is configured (bun test, jest, vitest)
    - Check for coverage configuration
 
@@ -55,12 +59,14 @@ Optional:
 1. **Run tests with coverage:**
 
    **For Bun:**
+
    ```bash
    cd {package-path}
    bun test --coverage --coverage-reporter=json --coverage-reporter=text
    ```
 
    **For Jest:**
+
    ```bash
    bun run test:coverage --coverageReporters=json --coverageReporters=text
    ```
@@ -68,10 +74,10 @@ Optional:
 2. **Parse coverage report:**
    - Read coverage/coverage-summary.json
    - Extract metrics:
-     * Lines coverage
-     * Statements coverage
-     * Functions coverage
-     * Branches coverage
+     - Lines coverage
+     - Statements coverage
+     - Functions coverage
+     - Branches coverage
 
 3. **Store baseline metrics:**
    ```json
@@ -90,6 +96,7 @@ Optional:
 ### Phase 3: Execute Tests and Collect Coverage
 
 1. **Run full test suite with coverage:**
+
    ```bash
    bun test --coverage
    ```
@@ -107,6 +114,7 @@ Optional:
 ### Phase 4: Analyze Coverage Metrics
 
 1. **Calculate overall coverage:**
+
    ```
    Total Coverage:
    - Lines: {n}% ({covered}/{total})
@@ -134,6 +142,7 @@ Optional:
 ### Phase 5: Compare with Baseline (If Provided)
 
 1. **Calculate delta:**
+
    ```
    Coverage Change:
    - Lines: {baseline}% → {current}% ({delta > 0 ? '+' : ''}{delta}%)
@@ -163,6 +172,7 @@ Optional:
 1. **Check minimum thresholds:**
 
    Default thresholds (can be overridden):
+
    ```json
    {
      "lines": 80,
@@ -186,16 +196,18 @@ Optional:
 
 Create comprehensive coverage validation report:
 
-```markdown
+````markdown
 # Test Coverage Report: {package-name}
 
 ## Summary
 
 **Test Execution:**
+
 - ✅ All tests passed: {n} tests in {m} files
 - Execution time: {time}ms
 
 **Overall Coverage:**
+
 - Lines: {pct}% {✅|⚠️|❌}
 - Statements: {pct}% {✅|⚠️|❌}
 - Functions: {pct}% {✅|⚠️|❌}
@@ -205,23 +217,24 @@ Create comprehensive coverage validation report:
 
 ## Coverage Metrics
 
-| Metric | Coverage | Total | Covered | Status | Threshold |
-|--------|----------|-------|---------|--------|-----------|
-| Lines | {pct}% | {total} | {covered} | {✅|⚠️|❌} | {n}% |
-| Statements | {pct}% | {total} | {covered} | {✅|⚠️|❌} | {n}% |
-| Functions | {pct}% | {total} | {covered} | {✅|⚠️|❌} | {n}% |
-| Branches | {pct}% | {total} | {covered} | {✅|⚠️|❌} | {n}% |
+| Metric     | Coverage | Total   | Covered   | Status | Threshold |
+| ---------- | -------- | ------- | --------- | ------ | --------- | --- | ---- |
+| Lines      | {pct}%   | {total} | {covered} | {✅    | ⚠️        | ❌} | {n}% |
+| Statements | {pct}%   | {total} | {covered} | {✅    | ⚠️        | ❌} | {n}% |
+| Functions  | {pct}%   | {total} | {covered} | {✅    | ⚠️        | ❌} | {n}% |
+| Branches   | {pct}%   | {total} | {covered} | {✅    | ⚠️        | ❌} | {n}% |
 
 ## Coverage Change {if baseline provided}
 
-| Metric | Before | After | Delta | Trend |
-|--------|--------|-------|-------|-------|
-| Lines | {n}% | {n}% | {+/-n}% | {📈|📉|➡️} |
-| Statements | {n}% | {n}% | {+/-n}% | {📈|📉|➡️} |
-| Functions | {n}% | {n}% | {+/-n}% | {📈|📉|➡️} |
-| Branches | {n}% | {n}% | {+/-n}% | {📈|📉|➡️} |
+| Metric     | Before | After | Delta   | Trend |
+| ---------- | ------ | ----- | ------- | ----- | --- | --- |
+| Lines      | {n}%   | {n}%  | {+/-n}% | {📈   | 📉  | ➡️} |
+| Statements | {n}%   | {n}%  | {+/-n}% | {📈   | 📉  | ➡️} |
+| Functions  | {n}%   | {n}%  | {+/-n}% | {📈   | 📉  | ➡️} |
+| Branches   | {n}%   | {n}%  | {+/-n}% | {📈   | 📉  | ➡️} |
 
 {If regression detected:}
+
 ### ⚠️ Coverage Regressions
 
 - **{file-path}**: {old}% → {new}% ({-delta}%)
@@ -231,18 +244,22 @@ Create comprehensive coverage validation report:
 ## File-Level Coverage
 
 ### Excellent Coverage (≥ 90%)
+
 - ✅ src/core/logger.service.ts: 95.2%
 - ✅ src/utils/format.ts: 100%
 
 ### Good Coverage (80-89%)
+
 - ✅ src/adapters/hono.adapter.ts: 85.7%
 
 ### Needs Improvement (< 80%)
+
 - ⚠️ src/middleware/request-id.ts: 72.3%
   - Uncovered: Error handling paths
   - Recommendation: Add error case tests
 
 ### Uncovered Files
+
 - ❌ src/utils/debug.ts: 0%
   - Critical: {yes|no}
   - Recommendation: {action}
@@ -250,25 +267,30 @@ Create comprehensive coverage validation report:
 ## Uncovered Code Patterns
 
 ### Missing Branch Coverage
+
 - Error handling: {n} branches
 - Edge cases: {n} branches
 - Conditional logic: {n} branches
 
 ### Missing Function Coverage
+
 - Private methods: {n} functions
 - Helper utilities: {n} functions
 
 ### Critical Gaps
+
 {List of important code paths without tests}
 
 ## Recommendations
 
 ### Required Actions (to meet thresholds)
+
 1. Add tests for src/utils/debug.ts (currently 0%)
 2. Cover error paths in src/middleware/request-id.ts
 3. Add branch tests for conditional logic in {file}
 
 ### Optional Improvements
+
 1. Increase branch coverage in {file} from {n}% to {n}%
 2. Add integration tests for {feature}
 3. Test edge cases in {component}
@@ -276,6 +298,7 @@ Create comprehensive coverage validation report:
 ## Coverage Configuration
 
 Current configuration:
+
 ```json
 {
   "thresholds": {
@@ -287,10 +310,12 @@ Current configuration:
   "exclude": ["**/*.test.ts", "**/*.spec.ts", "**/mocks/**"]
 }
 ```
+````
 
 ## Detailed Report
 
 Full coverage report available at:
+
 - HTML: {package-path}/coverage/index.html
 - JSON: {package-path}/coverage/coverage-final.json
 
@@ -307,6 +332,7 @@ open coverage/index.html
 # View detailed text report
 cat coverage/coverage-summary.json | jq
 ```
+
 ```
 
 ## Tools Required
@@ -352,41 +378,50 @@ If validation fails:
 
 ### During Package Migration
 ```
+
 User: "Validate coverage for packages/rd-logger after migration"
 
 Agent:
+
 1. Runs bun test --coverage
 2. Parses coverage report
 3. Results: Lines 89.5%, Statements 90.2%, Functions 92%, Branches 78%
 4. Compares with baseline (if provided from original repo)
 5. Reports: ✅ All thresholds met, +2.3% increase in coverage
 6. Identifies: 2 files below 80%, provides recommendations
+
 ```
 
 ### During PR Review
 ```
+
 User: "Check if PR #42 maintains coverage"
 
 Agent:
+
 1. Captures baseline from main branch
 2. Runs tests on PR branch
 3. Compares: Lines 85.3% → 84.1% (-1.2%)
 4. Identifies: New code in src/feature.ts is untested
 5. Reports: ⚠️ Coverage regression, 15 new lines uncovered
 6. Recommends: Add tests for new feature before merge
+
 ```
 
 ### Coverage Improvement
 ```
+
 User: "What do I need to do to reach 90% coverage?"
 
 Agent:
+
 1. Runs coverage analysis
 2. Current: 82.5% lines
 3. Gap: Need 7.5% more (approximately 45 lines)
 4. Identifies: 3 files below 80%
 5. Provides: Specific uncovered line ranges
 6. Recommends: Priority order for adding tests
+
 ```
 
 ## Success Criteria
@@ -410,3 +445,4 @@ This agent is designed to be called:
 - For refactoring validation
 - By CI/CD pipelines as quality gates
 - During coverage improvement initiatives
+```

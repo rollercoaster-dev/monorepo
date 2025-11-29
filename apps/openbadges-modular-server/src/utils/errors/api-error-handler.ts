@@ -5,11 +5,11 @@
  * eliminating duplicate error-handling logic and ensuring consistent responses.
  */
 
-import type { Context } from 'hono';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { logger } from '../logging/logger.service';
-import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
-import { ValidationError } from './validation.errors';
+import type { Context } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { logger } from "../logging/logger.service";
+import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
+import { ValidationError } from "./validation.errors";
 
 /**
  * Standard API error response structure
@@ -46,13 +46,13 @@ function classifyError(error: unknown): ErrorClassification {
 
   // Permission errors
   if (
-    message.toLowerCase().includes('permission') ||
-    message.toLowerCase().includes('forbidden') ||
-    message.toLowerCase().includes('unauthorized')
+    message.toLowerCase().includes("permission") ||
+    message.toLowerCase().includes("forbidden") ||
+    message.toLowerCase().includes("unauthorized")
   ) {
     return {
       statusCode: 403,
-      errorType: 'Forbidden',
+      errorType: "Forbidden",
       message,
     };
   }
@@ -62,46 +62,46 @@ function classifyError(error: unknown): ErrorClassification {
   const isErrorInstance =
     error instanceof BadRequestError ||
     error instanceof ValidationError ||
-    (error instanceof Error && error.name === 'BadRequestError');
+    (error instanceof Error && error.name === "BadRequestError");
 
   const hasValidationMessage =
-    message.toLowerCase().includes('invalid') ||
-    message.toLowerCase().includes('validation');
+    message.toLowerCase().includes("invalid") ||
+    message.toLowerCase().includes("validation");
 
-  const isInvalidIriError = message.includes('Invalid IRI');
+  const isInvalidIriError = message.includes("Invalid IRI");
 
   if ((isErrorInstance || hasValidationMessage) && !isInvalidIriError) {
     return {
       statusCode: 400,
-      errorType: 'Bad Request',
+      errorType: "Bad Request",
       message,
     };
   }
 
   // Invalid IRI errors (handle these specifically)
-  if (message.includes('Invalid IRI')) {
+  if (message.includes("Invalid IRI")) {
     return {
       statusCode: 400,
-      errorType: 'Bad Request',
-      message: message.includes('issuer')
-        ? 'Invalid issuer ID'
-        : message.includes('badge')
-        ? 'Invalid badge class ID'
-        : message.includes('assertion')
-        ? 'Invalid assertion ID'
-        : 'Invalid ID format',
+      errorType: "Bad Request",
+      message: message.includes("issuer")
+        ? "Invalid issuer ID"
+        : message.includes("badge")
+          ? "Invalid badge class ID"
+          : message.includes("assertion")
+            ? "Invalid assertion ID"
+            : "Invalid ID format",
     };
   }
 
   // Resource not found errors (only for generic "not found" cases, not BadRequestErrors)
   if (
-    message.toLowerCase().includes('does not exist') ||
-    message.toLowerCase().includes('not found') ||
-    message.toLowerCase().includes('missing')
+    message.toLowerCase().includes("does not exist") ||
+    message.toLowerCase().includes("not found") ||
+    message.toLowerCase().includes("missing")
   ) {
     return {
       statusCode: 404,
-      errorType: 'Not Found',
+      errorType: "Not Found",
       message,
     };
   }
@@ -109,10 +109,10 @@ function classifyError(error: unknown): ErrorClassification {
   // Default to internal server error
   return {
     statusCode: 500,
-    errorType: 'Internal Server Error',
+    errorType: "Internal Server Error",
     message:
-      process.env.NODE_ENV === 'production'
-        ? 'Unexpected server error'
+      process.env.NODE_ENV === "production"
+        ? "Unexpected server error"
         : message,
   };
 }
@@ -128,7 +128,7 @@ function classifyError(error: unknown): ErrorClassification {
 export function sendApiError(
   c: Context,
   error: unknown,
-  context: ErrorContext = {}
+  context: ErrorContext = {},
 ): Response {
   const classification = classifyError(error);
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -143,7 +143,7 @@ export function sendApiError(
   // Log the error with appropriate level
   const logMessage = context.endpoint
     ? `${context.endpoint} failed`
-    : 'API request failed';
+    : "API request failed";
 
   if (classification.statusCode >= 500) {
     logger.error(logMessage, logContext);
@@ -175,7 +175,7 @@ export function sendApiError(
 export function sendNotFoundError(
   c: Context,
   resourceType: string,
-  context: ErrorContext = {}
+  context: ErrorContext = {},
 ): Response {
   const logContext = {
     statusCode: 404,
@@ -191,10 +191,10 @@ export function sendNotFoundError(
 
   return c.json(
     {
-      error: 'Not Found',
+      error: "Not Found",
       message: `${resourceType} not found`,
     },
-    404
+    404,
   );
 }
 
@@ -209,7 +209,7 @@ export function sendNotFoundError(
 export async function handleApiOperation<T>(
   c: Context,
   operation: () => Promise<T>,
-  context: ErrorContext = {}
+  context: ErrorContext = {},
 ): Promise<T | Response> {
   try {
     return await operation();

@@ -5,29 +5,29 @@
  * It prevents tests from failing when a specific database type is not available.
  */
 
-import { describe, it } from 'bun:test';
-import { logger } from '@/utils/logging/logger.service';
-import { isPgAvailable } from '../setup-test-app';
+import { describe, it } from "bun:test";
+import { logger } from "@/utils/logging/logger.service";
+import { isPgAvailable } from "../setup-test-app";
 
 /**
  * Get the current database type from environment
  */
 export function getCurrentDatabaseType(): string {
-  return process.env.DB_TYPE || 'sqlite';
+  return process.env.DB_TYPE || "sqlite";
 }
 
 /**
  * Check if PostgreSQL is available for testing
  */
 export function isPostgresqlAvailable(): boolean {
-  return getCurrentDatabaseType() === 'postgresql' && isPgAvailable;
+  return getCurrentDatabaseType() === "postgresql" && isPgAvailable;
 }
 
 /**
  * Check if SQLite is being used for testing
  */
 export function isSqliteInUse(): boolean {
-  return getCurrentDatabaseType() === 'sqlite';
+  return getCurrentDatabaseType() === "sqlite";
 }
 
 /**
@@ -42,7 +42,7 @@ export function describePostgreSQL(name: string, fn: () => void): void {
     describe(name, fn);
   } else {
     logger.info(
-      `Skipping PostgreSQL E2E test suite: ${name} (PostgreSQL not available)`
+      `Skipping PostgreSQL E2E test suite: ${name} (PostgreSQL not available)`,
     );
     describe.skip(name, fn);
   }
@@ -72,14 +72,14 @@ export function describeSQLite(name: string, fn: () => void): void {
  */
 export function itPostgreSQL(
   name: string,
-  fn: () => void | Promise<void>
+  fn: () => void | Promise<void>,
 ): void {
   if (isPostgresqlAvailable()) {
     logger.debug(`Running PostgreSQL E2E test: ${name}`);
     it(name, fn);
   } else {
     logger.debug(
-      `Skipping PostgreSQL E2E test: ${name} (PostgreSQL not available)`
+      `Skipping PostgreSQL E2E test: ${name} (PostgreSQL not available)`,
     );
     it.skip(name, fn);
   }
@@ -109,7 +109,7 @@ export function itSQLite(name: string, fn: () => void | Promise<void>): void {
  */
 export function describeAnyDatabase(name: string, fn: () => void): void {
   const dbType = getCurrentDatabaseType();
-  if (dbType === 'postgresql' && !isPgAvailable) {
+  if (dbType === "postgresql" && !isPgAvailable) {
     logger.info(`Skipping E2E test suite: ${name} (PostgreSQL not available)`);
     describe.skip(name, fn);
   } else {
@@ -126,10 +126,10 @@ export function describeAnyDatabase(name: string, fn: () => void): void {
  */
 export function getConditionalDescribe(
   requirePostgreSQL = false,
-  requireSQLite = false
+  requireSQLite = false,
 ): typeof describe {
   if (requirePostgreSQL && requireSQLite) {
-    throw new Error('Cannot require both PostgreSQL and SQLite simultaneously');
+    throw new Error("Cannot require both PostgreSQL and SQLite simultaneously");
   }
 
   if (requirePostgreSQL) {
@@ -144,7 +144,7 @@ export function getConditionalDescribe(
 
   // For database-agnostic tests, check if any database is available
   const dbType = getCurrentDatabaseType();
-  if (dbType === 'postgresql' && !isPgAvailable) {
+  if (dbType === "postgresql" && !isPgAvailable) {
     return describe.skip as typeof describe;
   }
 
@@ -159,10 +159,10 @@ export function getConditionalDescribe(
  */
 export function getConditionalIt(
   requirePostgreSQL = false,
-  requireSQLite = false
+  requireSQLite = false,
 ): typeof it {
   if (requirePostgreSQL && requireSQLite) {
-    throw new Error('Cannot require both PostgreSQL and SQLite simultaneously');
+    throw new Error("Cannot require both PostgreSQL and SQLite simultaneously");
   }
 
   if (requirePostgreSQL) {
@@ -175,7 +175,7 @@ export function getConditionalIt(
 
   // For database-agnostic tests, check if any database is available
   const dbType = getCurrentDatabaseType();
-  if (dbType === 'postgresql' && !isPgAvailable) {
+  if (dbType === "postgresql" && !isPgAvailable) {
     return it.skip as typeof it;
   }
 

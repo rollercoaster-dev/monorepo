@@ -6,9 +6,9 @@
  * JWT operations.
  */
 
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
-import { config } from '../../config/config';
-import { logger } from '../../utils/logging/logger.service';
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { config } from "../../config/config";
+import { logger } from "../../utils/logging/logger.service";
 
 /**
  * JWT payload structure for authenticated users
@@ -48,7 +48,7 @@ export interface JwtPayload {
 export class JwtService {
   // Encode the JWT secret as bytes for use with the jose library
   private static readonly SECRET = new TextEncoder().encode(
-    config.auth?.jwtSecret || 'temp_secret_replace_in_production'
+    config.auth?.jwtSecret || "temp_secret_replace_in_production",
   );
   private static readonly TOKEN_EXPIRY =
     config.auth?.tokenExpirySeconds || 3600; // 1 hour default
@@ -56,7 +56,7 @@ export class JwtService {
   private static readonly ISSUER =
     config.auth?.issuer || config.openBadges.baseUrl;
   // Use HMAC SHA-256 for token signing (symmetric key algorithm)
-  private static readonly ALGORITHM = 'HS256';
+  private static readonly ALGORITHM = "HS256";
 
   /**
    * Generate a JWT token for an authenticated user
@@ -87,8 +87,8 @@ export class JwtService {
 
       return token;
     } catch (error) {
-      logger.logError('Failed to generate JWT token', error as Error);
-      throw new Error('Token generation failed');
+      logger.logError("Failed to generate JWT token", error as Error);
+      throw new Error("Token generation failed");
     }
   }
 
@@ -104,22 +104,22 @@ export class JwtService {
       });
 
       // Ensure the payload has the required provider property for authentication context
-      if (!payload['provider']) {
-        throw new Error('Token payload missing required provider property');
+      if (!payload["provider"]) {
+        throw new Error("Token payload missing required provider property");
       }
 
       // Convert the generic JWTPayload to our specific JwtPayload interface
       return {
         sub: payload.sub as string, // Subject (user ID)
-        provider: payload['provider'] as string, // Authentication provider
-        claims: payload['claims'] as Record<string, unknown> | undefined, // Additional user claims
+        provider: payload["provider"] as string, // Authentication provider
+        claims: payload["claims"] as Record<string, unknown> | undefined, // Additional user claims
         iss: payload.iss, // Issuer
         exp: payload.exp, // Expiration time
         iat: payload.iat, // Issued at time
       };
     } catch (error) {
-      logger.logError('JWT token verification failed', error as Error);
-      throw new Error('Invalid or expired token');
+      logger.logError("JWT token verification failed", error as Error);
+      throw new Error("Invalid or expired token");
     }
   }
 
@@ -129,7 +129,7 @@ export class JwtService {
    * @returns The token if found, null otherwise
    */
   static extractTokenFromHeader(authHeader: string | null): string | null {
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return null;
     }
 

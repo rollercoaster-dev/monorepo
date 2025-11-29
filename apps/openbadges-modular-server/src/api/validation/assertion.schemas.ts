@@ -1,7 +1,7 @@
 /**
  * Zod schemas for Assertion-related API endpoint validation.
  */
-import { z } from 'zod';
+import { z } from "zod";
 
 // Schema for RecipientDto
 export const RecipientSchema = z
@@ -11,7 +11,7 @@ export const RecipientSchema = z
     hashed: z.boolean(),
     salt: z.string().optional(),
   })
-  .strict('Unrecognized fields in recipient object');
+  .strict("Unrecognized fields in recipient object");
 
 // Schema for VerificationDto
 export const VerificationSchema = z
@@ -21,7 +21,7 @@ export const VerificationSchema = z
     verificationProperty: z.string().optional(),
     startsWith: z.array(z.string()).optional(),
   })
-  .strict('Unrecognized fields in verification object');
+  .strict("Unrecognized fields in verification object");
 
 // Schema for EvidenceDto
 export const EvidenceSchema = z
@@ -34,7 +34,7 @@ export const EvidenceSchema = z
     genre: z.string().optional(),
     audience: z.string().optional(),
   })
-  .strict('Unrecognized fields in evidence object');
+  .strict("Unrecognized fields in evidence object");
 
 // Schema for AssertionBaseDto
 export const AssertionBaseSchema = z.object({
@@ -42,17 +42,17 @@ export const AssertionBaseSchema = z.object({
   badge: z.string(), // Badge Class IRI - using string for flexibility
   issuedOn: z
     .string()
-    .datetime({ message: 'Invalid ISO 8601 date string format for issuedOn' }),
+    .datetime({ message: "Invalid ISO 8601 date string format for issuedOn" }),
   verification: VerificationSchema.optional(),
   evidence: z.union([EvidenceSchema, z.array(EvidenceSchema)]).optional(),
   narrative: z.string().optional(),
   expires: z
     .string()
-    .datetime({ message: 'Invalid ISO 8601 date string format for expires' })
+    .datetime({ message: "Invalid ISO 8601 date string format for expires" })
     .optional(),
   image: z
     .union([
-      z.string().url({ message: 'Image must be a valid URL string' }), // Simple URL string
+      z.string().url({ message: "Image must be a valid URL string" }), // Simple URL string
       z
         .object({
           // Image object
@@ -60,11 +60,11 @@ export const AssertionBaseSchema = z.object({
           type: z.string().optional(),
           url: z
             .string()
-            .url({ message: 'Image url must be a valid URL' })
+            .url({ message: "Image url must be a valid URL" })
             .optional(),
           caption: z.string().optional(),
         })
-        .strict('Unrecognized fields in image object'),
+        .strict("Unrecognized fields in image object"),
     ])
     .optional(),
   revoked: z.boolean().optional(),
@@ -74,8 +74,8 @@ export const AssertionBaseSchema = z.object({
 // Schema for CreateAssertionOB2Dto
 export const CreateAssertionOB2Schema = AssertionBaseSchema.extend({
   type: z.union([z.string(), z.array(z.string())]).optional(),
-  '@context': z.string().optional(), // Allow @context field for OB2
-}).strict('Unrecognized fields in OB2 assertion data');
+  "@context": z.string().optional(), // Allow @context field for OB2
+}).strict("Unrecognized fields in OB2 assertion data");
 
 // Schema for CreateAssertionOB3Dto
 export const CreateAssertionOB3Schema = AssertionBaseSchema.extend({
@@ -89,8 +89,8 @@ export const CreateAssertionOB3Schema = AssertionBaseSchema.extend({
     })
     .passthrough() // Allow additional properties for OB3 flexibility
     .optional(), // Allow flexible credentialSubject with basic structure
-  '@context': z.string().optional(), // Allow @context field for OB3
-}).strict('Unrecognized fields in OB3 assertion data');
+  "@context": z.string().optional(), // Allow @context field for OB3
+}).strict("Unrecognized fields in OB3 assertion data");
 
 // Union schema for CreateAssertionDto
 export const CreateAssertionSchema = z.union([
@@ -111,46 +111,46 @@ export const RevokeAssertionSchema = z
     revoked: z.boolean(),
     revocationReason: z.string().optional(),
   })
-  .strict('Unrecognized fields in revocation data');
+  .strict("Unrecognized fields in revocation data");
 
 // Schema for BatchCreateCredentialsDto
 export const BatchCreateCredentialsSchema = z
   .object({
     credentials: z
       .array(CreateAssertionSchema)
-      .min(1, 'At least one credential is required')
-      .max(100, 'Maximum 100 credentials per batch'),
+      .min(1, "At least one credential is required")
+      .max(100, "Maximum 100 credentials per batch"),
   })
-  .strict('Unrecognized fields in batch create credentials data');
+  .strict("Unrecognized fields in batch create credentials data");
 
 // Schema for BatchRetrieveCredentialsDto
 export const BatchRetrieveCredentialsSchema = z
   .object({
     ids: z
-      .array(z.string().min(1, 'ID cannot be empty'))
-      .min(1, 'At least one ID is required')
-      .max(100, 'Maximum 100 IDs per batch'),
+      .array(z.string().min(1, "ID cannot be empty"))
+      .min(1, "At least one ID is required")
+      .max(100, "Maximum 100 IDs per batch"),
   })
-  .strict('Unrecognized fields in batch retrieve credentials data');
+  .strict("Unrecognized fields in batch retrieve credentials data");
 
 // Schema for UpdateCredentialStatusDto (single credential)
 export const UpdateCredentialStatusSchema = z
   .object({
     status: z
-      .enum(['0', '1'], {
+      .enum(["0", "1"], {
         errorMap: () => ({
-          message: 'Status must be 0 (active) or 1 (revoked/suspended)',
+          message: "Status must be 0 (active) or 1 (revoked/suspended)",
         }),
       })
       .transform(Number),
-    reason: z.string().min(1, 'Reason cannot be empty if provided').optional(),
-    purpose: z.enum(['revocation', 'suspension'], {
+    reason: z.string().min(1, "Reason cannot be empty if provided").optional(),
+    purpose: z.enum(["revocation", "suspension"], {
       errorMap: () => ({
-        message: 'Purpose must be one of: revocation, suspension',
+        message: "Purpose must be one of: revocation, suspension",
       }),
     }),
   })
-  .strict('Unrecognized fields in credential status update data');
+  .strict("Unrecognized fields in credential status update data");
 
 // Schema for BatchUpdateCredentialStatusDto
 export const BatchUpdateCredentialStatusSchema = z
@@ -159,20 +159,20 @@ export const BatchUpdateCredentialStatusSchema = z
       .array(
         z
           .object({
-            id: z.string().min(1, 'ID cannot be empty'),
-            status: z.enum(['revoked', 'suspended', 'active'], {
+            id: z.string().min(1, "ID cannot be empty"),
+            status: z.enum(["revoked", "suspended", "active"], {
               errorMap: () => ({
-                message: 'Status must be one of: revoked, suspended, active',
+                message: "Status must be one of: revoked, suspended, active",
               }),
             }),
             reason: z
               .string()
-              .min(1, 'Reason cannot be empty if provided')
+              .min(1, "Reason cannot be empty if provided")
               .optional(),
           })
-          .strict('Unrecognized fields in status update object')
+          .strict("Unrecognized fields in status update object"),
       )
-      .min(1, 'At least one update is required')
-      .max(100, 'Maximum 100 updates per batch'),
+      .min(1, "At least one update is required")
+      .max(100, "Maximum 100 updates per batch"),
   })
-  .strict('Unrecognized fields in batch update credential status data');
+  .strict("Unrecognized fields in batch update credential status data");

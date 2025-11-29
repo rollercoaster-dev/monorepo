@@ -5,8 +5,8 @@
  * Provides centralized configuration management similar to SqlitePragmaManager.
  */
 
-import type postgres from 'postgres';
-import { logger } from '@utils/logging/logger.service';
+import type postgres from "postgres";
+import { logger } from "@utils/logging/logger.service";
 
 /**
  * PostgreSQL configuration settings
@@ -23,11 +23,11 @@ export interface PostgresConfigSettings {
   randomPageCost?: number;
 
   // Logging settings
-  logStatement?: 'none' | 'ddl' | 'mod' | 'all';
+  logStatement?: "none" | "ddl" | "mod" | "all";
   logMinDurationStatement?: number;
 
   // WAL settings
-  walLevel?: 'minimal' | 'replica' | 'logical';
+  walLevel?: "minimal" | "replica" | "logical";
   maxWalSize?: string;
   minWalSize?: string;
 
@@ -88,40 +88,40 @@ export class PostgresConfigManager {
     try {
       // Apply session-level settings that can be changed without restart
       if (settings.workMem) {
-        await this.setSessionParameter('work_mem', settings.workMem);
+        await this.setSessionParameter("work_mem", settings.workMem);
         appliedSettings.push(`work_mem = ${settings.workMem}`);
       }
 
       if (settings.statementTimeout !== undefined) {
         await this.setSessionParameter(
-          'statement_timeout',
-          settings.statementTimeout.toString()
+          "statement_timeout",
+          settings.statementTimeout.toString(),
         );
         appliedSettings.push(
-          `statement_timeout = ${settings.statementTimeout}`
+          `statement_timeout = ${settings.statementTimeout}`,
         );
       }
 
       if (settings.lockTimeout) {
-        await this.setSessionParameter('lock_timeout', settings.lockTimeout);
+        await this.setSessionParameter("lock_timeout", settings.lockTimeout);
         appliedSettings.push(`lock_timeout = ${settings.lockTimeout}`);
       }
 
       if (settings.randomPageCost !== undefined) {
         await this.setSessionParameter(
-          'random_page_cost',
-          settings.randomPageCost.toString()
+          "random_page_cost",
+          settings.randomPageCost.toString(),
         );
         appliedSettings.push(`random_page_cost = ${settings.randomPageCost}`);
       }
 
       if (appliedSettings.length > 0) {
-        logger.info('Applied PostgreSQL session settings', {
+        logger.info("Applied PostgreSQL session settings", {
           settings: appliedSettings,
         });
       }
     } catch (error) {
-      logger.error('Failed to apply PostgreSQL session settings', {
+      logger.error("Failed to apply PostgreSQL session settings", {
         error: error instanceof Error ? error.message : String(error),
         attemptedSettings: appliedSettings,
       });
@@ -135,7 +135,7 @@ export class PostgresConfigManager {
    */
   private async setSessionParameter(
     parameter: string,
-    value: string
+    value: string,
   ): Promise<void> {
     // Validate parameter name to prevent injection
     if (!this.isValidParameterName(parameter)) {
@@ -192,29 +192,29 @@ export class PostgresConfigManager {
       // Get configuration parameters
       await this.populateConfigParameter(
         config,
-        'max_connections',
-        'maxConnections'
+        "max_connections",
+        "maxConnections",
       );
       await this.populateConfigParameter(
         config,
-        'shared_buffers',
-        'sharedBuffers'
+        "shared_buffers",
+        "sharedBuffers",
       );
       await this.populateConfigParameter(
         config,
-        'effective_cache_size',
-        'effectiveCacheSize'
+        "effective_cache_size",
+        "effectiveCacheSize",
       );
-      await this.populateConfigParameter(config, 'work_mem', 'workMem');
+      await this.populateConfigParameter(config, "work_mem", "workMem");
       await this.populateConfigParameter(
         config,
-        'maintenance_work_mem',
-        'maintenanceWorkMem'
+        "maintenance_work_mem",
+        "maintenanceWorkMem",
       );
-      await this.populateConfigParameter(config, 'wal_level', 'walLevel');
-      await this.populateConfigParameter(config, 'max_wal_size', 'maxWalSize');
+      await this.populateConfigParameter(config, "wal_level", "walLevel");
+      await this.populateConfigParameter(config, "max_wal_size", "maxWalSize");
     } catch (error) {
-      logger.warn('Error getting PostgreSQL runtime configuration', {
+      logger.warn("Error getting PostgreSQL runtime configuration", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -228,7 +228,7 @@ export class PostgresConfigManager {
   private async populateConfigParameter(
     config: PostgresRuntimeConfig,
     parameterName: string,
-    configKey: keyof Omit<PostgresRuntimeConfig, 'appliedSettings'>
+    configKey: keyof Omit<PostgresRuntimeConfig, "appliedSettings">,
   ): Promise<void> {
     try {
       const result = await this.client`
@@ -265,19 +265,19 @@ export class PostgresConfigManager {
    * Maps config keys to applied settings keys
    */
   private getAppliedSettingKey(
-    configKey: keyof Omit<PostgresRuntimeConfig, 'appliedSettings'>
-  ): keyof PostgresRuntimeConfig['appliedSettings'] | null {
+    configKey: keyof Omit<PostgresRuntimeConfig, "appliedSettings">,
+  ): keyof PostgresRuntimeConfig["appliedSettings"] | null {
     const mapping: Record<
       string,
-      keyof PostgresRuntimeConfig['appliedSettings']
+      keyof PostgresRuntimeConfig["appliedSettings"]
     > = {
-      maxConnections: 'maxConnections',
-      sharedBuffers: 'sharedBuffers',
-      effectiveCacheSize: 'effectiveCacheSize',
-      workMem: 'workMem',
-      maintenanceWorkMem: 'maintenanceWorkMem',
-      walLevel: 'walLevel',
-      maxWalSize: 'maxWalSize',
+      maxConnections: "maxConnections",
+      sharedBuffers: "sharedBuffers",
+      effectiveCacheSize: "effectiveCacheSize",
+      workMem: "workMem",
+      maintenanceWorkMem: "maintenanceWorkMem",
+      walLevel: "walLevel",
+      maxWalSize: "maxWalSize",
     };
 
     return mapping[configKey] || null;
@@ -308,7 +308,7 @@ export class PostgresConfigManager {
 
       return stats[0] || {};
     } catch (error) {
-      logger.warn('Failed to get PostgreSQL database statistics', {
+      logger.warn("Failed to get PostgreSQL database statistics", {
         error: error instanceof Error ? error.message : String(error),
       });
       return {};
@@ -333,7 +333,7 @@ export class PostgresConfigManager {
 
       return connectionInfo[0] || {};
     } catch (error) {
-      logger.warn('Failed to get PostgreSQL connection information', {
+      logger.warn("Failed to get PostgreSQL connection information", {
         error: error instanceof Error ? error.message : String(error),
       });
       return {};
@@ -349,7 +349,7 @@ export class PostgresConfigManager {
     // Validate work_mem format
     if (settings.workMem && !this.isValidMemorySize(settings.workMem)) {
       errors.push(
-        `Invalid work_mem format: ${settings.workMem}. Expected format: number + unit (e.g., '4MB', '256kB')`
+        `Invalid work_mem format: ${settings.workMem}. Expected format: number + unit (e.g., '4MB', '256kB')`,
       );
     }
 
@@ -359,7 +359,7 @@ export class PostgresConfigManager {
       !this.isValidMemorySize(settings.maintenanceWorkMem)
     ) {
       errors.push(
-        `Invalid maintenance_work_mem format: ${settings.maintenanceWorkMem}. Expected format: number + unit (e.g., '64MB', '1GB')`
+        `Invalid maintenance_work_mem format: ${settings.maintenanceWorkMem}. Expected format: number + unit (e.g., '64MB', '1GB')`,
       );
     }
 
@@ -369,7 +369,7 @@ export class PostgresConfigManager {
       (settings.randomPageCost < 0 || settings.randomPageCost > 100)
     ) {
       errors.push(
-        `Invalid random_page_cost: ${settings.randomPageCost}. Must be between 0 and 100`
+        `Invalid random_page_cost: ${settings.randomPageCost}. Must be between 0 and 100`,
       );
     }
 
@@ -379,7 +379,7 @@ export class PostgresConfigManager {
       !this.isValidTimeout(settings.statementTimeout)
     ) {
       errors.push(
-        `Invalid statement_timeout: ${settings.statementTimeout}. Expected format: number (ms) or string with unit (e.g., '30s', '5min')`
+        `Invalid statement_timeout: ${settings.statementTimeout}. Expected format: number (ms) or string with unit (e.g., '30s', '5min')`,
       );
     }
 

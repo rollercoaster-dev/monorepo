@@ -11,5 +11,10 @@ export interface Formatter {
    * @param context Additional context
    * @returns Formatted log message
    */
-  format(level: string, message: string, timestamp: string, context: Record<string, any>): string;
+  format(
+    level: string,
+    message: string,
+    timestamp: string,
+    context: Record<string, any>,
+  ): string;
 }

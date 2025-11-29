@@ -54,16 +54,16 @@ The `toJsonLd()` method in each entity uses the `toObject()` method to get a pro
 ```typescript
 toJsonLd(version: BadgeVersion = BadgeVersion.V3): Record<string, unknown> {
   const serializer = BadgeSerializerFactory.createSerializer(version);
-  
+
   // Use toObject() with the specified version to get properly typed data
   const typedData = this.toObject(version);
-  
+
   // Ensure the data has all required fields for the serializer
   const dataForSerializer = {
     ...typedData,
     // Add any required fields that might be missing
   };
-  
+
   // Pass the properly typed data to the serializer
   return serializer.serializeIssuer(dataForSerializer);
 }
@@ -75,15 +75,17 @@ Type guards are used to check the type of objects at runtime:
 
 ```typescript
 // Type guard to check if an object is a SignedBadgeVerification
-function isSignedBadgeVerification(proof: unknown): proof is SignedBadgeVerification {
+function isSignedBadgeVerification(
+  proof: unknown,
+): proof is SignedBadgeVerification {
   return (
-    typeof proof === 'object' &&
+    typeof proof === "object" &&
     proof !== null &&
-    'type' in proof &&
-    proof.type === 'SignedBadge' &&
-    'creator' in proof &&
-    'created' in proof &&
-    'signatureValue' in proof
+    "type" in proof &&
+    proof.type === "SignedBadge" &&
+    "creator" in proof &&
+    "created" in proof &&
+    "signatureValue" in proof
   );
 }
 ```
@@ -102,9 +104,9 @@ This approach provides several benefits:
 ```typescript
 // Create an issuer
 const issuer = Issuer.create({
-  name: 'Example Issuer',
-  url: 'https://example.com',
-  email: 'issuer@example.com'
+  name: "Example Issuer",
+  url: "https://example.com",
+  email: "issuer@example.com",
 });
 
 // Get the issuer as an OB2.Profile

@@ -11,16 +11,19 @@ The CI pipeline is designed to be efficient, reliable, and easy to maintain. It 
 This is the main workflow that runs on all pull requests and pushes to the main branch. It consists of the following jobs:
 
 #### a. Lint and Type Check
+
 - Runs ESLint to check code quality
 - Runs TypeScript type checking to ensure type safety
 - Fast and lightweight, runs first to catch basic errors
 
 #### b. Unit and Integration Tests
+
 - Runs all unit and integration tests
 - Uses PostgreSQL for database tests
 - Skips E2E tests to run them separately
 
 #### c. E2E Tests
+
 - Runs end-to-end tests with both PostgreSQL and SQLite
 - Tests the API endpoints with real HTTP requests
 - Verifies Open Badges compliance
@@ -53,21 +56,25 @@ The test environment is configured to be as close as possible to the production 
 This is a common issue that can have several causes:
 
 #### a. Database Connection Issues
+
 - **Symptom**: Database-related errors in CI logs
 - **Solution**: Check database connection parameters and ensure the database is ready before tests run
 - **Fix Example**: Add a wait step to ensure the database is ready before running tests
 
 #### b. Environment Variable Differences
+
 - **Symptom**: Undefined values or missing configuration errors
 - **Solution**: Compare local and CI environment variables, and ensure all required variables are set in CI
 - **Fix Example**: Add missing environment variables to the workflow file
 
 #### c. Path Resolution Problems
+
 - **Symptom**: Module not found errors
 - **Solution**: Ensure NODE_PATH is set correctly in CI
 - **Fix Example**: Add `NODE_PATH: "."` to environment variables
 
 #### d. Timing Issues
+
 - **Symptom**: Intermittent failures, especially in E2E tests
 - **Solution**: Add delays or retries for time-sensitive operations
 - **Fix Example**: Increase test timeouts or add retry logic
@@ -75,11 +82,13 @@ This is a common issue that can have several causes:
 ### 2. Database-Specific Issues
 
 #### a. PostgreSQL Issues
+
 - **Symptom**: Connection refused or authentication errors
 - **Solution**: Check PostgreSQL service configuration in workflow
 - **Fix Example**: Add `POSTGRES_HOST_AUTH_METHOD: trust` to PostgreSQL service environment
 
 #### b. SQLite Issues
+
 - **Symptom**: File permission errors or "database is locked" errors
 - **Solution**: Ensure SQLite file has proper permissions and is not being accessed by multiple processes
 - **Fix Example**: Use `:memory:` SQLite database for tests that don't need persistence
@@ -87,11 +96,13 @@ This is a common issue that can have several causes:
 ### 3. E2E Test Issues
 
 #### a. Server Not Starting
+
 - **Symptom**: Connection refused errors in E2E tests
 - **Solution**: Ensure the server is started before tests run
 - **Fix Example**: Add a health check to verify the server is running
 
 #### b. Authentication Issues
+
 - **Symptom**: 401 Unauthorized or 403 Forbidden errors
 - **Solution**: Ensure test API keys are correctly set in environment variables
 - **Fix Example**: Add `AUTH_API_KEY_TEST` and `AUTH_API_KEY_E2E` to environment variables

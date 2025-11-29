@@ -1,13 +1,13 @@
-import { it, expect, beforeEach, afterEach } from 'bun:test';
-import { Database } from 'bun:sqlite';
-import { SqliteDatabase } from '@/infrastructure/database/modules/sqlite/sqlite.database';
-import type { Shared } from 'openbadges-types';
-import { describeSqlite as getDescribeSqlite } from '../../../../helpers/database-test-filter';
+import { it, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { SqliteDatabase } from "@/infrastructure/database/modules/sqlite/sqlite.database";
+import type { Shared } from "openbadges-types";
+import { describeSqlite as getDescribeSqlite } from "../../../../helpers/database-test-filter";
 
 // Get the describe function for SQLite tests
 const describeSqlite = await getDescribeSqlite();
 
-describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
+describeSqlite("SQLiteDatabase Integration (in-memory)", () => {
   // Create a new database for each test to avoid connection issues
   let client: Database;
   let db: SqliteDatabase;
@@ -15,15 +15,15 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
   // Helper function to create a fresh database for each test
   const setupDatabase = async () => {
     // Create a new in-memory database
-    client = new Database(':memory:');
+    client = new Database(":memory:");
 
     // Apply SQLite optimizations
-    client.exec('PRAGMA journal_mode = WAL;');
-    client.exec('PRAGMA busy_timeout = 5000;');
-    client.exec('PRAGMA synchronous = NORMAL;');
-    client.exec('PRAGMA cache_size = 10000;');
-    client.exec('PRAGMA foreign_keys = ON;');
-    client.exec('PRAGMA temp_store = MEMORY;');
+    client.exec("PRAGMA journal_mode = WAL;");
+    client.exec("PRAGMA busy_timeout = 5000;");
+    client.exec("PRAGMA synchronous = NORMAL;");
+    client.exec("PRAGMA cache_size = 10000;");
+    client.exec("PRAGMA foreign_keys = ON;");
+    client.exec("PRAGMA temp_store = MEMORY;");
 
     // Create tables
     client.exec(`
@@ -106,24 +106,24 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
     }
   });
 
-  it('should check connection status', async () => {
+  it("should check connection status", async () => {
     expect(db.isConnected()).toBe(true);
   });
 
-  it.skip('should handle connection retry logic', async () => {
+  it.skip("should handle connection retry logic", async () => {
     // This test is skipped because bun:sqlite Database instances cannot be reopened once closed.
     // The connection retry logic is tested in the connection manager unit tests instead.
     // In real applications, a new Database instance would be created for reconnection.
     expect(db.isConnected()).toBe(true);
   });
 
-  it('should CRUD Issuer correctly', async () => {
+  it("should CRUD Issuer correctly", async () => {
     const issuerData = {
-      name: 'Test University',
-      url: 'https://test.edu' as Shared.IRI,
-      email: 'hello@test.edu',
-      description: 'Desc',
-      image: 'https://test.edu/logo.png' as Shared.IRI,
+      name: "Test University",
+      url: "https://test.edu" as Shared.IRI,
+      email: "hello@test.edu",
+      description: "Desc",
+      image: "https://test.edu/logo.png" as Shared.IRI,
     };
     // Create
     const created = await db.createIssuer(issuerData);
@@ -137,9 +137,9 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
     expect(fetched!.url).toBe(issuerData.url);
 
     // Update
-    const updated = await db.updateIssuer(created.id, { name: 'Updated Univ' });
+    const updated = await db.updateIssuer(created.id, { name: "Updated Univ" });
     expect(updated).not.toBeNull();
-    expect(updated!.name).toBe('Updated Univ');
+    expect(updated!.name).toBe("Updated Univ");
     // Unchanged field
     expect(updated!.url).toBe(issuerData.url);
 
@@ -150,23 +150,23 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
     expect(afterDel).toBeNull();
   });
 
-  it('should CRUD BadgeClass correctly', async () => {
+  it("should CRUD BadgeClass correctly", async () => {
     // First create an issuer
     const baseIssuer = await db.createIssuer({
-      name: 'Issuer',
-      url: 'https://i',
-      email: 'e@i',
-      description: '',
-      image: 'https://i.png' as Shared.IRI,
+      name: "Issuer",
+      url: "https://i",
+      email: "e@i",
+      description: "",
+      image: "https://i.png" as Shared.IRI,
     });
     const badgeData = {
       issuer: baseIssuer.id,
-      name: 'Test Badge',
-      description: 'B Desc',
-      image: 'https://b.png' as Shared.IRI,
+      name: "Test Badge",
+      description: "B Desc",
+      image: "https://b.png" as Shared.IRI,
       criteria: {},
       alignment: [],
-      tags: ['a', 'b'],
+      tags: ["a", "b"],
     };
     // Create
     const created = await db.createBadgeClass(badgeData);
@@ -184,10 +184,10 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
 
     // Update
     const updated = await db.updateBadgeClass(created.id, {
-      description: 'New Desc',
+      description: "New Desc",
     });
     expect(updated).not.toBeNull();
-    expect(updated!.description).toBe('New Desc');
+    expect(updated!.description).toBe("New Desc");
 
     // Delete
     const deleted = await db.deleteBadgeClass(created.id);
@@ -196,27 +196,27 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
     expect(after).toBeNull();
   });
 
-  it('should CRUD Assertion correctly', async () => {
+  it("should CRUD Assertion correctly", async () => {
     // Create issuer & badge
     const issuer = await db.createIssuer({
-      name: 'Iss',
-      url: 'https://i',
-      email: 'e',
-      description: '',
-      image: 'https://i.png' as Shared.IRI,
+      name: "Iss",
+      url: "https://i",
+      email: "e",
+      description: "",
+      image: "https://i.png" as Shared.IRI,
     });
     const badge = await db.createBadgeClass({
       issuer: issuer.id,
-      name: 'B',
-      description: 'D',
-      image: 'https://b.png' as Shared.IRI,
+      name: "B",
+      description: "D",
+      image: "https://b.png" as Shared.IRI,
       criteria: {},
       alignment: [],
       tags: [],
     });
     const assertionData = {
       badgeClass: badge.id,
-      recipient: { type: 'email', identity: 'foo@bar.com' },
+      recipient: { type: "email", identity: "foo@bar.com" },
       issuedOn: new Date().toISOString(),
       expires: new Date(Date.now() + 1000).toISOString(),
       evidence: [],
@@ -239,18 +239,18 @@ describeSqlite('SQLiteDatabase Integration (in-memory)', () => {
 
     // Read by recipient
     const byRec = await db.getAssertionsByRecipient(
-      assertionData.recipient.identity as Shared.IRI
+      assertionData.recipient.identity as Shared.IRI,
     );
     expect(byRec.length).toBe(1);
 
     // Update
     const updated = await db.updateAssertion(created.id, {
       revoked: true,
-      revocationReason: 'mistake',
+      revocationReason: "mistake",
     });
     expect(updated).not.toBeNull();
     expect(updated!.revoked).toBe(true);
-    expect(updated!.revocationReason).toBe('mistake');
+    expect(updated!.revocationReason).toBe("mistake");
 
     // Delete
     const deleted = await db.deleteAssertion(created.id);

@@ -75,18 +75,18 @@ See the test files for usage examples and edge case coverage.
 ## Example: OB3-compliant image field
 
 ```typescript
-import { IRI, OB3ImageObject } from 'openbadges-types/shared';
+import { IRI, OB3ImageObject } from "openbadges-types/shared";
 
 const issuerWithImage: OB3.Issuer = {
-  id: createIRI('https://example.org/issuer'),
-  type: ['Profile'],
-  name: 'Example Maker Society',
-  url: createIRI('https://example.org'),
+  id: createIRI("https://example.org/issuer"),
+  type: ["Profile"],
+  name: "Example Maker Society",
+  url: createIRI("https://example.org"),
   image: {
-    id: createIRI('https://example.org/logo.png'),
-    type: 'Image',
-    caption: 'Logo'
-  }
+    id: createIRI("https://example.org/logo.png"),
+    type: "Image",
+    caption: "Logo",
+  },
 };
 ```
 

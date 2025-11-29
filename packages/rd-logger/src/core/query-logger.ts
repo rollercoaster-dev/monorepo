@@ -1,4 +1,4 @@
-import type { Logger } from './logger.service.js';
+import type { Logger } from "./logger.service.js";
 
 export interface QueryLogEntry {
   query: string;
@@ -17,10 +17,10 @@ export interface QueryLoggerConfig {
 }
 
 export const DEFAULT_QUERY_LOGGER_CONFIG: QueryLoggerConfig = {
-  enabled: process.env.NODE_ENV !== 'production', // Enable by default in non-prod
+  enabled: process.env.NODE_ENV !== "production", // Enable by default in non-prod
   slowQueryThreshold: 100, // Default slow query threshold (ms)
   maxLogs: 1000, // Default max logs to store
-  logDebugQueries: process.env.DEBUG_QUERIES === 'true', // Log all queries if DEBUG_QUERIES is set
+  logDebugQueries: process.env.DEBUG_QUERIES === "true", // Log all queries if DEBUG_QUERIES is set
 };
 
 /**
@@ -49,7 +49,7 @@ export class QueryLogger {
     params: any[] | undefined,
     duration: number,
     database?: string,
-    requestId?: string
+    requestId?: string,
   ): void {
     if (!this.config.enabled) return;
 
@@ -143,13 +143,14 @@ export class QueryLogger {
     const totalDuration = this.logs.reduce((sum, log) => sum + log.duration, 0);
     const maxDuration = Math.max(...this.logs.map((log) => log.duration));
     const slowQueriesCount = this.logs.filter(
-      (log) => log.duration >= this.config.slowQueryThreshold
+      (log) => log.duration >= this.config.slowQueryThreshold,
     ).length;
 
     // Group by database
-    const byDatabase: Record<string, { count: number; totalDuration: number }> = {};
+    const byDatabase: Record<string, { count: number; totalDuration: number }> =
+      {};
     for (const log of this.logs) {
-      const dbKey = log.database || 'unknown';
+      const dbKey = log.database || "unknown";
       if (!byDatabase[dbKey]) {
         byDatabase[dbKey] = { count: 0, totalDuration: 0 };
       }
@@ -158,11 +159,15 @@ export class QueryLogger {
     }
 
     // Calculate average duration by database
-    const byDatabaseStats: Record<string, { count: number; avgDuration: number }> = {};
+    const byDatabaseStats: Record<
+      string,
+      { count: number; avgDuration: number }
+    > = {};
     for (const [db, stats] of Object.entries(byDatabase)) {
       byDatabaseStats[db] = {
         count: stats.count,
-        avgDuration: stats.totalDuration > 0 ? stats.totalDuration / stats.count : 0,
+        avgDuration:
+          stats.totalDuration > 0 ? stats.totalDuration / stats.count : 0,
       };
     }
 

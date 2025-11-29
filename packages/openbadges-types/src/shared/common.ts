@@ -44,7 +44,7 @@ export function createDateTime(value: string): DateTime {
  * @returns True if the value is a valid IRI, false otherwise
  */
 export function isIRI(value: unknown): value is string {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return false;
   }
 
@@ -63,12 +63,13 @@ export function isIRI(value: unknown): value is string {
  * @returns True if the value is a valid DateTime, false otherwise
  */
 export function isDateTime(value: unknown): value is string {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return false;
   }
 
   // ISO 8601 regex pattern
-  const iso8601Pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+  const iso8601Pattern =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
   return iso8601Pattern.test(value);
 }
 
@@ -95,7 +96,7 @@ export interface ImageObject {
  */
 export interface OB3ImageObject {
   id: IRI;
-  type: 'Image';
+  type: "Image";
   caption?: string | MultiLanguageString;
   author?: string;
 }

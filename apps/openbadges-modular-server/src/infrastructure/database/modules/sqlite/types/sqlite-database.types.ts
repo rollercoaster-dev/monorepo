@@ -5,9 +5,9 @@
  * ensuring type safety throughout the database layer.
  */
 
-import type { Shared, OB2, OB3 } from 'openbadges-types';
-import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
-import type { Database } from 'bun:sqlite';
+import type { Shared, OB2, OB3 } from "openbadges-types";
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
+import type { Database } from "bun:sqlite";
 
 /**
  * SQLite database client wrapper with type safety
@@ -47,7 +47,7 @@ export interface SqliteConnectionConfig {
    * - 'NORMAL': Good balance of safety and performance (recommended)
    * - 'FULL': Safest but slowest option
    */
-  sqliteSyncMode: 'OFF' | 'NORMAL' | 'FULL';
+  sqliteSyncMode: "OFF" | "NORMAL" | "FULL";
 
   /**
    * OPTIONAL SETTING: SQLite cache size in pages
@@ -89,7 +89,7 @@ export interface SqliteConnectionConfigInput {
    * - 'FULL': Safest but slowest option
    * @default 'NORMAL'
    */
-  sqliteSyncMode?: 'OFF' | 'NORMAL' | 'FULL';
+  sqliteSyncMode?: "OFF" | "NORMAL" | "FULL";
 
   /**
    * OPTIONAL SETTING: SQLite cache size in pages
@@ -103,13 +103,13 @@ export interface SqliteConnectionConfigInput {
  * Creates a complete SQLite connection config with validated defaults
  */
 export function createSqliteConnectionConfig(
-  input: SqliteConnectionConfigInput = {}
+  input: SqliteConnectionConfigInput = {},
 ): SqliteConnectionConfig {
   return {
     maxConnectionAttempts: Math.max(1, input.maxConnectionAttempts ?? 3),
     connectionRetryDelayMs: Math.max(100, input.connectionRetryDelayMs ?? 1000),
     sqliteBusyTimeout: Math.max(1000, input.sqliteBusyTimeout ?? 5000),
-    sqliteSyncMode: input.sqliteSyncMode ?? 'NORMAL',
+    sqliteSyncMode: input.sqliteSyncMode ?? "NORMAL",
     sqliteCacheSize: input.sqliteCacheSize,
   };
 }
@@ -146,11 +146,11 @@ export interface SqliteDatabaseHealth {
  * Connection state management
  */
 export type SqliteConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'connected'
-  | 'error'
-  | 'closed';
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "error"
+  | "closed";
 
 /**
  * Database record types that match the schema exactly
@@ -218,7 +218,7 @@ export interface TypeConversionResult<T> {
 export interface SqliteQueryMetrics {
   duration: number;
   rowsAffected: number;
-  queryType: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'UNKNOWN';
+  queryType: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "UNKNOWN";
   tableName?: string;
 }
 
@@ -270,15 +270,15 @@ export type OpenBadgesAlignmentType = OB2.AlignmentObject[] | OB3.Alignment[];
  * Centralized entity type definitions for type safety and maintainability
  */
 export const SQLITE_ENTITY_TYPES = [
-  'issuer',
-  'badgeClass',
-  'assertion',
-  'user',
-  'platform',
-  'apiKey',
-  'platformUser',
-  'userAssertion',
-  'statusList',
+  "issuer",
+  "badgeClass",
+  "assertion",
+  "user",
+  "platform",
+  "apiKey",
+  "platformUser",
+  "userAssertion",
+  "statusList",
 ] as const;
 
 /**
@@ -301,9 +301,12 @@ export interface SqliteOperationContext {
  * Error types specific to SQLite operations
  */
 export class SqliteConnectionError extends Error {
-  constructor(message: string, public readonly attempts: number) {
+  constructor(
+    message: string,
+    public readonly attempts: number,
+  ) {
     super(message);
-    this.name = 'SqliteConnectionError';
+    this.name = "SqliteConnectionError";
   }
 }
 
@@ -311,10 +314,10 @@ export class SqliteTypeConversionError extends Error {
   constructor(
     message: string,
     public readonly value: unknown,
-    public readonly targetType: string
+    public readonly targetType: string,
   ) {
     super(message);
-    this.name = 'SqliteTypeConversionError';
+    this.name = "SqliteTypeConversionError";
   }
 }
 
@@ -322,10 +325,10 @@ export class SqliteValidationError extends Error {
   constructor(
     message: string,
     public readonly field: string,
-    public readonly value: unknown
+    public readonly value: unknown,
   ) {
     super(message);
-    this.name = 'SqliteValidationError';
+    this.name = "SqliteValidationError";
   }
 }
 
@@ -403,5 +406,5 @@ export const MAX_PAGINATION_LIMIT = 1000;
  * This ensures compatibility with the real Drizzle transaction objects
  */
 export type DrizzleTransaction = Parameters<
-  Parameters<BunSQLiteDatabase<Record<string, unknown>>['transaction']>[0]
+  Parameters<BunSQLiteDatabase<Record<string, unknown>>["transaction"]>[0]
 >[0];

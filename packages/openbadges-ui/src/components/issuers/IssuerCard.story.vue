@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import IssuerCard from './IssuerCard.vue';
-import type { OB2, OB3 } from 'openbadges-types';
+import { ref } from "vue";
+import IssuerCard from "./IssuerCard.vue";
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * # IssuerCard
@@ -42,36 +42,39 @@ import type { OB2, OB3 } from 'openbadges-types';
 
 // Mock OB2 issuer data
 const mockOB2Issuer: OB2.Profile = {
-  id: 'https://example.org/issuers/1',
-  type: 'Profile',
-  name: 'Tech Academy',
-  url: 'https://tech-academy.edu',
-  email: 'badges@tech-academy.edu',
-  description: 'A leading technology education institution offering cutting-edge digital credentials and professional certifications for modern learners.',
-  image: 'https://placehold.co/200x200/3182ce/white?text=TA',
+  id: "https://example.org/issuers/1",
+  type: "Profile",
+  name: "Tech Academy",
+  url: "https://tech-academy.edu",
+  email: "badges@tech-academy.edu",
+  description:
+    "A leading technology education institution offering cutting-edge digital credentials and professional certifications for modern learners.",
+  image: "https://placehold.co/200x200/3182ce/white?text=TA",
 };
 
 // Mock OB3 issuer data
 const mockOB3Issuer = {
-  id: 'https://example.org/issuers/2',
-  type: ['Profile'] as [string, ...string[]],
-  name: 'Digital Skills Institute',
-  url: 'https://digital-skills.org',
-  email: 'info@digital-skills.org',
-  description: 'Empowering professionals with verified digital competencies through blockchain-backed credentials.',
+  id: "https://example.org/issuers/2",
+  type: ["Profile"] as [string, ...string[]],
+  name: "Digital Skills Institute",
+  url: "https://digital-skills.org",
+  email: "info@digital-skills.org",
+  description:
+    "Empowering professionals with verified digital competencies through blockchain-backed credentials.",
   image: {
-    id: 'https://placehold.co/200x200/38a169/white?text=DSI',
-    type: 'Image' as const,
+    id: "https://placehold.co/200x200/38a169/white?text=DSI",
+    type: "Image" as const,
   },
 } as OB3.Profile;
 
 // Issuer without image
 const issuerNoImage: OB2.Profile = {
-  id: 'https://example.org/issuers/3',
-  type: 'Profile',
-  name: 'Open Learning Foundation',
-  url: 'https://open-learning.org',
-  description: 'Promoting open education and accessible credentials for everyone.',
+  id: "https://example.org/issuers/3",
+  type: "Profile",
+  name: "Open Learning Foundation",
+  url: "https://open-learning.org",
+  description:
+    "Promoting open education and accessible credentials for everyone.",
 };
 
 const state = ref({
@@ -79,11 +82,11 @@ const state = ref({
   interactive: false,
   showDescription: true,
   showContact: false,
-  density: 'normal' as 'compact' | 'normal' | 'spacious',
+  density: "normal" as "compact" | "normal" | "spacious",
 });
 
 function onIssuerClick(issuer: OB2.Profile | OB3.Profile): void {
-  console.log('Issuer clicked:', issuer);
+  console.log("Issuer clicked:", issuer);
 }
 </script>
 
@@ -97,8 +100,9 @@ function onIssuerClick(issuer: OB2.Profile | OB3.Profile): void {
         <h1>IssuerCard</h1>
 
         <p>
-          The <code>IssuerCard</code> component displays information about a badge issuer,
-          including their logo, name, description, and contact details.
+          The <code>IssuerCard</code> component displays information about a
+          badge issuer, including their logo, name, description, and contact
+          details.
         </p>
 
         <h2>When To Use</h2>
@@ -131,25 +135,16 @@ function onIssuerClick(issuer: OB2.Profile | OB3.Profile): void {
     </template>
 
     <template #controls>
-      <HstCheckbox
-        v-model="state.showDescription"
-        title="Show Description"
-      />
-      <HstCheckbox
-        v-model="state.showContact"
-        title="Show Contact"
-      />
-      <HstCheckbox
-        v-model="state.interactive"
-        title="Interactive"
-      />
+      <HstCheckbox v-model="state.showDescription" title="Show Description" />
+      <HstCheckbox v-model="state.showContact" title="Show Contact" />
+      <HstCheckbox v-model="state.interactive" title="Interactive" />
       <HstSelect
         v-model="state.density"
         title="Density"
         :options="[
           { label: 'Compact', value: 'compact' },
           { label: 'Normal', value: 'normal' },
-          { label: 'Spacious', value: 'spacious' }
+          { label: 'Spacious', value: 'spacious' },
         ]"
       />
     </template>

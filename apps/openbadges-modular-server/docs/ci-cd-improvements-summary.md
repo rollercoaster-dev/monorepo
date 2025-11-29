@@ -8,12 +8,14 @@ This document summarizes the improvements made to the CI/CD process based on the
 
 **Problem**: Pushing git tags manually (e.g., `v1.0.0`) resulted in successful workflow runs but no GitHub releases were created.
 
-**Root Cause**: 
+**Root Cause**:
+
 - GitHub Actions ran outdated workflow versions when tags were pushed
 - Manual tags interfered with semantic-release's duplicate detection logic
 - Workflow was designed for branch pushes, not tag pushes
 
 **Solution Implemented**:
+
 - Added comprehensive troubleshooting section to `docs/release-process.md`
 - Updated README.md to explicitly warn against manual tagging
 - Documented the proper automated release process
@@ -23,6 +25,7 @@ This document summarizes the improvements made to the CI/CD process based on the
 **Problem**: No enforcement of Conventional Commits specification, which is required for semantic-release to work properly.
 
 **Solution Implemented**:
+
 - Added `@commitlint/cli` and `@commitlint/config-conventional` dependencies
 - Created `commitlint.config.js` with comprehensive validation rules
 - Added `.husky/commit-msg` hook to validate commit messages before commits
@@ -68,16 +71,19 @@ This document summarizes the improvements made to the CI/CD process based on the
 ## Benefits
 
 ### Improved Developer Experience
+
 - Clear error messages when commit messages don't follow conventions
 - Automatic validation prevents issues before they reach CI/CD
 - Comprehensive documentation for troubleshooting release issues
 
 ### Enhanced Release Reliability
+
 - Prevents manual tagging that interferes with automated releases
 - Ensures all commits follow the format required by semantic-release
 - Reduces silent failures and debugging time
 
 ### Better Code Quality
+
 - Enforces consistent commit message format
 - Integrates with existing pre-commit and pre-push hooks
 - Maintains high standards throughout the development workflow

@@ -1,10 +1,10 @@
-import type { Context, MiddlewareHandler } from 'hono';
-import { Logger } from '../core/logger.service.js';
-import { type LoggerConfig } from '../core/logger.config.js';
+import type { Context, MiddlewareHandler } from "hono";
+import { Logger } from "../core/logger.service.js";
+import { type LoggerConfig } from "../core/logger.config.js";
 import {
   runWithRequestContext,
   getRequestStore,
-} from '../core/request-context.js';
+} from "../core/request-context.js";
 
 // Define Hono-specific variables type if needed for c.set/c.get
 type HonoVariables = {
@@ -47,7 +47,7 @@ export interface HonoLoggerOptions {
     c: Context,
     store: { requestId: string },
     duration: number,
-    status: number
+    status: number,
   ) => string;
 }
 
@@ -57,13 +57,15 @@ export interface HonoLoggerOptions {
  * @param options Configuration options for the logger middleware.
  * @returns Hono MiddlewareHandler.
  */
-export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
+export const honoLogger = (
+  options: HonoLoggerOptions = {},
+): MiddlewareHandler<{
   Variables: HonoVariables;
 }> => {
   const logger = options.loggerInstance || new Logger(options.loggerOptions);
 
   return async (c, next) => {
-    const existingRequestId = c.req.header('x-request-id');
+    const existingRequestId = c.req.header("x-request-id");
 
     await runWithRequestContext(async () => {
       const store = getRequestStore()!;
@@ -71,10 +73,10 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
       const startTime = store.requestStartTime;
 
       // Set requestId in Hono context for access in handlers
-      c.set('requestId', requestId);
+      c.set("requestId", requestId);
 
       // Set response header
-      c.res.headers.set('x-request-id', requestId);
+      c.res.headers.set("x-request-id", requestId);
 
       // Check if logging should be skipped
       if (options.skip?.(c)) {
@@ -102,7 +104,7 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
         // Log uncaught errors that might bypass Hono's default error handler
         // Note: It's generally better to rely on Hono's built-in .onError
         if (error instanceof Error) {
-           logger.error(`Middleware error: ${error.message}`, {
+          logger.error(`Middleware error: ${error.message}`, {
             error: error, // Pass the raw error object
             requestId,
           });
@@ -119,7 +121,8 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
         ? options.responseMessage(c, store, duration, status)
         : `◀ Request completed`;
 
-      const logLevel = status >= 500 ? 'error' : status >= 400 ? 'warn' : 'info';
+      const logLevel =
+        status >= 500 ? "error" : status >= 400 ? "warn" : "info";
 
       logger[logLevel](responseMsg, {
         method,
@@ -128,7 +131,6 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
         duration: `${duration}ms`,
         requestId,
       });
-
     }, existingRequestId);
   };
 };
@@ -155,7 +157,8 @@ export const honoLogger = (options: HonoLoggerOptions = {}): MiddlewareHandler<{
 export const honoErrorHandler = (loggerInstance: Logger) => {
   return (err: Error, c: Context) => {
     const store = getRequestStore(); // Get context established by honoLogger middleware
-    const requestId = store?.requestId || c.req.header('x-request-id') || 'unknown';
+    const requestId =
+      store?.requestId || c.req.header("x-request-id") || "unknown";
 
     loggerInstance.error(`Unhandled Hono error: ${err.message}`, {
       error: err,
@@ -166,7 +169,7 @@ export const honoErrorHandler = (loggerInstance: Logger) => {
 
     // Default Hono error response
     console.error(err); // Log the raw error for visibility
-    const message = 'Internal Server Error';
+    const message = "Internal Server Error";
     return c.json({ ok: false, message }, 500);
   };
 };

@@ -5,8 +5,8 @@
  * optimized for bitstring status lists.
  */
 
-import { gzipSync, gunzipSync, constants } from 'zlib';
-import { logger } from '../logging/logger.service';
+import { gzipSync, gunzipSync, constants } from "zlib";
+import { logger } from "../logging/logger.service";
 
 /**
  * GZIP compression options optimized for bitstrings
@@ -44,7 +44,7 @@ export class GzipUtils {
    */
   static compress(
     data: Uint8Array | Buffer,
-    options: GzipOptions = {}
+    options: GzipOptions = {},
   ): Buffer {
     const opts = { ...DEFAULT_GZIP_OPTIONS, ...options };
 
@@ -59,18 +59,18 @@ export class GzipUtils {
       const spaceSavings =
         ((originalSize - compressedSize) / originalSize) * 100;
 
-      logger.debug('GZIP compression completed', {
+      logger.debug("GZIP compression completed", {
         originalSize,
         compressedSize,
         compressionRatio: compressionRatio.toFixed(3),
-        spaceSavings: spaceSavings.toFixed(1) + '%',
-        compressionTime: compressionTime + 'ms',
+        spaceSavings: spaceSavings.toFixed(1) + "%",
+        compressionTime: compressionTime + "ms",
         level: opts.level,
       });
 
       return compressed;
     } catch (error) {
-      logger.error('GZIP compression failed', {
+      logger.error("GZIP compression failed", {
         error: error instanceof Error ? error.message : String(error),
         dataSize: data.length,
         options: opts,
@@ -78,7 +78,7 @@ export class GzipUtils {
       throw new Error(
         `GZIP compression failed: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -94,25 +94,25 @@ export class GzipUtils {
       const decompressed = gunzipSync(compressedData);
       const decompressionTime = Date.now() - startTime;
 
-      logger.debug('GZIP decompression completed', {
+      logger.debug("GZIP decompression completed", {
         compressedSize: compressedData.length,
         decompressedSize: decompressed.length,
         expansionRatio: (decompressed.length / compressedData.length).toFixed(
-          3
+          3,
         ),
-        decompressionTime: decompressionTime + 'ms',
+        decompressionTime: decompressionTime + "ms",
       });
 
       return new Uint8Array(decompressed);
     } catch (error) {
-      logger.error('GZIP decompression failed', {
+      logger.error("GZIP decompression failed", {
         error: error instanceof Error ? error.message : String(error),
         compressedSize: compressedData.length,
       });
       throw new Error(
         `GZIP decompression failed: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -143,13 +143,13 @@ export class GzipUtils {
       });
     }
 
-    logger.info('Compression level test results', {
+    logger.info("Compression level test results", {
       originalSize: data.length,
       results: results.map((r) => ({
         level: r.level,
         size: r.compressedSize,
         ratio: r.compressionRatio.toFixed(3),
-        time: r.compressionTime + 'ms',
+        time: r.compressionTime + "ms",
       })),
     });
 
@@ -174,7 +174,7 @@ export class GzipUtils {
    */
   static getCompressionStats(
     originalData: Uint8Array | Buffer,
-    compressedData: Buffer
+    compressedData: Buffer,
   ): {
     originalSize: number;
     compressedSize: number;
@@ -187,7 +187,7 @@ export class GzipUtils {
     const compressionRatio = compressedSize / originalSize;
     const spaceSavings = originalSize - compressedSize;
     const spaceSavingsPercent =
-      ((spaceSavings / originalSize) * 100).toFixed(1) + '%';
+      ((spaceSavings / originalSize) * 100).toFixed(1) + "%";
 
     return {
       originalSize,
@@ -228,7 +228,7 @@ export class GzipUtils {
   static estimateBitstringCompressionRatio(
     totalEntries: number,
     usedEntries: number,
-    _statusSize: number = 1
+    _statusSize: number = 1,
   ): number {
     // For mostly empty bitstrings, GZIP achieves excellent compression
     const usageRatio = usedEntries / totalEntries;

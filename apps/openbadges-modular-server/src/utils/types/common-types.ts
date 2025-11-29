@@ -2,9 +2,9 @@
  * Common type definitions to replace 'any' types throughout the codebase
  */
 
-import type { DrizzleError } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
+import type { DrizzleError } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 
 /**
  * Database client types
@@ -77,7 +77,7 @@ export interface HttpContext {
  * Generic middleware handler
  */
 export type MiddlewareHandler = (
-  context: HttpContext
+  context: HttpContext,
 ) => Promise<unknown> | unknown;
 
 /**

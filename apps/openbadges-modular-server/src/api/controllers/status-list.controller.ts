@@ -5,18 +5,17 @@
  * according to the W3C Bitstring Status List v1.0 specification.
  */
 
-import { StatusListService } from '../../core/status-list.service';
-import type { StatusListRepository } from '../../domains/status-list/status-list.repository';
+import { StatusListService } from "../../core/status-list.service";
+import type { StatusListRepository } from "../../domains/status-list/status-list.repository";
 
 import type {
   CreateStatusListParams,
   UpdateCredentialStatusParams,
   StatusListQueryParams,
   StatusListData,
-  CredentialStatusEntryData} from '../../domains/status-list/status-list.types';
-import {
-  StatusPurpose
-} from '../../domains/status-list/status-list.types';
+  CredentialStatusEntryData,
+} from "../../domains/status-list/status-list.types";
+import { StatusPurpose } from "../../domains/status-list/status-list.types";
 import type {
   CreateStatusListDto,
   UpdateCredentialStatusDto,
@@ -27,9 +26,9 @@ import type {
   StatusListStatsResponseDto,
   BitstringStatusListCredentialResponseDto,
   StatusListValidationResponseDto,
-} from '../dtos/status-list.dto';
-import { logger } from '../../utils/logging/logger.service';
-import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
+} from "../dtos/status-list.dto";
+import { logger } from "../../utils/logging/logger.service";
+import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
 
 /**
  * Controller for status list-related endpoints
@@ -51,10 +50,10 @@ export class StatusListController {
    */
   async createStatusList(
     data: CreateStatusListDto,
-    issuerId: string
+    issuerId: string,
   ): Promise<StatusListResponseDto> {
     try {
-      logger.info('Creating status list', {
+      logger.info("Creating status list", {
         issuerId,
         purpose: data.purpose,
         statusSize: data.statusSize,
@@ -66,11 +65,11 @@ export class StatusListController {
       }
 
       if (data.statusSize && ![1, 2, 4, 8].includes(data.statusSize)) {
-        throw new BadRequestError('Status size must be 1, 2, 4, or 8 bits');
+        throw new BadRequestError("Status size must be 1, 2, 4, or 8 bits");
       }
 
       if (data.totalEntries && data.totalEntries < 131072) {
-        throw new BadRequestError('Total entries must be at least 131,072');
+        throw new BadRequestError("Total entries must be at least 131,072");
       }
 
       const params: CreateStatusListParams = {
@@ -86,7 +85,7 @@ export class StatusListController {
 
       return this.toStatusListResponseDto(statusList);
     } catch (error) {
-      logger.error('Failed to create status list', {
+      logger.error("Failed to create status list", {
         error: error instanceof Error ? error.message : String(error),
         issuerId,
         data,
@@ -96,7 +95,7 @@ export class StatusListController {
         throw error;
       }
 
-      throw new Error('Failed to create status list');
+      throw new Error("Failed to create status list");
     }
   }
 
@@ -107,7 +106,7 @@ export class StatusListController {
    */
   async getStatusListById(id: string): Promise<StatusListResponseDto | null> {
     try {
-      logger.debug('Retrieving status list', { id });
+      logger.debug("Retrieving status list", { id });
 
       const statusList = await this.statusListService.getStatusList(id);
       if (!statusList) {
@@ -116,12 +115,12 @@ export class StatusListController {
 
       return this.toStatusListResponseDto(statusList);
     } catch (error) {
-      logger.error('Failed to retrieve status list', {
+      logger.error("Failed to retrieve status list", {
         error: error instanceof Error ? error.message : String(error),
         id,
       });
 
-      throw new Error('Failed to retrieve status list');
+      throw new Error("Failed to retrieve status list");
     }
   }
 
@@ -133,10 +132,10 @@ export class StatusListController {
    */
   async getStatusListCredential(
     id: string,
-    issuerData: { id: string; name?: string; url?: string }
+    issuerData: { id: string; name?: string; url?: string },
   ): Promise<BitstringStatusListCredentialResponseDto | null> {
     try {
-      logger.debug('Retrieving status list credential', {
+      logger.debug("Retrieving status list credential", {
         id,
         issuerId: issuerData.id,
       });
@@ -148,16 +147,16 @@ export class StatusListController {
 
       return this.statusListService.toStatusListCredential(
         statusList,
-        issuerData
+        issuerData,
       );
     } catch (error) {
-      logger.error('Failed to retrieve status list credential', {
+      logger.error("Failed to retrieve status list credential", {
         error: error instanceof Error ? error.message : String(error),
         id,
         issuerId: issuerData.id,
       });
 
-      throw new Error('Failed to retrieve status list credential');
+      throw new Error("Failed to retrieve status list credential");
     }
   }
 
@@ -167,10 +166,10 @@ export class StatusListController {
    * @returns Array of matching status lists
    */
   async findStatusLists(
-    params: StatusListQueryDto
+    params: StatusListQueryDto,
   ): Promise<StatusListResponseDto[]> {
     try {
-      logger.debug('Finding status lists', { ...params });
+      logger.debug("Finding status lists", { ...params });
 
       const queryParams: StatusListQueryParams = {
         issuerId: params.issuerId,
@@ -181,20 +180,19 @@ export class StatusListController {
         offset: params.offset,
       };
 
-      const statusLists = await this.statusListService.findStatusLists(
-        queryParams
-      );
+      const statusLists =
+        await this.statusListService.findStatusLists(queryParams);
 
       return statusLists.map((statusList) =>
-        this.toStatusListResponseDto(statusList)
+        this.toStatusListResponseDto(statusList),
       );
     } catch (error) {
-      logger.error('Failed to find status lists', {
+      logger.error("Failed to find status lists", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
 
-      throw new Error('Failed to find status lists');
+      throw new Error("Failed to find status lists");
     }
   }
 
@@ -206,10 +204,10 @@ export class StatusListController {
    */
   async updateCredentialStatus(
     credentialId: string,
-    data: UpdateCredentialStatusDto
+    data: UpdateCredentialStatusDto,
   ): Promise<StatusUpdateResponseDto> {
     try {
-      logger.info('Updating credential status', {
+      logger.info("Updating credential status", {
         credentialId,
         status: data.status,
         purpose: data.purpose,
@@ -222,7 +220,7 @@ export class StatusListController {
       }
 
       if (data.status < 0) {
-        throw new BadRequestError('Status value must be non-negative');
+        throw new BadRequestError("Status value must be non-negative");
       }
 
       const params: UpdateCredentialStatusParams = {
@@ -232,9 +230,8 @@ export class StatusListController {
         purpose: data.purpose,
       };
 
-      const result = await this.statusListService.updateCredentialStatus(
-        params
-      );
+      const result =
+        await this.statusListService.updateCredentialStatus(params);
 
       return {
         success: result.success,
@@ -245,7 +242,7 @@ export class StatusListController {
         details: result.details,
       };
     } catch (error) {
-      logger.error('Failed to update credential status', {
+      logger.error("Failed to update credential status", {
         error: error instanceof Error ? error.message : String(error),
         credentialId,
         data,
@@ -269,7 +266,7 @@ export class StatusListController {
    */
   async getStatusListStats(id: string): Promise<StatusListStatsResponseDto> {
     try {
-      logger.debug('Getting status list statistics', { id });
+      logger.debug("Getting status list statistics", { id });
 
       const stats = await this.statusListRepository.getStatusListStats(id);
 
@@ -282,12 +279,12 @@ export class StatusListController {
         statusBreakdown: {}, // TODO: Implement status breakdown
       };
     } catch (error) {
-      logger.error('Failed to get status list statistics', {
+      logger.error("Failed to get status list statistics", {
         error: error instanceof Error ? error.message : String(error),
         id,
       });
 
-      throw new Error('Failed to get status list statistics');
+      throw new Error("Failed to get status list statistics");
     }
   }
 
@@ -297,16 +294,15 @@ export class StatusListController {
    * @returns Validation result
    */
   async validateStatusListCredential(
-    credential: BitstringStatusListCredentialResponseDto
+    credential: BitstringStatusListCredentialResponseDto,
   ): Promise<StatusListValidationResponseDto> {
     try {
-      logger.debug('Validating status list credential', {
+      logger.debug("Validating status list credential", {
         credentialId: credential.id,
       });
 
-      const isValid = await this.statusListService.validateStatusListCredential(
-        credential
-      );
+      const isValid =
+        await this.statusListService.validateStatusListCredential(credential);
 
       return {
         isValid,
@@ -315,7 +311,7 @@ export class StatusListController {
         details: {},
       };
     } catch (error) {
-      logger.error('Status list credential validation failed', {
+      logger.error("Status list credential validation failed", {
         error: error instanceof Error ? error.message : String(error),
         credentialId: credential.id,
       });
@@ -333,7 +329,7 @@ export class StatusListController {
    * Converts a StatusList entity to a response DTO
    */
   private toStatusListResponseDto(
-    statusList: StatusListData
+    statusList: StatusListData,
   ): StatusListResponseDto {
     const utilizationPercent =
       (statusList.usedEntries / statusList.totalEntries) * 100;
@@ -359,7 +355,7 @@ export class StatusListController {
    * Converts a CredentialStatusEntry to a response DTO
    */
   private toCredentialStatusEntryResponseDto(
-    entry: CredentialStatusEntryData
+    entry: CredentialStatusEntryData,
   ): CredentialStatusEntryResponseDto {
     return {
       id: entry.id,

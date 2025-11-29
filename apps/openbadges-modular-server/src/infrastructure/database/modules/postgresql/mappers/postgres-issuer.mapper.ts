@@ -5,16 +5,16 @@
  * handling the conversion between domain entities and database records.
  */
 
-import { Issuer } from '@domains/issuer/issuer.entity';
-import type { Shared } from 'openbadges-types'; // Import Shared namespace from package root
+import { Issuer } from "@domains/issuer/issuer.entity";
+import type { Shared } from "openbadges-types"; // Import Shared namespace from package root
 import {
   convertJson,
   convertUuid,
-} from '@infrastructure/database/utils/type-conversion';
-import { safeParseJson } from '@utils/json-utils';
-import type { InferInsertModel } from 'drizzle-orm';
-import type { issuers } from '../schema';
-import { logger } from '@utils/logging/logger.service';
+} from "@infrastructure/database/utils/type-conversion";
+import { safeParseJson } from "@utils/json-utils";
+import type { InferInsertModel } from "drizzle-orm";
+import type { issuers } from "../schema";
+import { logger } from "@utils/logging/logger.service";
 
 /**
  * PostgreSQL mapper for the Issuer domain entity
@@ -47,7 +47,7 @@ export class PostgresIssuerMapper {
     // Ensure the object structure is valid for spreading.
     const safeAdditionalFields =
       additionalFields &&
-      typeof additionalFields === 'object' &&
+      typeof additionalFields === "object" &&
       !Array.isArray(additionalFields)
         ? (additionalFields as Record<string, unknown>) // Assert after check
         : undefined; // Pass undefined if not a valid object
@@ -55,32 +55,32 @@ export class PostgresIssuerMapper {
     // --- Type Validation and Conversion ---
     // ID (Convert from PostgreSQL UUID to application URN format)
     if (!id) {
-      throw new Error('Issuer record is missing an ID.');
+      throw new Error("Issuer record is missing an ID.");
     }
     const domainId = convertUuid(
       id.toString(),
-      'postgresql',
-      'from'
+      "postgresql",
+      "from",
     ) as Shared.IRI;
 
-    const domainName = typeof name === 'string' ? name : '';
-    const domainUrl = typeof url === 'string' ? (url as Shared.IRI) : undefined;
-    const domainEmail = typeof email === 'string' ? email : undefined;
+    const domainName = typeof name === "string" ? name : "";
+    const domainUrl = typeof url === "string" ? (url as Shared.IRI) : undefined;
+    const domainEmail = typeof email === "string" ? email : undefined;
     const domainDescription =
-      typeof description === 'string' ? description : undefined;
+      typeof description === "string" ? description : undefined;
     const domainImage =
-      typeof image === 'string' ? (image as Shared.IRI) : undefined; // Assuming image is IRI or null/undefined
+      typeof image === "string" ? (image as Shared.IRI) : undefined; // Assuming image is IRI or null/undefined
 
     // Parse publicKey using shared utility, ensuring it's a valid object
     const domainPublicKey = safeParseJson<Record<string, unknown>>(
       publicKey,
-      undefined
+      undefined,
     );
 
     // Additional validation to ensure it's a non-array object if parsed
     const validatedPublicKey =
       domainPublicKey &&
-      typeof domainPublicKey === 'object' &&
+      typeof domainPublicKey === "object" &&
       !Array.isArray(domainPublicKey)
         ? domainPublicKey
         : undefined;
@@ -99,7 +99,7 @@ export class PostgresIssuerMapper {
       });
     } catch (error) {
       logger.error(
-        `Error mapping PostgreSQL Issuer record to domain: ${error}`
+        `Error mapping PostgreSQL Issuer record to domain: ${error}`,
       );
       throw new Error(`Failed to map Issuer record with id ${id} to domain.`);
     }
@@ -115,27 +115,27 @@ export class PostgresIssuerMapper {
   toPersistence(entity: Partial<Issuer>): IssuerInsertModel {
     // Validate required fields for insertion
     if (!entity.name) {
-      throw new Error('Issuer entity must have a name for persistence.');
+      throw new Error("Issuer entity must have a name for persistence.");
     }
     if (!entity.url) {
-      throw new Error('Issuer entity must have a url for persistence.');
+      throw new Error("Issuer entity must have a url for persistence.");
     }
 
     const recordToInsert = {
       // Include ID if provided in the entity (convert URN to UUID for PostgreSQL)
       ...(entity.id && {
-        id: convertUuid(entity.id as string, 'postgresql', 'to'),
+        id: convertUuid(entity.id as string, "postgresql", "to"),
       }),
       name: entity.name,
       url: entity.url as string, // Assuming url is IRI, cast to string
       email: entity.email,
       description: entity.description,
       image: entity.image as string, // Assuming image is IRI, cast to string
-      publicKey: convertJson(entity.publicKey, 'postgresql', 'to'),
+      publicKey: convertJson(entity.publicKey, "postgresql", "to"),
       additionalFields: convertJson(
-        entity['additionalFields'],
-        'postgresql',
-        'to'
+        entity["additionalFields"],
+        "postgresql",
+        "to",
       ),
       // Exclude createdAt, updatedAt (DB defaults)
     };

@@ -1,16 +1,11 @@
-import type {
-  LogLevel,
-  LoggerConfig} from './logger.config.js';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  LOG_LEVEL_PRIORITY,
-} from './logger.config.js';
-import type { Transport} from './transports/index.js';
-import { ConsoleTransport, FileTransport } from './transports/index.js';
-import type { Formatter} from './formatters/index.js';
-import { TextFormatter } from './formatters/index.js';
-import { formatError } from './utils.js';
-import type { SensitiveLoggingApproval } from './sensitive/index.js';
+import type { LogLevel, LoggerConfig } from "./logger.config.js";
+import { DEFAULT_LOGGER_CONFIG, LOG_LEVEL_PRIORITY } from "./logger.config.js";
+import type { Transport } from "./transports/index.js";
+import { ConsoleTransport, FileTransport } from "./transports/index.js";
+import type { Formatter } from "./formatters/index.js";
+import { TextFormatter } from "./formatters/index.js";
+import { formatError } from "./utils.js";
+import type { SensitiveLoggingApproval } from "./sensitive/index.js";
 
 /**
  * Enhanced neuro-friendly logger class
@@ -48,7 +43,7 @@ export class Logger {
           use24HourFormat: this.config.use24HourFormat,
           levelColors: this.config.levelColors,
           levelIcons: this.config.levelIcons,
-        })
+        }),
       );
 
       // Add file transport if enabled
@@ -72,7 +67,7 @@ export class Logger {
   public log(
     level: LogLevel,
     message: string,
-    context: Record<string, any> = {}
+    context: Record<string, any> = {},
   ): void {
     // Check if this log level should be shown based on configuration
     // In LOG_LEVEL_PRIORITY, higher values mean less verbose (debug=0, fatal=4)
@@ -103,23 +98,23 @@ export class Logger {
 
   // Convenience wrappers
   public debug(msg: string, ctx?: Record<string, any>): void {
-    this.log('debug', msg, ctx);
+    this.log("debug", msg, ctx);
   }
 
   public info(msg: string, ctx?: Record<string, any>): void {
-    this.log('info', msg, ctx);
+    this.log("info", msg, ctx);
   }
 
   public warn(msg: string, ctx?: Record<string, any>): void {
-    this.log('warn', msg, ctx);
+    this.log("warn", msg, ctx);
   }
 
   public error(msg: string, ctx?: Record<string, any>): void {
-    this.log('error', msg, ctx);
+    this.log("error", msg, ctx);
   }
 
   public fatal(msg: string, ctx?: Record<string, any>): void {
-    this.log('fatal', msg, ctx);
+    this.log("fatal", msg, ctx);
   }
 
   /**
@@ -131,9 +126,9 @@ export class Logger {
   public logError(
     msg: string,
     error: Error,
-    additionalContext: Record<string, any> = {}
+    additionalContext: Record<string, any> = {},
   ): void {
-    this.log('error', msg, { ...additionalContext, error });
+    this.log("error", msg, { ...additionalContext, error });
   }
 
   /**
@@ -148,21 +143,21 @@ export class Logger {
     level: LogLevel,
     message: string,
     data: Record<string, any>,
-    approval: SensitiveLoggingApproval
+    approval: SensitiveLoggingApproval,
   ): void {
     // Validate approval
     if (!approval.reason || !approval.approvedBy) {
-      this.warn('Attempted to log sensitive data without proper approval', {
+      this.warn("Attempted to log sensitive data without proper approval", {
         message:
-          'Missing required approval information. Sensitive data will not be logged.',
+          "Missing required approval information. Sensitive data will not be logged.",
       });
       return;
     }
 
     // Check if approval has expired
     if (approval.expiresAt && new Date() > approval.expiresAt) {
-      this.warn('Attempted to log sensitive data with expired approval', {
-        message: 'Approval has expired. Sensitive data will not be logged.',
+      this.warn("Attempted to log sensitive data with expired approval", {
+        message: "Approval has expired. Sensitive data will not be logged.",
         expiredAt: approval.expiresAt,
       });
       return;
@@ -182,7 +177,7 @@ export class Logger {
     };
 
     // Log with a warning prefix to make it stand out
-    const warningPrefix = '⚠️ SENSITIVE DATA ⚠️ ';
+    const warningPrefix = "⚠️ SENSITIVE DATA ⚠️ ";
     this.log(level, `${warningPrefix}${message}`, contextWithApproval);
   }
 
@@ -192,9 +187,9 @@ export class Logger {
   public infoWithSensitiveData(
     message: string,
     data: Record<string, any>,
-    approval: SensitiveLoggingApproval
+    approval: SensitiveLoggingApproval,
   ): void {
-    this.logWithSensitiveData('info', message, data, approval);
+    this.logWithSensitiveData("info", message, data, approval);
   }
 
   /**
@@ -203,9 +198,9 @@ export class Logger {
   public errorWithSensitiveData(
     message: string,
     data: Record<string, any>,
-    approval: SensitiveLoggingApproval
+    approval: SensitiveLoggingApproval,
   ): void {
-    this.logWithSensitiveData('error', message, data, approval);
+    this.logWithSensitiveData("error", message, data, approval);
   }
 
   /**

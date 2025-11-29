@@ -9,15 +9,18 @@ This document describes the implementation of proper SQLite resource management 
 The original recommendation highlighted a valid concern about SQLite resource cleanup, but incorrectly assumed the existence of a static `sqliteConnectionManager` property. The actual issues were:
 
 ### 1. **Mixed Architecture Patterns**
+
 - **New Pattern**: Issuer, BadgeClass, Assertion repositories used `SqliteConnectionManager`
 - **Old Pattern**: ApiKey, Platform, PlatformUser, UserAssertion, User repositories used raw `Database` clients
 
 ### 2. **Resource Leaks**
+
 - Multiple `Database` instances created without centralized tracking
 - No cleanup mechanism for SQLite connections in the `close()` method
 - Each repository creation spawned new connection managers
 
 ### 3. **Inconsistent Resource Management**
+
 - PostgreSQL had centralized client management
 - SQLite had distributed, untracked connection creation
 
@@ -52,7 +55,7 @@ if (RepositoryFactory.initializationPromise) {
 // Prevent multiple initializations if already initialized
 if (RepositoryFactory.isInitialized) {
   logger.warn(
-    'RepositoryFactory already initialized. Skipping redundant initialization.'
+    "RepositoryFactory already initialized. Skipping redundant initialization.",
   );
   return;
 }
@@ -62,32 +65,39 @@ RepositoryFactory.initializationPromise = (async () => {
   try {
     RepositoryFactory.dbType = config.type;
 
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       // PostgreSQL initialization (unchanged)
       // ...
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Only initialize if not already initialized
       if (!RepositoryFactory.sqliteConnectionManager) {
         // Create shared SQLite connection manager for resource management
-        const { Database } = await import('bun:sqlite');
+        const { Database } = await import("bun:sqlite");
         const { SqliteConnectionManager } = await import(
-          './database/modules/sqlite/connection/sqlite-connection.manager'
+          "./database/modules/sqlite/connection/sqlite-connection.manager"
         );
-        
-        const sqliteFile = config.sqliteFile || ':memory:';
+
+        const sqliteFile = config.sqliteFile || ":memory:";
         const client = new Database(sqliteFile);
-        
-        RepositoryFactory.sqliteConnectionManager = new SqliteConnectionManager(client, {
-          maxConnectionAttempts: 3,
-          connectionRetryDelayMs: 1000,
-          sqliteBusyTimeout: config.sqliteBusyTimeout,
-          sqliteSyncMode: config.sqliteSyncMode as | 'OFF' | 'NORMAL' | 'FULL' | undefined,
-          sqliteCacheSize: config.sqliteCacheSize,
-        });
-        
+
+        RepositoryFactory.sqliteConnectionManager = new SqliteConnectionManager(
+          client,
+          {
+            maxConnectionAttempts: 3,
+            connectionRetryDelayMs: 1000,
+            sqliteBusyTimeout: config.sqliteBusyTimeout,
+            sqliteSyncMode: config.sqliteSyncMode as
+              | "OFF"
+              | "NORMAL"
+              | "FULL"
+              | undefined,
+            sqliteCacheSize: config.sqliteCacheSize,
+          },
+        );
+
         // Connect the shared connection manager
         await RepositoryFactory.sqliteConnectionManager.connect();
-        logger.info('SQLite connection manager initialized successfully');
+        logger.info("SQLite connection manager initialized successfully");
       }
     } else {
       throw new Error(`Unsupported database type: ${RepositoryFactory.dbType}`);
@@ -96,11 +106,11 @@ RepositoryFactory.initializationPromise = (async () => {
     // Mark as initialized
     RepositoryFactory.isInitialized = true;
     logger.info(
-      `Repository factory initialized with ${RepositoryFactory.dbType} database`
+      `Repository factory initialized with ${RepositoryFactory.dbType} database`,
     );
   } catch (error) {
-    logger.error('Failed to initialize RepositoryFactory', {
-      error: error instanceof Error ? error.message : String(error)
+    logger.error("Failed to initialize RepositoryFactory", {
+      error: error instanceof Error ? error.message : String(error),
     });
     throw error;
   }
@@ -115,25 +125,31 @@ await RepositoryFactory.initializationPromise;
 Updated all SQLite repository creation methods to use the shared connection manager:
 
 **For repositories using SqliteConnectionManager directly:**
+
 ```typescript
 // Use the shared SQLite connection manager
 if (!RepositoryFactory.sqliteConnectionManager) {
-  throw new Error('SQLite connection manager not initialized');
+  throw new Error("SQLite connection manager not initialized");
 }
 
 // Create the base repository using the shared connection manager
-const baseRepository = new SqliteIssuerRepository(RepositoryFactory.sqliteConnectionManager);
+const baseRepository = new SqliteIssuerRepository(
+  RepositoryFactory.sqliteConnectionManager,
+);
 ```
 
 **For repositories using raw Database clients:**
+
 ```typescript
 // Use the shared SQLite connection manager
 if (!RepositoryFactory.sqliteConnectionManager) {
-  throw new Error('SQLite connection manager not initialized');
+  throw new Error("SQLite connection manager not initialized");
 }
 
 // Create the repository using the raw client from the shared connection manager
-return new SqliteApiKeyRepository(RepositoryFactory.sqliteConnectionManager.getClient());
+return new SqliteApiKeyRepository(
+  RepositoryFactory.sqliteConnectionManager.getClient(),
+);
 ```
 
 ### 4. **Proper Resource Cleanup**
@@ -199,28 +215,33 @@ static async close(): Promise<void> {
 ## Benefits
 
 ### 1. **Resource Efficiency**
+
 - Single SQLite connection per application instance
 - Eliminates multiple Database instance creation
 - Proper connection pooling and management
 - Thread-safe initialization prevents duplicate connections
 
 ### 2. **Concurrency Protection**
+
 - Promise-based mutex pattern prevents race conditions
 - Ensures only one initialization process runs at a time
 - Subsequent calls wait for the first initialization to complete
 - Prevents resource duplication in high-load environments
 
 ### 3. **Consistent Architecture**
+
 - All repositories now use the same connection management pattern
 - Centralized resource tracking and cleanup
 - Matches PostgreSQL's centralized client management
 
 ### 4. **Improved Reliability**
+
 - Proper connection state management
 - Graceful error handling during cleanup
 - Prevention of resource leaks
 
 ### 5. **Better Testing**
+
 - Predictable resource lifecycle
 - Easier test isolation
 - Comprehensive test coverage for resource management
@@ -246,16 +267,19 @@ Created comprehensive tests in `tests/infrastructure/repository.factory.resource
 ## Migration Impact
 
 ### **Backward Compatibility**: ✅ Maintained
+
 - All existing repository interfaces remain unchanged
 - No breaking changes to public APIs
 - Existing tests continue to pass
 
 ### **Performance**: ✅ Improved
+
 - Reduced memory usage from fewer Database instances
 - Better connection reuse
 - Faster repository creation (reuses existing connection)
 
 ### **Maintainability**: ✅ Enhanced
+
 - Consistent patterns across all repositories
 - Centralized resource management
 - Clear separation of concerns
@@ -265,7 +289,7 @@ Created comprehensive tests in `tests/infrastructure/repository.factory.resource
 The SQLite resource management fix successfully addresses the original recommendation's concerns while providing a robust, scalable solution that:
 
 1. **Eliminates resource leaks** through proper connection management
-2. **Standardizes architecture** across all SQLite repositories  
+2. **Standardizes architecture** across all SQLite repositories
 3. **Maintains backward compatibility** with existing code
 4. **Improves performance** through connection reuse
 5. **Enhances testability** with predictable resource lifecycle

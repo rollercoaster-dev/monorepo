@@ -5,18 +5,17 @@
  * it behaves correctly according to the Bitstring Status List specification.
  */
 
-import { describe, expect, it, beforeEach, mock } from 'bun:test';
-import { StatusList } from '@domains/status-list/status-list.entity';
+import { describe, expect, it, beforeEach, mock } from "bun:test";
+import { StatusList } from "@domains/status-list/status-list.entity";
 import type {
   StatusListData,
-  CreateStatusListParams} from '@domains/status-list/status-list.types';
-import {
-  StatusPurpose
-} from '@domains/status-list/status-list.types';
-import type { Shared } from 'openbadges-types';
+  CreateStatusListParams,
+} from "@domains/status-list/status-list.types";
+import { StatusPurpose } from "@domains/status-list/status-list.types";
+import type { Shared } from "openbadges-types";
 
 // Mock the logger to avoid console output during tests
-mock.module('@utils/logging/logger.service', () => ({
+mock.module("@utils/logging/logger.service", () => ({
   logger: {
     info: mock(() => {}),
     debug: mock(() => {}),
@@ -25,36 +24,36 @@ mock.module('@utils/logging/logger.service', () => ({
   },
 }));
 
-describe('StatusList Entity', () => {
+describe("StatusList Entity", () => {
   // Test data
   const validStatusListData: StatusListData = {
-    id: 'status-list-123',
-    issuerId: 'issuer-456',
+    id: "status-list-123",
+    issuerId: "issuer-456",
     purpose: StatusPurpose.REVOCATION,
     statusSize: 1,
     encodedList:
-      'H4sIAAAAAAAAA-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA',
+      "H4sIAAAAAAAAA-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA",
     totalEntries: 131072,
     usedEntries: 0,
-    createdAt: new Date('2023-01-01T00:00:00Z'),
-    updatedAt: new Date('2023-01-01T00:00:00Z'),
-    metadata: { test: 'value' },
+    createdAt: new Date("2023-01-01T00:00:00Z"),
+    updatedAt: new Date("2023-01-01T00:00:00Z"),
+    metadata: { test: "value" },
   };
 
   const validCreateParams: CreateStatusListParams = {
-    issuerId: 'issuer-456',
+    issuerId: "issuer-456",
     purpose: StatusPurpose.REVOCATION,
     statusSize: 1,
     totalEntries: 131072,
     ttl: 86400000,
-    metadata: { test: 'value' },
+    metadata: { test: "value" },
   };
 
-  describe('Factory Methods', () => {
-    describe('create', () => {
-      it('should create a new status list with default values', async () => {
+  describe("Factory Methods", () => {
+    describe("create", () => {
+      it("should create a new status list with default values", async () => {
         const params: CreateStatusListParams = {
-          issuerId: 'issuer-123',
+          issuerId: "issuer-123",
           purpose: StatusPurpose.REVOCATION,
         };
 
@@ -74,7 +73,7 @@ describe('StatusList Entity', () => {
         expect(statusList.metadata).toBeUndefined();
       });
 
-      it('should create a status list with custom parameters', async () => {
+      it("should create a status list with custom parameters", async () => {
         const statusList = await StatusList.create(validCreateParams);
 
         expect(statusList).toBeDefined();
@@ -89,7 +88,7 @@ describe('StatusList Entity', () => {
         expect(statusList.encodedList).toBeDefined();
       });
 
-      it('should create status lists with different purposes', async () => {
+      it("should create status lists with different purposes", async () => {
         const purposes = [
           StatusPurpose.REVOCATION,
           StatusPurpose.SUSPENSION,
@@ -99,7 +98,7 @@ describe('StatusList Entity', () => {
 
         for (const purpose of purposes) {
           const statusList = await StatusList.create({
-            issuerId: 'issuer-123',
+            issuerId: "issuer-123",
             purpose,
           });
 
@@ -107,12 +106,12 @@ describe('StatusList Entity', () => {
         }
       });
 
-      it('should create status lists with different status sizes', async () => {
+      it("should create status lists with different status sizes", async () => {
         const statusSizes = [1, 2, 4, 8];
 
         for (const statusSize of statusSizes) {
           const statusList = await StatusList.create({
-            issuerId: 'issuer-123',
+            issuerId: "issuer-123",
             purpose: StatusPurpose.REVOCATION,
             statusSize,
           });
@@ -122,8 +121,8 @@ describe('StatusList Entity', () => {
       });
     });
 
-    describe('fromData', () => {
-      it('should create a status list from data', () => {
+    describe("fromData", () => {
+      it("should create a status list from data", () => {
         const statusList = StatusList.fromData(validStatusListData);
 
         expect(statusList).toBeDefined();
@@ -141,17 +140,17 @@ describe('StatusList Entity', () => {
     });
   });
 
-  describe('Instance Methods', () => {
+  describe("Instance Methods", () => {
     let statusList: StatusList;
 
     beforeEach(() => {
       statusList = StatusList.fromData(validStatusListData);
     });
 
-    describe('updateEncodedList', () => {
-      it('should update the encoded list and timestamp', () => {
+    describe("updateEncodedList", () => {
+      it("should update the encoded list and timestamp", () => {
         const originalUpdatedAt = statusList.updatedAt;
-        const newEncodedList = 'new-encoded-list-value';
+        const newEncodedList = "new-encoded-list-value";
 
         // Wait a bit to ensure timestamp difference
         setTimeout(() => {
@@ -160,14 +159,14 @@ describe('StatusList Entity', () => {
           expect(statusList.encodedList).toBe(newEncodedList);
           expect(statusList.updatedAt).not.toEqual(originalUpdatedAt);
           expect(statusList.updatedAt.getTime()).toBeGreaterThan(
-            originalUpdatedAt.getTime()
+            originalUpdatedAt.getTime(),
           );
         }, 1);
       });
     });
 
-    describe('incrementUsedEntries', () => {
-      it('should increment used entries by 1', () => {
+    describe("incrementUsedEntries", () => {
+      it("should increment used entries by 1", () => {
         const originalUsedEntries = statusList.usedEntries;
 
         statusList.incrementUsedEntries();
@@ -175,7 +174,7 @@ describe('StatusList Entity', () => {
         expect(statusList.usedEntries).toBe(originalUsedEntries + 1);
       });
 
-      it('should increment used entries by 1 only', () => {
+      it("should increment used entries by 1 only", () => {
         const originalUsedEntries = statusList.usedEntries;
 
         statusList.incrementUsedEntries();
@@ -184,22 +183,22 @@ describe('StatusList Entity', () => {
       });
     });
 
-    describe('hasCapacity', () => {
-      it('should return true when status list has capacity', () => {
+    describe("hasCapacity", () => {
+      it("should return true when status list has capacity", () => {
         statusList.usedEntries = 100;
         statusList.totalEntries = 131072;
 
         expect(statusList.hasCapacity()).toBe(true);
       });
 
-      it('should return false when status list is at capacity', () => {
+      it("should return false when status list is at capacity", () => {
         statusList.usedEntries = 131072;
         statusList.totalEntries = 131072;
 
         expect(statusList.hasCapacity()).toBe(false);
       });
 
-      it('should return false when used entries exceed total entries', () => {
+      it("should return false when used entries exceed total entries", () => {
         statusList.usedEntries = 131073;
         statusList.totalEntries = 131072;
 
@@ -207,8 +206,8 @@ describe('StatusList Entity', () => {
       });
     });
 
-    describe('toBitstringStatusList', () => {
-      it('should convert to BitstringStatusList format with minimal fields', () => {
+    describe("toBitstringStatusList", () => {
+      it("should convert to BitstringStatusList format with minimal fields", () => {
         const minimalStatusList = StatusList.fromData({
           ...validStatusListData,
           statusSize: 1,
@@ -219,13 +218,13 @@ describe('StatusList Entity', () => {
 
         expect(bitstringStatusList).toEqual({
           id: validStatusListData.id as Shared.IRI,
-          type: 'BitstringStatusList',
+          type: "BitstringStatusList",
           statusPurpose: validStatusListData.purpose,
           encodedList: validStatusListData.encodedList,
         });
       });
 
-      it('should include TTL when present', () => {
+      it("should include TTL when present", () => {
         const statusListWithTtl = StatusList.fromData({
           ...validStatusListData,
           ttl: 86400000,
@@ -236,7 +235,7 @@ describe('StatusList Entity', () => {
         expect(bitstringStatusList.ttl).toBe(86400000);
       });
 
-      it('should include statusSize and statusMessages for multi-bit status', () => {
+      it("should include statusSize and statusMessages for multi-bit status", () => {
         const multiBitStatusList = StatusList.fromData({
           ...validStatusListData,
           statusSize: 2,
@@ -252,38 +251,38 @@ describe('StatusList Entity', () => {
       });
     });
 
-    describe('toBitstringStatusListCredential', () => {
+    describe("toBitstringStatusListCredential", () => {
       const mockIssuerData = {
-        id: 'issuer-123',
-        name: 'Test Issuer',
-        url: 'https://example.com/issuer',
+        id: "issuer-123",
+        name: "Test Issuer",
+        url: "https://example.com/issuer",
       };
 
-      it('should convert to BitstringStatusListCredential format', () => {
+      it("should convert to BitstringStatusListCredential format", () => {
         const credential =
           statusList.toBitstringStatusListCredential(mockIssuerData);
 
         expect(credential).toMatchObject({
-          '@context': expect.arrayContaining([
-            'https://www.w3.org/ns/credentials/v2',
+          "@context": expect.arrayContaining([
+            "https://www.w3.org/ns/credentials/v2",
           ]),
           id: statusList.id,
           type: expect.arrayContaining([
-            'VerifiableCredential',
-            'BitstringStatusListCredential',
+            "VerifiableCredential",
+            "BitstringStatusListCredential",
           ]),
           issuer: mockIssuerData.id,
           validFrom: expect.any(String),
           credentialSubject: expect.objectContaining({
             id: statusList.id,
-            type: 'BitstringStatusList',
+            type: "BitstringStatusList",
             statusPurpose: statusList.purpose,
             encodedList: statusList.encodedList,
           }),
         });
       });
 
-      it('should include validUntil when TTL is present', () => {
+      it("should include validUntil when TTL is present", () => {
         const statusListWithTtl = StatusList.fromData({
           ...validStatusListData,
           ttl: 86400000, // 24 hours
@@ -293,12 +292,12 @@ describe('StatusList Entity', () => {
           statusListWithTtl.toBitstringStatusListCredential(mockIssuerData);
 
         expect(credential.validUntil).toBeDefined();
-        expect(typeof credential.validUntil).toBe('string');
+        expect(typeof credential.validUntil).toBe("string");
       });
     });
 
-    describe('generateDefaultStatusMessages', () => {
-      it('should generate correct messages for revocation purpose', () => {
+    describe("generateDefaultStatusMessages", () => {
+      it("should generate correct messages for revocation purpose", () => {
         const revocationStatusList = StatusList.fromData({
           ...validStatusListData,
           purpose: StatusPurpose.REVOCATION,
@@ -308,14 +307,14 @@ describe('StatusList Entity', () => {
         const messages = revocationStatusList.generateDefaultStatusMessages();
 
         expect(messages).toEqual([
-          { status: '0x0', message: 'not_revoked' },
-          { status: '0x1', message: 'revoked' },
-          { status: '0x2', message: 'revoked' },
-          { status: '0x3', message: 'revoked' },
+          { status: "0x0", message: "not_revoked" },
+          { status: "0x1", message: "revoked" },
+          { status: "0x2", message: "revoked" },
+          { status: "0x3", message: "revoked" },
         ]);
       });
 
-      it('should generate correct messages for suspension purpose', () => {
+      it("should generate correct messages for suspension purpose", () => {
         const suspensionStatusList = StatusList.fromData({
           ...validStatusListData,
           purpose: StatusPurpose.SUSPENSION,
@@ -325,14 +324,14 @@ describe('StatusList Entity', () => {
         const messages = suspensionStatusList.generateDefaultStatusMessages();
 
         expect(messages).toEqual([
-          { status: '0x0', message: 'not_suspended' },
-          { status: '0x1', message: 'suspended' },
-          { status: '0x2', message: 'suspended' },
-          { status: '0x3', message: 'suspended' },
+          { status: "0x0", message: "not_suspended" },
+          { status: "0x1", message: "suspended" },
+          { status: "0x2", message: "suspended" },
+          { status: "0x3", message: "suspended" },
         ]);
       });
 
-      it('should generate correct messages for refresh purpose', () => {
+      it("should generate correct messages for refresh purpose", () => {
         const refreshStatusList = StatusList.fromData({
           ...validStatusListData,
           purpose: StatusPurpose.REFRESH,
@@ -342,14 +341,14 @@ describe('StatusList Entity', () => {
         const messages = refreshStatusList.generateDefaultStatusMessages();
 
         expect(messages).toEqual([
-          { status: '0x0', message: 'no_refresh_needed' },
-          { status: '0x1', message: 'refresh_available' },
-          { status: '0x2', message: 'refresh_available' },
-          { status: '0x3', message: 'refresh_available' },
+          { status: "0x0", message: "no_refresh_needed" },
+          { status: "0x1", message: "refresh_available" },
+          { status: "0x2", message: "refresh_available" },
+          { status: "0x3", message: "refresh_available" },
         ]);
       });
 
-      it('should generate correct messages for message purpose', () => {
+      it("should generate correct messages for message purpose", () => {
         const messageStatusList = StatusList.fromData({
           ...validStatusListData,
           purpose: StatusPurpose.MESSAGE,
@@ -359,14 +358,14 @@ describe('StatusList Entity', () => {
         const messages = messageStatusList.generateDefaultStatusMessages();
 
         expect(messages).toEqual([
-          { status: '0x0', message: 'no_message' },
-          { status: '0x1', message: 'message_1' },
-          { status: '0x2', message: 'message_2' },
-          { status: '0x3', message: 'message_3' },
+          { status: "0x0", message: "no_message" },
+          { status: "0x1", message: "message_1" },
+          { status: "0x2", message: "message_2" },
+          { status: "0x3", message: "message_3" },
         ]);
       });
 
-      it('should handle different status sizes', () => {
+      it("should handle different status sizes", () => {
         const statusSizes = [1, 2, 4, 8];
 
         statusSizes.forEach((statusSize) => {
@@ -379,16 +378,16 @@ describe('StatusList Entity', () => {
           const expectedCount = Math.pow(2, statusSize);
 
           expect(messages.length).toBe(expectedCount);
-          expect(messages[0].status).toBe('0x0');
+          expect(messages[0].status).toBe("0x0");
           expect(messages[expectedCount - 1].status).toBe(
-            `0x${(expectedCount - 1).toString(16).toUpperCase()}`
+            `0x${(expectedCount - 1).toString(16).toUpperCase()}`,
           );
         });
       });
     });
 
-    describe('toData', () => {
-      it('should convert to database data format', () => {
+    describe("toData", () => {
+      it("should convert to database data format", () => {
         const data = statusList.toData();
 
         expect(data).toEqual({
@@ -408,37 +407,37 @@ describe('StatusList Entity', () => {
     });
   });
 
-  describe('Static Methods', () => {
-    describe('validateParams', () => {
-      it('should validate valid parameters without throwing', () => {
+  describe("Static Methods", () => {
+    describe("validateParams", () => {
+      it("should validate valid parameters without throwing", () => {
         expect(() => {
           StatusList.validateParams(validCreateParams);
         }).not.toThrow();
       });
 
-      it('should throw error for missing issuerId', () => {
+      it("should throw error for missing issuerId", () => {
         const invalidParams = {
           ...validCreateParams,
-          issuerId: '',
+          issuerId: "",
         };
 
         expect(() => {
           StatusList.validateParams(invalidParams);
-        }).toThrow('issuerId is required');
+        }).toThrow("issuerId is required");
       });
 
-      it('should throw error for invalid status purpose', () => {
+      it("should throw error for invalid status purpose", () => {
         const invalidParams = {
           ...validCreateParams,
-          purpose: 'invalid-purpose' as StatusPurpose,
+          purpose: "invalid-purpose" as StatusPurpose,
         };
 
         expect(() => {
           StatusList.validateParams(invalidParams);
-        }).toThrow('Invalid status purpose: invalid-purpose');
+        }).toThrow("Invalid status purpose: invalid-purpose");
       });
 
-      it('should throw error for invalid status size', () => {
+      it("should throw error for invalid status size", () => {
         // Note: 0 is falsy so it won't trigger validation, only test truthy invalid values
         const invalidSizes = [9, -1, 16];
 
@@ -450,11 +449,11 @@ describe('StatusList Entity', () => {
 
           expect(() => {
             StatusList.validateParams(invalidParams);
-          }).toThrow('statusSize must be between 1 and 8 bits');
+          }).toThrow("statusSize must be between 1 and 8 bits");
         });
       });
 
-      it('should not validate statusSize when it is 0 (falsy)', () => {
+      it("should not validate statusSize when it is 0 (falsy)", () => {
         const paramsWithZeroStatusSize = {
           ...validCreateParams,
           statusSize: 0, // This is falsy so validation is skipped
@@ -465,9 +464,9 @@ describe('StatusList Entity', () => {
         }).not.toThrow();
       });
 
-      it('should not validate statusSize when not provided', () => {
+      it("should not validate statusSize when not provided", () => {
         const paramsWithoutStatusSize = {
-          issuerId: 'issuer-123',
+          issuerId: "issuer-123",
           purpose: StatusPurpose.REVOCATION,
           // statusSize is optional and not provided
         };
@@ -477,7 +476,7 @@ describe('StatusList Entity', () => {
         }).not.toThrow();
       });
 
-      it('should throw error for invalid total entries', () => {
+      it("should throw error for invalid total entries", () => {
         const invalidParams = {
           ...validCreateParams,
           totalEntries: 100000, // Less than minimum 131072
@@ -485,10 +484,10 @@ describe('StatusList Entity', () => {
 
         expect(() => {
           StatusList.validateParams(invalidParams);
-        }).toThrow('totalEntries must be at least 131,072 for privacy');
+        }).toThrow("totalEntries must be at least 131,072 for privacy");
       });
 
-      it('should throw error for negative TTL', () => {
+      it("should throw error for negative TTL", () => {
         const invalidParams = {
           ...validCreateParams,
           ttl: -1,
@@ -496,10 +495,10 @@ describe('StatusList Entity', () => {
 
         expect(() => {
           StatusList.validateParams(invalidParams);
-        }).toThrow('ttl must be non-negative');
+        }).toThrow("ttl must be non-negative");
       });
 
-      it('should accept valid status sizes', () => {
+      it("should accept valid status sizes", () => {
         const validSizes = [1, 2, 4, 8];
 
         validSizes.forEach((statusSize) => {
@@ -514,7 +513,7 @@ describe('StatusList Entity', () => {
         });
       });
 
-      it('should accept valid total entries', () => {
+      it("should accept valid total entries", () => {
         const validTotalEntries = [131072, 262144, 524288];
 
         validTotalEntries.forEach((totalEntries) => {
@@ -529,7 +528,7 @@ describe('StatusList Entity', () => {
         });
       });
 
-      it('should accept zero TTL', () => {
+      it("should accept zero TTL", () => {
         const params = {
           ...validCreateParams,
           ttl: 0,
@@ -541,19 +540,19 @@ describe('StatusList Entity', () => {
       });
     });
 
-    describe('encodeBitstring and decodeBitstring', () => {
-      it('should encode and decode bitstring correctly', async () => {
+    describe("encodeBitstring and decodeBitstring", () => {
+      it("should encode and decode bitstring correctly", async () => {
         const originalBitstring = new Uint8Array([1, 2, 3, 4, 5]);
 
         const encoded = await StatusList.encodeBitstring(originalBitstring);
-        expect(typeof encoded).toBe('string');
+        expect(typeof encoded).toBe("string");
         expect(encoded.length).toBeGreaterThan(0);
 
         const decoded = await StatusList.decodeBitstring(encoded);
         expect(decoded).toEqual(originalBitstring);
       });
 
-      it('should handle empty bitstring', async () => {
+      it("should handle empty bitstring", async () => {
         const emptyBitstring = new Uint8Array(0);
 
         const encoded = await StatusList.encodeBitstring(emptyBitstring);
@@ -562,7 +561,7 @@ describe('StatusList Entity', () => {
         expect(decoded).toEqual(emptyBitstring);
       });
 
-      it('should handle large bitstring', async () => {
+      it("should handle large bitstring", async () => {
         const largeBitstring = new Uint8Array(16384); // 16KB
         largeBitstring.fill(0);
         largeBitstring[0] = 255;
@@ -576,8 +575,8 @@ describe('StatusList Entity', () => {
     });
   });
 
-  describe('Edge Cases and Error Handling', () => {
-    it('should handle status list with maximum capacity', () => {
+  describe("Edge Cases and Error Handling", () => {
+    it("should handle status list with maximum capacity", () => {
       const fullStatusList = StatusList.fromData({
         ...validStatusListData,
         usedEntries: 131072,
@@ -587,11 +586,11 @@ describe('StatusList Entity', () => {
       expect(fullStatusList.hasCapacity()).toBe(false);
     });
 
-    it('should handle status list with metadata', () => {
+    it("should handle status list with metadata", () => {
       const metadata = {
-        version: '1.0',
-        description: 'Test status list',
-        tags: ['test', 'revocation'],
+        version: "1.0",
+        description: "Test status list",
+        tags: ["test", "revocation"],
       };
 
       const statusListWithMetadata = StatusList.fromData({
@@ -603,13 +602,13 @@ describe('StatusList Entity', () => {
       expect(statusListWithMetadata.toData().metadata).toEqual(metadata);
     });
 
-    it('should handle status list without optional fields', () => {
+    it("should handle status list without optional fields", () => {
       const minimalData: StatusListData = {
-        id: 'minimal-status-list',
-        issuerId: 'minimal-issuer',
+        id: "minimal-status-list",
+        issuerId: "minimal-issuer",
         purpose: StatusPurpose.REVOCATION,
         statusSize: 1,
-        encodedList: 'encoded-list',
+        encodedList: "encoded-list",
         totalEntries: 131072,
         usedEntries: 0,
         createdAt: new Date(),

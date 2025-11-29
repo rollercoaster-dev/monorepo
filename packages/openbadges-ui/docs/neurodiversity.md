@@ -29,15 +29,15 @@ The library includes several themes designed for specific neurodivergent needs:
 To apply these themes:
 
 ```typescript
-import { AccessibilityService } from 'openbadges-ui';
+import { AccessibilityService } from "openbadges-ui";
 
 // Apply a theme
-AccessibilityService.applyTheme('dyslexia-friendly');
-AccessibilityService.applyTheme('high-contrast');
-AccessibilityService.applyTheme('autism-friendly');
+AccessibilityService.applyTheme("dyslexia-friendly");
+AccessibilityService.applyTheme("high-contrast");
+AccessibilityService.applyTheme("autism-friendly");
 
 // Reset to default theme
-AccessibilityService.applyTheme('default');
+AccessibilityService.applyTheme("default");
 ```
 
 ### 2. Content Density Controls
@@ -46,9 +46,9 @@ Adjustable content density helps users with sensory processing differences and a
 
 ```typescript
 // Set content density
-AccessibilityService.setContentDensity('compact');
-AccessibilityService.setContentDensity('normal');
-AccessibilityService.setContentDensity('spacious');
+AccessibilityService.setContentDensity("compact");
+AccessibilityService.setContentDensity("normal");
+AccessibilityService.setContentDensity("spacious");
 ```
 
 ### 3. Focus Mode
@@ -69,9 +69,9 @@ Control animation and motion for users with vestibular disorders or sensory sens
 
 ```typescript
 // Set animation level
-AccessibilityService.setAnimationLevel('none');
-AccessibilityService.setAnimationLevel('minimal');
-AccessibilityService.setAnimationLevel('full');
+AccessibilityService.setAnimationLevel("none");
+AccessibilityService.setAnimationLevel("minimal");
+AccessibilityService.setAnimationLevel("full");
 ```
 
 ### 5. Reading Modes
@@ -80,10 +80,10 @@ Special reading modes to assist users with dyslexia and visual processing differ
 
 ```typescript
 // Set reading mode
-AccessibilityService.setReadingMode('bionic');
-AccessibilityService.setReadingMode('ruler');
-AccessibilityService.setReadingMode('paragraph-focus');
-AccessibilityService.setReadingMode('default');
+AccessibilityService.setReadingMode("bionic");
+AccessibilityService.setReadingMode("ruler");
+AccessibilityService.setReadingMode("paragraph-focus");
+AccessibilityService.setReadingMode("default");
 ```
 
 ### 6. Text Simplification
@@ -106,7 +106,7 @@ Format numbers to be more readable for users with dyscalculia:
 const formattedNumber = AccessibilityService.formatNumber(12345, {
   useGrouping: true,
   addVisualSeparators: true,
-  highlightDigits: true
+  highlightDigits: true,
 });
 ```
 
@@ -170,7 +170,7 @@ const formattedNumber = AccessibilityService.formatNumber(12345, {
 The library includes an enhanced `AccessibilityAudit` service that can check for neurodiversity-related accessibility issues:
 
 ```typescript
-import { AccessibilityAudit } from 'openbadges-ui';
+import { AccessibilityAudit } from "openbadges-ui";
 
 // Check for cognitive accessibility issues
 const cognitiveIssues = AccessibilityAudit.checkCognitiveAccessibility(element);

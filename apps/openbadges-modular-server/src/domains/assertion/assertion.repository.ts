@@ -6,8 +6,8 @@
  * Assertion repository implementations must fulfill.
  */
 
-import type { Assertion } from './assertion.entity';
-import type { Shared } from 'openbadges-types';
+import type { Assertion } from "./assertion.entity";
+import type { Shared } from "openbadges-types";
 
 export interface AssertionRepository {
   /**
@@ -15,7 +15,7 @@ export interface AssertionRepository {
    * @param assertion The assertion to create
    * @returns The created assertion with its ID
    */
-  create(assertion: Omit<Assertion, 'id'>): Promise<Assertion>;
+  create(assertion: Omit<Assertion, "id">): Promise<Assertion>;
 
   /**
    * Finds all assertions
@@ -50,7 +50,10 @@ export interface AssertionRepository {
    * @param assertion The updated assertion data
    * @returns The updated assertion if found, null otherwise
    */
-  update(id: Shared.IRI, assertion: Partial<Assertion>): Promise<Assertion | null>;
+  update(
+    id: Shared.IRI,
+    assertion: Partial<Assertion>,
+  ): Promise<Assertion | null>;
 
   /**
    * Deletes an assertion by its ID
@@ -79,11 +82,13 @@ export interface AssertionRepository {
    * @param assertions The assertions to create
    * @returns An array of results indicating success/failure for each assertion
    */
-  createBatch(assertions: Omit<Assertion, 'id'>[]): Promise<Array<{
-    success: boolean;
-    assertion?: Assertion;
-    error?: string;
-  }>>;
+  createBatch(assertions: Omit<Assertion, "id">[]): Promise<
+    Array<{
+      success: boolean;
+      assertion?: Assertion;
+      error?: string;
+    }>
+  >;
 
   /**
    * Finds multiple assertions by their IDs
@@ -97,14 +102,18 @@ export interface AssertionRepository {
    * @param updates Array of status updates to apply
    * @returns An array of results indicating success/failure for each update
    */
-  updateStatusBatch(updates: Array<{
-    id: Shared.IRI;
-    status: 'revoked' | 'suspended' | 'active';
-    reason?: string;
-  }>): Promise<Array<{
-    id: Shared.IRI;
-    success: boolean;
-    assertion?: Assertion;
-    error?: string;
-  }>>;
+  updateStatusBatch(
+    updates: Array<{
+      id: Shared.IRI;
+      status: "revoked" | "suspended" | "active";
+      reason?: string;
+    }>,
+  ): Promise<
+    Array<{
+      id: Shared.IRI;
+      success: boolean;
+      assertion?: Assertion;
+      error?: string;
+    }>
+  >;
 }

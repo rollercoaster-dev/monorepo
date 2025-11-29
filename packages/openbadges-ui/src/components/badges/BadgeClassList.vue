@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import BadgeClassCard from '@components/badges/BadgeClassCard.vue';
+import { computed, ref, watch } from "vue";
+import type { OB2, OB3 } from "@/types";
+import BadgeClassCard from "@components/badges/BadgeClassCard.vue";
 
 interface Props {
   badgeClasses: (OB2.BadgeClass | OB3.Achievement)[];
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
   loading?: boolean;
   pageSize?: number;
   currentPage?: number;
   showPagination?: boolean;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
   ariaLabel?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  layout: 'grid',
+  layout: "grid",
   loading: false,
   pageSize: 9,
   currentPage: 1,
   showPagination: false,
-  density: 'normal',
-  ariaLabel: 'List of badge classes',
+  density: "normal",
+  ariaLabel: "List of badge classes",
 });
 
 const emit = defineEmits<{
-  (e: 'badge-class-click', badgeClass: OB2.BadgeClass | OB3.Achievement): void;
-  (e: 'page-change', page: number): void;
-  (e: 'update:density', density: 'compact' | 'normal' | 'spacious'): void;
+  (e: "badge-class-click", badgeClass: OB2.BadgeClass | OB3.Achievement): void;
+  (e: "page-change", page: number): void;
+  (e: "update:density", density: "compact" | "normal" | "spacious"): void;
 }>();
 
 // Internal state for pagination
 const internalCurrentPage = ref(props.currentPage);
 
 // Internal state for density
-const internalDensity = ref<'compact' | 'normal' | 'spacious'>(props.density);
+const internalDensity = ref<"compact" | "normal" | "spacious">(props.density);
 
 // Watch for external currentPage changes
 watch(
   () => props.currentPage,
   (newPage) => {
     internalCurrentPage.value = newPage;
-  }
+  },
 );
 
 // Watch for external density changes
@@ -49,41 +49,48 @@ watch(
   () => props.density,
   (newValue) => {
     internalDensity.value = newValue;
-  }
+  },
 );
 
 // Search and filter state
-const searchText = ref('');
-const issuerFilter = ref('');
-const tagFilter = ref('');
+const searchText = ref("");
+const issuerFilter = ref("");
+const tagFilter = ref("");
 
 // Helper to get string from MultiLanguageString
-const getLocalizedString = (value: string | { [key: string]: string } | undefined): string => {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  return value['en'] || Object.values(value)[0] || '';
+const getLocalizedString = (
+  value: string | { [key: string]: string } | undefined,
+): string => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value["en"] || Object.values(value)[0] || "";
 };
 
 // Normalize badge class for search/filtering
 const normalizeBadgeClass = (badge: OB2.BadgeClass | OB3.Achievement) => {
-  const name = getLocalizedString(badge.name) || 'Unnamed Badge';
-  const description = getLocalizedString(badge.description) || '';
-  const id = badge.id || '';
+  const name = getLocalizedString(badge.name) || "Unnamed Badge";
+  const description = getLocalizedString(badge.description) || "";
+  const id = badge.id || "";
 
   // Get issuer name
-  let issuerName = '';
-  const issuerField = 'issuer' in badge ? badge.issuer : ('creator' in badge ? badge.creator : null);
+  let issuerName = "";
+  const issuerField =
+    "issuer" in badge
+      ? badge.issuer
+      : "creator" in badge
+        ? badge.creator
+        : null;
   if (issuerField) {
-    if (typeof issuerField === 'string') {
+    if (typeof issuerField === "string") {
       issuerName = issuerField;
-    } else if (typeof issuerField === 'object' && 'name' in issuerField) {
+    } else if (typeof issuerField === "object" && "name" in issuerField) {
       issuerName = getLocalizedString(issuerField.name as string);
     }
   }
 
   // Get tags
   const tags: string[] = [];
-  if ('tags' in badge && Array.isArray(badge.tags)) {
+  if ("tags" in badge && Array.isArray(badge.tags)) {
     tags.push(...badge.tags);
   }
 
@@ -165,7 +172,7 @@ watch(
     if (internalCurrentPage.value > total) {
       internalCurrentPage.value = total;
     }
-  }
+  },
 );
 
 // Get current page of badge classes
@@ -185,30 +192,32 @@ const normalizedBadgeClasses = computed(() => {
 });
 
 // Handle badge class click
-const handleBadgeClassClick = (badgeClass: OB2.BadgeClass | OB3.Achievement) => {
-  emit('badge-class-click', badgeClass);
+const handleBadgeClassClick = (
+  badgeClass: OB2.BadgeClass | OB3.Achievement,
+) => {
+  emit("badge-class-click", badgeClass);
 };
 
 // Handle page change
 const handlePageChange = (page: number) => {
   if (page < 1 || page > totalPages.value) return;
   internalCurrentPage.value = page;
-  emit('page-change', page);
+  emit("page-change", page);
 };
 
 // Handle density change
 const handleDensityChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
-  const value = target.value as 'compact' | 'normal' | 'spacious';
+  const value = target.value as "compact" | "normal" | "spacious";
   internalDensity.value = value;
-  emit('update:density', value);
+  emit("update:density", value);
 };
 
 // Clear all filters
 const clearFilters = () => {
-  searchText.value = '';
-  issuerFilter.value = '';
-  tagFilter.value = '';
+  searchText.value = "";
+  issuerFilter.value = "";
+  tagFilter.value = "";
 };
 
 const hasActiveFilters = computed(() => {
@@ -219,10 +228,17 @@ const hasActiveFilters = computed(() => {
 <template>
   <div
     class="manus-badge-class-list"
-    :class="[`density-${internalDensity}`, { 'grid-layout': layout === 'grid' }]"
+    :class="[
+      `density-${internalDensity}`,
+      { 'grid-layout': layout === 'grid' },
+    ]"
   >
     <!-- Search and filter controls -->
-    <div class="manus-badge-class-list-controls" role="region" aria-label="Badge list controls">
+    <div
+      class="manus-badge-class-list-controls"
+      role="region"
+      aria-label="Badge list controls"
+    >
       <input
         v-model="searchText"
         class="manus-badge-class-list-search"
@@ -294,11 +310,7 @@ const hasActiveFilters = computed(() => {
     </div>
 
     <!-- Badge class list -->
-    <ul
-      v-else
-      class="manus-badge-class-list-items"
-      :aria-label="ariaLabel"
-    >
+    <ul v-else class="manus-badge-class-list-items" :aria-label="ariaLabel">
       <li
         v-for="badge in normalizedBadgeClasses"
         :key="badge.id"
@@ -443,7 +455,9 @@ const hasActiveFilters = computed(() => {
 }
 
 /* Make cards stretch to fill grid cell */
-.manus-badge-class-list.grid-layout .manus-badge-class-list-item :deep(.manus-badge-class-card) {
+.manus-badge-class-list.grid-layout
+  .manus-badge-class-list-item
+  :deep(.manus-badge-class-card) {
   width: 100%;
   max-width: none;
 }

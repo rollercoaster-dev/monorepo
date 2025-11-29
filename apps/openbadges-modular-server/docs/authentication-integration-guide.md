@@ -100,46 +100,46 @@ The authentication system is configured using environment variables. Here are th
 
 #### General Authentication Settings
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_ENABLED` | Enable/disable authentication | `true` |
-| `AUTH_DISABLE_RBAC` | Disable role-based access control | `false` |
+| Variable            | Description                                                     | Default                          |
+| ------------------- | --------------------------------------------------------------- | -------------------------------- |
+| `AUTH_ENABLED`      | Enable/disable authentication                                   | `true`                           |
+| `AUTH_DISABLE_RBAC` | Disable role-based access control                               | `false`                          |
 | `AUTH_PUBLIC_PATHS` | Comma-separated list of paths that don't require authentication | `/docs,/swagger,/health,/public` |
 
 #### JWT Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `JWT_SECRET` | Secret key for JWT signing | Random in dev, required in prod |
-| `JWT_TOKEN_EXPIRY_SECONDS` | JWT token expiry in seconds | `3600` (1 hour) |
-| `JWT_ISSUER` | JWT issuer claim | `http://localhost:3000` |
+| Variable                   | Description                 | Default                         |
+| -------------------------- | --------------------------- | ------------------------------- |
+| `JWT_SECRET`               | Secret key for JWT signing  | Random in dev, required in prod |
+| `JWT_TOKEN_EXPIRY_SECONDS` | JWT token expiry in seconds | `3600` (1 hour)                 |
+| `JWT_ISSUER`               | JWT issuer claim            | `http://localhost:3000`         |
 
 #### API Key Authentication
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_API_KEY_ENABLED` | Enable API key authentication | `true` |
-| `AUTH_API_KEY_<NAME>` | API key definition | Format: `<key>:<user-id>:<description>` |
+| Variable               | Description                   | Default                                 |
+| ---------------------- | ----------------------------- | --------------------------------------- |
+| `AUTH_API_KEY_ENABLED` | Enable API key authentication | `true`                                  |
+| `AUTH_API_KEY_<NAME>`  | API key definition            | Format: `<key>:<user-id>:<description>` |
 
 #### Basic Authentication
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_BASIC_AUTH_ENABLED` | Enable basic authentication | `true` |
-| `AUTH_BASIC_AUTH_<USERNAME>` | Basic auth credentials | Format: `<password>:<user-id>:<role>` |
+| Variable                     | Description                 | Default                               |
+| ---------------------------- | --------------------------- | ------------------------------------- |
+| `AUTH_BASIC_AUTH_ENABLED`    | Enable basic authentication | `true`                                |
+| `AUTH_BASIC_AUTH_<USERNAME>` | Basic auth credentials      | Format: `<password>:<user-id>:<role>` |
 
 #### OAuth2 Authentication
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_OAUTH2_ENABLED` | Enable OAuth2 authentication | `false` |
-| `AUTH_OAUTH2_JWKS_URI` | URI for JWKS (for token validation) | None |
-| `AUTH_OAUTH2_INTROSPECTION_ENDPOINT` | Token introspection endpoint | None |
-| `AUTH_OAUTH2_CLIENT_ID` | OAuth2 client ID | None |
-| `AUTH_OAUTH2_CLIENT_SECRET` | OAuth2 client secret | None |
-| `AUTH_OAUTH2_USER_ID_CLAIM` | Claim to use as user ID | `sub` |
-| `AUTH_OAUTH2_AUDIENCE` | Expected audience value | None |
-| `AUTH_OAUTH2_ISSUER` | Expected issuer value | None |
+| Variable                             | Description                         | Default |
+| ------------------------------------ | ----------------------------------- | ------- |
+| `AUTH_OAUTH2_ENABLED`                | Enable OAuth2 authentication        | `false` |
+| `AUTH_OAUTH2_JWKS_URI`               | URI for JWKS (for token validation) | None    |
+| `AUTH_OAUTH2_INTROSPECTION_ENDPOINT` | Token introspection endpoint        | None    |
+| `AUTH_OAUTH2_CLIENT_ID`              | OAuth2 client ID                    | None    |
+| `AUTH_OAUTH2_CLIENT_SECRET`          | OAuth2 client secret                | None    |
+| `AUTH_OAUTH2_USER_ID_CLAIM`          | Claim to use as user ID             | `sub`   |
+| `AUTH_OAUTH2_AUDIENCE`               | Expected audience value             | None    |
+| `AUTH_OAUTH2_ISSUER`                 | Expected issuer value               | None    |
 
 ### Docker Configuration
 
@@ -166,6 +166,7 @@ services:
 This example shows how to set up API key authentication for a service-to-service integration:
 
 1. Configure the API key in the server:
+
    ```
    AUTH_API_KEY_ENABLED=true
    AUTH_API_KEY_SERVICE1=api-key-123:service1-user:Service 1 Integration
@@ -182,6 +183,7 @@ This example shows how to set up API key authentication for a service-to-service
 This example shows how to integrate with Auth0 as an identity provider:
 
 1. Configure OAuth2 in the server:
+
    ```
    AUTH_OAUTH2_ENABLED=true
    AUTH_OAUTH2_JWKS_URI=https://your-tenant.auth0.com/.well-known/jwks.json
@@ -202,6 +204,7 @@ This example shows how to integrate with Auth0 as an identity provider:
 This example shows how to set up basic authentication for development:
 
 1. Configure basic auth in the server:
+
    ```
    AUTH_BASIC_AUTH_ENABLED=true
    AUTH_BASIC_AUTH_ADMIN=admin-password:admin-user:admin
@@ -225,14 +228,18 @@ To implement a custom authentication provider:
 1. Create a new adapter class that implements the `AuthAdapter` interface:
 
 ```typescript
-import { AuthAdapter, AuthAdapterOptions, AuthenticationResult } from './auth-adapter.interface';
+import {
+  AuthAdapter,
+  AuthAdapterOptions,
+  AuthenticationResult,
+} from "./auth-adapter.interface";
 
 interface CustomAuthConfig {
   // Your custom configuration
 }
 
 export class CustomAuthAdapter implements AuthAdapter {
-  private readonly providerName: string = 'custom-auth';
+  private readonly providerName: string = "custom-auth";
   private readonly config: CustomAuthConfig;
 
   constructor(options: AuthAdapterOptions) {
@@ -248,18 +255,18 @@ export class CustomAuthAdapter implements AuthAdapter {
 
   canHandle(request: Request): boolean {
     // Determine if this adapter can handle the request
-    return request.headers.has('X-Custom-Auth');
+    return request.headers.has("X-Custom-Auth");
   }
 
   async authenticate(request: Request): Promise<AuthenticationResult> {
     // Implement your custom authentication logic
-    const authHeader = request.headers.get('X-Custom-Auth');
+    const authHeader = request.headers.get("X-Custom-Auth");
 
     if (!authHeader) {
       return {
         isAuthenticated: false,
-        error: 'No custom auth header provided',
-        provider: this.providerName
+        error: "No custom auth header provided",
+        provider: this.providerName,
       };
     }
 
@@ -268,12 +275,12 @@ export class CustomAuthAdapter implements AuthAdapter {
 
     return {
       isAuthenticated: true,
-      userId: 'user-id',
+      userId: "user-id",
       claims: {
-        role: 'user',
+        role: "user",
         // Other claims
       },
-      provider: this.providerName
+      provider: this.providerName,
     };
   }
 }
@@ -283,7 +290,7 @@ export class CustomAuthAdapter implements AuthAdapter {
 
 ```typescript
 // src/auth/auth.initializer.ts
-import { CustomAuthAdapter } from './adapters/custom-auth.adapter';
+import { CustomAuthAdapter } from "./adapters/custom-auth.adapter";
 
 export async function initializeAuth(): Promise<void> {
   // ... existing code
@@ -291,11 +298,11 @@ export async function initializeAuth(): Promise<void> {
   // Initialize custom authentication if enabled
   if (config.auth.adapters.customAuth?.enabled) {
     const customAuthAdapter = new CustomAuthAdapter({
-      providerName: 'custom-auth',
-      config: config.auth.adapters.customAuth
+      providerName: "custom-auth",
+      config: config.auth.adapters.customAuth,
     });
     registerAuthAdapter(customAuthAdapter);
-    logger.info('Custom authentication enabled');
+    logger.info("Custom authentication enabled");
   }
 
   // ... existing code
@@ -313,11 +320,11 @@ export const config = {
     adapters: {
       // ... existing adapters
       customAuth: {
-        enabled: process.env['AUTH_CUSTOM_AUTH_ENABLED'] === 'true',
+        enabled: process.env["AUTH_CUSTOM_AUTH_ENABLED"] === "true",
         // Your custom configuration
-      }
-    }
-  }
+      },
+    },
+  },
 };
 ```
 

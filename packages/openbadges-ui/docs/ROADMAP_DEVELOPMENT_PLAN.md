@@ -94,6 +94,7 @@ The roadmap will be organized into the following sections:
 ### 3. Feature Details
 
 For each planned feature:
+
 - Description
 - User benefit
 - Technical approach
@@ -136,6 +137,7 @@ Total estimated time: **6-10 days**
 ## Maintenance Plan
 
 The roadmap will be:
+
 - Reviewed quarterly
 - Updated based on user feedback
 - Adjusted for changing priorities

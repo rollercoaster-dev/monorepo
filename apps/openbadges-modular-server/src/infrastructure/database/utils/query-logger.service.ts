@@ -5,8 +5,8 @@
  * slow queries for performance optimization.
  */
 
-import { config } from '@/config/config';
-import { logger } from '@/utils/logging/logger.service';
+import { config } from "@/config/config";
+import { logger } from "@/utils/logging/logger.service";
 
 export interface QueryLogEntry {
   query: string;
@@ -34,7 +34,7 @@ export class QueryLoggerService {
     query: string,
     params: unknown[] | undefined,
     duration: number,
-    database: string
+    database: string,
   ): void {
     if (!QueryLoggerService.enabled) return;
 
@@ -64,8 +64,8 @@ export class QueryLoggerService {
 
     // Log all queries in development mode
     if (
-      process.env.NODE_ENV === 'development' &&
-      process.env['DEBUG_QUERIES'] === 'true'
+      process.env.NODE_ENV === "development" &&
+      process.env["DEBUG_QUERIES"] === "true"
     ) {
       logger.debug(`Database query executed`, {
         duration: `${duration}ms`,
@@ -92,7 +92,7 @@ export class QueryLoggerService {
   static getSlowQueries(threshold?: number): QueryLogEntry[] {
     const actualThreshold = threshold || QueryLoggerService.slowQueryThreshold;
     return QueryLoggerService.logs.filter(
-      (log) => log.duration >= actualThreshold
+      (log) => log.duration >= actualThreshold,
     );
   }
 
@@ -142,13 +142,13 @@ export class QueryLoggerService {
 
     const totalDuration = QueryLoggerService.logs.reduce(
       (sum, log) => sum + log.duration,
-      0
+      0,
     );
     const maxDuration = Math.max(
-      ...QueryLoggerService.logs.map((log) => log.duration)
+      ...QueryLoggerService.logs.map((log) => log.duration),
     );
     const slowQueries = QueryLoggerService.logs.filter(
-      (log) => log.duration >= QueryLoggerService.slowQueryThreshold
+      (log) => log.duration >= QueryLoggerService.slowQueryThreshold,
     ).length;
 
     // Group by database

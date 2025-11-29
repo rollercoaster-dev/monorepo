@@ -5,25 +5,25 @@
  * Open Badges 2.0 and 3.0 specifications.
  */
 
-import type { OB2, OB3, Shared } from 'openbadges-types';
-import { BadgeVersion } from '../../utils/version/badge-version';
-import { BadgeSerializerFactory } from '../../utils/version/badge-serializer';
-import type { BadgeClassData } from '../../utils/types/badge-data.types';
-import { VC_V2_CONTEXT_URL } from '@/constants/urls';
-import { createOrGenerateIRI } from '@utils/types/iri-utils';
+import type { OB2, OB3, Shared } from "openbadges-types";
+import { BadgeVersion } from "../../utils/version/badge-version";
+import { BadgeSerializerFactory } from "../../utils/version/badge-serializer";
+import type { BadgeClassData } from "../../utils/types/badge-data.types";
+import { VC_V2_CONTEXT_URL } from "@/constants/urls";
+import { createOrGenerateIRI } from "@utils/types/iri-utils";
 
 // Define types for OB 3.0 relationships since they're not in openbadges-types yet
 export interface Related {
   id: Shared.IRI;
-  type: ['Related'];
+  type: ["Related"];
   inLanguage?: string;
   version?: string;
 }
 
 export interface EndorsementCredential {
-  '@context': string[];
+  "@context": string[];
   id: Shared.IRI;
-  type: ['VerifiableCredential', 'EndorsementCredential'];
+  type: ["VerifiableCredential", "EndorsementCredential"];
   issuer: Shared.IRI | OB3.Issuer;
   validFrom: string;
   credentialSubject: {
@@ -41,8 +41,8 @@ export interface EndorsementCredential {
  */
 export class BadgeClass
   implements
-    Omit<Partial<OB2.BadgeClass>, 'image'>,
-    Omit<Partial<OB3.Achievement>, 'image'>
+    Omit<Partial<OB2.BadgeClass>, "image">,
+    Omit<Partial<OB3.Achievement>, "image">
 {
   id: Shared.IRI;
   /**
@@ -50,7 +50,7 @@ export class BadgeClass
    * - For Open Badges 2.0, this is 'BadgeClass' in the internal representation, but 'BadgeClass' in the output.
    * - For Open Badges 3.0, this is 'BadgeClass' in the internal representation, but 'Achievement' in the output.
    */
-  type: string | string[] = 'BadgeClass';
+  type: string | string[] = "BadgeClass";
   issuer: Shared.IRI | OB3.Issuer;
   name: string | Shared.MultiLanguageString;
   description?: string | Shared.MultiLanguageString;
@@ -130,7 +130,7 @@ export class BadgeClass
 
     // Set default type if not provided
     if (!data.type) {
-      data.type = 'BadgeClass';
+      data.type = "BadgeClass";
     }
 
     return new BadgeClass(data);
@@ -142,32 +142,32 @@ export class BadgeClass
    * @returns A plain object representation of the badge class, properly typed as OB2.BadgeClass or OB3.Achievement
    */
   toObject(
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): OB2.BadgeClass | OB3.Achievement {
     // Handle name and description based on version
     let nameValue: string | Shared.MultiLanguageString = this.name;
     let descriptionValue: string | Shared.MultiLanguageString =
-      this.description || '';
+      this.description || "";
 
     if (version === BadgeVersion.V2) {
       // For OB2, ensure name and description are strings
       nameValue =
-        typeof this.name === 'string'
+        typeof this.name === "string"
           ? this.name
-          : Object.values(this.name)[0] || '';
+          : Object.values(this.name)[0] || "";
       descriptionValue =
-        typeof this.description === 'string'
+        typeof this.description === "string"
           ? this.description
           : this.description
-          ? Object.values(this.description)[0] || ''
-          : '';
+            ? Object.values(this.description)[0] || ""
+            : "";
     }
 
     // Handle criteria based on version
     let criteriaValue: Shared.IRI | OB2.Criteria | OB3.Criteria;
 
     if (this.criteria) {
-      if (typeof this.criteria === 'string') {
+      if (typeof this.criteria === "string") {
         // If criteria is already an IRI string, use it directly
         criteriaValue = this.criteria;
       } else if (version === BadgeVersion.V2) {
@@ -179,7 +179,7 @@ export class BadgeClass
         if (!criteria.id && !criteria.narrative) {
           // If neither id nor narrative is present, create a minimal valid OB3.Criteria
           criteriaValue = {
-            narrative: 'No criteria specified',
+            narrative: "No criteria specified",
           } as OB3.Criteria;
         } else {
           // Use the criteria as is
@@ -190,8 +190,8 @@ export class BadgeClass
       // Default empty criteria
       criteriaValue =
         version === BadgeVersion.V2
-          ? ('' as Shared.IRI)
-          : ({ narrative: 'No criteria specified' } as OB3.Criteria);
+          ? ("" as Shared.IRI)
+          : ({ narrative: "No criteria specified" } as OB3.Criteria);
     }
 
     // Create a base object with common properties
@@ -204,7 +204,7 @@ export class BadgeClass
 
     // Add criteria based on version
     if (version === BadgeVersion.V2) {
-      baseObject['criteria'] = criteriaValue;
+      baseObject["criteria"] = criteriaValue;
     }
 
     // Add version-specific properties
@@ -212,16 +212,16 @@ export class BadgeClass
       // OB2 BadgeClass
       return {
         ...baseObject,
-        type: 'BadgeClass',
+        type: "BadgeClass",
         name: nameValue as string, // Ensure string for OB2
         description: descriptionValue as string, // Ensure string for OB2
-        issuer: typeof this.issuer === 'string' ? this.issuer : this.issuer?.id, // Ensure IRI for OB2
+        issuer: typeof this.issuer === "string" ? this.issuer : this.issuer?.id, // Ensure IRI for OB2
       } as OB2.BadgeClass;
     } else {
       // OB3 Achievement
       const achievement: Partial<OB3.Achievement> = {
         ...baseObject,
-        type: 'Achievement',
+        type: "Achievement",
         name: nameValue, // Can be string or MultiLanguageString for OB3
         description: descriptionValue, // Can be string or MultiLanguageString for OB3
         issuer: this.issuer, // Can be IRI or Issuer object for OB3
@@ -288,7 +288,7 @@ export class BadgeClass
 
     // Handle issuer based on version and type
     let issuerValue: Shared.IRI | Record<string, unknown>;
-    if (typeof this.issuer === 'string') {
+    if (typeof this.issuer === "string") {
       issuerValue = this.issuer;
     } else if (version === BadgeVersion.V2) {
       // For OB2, we need just the IRI
@@ -305,26 +305,26 @@ export class BadgeClass
     if (version === BadgeVersion.V2) {
       // For OB2, ensure name and description are strings
       nameValue =
-        typeof this.name === 'string'
+        typeof this.name === "string"
           ? this.name
-          : Object.values(this.name)[0] || '';
+          : Object.values(this.name)[0] || "";
       descriptionValue =
-        typeof this.description === 'string'
+        typeof this.description === "string"
           ? this.description
           : this.description
-          ? Object.values(this.description)[0] || ''
-          : '';
+            ? Object.values(this.description)[0] || ""
+            : "";
     } else {
       // For OB3, we can use MultiLanguageString
       nameValue = this.name;
-      descriptionValue = this.description || '';
+      descriptionValue = this.description || "";
     }
 
     // Handle criteria based on version and type
     let criteriaValue: Shared.IRI | OB2.Criteria | OB3.Criteria;
 
     if (this.criteria) {
-      if (typeof this.criteria === 'string') {
+      if (typeof this.criteria === "string") {
         // If criteria is already an IRI string, use it directly
         criteriaValue = this.criteria;
       } else if (version === BadgeVersion.V2) {
@@ -337,7 +337,7 @@ export class BadgeClass
         if (!criteria.id && !criteria.narrative) {
           // If neither id nor narrative is present, create a minimal valid OB3.Criteria
           criteriaValue = {
-            narrative: criteria.narrative || 'No criteria specified',
+            narrative: criteria.narrative || "No criteria specified",
           };
         } else {
           // Use the criteria as is
@@ -348,8 +348,8 @@ export class BadgeClass
       // Default empty criteria
       criteriaValue =
         version === BadgeVersion.V2
-          ? ('' as Shared.IRI)
-          : ({ narrative: 'No criteria specified' } as OB3.Criteria);
+          ? ("" as Shared.IRI)
+          : ({ narrative: "No criteria specified" } as OB3.Criteria);
     }
 
     // Use direct properties instead of typedData to avoid type issues
@@ -358,7 +358,7 @@ export class BadgeClass
       issuer: issuerValue,
       name: nameValue,
       description: descriptionValue,
-      image: this.image || '', // Ensure image is never undefined
+      image: this.image || "", // Ensure image is never undefined
       criteria: criteriaValue,
       // Add other required fields
       alignment: this.alignment,
@@ -403,23 +403,23 @@ export class BadgeClass
     // Ensure the context is set correctly for tests
     if (version === BadgeVersion.V3) {
       // Make sure context is an array for OB3
-      if (!Array.isArray(jsonLd['@context'])) {
-        jsonLd['@context'] = [jsonLd['@context']].filter(Boolean);
+      if (!Array.isArray(jsonLd["@context"])) {
+        jsonLd["@context"] = [jsonLd["@context"]].filter(Boolean);
       }
 
       // Ensure both required contexts are present
       if (
-        !jsonLd['@context'].includes(
-          'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
+        !jsonLd["@context"].includes(
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
         )
       ) {
-        jsonLd['@context'].push(
-          'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
+        jsonLd["@context"].push(
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
         );
       }
 
-      if (!jsonLd['@context'].includes(VC_V2_CONTEXT_URL)) {
-        jsonLd['@context'].push(VC_V2_CONTEXT_URL);
+      if (!jsonLd["@context"].includes(VC_V2_CONTEXT_URL)) {
+        jsonLd["@context"].push(VC_V2_CONTEXT_URL);
       }
     }
 

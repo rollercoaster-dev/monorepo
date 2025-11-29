@@ -20,7 +20,6 @@
 ## Streamlined Workflow
 
 1. **Task Management**
-
    - Use emoji prefixes (🟡 in-progress, 🟢 completed) for visual status
    - Standardize task file format with sections:
      - Current Status
@@ -29,12 +28,10 @@
      - Notes
 
 2. **Memory Management**
-
    - Store ideas in `agent/memory/` with prefix `idea_`
    - Keep system prompts in `agent/memory/`
 
 3. **Frameworks**
-
    - Maintain productivity frameworks in `agent/frameworks/`:
      - `focus_management.md` - Drift detection and parking lot process
      - `time_management.md` - Pomodoro and time estimation

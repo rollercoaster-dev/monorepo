@@ -6,12 +6,12 @@
  * for accessing the database regardless of the underlying implementation.
  */
 
-import type { DatabaseInterface } from './interfaces/database.interface';
-import type { DatabaseModuleInterface } from './interfaces/database-module.interface';
-import { SqliteModule } from './modules/sqlite/sqlite.module';
-import { PostgresqlModule } from './modules/postgresql/postgresql.module';
-import { config } from '@/config/config';
-import { logger } from '@utils/logging/logger.service';
+import type { DatabaseInterface } from "./interfaces/database.interface";
+import type { DatabaseModuleInterface } from "./interfaces/database-module.interface";
+import { SqliteModule } from "./modules/sqlite/sqlite.module";
+import { PostgresqlModule } from "./modules/postgresql/postgresql.module";
+import { config } from "@/config/config";
+import { logger } from "@utils/logging/logger.service";
 
 export class DatabaseFactory {
   private static modules: Map<string, DatabaseModuleInterface> = new Map();
@@ -24,7 +24,7 @@ export class DatabaseFactory {
    */
   static registerModule(
     module: DatabaseModuleInterface,
-    isDefault: boolean = false
+    isDefault: boolean = false,
   ): void {
     const moduleName = module.getModuleName();
     this.modules.set(moduleName, module);
@@ -43,7 +43,7 @@ export class DatabaseFactory {
    */
   static async createDatabase(
     moduleName?: string,
-    config: Record<string, unknown> = {}
+    config: Record<string, unknown> = {},
   ): Promise<DatabaseInterface> {
     const moduleToUse = moduleName || this.defaultModule;
 
@@ -73,25 +73,25 @@ export class DatabaseFactory {
 }
 
 // Get database type from environment/config
-let dbType = process.env['DB_TYPE'] || config.database.type || 'sqlite';
+let dbType = process.env["DB_TYPE"] || config.database.type || "sqlite";
 
 // Validate database type
-const supportedDbTypes = ['postgresql', 'sqlite'];
+const supportedDbTypes = ["postgresql", "sqlite"];
 if (!supportedDbTypes.includes(dbType)) {
   logger.error(`Unsupported database type: ${dbType}. Using default (sqlite).`);
   // Explicitly default to 'sqlite' for unsupported types
-  dbType = 'sqlite';
+  dbType = "sqlite";
 }
 
 // Register supported modules
-if (dbType === 'postgresql') {
+if (dbType === "postgresql") {
   // Register PostgreSQL as default if configured
   DatabaseFactory.registerModule(new PostgresqlModule(), true);
   DatabaseFactory.registerModule(new SqliteModule());
-  logger.info('Using PostgreSQL as the default database');
+  logger.info("Using PostgreSQL as the default database");
 } else {
   // Register SQLite as default
   DatabaseFactory.registerModule(new SqliteModule(), true);
   DatabaseFactory.registerModule(new PostgresqlModule());
-  logger.info('Using SQLite as the default database');
+  logger.info("Using SQLite as the default database");
 }

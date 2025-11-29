@@ -5,25 +5,25 @@
  * across SQLite repositories with proper type safety and error handling.
  */
 
-import type { Issuer } from '@domains/issuer/issuer.entity';
-import type { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import type { Assertion } from '@domains/assertion/assertion.entity';
+import type { Issuer } from "@domains/issuer/issuer.entity";
+import type { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import type { Assertion } from "@domains/assertion/assertion.entity";
 import type {
   DatabaseInterface,
   DatabaseQueryOptions,
   DatabaseHealth,
-} from '@infrastructure/database/interfaces/database.interface';
-import type { Shared } from 'openbadges-types';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { SqliteRepositoryCoordinator } from '../repositories/sqlite-repository.coordinator';
-import { SqliteIssuerRepository } from '../repositories/sqlite-issuer.repository';
-import { SqliteBadgeClassRepository } from '../repositories/sqlite-badge-class.repository';
-import { SqliteAssertionRepository } from '../repositories/sqlite-assertion.repository';
-import { logger } from '@utils/logging/logger.service';
+} from "@infrastructure/database/interfaces/database.interface";
+import type { Shared } from "openbadges-types";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { SqliteRepositoryCoordinator } from "../repositories/sqlite-repository.coordinator";
+import { SqliteIssuerRepository } from "../repositories/sqlite-issuer.repository";
+import { SqliteBadgeClassRepository } from "../repositories/sqlite-badge-class.repository";
+import { SqliteAssertionRepository } from "../repositories/sqlite-assertion.repository";
+import { logger } from "@utils/logging/logger.service";
 import type {
   SqliteOperationContext,
   SqlitePaginationParams,
-} from '../types/sqlite-database.types';
+} from "../types/sqlite-database.types";
 
 /**
  * SQLite implementation of the DatabaseInterface using the repository pattern
@@ -37,12 +37,12 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   constructor(private readonly connectionManager: SqliteConnectionManager) {
     this.repositoryCoordinator = new SqliteRepositoryCoordinator(
-      connectionManager
+      connectionManager,
     );
     // Initialize repositories directly for simple operations
     this.issuerRepository = new SqliteIssuerRepository(connectionManager);
     this.badgeClassRepository = new SqliteBadgeClassRepository(
-      connectionManager
+      connectionManager,
     );
     this.assertionRepository = new SqliteAssertionRepository(connectionManager);
   }
@@ -52,8 +52,8 @@ export class SqliteDatabaseService implements DatabaseInterface {
    */
   private createOperationContext(
     operation: string,
-    entityType: SqliteOperationContext['entityType'],
-    entityId?: Shared.IRI
+    entityType: SqliteOperationContext["entityType"],
+    entityId?: Shared.IRI,
   ): SqliteOperationContext {
     return {
       operation,
@@ -69,9 +69,9 @@ export class SqliteDatabaseService implements DatabaseInterface {
    */
   private logDebugConditional(
     message: string,
-    context: Record<string, unknown>
+    context: Record<string, unknown>,
   ): void {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logger.debug(message, context);
     }
   }
@@ -90,14 +90,14 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   // Issuer operations
-  async createIssuer(issuer: Omit<Issuer, 'id'>): Promise<Issuer> {
-    const context = this.createOperationContext('CREATE Issuer', 'issuer');
+  async createIssuer(issuer: Omit<Issuer, "id">): Promise<Issuer> {
+    const context = this.createOperationContext("CREATE Issuer", "issuer");
 
     try {
       const result = await this.issuerRepository.create(issuer);
 
       // Log creation success - info level for important operations
-      logger.info('Issuer created successfully', {
+      logger.info("Issuer created successfully", {
         operation: context.operation,
         issuerId: result.id,
         duration: Date.now() - context.startTime,
@@ -105,7 +105,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to create issuer', {
+      logger.error("Failed to create issuer", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -115,13 +115,13 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async getIssuerById(id: Shared.IRI): Promise<Issuer | null> {
-    const context = this.createOperationContext('GET Issuer', 'issuer', id);
+    const context = this.createOperationContext("GET Issuer", "issuer", id);
 
     try {
       const result = await this.issuerRepository.findById(id);
 
       // Only log read operations in development mode to reduce noise
-      this.logDebugConditional('Issuer retrieved', {
+      this.logDebugConditional("Issuer retrieved", {
         operation: context.operation,
         issuerId: id,
         found: result !== null,
@@ -130,7 +130,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get issuer', {
+      logger.error("Failed to get issuer", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         issuerId: id,
@@ -141,7 +141,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async getAllIssuers(options?: DatabaseQueryOptions): Promise<Issuer[]> {
-    const context = this.createOperationContext('GET All Issuers', 'issuer');
+    const context = this.createOperationContext("GET All Issuers", "issuer");
 
     try {
       // Convert DatabaseQueryOptions to SqlitePaginationParams
@@ -154,16 +154,16 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       const result = await this.issuerRepository.findAll(pagination);
 
-      this.logDebugConditional('All issuers retrieved', {
+      this.logDebugConditional("All issuers retrieved", {
         operation: context.operation,
         count: result.length,
-        pagination: pagination || 'default',
+        pagination: pagination || "default",
         duration: Date.now() - context.startTime,
       });
 
       return result;
     } catch (error) {
-      logger.error('Failed to get all issuers', {
+      logger.error("Failed to get all issuers", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -174,14 +174,14 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async updateIssuer(
     id: Shared.IRI,
-    issuer: Partial<Issuer>
+    issuer: Partial<Issuer>,
   ): Promise<Issuer | null> {
-    const context = this.createOperationContext('UPDATE Issuer', 'issuer', id);
+    const context = this.createOperationContext("UPDATE Issuer", "issuer", id);
 
     try {
       const result = await this.issuerRepository.update(id, issuer);
 
-      logger.info('Issuer updated', {
+      logger.info("Issuer updated", {
         operation: context.operation,
         issuerId: id,
         updated: result !== null,
@@ -190,7 +190,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to update issuer', {
+      logger.error("Failed to update issuer", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         issuerId: id,
@@ -201,12 +201,12 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async deleteIssuer(id: Shared.IRI): Promise<boolean> {
-    const context = this.createOperationContext('DELETE Issuer', 'issuer', id);
+    const context = this.createOperationContext("DELETE Issuer", "issuer", id);
 
     try {
       const result = await this.issuerRepository.delete(id);
 
-      logger.info('Issuer deletion attempted', {
+      logger.info("Issuer deletion attempted", {
         operation: context.operation,
         issuerId: id,
         deleted: result,
@@ -215,7 +215,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to delete issuer', {
+      logger.error("Failed to delete issuer", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         issuerId: id,
@@ -227,41 +227,41 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   // BadgeClass operations
   async createBadgeClass(
-    badgeClass: Omit<BadgeClass, 'id'>
+    badgeClass: Omit<BadgeClass, "id">,
   ): Promise<BadgeClass> {
     const context = this.createOperationContext(
-      'CREATE BadgeClass',
-      'badgeClass'
+      "CREATE BadgeClass",
+      "badgeClass",
     );
 
     try {
       const result =
         await this.repositoryCoordinator.createBadgeClassWithValidation(
-          badgeClass
+          badgeClass,
         );
 
       // Extract issuer ID with proper type checking
       let issuerId: Shared.IRI | undefined;
 
-      if (typeof badgeClass.issuer === 'string') {
+      if (typeof badgeClass.issuer === "string") {
         issuerId = badgeClass.issuer as Shared.IRI;
       } else if (
         badgeClass.issuer &&
-        typeof badgeClass.issuer === 'object' &&
-        'id' in badgeClass.issuer &&
+        typeof badgeClass.issuer === "object" &&
+        "id" in badgeClass.issuer &&
         badgeClass.issuer.id
       ) {
         issuerId = badgeClass.issuer.id as Shared.IRI;
       }
 
       if (!issuerId) {
-        logger.warn('BadgeClass created with invalid or missing issuer ID', {
+        logger.warn("BadgeClass created with invalid or missing issuer ID", {
           operation: context.operation,
           badgeClassId: result.id,
         });
       }
 
-      logger.info('BadgeClass created successfully', {
+      logger.info("BadgeClass created successfully", {
         operation: context.operation,
         badgeClassId: result.id,
         issuerId,
@@ -270,7 +270,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to create badge class', {
+      logger.error("Failed to create badge class", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -281,15 +281,15 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async getBadgeClassById(id: Shared.IRI): Promise<BadgeClass | null> {
     const context = this.createOperationContext(
-      'GET BadgeClass',
-      'badgeClass',
-      id
+      "GET BadgeClass",
+      "badgeClass",
+      id,
     );
 
     try {
       const result = await this.badgeClassRepository.findById(id);
 
-      this.logDebugConditional('BadgeClass retrieved', {
+      this.logDebugConditional("BadgeClass retrieved", {
         operation: context.operation,
         badgeClassId: id,
         found: result !== null,
@@ -298,7 +298,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get badge class', {
+      logger.error("Failed to get badge class", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         badgeClassId: id,
@@ -309,11 +309,11 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async getAllBadgeClasses(
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]> {
     const context = this.createOperationContext(
-      'GET All BadgeClasses',
-      'badgeClass'
+      "GET All BadgeClasses",
+      "badgeClass",
     );
 
     try {
@@ -327,16 +327,16 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       const result = await this.badgeClassRepository.findAll(pagination);
 
-      this.logDebugConditional('All badge classes retrieved', {
+      this.logDebugConditional("All badge classes retrieved", {
         operation: context.operation,
         count: result.length,
-        pagination: pagination || 'default',
+        pagination: pagination || "default",
         duration: Date.now() - context.startTime,
       });
 
       return result;
     } catch (error) {
-      logger.error('Failed to get all badge classes', {
+      logger.error("Failed to get all badge classes", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -347,15 +347,15 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async getBadgeClassesByIssuer(issuerId: Shared.IRI): Promise<BadgeClass[]> {
     const context = this.createOperationContext(
-      'GET BadgeClasses by Issuer',
-      'badgeClass',
-      issuerId
+      "GET BadgeClasses by Issuer",
+      "badgeClass",
+      issuerId,
     );
 
     try {
       const result = await this.badgeClassRepository.findByIssuer(issuerId);
 
-      this.logDebugConditional('BadgeClasses retrieved by issuer', {
+      this.logDebugConditional("BadgeClasses retrieved by issuer", {
         operation: context.operation,
         issuerId,
         count: result.length,
@@ -364,7 +364,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get badge classes by issuer', {
+      logger.error("Failed to get badge classes by issuer", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         issuerId,
@@ -376,18 +376,18 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async updateBadgeClass(
     id: Shared.IRI,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null> {
     const context = this.createOperationContext(
-      'UPDATE BadgeClass',
-      'badgeClass',
-      id
+      "UPDATE BadgeClass",
+      "badgeClass",
+      id,
     );
 
     try {
       const result = await this.badgeClassRepository.update(id, badgeClass);
 
-      logger.info('BadgeClass updated', {
+      logger.info("BadgeClass updated", {
         operation: context.operation,
         badgeClassId: id,
         updated: result !== null,
@@ -396,7 +396,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to update badge class', {
+      logger.error("Failed to update badge class", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         badgeClassId: id,
@@ -408,15 +408,15 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async deleteBadgeClass(id: Shared.IRI): Promise<boolean> {
     const context = this.createOperationContext(
-      'DELETE BadgeClass',
-      'badgeClass',
-      id
+      "DELETE BadgeClass",
+      "badgeClass",
+      id,
     );
 
     try {
       const result = await this.badgeClassRepository.delete(id);
 
-      logger.info('BadgeClass deletion attempted', {
+      logger.info("BadgeClass deletion attempted", {
         operation: context.operation,
         badgeClassId: id,
         deleted: result,
@@ -425,7 +425,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to delete badge class', {
+      logger.error("Failed to delete badge class", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         badgeClassId: id,
@@ -436,19 +436,19 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   // Assertion operations
-  async createAssertion(assertion: Omit<Assertion, 'id'>): Promise<Assertion> {
+  async createAssertion(assertion: Omit<Assertion, "id">): Promise<Assertion> {
     const context = this.createOperationContext(
-      'CREATE Assertion',
-      'assertion'
+      "CREATE Assertion",
+      "assertion",
     );
 
     try {
       const result =
         await this.repositoryCoordinator.createAssertionWithValidation(
-          assertion
+          assertion,
         );
 
-      logger.info('Assertion created successfully', {
+      logger.info("Assertion created successfully", {
         operation: context.operation,
         assertionId: result.id,
         badgeClassId: assertion.badgeClass,
@@ -457,7 +457,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to create assertion', {
+      logger.error("Failed to create assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -468,15 +468,15 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async getAssertionById(id: Shared.IRI): Promise<Assertion | null> {
     const context = this.createOperationContext(
-      'GET Assertion',
-      'assertion',
-      id
+      "GET Assertion",
+      "assertion",
+      id,
     );
 
     try {
       const result = await this.assertionRepository.findById(id);
 
-      this.logDebugConditional('Assertion retrieved', {
+      this.logDebugConditional("Assertion retrieved", {
         operation: context.operation,
         assertionId: id,
         found: result !== null,
@@ -485,7 +485,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get assertion', {
+      logger.error("Failed to get assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         assertionId: id,
@@ -497,8 +497,8 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async getAllAssertions(options?: DatabaseQueryOptions): Promise<Assertion[]> {
     const context = this.createOperationContext(
-      'GET All Assertions',
-      'assertion'
+      "GET All Assertions",
+      "assertion",
     );
 
     try {
@@ -512,16 +512,16 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       const result = await this.assertionRepository.findAll(pagination);
 
-      this.logDebugConditional('All assertions retrieved', {
+      this.logDebugConditional("All assertions retrieved", {
         operation: context.operation,
         count: result.length,
-        pagination: pagination || 'default',
+        pagination: pagination || "default",
         duration: Date.now() - context.startTime,
       });
 
       return result;
     } catch (error) {
-      logger.error('Failed to get all assertions', {
+      logger.error("Failed to get all assertions", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -531,20 +531,19 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async getAssertionsByBadgeClass(
-    badgeClassId: Shared.IRI
+    badgeClassId: Shared.IRI,
   ): Promise<Assertion[]> {
     const context = this.createOperationContext(
-      'GET Assertions by BadgeClass',
-      'assertion',
-      badgeClassId
+      "GET Assertions by BadgeClass",
+      "assertion",
+      badgeClassId,
     );
 
     try {
-      const result = await this.assertionRepository.findByBadgeClass(
-        badgeClassId
-      );
+      const result =
+        await this.assertionRepository.findByBadgeClass(badgeClassId);
 
-      this.logDebugConditional('Assertions retrieved by badge class', {
+      this.logDebugConditional("Assertions retrieved by badge class", {
         operation: context.operation,
         badgeClassId,
         count: result.length,
@@ -553,7 +552,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get assertions by badge class', {
+      logger.error("Failed to get assertions by badge class", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         badgeClassId,
@@ -565,17 +564,17 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async getAssertionsByRecipient(recipientId: string): Promise<Assertion[]> {
     const context = this.createOperationContext(
-      'GET Assertions by Recipient',
-      'assertion',
-      recipientId as Shared.IRI
+      "GET Assertions by Recipient",
+      "assertion",
+      recipientId as Shared.IRI,
     );
 
     try {
       const result = await this.assertionRepository.findByRecipient(
-        recipientId as Shared.IRI
+        recipientId as Shared.IRI,
       );
 
-      this.logDebugConditional('Assertions retrieved by recipient', {
+      this.logDebugConditional("Assertions retrieved by recipient", {
         operation: context.operation,
         count: result.length,
         duration: Date.now() - context.startTime,
@@ -583,7 +582,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to get assertions by recipient', {
+      logger.error("Failed to get assertions by recipient", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -594,18 +593,18 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async updateAssertion(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null> {
     const context = this.createOperationContext(
-      'UPDATE Assertion',
-      'assertion',
-      id
+      "UPDATE Assertion",
+      "assertion",
+      id,
     );
 
     try {
       const result = await this.assertionRepository.update(id, assertion);
 
-      logger.info('Assertion updated', {
+      logger.info("Assertion updated", {
         operation: context.operation,
         assertionId: id,
         updated: result !== null,
@@ -614,7 +613,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to update assertion', {
+      logger.error("Failed to update assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         assertionId: id,
@@ -626,15 +625,15 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async deleteAssertion(id: Shared.IRI): Promise<boolean> {
     const context = this.createOperationContext(
-      'DELETE Assertion',
-      'assertion',
-      id
+      "DELETE Assertion",
+      "assertion",
+      id,
     );
 
     try {
       const result = await this.assertionRepository.delete(id);
 
-      logger.info('Assertion deletion attempted', {
+      logger.info("Assertion deletion attempted", {
         operation: context.operation,
         assertionId: id,
         deleted: result,
@@ -643,7 +642,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to delete assertion', {
+      logger.error("Failed to delete assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         assertionId: id,
@@ -655,18 +654,18 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
   async revokeAssertion(
     id: Shared.IRI,
-    reason?: string
+    reason?: string,
   ): Promise<Assertion | null> {
     const context = this.createOperationContext(
-      'REVOKE Assertion',
-      'assertion',
-      id
+      "REVOKE Assertion",
+      "assertion",
+      id,
     );
 
     try {
       const result = await this.assertionRepository.revoke(id, reason);
 
-      logger.info('Assertion revocation attempted', {
+      logger.info("Assertion revocation attempted", {
         operation: context.operation,
         assertionId: id,
         revoked: result !== null,
@@ -676,7 +675,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to revoke assertion', {
+      logger.error("Failed to revoke assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         assertionId: id,
@@ -687,18 +686,18 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   async verifyAssertion(
-    id: Shared.IRI
+    id: Shared.IRI,
   ): Promise<{ isValid: boolean; reason?: string }> {
     const context = this.createOperationContext(
-      'VERIFY Assertion',
-      'assertion',
-      id
+      "VERIFY Assertion",
+      "assertion",
+      id,
     );
 
     try {
       const result = await this.assertionRepository.verify(id);
 
-      this.logDebugConditional('Assertion verification completed', {
+      this.logDebugConditional("Assertion verification completed", {
         operation: context.operation,
         assertionId: id,
         isValid: result.isValid,
@@ -708,7 +707,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to verify assertion', {
+      logger.error("Failed to verify assertion", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         assertionId: id,
@@ -727,11 +726,11 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       // Default to false when the property is absent
       const repoStatus =
-        typeof repositoryHealth === 'boolean'
+        typeof repositoryHealth === "boolean"
           ? repositoryHealth
-          : 'overall' in (repositoryHealth as Record<string, unknown>)
-          ? (repositoryHealth as { overall: boolean }).overall
-          : false;
+          : "overall" in (repositoryHealth as Record<string, unknown>)
+            ? (repositoryHealth as { overall: boolean }).overall
+            : false;
 
       // Convert SqliteDatabaseHealth to DatabaseHealth
       return {
@@ -743,7 +742,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
         configuration: connectionHealth.configuration || {},
       };
     } catch (error) {
-      logger.error('Failed to get database health', {
+      logger.error("Failed to get database health", {
         error: error instanceof Error ? error.message : String(error),
       });
 
@@ -776,7 +775,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
   getConfiguration(): Record<string, unknown> {
     const stats = this.connectionManager.getConnectionStats();
     return {
-      module: 'sqlite',
+      module: "sqlite",
       state: stats.state,
       attempts: stats.attempts,
       uptime: stats.uptime,
@@ -797,32 +796,32 @@ export class SqliteDatabaseService implements DatabaseInterface {
   }
 
   getModuleName(): string {
-    return 'sqlite';
+    return "sqlite";
   }
 
   // Utility methods for coordinated operations
   async createBadgeEcosystem(
-    issuerData: Omit<Issuer, 'id'>,
-    badgeClassData: Omit<BadgeClass, 'id' | 'issuer'>,
-    assertionData: Omit<Assertion, 'id' | 'badgeClass'>
+    issuerData: Omit<Issuer, "id">,
+    badgeClassData: Omit<BadgeClass, "id" | "issuer">,
+    assertionData: Omit<Assertion, "id" | "badgeClass">,
   ): Promise<{
     issuer: Issuer;
     badgeClass: BadgeClass;
     assertion: Assertion;
   }> {
     const context = this.createOperationContext(
-      'CREATE Badge Ecosystem',
-      'issuer'
+      "CREATE Badge Ecosystem",
+      "issuer",
     );
 
     try {
       const result = await this.repositoryCoordinator.createBadgeEcosystem(
         issuerData,
         badgeClassData,
-        assertionData
+        assertionData,
       );
 
-      logger.info('Badge ecosystem created successfully', {
+      logger.info("Badge ecosystem created successfully", {
         operation: context.operation,
         issuerId: result.issuer.id,
         badgeClassId: result.badgeClass.id,
@@ -832,7 +831,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to create badge ecosystem', {
+      logger.error("Failed to create badge ecosystem", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         duration: Date.now() - context.startTime,
@@ -847,17 +846,16 @@ export class SqliteDatabaseService implements DatabaseInterface {
     assertionsDeleted: number;
   }> {
     const context = this.createOperationContext(
-      'DELETE Issuer Cascade',
-      'issuer',
-      issuerId
+      "DELETE Issuer Cascade",
+      "issuer",
+      issuerId,
     );
 
     try {
-      const result = await this.repositoryCoordinator.deleteIssuerCascade(
-        issuerId
-      );
+      const result =
+        await this.repositoryCoordinator.deleteIssuerCascade(issuerId);
 
-      logger.info('Issuer cascade deletion completed', {
+      logger.info("Issuer cascade deletion completed", {
         operation: context.operation,
         issuerId,
         issuerDeleted: result.issuerDeleted,
@@ -868,7 +866,7 @@ export class SqliteDatabaseService implements DatabaseInterface {
 
       return result;
     } catch (error) {
-      logger.error('Failed to delete issuer cascade', {
+      logger.error("Failed to delete issuer cascade", {
         error: error instanceof Error ? error.message : String(error),
         operation: context.operation,
         issuerId,

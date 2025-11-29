@@ -8,11 +8,13 @@ model: sonnet
 # Migration Orchestrator Agent
 
 ## Purpose
+
 Guides the complete package migration workflow by coordinating the four phases. This agent is **advisory** - it analyzes the current state and tells you which specialized agent to invoke next. The main Claude session handles invoking each agent sequentially.
 
 **Important**: This agent does NOT directly call other agents. It returns instructions for what to run next.
 
 ## When to Use This Agent
+
 - To start a new package migration
 - To check migration status and get next steps
 - To resume an interrupted migration
@@ -21,10 +23,12 @@ Guides the complete package migration workflow by coordinating the four phases. 
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of package to migrate
 - **Repository URL**: Git repository URL or path
 
 Optional:
+
 - **Package type**: library | application | internal-tool (auto-detected if not provided)
 - **Mode**: `full-auto` | `interactive` (default: interactive)
 - **Skip phases**: Array of phase numbers to skip (for resuming partial migrations)
@@ -56,6 +60,7 @@ Phase 4: FINALIZE
 ### Phase 1: Analysis
 
 1. **Welcome and setup:**
+
    ```
    ═══════════════════════════════════════════════════════
    Migration Orchestrator - Bun Monorepo
@@ -76,6 +81,7 @@ Phase 4: FINALIZE
    ```
 
 2. **Launch migration-analyzer:**
+
    ```
    [Phase 1/4] Analysis
    ───────────────────────────────────────────────────────
@@ -88,6 +94,7 @@ Phase 4: FINALIZE
    - Show estimated effort
 
 4. **Decision point (if interactive):**
+
    ```
    Analysis complete!
 
@@ -107,6 +114,7 @@ Phase 4: FINALIZE
 ### Phase 2: Planning
 
 1. **Launch migration-planner:**
+
    ```
    [Phase 2/4] Planning
    ───────────────────────────────────────────────────────
@@ -119,6 +127,7 @@ Phase 4: FINALIZE
    - Note any risks
 
 3. **Approval point (if interactive):**
+
    ```
    Migration plan created!
 
@@ -132,12 +141,13 @@ Phase 4: FINALIZE
    ```
 
    **If plan needs changes:**
-   - User can edit MIGRATION_PLAN_{package}.md
+   - User can edit MIGRATION*PLAN*{package}.md
    - Re-launch planner or proceed with edits
 
 ### Phase 3: Execution
 
 1. **Launch migration-executor:**
+
    ```
    [Phase 3/4] Execution
    ───────────────────────────────────────────────────────
@@ -152,6 +162,7 @@ Phase 4: FINALIZE
 3. **Handle execution results:**
 
    **If SUCCESS:**
+
    ```
    ✅ Migration execution complete!
 
@@ -163,6 +174,7 @@ Phase 4: FINALIZE
    ```
 
    **If FAILURE:**
+
    ```
    ❌ Migration execution failed
 
@@ -180,6 +192,7 @@ Phase 4: FINALIZE
 ### Phase 4: Finalization
 
 1. **Launch migration-finalizer:**
+
    ```
    [Phase 4/4] Finalization
    ───────────────────────────────────────────────────────
@@ -192,6 +205,7 @@ Phase 4: FINALIZE
    - List next steps
 
 3. **Success summary:**
+
    ```
    ═══════════════════════════════════════════════════════
    🎉 Migration Complete!
@@ -227,6 +241,7 @@ Phase 4: FINALIZE
 - Safer for complex migrations
 
 **Approval points:**
+
 1. After analysis (proceed with migration?)
 2. After planning (approve plan?)
 3. (Executor may pause based on its mode)
@@ -240,6 +255,7 @@ Phase 4: FINALIZE
 - Requires high confidence
 
 **Use when:**
+
 - Package is TRIVIAL or EASY complexity
 - Analysis shows FULL Bun compatibility
 - No dependency conflicts
@@ -260,6 +276,7 @@ Orchestrator:
 ```
 
 **Implementation:**
+
 ```
 Input: skip_phases: [1, 2]
 
@@ -275,6 +292,7 @@ Workflow:
 ### Analysis Phase Errors
 
 **Recommendation: DO_NOT_MIGRATE**
+
 ```
 Analysis complete: DO NOT MIGRATE
 
@@ -295,6 +313,7 @@ Migration aborted. Would you like to:
 ### Planning Phase Errors
 
 **Cannot create plan**
+
 ```
 Planning failed: {error}
 
@@ -309,6 +328,7 @@ Please resolve the issues and try again.
 ### Execution Phase Errors
 
 **Test failures, build errors, etc.**
+
 ```
 Execution failed at Phase {n}
 
@@ -325,6 +345,7 @@ What would you like to do?
 ### Finalization Phase Errors
 
 **PR creation fails**
+
 ```
 Finalization failed: Could not create PR
 
@@ -362,18 +383,21 @@ The orchestrator tracks migration state:
 ## Tools Required
 
 **Readonly Tools:**
+
 - Read (check migration state, read reports)
 - Bash (check git status, current branch)
 - Glob, Grep (find migration artifacts)
 
 **Write Tools:**
+
 - None (orchestrator guides workflow, doesn't modify files)
 
-*This agent is advisory - it tells you which agent to invoke next rather than calling agents directly.*
+_This agent is advisory - it tells you which agent to invoke next rather than calling agents directly._
 
 ## Output Format
 
 The orchestrator provides:
+
 1. **Progress updates** as each agent runs
 2. **Phase summaries** after each agent completes
 3. **Final summary** with all results and next steps
@@ -516,6 +540,7 @@ PR created with warnings for reviewers.
 ## Success Criteria
 
 This orchestrator is successful when:
+
 - All four agents execute in correct sequence
 - User receives clear progress updates
 - Approval points work correctly (interactive mode)
@@ -526,12 +551,14 @@ This orchestrator is successful when:
 ## Benefits of Orchestrator
 
 **For users:**
+
 - Single command migrates a package
 - Clear progress through phases
 - Can pause/resume at approval points
 - Handles all coordination automatically
 
 **For developers:**
+
 - Each agent remains focused and reusable
 - Easy to debug (check which agent failed)
 - Can use agents independently
@@ -540,6 +567,7 @@ This orchestrator is successful when:
 ## Reusability
 
 This orchestrator is the **primary entry point** for migrations:
+
 - Call it to migrate any package
 - Can be invoked from other systems (CI/CD, scripts)
 - Provides consistent migration experience
