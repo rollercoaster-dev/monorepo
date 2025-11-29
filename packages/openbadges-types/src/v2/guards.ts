@@ -167,13 +167,9 @@ export function isVerificationObject(value: unknown): value is VerificationObjec
  * @returns True if the value is a valid OB2 Evidence, false otherwise
  */
 export function isEvidence(value: unknown): value is Evidence {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  // OB2 Evidence requires at least id OR narrative per spec
+  // OB2 Evidence has no required properties per spec
   // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Evidence
-  return 'id' in value || 'narrative' in value;
+  return typeof value === 'object' && value !== null;
 }
 
 /**
