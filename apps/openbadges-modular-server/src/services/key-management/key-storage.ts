@@ -161,6 +161,46 @@ export async function loadKeyPairFromFile(
   };
 }
 
+/**
+ * Saves a key pair to a JSON file
+ *
+ * The file is written with restricted permissions (0o600) since it contains
+ * the private key.
+ *
+ * @param keyPair - The key pair to save
+ * @param filePath - Path where the key file should be written
+ * @throws Error if the file cannot be written
+ */
+export async function saveKeyPairToFile(
+  keyPair: KeyPairWithJWK,
+  filePath: string
+): Promise<void> {
+  const fileData: KeyFileFormat = {
+    id: keyPair.id,
+    publicKey: keyPair.publicKey,
+    privateKey: keyPair.privateKey,
+    keyType: keyPair.keyType,
+    algorithm: keyPair.algorithm,
+    createdAt: keyPair.createdAt,
+  };
+
+  try {
+    await fs.promises.writeFile(filePath, JSON.stringify(fileData, null, 2), {
+      encoding: 'utf-8',
+      mode: 0o600,
+    });
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      throw new Error(`Directory does not exist for key file: ${filePath}`);
+    }
+    if (code === 'EACCES') {
+      throw new Error(`Permission denied writing key file: ${filePath}`);
+    }
+    throw new Error(`Failed to write key file: ${(error as Error).message}`);
+  }
+}
+
 // =============================================================================
 // Active Key Management
 // =============================================================================
