@@ -40,7 +40,7 @@
     "db:test:pg:migrate": "NODE_ENV=test DB_TYPE=postgresql DATABASE_URL=postgresql://testuser:testpassword@localhost:5433/openbadges_test bun run db:generate:pg && NODE_ENV=test DB_TYPE=postgresql DATABASE_URL=postgresql://testuser:testpassword@localhost:5433/openbadges_test bun run db:migrate:pg",
     "test:e2e:pg:setup": "bun run db:test:pg:start && bun run db:test:pg:migrate && docker cp drizzle/pg-migrations/0000_strong_gideon.sql openbadges-modular-server-test-db-pg-1:/tmp/migration.sql && docker exec openbadges-modular-server-test-db-pg-1 psql -U testuser -d openbadges_test -f /tmp/migration.sql",
     "test:e2e:pg:run": "NODE_ENV=test DB_TYPE=postgresql DATABASE_URL=postgresql://testuser:testpassword@localhost:5433/openbadges_test bun test ./tests/e2e",
-    "test:e2e:pg": "bun run test:e2e:pg:setup && bun run test:e2e:pg:run ; bun run db:test:pg:stop",
+    "test:e2e:pg": "./scripts/run-pg-e2e-tests.sh",
     "db:test:sqlite:migrate": "NODE_ENV=test DB_TYPE=sqlite SQLITE_DB_PATH=$(pwd)/tests/e2e/test_database.sqlite bun run db:generate:sqlite && NODE_ENV=test DB_TYPE=sqlite SQLITE_DB_PATH=$(pwd)/tests/e2e/test_database.sqlite bun run db:migrate:sqlite",
     "test:e2e:sqlite:run": "NODE_ENV=test DB_TYPE=sqlite SQLITE_DB_PATH=$(pwd)/tests/e2e/test_database.sqlite bun test ./tests/e2e",
     "test:e2e:sqlite": "NODE_ENV=test DB_TYPE=sqlite bun test ./tests/e2e",
