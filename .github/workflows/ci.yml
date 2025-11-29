@@ -85,6 +85,9 @@ jobs:
       - name: Build workspace dependencies
         run: bun run build
 
+      - name: Generate test JWT keys
+        run: ./scripts/generate-test-keys.sh apps/openbadges-system/keys
+
       - name: Run integration tests
         run: bun run test:integration
 
