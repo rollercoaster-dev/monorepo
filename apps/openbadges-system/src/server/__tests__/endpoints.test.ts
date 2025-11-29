@@ -50,6 +50,8 @@ describe('Server Endpoints', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    // Reset modules to ensure mocks are applied fresh in CI environments
+    vi.resetModules()
     mockFetch = vi.mocked(fetch)
 
     // Import the server app dynamically to ensure mocks are applied
