@@ -68,13 +68,16 @@ export interface CredentialSubject {
 /**
  * Achievement interface for Open Badges 3.0
  * Represents the achievement being recognized
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#achievement
  */
 export interface Achievement extends JsonLdObject {
   id: IRI;
   type: string | string[];
   name: string | MultiLanguageString;
-  description?: string | MultiLanguageString;
-  criteria?: Criteria;
+  /** Required per OB3 spec Section 4.3 */
+  description: string | MultiLanguageString;
+  /** Required per OB3 spec Section 4.3 */
+  criteria: Criteria;
   image?: IRI | OB3ImageObject;
   creator?: IRI | Issuer;
   alignments?: Alignment[];

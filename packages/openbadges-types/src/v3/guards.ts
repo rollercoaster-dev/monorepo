@@ -126,14 +126,21 @@ export function isCredentialSubject(value: unknown): value is CredentialSubject 
  * Type guard to check if a value is an OB3 Achievement
  * @param value The value to check
  * @returns True if the value is a valid OB3 Achievement, false otherwise
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#achievement
  */
 export function isAchievement(value: unknown): value is Achievement {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
 
-  // Check for required properties
-  if (!('id' in value) || !('name' in value)) {
+  // Check for required properties per OB3 spec Section 4.3
+  // id, name, description, and criteria are all required
+  if (
+    !('id' in value) ||
+    !('name' in value) ||
+    !('description' in value) ||
+    !('criteria' in value)
+  ) {
     return false;
   }
 

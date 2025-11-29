@@ -103,9 +103,8 @@ export const validOB3Achievement = {
 };
 
 export const invalidOB3Achievement = {
-  // Missing required 'id' and 'name'
+  // Missing required 'id', 'name', 'description', and 'criteria' per OB3 spec
   type: ['Achievement'],
-  description: 'Missing id and name',
 };
 
 // OB3 Issuer sample objects

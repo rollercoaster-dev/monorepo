@@ -67,17 +67,54 @@ describe('OB3 Type Guards', () => {
   describe('isAchievement', () => {
     test('should correctly identify valid OB3 Achievement objects', () => {
       const validAchievement = createOB3Achievement();
-
       expect(OB3.isAchievement(validAchievement)).toBe(true);
+    });
 
-      // Invalid achievements
+    test('should reject null and empty objects', () => {
       expect(OB3.isAchievement(null)).toBe(false);
       expect(OB3.isAchievement({})).toBe(false);
+    });
+
+    test('should reject achievements missing required id', () => {
       expect(
         OB3.isAchievement({
-          '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
           type: 'Achievement',
-          // Missing name property
+          name: 'Test',
+          description: 'Test description',
+          criteria: { narrative: 'Do something' },
+        })
+      ).toBe(false);
+    });
+
+    test('should reject achievements missing required name', () => {
+      expect(
+        OB3.isAchievement({
+          id: 'https://example.org/achievements/1',
+          type: 'Achievement',
+          description: 'Test description',
+          criteria: { narrative: 'Do something' },
+        })
+      ).toBe(false);
+    });
+
+    test('should reject achievements missing required description', () => {
+      expect(
+        OB3.isAchievement({
+          id: 'https://example.org/achievements/1',
+          type: 'Achievement',
+          name: 'Test',
+          criteria: { narrative: 'Do something' },
+        })
+      ).toBe(false);
+    });
+
+    test('should reject achievements missing required criteria', () => {
+      expect(
+        OB3.isAchievement({
+          id: 'https://example.org/achievements/1',
+          type: 'Achievement',
+          name: 'Test',
+          description: 'Test description',
         })
       ).toBe(false);
     });
