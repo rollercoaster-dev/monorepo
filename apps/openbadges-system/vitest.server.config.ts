@@ -13,5 +13,9 @@ export default defineConfig({
     setupFiles: ['./src/server/test.setup.ts'],
     include: ['src/server/**/*.{test,spec}.ts?(x)'],
     exclude: ['src/client/**', 'src/test/integration/**', '**/*.bun.test.ts'],
+    deps: {
+      // Inline zod to avoid ESM resolution issues in CI
+      inline: ['zod'],
+    },
   },
 })
