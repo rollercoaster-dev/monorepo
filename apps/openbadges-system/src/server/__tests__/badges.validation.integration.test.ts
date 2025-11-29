@@ -22,7 +22,6 @@ describe('Badges proxy validation (integration)', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    vi.resetModules()
     mockFetch = vi.mocked(fetch)
     const serverModule = await import('../index')
     app = { fetch: serverModule.default.fetch }
