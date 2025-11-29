@@ -213,7 +213,9 @@ let cachedActiveKey: KeyPairWithJWK | null = null;
  * Priority:
  * 1. Cached key
  * 2. Environment variables (KEY_PRIVATE + KEY_PUBLIC)
- * 3. Auto-generate (if KEY_AUTO_GENERATE=true)
+ * 3. File path (OB_SIGNING_KEY)
+ * 4. Auto-generate (if KEY_AUTO_GENERATE=true)
+ *    - If OB_SIGNING_KEY is set, saves generated key to that path
  */
 export async function getActiveKey(): Promise<KeyPairWithJWK> {
   if (cachedActiveKey) {
@@ -227,15 +229,36 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
     return envKey;
   }
 
+  // Try file path from OB_SIGNING_KEY
+  const keyFilePath = process.env['OB_SIGNING_KEY'];
+  if (keyFilePath) {
+    try {
+      const fileKey = await loadKeyPairFromFile(keyFilePath);
+      cachedActiveKey = fileKey;
+      return fileKey;
+    } catch (error) {
+      // File doesn't exist - fall through to auto-generate if enabled
+      if (!(error instanceof Error) || !error.message.includes('not found')) {
+        throw error;
+      }
+    }
+  }
+
   // Auto-generate if enabled
   if (process.env['KEY_AUTO_GENERATE'] === 'true') {
     const generated = await generateRSAKeyPair({ algorithm: 'RS256' });
+
+    // Save to file if OB_SIGNING_KEY is set
+    if (keyFilePath) {
+      await saveKeyPairToFile(generated, keyFilePath);
+    }
+
     cachedActiveKey = generated;
     return generated;
   }
 
   throw new Error(
-    'No signing key available. Set KEY_PRIVATE/KEY_PUBLIC or KEY_AUTO_GENERATE=true'
+    'No signing key available. Set KEY_PRIVATE/KEY_PUBLIC, OB_SIGNING_KEY, or KEY_AUTO_GENERATE=true'
   );
 }
 
