@@ -118,10 +118,8 @@ else
   echo -e "${GREEN}✓${NC} GitHub CLI detected ($GH_VERSION)"
 fi
 
-# Ensure ~/.local/bin is in PATH (for gh and other user-installed binaries)
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-  export PATH="$HOME/.local/bin:$PATH"
-fi
+# Ensure common binary paths are in PATH for current session
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
 
 echo ""
 
@@ -173,8 +171,11 @@ if [ -n "$CLAUDE_ENV_FILE" ]; then
   echo "export LOG_LEVEL=${LOG_LEVEL:-info}" >> "$CLAUDE_ENV_FILE"
   echo "export BUN_ENV=${BUN_ENV:-development}" >> "$CLAUDE_ENV_FILE"
 
-  # Ensure ~/.local/bin is in PATH for gh and other user binaries
-  echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+  # Ensure common binary paths are in PATH
+  # - ~/.local/bin: user-installed binaries (gh in web environment)
+  # - /opt/homebrew/bin: Homebrew on Apple Silicon
+  # - /usr/local/bin: Homebrew on Intel Mac / common Unix location
+  echo "export PATH=\"/opt/homebrew/bin:/usr/local/bin:\$HOME/.local/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 
   # GitHub CLI authentication via GH_TOKEN
   if [ -n "$GH_TOKEN" ]; then
