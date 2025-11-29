@@ -5,7 +5,9 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { KeyPairWithJWK, KeyType, KeyAlgorithm } from './types';
+import * as fs from 'fs';
+import type { KeyPairWithJWK, KeyType, KeyAlgorithm, KeyFileFormat } from './types';
+import { isValidKeyFileFormat } from './types';
 import { keyPairToJWK, generateRSAKeyPair } from './key-generator';
 
 // =============================================================================
@@ -94,6 +96,66 @@ export function loadKeyPairFromEnv(): KeyPairWithJWK | null {
     algorithm,
     status: 'active',
     createdAt: new Date().toISOString(),
+    publicJwk,
+    privateJwk,
+  };
+}
+
+// =============================================================================
+// File-based Loading
+// =============================================================================
+
+/**
+ * Loads a key pair from a JSON file
+ *
+ * @param filePath - Absolute or relative path to the key file
+ * @returns KeyPairWithJWK loaded from the file
+ * @throws Error if file doesn't exist, is unreadable, or has invalid format
+ */
+export async function loadKeyPairFromFile(
+  filePath: string
+): Promise<KeyPairWithJWK> {
+  let content: string;
+  try {
+    content = await fs.promises.readFile(filePath, 'utf-8');
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      throw new Error(`Key file not found: ${filePath}`);
+    }
+    if (code === 'EACCES') {
+      throw new Error(`Permission denied reading key file: ${filePath}`);
+    }
+    throw new Error(`Failed to read key file: ${(error as Error).message}`);
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(content);
+  } catch {
+    throw new Error(`Invalid JSON in key file: ${filePath}`);
+  }
+
+  if (!isValidKeyFileFormat(data)) {
+    throw new Error(`Invalid key file format: ${filePath}`);
+  }
+
+  const { publicJwk, privateJwk } = keyPairToJWK(
+    data.publicKey,
+    data.privateKey,
+    data.keyType,
+    data.algorithm,
+    data.id
+  );
+
+  return {
+    id: data.id,
+    publicKey: data.publicKey,
+    privateKey: data.privateKey,
+    keyType: data.keyType,
+    algorithm: data.algorithm,
+    status: 'active',
+    createdAt: data.createdAt,
     publicJwk,
     privateJwk,
   };
