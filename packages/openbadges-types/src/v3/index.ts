@@ -5,11 +5,15 @@ import type { JsonLdObject } from '../shared/jsonld';
 /**
  * VerifiableCredential interface for Open Badges 3.0
  * Based on the W3C Verifiable Credentials Data Model v2.0
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#openbadgecredential
  */
 export interface VerifiableCredential extends JsonLdObject {
   '@context': string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'VerifiableCredential' | string | string[];
+  /**
+   * Must include both 'VerifiableCredential' and 'OpenBadgeCredential' per OB3 spec
+   */
+  type: string[];
   issuer: IRI | Issuer;
   issuanceDate: DateTime;
   expirationDate?: DateTime;

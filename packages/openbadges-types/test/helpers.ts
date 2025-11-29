@@ -82,7 +82,7 @@ export const createOB3VerifiableCredential = (
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: Shared.createIRI('https://example.org/credentials/3732'),
-    type: ['VerifiableCredential'],
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: createOB3Issuer(),
     issuanceDate: Shared.createDateTime('2023-06-15T12:00:00Z'),
     credentialSubject: {

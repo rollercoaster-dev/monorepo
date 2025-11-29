@@ -20,14 +20,19 @@ import type {
  * Type guard to check if a value is an OB3 VerifiableCredential
  * @param value The value to check
  * @returns True if the value is a valid OB3 VerifiableCredential, false otherwise
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#openbadgecredential
  */
 export function isVerifiableCredential(value: unknown): value is VerifiableCredential {
   if (!isJsonLdObject(value)) {
     return false;
   }
 
-  // Check for required properties
+  // Check for required type properties per OB3 spec
+  // Must have both 'VerifiableCredential' and 'OpenBadgeCredential'
   if (!hasJsonLdType(value, 'VerifiableCredential')) {
+    return false;
+  }
+  if (!hasJsonLdType(value, 'OpenBadgeCredential')) {
     return false;
   }
 

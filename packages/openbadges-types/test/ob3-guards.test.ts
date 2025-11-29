@@ -5,23 +5,44 @@ describe('OB3 Type Guards', () => {
   describe('isVerifiableCredential', () => {
     test('should correctly identify valid OB3 VerifiableCredential objects', () => {
       const validCredential = createOB3VerifiableCredential();
-
       expect(OB3.isVerifiableCredential(validCredential)).toBe(true);
+    });
 
-      // Invalid credentials
+    test('should reject null and empty objects', () => {
       expect(OB3.isVerifiableCredential(null)).toBe(false);
       expect(OB3.isVerifiableCredential({})).toBe(false);
+    });
+
+    test('should reject credentials with wrong type', () => {
       expect(
         OB3.isVerifiableCredential({
           '@context': 'https://www.w3.org/2018/credentials/v1',
-          type: 'Achievement', // Wrong type
+          type: 'Achievement',
         })
       ).toBe(false);
+    });
+
+    test('should reject credentials missing OpenBadgeCredential type', () => {
+      expect(
+        OB3.isVerifiableCredential({
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          type: ['VerifiableCredential'], // Missing OpenBadgeCredential
+          id: 'https://example.org/credentials/1',
+          issuer: 'https://example.org/issuers/1',
+          issuanceDate: '2023-06-15T12:00:00Z',
+          credentialSubject: { achievement: {} },
+        })
+      ).toBe(false);
+    });
+
+    test('should reject credentials missing required properties', () => {
       expect(
         OB3.isVerifiableCredential({
           '@context': 'https://www.w3.org/2018/credentials/v1',
-          type: 'VerifiableCredential',
-          // Missing required properties
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
         })
       ).toBe(false);
     });
