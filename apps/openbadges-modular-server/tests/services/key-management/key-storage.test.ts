@@ -3,10 +3,16 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import {
   loadKeyPairFromEnv,
+  loadKeyPairFromFile,
+  saveKeyPairToFile,
   getActiveKey,
   clearKeyCache,
+  KeyFileNotFoundError,
 } from '../../../src/services/key-management/key-storage';
 import { generateRSAKeyPair } from '../../../src/services/key-management/key-generator';
 
@@ -15,6 +21,7 @@ function clearEnv(): void {
   delete process.env['KEY_PUBLIC'];
   delete process.env['KEY_ID'];
   delete process.env['KEY_AUTO_GENERATE'];
+  delete process.env['OB_SIGNING_KEY'];
 }
 
 describe('Key Storage Service', () => {
@@ -92,6 +99,167 @@ describe('Key Storage Service', () => {
 
     it('should throw when no key available', async () => {
       await expect(getActiveKey()).rejects.toThrow('No signing key available');
+    });
+  });
+
+  describe('File-based Key Storage', () => {
+    let tempDir: string;
+
+    beforeEach(async () => {
+      tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'key-test-'));
+    });
+
+    afterEach(async () => {
+      await fs.promises.rm(tempDir, { recursive: true, force: true });
+    });
+
+    describe('loadKeyPairFromFile', () => {
+      it('should load valid key file', async () => {
+        const keyPair = await generateRSAKeyPair();
+        const filePath = path.join(tempDir, 'test-key.json');
+        await saveKeyPairToFile(keyPair, filePath);
+
+        const loaded = await loadKeyPairFromFile(filePath);
+        expect(loaded.id).toBe(keyPair.id);
+        expect(loaded.publicKey).toBe(keyPair.publicKey);
+        expect(loaded.privateKey).toBe(keyPair.privateKey);
+        expect(loaded.status).toBe('active');
+      });
+
+      it('should throw KeyFileNotFoundError for non-existent file', async () => {
+        await expect(loadKeyPairFromFile('/nonexistent/path.json')).rejects.toThrow(
+          KeyFileNotFoundError
+        );
+      });
+
+      it('should throw for invalid JSON', async () => {
+        const filePath = path.join(tempDir, 'invalid.json');
+        await fs.promises.writeFile(filePath, 'not valid json');
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid JSON');
+      });
+
+      it('should throw for invalid format', async () => {
+        const filePath = path.join(tempDir, 'invalid-format.json');
+        await fs.promises.writeFile(filePath, JSON.stringify({ foo: 'bar' }));
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
+      });
+
+      it('should throw for invalid algorithm', async () => {
+        const filePath = path.join(tempDir, 'invalid-algorithm.json');
+        await fs.promises.writeFile(
+          filePath,
+          JSON.stringify({
+            id: 'test-id',
+            publicKey: '-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----',
+            privateKey: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----',
+            keyType: 'RSA',
+            algorithm: 'INVALID',
+            createdAt: new Date().toISOString(),
+          })
+        );
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
+      });
+
+      it('should throw for invalid date', async () => {
+        const filePath = path.join(tempDir, 'invalid-date.json');
+        await fs.promises.writeFile(
+          filePath,
+          JSON.stringify({
+            id: 'test-id',
+            publicKey: '-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----',
+            privateKey: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----',
+            keyType: 'RSA',
+            algorithm: 'RS256',
+            createdAt: 'not-a-date',
+          })
+        );
+
+        await expect(loadKeyPairFromFile(filePath)).rejects.toThrow('Invalid key file format');
+      });
+    });
+
+    describe('saveKeyPairToFile', () => {
+      it('should write file with 0o600 permissions', async () => {
+        const keyPair = await generateRSAKeyPair();
+        const filePath = path.join(tempDir, 'test-key.json');
+        await saveKeyPairToFile(keyPair, filePath);
+
+        const stats = await fs.promises.stat(filePath);
+        // Check owner read/write only (0o600)
+        expect(stats.mode & 0o777).toBe(0o600);
+      });
+
+      it('should round-trip with loadKeyPairFromFile', async () => {
+        const keyPair = await generateRSAKeyPair();
+        const filePath = path.join(tempDir, 'roundtrip-key.json');
+
+        await saveKeyPairToFile(keyPair, filePath);
+        const loaded = await loadKeyPairFromFile(filePath);
+
+        expect(loaded.id).toBe(keyPair.id);
+        expect(loaded.keyType).toBe(keyPair.keyType);
+        expect(loaded.algorithm).toBe(keyPair.algorithm);
+        expect(loaded.createdAt).toBe(keyPair.createdAt);
+      });
+
+      it('should throw for non-existent directory', async () => {
+        const keyPair = await generateRSAKeyPair();
+        const filePath = path.join('/nonexistent/dir', 'key.json');
+
+        await expect(saveKeyPairToFile(keyPair, filePath)).rejects.toThrow(
+          'Directory does not exist'
+        );
+      });
+    });
+
+    describe('getActiveKey with file', () => {
+      it('should load from OB_SIGNING_KEY', async () => {
+        const keyPair = await generateRSAKeyPair();
+        const filePath = path.join(tempDir, 'signing-key.json');
+        await saveKeyPairToFile(keyPair, filePath);
+
+        process.env['OB_SIGNING_KEY'] = filePath;
+        const active = await getActiveKey();
+        expect(active.id).toBe(keyPair.id);
+      });
+
+      it('should prioritize env vars over file', async () => {
+        const fileKey = await generateRSAKeyPair();
+        const envKey = await generateRSAKeyPair();
+        const filePath = path.join(tempDir, 'signing-key.json');
+        await saveKeyPairToFile(fileKey, filePath);
+
+        process.env['OB_SIGNING_KEY'] = filePath;
+        process.env['KEY_PRIVATE'] = envKey.privateKey;
+        process.env['KEY_PUBLIC'] = envKey.publicKey;
+
+        const active = await getActiveKey();
+        // Use id to compare since the key content should be from env, not file
+        expect(active.id).not.toBe(fileKey.id);
+      });
+
+      it('should auto-save generated key when OB_SIGNING_KEY is set', async () => {
+        const filePath = path.join(tempDir, 'auto-generated-key.json');
+        process.env['OB_SIGNING_KEY'] = filePath;
+        process.env['KEY_AUTO_GENERATE'] = 'true';
+
+        const generated = await getActiveKey();
+
+        // Verify file was created
+        const fileExists = await fs.promises
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+
+        // Verify file contains correct key
+        clearKeyCache();
+        const loaded = await loadKeyPairFromFile(filePath);
+        expect(loaded.id).toBe(generated.id);
+      });
     });
   });
 });

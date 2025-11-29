@@ -308,3 +308,71 @@ export function isOKPKey(jwk: JWK): jwk is OKPPublicKey | OKPPrivateKey {
 export function isPrivateKey(jwk: JWK): jwk is JWKPrivate {
   return 'd' in jwk;
 }
+
+// =============================================================================
+// File Storage Types
+// =============================================================================
+
+/**
+ * JSON format for key file storage (minimal, without JWK)
+ *
+ * This is the format used when persisting keys to disk via OB_SIGNING_KEY.
+ * JWKs are regenerated on load to keep the file format simple.
+ */
+export interface KeyFileFormat {
+  id: string;
+  publicKey: string;
+  privateKey: string;
+  keyType: KeyType;
+  algorithm: KeyAlgorithm;
+  createdAt: string;
+}
+
+/** Valid key types for file storage */
+const VALID_KEY_TYPES = ['RSA', 'EC', 'OKP'] as const;
+
+/** Valid algorithms for file storage */
+const VALID_ALGORITHMS = [
+  'RS256',
+  'RS384',
+  'RS512',
+  'ES256',
+  'ES384',
+  'ES512',
+  'EdDSA',
+] as const;
+
+/**
+ * Validates an ISO 8601 date string
+ */
+function isValidISO8601(date: string): boolean {
+  const parsed = Date.parse(date);
+  return !isNaN(parsed);
+}
+
+/**
+ * Type guard to validate KeyFileFormat structure
+ *
+ * Validates:
+ * - Required string fields (id, publicKey, privateKey, createdAt)
+ * - keyType is one of: RSA, EC, OKP
+ * - algorithm is one of: RS256, RS384, RS512, ES256, ES384, ES512, EdDSA
+ * - createdAt is a valid ISO 8601 date string
+ */
+export function isValidKeyFileFormat(data: unknown): data is KeyFileFormat {
+  if (typeof data !== 'object' || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.publicKey === 'string' &&
+    typeof obj.privateKey === 'string' &&
+    typeof obj.keyType === 'string' &&
+    VALID_KEY_TYPES.includes(obj.keyType as (typeof VALID_KEY_TYPES)[number]) &&
+    typeof obj.algorithm === 'string' &&
+    VALID_ALGORITHMS.includes(
+      obj.algorithm as (typeof VALID_ALGORITHMS)[number]
+    ) &&
+    typeof obj.createdAt === 'string' &&
+    isValidISO8601(obj.createdAt)
+  );
+}

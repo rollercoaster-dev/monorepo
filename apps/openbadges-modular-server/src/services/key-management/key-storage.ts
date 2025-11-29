@@ -1,12 +1,43 @@
 /**
  * Key Storage Service
  *
- * Handles loading cryptographic key pairs from environment variables.
+ * Handles loading cryptographic key pairs from environment variables and files.
+ *
+ * Key Loading Priority:
+ * 1. Cached key (memory)
+ * 2. Environment variables (KEY_PRIVATE + KEY_PUBLIC)
+ * 3. File path (OB_SIGNING_KEY)
+ * 4. Auto-generate (if KEY_AUTO_GENERATE=true)
+ *
+ * Platform Notes:
+ * - File permissions (0o600) are enforced on Unix systems
+ * - On Windows, file permissions are not enforced; consider using ACLs
+ *
+ * Multi-Process Deployments:
+ * - When using KEY_AUTO_GENERATE with OB_SIGNING_KEY, ensure only one process
+ *   generates the key to avoid race conditions. Use a shared key file or
+ *   external key management for clustered deployments.
  */
 
 import { randomUUID } from 'crypto';
-import type { KeyPairWithJWK, KeyType, KeyAlgorithm } from './types';
+import * as fs from 'fs';
+import type { KeyPairWithJWK, KeyType, KeyAlgorithm, KeyFileFormat } from './types';
+import { isValidKeyFileFormat } from './types';
 import { keyPairToJWK, generateRSAKeyPair } from './key-generator';
+
+// =============================================================================
+// Custom Errors
+// =============================================================================
+
+/**
+ * Error thrown when a key file is not found
+ */
+export class KeyFileNotFoundError extends Error {
+  constructor(filePath: string) {
+    super(`Key file not found: ${filePath}`);
+    this.name = 'KeyFileNotFoundError';
+  }
+}
 
 // =============================================================================
 // Environment Variable Loading
@@ -100,6 +131,129 @@ export function loadKeyPairFromEnv(): KeyPairWithJWK | null {
 }
 
 // =============================================================================
+// File-based Loading
+// =============================================================================
+
+/**
+ * Loads a key pair from a JSON file
+ *
+ * @param filePath - Absolute or relative path to the key file
+ * @returns KeyPairWithJWK loaded from the file
+ * @throws Error if file doesn't exist, is unreadable, or has invalid format
+ */
+export async function loadKeyPairFromFile(
+  filePath: string
+): Promise<KeyPairWithJWK> {
+  let content: string;
+  try {
+    content = await fs.promises.readFile(filePath, 'utf-8');
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      throw new KeyFileNotFoundError(filePath);
+    }
+    if (code === 'EACCES') {
+      throw new Error(`Permission denied reading key file: ${filePath}`);
+    }
+    throw new Error(`Failed to read key file: ${(error as Error).message}`);
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(content);
+  } catch {
+    throw new Error(`Invalid JSON in key file: ${filePath}`);
+  }
+
+  if (!isValidKeyFileFormat(data)) {
+    throw new Error(`Invalid key file format: ${filePath}`);
+  }
+
+  const { publicJwk, privateJwk } = keyPairToJWK(
+    data.publicKey,
+    data.privateKey,
+    data.keyType,
+    data.algorithm,
+    data.id
+  );
+
+  return {
+    id: data.id,
+    publicKey: data.publicKey,
+    privateKey: data.privateKey,
+    keyType: data.keyType,
+    algorithm: data.algorithm,
+    status: 'active',
+    createdAt: data.createdAt,
+    publicJwk,
+    privateJwk,
+  };
+}
+
+/**
+ * Saves a key pair to a JSON file
+ *
+ * Uses atomic write (temp file + rename) to prevent corruption if the process
+ * crashes during write. The file is written with restricted permissions (0o600)
+ * since it contains the private key.
+ *
+ * Note: On Windows, file permissions (mode) are not enforced by the filesystem.
+ * Consider using Windows ACLs for production deployments on Windows.
+ *
+ * @param keyPair - The key pair to save
+ * @param filePath - Path where the key file should be written
+ * @throws Error if the file cannot be written
+ */
+export async function saveKeyPairToFile(
+  keyPair: KeyPairWithJWK,
+  filePath: string
+): Promise<void> {
+  const fileData: KeyFileFormat = {
+    id: keyPair.id,
+    publicKey: keyPair.publicKey,
+    privateKey: keyPair.privateKey,
+    keyType: keyPair.keyType,
+    algorithm: keyPair.algorithm,
+    createdAt: keyPair.createdAt,
+  };
+
+  const content = JSON.stringify(fileData, null, 2);
+  const tempPath = `${filePath}.tmp.${process.pid}`;
+
+  try {
+    // Write to temp file first (atomic write pattern)
+    await fs.promises.writeFile(tempPath, content, {
+      encoding: 'utf-8',
+      mode: 0o600,
+    });
+
+    // Rename is atomic on most filesystems
+    await fs.promises.rename(tempPath, filePath);
+
+    // Ensure permissions on Unix (rename preserves temp file permissions)
+    if (process.platform !== 'win32') {
+      await fs.promises.chmod(filePath, 0o600);
+    }
+  } catch (error) {
+    // Clean up temp file if it exists
+    try {
+      await fs.promises.unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
+
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') {
+      throw new Error(`Directory does not exist for key file: ${filePath}`);
+    }
+    if (code === 'EACCES') {
+      throw new Error(`Permission denied writing key file: ${filePath}`);
+    }
+    throw new Error(`Failed to write key file: ${(error as Error).message}`);
+  }
+}
+
+// =============================================================================
 // Active Key Management
 // =============================================================================
 
@@ -111,7 +265,9 @@ let cachedActiveKey: KeyPairWithJWK | null = null;
  * Priority:
  * 1. Cached key
  * 2. Environment variables (KEY_PRIVATE + KEY_PUBLIC)
- * 3. Auto-generate (if KEY_AUTO_GENERATE=true)
+ * 3. File path (OB_SIGNING_KEY)
+ * 4. Auto-generate (if KEY_AUTO_GENERATE=true)
+ *    - If OB_SIGNING_KEY is set, saves generated key to that path
  */
 export async function getActiveKey(): Promise<KeyPairWithJWK> {
   if (cachedActiveKey) {
@@ -125,15 +281,37 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
     return envKey;
   }
 
+  // Try file path from OB_SIGNING_KEY
+  const keyFilePath = process.env['OB_SIGNING_KEY'];
+  if (keyFilePath) {
+    try {
+      const fileKey = await loadKeyPairFromFile(keyFilePath);
+      cachedActiveKey = fileKey;
+      return fileKey;
+    } catch (error) {
+      // File doesn't exist - fall through to auto-generate if enabled
+      // Re-throw all other errors (permission denied, invalid format, etc.)
+      if (!(error instanceof KeyFileNotFoundError)) {
+        throw error;
+      }
+    }
+  }
+
   // Auto-generate if enabled
   if (process.env['KEY_AUTO_GENERATE'] === 'true') {
     const generated = await generateRSAKeyPair({ algorithm: 'RS256' });
+
+    // Save to file if OB_SIGNING_KEY is set
+    if (keyFilePath) {
+      await saveKeyPairToFile(generated, keyFilePath);
+    }
+
     cachedActiveKey = generated;
     return generated;
   }
 
   throw new Error(
-    'No signing key available. Set KEY_PRIVATE/KEY_PUBLIC or KEY_AUTO_GENERATE=true'
+    'No signing key available. Set KEY_PRIVATE/KEY_PUBLIC, OB_SIGNING_KEY, or KEY_AUTO_GENERATE=true'
   );
 }
 
