@@ -9,6 +9,12 @@
     "./prettier": "./prettier.config.mjs",
     "./tsconfig": "./tsconfig.base.json"
   },
+  "scripts": {
+    "test": "echo 'No tests for shared-config'",
+    "test:unit": "echo 'No tests for shared-config'",
+    "test:integration": "echo 'No tests for shared-config'",
+    "test:e2e": "echo 'No tests for shared-config'"
+  },
   "files": [
     "eslint.config.mjs",
     "prettier.config.mjs",
