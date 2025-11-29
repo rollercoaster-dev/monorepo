@@ -328,8 +328,36 @@ export interface KeyFileFormat {
   createdAt: string;
 }
 
+/** Valid key types for file storage */
+const VALID_KEY_TYPES = ['RSA', 'EC', 'OKP'] as const;
+
+/** Valid algorithms for file storage */
+const VALID_ALGORITHMS = [
+  'RS256',
+  'RS384',
+  'RS512',
+  'ES256',
+  'ES384',
+  'ES512',
+  'EdDSA',
+] as const;
+
+/**
+ * Validates an ISO 8601 date string
+ */
+function isValidISO8601(date: string): boolean {
+  const parsed = Date.parse(date);
+  return !isNaN(parsed);
+}
+
 /**
  * Type guard to validate KeyFileFormat structure
+ *
+ * Validates:
+ * - Required string fields (id, publicKey, privateKey, createdAt)
+ * - keyType is one of: RSA, EC, OKP
+ * - algorithm is one of: RS256, RS384, RS512, ES256, ES384, ES512, EdDSA
+ * - createdAt is a valid ISO 8601 date string
  */
 export function isValidKeyFileFormat(data: unknown): data is KeyFileFormat {
   if (typeof data !== 'object' || data === null) return false;
@@ -339,8 +367,12 @@ export function isValidKeyFileFormat(data: unknown): data is KeyFileFormat {
     typeof obj.publicKey === 'string' &&
     typeof obj.privateKey === 'string' &&
     typeof obj.keyType === 'string' &&
-    ['RSA', 'EC', 'OKP'].includes(obj.keyType as string) &&
+    VALID_KEY_TYPES.includes(obj.keyType as (typeof VALID_KEY_TYPES)[number]) &&
     typeof obj.algorithm === 'string' &&
-    typeof obj.createdAt === 'string'
+    VALID_ALGORITHMS.includes(
+      obj.algorithm as (typeof VALID_ALGORITHMS)[number]
+    ) &&
+    typeof obj.createdAt === 'string' &&
+    isValidISO8601(obj.createdAt)
   );
 }
