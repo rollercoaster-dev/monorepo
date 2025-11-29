@@ -14,7 +14,7 @@
     "start": "bun run src/server/index.ts",
     "test": "bun run test:client && bun run test:server",
     "test:unit": "bun run test:client",
-    "test:integration": "bun run test:server",
+    "test:integration": "bun run test:server && bun run test:server:vitest",
     "test:e2e": "echo 'No E2E tests'",
     "test:ui": "vitest --ui",
     "test:run": "bun run test:client -- --run && bun run test:server",
