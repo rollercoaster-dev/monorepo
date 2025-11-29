@@ -11,6 +11,7 @@ import { type Badge } from './composite-guards';
 export { Shared, OB2, OB3, CompositeGuards, BadgeNormalizer };
 export type { Badge };
 export * from './validation';
+export * from './validation-report';
 export * from './type-guards';
 export * from './utils';
 
