@@ -207,13 +207,9 @@ export function isImage(value: unknown): value is Image {
  * @returns True if the value is a valid OB2 Criteria, false otherwise
  */
 export function isCriteria(value: unknown): value is Criteria {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  // OB2 Criteria requires id (URL to criteria page) OR narrative per spec
+  // OB2 Criteria has no required properties per spec
   // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Criteria
-  return 'id' in value || 'narrative' in value;
+  return typeof value === 'object' && value !== null;
 }
 
 /**
