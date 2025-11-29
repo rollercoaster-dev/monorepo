@@ -167,12 +167,9 @@ export function isVerificationObject(value: unknown): value is VerificationObjec
  * @returns True if the value is a valid OB2 Evidence, false otherwise
  */
 export function isEvidence(value: unknown): value is Evidence {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  // No specific required properties for Evidence
-  return true;
+  // OB2 Evidence has no required properties per spec
+  // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Evidence
+  return typeof value === 'object' && value !== null;
 }
 
 /**
@@ -199,8 +196,9 @@ export function isImage(value: unknown): value is Image {
     return false;
   }
 
-  // No specific required properties for Image
-  return true;
+  // OB2 Image requires id (the image URL) per spec
+  // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Image
+  return 'id' in value && typeof (value as Record<string, unknown>).id === 'string';
 }
 
 /**
@@ -209,12 +207,9 @@ export function isImage(value: unknown): value is Image {
  * @returns True if the value is a valid OB2 Criteria, false otherwise
  */
 export function isCriteria(value: unknown): value is Criteria {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  // No specific required properties for Criteria
-  return true;
+  // OB2 Criteria has no required properties per spec
+  // https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Criteria
+  return typeof value === 'object' && value !== null;
 }
 
 /**

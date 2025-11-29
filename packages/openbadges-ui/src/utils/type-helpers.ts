@@ -140,12 +140,13 @@ export function isOB3VerifiableCredential(badge: unknown): badge is OB3.Verifiab
   const obj = badge as Record<string, unknown>;
 
   // OB3 spec allows type to be string 'VerifiableCredential' or array ['VerifiableCredential', ...]
+  // VC Data Model 2.0 uses validFrom (preferred), but issuanceDate is still accepted for backwards compatibility
   return (
     '@context' in obj &&
     'type' in obj &&
     typeIncludes(obj.type, 'VerifiableCredential') &&
     'issuer' in obj &&
-    'issuanceDate' in obj &&
+    ('validFrom' in obj || 'issuanceDate' in obj) &&
     'credentialSubject' in obj
   );
 }

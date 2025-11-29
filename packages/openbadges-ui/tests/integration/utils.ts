@@ -163,7 +163,7 @@ export function createMockOB3Badge(
       name: 'Test Issuer',
       url: createIRI('http://example.org/issuers/1/profile'),
     },
-    issuanceDate: createDateTime('2023-01-01T00:00:00Z'),
+    validFrom: createDateTime('2023-01-01T00:00:00Z'),
     credentialSubject: {
       // id for credentialSubject is optional, can be IRI
       // id: createIRI('did:example:ebfeb1f712ebc6f1c276e12ec21'),
@@ -178,8 +178,9 @@ export function createMockOB3Badge(
           id: createIRI('http://example.org/badge.png'),
           type: 'Image',
         },
-        // criteria for achievement can be IRI or Criteria object
-        // criteria: createIRI('http://example.org/achievements/1/criteria')
+        criteria: {
+          narrative: 'Complete the required tasks to earn this badge.',
+        },
       },
     },
     proof: {
