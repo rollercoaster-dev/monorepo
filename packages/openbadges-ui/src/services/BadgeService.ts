@@ -277,8 +277,9 @@ export class BadgeService {
           url: issuerUrl,
           image: issuerImage,
         },
-        issuedOn: badge.issuanceDate as string,
-        expires: badge.expirationDate as string | undefined,
+        // VC Data Model 2.0 uses validFrom/validUntil, fallback to legacy issuanceDate/expirationDate
+        issuedOn: (badge.validFrom || badge.issuanceDate) as string,
+        expires: (badge.validUntil || badge.expirationDate) as string | undefined,
       };
     }
 

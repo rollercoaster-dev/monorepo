@@ -95,13 +95,13 @@ describe('Badge Validation', () => {
       const validCredential = createOB3VerifiableCredential();
       const invalidCredential = {
         ...validCredential,
-        issuanceDate: '2023-06-15', // Invalid DateTime (missing time)
+        validFrom: '2023-06-15', // Invalid DateTime (missing time)
       };
 
       const result = validateBadge(invalidCredential);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('issuanceDate'))).toBe(true);
+      expect(result.errors.some(error => error.includes('validFrom'))).toBe(true);
     });
   });
 

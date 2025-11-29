@@ -151,7 +151,7 @@ export const mockOB3Credential: OB3.VerifiableCredential = {
     'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
   ],
   id: 'https://example.org/credentials/2001' as Shared.IRI,
-  type: ['VerifiableCredential'],
+  type: ['VerifiableCredential', 'OpenBadgeCredential'],
   issuer: {
     id: 'https://example.org/issuers/manus' as Shared.IRI,
     type: ['Profile'],
@@ -162,7 +162,7 @@ export const mockOB3Credential: OB3.VerifiableCredential = {
       type: 'Image',
     },
   },
-  issuanceDate: '2025-04-01T10:00:00Z' as Shared.DateTime,
+  validFrom: '2025-04-01T10:00:00Z' as Shared.DateTime,
   credentialSubject: {
     id: 'did:example:ebfeb1f712ebc6f1c276e12ec21' as Shared.IRI,
     achievement: mockOB3Achievement,

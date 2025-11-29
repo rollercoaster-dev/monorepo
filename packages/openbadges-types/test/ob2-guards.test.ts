@@ -125,5 +125,93 @@ describe('OB2 Type Guards', () => {
     });
   });
 
-  // Additional tests for other type guards can be added here
+  describe('isEvidence', () => {
+    // OB2 Evidence has NO required properties per spec
+    // See: https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Evidence
+    test('should accept empty objects (OB2 Evidence has no required properties)', () => {
+      expect(OB2.isEvidence({})).toBe(true);
+    });
+
+    test('should reject null and undefined', () => {
+      expect(OB2.isEvidence(null)).toBe(false);
+      expect(OB2.isEvidence(undefined)).toBe(false);
+    });
+
+    test('should accept objects with id property', () => {
+      expect(OB2.isEvidence({ id: 'https://example.com/evidence/1' })).toBe(true);
+    });
+
+    test('should accept objects with narrative property', () => {
+      expect(OB2.isEvidence({ narrative: 'Completed the project successfully' })).toBe(true);
+    });
+
+    test('should accept objects with both id and narrative', () => {
+      expect(
+        OB2.isEvidence({
+          id: 'https://example.com/evidence/1',
+          narrative: 'Completed the project successfully',
+        })
+      ).toBe(true);
+    });
+  });
+
+  describe('isImage', () => {
+    test('should reject empty objects', () => {
+      expect(OB2.isImage({})).toBe(false);
+    });
+
+    test('should reject null and undefined', () => {
+      expect(OB2.isImage(null)).toBe(false);
+      expect(OB2.isImage(undefined)).toBe(false);
+    });
+
+    test('should accept objects with string id property', () => {
+      expect(OB2.isImage({ id: 'https://example.com/image.png' })).toBe(true);
+    });
+
+    test('should reject objects with non-string id property', () => {
+      expect(OB2.isImage({ id: 123 })).toBe(false);
+      expect(OB2.isImage({ id: null })).toBe(false);
+    });
+
+    test('should accept full Image objects', () => {
+      expect(
+        OB2.isImage({
+          id: 'https://example.com/image.png',
+          type: 'Image',
+          caption: 'A badge image',
+        })
+      ).toBe(true);
+    });
+  });
+
+  describe('isCriteria', () => {
+    // OB2 Criteria has NO required properties per spec
+    // See: https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Criteria
+    test('should accept empty objects (OB2 Criteria has no required properties)', () => {
+      expect(OB2.isCriteria({})).toBe(true);
+    });
+
+    test('should reject null and undefined', () => {
+      expect(OB2.isCriteria(null)).toBe(false);
+      expect(OB2.isCriteria(undefined)).toBe(false);
+    });
+
+    test('should accept objects with id property', () => {
+      expect(OB2.isCriteria({ id: 'https://example.com/criteria' })).toBe(true);
+    });
+
+    test('should accept objects with narrative property', () => {
+      expect(OB2.isCriteria({ narrative: 'Must complete all assignments' })).toBe(true);
+    });
+
+    test('should accept objects with both id and narrative', () => {
+      expect(
+        OB2.isCriteria({
+          id: 'https://example.com/criteria',
+          narrative: 'Must complete all assignments',
+        })
+      ).toBe(true);
+    });
+  });
 });

@@ -20,30 +20,29 @@ import type {
  * Type guard to check if a value is an OB3 VerifiableCredential
  * @param value The value to check
  * @returns True if the value is a valid OB3 VerifiableCredential, false otherwise
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#openbadgecredential
  */
 export function isVerifiableCredential(value: unknown): value is VerifiableCredential {
   if (!isJsonLdObject(value)) {
     return false;
   }
 
+  // Must have both 'VerifiableCredential' and 'OpenBadgeCredential' types
+  if (!hasJsonLdType(value, 'VerifiableCredential') || !hasJsonLdType(value, 'OpenBadgeCredential')) {
+    return false;
+  }
+
+  // Check for required contexts (both VC and OB3)
+  if (!hasJsonLdContext(value, VCContext) || !hasJsonLdContext(value, OB3Context)) {
+    return false;
+  }
+
   // Check for required properties
-  if (!hasJsonLdType(value, 'VerifiableCredential')) {
-    return false;
-  }
-
-  // Check for required contexts
-  // VC should have both the VC context and the OB3 context
-  const hasVCContext = hasJsonLdContext(value, VCContext);
-  const hasOB3Context = hasJsonLdContext(value, OB3Context);
-  if (!hasVCContext || !hasOB3Context) {
-    return false;
-  }
-
-  return !(
-    !('id' in value) ||
-    !('issuer' in value) ||
-    !('issuanceDate' in value) ||
-    !('credentialSubject' in value)
+  return (
+    'id' in value &&
+    'issuer' in value &&
+    'validFrom' in value &&
+    'credentialSubject' in value
   );
 }
 
@@ -126,6 +125,7 @@ export function isCredentialSubject(value: unknown): value is CredentialSubject 
  * Type guard to check if a value is an OB3 Achievement
  * @param value The value to check
  * @returns True if the value is a valid OB3 Achievement, false otherwise
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#achievement
  */
 export function isAchievement(value: unknown): value is Achievement {
   if (typeof value !== 'object' || value === null) {
@@ -133,7 +133,7 @@ export function isAchievement(value: unknown): value is Achievement {
   }
 
   // Check for required properties
-  if (!('id' in value) || !('name' in value)) {
+  if (!('id' in value) || !('name' in value) || !('description' in value) || !('criteria' in value)) {
     return false;
   }
 
@@ -205,6 +205,7 @@ export function isEvidence(value: unknown): value is Evidence {
 
 /**
  * Type guard to check if a value is an OB3 Criteria
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#criteria
  * @param value The value to check
  * @returns True if the value is a valid OB3 Criteria, false otherwise
  */
@@ -231,7 +232,8 @@ export function isCriteria(value: unknown): value is Criteria {
     return false;
   }
 
-  return true;
+  // OB3 Criteria requires id (URL) OR narrative per spec
+  return 'id' in value || 'narrative' in value;
 }
 
 /**

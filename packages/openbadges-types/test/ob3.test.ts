@@ -13,7 +13,7 @@ describe('Open Badges 3.0 Types', () => {
       expect(validCredential).toHaveProperty('id');
       expect(validCredential).toHaveProperty('type');
       expect(validCredential).toHaveProperty('issuer');
-      expect(validCredential).toHaveProperty('issuanceDate');
+      expect(validCredential).toHaveProperty('validFrom');
       expect(validCredential).toHaveProperty('credentialSubject');
     });
 
