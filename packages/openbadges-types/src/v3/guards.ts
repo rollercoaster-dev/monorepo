@@ -27,28 +27,22 @@ export function isVerifiableCredential(value: unknown): value is VerifiableCrede
     return false;
   }
 
-  // Check for required type properties per OB3 spec
-  // Must have both 'VerifiableCredential' and 'OpenBadgeCredential'
-  if (!hasJsonLdType(value, 'VerifiableCredential')) {
-    return false;
-  }
-  if (!hasJsonLdType(value, 'OpenBadgeCredential')) {
+  // Must have both 'VerifiableCredential' and 'OpenBadgeCredential' types
+  if (!hasJsonLdType(value, 'VerifiableCredential') || !hasJsonLdType(value, 'OpenBadgeCredential')) {
     return false;
   }
 
-  // Check for required contexts
-  // VC should have both the VC context and the OB3 context
-  const hasVCContext = hasJsonLdContext(value, VCContext);
-  const hasOB3Context = hasJsonLdContext(value, OB3Context);
-  if (!hasVCContext || !hasOB3Context) {
+  // Check for required contexts (both VC and OB3)
+  if (!hasJsonLdContext(value, VCContext) || !hasJsonLdContext(value, OB3Context)) {
     return false;
   }
 
-  return !(
-    !('id' in value) ||
-    !('issuer' in value) ||
-    !('issuanceDate' in value) ||
-    !('credentialSubject' in value)
+  // Check for required properties
+  return (
+    'id' in value &&
+    'issuer' in value &&
+    'validFrom' in value &&
+    'credentialSubject' in value
   );
 }
 
@@ -138,14 +132,8 @@ export function isAchievement(value: unknown): value is Achievement {
     return false;
   }
 
-  // Check for required properties per OB3 spec Section 4.3
-  // id, name, description, and criteria are all required
-  if (
-    !('id' in value) ||
-    !('name' in value) ||
-    !('description' in value) ||
-    !('criteria' in value)
-  ) {
+  // Check for required properties
+  if (!('id' in value) || !('name' in value) || !('description' in value) || !('criteria' in value)) {
     return false;
   }
 

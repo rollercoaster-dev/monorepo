@@ -10,13 +10,11 @@ import type { JsonLdObject } from '../shared/jsonld';
 export interface VerifiableCredential extends JsonLdObject {
   '@context': string | string[] | Record<string, unknown>;
   id: IRI;
-  /**
-   * Must include both 'VerifiableCredential' and 'OpenBadgeCredential' per OB3 spec
-   */
+  /** Must include both 'VerifiableCredential' and 'OpenBadgeCredential' */
   type: string[];
   issuer: IRI | Issuer;
-  issuanceDate: DateTime;
-  expirationDate?: DateTime;
+  validFrom: DateTime;
+  validUntil?: DateTime;
   credentialSubject: CredentialSubject;
   proof?: Proof;
   credentialStatus?: CredentialStatus;
@@ -78,9 +76,7 @@ export interface Achievement extends JsonLdObject {
   id: IRI;
   type: string | string[];
   name: string | MultiLanguageString;
-  /** Required per OB3 spec Section 4.3 */
   description: string | MultiLanguageString;
-  /** Required per OB3 spec Section 4.3 */
   criteria: Criteria;
   image?: IRI | OB3ImageObject;
   creator?: IRI | Issuer;

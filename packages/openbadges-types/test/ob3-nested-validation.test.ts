@@ -8,7 +8,7 @@ describe('OB3 Nested Object Validation', () => {
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: 'https://example.org/credentials/3732',
-    type: 'VerifiableCredential',
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: {
       '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
       id: 'https://example.org/issuers/123',
@@ -17,7 +17,7 @@ describe('OB3 Nested Object Validation', () => {
       url: 'https://example.org',
       email: 'contact@example.org',
     },
-    issuanceDate: '2023-06-15T12:00:00Z',
+    validFrom: '2023-06-15T12:00:00Z',
     credentialSubject: {
       id: 'did:example:ebfeb1f712ebc6f1c276e12ec21',
       achievement: {
@@ -42,7 +42,7 @@ describe('OB3 Nested Object Validation', () => {
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: 'https://example.org/credentials/3732',
-    type: 'VerifiableCredential',
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: {
       // No @context property
       id: 'https://example.org/issuers/123',
@@ -51,7 +51,7 @@ describe('OB3 Nested Object Validation', () => {
       url: 'https://example.org',
       email: 'contact@example.org',
     },
-    issuanceDate: '2023-06-15T12:00:00Z',
+    validFrom: '2023-06-15T12:00:00Z',
     credentialSubject: {
       id: 'did:example:ebfeb1f712ebc6f1c276e12ec21',
       achievement: {
@@ -76,7 +76,7 @@ describe('OB3 Nested Object Validation', () => {
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: 'https://example.org/credentials/3732',
-    type: ['VerifiableCredential'],
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: {
       id: 'https://example.org/issuers/123',
       type: ['Profile'],
@@ -84,7 +84,7 @@ describe('OB3 Nested Object Validation', () => {
       url: 'https://example.org',
       email: 'contact@example.org',
     },
-    issuanceDate: '2023-06-15T12:00:00Z',
+    validFrom: '2023-06-15T12:00:00Z',
     credentialSubject: {
       id: 'did:example:ebfeb1f712ebc6f1c276e12ec21',
       achievement: {
@@ -116,7 +116,7 @@ describe('OB3 Nested Object Validation', () => {
       url: 'https://example.org',
       email: 'contact@example.org',
     },
-    issuanceDate: '2023-06-15T12:00:00Z',
+    validFrom: '2023-06-15T12:00:00Z',
     credentialSubject: {
       id: 'did:example:ebfeb1f712ebc6f1c276e12ec21',
       achievement: {

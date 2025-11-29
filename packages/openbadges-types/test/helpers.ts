@@ -84,7 +84,7 @@ export const createOB3VerifiableCredential = (
     id: Shared.createIRI('https://example.org/credentials/3732'),
     type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: createOB3Issuer(),
-    issuanceDate: Shared.createDateTime('2023-06-15T12:00:00Z'),
+    validFrom: Shared.createDateTime('2023-06-15T12:00:00Z'),
     credentialSubject: {
       id: Shared.createIRI('did:example:ebfeb1f712ebc6f1c276e12ec21'),
       achievement: createOB3Achievement(),

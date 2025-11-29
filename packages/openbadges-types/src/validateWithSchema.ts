@@ -35,14 +35,14 @@ export function validateOB3Credential(data: unknown): {
 
   const credential = data as Record<string, unknown>;
 
-  // Check for required fields
+  // Check for required fields (validFrom per VC Data Model 2.0)
   if (
     !credential.id ||
     !credential.type ||
     !credential.issuer ||
-    !credential.issuanceDate ||
+    !credential.validFrom ||
     !credential.credentialSubject ||
-    typeof credential.issuanceDate !== 'string'
+    typeof credential.validFrom !== 'string'
   ) {
     return {
       valid: false,

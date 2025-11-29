@@ -32,7 +32,7 @@ describe('OB3 Type Guards', () => {
           type: ['VerifiableCredential'], // Missing OpenBadgeCredential
           id: 'https://example.org/credentials/1',
           issuer: 'https://example.org/issuers/1',
-          issuanceDate: '2023-06-15T12:00:00Z',
+          validFrom: '2023-06-15T12:00:00Z',
           credentialSubject: { achievement: {} },
         })
       ).toBe(false);
