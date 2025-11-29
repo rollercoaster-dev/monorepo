@@ -23,6 +23,8 @@ async function resetSqliteDatabase(): Promise<void> {
 
     // Tables to clean up (in order to avoid foreign key constraints)
     const tables = [
+      'credential_status_entries',
+      'status_lists',
       'user_assertions',
       'user_roles',
       'platform_users',
@@ -107,6 +109,8 @@ async function resetPostgresDatabase(): Promise<void> {
 
     // Tables to clean up (in order to avoid foreign key constraints)
     const tables = [
+      'credential_status_entries',
+      'status_lists',
       'user_assertions',
       'user_roles',
       'platform_users',
@@ -189,12 +193,11 @@ async function resetPostgresDatabase(): Promise<void> {
  * Reset the database to a clean state
  */
 export async function resetDatabase(): Promise<void> {
-  // Force SQLite for E2E tests
-  const dbType = 'sqlite';
+  // Use DB_TYPE environment variable to determine which database to reset
+  const dbType = process.env.DB_TYPE || 'sqlite';
 
   logger.info('Resetting database', {
     dbType,
-    sqliteFile: ':memory:',
   });
 
   try {
