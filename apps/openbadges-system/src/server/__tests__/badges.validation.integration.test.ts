@@ -22,12 +22,13 @@ describe('Badges proxy validation (integration)', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    vi.resetModules()
     mockFetch = vi.mocked(fetch)
     const serverModule = await import('../index')
     app = { fetch: serverModule.default.fetch }
   })
 
-  it('returns 400 for invalid BadgeClass payload', async () => {
+  it('returns 400 for invalid BadgeClass payload with 1EdTech format report', async () => {
     const req = new Request('http://localhost/api/badges/api/v2/badge-classes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
@@ -46,10 +47,18 @@ describe('Badges proxy validation (integration)', () => {
 
     expect(res.status).toBe(400)
     expect(json.error).toBe('Invalid OB2 BadgeClass payload')
-    expect(Array.isArray(json.details)).toBe(true)
+    // Verify 1EdTech-format report structure
+    expect(json.report).toBeDefined()
+    expect(json.report.valid).toBe(false)
+    expect(json.report.errorCount).toBeGreaterThan(0)
+    expect(Array.isArray(json.report.messages)).toBe(true)
+    expect(json.report.messages.length).toBeGreaterThan(0)
+    expect(json.report.messages[0]).toHaveProperty('messageLevel', 'ERROR')
+    expect(json.report.messages[0]).toHaveProperty('result')
+    expect(json.report.messages[0]).toHaveProperty('success', false)
   })
 
-  it('returns 400 for invalid Assertion payload', async () => {
+  it('returns 400 for invalid Assertion payload with 1EdTech format report', async () => {
     const req = new Request('http://localhost/api/badges/api/v2/assertions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
@@ -65,6 +74,10 @@ describe('Badges proxy validation (integration)', () => {
 
     expect(res.status).toBe(400)
     expect(json.error).toBe('Invalid OB2 Assertion payload')
+    // Verify 1EdTech-format report structure
+    expect(json.report).toBeDefined()
+    expect(json.report.valid).toBe(false)
+    expect(json.report.errorCount).toBeGreaterThan(0)
   })
 
   it('forwards valid BadgeClass payload to OpenBadges server', async () => {

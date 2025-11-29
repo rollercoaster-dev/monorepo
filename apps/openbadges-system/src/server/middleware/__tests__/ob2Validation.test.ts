@@ -41,10 +41,22 @@ describe('OB2 Validation Schemas', () => {
       }
       const res = validateBadgeClassPayload(payload)
       expect(res.valid).toBe(false)
-      expect(res.valid ? [] : res.errors.join('\n')).toContain('image: Must be a valid IRI (URL)')
-      expect(res.valid ? [] : res.errors.join('\n')).toContain(
-        'criteria.narrative: Criteria narrative is required'
+      expect(res.report.valid).toBe(false)
+      expect(res.report.errorCount).toBeGreaterThanOrEqual(2)
+
+      // Check for image error
+      const imageError = res.report.messages.find(
+        m => m.node_path?.includes('image') && m.result.includes('IRI')
       )
+      expect(imageError).toBeDefined()
+      expect(imageError?.messageLevel).toBe('ERROR')
+      expect(imageError?.success).toBe(false)
+
+      // Check for criteria.narrative error
+      const narrativeError = res.report.messages.find(
+        m => m.node_path?.includes('criteria') && m.result.includes('narrative')
+      )
+      expect(narrativeError).toBeDefined()
     })
 
     it('accepts criteria as IRI string', () => {
@@ -58,6 +70,9 @@ describe('OB2 Validation Schemas', () => {
       }
       const res = validateBadgeClassPayload(payload)
       expect(res.valid).toBe(true)
+      expect(res.report.valid).toBe(true)
+      expect(res.report.errorCount).toBe(0)
+      expect(res.report.messages).toHaveLength(0)
     })
   })
 
@@ -82,9 +97,18 @@ describe('OB2 Validation Schemas', () => {
       }
       const res = validateAssertionPayload(payload)
       expect(res.valid).toBe(false)
-      const msg = res.valid ? '' : res.errors.join('\n')
-      expect(msg).toContain('recipient.identity: recipient.identity must be a valid email')
-      expect(msg).toContain('evidence: Must be a valid IRI (URL)')
+      expect(res.report.errorCount).toBeGreaterThanOrEqual(2)
+
+      // Check for email error
+      const emailError = res.report.messages.find(
+        m => m.node_path?.join('.').includes('recipient') && m.result.includes('email')
+      )
+      expect(emailError).toBeDefined()
+
+      // Check for evidence URL error
+      const evidenceError = res.report.messages.find(m => m.node_path?.includes('evidence'))
+      expect(evidenceError).toBeDefined()
+      expect(evidenceError?.result).toContain('IRI')
     })
   })
 })
