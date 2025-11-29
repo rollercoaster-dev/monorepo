@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { ValidationMessage, ValidationReportContent } from 'openbadges-types'
 
 // Shared helpers
 const iriSchema = z.string().url({ message: 'Must be a valid IRI (URL)' })
@@ -80,31 +81,89 @@ export const assertionSchema = z.object({
   narrative: z.string().optional(),
 })
 
-export type ValidationResult<T> = { valid: true; data: T } | { valid: false; errors: string[] }
+export type ValidationResult<T> =
+  | { valid: true; data: T; report: ValidationReportContent }
+  | { valid: false; report: ValidationReportContent }
 
-function formatValidationErrors(issues: z.ZodIssue[]): string[] {
-  return issues.map(e => {
-    const path =
-      (e.path as (string | number)[])
-        .map((p, i) => {
-          if (typeof p === 'number' && i > 0) {
-            return `[${p}]`
-          }
-          return i === 0 ? p : `.${p}`
-        })
-        .join('') || 'root'
-    return `${path}: ${e.message}`
-  })
+/**
+ * Maps Zod issue codes to task names for consistent error identification
+ */
+function getTaskName(issue: z.ZodIssue): string {
+  const pathStr =
+    issue.path.length > 0 ? issue.path.map(p => String(p).toUpperCase()).join('_') : 'ROOT'
+
+  const code = issue.code as string
+  switch (code) {
+    case 'invalid_type':
+      return `VALIDATE_TYPE_${pathStr}`
+    case 'invalid_string': {
+      const stringIssue = issue as z.ZodIssue & { validation?: string }
+      if (stringIssue.validation === 'url') return `VALIDATE_IRI_${pathStr}`
+      if (stringIssue.validation === 'email') return `VALIDATE_EMAIL_${pathStr}`
+      return `VALIDATE_STRING_${pathStr}`
+    }
+    case 'too_small':
+      return `VALIDATE_REQUIRED_${pathStr}`
+    case 'invalid_literal':
+      return `VALIDATE_LITERAL_${pathStr}`
+    case 'invalid_union':
+      return `VALIDATE_UNION_${pathStr}`
+    case 'invalid_format':
+      return `VALIDATE_FORMAT_${pathStr}`
+    default:
+      return `VALIDATE_${pathStr}`
+  }
+}
+
+/**
+ * Transforms Zod validation issues into 1EdTech-format ValidationMessages
+ */
+function zodIssuesToMessages(issues: z.ZodIssue[]): ValidationMessage[] {
+  return issues.map(issue => ({
+    name: getTaskName(issue),
+    messageLevel: 'ERROR' as const,
+    node_path: issue.path as Array<string | number>,
+    success: false,
+    result: issue.message,
+  }))
+}
+
+/**
+ * Creates a ValidationReportContent from validation results
+ */
+function createValidationReport(
+  messages: ValidationMessage[],
+  options?: { openBadgesVersion?: '2.0' | '3.0' }
+): ValidationReportContent {
+  const errorCount = messages.filter(m => m.messageLevel === 'ERROR').length
+  const warningCount = messages.filter(m => m.messageLevel === 'WARNING').length
+
+  return {
+    valid: errorCount === 0,
+    errorCount,
+    warningCount,
+    messages,
+    ...options,
+  }
 }
 
 export function validateBadgeClassPayload(
   payload: unknown
 ): ValidationResult<z.infer<typeof badgeClassSchema>> {
   const res = badgeClassSchema.safeParse(payload)
-  if (res.success) return { valid: true, data: res.data }
+
+  if (res.success) {
+    return {
+      valid: true,
+      data: res.data,
+      report: createValidationReport([], { openBadgesVersion: '2.0' }),
+    }
+  }
+
+  const messages = zodIssuesToMessages(res.error.issues)
   return {
     valid: false,
-    errors: formatValidationErrors(res.error.issues),
+    report: createValidationReport(messages, { openBadgesVersion: '2.0' }),
   }
 }
 
@@ -112,9 +171,18 @@ export function validateAssertionPayload(
   payload: unknown
 ): ValidationResult<z.infer<typeof assertionSchema>> {
   const res = assertionSchema.safeParse(payload)
-  if (res.success) return { valid: true, data: res.data }
+
+  if (res.success) {
+    return {
+      valid: true,
+      data: res.data,
+      report: createValidationReport([], { openBadgesVersion: '2.0' }),
+    }
+  }
+
+  const messages = zodIssuesToMessages(res.error.issues)
   return {
     valid: false,
-    errors: formatValidationErrors(res.error.issues),
+    report: createValidationReport(messages, { openBadgesVersion: '2.0' }),
   }
 }
