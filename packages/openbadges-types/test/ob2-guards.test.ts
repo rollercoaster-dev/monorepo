@@ -126,8 +126,10 @@ describe('OB2 Type Guards', () => {
   });
 
   describe('isEvidence', () => {
-    test('should reject empty objects', () => {
-      expect(OB2.isEvidence({})).toBe(false);
+    // OB2 Evidence has NO required properties per spec
+    // See: https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Evidence
+    test('should accept empty objects (OB2 Evidence has no required properties)', () => {
+      expect(OB2.isEvidence({})).toBe(true);
     });
 
     test('should reject null and undefined', () => {
@@ -184,8 +186,10 @@ describe('OB2 Type Guards', () => {
   });
 
   describe('isCriteria', () => {
-    test('should reject empty objects', () => {
-      expect(OB2.isCriteria({})).toBe(false);
+    // OB2 Criteria has NO required properties per spec
+    // See: https://www.imsglobal.org/sites/default/files/Badges/OBv2p0Final/index.html#Criteria
+    test('should accept empty objects (OB2 Criteria has no required properties)', () => {
+      expect(OB2.isCriteria({})).toBe(true);
     });
 
     test('should reject null and undefined', () => {
