@@ -6,47 +6,47 @@
  * repositories regardless of the underlying database implementation.
  */
 
-import postgres from 'postgres';
-import type { IssuerRepository } from '@domains/issuer/issuer.repository';
-import type { BadgeClassRepository } from '@domains/badgeClass/badgeClass.repository';
-import type { AssertionRepository } from '@domains/assertion/assertion.repository';
-import type { StatusListRepository } from '@domains/status-list/status-list.repository';
-import type { ApiKeyRepository } from '@domains/auth/apiKey.repository';
-import type { UserRepository } from '@domains/user/user.repository';
-import type { PlatformRepository } from '@domains/backpack/platform.repository';
-import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
-import type { UserAssertionRepository } from '@domains/backpack/user-assertion.repository';
-import { PostgresIssuerRepository } from './database/modules/postgresql/repositories/postgres-issuer.repository';
-import { PostgresBadgeClassRepository } from './database/modules/postgresql/repositories/postgres-badge-class.repository';
-import { PostgresAssertionRepository } from './database/modules/postgresql/repositories/postgres-assertion.repository';
-import { PostgresStatusListRepository } from './database/modules/postgresql/repositories/postgres-status-list.repository';
-import { PostgresApiKeyRepository } from './database/modules/postgresql/repositories/postgres-api-key.repository';
-import { PostgresUserRepository } from './database/modules/postgresql/repositories/postgres-user.repository';
-import { PostgresPlatformRepository } from './database/modules/postgresql/repositories/postgres-platform.repository';
-import { PostgresPlatformUserRepository } from './database/modules/postgresql/repositories/postgres-platform-user.repository';
-import { PostgresUserAssertionRepository } from './database/modules/postgresql/repositories/postgres-user-assertion.repository';
+import postgres from "postgres";
+import type { IssuerRepository } from "@domains/issuer/issuer.repository";
+import type { BadgeClassRepository } from "@domains/badgeClass/badgeClass.repository";
+import type { AssertionRepository } from "@domains/assertion/assertion.repository";
+import type { StatusListRepository } from "@domains/status-list/status-list.repository";
+import type { ApiKeyRepository } from "@domains/auth/apiKey.repository";
+import type { UserRepository } from "@domains/user/user.repository";
+import type { PlatformRepository } from "@domains/backpack/platform.repository";
+import type { PlatformUserRepository } from "@domains/backpack/platform-user.repository";
+import type { UserAssertionRepository } from "@domains/backpack/user-assertion.repository";
+import { PostgresIssuerRepository } from "./database/modules/postgresql/repositories/postgres-issuer.repository";
+import { PostgresBadgeClassRepository } from "./database/modules/postgresql/repositories/postgres-badge-class.repository";
+import { PostgresAssertionRepository } from "./database/modules/postgresql/repositories/postgres-assertion.repository";
+import { PostgresStatusListRepository } from "./database/modules/postgresql/repositories/postgres-status-list.repository";
+import { PostgresApiKeyRepository } from "./database/modules/postgresql/repositories/postgres-api-key.repository";
+import { PostgresUserRepository } from "./database/modules/postgresql/repositories/postgres-user.repository";
+import { PostgresPlatformRepository } from "./database/modules/postgresql/repositories/postgres-platform.repository";
+import { PostgresPlatformUserRepository } from "./database/modules/postgresql/repositories/postgres-platform-user.repository";
+import { PostgresUserAssertionRepository } from "./database/modules/postgresql/repositories/postgres-user-assertion.repository";
 // All PostgreSQL repositories are now implemented
-import { SqliteIssuerRepository } from './database/modules/sqlite/repositories/sqlite-issuer.repository';
-import { SqliteBadgeClassRepository } from './database/modules/sqlite/repositories/sqlite-badge-class.repository';
-import { SqliteAssertionRepository } from './database/modules/sqlite/repositories/sqlite-assertion.repository';
-import { SqliteStatusListRepository } from './database/modules/sqlite/repositories/sqlite-status-list.repository';
-import { SqliteApiKeyRepository } from './database/modules/sqlite/repositories/sqlite-api-key.repository';
-import { SqliteUserRepository } from './database/modules/sqlite/repositories/sqlite-user.repository';
-import { SqlitePlatformRepository } from './database/modules/sqlite/repositories/sqlite-platform.repository';
-import { SqlitePlatformUserRepository } from './database/modules/sqlite/repositories/sqlite-platform-user.repository';
-import { SqliteUserAssertionRepository } from './database/modules/sqlite/repositories/sqlite-user-assertion.repository';
-import { CachedIssuerRepository } from './cache/repositories/cached-issuer.repository';
-import { CachedBadgeClassRepository } from './cache/repositories/cached-badge-class.repository';
-import { CachedAssertionRepository } from './cache/repositories/cached-assertion.repository';
-import { config } from '@/config/config';
-import { logger } from '@utils/logging/logger.service';
+import { SqliteIssuerRepository } from "./database/modules/sqlite/repositories/sqlite-issuer.repository";
+import { SqliteBadgeClassRepository } from "./database/modules/sqlite/repositories/sqlite-badge-class.repository";
+import { SqliteAssertionRepository } from "./database/modules/sqlite/repositories/sqlite-assertion.repository";
+import { SqliteStatusListRepository } from "./database/modules/sqlite/repositories/sqlite-status-list.repository";
+import { SqliteApiKeyRepository } from "./database/modules/sqlite/repositories/sqlite-api-key.repository";
+import { SqliteUserRepository } from "./database/modules/sqlite/repositories/sqlite-user.repository";
+import { SqlitePlatformRepository } from "./database/modules/sqlite/repositories/sqlite-platform.repository";
+import { SqlitePlatformUserRepository } from "./database/modules/sqlite/repositories/sqlite-platform-user.repository";
+import { SqliteUserAssertionRepository } from "./database/modules/sqlite/repositories/sqlite-user-assertion.repository";
+import { CachedIssuerRepository } from "./cache/repositories/cached-issuer.repository";
+import { CachedBadgeClassRepository } from "./cache/repositories/cached-badge-class.repository";
+import { CachedAssertionRepository } from "./cache/repositories/cached-assertion.repository";
+import { config } from "@/config/config";
+import { logger } from "@utils/logging/logger.service";
 
 export class RepositoryFactory {
   private static client: postgres.Sql | null = null;
-  private static dbType: string = 'postgresql'; // Default database type
+  private static dbType: string = "postgresql"; // Default database type
   private static isInitialized: boolean = false;
   private static sqliteConnectionManager:
-    | import('./database/modules/sqlite/connection/sqlite-connection.manager').SqliteConnectionManager
+    | import("./database/modules/sqlite/connection/sqlite-connection.manager").SqliteConnectionManager
     | null = null;
 
   // Promise to track ongoing initialization - serves as a mutex
@@ -74,7 +74,7 @@ export class RepositoryFactory {
     // Prevent multiple initializations if already initialized
     if (RepositoryFactory.isInitialized) {
       logger.warn(
-        'RepositoryFactory already initialized. Skipping redundant initialization.'
+        "RepositoryFactory already initialized. Skipping redundant initialization.",
       );
       return;
     }
@@ -84,7 +84,7 @@ export class RepositoryFactory {
       try {
         RepositoryFactory.dbType = config.type;
 
-        if (RepositoryFactory.dbType === 'postgresql') {
+        if (RepositoryFactory.dbType === "postgresql") {
           // Configure PostgreSQL client with connection pooling
           RepositoryFactory.client = postgres(config.connectionString, {
             max: 20, // Maximum connections in pool
@@ -92,16 +92,16 @@ export class RepositoryFactory {
             connect_timeout: 10, // Connection timeout in seconds
             max_lifetime: 60 * 60, // Max connection lifetime in seconds
           });
-        } else if (RepositoryFactory.dbType === 'sqlite') {
+        } else if (RepositoryFactory.dbType === "sqlite") {
           // Only initialize if not already initialized
           if (!RepositoryFactory.sqliteConnectionManager) {
             // Create shared SQLite connection manager for resource management
-            const { Database } = await import('bun:sqlite');
+            const { Database } = await import("bun:sqlite");
             const { SqliteConnectionManager } = await import(
-              './database/modules/sqlite/connection/sqlite-connection.manager'
+              "./database/modules/sqlite/connection/sqlite-connection.manager"
             );
 
-            const sqliteFile = config.sqliteFile || ':memory:';
+            const sqliteFile = config.sqliteFile || ":memory:";
             const client = new Database(sqliteFile);
 
             RepositoryFactory.sqliteConnectionManager =
@@ -110,30 +110,30 @@ export class RepositoryFactory {
                 connectionRetryDelayMs: 1000,
                 sqliteBusyTimeout: config.sqliteBusyTimeout,
                 sqliteSyncMode: config.sqliteSyncMode as
-                  | 'OFF'
-                  | 'NORMAL'
-                  | 'FULL'
+                  | "OFF"
+                  | "NORMAL"
+                  | "FULL"
                   | undefined,
                 sqliteCacheSize: config.sqliteCacheSize,
               });
 
             // Connect the shared connection manager
             await RepositoryFactory.sqliteConnectionManager.connect();
-            logger.info('SQLite connection manager initialized successfully');
+            logger.info("SQLite connection manager initialized successfully");
           }
         } else {
           throw new Error(
-            `Unsupported database type: ${RepositoryFactory.dbType}`
+            `Unsupported database type: ${RepositoryFactory.dbType}`,
           );
         }
 
         // Mark as initialized
         RepositoryFactory.isInitialized = true;
         logger.info(
-          `Repository factory initialized with ${RepositoryFactory.dbType} database`
+          `Repository factory initialized with ${RepositoryFactory.dbType} database`,
         );
       } catch (error) {
-        logger.error('Failed to initialize RepositoryFactory', {
+        logger.error("Failed to initialize RepositoryFactory", {
           error: error instanceof Error ? error.message : String(error),
         });
         throw error;
@@ -152,29 +152,29 @@ export class RepositoryFactory {
     // Check if caching is enabled
     const enableCaching = config.cache?.enabled !== false;
 
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the base repository
       const baseRepository = new PostgresIssuerRepository(
-        RepositoryFactory.client
+        RepositoryFactory.client,
       );
 
       // Wrap with cache if enabled
       return enableCaching
         ? new CachedIssuerRepository(baseRepository)
         : baseRepository;
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the base repository using the shared connection manager
       const baseRepository = new SqliteIssuerRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
 
       // Wrap with cache if enabled
@@ -194,29 +194,29 @@ export class RepositoryFactory {
     // Check if caching is enabled
     const enableCaching = config.cache?.enabled !== false;
 
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the base repository
       const baseRepository = new PostgresBadgeClassRepository(
-        RepositoryFactory.client
+        RepositoryFactory.client,
       );
 
       // Wrap with cache if enabled
       return enableCaching
         ? new CachedBadgeClassRepository(baseRepository)
         : baseRepository;
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the base repository using the shared connection manager
       const baseRepository = new SqliteBadgeClassRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
 
       // Wrap with cache if enabled
@@ -236,29 +236,29 @@ export class RepositoryFactory {
     // Check if caching is enabled
     const enableCaching = config.cache?.enabled !== false;
 
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the base repository
       const baseRepository = new PostgresAssertionRepository(
-        RepositoryFactory.client
+        RepositoryFactory.client,
       );
 
       // Wrap with cache if enabled
       return enableCaching
         ? new CachedAssertionRepository(baseRepository)
         : baseRepository;
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the base repository using the shared connection manager
       const baseRepository = new SqliteAssertionRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
 
       // Wrap with cache if enabled
@@ -275,22 +275,22 @@ export class RepositoryFactory {
    * @returns An implementation of StatusListRepository
    */
   static async createStatusListRepository(): Promise<StatusListRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository
       return new PostgresStatusListRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqliteStatusListRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -302,22 +302,22 @@ export class RepositoryFactory {
    * @returns An implementation of ApiKeyRepository
    */
   static async createApiKeyRepository(): Promise<ApiKeyRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository (no caching for security-related repositories)
       return new PostgresApiKeyRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqliteApiKeyRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -329,22 +329,22 @@ export class RepositoryFactory {
    * @returns An implementation of PlatformRepository
    */
   static async createPlatformRepository(): Promise<PlatformRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository
       return new PostgresPlatformRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqlitePlatformRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -356,22 +356,22 @@ export class RepositoryFactory {
    * @returns An implementation of PlatformUserRepository
    */
   static async createPlatformUserRepository(): Promise<PlatformUserRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository
       return new PostgresPlatformUserRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqlitePlatformUserRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -383,22 +383,22 @@ export class RepositoryFactory {
    * @returns An implementation of UserAssertionRepository
    */
   static async createUserAssertionRepository(): Promise<UserAssertionRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository
       return new PostgresUserAssertionRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqliteUserAssertionRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -410,22 +410,22 @@ export class RepositoryFactory {
    * @returns An implementation of UserRepository
    */
   static async createUserRepository(): Promise<UserRepository> {
-    if (RepositoryFactory.dbType === 'postgresql') {
+    if (RepositoryFactory.dbType === "postgresql") {
       if (!RepositoryFactory.client) {
-        throw new Error('PostgreSQL client not initialized');
+        throw new Error("PostgreSQL client not initialized");
       }
 
       // Create the repository
       return new PostgresUserRepository(RepositoryFactory.client);
-    } else if (RepositoryFactory.dbType === 'sqlite') {
+    } else if (RepositoryFactory.dbType === "sqlite") {
       // Use the shared SQLite connection manager
       if (!RepositoryFactory.sqliteConnectionManager) {
-        throw new Error('SQLite connection manager not initialized');
+        throw new Error("SQLite connection manager not initialized");
       }
 
       // Create the repository using the shared connection manager
       return new SqliteUserRepository(
-        RepositoryFactory.sqliteConnectionManager
+        RepositoryFactory.sqliteConnectionManager,
       );
     }
 
@@ -442,38 +442,38 @@ export class RepositoryFactory {
         await RepositoryFactory.initializationPromise;
       } catch (error) {
         // If initialization failed, log and continue with cleanup
-        logger.warn('Initialization was in progress but failed during close', {
+        logger.warn("Initialization was in progress but failed during close", {
           errorMessage: error instanceof Error ? error.message : String(error),
         });
       }
     }
 
     if (!RepositoryFactory.isInitialized) {
-      logger.warn('RepositoryFactory not initialized. Nothing to close.');
+      logger.warn("RepositoryFactory not initialized. Nothing to close.");
       return;
     }
 
-    if (RepositoryFactory.dbType === 'postgresql' && RepositoryFactory.client) {
+    if (RepositoryFactory.dbType === "postgresql" && RepositoryFactory.client) {
       try {
         await RepositoryFactory.client.end();
-        logger.info('PostgreSQL client closed successfully');
+        logger.info("PostgreSQL client closed successfully");
       } catch (e) {
-        logger.warn('Failed to close PostgreSQL client', {
+        logger.warn("Failed to close PostgreSQL client", {
           errorMessage: e instanceof Error ? e.message : String(e),
         });
       }
       RepositoryFactory.client = null;
     } else if (
-      RepositoryFactory.dbType === 'sqlite' &&
+      RepositoryFactory.dbType === "sqlite" &&
       RepositoryFactory.sqliteConnectionManager
     ) {
       // Properly disconnect the shared SQLite connection manager
       try {
         await RepositoryFactory.sqliteConnectionManager.disconnect();
         RepositoryFactory.sqliteConnectionManager = null;
-        logger.info('SQLite connection manager disconnected successfully');
+        logger.info("SQLite connection manager disconnected successfully");
       } catch (error) {
-        logger.warn('Failed to disconnect SQLite connection manager', {
+        logger.warn("Failed to disconnect SQLite connection manager", {
           errorMessage: error instanceof Error ? error.message : String(error),
         });
       }
@@ -483,7 +483,7 @@ export class RepositoryFactory {
     RepositoryFactory.isInitialized = false;
     // Reset initialization promise
     RepositoryFactory.initializationPromise = null;
-    logger.info('Repository factory closed');
+    logger.info("Repository factory closed");
   }
 
   /**
@@ -497,14 +497,14 @@ export class RepositoryFactory {
 
     try {
       if (
-        RepositoryFactory.dbType === 'postgresql' &&
+        RepositoryFactory.dbType === "postgresql" &&
         RepositoryFactory.client
       ) {
         // Test PostgreSQL connection with a simple query
         await RepositoryFactory.client`SELECT 1`;
         return true;
       } else if (
-        RepositoryFactory.dbType === 'sqlite' &&
+        RepositoryFactory.dbType === "sqlite" &&
         RepositoryFactory.sqliteConnectionManager
       ) {
         // Test SQLite connection
@@ -515,7 +515,7 @@ export class RepositoryFactory {
       return false;
     } catch {
       logger.debug(
-        'RepositoryFactory.isConnected(): connectivity check failed'
+        "RepositoryFactory.isConnected(): connectivity check failed",
       );
       return false;
     }
@@ -526,7 +526,7 @@ export class RepositoryFactory {
    * @returns The SQLite connection manager or null if not initialized
    */
   static getSqliteConnectionManager():
-    | import('./database/modules/sqlite/connection/sqlite-connection.manager').SqliteConnectionManager
+    | import("./database/modules/sqlite/connection/sqlite-connection.manager").SqliteConnectionManager
     | null {
     return RepositoryFactory.sqliteConnectionManager;
   }

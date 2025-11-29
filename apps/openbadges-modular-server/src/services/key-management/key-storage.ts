@@ -19,11 +19,16 @@
  *   external key management for clustered deployments.
  */
 
-import { randomUUID } from 'crypto';
-import * as fs from 'fs';
-import type { KeyPairWithJWK, KeyType, KeyAlgorithm, KeyFileFormat } from './types';
-import { isValidKeyFileFormat } from './types';
-import { keyPairToJWK, generateRSAKeyPair } from './key-generator';
+import { randomUUID } from "crypto";
+import * as fs from "fs";
+import type {
+  KeyPairWithJWK,
+  KeyType,
+  KeyAlgorithm,
+  KeyFileFormat,
+} from "./types";
+import { isValidKeyFileFormat } from "./types";
+import { keyPairToJWK, generateRSAKeyPair } from "./key-generator";
 
 // =============================================================================
 // Custom Errors
@@ -35,7 +40,7 @@ import { keyPairToJWK, generateRSAKeyPair } from './key-generator';
 export class KeyFileNotFoundError extends Error {
   constructor(filePath: string) {
     super(`Key file not found: ${filePath}`);
-    this.name = 'KeyFileNotFoundError';
+    this.name = "KeyFileNotFoundError";
   }
 }
 
@@ -50,21 +55,21 @@ function decodePemKey(value: string): string {
   const trimmed = value.trim();
 
   // If it starts with PEM header, it's raw PEM
-  if (trimmed.startsWith('-----BEGIN')) {
+  if (trimmed.startsWith("-----BEGIN")) {
     return trimmed;
   }
 
   // Try base64 decode
   try {
-    const decoded = Buffer.from(trimmed, 'base64').toString('utf-8');
-    if (decoded.includes('-----BEGIN') && decoded.includes('-----END')) {
+    const decoded = Buffer.from(trimmed, "base64").toString("utf-8");
+    if (decoded.includes("-----BEGIN") && decoded.includes("-----END")) {
       return decoded;
     }
   } catch {
     // Not valid base64
   }
 
-  throw new Error('Invalid key format: must be PEM or base64-encoded PEM');
+  throw new Error("Invalid key format: must be PEM or base64-encoded PEM");
 }
 
 /**
@@ -73,12 +78,12 @@ function decodePemKey(value: string): string {
 function detectKeyType(privateKeyPem: string): KeyType {
   // Ed25519 keys in PKCS#8 are ~48 bytes, RSA 2048 are ~1200+ bytes
   const base64Content = privateKeyPem
-    .replace(/-----BEGIN[^-]+-----/, '')
-    .replace(/-----END[^-]+-----/, '')
-    .replace(/\s/g, '');
+    .replace(/-----BEGIN[^-]+-----/, "")
+    .replace(/-----END[^-]+-----/, "")
+    .replace(/\s/g, "");
 
-  const keySize = Buffer.from(base64Content, 'base64').length;
-  return keySize < 100 ? 'OKP' : 'RSA';
+  const keySize = Buffer.from(base64Content, "base64").length;
+  return keySize < 100 ? "OKP" : "RSA";
 }
 
 /**
@@ -91,30 +96,30 @@ function detectKeyType(privateKeyPem: string): KeyType {
  * @returns KeyPairWithJWK if both keys are present, null otherwise
  */
 export function loadKeyPairFromEnv(): KeyPairWithJWK | null {
-  const privateKeyRaw = process.env['KEY_PRIVATE'];
-  const publicKeyRaw = process.env['KEY_PUBLIC'];
+  const privateKeyRaw = process.env["KEY_PRIVATE"];
+  const publicKeyRaw = process.env["KEY_PUBLIC"];
 
   if (!privateKeyRaw && !publicKeyRaw) {
     return null;
   }
 
   if (!privateKeyRaw || !publicKeyRaw) {
-    throw new Error('Both KEY_PRIVATE and KEY_PUBLIC must be set together');
+    throw new Error("Both KEY_PRIVATE and KEY_PUBLIC must be set together");
   }
 
   const privateKey = decodePemKey(privateKeyRaw);
   const publicKey = decodePemKey(publicKeyRaw);
 
   const keyType = detectKeyType(privateKey);
-  const algorithm: KeyAlgorithm = keyType === 'OKP' ? 'EdDSA' : 'RS256';
-  const keyId = process.env['KEY_ID'] || randomUUID();
+  const algorithm: KeyAlgorithm = keyType === "OKP" ? "EdDSA" : "RS256";
+  const keyId = process.env["KEY_ID"] || randomUUID();
 
   const { publicJwk, privateJwk } = keyPairToJWK(
     publicKey,
     privateKey,
     keyType,
     algorithm,
-    keyId
+    keyId,
   );
 
   return {
@@ -123,7 +128,7 @@ export function loadKeyPairFromEnv(): KeyPairWithJWK | null {
     privateKey,
     keyType,
     algorithm,
-    status: 'active',
+    status: "active",
     createdAt: new Date().toISOString(),
     publicJwk,
     privateJwk,
@@ -142,17 +147,17 @@ export function loadKeyPairFromEnv(): KeyPairWithJWK | null {
  * @throws Error if file doesn't exist, is unreadable, or has invalid format
  */
 export async function loadKeyPairFromFile(
-  filePath: string
+  filePath: string,
 ): Promise<KeyPairWithJWK> {
   let content: string;
   try {
-    content = await fs.promises.readFile(filePath, 'utf-8');
+    content = await fs.promises.readFile(filePath, "utf-8");
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT') {
+    if (code === "ENOENT") {
       throw new KeyFileNotFoundError(filePath);
     }
-    if (code === 'EACCES') {
+    if (code === "EACCES") {
       throw new Error(`Permission denied reading key file: ${filePath}`);
     }
     throw new Error(`Failed to read key file: ${(error as Error).message}`);
@@ -174,7 +179,7 @@ export async function loadKeyPairFromFile(
     data.privateKey,
     data.keyType,
     data.algorithm,
-    data.id
+    data.id,
   );
 
   return {
@@ -183,7 +188,7 @@ export async function loadKeyPairFromFile(
     privateKey: data.privateKey,
     keyType: data.keyType,
     algorithm: data.algorithm,
-    status: 'active',
+    status: "active",
     createdAt: data.createdAt,
     publicJwk,
     privateJwk,
@@ -206,7 +211,7 @@ export async function loadKeyPairFromFile(
  */
 export async function saveKeyPairToFile(
   keyPair: KeyPairWithJWK,
-  filePath: string
+  filePath: string,
 ): Promise<void> {
   const fileData: KeyFileFormat = {
     id: keyPair.id,
@@ -223,7 +228,7 @@ export async function saveKeyPairToFile(
   try {
     // Write to temp file first (atomic write pattern)
     await fs.promises.writeFile(tempPath, content, {
-      encoding: 'utf-8',
+      encoding: "utf-8",
       mode: 0o600,
     });
 
@@ -231,7 +236,7 @@ export async function saveKeyPairToFile(
     await fs.promises.rename(tempPath, filePath);
 
     // Ensure permissions on Unix (rename preserves temp file permissions)
-    if (process.platform !== 'win32') {
+    if (process.platform !== "win32") {
       await fs.promises.chmod(filePath, 0o600);
     }
   } catch (error) {
@@ -243,10 +248,10 @@ export async function saveKeyPairToFile(
     }
 
     const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT') {
+    if (code === "ENOENT") {
       throw new Error(`Directory does not exist for key file: ${filePath}`);
     }
-    if (code === 'EACCES') {
+    if (code === "EACCES") {
       throw new Error(`Permission denied writing key file: ${filePath}`);
     }
     throw new Error(`Failed to write key file: ${(error as Error).message}`);
@@ -282,7 +287,7 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
   }
 
   // Try file path from OB_SIGNING_KEY
-  const keyFilePath = process.env['OB_SIGNING_KEY'];
+  const keyFilePath = process.env["OB_SIGNING_KEY"];
   if (keyFilePath) {
     try {
       const fileKey = await loadKeyPairFromFile(keyFilePath);
@@ -298,8 +303,8 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
   }
 
   // Auto-generate if enabled
-  if (process.env['KEY_AUTO_GENERATE'] === 'true') {
-    const generated = await generateRSAKeyPair({ algorithm: 'RS256' });
+  if (process.env["KEY_AUTO_GENERATE"] === "true") {
+    const generated = await generateRSAKeyPair({ algorithm: "RS256" });
 
     // Save to file if OB_SIGNING_KEY is set
     if (keyFilePath) {
@@ -311,7 +316,7 @@ export async function getActiveKey(): Promise<KeyPairWithJWK> {
   }
 
   throw new Error(
-    'No signing key available. Set KEY_PRIVATE/KEY_PUBLIC, OB_SIGNING_KEY, or KEY_AUTO_GENERATE=true'
+    "No signing key available. Set KEY_PRIVATE/KEY_PUBLIC, OB_SIGNING_KEY, or KEY_AUTO_GENERATE=true",
   );
 }
 

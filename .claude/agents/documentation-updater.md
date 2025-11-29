@@ -8,9 +8,11 @@ model: haiku
 # Documentation Updater Agent
 
 ## Purpose
+
 Updates all project documentation to reflect changes from migrations, new features, version updates, and structural changes. Ensures documentation consistency across the monorepo.
 
 ## When to Use This Agent
+
 - After completing a package migration
 - When adding new packages or features
 - During version bumps and releases
@@ -22,11 +24,13 @@ Updates all project documentation to reflect changes from migrations, new featur
 ## Inputs
 
 The user should provide:
+
 - **Context**: What changed (migration, feature, refactor, version bump)
 - **Package name**: Name of affected package (if applicable)
 - **Package path**: Path to the package (if applicable)
 
 Optional for migrations:
+
 - **Migration status**: complete | in-progress | blocked
 - **Package version**: Current version
 - **Test results**: Pass/fail, count
@@ -67,10 +71,12 @@ Optional for migrations:
 1. **Update package status in "Current Packages" section:**
 
    **For migrations:**
+
    ```markdown
    ### Published Packages (npm)
 
    #### @rollercoaster-dev/{package-name}
+
    - **Purpose**: {description from package.json}
    - **Location**: `packages/{package-name}/`
    - **Status**: ✅ Migrated, published, full CI/CD
@@ -81,6 +87,7 @@ Optional for migrations:
    ```
 
    **Update migration status:**
+
    ```markdown
    ## 🔄 Migration Status
 
@@ -91,20 +98,22 @@ Optional for migrations:
    - ✅ **Phase 1**: Foundation Setup (Complete)
    - 🏗️ **Phase 2**: Migrate Shared Packages (In Progress)
      - ✅ rd-logger (complete with CI/CD)
-     - ✅ {package-name} (complete)  # ← Add this
+     - ✅ {package-name} (complete) # ← Add this
      - ⏳ openbadges-types, openbadges-ui
    ```
 
 2. **Update package manager references (if migrated to Bun):**
+
    ```markdown
    ## 🏗️ Architecture
 
-   - **Package Manager**: Bun v1.3.0 with workspaces  # ← Update from pnpm
+   - **Package Manager**: Bun v1.3.0 with workspaces # ← Update from pnpm
    - **Runtime**: Bun (for packages/apps using Bun APIs)
    ```
 
 3. **Update common commands (if changed):**
-   ```markdown
+
+   ````markdown
    ### Common Commands
 
    ```bash
@@ -116,6 +125,10 @@ Optional for migrations:
    # Package Management
    bun install          # Install dependencies
    ```
+   ````
+
+   ```
+
    ```
 
 4. **Add new packages to package-specific sections:**
@@ -125,6 +138,7 @@ Optional for migrations:
 ### Phase 3: Update Main README.md
 
 1. **Update package count and badges:**
+
    ```markdown
    ## Packages
 
@@ -135,6 +149,7 @@ Optional for migrations:
    ```
 
 2. **Update status badges (if applicable):**
+
    ```markdown
    [![npm version](https://badge.fury.io/js/@rollercoaster-dev%2F{package}.svg)](...)
    [![CI](https://github.com/rollercoaster-dev/monorepo/workflows/CI/badge.svg)](...)
@@ -146,18 +161,24 @@ Optional for migrations:
    - Package manager commands
 
 4. **Update monorepo structure diagram:**
+
    ```markdown
+
    ```
+
    monorepo/
    ├── packages/
-   │   ├── rd-logger/          ✅
-   │   └── {new-package}/      ✅  # ← Add this
+   │ ├── rd-logger/ ✅
+   │ └── {new-package}/ ✅ # ← Add this
+
    ```
+
    ```
 
 ### Phase 4: Create/Update MIGRATION.md (Audit Trail)
 
 1. **Create MIGRATION.md if doesn't exist:**
+
    ```markdown
    # Migration Audit Trail
 
@@ -183,6 +204,7 @@ Optional for migrations:
    ```
 
 2. **Add migration entry:**
+
    ```markdown
    ## Completed Migrations
 
@@ -200,10 +222,12 @@ Optional for migrations:
    - **Published**: {yes|no}
 
    **Key Changes:**
+
    - {Notable change 1}
    - {Notable change 2}
 
    **Lessons Learned:**
+
    - {Lesson 1}
    - {Lesson 2}
    ```
@@ -216,18 +240,22 @@ Optional for migrations:
 ### Phase 5: Archive Migration Plan
 
 1. **Create docs/migrations/ directory if doesn't exist:**
+
    ```bash
    mkdir -p docs/migrations
    ```
 
 2. **Move migration plan:**
+
    ```bash
    mv MIGRATION_PLAN_{package}.md docs/migrations/
    ```
 
 3. **Add completion metadata to migration plan:**
+
    ```markdown
    <!-- Add to top of migration plan -->
+
    # Migration Plan: {package-name}
 
    **Status**: ✅ COMPLETED on 2025-11-16
@@ -241,6 +269,7 @@ Optional for migrations:
    ```
 
 4. **Create/update docs/migrations/README.md:**
+
    ```markdown
    # Migration Plans Archive
 
@@ -254,6 +283,7 @@ Optional for migrations:
    ## Using Migration Plans
 
    Each migration plan documents:
+
    - Original package structure
    - Required changes
    - Dependencies to update
@@ -270,7 +300,8 @@ Optional for migrations:
 2. **Update installation section:**
 
    **For published packages:**
-   ```markdown
+
+   ````markdown
    ## Installation
 
    ```bash
@@ -283,7 +314,9 @@ Optional for migrations:
    # Using pnpm
    pnpm add @rollercoaster-dev/{package-name}
    ```
-   ```
+   ````
+
+   ````
 
    **For internal packages:**
    ```markdown
@@ -297,16 +330,21 @@ Optional for migrations:
        "@rollercoaster-dev/{package-name}": "workspace:*"
      }
    }
+   ````
+
    ```
+
    ```
 
 3. **Add monorepo context badge/notice:**
+
    ```markdown
    > Part of the [rollercoaster.dev monorepo](../../README.md)
    ```
 
 4. **Update development instructions:**
-   ```markdown
+
+   ````markdown
    ## Development
 
    This package is part of a monorepo. Clone the main repository:
@@ -316,6 +354,7 @@ Optional for migrations:
    cd monorepo
    bun install
    ```
+   ````
 
    ### Working on this package
 
@@ -329,17 +368,21 @@ Optional for migrations:
    # Type check
    bun --filter {package-name} run type-check
    ```
+
+   ```
+
    ```
 
 5. **Update import examples (if paths changed):**
    ```typescript
    // Update from standalone repo imports to monorepo imports
-   import { Logger } from '@rollercoaster-dev/{package-name}'
+   import { Logger } from "@rollercoaster-dev/{package-name}";
    ```
 
 ### Phase 7: Update Cross-References
 
 1. **Find references to package in other docs:**
+
    ```bash
    grep -r "{package-name}" docs/ --include="*.md"
    ```
@@ -359,12 +402,14 @@ Optional for migrations:
    - Look in `.changeset/` directory
 
 2. **Create or update changeset:**
+
    ```bash
    # If not already created during migration
    bun changeset
    ```
 
 3. **Verify changeset content:**
+
    ```markdown
    ---
    "@rollercoaster-dev/{package-name}": minor
@@ -400,7 +445,7 @@ Optional for migrations:
 
 Create summary of documentation changes:
 
-```markdown
+````markdown
 # Documentation Update Report
 
 ## Summary
@@ -412,6 +457,7 @@ Create summary of documentation changes:
 ## Files Updated
 
 ### Modified
+
 - ✅ CLAUDE.md
   - Updated package status
   - Updated migration progress
@@ -426,30 +472,36 @@ Create summary of documentation changes:
   - Added monorepo context
 
 ### Created
+
 - ✅ docs/migrations/README.md (if first migration)
 - ✅ MIGRATION.md (if didn't exist)
 
 ### Moved
-- ✅ MIGRATION_PLAN_{package}.md → docs/migrations/
+
+- ✅ MIGRATION*PLAN*{package}.md → docs/migrations/
 
 ## Changes Made
 
 ### CLAUDE.md
+
 - Added {package-name} to "Current Packages"
 - Updated migration status: Phase 2 shows {package} as complete
 - {Other changes}
 
 ### README.md
+
 - Added {package-name} to package list
 - Updated package count: {old} → {new}
 - {Other changes}
 
 ### MIGRATION.md
+
 - Added migration entry for {package-name}
 - Recorded: PR #{n}, {m} tests passing, {pct}% coverage
 - Documented lessons learned
 
 ### Package README
+
 - Updated installation for monorepo context
 - Added development instructions
 - Updated import examples
@@ -484,6 +536,8 @@ cat packages/{package-name}/README.md
 # View migration plan archive
 cat docs/migrations/MIGRATION_PLAN_{package}.md
 ```
+````
+
 ```
 
 ## Tools Required
@@ -528,9 +582,11 @@ If documentation update fails:
 
 ### After Package Migration
 ```
+
 User: "Update documentation for completed openbadges-types migration"
 
 Agent:
+
 1. Reads migration context (PR #45, 52 tests passing, 91% coverage)
 2. Updates CLAUDE.md: Marks openbadges-types as ✅ complete
 3. Updates README.md: Adds package to list
@@ -539,18 +595,22 @@ Agent:
 6. Updates package README: Adds monorepo context
 7. Validates: All links work, formatting correct
 8. Reports: ✅ 5 files updated, documentation complete
+
 ```
 
 ### After New Feature
 ```
+
 User: "Update docs for new Bun.serve adapter in rd-logger"
 
 Agent:
+
 1. Updates packages/rd-logger/README.md: Adds Bun adapter section
 2. Updates CLAUDE.md: Adds feature to rd-logger features list
 3. Creates usage example
 4. Updates CHANGELOG (if exists)
 5. Reports: ✅ Documentation updated for new feature
+
 ```
 
 ## Success Criteria
@@ -574,3 +634,4 @@ This agent is designed to be called:
 - As part of release process
 - For documentation audits
 - By other agents that make structural changes
+```

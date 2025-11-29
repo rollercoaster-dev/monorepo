@@ -16,8 +16,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,ts,vue}\"",
-    "typecheck": "tsc --noEmit --skipLibCheck",
-    "check": "bun run lint --fix && bun run typecheck",
+    "type-check": "vue-tsc --noEmit",
+    "check": "bun run lint --fix && bun run type-check",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -79,6 +79,7 @@
     "terser": "^5.39.0",
     "typescript": "^5.8.3",
     "vite": "^4.5.14",
+    "vue-tsc": "^3.0.1",
     "vitest": "^0.34.0",
     "vue": "^3.0.0"
   },

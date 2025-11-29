@@ -1,12 +1,8 @@
-import chalk from 'chalk';
-import type { Transport } from './transport.interface.js';
-import type {
-  LogLevel} from '../logger.config.js';
-import {
-  DEFAULT_LEVEL_COLORS,
-  DEFAULT_LEVEL_ICONS,
-} from '../logger.config.js';
-import { formatDate, safeStringify } from '../utils.js';
+import chalk from "chalk";
+import type { Transport } from "./transport.interface.js";
+import type { LogLevel } from "../logger.config.js";
+import { DEFAULT_LEVEL_COLORS, DEFAULT_LEVEL_ICONS } from "../logger.config.js";
+import { formatDate, safeStringify } from "../utils.js";
 
 export interface ConsoleTransportOptions {
   /**
@@ -39,7 +35,7 @@ export interface ConsoleTransportOptions {
  * Console transport for the logger
  */
 export class ConsoleTransport implements Transport {
-  public name = 'console';
+  public name = "console";
   private prettyPrint: boolean;
   private colorize: boolean;
   private use24HourFormat: boolean;
@@ -64,7 +60,7 @@ export class ConsoleTransport implements Transport {
     level: string,
     message: string,
     timestamp: string,
-    context: Record<string, any>
+    context: Record<string, any>,
   ): void {
     const logLevel = level as LogLevel;
     const icon = this.levelIcons[logLevel];
@@ -92,7 +88,7 @@ export class ConsoleTransport implements Transport {
     if (Object.keys(context).length) {
       for (const [key, value] of Object.entries(context)) {
         const formattedValue =
-          typeof value === 'object' && value !== null
+          typeof value === "object" && value !== null
             ? safeStringify(value)
             : String(value);
         const colorizedKey = this.colorize ? chalk.gray(key) : key;
@@ -104,8 +100,8 @@ export class ConsoleTransport implements Transport {
     }
 
     const divider = this.colorize
-      ? chalk.dim('\n────────────────────────────────────')
-      : '\n────────────────────────────────────';
+      ? chalk.dim("\n────────────────────────────────────")
+      : "\n────────────────────────────────────";
     consoleOutput += divider;
 
     // Output to console

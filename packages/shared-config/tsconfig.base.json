@@ -33,11 +33,5 @@
     // Skip Lib Check for faster builds
     "skipLibCheck": true
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    ".turbo"
-  ]
+  "exclude": ["node_modules", "dist", "build", "coverage", ".turbo"]
 }

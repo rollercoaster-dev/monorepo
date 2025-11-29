@@ -1,33 +1,40 @@
 // src/composables/useBadges.ts
-import { ref, computed } from 'vue';
-import type { ComputedRef } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import { BadgeService } from '@services/BadgeService';
+import { ref, computed } from "vue";
+import type { ComputedRef } from "vue";
+import type { OB2, OB3 } from "@/types";
+import { BadgeService } from "@services/BadgeService";
 
 /**
  * Composable for managing a collection of badges
  * Provides functionality to filter, sort, and transform badges for display
  */
-export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredential)[] = []): {
+export function useBadges(
+  initialBadges: (OB2.Assertion | OB3.VerifiableCredential)[] = [],
+): {
   badges: ReturnType<typeof ref<(OB2.Assertion | OB3.VerifiableCredential)[]>>;
   filterText: ReturnType<typeof ref<string>>;
-  sortBy: ReturnType<typeof ref<'issuedOn' | 'name'>>;
-  sortDirection: ReturnType<typeof ref<'asc' | 'desc'>>;
+  sortBy: ReturnType<typeof ref<"issuedOn" | "name">>;
+  sortDirection: ReturnType<typeof ref<"asc" | "desc">>;
   filteredBadges: ComputedRef<(OB2.Assertion | OB3.VerifiableCredential)[]>;
   sortedBadges: ComputedRef<(OB2.Assertion | OB3.VerifiableCredential)[]>;
-  normalizedBadges: ComputedRef<ReturnType<typeof BadgeService.normalizeBadge>[]>;
-  badgesByIssuer: ComputedRef<Record<string, ReturnType<typeof BadgeService.normalizeBadge>[]>>;
+  normalizedBadges: ComputedRef<
+    ReturnType<typeof BadgeService.normalizeBadge>[]
+  >;
+  badgesByIssuer: ComputedRef<
+    Record<string, ReturnType<typeof BadgeService.normalizeBadge>[]>
+  >;
   addBadge: (badge: OB2.Assertion | OB3.VerifiableCredential) => void;
   removeBadge: (badgeId: string) => void;
   setBadges: (newBadges: (OB2.Assertion | OB3.VerifiableCredential)[]) => void;
   setFilter: (text: string) => void;
-  setSorting: (by: 'issuedOn' | 'name', direction?: 'asc' | 'desc') => void;
+  setSorting: (by: "issuedOn" | "name", direction?: "asc" | "desc") => void;
 } {
   // State
-  const badges = ref<(OB2.Assertion | OB3.VerifiableCredential)[]>(initialBadges);
-  const filterText = ref('');
-  const sortBy = ref<'issuedOn' | 'name'>('issuedOn');
-  const sortDirection = ref<'asc' | 'desc'>('desc');
+  const badges =
+    ref<(OB2.Assertion | OB3.VerifiableCredential)[]>(initialBadges);
+  const filterText = ref("");
+  const sortBy = ref<"issuedOn" | "name">("issuedOn");
+  const sortDirection = ref<"asc" | "desc">("desc");
 
   // Computed properties
   const filteredBadges = computed(() => {
@@ -53,15 +60,15 @@ export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredenti
       const normalizedA = BadgeService.normalizeBadge(a);
       const normalizedB = BadgeService.normalizeBadge(b);
 
-      if (sortBy.value === 'name') {
-        return sortDirection.value === 'asc'
+      if (sortBy.value === "name") {
+        return sortDirection.value === "asc"
           ? normalizedA.name.localeCompare(normalizedB.name)
           : normalizedB.name.localeCompare(normalizedA.name);
       } else {
         // Sort by issuedOn date
         const dateA = new Date(normalizedA.issuedOn).getTime();
         const dateB = new Date(normalizedB.issuedOn).getTime();
-        return sortDirection.value === 'asc' ? dateA - dateB : dateB - dateA;
+        return sortDirection.value === "asc" ? dateA - dateB : dateB - dateA;
       }
     });
 
@@ -70,7 +77,9 @@ export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredenti
 
   // Normalized badges for display
   const normalizedBadges = computed(() => {
-    return sortedBadges.value.map((badge) => BadgeService.normalizeBadge(badge));
+    return sortedBadges.value.map((badge) =>
+      BadgeService.normalizeBadge(badge),
+    );
   });
 
   // Group badges by issuer
@@ -78,7 +87,7 @@ export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredenti
     const grouped: Record<string, typeof normalizedBadges.value> = {};
 
     normalizedBadges.value.forEach((badge) => {
-      const issuerName = badge.issuer.name || 'Unknown Issuer';
+      const issuerName = badge.issuer.name || "Unknown Issuer";
       if (!grouped[issuerName]) {
         grouped[issuerName] = [];
       }
@@ -100,7 +109,9 @@ export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredenti
     }
   };
 
-  const setBadges = (newBadges: (OB2.Assertion | OB3.VerifiableCredential)[]) => {
+  const setBadges = (
+    newBadges: (OB2.Assertion | OB3.VerifiableCredential)[],
+  ) => {
     badges.value = newBadges;
   };
 
@@ -108,7 +119,10 @@ export function useBadges(initialBadges: (OB2.Assertion | OB3.VerifiableCredenti
     filterText.value = text;
   };
 
-  const setSorting = (by: 'issuedOn' | 'name', direction: 'asc' | 'desc' = 'desc') => {
+  const setSorting = (
+    by: "issuedOn" | "name",
+    direction: "asc" | "desc" = "desc",
+  ) => {
     sortBy.value = by;
     sortDirection.value = direction;
   };

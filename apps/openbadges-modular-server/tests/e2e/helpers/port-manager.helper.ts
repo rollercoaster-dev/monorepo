@@ -10,8 +10,8 @@
  *   manage their own cleanup processes.
  */
 
-import getPort, { portNumbers } from 'get-port';
-import { logger } from '@/utils/logging/logger.service';
+import getPort, { portNumbers } from "get-port";
+import { logger } from "@/utils/logging/logger.service";
 
 // Cache of allocated ports to avoid conflicts within the same process
 const allocatedPorts = new Set<number>();
@@ -25,7 +25,7 @@ let portAllocationMutex: Promise<void> = Promise.resolve();
  * @returns Promise<number> Available port number
  */
 export async function getAvailablePort(
-  preferredPort?: number
+  preferredPort?: number,
 ): Promise<number> {
   // Use a mutex to prevent concurrent port allocation
   return new Promise<number>((resolve, reject) => {
@@ -34,14 +34,14 @@ export async function getAvailablePort(
         try {
           // Add a small random delay to reduce race conditions between test files
           await new Promise((resolveDelay) =>
-            setTimeout(resolveDelay, Math.random() * 100)
+            setTimeout(resolveDelay, Math.random() * 100),
           );
 
           const port = await getPort({
             port: preferredPort
               ? [preferredPort, ...portNumbers(10000, 20000)]
               : portNumbers(10000, 20000),
-            host: '0.0.0.0',
+            host: "0.0.0.0",
             exclude: Array.from(allocatedPorts), // Exclude already allocated ports
           });
 
@@ -51,7 +51,7 @@ export async function getAvailablePort(
           logger.info(`Allocated port ${port} for E2E test`);
           resolve(port);
         } catch (error) {
-          logger.error('Failed to get available port', {
+          logger.error("Failed to get available port", {
             error: error instanceof Error ? error.message : String(error),
             preferredPort,
           });
@@ -91,17 +91,17 @@ export function clearAllocatedPorts(): void {
 // Cleanup allocated ports on process exit for improved robustness
 // Only register process handlers if not disabled by environment variable
 // This prevents interference with test runners that manage their own cleanup
-if (process.env.DISABLE_PORT_CLEANUP !== 'true') {
-  process.on('exit', () => {
+if (process.env.DISABLE_PORT_CLEANUP !== "true") {
+  process.on("exit", () => {
     clearAllocatedPorts();
   });
 
-  process.on('SIGINT', () => {
+  process.on("SIGINT", () => {
     clearAllocatedPorts();
     process.exit(0);
   });
 
-  process.on('SIGTERM', () => {
+  process.on("SIGTERM", () => {
     clearAllocatedPorts();
     process.exit(0);
   });

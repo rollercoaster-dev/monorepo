@@ -13,6 +13,8 @@ export default defineConfig({
     setupFiles: ['./src/server/test.setup.ts'],
     include: ['src/server/**/*.{test,spec}.ts?(x)'],
     exclude: ['src/client/**', 'src/test/integration/**', '**/*.bun.test.ts'],
+    // Clear mock call history between tests (keeps implementations)
+    clearMocks: true,
     deps: {
       // Inline zod to avoid ESM resolution issues in CI
       // See: https://github.com/colinhacks/zod/issues/1958

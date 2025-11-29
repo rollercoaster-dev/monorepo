@@ -5,8 +5,8 @@
  * they correctly handle conversions between string and Shared.IRI types.
  */
 
-import { describe, expect, it } from 'bun:test';
-import type { Shared } from 'openbadges-types';
+import { describe, expect, it } from "bun:test";
+import type { Shared } from "openbadges-types";
 import {
   toIRI,
   toString,
@@ -15,217 +15,239 @@ import {
   toIRIArray,
   toStringArray,
   objectWithIRIToString,
-  objectWithStringToIRI
-} from '@/utils/types/iri-utils';
+  objectWithStringToIRI,
+} from "@/utils/types/iri-utils";
 
-describe('IRI Utilities', () => {
-  describe('toIRI', () => {
-    it('should convert a string to a Shared.IRI', () => {
-      const result = toIRI('https://example.com/badge');
-      expect(result).toBe('https://example.com/badge' as Shared.IRI);
-      expect(typeof result).toBe('string');
+describe("IRI Utilities", () => {
+  describe("toIRI", () => {
+    it("should convert a string to a Shared.IRI", () => {
+      const result = toIRI("https://example.com/badge");
+      expect(result).toBe("https://example.com/badge" as Shared.IRI);
+      expect(typeof result).toBe("string");
     });
 
-    it('should return null for null or undefined values', () => {
+    it("should return null for null or undefined values", () => {
       expect(toIRI(null)).toBe(null);
       expect(toIRI(undefined)).toBe(null);
-      expect(toIRI('')).toBe(null);
+      expect(toIRI("")).toBe(null);
     });
 
-    it('should return the same value for a Shared.IRI', () => {
-      const iri = 'https://example.com/badge' as Shared.IRI;
+    it("should return the same value for a Shared.IRI", () => {
+      const iri = "https://example.com/badge" as Shared.IRI;
       expect(toIRI(iri)).toBe(iri);
     });
 
-    it('should return null for invalid IRIs', () => {
-      expect(toIRI('not-a-url')).toBe(null);
-      expect(toIRI('123')).toBe(null);
+    it("should return null for invalid IRIs", () => {
+      expect(toIRI("not-a-url")).toBe(null);
+      expect(toIRI("123")).toBe(null);
     });
 
-    it('should handle UUID strings correctly', () => {
-      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+    it("should handle UUID strings correctly", () => {
+      const uuid = "123e4567-e89b-12d3-a456-426614174000";
       expect(toIRI(uuid)).toBe(uuid as Shared.IRI);
     });
   });
 
-  describe('toString', () => {
-    it('should convert a Shared.IRI to a string', () => {
-      const iri = 'https://example.com/badge' as Shared.IRI;
+  describe("toString", () => {
+    it("should convert a Shared.IRI to a string", () => {
+      const iri = "https://example.com/badge" as Shared.IRI;
       const result = toString(iri);
-      expect(result).toBe('https://example.com/badge');
-      expect(typeof result).toBe('string');
+      expect(result).toBe("https://example.com/badge");
+      expect(typeof result).toBe("string");
     });
 
-    it('should return null for null or undefined values', () => {
+    it("should return null for null or undefined values", () => {
       expect(toString(null)).toBe(null);
       expect(toString(undefined)).toBe(null);
-      expect(toString('')).toBe(null);
+      expect(toString("")).toBe(null);
     });
 
-    it('should return the same value for a string', () => {
-      const str = 'https://example.com/badge';
+    it("should return the same value for a string", () => {
+      const str = "https://example.com/badge";
       expect(toString(str)).toBe(str);
     });
   });
 
-  describe('isValidIRI', () => {
-    it('should return true for valid URLs', () => {
-      expect(isValidIRI('https://example.com/badge')).toBe(true);
-      expect(isValidIRI('http://example.com')).toBe(true);
-      expect(isValidIRI('https://example.com/badge?param=value')).toBe(true);
+  describe("isValidIRI", () => {
+    it("should return true for valid URLs", () => {
+      expect(isValidIRI("https://example.com/badge")).toBe(true);
+      expect(isValidIRI("http://example.com")).toBe(true);
+      expect(isValidIRI("https://example.com/badge?param=value")).toBe(true);
     });
 
-    it('should return true for valid UUIDs', () => {
-      expect(isValidIRI('123e4567-e89b-12d3-a456-426614174000')).toBe(true);
-      expect(isValidIRI('00000000-0000-0000-0000-000000000000')).toBe(true);
+    it("should return true for valid UUIDs", () => {
+      expect(isValidIRI("123e4567-e89b-12d3-a456-426614174000")).toBe(true);
+      expect(isValidIRI("00000000-0000-0000-0000-000000000000")).toBe(true);
     });
 
-    it('should return false for invalid IRIs', () => {
-      expect(isValidIRI('not-a-url')).toBe(false);
-      expect(isValidIRI('123')).toBe(false);
-      expect(isValidIRI('')).toBe(false);
+    it("should return false for invalid IRIs", () => {
+      expect(isValidIRI("not-a-url")).toBe(false);
+      expect(isValidIRI("123")).toBe(false);
+      expect(isValidIRI("")).toBe(false);
       expect(isValidIRI(null)).toBe(false);
       expect(isValidIRI(undefined)).toBe(false);
     });
   });
 
-  describe('ensureValidIRI', () => {
-    it('should return the value as a Shared.IRI if valid', () => {
-      const result = ensureValidIRI('https://example.com/badge');
-      expect(result).toBe('https://example.com/badge' as Shared.IRI);
+  describe("ensureValidIRI", () => {
+    it("should return the value as a Shared.IRI if valid", () => {
+      const result = ensureValidIRI("https://example.com/badge");
+      expect(result).toBe("https://example.com/badge" as Shared.IRI);
     });
 
-    it('should return null for invalid IRIs', () => {
-      expect(ensureValidIRI('not-a-url')).toBe(null);
-      expect(ensureValidIRI('')).toBe(null);
+    it("should return null for invalid IRIs", () => {
+      expect(ensureValidIRI("not-a-url")).toBe(null);
+      expect(ensureValidIRI("")).toBe(null);
       expect(ensureValidIRI(null)).toBe(null);
       expect(ensureValidIRI(undefined)).toBe(null);
     });
   });
 
-  describe('toIRIArray', () => {
-    it('should convert an array of strings to an array of Shared.IRIs', () => {
-      const result = toIRIArray(['https://example.com/badge1', 'https://example.com/badge2']);
-      expect(result).toEqual(['https://example.com/badge1' as Shared.IRI, 'https://example.com/badge2' as Shared.IRI]);
+  describe("toIRIArray", () => {
+    it("should convert an array of strings to an array of Shared.IRIs", () => {
+      const result = toIRIArray([
+        "https://example.com/badge1",
+        "https://example.com/badge2",
+      ]);
+      expect(result).toEqual([
+        "https://example.com/badge1" as Shared.IRI,
+        "https://example.com/badge2" as Shared.IRI,
+      ]);
     });
 
-    it('should filter out invalid IRIs', () => {
-      const result = toIRIArray(['https://example.com/badge', '', null, undefined]);
-      expect(result).toEqual(['https://example.com/badge' as Shared.IRI]);
+    it("should filter out invalid IRIs", () => {
+      const result = toIRIArray([
+        "https://example.com/badge",
+        "",
+        null,
+        undefined,
+      ]);
+      expect(result).toEqual(["https://example.com/badge" as Shared.IRI]);
     });
 
-    it('should return an empty array for null or undefined values', () => {
+    it("should return an empty array for null or undefined values", () => {
       expect(toIRIArray(null)).toEqual([]);
       expect(toIRIArray(undefined)).toEqual([]);
     });
   });
 
-  describe('toStringArray', () => {
-    it('should convert an array of Shared.IRIs to an array of strings', () => {
-      const iris = ['https://example.com/badge1', 'https://example.com/badge2'] as Shared.IRI[];
+  describe("toStringArray", () => {
+    it("should convert an array of Shared.IRIs to an array of strings", () => {
+      const iris = [
+        "https://example.com/badge1",
+        "https://example.com/badge2",
+      ] as Shared.IRI[];
       const result = toStringArray(iris);
-      expect(result).toEqual(['https://example.com/badge1', 'https://example.com/badge2']);
+      expect(result).toEqual([
+        "https://example.com/badge1",
+        "https://example.com/badge2",
+      ]);
     });
 
-    it('should filter out invalid values', () => {
-      const iris = ['https://example.com/badge', '', null, undefined] as (Shared.IRI | null | undefined | string)[];
+    it("should filter out invalid values", () => {
+      const iris = ["https://example.com/badge", "", null, undefined] as (
+        | Shared.IRI
+        | null
+        | undefined
+        | string
+      )[];
       const result = toStringArray(iris);
-      expect(result).toEqual(['https://example.com/badge']);
+      expect(result).toEqual(["https://example.com/badge"]);
     });
 
-    it('should return an empty array for null or undefined values', () => {
+    it("should return an empty array for null or undefined values", () => {
       expect(toStringArray(null)).toEqual([]);
       expect(toStringArray(undefined)).toEqual([]);
     });
   });
 
-  describe('objectWithIRIToString', () => {
-    it('should convert IRI properties to string properties', () => {
+  describe("objectWithIRIToString", () => {
+    it("should convert IRI properties to string properties", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        url: 'https://example.com/badge',
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        url: "https://example.com/badge",
+        name: "Test Badge",
       };
-      const result = objectWithIRIToString(obj, ['id', 'url']);
+      const result = objectWithIRIToString(obj, ["id", "url"]);
       expect(result).toEqual({
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        url: 'https://example.com/badge',
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        url: "https://example.com/badge",
+        name: "Test Badge",
       });
     });
 
-    it('should handle null or undefined properties', () => {
+    it("should handle null or undefined properties", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
+        id: "123e4567-e89b-12d3-a456-426614174000",
         url: null,
         image: undefined,
-        name: 'Test Badge'
+        name: "Test Badge",
       };
-      const result = objectWithIRIToString(obj, ['id', 'url', 'image']);
+      const result = objectWithIRIToString(obj, ["id", "url", "image"]);
       expect(result).toEqual({
-        id: '123e4567-e89b-12d3-a456-426614174000',
+        id: "123e4567-e89b-12d3-a456-426614174000",
         url: null,
         image: undefined,
-        name: 'Test Badge'
+        name: "Test Badge",
       });
     });
   });
 
-  describe('objectWithStringToIRI', () => {
-    it('should convert string properties to IRI properties', () => {
+  describe("objectWithStringToIRI", () => {
+    it("should convert string properties to IRI properties", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        url: 'https://example.com/badge',
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        url: "https://example.com/badge",
+        name: "Test Badge",
       };
-      const result = objectWithStringToIRI(obj, ['id', 'url']);
+      const result = objectWithStringToIRI(obj, ["id", "url"]);
       expect(result).toEqual({
-        id: '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI,
-        url: 'https://example.com/badge' as Shared.IRI,
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI,
+        url: "https://example.com/badge" as Shared.IRI,
+        name: "Test Badge",
       });
     });
 
-    it('should handle null or undefined properties', () => {
+    it("should handle null or undefined properties", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
+        id: "123e4567-e89b-12d3-a456-426614174000",
         url: null,
         image: undefined,
-        name: 'Test Badge'
+        name: "Test Badge",
       };
-      const result = objectWithStringToIRI(obj, ['id', 'url', 'image']);
+      const result = objectWithStringToIRI(obj, ["id", "url", "image"]);
       expect(result).toEqual({
-        id: '123e4567-e89b-12d3-a456-426614174000' as Shared.IRI,
+        id: "123e4567-e89b-12d3-a456-426614174000" as Shared.IRI,
         url: null,
         image: undefined,
-        name: 'Test Badge'
+        name: "Test Badge",
       });
     });
 
-    it('should throw an error for invalid IRIs', () => {
+    it("should throw an error for invalid IRIs", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        url: 'not-a-valid-url',
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        url: "not-a-valid-url",
+        name: "Test Badge",
       };
-      expect(() => objectWithStringToIRI(obj, ['id', 'url'])).toThrow();
+      expect(() => objectWithStringToIRI(obj, ["id", "url"])).toThrow();
     });
 
-    it('should throw an error with the names of invalid properties', () => {
+    it("should throw an error with the names of invalid properties", () => {
       const obj = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        url: 'not-a-valid-url',
-        image: 'also-not-valid',
-        name: 'Test Badge'
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        url: "not-a-valid-url",
+        image: "also-not-valid",
+        name: "Test Badge",
       };
       try {
-        objectWithStringToIRI(obj, ['id', 'url', 'image']);
+        objectWithStringToIRI(obj, ["id", "url", "image"]);
         // If we get here, the test should fail
         expect(true).toBe(false);
       } catch (error) {
-        expect(error.message).toContain('url');
-        expect(error.message).toContain('image');
-        expect(error.message).not.toContain('id');
+        expect(error.message).toContain("url");
+        expect(error.message).toContain("image");
+        expect(error.message).not.toContain("id");
       }
     });
   });

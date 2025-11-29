@@ -5,9 +5,9 @@
  * in JSON Web Key format as specified in RFC 7517.
  */
 
-import type { JsonWebKeySet } from '../../core/key.service';
-import { KeyService } from '../../core/key.service';
-import { logger } from '../../utils/logging/logger.service';
+import type { JsonWebKeySet } from "../../core/key.service";
+import { KeyService } from "../../core/key.service";
+import { logger } from "../../utils/logging/logger.service";
 
 /**
  * Controller for JWKS endpoints
@@ -22,13 +22,13 @@ export class JwksController {
     body: JsonWebKeySet | { error: string };
   }> {
     try {
-      logger.debug('Retrieving JWKS');
+      logger.debug("Retrieving JWKS");
 
       // Get the JWKS from the key service
       const jwks = await KeyService.getJwkSet();
 
       // Log the number of keys returned (without exposing key details)
-      logger.info('JWKS retrieved successfully', {
+      logger.info("JWKS retrieved successfully", {
         keyCount: jwks.keys.length,
         keyIds: jwks.keys.map((key) => key.kid).filter(Boolean),
       });
@@ -38,14 +38,14 @@ export class JwksController {
         body: jwks,
       };
     } catch (error) {
-      logger.error('Failed to retrieve JWKS', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to retrieve JWKS", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
       return {
         status: 500,
         body: {
-          error: 'Internal server error while retrieving JWKS',
+          error: "Internal server error while retrieving JWKS",
         },
       };
     }
@@ -60,7 +60,7 @@ export class JwksController {
     body: Record<string, unknown>;
   }> {
     try {
-      logger.debug('Retrieving key status information');
+      logger.debug("Retrieving key status information");
 
       const statusInfo = KeyService.getKeyStatusInfo();
       const statusData: Record<string, unknown> = {};
@@ -75,7 +75,7 @@ export class JwksController {
         };
       }
 
-      logger.info('Key status retrieved successfully', {
+      logger.info("Key status retrieved successfully", {
         keyCount: statusInfo.size,
       });
 
@@ -87,14 +87,14 @@ export class JwksController {
         },
       };
     } catch (error) {
-      logger.error('Failed to retrieve key status', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to retrieve key status", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
       return {
         status: 500,
         body: {
-          error: 'Internal server error while retrieving key status',
+          error: "Internal server error while retrieving key status",
         },
       };
     }

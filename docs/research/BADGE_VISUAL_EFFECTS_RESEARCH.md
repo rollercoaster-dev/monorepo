@@ -5,6 +5,7 @@ This document explores advanced visual effects for digital badges and the possib
 ## Overview
 
 Making badges "special" requires a multi-layered approach:
+
 1. **In-app experience** - Rich CSS/WebGL effects for interactive viewing
 2. **Baked badge exports** - PNG/SVG with embedded credential metadata
 3. **Animated exports** - For enhanced sharing (with constraints)
@@ -19,21 +20,22 @@ Making badges "special" requires a multi-layered approach:
 "Badge Baking is the process of taking an Assertion and embedding it into the badge image, so that when a user displays a badge on a page, software that is OpenBadges-aware can automatically extract that Assertion data and perform the checks necessary to see if a person legitimately earned the badge."
 
 > ⚠️ **Important OB 2.0 vs OB 3.0 Distinction:**
+>
 > - **OB 2.0**: The badge image IS the credential - baking is how verification data is stored
 > - **OB 3.0**: The credential is a **Verifiable Credential (JSON-LD)** with cryptographic proof - the image is **optional** and baking is for **portability**, not verification
 
 ### Supported Formats (Specification Requirement)
 
-| Format | Baking Support | Animation Support | Notes |
-|--------|---------------|-------------------|-------|
-| **PNG** | Yes (iTXt chunk) | No* | Standard format |
-| **SVG** | Yes (XML namespace) | **Yes (SMIL)** | Best for animation! |
-| **APNG** | Likely* (iTXt preserved) | Yes | Needs verification |
-| GIF | **No** | Yes | NOT SUPPORTED |
-| WebP | **No** | Yes | NOT SUPPORTED |
-| MP4/WebM | **No** | Yes | NOT SUPPORTED |
+| Format   | Baking Support            | Animation Support | Notes               |
+| -------- | ------------------------- | ----------------- | ------------------- |
+| **PNG**  | Yes (iTXt chunk)          | No\*              | Standard format     |
+| **SVG**  | Yes (XML namespace)       | **Yes (SMIL)**    | Best for animation! |
+| **APNG** | Likely\* (iTXt preserved) | Yes               | Needs verification  |
+| GIF      | **No**                    | Yes               | NOT SUPPORTED       |
+| WebP     | **No**                    | Yes               | NOT SUPPORTED       |
+| MP4/WebM | **No**                    | Yes               | NOT SUPPORTED       |
 
-*APNG uses the same chunk structure as PNG, so iTXt metadata should be preserved, but this needs testing.
+\*APNG uses the same chunk structure as PNG, so iTXt metadata should be preserved, but this needs testing.
 
 ### PNG Baking Technical Details
 
@@ -83,13 +85,13 @@ PNG File Structure:
 
 OB 3.0 fundamentally changes how badges work by aligning with the W3C Verifiable Credentials (VC) data model:
 
-| Aspect | OB 2.0 (Hosted) | OB 3.0 (Verifiable Credentials) |
-|--------|-----------------|--------------------------------|
-| **Primary credential** | Baked image or hosted JSON | JSON-LD with cryptographic proof |
-| **Image role** | IS the credential | **Optional**, for display only |
-| **Verification** | Contact issuer server | Verify cryptographic signature |
-| **Issuer dependency** | Issuer must stay online | Works even if issuer disappears |
-| **Tampering detection** | Re-fetch from issuer | **Signature validation fails** |
+| Aspect                  | OB 2.0 (Hosted)            | OB 3.0 (Verifiable Credentials)  |
+| ----------------------- | -------------------------- | -------------------------------- |
+| **Primary credential**  | Baked image or hosted JSON | JSON-LD with cryptographic proof |
+| **Image role**          | IS the credential          | **Optional**, for display only   |
+| **Verification**        | Contact issuer server      | Verify cryptographic signature   |
+| **Issuer dependency**   | Issuer must stay online    | Works even if issuer disappears  |
+| **Tampering detection** | Re-fetch from issuer       | **Signature validation fails**   |
 
 #### Cryptographic Proofs in OB 3.0
 
@@ -121,7 +123,9 @@ OB 3.0 credentials include a `proof` property with a cryptographic signature:
   },
   "credentialSubject": {
     "type": "AchievementSubject",
-    "achievement": { /* BadgeClass data */ }
+    "achievement": {
+      /* BadgeClass data */
+    }
   },
   "proof": {
     "type": "DataIntegrityProof",
@@ -163,6 +167,7 @@ OB 3.0 credentials include a `proof` property with a cryptographic signature:
 **Key insight**: The cryptographic proof is calculated over the **entire credential content**. If someone edits the SVG (visual or metadata), the hash won't match the signature, and verification fails.
 
 **Requirements for this to work:**
+
 1. Credential must include a cryptographic proof (Phase 5 in our roadmap)
 2. Issuer's public key must be discoverable (JWKS/DID - Phase 6)
 3. Verifiers must actually check the proof (verification endpoint needed)
@@ -178,15 +183,16 @@ OB 3.0 credentials include a `proof` property with a cryptographic signature:
 
 Per `docs/ob3-roadmap.md` and the changelog, here's the implementation status:
 
-| Phase | Feature | Status | Notes |
-|-------|---------|--------|-------|
-| 5 | **JWT Proof Generation** | ✅ Done | PR #54 merged |
-| 5 | VC Envelope | ✅ Partial | `/v3/assertions` returns VC-JSON |
-| 4 | **Baked Images Helper** | ⏳ Pending | No baking logic exists |
-| 6 | **JWKS/DID:web** | ⏳ Pending | Required for offline verification |
-| 7 | StatusList2021 (revocation) | ⏳ Pending | VC-native revocation |
+| Phase | Feature                     | Status     | Notes                             |
+| ----- | --------------------------- | ---------- | --------------------------------- |
+| 5     | **JWT Proof Generation**    | ✅ Done    | PR #54 merged                     |
+| 5     | VC Envelope                 | ✅ Partial | `/v3/assertions` returns VC-JSON  |
+| 4     | **Baked Images Helper**     | ⏳ Pending | No baking logic exists            |
+| 6     | **JWKS/DID:web**            | ⏳ Pending | Required for offline verification |
+| 7     | StatusList2021 (revocation) | ⏳ Pending | VC-native revocation              |
 
 **Current State:**
+
 - `BadgeClass.image` stores a URL/IRI reference (not baked data)
 - `AssetsController` uploads raw images (PNG, SVG, GIF, WebP, PDF)
 - JWT proof generation is implemented but baking is not
@@ -218,8 +224,14 @@ Without this, verifiers cannot validate proofs!
 
 interface BakingService {
   // Bake a signed credential into an image
-  bakePNG(imageBuffer: Buffer, credential: VerifiableCredential): Promise<Buffer>;
-  bakeSVG(svgContent: string, credential: VerifiableCredential): Promise<string>;
+  bakePNG(
+    imageBuffer: Buffer,
+    credential: VerifiableCredential,
+  ): Promise<Buffer>;
+  bakeSVG(
+    svgContent: string,
+    credential: VerifiableCredential,
+  ): Promise<string>;
 
   // Extract credential from baked image
   unbakePNG(imageBuffer: Buffer): Promise<VerifiableCredential>;
@@ -255,16 +267,17 @@ Response: { valid: boolean, credential?: VerifiableCredential, errors?: string[]
 async function verifyCredential(credential: VerifiableCredential): Promise<{
   valid: boolean;
   checks: {
-    proofValid: boolean;      // Cryptographic signature verified
-    issuerValid: boolean;     // Issuer DID/JWKS resolved
-    notExpired: boolean;      // credentialStatus check
-    notRevoked: boolean;      // StatusList2021 check (Phase 7)
+    proofValid: boolean; // Cryptographic signature verified
+    issuerValid: boolean; // Issuer DID/JWKS resolved
+    notExpired: boolean; // credentialStatus check
+    notRevoked: boolean; // StatusList2021 check (Phase 7)
   };
   errors?: string[];
 }>;
 ```
 
 **Recommended Libraries:**
+
 - `png-chunks-extract` / `png-chunks-encode` - For PNG iTXt manipulation
 - `fast-xml-parser` - For SVG XML manipulation
 - `@digitalbazaar/ed25519-signature-2020` - For Linked Data Proofs
@@ -299,11 +312,11 @@ Glassmorphism creates a "frosted glass" effect using:
 
 ### Key Parameters
 
-| Property | Recommended Range | Effect |
-|----------|------------------|--------|
-| Background opacity | 0.05 - 0.25 | Higher = more visible glass |
-| Blur radius | 8px - 20px | Higher = more frosted |
-| Border opacity | 0.1 - 0.3 | Subtle edge definition |
+| Property           | Recommended Range | Effect                      |
+| ------------------ | ----------------- | --------------------------- |
+| Background opacity | 0.05 - 0.25       | Higher = more visible glass |
+| Blur radius        | 8px - 20px        | Higher = more frosted       |
+| Border opacity     | 0.1 - 0.3         | Subtle edge definition      |
 
 ### Requirements & Constraints
 
@@ -328,7 +341,7 @@ Glassmorphism creates a "frosted glass" effect using:
 ```css
 /* Parent container sets the 3D space */
 .badge-container {
-  perspective: 800px;  /* Lower = more dramatic */
+  perspective: 800px; /* Lower = more dramatic */
 }
 
 /* Child element transforms in 3D */
@@ -356,7 +369,7 @@ function handleMouseMove(e, element) {
   const centerX = rect.width / 2;
   const centerY = rect.height / 2;
 
-  const rotateX = (y - centerY) / 10;  // Adjust divisor for sensitivity
+  const rotateX = (y - centerY) / 10; // Adjust divisor for sensitivity
   const rotateY = (centerX - x) / 10;
 
   element.style.transform = `
@@ -402,7 +415,7 @@ The [simeydotme/pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-c
 
 /* Base holographic gradient */
 .holo-badge::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -431,8 +444,13 @@ The [simeydotme/pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-c
 }
 
 @keyframes holo-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 ```
 
@@ -445,7 +463,7 @@ The [simeydotme/pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-c
 }
 
 .shimmer-badge::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
@@ -465,7 +483,9 @@ The [simeydotme/pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-c
 }
 
 @keyframes shimmer {
-  to { left: 150%; }
+  to {
+    left: 150%;
+  }
 }
 ```
 
@@ -484,13 +504,13 @@ The [simeydotme/pokemon-cards-css](https://github.com/simeydotme/pokemon-cards-c
 
 ### Why SVG + SMIL?
 
-| Feature | CSS Animation | SMIL Animation |
-|---------|--------------|----------------|
-| Works in `<img>` tag | No | **Yes** |
-| Works as background-image | No | **Yes** |
-| Works when downloaded | No | **Yes** |
-| Preserves baked metadata | N/A | **Yes** |
-| Browser support | 95%+ | 95%+ (except old IE) |
+| Feature                   | CSS Animation | SMIL Animation       |
+| ------------------------- | ------------- | -------------------- |
+| Works in `<img>` tag      | No            | **Yes**              |
+| Works as background-image | No            | **Yes**              |
+| Works when downloaded     | No            | **Yes**              |
+| Preserves baked metadata  | N/A           | **Yes**              |
+| Browser support           | 95%+          | 95%+ (except old IE) |
 
 ### CSS Animations (In-App Only)
 
@@ -503,8 +523,15 @@ CSS animations only work when SVG is inline in the DOM:
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.9; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
 }
 ```
 
@@ -578,12 +605,12 @@ SMIL animations are embedded IN the SVG file and work everywhere:
 
 ### SMIL Animation Elements
 
-| Element | Purpose | Example |
-|---------|---------|---------|
-| `<animate>` | Animate single attribute | Opacity, radius, position |
-| `<animateTransform>` | Transform animations | Rotate, scale, translate |
-| `<animateMotion>` | Move along path | Orbiting elements |
-| `<set>` | Set value at time | Delayed visibility |
+| Element              | Purpose                  | Example                   |
+| -------------------- | ------------------------ | ------------------------- |
+| `<animate>`          | Animate single attribute | Opacity, radius, position |
+| `<animateTransform>` | Transform animations     | Rotate, scale, translate  |
+| `<animateMotion>`    | Move along path          | Orbiting elements         |
+| `<set>`              | Set value at time        | Delayed visibility        |
 
 ### Holographic Effect in SVG
 
@@ -632,13 +659,13 @@ SMIL animations are embedded IN the SVG file and work everywhere:
 
 ### Browser Support for SMIL
 
-| Browser | SMIL Support | Notes |
-|---------|-------------|-------|
-| Chrome | Yes | Was deprecated, now supported |
-| Firefox | Yes | Full support |
-| Safari | Yes | Full support |
-| Edge | Yes | Chromium-based |
-| IE | No | Use static fallback |
+| Browser | SMIL Support | Notes                         |
+| ------- | ------------ | ----------------------------- |
+| Chrome  | Yes          | Was deprecated, now supported |
+| Firefox | Yes          | Full support                  |
+| Safari  | Yes          | Full support                  |
+| Edge    | Yes          | Chromium-based                |
+| IE      | No           | Use static fallback           |
 
 ---
 
@@ -648,13 +675,13 @@ SMIL animations are embedded IN the SVG file and work everywhere:
 
 Social media platforms have significant limitations:
 
-| Platform | GIF Support | Animation in OG Preview |
-|----------|-------------|------------------------|
-| LinkedIn | First frame only | No |
-| Twitter/X | First frame only | No (cards) |
-| Facebook | First frame only | No |
-| Discord | Full animation | Limited |
-| Slack | Full animation | Limited |
+| Platform  | GIF Support      | Animation in OG Preview |
+| --------- | ---------------- | ----------------------- |
+| LinkedIn  | First frame only | No                      |
+| Twitter/X | First frame only | No (cards)              |
+| Facebook  | First frame only | No                      |
+| Discord   | Full animation   | Limited                 |
+| Slack     | Full animation   | Limited                 |
 
 **Key finding**: Open Graph `og:image` tags **do not support animation** - only the first frame displays.
 
@@ -699,13 +726,13 @@ Social media platforms have significant limitations:
 
 Provide users with export formats for direct sharing:
 
-| Format | Best For | File Size | Quality |
-|--------|----------|-----------|---------|
-| GIF | Universal compatibility | Large | Medium (256 colors) |
-| APNG | Higher quality | Medium | High (full color + alpha) |
-| WebP | Modern browsers | Small | High |
-| MP4 | Twitter/Instagram direct upload | Small | Highest |
-| WebM | Discord, web embeds | Small | High |
+| Format | Best For                        | File Size | Quality                   |
+| ------ | ------------------------------- | --------- | ------------------------- |
+| GIF    | Universal compatibility         | Large     | Medium (256 colors)       |
+| APNG   | Higher quality                  | Medium    | High (full color + alpha) |
+| WebP   | Modern browsers                 | Small     | High                      |
+| MP4    | Twitter/Instagram direct upload | Small     | Highest                   |
+| WebM   | Discord, web embeds             | Small     | High                      |
 
 ---
 
@@ -716,11 +743,11 @@ Provide users with export formats for direct sharing:
 Using Canvas + MediaRecorder API:
 
 ```javascript
-import CanvasCapture from 'canvas-capture';
+import CanvasCapture from "canvas-capture";
 
 async function exportBadgeAnimation(badgeElement, duration = 3000) {
   // Create off-screen canvas
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 512;
   canvas.height = 512;
 
@@ -762,6 +789,7 @@ async function exportBadgeAnimation(badgeElement, duration = 3000) {
 ### Server-Side Generation (Future)
 
 For high-quality exports:
+
 - Puppeteer + headless Chrome
 - Record CSS animations to video
 - Generate consistent, high-quality output
@@ -800,9 +828,7 @@ For high-quality exports:
     />
 
     <div class="controls">
-      <toggle v-model="userPreferences.animations">
-        Enable animations
-      </toggle>
+      <toggle v-model="userPreferences.animations"> Enable animations </toggle>
       <toggle v-model="userPreferences.holographic">
         Enable holographic effect
       </toggle>
@@ -813,12 +839,12 @@ For high-quality exports:
 
 ### Theme-Specific Adjustments
 
-| Theme | Animation Level | Effect Intensity |
-|-------|----------------|------------------|
-| Default | Full | 100% |
-| ADHD-friendly | Minimal | 50% (no auto-play) |
-| Autism-friendly | None | 0% (static only) |
-| High contrast | Reduced | 30% |
+| Theme           | Animation Level | Effect Intensity   |
+| --------------- | --------------- | ------------------ |
+| Default         | Full            | 100%               |
+| ADHD-friendly   | Minimal         | 50% (no auto-play) |
+| Autism-friendly | None            | 0% (static only)   |
+| High contrast   | Reduced         | 30%                |
 
 ---
 
@@ -847,11 +873,11 @@ For high-quality exports:
 
 ### Badge Tier Visual Hierarchy
 
-| Tier | Effects | Example |
-|------|---------|---------|
-| Standard | Subtle shadow, gentle hover | Course completion |
-| Rare | 3D tilt, shimmer on hover | Skill mastery |
-| Epic | Holographic gradient, particles | Certification |
+| Tier      | Effects                          | Example           |
+| --------- | -------------------------------- | ----------------- |
+| Standard  | Subtle shadow, gentle hover      | Course completion |
+| Rare      | 3D tilt, shimmer on hover        | Skill mastery     |
+| Epic      | Holographic gradient, particles  | Certification     |
 | Legendary | Full holo, animated border, glow | Major achievement |
 
 ---
@@ -875,12 +901,12 @@ For high-quality exports:
 
 ### Browser Support Matrix
 
-| Effect | Chrome | Firefox | Safari | Edge |
-|--------|--------|---------|--------|------|
-| backdrop-filter | 76+ | 103+ | 9+ | 79+ |
-| mix-blend-mode | 41+ | 32+ | 8+ | 79+ |
-| CSS transforms 3D | 36+ | 16+ | 9+ | 12+ |
-| MediaRecorder | 49+ | 25+ | 14.1+ | 79+ |
+| Effect            | Chrome | Firefox | Safari | Edge |
+| ----------------- | ------ | ------- | ------ | ---- |
+| backdrop-filter   | 76+    | 103+    | 9+     | 79+  |
+| mix-blend-mode    | 41+    | 32+     | 8+     | 79+  |
+| CSS transforms 3D | 36+    | 16+     | 9+     | 12+  |
+| MediaRecorder     | 49+    | 25+     | 14.1+  | 79+  |
 
 ---
 
@@ -958,12 +984,14 @@ For high-quality exports:
 ### What We Can Do
 
 **Verifiable Credentials (Tamper-Evident):**
+
 - VC JSON with JWT or Linked Data Proof
 - Baked PNG with embedded VC (static)
 - Baked SVG with embedded VC + SMIL animations
 - All include cryptographic proof for verification
 
 **Animated Baked Badges** (SVG + SMIL):
+
 - Pulsing, breathing effects
 - Rotating decorative elements
 - Holographic color-shifting gradients
@@ -971,6 +999,7 @@ For high-quality exports:
 - **All while preserving cryptographic proof!**
 
 **In-App Experience** (Full Effects):
+
 - Glassmorphism containers
 - 3D perspective tilt (cursor-reactive)
 - Complex holographic effects (Pokemon-card style)
@@ -978,6 +1007,7 @@ For high-quality exports:
 - Real-time verification status display
 
 **Marketing/Display Formats** (Non-credential):
+
 - Animated GIF for social sharing
 - MP4/WebM for video platforms
 - Eye-catching OG images (static)
@@ -1003,17 +1033,20 @@ For high-quality exports:
 ### Key Insights
 
 **1. SVG + SMIL is the golden path for animated portable badges:**
+
 - Embedded animation that works everywhere
 - Baked VC with cryptographic proof
 - Tamper-evident (edits invalidate signature)
 - Universal browser support
 
 **2. The proof is the security, not the format:**
+
 - SVG editability is NOT a security hole
 - Any edit invalidates the cryptographic proof
 - Verifiers check signature, not file integrity
 
 **3. Baking is for portability, not verification:**
+
 - OB 3.0 verification uses cryptographic proofs
 - Baking embeds the VC for offline/portable use
 - The credential works with OR without the image
@@ -1026,26 +1059,26 @@ For high-quality exports:
 
 These must be completed before visual effects can be properly integrated:
 
-| Priority | Feature | Server Phase | Why First? |
-|----------|---------|--------------|------------|
-| 🔴 1 | **JWKS/DID:web endpoint** | Phase 6 | Required for any verification to work |
-| 🔴 2 | **Verification endpoint** | Phase 6 | Users need to verify credentials |
-| 🟡 3 | **Baking service** | Phase 4 | Enables portable credentials |
-| 🟡 4 | **Unbaking service** | Phase 4 | Extract VC from baked images |
-| 🟢 5 | **StatusList2021** | Phase 7 | Revocation support |
+| Priority | Feature                   | Server Phase | Why First?                            |
+| -------- | ------------------------- | ------------ | ------------------------------------- |
+| 🔴 1     | **JWKS/DID:web endpoint** | Phase 6      | Required for any verification to work |
+| 🔴 2     | **Verification endpoint** | Phase 6      | Users need to verify credentials      |
+| 🟡 3     | **Baking service**        | Phase 4      | Enables portable credentials          |
+| 🟡 4     | **Unbaking service**      | Phase 4      | Extract VC from baked images          |
+| 🟢 5     | **StatusList2021**        | Phase 7      | Revocation support                    |
 
 ### Badge Builder / Visual Effects Priority
 
 After server prerequisites are met:
 
-| Priority | Feature | Format | Notes |
-|----------|---------|--------|-------|
-| 1 | Static baked PNG | PNG | Basic portable credential |
-| 2 | Animated baked SVG (SMIL) | SVG | Best portable format |
-| 3 | Interactive share page | Web | Full visual effects + live verification |
-| 4 | Verification status UI | Web | Show proof validity, issuer identity |
-| 5 | Marketing GIF export | GIF | Clearly labeled as display-only |
-| 6 | Video export for social | MP4 | For social media direct upload |
+| Priority | Feature                   | Format | Notes                                   |
+| -------- | ------------------------- | ------ | --------------------------------------- |
+| 1        | Static baked PNG          | PNG    | Basic portable credential               |
+| 2        | Animated baked SVG (SMIL) | SVG    | Best portable format                    |
+| 3        | Interactive share page    | Web    | Full visual effects + live verification |
+| 4        | Verification status UI    | Web    | Show proof validity, issuer identity    |
+| 5        | Marketing GIF export      | GIF    | Clearly labeled as display-only         |
+| 6        | Video export for social   | MP4    | For social media direct upload          |
 
 ### Research Still Needed
 
@@ -1065,6 +1098,6 @@ After server prerequisites are met:
 
 ---
 
-*Research Date: November 2025*
-*Updated: November 2025 (OB 3.0 Verification Model, SVG Tamper Detection)*
-*Author: Rollercoaster.dev Team*
+_Research Date: November 2025_
+_Updated: November 2025 (OB 3.0 Verification Model, SVG Tamper Detection)_
+_Author: Rollercoaster.dev Team_

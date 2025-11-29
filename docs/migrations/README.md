@@ -5,6 +5,7 @@ This directory contains detailed migration plans for all packages migrated into 
 ## Purpose
 
 Each migration plan documents:
+
 - Original package structure and analysis
 - Required changes and dependencies
 - Step-by-step migration phases
@@ -13,6 +14,7 @@ Each migration plan documents:
 - Actual results and deviations
 
 These plans serve as:
+
 - **Historical record** of how each package was migrated
 - **Reference** for similar future migrations
 - **Documentation** of migration decisions and trade-offs
@@ -45,14 +47,17 @@ Each migration plan follows this structure:
 # Migration Plan: {package-name}
 
 ## Overview
+
 - Package information
 - Migration objectives
 - Success criteria
 
 ## Prerequisites
+
 - Required preparations
 
 ## Migration Phases
+
 - Phase 1: Initial Setup
 - Phase 2: Dependency Resolution
 - Phase 3: Bun Integration
@@ -63,17 +68,21 @@ Each migration plan follows this structure:
 - Phase 8: Finalization
 
 ## Risk Management
+
 - Identified risks
 - Mitigation strategies
 
 ## Rollback Strategy
+
 - How to undo if needed
 
 ## Timeline
+
 - Estimated effort
 - Milestones
 
 ## Validation Checklist
+
 - All quality gates
 ```
 
@@ -82,6 +91,7 @@ Each migration plan follows this structure:
 ### Before Starting a Migration
 
 Review existing migration plans for similar packages:
+
 - Check what challenges were encountered
 - Learn from successful patterns
 - Avoid known pitfalls
@@ -89,6 +99,7 @@ Review existing migration plans for similar packages:
 ### During a Migration
 
 Follow the plan but adapt as needed:
+
 - Document deviations from plan
 - Update estimates based on actual progress
 - Note unexpected issues for future reference
@@ -96,6 +107,7 @@ Follow the plan but adapt as needed:
 ### After Migration
 
 Update the migration plan with:
+
 - **Status**: ✅ COMPLETED on {date}
 - **PR**: #{number}
 - **Actual Duration**: {timespan}
@@ -106,9 +118,9 @@ Update the migration plan with:
 
 Track migration velocity and complexity:
 
-| Package | Complexity | Estimated | Actual | Commits | PR |
-|---------|------------|-----------|--------|---------|-----|
-| rd-logger | MEDIUM | 3-5 days | TBD | 13 | #36 |
+| Package   | Complexity | Estimated | Actual | Commits | PR  |
+| --------- | ---------- | --------- | ------ | ------- | --- |
+| rd-logger | MEDIUM     | 3-5 days  | TBD    | 13      | #36 |
 
 ## Notes
 

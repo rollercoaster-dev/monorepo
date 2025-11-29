@@ -15,6 +15,7 @@ Add server-side filtering support for badge classes by issuer ID, replacing the 
 ## Problem Statement
 
 The `getBadgeClassesByIssuer` method in `badgeApi.ts` currently:
+
 1. Fetches ALL badge classes from the server
 2. Filters them client-side by issuer ID
 
@@ -23,6 +24,7 @@ This is inefficient for large datasets and wastes bandwidth.
 ## Proposed Solution
 
 Add a `?issuer={issuerId}` query parameter to the badge server API:
+
 ```
 GET /api/bs/v2/badge-classes?issuer={issuerId}
 GET /api/bs/v3/achievements?issuer={issuerId}
@@ -39,15 +41,18 @@ The badge server **already has** `findByIssuer` implemented in the repository la
 ### Commit 1: `feat(openbadges-modular-server): add issuer query param to badge-classes endpoint`
 
 **Files:**
+
 - `apps/openbadges-modular-server/src/api/api.router.ts`
 - `apps/openbadges-modular-server/src/api/controllers/badgeClass.controller.ts`
 
 **Changes:**
+
 1. Update `getAllBadgeClasses` controller method to accept optional `issuerId` parameter
 2. Update router to parse `issuer` query parameter and pass to controller
 3. Use existing `findByIssuer` repository method when `issuerId` is provided
 
 **Controller Update:**
+
 ```typescript
 async getAllBadgeClasses(
   version: BadgeVersion = BadgeVersion.V3,
@@ -61,10 +66,14 @@ async getAllBadgeClasses(
 ```
 
 **Router Update:**
+
 ```typescript
-router.get('/achievements', requireAuth(), async (c) => {
-  const issuerId = c.req.query('issuer');
-  const result = await badgeClassController.getAllBadgeClasses(version, issuerId);
+router.get("/achievements", requireAuth(), async (c) => {
+  const issuerId = c.req.query("issuer");
+  const result = await badgeClassController.getAllBadgeClasses(
+    version,
+    issuerId,
+  );
   return c.json(result);
 });
 ```
@@ -74,9 +83,11 @@ router.get('/achievements', requireAuth(), async (c) => {
 ### Commit 2: `test(openbadges-modular-server): add tests for issuer query param filtering`
 
 **Files:**
+
 - `apps/openbadges-modular-server/tests/e2e/badgeClass.e2e.test.ts`
 
 **Test Cases:**
+
 - GET /achievements?issuer={validId} returns filtered results
 - GET /achievements?issuer={invalidId} returns empty array
 - GET /achievements without query param returns all badge classes
@@ -89,14 +100,17 @@ router.get('/achievements', requireAuth(), async (c) => {
 ### Commit 3: `feat(openbadges-system): use server-side filtering in getBadgeClassesByIssuer`
 
 **Files:**
+
 - `apps/openbadges-system/src/client/services/badgeApi.ts`
 
 **Changes:**
+
 1. Update `getBadgeClassesByIssuer` to use query parameter
 2. Remove client-side filtering logic
 3. Remove TODO comment referencing issue #106
 
 **Before:**
+
 ```typescript
 async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
   // TODO: Add server-side filtering endpoint to badge server
@@ -106,6 +120,7 @@ async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
 ```
 
 **After:**
+
 ```typescript
 async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
   const response = await fetch(
@@ -123,6 +138,7 @@ async getBadgeClassesByIssuer(issuerId: string): Promise<BadgeClass[]> {
 ### Commit 4: `docs: update plan with completion status`
 
 **Files:**
+
 - `docs/plans/server-side-badge-filtering-plan.md` (update status)
 
 ---

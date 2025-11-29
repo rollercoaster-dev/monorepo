@@ -21,21 +21,25 @@ Automatically fetch and summarize milestone progress when the user asks about co
 ## Instructions
 
 ### List Milestones
+
 ```bash
 gh api repos/rollercoaster-dev/monorepo/milestones --jq '.[] | {number, title, open_issues, closed_issues, due_on, state}'
 ```
 
 ### Get Specific Milestone
+
 ```bash
 gh api repos/rollercoaster-dev/monorepo/milestones/<number>
 ```
 
 ### Get Issues in Milestone
+
 ```bash
 gh issue list --milestone "<milestone-name>" --state all
 ```
 
 ### Calculate Progress
+
 ```
 Completion % = (closed_issues / (open_issues + closed_issues)) * 100
 ```
@@ -43,10 +47,12 @@ Completion % = (closed_issues / (open_issues + closed_issues)) * 100
 ## Current Milestones
 
 ### OpenBadges Badge Generator (#14)
+
 - **Issues:** #108-#128 (21 issues)
 - **Tracks:** Key management, baking, verification, E2E tests
 
 **Dependency Tracks:**
+
 - Track A (Keys): #108 → #109 → #110 → #111 → #112 → #113
 - Track B (PNG Baking): #114 → #115 → #116
 - Track C (SVG Baking): #114 → #117 → #118
@@ -63,26 +69,31 @@ Completion % = (closed_issues / (open_issues + closed_issues)) * 100
 **Due:** <date or "No due date">
 
 ### By Status
+
 - Done: <count>
 - In Review: <count>
 - In Progress: <count>
 - Not Started: <count>
 
 ### Recently Completed
+
 - #X: <title>
 - #Y: <title>
 
 ### Up Next (Unblocked)
+
 - #A: <title>
 - #B: <title>
 
 ### Blocked
+
 - #C: <title> - Waiting on #X
 ```
 
 ## Progress Bar
 
 Generate visual progress:
+
 ```
 [████████░░░░░░░░░░░░] 40% (8/20)
 ```

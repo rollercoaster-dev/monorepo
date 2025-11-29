@@ -6,7 +6,7 @@
  */
 
 // Import createLRU function from lru.min
-import { createLRU } from 'lru.min';
+import { createLRU } from "lru.min";
 
 // Define a more specific type for the LRU cache instance
 type LRUType = {
@@ -20,7 +20,7 @@ type LRUType = {
   size: number;
 };
 
-import type { CacheInterface, CacheStats } from './cache.interface';
+import type { CacheInterface, CacheStats } from "./cache.interface";
 
 export interface CacheOptions {
   /**
@@ -136,7 +136,7 @@ export class CacheService implements CacheInterface {
   keys(): string[] {
     // Convert IterableIterator to array and filter out any undefined/null values
     return Array.from(this.cache.keys()).filter(
-      (key): key is string => key != null && typeof key === 'string'
+      (key): key is string => key != null && typeof key === "string",
     );
   }
 
@@ -185,26 +185,26 @@ export class CacheService implements CacheInterface {
       return 0;
     }
 
-    if (typeof obj === 'string') {
+    if (typeof obj === "string") {
       return obj.length * 2; // UTF-16 characters are 2 bytes each
     }
 
-    if (typeof obj === 'number') {
+    if (typeof obj === "number") {
       return 8; // Numbers are typically 8 bytes
     }
 
-    if (typeof obj === 'boolean') {
+    if (typeof obj === "boolean") {
       return 4; // Booleans are typically 4 bytes
     }
 
     if (Array.isArray(obj)) {
       return obj.reduce(
         (size, item) => size + this.estimateObjectSize(item),
-        0
+        0,
       );
     }
 
-    if (typeof obj === 'object') {
+    if (typeof obj === "object") {
       let size = 0;
       for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {

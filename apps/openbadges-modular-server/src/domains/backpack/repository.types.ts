@@ -1,9 +1,9 @@
 /**
  * Type definitions for repository parameters and returns
  */
-import type { Shared } from 'openbadges-types';
-import type { PlatformStatus, UserAssertionStatus } from './backpack.types'; // Import for local use
-export { PlatformStatus, UserAssertionStatus } from './backpack.types';
+import type { Shared } from "openbadges-types";
+import type { PlatformStatus, UserAssertionStatus } from "./backpack.types"; // Import for local use
+export { PlatformStatus, UserAssertionStatus } from "./backpack.types";
 
 /**
  * Platform creation parameters

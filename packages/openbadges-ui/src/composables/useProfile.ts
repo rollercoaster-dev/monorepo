@@ -1,9 +1,9 @@
 // src/composables/useProfile.ts
-import { ref, computed } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import { BadgeService } from '@services/BadgeService';
-import type { Profile, ProfileType } from '@/types';
+import { ref, computed } from "vue";
+import type { ComputedRef, Ref } from "vue";
+import type { OB2, OB3 } from "@/types";
+import { BadgeService } from "@services/BadgeService";
+import type { Profile, ProfileType } from "@/types";
 
 // Return type for the useProfile composable
 export interface UseProfileReturn {
@@ -21,7 +21,9 @@ export interface UseProfileReturn {
   setProfile: (newProfile: Profile) => void;
   loadProfile: (profileId: string, type?: ProfileType) => Promise<void>;
   clearProfile: () => void;
-  extractIssuerFromBadge: (badge: OB2.Assertion | OB3.VerifiableCredential) => Profile | null;
+  extractIssuerFromBadge: (
+    badge: OB2.Assertion | OB3.VerifiableCredential,
+  ) => Profile | null;
 }
 
 /**
@@ -39,15 +41,15 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
 
   // Computed properties
   const isIssuer = computed(() => {
-    return profile.value?.type === 'Issuer';
+    return profile.value?.type === "Issuer";
   });
 
   const isRecipient = computed(() => {
-    return profile.value?.type === 'Recipient';
+    return profile.value?.type === "Recipient";
   });
 
   const displayName = computed(() => {
-    return profile.value?.name || 'Unknown';
+    return profile.value?.name || "Unknown";
   });
 
   // Methods
@@ -56,7 +58,10 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
     error.value = null;
   };
 
-  const loadProfile = async (profileId: string, type: ProfileType = 'Recipient') => {
+  const loadProfile = async (
+    profileId: string,
+    type: ProfileType = "Recipient",
+  ) => {
     isLoading.value = true;
     error.value = null;
 
@@ -71,7 +76,7 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
         name: `${type} ${profileId.substring(0, 8)}`,
         image: `https://ui-avatars.com/api/?name=${type}+${profileId.substring(
           0,
-          8
+          8,
         )}&background=random`,
         description: `This is a ${type.toLowerCase()} profile.`,
         type,
@@ -80,7 +85,7 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
       if (e instanceof Error) {
         error.value = e.message;
       } else {
-        error.value = 'Failed to load profile';
+        error.value = "Failed to load profile";
       }
       profile.value = null;
     } finally {
@@ -100,7 +105,7 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
    * @returns A Profile object for the issuer, or null if extraction fails
    */
   const extractIssuerFromBadge = (
-    badge: OB2.Assertion | OB3.VerifiableCredential
+    badge: OB2.Assertion | OB3.VerifiableCredential,
   ): Profile | null => {
     try {
       const normalized = BadgeService.normalizeBadge(badge);
@@ -113,7 +118,7 @@ export function useProfile(initialProfile?: Profile): UseProfileReturn {
       const issuerProfile: Profile = {
         id: normalized.issuer.url || `issuer:${normalized.issuer.name}`,
         name: normalized.issuer.name,
-        type: 'Issuer' as const,
+        type: "Issuer" as const,
       };
 
       // Add optional properties if they exist

@@ -2,15 +2,15 @@
  * PostgreSQL mapper for StatusList entities
  */
 
-import { StatusList } from '@domains/status-list/status-list.entity';
+import { StatusList } from "@domains/status-list/status-list.entity";
 import type {
   StatusListData,
   CredentialStatusEntryData,
   StatusPurpose,
-} from '@domains/status-list/status-list.types';
-import type { statusLists, credentialStatusEntries } from '../schema';
-import { logger } from '@utils/logging/logger.service';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+} from "@domains/status-list/status-list.types";
+import type { statusLists, credentialStatusEntries } from "../schema";
+import { logger } from "@utils/logging/logger.service";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 /**
  * Type for PostgreSQL status list record
@@ -33,7 +33,7 @@ export class PostgresStatusListMapper {
   toPersistence(entity: StatusList): Record<string, unknown> {
     try {
       return {
-        issuerId: convertUuid(entity.issuerId, 'postgresql', 'to'),
+        issuerId: convertUuid(entity.issuerId, "postgresql", "to"),
         purpose: entity.purpose,
         statusSize: entity.statusSize,
         encodedList: entity.encodedList,
@@ -45,11 +45,11 @@ export class PostgresStatusListMapper {
         updatedAt: entity.updatedAt,
       };
     } catch (error) {
-      logger.error('Failed to convert StatusList to persistence format', {
+      logger.error("Failed to convert StatusList to persistence format", {
         error: error instanceof Error ? error.message : String(error),
         entityId: entity.id,
       });
-      throw new Error('Failed to convert StatusList to persistence format');
+      throw new Error("Failed to convert StatusList to persistence format");
     }
   }
 
@@ -60,7 +60,7 @@ export class PostgresStatusListMapper {
     try {
       const data: StatusListData = {
         id: record.id,
-        issuerId: convertUuid(record.issuerId, 'postgresql', 'from'),
+        issuerId: convertUuid(record.issuerId, "postgresql", "from"),
         purpose: record.purpose as StatusPurpose,
         statusSize: record.statusSize,
         encodedList: record.encodedList,
@@ -77,14 +77,14 @@ export class PostgresStatusListMapper {
       return StatusList.fromData(data);
     } catch (error) {
       logger.error(
-        'Failed to convert PostgreSQL record to StatusList domain entity',
+        "Failed to convert PostgreSQL record to StatusList domain entity",
         {
           error: error instanceof Error ? error.message : String(error),
           recordId: record.id,
-        }
+        },
       );
       throw new Error(
-        'Failed to convert PostgreSQL record to StatusList domain entity'
+        "Failed to convert PostgreSQL record to StatusList domain entity",
       );
     }
   }
@@ -93,11 +93,11 @@ export class PostgresStatusListMapper {
    * Converts a CredentialStatusEntry domain entity to PostgreSQL persistence format
    */
   statusEntryToPersistence(
-    entity: CredentialStatusEntryData
+    entity: CredentialStatusEntryData,
   ): Record<string, unknown> {
     try {
       return {
-        credentialId: convertUuid(entity.credentialId, 'postgresql', 'to'),
+        credentialId: convertUuid(entity.credentialId, "postgresql", "to"),
         statusListId: entity.statusListId,
         statusListIndex: entity.statusListIndex,
         statusSize: entity.statusSize,
@@ -109,14 +109,14 @@ export class PostgresStatusListMapper {
       };
     } catch (error) {
       logger.error(
-        'Failed to convert CredentialStatusEntry to persistence format',
+        "Failed to convert CredentialStatusEntry to persistence format",
         {
           error: error instanceof Error ? error.message : String(error),
           entityId: entity.id,
-        }
+        },
       );
       throw new Error(
-        'Failed to convert CredentialStatusEntry to persistence format'
+        "Failed to convert CredentialStatusEntry to persistence format",
       );
     }
   }
@@ -125,12 +125,12 @@ export class PostgresStatusListMapper {
    * Converts a PostgreSQL record to CredentialStatusEntry domain entity
    */
   statusEntryToDomain(
-    record: PostgresCredentialStatusEntryRecord
+    record: PostgresCredentialStatusEntryRecord,
   ): CredentialStatusEntryData {
     try {
       return {
         id: record.id,
-        credentialId: convertUuid(record.credentialId, 'postgresql', 'from'),
+        credentialId: convertUuid(record.credentialId, "postgresql", "from"),
         statusListId: record.statusListId,
         statusListIndex: record.statusListIndex,
         statusSize: record.statusSize,
@@ -142,14 +142,14 @@ export class PostgresStatusListMapper {
       };
     } catch (error) {
       logger.error(
-        'Failed to convert PostgreSQL record to CredentialStatusEntry domain entity',
+        "Failed to convert PostgreSQL record to CredentialStatusEntry domain entity",
         {
           error: error instanceof Error ? error.message : String(error),
           recordId: record.id,
-        }
+        },
       );
       throw new Error(
-        'Failed to convert PostgreSQL record to CredentialStatusEntry domain entity'
+        "Failed to convert PostgreSQL record to CredentialStatusEntry domain entity",
       );
     }
   }
@@ -159,32 +159,32 @@ export class PostgresStatusListMapper {
    */
   validateForPersistence(entity: StatusList): void {
     if (!entity.id) {
-      throw new Error('StatusList ID is required');
+      throw new Error("StatusList ID is required");
     }
 
     if (!entity.issuerId) {
-      throw new Error('StatusList issuerId is required');
+      throw new Error("StatusList issuerId is required");
     }
 
     if (!entity.purpose) {
-      throw new Error('StatusList purpose is required');
+      throw new Error("StatusList purpose is required");
     }
 
     if (!entity.encodedList) {
-      throw new Error('StatusList encodedList is required');
+      throw new Error("StatusList encodedList is required");
     }
 
     if (entity.statusSize < 1 || entity.statusSize > 8) {
-      throw new Error('StatusList statusSize must be between 1 and 8');
+      throw new Error("StatusList statusSize must be between 1 and 8");
     }
 
     if (entity.totalEntries < 131072) {
-      throw new Error('StatusList totalEntries must be at least 131,072');
+      throw new Error("StatusList totalEntries must be at least 131,072");
     }
 
     if (entity.usedEntries < 0 || entity.usedEntries > entity.totalEntries) {
       throw new Error(
-        'StatusList usedEntries must be between 0 and totalEntries'
+        "StatusList usedEntries must be between 0 and totalEntries",
       );
     }
   }
@@ -194,43 +194,43 @@ export class PostgresStatusListMapper {
    */
   validateStatusEntryForPersistence(entity: CredentialStatusEntryData): void {
     if (!entity.id) {
-      throw new Error('CredentialStatusEntry ID is required');
+      throw new Error("CredentialStatusEntry ID is required");
     }
 
     if (!entity.credentialId) {
-      throw new Error('CredentialStatusEntry credentialId is required');
+      throw new Error("CredentialStatusEntry credentialId is required");
     }
 
     if (!entity.statusListId) {
-      throw new Error('CredentialStatusEntry statusListId is required');
+      throw new Error("CredentialStatusEntry statusListId is required");
     }
 
     if (entity.statusListIndex < 0) {
       throw new Error(
-        'CredentialStatusEntry statusListIndex must be non-negative'
+        "CredentialStatusEntry statusListIndex must be non-negative",
       );
     }
 
     if (entity.statusSize < 1 || entity.statusSize > 8) {
       throw new Error(
-        'CredentialStatusEntry statusSize must be between 1 and 8'
+        "CredentialStatusEntry statusSize must be between 1 and 8",
       );
     }
 
     if (!entity.purpose) {
-      throw new Error('CredentialStatusEntry purpose is required');
+      throw new Error("CredentialStatusEntry purpose is required");
     }
 
     if (entity.currentStatus < 0) {
       throw new Error(
-        'CredentialStatusEntry currentStatus must be non-negative'
+        "CredentialStatusEntry currentStatus must be non-negative",
       );
     }
 
     const maxStatus = Math.pow(2, entity.statusSize) - 1;
     if (entity.currentStatus > maxStatus) {
       throw new Error(
-        `CredentialStatusEntry currentStatus must not exceed ${maxStatus} for ${entity.statusSize}-bit status`
+        `CredentialStatusEntry currentStatus must not exceed ${maxStatus} for ${entity.statusSize}-bit status`,
       );
     }
   }
@@ -246,7 +246,7 @@ export class PostgresStatusListMapper {
    * Converts multiple PostgreSQL records to CredentialStatusEntry domain entities
    */
   statusEntryToDomainArray(
-    records: PostgresCredentialStatusEntryRecord[]
+    records: PostgresCredentialStatusEntryRecord[],
   ): CredentialStatusEntryData[] {
     return records.map((record) => this.statusEntryToDomain(record));
   }
@@ -262,7 +262,7 @@ export class PostgresStatusListMapper {
    * Converts multiple CredentialStatusEntry entities to PostgreSQL persistence format
    */
   statusEntryToPersistenceArray(
-    entities: CredentialStatusEntryData[]
+    entities: CredentialStatusEntryData[],
   ): Array<Record<string, unknown>> {
     return entities.map((entity) => this.statusEntryToPersistence(entity));
   }

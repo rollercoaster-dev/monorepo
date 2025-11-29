@@ -32,40 +32,40 @@ The header has a specific format that includes a **type**, an optional **scope**
 
 Must be one of the following:
 
-* **feat**: A new feature
-* **fix**: A bug fix
-* **docs**: Documentation only changes
-* **style**: Changes that do not affect the meaning of the code (white-space, formatting, etc)
-* **refactor**: A code change that neither fixes a bug nor adds a feature
-* **perf**: A code change that improves performance
-* **test**: Adding missing tests or correcting existing tests
-* **build**: Changes that affect the build system or external dependencies
-* **ci**: Changes to our CI configuration files and scripts
-* **chore**: Other changes that don't modify src or test files
-* **revert**: Reverts a previous commit
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code (white-space, formatting, etc)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **perf**: A code change that improves performance
+- **test**: Adding missing tests or correcting existing tests
+- **build**: Changes that affect the build system or external dependencies
+- **ci**: Changes to our CI configuration files and scripts
+- **chore**: Other changes that don't modify src or test files
+- **revert**: Reverts a previous commit
 
 #### Scope
 
 The scope is optional and should be a noun describing a section of the codebase:
 
-* **api**: Changes to the API endpoints
-* **auth**: Authentication-related changes
-* **db**: Database-related changes
-* **docker**: Docker configuration changes
-* **issuer**: Changes to issuer functionality
-* **badge**: Changes to badge class functionality
-* **assertion**: Changes to assertion functionality
-* **validation**: Changes to validation logic
-* **config**: Configuration-related changes
-* **deps**: Dependency updates
+- **api**: Changes to the API endpoints
+- **auth**: Authentication-related changes
+- **db**: Database-related changes
+- **docker**: Docker configuration changes
+- **issuer**: Changes to issuer functionality
+- **badge**: Changes to badge class functionality
+- **assertion**: Changes to assertion functionality
+- **validation**: Changes to validation logic
+- **config**: Configuration-related changes
+- **deps**: Dependency updates
 
 #### Subject
 
 The subject contains a succinct description of the change:
 
-* Use the imperative, present tense: "change" not "changed" nor "changes"
-* Don't capitalize the first letter
-* No period (.) at the end
+- Use the imperative, present tense: "change" not "changed" nor "changes"
+- Don't capitalize the first letter
+- No period (.) at the end
 
 ### Body
 
@@ -109,15 +109,16 @@ Update the installation instructions to include the new environment variables.
 
 Following this convention allows semantic-release to automatically determine the next version number based on the types of commits:
 
-* `fix` type → Patch release (1.0.0 → 1.0.1)
-* `feat` type → Minor release (1.0.0 → 1.1.0)
-* `BREAKING CHANGE` in body/footer or `!` after type/scope → Major release (1.0.0 → 2.0.0)
+- `fix` type → Patch release (1.0.0 → 1.0.1)
+- `feat` type → Minor release (1.0.0 → 1.1.0)
+- `BREAKING CHANGE` in body/footer or `!` after type/scope → Major release (1.0.0 → 2.0.0)
 
 ## Automated Validation
 
 This project automatically validates commit messages using [commitlint](https://github.com/conventional-changelog/commitlint) via a Husky commit-msg hook. When you commit, your message will be checked against the Conventional Commits specification.
 
 If your commit message doesn't follow the format, you'll see an error like:
+
 ```
 ❌ Commit message validation failed!
 
@@ -134,5 +135,5 @@ Examples:
 
 To help follow this convention, you can use:
 
-* [commitizen](https://github.com/commitizen/cz-cli) - Interactive CLI tool for creating formatted commit messages
-* [commitlint](https://github.com/conventional-changelog/commitlint) - Lint commit messages against the convention (automatically configured)
+- [commitizen](https://github.com/commitizen/cz-cli) - Interactive CLI tool for creating formatted commit messages
+- [commitlint](https://github.com/conventional-changelog/commitlint) - Lint commit messages against the convention (automatically configured)

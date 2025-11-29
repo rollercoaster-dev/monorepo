@@ -5,9 +5,9 @@
  * API Keys are used for headless authentication and are associated with a user.
  */
 
-import type { Shared } from 'openbadges-types';
-import { v4 as uuidv4 } from 'uuid';
-import { randomBytes } from 'crypto';
+import type { Shared } from "openbadges-types";
+import { v4 as uuidv4 } from "uuid";
+import { randomBytes } from "crypto";
 
 /**
  * Permissions for an API Key
@@ -135,7 +135,7 @@ export class ApiKey {
   static generateApiKey(): string {
     // Generate 32 random bytes and convert to a hex string
     // This creates a 64-character hex string
-    return randomBytes(32).toString('hex');
+    return randomBytes(32).toString("hex");
   }
 
   /**

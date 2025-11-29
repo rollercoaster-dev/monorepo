@@ -1,10 +1,10 @@
 /**
  * UserAssertion entity representing a badge in a user's backpack
  */
-import type { Shared } from 'openbadges-types';
-import type { UserAssertionMetadata } from './backpack.types';
-import { UserAssertionStatus } from './backpack.types';
-import { createOrGenerateIRI } from '@utils/types/iri-utils';
+import type { Shared } from "openbadges-types";
+import type { UserAssertionMetadata } from "./backpack.types";
+import { UserAssertionStatus } from "./backpack.types";
+import { createOrGenerateIRI } from "@utils/types/iri-utils";
 
 /**
  * Interface for the data returned by UserAssertion.toObject()

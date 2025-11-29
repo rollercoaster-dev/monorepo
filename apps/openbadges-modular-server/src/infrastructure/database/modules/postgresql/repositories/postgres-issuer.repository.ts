@@ -5,17 +5,17 @@
  * and the Data Mapper pattern with the base repository class.
  */
 
-import { eq } from 'drizzle-orm';
-import type postgres from 'postgres';
-import type { Issuer } from '@domains/issuer/issuer.entity';
-import type { IssuerRepository } from '@domains/issuer/issuer.repository';
-import { issuers } from '../schema';
-import { PostgresIssuerMapper } from '../mappers/postgres-issuer.mapper';
-import type { Shared } from 'openbadges-types';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import { BasePostgresRepository } from './base-postgres.repository';
-import type { PostgresEntityType } from '../types/postgres-database.types';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+import { eq } from "drizzle-orm";
+import type postgres from "postgres";
+import type { Issuer } from "@domains/issuer/issuer.entity";
+import type { IssuerRepository } from "@domains/issuer/issuer.repository";
+import { issuers } from "../schema";
+import { PostgresIssuerMapper } from "../mappers/postgres-issuer.mapper";
+import type { Shared } from "openbadges-types";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import { BasePostgresRepository } from "./base-postgres.repository";
+import type { PostgresEntityType } from "../types/postgres-database.types";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 export class PostgresIssuerRepository
   extends BasePostgresRepository
@@ -32,18 +32,18 @@ export class PostgresIssuerRepository
    * Returns the entity type for this repository
    */
   protected getEntityType(): PostgresEntityType {
-    return 'issuer';
+    return "issuer";
   }
 
   /**
    * Returns the table name for this repository
    */
   protected getTableName(): string {
-    return 'issuers';
+    return "issuers";
   }
 
-  async create(issuer: Omit<Issuer, 'id'>): Promise<Issuer> {
-    const context = this.createOperationContext('CREATE Issuer');
+  async create(issuer: Omit<Issuer, "id">): Promise<Issuer> {
+    const context = this.createOperationContext("CREATE Issuer");
 
     // Convert domain entity to database record
     const record = this.mapper.toPersistence(issuer);
@@ -54,15 +54,15 @@ export class PostgresIssuerRepository
         const result = await this.db.insert(issuers).values(record).returning();
         return this.mapper.toDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async findAll(): Promise<Issuer[]> {
-    const context = this.createOperationContext('SELECT All Issuers');
+    const context = this.createOperationContext("SELECT All Issuers");
 
     // Log warning for unbounded query
-    this.logUnboundedQueryWarning('findAll');
+    this.logUnboundedQueryWarning("findAll");
 
     return this.executeQuery(context, async (db) => {
       const result = await db.select().from(issuers);
@@ -71,30 +71,30 @@ export class PostgresIssuerRepository
   }
 
   async findById(id: Shared.IRI): Promise<Issuer | null> {
-    this.validateEntityId(id, 'findById');
-    const context = this.createOperationContext('SELECT Issuer by ID', id);
+    this.validateEntityId(id, "findById");
+    const context = this.createOperationContext("SELECT Issuer by ID", id);
 
     return this.executeSingleQuery(
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .select()
           .from(issuers)
           .where(eq(issuers.id, dbId));
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id]
+      [id],
     );
   }
 
   async update(
     id: Shared.IRI,
-    issuer: Partial<Issuer>
+    issuer: Partial<Issuer>,
   ): Promise<Issuer | null> {
-    this.validateEntityId(id, 'update');
-    const context = this.createOperationContext('UPDATE Issuer', id);
+    this.validateEntityId(id, "update");
+    const context = this.createOperationContext("UPDATE Issuer", id);
 
     // Check if issuer exists
     const existingIssuer = await this.findById(id);
@@ -116,7 +116,7 @@ export class PostgresIssuerRepository
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .update(issuers)
           .set(record)
@@ -124,17 +124,17 @@ export class PostgresIssuerRepository
           .returning();
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id, SensitiveValue.from(record)]
+      [id, SensitiveValue.from(record)],
     );
   }
 
   async delete(id: Shared.IRI): Promise<boolean> {
-    this.validateEntityId(id, 'delete');
-    const context = this.createOperationContext('DELETE Issuer', id);
+    this.validateEntityId(id, "delete");
+    const context = this.createOperationContext("DELETE Issuer", id);
 
     return this.executeDelete(context, async (db) => {
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
       return await db.delete(issuers).where(eq(issuers.id, dbId)).returning();
     });
   }

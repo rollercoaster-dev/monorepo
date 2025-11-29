@@ -4,28 +4,28 @@
  * This class coordinates operations across multiple SQLite repositories,
  * providing transaction support and unified error handling.
  */
-import { eq, inArray, sql } from 'drizzle-orm';
-import type { Shared } from 'openbadges-types';
-import { Issuer } from '@domains/issuer/issuer.entity';
-import { BadgeClass } from '@domains/badgeClass/badgeClass.entity';
-import { Assertion } from '@domains/assertion/assertion.entity';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { SqliteIssuerRepository } from './sqlite-issuer.repository';
-import { SqliteBadgeClassRepository } from './sqlite-badge-class.repository';
-import { SqliteAssertionRepository } from './sqlite-assertion.repository';
-import { SqliteAssertionMapper } from '../mappers/sqlite-assertion.mapper';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import { logger } from '@utils/logging/logger.service';
+import { eq, inArray, sql } from "drizzle-orm";
+import type { Shared } from "openbadges-types";
+import { Issuer } from "@domains/issuer/issuer.entity";
+import { BadgeClass } from "@domains/badgeClass/badgeClass.entity";
+import { Assertion } from "@domains/assertion/assertion.entity";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { SqliteIssuerRepository } from "./sqlite-issuer.repository";
+import { SqliteBadgeClassRepository } from "./sqlite-badge-class.repository";
+import { SqliteAssertionRepository } from "./sqlite-assertion.repository";
+import { SqliteAssertionMapper } from "../mappers/sqlite-assertion.mapper";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import { logger } from "@utils/logging/logger.service";
 import type {
   SqliteTransactionContext,
   SqliteOperationContext,
   DrizzleTransaction,
   SqliteEntityType,
-} from '../types/sqlite-database.types';
-import { issuers, badgeClasses, assertions } from '../schema';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+} from "../types/sqlite-database.types";
+import { issuers, badgeClasses, assertions } from "../schema";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
 // We'll use a more pragmatic approach with proper JSDoc comments
 
 /**
@@ -55,7 +55,7 @@ export class SqliteRepositoryCoordinator {
   getBadgeClassRepository(): SqliteBadgeClassRepository {
     if (!this._badgeClassRepository) {
       this._badgeClassRepository = new SqliteBadgeClassRepository(
-        this.connectionManager
+        this.connectionManager,
       );
     }
     return this._badgeClassRepository;
@@ -67,7 +67,7 @@ export class SqliteRepositoryCoordinator {
   getAssertionRepository(): SqliteAssertionRepository {
     if (!this._assertionRepository) {
       this._assertionRepository = new SqliteAssertionRepository(
-        this.connectionManager
+        this.connectionManager,
       );
     }
     return this._assertionRepository;
@@ -91,23 +91,23 @@ export class SqliteRepositoryCoordinator {
    * Creates a complete badge ecosystem (issuer, badge class, and assertion) in a coordinated manner
    */
   async createBadgeEcosystem(
-    issuerData: Omit<Issuer, 'id'>,
-    badgeClassData: Omit<BadgeClass, 'id' | 'issuer'>,
-    assertionData: Omit<Assertion, 'id' | 'badgeClass'>
+    issuerData: Omit<Issuer, "id">,
+    badgeClassData: Omit<BadgeClass, "id" | "issuer">,
+    assertionData: Omit<Assertion, "id" | "badgeClass">,
   ): Promise<{
     issuer: Issuer;
     badgeClass: BadgeClass;
     assertion: Assertion;
   }> {
     const transactionContext = this.createTransactionContext(
-      'createBadgeEcosystem'
+      "createBadgeEcosystem",
     );
 
     try {
       // Ensure an active database connection before proceeding
       if (!this.connectionManager.isConnected()) {
         logger.info(
-          'Database not connected, establishing connection before createBadgeEcosystem operation'
+          "Database not connected, establishing connection before createBadgeEcosystem operation",
         );
         await this.connectionManager.connect();
       }
@@ -115,7 +115,7 @@ export class SqliteRepositoryCoordinator {
       // Double-check connection status after connection attempt
       if (!this.connectionManager.isConnected()) {
         throw new Error(
-          'Failed to establish database connection for createBadgeEcosystem operation'
+          "Failed to establish database connection for createBadgeEcosystem operation",
         );
       }
 
@@ -127,7 +127,7 @@ export class SqliteRepositoryCoordinator {
         const issuer = await this.createIssuerWithTransaction(issuerData, tx);
 
         transactionContext.operations.push(
-          this.createOperationContext('CREATE Issuer', issuer.id)
+          this.createOperationContext("CREATE Issuer", issuer.id),
         );
 
         // Create badge class with issuer reference using helper method
@@ -136,11 +136,11 @@ export class SqliteRepositoryCoordinator {
             ...badgeClassData,
             issuer: issuer.id,
           },
-          tx
+          tx,
         );
 
         transactionContext.operations.push(
-          this.createOperationContext('CREATE BadgeClass', badgeClass.id)
+          this.createOperationContext("CREATE BadgeClass", badgeClass.id),
         );
 
         // Create assertion with badge class and issuer references using helper method
@@ -150,17 +150,17 @@ export class SqliteRepositoryCoordinator {
             badgeClass: badgeClass.id,
             issuer: issuer.id, // Add issuer reference for v3.0 compliance
           },
-          tx
+          tx,
         );
 
         transactionContext.operations.push(
-          this.createOperationContext('CREATE Assertion', assertion.id)
+          this.createOperationContext("CREATE Assertion", assertion.id),
         );
 
         return { issuer, badgeClass, assertion };
       });
 
-      logger.info('Badge ecosystem created successfully', {
+      logger.info("Badge ecosystem created successfully", {
         transactionId: transactionContext.id,
         issuerId: result.issuer.id,
         badgeClassId: result.badgeClass.id,
@@ -170,7 +170,7 @@ export class SqliteRepositoryCoordinator {
 
       return result;
     } catch (error) {
-      logger.error('Failed to create badge ecosystem', {
+      logger.error("Failed to create badge ecosystem", {
         error: error instanceof Error ? error.message : String(error),
         transactionId: transactionContext.id,
         operations: transactionContext.operations.length,
@@ -184,13 +184,13 @@ export class SqliteRepositoryCoordinator {
    * Validates that an issuer exists before creating a badge class
    */
   async createBadgeClassWithValidation(
-    badgeClassData: Omit<BadgeClass, 'id'>
+    badgeClassData: Omit<BadgeClass, "id">,
   ): Promise<BadgeClass> {
     try {
       // Ensure an active database connection before proceeding
       if (!this.connectionManager.isConnected()) {
         logger.info(
-          'Database not connected, establishing connection before createBadgeClassWithValidation operation'
+          "Database not connected, establishing connection before createBadgeClassWithValidation operation",
         );
         await this.connectionManager.connect();
       }
@@ -198,19 +198,19 @@ export class SqliteRepositoryCoordinator {
       // Double-check connection status after connection attempt
       if (!this.connectionManager.isConnected()) {
         throw new Error(
-          'Failed to establish database connection for createBadgeClassWithValidation operation'
+          "Failed to establish database connection for createBadgeClassWithValidation operation",
         );
       }
 
       // Extract issuer ID with proper type checking
       let issuerId: Shared.IRI | undefined;
 
-      if (typeof badgeClassData.issuer === 'string') {
+      if (typeof badgeClassData.issuer === "string") {
         issuerId = badgeClassData.issuer as Shared.IRI;
       } else if (
         badgeClassData.issuer &&
-        typeof badgeClassData.issuer === 'object' &&
-        'id' in badgeClassData.issuer &&
+        typeof badgeClassData.issuer === "object" &&
+        "id" in badgeClassData.issuer &&
         badgeClassData.issuer.id
       ) {
         issuerId = badgeClassData.issuer.id as Shared.IRI;
@@ -218,7 +218,7 @@ export class SqliteRepositoryCoordinator {
 
       // Validate that we have a valid issuer ID
       if (!issuerId) {
-        throw new Error('Invalid or missing issuer ID in badge class data');
+        throw new Error("Invalid or missing issuer ID in badge class data");
       }
 
       // Validate that the issuer exists in the database
@@ -233,18 +233,18 @@ export class SqliteRepositoryCoordinator {
       // Extract issuer ID safely for error logging
       let issuerId: Shared.IRI | undefined;
 
-      if (typeof badgeClassData.issuer === 'string') {
+      if (typeof badgeClassData.issuer === "string") {
         issuerId = badgeClassData.issuer as Shared.IRI;
       } else if (
         badgeClassData.issuer &&
-        typeof badgeClassData.issuer === 'object' &&
-        'id' in badgeClassData.issuer &&
+        typeof badgeClassData.issuer === "object" &&
+        "id" in badgeClassData.issuer &&
         badgeClassData.issuer.id
       ) {
         issuerId = badgeClassData.issuer.id as Shared.IRI;
       }
 
-      logger.error('Failed to create badge class with validation', {
+      logger.error("Failed to create badge class with validation", {
         error: error instanceof Error ? error.message : String(error),
         issuerId,
         badgeClassData: SensitiveValue.from(badgeClassData),
@@ -257,13 +257,13 @@ export class SqliteRepositoryCoordinator {
    * Validates that a badge class exists before creating an assertion
    */
   async createAssertionWithValidation(
-    assertionData: Omit<Assertion, 'id'>
+    assertionData: Omit<Assertion, "id">,
   ): Promise<Assertion> {
     try {
       // Ensure an active database connection before proceeding
       if (!this.connectionManager.isConnected()) {
         logger.info(
-          'Database not connected, establishing connection before createAssertionWithValidation operation'
+          "Database not connected, establishing connection before createAssertionWithValidation operation",
         );
         await this.connectionManager.connect();
       }
@@ -271,7 +271,7 @@ export class SqliteRepositoryCoordinator {
       // Double-check connection status after connection attempt
       if (!this.connectionManager.isConnected()) {
         throw new Error(
-          'Failed to establish database connection for createAssertionWithValidation operation'
+          "Failed to establish database connection for createAssertionWithValidation operation",
         );
       }
 
@@ -285,7 +285,7 @@ export class SqliteRepositoryCoordinator {
       // Create the assertion
       return await this.assertionRepository.create(assertionData);
     } catch (error) {
-      logger.error('Failed to create assertion with validation', {
+      logger.error("Failed to create assertion with validation", {
         error: error instanceof Error ? error.message : String(error),
         badgeClassId: assertionData.badgeClass,
       });
@@ -310,14 +310,14 @@ export class SqliteRepositoryCoordinator {
     assertionsDeleted: number;
   }> {
     const transactionContext = this.createTransactionContext(
-      'deleteIssuerCascade'
+      "deleteIssuerCascade",
     );
 
     try {
       // Ensure an active database connection before proceeding
       if (!this.connectionManager.isConnected()) {
         logger.info(
-          'Database not connected, establishing connection before deleteIssuerCascade operation'
+          "Database not connected, establishing connection before deleteIssuerCascade operation",
         );
         await this.connectionManager.connect();
       }
@@ -325,7 +325,7 @@ export class SqliteRepositoryCoordinator {
       // Double-check connection status after connection attempt
       if (!this.connectionManager.isConnected()) {
         throw new Error(
-          'Failed to establish database connection for deleteIssuerCascade operation'
+          "Failed to establish database connection for deleteIssuerCascade operation",
         );
       }
 
@@ -336,7 +336,7 @@ export class SqliteRepositoryCoordinator {
         // First, count what will be deleted for accurate reporting
         // Get all badge classes for this issuer using the transaction
         // Convert URN to UUID for SQLite query
-        const dbIssuerId = convertUuid(issuerId as string, 'sqlite', 'to');
+        const dbIssuerId = convertUuid(issuerId as string, "sqlite", "to");
         const badgeClassResults = await tx
           .select({ id: badgeClasses.id })
           .from(badgeClasses)
@@ -369,17 +369,17 @@ export class SqliteRepositoryCoordinator {
         const badgeClassesDeleted = badgeClassIds.length;
 
         transactionContext.operations.push(
-          this.createOperationContext('DELETE Issuer CASCADE', issuerId),
+          this.createOperationContext("DELETE Issuer CASCADE", issuerId),
           this.createOperationContext(
-            `DELETE ${badgeClassesDeleted} BadgeClasses`
+            `DELETE ${badgeClassesDeleted} BadgeClasses`,
           ),
-          this.createOperationContext(`DELETE ${assertionsDeleted} Assertions`)
+          this.createOperationContext(`DELETE ${assertionsDeleted} Assertions`),
         );
 
         return { issuerDeleted, badgeClassesDeleted, assertionsDeleted };
       });
 
-      logger.info('Issuer cascade deletion completed', {
+      logger.info("Issuer cascade deletion completed", {
         transactionId: transactionContext.id,
         issuerId,
         issuerDeleted: result.issuerDeleted,
@@ -390,7 +390,7 @@ export class SqliteRepositoryCoordinator {
 
       return result;
     } catch (error) {
-      logger.error('Failed to delete issuer cascade', {
+      logger.error("Failed to delete issuer cascade", {
         error: error instanceof Error ? error.message : String(error),
         transactionId: transactionContext.id,
         issuerId,
@@ -416,7 +416,7 @@ export class SqliteRepositoryCoordinator {
       // Ensure an active database connection before proceeding
       if (!this.connectionManager.isConnected()) {
         logger.info(
-          'Database not connected, establishing connection before performHealthCheck operation'
+          "Database not connected, establishing connection before performHealthCheck operation",
         );
         await this.connectionManager.connect();
       }
@@ -426,9 +426,9 @@ export class SqliteRepositoryCoordinator {
         await this.connectionManager.performHealthCheck();
 
       // Test each repository with a simple query
-      const issuerHealthy = await this.testRepositoryHealth('issuer');
-      const badgeClassHealthy = await this.testRepositoryHealth('badgeClass');
-      const assertionHealthy = await this.testRepositoryHealth('assertion');
+      const issuerHealthy = await this.testRepositoryHealth("issuer");
+      const badgeClassHealthy = await this.testRepositoryHealth("badgeClass");
+      const assertionHealthy = await this.testRepositoryHealth("assertion");
 
       const repositoriesHealthy =
         issuerHealthy && badgeClassHealthy && assertionHealthy;
@@ -444,7 +444,7 @@ export class SqliteRepositoryCoordinator {
         },
       };
     } catch (error) {
-      logger.error('Health check failed', {
+      logger.error("Health check failed", {
         error: error instanceof Error ? error.message : String(error),
       });
       return {
@@ -463,7 +463,7 @@ export class SqliteRepositoryCoordinator {
    * Creates a transaction context for coordinated operations
    */
   private createTransactionContext(
-    _operation: string
+    _operation: string,
   ): SqliteTransactionContext {
     return {
       id: `tx_${Date.now()}_${randomUUID().substring(0, 8)}`,
@@ -478,7 +478,7 @@ export class SqliteRepositoryCoordinator {
    */
   private createOperationContext(
     operation: string,
-    entityId?: Shared.IRI
+    entityId?: Shared.IRI,
   ): SqliteOperationContext {
     // Determine entity type from operation string
     const entityType = this.determineEntityTypeFromOperation(operation);
@@ -495,40 +495,40 @@ export class SqliteRepositoryCoordinator {
    * Determines entity type from operation string
    */
   private determineEntityTypeFromOperation(
-    operation: string
+    operation: string,
   ): SqliteEntityType {
     const lowerOp = operation.toLowerCase();
 
-    if (lowerOp.includes('issuer')) {
-      return 'issuer';
+    if (lowerOp.includes("issuer")) {
+      return "issuer";
     } else if (
-      lowerOp.includes('badgeclass') ||
-      lowerOp.includes('badge class')
+      lowerOp.includes("badgeclass") ||
+      lowerOp.includes("badge class")
     ) {
-      return 'badgeClass';
-    } else if (lowerOp.includes('assertion')) {
-      return 'assertion';
+      return "badgeClass";
+    } else if (lowerOp.includes("assertion")) {
+      return "assertion";
     }
 
     // Default fallback
-    return 'issuer';
+    return "issuer";
   }
 
   /**
    * Tests repository health by attempting a simple operation
    */
   private async testRepositoryHealth(
-    repositoryType: 'issuer' | 'badgeClass' | 'assertion'
+    repositoryType: "issuer" | "badgeClass" | "assertion",
   ): Promise<boolean> {
     try {
       switch (repositoryType) {
-        case 'issuer':
+        case "issuer":
           await this.issuerRepository.findAll();
           return true;
-        case 'badgeClass':
+        case "badgeClass":
           await this.badgeClassRepository.findAll();
           return true;
-        case 'assertion':
+        case "assertion":
           await this.assertionRepository.findAll();
           return true;
         default:
@@ -546,8 +546,8 @@ export class SqliteRepositoryCoordinator {
    * @param tx The transaction object from Drizzle
    */
   private async createIssuerWithTransaction(
-    issuerData: Omit<Issuer, 'id'>,
-    tx: DrizzleTransaction // Transaction object from Drizzle
+    issuerData: Omit<Issuer, "id">,
+    tx: DrizzleTransaction, // Transaction object from Drizzle
   ): Promise<Issuer> {
     // Create a full issuer entity with generated ID
     const issuerWithId = Issuer.create(issuerData);
@@ -568,7 +568,7 @@ export class SqliteRepositoryCoordinator {
 
     if (!insertResult[0]) {
       throw new Error(
-        'Failed to create issuer within transaction: no result returned'
+        "Failed to create issuer within transaction: no result returned",
       );
     }
 
@@ -583,8 +583,8 @@ export class SqliteRepositoryCoordinator {
    * @param tx The transaction object from Drizzle
    */
   private async createBadgeClassWithTransaction(
-    badgeClassData: Omit<BadgeClass, 'id'>,
-    tx: DrizzleTransaction // Transaction object from Drizzle
+    badgeClassData: Omit<BadgeClass, "id">,
+    tx: DrizzleTransaction, // Transaction object from Drizzle
   ): Promise<BadgeClass> {
     // Create a full badge class entity with generated ID
     const badgeClassWithId = BadgeClass.create(badgeClassData);
@@ -608,7 +608,7 @@ export class SqliteRepositoryCoordinator {
 
     if (!insertResult[0]) {
       throw new Error(
-        'Failed to create badge class within transaction: no result returned'
+        "Failed to create badge class within transaction: no result returned",
       );
     }
 
@@ -623,8 +623,8 @@ export class SqliteRepositoryCoordinator {
    * @param tx The transaction object from Drizzle
    */
   private async createAssertionWithTransaction(
-    assertionData: Omit<Assertion, 'id'>,
-    tx: DrizzleTransaction // Transaction object from Drizzle
+    assertionData: Omit<Assertion, "id">,
+    tx: DrizzleTransaction, // Transaction object from Drizzle
   ): Promise<Assertion> {
     // Let the entity handle ID generation to ensure proper IRI format
     const fullAssertion = Assertion.create(assertionData);
@@ -650,7 +650,7 @@ export class SqliteRepositoryCoordinator {
 
     if (!insertResult[0]) {
       throw new Error(
-        'Failed to create assertion within transaction: no result returned'
+        "Failed to create assertion within transaction: no result returned",
       );
     }
 

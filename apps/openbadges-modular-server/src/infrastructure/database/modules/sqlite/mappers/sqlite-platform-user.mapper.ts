@@ -5,11 +5,15 @@
  * handling the conversion between domain entities and database records.
  */
 
-import { PlatformUser } from '@domains/backpack/platform-user.entity';
-import type { Shared } from 'openbadges-types';
-import { convertJson, convertTimestamp, convertUuid } from '@infrastructure/database/utils/type-conversion';
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import type { platformUsers } from '../schema';
+import { PlatformUser } from "@domains/backpack/platform-user.entity";
+import type { Shared } from "openbadges-types";
+import {
+  convertJson,
+  convertTimestamp,
+  convertUuid,
+} from "@infrastructure/database/utils/type-conversion";
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import type { platformUsers } from "../schema";
 // Import logger if needed for error handling
 // import { logger } from '@utils/logging/logger.service';
 
@@ -28,11 +32,23 @@ export class SqlitePlatformUserMapper {
 
     // Create the record with required fields
     const record: InferInsertModel<typeof platformUsers> = {
-      id: convertUuid(data.id as string, 'sqlite', 'to') as string,
-      platformId: convertUuid(data.platformId as string, 'sqlite', 'to') as string,
+      id: convertUuid(data.id as string, "sqlite", "to") as string,
+      platformId: convertUuid(
+        data.platformId as string,
+        "sqlite",
+        "to",
+      ) as string,
       externalUserId: String(data.externalUserId),
-      createdAt: convertTimestamp(data.createdAt as Date, 'sqlite', 'to') as number,
-      updatedAt: convertTimestamp(data.updatedAt as Date, 'sqlite', 'to') as number
+      createdAt: convertTimestamp(
+        data.createdAt as Date,
+        "sqlite",
+        "to",
+      ) as number,
+      updatedAt: convertTimestamp(
+        data.updatedAt as Date,
+        "sqlite",
+        "to",
+      ) as number,
     };
 
     // Add optional fields if they exist
@@ -48,7 +64,11 @@ export class SqlitePlatformUserMapper {
     }
 
     if (data.metadata !== undefined) {
-      extendedRecord.metadata = convertJson(data.metadata, 'sqlite', 'to') as string;
+      extendedRecord.metadata = convertJson(
+        data.metadata,
+        "sqlite",
+        "to",
+      ) as string;
     }
 
     return record;
@@ -61,19 +81,26 @@ export class SqlitePlatformUserMapper {
    */
   toDomain(record: InferSelectModel<typeof platformUsers>): PlatformUser {
     // Parse metadata
-    const parsedMetadata = convertJson(record.metadata, 'sqlite', 'from');
-    const metadata = typeof parsedMetadata === 'object' ? parsedMetadata as Record<string, unknown> : undefined;
+    const parsedMetadata = convertJson(record.metadata, "sqlite", "from");
+    const metadata =
+      typeof parsedMetadata === "object"
+        ? (parsedMetadata as Record<string, unknown>)
+        : undefined;
 
     // Create and return domain entity
     return PlatformUser.create({
-      id: convertUuid(record.id, 'sqlite', 'from') as Shared.IRI,
-      platformId: convertUuid(record.platformId, 'sqlite', 'from') as Shared.IRI,
+      id: convertUuid(record.id, "sqlite", "from") as Shared.IRI,
+      platformId: convertUuid(
+        record.platformId,
+        "sqlite",
+        "from",
+      ) as Shared.IRI,
       externalUserId: record.externalUserId,
       displayName: record.displayName || undefined,
       email: record.email || undefined,
       metadata,
-      createdAt: convertTimestamp(record.createdAt, 'sqlite', 'from') as Date,
-      updatedAt: convertTimestamp(record.updatedAt, 'sqlite', 'from') as Date
+      createdAt: convertTimestamp(record.createdAt, "sqlite", "from") as Date,
+      updatedAt: convertTimestamp(record.updatedAt, "sqlite", "from") as Date,
     });
   }
 
@@ -82,25 +109,27 @@ export class SqlitePlatformUserMapper {
    * @param record The persistence record to create an update object from
    * @returns An object suitable for updating the database
    */
-  toUpdateObject(record: InferInsertModel<typeof platformUsers>): Record<string, unknown> {
+  toUpdateObject(
+    record: InferInsertModel<typeof platformUsers>,
+  ): Record<string, unknown> {
     // Create the update object with required fields
     const updateData: Record<string, unknown> = {
       platformId: record.platformId,
       externalUserId: record.externalUserId,
-      updatedAt: record.updatedAt
+      updatedAt: record.updatedAt,
     };
 
     // Add optional fields with null handling
     const extendedRecord = record as Record<string, unknown>;
-    if ('displayName' in extendedRecord) {
+    if ("displayName" in extendedRecord) {
       updateData.displayName = extendedRecord.displayName ?? null;
     }
 
-    if ('email' in extendedRecord) {
+    if ("email" in extendedRecord) {
       updateData.email = extendedRecord.email ?? null;
     }
 
-    if ('metadata' in extendedRecord) {
+    if ("metadata" in extendedRecord) {
       updateData.metadata = extendedRecord.metadata ?? null;
     }
 

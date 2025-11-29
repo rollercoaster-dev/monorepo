@@ -1,23 +1,24 @@
 /**
  * Tests for the Platform entity
  */
-import { describe, test, expect } from 'bun:test';
-import { Platform } from '@/domains/backpack/platform.entity';
-import { PlatformStatus } from '@/domains/backpack/backpack.types';
-import type { Shared } from 'openbadges-types';
+import { describe, test, expect } from "bun:test";
+import { Platform } from "@/domains/backpack/platform.entity";
+import { PlatformStatus } from "@/domains/backpack/backpack.types";
+import type { Shared } from "openbadges-types";
 
-describe('Platform Entity', () => {
+describe("Platform Entity", () => {
   // Test data
   const validPlatformData = {
-    name: 'Test Platform',
-    description: 'A test platform',
-    clientId: 'test-client-id',
-    publicKey: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0+JdYLHloVeU+HkZ3N5u\nYrDOCYSUxw/nPVYnFHLCvRSRnzXLBYAkWjgMdz7gV8Q0PE9XJU7S8yyGNuGCUgKd\nP9F9S5GJLzEbV4/d0w1Zz/xnQlkCDFGGvnmMYqFwcxDlr9zTm5K7bXl0ioGNYpfs\nZVo9AOsOTGQxkUbTAMBA+9+ZnkPCa2kVYnOLKgdCvN6u8wIDAQAB\n-----END PUBLIC KEY-----',
-    webhookUrl: 'https://example.com/webhook',
-    status: PlatformStatus.ACTIVE
+    name: "Test Platform",
+    description: "A test platform",
+    clientId: "test-client-id",
+    publicKey:
+      "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0+JdYLHloVeU+HkZ3N5u\nYrDOCYSUxw/nPVYnFHLCvRSRnzXLBYAkWjgMdz7gV8Q0PE9XJU7S8yyGNuGCUgKd\nP9F9S5GJLzEbV4/d0w1Zz/xnQlkCDFGGvnmMYqFwcxDlr9zTm5K7bXl0ioGNYpfs\nZVo9AOsOTGQxkUbTAMBA+9+ZnkPCa2kVYnOLKgdCvN6u8wIDAQAB\n-----END PUBLIC KEY-----",
+    webhookUrl: "https://example.com/webhook",
+    status: PlatformStatus.ACTIVE,
   };
 
-  test('should create a platform with factory method', () => {
+  test("should create a platform with factory method", () => {
     const platform = Platform.create(validPlatformData);
 
     expect(platform).toBeDefined();
@@ -32,24 +33,24 @@ describe('Platform Entity', () => {
     expect(platform.updatedAt).toBeInstanceOf(Date);
   });
 
-  test('should create a platform with custom ID', () => {
-    const customId = 'custom-id' as Shared.IRI;
+  test("should create a platform with custom ID", () => {
+    const customId = "custom-id" as Shared.IRI;
     const platform = Platform.create({
       ...validPlatformData,
-      id: customId
+      id: customId,
     });
 
     expect(platform.id).toBe(customId);
   });
 
-  test('should set default status if not provided', () => {
+  test("should set default status if not provided", () => {
     const { status: _status, ...dataWithoutStatus } = validPlatformData;
     const platform = Platform.create(dataWithoutStatus);
 
     expect(platform.status).toBe(PlatformStatus.ACTIVE);
   });
 
-  test('should convert to plain object', () => {
+  test("should convert to plain object", () => {
     const platform = Platform.create(validPlatformData);
     const obj = platform.toObject();
 

@@ -5,21 +5,21 @@
  * including database connection status and performance metrics.
  */
 
-import { performance } from 'perf_hooks';
-import { config } from '../../config/config';
-import { logger } from '../logging/logger.service';
-import type { CacheService } from '../../infrastructure/cache/cache.service';
-import { QueryLoggerService } from '../../infrastructure/database/utils/query-logger.service';
-import { PreparedStatementManager } from '../../infrastructure/database/utils/prepared-statements';
-import { type DatabaseInterface } from '../../infrastructure/database/interfaces/database.interface';
-import { type CacheStats } from '../../infrastructure/cache/cache.interface';
-import { getAppVersion, formatVersion } from '../version/app-version';
+import { performance } from "perf_hooks";
+import { config } from "../../config/config";
+import { logger } from "../logging/logger.service";
+import type { CacheService } from "../../infrastructure/cache/cache.service";
+import { QueryLoggerService } from "../../infrastructure/database/utils/query-logger.service";
+import { PreparedStatementManager } from "../../infrastructure/database/utils/prepared-statements";
+import { type DatabaseInterface } from "../../infrastructure/database/interfaces/database.interface";
+import { type CacheStats } from "../../infrastructure/cache/cache.interface";
+import { getAppVersion, formatVersion } from "../version/app-version";
 
 /**
  * Represents the health check result
  */
 export interface HealthCheckResult {
-  status: 'ok' | 'error' | 'degraded';
+  status: "ok" | "error" | "degraded";
   timestamp: string;
   uptime: number;
   database: {
@@ -70,7 +70,7 @@ export class HealthCheckService {
     db: DatabaseInterface,
     cacheService?: CacheService,
     queryLogger?: QueryLoggerService,
-    preparedStatementManager?: PreparedStatementManager
+    preparedStatementManager?: PreparedStatementManager,
   ) {
     this.db = db;
     this.cacheService = cacheService;
@@ -84,7 +84,7 @@ export class HealthCheckService {
    */
   async check(): Promise<HealthCheckResult> {
     const baseResult = {
-      status: 'ok' as 'ok' | 'error' | 'degraded',
+      status: "ok" as "ok" | "error" | "degraded",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       database: {
@@ -92,13 +92,26 @@ export class HealthCheckService {
         connected: false, // Default to false
         responseTime: undefined as string | undefined,
         error: undefined as string | undefined,
-        metrics: undefined as Record<string, unknown> | undefined
+        metrics: undefined as Record<string, unknown> | undefined,
       },
-      cache: undefined as { enabled: boolean; stats?: CacheStats; error?: string } | undefined,
-      queries: undefined as { enabled: boolean; stats?: Record<string, unknown>; slowQueries?: Array<{ query: string; duration: number; timestamp: string }>; preparedStatements?: Record<string, unknown> } | undefined,
+      cache: undefined as
+        | { enabled: boolean; stats?: CacheStats; error?: string }
+        | undefined,
+      queries: undefined as
+        | {
+            enabled: boolean;
+            stats?: Record<string, unknown>;
+            slowQueries?: Array<{
+              query: string;
+              duration: number;
+              timestamp: string;
+            }>;
+            preparedStatements?: Record<string, unknown>;
+          }
+        | undefined,
       memory: this.getMemoryMetrics(),
-      environment: process.env.NODE_ENV || 'development',
-      version: formatVersion(getAppVersion())
+      environment: process.env.NODE_ENV || "development",
+      version: formatVersion(getAppVersion()),
     };
 
     // Check Database Connection
@@ -106,23 +119,28 @@ export class HealthCheckService {
     try {
       baseResult.database.connected = this.db.isConnected();
       if (!baseResult.database.connected) {
-         // Optionally try to connect if not connected, but be mindful of implications
-         // await this.db.connect();
-         // baseResult.database.connected = this.db.isConnected();
-         if (!baseResult.database.connected) throw new Error('Database is not connected.');
+        // Optionally try to connect if not connected, but be mindful of implications
+        // await this.db.connect();
+        // baseResult.database.connected = this.db.isConnected();
+        if (!baseResult.database.connected)
+          throw new Error("Database is not connected.");
       }
       baseResult.database.responseTime = `${(performance.now() - dbCheckStart).toFixed(2)}ms`;
 
       // Optionally get detailed metrics if connected
       if (baseResult.database.connected) {
-        baseResult.database.metrics = await this.getDatabaseMetrics(config.database.type);
+        baseResult.database.metrics = await this.getDatabaseMetrics(
+          config.database.type,
+        );
       }
-
     } catch (dbError: unknown) {
-      baseResult.status = 'error';
+      baseResult.status = "error";
       baseResult.database.connected = false;
-      baseResult.database.error = dbError instanceof Error ? dbError.message : String(dbError);
-      logger.error('Health check failed: Database connection error', { error: baseResult.database.error });
+      baseResult.database.error =
+        dbError instanceof Error ? dbError.message : String(dbError);
+      logger.error("Health check failed: Database connection error", {
+        error: baseResult.database.error,
+      });
     }
 
     // Get Cache Metrics (if CacheService is available)
@@ -131,43 +149,53 @@ export class HealthCheckService {
         const cacheStats = await this.cacheService.getStats();
         baseResult.cache = {
           enabled: config.cache.enabled,
-          stats: cacheStats
+          stats: cacheStats,
         };
       } catch (cacheError: unknown) {
-        logger.warn('Health check: Failed to get cache stats', { error: cacheError });
+        logger.warn("Health check: Failed to get cache stats", {
+          error: cacheError,
+        });
         baseResult.cache = {
           enabled: config.cache.enabled,
           stats: undefined,
-          error: cacheError instanceof Error ? cacheError.message : String(cacheError)
+          error:
+            cacheError instanceof Error
+              ? cacheError.message
+              : String(cacheError),
         };
-         if (baseResult.status === 'ok') baseResult.status = 'degraded'; // Mark as degraded if only cache fails
+        if (baseResult.status === "ok") baseResult.status = "degraded"; // Mark as degraded if only cache fails
       }
     } else {
-         baseResult.cache = { enabled: false };
+      baseResult.cache = { enabled: false };
     }
 
     // Get Query Logger Metrics (if available)
     if (this.queryLogger && config.database.queryLogging) {
-        baseResult.queries = {
-            enabled: true,
-            stats: QueryLoggerService.getStats(),
-            slowQueries: QueryLoggerService.getSlowQueries()
-        };
+      baseResult.queries = {
+        enabled: true,
+        stats: QueryLoggerService.getStats(),
+        slowQueries: QueryLoggerService.getSlowQueries(),
+      };
     }
 
     // Get Prepared Statement Metrics (if available)
-     if (this.preparedStatementManager) {
-         const statementStats = PreparedStatementManager.getStats();
-         if (baseResult.queries) {
-             baseResult.queries.preparedStatements = statementStats;
-         } else {
-             baseResult.queries = { enabled: false, preparedStatements: statementStats };
-         }
-     }
+    if (this.preparedStatementManager) {
+      const statementStats = PreparedStatementManager.getStats();
+      if (baseResult.queries) {
+        baseResult.queries.preparedStatements = statementStats;
+      } else {
+        baseResult.queries = {
+          enabled: false,
+          preparedStatements: statementStats,
+        };
+      }
+    }
 
     // Log final status if not 'ok'
-    if (baseResult.status !== 'ok') {
-        logger.warn(`Health check completed with status: ${baseResult.status}`, { result: baseResult });
+    if (baseResult.status !== "ok") {
+      logger.warn(`Health check completed with status: ${baseResult.status}`, {
+        result: baseResult,
+      });
     }
 
     return baseResult;
@@ -177,14 +205,14 @@ export class HealthCheckService {
    * Gets memory metrics for the application
    * @returns Memory metrics object
    */
-  private getMemoryMetrics(): HealthCheckResult['memory'] {
+  private getMemoryMetrics(): HealthCheckResult["memory"] {
     const memoryUsage = process.memoryUsage();
     return {
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
       heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
       external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
-      arrayBuffers: `${Math.round(memoryUsage.arrayBuffers / 1024 / 1024)}MB`
+      arrayBuffers: `${Math.round(memoryUsage.arrayBuffers / 1024 / 1024)}MB`,
     };
   }
 
@@ -193,19 +221,23 @@ export class HealthCheckService {
    * @param dbType Database type ('sqlite' or 'postgresql')
    * @returns Database metrics
    */
-  private async getDatabaseMetrics(dbType: string): Promise<Record<string, unknown>> {
+  private async getDatabaseMetrics(
+    dbType: string,
+  ): Promise<Record<string, unknown>> {
     const metrics: Record<string, unknown> = {
-        connected: this.db.isConnected(),
-        dialect: dbType
-        // TODO: Add any other metrics derivable purely from DatabaseInterface if needed.
-        // Cannot get low-level PRAGMAs or pg_stats via the current interface.
+      connected: this.db.isConnected(),
+      dialect: dbType,
+      // TODO: Add any other metrics derivable purely from DatabaseInterface if needed.
+      // Cannot get low-level PRAGMAs or pg_stats via the current interface.
     };
 
     // Add placeholder for future potential metrics
-    if (dbType === 'sqlite') {
-        metrics['notes'] = 'Detailed SQLite metrics (PRAGMAs) require direct DB access, not available via interface.';
-    } else if (dbType === 'postgresql') {
-        metrics['notes'] = 'Detailed PostgreSQL metrics (pg_stat_activity, sizes) require direct DB access, not available via interface.';
+    if (dbType === "sqlite") {
+      metrics["notes"] =
+        "Detailed SQLite metrics (PRAGMAs) require direct DB access, not available via interface.";
+    } else if (dbType === "postgresql") {
+      metrics["notes"] =
+        "Detailed PostgreSQL metrics (pg_stat_activity, sizes) require direct DB access, not available via interface.";
     }
 
     return metrics;
@@ -216,7 +248,9 @@ export class HealthCheckService {
    * This currently adds limited extra checks due to DatabaseInterface constraints.
    * @returns Health check result
    */
-  async deepCheck(): Promise<HealthCheckResult & { checks: Record<string, unknown> }> {
+  async deepCheck(): Promise<
+    HealthCheckResult & { checks: Record<string, unknown> }
+  > {
     const baseResult = await this.check(); // Call instance method
     const checks: Record<string, unknown> = {};
 
@@ -227,30 +261,29 @@ export class HealthCheckService {
     // Example simple check: re-verify connection status
     const deepDbCheckStart = performance.now();
     try {
-        const isConnected = this.db.isConnected();
-        checks['database_deep_connection'] = {
-            status: isConnected ? 'ok' : 'error',
-            connected: isConnected,
-            duration: `${(performance.now() - deepDbCheckStart).toFixed(2)}ms`
-        };
-        if (!isConnected && baseResult.status === 'ok') {
-            baseResult.status = 'degraded';
-        }
+      const isConnected = this.db.isConnected();
+      checks["database_deep_connection"] = {
+        status: isConnected ? "ok" : "error",
+        connected: isConnected,
+        duration: `${(performance.now() - deepDbCheckStart).toFixed(2)}ms`,
+      };
+      if (!isConnected && baseResult.status === "ok") {
+        baseResult.status = "degraded";
+      }
     } catch (error: unknown) {
-         checks['database_deep_connection'] = {
-            status: 'error',
-            error: error instanceof Error ? error.message : String(error),
-            duration: `${(performance.now() - deepDbCheckStart).toFixed(2)}ms`
-        };
-         if (baseResult.status === 'ok') baseResult.status = 'degraded';
+      checks["database_deep_connection"] = {
+        status: "error",
+        error: error instanceof Error ? error.message : String(error),
+        duration: `${(performance.now() - deepDbCheckStart).toFixed(2)}ms`,
+      };
+      if (baseResult.status === "ok") baseResult.status = "degraded";
     }
-
 
     // Add other deep checks here if applicable (e.g., check external service connectivity)
 
     return {
       ...baseResult,
-      checks
+      checks,
     };
   }
 
@@ -259,7 +292,9 @@ export class HealthCheckService {
    */
   static async check(): Promise<HealthCheckResult> {
     // Stub DB always connected
-    const stubDb: DatabaseInterface = { isConnected: () => true } as DatabaseInterface;
+    const stubDb: DatabaseInterface = {
+      isConnected: () => true,
+    } as DatabaseInterface;
     const service = new HealthCheckService(stubDb);
     return service.check();
   }

@@ -1,11 +1,11 @@
 /**
  * DTOs for Issuer-related API endpoints
- * 
+ *
  * These DTOs define the expected request and response structures for issuer operations.
  * They provide type safety and validation for the API.
  */
 
-import type { OB2, OB3 } from 'openbadges-types';
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * Base DTO for issuer creation and update operations
@@ -16,12 +16,14 @@ export interface IssuerBaseDto {
   url: string;
   email?: string;
   description?: string;
-  image?: string | {
-    id?: string;
-    type?: string;
-    url?: string;
-    caption?: string;
-  };
+  image?:
+    | string
+    | {
+        id?: string;
+        type?: string;
+        url?: string;
+        caption?: string;
+      };
   publicKey?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -38,7 +40,7 @@ export interface CreateIssuerOB2Dto extends IssuerBaseDto {
  */
 export interface CreateIssuerOB3Dto extends IssuerBaseDto {
   type?: string; // In OB3, type is typically a string
-  id?: string;   // Allow client to suggest an ID (optional)
+  id?: string; // Allow client to suggest an ID (optional)
 }
 
 /**

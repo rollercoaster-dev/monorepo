@@ -5,17 +5,17 @@
  * It includes user identity, credentials, roles, and permissions.
  */
 
-import type { Shared } from 'openbadges-types';
-import { createOrGenerateIRI } from '@utils/types/iri-utils';
+import type { Shared } from "openbadges-types";
+import { createOrGenerateIRI } from "@utils/types/iri-utils";
 
 /**
  * User roles in the system
  */
 export enum UserRole {
-  ADMIN = 'admin',
-  ISSUER = 'issuer',
-  VIEWER = 'viewer',
-  USER = 'user',
+  ADMIN = "admin",
+  ISSUER = "issuer",
+  VIEWER = "viewer",
+  USER = "user",
 }
 
 /**
@@ -23,30 +23,30 @@ export enum UserRole {
  */
 export enum UserPermission {
   // Admin permissions
-  MANAGE_USERS = 'manage:users',
-  MANAGE_SYSTEM = 'manage:system',
+  MANAGE_USERS = "manage:users",
+  MANAGE_SYSTEM = "manage:system",
 
   // Issuer permissions
-  CREATE_ISSUER = 'create:issuer',
-  UPDATE_ISSUER = 'update:issuer',
-  DELETE_ISSUER = 'delete:issuer',
+  CREATE_ISSUER = "create:issuer",
+  UPDATE_ISSUER = "update:issuer",
+  DELETE_ISSUER = "delete:issuer",
 
   // Badge class permissions
-  CREATE_BADGE_CLASS = 'create:badgeClass',
-  UPDATE_BADGE_CLASS = 'update:badgeClass',
-  DELETE_BADGE_CLASS = 'delete:badgeClass',
+  CREATE_BADGE_CLASS = "create:badgeClass",
+  UPDATE_BADGE_CLASS = "update:badgeClass",
+  DELETE_BADGE_CLASS = "delete:badgeClass",
 
   // Assertion permissions
-  CREATE_ASSERTION = 'create:assertion',
-  UPDATE_ASSERTION = 'update:assertion',
-  DELETE_ASSERTION = 'delete:assertion',
-  REVOKE_ASSERTION = 'revoke:assertion',
-  SIGN_ASSERTION = 'sign:assertion',
+  CREATE_ASSERTION = "create:assertion",
+  UPDATE_ASSERTION = "update:assertion",
+  DELETE_ASSERTION = "delete:assertion",
+  REVOKE_ASSERTION = "revoke:assertion",
+  SIGN_ASSERTION = "sign:assertion",
 
   // Backpack permissions
-  MANAGE_PLATFORMS = 'manage:platforms',
-  VIEW_BACKPACK = 'view:backpack',
-  MANAGE_BACKPACK = 'manage:backpack',
+  MANAGE_PLATFORMS = "manage:platforms",
+  VIEW_BACKPACK = "view:backpack",
+  MANAGE_BACKPACK = "manage:backpack",
 }
 
 /**

@@ -5,17 +5,17 @@ import {
   beforeEach,
   afterEach,
   beforeAll,
-} from 'bun:test';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { Database } from 'bun:sqlite';
-import { sql } from 'drizzle-orm';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+} from "bun:test";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { Database } from "bun:sqlite";
+import { sql } from "drizzle-orm";
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   describeSqlite,
   describePostgres,
-} from '../../../helpers/database-test-filter';
+} from "../../../helpers/database-test-filter";
 
 // Variables to hold the database-specific test functions
 let describeSqliteTests: (label: string, fn: () => void) => void =
@@ -29,15 +29,15 @@ beforeAll(async () => {
   describePostgresTests = await describePostgres();
 });
 
-describe('Issuer Field Migration Integration Tests', () => {
-  it('should initialize database test functions', () => {
+describe("Issuer Field Migration Integration Tests", () => {
+  it("should initialize database test functions", () => {
     // This test ensures the beforeAll hook runs
     expect(true).toBe(true);
   });
 });
 
 // Use database filtering to only run PostgreSQL tests when PostgreSQL is available
-describePostgresTests('PostgreSQL Migration', () => {
+describePostgresTests("PostgreSQL Migration", () => {
   let client: postgres.Sql;
   let db: ReturnType<typeof drizzle>;
 
@@ -95,7 +95,7 @@ describePostgresTests('PostgreSQL Migration', () => {
     }
   });
 
-  it('should add issuer_id column to assertions table', async () => {
+  it("should add issuer_id column to assertions table", async () => {
     if (!process.env.DATABASE_URL) {
       // Skip PostgreSQL test - DATABASE_URL not set
       return;
@@ -105,9 +105,9 @@ describePostgresTests('PostgreSQL Migration', () => {
     const migration1 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/pg-migrations/0001_add_issuer_id_to_assertions.sql'
+        "drizzle/pg-migrations/0001_add_issuer_id_to_assertions.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
 
     await db.execute(sql.raw(migration1));
@@ -120,12 +120,12 @@ describePostgresTests('PostgreSQL Migration', () => {
       `);
 
     expect(result.length).toBe(1);
-    expect(result[0].column_name).toBe('issuer_id');
-    expect(result[0].data_type).toBe('uuid');
-    expect(result[0].is_nullable).toBe('YES');
+    expect(result[0].column_name).toBe("issuer_id");
+    expect(result[0].data_type).toBe("uuid");
+    expect(result[0].is_nullable).toBe("YES");
   });
 
-  it('should populate issuer_id from badge_classes', async () => {
+  it("should populate issuer_id from badge_classes", async () => {
     if (!process.env.DATABASE_URL) {
       // Skip PostgreSQL test - DATABASE_URL not set
       return;
@@ -151,16 +151,16 @@ describePostgresTests('PostgreSQL Migration', () => {
     const migration1 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/pg-migrations/0001_add_issuer_id_to_assertions.sql'
+        "drizzle/pg-migrations/0001_add_issuer_id_to_assertions.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
     const migration2 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/pg-migrations/0002_populate_assertion_issuer_ids.sql'
+        "drizzle/pg-migrations/0002_populate_assertion_issuer_ids.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
 
     await db.execute(sql.raw(migration1));
@@ -174,18 +174,18 @@ describePostgresTests('PostgreSQL Migration', () => {
       `);
 
     expect(result.length).toBe(1);
-    expect(result[0].issuer_id).toBe('11111111-1111-1111-1111-111111111111');
+    expect(result[0].issuer_id).toBe("11111111-1111-1111-1111-111111111111");
   });
 });
 
 // Use database filtering to only run SQLite tests when SQLite is available
-describeSqliteTests('SQLite Migration', () => {
+describeSqliteTests("SQLite Migration", () => {
   // let _db: ReturnType<typeof drizzleSqlite>;
   let sqlite: Database;
 
   beforeEach(() => {
     // Create in-memory SQLite database for testing
-    sqlite = new Database(':memory:');
+    sqlite = new Database(":memory:");
     // _db = drizzleSqlite(sqlite);
 
     // Create base tables for testing
@@ -225,14 +225,14 @@ describeSqliteTests('SQLite Migration', () => {
     sqlite.close();
   });
 
-  it('should add issuer_id column to assertions table', () => {
+  it("should add issuer_id column to assertions table", () => {
     // Read and execute the first migration
     const migration1 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/migrations/0001_add_issuer_id_to_assertions.sql'
+        "drizzle/migrations/0001_add_issuer_id_to_assertions.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
 
     sqlite.run(migration1);
@@ -242,24 +242,24 @@ describeSqliteTests('SQLite Migration', () => {
       .prepare(
         `
         PRAGMA table_info(assertions)
-      `
+      `,
       )
       .all() as Array<{ name: string; type: string; notnull: number }>;
 
-    const issuerIdColumn = result.find((col) => col.name === 'issuer_id');
+    const issuerIdColumn = result.find((col) => col.name === "issuer_id");
     expect(issuerIdColumn).toBeDefined();
-    expect(issuerIdColumn?.type).toBe('TEXT');
+    expect(issuerIdColumn?.type).toBe("TEXT");
     expect(issuerIdColumn?.notnull).toBe(0); // nullable
   });
 
-  it('should create index on issuer_id column', () => {
+  it("should create index on issuer_id column", () => {
     // Execute the first migration
     const migration1 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/migrations/0001_add_issuer_id_to_assertions.sql'
+        "drizzle/migrations/0001_add_issuer_id_to_assertions.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
 
     sqlite.run(migration1);
@@ -270,21 +270,21 @@ describeSqliteTests('SQLite Migration', () => {
         `
         SELECT name FROM sqlite_master
         WHERE type = 'index' AND name = 'assertion_issuer_idx'
-      `
+      `,
       )
       .all();
 
     expect(result.length).toBe(1);
   });
 
-  it('should populate issuer_id from badge_classes', () => {
+  it("should populate issuer_id from badge_classes", () => {
     // Insert test data
     sqlite
       .prepare(
         `
         INSERT INTO issuers (id, name, url)
         VALUES ('11111111-1111-1111-1111-111111111111', 'Test Issuer', 'https://example.com')
-      `
+      `,
       )
       .run();
 
@@ -293,7 +293,7 @@ describeSqliteTests('SQLite Migration', () => {
         `
         INSERT INTO badge_classes (id, issuer_id, name)
         VALUES ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Test Badge')
-      `
+      `,
       )
       .run();
 
@@ -302,7 +302,7 @@ describeSqliteTests('SQLite Migration', () => {
         `
         INSERT INTO assertions (id, badge_class_id, recipient)
         VALUES ('33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', '{"type": "email", "identity": "test@example.com"}')
-      `
+      `,
       )
       .run();
 
@@ -310,16 +310,16 @@ describeSqliteTests('SQLite Migration', () => {
     const migration1 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/migrations/0001_add_issuer_id_to_assertions.sql'
+        "drizzle/migrations/0001_add_issuer_id_to_assertions.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
     const migration2 = readFileSync(
       join(
         process.cwd(),
-        'drizzle/migrations/0002_populate_assertion_issuer_ids.sql'
+        "drizzle/migrations/0002_populate_assertion_issuer_ids.sql",
       ),
-      'utf-8'
+      "utf-8",
     );
 
     sqlite.run(migration1);
@@ -332,10 +332,10 @@ describeSqliteTests('SQLite Migration', () => {
         SELECT issuer_id
         FROM assertions
         WHERE id = '33333333-3333-3333-3333-333333333333'
-      `
+      `,
       )
       .get() as { issuer_id: string };
 
-    expect(result.issuer_id).toBe('11111111-1111-1111-1111-111111111111');
+    expect(result.issuer_id).toBe("11111111-1111-1111-1111-111111111111");
   });
 });

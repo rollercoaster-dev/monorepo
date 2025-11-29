@@ -10,16 +10,16 @@ Issue → Research → Plan → Implement → PR → Review → Merge
 
 ### Tools
 
-| Type | Name | Purpose | Invoke |
-|------|------|---------|--------|
-| Skill | issue-fetcher | Get issue details | Auto (ask about issues) |
-| Skill | board-status | Check project board | Auto (ask about board) |
-| Skill | milestone-tracker | Track milestone progress | Auto (ask about milestone) |
-| Skill | pr-review-checker | Check PR review status | Auto (ask about reviews) |
-| Agent | issue-researcher | Research and plan | `"research issue #123"` |
-| Agent | atomic-developer | Implement with commits | `"implement issue #123"` |
-| Agent | pr-creator | Create PR, trigger reviews | `"create pr for issue #123"` |
-| Agent | review-handler | Address review feedback | `"handle reviews for pr #123"` |
+| Type  | Name              | Purpose                    | Invoke                         |
+| ----- | ----------------- | -------------------------- | ------------------------------ |
+| Skill | issue-fetcher     | Get issue details          | Auto (ask about issues)        |
+| Skill | board-status      | Check project board        | Auto (ask about board)         |
+| Skill | milestone-tracker | Track milestone progress   | Auto (ask about milestone)     |
+| Skill | pr-review-checker | Check PR review status     | Auto (ask about reviews)       |
+| Agent | issue-researcher  | Research and plan          | `"research issue #123"`        |
+| Agent | atomic-developer  | Implement with commits     | `"implement issue #123"`       |
+| Agent | pr-creator        | Create PR, trigger reviews | `"create pr for issue #123"`   |
+| Agent | review-handler    | Address review feedback    | `"handle reviews for pr #123"` |
 
 ## Complete Workflow
 
@@ -28,6 +28,7 @@ Issue → Research → Plan → Implement → PR → Review → Merge
 **Ask:** "what's next to work on?" or "board status"
 
 The `board-status` skill auto-triggers and shows:
+
 - Items in "Next" column (ready to pick up)
 - Current "In Progress" items
 - Items "In Review"
@@ -37,6 +38,7 @@ The `board-status` skill auto-triggers and shows:
 **Command:** `"research issue #108"`
 
 The `issue-researcher` agent:
+
 1. Fetches issue details
 2. Analyzes codebase
 3. Creates development plan
@@ -48,6 +50,7 @@ The `issue-researcher` agent:
 **Command:** `"implement issue #108"`
 
 The `atomic-developer` agent:
+
 1. Creates feature branch: `feat/issue-108-description`
 2. Follows the development plan
 3. Makes atomic commits (one logical change each)
@@ -59,6 +62,7 @@ The `atomic-developer` agent:
 **Command:** `"create pr for issue #108"`
 
 The `pr-creator` agent:
+
 1. Pushes branch to origin
 2. Creates PR with proper description
 3. Links issue with "Closes #108"
@@ -71,6 +75,7 @@ The `pr-creator` agent:
 **Command:** `"handle reviews for pr #140"`
 
 The `review-handler` agent:
+
 1. Fetches CodeRabbit and Claude reviews
 2. Categorizes feedback (critical/should fix/suggestions)
 3. Implements fixes with atomic commits
@@ -80,6 +85,7 @@ The `review-handler` agent:
 ### 6. Merge and Done
 
 When approved:
+
 1. Merge the PR (squash or merge commit)
 2. GitHub auto-closes the linked issue
 3. Update board status to "Done" (if not automatic)
@@ -110,13 +116,13 @@ When approved:
 Backlog → Next → In Progress → In Review → Done
 ```
 
-| Status | When | Who Updates |
-|--------|------|-------------|
-| Backlog | Issue created, not ready | Manual |
-| Next | Dependencies met, ready to work | Manual |
-| In Progress | Work started | atomic-developer |
-| In Review | PR created | pr-creator |
-| Done | PR merged | review-handler |
+| Status      | When                            | Who Updates      |
+| ----------- | ------------------------------- | ---------------- |
+| Backlog     | Issue created, not ready        | Manual           |
+| Next        | Dependencies met, ready to work | Manual           |
+| In Progress | Work started                    | atomic-developer |
+| In Review   | PR created                      | pr-creator       |
+| Done        | PR merged                       | review-handler   |
 
 ### Branch Naming
 
@@ -125,6 +131,7 @@ Backlog → Next → In Progress → In Review → Done
 ```
 
 Examples:
+
 - `feat/issue-108-key-management-types`
 - `fix/issue-115-png-encoding`
 - `refactor/issue-120-unified-baking`
@@ -144,12 +151,14 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 ## Skills vs Agents
 
 ### Skills (Auto-invoke)
+
 - **Read-only** operations
 - Triggered by natural language questions
 - No explicit command needed
 - Examples: "what's blocking?", "PR status?", "milestone progress?"
 
 ### Agents (Explicit invoke)
+
 - **Write** operations (code changes, PR creation)
 - Triggered by explicit commands
 - User controls when to invoke

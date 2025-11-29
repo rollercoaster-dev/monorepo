@@ -53,6 +53,7 @@ The authentication system implements role-based access control to restrict acces
 Permissions are granular access controls that define what actions a user can perform. Each role has a default set of permissions, but these can be customized per user.
 
 Examples of permissions:
+
 - `manage:users` - Can manage user accounts
 - `create:badgeClass` - Can create badge classes
 - `issue:assertion` - Can issue badge assertions
@@ -112,14 +113,14 @@ For E2E tests, you can use the test API key defined in the environment variables
 
 ```typescript
 // In your test file
-const API_KEY = 'test-api-key';
+const API_KEY = "test-api-key";
 
 // Make authenticated request
 const response = await fetch(`${API_URL}/v2/issuers`, {
   headers: {
-    'Authorization': `ApiKey ${API_KEY}`,
-    'Content-Type': 'application/json'
-  }
+    Authorization: `ApiKey ${API_KEY}`,
+    "Content-Type": "application/json",
+  },
 });
 ```
 
@@ -154,22 +155,21 @@ The authentication configuration is loaded in the server's config module:
 // src/config/config.ts
 export const config = {
   auth: {
-    enabled: process.env.AUTH_ENABLED !== 'false',
-    jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
-    tokenExpirySeconds: parseInt(process.env.JWT_TOKEN_EXPIRY_SECONDS || '3600', 10),
-    issuer: process.env.JWT_ISSUER || 'openbadges-server',
+    enabled: process.env.AUTH_ENABLED !== "false",
+    jwtSecret: process.env.JWT_SECRET || "default-secret-change-in-production",
+    tokenExpirySeconds: parseInt(
+      process.env.JWT_TOKEN_EXPIRY_SECONDS || "3600",
+      10,
+    ),
+    issuer: process.env.JWT_ISSUER || "openbadges-server",
     apiKeys: {
-      main: process.env.AUTH_API_KEY || 'default-api-key-change-in-production',
-      test: process.env.AUTH_API_KEY_TEST || 'test-api-key',
-      e2e: process.env.AUTH_API_KEY_E2E || 'e2e-test-api-key'
+      main: process.env.AUTH_API_KEY || "default-api-key-change-in-production",
+      test: process.env.AUTH_API_KEY_TEST || "test-api-key",
+      e2e: process.env.AUTH_API_KEY_E2E || "e2e-test-api-key",
     },
     // Public paths that don't require authentication
-    publicPaths: [
-      '/health',
-      '/docs',
-      '/swagger'
-    ]
-  }
+    publicPaths: ["/health", "/docs", "/swagger"],
+  },
 };
 ```
 

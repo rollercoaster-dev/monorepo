@@ -2,30 +2,30 @@
  * SQLite implementation of StatusListRepository
  */
 
-import { eq, and, sql, lt, desc, asc } from 'drizzle-orm';
-import type { StatusList } from '@domains/status-list/status-list.entity';
-import type { StatusListRepository } from '@domains/status-list/status-list.repository';
+import { eq, and, sql, lt, desc, asc } from "drizzle-orm";
+import type { StatusList } from "@domains/status-list/status-list.entity";
+import type { StatusListRepository } from "@domains/status-list/status-list.repository";
 import type {
   StatusPurpose,
   StatusListQueryParams,
   CredentialStatusEntryData,
   UpdateCredentialStatusParams,
   StatusUpdateResult,
-} from '@domains/status-list/status-list.types';
-import { statusLists, credentialStatusEntries } from '../schema';
-import { SqliteStatusListMapper } from '../mappers/sqlite-status-list.mapper';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import { BaseSqliteRepository } from './base-sqlite.repository';
-import { logger } from '@utils/logging/logger.service';
+} from "@domains/status-list/status-list.types";
+import { statusLists, credentialStatusEntries } from "../schema";
+import { SqliteStatusListMapper } from "../mappers/sqlite-status-list.mapper";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import { BaseSqliteRepository } from "./base-sqlite.repository";
+import { logger } from "@utils/logging/logger.service";
 import {
   decodeBitstring,
   setStatusAtIndex,
   encodeBitstring,
-} from '@utils/bitstring/bitstring.utils';
-import { createOrGenerateIRI } from '@utils/types/type-utils';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import type { Shared } from 'openbadges-types';
-import type { SqliteEntityType } from '../types/sqlite-database.types';
+} from "@utils/bitstring/bitstring.utils";
+import { createOrGenerateIRI } from "@utils/types/type-utils";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
+import type { Shared } from "openbadges-types";
+import type { SqliteEntityType } from "../types/sqlite-database.types";
 
 /**
  * SQLite StatusList repository implementation
@@ -42,15 +42,15 @@ export class SqliteStatusListRepository
   }
 
   protected getEntityType(): SqliteEntityType {
-    return 'statusList';
+    return "statusList";
   }
 
   protected getTableName(): string {
-    return 'status_lists';
+    return "status_lists";
   }
 
   async create(statusList: StatusList): Promise<StatusList> {
-    const context = this.createOperationContext('CREATE StatusList');
+    const context = this.createOperationContext("CREATE StatusList");
 
     // Convert domain entity to database record
     const record = this.mapper.toPersistence(statusList);
@@ -65,15 +65,15 @@ export class SqliteStatusListRepository
           .returning();
         return this.mapper.toDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async findById(id: string): Promise<StatusList | null> {
-    this.validateEntityId(id as Shared.IRI, 'findById');
+    this.validateEntityId(id as Shared.IRI, "findById");
     const context = this.createOperationContext(
-      'SELECT StatusList by ID',
-      id as Shared.IRI
+      "SELECT StatusList by ID",
+      id as Shared.IRI,
     );
 
     const result = await this.executeQuery(
@@ -85,7 +85,7 @@ export class SqliteStatusListRepository
           .where(eq(statusLists.id, id))
           .limit(1);
       },
-      [id]
+      [id],
     );
 
     return result.length > 0 ? this.mapper.toDomain(result[0]) : null;
@@ -93,7 +93,7 @@ export class SqliteStatusListRepository
 
   async findMany(params: StatusListQueryParams): Promise<StatusList[]> {
     const context = this.createOperationContext(
-      'SELECT StatusLists with filters'
+      "SELECT StatusLists with filters",
     );
 
     const result = await this.executeQuery(
@@ -114,7 +114,7 @@ export class SqliteStatusListRepository
         }
         if (params.hasCapacity) {
           conditions.push(
-            lt(statusLists.usedEntries, statusLists.totalEntries)
+            lt(statusLists.usedEntries, statusLists.totalEntries),
           );
         }
 
@@ -135,7 +135,7 @@ export class SqliteStatusListRepository
 
         return query;
       },
-      [params]
+      [params],
     );
 
     return result.map((record) => this.mapper.toDomain(record));
@@ -144,12 +144,12 @@ export class SqliteStatusListRepository
   async findAvailableStatusList(
     issuerId: string,
     purpose: StatusPurpose,
-    statusSize: number
+    statusSize: number,
   ): Promise<StatusList | null> {
-    const context = this.createOperationContext('SELECT Available StatusList');
+    const context = this.createOperationContext("SELECT Available StatusList");
 
     // Convert issuer ID from URN format to UUID format for database query
-    const dbIssuerId = convertUuid(issuerId, 'sqlite', 'to');
+    const dbIssuerId = convertUuid(issuerId, "sqlite", "to");
 
     const result = await this.executeQuery(
       context,
@@ -162,13 +162,13 @@ export class SqliteStatusListRepository
               eq(statusLists.issuerId, dbIssuerId),
               eq(statusLists.purpose, purpose),
               eq(statusLists.statusSize, statusSize),
-              lt(statusLists.usedEntries, statusLists.totalEntries)
-            )
+              lt(statusLists.usedEntries, statusLists.totalEntries),
+            ),
           )
           .orderBy(asc(statusLists.usedEntries))
           .limit(1);
       },
-      [dbIssuerId, purpose, statusSize]
+      [dbIssuerId, purpose, statusSize],
     );
 
     return result.length > 0 ? this.mapper.toDomain(result[0]) : null;
@@ -176,8 +176,8 @@ export class SqliteStatusListRepository
 
   async update(statusList: StatusList): Promise<StatusList> {
     const context = this.createOperationContext(
-      'UPDATE StatusList',
-      statusList.id as Shared.IRI
+      "UPDATE StatusList",
+      statusList.id as Shared.IRI,
     );
 
     // Convert domain entity to database record
@@ -202,15 +202,15 @@ export class SqliteStatusListRepository
 
         return this.mapper.toDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async delete(id: string): Promise<boolean> {
-    this.validateEntityId(id as Shared.IRI, 'delete');
+    this.validateEntityId(id as Shared.IRI, "delete");
     const context = this.createOperationContext(
-      'DELETE StatusList',
-      id as Shared.IRI
+      "DELETE StatusList",
+      id as Shared.IRI,
     );
 
     return this.executeOperation(
@@ -224,14 +224,14 @@ export class SqliteStatusListRepository
 
         return result.length > 0;
       },
-      1
+      1,
     );
   }
 
   async createStatusEntry(
-    entry: Omit<CredentialStatusEntryData, 'id' | 'createdAt' | 'updatedAt'>
+    entry: Omit<CredentialStatusEntryData, "id" | "createdAt" | "updatedAt">,
   ): Promise<CredentialStatusEntryData> {
-    const context = this.createOperationContext('CREATE CredentialStatusEntry');
+    const context = this.createOperationContext("CREATE CredentialStatusEntry");
 
     const now = new Date();
     const entryWithDefaults = {
@@ -252,18 +252,18 @@ export class SqliteStatusListRepository
           .returning();
         return this.mapper.statusEntryToDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async findStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose
+    purpose: StatusPurpose,
   ): Promise<CredentialStatusEntryData | null> {
-    const context = this.createOperationContext('SELECT CredentialStatusEntry');
+    const context = this.createOperationContext("SELECT CredentialStatusEntry");
 
     // Convert credential ID from URN format to UUID format for database query
-    const dbCredentialId = convertUuid(credentialId, 'sqlite', 'to');
+    const dbCredentialId = convertUuid(credentialId, "sqlite", "to");
 
     const result = await this.executeQuery(
       context,
@@ -274,12 +274,12 @@ export class SqliteStatusListRepository
           .where(
             and(
               eq(credentialStatusEntries.credentialId, dbCredentialId),
-              eq(credentialStatusEntries.purpose, purpose)
-            )
+              eq(credentialStatusEntries.purpose, purpose),
+            ),
           )
           .limit(1);
       },
-      [dbCredentialId, purpose]
+      [dbCredentialId, purpose],
     );
 
     return result.length > 0
@@ -288,10 +288,10 @@ export class SqliteStatusListRepository
   }
 
   async findStatusEntriesByList(
-    statusListId: string
+    statusListId: string,
   ): Promise<CredentialStatusEntryData[]> {
     const context = this.createOperationContext(
-      'SELECT CredentialStatusEntries by StatusList'
+      "SELECT CredentialStatusEntries by StatusList",
     );
 
     const result = await this.executeQuery(
@@ -303,18 +303,18 @@ export class SqliteStatusListRepository
           .where(eq(credentialStatusEntries.statusListId, statusListId))
           .orderBy(asc(credentialStatusEntries.statusListIndex));
       },
-      [statusListId]
+      [statusListId],
     );
 
     return result.map((record) => this.mapper.statusEntryToDomain(record));
   }
 
   async updateStatusEntry(
-    entry: CredentialStatusEntryData
+    entry: CredentialStatusEntryData,
   ): Promise<CredentialStatusEntryData> {
     const context = this.createOperationContext(
-      'UPDATE CredentialStatusEntry',
-      entry.id as Shared.IRI
+      "UPDATE CredentialStatusEntry",
+      entry.id as Shared.IRI,
     );
 
     const record = this.mapper.statusEntryToPersistence({
@@ -332,27 +332,27 @@ export class SqliteStatusListRepository
         const result = await db
           .update(credentialStatusEntries)
           .set(
-            updateData as Partial<typeof credentialStatusEntries.$inferInsert>
+            updateData as Partial<typeof credentialStatusEntries.$inferInsert>,
           )
           .where(eq(credentialStatusEntries.id, entry.id as Shared.IRI))
           .returning();
 
         if (result.length === 0) {
           throw new Error(
-            `CredentialStatusEntry with id ${entry.id} not found`
+            `CredentialStatusEntry with id ${entry.id} not found`,
           );
         }
 
         return this.mapper.statusEntryToDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async updateCredentialStatus(
-    params: UpdateCredentialStatusParams
+    params: UpdateCredentialStatusParams,
   ): Promise<StatusUpdateResult> {
-    const context = this.createOperationContext('UPDATE Credential Status');
+    const context = this.createOperationContext("UPDATE Credential Status");
 
     try {
       return await this.executeOperation(
@@ -364,24 +364,24 @@ export class SqliteStatusListRepository
             // Find the credential's status entry
             const statusEntry = await this.findStatusEntry(
               params.credentialId,
-              params.purpose
+              params.purpose,
             );
             if (!statusEntry) {
               throw new Error(
-                `No status entry found for credential ${params.credentialId} with purpose ${params.purpose}`
+                `No status entry found for credential ${params.credentialId} with purpose ${params.purpose}`,
               );
             }
 
             // Find the status list (convert URN to UUID format for database query)
             const statusListId = convertUuid(
               statusEntry.statusListId,
-              'sqlite',
-              'to'
+              "sqlite",
+              "to",
             );
             const statusList = await this.findById(statusListId);
             if (!statusList) {
               throw new Error(
-                `Status list ${statusEntry.statusListId} not found`
+                `Status list ${statusEntry.statusListId} not found`,
               );
             }
 
@@ -391,7 +391,7 @@ export class SqliteStatusListRepository
               bitstring,
               statusEntry.statusListIndex,
               params.status,
-              statusList.statusSize
+              statusList.statusSize,
             );
             const encodedList = await encodeBitstring(updatedBitstring);
 
@@ -413,10 +413,10 @@ export class SqliteStatusListRepository
             };
           });
         },
-        1
+        1,
       );
     } catch (error) {
-      logger.error('Failed to update credential status', {
+      logger.error("Failed to update credential status", {
         error: error instanceof Error ? error.message : String(error),
         params,
       });
@@ -429,10 +429,10 @@ export class SqliteStatusListRepository
   }
 
   async deleteStatusEntry(id: string): Promise<boolean> {
-    this.validateEntityId(id as Shared.IRI, 'deleteStatusEntry');
+    this.validateEntityId(id as Shared.IRI, "deleteStatusEntry");
     const context = this.createOperationContext(
-      'DELETE CredentialStatusEntry',
-      id as Shared.IRI
+      "DELETE CredentialStatusEntry",
+      id as Shared.IRI,
     );
 
     return this.executeOperation(
@@ -446,15 +446,15 @@ export class SqliteStatusListRepository
 
         return result.length > 0;
       },
-      1
+      1,
     );
   }
 
   async getUsedEntriesCount(statusListId: string): Promise<number> {
-    const context = this.createOperationContext('COUNT Used Entries');
+    const context = this.createOperationContext("COUNT Used Entries");
 
     // Convert status list ID from URN format to UUID format for database query
-    const dbStatusListId = convertUuid(statusListId, 'sqlite', 'to');
+    const dbStatusListId = convertUuid(statusListId, "sqlite", "to");
 
     const result = await this.executeQuery(
       context,
@@ -464,17 +464,17 @@ export class SqliteStatusListRepository
           .from(credentialStatusEntries)
           .where(eq(credentialStatusEntries.statusListId, dbStatusListId));
       },
-      [dbStatusListId]
+      [dbStatusListId],
     );
 
     return result[0]?.count || 0;
   }
 
   async findByIssuer(issuerId: string): Promise<StatusList[]> {
-    const context = this.createOperationContext('SELECT StatusLists by Issuer');
+    const context = this.createOperationContext("SELECT StatusLists by Issuer");
 
     // Convert issuer ID from URN format to UUID format for database query
-    const dbIssuerId = convertUuid(issuerId, 'sqlite', 'to');
+    const dbIssuerId = convertUuid(issuerId, "sqlite", "to");
 
     const result = await this.executeQuery(
       context,
@@ -485,7 +485,7 @@ export class SqliteStatusListRepository
           .where(eq(statusLists.issuerId, dbIssuerId))
           .orderBy(desc(statusLists.createdAt));
       },
-      [dbIssuerId]
+      [dbIssuerId],
     );
 
     return result.map((record) => this.mapper.toDomain(record));
@@ -493,7 +493,7 @@ export class SqliteStatusListRepository
 
   async findByPurpose(purpose: StatusPurpose): Promise<StatusList[]> {
     const context = this.createOperationContext(
-      'SELECT StatusLists by Purpose'
+      "SELECT StatusLists by Purpose",
     );
 
     const result = await this.executeQuery(
@@ -505,7 +505,7 @@ export class SqliteStatusListRepository
           .where(eq(statusLists.purpose, purpose))
           .orderBy(desc(statusLists.createdAt));
       },
-      [purpose]
+      [purpose],
     );
 
     return result.map((record) => this.mapper.toDomain(record));
@@ -513,12 +513,12 @@ export class SqliteStatusListRepository
 
   async hasStatusEntry(
     credentialId: string,
-    purpose: StatusPurpose
+    purpose: StatusPurpose,
   ): Promise<boolean> {
-    const context = this.createOperationContext('CHECK StatusEntry Exists');
+    const context = this.createOperationContext("CHECK StatusEntry Exists");
 
     // Convert credential ID from URN format to UUID format for database query
-    const dbCredentialId = convertUuid(credentialId, 'sqlite', 'to');
+    const dbCredentialId = convertUuid(credentialId, "sqlite", "to");
 
     const result = await this.executeQuery(
       context,
@@ -529,11 +529,11 @@ export class SqliteStatusListRepository
           .where(
             and(
               eq(credentialStatusEntries.credentialId, dbCredentialId),
-              eq(credentialStatusEntries.purpose, purpose)
-            )
+              eq(credentialStatusEntries.purpose, purpose),
+            ),
           );
       },
-      [dbCredentialId, purpose]
+      [dbCredentialId, purpose],
     );
 
     return (result[0]?.count || 0) > 0;
@@ -566,10 +566,10 @@ export class SqliteStatusListRepository
   async findCredentialsNeedingStatus(
     issuerId: string,
     purpose: StatusPurpose,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<string[]> {
     const context = this.createOperationContext(
-      'SELECT Credentials Needing Status'
+      "SELECT Credentials Needing Status",
     );
 
     // This would need to join with assertions table to find credentials
@@ -580,7 +580,7 @@ export class SqliteStatusListRepository
       async (_db) => {
         return [];
       },
-      [issuerId, purpose, limit]
+      [issuerId, purpose, limit],
     );
 
     return [];

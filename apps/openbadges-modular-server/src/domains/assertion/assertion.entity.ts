@@ -5,25 +5,25 @@
  * Open Badges 2.0 and 3.0 specifications.
  */
 
-import type { Shared, OB2, OB3} from 'openbadges-types';
-import { createDateTime } from 'openbadges-types';
-import { BadgeVersion } from '../../utils/version/badge-version';
-import { BadgeSerializerFactory } from '../../utils/version/badge-serializer';
+import type { Shared, OB2, OB3 } from "openbadges-types";
+import { createDateTime } from "openbadges-types";
+import { BadgeVersion } from "../../utils/version/badge-version";
+import { BadgeSerializerFactory } from "../../utils/version/badge-serializer";
 import type {
   AssertionData,
   RecipientData,
   VerificationData,
-} from '../../utils/types/badge-data.types';
+} from "../../utils/types/badge-data.types";
 import type {
   BadgeClassData,
   IssuerData,
-} from '../../utils/types/badge-data.types';
-import type { BadgeClass } from '../badgeClass/badgeClass.entity';
-import type { Issuer } from '../issuer/issuer.entity';
-import { VC_V2_CONTEXT_URL } from '@/constants/urls';
-import { createOrGenerateIRI, isValidIRI } from '@utils/types/iri-utils';
-import type { BitstringStatusListEntry } from '../status-list/status-list.types';
-import type { ProofType, ProofArray } from '../../utils/types/proof.types';
+} from "../../utils/types/badge-data.types";
+import type { BadgeClass } from "../badgeClass/badgeClass.entity";
+import type { Issuer } from "../issuer/issuer.entity";
+import { VC_V2_CONTEXT_URL } from "@/constants/urls";
+import { createOrGenerateIRI, isValidIRI } from "@utils/types/iri-utils";
+import type { BitstringStatusListEntry } from "../status-list/status-list.types";
+import type { ProofType, ProofArray } from "../../utils/types/proof.types";
 
 /**
  * Assertion entity representing a badge awarded to a recipient
@@ -40,7 +40,7 @@ export class Assertion {
    *   For OBv3, the type should be ['VerifiableCredential', 'OpenBadgeCredential']
    * The default value is 'Assertion' for internal representation.
    */
-  type: string | string[] = 'Assertion';
+  type: string | string[] = "Assertion";
   badgeClass: Shared.IRI;
   recipient: OB2.IdentityObject | OB3.CredentialSubject;
   issuedOn: string;
@@ -75,13 +75,13 @@ export class Assertion {
 
     // Set default type if not provided
     if (!data.type) {
-      data.type = 'Assertion';
+      data.type = "Assertion";
     }
 
     // Set default verification if not provided
     if (!data.verification) {
       data.verification = {
-        type: 'hosted',
+        type: "hosted",
       };
     }
 
@@ -99,21 +99,21 @@ export class Assertion {
   validateForV3(): void {
     if (!this.issuer) {
       throw new Error(
-        'Issuer is required for Open Badges v3.0 VerifiableCredential format'
+        "Issuer is required for Open Badges v3.0 VerifiableCredential format",
       );
     }
 
     // If issuer is an object, validate required fields
-    if (typeof this.issuer === 'object' && this.issuer !== null) {
+    if (typeof this.issuer === "object" && this.issuer !== null) {
       const issuerObj = this.issuer as OB3.Issuer;
       if (!issuerObj.id) {
-        throw new Error('Issuer.id is required for Open Badges v3.0 format');
+        throw new Error("Issuer.id is required for Open Badges v3.0 format");
       }
       if (!issuerObj.name) {
-        throw new Error('Issuer.name is required for Open Badges v3.0 format');
+        throw new Error("Issuer.name is required for Open Badges v3.0 format");
       }
       if (!issuerObj.url) {
-        throw new Error('Issuer.url is required for Open Badges v3.0 format');
+        throw new Error("Issuer.url is required for Open Badges v3.0 format");
       }
     }
   }
@@ -124,7 +124,7 @@ export class Assertion {
    * @returns A plain object representation of the assertion, properly typed as OB2.Assertion or OB3.VerifiableCredential
    */
   toObject(
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): OB2.Assertion | OB3.VerifiableCredential {
     // Create a base object with common properties
     const baseObject = {
@@ -139,7 +139,7 @@ export class Assertion {
       return {
         id: this.id,
         ...baseObject,
-        type: 'Assertion',
+        type: "Assertion",
         badge: this.badgeClass, // In OB2, badge is the IRI of the BadgeClass
         recipient: this.recipient as OB2.IdentityObject,
         verification: this.verification as OB2.VerificationObject,
@@ -155,10 +155,10 @@ export class Assertion {
       const ob3Data: Record<string, unknown> = {
         id: this.id,
         ...baseObject,
-        type: ['VerifiableCredential', 'OpenBadgeCredential'],
-        '@context': [
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        "@context": [
           VC_V2_CONTEXT_URL,
-          'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
         ],
         // Cast to proper types for OB3
         issuer: this.issuer,
@@ -175,11 +175,11 @@ export class Assertion {
       if (this.verification) {
         const verification = this.verification as Record<string, unknown>;
         ob3Data.proof = {
-          type: verification.type || 'Ed25519Signature2020',
+          type: verification.type || "Ed25519Signature2020",
           created:
             verification.created || createDateTime(new Date().toISOString()),
           verificationMethod: verification.creator || `${this.id}#key-1`,
-          proofPurpose: 'assertionMethod',
+          proofPurpose: "assertionMethod",
           ...(verification.signatureValue
             ? { proofValue: verification.signatureValue }
             : {}),
@@ -197,7 +197,7 @@ export class Assertion {
 
       ob3Data.credentialSubject = {
         id: recipientId,
-        type: 'AchievementSubject',
+        type: "AchievementSubject",
         achievement: this.badgeClass,
       };
 
@@ -216,7 +216,7 @@ export class Assertion {
   toJsonLd(
     version: BadgeVersion = BadgeVersion.V3,
     badgeClass?: BadgeClass,
-    issuer?: Issuer
+    issuer?: Issuer,
   ): OB2.Assertion | OB3.VerifiableCredential {
     // Validate v3.0 requirements
     if (version === BadgeVersion.V3) {
@@ -253,7 +253,7 @@ export class Assertion {
     let typedIssuer: IssuerData | undefined;
     if (issuer) {
       typedIssuer = issuer.toJsonLd(version) as IssuerData;
-    } else if (this.issuer && typeof this.issuer === 'object') {
+    } else if (this.issuer && typeof this.issuer === "object") {
       // If issuer is embedded in the assertion, use it directly
       typedIssuer = this.issuer as IssuerData;
     }
@@ -262,28 +262,28 @@ export class Assertion {
     const output = serializer.serializeAssertion(
       assertionData,
       typedBadgeClass, // Pass the potentially undefined typed data
-      typedIssuer // Pass the potentially undefined typed data
+      typedIssuer, // Pass the potentially undefined typed data
     ) as unknown as Record<string, unknown>;
 
     // For Open Badges 3 (VerifiableCredential), ensure correct type and context
     if (version === BadgeVersion.V3) {
       // Ensure type is an array with both VerifiableCredential and OpenBadgeCredential
-      output.type = ['VerifiableCredential', 'OpenBadgeCredential'];
+      output.type = ["VerifiableCredential", "OpenBadgeCredential"];
 
       // Ensure context includes both VC and OB3 contexts
-      if (typeof output['@context'] === 'string') {
-        output['@context'] = [VC_V2_CONTEXT_URL, output['@context']];
+      if (typeof output["@context"] === "string") {
+        output["@context"] = [VC_V2_CONTEXT_URL, output["@context"]];
       } else if (
-        Array.isArray(output['@context']) &&
-        !output['@context'].includes(VC_V2_CONTEXT_URL)
+        Array.isArray(output["@context"]) &&
+        !output["@context"].includes(VC_V2_CONTEXT_URL)
       ) {
-        output['@context'] = [VC_V2_CONTEXT_URL, ...output['@context']];
+        output["@context"] = [VC_V2_CONTEXT_URL, ...output["@context"]];
       }
 
       // Convert badgeClass to badge for OB3
-      if ('badgeClass' in output) {
-        output['badge'] = output['badgeClass'];
-        delete output['badgeClass'];
+      if ("badgeClass" in output) {
+        output["badge"] = output["badgeClass"];
+        delete output["badgeClass"];
       }
 
       // Handle proofs - prioritize multiple proofs over single verification
@@ -301,18 +301,18 @@ export class Assertion {
           unknown
         >;
         output.proof = {
-          type: 'DataIntegrityProof',
-          cryptosuite: 'rsa-sha256',
+          type: "DataIntegrityProof",
+          cryptosuite: "rsa-sha256",
           created:
             verification.created || createDateTime(new Date().toISOString()),
           verificationMethod: verification.creator || `${this.id}#key-1`,
-          proofPurpose: 'assertionMethod',
-          proofValue: verification.signatureValue || 'placeholder',
+          proofPurpose: "assertionMethod",
+          proofValue: verification.signatureValue || "placeholder",
         };
       }
 
       // Remove the old verification property if it exists
-      if ('verification' in output) {
+      if ("verification" in output) {
         delete output.verification;
       }
 
@@ -323,7 +323,7 @@ export class Assertion {
 
         output.credentialSubject = {
           id: recipientId,
-          type: 'AchievementSubject',
+          type: "AchievementSubject",
           achievement: this.badgeClass,
         };
       }
@@ -430,27 +430,27 @@ export class Assertion {
    * @throws Error if no valid recipient ID can be determined
    */
   private getValidatedRecipientId(): Shared.IRI {
-    if (!this.recipient || typeof this.recipient !== 'object') {
+    if (!this.recipient || typeof this.recipient !== "object") {
       throw new Error(
-        'Cannot create OB3 VerifiableCredential: recipient is required and must be a valid object'
+        "Cannot create OB3 VerifiableCredential: recipient is required and must be a valid object",
       );
     }
 
     let recipientId: string | undefined;
 
-    if ('identity' in this.recipient) {
+    if ("identity" in this.recipient) {
       // OB2 style recipient
       recipientId = this.recipient.identity
         ? String(this.recipient.identity)
         : undefined;
-    } else if ('id' in this.recipient) {
+    } else if ("id" in this.recipient) {
       // OB3 style recipient
       recipientId = this.recipient.id ? String(this.recipient.id) : undefined;
     }
 
     if (!recipientId) {
       throw new Error(
-        'Cannot create OB3 VerifiableCredential: recipient must have a valid identity or id field'
+        "Cannot create OB3 VerifiableCredential: recipient must have a valid identity or id field",
       );
     }
 
@@ -458,7 +458,7 @@ export class Assertion {
     const validIRI = this.convertToValidIRI(recipientId);
     if (!validIRI) {
       throw new Error(
-        `Cannot create OB3 VerifiableCredential: recipient ID "${recipientId}" cannot be converted to a valid IRI`
+        `Cannot create OB3 VerifiableCredential: recipient ID "${recipientId}" cannot be converted to a valid IRI`,
       );
     }
 
@@ -493,55 +493,55 @@ export class Assertion {
    * @throws Error if the object does not conform to the OB3.VerifiableCredential interface
    */
   private validateAsVerifiableCredential(
-    data: unknown
+    data: unknown,
   ): OB3.VerifiableCredential {
     // Check for required fields in OB3.VerifiableCredential
     const vcData = data as Record<string, unknown>;
 
     // Validate required fields
-    if (!vcData['id']) throw new Error('VerifiableCredential must have an id');
-    if (!vcData['type'])
-      throw new Error('VerifiableCredential must have a type');
-    if (!vcData['issuer'])
-      throw new Error('VerifiableCredential must have an issuer');
-    if (!vcData['issuanceDate'])
-      throw new Error('VerifiableCredential must have an issuanceDate');
-    if (!vcData['credentialSubject'])
-      throw new Error('VerifiableCredential must have a credentialSubject');
-    if (!vcData['@context'])
-      throw new Error('VerifiableCredential must have a @context');
+    if (!vcData["id"]) throw new Error("VerifiableCredential must have an id");
+    if (!vcData["type"])
+      throw new Error("VerifiableCredential must have a type");
+    if (!vcData["issuer"])
+      throw new Error("VerifiableCredential must have an issuer");
+    if (!vcData["issuanceDate"])
+      throw new Error("VerifiableCredential must have an issuanceDate");
+    if (!vcData["credentialSubject"])
+      throw new Error("VerifiableCredential must have a credentialSubject");
+    if (!vcData["@context"])
+      throw new Error("VerifiableCredential must have a @context");
 
     // Validate type is an array with VerifiableCredential
-    if (Array.isArray(vcData['type'])) {
-      if (!vcData['type'].includes('VerifiableCredential')) {
+    if (Array.isArray(vcData["type"])) {
+      if (!vcData["type"].includes("VerifiableCredential")) {
         throw new Error(
-          "VerifiableCredential type array must include 'VerifiableCredential'"
+          "VerifiableCredential type array must include 'VerifiableCredential'",
         );
       }
-    } else if (vcData['type'] !== 'VerifiableCredential') {
+    } else if (vcData["type"] !== "VerifiableCredential") {
       throw new Error(
-        "VerifiableCredential type must be 'VerifiableCredential' or include it in the array"
+        "VerifiableCredential type must be 'VerifiableCredential' or include it in the array",
       );
     }
 
     // Validate context includes VC context
-    if (Array.isArray(vcData['@context'])) {
-      if (!vcData['@context'].includes(VC_V2_CONTEXT_URL)) {
+    if (Array.isArray(vcData["@context"])) {
+      if (!vcData["@context"].includes(VC_V2_CONTEXT_URL)) {
         throw new Error(
-          'VerifiableCredential @context must include VC_V2_CONTEXT_URL'
+          "VerifiableCredential @context must include VC_V2_CONTEXT_URL",
         );
       }
-    } else if (vcData['@context'] !== VC_V2_CONTEXT_URL) {
+    } else if (vcData["@context"] !== VC_V2_CONTEXT_URL) {
       throw new Error(
-        'VerifiableCredential @context must be VC_V2_CONTEXT_URL or include it in the array'
+        "VerifiableCredential @context must be VC_V2_CONTEXT_URL or include it in the array",
       );
     }
 
     // Validate credentialSubject has achievement
-    const subject = vcData['credentialSubject'] as Record<string, unknown>;
-    if (!subject['achievement']) {
+    const subject = vcData["credentialSubject"] as Record<string, unknown>;
+    if (!subject["achievement"]) {
       throw new Error(
-        'VerifiableCredential credentialSubject must have an achievement'
+        "VerifiableCredential credentialSubject must have an achievement",
       );
     }
 

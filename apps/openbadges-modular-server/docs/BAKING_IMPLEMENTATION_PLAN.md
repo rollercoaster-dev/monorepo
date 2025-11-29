@@ -26,13 +26,13 @@ Badge baking embeds a signed Verifiable Credential (VC) into a badge image (PNG 
 
 ```typescript
 // src/api/controllers/well-known.controller.ts
-import { Hono } from 'hono';
-import { getIssuerJWKS } from '../services/key-management.service';
+import { Hono } from "hono";
+import { getIssuerJWKS } from "../services/key-management.service";
 
 const wellKnown = new Hono();
 
 // GET /.well-known/jwks.json
-wellKnown.get('/jwks.json', async (c) => {
+wellKnown.get("/jwks.json", async (c) => {
   const jwks = await getIssuerJWKS();
   return c.json(jwks);
 });
@@ -58,6 +58,7 @@ export { wellKnown };
 ```
 
 **Tasks**:
+
 - [ ] Create key management service
 - [ ] Implement JWKS endpoint
 - [ ] Add key rotation support
@@ -73,26 +74,34 @@ export { wellKnown };
 
 ```typescript
 // GET /.well-known/did.json
-wellKnown.get('/did.json', async (c) => {
+wellKnown.get("/did.json", async (c) => {
   const baseUrl = config.baseUrl; // e.g., https://badges.example.com
   const jwks = await getIssuerJWKS();
 
   return c.json({
-    "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
-    "id": `did:web:${new URL(baseUrl).host}`,
-    "verificationMethod": jwks.keys.map((key, i) => ({
-      "id": `did:web:${new URL(baseUrl).host}#key-${i}`,
-      "type": "JsonWebKey2020",
-      "controller": `did:web:${new URL(baseUrl).host}`,
-      "publicKeyJwk": key
+    "@context": [
+      "https://www.w3.org/ns/did/v1",
+      "https://w3id.org/security/suites/jws-2020/v1",
+    ],
+    id: `did:web:${new URL(baseUrl).host}`,
+    verificationMethod: jwks.keys.map((key, i) => ({
+      id: `did:web:${new URL(baseUrl).host}#key-${i}`,
+      type: "JsonWebKey2020",
+      controller: `did:web:${new URL(baseUrl).host}`,
+      publicKeyJwk: key,
     })),
-    "authentication": jwks.keys.map((_, i) => `did:web:${new URL(baseUrl).host}#key-${i}`),
-    "assertionMethod": jwks.keys.map((_, i) => `did:web:${new URL(baseUrl).host}#key-${i}`)
+    authentication: jwks.keys.map(
+      (_, i) => `did:web:${new URL(baseUrl).host}#key-${i}`,
+    ),
+    assertionMethod: jwks.keys.map(
+      (_, i) => `did:web:${new URL(baseUrl).host}#key-${i}`,
+    ),
   });
 });
 ```
 
 **Tasks**:
+
 - [ ] Implement DID document endpoint
 - [ ] Update issuer profiles to use DID
 - [ ] Test with DID resolvers
@@ -113,7 +122,10 @@ interface BakingService {
    * @param credential - Signed VerifiableCredential
    * @returns Baked PNG with credential in iTXt chunk
    */
-  bakePNG(imageBuffer: Buffer, credential: VerifiableCredential): Promise<Buffer>;
+  bakePNG(
+    imageBuffer: Buffer,
+    credential: VerifiableCredential,
+  ): Promise<Buffer>;
 
   /**
    * Bake a credential into an SVG image
@@ -121,7 +133,10 @@ interface BakingService {
    * @param credential - Signed VerifiableCredential
    * @returns Baked SVG with credential in openbadges namespace
    */
-  bakeSVG(svgContent: string, credential: VerifiableCredential): Promise<string>;
+  bakeSVG(
+    svgContent: string,
+    credential: VerifiableCredential,
+  ): Promise<string>;
 
   /**
    * Extract credential from a baked PNG
@@ -143,22 +158,23 @@ interface BakingService {
 
 ```typescript
 // src/services/baking/png-baking.service.ts
-import { encode as encodePNG, decode as decodePNG } from 'png-chunks-encode';
-import extractChunks from 'png-chunks-extract';
-import { text as textEncode } from 'png-chunk-text';
+import { encode as encodePNG, decode as decodePNG } from "png-chunks-encode";
+import extractChunks from "png-chunks-extract";
+import { text as textEncode } from "png-chunk-text";
 
-const OPENBADGES_KEYWORD = 'openbadges';
+const OPENBADGES_KEYWORD = "openbadges";
 
 export async function bakePNG(
   imageBuffer: Buffer,
-  credential: VerifiableCredential
+  credential: VerifiableCredential,
 ): Promise<Buffer> {
   // 1. Extract existing chunks
   const chunks = extractChunks(imageBuffer);
 
   // 2. Remove any existing openbadges chunk
   const filteredChunks = chunks.filter(
-    chunk => !(chunk.name === 'iTXt' && chunk.data.includes(OPENBADGES_KEYWORD))
+    (chunk) =>
+      !(chunk.name === "iTXt" && chunk.data.includes(OPENBADGES_KEYWORD)),
   );
 
   // 3. Create new iTXt chunk with credential
@@ -166,7 +182,7 @@ export async function bakePNG(
   const iTXtChunk = createiTXtChunk(OPENBADGES_KEYWORD, credentialJson);
 
   // 4. Insert before IEND
-  const iendIndex = filteredChunks.findIndex(c => c.name === 'IEND');
+  const iendIndex = filteredChunks.findIndex((c) => c.name === "IEND");
   filteredChunks.splice(iendIndex, 0, iTXtChunk);
 
   // 5. Encode back to PNG
@@ -176,20 +192,20 @@ export async function bakePNG(
 function createiTXtChunk(keyword: string, text: string): PNGChunk {
   // iTXt format: keyword + null + compression flag (0) + compression method (0)
   // + language tag + null + translated keyword + null + text
-  const keywordBuf = Buffer.from(keyword, 'latin1');
-  const textBuf = Buffer.from(text, 'utf8');
+  const keywordBuf = Buffer.from(keyword, "latin1");
+  const textBuf = Buffer.from(text, "utf8");
 
   const data = Buffer.concat([
     keywordBuf,
-    Buffer.from([0]),      // Null separator
-    Buffer.from([0]),      // Compression flag (0 = uncompressed, REQUIRED by spec)
-    Buffer.from([0]),      // Compression method
-    Buffer.from([0]),      // Language tag (empty)
-    Buffer.from([0]),      // Translated keyword (empty)
-    textBuf
+    Buffer.from([0]), // Null separator
+    Buffer.from([0]), // Compression flag (0 = uncompressed, REQUIRED by spec)
+    Buffer.from([0]), // Compression method
+    Buffer.from([0]), // Language tag (empty)
+    Buffer.from([0]), // Translated keyword (empty)
+    textBuf,
   ]);
 
-  return { name: 'iTXt', data };
+  return { name: "iTXt", data };
 }
 ```
 
@@ -198,31 +214,37 @@ function createiTXtChunk(keyword: string, text: string): PNGChunk {
 ```typescript
 // src/services/baking/svg-baking.service.ts
 
-const OPENBADGES_NS = 'http://openbadges.org';
+const OPENBADGES_NS = "http://openbadges.org";
 
 export async function bakeSVG(
   svgContent: string,
-  credential: VerifiableCredential
+  credential: VerifiableCredential,
 ): Promise<string> {
   // 1. Parse SVG
   const parser = new DOMParser();
-  const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+  const doc = parser.parseFromString(svgContent, "image/svg+xml");
   const svg = doc.documentElement;
 
   // 2. Add openbadges namespace if not present
-  if (!svg.getAttribute('xmlns:openbadges')) {
-    svg.setAttribute('xmlns:openbadges', OPENBADGES_NS);
+  if (!svg.getAttribute("xmlns:openbadges")) {
+    svg.setAttribute("xmlns:openbadges", OPENBADGES_NS);
   }
 
   // 3. Remove existing assertion element
-  const existingAssertion = doc.getElementsByTagNameNS(OPENBADGES_NS, 'assertion')[0];
+  const existingAssertion = doc.getElementsByTagNameNS(
+    OPENBADGES_NS,
+    "assertion",
+  )[0];
   if (existingAssertion) {
     existingAssertion.remove();
   }
 
   // 4. Create new assertion element
-  const assertionElement = doc.createElementNS(OPENBADGES_NS, 'openbadges:assertion');
-  assertionElement.setAttribute('verify', credential.id || '');
+  const assertionElement = doc.createElementNS(
+    OPENBADGES_NS,
+    "openbadges:assertion",
+  );
+  assertionElement.setAttribute("verify", credential.id || "");
 
   // 5. Add credential as CDATA
   const cdata = doc.createCDATASection(JSON.stringify(credential));
@@ -239,11 +261,11 @@ export async function bakeSVG(
 
 ### Libraries to Use
 
-| Library | Purpose | Install |
-|---------|---------|---------|
-| `png-chunks-extract` | Extract chunks from PNG | `bun add png-chunks-extract` |
-| `png-chunks-encode` | Encode chunks to PNG | `bun add png-chunks-encode` |
-| `@xmldom/xmldom` | Parse/serialize SVG (Node.js) | `bun add @xmldom/xmldom` |
+| Library              | Purpose                       | Install                      |
+| -------------------- | ----------------------------- | ---------------------------- |
+| `png-chunks-extract` | Extract chunks from PNG       | `bun add png-chunks-extract` |
+| `png-chunks-encode`  | Encode chunks to PNG          | `bun add png-chunks-encode`  |
+| `@xmldom/xmldom`     | Parse/serialize SVG (Node.js) | `bun add @xmldom/xmldom`     |
 
 ---
 
@@ -253,18 +275,20 @@ export async function bakeSVG(
 
 ```typescript
 // POST /v3/credentials/:id/bake
-bakingController.post('/:id/bake', async (c) => {
-  const credentialId = c.req.param('id');
-  const { format = 'svg' } = await c.req.json();
+bakingController.post("/:id/bake", async (c) => {
+  const credentialId = c.req.param("id");
+  const { format = "svg" } = await c.req.json();
 
   // 1. Fetch the credential (with proof)
   const credential = await credentialRepository.findById(credentialId);
   if (!credential) {
-    return c.json({ error: 'Credential not found' }, 404);
+    return c.json({ error: "Credential not found" }, 404);
   }
 
   // 2. Get the BadgeClass image
-  const badgeClass = await badgeClassRepository.findById(credential.credentialSubject.achievement.id);
+  const badgeClass = await badgeClassRepository.findById(
+    credential.credentialSubject.achievement.id,
+  );
   const imageUrl = badgeClass.image;
 
   // 3. Fetch and bake
@@ -274,21 +298,21 @@ bakingController.post('/:id/bake', async (c) => {
   let bakedImage: Buffer | string;
   let contentType: string;
 
-  if (format === 'png') {
+  if (format === "png") {
     bakedImage = await bakingService.bakePNG(imageBuffer, credential);
-    contentType = 'image/png';
+    contentType = "image/png";
   } else {
-    const svgContent = imageBuffer.toString('utf8');
+    const svgContent = imageBuffer.toString("utf8");
     bakedImage = await bakingService.bakeSVG(svgContent, credential);
-    contentType = 'image/svg+xml';
+    contentType = "image/svg+xml";
   }
 
   // 4. Return baked image
   return new Response(bakedImage, {
     headers: {
-      'Content-Type': contentType,
-      'Content-Disposition': `attachment; filename="badge-${credentialId}.${format}"`
-    }
+      "Content-Type": contentType,
+      "Content-Disposition": `attachment; filename="badge-${credentialId}.${format}"`,
+    },
   });
 });
 ```
@@ -297,29 +321,29 @@ bakingController.post('/:id/bake', async (c) => {
 
 ```typescript
 // POST /v3/verify/baked
-verifyController.post('/baked', async (c) => {
+verifyController.post("/baked", async (c) => {
   const formData = await c.req.formData();
-  const file = formData.get('file') as File;
+  const file = formData.get("file") as File;
 
   if (!file) {
-    return c.json({ error: 'No file provided' }, 400);
+    return c.json({ error: "No file provided" }, 400);
   }
 
   // 1. Detect format and unbake
   const buffer = Buffer.from(await file.arrayBuffer());
   let credential: VerifiableCredential | null = null;
 
-  if (file.type === 'image/png' || file.name.endsWith('.png')) {
+  if (file.type === "image/png" || file.name.endsWith(".png")) {
     credential = await bakingService.unbakePNG(buffer);
-  } else if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
-    const svgContent = buffer.toString('utf8');
+  } else if (file.type === "image/svg+xml" || file.name.endsWith(".svg")) {
+    const svgContent = buffer.toString("utf8");
     credential = await bakingService.unbakeSVG(svgContent);
   }
 
   if (!credential) {
     return c.json({
       valid: false,
-      error: 'No credential found in image'
+      error: "No credential found in image",
     });
   }
 
@@ -330,7 +354,7 @@ verifyController.post('/baked', async (c) => {
     valid: verificationResult.valid,
     credential: verificationResult.valid ? credential : undefined,
     checks: verificationResult.checks,
-    errors: verificationResult.errors
+    errors: verificationResult.errors,
   });
 });
 ```
@@ -339,7 +363,7 @@ verifyController.post('/baked', async (c) => {
 
 ```typescript
 // POST /v3/verify
-verifyController.post('/', async (c) => {
+verifyController.post("/", async (c) => {
   const credential = await c.req.json();
 
   const result = await verificationService.verify(credential);
@@ -350,9 +374,9 @@ verifyController.post('/', async (c) => {
       proofValid: result.proofValid,
       issuerValid: result.issuerValid,
       notExpired: result.notExpired,
-      notRevoked: result.notRevoked
+      notRevoked: result.notRevoked,
     },
-    errors: result.errors
+    errors: result.errors,
   });
 });
 ```
@@ -373,31 +397,33 @@ interface VerificationResult {
   errors: string[];
 }
 
-export async function verify(credential: VerifiableCredential): Promise<VerificationResult> {
+export async function verify(
+  credential: VerifiableCredential,
+): Promise<VerificationResult> {
   const errors: string[] = [];
 
   // 1. Check proof
   const proofValid = await verifyProof(credential);
   if (!proofValid) {
-    errors.push('Cryptographic proof verification failed');
+    errors.push("Cryptographic proof verification failed");
   }
 
   // 2. Check issuer (resolve DID/JWKS)
   const issuerValid = await verifyIssuer(credential);
   if (!issuerValid) {
-    errors.push('Issuer verification failed');
+    errors.push("Issuer verification failed");
   }
 
   // 3. Check expiration
   const notExpired = !isExpired(credential);
   if (!notExpired) {
-    errors.push('Credential has expired');
+    errors.push("Credential has expired");
   }
 
   // 4. Check revocation (Phase 7)
   const notRevoked = await checkRevocationStatus(credential);
   if (!notRevoked) {
-    errors.push('Credential has been revoked');
+    errors.push("Credential has been revoked");
   }
 
   return {
@@ -406,7 +432,7 @@ export async function verify(credential: VerifiableCredential): Promise<Verifica
     issuerValid,
     notExpired,
     notRevoked,
-    errors
+    errors,
   };
 }
 ```
@@ -420,23 +446,23 @@ export async function verify(credential: VerifiableCredential): Promise<Verifica
 ```typescript
 // tests/services/baking.service.test.ts
 
-describe('BakingService', () => {
-  describe('bakePNG', () => {
-    it('should embed credential in iTXt chunk', async () => {
-      const image = await fs.readFile('test-fixtures/badge.png');
+describe("BakingService", () => {
+  describe("bakePNG", () => {
+    it("should embed credential in iTXt chunk", async () => {
+      const image = await fs.readFile("test-fixtures/badge.png");
       const credential = mockCredential();
 
       const baked = await bakingService.bakePNG(image, credential);
 
       // Verify iTXt chunk exists
       const chunks = extractChunks(baked);
-      const iTXt = chunks.find(c => c.name === 'iTXt');
+      const iTXt = chunks.find((c) => c.name === "iTXt");
       expect(iTXt).toBeDefined();
-      expect(iTXt.data.toString()).toContain('openbadges');
+      expect(iTXt.data.toString()).toContain("openbadges");
     });
 
-    it('should unbake to same credential', async () => {
-      const image = await fs.readFile('test-fixtures/badge.png');
+    it("should unbake to same credential", async () => {
+      const image = await fs.readFile("test-fixtures/badge.png");
       const credential = mockCredential();
 
       const baked = await bakingService.bakePNG(image, credential);
@@ -446,15 +472,15 @@ describe('BakingService', () => {
     });
   });
 
-  describe('bakeSVG', () => {
-    it('should add openbadges namespace and assertion element', async () => {
+  describe("bakeSVG", () => {
+    it("should add openbadges namespace and assertion element", async () => {
       const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
       const credential = mockCredential();
 
       const baked = await bakingService.bakeSVG(svg, credential);
 
       expect(baked).toContain('xmlns:openbadges="http://openbadges.org"');
-      expect(baked).toContain('<openbadges:assertion');
+      expect(baked).toContain("<openbadges:assertion");
     });
   });
 });
@@ -465,29 +491,36 @@ describe('BakingService', () => {
 ```typescript
 // tests/e2e/baking.e2e.test.ts
 
-describe('Baking E2E', () => {
-  it('should bake and verify a credential', async () => {
+describe("Baking E2E", () => {
+  it("should bake and verify a credential", async () => {
     // 1. Create issuer and badge class
     const issuer = await createTestIssuer();
     const badgeClass = await createTestBadgeClass(issuer.id);
 
     // 2. Issue credential
-    const credential = await issueCredential(badgeClass.id, 'test@example.com');
+    const credential = await issueCredential(badgeClass.id, "test@example.com");
 
     // 3. Bake
-    const bakedResponse = await fetch(`${API_URL}/v3/credentials/${credential.id}/bake`, {
-      method: 'POST',
-      body: JSON.stringify({ format: 'svg' })
-    });
+    const bakedResponse = await fetch(
+      `${API_URL}/v3/credentials/${credential.id}/bake`,
+      {
+        method: "POST",
+        body: JSON.stringify({ format: "svg" }),
+      },
+    );
     const bakedSvg = await bakedResponse.text();
 
     // 4. Verify baked image
     const formData = new FormData();
-    formData.append('file', new Blob([bakedSvg], { type: 'image/svg+xml' }), 'badge.svg');
+    formData.append(
+      "file",
+      new Blob([bakedSvg], { type: "image/svg+xml" }),
+      "badge.svg",
+    );
 
     const verifyResponse = await fetch(`${API_URL}/v3/verify/baked`, {
-      method: 'POST',
-      body: formData
+      method: "POST",
+      body: formData,
     });
     const result = await verifyResponse.json();
 
@@ -501,19 +534,19 @@ describe('Baking E2E', () => {
 
 ## Implementation Order
 
-| Step | Task | Depends On | Priority |
-|------|------|------------|----------|
-| 1 | Key management service | - | High |
-| 2 | JWKS endpoint | Step 1 | High |
-| 3 | DID:web endpoint | Step 1 | Medium |
-| 4 | PNG baking service | - | High |
-| 5 | SVG baking service | - | High |
-| 6 | Bake endpoint | Steps 4, 5 | High |
-| 7 | Verification service | Steps 2, 3 | High |
-| 8 | Verify endpoint | Step 7 | High |
-| 9 | Verify baked endpoint | Steps 4, 5, 7 | Medium |
-| 10 | Unit tests | Steps 4, 5, 7 | High |
-| 11 | E2E tests | All | Medium |
+| Step | Task                   | Depends On    | Priority |
+| ---- | ---------------------- | ------------- | -------- |
+| 1    | Key management service | -             | High     |
+| 2    | JWKS endpoint          | Step 1        | High     |
+| 3    | DID:web endpoint       | Step 1        | Medium   |
+| 4    | PNG baking service     | -             | High     |
+| 5    | SVG baking service     | -             | High     |
+| 6    | Bake endpoint          | Steps 4, 5    | High     |
+| 7    | Verification service   | Steps 2, 3    | High     |
+| 8    | Verify endpoint        | Step 7        | High     |
+| 9    | Verify baked endpoint  | Steps 4, 5, 7 | Medium   |
+| 10   | Unit tests             | Steps 4, 5, 7 | High     |
+| 11   | E2E tests              | All           | Medium   |
 
 ---
 
@@ -541,6 +574,6 @@ Create these GitHub issues to track implementation:
 
 ---
 
-*Document Version: 1.0*
-*Date: November 2025*
-*Author: Rollercoaster.dev Team*
+_Document Version: 1.0_
+_Date: November 2025_
+_Author: Rollercoaster.dev Team_

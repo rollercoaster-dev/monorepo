@@ -8,9 +8,11 @@ model: sonnet
 # Migration Analyzer Agent
 
 ## Purpose
+
 Analyzes a repository or package for migration into the Bun-based monorepo. Assesses complexity, identifies dependencies, detects Bun compatibility, and estimates migration effort.
 
 ## When to Use This Agent
+
 - At the start of any package migration (Phase 1)
 - When evaluating whether to migrate a package
 - To estimate migration complexity and timeline
@@ -19,10 +21,12 @@ Analyzes a repository or package for migration into the Bun-based monorepo. Asse
 ## Inputs
 
 The user should provide:
+
 - **Package/repo to analyze**: Name and URL/path
 - **Package type**: library | application | internal-tool (if known)
 
 Optional:
+
 - **Target migration date**: When package needs to be migrated
 - **Priority**: high | medium | low
 - **Known issues**: Any known problems or concerns
@@ -32,6 +36,7 @@ Optional:
 ### Phase 1: Clone and Initial Discovery
 
 1. **Clone the repository temporarily:**
+
    ```bash
    cd /tmp
    git clone {repo-url} {package-name}-analysis
@@ -55,8 +60,8 @@ Optional:
    - TypeScript: tsconfig.json
    - Bun: bunfig.toml, bun.lockb
    - pnpm: pnpm-lock.yaml, pnpm-workspace.yaml
-   - Vite: vite.config.*
-   - Webpack: webpack.config.*
+   - Vite: vite.config.\*
+   - Webpack: webpack.config.\*
    - Other bundlers
 
 ### Phase 2: Dependency Analysis
@@ -67,7 +72,7 @@ Optional:
    - Identify Node.js-only packages
    - Assess dependency risks
 
-   *Note: For deep dependency analysis, the main agent can invoke `dependency-analyzer` separately after this analysis completes.*
+   _Note: For deep dependency analysis, the main agent can invoke `dependency-analyzer` separately after this analysis completes._
 
 2. **Check for workspace dependencies:**
    - Internal package references
@@ -80,6 +85,7 @@ Optional:
 ### Phase 3: Bun Compatibility Assessment
 
 1. **Check for Bun API usage:**
+
    ```bash
    grep -r "Bun\." src/ --include="*.ts" --include="*.js"
    ```
@@ -91,6 +97,7 @@ Optional:
    - Has yarn.lock: Using yarn
 
 3. **Identify Node.js-specific code:**
+
    ```bash
    grep -r "require(" src/ --include="*.ts" --include="*.js"  # CommonJS
    grep -r "node:" src/ --include="*.ts" --include="*.js"     # Node imports
@@ -111,13 +118,14 @@ Optional:
 ### Phase 4: Code Structure Analysis
 
 1. **Analyze directory structure:**
+
    ```bash
    tree -L 3 -d
    ```
 
 2. **Identify source layout:**
    - Source directory: src/, lib/, packages/
-   - Test location: __tests__/, tests/, *.test.ts colocated
+   - Test location: **tests**/, tests/, \*.test.ts colocated
    - Build output: dist/, build/, out/
    - Config files: root vs nested
 
@@ -137,12 +145,13 @@ Optional:
 ### Phase 5: Test Infrastructure Analysis
 
 1. **Identify test runner:**
-   - Bun test: *.test.ts with no config (native)
-   - Jest: jest.config.*
-   - Vitest: vitest.config.*
+   - Bun test: \*.test.ts with no config (native)
+   - Jest: jest.config.\*
+   - Vitest: vitest.config.\*
    - Other: mocha, ava, etc.
 
 2. **Count tests:**
+
    ```bash
    find . -name "*.test.ts" -o -name "*.spec.ts" | wc -l
    grep -r "describe\|it(" --include="*.test.ts" | wc -l
@@ -194,6 +203,7 @@ Optional:
 ### Phase 8: Git History Analysis
 
 1. **Check repository activity:**
+
    ```bash
    git log --oneline | head -20  # Recent commits
    git log --since="1 year ago" --oneline | wc -l  # Activity level
@@ -210,31 +220,37 @@ Optional:
 Calculate complexity score based on:
 
 **Size (weight: 20%)**
+
 - Lines of code
 - File count
 - Number of dependencies
 
 **Bun Compatibility (weight: 30%)**
+
 - Already using Bun: 0 points
 - Pure TS/JS: 5 points
 - Some Node.js APIs: 10 points
 - Native deps: 20 points
 
 **Test Migration (weight: 20%)**
+
 - Already Bun test: 0 points
 - Jest/Vitest: 5 points
 - Custom test setup: 15 points
 
 **Build Complexity (weight: 20%)**
+
 - Simple (just tsc): 0 points
 - Bundler with config: 10 points
 - Complex build pipeline: 20 points
 
 **Dependencies (weight: 10%)**
+
 - Version conflicts: +5 points each
 - Circular deps: +10 points each
 
 **Total Complexity Score:**
+
 - 0-10: TRIVIAL (few hours)
 - 11-25: EASY (1-2 days)
 - 26-50: MEDIUM (3-5 days)
@@ -268,14 +284,14 @@ Create comprehensive analysis report:
 
 ## Codebase Metrics
 
-| Metric | Count |
-|--------|-------|
-| Total Files | {n} |
-| Lines of Code | {n} |
-| TypeScript Files | {n} |
-| Test Files | {n} |
-| Dependencies | {n} |
-| Dev Dependencies | {n} |
+| Metric           | Count |
+| ---------------- | ----- |
+| Total Files      | {n}   |
+| Lines of Code    | {n}   |
+| TypeScript Files | {n}   |
+| Test Files       | {n}   |
+| Dependencies     | {n}   |
+| Dev Dependencies | {n}   |
 
 ## Current Tech Stack
 
@@ -290,23 +306,28 @@ Create comprehensive analysis report:
 **Overall**: {FULL|HIGH|MEDIUM|LOW}
 
 ### Bun API Usage
+
 {✅ Already uses Bun APIs | ❌ Not using Bun APIs}
 
 Detected Bun APIs:
-- {List of Bun.* calls found}
+
+- {List of Bun.\* calls found}
 
 ### Node.js Compatibility
+
 - CommonJS usage: {detected|not detected}
 - Node: imports: {detected|not detected}
 - Native addons: {detected|not detected}
-- __dirname/__filename: {detected|not detected}
+- **dirname/**filename: {detected|not detected}
 
 ### Package Manager
+
 - Current: {pnpm|npm|yarn|bun}
 - Has bun.lockb: {yes|no}
 - Migration needed: {yes|no}
 
 ### Risk Assessment
+
 {List of compatibility risks and mitigation strategies}
 
 ## Dependency Analysis
@@ -328,6 +349,7 @@ Detected Bun APIs:
 **Migration Complexity**: {EASY|MEDIUM|HARD}
 
 ### Test Migration Notes
+
 {Specific notes about what needs to change}
 
 ## Build Configuration
@@ -336,6 +358,7 @@ Detected Bun APIs:
 **Complexity**: {SIMPLE|MODERATE|COMPLEX}
 
 ### Build Migration Notes
+
 - {Note 1}
 - {Note 2}
 
@@ -347,6 +370,7 @@ Detected Bun APIs:
 **Project References**: {yes|no}
 
 ### TypeScript Migration Notes
+
 {What needs to change in tsconfig.json}
 
 ## Documentation Status
@@ -363,6 +387,7 @@ Detected Bun APIs:
 **Total Complexity Score**: {score}/100
 
 Breakdown:
+
 - Size: {score}/20
 - Bun Compatibility: {score}/30
 - Test Migration: {score}/20
@@ -375,14 +400,17 @@ Breakdown:
 ## Migration Risks
 
 ### High Risk
+
 - {Risk 1}
   - Impact: {description}
   - Mitigation: {strategy}
 
 ### Medium Risk
+
 - {Risk 2}
 
 ### Low Risk
+
 - {Risk 3}
 
 ## Recommendations
@@ -396,6 +424,7 @@ Breakdown:
 ### Prerequisites
 
 Before migration:
+
 1. {Prerequisite 1}
 2. {Prerequisite 2}
 
@@ -425,6 +454,7 @@ If proceeding with migration:
 ### Phase 11: Cleanup
 
 1. **Remove temporary clone:**
+
    ```bash
    cd ..
    rm -rf {package-name}-analysis
@@ -437,6 +467,7 @@ If proceeding with migration:
 ## Tools Required
 
 **Readonly Tools:**
+
 - Bash (git clone, grep, find, wc, tree)
 - Read (package.json, tsconfig.json, config files)
 - Grep (search for patterns, API usage)
@@ -444,13 +475,15 @@ If proceeding with migration:
 - WebFetch (fetch repo info if URL provided)
 
 **Write Tools:**
+
 - None (analysis only, doesn't modify anything)
 
-*Note: This agent performs dependency analysis inline. For complex dependency issues, recommend invoking `dependency-analyzer` separately.*
+_Note: This agent performs dependency analysis inline. For complex dependency issues, recommend invoking `dependency-analyzer` separately._
 
 ## Output Format
 
 Return comprehensive analysis report with:
+
 1. **Executive Summary**: Quick verdict and recommendation
 2. **Package Information**: Basic metadata
 3. **Metrics**: Size, complexity, dependencies
@@ -462,6 +495,7 @@ Return comprehensive analysis report with:
 ## Error Handling
 
 If analysis fails:
+
 1. **Clone fails:**
    - Check repo URL/access
    - Suggest authentication if private
@@ -498,6 +532,7 @@ Agent:
 ## Success Criteria
 
 This agent is successful when:
+
 - Complete picture of package structure and complexity
 - Bun compatibility accurately assessed
 - All risks identified with mitigation strategies
@@ -508,6 +543,7 @@ This agent is successful when:
 ## Reusability
 
 This agent is designed to be called:
+
 - At the start of every package migration
 - Standalone for migration feasibility studies
 - During migration planning

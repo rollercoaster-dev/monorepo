@@ -4,16 +4,16 @@
  * where bitOffset + statusSize > 8, which would cause negative shifts in the old implementation
  */
 
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from "bun:test";
 import {
   createEmptyBitstring,
   setStatusAtIndex,
   getStatusAtIndex,
-} from '@utils/bitstring/bitstring.utils';
+} from "@utils/bitstring/bitstring.utils";
 
-describe('Negative-Shift Hazard Fix Verification', () => {
-  describe('Critical edge cases that would cause negative shifts', () => {
-    it('should handle statusSize=4, bitOffset=6 (8-6-4=-2)', () => {
+describe("Negative-Shift Hazard Fix Verification", () => {
+  describe("Critical edge cases that would cause negative shifts", () => {
+    it("should handle statusSize=4, bitOffset=6 (8-6-4=-2)", () => {
       // This is the exact scenario mentioned in the issue
       // We need to find an index that gives bitOffset=6 with statusSize=4
 
@@ -43,7 +43,7 @@ describe('Negative-Shift Hazard Fix Verification', () => {
       }
     });
 
-    it('should handle all possible bitOffset values with statusSize=8', () => {
+    it("should handle all possible bitOffset values with statusSize=8", () => {
       // With statusSize=8, any bitOffset > 0 would span byte boundaries
       // and could potentially cause negative shifts
 
@@ -54,22 +54,13 @@ describe('Negative-Shift Hazard Fix Verification', () => {
 
       // Test all possible bitOffsets (0-7) with statusSize=1
       for (let bitOffset = 0; bitOffset < 8; bitOffset++) {
-        const updated = setStatusAtIndex(
-          bitstring1,
-          bitOffset,
-          1,
-          1
-        );
-        const retrieved = getStatusAtIndex(
-          updated,
-          bitOffset,
-          1
-        );
+        const updated = setStatusAtIndex(bitstring1, bitOffset, 1, 1);
+        const retrieved = getStatusAtIndex(updated, bitOffset, 1);
         expect(retrieved).toBe(1);
       }
     });
 
-    it('should handle statusSize=4 with all possible bitOffsets', () => {
+    it("should handle statusSize=4 with all possible bitOffsets", () => {
       // Test statusSize=4 with different bitOffsets
       const bitstring = createEmptyBitstring(131072, 4);
 
@@ -87,19 +78,14 @@ describe('Negative-Shift Hazard Fix Verification', () => {
 
         // Test all possible 4-bit values
         for (let value = 0; value < 16; value++) {
-          const updated = setStatusAtIndex(
-            bitstring,
-            index,
-            value,
-            4
-          );
+          const updated = setStatusAtIndex(bitstring, index, value, 4);
           const retrieved = getStatusAtIndex(updated, index, 4);
           expect(retrieved).toBe(value);
         }
       });
     });
 
-    it('should handle statusSize=2 with all possible bitOffsets', () => {
+    it("should handle statusSize=2 with all possible bitOffsets", () => {
       // Test statusSize=2 with different bitOffsets
       const bitstring = createEmptyBitstring(131072, 2);
 
@@ -118,12 +104,7 @@ describe('Negative-Shift Hazard Fix Verification', () => {
 
         // Test all possible 2-bit values
         for (let value = 0; value < 4; value++) {
-          const updated = setStatusAtIndex(
-            bitstring,
-            index,
-            value,
-            2
-          );
+          const updated = setStatusAtIndex(bitstring, index, value, 2);
           const retrieved = getStatusAtIndex(updated, index, 2);
           expect(retrieved).toBe(value);
         }
@@ -131,8 +112,8 @@ describe('Negative-Shift Hazard Fix Verification', () => {
     });
   });
 
-  describe('Boundary condition verification', () => {
-    it('should correctly handle the exact boundary where firstPartBits = 8 - bitOffset', () => {
+  describe("Boundary condition verification", () => {
+    it("should correctly handle the exact boundary where firstPartBits = 8 - bitOffset", () => {
       // Test cases where the status exactly fills the remaining bits in the first byte
       const testCases = [
         { statusSize: 1, bitOffset: 7 }, // firstPartBits = min(1, 8-7) = 1
@@ -152,10 +133,7 @@ describe('Negative-Shift Hazard Fix Verification', () => {
         }
 
         if (testIndex !== -1) {
-          const bitstring = createEmptyBitstring(
-            131072,
-            statusSize
-          );
+          const bitstring = createEmptyBitstring(131072, statusSize);
           const maxValue = Math.pow(2, statusSize) - 1;
 
           for (let value = 0; value <= maxValue; value++) {
@@ -163,20 +141,16 @@ describe('Negative-Shift Hazard Fix Verification', () => {
               bitstring,
               testIndex,
               value,
-              statusSize
+              statusSize,
             );
-            const retrieved = getStatusAtIndex(
-              updated,
-              testIndex,
-              statusSize
-            );
+            const retrieved = getStatusAtIndex(updated, testIndex, statusSize);
             expect(retrieved).toBe(value);
           }
         }
       });
     });
 
-    it('should handle cases where remainingBits > 0 (multi-byte scenarios)', () => {
+    it("should handle cases where remainingBits > 0 (multi-byte scenarios)", () => {
       // Test cases where the status spans across byte boundaries
       // Index 3 gives bitOffset=6, so firstPartBits=min(2,8-6)=2, remainingBits=2-2=0 (no span)
       // Index 7 gives bitOffset=6, so firstPartBits=min(2,8-6)=2, remainingBits=2-2=0 (no span)
@@ -189,30 +163,22 @@ describe('Negative-Shift Hazard Fix Verification', () => {
 
       for (let i = 0; i < 16; i++) {
         const value = i % 2; // 0 or 1
-        const updated = setStatusAtIndex(
-          bitstring1,
-          i,
-          value,
-          1
-        );
+        const updated = setStatusAtIndex(bitstring1, i, value, 1);
         const retrieved = getStatusAtIndex(updated, i, 1);
         expect(retrieved).toBe(value);
       }
     });
   });
 
-  describe('Regression test for the original issue', () => {
-    it('should not throw RangeError for any valid bitOffset and statusSize combination', () => {
+  describe("Regression test for the original issue", () => {
+    it("should not throw RangeError for any valid bitOffset and statusSize combination", () => {
       // This test ensures that we never encounter the original error:
       // "RangeError: BigInt shift exponent must be positive"
 
       const statusSizes = [1, 2, 4, 8];
 
       statusSizes.forEach((statusSize) => {
-        const bitstring = createEmptyBitstring(
-          131072,
-          statusSize
-        );
+        const bitstring = createEmptyBitstring(131072, statusSize);
         const maxValue = Math.pow(2, statusSize) - 1;
 
         // Test the first several indices to cover different bitOffset scenarios
@@ -224,13 +190,9 @@ describe('Negative-Shift Hazard Fix Verification', () => {
                 bitstring,
                 index,
                 value,
-                statusSize
+                statusSize,
               );
-              const retrieved = getStatusAtIndex(
-                updated,
-                index,
-                statusSize
-              );
+              const retrieved = getStatusAtIndex(updated, index, statusSize);
               expect(retrieved).toBe(value);
             }
           }).not.toThrow();
@@ -238,7 +200,7 @@ describe('Negative-Shift Hazard Fix Verification', () => {
       });
     });
 
-    it('should produce consistent results across multiple operations', () => {
+    it("should produce consistent results across multiple operations", () => {
       // Test that repeated set/get operations produce consistent results
       const bitstring = createEmptyBitstring(131072, 4);
 
@@ -253,31 +215,17 @@ describe('Negative-Shift Hazard Fix Verification', () => {
       // Set all values
       let currentBitstring = bitstring;
       testData.forEach(({ index, value }) => {
-        currentBitstring = setStatusAtIndex(
-          currentBitstring,
-          index,
-          value,
-          4
-        );
+        currentBitstring = setStatusAtIndex(currentBitstring, index, value, 4);
       });
 
       // Verify all values are correct
       testData.forEach(({ index, value }) => {
-        const retrieved = getStatusAtIndex(
-          currentBitstring,
-          index,
-          4
-        );
+        const retrieved = getStatusAtIndex(currentBitstring, index, 4);
         expect(retrieved).toBe(value);
       });
 
       // Modify one value and verify others remain unchanged
-      currentBitstring = setStatusAtIndex(
-        currentBitstring,
-        1,
-        7,
-        4
-      );
+      currentBitstring = setStatusAtIndex(currentBitstring, 1, 7, 4);
 
       expect(getStatusAtIndex(currentBitstring, 0, 4)).toBe(5);
       expect(getStatusAtIndex(currentBitstring, 1, 4)).toBe(7); // changed

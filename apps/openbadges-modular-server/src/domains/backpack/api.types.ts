@@ -1,10 +1,10 @@
 /**
  * Type definitions for API requests and responses
  */
-import type { Shared } from 'openbadges-types';
-import type { ApiResponse } from './backpack.types';
-import { PlatformStatus, UserAssertionStatus } from './backpack.types';
-import { z } from 'zod';
+import type { Shared } from "openbadges-types";
+import type { ApiResponse } from "./backpack.types";
+import { PlatformStatus, UserAssertionStatus } from "./backpack.types";
+import { z } from "zod";
 
 // Base IRI schema for reusability
 const IRISchema = z.string().url(); // Assuming IRIs should be valid URLs. Adjust if not.
@@ -44,7 +44,7 @@ export const CreatePlatformRequestSchema = z.object({
   clientId: z.string().min(1),
   publicKey: z.string().min(1),
   description: z.string().optional(),
-  webhookUrl: z.string().url().optional()
+  webhookUrl: z.string().url().optional(),
 });
 
 /**
@@ -88,7 +88,7 @@ export const UpdatePlatformRequestSchema = z.object({
   publicKey: z.string().min(1).optional(),
   status: z.nativeEnum(PlatformStatus).optional(),
   description: z.string().optional(),
-  webhookUrl: z.string().url().optional()
+  webhookUrl: z.string().url().optional(),
 });
 
 /**
@@ -150,7 +150,7 @@ export const PlatformSchema = z.object({
   description: z.string().optional(),
   webhookUrl: z.string().url().optional(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
 });
 
 /**
@@ -165,11 +165,11 @@ export interface PlatformListResponse {
 
 export const PlatformsArraySchema = z.object({
   success: z.literal(true),
-  platforms: z.array(PlatformSchema)
+  platforms: z.array(PlatformSchema),
 });
 
 export const PlatformIdSchema = z.object({
-  id: IRISchema
+  id: IRISchema,
 });
 
 /**
@@ -219,7 +219,7 @@ export const PlatformUserSchema = z.object({
   displayName: z.string().optional(),
   email: z.string().email().optional(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
 });
 
 /**
@@ -239,7 +239,7 @@ export interface AddAssertionRequest {
 
 export const AddAssertionRequestSchema = z.object({
   assertionId: IRISchema,
-  metadata: z.record(z.unknown()).optional() // More specific schema might be better if metadata structure is known
+  metadata: z.record(z.unknown()).optional(), // More specific schema might be better if metadata structure is known
 });
 
 /**
@@ -253,7 +253,7 @@ export interface UpdateAssertionStatusRequest {
 }
 
 export const UpdateAssertionStatusRequestSchema = z.object({
-  status: z.nativeEnum(UserAssertionStatus)
+  status: z.nativeEnum(UserAssertionStatus),
 });
 
 /**
@@ -297,7 +297,7 @@ export const UserAssertionSchema = z.object({
   assertionId: IRISchema,
   addedAt: z.string().datetime(),
   status: z.nativeEnum(UserAssertionStatus),
-  metadata: z.record(z.unknown()).optional()
+  metadata: z.record(z.unknown()).optional(),
 });
 
 /**
@@ -312,14 +312,14 @@ export interface UserAssertionListResponse {
 
 export const UserAssertionsArraySchema = z.object({
   success: z.literal(true),
-  assertions: z.array(UserAssertionSchema)
+  assertions: z.array(UserAssertionSchema),
 });
 
 /**
  * Success API response for general success cases like DELETE
  */
 export const SuccessResponseSchema = z.object({
-  success: z.literal(true)
+  success: z.literal(true),
 });
 
 /**
@@ -346,7 +346,7 @@ export const ApiErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.string(),
   code: z.string().optional(), // Assuming code might not always be present
-  details: z.record(z.unknown()).optional()
+  details: z.record(z.unknown()).optional(),
 });
 
 // Updated response types for OpenAPI documentation, ensuring they return objects directly
@@ -362,7 +362,7 @@ export type TypedApiResponse<T> = ApiResponse<T>;
  */
 export const PlatformApiResponseSchema = z.object({
   success: z.literal(true),
-  platform: PlatformSchema
+  platform: PlatformSchema,
 });
 
 /**
@@ -375,13 +375,14 @@ export type PlatformListApiResponse = TypedApiResponse<PlatformListResponse>;
  */
 export const UserAssertionApiResponseSchema = z.object({
   success: z.literal(true),
-  assertion: UserAssertionSchema // Renamed from userAssertion to assertion to match existing interface UserAssertionApiResponse
+  assertion: UserAssertionSchema, // Renamed from userAssertion to assertion to match existing interface UserAssertionApiResponse
 });
 
 /**
  * User assertion list API response
  */
-export type UserAssertionListApiResponse = TypedApiResponse<UserAssertionListResponse>;
+export type UserAssertionListApiResponse =
+  TypedApiResponse<UserAssertionListResponse>;
 
 /**
  * Success API response

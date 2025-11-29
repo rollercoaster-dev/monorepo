@@ -166,7 +166,7 @@ The complete schema is created automatically by the migration process. You don't
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -182,7 +182,7 @@ services:
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   api:

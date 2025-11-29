@@ -31,9 +31,11 @@ Orchestrates the complete development workflow by invoking specialized agents in
 ## Inputs
 
 Required:
+
 - **Issue number**: GitHub issue to work on
 
 Optional:
+
 - **Skip phases**: Array of phases to skip (for resuming)
 
 ## Workflow
@@ -56,6 +58,7 @@ Task(subagent_type: "issue-researcher", prompt: "
 ```
 
 **Pass to next phase:**
+
 - Dev plan path
 - Complexity estimate
 - Affected files list
@@ -82,6 +85,7 @@ Task(subagent_type: "atomic-developer", prompt: "
 ```
 
 **Pass to next phase:**
+
 - Branch name
 - Commit list
 - Validation results
@@ -106,12 +110,14 @@ Task(subagent_type: "pr-creator", prompt: "
 ```
 
 **Pass to next phase:**
+
 - PR number
 - PR URL
 
 ### Phase 4: Handle Reviews (if needed)
 
 **Check for reviews:**
+
 ```bash
 gh pr view {pr-number} --json reviews,comments
 ```
@@ -135,12 +141,14 @@ Task(subagent_type: "review-handler", prompt: "
 ### Phase 5: Complete
 
 **Update project board:**
+
 ```bash
 # Set to "Done" status
 gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ ...
 ```
 
 **Report completion:**
+
 ```
 ═══════════════════════════════════════════════════════
 ✅ Development Complete
@@ -182,19 +190,23 @@ Time: {duration}
 ## Error Handling
 
 ### Research fails
+
 - Report issue details couldn't be fetched
 - Suggest checking issue number
 
 ### Implementation fails
+
 - Report which step failed
 - Save partial progress
 - Allow resume from failed step
 
 ### PR creation fails
+
 - Check branch is pushed
 - Verify GitHub permissions
 
 ### Review handling fails
+
 - Report which comment couldn't be addressed
 - Allow manual intervention
 
@@ -249,6 +261,7 @@ To resume from a specific phase:
 ```
 
 Orchestrator will:
+
 1. Skip phases 1-2
 2. Check git state (branch exists, commits made)
 3. Continue from phase 3

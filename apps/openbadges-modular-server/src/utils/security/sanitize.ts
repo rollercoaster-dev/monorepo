@@ -15,7 +15,7 @@ export function sanitizeConnectionString(connectionString: string): string {
 
   // Replace password in standard connection string format
   // Format: postgresql://username:password@host:port/database
-  return connectionString.replace(/\/\/([^:]+):([^@]+)@/, '//$1:***@');
+  return connectionString.replace(/\/\/([^:]+):([^@]+)@/, "//$1:***@");
 }
 
 /**
@@ -27,15 +27,15 @@ export function sanitizeConnectionString(connectionString: string): string {
 export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
   sensitiveKeys: string[] = [
-    'password',
-    'secret',
-    'key',
-    'token',
-    'apiKey',
-    'api_key',
-  ]
+    "password",
+    "secret",
+    "key",
+    "token",
+    "apiKey",
+    "api_key",
+  ],
 ): T {
-  if (!obj || typeof obj !== 'object') return obj;
+  if (!obj || typeof obj !== "object") return obj;
 
   // Create a new object to avoid modifying the original
   const result = { ...obj };
@@ -44,18 +44,18 @@ export function sanitizeObject<T extends Record<string, unknown>>(
     // Check if the key contains any of the sensitive key names
     if (
       sensitiveKeys.some((sensitiveKey) =>
-        key.toLowerCase().includes(sensitiveKey.toLowerCase())
+        key.toLowerCase().includes(sensitiveKey.toLowerCase()),
       )
     ) {
       // Mask the value if it's a string
-      if (typeof result[key] === 'string') {
-        result[key as keyof T] = '***' as unknown as T[keyof T];
+      if (typeof result[key] === "string") {
+        result[key as keyof T] = "***" as unknown as T[keyof T];
       }
-    } else if (typeof result[key] === 'object' && result[key] != null) {
+    } else if (typeof result[key] === "object" && result[key] != null) {
       // Recursively sanitize nested objects
       result[key as keyof T] = sanitizeObject(
         result[key] as Record<string, unknown>,
-        sensitiveKeys
+        sensitiveKeys,
       ) as unknown as T[keyof T];
     }
   }

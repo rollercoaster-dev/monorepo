@@ -5,21 +5,21 @@
  * and the Data Mapper pattern with Drizzle ORM.
  */
 
-import { eq, and, like, sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import type postgres from 'postgres';
-import type { UserRole, UserPermission } from '@domains/user/user.entity';
-import { User } from '@domains/user/user.entity';
+import { eq, and, like, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import type postgres from "postgres";
+import type { UserRole, UserPermission } from "@domains/user/user.entity";
+import { User } from "@domains/user/user.entity";
 import type {
   UserRepository,
   UserCreateParams,
   UserUpdateParams,
   UserQueryParams,
-} from '@domains/user/user.repository';
-import { users } from '../schema';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@utils/logging/logger.service';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+} from "@domains/user/user.repository";
+import { users } from "../schema";
+import type { Shared } from "openbadges-types";
+import { logger } from "@utils/logging/logger.service";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 /**
  * PostgreSQL implementation of the User repository
@@ -48,7 +48,7 @@ export class PostgresUserRepository implements UserRepository {
 
       // Insert into database
       await this.db.insert(users).values({
-        id: convertUuid(obj.id as string, 'postgresql', 'to'),
+        id: convertUuid(obj.id as string, "postgresql", "to"),
         username: obj.username as string,
         email: obj.email as string,
         passwordHash: obj.passwordHash as string | null,
@@ -65,7 +65,7 @@ export class PostgresUserRepository implements UserRepository {
 
       return newUser;
     } catch (error) {
-      logger.error('Error creating user in PostgreSQL repository', {
+      logger.error("Error creating user in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         params,
       });
@@ -81,7 +81,7 @@ export class PostgresUserRepository implements UserRepository {
   async findById(id: Shared.IRI): Promise<User | null> {
     try {
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
 
       // Query database
       const result = await this.db
@@ -97,7 +97,7 @@ export class PostgresUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by ID in PostgreSQL repository', {
+      logger.error("Error finding user by ID in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });
@@ -126,7 +126,7 @@ export class PostgresUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by username in PostgreSQL repository', {
+      logger.error("Error finding user by username in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         username,
       });
@@ -155,7 +155,7 @@ export class PostgresUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by email in PostgreSQL repository', {
+      logger.error("Error finding user by email in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         email,
       });
@@ -212,14 +212,14 @@ export class PostgresUserRepository implements UserRepository {
         updateValues.metadata = params.metadata;
 
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
 
       // Update in database
       await this.db.update(users).set(updateValues).where(eq(users.id, dbId));
 
       return mergedUser;
     } catch (error) {
-      logger.error('Error updating user in PostgreSQL repository', {
+      logger.error("Error updating user in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
         params,
@@ -236,7 +236,7 @@ export class PostgresUserRepository implements UserRepository {
   async delete(id: Shared.IRI): Promise<boolean> {
     try {
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
 
       // Delete from database
       const result = await this.db
@@ -247,7 +247,7 @@ export class PostgresUserRepository implements UserRepository {
       // Return true if deleted, false otherwise
       return result.length > 0;
     } catch (error) {
-      logger.error('Error deleting user in PostgreSQL repository', {
+      logger.error("Error deleting user in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });
@@ -290,7 +290,7 @@ export class PostgresUserRepository implements UserRepository {
         // For role filtering, we need to use a JSON contains operator
         // This is PostgreSQL specific syntax
         conditions.push(
-          sql`${users.roles}::jsonb @> ${JSON.stringify([params.role])}::jsonb`
+          sql`${users.roles}::jsonb @> ${JSON.stringify([params.role])}::jsonb`,
         );
       }
 
@@ -315,7 +315,7 @@ export class PostgresUserRepository implements UserRepository {
       // Convert database records to domain entities
       return result.map((record) => this.toDomain(record));
     } catch (error) {
-      logger.error('Error finding users by query in PostgreSQL repository', {
+      logger.error("Error finding users by query in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         params,
       });
@@ -352,7 +352,7 @@ export class PostgresUserRepository implements UserRepository {
         // For role filtering, we need to use a JSON contains operator
         // This is PostgreSQL specific syntax
         conditions.push(
-          sql`${users.roles}::jsonb @> ${JSON.stringify([params.role])}::jsonb`
+          sql`${users.roles}::jsonb @> ${JSON.stringify([params.role])}::jsonb`,
         );
       }
 
@@ -369,7 +369,7 @@ export class PostgresUserRepository implements UserRepository {
       // Return count
       return Number(result[0]?.count || 0);
     } catch (error) {
-      logger.error('Error counting users by query in PostgreSQL repository', {
+      logger.error("Error counting users by query in PostgreSQL repository", {
         error: error instanceof Error ? error.stack : String(error),
         params,
       });
@@ -385,23 +385,23 @@ export class PostgresUserRepository implements UserRepository {
   private toDomain(record: Record<string, unknown>): User {
     // Parse JSON fields
     const roles =
-      typeof record.roles === 'string'
+      typeof record.roles === "string"
         ? (JSON.parse(record.roles as string) as UserRole[])
         : (record.roles as UserRole[]);
 
     const permissions =
-      typeof record.permissions === 'string'
+      typeof record.permissions === "string"
         ? (JSON.parse(record.permissions as string) as UserPermission[])
         : (record.permissions as UserPermission[]);
 
     const metadata =
-      typeof record.metadata === 'string' && record.metadata
+      typeof record.metadata === "string" && record.metadata
         ? JSON.parse(record.metadata as string)
         : (record.metadata as Record<string, unknown> | undefined);
 
     // Create user entity
     return User.create({
-      id: convertUuid(record.id as string, 'postgresql', 'from') as Shared.IRI,
+      id: convertUuid(record.id as string, "postgresql", "from") as Shared.IRI,
       username: record.username as string,
       email: record.email as string,
       passwordHash: record.passwordHash as string | undefined,

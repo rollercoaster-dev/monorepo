@@ -71,45 +71,46 @@ yarn add openbadges-types
 ### Open Badges 2.0
 
 ```typescript
-import { OB2 } from 'openbadges-types';
+import { OB2 } from "openbadges-types";
 
 // Create a BadgeClass
 const badgeClass: OB2.BadgeClass = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/badges/5',
-  type: 'BadgeClass',
-  name: '3-D Printmaster',
-  description: 'This badge is awarded for passing the 3-D printing knowledge and safety test.',
-  image: 'https://example.org/badges/5/image',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/badges/5",
+  type: "BadgeClass",
+  name: "3-D Printmaster",
+  description:
+    "This badge is awarded for passing the 3-D printing knowledge and safety test.",
+  image: "https://example.org/badges/5/image",
   criteria: {
     narrative:
-      'Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.',
+      "Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.",
   },
   issuer: {
-    id: 'https://example.org/issuer',
-    type: 'Profile',
-    name: 'Example Maker Society',
-    url: 'https://example.org',
-    email: 'contact@example.org',
+    id: "https://example.org/issuer",
+    type: "Profile",
+    name: "Example Maker Society",
+    url: "https://example.org",
+    email: "contact@example.org",
     verification: {
-      type: 'hosted',
-      allowedOrigins: 'example.org',
+      type: "hosted",
+      allowedOrigins: "example.org",
     },
   },
 };
 
 // Create an Assertion
 const assertion: OB2.Assertion = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    type: 'email',
-    identity: 'alice@example.org',
+    type: "email",
+    identity: "alice@example.org",
   },
-  issuedOn: '2016-12-31T23:59:59+00:00',
+  issuedOn: "2016-12-31T23:59:59+00:00",
   verification: {
-    type: 'hosted',
+    type: "hosted",
   },
   badge: badgeClass,
 };
@@ -118,51 +119,52 @@ const assertion: OB2.Assertion = {
 ### Open Badges 3.0
 
 ```typescript
-import { OB3 } from 'openbadges-types';
+import { OB3 } from "openbadges-types";
 
 // Create an Achievement
 const achievement: OB3.Achievement = {
-  type: ['Achievement'],
-  name: '3-D Printmaster',
-  description: 'This badge is awarded for passing the 3-D printing knowledge and safety test.',
+  type: ["Achievement"],
+  name: "3-D Printmaster",
+  description:
+    "This badge is awarded for passing the 3-D printing knowledge and safety test.",
   criteria: {
     narrative:
-      'Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.',
+      "Students are tested on knowledge and safety, both through a paper test and a supervised performance evaluation on key skills.",
   },
   alignments: [
     {
-      targetName: 'ISTE Standard 3',
-      targetUrl: 'https://example.org/standards/iste3',
+      targetName: "ISTE Standard 3",
+      targetUrl: "https://example.org/standards/iste3",
     },
   ],
 };
 
 // Create a Verifiable Credential
 const credential: OB3.VerifiableCredential = {
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
   ],
-  id: 'https://example.org/credentials/3732',
-  type: ['VerifiableCredential'],
+  id: "https://example.org/credentials/3732",
+  type: ["VerifiableCredential"],
   issuer: {
-    id: 'https://example.org/issuers/123',
-    type: ['Profile'],
-    name: 'Example Maker Society',
-    url: 'https://example.org',
-    email: 'contact@example.org',
+    id: "https://example.org/issuers/123",
+    type: ["Profile"],
+    name: "Example Maker Society",
+    url: "https://example.org",
+    email: "contact@example.org",
   },
-  issuanceDate: '2023-06-15T12:00:00Z',
+  issuanceDate: "2023-06-15T12:00:00Z",
   credentialSubject: {
-    id: 'did:example:ebfeb1f712ebc6f1c276e12ec21',
+    id: "did:example:ebfeb1f712ebc6f1c276e12ec21",
     achievement: achievement,
   },
   proof: {
-    type: 'Ed25519Signature2020',
-    created: '2023-06-15T12:05:00Z',
-    verificationMethod: 'https://example.org/issuers/123#keys-1',
-    proofPurpose: 'assertionMethod',
-    proofValue: 'z58DAdFfa9SkqZMVPxAQpic6FPCsJWa6SpsfDqwmUbHEVnWxeh',
+    type: "Ed25519Signature2020",
+    created: "2023-06-15T12:05:00Z",
+    verificationMethod: "https://example.org/issuers/123#keys-1",
+    proofPurpose: "assertionMethod",
+    proofValue: "z58DAdFfa9SkqZMVPxAQpic6FPCsJWa6SpsfDqwmUbHEVnWxeh",
   },
 };
 ```
@@ -170,20 +172,23 @@ const credential: OB3.VerifiableCredential = {
 ### Using Shared Types
 
 ```typescript
-import { Shared } from 'openbadges-types';
+import { Shared } from "openbadges-types";
 
 // Use shared types
-const dateTime: Shared.DateTime = '2023-06-15T12:00:00Z';
-const iri: Shared.IRI = 'https://example.org/badges/5';
+const dateTime: Shared.DateTime = "2023-06-15T12:00:00Z";
+const iri: Shared.IRI = "https://example.org/badges/5";
 ```
 
 ### Version-Specific Operations
 
 ```typescript
-import { OpenBadgesVersion, VersionedBadge } from 'openbadges-types';
+import { OpenBadgesVersion, VersionedBadge } from "openbadges-types";
 
 // Function that works with either version
-function processBadge<T extends OpenBadgesVersion>(badge: VersionedBadge<T>, version: T): string {
+function processBadge<T extends OpenBadgesVersion>(
+  badge: VersionedBadge<T>,
+  version: T,
+): string {
   if (version === OpenBadgesVersion.V2) {
     // badge is typed as OB2.Assertion
     return (badge as OB2.Assertion).badge.name;
@@ -203,11 +208,11 @@ function processBadge<T extends OpenBadgesVersion>(badge: VersionedBadge<T>, ver
 You can import the official JSON-LD context objects for Open Badges 2.0 and 3.0 for use in validation or tooling:
 
 ```typescript
-import { OB2_CONTEXT, OB3_CONTEXT } from 'openbadges-types';
+import { OB2_CONTEXT, OB3_CONTEXT } from "openbadges-types";
 
 // OB2_CONTEXT and OB3_CONTEXT are the official JSON-LD context objects
-console.log(OB2_CONTEXT['@context']);
-console.log(OB3_CONTEXT['@context']);
+console.log(OB2_CONTEXT["@context"]);
+console.log(OB3_CONTEXT["@context"]);
 ```
 
 ## API Documentation
@@ -220,9 +225,9 @@ console.log(OB3_CONTEXT['@context']);
 
   ```typescript
   interface Assertion extends JsonLdObject {
-    '@context': string | string[] | Record<string, any>;
+    "@context": string | string[] | Record<string, any>;
     id: IRI;
-    type: 'Assertion' | string;
+    type: "Assertion" | string;
     recipient: IdentityObject;
     badge: BadgeClass | IRI;
     issuedOn: DateTime;
@@ -239,9 +244,9 @@ console.log(OB3_CONTEXT['@context']);
 
   ```typescript
   interface BadgeClass extends JsonLdObject {
-    '@context': string | string[] | Record<string, any>;
+    "@context": string | string[] | Record<string, any>;
     id: IRI;
-    type: 'BadgeClass' | string;
+    type: "BadgeClass" | string;
     name: string;
     description: string;
     image: string | ImageObject;
@@ -256,9 +261,9 @@ console.log(OB3_CONTEXT['@context']);
 - `Profile`: Represents an issuer of badges
   ```typescript
   interface Profile extends JsonLdObject {
-    '@context': string | string[] | Record<string, any>;
+    "@context": string | string[] | Record<string, any>;
     id: IRI;
-    type: 'Profile' | 'Issuer' | string;
+    type: "Profile" | "Issuer" | string;
     name: string;
     url?: string;
     email?: string;
@@ -289,9 +294,9 @@ console.log(OB3_CONTEXT['@context']);
 
   ```typescript
   interface VerifiableCredential extends JsonLdObject {
-    '@context': string | string[] | Record<string, any>;
+    "@context": string | string[] | Record<string, any>;
     id: IRI;
-    type: 'VerifiableCredential' | string | string[];
+    type: "VerifiableCredential" | string | string[];
     issuer: IRI | Issuer;
     issuanceDate: DateTime;
     expirationDate?: DateTime;
@@ -309,7 +314,7 @@ console.log(OB3_CONTEXT['@context']);
 
   ```typescript
   interface Achievement extends JsonLdObject {
-    type: 'Achievement' | string | string[];
+    type: "Achievement" | string | string[];
     id?: IRI;
     name: string | MultiLanguageString;
     description?: string | MultiLanguageString;
@@ -400,7 +405,7 @@ console.log(OB3_CONTEXT['@context']);
 
   ```typescript
   interface JsonLdObject {
-    '@context'?: string | string[] | Record<string, any>;
+    "@context"?: string | string[] | Record<string, any>;
     type?: string | string[];
     id?: string;
     [key: string]: any;
@@ -523,14 +528,14 @@ This package includes type guards and runtime validation for both Open Badges 2.
 **Example:**
 
 ```typescript
-import { validateBadge } from 'openbadges-types';
+import { validateBadge } from "openbadges-types";
 
 const result = validateBadge(badgeObject);
 if (result.isValid) {
   // Badge is valid OB2 or OB3
-  console.log('Version:', result.version);
+  console.log("Version:", result.version);
 } else {
-  console.error('Validation errors:', result.errors);
+  console.error("Validation errors:", result.errors);
 }
 ```
 
@@ -539,7 +544,7 @@ if (result.isValid) {
 The package provides composite type guards that work with both OB2 and OB3 badges:
 
 ```typescript
-import { CompositeGuards } from 'openbadges-types';
+import { CompositeGuards } from "openbadges-types";
 
 // Check if an object is a valid badge (either OB2 or OB3)
 if (CompositeGuards.isBadge(badge)) {
@@ -559,7 +564,7 @@ if (CompositeGuards.isBadge(badge)) {
 For applications that need to work with both OB2 and OB3 badges, the package provides utilities to normalize badges to a common format:
 
 ```typescript
-import { BadgeNormalizer } from 'openbadges-types';
+import { BadgeNormalizer } from "openbadges-types";
 
 // Normalize a badge to a common format
 const normalizedBadge = BadgeNormalizer.normalizeBadge(badgeObject);
@@ -571,9 +576,12 @@ console.log(`Issued on: ${normalizedBadge.issuanceDate}`);
 
 // You can also filter, sort, and group badges
 const badges = BadgeNormalizer.normalizeBadges(badgeArray);
-const filteredBadges = BadgeNormalizer.filterBadgesBySearchTerm(badges, 'search term');
-const sortedBadges = BadgeNormalizer.sortBadges(badges, 'name', 'asc');
-const groupedBadges = BadgeNormalizer.groupBadges(badges, 'issuerName');
+const filteredBadges = BadgeNormalizer.filterBadgesBySearchTerm(
+  badges,
+  "search term",
+);
+const sortedBadges = BadgeNormalizer.sortBadges(badges, "name", "asc");
+const groupedBadges = BadgeNormalizer.groupBadges(badges, "issuerName");
 ```
 
 See the test files and [Consuming Applications](#consuming-applications) documentation for more usage examples and edge case coverage.

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
-import FontSelector from './FontSelector.vue';
-import ThemeSelector from './ThemeSelector.vue';
+import { ref, watch, onUnmounted } from "vue";
+import FontSelector from "./FontSelector.vue";
+import ThemeSelector from "./ThemeSelector.vue";
 
 /**
  * Props for the AccessibilitySettings component
@@ -45,10 +45,10 @@ interface AccessibilitySettingsProps {
 }
 
 const props = withDefaults(defineProps<AccessibilitySettingsProps>(), {
-  theme: 'default',
-  font: 'system',
+  theme: "default",
+  font: "system",
   open: false,
-  title: 'Accessibility Settings',
+  title: "Accessibility Settings",
   showMotionReduction: true,
   showFocusMode: true,
 });
@@ -61,48 +61,48 @@ const emit = defineEmits<{
    * Emitted when the selected theme changes
    * @param value The new theme value
    */
-  (e: 'update:theme', value: string): void;
+  (e: "update:theme", value: string): void;
 
   /**
    * Emitted when the selected font changes
    * @param value The new font value
    */
-  (e: 'update:font', value: string): void;
+  (e: "update:font", value: string): void;
 
   /**
    * Emitted when the open state changes
    * @param value The new open state
    */
-  (e: 'update:open', value: boolean): void;
+  (e: "update:open", value: boolean): void;
 
   /**
    * Emitted when the motion reduction setting changes
    * @param value The new motion reduction state
    */
-  (e: 'motionReductionChange', value: boolean): void;
+  (e: "motionReductionChange", value: boolean): void;
 
   /**
    * Emitted when the focus mode setting changes
    * @param value The new focus mode state
    */
-  (e: 'focusModeChange', value: boolean): void;
+  (e: "focusModeChange", value: boolean): void;
 
   /**
    * Emitted when the font size changes
    * @param value The new font size value
    */
-  (e: 'fontSizeChange', value: string): void;
+  (e: "fontSizeChange", value: string): void;
 
   /**
    * Emitted when the text spacing changes
    * @param value The new text spacing value
    */
-  (e: 'textSpacingChange', value: boolean): void;
+  (e: "textSpacingChange", value: boolean): void;
 
   /**
    * Emitted when all settings are reset to defaults
    */
-  (e: 'resetSettings'): void;
+  (e: "resetSettings"): void;
 }>();
 
 // Internal state
@@ -117,98 +117,98 @@ watch(
   () => props.open,
   (newValue) => {
     isOpen.value = newValue;
-  }
+  },
 );
 
 watch(
   () => props.theme,
   (newValue) => {
     selectedTheme.value = newValue;
-  }
+  },
 );
 
 watch(
   () => props.font,
   (newValue) => {
     selectedFont.value = newValue;
-  }
+  },
 );
 
 // Methods
 const toggleOpen = () => {
   isOpen.value = !isOpen.value;
-  emit('update:open', isOpen.value);
+  emit("update:open", isOpen.value);
 };
 
 const handleThemeChange = (value: string) => {
   selectedTheme.value = value;
-  emit('update:theme', value);
+  emit("update:theme", value);
 };
 
 const handleFontChange = (value: string) => {
   selectedFont.value = value;
-  emit('update:font', value);
+  emit("update:font", value);
 };
 
 const handleMotionReductionChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   reduceMotion.value = target.checked;
-  emit('motionReductionChange', target.checked);
+  emit("motionReductionChange", target.checked);
 
   // Apply the class to the document body
   if (reduceMotion.value) {
-    document.body.classList.add('ob-animations-none');
+    document.body.classList.add("ob-animations-none");
   } else {
-    document.body.classList.remove('ob-animations-none');
+    document.body.classList.remove("ob-animations-none");
   }
 };
 
 const handleFocusModeChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   focusMode.value = target.checked;
-  emit('focusModeChange', target.checked);
+  emit("focusModeChange", target.checked);
 
   // Apply the class to the document body
   if (focusMode.value) {
-    document.body.classList.add('ob-focus-mode');
+    document.body.classList.add("ob-focus-mode");
   } else {
-    document.body.classList.remove('ob-focus-mode');
+    document.body.classList.remove("ob-focus-mode");
   }
 };
 
 const handleFontSizeChange = (value: string) => {
-  emit('fontSizeChange', value);
+  emit("fontSizeChange", value);
 };
 
 const handleTextSpacingChange = (value: boolean) => {
-  emit('textSpacingChange', value);
+  emit("textSpacingChange", value);
 };
 
 const resetSettings = () => {
-  selectedTheme.value = 'default';
-  selectedFont.value = 'system';
+  selectedTheme.value = "default";
+  selectedFont.value = "system";
   reduceMotion.value = false;
   focusMode.value = false;
 
   // Remove classes from the document body
-  document.body.classList.remove('ob-animations-none', 'ob-focus-mode');
+  document.body.classList.remove("ob-animations-none", "ob-focus-mode");
 
   // Emit events
-  emit('update:theme', 'default');
-  emit('update:font', 'system');
-  emit('motionReductionChange', false);
-  emit('focusModeChange', false);
-  emit('resetSettings');
+  emit("update:theme", "default");
+  emit("update:font", "system");
+  emit("motionReductionChange", false);
+  emit("focusModeChange", false);
+  emit("resetSettings");
 };
 
 // Cleanup on unmount - remove classes that were added to document.body
 // This prevents class leakage when component is removed (e.g., route change)
 onUnmounted(() => {
   if (reduceMotion.value) {
-    document.body.classList.remove('ob-animations-none');
+    document.body.classList.remove("ob-animations-none");
   }
   if (focusMode.value) {
-    document.body.classList.remove('ob-focus-mode');
+    document.body.classList.remove("ob-focus-mode");
   }
 });
 </script>
@@ -218,7 +218,9 @@ onUnmounted(() => {
     <button
       class="ob-accessibility-toggle"
       :aria-expanded="isOpen"
-      :aria-label="isOpen ? 'Close accessibility settings' : 'Open accessibility settings'"
+      :aria-label="
+        isOpen ? 'Close accessibility settings' : 'Open accessibility settings'
+      "
       @click="toggleOpen"
     >
       <span class="ob-accessibility-icon">
@@ -269,7 +271,10 @@ onUnmounted(() => {
       </div>
 
       <div class="ob-accessibility-panel-content">
-        <ThemeSelector v-model="selectedTheme" @update:model-value="handleThemeChange" />
+        <ThemeSelector
+          v-model="selectedTheme"
+          @update:model-value="handleThemeChange"
+        />
 
         <FontSelector
           v-model="selectedFont"
@@ -278,7 +283,10 @@ onUnmounted(() => {
           @text-spacing-change="handleTextSpacingChange"
         />
 
-        <div v-if="showMotionReduction || showFocusMode" class="ob-accessibility-options">
+        <div
+          v-if="showMotionReduction || showFocusMode"
+          class="ob-accessibility-options"
+        >
           <h3 class="ob-accessibility-options-title">Additional Options</h3>
 
           <div v-if="showMotionReduction" class="ob-accessibility-option">
@@ -290,12 +298,16 @@ onUnmounted(() => {
                 :checked="reduceMotion"
                 @change="handleMotionReductionChange"
               />
-              <label for="ob-reduce-motion" class="ob-accessibility-checkbox-label">
+              <label
+                for="ob-reduce-motion"
+                class="ob-accessibility-checkbox-label"
+              >
                 Reduce Motion
               </label>
             </div>
             <p class="ob-accessibility-option-description">
-              Minimizes animations and transitions for users with vestibular disorders
+              Minimizes animations and transitions for users with vestibular
+              disorders
             </p>
           </div>
 
@@ -308,7 +320,10 @@ onUnmounted(() => {
                 :checked="focusMode"
                 @change="handleFocusModeChange"
               />
-              <label for="ob-focus-mode" class="ob-accessibility-checkbox-label">
+              <label
+                for="ob-focus-mode"
+                class="ob-accessibility-checkbox-label"
+              >
                 Focus Mode
               </label>
             </div>
@@ -509,7 +524,8 @@ onUnmounted(() => {
     bottom: 0;
     left: 0;
     right: 0;
-    border-radius: var(--ob-border-radius-lg, 8px) var(--ob-border-radius-lg, 8px) 0 0;
+    border-radius: var(--ob-border-radius-lg, 8px)
+      var(--ob-border-radius-lg, 8px) 0 0;
     max-height: 80vh;
   }
 }

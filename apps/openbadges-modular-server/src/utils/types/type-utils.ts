@@ -5,10 +5,10 @@
  * from the openbadges-types package, ensuring proper validation and conversion.
  */
 
-import type { Shared} from 'openbadges-types';
-import { createIRI, isIRI } from 'openbadges-types';
-import { v4 as uuidv4 } from 'uuid';
-import { logger } from '../logging/logger.service';
+import type { Shared } from "openbadges-types";
+import { createIRI, isIRI } from "openbadges-types";
+import { v4 as uuidv4 } from "uuid";
+import { logger } from "../logging/logger.service";
 
 /**
  * Safely creates a Shared.IRI from a string or generates a new UUID as IRI
@@ -34,14 +34,17 @@ export function createOrGenerateIRI(value?: string): Shared.IRI {
  * @param defaultValue Default value to return if parsing fails
  * @returns Parsed object or default value
  */
-export function parseJSON<T>(value: string | null | undefined, defaultValue?: T): T | undefined {
+export function parseJSON<T>(
+  value: string | null | undefined,
+  defaultValue?: T,
+): T | undefined {
   if (!value) return defaultValue;
   try {
     return JSON.parse(value) as T;
   } catch (error) {
-    logger.error('Error parsing JSON', {
+    logger.error("Error parsing JSON", {
       errorMessage: error instanceof Error ? error.message : String(error),
-      value: typeof value === 'string' ? value.substring(0, 100) : null
+      value: typeof value === "string" ? value.substring(0, 100) : null,
     });
     return defaultValue;
   }
@@ -57,9 +60,9 @@ export function stringifyJSON(value: unknown): string | null {
   try {
     return JSON.stringify(value);
   } catch (error) {
-    logger.error('Error stringifying JSON', {
+    logger.error("Error stringifying JSON", {
       errorMessage: error instanceof Error ? error.message : String(error),
-      valueType: typeof value
+      valueType: typeof value,
     });
     return null;
   }
@@ -70,20 +73,26 @@ export function stringifyJSON(value: unknown): string | null {
  * @param value Date string to convert
  * @returns A valid Shared.DateTime or undefined
  */
-export function toDateTime(value: string | Date | null | undefined): Shared.DateTime | undefined {
+export function toDateTime(
+  value: string | Date | null | undefined,
+): Shared.DateTime | undefined {
   if (!value) return undefined;
 
   try {
     const dateString = value instanceof Date ? value.toISOString() : value;
     // Validate that it's a proper ISO 8601 date
-    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(dateString)) {
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(
+        dateString,
+      )
+    ) {
       throw new Error(`Invalid ISO 8601 date: ${dateString}`);
     }
     return dateString as Shared.DateTime;
   } catch (error) {
-    logger.error('Error converting to DateTime', {
+    logger.error("Error converting to DateTime", {
       errorMessage: error instanceof Error ? error.message : String(error),
-      value: String(value)
+      value: String(value),
     });
     return undefined;
   }
@@ -95,7 +104,7 @@ export function toDateTime(value: string | Date | null | undefined): Shared.Date
  * @returns True if the value is a non-empty string
  */
 export function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 /**
@@ -119,7 +128,9 @@ export function isValidUrl(value: unknown): boolean {
  * @param value URL string to convert
  * @returns A valid Shared.IRI or undefined
  */
-export function toUrlIRI(value: string | null | undefined): Shared.IRI | undefined {
+export function toUrlIRI(
+  value: string | null | undefined,
+): Shared.IRI | undefined {
   if (!value) return undefined;
 
   if (isValidUrl(value)) {

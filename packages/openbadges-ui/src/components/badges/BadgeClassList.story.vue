@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BadgeClassList from './BadgeClassList.vue';
-import type { OB2, OB3 } from 'openbadges-types';
+import { ref } from "vue";
+import BadgeClassList from "./BadgeClassList.vue";
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * # BadgeClassList
@@ -46,98 +46,101 @@ import type { OB2, OB3 } from 'openbadges-types';
 // Mock badge classes for stories
 const mockBadgeClasses: (OB2.BadgeClass | OB3.Achievement)[] = [
   {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'Web Developer Certificate',
-    description: 'Demonstrates proficiency in modern web development.',
-    image: 'https://placehold.co/200x200/3182ce/white?text=WD',
-    criteria: { narrative: 'Complete all web dev courses.' },
-    issuer: { id: 'https://example.org/issuers/1', name: 'Tech Academy' },
-    tags: ['web', 'javascript', 'html', 'css'],
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "Web Developer Certificate",
+    description: "Demonstrates proficiency in modern web development.",
+    image: "https://placehold.co/200x200/3182ce/white?text=WD",
+    criteria: { narrative: "Complete all web dev courses." },
+    issuer: { id: "https://example.org/issuers/1", name: "Tech Academy" },
+    tags: ["web", "javascript", "html", "css"],
   } as OB2.BadgeClass,
   {
-    id: 'https://example.org/badges/2',
-    type: ['Achievement'] as [string, ...string[]],
-    name: 'Data Science Fundamentals',
-    description: 'Understanding of core data science concepts.',
-    image: { id: 'https://placehold.co/200x200/805ad5/white?text=DS', type: 'Image' as const },
-    criteria: { narrative: 'Pass the data science assessment.' },
-    creator: { id: 'https://example.org/issuers/2', name: 'Data Institute' },
+    id: "https://example.org/badges/2",
+    type: ["Achievement"] as [string, ...string[]],
+    name: "Data Science Fundamentals",
+    description: "Understanding of core data science concepts.",
+    image: {
+      id: "https://placehold.co/200x200/805ad5/white?text=DS",
+      type: "Image" as const,
+    },
+    criteria: { narrative: "Pass the data science assessment." },
+    creator: { id: "https://example.org/issuers/2", name: "Data Institute" },
   } as OB3.Achievement,
   {
-    id: 'https://example.org/badges/3',
-    type: 'BadgeClass',
-    name: 'Cloud Architecture',
-    description: 'Expertise in cloud computing architectures.',
-    image: 'https://placehold.co/200x200/38a169/white?text=CA',
-    criteria: { narrative: 'Design and deploy cloud solutions.' },
-    issuer: { id: 'https://example.org/issuers/1', name: 'Tech Academy' },
-    tags: ['cloud', 'aws', 'architecture'],
+    id: "https://example.org/badges/3",
+    type: "BadgeClass",
+    name: "Cloud Architecture",
+    description: "Expertise in cloud computing architectures.",
+    image: "https://placehold.co/200x200/38a169/white?text=CA",
+    criteria: { narrative: "Design and deploy cloud solutions." },
+    issuer: { id: "https://example.org/issuers/1", name: "Tech Academy" },
+    tags: ["cloud", "aws", "architecture"],
   } as OB2.BadgeClass,
   {
-    id: 'https://example.org/badges/4',
-    type: 'BadgeClass',
-    name: 'Cybersecurity Essentials',
-    description: 'Foundational cybersecurity knowledge and skills.',
-    image: 'https://placehold.co/200x200/e53e3e/white?text=CS',
-    criteria: { narrative: 'Complete security assessment.' },
-    issuer: { id: 'https://example.org/issuers/3', name: 'Security Institute' },
-    tags: ['security', 'networking'],
+    id: "https://example.org/badges/4",
+    type: "BadgeClass",
+    name: "Cybersecurity Essentials",
+    description: "Foundational cybersecurity knowledge and skills.",
+    image: "https://placehold.co/200x200/e53e3e/white?text=CS",
+    criteria: { narrative: "Complete security assessment." },
+    issuer: { id: "https://example.org/issuers/3", name: "Security Institute" },
+    tags: ["security", "networking"],
   } as OB2.BadgeClass,
   {
-    id: 'https://example.org/badges/5',
-    type: 'BadgeClass',
-    name: 'Machine Learning Practitioner',
-    description: 'Practical machine learning implementation skills.',
-    image: 'https://placehold.co/200x200/d53f8c/white?text=ML',
-    criteria: { narrative: 'Build and deploy ML models.' },
-    issuer: { id: 'https://example.org/issuers/2', name: 'Data Institute' },
-    tags: ['ml', 'python', 'ai'],
+    id: "https://example.org/badges/5",
+    type: "BadgeClass",
+    name: "Machine Learning Practitioner",
+    description: "Practical machine learning implementation skills.",
+    image: "https://placehold.co/200x200/d53f8c/white?text=ML",
+    criteria: { narrative: "Build and deploy ML models." },
+    issuer: { id: "https://example.org/issuers/2", name: "Data Institute" },
+    tags: ["ml", "python", "ai"],
   } as OB2.BadgeClass,
   {
-    id: 'https://example.org/badges/6',
-    type: 'BadgeClass',
-    name: 'DevOps Engineer',
-    description: 'CI/CD pipelines and infrastructure automation.',
-    image: 'https://placehold.co/200x200/2c5282/white?text=DO',
-    criteria: { narrative: 'Implement CI/CD workflows.' },
-    issuer: { id: 'https://example.org/issuers/1', name: 'Tech Academy' },
-    tags: ['devops', 'docker', 'kubernetes', 'ci-cd'],
+    id: "https://example.org/badges/6",
+    type: "BadgeClass",
+    name: "DevOps Engineer",
+    description: "CI/CD pipelines and infrastructure automation.",
+    image: "https://placehold.co/200x200/2c5282/white?text=DO",
+    criteria: { narrative: "Implement CI/CD workflows." },
+    issuer: { id: "https://example.org/issuers/1", name: "Tech Academy" },
+    tags: ["devops", "docker", "kubernetes", "ci-cd"],
   } as OB2.BadgeClass,
   {
-    id: 'https://example.org/badges/7',
-    type: 'BadgeClass',
-    name: 'UI/UX Design',
-    description: 'User interface and user experience design principles.',
-    image: 'https://placehold.co/200x200/ed8936/white?text=UX',
-    criteria: { narrative: 'Create a design portfolio.' },
-    issuer: { id: 'https://example.org/issuers/4', name: 'Design School' },
-    tags: ['design', 'ux', 'ui', 'figma'],
+    id: "https://example.org/badges/7",
+    type: "BadgeClass",
+    name: "UI/UX Design",
+    description: "User interface and user experience design principles.",
+    image: "https://placehold.co/200x200/ed8936/white?text=UX",
+    criteria: { narrative: "Create a design portfolio." },
+    issuer: { id: "https://example.org/issuers/4", name: "Design School" },
+    tags: ["design", "ux", "ui", "figma"],
   } as OB2.BadgeClass,
 ];
 
 const state = ref({
   badgeClasses: mockBadgeClasses,
-  layout: 'grid' as 'grid' | 'list',
+  layout: "grid" as "grid" | "list",
   loading: false,
   pageSize: 4,
   currentPage: 1,
   showPagination: false,
-  density: 'normal' as 'compact' | 'normal' | 'spacious',
-  ariaLabel: 'List of available badges',
+  density: "normal" as "compact" | "normal" | "spacious",
+  ariaLabel: "List of available badges",
 });
 
 function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
-  console.log('Badge class clicked:', badgeClass);
+  console.log("Badge class clicked:", badgeClass);
 }
 
 function onPageChange(page: number): void {
-  console.log('Page changed:', page);
+  console.log("Page changed:", page);
   state.value.currentPage = page;
 }
 
-function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
-  console.log('Density changed:', density);
+function onDensityChange(density: "compact" | "normal" | "spacious"): void {
+  console.log("Density changed:", density);
   state.value.density = density;
 }
 </script>
@@ -152,8 +155,9 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         <h1>BadgeClassList</h1>
 
         <p>
-          The <code>BadgeClassList</code> component displays a searchable, filterable
-          collection of badge classes with support for grid and list layouts.
+          The <code>BadgeClassList</code> component displays a searchable,
+          filterable collection of badge classes with support for grid and list
+          layouts.
         </p>
 
         <h2>When To Use</h2>
@@ -178,17 +182,13 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
 /&gt;</code></pre>
 
         <h2>Filtering</h2>
-        <p>
-          The component provides built-in filtering by:
-        </p>
+        <p>The component provides built-in filtering by:</p>
         <ul>
           <li><strong>Search</strong> - Filter by name or description</li>
           <li><strong>Issuer</strong> - Dropdown to filter by issuer</li>
           <li><strong>Tags</strong> - Dropdown to filter by tag</li>
         </ul>
-        <p>
-          A "Clear Filters" button appears when any filter is active.
-        </p>
+        <p>A "Clear Filters" button appears when any filter is active.</p>
 
         <h2>Accessibility</h2>
         <ul>
@@ -206,7 +206,7 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         title="Layout"
         :options="[
           { label: 'Grid', value: 'grid' },
-          { label: 'List', value: 'list' }
+          { label: 'List', value: 'list' },
         ]"
       />
       <HstSelect
@@ -215,21 +215,12 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         :options="[
           { label: 'Compact', value: 'compact' },
           { label: 'Normal', value: 'normal' },
-          { label: 'Spacious', value: 'spacious' }
+          { label: 'Spacious', value: 'spacious' },
         ]"
       />
-      <HstCheckbox
-        v-model="state.loading"
-        title="Loading"
-      />
-      <HstCheckbox
-        v-model="state.showPagination"
-        title="Show Pagination"
-      />
-      <HstNumber
-        v-model="state.pageSize"
-        title="Page Size"
-      />
+      <HstCheckbox v-model="state.loading" title="Loading" />
+      <HstCheckbox v-model="state.showPagination" title="Show Pagination" />
+      <HstNumber v-model="state.pageSize" title="Page Size" />
     </template>
 
     <Variant title="Grid Layout">
@@ -327,9 +318,13 @@ function onDensityChange(density: 'compact' | 'normal' | 'spacious'): void {
         @update:density="onDensityChange"
       >
         <template #empty>
-          <div style="padding: 2rem; text-align: center;">
-            <p style="font-size: 1.25rem; margin-bottom: 1rem;">No badges available</p>
-            <p style="color: #666;">Check back later or explore other categories!</p>
+          <div style="padding: 2rem; text-align: center">
+            <p style="font-size: 1.25rem; margin-bottom: 1rem">
+              No badges available
+            </p>
+            <p style="color: #666">
+              Check back later or explore other categories!
+            </p>
           </div>
         </template>
       </BadgeClassList>

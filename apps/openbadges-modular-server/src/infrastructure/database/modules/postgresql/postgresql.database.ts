@@ -5,21 +5,21 @@
  * It provides CRUD operations for Issuers, BadgeClasses, and Assertions.
  */
 
-import { eq, sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { Issuer } from '../../../../domains/issuer/issuer.entity';
-import { BadgeClass } from '../../../../domains/badgeClass/badgeClass.entity';
-import { Assertion } from '../../../../domains/assertion/assertion.entity';
-import type { Shared } from 'openbadges-types';
+import { eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { Issuer } from "../../../../domains/issuer/issuer.entity";
+import { BadgeClass } from "../../../../domains/badgeClass/badgeClass.entity";
+import { Assertion } from "../../../../domains/assertion/assertion.entity";
+import type { Shared } from "openbadges-types";
 import type {
   DatabaseInterface,
   DatabaseQueryOptions,
   DatabaseHealth,
   DatabaseHealthError,
-} from '../../interfaces/database.interface';
-import { issuers, badgeClasses, assertions } from './schema';
-import { logger } from '../../../../utils/logging/logger.service';
+} from "../../interfaces/database.interface";
+import { issuers, badgeClasses, assertions } from "./schema";
+import { logger } from "../../../../utils/logging/logger.service";
 
 export class PostgresqlDatabase implements DatabaseInterface {
   private client: postgres.Sql | null = null;
@@ -42,20 +42,20 @@ export class PostgresqlDatabase implements DatabaseInterface {
     try {
       // Validate connection string before creating client
       if (
-        typeof this.config['connectionString'] !== 'string' ||
-        !this.config['connectionString']
+        typeof this.config["connectionString"] !== "string" ||
+        !this.config["connectionString"]
       ) {
         const error = new Error(
-          'Invalid or missing PostgreSQL connection string in configuration'
+          "Invalid or missing PostgreSQL connection string in configuration",
         );
         logger.error(
-          'Invalid or missing PostgreSQL connection string in configuration'
+          "Invalid or missing PostgreSQL connection string in configuration",
         );
         this.lastError = this.toSerializableError(error);
         throw error;
       }
 
-      this.client = postgres(this.config['connectionString']);
+      this.client = postgres(this.config["connectionString"]);
       this.db = drizzle(this.client);
       this.connected = true;
       this.connectionStartedAt = Date.now();
@@ -64,7 +64,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       const connectionError =
         error instanceof Error ? error : new Error(String(error));
       this.lastError = this.toSerializableError(connectionError);
-      logger.error('Failed to connect to PostgreSQL database', {
+      logger.error("Failed to connect to PostgreSQL database", {
         error: connectionError,
       });
       throw connectionError;
@@ -76,7 +76,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
     try {
       // Ensure the client exists and has an end method before trying to end the connection
-      if (this.client && typeof this.client.end === 'function') {
+      if (this.client && typeof this.client.end === "function") {
         await this.client.end();
       }
       this.client = null;
@@ -87,7 +87,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       const disconnectionError =
         error instanceof Error ? error : new Error(String(error));
       this.lastError = this.toSerializableError(disconnectionError);
-      logger.error('Failed to disconnect from PostgreSQL database', {
+      logger.error("Failed to disconnect from PostgreSQL database", {
         error: disconnectionError,
       });
       throw disconnectionError;
@@ -100,7 +100,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   private ensureConnected(): void {
     if (!this.connected || !this.db) {
-      throw new Error('Database is not connected');
+      throw new Error("Database is not connected");
     }
   }
 
@@ -120,7 +120,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
   }
 
   // Issuer operations
-  async createIssuer(issuer: Omit<Issuer, 'id'>): Promise<Issuer> {
+  async createIssuer(issuer: Omit<Issuer, "id">): Promise<Issuer> {
     this.ensureConnected();
 
     // Extract fields that are part of the schema
@@ -141,11 +141,11 @@ export class PostgresqlDatabase implements DatabaseInterface {
       email: email as string | null,
       description: description as string | null,
       image:
-        typeof image === 'string'
+        typeof image === "string"
           ? image
           : image
-          ? JSON.stringify(image)
-          : undefined,
+            ? JSON.stringify(image)
+            : undefined,
       publicKey: publicKey ? JSON.stringify(publicKey) : undefined,
       additionalFields:
         Object.keys(additionalFields).length > 0 ? additionalFields : undefined,
@@ -156,7 +156,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       .returning();
 
     if (!result[0]) {
-      throw new Error('Failed to create issuer');
+      throw new Error("Failed to create issuer");
     }
 
     // Combine the database record with additional fields to form the complete Issuer object
@@ -201,7 +201,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   async updateIssuer(
     id: Shared.IRI,
-    issuer: Partial<Issuer>
+    issuer: Partial<Issuer>,
   ): Promise<Issuer | null> {
     this.ensureConnected();
 
@@ -218,15 +218,15 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
     // Prepare update data
     const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData['name'] = name;
-    if (url !== undefined) updateData['url'] = url as string;
-    if (email !== undefined) updateData['email'] = email;
-    if (description !== undefined) updateData['description'] = description;
+    if (name !== undefined) updateData["name"] = name;
+    if (url !== undefined) updateData["url"] = url as string;
+    if (email !== undefined) updateData["email"] = email;
+    if (description !== undefined) updateData["description"] = description;
     if (image !== undefined)
-      updateData['image'] =
-        typeof image === 'string' ? image : JSON.stringify(image);
+      updateData["image"] =
+        typeof image === "string" ? image : JSON.stringify(image);
     if (publicKey !== undefined)
-      updateData['publicKey'] = publicKey ? JSON.stringify(publicKey) : null;
+      updateData["publicKey"] = publicKey ? JSON.stringify(publicKey) : null;
 
     // If there are additional fields, merge them with existing ones
     if (Object.keys(additionalFields).length > 0) {
@@ -236,13 +236,13 @@ export class PostgresqlDatabase implements DatabaseInterface {
       // Use direct property assignment for better performance (O(n) vs O(n²))
       const existingAdditionalFields: Record<string, unknown> = {};
       const standardKeys = [
-        'id',
-        'name',
-        'url',
-        'email',
-        'description',
-        'image',
-        'publicKey',
+        "id",
+        "name",
+        "url",
+        "email",
+        "description",
+        "image",
+        "publicKey",
       ];
 
       for (const [key, value] of Object.entries(existingIssuer)) {
@@ -251,14 +251,14 @@ export class PostgresqlDatabase implements DatabaseInterface {
         }
       }
 
-      updateData['additionalFields'] = {
+      updateData["additionalFields"] = {
         ...existingAdditionalFields,
         ...additionalFields,
       };
     }
 
     // Add updatedAt timestamp
-    updateData['updatedAt'] = new Date();
+    updateData["updatedAt"] = new Date();
 
     const result = await this.db!.update(issuers)
       .set(updateData)
@@ -294,7 +294,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   // BadgeClass operations
   async createBadgeClass(
-    badgeClass: Omit<BadgeClass, 'id'>
+    badgeClass: Omit<BadgeClass, "id">,
   ): Promise<BadgeClass> {
     this.ensureConnected();
 
@@ -321,10 +321,10 @@ export class PostgresqlDatabase implements DatabaseInterface {
     const insertData = {
       issuerId: issuerId as string,
       name: name as string,
-      description: (description || '') as string,
+      description: (description || "") as string,
       image:
-        typeof image === 'string' ? image : image ? JSON.stringify(image) : '',
-      criteria: criteria ? JSON.stringify(criteria) : '{}',
+        typeof image === "string" ? image : image ? JSON.stringify(image) : "",
+      criteria: criteria ? JSON.stringify(criteria) : "{}",
       alignment: alignment ? JSON.stringify(alignment) : undefined,
       tags: tags ? JSON.stringify(tags) : undefined,
       additionalFields:
@@ -336,7 +336,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       .returning();
 
     if (!result[0]) {
-      throw new Error('Failed to create badge class');
+      throw new Error("Failed to create badge class");
     }
 
     // Combine the database record with additional fields to form the complete BadgeClass object
@@ -387,7 +387,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   async getBadgeClassesByIssuer(
     issuerId: Shared.IRI,
-    _options?: DatabaseQueryOptions
+    _options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]> {
     this.ensureConnected();
 
@@ -410,13 +410,13 @@ export class PostgresqlDatabase implements DatabaseInterface {
           : undefined,
         tags: record.tags ? JSON.parse(record.tags as string) : undefined,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
   async updateBadgeClass(
     id: Shared.IRI,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null> {
     this.ensureConnected();
 
@@ -434,17 +434,17 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
     // Prepare update data
     const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData['name'] = name;
-    if (description !== undefined) updateData['description'] = description;
+    if (name !== undefined) updateData["name"] = name;
+    if (description !== undefined) updateData["description"] = description;
     if (image !== undefined)
-      updateData['image'] =
-        typeof image === 'string' ? image : JSON.stringify(image);
+      updateData["image"] =
+        typeof image === "string" ? image : JSON.stringify(image);
     if (criteria !== undefined)
-      updateData['criteria'] = criteria ? JSON.stringify(criteria) : null;
+      updateData["criteria"] = criteria ? JSON.stringify(criteria) : null;
     if (alignment !== undefined)
-      updateData['alignment'] = alignment ? JSON.stringify(alignment) : null;
+      updateData["alignment"] = alignment ? JSON.stringify(alignment) : null;
     if (tags !== undefined)
-      updateData['tags'] = tags ? JSON.stringify(tags) : null;
+      updateData["tags"] = tags ? JSON.stringify(tags) : null;
 
     // Update issuer if provided
     if (issuer !== undefined) {
@@ -453,7 +453,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       if (!issuerExists) {
         throw new Error(`Issuer with ID ${issuerId} does not exist`);
       }
-      updateData['issuerId'] = issuerId as string;
+      updateData["issuerId"] = issuerId as string;
     }
 
     // If there are additional fields, merge them with existing ones
@@ -464,14 +464,14 @@ export class PostgresqlDatabase implements DatabaseInterface {
       // Use direct property assignment for better performance (O(n) vs O(n²))
       const existingAdditionalFields: Record<string, unknown> = {};
       const standardKeys = [
-        'id',
-        'issuer',
-        'name',
-        'description',
-        'image',
-        'criteria',
-        'alignment',
-        'tags',
+        "id",
+        "issuer",
+        "name",
+        "description",
+        "image",
+        "criteria",
+        "alignment",
+        "tags",
       ];
 
       for (const [key, value] of Object.entries(existingBadgeClass)) {
@@ -480,14 +480,14 @@ export class PostgresqlDatabase implements DatabaseInterface {
         }
       }
 
-      updateData['additionalFields'] = {
+      updateData["additionalFields"] = {
         ...existingAdditionalFields,
         ...additionalFields,
       };
     }
 
     // Add updatedAt timestamp
-    updateData['updatedAt'] = new Date();
+    updateData["updatedAt"] = new Date();
 
     const result = await this.db!.update(badgeClasses)
       .set(updateData)
@@ -525,7 +525,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
   }
 
   // Assertion operations
-  async createAssertion(assertion: Omit<Assertion, 'id'>): Promise<Assertion> {
+  async createAssertion(assertion: Omit<Assertion, "id">): Promise<Assertion> {
     this.ensureConnected();
 
     // Extract fields that are part of the schema
@@ -556,7 +556,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       if (value instanceof Date) {
         return isNaN(value.getTime()) ? undefined : value;
       }
-      if (typeof value === 'string' || typeof value === 'number') {
+      if (typeof value === "string" || typeof value === "number") {
         try {
           const dateObj = new Date(value);
           if (isNaN(dateObj.getTime())) {
@@ -604,7 +604,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       .returning();
 
     if (!result[0]) {
-      throw new Error('Failed to create assertion');
+      throw new Error("Failed to create assertion");
     }
 
     // Combine the database record with additional fields to form the complete Assertion object
@@ -659,7 +659,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   async getAssertionsByBadgeClass(
     badgeClassId: Shared.IRI,
-    _options?: DatabaseQueryOptions
+    _options?: DatabaseQueryOptions,
   ): Promise<Assertion[]> {
     this.ensureConnected();
 
@@ -683,13 +683,13 @@ export class PostgresqlDatabase implements DatabaseInterface {
         revoked: record.revoked !== null ? Boolean(record.revoked) : undefined,
         revocationReason: record.revocationReason,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
   async getAssertionsByRecipient(
     recipientId: string,
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<Assertion[]> {
     this.ensureConnected();
 
@@ -709,7 +709,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
     const result = await this.db!.select()
       .from(assertions)
       .where(
-        sql`(${assertions.recipient}->>'identity' = ${recipientId}) OR (${assertions.recipient}->>'id' = ${recipientId})`
+        sql`(${assertions.recipient}->>'identity' = ${recipientId}) OR (${assertions.recipient}->>'id' = ${recipientId})`,
       )
       .limit(limit)
       .offset(offset);
@@ -730,13 +730,13 @@ export class PostgresqlDatabase implements DatabaseInterface {
         revoked: record.revoked !== null ? Boolean(record.revoked) : undefined,
         revocationReason: record.revocationReason,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
   async updateAssertion(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null> {
     this.ensureConnected();
 
@@ -756,19 +756,19 @@ export class PostgresqlDatabase implements DatabaseInterface {
     // Prepare update data
     const updateData: Record<string, unknown> = {};
     if (recipient !== undefined)
-      updateData['recipient'] = JSON.stringify(recipient);
-    if (issuedOn !== undefined) updateData['issuedOn'] = new Date(issuedOn);
+      updateData["recipient"] = JSON.stringify(recipient);
+    if (issuedOn !== undefined) updateData["issuedOn"] = new Date(issuedOn);
     if (expires !== undefined)
-      updateData['expires'] = expires ? new Date(expires) : null;
+      updateData["expires"] = expires ? new Date(expires) : null;
     if (evidence !== undefined)
-      updateData['evidence'] = evidence ? JSON.stringify(evidence) : null;
+      updateData["evidence"] = evidence ? JSON.stringify(evidence) : null;
     if (verification !== undefined)
-      updateData['verification'] = verification
+      updateData["verification"] = verification
         ? JSON.stringify(verification)
         : null;
-    if (revoked !== undefined) updateData['revoked'] = revoked;
+    if (revoked !== undefined) updateData["revoked"] = revoked;
     if (revocationReason !== undefined)
-      updateData['revocationReason'] = revocationReason;
+      updateData["revocationReason"] = revocationReason;
 
     // Update badge class if provided
     if (badgeClass !== undefined) {
@@ -777,7 +777,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
       if (!badgeClassExists) {
         throw new Error(`Badge class with ID ${badgeClassId} does not exist`);
       }
-      updateData['badgeClassId'] = badgeClassId as string;
+      updateData["badgeClassId"] = badgeClassId as string;
     }
 
     // If there are additional fields, merge them with existing ones
@@ -788,15 +788,15 @@ export class PostgresqlDatabase implements DatabaseInterface {
       // Use direct property assignment for better performance (O(n) vs O(n²))
       const existingAdditionalFields: Record<string, unknown> = {};
       const standardKeys = [
-        'id',
-        'badgeClass',
-        'recipient',
-        'issuedOn',
-        'expires',
-        'evidence',
-        'verification',
-        'revoked',
-        'revocationReason',
+        "id",
+        "badgeClass",
+        "recipient",
+        "issuedOn",
+        "expires",
+        "evidence",
+        "verification",
+        "revoked",
+        "revocationReason",
       ];
 
       for (const [key, value] of Object.entries(existingAssertion)) {
@@ -805,14 +805,14 @@ export class PostgresqlDatabase implements DatabaseInterface {
         }
       }
 
-      updateData['additionalFields'] = {
+      updateData["additionalFields"] = {
         ...existingAdditionalFields,
         ...additionalFields,
       };
     }
 
     // Add updatedAt timestamp
-    updateData['updatedAt'] = new Date();
+    updateData["updatedAt"] = new Date();
 
     const result = await this.db!.update(assertions)
       .set(updateData)
@@ -883,12 +883,12 @@ export class PostgresqlDatabase implements DatabaseInterface {
           ? JSON.parse(record.publicKey as string)
           : undefined,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
   async getAllBadgeClasses(
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]> {
     this.ensureConnected();
 
@@ -923,7 +923,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
           : undefined,
         tags: record.tags ? JSON.parse(record.tags as string) : undefined,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
@@ -962,7 +962,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
         revoked: record.revoked !== null ? Boolean(record.revoked) : undefined,
         revocationReason: record.revocationReason,
         ...((record.additionalFields as Record<string, unknown>) || {}),
-      })
+      }),
     );
   }
 
@@ -1006,7 +1006,7 @@ export class PostgresqlDatabase implements DatabaseInterface {
 
   getConfiguration(): Record<string, unknown> {
     return {
-      module: 'postgresql',
+      module: "postgresql",
       connected: this.connected,
       ...this.config,
     };
@@ -1025,6 +1025,6 @@ export class PostgresqlDatabase implements DatabaseInterface {
   }
 
   getModuleName(): string {
-    return 'postgresql';
+    return "postgresql";
   }
 }

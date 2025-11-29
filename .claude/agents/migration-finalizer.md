@@ -8,9 +8,11 @@ model: sonnet
 # Migration Finalizer Agent
 
 ## Purpose
+
 Finalizes a completed migration by creating a comprehensive PR, updating documentation, closing sub-issues, and preparing for merge.
 
 ## When to Use This Agent
+
 - After migration-executor completes successfully (Phase 4)
 - When migration is ready for review
 - To create PR and close out migration work
@@ -18,10 +20,12 @@ Finalizes a completed migration by creating a comprehensive PR, updating documen
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of migrated package
 - **Execution report path**: Path to execution report (optional, can gather info)
 
 Optional:
+
 - **Additional reviewers**: People to request reviews from
 - **PR labels**: Custom labels beyond 'migration'
 
@@ -41,12 +45,14 @@ Optional:
    - List dependencies
 
 3. **Get git information:**
+
    ```bash
    git log main..HEAD --oneline | wc -l  # Commit count
    git diff main...HEAD --stat  # Change summary
    ```
 
 4. **Find related issues:**
+
    ```bash
    git log main..HEAD --grep="Related to" | grep -o "#[0-9]*" | sort -u
    ```
@@ -61,6 +67,7 @@ Optional:
 ### Phase 2: Prepare for PR
 
 1. **Run final validation sweep:**
+
    ```bash
    bun install  # Ensure lockfile up to date
    bun run lint  # Final lint check
@@ -70,12 +77,14 @@ Optional:
    ```
 
 2. **Check for uncommitted changes:**
+
    ```bash
    git status
    # Should be clean
    ```
 
 3. **Ensure on migration branch:**
+
    ```bash
    git branch --show-current
    # Should be migrate/{package-name}
@@ -105,6 +114,7 @@ Migrates the `{package-name}` package from [standalone repository]({original-rep
 ## Migration Details
 
 ### Package Information
+
 - **Package**: @rollercoaster-dev/{package-name}@{version}
 - **Original Repository**: {url}
 - **New Location**: `packages/{package-name}/`
@@ -114,6 +124,7 @@ Migrates the `{package-name}` package from [standalone repository]({original-rep
 ### What Changed
 
 #### Bun Integration
+
 - ✅ Configured `packageManager: "bun@1.3.0"`
 - ✅ Updated scripts for Bun runtime
 - ✅ Migrated to Bun test runner
@@ -121,6 +132,7 @@ Migrates the `{package-name}` package from [standalone repository]({original-rep
 - ✅ {Other Bun-specific changes}
 
 #### Monorepo Integration
+
 - ✅ Added to workspace configuration
 - ✅ Configured TypeScript project references
 - ✅ Added to Turborepo pipeline
@@ -128,18 +140,21 @@ Migrates the `{package-name}` package from [standalone repository]({original-rep
 - ✅ Added workspace dependencies: {list}
 
 #### Dependency Resolution
+
 - ✅ Resolved {n} version conflicts
   - {dependency}: v{old} → v{new}
 - ✅ Added workspace dependencies
 - ✅ Removed {n} duplicate dependencies
 
 #### Code Changes
+
 - ✅ Fixed {n} TypeScript strict mode errors
 - ✅ Updated imports for ESM compatibility
 - ✅ {Other code adaptations}
 - ✅ Removed standalone repository artifacts
 
 #### Documentation
+
 - ✅ Updated package README for monorepo context
 - ✅ Updated CLAUDE.md migration status
 - ✅ Updated main README.md
@@ -150,38 +165,48 @@ Migrates the `{package-name}` package from [standalone repository]({original-rep
 
 #### Tests
 ```
+
 ✅ All tests passing: {n}/{n} tests in {m} files
-   Execution time: {time}ms
+Execution time: {time}ms
+
 ```
 
 #### Coverage
 ```
+
 ✅ Coverage maintained/improved:
-   Lines: {pct}% ({comparison})
-   Statements: {pct}% ({comparison})
-   Functions: {pct}% ({comparison})
-   Branches: {pct}% ({comparison})
+Lines: {pct}% ({comparison})
+Statements: {pct}% ({comparison})
+Functions: {pct}% ({comparison})
+Branches: {pct}% ({comparison})
+
 ```
 
 #### Build
 ```
+
 ✅ Build successful
-   Output: packages/{package-name}/dist/
-   {n} declaration files generated
+Output: packages/{package-name}/dist/
+{n} declaration files generated
+
 ```
 
 #### Type Checking
 ```
+
 ✅ Type checking passes
-   0 errors across {n} files
+0 errors across {n} files
+
 ```
 
 #### Integration
 ```
+
 ✅ Full monorepo build successful
-   All packages build correctly
-   TypeScript project references working
-```
+All packages build correctly
+TypeScript project references working
+
+````
 
 ### Migration Commits
 
@@ -242,7 +267,7 @@ bun run lint
 bun run type-check
 bun test
 bun run build
-```
+````
 
 ### Testing Package Usage
 
@@ -271,6 +296,7 @@ Detailed migration plan available at: [`docs/migrations/MIGRATION_PLAN_{package}
 
 **Closes**: #{parent-issue}
 **Sub-Issues (Tracking)**:
+
 - #{issue}: Phase 1: Initial Setup ✅
 - #{issue}: Phase 2: Dependency Resolution ✅
 - #{issue}: Phase 3: Bun Integration ✅
@@ -287,7 +313,8 @@ Detailed migration plan available at: [`docs/migrations/MIGRATION_PLAN_{package}
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>
-```
+
+````
 
 ### Phase 4: Create Pull Request
 
@@ -303,9 +330,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>
      --head migrate/{package-name} \
      --label migration \
      --label {package-type}
-   ```
+````
 
 2. **Request reviews (if specified):**
+
    ```bash
    gh pr edit --add-reviewer {reviewer1},{reviewer2}
    ```
@@ -320,6 +348,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 For each sub-issue:
 
 1. **Add completion comment:**
+
    ```bash
    gh issue comment {issue-number} --body "✅ Phase complete
 
@@ -334,6 +363,7 @@ For each sub-issue:
    ```
 
 2. **Close the issue:**
+
    ```bash
    gh issue close {issue-number} --reason completed --comment "Completed as part of PR #{pr-number}"
    ```
@@ -345,6 +375,7 @@ For each sub-issue:
 ### Phase 6: Final Documentation Updates
 
 1. **Add PR link to migration plan:**
+
    ```bash
    # Add to top of docs/migrations/MIGRATION_PLAN_{package}.md
    # **PR**: #{pr-number}
@@ -408,6 +439,7 @@ All {n} sub-issues have been closed with completion comments and links to PR:
 ## Final Validation
 
 Before creating PR, validated:
+
 - ✅ All tests passing
 - ✅ Coverage maintained
 - ✅ Build successful
@@ -419,6 +451,7 @@ Before creating PR, validated:
 ## PR Review Checklist
 
 When reviewing this PR, check:
+
 - [ ] All tests pass in CI
 - [ ] Coverage meets thresholds
 - [ ] Bun integration correct
@@ -449,17 +482,20 @@ The {package-name} package has been successfully migrated to the Bun monorepo. R
 ## Tools Required
 
 **Readonly Tools:**
+
 - Read (execution report, package files, migration plan)
 - Grep (find issue numbers, gather information)
 - Bash (git commands, run validations)
 
 **Write Tools:**
+
 - Bash (gh CLI for PR and issue management, git push)
 - Edit (update documentation with PR links)
 
 ## Output Format
 
 Return:
+
 1. **Finalization report** with PR details
 2. **PR URL** for user to view
 3. **Next steps** (usually: wait for review)
@@ -494,6 +530,7 @@ If finalization fails:
 ## Success Criteria
 
 This agent is successful when:
+
 - PR created with comprehensive description
 - All sub-issues closed with proper comments
 - Documentation updated with PR links
@@ -504,6 +541,7 @@ This agent is successful when:
 ## Reusability
 
 This agent is designed to be called:
+
 - After migration-executor for every migration
 - Standalone if migration is complete but PR not created
 - To recreate PR if first attempt had issues

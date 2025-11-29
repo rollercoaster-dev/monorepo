@@ -1,13 +1,13 @@
-import type { AssetStorageInterface } from '../interfaces/asset-storage.interface';
-import type { AssetResolver } from '../interfaces/asset-resolver.interface';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { existsSync } from 'fs';
-import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/utils/logging/logger.service';
+import type { AssetStorageInterface } from "../interfaces/asset-storage.interface";
+import type { AssetResolver } from "../interfaces/asset-resolver.interface";
+import * as path from "path";
+import * as fs from "fs/promises";
+import { existsSync } from "fs";
+import { v4 as uuidv4 } from "uuid";
+import { logger } from "@/utils/logging/logger.service";
 
 const UPLOADS_DIR =
-  process.env['ASSETS_LOCAL_DIR'] || path.resolve(process.cwd(), 'uploads');
+  process.env["ASSETS_LOCAL_DIR"] || path.resolve(process.cwd(), "uploads");
 
 export class LocalAssetStorageAdapter
   implements AssetStorageInterface, AssetResolver
@@ -21,9 +21,9 @@ export class LocalAssetStorageAdapter
     if (!existsSync(UPLOADS_DIR)) {
       try {
         // Use Node.js built-in fs module for synchronous operation
-        require('fs').mkdirSync(UPLOADS_DIR, { recursive: true });
+        require("fs").mkdirSync(UPLOADS_DIR, { recursive: true });
       } catch (error) {
-        logger.error('Failed to create uploads directory', { error });
+        logger.error("Failed to create uploads directory", { error });
       }
     }
   }
@@ -31,9 +31,9 @@ export class LocalAssetStorageAdapter
   async store(
     fileBuffer: Buffer,
     filename: string,
-    _mimetype: string
+    _mimetype: string,
   ): Promise<string> {
-    const ext = path.extname(filename) || '';
+    const ext = path.extname(filename) || "";
     const safeName = `${uuidv4()}${ext}`;
     const filePath = path.join(UPLOADS_DIR, safeName);
     await fs.writeFile(filePath, fileBuffer);

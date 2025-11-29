@@ -5,10 +5,10 @@
  * It can be used to bootstrap the system with an initial admin API key.
  */
 
-import { RepositoryFactory } from '@/infrastructure/repository.factory';
-import { ApiKey } from '@/domains/auth/apiKey.entity';
-import { config } from '@/config/config';
-import { logger } from '@/utils/logging/logger.service';
+import { RepositoryFactory } from "@/infrastructure/repository.factory";
+import { ApiKey } from "@/domains/auth/apiKey.entity";
+import { config } from "@/config/config";
+import { logger } from "@/utils/logging/logger.service";
 
 /**
  * Display an important message to the user
@@ -19,11 +19,15 @@ import { logger } from '@/utils/logging/logger.service';
  */
 function displayImportantMessage(messages: string[]): void {
   // Using process.stdout.write to avoid linting errors with console.log
-  process.stdout.write('\n===========================================================\n');
+  process.stdout.write(
+    "\n===========================================================\n",
+  );
   for (const message of messages) {
     process.stdout.write(`${message}\n`);
   }
-  process.stdout.write('===========================================================\n\n');
+  process.stdout.write(
+    "===========================================================\n\n",
+  );
 }
 
 /**
@@ -38,7 +42,7 @@ async function generateAdminKey(): Promise<void> {
       sqliteFile: config.database.sqliteFile,
       sqliteBusyTimeout: config.database.sqliteBusyTimeout,
       sqliteSyncMode: config.database.sqliteSyncMode,
-      sqliteCacheSize: config.database.sqliteCacheSize
+      sqliteCacheSize: config.database.sqliteCacheSize,
     });
 
     logger.info(`Connected to ${config.database.type} database`);
@@ -48,40 +52,40 @@ async function generateAdminKey(): Promise<void> {
 
     // Create a new API key for the admin user
     const apiKey = ApiKey.create({
-      name: 'Admin API Key',
-      userId: 'admin',
-      description: 'API key for the admin user',
+      name: "Admin API Key",
+      userId: "admin",
+      description: "API key for the admin user",
       permissions: {
-        roles: ['admin'],
-        permissions: ['*'],
-        scope: 'admin'
-      }
+        roles: ["admin"],
+        permissions: ["*"],
+        scope: "admin",
+      },
     });
 
     // Save the API key
     const createdApiKey = await apiKeyRepository.create(apiKey);
 
     // Log the API key (without sensitive information)
-    logger.info('Admin API key generated successfully');
-    logger.info('API Key metadata:', {
+    logger.info("Admin API key generated successfully");
+    logger.info("API Key metadata:", {
       id: createdApiKey.id,
       name: createdApiKey.name,
       userId: createdApiKey.userId,
       description: createdApiKey.description,
-      permissions: createdApiKey.permissions
+      permissions: createdApiKey.permissions,
     });
 
     // Only log the actual key value to the console, not to the log files
     // This ensures the key is only shown once during generation
     displayImportantMessage([
-      'IMPORTANT: SAVE THIS API KEY - IT WILL NOT BE SHOWN AGAIN',
-      `API Key: ${createdApiKey.key}`
+      "IMPORTANT: SAVE THIS API KEY - IT WILL NOT BE SHOWN AGAIN",
+      `API Key: ${createdApiKey.key}`,
     ]);
 
     // Close the database connection
     await RepositoryFactory.close();
   } catch (error) {
-    logger.logError('Failed to generate admin API key', error as Error);
+    logger.logError("Failed to generate admin API key", error as Error);
     process.exit(1);
   }
 }

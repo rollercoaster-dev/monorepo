@@ -11,11 +11,7 @@
     </div>
 
     <!-- Error state -->
-    <div
-      v-if="error"
-      class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
-      role="alert"
-    >
+    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
       <p class="text-red-800">{{ error }}</p>
       <button
         class="mt-2 text-sm text-red-600 hover:text-red-800 underline"
@@ -38,10 +34,7 @@
       <template #empty>
         <div class="text-center py-8">
           <p class="text-gray-500 mb-4">No badges found.</p>
-          <RouterLink
-            to="/badges/create"
-            class="text-blue-600 hover:text-blue-800 underline"
-          >
+          <RouterLink to="/badges/create" class="text-blue-600 hover:text-blue-800 underline">
             Create your first badge
           </RouterLink>
         </div>
@@ -51,40 +44,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { BadgeClassList } from 'openbadges-ui';
-import { badgeApi, type BadgeClass } from '@/services/badgeApi';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { BadgeClassList } from 'openbadges-ui'
+import { badgeApi, type BadgeClass } from '@/services/badgeApi'
 
-const router = useRouter();
+const router = useRouter()
 
 // State
-const badgeClasses = ref<BadgeClass[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const badgeClasses = ref<BadgeClass[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
 
 // Load badge classes
 async function loadBadgeClasses() {
-  loading.value = true;
-  error.value = null;
+  loading.value = true
+  error.value = null
 
   try {
-    badgeClasses.value = await badgeApi.getBadgeClasses();
+    badgeClasses.value = await badgeApi.getBadgeClasses()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load badges';
+    error.value = err instanceof Error ? err.message : 'Failed to load badges'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // Handle badge class click - navigate to detail page
 function handleBadgeClassClick(badgeClass: BadgeClass) {
-  const id = encodeURIComponent(badgeClass.id);
-  router.push(`/badges/${id}`);
+  const id = encodeURIComponent(badgeClass.id)
+  router.push(`/badges/${id}`)
 }
 
 // Load data on mount
 onMounted(() => {
-  loadBadgeClasses();
-});
+  loadBadgeClasses()
+})
 </script>

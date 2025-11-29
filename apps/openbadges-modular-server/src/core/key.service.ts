@@ -12,11 +12,11 @@ import {
   KeyType,
   detectKeyType,
   Cryptosuite,
-} from '../utils/crypto/signature';
-import { logger } from '../utils/logging/logger.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
+} from "../utils/crypto/signature";
+import { logger } from "../utils/logging/logger.service";
+import * as fs from "fs";
+import * as path from "path";
+import * as crypto from "crypto";
 
 /**
  * JSON Web Key (JWK) format as defined in RFC 7517
@@ -30,7 +30,7 @@ export interface JsonWebKey {
   x5u?: string; // X.509 URL
   x5c?: string[]; // X.509 Certificate Chain
   x5t?: string; // X.509 Certificate SHA-1 Thumbprint
-  'x5t#S256'?: string; // X.509 Certificate SHA-256 Thumbprint
+  "x5t#S256"?: string; // X.509 Certificate SHA-256 Thumbprint
 
   // RSA-specific parameters
   n?: string; // Modulus
@@ -52,9 +52,9 @@ export interface JsonWebKeySet {
  * Key status for rotation management
  */
 export enum KeyStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  REVOKED = 'revoked',
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  REVOKED = "revoked",
 }
 
 /**
@@ -111,7 +111,7 @@ export class KeyService {
       // Define and ensure keys directory exists - respect KEYS_DIR env var
       KeyService.KEYS_DIR = process.env.KEYS_DIR
         ? path.resolve(process.env.KEYS_DIR)
-        : path.join(process.cwd(), 'keys');
+        : path.join(process.cwd(), "keys");
       const dirExists = await KeyService.fileExists(KeyService.KEYS_DIR);
       if (!dirExists) {
         await fs.promises.mkdir(KeyService.KEYS_DIR, { recursive: true });
@@ -121,7 +121,7 @@ export class KeyService {
       await KeyService.loadKeys();
 
       // If no default key pair exists, generate one
-      if (!keyPairs.has('default')) {
+      if (!keyPairs.has("default")) {
         const keyPairData = generateKeyPair();
         const metadata: KeyMetadata = {
           created: new Date().toISOString(),
@@ -136,18 +136,18 @@ export class KeyService {
           metadata,
           status: KeyStatus.ACTIVE,
         };
-        keyPairs.set('default', defaultKeyPair);
+        keyPairs.set("default", defaultKeyPair);
 
         // Save the new key pair
-        await KeyService.saveKeyPair('default', defaultKeyPair);
+        await KeyService.saveKeyPair("default", defaultKeyPair);
 
-        logger.info('Generated and saved default RSA key pair');
+        logger.info("Generated and saved default RSA key pair");
       } else {
-        logger.info('Loaded existing default key pair');
+        logger.info("Loaded existing default key pair");
       }
     } catch (error) {
-      logger.error('Failed to initialize key service', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to initialize key service", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -160,22 +160,22 @@ export class KeyService {
     try {
       // Ensure KEYS_DIR is defined before proceeding
       if (!KeyService.KEYS_DIR) {
-        throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+        throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
       }
 
       // Check if default key pair exists
-      const publicKeyPath = path.join(KeyService.KEYS_DIR, 'default.pub');
-      const privateKeyPath = path.join(KeyService.KEYS_DIR, 'default.key');
+      const publicKeyPath = path.join(KeyService.KEYS_DIR, "default.pub");
+      const privateKeyPath = path.join(KeyService.KEYS_DIR, "default.key");
 
       const publicKeyExists = await KeyService.fileExists(publicKeyPath);
       const privateKeyExists = await KeyService.fileExists(privateKeyPath);
       if (publicKeyExists && privateKeyExists) {
         // Load default key pair
-        const publicKey = await fs.promises.readFile(publicKeyPath, 'utf8');
-        const privateKey = await fs.promises.readFile(privateKeyPath, 'utf8');
+        const publicKey = await fs.promises.readFile(publicKeyPath, "utf8");
+        const privateKey = await fs.promises.readFile(privateKeyPath, "utf8");
         const metadataPath = path.join(
           KeyService.KEYS_DIR,
-          'default.meta.json'
+          "default.meta.json",
         );
 
         let keyType: KeyType;
@@ -187,19 +187,19 @@ export class KeyService {
           try {
             const metadataContent = await fs.promises.readFile(
               metadataPath,
-              'utf8'
+              "utf8",
             );
             const metadata = JSON.parse(metadataContent);
             keyType = metadata.keyType;
             cryptosuite = metadata.cryptosuite;
-            logger.info('Loaded key metadata from file');
+            logger.info("Loaded key metadata from file");
           } catch (error) {
             // If metadata file exists but can't be parsed, fall back to detection
             logger.warn(
-              'Failed to parse key metadata, falling back to detection'
+              "Failed to parse key metadata, falling back to detection",
             );
-            logger.error('Metadata parsing error', {
-              error: error instanceof Error ? error.message : 'Unknown error',
+            logger.error("Metadata parsing error", {
+              error: error instanceof Error ? error.message : "Unknown error",
             });
             keyType = detectKeyType(publicKey);
             cryptosuite =
@@ -233,13 +233,13 @@ export class KeyService {
             await fs.promises.writeFile(
               metadataPath,
               JSON.stringify(metadata, null, 2),
-              { mode: 0o644 }
+              { mode: 0o644 },
             );
-            logger.info('Created metadata file for existing key');
+            logger.info("Created metadata file for existing key");
           } catch (error) {
-            logger.warn('Failed to create metadata file for existing key');
-            logger.error('Metadata creation error', {
-              error: error instanceof Error ? error.message : 'Unknown error',
+            logger.warn("Failed to create metadata file for existing key");
+            logger.error("Metadata creation error", {
+              error: error instanceof Error ? error.message : "Unknown error",
             });
           }
         }
@@ -250,7 +250,7 @@ export class KeyService {
           try {
             const metadataContent = await fs.promises.readFile(
               metadataPath,
-              'utf8'
+              "utf8",
             );
             metadata = JSON.parse(metadataContent);
           } catch (_error) {
@@ -271,7 +271,7 @@ export class KeyService {
           };
         }
 
-        keyPairs.set('default', {
+        keyPairs.set("default", {
           publicKey,
           privateKey,
           keyType,
@@ -287,8 +287,8 @@ export class KeyService {
 
       // Find all key IDs (files ending with .pub)
       for (const file of files) {
-        if (file.endsWith('.pub') && file !== 'default.pub') {
-          const keyId = file.replace('.pub', '');
+        if (file.endsWith(".pub") && file !== "default.pub") {
+          const keyId = file.replace(".pub", "");
           keyIds.add(keyId);
         }
       }
@@ -301,11 +301,11 @@ export class KeyService {
         const publicKeyExists = await KeyService.fileExists(publicKeyPath);
         const privateKeyExists = await KeyService.fileExists(privateKeyPath);
         if (publicKeyExists && privateKeyExists) {
-          const publicKey = await fs.promises.readFile(publicKeyPath, 'utf8');
-          const privateKey = await fs.promises.readFile(privateKeyPath, 'utf8');
+          const publicKey = await fs.promises.readFile(publicKeyPath, "utf8");
+          const privateKey = await fs.promises.readFile(privateKeyPath, "utf8");
           const metadataPath = path.join(
             KeyService.KEYS_DIR,
-            `${keyId}.meta.json`
+            `${keyId}.meta.json`,
           );
 
           let keyType: KeyType;
@@ -317,7 +317,7 @@ export class KeyService {
             try {
               const metadataContent = await fs.promises.readFile(
                 metadataPath,
-                'utf8'
+                "utf8",
               );
               const metadata = JSON.parse(metadataContent);
               keyType = metadata.keyType;
@@ -326,8 +326,8 @@ export class KeyService {
             } catch (error) {
               // If metadata file exists but can't be parsed, fall back to detection
               logger.warn(`Failed to parse metadata for key: ${keyId}`);
-              logger.error('Metadata parsing error', {
-                error: error instanceof Error ? error.message : 'Unknown error',
+              logger.error("Metadata parsing error", {
+                error: error instanceof Error ? error.message : "Unknown error",
               });
               keyType = detectKeyType(publicKey);
               cryptosuite =
@@ -361,13 +361,13 @@ export class KeyService {
               await fs.promises.writeFile(
                 metadataPath,
                 JSON.stringify(metadata, null, 2),
-                { mode: 0o644 }
+                { mode: 0o644 },
               );
               logger.info(`Created metadata file for existing key: ${keyId}`);
             } catch (error) {
               logger.warn(`Failed to create metadata file for key: ${keyId}`);
-              logger.error('Metadata creation error', {
-                error: error instanceof Error ? error.message : 'Unknown error',
+              logger.error("Metadata creation error", {
+                error: error instanceof Error ? error.message : "Unknown error",
               });
             }
           }
@@ -378,7 +378,7 @@ export class KeyService {
             try {
               const metadataContent = await fs.promises.readFile(
                 metadataPath,
-                'utf8'
+                "utf8",
               );
               metadata = JSON.parse(metadataContent);
             } catch (_error) {
@@ -410,8 +410,8 @@ export class KeyService {
         }
       }
     } catch (error) {
-      logger.error('Failed to load keys', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to load keys", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -424,12 +424,12 @@ export class KeyService {
    */
   private static async saveKeyPair(
     id: string,
-    keyPair: KeyPair
+    keyPair: KeyPair,
   ): Promise<void> {
     try {
       // Ensure KEYS_DIR is defined before proceeding
       if (!KeyService.KEYS_DIR) {
-        throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+        throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
       }
 
       const publicKeyPath = path.join(KeyService.KEYS_DIR, `${id}.pub`);
@@ -458,13 +458,13 @@ export class KeyService {
       await fs.promises.writeFile(
         metadataPath,
         JSON.stringify(metadata, null, 2),
-        { mode: 0o644 }
+        { mode: 0o644 },
       );
 
       logger.info(`Saved key pair with ID: ${id} (${keyPair.keyType})`);
     } catch (error) {
       logger.error(`Failed to save key pair with ID: ${id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -475,9 +475,9 @@ export class KeyService {
    * @returns The default public key
    */
   static async getDefaultPublicKey(): Promise<string> {
-    const keyPair = keyPairs.get('default');
+    const keyPair = keyPairs.get("default");
     if (!keyPair) {
-      throw new Error('Default key pair not found');
+      throw new Error("Default key pair not found");
     }
     return keyPair.publicKey;
   }
@@ -487,9 +487,9 @@ export class KeyService {
    * @returns The default private key
    */
   static async getDefaultPrivateKey(): Promise<string> {
-    const keyPair = keyPairs.get('default');
+    const keyPair = keyPairs.get("default");
     if (!keyPair) {
-      throw new Error('Default key pair not found');
+      throw new Error("Default key pair not found");
     }
     return keyPair.privateKey;
   }
@@ -500,9 +500,9 @@ export class KeyService {
    * @returns The signature
    */
   static async signWithDefaultKey(data: string): Promise<string> {
-    const keyPair = keyPairs.get('default');
+    const keyPair = keyPairs.get("default");
     if (!keyPair) {
-      throw new Error('Default key pair not found');
+      throw new Error("Default key pair not found");
     }
     return signData(data, keyPair.privateKey, keyPair.keyType);
   }
@@ -515,11 +515,11 @@ export class KeyService {
    */
   static async verifyWithDefaultKey(
     data: string,
-    signature: string
+    signature: string,
   ): Promise<boolean> {
-    const keyPair = keyPairs.get('default');
+    const keyPair = keyPairs.get("default");
     if (!keyPair) {
-      throw new Error('Default key pair not found');
+      throw new Error("Default key pair not found");
     }
     return verifySignature(data, signature, keyPair.publicKey, keyPair.keyType);
   }
@@ -530,7 +530,7 @@ export class KeyService {
    * @returns True if the key ID exists, false otherwise.
    */
   static async keyExists(id: string): Promise<boolean> {
-    if (id === 'default') {
+    if (id === "default") {
       // 'default' key is handled by getPublicKey/getPrivateKey which ensure it's loaded or generated.
       // This method is for checking existence of *specific, non-default* keys.
       // The 'default' key is always assumed to exist or be creatable by initialize().
@@ -544,7 +544,7 @@ export class KeyService {
 
     // If not in memory, check if the key files exist on disk
     if (!KeyService.KEYS_DIR) {
-      throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+      throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
     }
 
     const publicKeyPath = path.join(KeyService.KEYS_DIR, `${id}.pub`);
@@ -564,7 +564,7 @@ export class KeyService {
    */
   static async generateKeyPair(
     id: string,
-    keyType: KeyType = KeyType.RSA
+    keyType: KeyType = KeyType.RSA,
   ): Promise<KeyPair> {
     try {
       // Generate the key pair with the specified type
@@ -609,7 +609,7 @@ export class KeyService {
       return keyPair;
     } catch (error) {
       logger.error(`Failed to generate key pair with ID: ${id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -629,14 +629,14 @@ export class KeyService {
     if (!keyPair) {
       // Ensure KEYS_DIR is defined before proceeding
       if (!KeyService.KEYS_DIR) {
-        throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+        throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
       }
 
       // Try to load the key from storage
       const publicKeyPath = path.join(KeyService.KEYS_DIR, `${id}.pub`);
       const publicKeyExists = await KeyService.fileExists(publicKeyPath);
       if (publicKeyExists) {
-        return await fs.promises.readFile(publicKeyPath, 'utf8');
+        return await fs.promises.readFile(publicKeyPath, "utf8");
       }
       throw new Error(`Key pair with ID ${id} not found`);
     }
@@ -657,14 +657,14 @@ export class KeyService {
     if (!keyPair) {
       // Ensure KEYS_DIR is defined before proceeding
       if (!KeyService.KEYS_DIR) {
-        throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+        throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
       }
 
       // Try to load the key from storage
       const privateKeyPath = path.join(KeyService.KEYS_DIR, `${id}.key`);
       const privateKeyExists = await KeyService.fileExists(privateKeyPath);
       if (privateKeyExists) {
-        return await fs.promises.readFile(privateKeyPath, 'utf8');
+        return await fs.promises.readFile(privateKeyPath, "utf8");
       }
       throw new Error(`Key pair with ID ${id} not found`);
     }
@@ -688,12 +688,12 @@ export class KeyService {
     try {
       // Ensure KEYS_DIR is defined before proceeding
       if (!KeyService.KEYS_DIR) {
-        throw new Error('KeyService not initialized. KEYS_DIR is undefined.');
+        throw new Error("KeyService not initialized. KEYS_DIR is undefined.");
       }
 
       // Don't allow deleting the default key pair
-      if (id === 'default') {
-        throw new Error('Cannot delete the default key pair');
+      if (id === "default") {
+        throw new Error("Cannot delete the default key pair");
       }
 
       // Remove from memory
@@ -716,7 +716,7 @@ export class KeyService {
       return removed;
     } catch (error) {
       logger.error(`Failed to delete key pair with ID: ${id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -730,7 +730,7 @@ export class KeyService {
    */
   static async rotateKey(
     keyId: string,
-    newKeyType?: KeyType
+    newKeyType?: KeyType,
   ): Promise<KeyPair> {
     try {
       const existingKeyPair = keyPairs.get(keyId);
@@ -757,13 +757,13 @@ export class KeyService {
       const keyType = newKeyType || existingKeyPair.keyType;
       const newKeyPair = await KeyService.generateKeyPair(
         rotatedKeyId,
-        keyType
+        keyType,
       );
 
       // If this was the default key, update the default to point to the new key
-      if (keyId === 'default') {
+      if (keyId === "default") {
         // Simply repoint the in-memory alias; no extra disk copy.
-        keyPairs.set('default', newKeyPair);
+        keyPairs.set("default", newKeyPair);
       }
 
       logger.info(`Key rotated successfully`, {
@@ -775,7 +775,7 @@ export class KeyService {
       return newKeyPair;
     } catch (error) {
       logger.error(`Failed to rotate key ${keyId}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -811,7 +811,7 @@ export class KeyService {
       });
     } catch (error) {
       logger.error(`Failed to set key status for ${keyId}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -850,22 +850,22 @@ export class KeyService {
   static convertPemToJwk(
     publicKeyPem: string,
     keyType: KeyType,
-    keyId: string
+    keyId: string,
   ): JsonWebKey {
     try {
       const publicKeyObject = crypto.createPublicKey(publicKeyPem);
 
       switch (keyType) {
         case KeyType.RSA: {
-          const keyDetails = publicKeyObject.export({ format: 'jwk' }) as {
+          const keyDetails = publicKeyObject.export({ format: "jwk" }) as {
             n: string;
             e: string;
           };
           return {
-            kty: 'RSA',
-            use: 'sig',
-            key_ops: ['verify'],
-            alg: 'RS256',
+            kty: "RSA",
+            use: "sig",
+            key_ops: ["verify"],
+            alg: "RS256",
             kid: keyId,
             n: keyDetails.n,
             e: keyDetails.e,
@@ -873,28 +873,28 @@ export class KeyService {
         }
 
         case KeyType.Ed25519: {
-          const keyDetails = publicKeyObject.export({ format: 'jwk' }) as {
+          const keyDetails = publicKeyObject.export({ format: "jwk" }) as {
             x: string;
           };
           return {
-            kty: 'OKP',
-            use: 'sig',
-            key_ops: ['verify'],
-            alg: 'EdDSA',
+            kty: "OKP",
+            use: "sig",
+            key_ops: ["verify"],
+            alg: "EdDSA",
             kid: keyId,
-            crv: 'Ed25519',
+            crv: "Ed25519",
             x: keyDetails.x,
           };
         }
 
         default:
           throw new Error(
-            `Unsupported key type for JWK conversion: ${keyType}`
+            `Unsupported key type for JWK conversion: ${keyType}`,
           );
       }
     } catch (error) {
       logger.error(`Failed to convert PEM to JWK for key ${keyId}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -914,7 +914,7 @@ export class KeyService {
           const jwk = KeyService.convertPemToJwk(
             keyPair.publicKey,
             keyPair.keyType,
-            keyId
+            keyId,
           );
           jwks.push(jwk);
         } catch (error) {

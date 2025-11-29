@@ -4,15 +4,14 @@
  * This provides a wrapper around the Rollercoaster.dev logger package,
  * exposing the standard logging interface used throughout the application.
  */
-import type {
-  LogLevel} from '@rollercoaster-dev/rd-logger';
+import type { LogLevel } from "@rollercoaster-dev/rd-logger";
 import {
   Logger as RdLogger,
   QueryLogger as RdQueryLogger, // Renamed to avoid conflict
   DEFAULT_QUERY_LOGGER_CONFIG,
   type QueryLogEntry, // Import the type for return values
-} from '@rollercoaster-dev/rd-logger';
-import { config } from '../../config/config';
+} from "@rollercoaster-dev/rd-logger";
+import { config } from "../../config/config";
 
 // Declare loggers but initialize lazily
 let rdLogger: RdLogger | null = null;
@@ -54,27 +53,45 @@ export type LogContext = Record<string, unknown>;
 
 // Provide the same interface as before but use the new logger
 export const logger = {
-  debug(msg: string, ctx?: LogContext): void { getLoggerInstance().debug(msg, ctx); },
-  info(msg: string, ctx?: LogContext): void { getLoggerInstance().info(msg, ctx); },
-  warn(msg: string, ctx?: LogContext): void { getLoggerInstance().warn(msg, ctx); },
-  error(msg: string, ctx?: LogContext): void { getLoggerInstance().error(msg, ctx); },
-  fatal(msg: string, ctx?: LogContext): void { getLoggerInstance().error(msg, ctx); }, // Note: RdLogger might not have 'fatal', so using 'error'
+  debug(msg: string, ctx?: LogContext): void {
+    getLoggerInstance().debug(msg, ctx);
+  },
+  info(msg: string, ctx?: LogContext): void {
+    getLoggerInstance().info(msg, ctx);
+  },
+  warn(msg: string, ctx?: LogContext): void {
+    getLoggerInstance().warn(msg, ctx);
+  },
+  error(msg: string, ctx?: LogContext): void {
+    getLoggerInstance().error(msg, ctx);
+  },
+  fatal(msg: string, ctx?: LogContext): void {
+    getLoggerInstance().error(msg, ctx);
+  }, // Note: RdLogger might not have 'fatal', so using 'error'
 
   // Log an error object directly
-  logError(msg: string, error: Error, additionalContext: LogContext = {}): void {
+  logError(
+    msg: string,
+    error: Error,
+    additionalContext: LogContext = {},
+  ): void {
     // Call the adapter's error method so spies work
     logger.error(msg, { ...additionalContext, error });
-  }
+  },
 };
 
 // Export the query logger instance
 export const queryLogger = {
   // Provide methods that ensure the instance is created before use
-  logQuery: (...args: Parameters<RdQueryLogger['logQuery']>): void => getQueryLoggerInstance().logQuery(...args),
+  logQuery: (...args: Parameters<RdQueryLogger["logQuery"]>): void =>
+    getQueryLoggerInstance().logQuery(...args),
   getLogs: (): QueryLogEntry[] => getQueryLoggerInstance().getLogs(),
-  getSlowQueries: (...args: Parameters<RdQueryLogger['getSlowQueries']>): QueryLogEntry[] => getQueryLoggerInstance().getSlowQueries(...args),
+  getSlowQueries: (
+    ...args: Parameters<RdQueryLogger["getSlowQueries"]>
+  ): QueryLogEntry[] => getQueryLoggerInstance().getSlowQueries(...args),
   clearLogs: (): void => getQueryLoggerInstance().clearLogs(),
-  configure: (...args: Parameters<RdQueryLogger['configure']>): void => getQueryLoggerInstance().configure(...args),
+  configure: (...args: Parameters<RdQueryLogger["configure"]>): void =>
+    getQueryLoggerInstance().configure(...args),
   getStats: (): {
     totalQueries: number;
     slowQueries: number;

@@ -28,10 +28,12 @@ Implements code changes following a development plan, making atomic commits that
 ## Inputs
 
 The user should provide:
+
 - **Issue number**: The GitHub issue being implemented
 - **Development plan**: From issue-researcher (or path to it)
 
 Optional:
+
 - **Start from step**: If resuming partial work
 - **Skip tests**: For draft implementations
 
@@ -47,6 +49,7 @@ Optional:
 4. **No defensive coding for impossible cases** - Trust internal code
 
 **Before writing ANY code, ask:**
+
 - Is this explicitly required by the issue?
 - Would the feature work without this?
 - Am I adding this "just in case"?
@@ -78,36 +81,40 @@ RIGHT (minimal):
 3. **Edge cases only if likely** - Don't test impossible scenarios
 
 **Test count guideline:**
+
 - Simple function: 2-4 tests
 - Complex function: 5-8 tests
 - Full service: 8-15 tests
 
 **WRONG (over-tested):**
+
 ```typescript
 // 33 tests for a storage service that has 3 functions
-it('should handle empty string')
-it('should handle null')
-it('should handle undefined')
-it('should handle whitespace-only string')
-it('should handle very long string')
+it("should handle empty string");
+it("should handle null");
+it("should handle undefined");
+it("should handle whitespace-only string");
+it("should handle very long string");
 // ... 28 more tests
 ```
 
 **RIGHT (focused):**
+
 ```typescript
 // 8 tests covering real behavior
-it('should return null when no env vars set')
-it('should throw when only private key set')
-it('should load valid PEM keys')
-it('should load base64-encoded keys')
-it('should cache the loaded key')
-it('should auto-generate when enabled')
-it('should throw when no key available')
+it("should return null when no env vars set");
+it("should throw when only private key set");
+it("should load valid PEM keys");
+it("should load base64-encoded keys");
+it("should cache the loaded key");
+it("should auto-generate when enabled");
+it("should throw when no key available");
 ```
 
 ### Atomic Commits
 
 Each commit must be:
+
 1. **Self-contained**: Works on its own
 2. **Single purpose**: One logical change
 3. **Buildable**: Code compiles/passes type-check
@@ -116,6 +123,7 @@ Each commit must be:
 #### Good vs Bad Atomic Commits
 
 **GOOD** (single purpose):
+
 ```
 feat(keys): add KeyPair type definition
 feat(keys): implement RSA key generation
@@ -124,6 +132,7 @@ test(keys): add key generation tests
 ```
 
 **BAD** (mixed concerns):
+
 ```
 feat(keys): add types, implement generation, add tests
 feat: various improvements to key management
@@ -155,14 +164,17 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 ### Phase 1: Prepare Environment
 
 1. **Verify clean state:**
+
    ```bash
    git status
    ```
 
 2. **Create feature branch:**
+
    ```bash
    git checkout -b <type>/issue-<number>-<short-description>
    ```
+
    Example: `feat/issue-15-jwks-endpoint`
 
 3. **Load development plan:**
@@ -170,6 +182,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
    - Or receive from user
 
 4. **Update GitHub Project Board - Set "In Progress":**
+
    ```bash
    # Get item ID
    ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <number>) | .id')
@@ -192,17 +205,20 @@ For each step in the development plan:
    - Include inline comments where helpful
 
 3. **Validate changes:**
+
    ```bash
    bun run type-check  # TypeScript check
    bun run lint        # Linting
    ```
 
 4. **Run relevant tests:**
+
    ```bash
    bun test <specific-test-file>
    ```
 
 5. **Stage and commit:**
+
    ```bash
    git add <specific-files>
    git commit -m "<type>(<scope>): <message>"
@@ -239,6 +255,7 @@ If the plan needs adjustment:
 After all commits:
 
 1. **Run full validation:**
+
    ```bash
    bun run type-check
    bun run lint
@@ -247,11 +264,13 @@ After all commits:
    ```
 
 2. **Review commit history:**
+
    ```bash
    git log --oneline -n <number-of-commits>
    ```
 
 3. **Check diff stats:**
+
    ```bash
    git diff main --stat
    ```
@@ -280,6 +299,7 @@ After all commits:
 ## Commit Templates
 
 ### Feature commit
+
 ```
 feat(<scope>): add <feature>
 
@@ -289,6 +309,7 @@ feat(<scope>): add <feature>
 ```
 
 ### Test commit
+
 ```
 test(<scope>): add tests for <feature>
 
@@ -298,6 +319,7 @@ test(<scope>): add tests for <feature>
 ```
 
 ### Fix commit
+
 ```
 fix(<scope>): resolve <issue>
 
@@ -308,6 +330,7 @@ Closes #<issue-number>
 ```
 
 ### Refactor commit
+
 ```
 refactor(<scope>): <change>
 
@@ -354,6 +377,7 @@ refactor(<scope>): <change>
 ## Output Format
 
 After each commit:
+
 ```
 Commit #<n>: <type>(<scope>): <message>
 Files: <file-list>
@@ -361,6 +385,7 @@ Status: <passing|failing>
 ```
 
 After completion:
+
 ```
 ## Implementation Complete
 
@@ -387,12 +412,14 @@ Ready for pr-creator. Run: "create pr for issue #<number>"
 ## Tools Required
 
 **Required:**
+
 - Bash (git commands, validation)
 - Read (examine existing code)
 - Write (create new files)
 - Edit (modify existing files)
 
 **Optional:**
+
 - Glob (find files)
 - Grep (search code)
 
@@ -420,6 +447,7 @@ Agent:
 ## Success Criteria
 
 This agent is successful when:
+
 - All planned commits are made
 - Each commit is atomic and buildable
 - All validations pass

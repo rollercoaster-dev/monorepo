@@ -8,9 +8,11 @@ model: sonnet
 # Bun Package Integrator Agent
 
 ## Purpose
+
 Integrates packages into the Bun-based monorepo, handling TypeScript configuration, Bun-specific tooling, workspace setup, and build configuration.
 
 ## When to Use This Agent
+
 - After migrating a package into the monorepo
 - When creating a new package in the monorepo
 - When updating existing packages to use Bun features
@@ -20,11 +22,13 @@ Integrates packages into the Bun-based monorepo, handling TypeScript configurati
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of the package (e.g., "rd-logger")
 - **Package path**: Relative path from monorepo root (e.g., "packages/rd-logger")
 - **Package type**: library | application | internal-tool
 
 Optional:
+
 - **Bun version**: Target Bun version (default: 1.3)
 - **Needs build**: Whether package needs pre-publish build (default: true for libraries)
 - **Uses Bun APIs**: Whether package uses Bun-specific APIs
@@ -42,12 +46,12 @@ Optional:
 2. **Detect Bun API usage:**
    - Scan for `Bun.*` API calls in source code
    - Identify Bun-specific features used:
-     * Bun.serve (HTTP server)
-     * Bun.file (file I/O)
-     * Bun.write (file writing)
-     * Bun.sleep (async sleep)
-     * Bun.build (bundler)
-     * Bun.$ (shell)
+     - Bun.serve (HTTP server)
+     - Bun.file (file I/O)
+     - Bun.write (file writing)
+     - Bun.sleep (async sleep)
+     - Bun.build (bundler)
+     - Bun.$ (shell)
 
 3. **Check current state:**
    - Lockfile type (bun.lockb, pnpm-lock.yaml, etc.)
@@ -56,13 +60,14 @@ Optional:
    - TypeScript configuration
 
 4. **Detect internal dependencies:**
-   - Scan package.json dependencies for @rollercoaster-dev/* packages
+   - Scan package.json dependencies for @rollercoaster-dev/\* packages
    - Build list of internal package dependencies
    - Verify those packages exist in monorepo
 
 ### Phase 2: Update Package package.json
 
 1. **Set packageManager field:**
+
    ```json
    {
      "packageManager": "bun@1.3.0"
@@ -70,6 +75,7 @@ Optional:
    ```
 
 2. **Update scripts for Bun:**
+
    ```json
    {
      "scripts": {
@@ -86,6 +92,7 @@ Optional:
 3. **Configure for library vs application:**
 
    **For Libraries:**
+
    ```json
    {
      "main": "./dist/index.js",
@@ -104,6 +111,7 @@ Optional:
    ```
 
    **For Applications:**
+
    ```json
    {
      "private": true,
@@ -116,6 +124,7 @@ Optional:
    ```
 
 4. **Add/update workspace dependencies:**
+
    ```json
    {
      "dependencies": {
@@ -127,10 +136,7 @@ Optional:
 5. **Configure trustedDependencies if needed:**
    ```json
    {
-     "trustedDependencies": [
-       "esbuild",
-       "@swc/core"
-     ]
+     "trustedDependencies": ["esbuild", "@swc/core"]
    }
    ```
 
@@ -141,6 +147,7 @@ Optional:
    - Preserve custom compiler options
 
 2. **Update to extend shared config:**
+
    ```json
    {
      "extends": "@rollercoaster-dev/shared-config/tsconfig",
@@ -156,6 +163,7 @@ Optional:
    ```
 
 3. **Add project references for libraries:**
+
    ```json
    {
      "compilerOptions": {
@@ -169,11 +177,10 @@ Optional:
    ```
 
 4. **Add references to internal dependencies:**
+
    ```json
    {
-     "references": [
-       { "path": "../other-package" }
-     ]
+     "references": [{ "path": "../other-package" }]
    }
    ```
 
@@ -188,10 +195,11 @@ Optional:
 ### Phase 4: Configure Bun Test Runner
 
 1. **Check for existing test configuration:**
-   - Look for jest.config.*, vitest.config.*, etc.
+   - Look for jest.config._, vitest.config._, etc.
    - Identify test file patterns
 
 2. **Create bunfig.toml if using custom test config:**
+
    ```toml
    [test]
    preload = ["./test/setup.ts"]
@@ -203,6 +211,7 @@ Optional:
    ```
 
 3. **Update test scripts:**
+
    ```json
    {
      "scripts": {
@@ -215,9 +224,9 @@ Optional:
 
 4. **Migrate test files if needed:**
    - Jest → Bun test migration:
-     * `describe`, `it`, `expect` are compatible
-     * Most jest matchers work
-     * Mock functions may need updates
+     - `describe`, `it`, `expect` are compatible
+     - Most jest matchers work
+     - Mock functions may need updates
    - Note common differences for user
 
 ### Phase 5: Update Root Workspace Configuration
@@ -225,16 +234,15 @@ Optional:
 1. **Verify package is in workspace globs:**
 
    Check root `package.json`:
+
    ```json
    {
-     "workspaces": [
-       "packages/*",
-       "apps/*"
-     ]
+     "workspaces": ["packages/*", "apps/*"]
    }
    ```
 
 2. **Add to root tsconfig.json references (if library):**
+
    ```json
    {
      "references": [
@@ -243,6 +251,7 @@ Optional:
      ]
    }
    ```
+
    - Maintain alphabetical order
 
 3. **Check bunfig.toml at root (if exists):**
@@ -252,12 +261,14 @@ Optional:
 ### Phase 6: Install Dependencies
 
 1. **Remove old lockfiles:**
+
    ```bash
    cd {package-path}
    rm -f pnpm-lock.yaml package-lock.json yarn.lock
    ```
 
 2. **Install with Bun:**
+
    ```bash
    cd /Users/joeczarnecki/Code/rollercoaster.dev/monorepo
    bun install
@@ -270,22 +281,26 @@ Optional:
 ### Phase 7: Validation
 
 1. **Run type checking:**
+
    ```bash
    cd {package-path}
    bun run type-check
    ```
 
 2. **Run tests:**
+
    ```bash
    bun test
    ```
 
 3. **Build the package (if library):**
+
    ```bash
    bun run build
    ```
 
 4. **Verify workspace linking:**
+
    ```bash
    cd /Users/joeczarnecki/Code/rollercoaster.dev/monorepo
    bun install  # Should be instant if already installed
@@ -316,11 +331,12 @@ Optional:
 4. **Dependency issues:**
    - Peer dependencies: Bun auto-installs, may need to adjust
    - Native modules: Check Bun compatibility
-   - Missing types: Add @types/* packages
+   - Missing types: Add @types/\* packages
 
 ### Phase 9: Update Turborepo Configuration
 
 1. **Read turbo.json:**
+
    ```
    /Users/joeczarnecki/Code/rollercoaster.dev/monorepo/turbo.json
    ```
@@ -348,6 +364,7 @@ Create comprehensive integration report:
 # Bun Integration Report: {package-name}
 
 ## Summary
+
 - Package: {package-name}
 - Type: {library|application|internal-tool}
 - Bun Version: {version}
@@ -356,23 +373,27 @@ Create comprehensive integration report:
 ## Changes Made
 
 ### package.json Updates
+
 - ✅ Set packageManager: "bun@1.3.0"
 - ✅ Updated scripts for Bun
 - ✅ Configured {library|app} exports
 - ✅ Added workspace dependencies: {list}
 
 ### TypeScript Configuration
+
 - ✅ Extended shared config
 - ✅ Set moduleResolution: "Bundler"
 - ✅ Added project references: {count}
 - ✅ Configured declaration output
 
 ### Test Configuration
+
 - ✅ Migrated to Bun test runner
 - ✅ {Removed|Migrated} Jest/Vitest config
 - ✅ Updated test scripts
 
 ### Workspace Integration
+
 - ✅ Verified package in workspace globs
 - ✅ Added to root tsconfig references
 - ✅ Installed dependencies with Bun
@@ -388,10 +409,12 @@ Create comprehensive integration report:
 ## Dependencies
 
 ### Workspace Dependencies
+
 - {dependency-1} (`packages/{path}`)
 - {dependency-2} (`packages/{path}`)
 
 ### External Dependencies
+
 - Total: {count}
 - Bun-compatible: {count}
 - May need attention: {list}
@@ -400,28 +423,36 @@ Create comprehensive integration report:
 
 ### Type Checking
 ```
+
 ✅ bun run type-check passed
-   0 errors, 0 warnings
+0 errors, 0 warnings
+
 ```
 
 ### Tests
 ```
+
 ✅ bun test passed
-   {n} tests in {m} files
+{n} tests in {m} files
+
 ```
 
 ### Build
 ```
+
 ✅ bun run build succeeded
-   Generated dist/ output
-   {n} .d.ts files created
+Generated dist/ output
+{n} .d.ts files created
+
 ```
 
 ### Workspace
 ```
+
 ✅ bun install completed
-   All workspace links created
-```
+All workspace links created
+
+````
 
 ## Issues Found
 
@@ -466,7 +497,8 @@ bun --filter {package-name} run build
 
 # Run dev server (if app)
 bun --filter {package-name} dev
-```
+````
+
 ```
 
 ## Tools Required
@@ -514,9 +546,11 @@ If integration fails:
 
 ### During Package Migration
 ```
+
 User: "Integrate openbadges-types into Bun monorepo"
 
 Agent:
+
 1. Analyzes openbadges-types structure
 2. Updates package.json for Bun (scripts, packageManager)
 3. Configures tsconfig.json (moduleResolution: Bundler)
@@ -525,19 +559,23 @@ Agent:
 6. Runs bun install
 7. Validates: type-check ✅, test ✅, build ✅
 8. Reports: ✅ Integration complete
+
 ```
 
 ### For New Package
 ```
+
 User: "Set up Bun configuration for new packages/api-client"
 
 Agent:
+
 1. Creates package.json with Bun settings
 2. Creates tsconfig.json extending shared config
 3. Sets up build scripts for library
 4. Adds to root tsconfig references
 5. Runs bun install
 6. Reports: ✅ Ready for development
+
 ```
 
 ## Success Criteria
@@ -559,3 +597,4 @@ This agent is designed to be called:
 - For fixing existing Bun configuration issues
 - As part of Bun version upgrades
 - By other agents that need Bun integration
+```

@@ -5,27 +5,26 @@
  * It supports both Open Badges 2.0 and 3.0 specifications.
  */
 
-import { Assertion } from '../../domains/assertion/assertion.entity';
-import type { AssertionRepository } from '../../domains/assertion/assertion.repository';
-import type { BadgeClassRepository } from '../../domains/badgeClass/badgeClass.repository';
-import type { IssuerRepository } from '../../domains/issuer/issuer.repository';
-import type { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
-import type { Issuer } from '../../domains/issuer/issuer.entity';
-import { BadgeVersion } from '../../utils/version/badge-version';
-import { toIRI } from '../../utils/types/iri-utils';
-import type { Shared, OB2, OB3 } from 'openbadges-types';
-import { VerificationService } from '../../core/verification.service';
-import { BadRequestError } from '../../infrastructure/errors/bad-request.error';
-import type {
-  VerificationStatus} from '../../utils/types/verification-status';
+import { Assertion } from "../../domains/assertion/assertion.entity";
+import type { AssertionRepository } from "../../domains/assertion/assertion.repository";
+import type { BadgeClassRepository } from "../../domains/badgeClass/badgeClass.repository";
+import type { IssuerRepository } from "../../domains/issuer/issuer.repository";
+import type { BadgeClass } from "../../domains/badgeClass/badgeClass.entity";
+import type { Issuer } from "../../domains/issuer/issuer.entity";
+import { BadgeVersion } from "../../utils/version/badge-version";
+import { toIRI } from "../../utils/types/iri-utils";
+import type { Shared, OB2, OB3 } from "openbadges-types";
+import { VerificationService } from "../../core/verification.service";
+import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
+import type { VerificationStatus } from "../../utils/types/verification-status";
 import {
   VerificationErrorCode,
   createVerificationError,
-} from '../../utils/types/verification-status';
-import { KeyService } from '../../core/key.service';
-import type { CredentialStatusService } from '../../core/credential-status.service';
-import { StatusPurpose } from '../../domains/status-list/status-list.types';
-import { logger } from '../../utils/logging/logger.service';
+} from "../../utils/types/verification-status";
+import { KeyService } from "../../core/key.service";
+import type { CredentialStatusService } from "../../core/credential-status.service";
+import { StatusPurpose } from "../../domains/status-list/status-list.types";
+import { logger } from "../../utils/logging/logger.service";
 import type {
   CreateAssertionDto,
   UpdateAssertionDto,
@@ -35,8 +34,8 @@ import type {
   BatchUpdateCredentialStatusDto,
   BatchOperationResponseDto,
   BatchOperationResult,
-} from '../dtos';
-import { UserPermission } from '../../domains/user/user.entity';
+} from "../dtos";
+import { UserPermission } from "../../domains/user/user.entity";
 
 /**
  * Maps incoming validated data to the internal Partial<Assertion> format.
@@ -46,7 +45,7 @@ import { UserPermission } from '../../domains/user/user.entity';
  * @returns Mapped data (Partial<Assertion>)
  */
 function mapToAssertionEntity(
-  data: CreateAssertionDto | UpdateAssertionDto
+  data: CreateAssertionDto | UpdateAssertionDto,
 ): Partial<Assertion> {
   const mappedData: Partial<Assertion> = {};
 
@@ -55,13 +54,13 @@ function mapToAssertionEntity(
   // Casting might be needed if internal types differ significantly (e.g., branded types)
 
   // Map properties using safe assertions based on Assertion entity types
-  if ('id' in data && data.id !== undefined)
+  if ("id" in data && data.id !== undefined)
     mappedData.id = data.id as Shared.IRI; // OB3 allows optional ID
 
   // Handle both 'badge' and 'badgeClass' fields (middleware may have mapped badge -> badgeClass)
-  if ('badgeClass' in data && data.badgeClass !== undefined) {
+  if ("badgeClass" in data && data.badgeClass !== undefined) {
     mappedData.badgeClass = data.badgeClass as Shared.IRI;
-  } else if ('badge' in data && data.badge !== undefined) {
+  } else if ("badge" in data && data.badge !== undefined) {
     mappedData.badgeClass = data.badge as Shared.IRI; // Renamed: badge -> badgeClass
   }
   if (data.recipient !== undefined)
@@ -105,13 +104,13 @@ function convertAssertionToJsonLd(
   assertion: Assertion,
   version: BadgeVersion,
   badgeClass?: BadgeClass,
-  issuer?: Issuer
+  issuer?: Issuer,
 ): AssertionResponseDto {
   if (badgeClass && issuer) {
     return assertion.toJsonLd(
       version,
       badgeClass,
-      issuer
+      issuer,
     ) as AssertionResponseDto;
   }
   return assertion.toJsonLd(version) as AssertionResponseDto;
@@ -129,7 +128,7 @@ export class AssertionController {
     private assertionRepository: AssertionRepository,
     private badgeClassRepository: BadgeClassRepository,
     private issuerRepository: IssuerRepository,
-    private credentialStatusService?: CredentialStatusService
+    private credentialStatusService?: CredentialStatusService,
   ) {}
 
   /**
@@ -140,13 +139,13 @@ export class AssertionController {
    */
   private hasPermission(
     user: { claims?: Record<string, unknown> } | null,
-    permission: UserPermission
+    permission: UserPermission,
   ): boolean {
     if (!user || !user.claims) {
       return false;
     }
 
-    const permissions = (user.claims['permissions'] as UserPermission[]) || [];
+    const permissions = (user.claims["permissions"] as UserPermission[]) || [];
     return permissions.includes(permission);
   }
 
@@ -162,20 +161,20 @@ export class AssertionController {
     data: CreateAssertionDto,
     version: BadgeVersion = BadgeVersion.V3,
     sign: boolean = true,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<AssertionResponseDto> {
     // Check if user has permission to create assertions
     if (user && !this.hasPermission(user, UserPermission.CREATE_ASSERTION)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to create an assertion without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to create an assertion without permission`,
       );
-      throw new BadRequestError('Insufficient permissions to create assertion');
+      throw new BadRequestError("Insufficient permissions to create assertion");
     }
     try {
       // Log the raw data for debugging
-      logger.debug('Raw assertion creation data', { data });
+      logger.debug("Raw assertion creation data", { data });
 
       // Note: Validation is already done by the validation middleware
       // The data parameter is already validated and potentially mapped
@@ -190,24 +189,24 @@ export class AssertionController {
         mappedData = mapToAssertionEntity(data);
       } catch (error) {
         // Handle potential mapping errors if any (though simplified map should be safer)
-        logger.error('Error mapping validated assertion data', { error });
+        logger.error("Error mapping validated assertion data", { error });
         throw error; // Re-throw other mapping errors
       }
 
       // Validate that the badge class exists before creating the assertion
       const badgeClassId = mappedData.badgeClass;
       if (!badgeClassId) {
-        throw new BadRequestError('Badge class ID is required');
+        throw new BadRequestError("Badge class ID is required");
       }
 
       const badgeClass = await this.badgeClassRepository.findById(badgeClassId);
       if (!badgeClass) {
         logger.warn(
-          `Attempted to create assertion for non-existent badge class: ${badgeClassId}`
+          `Attempted to create assertion for non-existent badge class: ${badgeClassId}`,
         );
         // Throw a BadRequestError instead of a generic Error to get a 400 status code
         throw new BadRequestError(
-          `Badge class with ID ${badgeClassId} does not exist`
+          `Badge class with ID ${badgeClassId} does not exist`,
         );
       }
 
@@ -217,14 +216,14 @@ export class AssertionController {
         // We already have the badge class from validation above
         // Handle both string and object issuer IDs
         const issuerId =
-          typeof badgeClass.issuer === 'string'
+          typeof badgeClass.issuer === "string"
             ? badgeClass.issuer
             : (badgeClass.issuer as OB3.Issuer).id;
         issuer = await this.issuerRepository.findById(issuerId);
 
         if (!issuer) {
           throw new BadRequestError(
-            `Referenced issuer '${issuerId}' does not exist`
+            `Referenced issuer '${issuerId}' does not exist`,
           );
         }
 
@@ -243,9 +242,8 @@ export class AssertionController {
       }
 
       // Save the assertion first (required for foreign key constraints)
-      const createdAssertion = await this.assertionRepository.create(
-        signedAssertion
-      );
+      const createdAssertion =
+        await this.assertionRepository.create(signedAssertion);
 
       // Assign credential status for v3.0 credentials if service is available
       // This must happen AFTER the assertion is saved to satisfy foreign key constraints
@@ -274,7 +272,7 @@ export class AssertionController {
               credentialStatus: statusAssignment.credentialStatus,
             });
 
-            logger.info('Credential status assigned to assertion', {
+            logger.info("Credential status assigned to assertion", {
               assertionId: createdAssertion.id,
               statusListIndex:
                 statusAssignment.credentialStatus.statusListIndex,
@@ -282,13 +280,13 @@ export class AssertionController {
                 statusAssignment.credentialStatus.statusListCredential,
             });
           } else {
-            logger.warn('Failed to assign credential status', {
+            logger.warn("Failed to assign credential status", {
               assertionId: createdAssertion.id,
               error: statusAssignment.error,
             });
           }
         } catch (error) {
-          logger.error('Error during credential status assignment', {
+          logger.error("Error during credential status assignment", {
             assertionId: createdAssertion.id,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -302,14 +300,14 @@ export class AssertionController {
           createdAssertion,
           version,
           badgeClass,
-          issuer
+          issuer,
         );
       }
 
       return convertAssertionToJsonLd(createdAssertion, version);
     } catch (error) {
-      logger.error('Failed to create assertion', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to create assertion", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -321,7 +319,7 @@ export class AssertionController {
    * @returns All assertions
    */
   async getAllAssertions(
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<(OB2.Assertion | OB3.VerifiableCredential)[]> {
     const assertions = await this.assertionRepository.findAll();
 
@@ -331,12 +329,12 @@ export class AssertionController {
         // For V3, fetch related entities
         if (version === BadgeVersion.V3) {
           const badgeClass = await this.badgeClassRepository.findById(
-            assertion.badgeClass
+            assertion.badgeClass,
           );
           if (badgeClass) {
             // Handle both string and object issuer IDs
             const issuerId =
-              typeof badgeClass.issuer === 'string'
+              typeof badgeClass.issuer === "string"
                 ? badgeClass.issuer
                 : (badgeClass.issuer as OB3.Issuer).id;
             const issuer = await this.issuerRepository.findById(issuerId);
@@ -347,7 +345,7 @@ export class AssertionController {
 
         // For other versions or if related entities not found
         return assertion.toJsonLd(version);
-      })
+      }),
     );
   }
 
@@ -361,10 +359,10 @@ export class AssertionController {
   async getAssertionById(
     id: string,
     version: BadgeVersion = BadgeVersion.V3,
-    includeRevoked: boolean = false
+    includeRevoked: boolean = false,
   ): Promise<OB2.Assertion | OB3.VerifiableCredential | null> {
     const assertion = await this.assertionRepository.findById(
-      toIRI(id) as Shared.IRI
+      toIRI(id) as Shared.IRI,
     );
     if (!assertion) {
       return null;
@@ -380,18 +378,18 @@ export class AssertionController {
 
     if (version === BadgeVersion.V3) {
       const badgeClass = await this.badgeClassRepository.findById(
-        assertion.badgeClass
+        assertion.badgeClass,
       );
 
       // Get issuer from assertion.issuer field (preferred) or from badge class
       let issuer: Issuer | null = null;
-      if (assertion.issuer && typeof assertion.issuer === 'string') {
+      if (assertion.issuer && typeof assertion.issuer === "string") {
         // Use issuer from assertion entity (v3.0 compliant)
         issuer = await this.issuerRepository.findById(assertion.issuer);
       } else if (badgeClass?.issuer) {
         // Fallback to issuer from badge class
         const issuerIri =
-          typeof badgeClass.issuer === 'string'
+          typeof badgeClass.issuer === "string"
             ? badgeClass.issuer
             : (badgeClass.issuer.id as Shared.IRI);
         issuer = await this.issuerRepository.findById(issuerIri);
@@ -412,10 +410,10 @@ export class AssertionController {
    * @returns Object with existence and revocation status
    */
   async checkAssertionRevocationStatus(
-    id: string
+    id: string,
   ): Promise<{ exists: boolean; revoked: boolean; revocationReason?: string }> {
     const assertion = await this.assertionRepository.findById(
-      toIRI(id) as Shared.IRI
+      toIRI(id) as Shared.IRI,
     );
 
     if (!assertion) {
@@ -437,31 +435,31 @@ export class AssertionController {
    */
   async getAssertionsByBadgeClass(
     badgeClassId: string,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<(OB2.Assertion | OB3.VerifiableCredential)[]> {
     const assertions = await this.assertionRepository.findByBadgeClass(
-      toIRI(badgeClassId) as Shared.IRI
+      toIRI(badgeClassId) as Shared.IRI,
     );
 
     if (version === BadgeVersion.V3) {
       const badgeClass = await this.badgeClassRepository.findById(
-        toIRI(badgeClassId) as Shared.IRI
+        toIRI(badgeClassId) as Shared.IRI,
       );
       if (badgeClass) {
         const issuerIri =
-          typeof badgeClass.issuer === 'string'
+          typeof badgeClass.issuer === "string"
             ? badgeClass.issuer
             : (badgeClass.issuer.id as Shared.IRI);
         const issuer = await this.issuerRepository.findById(issuerIri);
         // Pass entities directly
         return assertions.map((assertion) =>
-          convertAssertionToJsonLd(assertion, version, badgeClass, issuer)
+          convertAssertionToJsonLd(assertion, version, badgeClass, issuer),
         );
       }
     }
 
     return assertions.map((assertion) =>
-      convertAssertionToJsonLd(assertion, version)
+      convertAssertionToJsonLd(assertion, version),
     );
   }
 
@@ -477,61 +475,61 @@ export class AssertionController {
     id: string,
     data: UpdateAssertionDto,
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<AssertionResponseDto | null> {
     // Check if user has permission to update assertions
     if (user && !this.hasPermission(user, UserPermission.UPDATE_ASSERTION)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to update assertion ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to update assertion ${id} without permission`,
       );
-      throw new BadRequestError('Insufficient permissions to update assertion');
+      throw new BadRequestError("Insufficient permissions to update assertion");
     }
     // Note: Validation is already done by the validation middleware
-      // The data parameter is already validated and potentially mapped
+    // The data parameter is already validated and potentially mapped
 
-      // Map incoming data to internal format using validated data
-      let mappedData: Partial<Assertion>;
-      try {
-        // Pass the already validated data directly
-        mappedData = mapToAssertionEntity(data);
-      } catch (error) {
-        // Handle potential mapping errors
-        logger.error('Error mapping validated assertion data for update', {
-          error,
-        });
-        throw error; // Re-throw other mapping errors
-      }
+    // Map incoming data to internal format using validated data
+    let mappedData: Partial<Assertion>;
+    try {
+      // Pass the already validated data directly
+      mappedData = mapToAssertionEntity(data);
+    } catch (error) {
+      // Handle potential mapping errors
+      logger.error("Error mapping validated assertion data for update", {
+        error,
+      });
+      throw error; // Re-throw other mapping errors
+    }
 
-      const updatedAssertion = await this.assertionRepository.update(
-        toIRI(id) as Shared.IRI,
-        mappedData
+    const updatedAssertion = await this.assertionRepository.update(
+      toIRI(id) as Shared.IRI,
+      mappedData,
+    );
+    if (!updatedAssertion) {
+      return null;
+    }
+
+    if (version === BadgeVersion.V3) {
+      const badgeClass = await this.badgeClassRepository.findById(
+        updatedAssertion.badgeClass,
       );
-      if (!updatedAssertion) {
-        return null;
-      }
-
-      if (version === BadgeVersion.V3) {
-        const badgeClass = await this.badgeClassRepository.findById(
-          updatedAssertion.badgeClass
+      if (badgeClass) {
+        const issuerIri =
+          typeof badgeClass.issuer === "string"
+            ? badgeClass.issuer
+            : (badgeClass.issuer.id as Shared.IRI);
+        const issuer = await this.issuerRepository.findById(issuerIri);
+        return convertAssertionToJsonLd(
+          updatedAssertion,
+          version,
+          badgeClass,
+          issuer,
         );
-        if (badgeClass) {
-          const issuerIri =
-            typeof badgeClass.issuer === 'string'
-              ? badgeClass.issuer
-              : (badgeClass.issuer.id as Shared.IRI);
-          const issuer = await this.issuerRepository.findById(issuerIri);
-          return convertAssertionToJsonLd(
-            updatedAssertion,
-            version,
-            badgeClass,
-            issuer
-          );
-        }
       }
+    }
 
-      return convertAssertionToJsonLd(updatedAssertion, version);
+    return convertAssertionToJsonLd(updatedAssertion, version);
   }
 
   /**
@@ -544,21 +542,21 @@ export class AssertionController {
   async revokeAssertion(
     id: string,
     reason: string,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<boolean> {
     // Check if user has permission to revoke assertions
     if (user && !this.hasPermission(user, UserPermission.REVOKE_ASSERTION)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to revoke assertion ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to revoke assertion ${id} without permission`,
       );
-      throw new BadRequestError('Insufficient permissions to revoke assertion');
+      throw new BadRequestError("Insufficient permissions to revoke assertion");
     }
 
     const result = await this.assertionRepository.revoke(
       toIRI(id) as Shared.IRI,
-      reason
+      reason,
     );
     return result !== null;
   }
@@ -575,36 +573,36 @@ export class AssertionController {
 
       // Get the assertion
       const assertion = await this.assertionRepository.findById(
-        toIRI(id) as Shared.IRI
+        toIRI(id) as Shared.IRI,
       );
       if (!assertion) {
         return createVerificationError(
           VerificationErrorCode.ASSERTION_NOT_FOUND,
-          'Assertion not found'
+          "Assertion not found",
         );
       }
 
       // Verify badge class exists
       const badgeClass = await this.badgeClassRepository.findById(
-        assertion.badgeClass
+        assertion.badgeClass,
       );
       if (!badgeClass) {
         return createVerificationError(
           VerificationErrorCode.INTERNAL_ERROR,
-          'Referenced badge class not found'
+          "Referenced badge class not found",
         );
       }
 
       // Verify issuer exists
       const issuerIri =
-        typeof badgeClass.issuer === 'string'
+        typeof badgeClass.issuer === "string"
           ? badgeClass.issuer
           : (badgeClass.issuer.id as Shared.IRI);
       const issuer = await this.issuerRepository.findById(issuerIri);
       if (!issuer) {
         return createVerificationError(
           VerificationErrorCode.INTERNAL_ERROR,
-          'Referenced issuer not found'
+          "Referenced issuer not found",
         );
       }
 
@@ -612,11 +610,11 @@ export class AssertionController {
       return await VerificationService.verifyAssertion(assertion);
     } catch (error) {
       logger.error(`Failed to verify assertion with ID ${id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return createVerificationError(
         VerificationErrorCode.INTERNAL_ERROR,
-        `Error during verification process: ${(error as Error).message}`
+        `Error during verification process: ${(error as Error).message}`,
       );
     }
   }
@@ -631,18 +629,18 @@ export class AssertionController {
    */
   async signAssertion(
     id: string,
-    keyId: string = 'default',
+    keyId: string = "default",
     version: BadgeVersion = BadgeVersion.V3,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<OB2.Assertion | OB3.VerifiableCredential | null> {
     // Check if user has permission to sign assertions
     if (user && !this.hasPermission(user, UserPermission.SIGN_ASSERTION)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to sign assertion ${id} without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to sign assertion ${id} without permission`,
       );
-      throw new BadRequestError('Insufficient permissions to sign assertion');
+      throw new BadRequestError("Insufficient permissions to sign assertion");
     }
     try {
       // Initialize the key service
@@ -650,7 +648,7 @@ export class AssertionController {
 
       // Get the assertion
       const assertion = await this.assertionRepository.findById(
-        toIRI(id) as Shared.IRI
+        toIRI(id) as Shared.IRI,
       );
       if (!assertion) {
         return null;
@@ -660,7 +658,7 @@ export class AssertionController {
       const signedAssertion =
         await VerificationService.createVerificationForAssertion(
           assertion,
-          keyId
+          keyId,
         );
 
       // Update the assertion in the repository
@@ -669,7 +667,7 @@ export class AssertionController {
       const signedData = { ...signedAssertion };
       const updatedAssertion = await this.assertionRepository.update(
         assertion.id,
-        signedData as Partial<Assertion>
+        signedData as Partial<Assertion>,
       );
       if (!updatedAssertion) {
         return null;
@@ -678,10 +676,10 @@ export class AssertionController {
       // For a complete response, we need the badge class and issuer
       if (version === BadgeVersion.V3) {
         const badgeClass = await this.badgeClassRepository.findById(
-          signedAssertion.badgeClass
+          signedAssertion.badgeClass,
         );
         const issuerIri = badgeClass?.issuer
-          ? typeof badgeClass.issuer === 'string'
+          ? typeof badgeClass.issuer === "string"
             ? badgeClass.issuer
             : (badgeClass.issuer.id as Shared.IRI)
           : null;
@@ -696,7 +694,7 @@ export class AssertionController {
       }
     } catch (error) {
       logger.error(`Failed to sign assertion with ID ${id}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return null;
     }
@@ -719,13 +717,13 @@ export class AssertionController {
         keyIds.map(async (id) => ({
           id,
           publicKey: await KeyService.getPublicKey(id),
-        }))
+        })),
       );
 
       return publicKeys;
     } catch (error) {
-      logger.error('Failed to get public keys', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to get public keys", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return [];
     }
@@ -737,7 +735,7 @@ export class AssertionController {
    * @returns The public key or null if not found
    */
   async getPublicKey(
-    keyId: string
+    keyId: string,
   ): Promise<{ id: string; publicKey: string } | null> {
     try {
       // Initialize the key service
@@ -752,7 +750,7 @@ export class AssertionController {
       };
     } catch (error) {
       logger.error(`Failed to get public key with ID ${keyId}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return null;
     }
@@ -770,7 +768,7 @@ export class AssertionController {
     data: BatchCreateCredentialsDto,
     version: BadgeVersion = BadgeVersion.V3,
     sign: boolean = true,
-    user?: { claims?: Record<string, unknown> } | null
+    user?: { claims?: Record<string, unknown> } | null,
   ): Promise<BatchOperationResponseDto<AssertionResponseDto>> {
     const startTime = Date.now();
     const batchId = `batch_${Date.now()}_${Math.random()
@@ -782,7 +780,7 @@ export class AssertionController {
       logger.warn(`Large batch operation detected`, {
         batchId,
         credentialCount: data.credentials.length,
-        user: user?.claims?.['sub'] || 'unknown',
+        user: user?.claims?.["sub"] || "unknown",
       });
     }
 
@@ -790,16 +788,16 @@ export class AssertionController {
     if (user && !this.hasPermission(user, UserPermission.CREATE_ASSERTION)) {
       logger.warn(
         `User ${
-          user.claims?.['sub'] || 'unknown'
-        } attempted to create assertions batch without permission`
+          user.claims?.["sub"] || "unknown"
+        } attempted to create assertions batch without permission`,
       );
       throw new BadRequestError(
-        'Insufficient permissions to create assertions'
+        "Insufficient permissions to create assertions",
       );
     }
 
     try {
-      logger.debug('Batch assertion creation data', {
+      logger.debug("Batch assertion creation data", {
         credentialCount: data.credentials.length,
       });
 
@@ -807,7 +805,7 @@ export class AssertionController {
       await KeyService.initialize();
 
       // Process each credential and prepare for batch creation
-      const assertionsToCreate: Omit<Assertion, 'id'>[] = [];
+      const assertionsToCreate: Omit<Assertion, "id">[] = [];
       const validationResults: BatchOperationResult<AssertionResponseDto>[] =
         [];
 
@@ -824,26 +822,25 @@ export class AssertionController {
               index: i,
               success: false,
               error: {
-                code: 'VALIDATION_ERROR',
-                message: 'Badge class ID is required',
-                field: 'badgeClass',
+                code: "VALIDATION_ERROR",
+                message: "Badge class ID is required",
+                field: "badgeClass",
                 details: { batchIndex: i, batchId },
               },
             });
             continue;
           }
 
-          const badgeClass = await this.badgeClassRepository.findById(
-            badgeClassId
-          );
+          const badgeClass =
+            await this.badgeClassRepository.findById(badgeClassId);
           if (!badgeClass) {
             validationResults.push({
               index: i,
               success: false,
               error: {
-                code: 'VALIDATION_ERROR',
+                code: "VALIDATION_ERROR",
                 message: `Badge class with ID ${badgeClassId} does not exist`,
-                field: 'badgeClass',
+                field: "badgeClass",
                 details: { batchIndex: i, batchId, badgeClassId },
               },
             });
@@ -858,7 +855,7 @@ export class AssertionController {
           if (sign) {
             signedAssertion =
               await VerificationService.createVerificationForAssertion(
-                assertion
+                assertion,
               );
           }
 
@@ -874,12 +871,12 @@ export class AssertionController {
             index: i,
             success: false,
             error: {
-              code: 'VALIDATION_ERROR',
+              code: "VALIDATION_ERROR",
               message:
                 error instanceof Error
                   ? error.message
-                  : 'Unknown validation error',
-              field: 'credential',
+                  : "Unknown validation error",
+              field: "credential",
               details: { batchIndex: i, batchId },
             },
           });
@@ -887,9 +884,8 @@ export class AssertionController {
       }
 
       // Perform batch creation for valid assertions
-      const batchResults = await this.assertionRepository.createBatch(
-        assertionsToCreate
-      );
+      const batchResults =
+        await this.assertionRepository.createBatch(assertionsToCreate);
 
       // Combine validation and creation results
       const results: BatchOperationResult<AssertionResponseDto>[] = [];
@@ -918,24 +914,24 @@ export class AssertionController {
       if (successfulAssertionIds.length > 0) {
         try {
           const assertions = await this.assertionRepository.findByIds(
-            successfulAssertionIds as Shared.IRI[]
+            successfulAssertionIds as Shared.IRI[],
           );
           for (const assertion of assertions) {
             if (assertion) {
               jsonLdAssertions.push(
-                assertion.toJsonLd(version) as AssertionResponseDto
+                assertion.toJsonLd(version) as AssertionResponseDto,
               );
             } else {
               jsonLdAssertions.push(null);
             }
           }
         } catch (error) {
-          logger.error('Failed to batch convert assertions to JSON-LD', {
+          logger.error("Failed to batch convert assertions to JSON-LD", {
             error,
           });
           // Fill with nulls if batch conversion fails
           jsonLdAssertions.push(
-            ...new Array(successfulAssertionIds.length).fill(null)
+            ...new Array(successfulAssertionIds.length).fill(null),
           );
         }
       }
@@ -968,8 +964,8 @@ export class AssertionController {
                 index: i,
                 success: false,
                 error: {
-                  code: 'CONVERSION_ERROR',
-                  message: 'Failed to convert assertion to response format',
+                  code: "CONVERSION_ERROR",
+                  message: "Failed to convert assertion to response format",
                   details: { batchId, assertionId: batchResult.assertion.id },
                 },
               });
@@ -979,8 +975,8 @@ export class AssertionController {
               index: i,
               success: false,
               error: {
-                code: 'CREATION_ERROR',
-                message: batchResult.error || 'Failed to create assertion',
+                code: "CREATION_ERROR",
+                message: batchResult.error || "Failed to create assertion",
                 details: { batchId, batchIndex: i },
               },
             });
@@ -1010,8 +1006,8 @@ export class AssertionController {
         },
       };
     } catch (error) {
-      logger.error('Failed to create assertions batch', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to create assertions batch", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -1025,7 +1021,7 @@ export class AssertionController {
    */
   async getAssertionsBatch(
     data: BatchRetrieveCredentialsDto,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<BatchOperationResponseDto<AssertionResponseDto>> {
     const startTime = Date.now();
     const batchId = `retrieve_${Date.now()}_${Math.random()
@@ -1033,14 +1029,14 @@ export class AssertionController {
       .substr(2, 9)}`;
 
     try {
-      logger.debug('Batch assertion retrieval data', {
+      logger.debug("Batch assertion retrieval data", {
         batchId,
         idCount: data.ids.length,
       });
 
       // Retrieve assertions from repository
       const assertions = await this.assertionRepository.findByIds(
-        data.ids as Shared.IRI[]
+        data.ids as Shared.IRI[],
       );
 
       // Convert to response format
@@ -1054,7 +1050,7 @@ export class AssertionController {
           try {
             // Convert to JSON-LD format directly (avoid additional DB call)
             const jsonLdAssertion = assertion.toJsonLd(
-              version
+              version,
             ) as AssertionResponseDto;
             results.push({
               id,
@@ -1068,8 +1064,8 @@ export class AssertionController {
               index: i,
               success: false,
               error: {
-                code: 'CONVERSION_ERROR',
-                message: 'Failed to convert assertion to response format',
+                code: "CONVERSION_ERROR",
+                message: "Failed to convert assertion to response format",
                 details: { batchId, assertionId: id },
               },
             });
@@ -1080,8 +1076,8 @@ export class AssertionController {
             index: i,
             success: false,
             error: {
-              code: 'NOT_FOUND',
-              message: 'Assertion not found',
+              code: "NOT_FOUND",
+              message: "Assertion not found",
               details: { batchId, requestedId: id },
             },
           });
@@ -1108,8 +1104,8 @@ export class AssertionController {
         },
       };
     } catch (error) {
-      logger.error('Failed to retrieve assertions batch', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to retrieve assertions batch", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -1123,7 +1119,7 @@ export class AssertionController {
    */
   async updateAssertionStatusBatch(
     data: BatchUpdateCredentialStatusDto,
-    version: BadgeVersion = BadgeVersion.V3
+    version: BadgeVersion = BadgeVersion.V3,
   ): Promise<BatchOperationResponseDto<AssertionResponseDto>> {
     const startTime = Date.now();
     const batchId = `update_${Date.now()}_${Math.random()
@@ -1131,7 +1127,7 @@ export class AssertionController {
       .substr(2, 9)}`;
 
     try {
-      logger.debug('Batch assertion status update data', {
+      logger.debug("Batch assertion status update data", {
         batchId,
         updateCount: data.updates.length,
       });
@@ -1141,7 +1137,7 @@ export class AssertionController {
         data.updates.map((update) => ({
           ...update,
           id: update.id as Shared.IRI,
-        }))
+        })),
       );
 
       // Convert to response format
@@ -1153,7 +1149,7 @@ export class AssertionController {
           try {
             // Convert to JSON-LD format directly (avoid additional DB call)
             const jsonLdAssertion = updateResult.assertion.toJsonLd(
-              version
+              version,
             ) as AssertionResponseDto;
             results.push({
               id: updateResult.id,
@@ -1167,8 +1163,8 @@ export class AssertionController {
               index,
               success: false,
               error: {
-                code: 'CONVERSION_ERROR',
-                message: 'Failed to convert assertion to response format',
+                code: "CONVERSION_ERROR",
+                message: "Failed to convert assertion to response format",
                 details: { batchId, assertionId: updateResult.id },
               },
             });
@@ -1179,9 +1175,9 @@ export class AssertionController {
             index,
             success: false,
             error: {
-              code: 'UPDATE_ERROR',
+              code: "UPDATE_ERROR",
               message:
-                updateResult.error || 'Failed to update assertion status',
+                updateResult.error || "Failed to update assertion status",
               details: { batchId },
             },
           });
@@ -1209,8 +1205,8 @@ export class AssertionController {
         },
       };
     } catch (error) {
-      logger.error('Failed to update assertion status batch', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to update assertion status batch", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }

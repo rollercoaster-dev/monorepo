@@ -9,10 +9,13 @@
  * Implements Open Badges 3.0 relationship validation requirements.
  */
 
-import type { BadgeClass, Related } from '../domains/badgeClass/badgeClass.entity';
-import type { BadgeClassRepository } from '../domains/badgeClass/badgeClass.repository';
-import type { Shared } from 'openbadges-types';
-import { logger } from '../utils/logging/logger.service';
+import type {
+  BadgeClass,
+  Related,
+} from "../domains/badgeClass/badgeClass.entity";
+import type { BadgeClassRepository } from "../domains/badgeClass/badgeClass.repository";
+import type { Shared } from "openbadges-types";
+import { logger } from "../utils/logging/logger.service";
 
 export interface RelationshipValidationResult {
   isValid: boolean;
@@ -50,7 +53,7 @@ export class AchievementRelationshipService {
    */
   async validateRelationship(
     achievementId: Shared.IRI,
-    relatedId: Shared.IRI
+    relatedId: Shared.IRI,
   ): Promise<RelationshipValidationResult> {
     const result: RelationshipValidationResult = {
       isValid: true,
@@ -60,9 +63,8 @@ export class AchievementRelationshipService {
 
     try {
       // Check if the related achievement exists
-      const relatedAchievement = await this.badgeClassRepository.findById(
-        relatedId
-      );
+      const relatedAchievement =
+        await this.badgeClassRepository.findById(relatedId);
       if (!relatedAchievement) {
         result.isValid = false;
         result.errors.push(`Related achievement '${relatedId}' does not exist`);
@@ -73,7 +75,7 @@ export class AchievementRelationshipService {
       if (relatedAchievement.related?.some((r) => r.id === achievementId)) {
         result.isValid = false;
         result.errors.push(
-          `Circular relationship detected: ${achievementId} and ${relatedId} would reference each other`
+          `Circular relationship detected: ${achievementId} and ${relatedId} would reference each other`,
         );
         return result;
       }
@@ -83,7 +85,7 @@ export class AchievementRelationshipService {
       if (graph.hasCircularReference) {
         result.isValid = false;
         result.errors.push(
-          `Adding relationship would create circular dependency in relationship graph`
+          `Adding relationship would create circular dependency in relationship graph`,
         );
         return result;
       }
@@ -91,24 +93,24 @@ export class AchievementRelationshipService {
       // Check depth limits
       if (graph.maxDepth > AchievementRelationshipService.MAX_TRAVERSAL_DEPTH) {
         result.warnings.push(
-          `Relationship graph depth (${graph.maxDepth}) exceeds recommended limit (${AchievementRelationshipService.MAX_TRAVERSAL_DEPTH})`
+          `Relationship graph depth (${graph.maxDepth}) exceeds recommended limit (${AchievementRelationshipService.MAX_TRAVERSAL_DEPTH})`,
         );
       }
 
-      logger.info('Relationship validation passed', {
+      logger.info("Relationship validation passed", {
         achievementId,
         relatedId,
         graphDepth: graph.maxDepth,
         nodeCount: graph.nodes.size,
       });
     } catch (error) {
-      logger.error('Error validating relationship', {
+      logger.error("Error validating relationship", {
         error: error instanceof Error ? error.message : String(error),
         achievementId,
         relatedId,
       });
       result.isValid = false;
-      result.errors.push('Internal error during relationship validation');
+      result.errors.push("Internal error during relationship validation");
     }
 
     return result;
@@ -122,7 +124,7 @@ export class AchievementRelationshipService {
    */
   async validateVersionChain(
     achievementId: Shared.IRI,
-    previousVersionId: Shared.IRI
+    previousVersionId: Shared.IRI,
   ): Promise<RelationshipValidationResult> {
     const result: RelationshipValidationResult = {
       isValid: true,
@@ -132,13 +134,12 @@ export class AchievementRelationshipService {
 
     try {
       // Check if the previous version exists
-      const previousVersion = await this.badgeClassRepository.findById(
-        previousVersionId
-      );
+      const previousVersion =
+        await this.badgeClassRepository.findById(previousVersionId);
       if (!previousVersion) {
         result.isValid = false;
         result.errors.push(
-          `Previous version '${previousVersionId}' does not exist`
+          `Previous version '${previousVersionId}' does not exist`,
         );
         return result;
       }
@@ -149,12 +150,12 @@ export class AchievementRelationshipService {
       // Check if adding this link would create a cycle
       if (
         versionChain.achievements.some(
-          (achievement) => achievement.id === achievementId
+          (achievement) => achievement.id === achievementId,
         )
       ) {
         result.isValid = false;
         result.errors.push(
-          `Circular version chain detected: ${achievementId} would create a cycle in version history`
+          `Circular version chain detected: ${achievementId} would create a cycle in version history`,
         );
         return result;
       }
@@ -165,23 +166,23 @@ export class AchievementRelationshipService {
         AchievementRelationshipService.MAX_VERSION_CHAIN_DEPTH
       ) {
         result.warnings.push(
-          `Version chain depth (${versionChain.depth}) exceeds recommended limit (${AchievementRelationshipService.MAX_VERSION_CHAIN_DEPTH})`
+          `Version chain depth (${versionChain.depth}) exceeds recommended limit (${AchievementRelationshipService.MAX_VERSION_CHAIN_DEPTH})`,
         );
       }
 
-      logger.info('Version chain validation passed', {
+      logger.info("Version chain validation passed", {
         achievementId,
         previousVersionId,
         chainDepth: versionChain.depth,
       });
     } catch (error) {
-      logger.error('Error validating version chain', {
+      logger.error("Error validating version chain", {
         error: error instanceof Error ? error.message : String(error),
         achievementId,
         previousVersionId,
       });
       result.isValid = false;
-      result.errors.push('Internal error during version chain validation');
+      result.errors.push("Internal error during version chain validation");
     }
 
     return result;
@@ -219,7 +220,7 @@ export class AchievementRelationshipService {
       if (
         chain.length >= AchievementRelationshipService.MAX_VERSION_CHAIN_DEPTH
       ) {
-        logger.warn('Version chain depth limit reached', {
+        logger.warn("Version chain depth limit reached", {
           achievementId,
           depth: chain.length,
         });
@@ -242,7 +243,7 @@ export class AchievementRelationshipService {
    */
   private async buildRelationshipGraph(
     sourceId: Shared.IRI,
-    newRelatedId: Shared.IRI
+    newRelatedId: Shared.IRI,
   ): Promise<RelationshipGraph> {
     const nodes = new Map<Shared.IRI, BadgeClass>();
     const edges = new Map<Shared.IRI, Shared.IRI[]>();
@@ -320,15 +321,15 @@ export class AchievementRelationshipService {
    */
   async addRelatedAchievement(
     achievementId: Shared.IRI,
-    related: Related
+    related: Related,
   ): Promise<BadgeClass | null> {
     // Validate the relationship first
     const validation = await this.validateRelationship(
       achievementId,
-      related.id
+      related.id,
     );
     if (!validation.isValid) {
-      throw new Error(`Invalid relationship: ${validation.errors.join(', ')}`);
+      throw new Error(`Invalid relationship: ${validation.errors.join(", ")}`);
     }
 
     // Get the existing achievement
@@ -355,7 +356,7 @@ export class AchievementRelationshipService {
    */
   async removeRelatedAchievement(
     achievementId: Shared.IRI,
-    relatedId: Shared.IRI
+    relatedId: Shared.IRI,
   ): Promise<BadgeClass | null> {
     // Get the existing achievement
     const achievement = await this.badgeClassRepository.findById(achievementId);

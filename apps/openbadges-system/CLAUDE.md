@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (<https://claude.ai/code>) when worki
 ## Monorepo Context
 
 This app is part of the **rollercoaster.dev monorepo**. It uses workspace dependencies from:
+
 - `packages/openbadges-types` - OpenBadges TypeScript type definitions
 - `packages/openbadges-ui` - Vue 3 component library for OpenBadges
 

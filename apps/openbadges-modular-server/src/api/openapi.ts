@@ -4,1833 +4,1872 @@
  * This file contains the OpenAPI/Swagger documentation for the API endpoints.
  */
 
-import type { OpenAPIObject } from 'openapi3-ts/oas30';
-import { config } from '../config/config';
-import { EXAMPLE_EDU_EVIDENCE_URL, EXAMPLE_EDU_KEYS_URL, EXAMPLE_EDU_URL, GITHUB_REPO_URL, MIT_LICENSE_URL, OPENBADGES_V3_CONTEXT_EXAMPLE } from '@/constants/urls';
-import { getAppVersion } from '../utils/version/app-version';
+import type { OpenAPIObject } from "openapi3-ts/oas30";
+import { config } from "../config/config";
+import {
+  EXAMPLE_EDU_EVIDENCE_URL,
+  EXAMPLE_EDU_KEYS_URL,
+  EXAMPLE_EDU_URL,
+  GITHUB_REPO_URL,
+  MIT_LICENSE_URL,
+  OPENBADGES_V3_CONTEXT_EXAMPLE,
+} from "@/constants/urls";
+import { getAppVersion } from "../utils/version/app-version";
 
 export const openApiConfig: OpenAPIObject = {
-  openapi: '3.0.0',
+  openapi: "3.0.0",
   info: {
-    title: 'Open Badges API',
+    title: "Open Badges API",
     version: getAppVersion().version,
-    description: 'A stateless, modular Open Badges API adhering to the Open Badges 3.0 specification',
+    description:
+      "A stateless, modular Open Badges API adhering to the Open Badges 3.0 specification",
     contact: {
-      name: 'Open Badges API Team',
-      url: GITHUB_REPO_URL
+      name: "Open Badges API Team",
+      url: GITHUB_REPO_URL,
     },
     license: {
-      name: 'MIT',
-      url: MIT_LICENSE_URL
-    }
+      name: "MIT",
+      url: MIT_LICENSE_URL,
+    },
   },
   servers: [
     {
       url: `http://localhost:${config.server.port}`,
-      description: 'Development server'
+      description: "Development server",
     },
     {
       url: `http://localhost:${config.server.port}${config.api.basePath}/${config.api.version}`,
-      description: 'Development server (API endpoints)'
-    }
+      description: "Development server (API endpoints)",
+    },
   ],
   tags: [
     {
-      name: 'Issuers',
-      description: 'Operations related to badge issuers'
+      name: "Issuers",
+      description: "Operations related to badge issuers",
     },
     {
-      name: 'Badge Classes',
-      description: 'Operations related to badge classes'
+      name: "Badge Classes",
+      description: "Operations related to badge classes",
     },
     {
-      name: 'Assertions',
-      description: 'Operations related to badge assertions'
+      name: "Assertions",
+      description: "Operations related to badge assertions",
     },
     {
-      name: 'System',
-      description: 'System-level operations like health checks and version information'
-    }
+      name: "System",
+      description:
+        "System-level operations like health checks and version information",
+    },
   ],
   paths: {
-    '/version': {
+    "/version": {
       get: {
-        tags: ['System'],
-        summary: 'Get API version information',
-        description: 'Returns the current version of the API',
+        tags: ["System"],
+        summary: "Get API version information",
+        description: "Returns the current version of the API",
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  type: 'object',
+                  type: "object",
                   properties: {
                     version: {
-                      type: 'string',
-                      description: 'Semantic version number',
-                      example: '1.0.0'
+                      type: "string",
+                      description: "Semantic version number",
+                      example: "1.0.0",
                     },
                     formatted: {
-                      type: 'string',
-                      description: 'Formatted version string with additional information',
-                      example: '1.0.0 (abc1234) built on 2023-06-15'
+                      type: "string",
+                      description:
+                        "Formatted version string with additional information",
+                      example: "1.0.0 (abc1234) built on 2023-06-15",
                     },
                     details: {
-                      type: 'object',
+                      type: "object",
                       properties: {
                         major: {
-                          type: 'number',
-                          description: 'Major version number',
-                          example: 1
+                          type: "number",
+                          description: "Major version number",
+                          example: 1,
                         },
                         minor: {
-                          type: 'number',
-                          description: 'Minor version number',
-                          example: 0
+                          type: "number",
+                          description: "Minor version number",
+                          example: 0,
                         },
                         patch: {
-                          type: 'number',
-                          description: 'Patch version number',
-                          example: 0
+                          type: "number",
+                          description: "Patch version number",
+                          example: 0,
                         },
                         preRelease: {
-                          type: 'string',
-                          description: 'Pre-release identifier',
-                          example: 'beta.1'
+                          type: "string",
+                          description: "Pre-release identifier",
+                          example: "beta.1",
                         },
                         buildMetadata: {
-                          type: 'string',
-                          description: 'Build metadata',
-                          example: 'build.123'
+                          type: "string",
+                          description: "Build metadata",
+                          example: "build.123",
                         },
                         gitCommit: {
-                          type: 'string',
-                          description: 'Git commit hash',
-                          example: 'abc1234'
+                          type: "string",
+                          description: "Git commit hash",
+                          example: "abc1234",
                         },
                         buildDate: {
-                          type: 'string',
-                          description: 'Build date',
-                          example: '2023-06-15'
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          type: "string",
+                          description: "Build date",
+                          example: "2023-06-15",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/issuers': {
+    "/issuers": {
       post: {
-        tags: ['Issuers'],
-        summary: 'Create a new issuer',
-        description: 'Creates a new issuer entity',
+        tags: ["Issuers"],
+        summary: "Create a new issuer",
+        description: "Creates a new issuer entity",
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/IssuerInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/IssuerInput",
+              },
+            },
+          },
         },
         responses: {
-          '201': {
-            description: 'Issuer created successfully',
+          "201": {
+            description: "Issuer created successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/IssuerResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/IssuerResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/issuers/{id}': {
+    "/issuers/{id}": {
       get: {
-        tags: ['Issuers'],
-        summary: 'Get issuer by ID',
-        description: 'Returns a single issuer by ID',
+        tags: ["Issuers"],
+        summary: "Get issuer by ID",
+        description: "Returns a single issuer by ID",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the issuer to retrieve'
-          }
+            description: "ID of the issuer to retrieve",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/IssuerResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/IssuerResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Issuer not found',
+          "404": {
+            description: "Issuer not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       put: {
-        tags: ['Issuers'],
-        summary: 'Update issuer by ID',
-        description: 'Updates an existing issuer',
+        tags: ["Issuers"],
+        summary: "Update issuer by ID",
+        description: "Updates an existing issuer",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the issuer to update'
-          }
+            description: "ID of the issuer to update",
+          },
         ],
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/IssuerUpdateInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/IssuerUpdateInput",
+              },
+            },
+          },
         },
         responses: {
-          '200': {
-            description: 'Issuer updated successfully',
+          "200": {
+            description: "Issuer updated successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/IssuerResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/IssuerResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Issuer not found',
+          "404": {
+            description: "Issuer not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       delete: {
-        tags: ['Issuers'],
-        summary: 'Delete issuer by ID',
-        description: 'Deletes an issuer',
+        tags: ["Issuers"],
+        summary: "Delete issuer by ID",
+        description: "Deletes an issuer",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the issuer to delete'
-          }
+            description: "ID of the issuer to delete",
+          },
         ],
         responses: {
-          '204': {
-            description: 'Issuer deleted successfully'
+          "204": {
+            description: "Issuer deleted successfully",
           },
-          '404': {
-            description: 'Issuer not found',
+          "404": {
+            description: "Issuer not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/badge-classes': {
+    "/badge-classes": {
       post: {
-        tags: ['Badge Classes'],
-        summary: 'Create a new badge class',
-        description: 'Creates a new badge class entity',
+        tags: ["Badge Classes"],
+        summary: "Create a new badge class",
+        description: "Creates a new badge class entity",
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/BadgeClassInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/BadgeClassInput",
+              },
+            },
+          },
         },
         responses: {
-          '201': {
-            description: 'Badge class created successfully',
+          "201": {
+            description: "Badge class created successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/BadgeClassResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/BadgeClassResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/badge-classes/{id}': {
+    "/badge-classes/{id}": {
       get: {
-        tags: ['Badge Classes'],
-        summary: 'Get badge class by ID',
-        description: 'Returns a single badge class by ID',
+        tags: ["Badge Classes"],
+        summary: "Get badge class by ID",
+        description: "Returns a single badge class by ID",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the badge class to retrieve'
-          }
+            description: "ID of the badge class to retrieve",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/BadgeClassResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/BadgeClassResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Badge class not found',
+          "404": {
+            description: "Badge class not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       put: {
-        tags: ['Badge Classes'],
-        summary: 'Update badge class by ID',
-        description: 'Updates an existing badge class',
+        tags: ["Badge Classes"],
+        summary: "Update badge class by ID",
+        description: "Updates an existing badge class",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the badge class to update'
-          }
+            description: "ID of the badge class to update",
+          },
         ],
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/BadgeClassUpdateInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/BadgeClassUpdateInput",
+              },
+            },
+          },
         },
         responses: {
-          '200': {
-            description: 'Badge class updated successfully',
+          "200": {
+            description: "Badge class updated successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/BadgeClassResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/BadgeClassResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Badge class not found',
+          "404": {
+            description: "Badge class not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       delete: {
-        tags: ['Badge Classes'],
-        summary: 'Delete badge class by ID',
-        description: 'Deletes a badge class',
+        tags: ["Badge Classes"],
+        summary: "Delete badge class by ID",
+        description: "Deletes a badge class",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the badge class to delete'
-          }
+            description: "ID of the badge class to delete",
+          },
         ],
         responses: {
-          '204': {
-            description: 'Badge class deleted successfully'
+          "204": {
+            description: "Badge class deleted successfully",
           },
-          '404': {
-            description: 'Badge class not found',
+          "404": {
+            description: "Badge class not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/badge-classes/issuer/{issuerId}': {
+    "/badge-classes/issuer/{issuerId}": {
       get: {
-        tags: ['Badge Classes'],
-        summary: 'Get badge classes by issuer ID',
-        description: 'Returns all badge classes for a specific issuer',
+        tags: ["Badge Classes"],
+        summary: "Get badge classes by issuer ID",
+        description: "Returns all badge classes for a specific issuer",
         parameters: [
           {
-            name: 'issuerId',
-            in: 'path',
+            name: "issuerId",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the issuer to retrieve badge classes for'
-          }
+            description: "ID of the issuer to retrieve badge classes for",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  type: 'object',
+                  type: "object",
                   properties: {
                     success: {
-                      type: 'boolean',
-                      example: true
+                      type: "boolean",
+                      example: true,
                     },
                     data: {
-                      type: 'array',
+                      type: "array",
                       items: {
-                        $ref: '#/components/schemas/BadgeClass'
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        $ref: "#/components/schemas/BadgeClass",
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions': {
+    "/assertions": {
       post: {
-        tags: ['Assertions'],
-        summary: 'Create a new assertion',
-        description: 'Creates a new assertion entity',
+        tags: ["Assertions"],
+        summary: "Create a new assertion",
+        description: "Creates a new assertion entity",
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/AssertionInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/AssertionInput",
+              },
+            },
+          },
         },
         responses: {
-          '201': {
-            description: 'Assertion created successfully',
+          "201": {
+            description: "Assertion created successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/AssertionResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/AssertionResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions/{id}': {
+    "/assertions/{id}": {
       get: {
-        tags: ['Assertions'],
-        summary: 'Get assertion by ID',
-        description: 'Returns a single assertion by ID',
+        tags: ["Assertions"],
+        summary: "Get assertion by ID",
+        description: "Returns a single assertion by ID",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the assertion to retrieve'
-          }
+            description: "ID of the assertion to retrieve",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/AssertionResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/AssertionResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Assertion not found',
+          "404": {
+            description: "Assertion not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       put: {
-        tags: ['Assertions'],
-        summary: 'Update assertion by ID',
-        description: 'Updates an existing assertion',
+        tags: ["Assertions"],
+        summary: "Update assertion by ID",
+        description: "Updates an existing assertion",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the assertion to update'
-          }
+            description: "ID of the assertion to update",
+          },
         ],
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                $ref: '#/components/schemas/AssertionUpdateInput'
-              }
-            }
-          }
+                $ref: "#/components/schemas/AssertionUpdateInput",
+              },
+            },
+          },
         },
         responses: {
-          '200': {
-            description: 'Assertion updated successfully',
+          "200": {
+            description: "Assertion updated successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/AssertionResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/AssertionResponse",
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Invalid input',
+          "400": {
+            description: "Invalid input",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Assertion not found',
+          "404": {
+            description: "Assertion not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
       },
       delete: {
-        tags: ['Assertions'],
-        summary: 'Delete assertion by ID',
-        description: 'Deletes an assertion',
+        tags: ["Assertions"],
+        summary: "Delete assertion by ID",
+        description: "Deletes an assertion",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the assertion to delete'
-          }
+            description: "ID of the assertion to delete",
+          },
         ],
         responses: {
-          '204': {
-            description: 'Assertion deleted successfully'
+          "204": {
+            description: "Assertion deleted successfully",
           },
-          '404': {
-            description: 'Assertion not found',
+          "404": {
+            description: "Assertion not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions/{id}/revoke': {
+    "/assertions/{id}/revoke": {
       post: {
-        tags: ['Assertions'],
-        summary: 'Revoke assertion by ID',
-        description: 'Revokes an existing assertion',
+        tags: ["Assertions"],
+        summary: "Revoke assertion by ID",
+        description: "Revokes an existing assertion",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the assertion to revoke'
-          }
+            description: "ID of the assertion to revoke",
+          },
         ],
         requestBody: {
           required: true,
           content: {
-            'application/json': {
+            "application/json": {
               schema: {
-                type: 'object',
-                required: ['reason'],
+                type: "object",
+                required: ["reason"],
                 properties: {
                   reason: {
-                    type: 'string',
-                    description: 'Reason for revocation',
-                    example: 'Badge awarded in error'
-                  }
-                }
-              }
-            }
-          }
+                    type: "string",
+                    description: "Reason for revocation",
+                    example: "Badge awarded in error",
+                  },
+                },
+              },
+            },
+          },
         },
         responses: {
-          '200': {
-            description: 'Assertion revoked successfully',
+          "200": {
+            description: "Assertion revoked successfully",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/AssertionResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/AssertionResponse",
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Assertion not found',
+          "404": {
+            description: "Assertion not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions/{id}/verify': {
+    "/assertions/{id}/verify": {
       get: {
-        tags: ['Assertions'],
-        summary: 'Verify assertion by ID',
-        description: 'Verifies an assertion\'s validity',
+        tags: ["Assertions"],
+        summary: "Verify assertion by ID",
+        description: "Verifies an assertion's validity",
         parameters: [
           {
-            name: 'id',
-            in: 'path',
+            name: "id",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the assertion to verify'
-          }
+            description: "ID of the assertion to verify",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Verification result',
+          "200": {
+            description: "Verification result",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  type: 'object',
+                  type: "object",
                   properties: {
                     success: {
-                      type: 'boolean',
-                      example: true
+                      type: "boolean",
+                      example: true,
                     },
                     data: {
-                      type: 'object',
+                      type: "object",
                       properties: {
                         isValid: {
-                          type: 'boolean',
-                          description: 'Overall validity of the assertion',
-                          example: true
+                          type: "boolean",
+                          description: "Overall validity of the assertion",
+                          example: true,
                         },
                         isExpired: {
-                          type: 'boolean',
-                          description: 'Whether the assertion has expired',
-                          example: false
+                          type: "boolean",
+                          description: "Whether the assertion has expired",
+                          example: false,
                         },
                         isRevoked: {
-                          type: 'boolean',
-                          description: 'Whether the assertion has been revoked',
-                          example: false
+                          type: "boolean",
+                          description: "Whether the assertion has been revoked",
+                          example: false,
                         },
                         hasValidSignature: {
-                          type: 'boolean',
-                          description: 'Whether the assertion has a valid signature',
-                          example: true
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                          type: "boolean",
+                          description:
+                            "Whether the assertion has a valid signature",
+                          example: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
-          '404': {
-            description: 'Assertion not found',
+          "404": {
+            description: "Assertion not found",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions/badge-class/{badgeClassId}': {
+    "/assertions/badge-class/{badgeClassId}": {
       get: {
-        tags: ['Assertions'],
-        summary: 'Get assertions by badge class ID',
-        description: 'Returns all assertions for a specific badge class',
+        tags: ["Assertions"],
+        summary: "Get assertions by badge class ID",
+        description: "Returns all assertions for a specific badge class",
         parameters: [
           {
-            name: 'badgeClassId',
-            in: 'path',
+            name: "badgeClassId",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the badge class to retrieve assertions for'
-          }
+            description: "ID of the badge class to retrieve assertions for",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  type: 'object',
+                  type: "object",
                   properties: {
                     success: {
-                      type: 'boolean',
-                      example: true
+                      type: "boolean",
+                      example: true,
                     },
                     data: {
-                      type: 'array',
+                      type: "array",
                       items: {
-                        $ref: '#/components/schemas/Assertion'
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        $ref: "#/components/schemas/Assertion",
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    '/assertions/recipient/{recipientId}': {
+    "/assertions/recipient/{recipientId}": {
       get: {
-        tags: ['Assertions'],
-        summary: 'Get assertions by recipient ID',
-        description: 'Returns all assertions for a specific recipient',
+        tags: ["Assertions"],
+        summary: "Get assertions by recipient ID",
+        description: "Returns all assertions for a specific recipient",
         parameters: [
           {
-            name: 'recipientId',
-            in: 'path',
+            name: "recipientId",
+            in: "path",
             required: true,
             schema: {
-              type: 'string',
-              format: 'uri'
+              type: "string",
+              format: "uri",
             },
-            description: 'ID of the recipient to retrieve assertions for'
-          }
+            description: "ID of the recipient to retrieve assertions for",
+          },
         ],
         responses: {
-          '200': {
-            description: 'Successful operation',
+          "200": {
+            description: "Successful operation",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  type: 'object',
+                  type: "object",
                   properties: {
                     success: {
-                      type: 'boolean',
-                      example: true
+                      type: "boolean",
+                      example: true,
                     },
                     data: {
-                      type: 'array',
+                      type: "array",
                       items: {
-                        $ref: '#/components/schemas/Assertion'
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        $ref: "#/components/schemas/Assertion",
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
-          '500': {
-            description: 'Server error',
+          "500": {
+            description: "Server error",
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
-                  $ref: '#/components/schemas/ErrorResponse'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       Issuer: {
-        type: 'object',
+        type: "object",
         properties: {
-          '@context': {
-            type: 'string',
-            description: 'JSON-LD context',
-            example: OPENBADGES_V3_CONTEXT_EXAMPLE
+          "@context": {
+            type: "string",
+            description: "JSON-LD context",
+            example: OPENBADGES_V3_CONTEXT_EXAMPLE,
           },
           type: {
-            type: 'string',
-            description: 'Type of the entity',
-            example: 'Profile'
+            type: "string",
+            description: "Type of the entity",
+            example: "Profile",
           },
           id: {
-            type: 'string',
-            format: 'uri',
-            description: 'Unique identifier for the issuer',
-            example: '123e4567-e89b-12d3-a456-426614174000'
+            type: "string",
+            format: "uri",
+            description: "Unique identifier for the issuer",
+            example: "123e4567-e89b-12d3-a456-426614174000",
           },
           name: {
-            type: 'string',
-            description: 'Name of the issuer',
-            example: 'Example University'
+            type: "string",
+            description: "Name of the issuer",
+            example: "Example University",
           },
           url: {
-            type: 'string',
-            format: 'uri',
-            description: 'URL of the issuer',
-            example: EXAMPLE_EDU_URL
+            type: "string",
+            format: "uri",
+            description: "URL of the issuer",
+            example: EXAMPLE_EDU_URL,
           },
           email: {
-            type: 'string',
-            description: 'Email of the issuer',
-            example: 'badges@example.edu'
+            type: "string",
+            description: "Email of the issuer",
+            example: "badges@example.edu",
           },
           description: {
-            type: 'string',
-            description: 'Description of the issuer',
-            example: 'A leading institution in online education'
+            type: "string",
+            description: "Description of the issuer",
+            example: "A leading institution in online education",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL to the issuer\'s image',
-            example: 'https://example.edu/logo.png'
+            description: "URL to the issuer's image",
+            example: "https://example.edu/logo.png",
           },
           publicKey: {
-            type: 'object',
-            description: 'Public key for verification',
+            type: "object",
+            description: "Public key for verification",
             properties: {
               id: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_KEYS_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_KEYS_URL,
               },
               owner: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_URL,
               },
               publicKeyPem: {
-                type: 'string',
-                example: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----'
-              }
-            }
-          }
+                type: "string",
+                example:
+                  "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----",
+              },
+            },
+          },
         },
-        required: ['@context', 'type', 'id', 'name', 'url']
+        required: ["@context", "type", "id", "name", "url"],
       },
       IssuerInput: {
-        type: 'object',
+        type: "object",
         properties: {
           name: {
-            type: 'string',
-            description: 'Name of the issuer',
-            example: 'Example University'
+            type: "string",
+            description: "Name of the issuer",
+            example: "Example University",
           },
           url: {
-            type: 'string',
-            format: 'uri',
-            description: 'URL of the issuer',
-            example: EXAMPLE_EDU_URL
+            type: "string",
+            format: "uri",
+            description: "URL of the issuer",
+            example: EXAMPLE_EDU_URL,
           },
           email: {
-            type: 'string',
-            description: 'Email of the issuer',
-            example: 'badges@example.edu'
+            type: "string",
+            description: "Email of the issuer",
+            example: "badges@example.edu",
           },
           description: {
-            type: 'string',
-            description: 'Description of the issuer',
-            example: 'A leading institution in online education'
+            type: "string",
+            description: "Description of the issuer",
+            example: "A leading institution in online education",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL to the issuer\'s image',
-            example: 'https://example.edu/logo.png'
+            description: "URL to the issuer's image",
+            example: "https://example.edu/logo.png",
           },
           publicKey: {
-            type: 'object',
-            description: 'Public key for verification',
+            type: "object",
+            description: "Public key for verification",
             properties: {
               id: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_KEYS_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_KEYS_URL,
               },
               owner: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_URL,
               },
               publicKeyPem: {
-                type: 'string',
-                example: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----'
-              }
-            }
-          }
+                type: "string",
+                example:
+                  "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----",
+              },
+            },
+          },
         },
-        required: ['name', 'url']
+        required: ["name", "url"],
       },
       IssuerUpdateInput: {
-        type: 'object',
+        type: "object",
         properties: {
           name: {
-            type: 'string',
-            description: 'Name of the issuer',
-            example: 'Example University'
+            type: "string",
+            description: "Name of the issuer",
+            example: "Example University",
           },
           url: {
-            type: 'string',
-            format: 'uri',
-            description: 'URL of the issuer',
-            example: EXAMPLE_EDU_URL
+            type: "string",
+            format: "uri",
+            description: "URL of the issuer",
+            example: EXAMPLE_EDU_URL,
           },
           email: {
-            type: 'string',
-            description: 'Email of the issuer',
-            example: 'badges@example.edu'
+            type: "string",
+            description: "Email of the issuer",
+            example: "badges@example.edu",
           },
           description: {
-            type: 'string',
-            description: 'Description of the issuer',
-            example: 'A leading institution in online education'
+            type: "string",
+            description: "Description of the issuer",
+            example: "A leading institution in online education",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL to the issuer\'s image',
-            example: 'https://example.edu/logo.png'
+            description: "URL to the issuer's image",
+            example: "https://example.edu/logo.png",
           },
           publicKey: {
-            type: 'object',
-            description: 'Public key for verification',
+            type: "object",
+            description: "Public key for verification",
             properties: {
               id: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_KEYS_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_KEYS_URL,
               },
               owner: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_URL,
               },
               publicKeyPem: {
-                type: 'string',
-                example: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----'
-              }
-            }
-          }
-        }
+                type: "string",
+                example:
+                  "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----",
+              },
+            },
+          },
+        },
       },
       IssuerResponse: {
-        type: 'object',
+        type: "object",
         properties: {
           success: {
-            type: 'boolean',
-            example: true
+            type: "boolean",
+            example: true,
           },
           data: {
-            $ref: '#/components/schemas/Issuer'
-          }
-        }
+            $ref: "#/components/schemas/Issuer",
+          },
+        },
       },
       BadgeClass: {
-        type: 'object',
+        type: "object",
         properties: {
-          '@context': {
-            type: 'string',
-            description: 'JSON-LD context',
-            example: OPENBADGES_V3_CONTEXT_EXAMPLE
+          "@context": {
+            type: "string",
+            description: "JSON-LD context",
+            example: OPENBADGES_V3_CONTEXT_EXAMPLE,
           },
           type: {
-            type: 'string',
-            description: 'Type of the entity',
-            example: 'BadgeClass'
+            type: "string",
+            description: "Type of the entity",
+            example: "BadgeClass",
           },
           id: {
-            type: 'string',
-            format: 'uri',
-            description: 'Unique identifier for the badge class',
-            example: '123e4567-e89b-12d3-a456-426614174001'
+            type: "string",
+            format: "uri",
+            description: "Unique identifier for the badge class",
+            example: "123e4567-e89b-12d3-a456-426614174001",
           },
           issuer: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the issuer',
-            example: '123e4567-e89b-12d3-a456-426614174000'
+            type: "string",
+            format: "uri",
+            description: "ID of the issuer",
+            example: "123e4567-e89b-12d3-a456-426614174000",
           },
           name: {
-            type: 'string',
-            description: 'Name of the badge class',
-            example: 'Introduction to Programming'
+            type: "string",
+            description: "Name of the badge class",
+            example: "Introduction to Programming",
           },
           description: {
-            type: 'string',
-            description: 'Description of the badge class',
-            example: 'This badge is awarded to students who complete the Introduction to Programming course'
+            type: "string",
+            description: "Description of the badge class",
+            example:
+              "This badge is awarded to students who complete the Introduction to Programming course",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL or object for the badge image',
-            example: 'https://example.edu/badges/intro-to-programming.png'
+            description: "URL or object for the badge image",
+            example: "https://example.edu/badges/intro-to-programming.png",
           },
           criteria: {
-            type: 'object',
-            description: 'Criteria for earning the badge',
+            type: "object",
+            description: "Criteria for earning the badge",
             properties: {
               narrative: {
-                type: 'string',
-                example: 'The recipient must complete all course modules with a score of at least 70%'
-              }
-            }
+                type: "string",
+                example:
+                  "The recipient must complete all course modules with a score of at least 70%",
+              },
+            },
           },
           alignment: {
-            type: 'array',
-            description: 'Alignment with external standards',
+            type: "array",
+            description: "Alignment with external standards",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 targetName: {
-                  type: 'string',
-                  example: 'ISTE Standard 1'
+                  type: "string",
+                  example: "ISTE Standard 1",
                 },
                 targetUrl: {
-                  type: 'string',
-                  example: 'https://www.iste.org/standards/iste-standards/standards-for-students'
+                  type: "string",
+                  example:
+                    "https://www.iste.org/standards/iste-standards/standards-for-students",
                 },
                 targetDescription: {
-                  type: 'string',
-                  example: 'Empowered Learner'
-                }
-              }
-            }
+                  type: "string",
+                  example: "Empowered Learner",
+                },
+              },
+            },
           },
           tags: {
-            type: 'array',
-            description: 'Tags for the badge class',
+            type: "array",
+            description: "Tags for the badge class",
             items: {
-              type: 'string',
-              example: 'programming'
-            }
-          }
+              type: "string",
+              example: "programming",
+            },
+          },
         },
-        required: ['@context', 'type', 'id', 'issuer', 'name', 'description', 'image', 'criteria']
+        required: [
+          "@context",
+          "type",
+          "id",
+          "issuer",
+          "name",
+          "description",
+          "image",
+          "criteria",
+        ],
       },
       BadgeClassInput: {
-        type: 'object',
+        type: "object",
         properties: {
           issuer: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the issuer',
-            example: '123e4567-e89b-12d3-a456-426614174000'
+            type: "string",
+            format: "uri",
+            description: "ID of the issuer",
+            example: "123e4567-e89b-12d3-a456-426614174000",
           },
           name: {
-            type: 'string',
-            description: 'Name of the badge class',
-            example: 'Introduction to Programming'
+            type: "string",
+            description: "Name of the badge class",
+            example: "Introduction to Programming",
           },
           description: {
-            type: 'string',
-            description: 'Description of the badge class',
-            example: 'This badge is awarded to students who complete the Introduction to Programming course'
+            type: "string",
+            description: "Description of the badge class",
+            example:
+              "This badge is awarded to students who complete the Introduction to Programming course",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL or object for the badge image',
-            example: 'https://example.edu/badges/intro-to-programming.png'
+            description: "URL or object for the badge image",
+            example: "https://example.edu/badges/intro-to-programming.png",
           },
           criteria: {
-            type: 'object',
-            description: 'Criteria for earning the badge',
+            type: "object",
+            description: "Criteria for earning the badge",
             properties: {
               narrative: {
-                type: 'string',
-                example: 'The recipient must complete all course modules with a score of at least 70%'
-              }
-            }
+                type: "string",
+                example:
+                  "The recipient must complete all course modules with a score of at least 70%",
+              },
+            },
           },
           alignment: {
-            type: 'array',
-            description: 'Alignment with external standards',
+            type: "array",
+            description: "Alignment with external standards",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 targetName: {
-                  type: 'string',
-                  example: 'ISTE Standard 1'
+                  type: "string",
+                  example: "ISTE Standard 1",
                 },
                 targetUrl: {
-                  type: 'string',
-                  example: 'https://www.iste.org/standards/iste-standards/standards-for-students'
+                  type: "string",
+                  example:
+                    "https://www.iste.org/standards/iste-standards/standards-for-students",
                 },
                 targetDescription: {
-                  type: 'string',
-                  example: 'Empowered Learner'
-                }
-              }
-            }
+                  type: "string",
+                  example: "Empowered Learner",
+                },
+              },
+            },
           },
           tags: {
-            type: 'array',
-            description: 'Tags for the badge class',
+            type: "array",
+            description: "Tags for the badge class",
             items: {
-              type: 'string',
-              example: 'programming'
-            }
-          }
+              type: "string",
+              example: "programming",
+            },
+          },
         },
-        required: ['issuer', 'name', 'description', 'image', 'criteria']
+        required: ["issuer", "name", "description", "image", "criteria"],
       },
       BadgeClassUpdateInput: {
-        type: 'object',
+        type: "object",
         properties: {
           issuer: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the issuer',
-            example: '123e4567-e89b-12d3-a456-426614174000'
+            type: "string",
+            format: "uri",
+            description: "ID of the issuer",
+            example: "123e4567-e89b-12d3-a456-426614174000",
           },
           name: {
-            type: 'string',
-            description: 'Name of the badge class',
-            example: 'Introduction to Programming'
+            type: "string",
+            description: "Name of the badge class",
+            example: "Introduction to Programming",
           },
           description: {
-            type: 'string',
-            description: 'Description of the badge class',
-            example: 'This badge is awarded to students who complete the Introduction to Programming course'
+            type: "string",
+            description: "Description of the badge class",
+            example:
+              "This badge is awarded to students who complete the Introduction to Programming course",
           },
           image: {
             oneOf: [
-              { type: 'string', format: 'uri' },
-              { $ref: '#/components/schemas/OB3ImageObject' }
+              { type: "string", format: "uri" },
+              { $ref: "#/components/schemas/OB3ImageObject" },
             ],
-            description: 'URL or object for the badge image',
-            example: 'https://example.edu/badges/intro-to-programming.png'
+            description: "URL or object for the badge image",
+            example: "https://example.edu/badges/intro-to-programming.png",
           },
           criteria: {
-            type: 'object',
-            description: 'Criteria for earning the badge',
+            type: "object",
+            description: "Criteria for earning the badge",
             properties: {
               narrative: {
-                type: 'string',
-                example: 'The recipient must complete all course modules with a score of at least 70%'
-              }
-            }
+                type: "string",
+                example:
+                  "The recipient must complete all course modules with a score of at least 70%",
+              },
+            },
           },
           alignment: {
-            type: 'array',
-            description: 'Alignment with external standards',
+            type: "array",
+            description: "Alignment with external standards",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 targetName: {
-                  type: 'string',
-                  example: 'ISTE Standard 1'
+                  type: "string",
+                  example: "ISTE Standard 1",
                 },
                 targetUrl: {
-                  type: 'string',
-                  example: 'https://www.iste.org/standards/iste-standards/standards-for-students'
+                  type: "string",
+                  example:
+                    "https://www.iste.org/standards/iste-standards/standards-for-students",
                 },
                 targetDescription: {
-                  type: 'string',
-                  example: 'Empowered Learner'
-                }
-              }
-            }
+                  type: "string",
+                  example: "Empowered Learner",
+                },
+              },
+            },
           },
           tags: {
-            type: 'array',
-            description: 'Tags for the badge class',
+            type: "array",
+            description: "Tags for the badge class",
             items: {
-              type: 'string',
-              example: 'programming'
-            }
-          }
-        }
+              type: "string",
+              example: "programming",
+            },
+          },
+        },
       },
       BadgeClassResponse: {
-        type: 'object',
+        type: "object",
         properties: {
           success: {
-            type: 'boolean',
-            example: true
+            type: "boolean",
+            example: true,
           },
           data: {
-            $ref: '#/components/schemas/BadgeClass'
-          }
-        }
+            $ref: "#/components/schemas/BadgeClass",
+          },
+        },
       },
       Assertion: {
-        type: 'object',
+        type: "object",
         properties: {
-          '@context': {
-            type: 'string',
-            description: 'JSON-LD context',
-            example: OPENBADGES_V3_CONTEXT_EXAMPLE
+          "@context": {
+            type: "string",
+            description: "JSON-LD context",
+            example: OPENBADGES_V3_CONTEXT_EXAMPLE,
           },
           type: {
-            type: 'string',
-            description: 'Type of the entity',
-            example: 'Assertion'
+            type: "string",
+            description: "Type of the entity",
+            example: "Assertion",
           },
           id: {
-            type: 'string',
-            format: 'uri',
-            description: 'Unique identifier for the assertion',
-            example: '123e4567-e89b-12d3-a456-426614174002'
+            type: "string",
+            format: "uri",
+            description: "Unique identifier for the assertion",
+            example: "123e4567-e89b-12d3-a456-426614174002",
           },
           badgeClass: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the badge class',
-            example: '123e4567-e89b-12d3-a456-426614174001'
+            type: "string",
+            format: "uri",
+            description: "ID of the badge class",
+            example: "123e4567-e89b-12d3-a456-426614174001",
           },
           recipient: {
-            type: 'object',
-            description: 'Recipient of the badge',
+            type: "object",
+            description: "Recipient of the badge",
             properties: {
               type: {
-                type: 'string',
-                example: 'email'
+                type: "string",
+                example: "email",
               },
               identity: {
-                type: 'string',
-                example: 'student@example.edu'
+                type: "string",
+                example: "student@example.edu",
               },
               hashed: {
-                type: 'boolean',
-                example: false
-              }
-            }
+                type: "boolean",
+                example: false,
+              },
+            },
           },
           issuedOn: {
-            type: 'string',
-            description: 'Date when the badge was issued',
-            example: '2023-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge was issued",
+            example: "2023-01-01T00:00:00Z",
           },
           expires: {
-            type: 'string',
-            description: 'Date when the badge expires',
-            example: '2024-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge expires",
+            example: "2024-01-01T00:00:00Z",
           },
           evidence: {
-            type: 'array',
-            description: 'Evidence for the badge',
+            type: "array",
+            description: "Evidence for the badge",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 type: {
-                  type: 'string',
-                  example: 'Evidence'
+                  type: "string",
+                  example: "Evidence",
                 },
                 id: {
-                  type: 'string',
-                  format: 'uri',
-                  example: EXAMPLE_EDU_EVIDENCE_URL
+                  type: "string",
+                  format: "uri",
+                  example: EXAMPLE_EDU_EVIDENCE_URL,
                 },
                 name: {
-                  type: 'string',
-                  example: 'Course Completion Certificate'
+                  type: "string",
+                  example: "Course Completion Certificate",
                 },
                 description: {
-                  type: 'string',
-                  example: 'Certificate of completion for the Introduction to Programming course'
+                  type: "string",
+                  example:
+                    "Certificate of completion for the Introduction to Programming course",
                 },
                 genre: {
-                  type: 'string',
-                  example: 'Certificate'
+                  type: "string",
+                  example: "Certificate",
                 },
                 audience: {
-                  type: 'string',
-                  example: 'Public'
-                }
-              }
-            }
+                  type: "string",
+                  example: "Public",
+                },
+              },
+            },
           },
           verification: {
-            type: 'object',
-            description: 'Verification information',
+            type: "object",
+            description: "Verification information",
             properties: {
               type: {
-                type: 'string',
-                example: 'SignedBadge'
+                type: "string",
+                example: "SignedBadge",
               },
               creator: {
-                type: 'string',
-                format: 'uri',
-                example: EXAMPLE_EDU_KEYS_URL
+                type: "string",
+                format: "uri",
+                example: EXAMPLE_EDU_KEYS_URL,
               },
               created: {
-                type: 'string',
-                example: '2023-01-01T00:00:00Z'
+                type: "string",
+                example: "2023-01-01T00:00:00Z",
               },
               signatureValue: {
-                type: 'string',
-                example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'
-              }
-            }
+                type: "string",
+                example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+              },
+            },
           },
           revoked: {
-            type: 'boolean',
-            description: 'Whether the badge has been revoked',
-            example: false
+            type: "boolean",
+            description: "Whether the badge has been revoked",
+            example: false,
           },
           revocationReason: {
-            type: 'string',
-            description: 'Reason for revocation',
-            example: 'Badge awarded in error'
-          }
+            type: "string",
+            description: "Reason for revocation",
+            example: "Badge awarded in error",
+          },
         },
-        required: ['@context', 'type', 'id', 'badgeClass', 'recipient', 'issuedOn']
+        required: [
+          "@context",
+          "type",
+          "id",
+          "badgeClass",
+          "recipient",
+          "issuedOn",
+        ],
       },
       AssertionInput: {
-        type: 'object',
+        type: "object",
         properties: {
           badgeClass: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the badge class',
-            example: '123e4567-e89b-12d3-a456-426614174001'
+            type: "string",
+            format: "uri",
+            description: "ID of the badge class",
+            example: "123e4567-e89b-12d3-a456-426614174001",
           },
           recipient: {
-            type: 'object',
-            description: 'Recipient of the badge',
+            type: "object",
+            description: "Recipient of the badge",
             properties: {
               type: {
-                type: 'string',
-                example: 'email'
+                type: "string",
+                example: "email",
               },
               identity: {
-                type: 'string',
-                example: 'student@example.edu'
+                type: "string",
+                example: "student@example.edu",
               },
               hashed: {
-                type: 'boolean',
-                example: false
-              }
-            }
+                type: "boolean",
+                example: false,
+              },
+            },
           },
           issuedOn: {
-            type: 'string',
-            description: 'Date when the badge was issued',
-            example: '2023-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge was issued",
+            example: "2023-01-01T00:00:00Z",
           },
           expires: {
-            type: 'string',
-            description: 'Date when the badge expires',
-            example: '2024-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge expires",
+            example: "2024-01-01T00:00:00Z",
           },
           evidence: {
-            type: 'array',
-            description: 'Evidence for the badge',
+            type: "array",
+            description: "Evidence for the badge",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 type: {
-                  type: 'string',
-                  example: 'Evidence'
+                  type: "string",
+                  example: "Evidence",
                 },
                 id: {
-                  type: 'string',
-                  format: 'uri',
-                  example: EXAMPLE_EDU_EVIDENCE_URL
+                  type: "string",
+                  format: "uri",
+                  example: EXAMPLE_EDU_EVIDENCE_URL,
                 },
                 name: {
-                  type: 'string',
-                  example: 'Course Completion Certificate'
+                  type: "string",
+                  example: "Course Completion Certificate",
                 },
                 description: {
-                  type: 'string',
-                  example: 'Certificate of completion for the Introduction to Programming course'
+                  type: "string",
+                  example:
+                    "Certificate of completion for the Introduction to Programming course",
                 },
                 genre: {
-                  type: 'string',
-                  example: 'Certificate'
+                  type: "string",
+                  example: "Certificate",
                 },
                 audience: {
-                  type: 'string',
-                  example: 'Public'
-                }
-              }
-            }
-          }
+                  type: "string",
+                  example: "Public",
+                },
+              },
+            },
+          },
         },
-        required: ['badgeClass', 'recipient']
+        required: ["badgeClass", "recipient"],
       },
       AssertionUpdateInput: {
-        type: 'object',
+        type: "object",
         properties: {
           badgeClass: {
-            type: 'string',
-            format: 'uri',
-            description: 'ID of the badge class',
-            example: '123e4567-e89b-12d3-a456-426614174001'
+            type: "string",
+            format: "uri",
+            description: "ID of the badge class",
+            example: "123e4567-e89b-12d3-a456-426614174001",
           },
           recipient: {
-            type: 'object',
-            description: 'Recipient of the badge',
+            type: "object",
+            description: "Recipient of the badge",
             properties: {
               type: {
-                type: 'string',
-                example: 'email'
+                type: "string",
+                example: "email",
               },
               identity: {
-                type: 'string',
-                example: 'student@example.edu'
+                type: "string",
+                example: "student@example.edu",
               },
               hashed: {
-                type: 'boolean',
-                example: false
-              }
-            }
+                type: "boolean",
+                example: false,
+              },
+            },
           },
           issuedOn: {
-            type: 'string',
-            description: 'Date when the badge was issued',
-            example: '2023-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge was issued",
+            example: "2023-01-01T00:00:00Z",
           },
           expires: {
-            type: 'string',
-            description: 'Date when the badge expires',
-            example: '2024-01-01T00:00:00Z'
+            type: "string",
+            description: "Date when the badge expires",
+            example: "2024-01-01T00:00:00Z",
           },
           evidence: {
-            type: 'array',
-            description: 'Evidence for the badge',
+            type: "array",
+            description: "Evidence for the badge",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
                 type: {
-                  type: 'string',
-                  example: 'Evidence'
+                  type: "string",
+                  example: "Evidence",
                 },
                 id: {
-                  type: 'string',
-                  format: 'uri',
-                  example: EXAMPLE_EDU_EVIDENCE_URL
+                  type: "string",
+                  format: "uri",
+                  example: EXAMPLE_EDU_EVIDENCE_URL,
                 },
                 name: {
-                  type: 'string',
-                  example: 'Course Completion Certificate'
+                  type: "string",
+                  example: "Course Completion Certificate",
                 },
                 description: {
-                  type: 'string',
-                  example: 'Certificate of completion for the Introduction to Programming course'
+                  type: "string",
+                  example:
+                    "Certificate of completion for the Introduction to Programming course",
                 },
                 genre: {
-                  type: 'string',
-                  example: 'Certificate'
+                  type: "string",
+                  example: "Certificate",
                 },
                 audience: {
-                  type: 'string',
-                  example: 'Public'
-                }
-              }
-            }
-          }
-        }
+                  type: "string",
+                  example: "Public",
+                },
+              },
+            },
+          },
+        },
       },
       AssertionResponse: {
-        type: 'object',
+        type: "object",
         properties: {
           success: {
-            type: 'boolean',
-            example: true
+            type: "boolean",
+            example: true,
           },
           data: {
-            $ref: '#/components/schemas/Assertion'
-          }
-        }
+            $ref: "#/components/schemas/Assertion",
+          },
+        },
       },
       OB3ImageObject: {
-        type: 'object',
+        type: "object",
         properties: {
           id: {
-            type: 'string',
-            format: 'uri',
-            description: 'Unique identifier for the image object',
-            example: 'https://example.edu/images/1'
+            type: "string",
+            format: "uri",
+            description: "Unique identifier for the image object",
+            example: "https://example.edu/images/1",
           },
           type: {
-            type: 'string',
-            enum: ['Image'],
-            example: 'Image'
+            type: "string",
+            enum: ["Image"],
+            example: "Image",
           },
           caption: {
-            oneOf: [
-              { type: 'string' },
-              { type: 'object' }
-            ],
-            description: 'Caption or multilingual captions for the image',
-            example: 'A badge image'
+            oneOf: [{ type: "string" }, { type: "object" }],
+            description: "Caption or multilingual captions for the image",
+            example: "A badge image",
           },
           author: {
-            type: 'string',
-            format: 'uri',
-            description: 'URI of the image author',
-            example: EXAMPLE_EDU_URL
-          }
+            type: "string",
+            format: "uri",
+            description: "URI of the image author",
+            example: EXAMPLE_EDU_URL,
+          },
         },
-        required: ['id', 'type']
+        required: ["id", "type"],
       },
       ErrorResponse: {
-        type: 'object',
+        type: "object",
         properties: {
           success: {
-            type: 'boolean',
-            example: false
+            type: "boolean",
+            example: false,
           },
           error: {
-            type: 'string',
-            description: 'Error message',
-            example: 'Validation error'
+            type: "string",
+            description: "Error message",
+            example: "Validation error",
           },
           details: {
-            type: 'array',
-            description: 'Detailed error information',
+            type: "array",
+            description: "Detailed error information",
             items: {
-              type: 'string',
-              example: 'Issuer name is required'
-            }
-          }
-        }
-      }
-    }
-  }
+              type: "string",
+              example: "Issuer name is required",
+            },
+          },
+        },
+      },
+    },
+  },
 };

@@ -5,15 +5,15 @@
  * and the Data Mapper pattern with Drizzle ORM.
  */
 
-import { eq, and } from 'drizzle-orm';
-import { PlatformUser } from '@domains/backpack/platform-user.entity';
-import type { PlatformUserRepository } from '@domains/backpack/platform-user.repository';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@utils/logging/logger.service';
-import { platformUsers } from '../schema';
-import { SqlitePlatformUserMapper } from '../mappers/sqlite-platform-user.mapper';
-import { createId } from '@paralleldrive/cuid2';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import { eq, and } from "drizzle-orm";
+import { PlatformUser } from "@domains/backpack/platform-user.entity";
+import type { PlatformUserRepository } from "@domains/backpack/platform-user.repository";
+import type { Shared } from "openbadges-types";
+import { logger } from "@utils/logging/logger.service";
+import { platformUsers } from "../schema";
+import { SqlitePlatformUserMapper } from "../mappers/sqlite-platform-user.mapper";
+import { createId } from "@paralleldrive/cuid2";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
 
 export class SqlitePlatformUserRepository implements PlatformUserRepository {
   private mapper: SqlitePlatformUserMapper;
@@ -30,7 +30,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
     return this.connectionManager.getDatabase();
   }
 
-  async create(user: Omit<PlatformUser, 'id'>): Promise<PlatformUser> {
+  async create(user: Omit<PlatformUser, "id">): Promise<PlatformUser> {
     try {
       // Generate ID and create full entity
       const id = createId() as Shared.IRI;
@@ -45,7 +45,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
       // Return the domain entity
       return newUser;
     } catch (error) {
-      logger.error('Error creating platform user in SQLite repository', {
+      logger.error("Error creating platform user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         user,
       });
@@ -69,7 +69,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
       // Convert database record to domain entity
       return this.mapper.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding platform user by ID in SQLite repository', {
+      logger.error("Error finding platform user by ID in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });
@@ -79,7 +79,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
 
   async findByPlatformAndExternalId(
     platformId: Shared.IRI,
-    externalUserId: string
+    externalUserId: string,
   ): Promise<PlatformUser | null> {
     try {
       // Query database using Drizzle ORM
@@ -89,8 +89,8 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
         .where(
           and(
             eq(platformUsers.platformId, platformId as string),
-            eq(platformUsers.externalUserId, externalUserId)
-          )
+            eq(platformUsers.externalUserId, externalUserId),
+          ),
         );
 
       // Return null if not found
@@ -102,12 +102,12 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
       return this.mapper.toDomain(result[0]);
     } catch (error) {
       logger.error(
-        'Error finding platform user by platform and external ID in SQLite repository',
+        "Error finding platform user by platform and external ID in SQLite repository",
         {
           error: error instanceof Error ? error.stack : String(error),
           platformId,
           externalUserId,
-        }
+        },
       );
       throw error;
     }
@@ -115,7 +115,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
 
   async update(
     id: Shared.IRI,
-    user: Partial<PlatformUser>
+    user: Partial<PlatformUser>,
   ): Promise<PlatformUser | null> {
     try {
       // Check if user exists
@@ -145,7 +145,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
       // Return the updated entity
       return mergedUser;
     } catch (error) {
-      logger.error('Error updating platform user in SQLite repository', {
+      logger.error("Error updating platform user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
         user,
@@ -165,7 +165,7 @@ export class SqlitePlatformUserRepository implements PlatformUserRepository {
       // Return true if something was deleted
       return result.length > 0;
     } catch (error) {
-      logger.error('Error deleting platform user in SQLite repository', {
+      logger.error("Error deleting platform user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });

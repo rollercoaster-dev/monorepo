@@ -5,9 +5,9 @@
  * across the SQLite module and connection manager.
  */
 
-import type { Database } from 'bun:sqlite';
-import { logger } from '@utils/logging/logger.service';
-import { sanitizeObject } from '@utils/security/sanitize';
+import type { Database } from "bun:sqlite";
+import { logger } from "@utils/logging/logger.service";
+import { sanitizeObject } from "@utils/security/sanitize";
 
 /**
  * Configuration interface for SQLite PRAGMA settings only
@@ -15,7 +15,7 @@ import { sanitizeObject } from '@utils/security/sanitize';
  */
 export interface SqlitePragmaConfig {
   sqliteBusyTimeout: number;
-  sqliteSyncMode: 'OFF' | 'NORMAL' | 'FULL';
+  sqliteSyncMode: "OFF" | "NORMAL" | "FULL";
   sqliteCacheSize?: number;
 }
 
@@ -47,7 +47,7 @@ export class SqlitePragmaManager {
    */
   static applyPragmas(
     client: Database,
-    config: SqlitePragmaConfig
+    config: SqlitePragmaConfig,
   ): SqlitePragmaResult {
     const result: SqlitePragmaResult = {
       appliedSettings: {},
@@ -67,7 +67,7 @@ export class SqlitePragmaManager {
 
       // Mark overall success only if no critical failures were recorded
       result.criticalSettingsApplied = result.failedSettings.every(
-        (f) => !f.critical
+        (f) => !f.critical,
       );
 
       // Log results in development (detailed) and production (warnings only)
@@ -98,24 +98,24 @@ export class SqlitePragmaManager {
   private static applyCriticalSettings(
     client: Database,
     config: SqlitePragmaConfig,
-    result: SqlitePragmaResult
+    result: SqlitePragmaResult,
   ): void {
     // Set journal mode to WAL for better concurrency (CRITICAL)
     try {
-      client.exec('PRAGMA journal_mode = WAL;');
+      client.exec("PRAGMA journal_mode = WAL;");
       result.appliedSettings.journalMode = true;
     } catch (error) {
       const errorMsg = `Failed to set journal_mode to WAL: ${
         error instanceof Error ? error.message : String(error)
       }`;
       result.failedSettings.push({
-        setting: 'journal_mode',
+        setting: "journal_mode",
         error: errorMsg,
         critical: true,
       });
       result.criticalSettingsApplied = false; // Explicitly set flag for clarity
       logger.error(errorMsg, {
-        setting: 'journal_mode',
+        setting: "journal_mode",
         error: sanitizeObject({
           error: error instanceof Error ? error.message : String(error),
         }),
@@ -133,22 +133,22 @@ export class SqlitePragmaManager {
         error instanceof Error ? error.message : String(error)
       }`;
       result.failedSettings.push({
-        setting: 'busy_timeout',
+        setting: "busy_timeout",
         error: errorMsg,
         critical: true,
       });
       logger.error(errorMsg, {
         requestedValue: busyTimeout,
-        category: 'CRITICAL_SETTING',
+        category: "CRITICAL_SETTING",
       });
       throw new Error(errorMsg); // Critical setting - halt initialization
     }
 
     // Apply synchronous mode setting (CRITICAL for data integrity)
-    const allowedSync = ['OFF', 'NORMAL', 'FULL'] as const;
+    const allowedSync = ["OFF", "NORMAL", "FULL"] as const;
     const syncModeRaw =
       config.sqliteSyncMode.toUpperCase() as (typeof allowedSync)[number];
-    const syncMode = allowedSync.includes(syncModeRaw) ? syncModeRaw : 'NORMAL';
+    const syncMode = allowedSync.includes(syncModeRaw) ? syncModeRaw : "NORMAL";
 
     try {
       client.exec(`PRAGMA synchronous = ${syncMode};`);
@@ -158,13 +158,13 @@ export class SqlitePragmaManager {
         error instanceof Error ? error.message : String(error)
       }`;
       result.failedSettings.push({
-        setting: 'synchronous',
+        setting: "synchronous",
         error: errorMsg,
         critical: true,
       });
       logger.error(errorMsg, {
         requestedValue: syncMode,
-        category: 'CRITICAL_SETTING',
+        category: "CRITICAL_SETTING",
       });
       throw new Error(errorMsg); // Critical setting - halt initialization
     }
@@ -175,26 +175,26 @@ export class SqlitePragmaManager {
    */
   private static applyImportantSettings(
     client: Database,
-    result: SqlitePragmaResult
+    result: SqlitePragmaResult,
   ): void {
     // Enable foreign keys constraint checking (IMPORTANT)
     try {
-      client.exec('PRAGMA foreign_keys = ON;');
+      client.exec("PRAGMA foreign_keys = ON;");
       result.appliedSettings.foreignKeys = true;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       result.failedSettings.push({
-        setting: 'foreign_keys',
+        setting: "foreign_keys",
         error: errorMessage,
         critical: false,
       });
       logger.warn(
-        'Failed to enable SQLite foreign_keys (continuing with SQLite default)',
+        "Failed to enable SQLite foreign_keys (continuing with SQLite default)",
         {
           errorMessage,
-          category: 'IMPORTANT_SETTING',
-        }
+          category: "IMPORTANT_SETTING",
+        },
       );
     }
   }
@@ -205,11 +205,11 @@ export class SqlitePragmaManager {
   private static applyOptionalSettings(
     client: Database,
     config: SqlitePragmaConfig,
-    result: SqlitePragmaResult
+    result: SqlitePragmaResult,
   ): void {
     // Apply cache size setting (OPTIONAL - performance only)
     if (
-      typeof config.sqliteCacheSize === 'number' &&
+      typeof config.sqliteCacheSize === "number" &&
       config.sqliteCacheSize > 0
     ) {
       const cacheSize = Math.max(1000, config.sqliteCacheSize);
@@ -220,39 +220,39 @@ export class SqlitePragmaManager {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         result.failedSettings.push({
-          setting: 'cache_size',
+          setting: "cache_size",
           error: errorMessage,
           critical: false,
         });
         logger.warn(
-          'Failed to set SQLite cache_size (continuing with SQLite default)',
+          "Failed to set SQLite cache_size (continuing with SQLite default)",
           {
             errorMessage,
             requestedValue: cacheSize,
-            category: 'OPTIONAL_SETTING',
-          }
+            category: "OPTIONAL_SETTING",
+          },
         );
       }
     }
 
     // Set temp store to memory for better performance (OPTIONAL)
     try {
-      client.exec('PRAGMA temp_store = MEMORY;');
+      client.exec("PRAGMA temp_store = MEMORY;");
       result.appliedSettings.tempStore = true;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       result.failedSettings.push({
-        setting: 'temp_store',
+        setting: "temp_store",
         error: errorMessage,
         critical: false,
       });
       logger.warn(
-        'Failed to set SQLite temp_store to MEMORY (continuing with SQLite default)',
+        "Failed to set SQLite temp_store to MEMORY (continuing with SQLite default)",
         {
           errorMessage,
-          category: 'OPTIONAL_SETTING',
-        }
+          category: "OPTIONAL_SETTING",
+        },
       );
     }
   }
@@ -263,11 +263,11 @@ export class SqlitePragmaManager {
    * - Production: Warning-level logging for failed settings only
    */
   private static logPragmaResults(result: SqlitePragmaResult): void {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
 
     // In development, log detailed information about all settings
     if (!isProduction) {
-      logger.info('SQLite PRAGMA settings applied:', {
+      logger.info("SQLite PRAGMA settings applied:", {
         appliedSettings: result.appliedSettings,
         criticalSettingsApplied: result.criticalSettingsApplied,
         failedSettingsCount: result.failedSettings.length,
@@ -278,7 +278,7 @@ export class SqlitePragmaManager {
     if (result.failedSettings.length > 0) {
       const criticalFailures = result.failedSettings.filter((f) => f.critical);
       const nonCriticalFailures = result.failedSettings.filter(
-        (f) => !f.critical
+        (f) => !f.critical,
       );
 
       if (criticalFailures.length > 0) {
@@ -289,7 +289,7 @@ export class SqlitePragmaManager {
                 criticalFailureCount: criticalFailures.length,
                 failedSettings: criticalFailures.map((f) => f.setting),
               }
-            : { criticalFailures }
+            : { criticalFailures },
         );
       }
 
@@ -301,7 +301,7 @@ export class SqlitePragmaManager {
                 nonCriticalFailureCount: nonCriticalFailures.length,
                 failedSettings: nonCriticalFailures.map((f) => f.setting),
               }
-            : { nonCriticalFailures }
+            : { nonCriticalFailures },
         );
       }
     }

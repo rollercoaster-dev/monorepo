@@ -5,7 +5,7 @@
  * They provide type safety and validation for the API.
  */
 
-import type { OB2, OB3 } from 'openbadges-types';
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * Recipient profile for assertions

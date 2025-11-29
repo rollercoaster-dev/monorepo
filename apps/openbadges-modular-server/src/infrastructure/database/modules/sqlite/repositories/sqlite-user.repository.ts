@@ -5,22 +5,22 @@
  * and the Data Mapper pattern with Drizzle ORM.
  */
 
-import { eq, and, like, sql } from 'drizzle-orm';
-import type { UserRole, UserPermission } from '@domains/user/user.entity';
-import { User } from '@domains/user/user.entity';
+import { eq, and, like, sql } from "drizzle-orm";
+import type { UserRole, UserPermission } from "@domains/user/user.entity";
+import { User } from "@domains/user/user.entity";
 import type {
   UserRepository,
   UserCreateParams,
   UserUpdateParams,
   UserQueryParams,
-} from '@domains/user/user.repository';
-import { users } from '../schema';
-import type { Shared } from 'openbadges-types';
-import { logger, queryLogger } from '@utils/logging/logger.service';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import { createId } from '@paralleldrive/cuid2';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
-import type { drizzle as DrizzleFn } from 'drizzle-orm/bun-sqlite';
+} from "@domains/user/user.repository";
+import { users } from "../schema";
+import type { Shared } from "openbadges-types";
+import { logger, queryLogger } from "@utils/logging/logger.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import { createId } from "@paralleldrive/cuid2";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
+import type { drizzle as DrizzleFn } from "drizzle-orm/bun-sqlite";
 
 // Create compile-time type alias to avoid runtime import dependency
 type DrizzleDB = ReturnType<typeof DrizzleFn>;
@@ -79,8 +79,8 @@ export class SqliteUserRepository implements UserRepository {
       // Log the password hash for debugging
       logger.debug(
         `Creating user in SQLite repository with passwordHash: ${
-          params.passwordHash ? 'yes' : 'no'
-        }`
+          params.passwordHash ? "yes" : "no"
+        }`,
       );
 
       // Get database with connection validation
@@ -111,22 +111,22 @@ export class SqliteUserRepository implements UserRepository {
 
       // Log query
       queryLogger.logQuery(
-        'INSERT User',
+        "INSERT User",
         [
           SensitiveValue.from({
             id: obj.id,
             username: obj.username,
             email: obj.email,
-            passwordHash: params.passwordHash ? '[REDACTED]' : null,
+            passwordHash: params.passwordHash ? "[REDACTED]" : null,
           }),
         ],
         duration,
-        'sqlite'
+        "sqlite",
       );
 
       // Check if insert was successful
       if (!result[0]) {
-        throw new Error('User was not created properly');
+        throw new Error("User was not created properly");
       }
 
       // Convert database record back to domain entity
@@ -135,15 +135,15 @@ export class SqliteUserRepository implements UserRepository {
       logger.debug(
         `User created in SQLite repository: ${
           createdUser.id
-        } with passwordHash: ${createdUser.passwordHash ? 'yes' : 'no'}`
+        } with passwordHash: ${createdUser.passwordHash ? "yes" : "no"}`,
       );
       return createdUser;
     } catch (error) {
-      logger.error('Error creating user in SQLite repository', {
+      logger.error("Error creating user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         params: {
           ...params,
-          ...(params.passwordHash ? { passwordHash: '[REDACTED]' } : {}),
+          ...(params.passwordHash ? { passwordHash: "[REDACTED]" } : {}),
         },
       });
       throw error;
@@ -174,7 +174,7 @@ export class SqliteUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by ID in SQLite repository', {
+      logger.error("Error finding user by ID in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });
@@ -206,7 +206,7 @@ export class SqliteUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by username in SQLite repository', {
+      logger.error("Error finding user by username in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         username,
       });
@@ -238,7 +238,7 @@ export class SqliteUserRepository implements UserRepository {
       // Convert database record to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error finding user by email in SQLite repository', {
+      logger.error("Error finding user by email in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         email,
       });
@@ -316,34 +316,34 @@ export class SqliteUserRepository implements UserRepository {
 
       // Log query
       queryLogger.logQuery(
-        'UPDATE User',
+        "UPDATE User",
         [
           id,
           SensitiveValue.from({
             ...updateValues,
             ...(updateValues.passwordHash
-              ? { passwordHash: '[REDACTED]' }
+              ? { passwordHash: "[REDACTED]" }
               : {}),
           }),
         ],
         duration,
-        'sqlite'
+        "sqlite",
       );
 
       // Check if update was successful
       if (!result[0]) {
-        throw new Error('Failed to update user: no result returned');
+        throw new Error("Failed to update user: no result returned");
       }
 
       // Convert database record back to domain entity
       return this.toDomain(result[0]);
     } catch (error) {
-      logger.error('Error updating user in SQLite repository', {
+      logger.error("Error updating user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
         params: {
           ...params,
-          ...(params.passwordHash ? { passwordHash: '[REDACTED]' } : {}),
+          ...(params.passwordHash ? { passwordHash: "[REDACTED]" } : {}),
         },
       });
       throw error;
@@ -369,7 +369,7 @@ export class SqliteUserRepository implements UserRepository {
       // Return true if deleted, false otherwise
       return result.length > 0;
     } catch (error) {
-      logger.error('Error deleting user in SQLite repository', {
+      logger.error("Error deleting user in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         id,
       });
@@ -438,7 +438,7 @@ export class SqliteUserRepository implements UserRepository {
       // Convert database records to domain entities
       return result.map((record) => this.toDomain(record));
     } catch (error) {
-      logger.error('Error finding users by query in SQLite repository', {
+      logger.error("Error finding users by query in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         params,
       });
@@ -492,7 +492,7 @@ export class SqliteUserRepository implements UserRepository {
       // Return count
       return Number(result[0]?.count || 0);
     } catch (error) {
-      logger.error('Error counting users by query in SQLite repository', {
+      logger.error("Error counting users by query in SQLite repository", {
         error: error instanceof Error ? error.stack : String(error),
         params,
       });
@@ -508,33 +508,33 @@ export class SqliteUserRepository implements UserRepository {
   private toDomain(record: Record<string, unknown>): User {
     // Parse JSON fields
     const roles =
-      typeof record.roles === 'string'
+      typeof record.roles === "string"
         ? (JSON.parse(record.roles as string) as UserRole[])
         : (record.roles as UserRole[]);
 
     const permissions =
-      typeof record.permissions === 'string'
+      typeof record.permissions === "string"
         ? (JSON.parse(record.permissions as string) as UserPermission[])
         : (record.permissions as UserPermission[]);
 
     const metadata =
-      typeof record.metadata === 'string' && record.metadata
+      typeof record.metadata === "string" && record.metadata
         ? JSON.parse(record.metadata as string)
         : (record.metadata as Record<string, unknown> | undefined);
 
     // Convert integer timestamps to Date objects
     const createdAt =
-      typeof record.createdAt === 'number'
+      typeof record.createdAt === "number"
         ? new Date(record.createdAt)
         : (record.createdAt as Date);
 
     const updatedAt =
-      typeof record.updatedAt === 'number'
+      typeof record.updatedAt === "number"
         ? new Date(record.updatedAt)
         : (record.updatedAt as Date);
 
     const lastLogin =
-      typeof record.lastLogin === 'number'
+      typeof record.lastLogin === "number"
         ? new Date(record.lastLogin)
         : (record.lastLogin as Date | undefined);
 

@@ -5,10 +5,10 @@
  * the Open Badges 3.0 specification using the openbadges-types package.
  */
 
-import type { Issuer } from '../../domains/issuer/issuer.entity';
-import type { BadgeClass } from '../../domains/badgeClass/badgeClass.entity';
-import type { Assertion } from '../../domains/assertion/assertion.entity';
-import type { Shared, OB3 } from 'openbadges-types';
+import type { Issuer } from "../../domains/issuer/issuer.entity";
+import type { BadgeClass } from "../../domains/badgeClass/badgeClass.entity";
+import type { Assertion } from "../../domains/assertion/assertion.entity";
+import type { Shared, OB3 } from "openbadges-types";
 
 /**
  * Validates a URL
@@ -61,39 +61,39 @@ export function validateIssuer(issuer: Issuer): {
 
   // Check required fields according to OB3.Issuer interface
   if (!issuer.id) {
-    errors.push('Issuer ID is required');
+    errors.push("Issuer ID is required");
   }
 
   if (!issuer.name) {
-    errors.push('Issuer name is required');
+    errors.push("Issuer name is required");
   }
 
   if (!issuer.url) {
-    errors.push('Issuer URL is required');
+    errors.push("Issuer URL is required");
   } else if (!isValidUrl(issuer.url)) {
-    errors.push('Issuer URL must be a valid URL');
+    errors.push("Issuer URL must be a valid URL");
   }
 
   if (issuer.image) {
-    if (typeof issuer.image === 'string') {
+    if (typeof issuer.image === "string") {
       // Handle IRI or OB2.Image (which is just an IRI string)
       if (!isValidUrl(issuer.image)) {
-        errors.push('Issuer image URL must be a valid URL');
+        errors.push("Issuer image URL must be a valid URL");
       }
-    } else if (typeof issuer.image === 'object' && 'id' in issuer.image) {
+    } else if (typeof issuer.image === "object" && "id" in issuer.image) {
       // Handle OB3.ImageObject
       if (!isValidUrl(issuer.image.id)) {
-        errors.push('Issuer image object ID must be a valid URL');
+        errors.push("Issuer image object ID must be a valid URL");
       }
     } else {
       // Handle unexpected type if necessary, though TypeScript should prevent this
-      errors.push('Issuer image has an invalid type');
+      errors.push("Issuer image has an invalid type");
     }
   }
 
   // Validate email if provided
   if (issuer.email && !isValidEmail(issuer.email)) {
-    errors.push('Issuer email must be a valid email address');
+    errors.push("Issuer email must be a valid email address");
   }
 
   return {
@@ -115,36 +115,36 @@ export function validateBadgeClass(badgeClass: BadgeClass): {
 
   // Check required fields according to OB3.Achievement interface
   if (!badgeClass.id) {
-    errors.push('Badge class ID is required');
+    errors.push("Badge class ID is required");
   }
 
   if (!badgeClass.type) {
-    errors.push('Badge class type is required');
+    errors.push("Badge class type is required");
   }
 
   if (!badgeClass.name) {
-    errors.push('Badge class name is required');
+    errors.push("Badge class name is required");
   }
 
   if (!badgeClass.issuer) {
-    errors.push('Badge class issuer is required');
+    errors.push("Badge class issuer is required");
   }
 
   if (!badgeClass.description) {
-    errors.push('Badge class description is required');
+    errors.push("Badge class description is required");
   }
 
   if (!badgeClass.image) {
-    errors.push('Badge class image is required');
+    errors.push("Badge class image is required");
   } else if (
-    typeof badgeClass.image === 'string' &&
+    typeof badgeClass.image === "string" &&
     !isValidUrl(badgeClass.image)
   ) {
-    errors.push('Badge class image must be a valid URL');
+    errors.push("Badge class image must be a valid URL");
   }
 
   if (!badgeClass.criteria) {
-    errors.push('Badge class criteria is required');
+    errors.push("Badge class criteria is required");
   }
 
   // Check alignment if provided
@@ -181,37 +181,37 @@ export function validateAssertion(assertion: Assertion): {
 
   // Check required fields according to OB3.VerifiableCredential interface
   if (!assertion.id) {
-    errors.push('Assertion ID is required');
+    errors.push("Assertion ID is required");
   }
 
   if (!assertion.type) {
-    errors.push('Assertion type is required');
+    errors.push("Assertion type is required");
   }
 
   if (!assertion.badgeClass) {
-    errors.push('Assertion badge class is required');
+    errors.push("Assertion badge class is required");
   }
 
   if (!assertion.recipient) {
-    errors.push('Assertion recipient is required');
+    errors.push("Assertion recipient is required");
   } else if (!assertion.recipient.type || !assertion.recipient.identity) {
     errors.push(
-      'Assertion recipient must be a valid recipient object with identity and type'
+      "Assertion recipient must be a valid recipient object with identity and type",
     );
   }
 
   if (!assertion.issuedOn) {
-    errors.push('Assertion issuedOn is required');
+    errors.push("Assertion issuedOn is required");
   } else if (!isValidDate(assertion.issuedOn)) {
-    errors.push('Assertion issuedOn must be a valid ISO date string');
+    errors.push("Assertion issuedOn must be a valid ISO date string");
   }
 
   // Check optional fields if provided
   if (assertion.expires) {
     if (!isValidDate(assertion.expires)) {
-      errors.push('Assertion expires must be a valid ISO date string');
+      errors.push("Assertion expires must be a valid ISO date string");
     } else if (new Date(assertion.expires) <= new Date(assertion.issuedOn)) {
-      errors.push('Assertion expires must be after issuedOn');
+      errors.push("Assertion expires must be after issuedOn");
     }
   }
 
@@ -220,7 +220,7 @@ export function validateAssertion(assertion: Assertion): {
     assertion.evidence.forEach((evidence, index) => {
       if (!evidence.id && !evidence.narrative && !evidence.name) {
         errors.push(
-          `Evidence ${index} must have at least one of: id, narrative, or name`
+          `Evidence ${index} must have at least one of: id, narrative, or name`,
         );
       }
 
@@ -231,34 +231,34 @@ export function validateAssertion(assertion: Assertion): {
   }
 
   // Check verification if provided
-  if (assertion.verification && typeof assertion.verification === 'object') {
+  if (assertion.verification && typeof assertion.verification === "object") {
     // Type guard: Check for properties unique to OB3.Proof to validate Proof-specific fields
     if (
-      'signatureValue' in assertion.verification &&
-      'creator' in assertion.verification &&
-      'created' in assertion.verification
+      "signatureValue" in assertion.verification &&
+      "creator" in assertion.verification &&
+      "created" in assertion.verification
     ) {
       const verificationProof = assertion.verification as OB3.Proof;
 
-      if (!verificationProof['creator']) {
-        errors.push('Verification creator is required');
+      if (!verificationProof["creator"]) {
+        errors.push("Verification creator is required");
       } else if (
-        typeof verificationProof['creator'] === 'string' &&
-        !isValidUrl(verificationProof['creator'])
+        typeof verificationProof["creator"] === "string" &&
+        !isValidUrl(verificationProof["creator"])
       ) {
-        errors.push('Verification creator must be a valid URL');
+        errors.push("Verification creator must be a valid URL");
       }
 
       if (!verificationProof.created) {
-        errors.push('Verification created is required');
+        errors.push("Verification created is required");
       } else if (!isValidDate(verificationProof.created)) {
-        errors.push('Verification created must be a valid ISO date string');
+        errors.push("Verification created must be a valid ISO date string");
       }
 
-      if (!verificationProof['signatureValue']) {
-        errors.push('Verification signatureValue is required');
+      if (!verificationProof["signatureValue"]) {
+        errors.push("Verification signatureValue is required");
       }
-    } else if (assertion.verification.type === 'hosted') {
+    } else if (assertion.verification.type === "hosted") {
       // Handle hosted verification specific checks if any (currently none needed here)
     } else {
       // Handle cases where verification is present but not OB3 Proof or Hosted Verification

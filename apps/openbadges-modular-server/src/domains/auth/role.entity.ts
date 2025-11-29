@@ -5,8 +5,8 @@
  * Roles are used for role-based access control and are associated with users.
  */
 
-import type { Shared } from 'openbadges-types';
-import { v4 as uuidv4 } from 'uuid';
+import type { Shared } from "openbadges-types";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * Role permissions

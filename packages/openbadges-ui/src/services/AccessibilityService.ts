@@ -5,7 +5,8 @@
  */
 
 // SSR safety guard - check if running in browser environment
-const isBrowser = typeof document !== 'undefined' && typeof window !== 'undefined';
+const isBrowser =
+  typeof document !== "undefined" && typeof window !== "undefined";
 
 export class AccessibilityService {
   /**
@@ -25,10 +26,10 @@ export class AccessibilityService {
   static formatDate(dateString: string): string {
     try {
       const date = new Date(dateString);
-      return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }).format(date);
     } catch (e) {
       return dateString;
@@ -43,9 +44,9 @@ export class AccessibilityService {
    */
   static getInitials(name: string, maxLength = 2): string {
     return name
-      .split(' ')
+      .split(" ")
       .map((part) => part.charAt(0))
-      .join('')
+      .join("")
       .toUpperCase()
       .substring(0, maxLength);
   }
@@ -60,7 +61,7 @@ export class AccessibilityService {
     if (text.length <= maxLength) {
       return text;
     }
-    return text.substring(0, maxLength) + '…';
+    return text.substring(0, maxLength) + "…";
   }
 
   /**
@@ -88,12 +89,12 @@ export class AccessibilityService {
    */
   static applyTheme(
     themeName:
-      | 'default'
-      | 'dark'
-      | 'high-contrast'
-      | 'large-text'
-      | 'dyslexia-friendly'
-      | 'autism-friendly'
+      | "default"
+      | "dark"
+      | "high-contrast"
+      | "large-text"
+      | "dyslexia-friendly"
+      | "autism-friendly",
   ): void {
     if (!isBrowser) {
       return;
@@ -101,15 +102,15 @@ export class AccessibilityService {
 
     // Remove any existing theme classes
     document.body.classList.remove(
-      'ob-dark-theme',
-      'ob-high-contrast-theme',
-      'ob-large-text-theme',
-      'ob-dyslexia-friendly-theme',
-      'ob-autism-friendly-theme'
+      "ob-dark-theme",
+      "ob-high-contrast-theme",
+      "ob-large-text-theme",
+      "ob-dyslexia-friendly-theme",
+      "ob-autism-friendly-theme",
     );
 
     // Add the new theme class if not default
-    if (themeName !== 'default') {
+    if (themeName !== "default") {
       document.body.classList.add(`ob-${themeName}-theme`);
     }
   }
@@ -122,7 +123,7 @@ export class AccessibilityService {
     if (!isBrowser) {
       return false;
     }
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
   /**
@@ -137,43 +138,43 @@ export class AccessibilityService {
     if (level === 1) {
       // Light simplification - replace complex words and shorten sentences
       return text
-        .replace(/\b(utilize|utilise)\b/g, 'use')
-        .replace(/\b(implement|implementation)\b/g, 'use')
-        .replace(/\b(additional)\b/g, 'more')
-        .replace(/\b(sufficient)\b/g, 'enough')
-        .replace(/\b(approximately)\b/g, 'about')
-        .replace(/\b(subsequently)\b/g, 'later')
-        .replace(/\b(nevertheless|nonetheless)\b/g, 'however');
+        .replace(/\b(utilize|utilise)\b/g, "use")
+        .replace(/\b(implement|implementation)\b/g, "use")
+        .replace(/\b(additional)\b/g, "more")
+        .replace(/\b(sufficient)\b/g, "enough")
+        .replace(/\b(approximately)\b/g, "about")
+        .replace(/\b(subsequently)\b/g, "later")
+        .replace(/\b(nevertheless|nonetheless)\b/g, "however");
     } else if (level === 2) {
       // Medium simplification - also break up longer sentences
       const simplified = text
-        .replace(/\b(utilize|utilise)\b/g, 'use')
-        .replace(/\b(implement|implementation)\b/g, 'use')
-        .replace(/\b(additional)\b/g, 'more')
-        .replace(/\b(sufficient)\b/g, 'enough')
-        .replace(/\b(approximately)\b/g, 'about')
-        .replace(/\b(subsequently)\b/g, 'later')
-        .replace(/\b(nevertheless|nonetheless)\b/g, 'however');
+        .replace(/\b(utilize|utilise)\b/g, "use")
+        .replace(/\b(implement|implementation)\b/g, "use")
+        .replace(/\b(additional)\b/g, "more")
+        .replace(/\b(sufficient)\b/g, "enough")
+        .replace(/\b(approximately)\b/g, "about")
+        .replace(/\b(subsequently)\b/g, "later")
+        .replace(/\b(nevertheless|nonetheless)\b/g, "however");
 
       // Break up longer sentences (simple approach)
-      return simplified.replace(/([.!?])\s+([A-Z])/g, '$1<br>$2');
+      return simplified.replace(/([.!?])\s+([A-Z])/g, "$1<br>$2");
     } else {
       // High simplification - also add visual breaks and simplify further
       const simplified = text
-        .replace(/\b(utilize|utilise)\b/g, 'use')
-        .replace(/\b(implement|implementation)\b/g, 'use')
-        .replace(/\b(additional)\b/g, 'more')
-        .replace(/\b(sufficient)\b/g, 'enough')
-        .replace(/\b(approximately)\b/g, 'about')
-        .replace(/\b(subsequently)\b/g, 'later')
-        .replace(/\b(nevertheless|nonetheless)\b/g, 'however')
-        .replace(/\b(therefore)\b/g, 'so')
-        .replace(/\b(regarding)\b/g, 'about')
-        .replace(/\b(concerning)\b/g, 'about')
-        .replace(/\b(accordingly)\b/g, 'so');
+        .replace(/\b(utilize|utilise)\b/g, "use")
+        .replace(/\b(implement|implementation)\b/g, "use")
+        .replace(/\b(additional)\b/g, "more")
+        .replace(/\b(sufficient)\b/g, "enough")
+        .replace(/\b(approximately)\b/g, "about")
+        .replace(/\b(subsequently)\b/g, "later")
+        .replace(/\b(nevertheless|nonetheless)\b/g, "however")
+        .replace(/\b(therefore)\b/g, "so")
+        .replace(/\b(regarding)\b/g, "about")
+        .replace(/\b(concerning)\b/g, "about")
+        .replace(/\b(accordingly)\b/g, "so");
 
       // Break up sentences and add more visual spacing
-      return simplified.replace(/([.!?])\s+([A-Z])/g, '$1<br><br>$2');
+      return simplified.replace(/([.!?])\s+([A-Z])/g, "$1<br><br>$2");
     }
   }
 
@@ -182,16 +183,16 @@ export class AccessibilityService {
    * Useful for users with ADHD, autism, or cognitive processing differences
    * @param density The content density preference
    */
-  static setContentDensity(density: 'compact' | 'normal' | 'spacious'): void {
+  static setContentDensity(density: "compact" | "normal" | "spacious"): void {
     if (!isBrowser) {
       return;
     }
 
     // Remove any existing density classes
     document.body.classList.remove(
-      'ob-density-compact',
-      'ob-density-normal',
-      'ob-density-spacious'
+      "ob-density-compact",
+      "ob-density-normal",
+      "ob-density-spacious",
     );
 
     // Add the new density class
@@ -209,9 +210,9 @@ export class AccessibilityService {
     }
 
     if (enabled) {
-      document.body.classList.add('ob-focus-mode');
+      document.body.classList.add("ob-focus-mode");
     } else {
-      document.body.classList.remove('ob-focus-mode');
+      document.body.classList.remove("ob-focus-mode");
     }
   }
 
@@ -220,16 +221,16 @@ export class AccessibilityService {
    * Important for users with vestibular disorders, autism, ADHD
    * @param level The level of animation (none, minimal, full)
    */
-  static setAnimationLevel(level: 'none' | 'minimal' | 'full'): void {
+  static setAnimationLevel(level: "none" | "minimal" | "full"): void {
     if (!isBrowser) {
       return;
     }
 
     // Remove any existing animation classes
     document.body.classList.remove(
-      'ob-animations-none',
-      'ob-animations-minimal',
-      'ob-animations-full'
+      "ob-animations-none",
+      "ob-animations-minimal",
+      "ob-animations-full",
     );
 
     // Add the new animation class
@@ -241,20 +242,22 @@ export class AccessibilityService {
    * Helpful for users with dyslexia, visual processing issues
    * @param mode The reading mode to apply
    */
-  static setReadingMode(mode: 'default' | 'bionic' | 'ruler' | 'paragraph-focus'): void {
+  static setReadingMode(
+    mode: "default" | "bionic" | "ruler" | "paragraph-focus",
+  ): void {
     if (!isBrowser) {
       return;
     }
 
     // Remove any existing reading mode classes
     document.body.classList.remove(
-      'ob-reading-bionic',
-      'ob-reading-ruler',
-      'ob-reading-paragraph-focus'
+      "ob-reading-bionic",
+      "ob-reading-ruler",
+      "ob-reading-paragraph-focus",
     );
 
     // Add the new reading mode class if not default
-    if (mode !== 'default') {
+    if (mode !== "default") {
       document.body.classList.add(`ob-reading-${mode}`);
     }
   }
@@ -271,9 +274,13 @@ export class AccessibilityService {
       useGrouping?: boolean;
       addVisualSeparators?: boolean;
       highlightDigits?: boolean;
-    } = {}
+    } = {},
   ): string {
-    const { useGrouping = true, addVisualSeparators = false, highlightDigits = false } = options;
+    const {
+      useGrouping = true,
+      addVisualSeparators = false,
+      highlightDigits = false,
+    } = options;
 
     // Format with locale and grouping
     let formatted = value.toLocaleString(undefined, {
@@ -282,12 +289,15 @@ export class AccessibilityService {
 
     // Add visual separators if requested
     if (addVisualSeparators) {
-      formatted = formatted.replace(/,/g, '<span class="ob-number-separator">,</span>');
+      formatted = formatted.replace(
+        /,/g,
+        '<span class="ob-number-separator">,</span>',
+      );
     }
 
     // Highlight alternating digits if requested
     if (highlightDigits) {
-      let result = '';
+      let result = "";
       for (let i = 0; i < formatted.length; i++) {
         const char = formatted[i];
         if (/\d/.test(char) && i % 2 === 0) {

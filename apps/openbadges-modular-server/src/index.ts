@@ -5,37 +5,37 @@
  * and starts the server.
  */
 
-import { Hono } from 'hono';
-import { RepositoryFactory } from './infrastructure/repository.factory';
-import { createApiRouter } from './api/api.router';
-import { config } from './config/config';
-import { createSecurityMiddleware } from './utils/security/security.middleware';
-import { IssuerController } from './api/controllers/issuer.controller';
-import { BadgeClassController } from './api/controllers/badgeClass.controller';
-import { AssertionController } from './api/controllers/assertion.controller';
-import { JwksController } from './api/controllers/jwks.controller';
-import { DatabaseFactory } from './infrastructure/database/database.factory';
-import { ShutdownService } from './utils/shutdown/shutdown.service';
-import { BackpackController } from './domains/backpack/backpack.controller';
-import { UserController } from './domains/user/user.controller';
-import { UserService } from './domains/user/user.service';
-import { BackpackService } from './domains/backpack/backpack.service';
-import { StatusListService } from './core/status-list.service';
-import { CredentialStatusService } from './core/credential-status.service';
+import { Hono } from "hono";
+import { RepositoryFactory } from "./infrastructure/repository.factory";
+import { createApiRouter } from "./api/api.router";
+import { config } from "./config/config";
+import { createSecurityMiddleware } from "./utils/security/security.middleware";
+import { IssuerController } from "./api/controllers/issuer.controller";
+import { BadgeClassController } from "./api/controllers/badgeClass.controller";
+import { AssertionController } from "./api/controllers/assertion.controller";
+import { JwksController } from "./api/controllers/jwks.controller";
+import { DatabaseFactory } from "./infrastructure/database/database.factory";
+import { ShutdownService } from "./utils/shutdown/shutdown.service";
+import { BackpackController } from "./domains/backpack/backpack.controller";
+import { UserController } from "./domains/user/user.controller";
+import { UserService } from "./domains/user/user.service";
+import { BackpackService } from "./domains/backpack/backpack.service";
+import { StatusListService } from "./core/status-list.service";
+import { CredentialStatusService } from "./core/credential-status.service";
 import {
   createErrorHandlerMiddleware,
   handleNotFound,
-} from './utils/errors/error-handler.middleware';
-import { logger } from './utils/logging/logger.service';
-import { getAppVersion } from './utils/version/app-version';
+} from "./utils/errors/error-handler.middleware";
+import { logger } from "./utils/logging/logger.service";
+import { getAppVersion } from "./utils/version/app-version";
 
-import { createRequestContextMiddleware } from './utils/logging/request-context.middleware';
-import { initializeAuthentication } from './auth/auth.initializer';
+import { createRequestContextMiddleware } from "./utils/logging/request-context.middleware";
+import { initializeAuthentication } from "./auth/auth.initializer";
 import {
   createAuthMiddleware,
   createAuthDebugMiddleware,
-} from './auth/middleware/auth.middleware';
-import { AuthController } from './auth/auth.controller';
+} from "./auth/middleware/auth.middleware";
+import { AuthController } from "./auth/auth.controller";
 
 // Create the main application
 const app = new Hono();
@@ -47,16 +47,16 @@ app.use(createAuthMiddleware());
 app.use(createAuthDebugMiddleware());
 
 // Root route
-app.get('/', (c) =>
+app.get("/", (c) =>
   c.json({
-    name: 'Open Badges API',
+    name: "Open Badges API",
     version: getAppVersion().version,
-    specification: 'Open Badges 3.0',
+    specification: "Open Badges 3.0",
     documentation: {
-      swagger: '/swagger',
-      swaggerUI: '/docs',
+      swagger: "/swagger",
+      swaggerUI: "/docs",
     },
-  })
+  }),
 );
 
 // Database instance for graceful shutdown
@@ -73,7 +73,7 @@ function setupGracefulShutdown(server: unknown): void {
   // Register custom shutdown hooks if needed
   ShutdownService.registerHook(async () => {
     // Custom shutdown logic can be added here
-    logger.info('Executing custom shutdown hook...');
+    logger.info("Executing custom shutdown hook...");
 
     // For example, you might want to save application state
     // or perform other cleanup operations
@@ -130,20 +130,20 @@ export async function setupApp(): Promise<Hono> {
     // Initialize services
     const statusListService = new StatusListService(statusListRepository);
     const credentialStatusService = new CredentialStatusService(
-      statusListService
+      statusListService,
     );
 
     // Initialize controllers with repositories and services
     const issuerController = new IssuerController(issuerRepository);
     const badgeClassController = new BadgeClassController(
       badgeClassRepository,
-      issuerRepository
+      issuerRepository,
     );
     const assertionController = new AssertionController(
       assertionRepository,
       badgeClassRepository,
       issuerRepository,
-      credentialStatusService
+      credentialStatusService,
     );
 
     // Initialize backpack service and controller
@@ -151,7 +151,7 @@ export async function setupApp(): Promise<Hono> {
       platformRepository,
       platformUserRepository,
       userAssertionRepository,
-      assertionRepository
+      assertionRepository,
     );
     // Initialize user service
     const userService = new UserService(userRepository);
@@ -170,11 +170,11 @@ export async function setupApp(): Promise<Hono> {
       jwksController,
       backpackController,
       userController,
-      authController
+      authController,
     );
 
     // Add API routes
-    app.route('', apiRouter);
+    app.route("", apiRouter);
     app.notFound(handleNotFound);
     app.use(createErrorHandlerMiddleware());
 
@@ -183,20 +183,20 @@ export async function setupApp(): Promise<Hono> {
       fetch: app.fetch,
       port: config.server.port,
       hostname: config.server.host,
-      development: process.env.NODE_ENV !== 'production',
+      development: process.env.NODE_ENV !== "production",
     });
 
     logger.info(`Server started successfully`, {
       server: `http://${config.server.host}:${config.server.port}`,
-      'swagger docs': `http://${config.server.host}:${config.server.port}/docs`,
-      'openapi json': `http://${config.server.host}:${config.server.port}/swagger`,
+      "swagger docs": `http://${config.server.host}:${config.server.port}/docs`,
+      "openapi json": `http://${config.server.host}:${config.server.port}/swagger`,
     });
 
     if (config.auth?.enabled) {
-      logger.info('Authentication is enabled');
+      logger.info("Authentication is enabled");
     } else {
       logger.warn(
-        'Authentication is disabled - all endpoints are publicly accessible'
+        "Authentication is disabled - all endpoints are publicly accessible",
       );
     }
 
@@ -204,9 +204,9 @@ export async function setupApp(): Promise<Hono> {
     return app;
   } catch (error) {
     if (error instanceof Error) {
-      logger.logError('Failed to start server', error);
+      logger.logError("Failed to start server", error);
     } else {
-      logger.error('Failed to start server', { message: String(error) });
+      logger.error("Failed to start server", { message: String(error) });
     }
     process.exit(1);
   }

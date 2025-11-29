@@ -4,7 +4,7 @@
  * This file provides utilities for implementing pagination in database queries.
  */
 
-import { config } from '@/config/config';
+import { config } from "@/config/config";
 
 /**
  * Generates a cursor for the next page
@@ -59,7 +59,7 @@ export interface PaginationOptions {
    * Sort direction
    * @default 'asc'
    */
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
 }
 
 export interface PaginatedResult<T> {
@@ -115,9 +115,9 @@ export interface PaginatedResult<T> {
  * @returns Normalized pagination options
  */
 export function normalizePaginationOptions(
-  options?: PaginationOptions
-): Required<Omit<PaginationOptions, 'cursor' | 'sortBy' | 'sortDirection'>> &
-  Pick<PaginationOptions, 'cursor' | 'sortBy' | 'sortDirection'> {
+  options?: PaginationOptions,
+): Required<Omit<PaginationOptions, "cursor" | "sortBy" | "sortDirection">> &
+  Pick<PaginationOptions, "cursor" | "sortBy" | "sortDirection"> {
   const defaultPageSize = config.database.defaultPageSize || 20;
   const maxPageSize = config.database.maxPageSize || 100;
 
@@ -134,7 +134,7 @@ export function normalizePaginationOptions(
     pageSize,
     cursor: options?.cursor,
     sortBy: options?.sortBy,
-    sortDirection: options?.sortDirection || 'asc',
+    sortDirection: options?.sortDirection || "asc",
   };
 }
 
@@ -162,7 +162,7 @@ export function calculateOffsetAndLimit(options?: PaginationOptions): {
 export function createPaginatedResult<T>(
   items: T[],
   total: number,
-  options?: PaginationOptions
+  options?: PaginationOptions,
 ): PaginatedResult<T> {
   const { page, pageSize, cursor } = normalizePaginationOptions(options);
   const totalPages = Math.ceil(total / pageSize);

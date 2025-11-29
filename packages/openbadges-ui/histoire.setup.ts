@@ -1,5 +1,5 @@
-import './src/styles/themes.css'
-import './src/styles/accessibility.css'
+import "./src/styles/themes.css";
+import "./src/styles/accessibility.css";
 
 // This file is used to set up the Histoire environment
 // You can import global CSS, register global components, etc.
@@ -9,5 +9,5 @@ export function setupVue3(): object {
   return {
     // You can return an object to configure the Vue app
     // For example, you can register global components, directives, etc.
-  }
+  };
 }

@@ -13,7 +13,8 @@
     "test": "echo 'No tests for shared-config'",
     "test:unit": "echo 'No tests for shared-config'",
     "test:integration": "echo 'No tests for shared-config'",
-    "test:e2e": "echo 'No tests for shared-config'"
+    "test:e2e": "echo 'No tests for shared-config'",
+    "type-check": "echo 'No types to check'"
   },
   "files": [
     "eslint.config.mjs",

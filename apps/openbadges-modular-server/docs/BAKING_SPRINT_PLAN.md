@@ -17,6 +17,7 @@ Trunk-based development plan with small, atomic PRs (~500 lines max).
 These PRs establish the cryptographic foundation needed for signing and verification.
 
 ### PR 1: Add key management types and interfaces
+
 **Lines: ~100**
 
 ```
@@ -29,11 +30,13 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(keys): add key management type definitions`
 
 ---
 
 ### PR 2: Implement key generation service
+
 **Lines: ~150**
 
 ```
@@ -46,6 +49,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(keys): add RSA key pair generation`
 2. `feat(keys): add EdDSA key pair generation`
 3. `test(keys): add key generator tests`
@@ -53,6 +57,7 @@ Changes:
 ---
 
 ### PR 3: Implement key storage service
+
 **Lines: ~200**
 
 ```
@@ -66,6 +71,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(keys): add key loading from environment`
 2. `feat(keys): add key file storage`
 3. `test(keys): add key storage tests`
@@ -73,6 +79,7 @@ Changes:
 ---
 
 ### PR 4: Add JWKS endpoint
+
 **Lines: ~150**
 
 ```
@@ -84,6 +91,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(api): add well-known controller`
 2. `feat(api): implement JWKS endpoint`
 3. `test(api): add JWKS endpoint tests`
@@ -91,6 +99,7 @@ Changes:
 ---
 
 ### PR 5: Add DID:web document endpoint
+
 **Lines: ~150**
 
 ```
@@ -101,12 +110,14 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(api): implement DID:web document endpoint`
 2. `test(api): add DID document tests`
 
 ---
 
 ### PR 6: Update issuer profile to use DID
+
 **Lines: ~100**
 
 ```
@@ -118,6 +129,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(issuer): add DID field to issuer entity`
 2. `feat(issuer): include DID in API responses`
 
@@ -126,6 +138,7 @@ Changes:
 ## Phase 4A: PNG Baking Service
 
 ### PR 7: Add baking service types and interfaces
+
 **Lines: ~80**
 
 ```
@@ -137,11 +150,13 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(baking): add baking service type definitions`
 
 ---
 
 ### PR 8: Add PNG chunk utilities
+
 **Lines: ~150**
 
 ```
@@ -156,6 +171,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `chore(deps): add png chunk manipulation libraries`
 2. `feat(baking): add PNG chunk extraction utilities`
 3. `feat(baking): add iTXt chunk creation utility`
@@ -164,6 +180,7 @@ Changes:
 ---
 
 ### PR 9: Implement PNG baking service
+
 **Lines: ~200**
 
 ```
@@ -176,6 +193,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(baking): implement PNG baking (embed credential)`
 2. `feat(baking): implement PNG unbaking (extract credential)`
 3. `test(baking): add PNG baking service tests`
@@ -185,6 +203,7 @@ Changes:
 ## Phase 4B: SVG Baking Service
 
 ### PR 10: Add SVG parsing utilities
+
 **Lines: ~100**
 
 ```
@@ -197,12 +216,14 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `chore(deps): add XML DOM library for SVG parsing`
 2. `feat(baking): add SVG parsing utilities`
 
 ---
 
 ### PR 11: Implement SVG baking service
+
 **Lines: ~200**
 
 ```
@@ -215,6 +236,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(baking): implement SVG baking (embed credential)`
 2. `feat(baking): implement SVG unbaking (extract credential)`
 3. `test(baking): add SVG baking service tests`
@@ -222,6 +244,7 @@ Changes:
 ---
 
 ### PR 12: Create unified baking service
+
 **Lines: ~100**
 
 ```
@@ -234,6 +257,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(baking): create unified baking service facade`
 2. `feat(baking): add format auto-detection`
 
@@ -242,6 +266,7 @@ Changes:
 ## Phase 4C: Baking API Endpoints
 
 ### PR 13: Add bake credential endpoint
+
 **Lines: ~200**
 
 ```
@@ -253,6 +278,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(api): add bake request DTO`
 2. `feat(api): implement bake credential endpoint`
 3. `test(api): add bake endpoint tests`
@@ -262,6 +288,7 @@ Changes:
 ## Phase 6B: Verification Service
 
 ### PR 14: Add verification service types
+
 **Lines: ~80**
 
 ```
@@ -273,11 +300,13 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(verify): add verification service type definitions`
 
 ---
 
 ### PR 15: Implement proof verification
+
 **Lines: ~250**
 
 ```
@@ -290,6 +319,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(verify): implement JWT proof verification`
 2. `feat(verify): implement verification method resolution`
 3. `test(verify): add proof verification tests`
@@ -297,6 +327,7 @@ Changes:
 ---
 
 ### PR 16: Implement issuer verification
+
 **Lines: ~150**
 
 ```
@@ -309,6 +340,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(verify): implement issuer DID resolution`
 2. `feat(verify): implement issuer JWKS fetching`
 3. `test(verify): add issuer verification tests`
@@ -316,6 +348,7 @@ Changes:
 ---
 
 ### PR 17: Create unified verification service
+
 **Lines: ~150**
 
 ```
@@ -327,12 +360,14 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(verify): create unified verification service`
 2. `feat(verify): add expiration checking`
 
 ---
 
 ### PR 18: Add verify credential endpoint
+
 **Lines: ~150**
 
 ```
@@ -344,6 +379,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(api): add verify request DTO`
 2. `feat(api): implement verify credential endpoint`
 3. `test(api): add verify endpoint tests`
@@ -351,6 +387,7 @@ Changes:
 ---
 
 ### PR 19: Add verify baked image endpoint
+
 **Lines: ~200**
 
 ```
@@ -361,6 +398,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `feat(api): implement verify baked image endpoint`
 2. `test(api): add verify baked endpoint tests`
 
@@ -369,6 +407,7 @@ Changes:
 ## Phase 4D: E2E Tests & Documentation
 
 ### PR 20: Add baking E2E tests
+
 **Lines: ~300**
 
 ```
@@ -381,6 +420,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `test(e2e): add PNG baking end-to-end test`
 2. `test(e2e): add SVG baking end-to-end test`
 3. `test(e2e): add tamper detection test`
@@ -388,6 +428,7 @@ Changes:
 ---
 
 ### PR 21: Update API documentation
+
 **Lines: ~200**
 
 ```
@@ -401,6 +442,7 @@ Changes:
 ```
 
 **Atomic commits:**
+
 1. `docs(api): add well-known endpoints documentation`
 2. `docs(api): add baking endpoint documentation`
 3. `docs(api): add verification endpoints documentation`
@@ -409,14 +451,14 @@ Changes:
 
 ## Summary
 
-| Phase | PRs | Est. Lines | Description |
-|-------|-----|------------|-------------|
-| 6A | 1-6 | ~750 | Key management & JWKS/DID |
-| 4A | 7-9 | ~430 | PNG baking service |
-| 4B | 10-12 | ~400 | SVG baking service |
-| 4C | 13 | ~200 | Bake API endpoint |
-| 6B | 14-19 | ~980 | Verification service & API |
-| 4D | 20-21 | ~500 | E2E tests & docs |
+| Phase | PRs   | Est. Lines | Description                |
+| ----- | ----- | ---------- | -------------------------- |
+| 6A    | 1-6   | ~750       | Key management & JWKS/DID  |
+| 4A    | 7-9   | ~430       | PNG baking service         |
+| 4B    | 10-12 | ~400       | SVG baking service         |
+| 4C    | 13    | ~200       | Bake API endpoint          |
+| 6B    | 14-19 | ~980       | Verification service & API |
+| 4D    | 20-21 | ~500       | E2E tests & docs           |
 
 **Total: 21 PRs, ~3,260 lines**
 
@@ -485,8 +527,8 @@ Until all PRs are merged, use feature flags:
 ```typescript
 // src/config/feature-flags.ts
 export const features = {
-  BAKING_ENABLED: process.env.FEATURE_BAKING === 'true',
-  VERIFICATION_ENABLED: process.env.FEATURE_VERIFICATION === 'true',
+  BAKING_ENABLED: process.env.FEATURE_BAKING === "true",
+  VERIFICATION_ENABLED: process.env.FEATURE_VERIFICATION === "true",
 };
 ```
 
@@ -494,7 +536,7 @@ Endpoints return 501 Not Implemented if flag is disabled:
 
 ```typescript
 if (!features.BAKING_ENABLED) {
-  return c.json({ error: 'Baking not yet available' }, 501);
+  return c.json({ error: "Baking not yet available" }, 501);
 }
 ```
 
@@ -538,5 +580,5 @@ Before creating issues, please confirm:
 
 ---
 
-*Plan Version: 1.0*
-*Date: November 2025*
+_Plan Version: 1.0_
+_Date: November 2025_

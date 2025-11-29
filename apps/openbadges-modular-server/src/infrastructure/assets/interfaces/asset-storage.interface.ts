@@ -11,7 +11,11 @@ export interface AssetStorageInterface {
    * @param mimetype MIME type of the file.
    * @returns The public URL or reference key for the stored asset.
    */
-  store(fileBuffer: Buffer, filename: string, mimetype: string): Promise<string>;
+  store(
+    fileBuffer: Buffer,
+    filename: string,
+    mimetype: string,
+  ): Promise<string>;
 
   /**
    * Optionally delete a file by key or URL.

@@ -5,20 +5,21 @@
  * including connection management, error handling, logging, and transaction support.
  */
 
-import { logger, queryLogger } from '@utils/logging/logger.service';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import { logger, queryLogger } from "@utils/logging/logger.service";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
 import type {
   SqliteOperationContext,
   SqliteQueryMetrics,
   DrizzleTransaction,
   SqliteEntityType,
-  SqlitePaginationParams} from '../types/sqlite-database.types';
+  SqlitePaginationParams,
+} from "../types/sqlite-database.types";
 import {
   DEFAULT_PAGINATION,
   MAX_PAGINATION_LIMIT,
-} from '../types/sqlite-database.types';
-import type { Shared } from 'openbadges-types';
-import type { drizzle as DrizzleFn } from 'drizzle-orm/bun-sqlite';
+} from "../types/sqlite-database.types";
+import type { Shared } from "openbadges-types";
+import type { drizzle as DrizzleFn } from "drizzle-orm/bun-sqlite";
 
 // Create compile-time type alias to avoid runtime import dependency
 type DrizzleDB = ReturnType<typeof DrizzleFn>;
@@ -47,7 +48,7 @@ export abstract class BaseSqliteRepository {
    */
   protected createOperationContext(
     operation: string,
-    entityId?: Shared.IRI
+    entityId?: Shared.IRI,
   ): SqliteOperationContext {
     return {
       operation,
@@ -73,7 +74,7 @@ export abstract class BaseSqliteRepository {
   protected logQueryMetrics(
     context: SqliteOperationContext,
     rowsAffected: number,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): SqliteQueryMetrics {
     const metrics: SqliteQueryMetrics = {
       duration: Date.now() - context.startTime,
@@ -90,7 +91,7 @@ export abstract class BaseSqliteRepository {
       context.operation,
       logParams,
       metrics.duration,
-      'sqlite'
+      "sqlite",
     );
 
     return metrics;
@@ -100,17 +101,17 @@ export abstract class BaseSqliteRepository {
    * Determines query type from operation string using word boundary regex for accuracy
    */
   private determineQueryType(
-    operation: string
-  ): 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'UNKNOWN' {
+    operation: string,
+  ): "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "UNKNOWN" {
     const upperOp = operation.toUpperCase();
 
     // Use word boundaries to ensure we match complete words, not substrings
-    if (/\bSELECT\b/.test(upperOp)) return 'SELECT';
-    if (/\bINSERT\b/.test(upperOp)) return 'INSERT';
-    if (/\bUPDATE\b/.test(upperOp)) return 'UPDATE';
-    if (/\bDELETE\b/.test(upperOp)) return 'DELETE';
+    if (/\bSELECT\b/.test(upperOp)) return "SELECT";
+    if (/\bINSERT\b/.test(upperOp)) return "INSERT";
+    if (/\bUPDATE\b/.test(upperOp)) return "UPDATE";
+    if (/\bDELETE\b/.test(upperOp)) return "DELETE";
 
-    return 'UNKNOWN'; // Return UNKNOWN instead of guessing
+    return "UNKNOWN"; // Return UNKNOWN instead of guessing
   }
 
   /**
@@ -119,7 +120,7 @@ export abstract class BaseSqliteRepository {
   protected async executeOperation<T>(
     context: SqliteOperationContext,
     operation: () => Promise<T>,
-    rowsAffected?: number
+    rowsAffected?: number,
   ): Promise<T> {
     try {
       const result = await operation();
@@ -140,7 +141,7 @@ export abstract class BaseSqliteRepository {
   protected async executeTransaction<T>(
     context: SqliteOperationContext,
     operation: (tx: DrizzleTransaction) => Promise<T>,
-    rowsAffected?: number
+    rowsAffected?: number,
   ): Promise<T> {
     try {
       const db = this.getDatabase();
@@ -183,7 +184,7 @@ export abstract class BaseSqliteRepository {
   protected async executeQuery<T>(
     context: SqliteOperationContext,
     query: (db: DrizzleDB) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T[]> {
     try {
       const db = this.getDatabase();
@@ -205,7 +206,7 @@ export abstract class BaseSqliteRepository {
   protected async executeSingleQuery<T>(
     context: SqliteOperationContext,
     query: (db: DrizzleDB) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T | null> {
     try {
       const db = this.getDatabase();
@@ -228,7 +229,7 @@ export abstract class BaseSqliteRepository {
   protected async executeUpdate<T>(
     context: SqliteOperationContext,
     update: (db: DrizzleDB) => Promise<T[]>,
-    queryParams?: unknown[]
+    queryParams?: unknown[],
   ): Promise<T | null> {
     try {
       const db = this.getDatabase();
@@ -250,7 +251,7 @@ export abstract class BaseSqliteRepository {
    */
   protected async executeDelete(
     context: SqliteOperationContext,
-    deleteOp: (db: DrizzleDB) => Promise<unknown[]>
+    deleteOp: (db: DrizzleDB) => Promise<unknown[]>,
   ): Promise<boolean> {
     try {
       const db = this.getDatabase();
@@ -272,7 +273,7 @@ export abstract class BaseSqliteRepository {
    * Helper method to validate entity ID format
    */
   protected validateEntityId(id: Shared.IRI, operation: string): void {
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+    if (!id || typeof id !== "string" || id.trim().length === 0) {
       throw new Error(`Invalid entity ID provided for ${operation}: ${id}`);
     }
   }
@@ -297,7 +298,7 @@ export abstract class BaseSqliteRepository {
    * Validates and normalizes pagination parameters
    */
   protected validatePagination(
-    params?: SqlitePaginationParams
+    params?: SqlitePaginationParams,
   ): Required<SqlitePaginationParams> {
     const limit = params?.limit ?? DEFAULT_PAGINATION.limit;
     const offset = params?.offset ?? DEFAULT_PAGINATION.offset;
@@ -305,19 +306,19 @@ export abstract class BaseSqliteRepository {
     // Validate limit
     if (limit <= 0) {
       throw new Error(
-        `Invalid pagination limit: ${limit}. Must be greater than 0.`
+        `Invalid pagination limit: ${limit}. Must be greater than 0.`,
       );
     }
     if (limit > MAX_PAGINATION_LIMIT) {
       throw new Error(
-        `Pagination limit ${limit} exceeds maximum allowed limit of ${MAX_PAGINATION_LIMIT}.`
+        `Pagination limit ${limit} exceeds maximum allowed limit of ${MAX_PAGINATION_LIMIT}.`,
       );
     }
 
     // Validate offset
     if (offset < 0) {
       throw new Error(
-        `Invalid pagination offset: ${offset}. Must be 0 or greater.`
+        `Invalid pagination offset: ${offset}. Must be 0 or greater.`,
       );
     }
 
@@ -335,8 +336,8 @@ export abstract class BaseSqliteRepository {
         entityType: this.getEntityType(),
         tableName: this.getTableName(),
         recommendation:
-          'Consider adding pagination parameters to prevent memory issues with large datasets',
-      }
+          "Consider adding pagination parameters to prevent memory issues with large datasets",
+      },
     );
   }
 }

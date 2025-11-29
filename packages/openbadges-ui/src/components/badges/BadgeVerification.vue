@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import { useBadgeVerification } from '@composables/useBadgeVerification';
-import { AccessibilityService } from '@services/AccessibilityService';
+import { computed, watch } from "vue";
+import type { OB2, OB3 } from "@/types";
+import { useBadgeVerification } from "@composables/useBadgeVerification";
+import { AccessibilityService } from "@services/AccessibilityService";
 
 interface Props {
   badge: OB2.Assertion | OB3.VerifiableCredential;
@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'verified', isValid: boolean): void;
+  (e: "verified", isValid: boolean): void;
 }>();
 
 // Use the badge verification composable
@@ -54,7 +54,7 @@ const formatDate = (date: Date) => {
 // Handle verify button click
 const handleVerify = async () => {
   const result = await verifyBadge(props.badge);
-  emit('verified', result.isValid);
+  emit("verified", result.isValid);
 };
 
 // Auto-verify reactively when badge or flag changes
@@ -67,7 +67,7 @@ watch(
     }
     await handleVerify();
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
 
@@ -82,10 +82,7 @@ watch(
       'is-revoked': revocationStatus === 'revoked',
     }"
   >
-    <div
-      v-if="showStatus"
-      class="ob-badge-verification-status"
-    >
+    <div v-if="showStatus" class="ob-badge-verification-status">
       <div
         v-if="isVerifying"
         class="ob-badge-verification-loading"
@@ -95,21 +92,12 @@ watch(
         <div class="ob-badge-verification-spinner" />
       </div>
 
-      <div
-        v-else-if="hasBeenVerified"
-        class="ob-badge-verification-result"
-      >
-        <div
-          v-if="isValid"
-          class="ob-badge-verification-valid"
-        >
+      <div v-else-if="hasBeenVerified" class="ob-badge-verification-result">
+        <div v-if="isValid" class="ob-badge-verification-valid">
           <span class="ob-badge-verification-icon">✓</span>
           <span>Verified</span>
         </div>
-        <div
-          v-else
-          class="ob-badge-verification-invalid"
-        >
+        <div v-else class="ob-badge-verification-invalid">
           <span class="ob-badge-verification-icon">✗</span>
           <span>Invalid</span>
         </div>
@@ -121,7 +109,7 @@ watch(
         class="ob-badge-verification-button"
         @click="handleVerify"
       >
-        {{ hasBeenVerified ? 'Verify Again' : 'Verify Badge' }}
+        {{ hasBeenVerified ? "Verify Again" : "Verify Badge" }}
       </button>
     </div>
 
@@ -129,10 +117,7 @@ watch(
       v-if="showDetails && hasBeenVerified"
       class="ob-badge-verification-details"
     >
-      <div
-        v-if="verificationMethod"
-        class="ob-badge-verification-method"
-      >
+      <div v-if="verificationMethod" class="ob-badge-verification-method">
         <span class="ob-badge-verification-label">Verification Method:</span>
         <span class="ob-badge-verification-value">{{
           formatVerificationMethod(verificationMethod)
@@ -148,7 +133,7 @@ watch(
           class="ob-badge-verification-value"
           :class="{ 'is-expired': expirationStatus === 'expired' }"
         >
-          {{ expirationStatus === 'expired' ? 'Expired' : 'Valid' }}
+          {{ expirationStatus === "expired" ? "Expired" : "Valid" }}
         </span>
       </div>
 
@@ -161,39 +146,23 @@ watch(
           class="ob-badge-verification-value"
           :class="{ 'is-revoked': revocationStatus === 'revoked' }"
         >
-          {{ revocationStatus === 'revoked' ? 'Revoked' : 'Valid' }}
+          {{ revocationStatus === "revoked" ? "Revoked" : "Valid" }}
         </span>
       </div>
 
-      <div
-        v-if="errors.length > 0"
-        class="ob-badge-verification-errors"
-      >
-        <h4 class="ob-badge-verification-section-title">
-          Errors:
-        </h4>
+      <div v-if="errors.length > 0" class="ob-badge-verification-errors">
+        <h4 class="ob-badge-verification-section-title">Errors:</h4>
         <ul>
-          <li
-            v-for="(error, index) in errors"
-            :key="index"
-          >
+          <li v-for="(error, index) in errors" :key="index">
             {{ error }}
           </li>
         </ul>
       </div>
 
-      <div
-        v-if="warnings.length > 0"
-        class="ob-badge-verification-warnings"
-      >
-        <h4 class="ob-badge-verification-section-title">
-          Warnings:
-        </h4>
+      <div v-if="warnings.length > 0" class="ob-badge-verification-warnings">
+        <h4 class="ob-badge-verification-section-title">Warnings:</h4>
         <ul>
-          <li
-            v-for="(warning, index) in warnings"
-            :key="index"
-          >
+          <li v-for="(warning, index) in warnings" :key="index">
             {{ warning }}
           </li>
         </ul>
@@ -204,7 +173,9 @@ watch(
         class="ob-badge-verification-timestamp"
       >
         <span class="ob-badge-verification-label">Last Verified:</span>
-        <span class="ob-badge-verification-value">{{ formatDate(lastVerified) }}</span>
+        <span class="ob-badge-verification-value">{{
+          formatDate(lastVerified)
+        }}</span>
       </div>
     </div>
   </div>

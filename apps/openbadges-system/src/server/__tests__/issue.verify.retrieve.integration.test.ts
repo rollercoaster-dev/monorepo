@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 import { postVerify } from './helpers/verify'
 
-// Mock platform token verification
-vi.mock('../services/jwt', () => ({
+// Hoisted mock ensures JWTService singleton is mocked before module evaluation
+const jwtMocks = vi.hoisted(() => ({
   jwtService: {
     verifyToken: vi.fn(() => ({ sub: 'test-user', email: 'issuer@example.org' })),
   },
 }))
+
+vi.mock('../services/jwt', () => jwtMocks)
 
 global.fetch = vi.fn()
 

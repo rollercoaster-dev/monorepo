@@ -1,26 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import IssuerDashboard from './IssuerDashboard.vue';
-import { mockAssertions } from '../../services/mockData';
+import { ref } from "vue";
+import IssuerDashboard from "./IssuerDashboard.vue";
+import { mockAssertions } from "../../services/mockData";
 
 const state = ref({
   issuerProfile: {
-    id: 'https://example.org/issuer',
-    name: 'Rollercoaster.dev',
-    url: 'https://example.org',
-    email: 'badges@example.org',
-    image: 'https://ui-avatars.com/api/?name=Manus+AI&background=0D8ABC&color=fff',
+    id: "https://example.org/issuer",
+    name: "Rollercoaster.dev",
+    url: "https://example.org",
+    email: "badges@example.org",
+    image:
+      "https://ui-avatars.com/api/?name=Manus+AI&background=0D8ABC&color=fff",
   },
   initialBadges: mockAssertions,
   loading: false,
 });
 
 function onBadgeIssued(assertion) {
-  console.log('Badge issued:', assertion);
+  console.log("Badge issued:", assertion);
 }
 
 function onBadgeClick(badge) {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
 }
 </script>
 
@@ -30,10 +31,7 @@ function onBadgeClick(badge) {
     :layout="{ type: 'single', iframe: true }"
   >
     <template #controls>
-      <HstCheckbox
-        v-model="state.loading"
-        title="Loading"
-      />
+      <HstCheckbox v-model="state.loading" title="Loading" />
     </template>
 
     <Variant title="Default">
@@ -60,7 +58,9 @@ function onBadgeClick(badge) {
       <div class="histoire-docs">
         <h1>IssuerDashboard</h1>
         <p>
-          The <code>IssuerDashboard</code> component provides a dashboard interface for badge issuers to manage and review issued badges. It supports filtering, loading states, and accessibility features.
+          The <code>IssuerDashboard</code> component provides a dashboard
+          interface for badge issuers to manage and review issued badges. It
+          supports filtering, loading states, and accessibility features.
         </p>
         <h2>When To Use</h2>
         <ul>
@@ -74,22 +74,54 @@ function onBadgeClick(badge) {
         <h2>Props</h2>
         <table>
           <thead>
-            <tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td><code>issuer-profile</code></td><td><code>object</code></td><td>Required</td><td>Issuer profile data</td></tr>
-            <tr><td><code>initial-badges</code></td><td><code>array</code></td><td><code>[]</code></td><td>Initial list of badges</td></tr>
-            <tr><td><code>loading</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Show loading state</td></tr>
+            <tr>
+              <td><code>issuer-profile</code></td>
+              <td><code>object</code></td>
+              <td>Required</td>
+              <td>Issuer profile data</td>
+            </tr>
+            <tr>
+              <td><code>initial-badges</code></td>
+              <td><code>array</code></td>
+              <td><code>[]</code></td>
+              <td>Initial list of badges</td>
+            </tr>
+            <tr>
+              <td><code>loading</code></td>
+              <td><code>boolean</code></td>
+              <td><code>false</code></td>
+              <td>Show loading state</td>
+            </tr>
           </tbody>
         </table>
         <h2>Events</h2>
         <table>
           <thead>
-            <tr><th>Name</th><th>Payload</th><th>Description</th></tr>
+            <tr>
+              <th>Name</th>
+              <th>Payload</th>
+              <th>Description</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td><code>badge-issued</code></td><td><code>object</code></td><td>Emitted when a badge is issued from the dashboard</td></tr>
-            <tr><td><code>badge-click</code></td><td><code>object</code></td><td>Emitted when a badge is clicked</td></tr>
+            <tr>
+              <td><code>badge-issued</code></td>
+              <td><code>object</code></td>
+              <td>Emitted when a badge is issued from the dashboard</td>
+            </tr>
+            <tr>
+              <td><code>badge-click</code></td>
+              <td><code>object</code></td>
+              <td>Emitted when a badge is clicked</td>
+            </tr>
           </tbody>
         </table>
         <h2>Accessibility</h2>

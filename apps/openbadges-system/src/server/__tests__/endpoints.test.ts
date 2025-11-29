@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 
-// Mock the JWT service
-vi.mock('../services/jwt', () => ({
+// Hoisted mock ensures JWTService singleton is mocked before module evaluation
+const jwtMocks = vi.hoisted(() => ({
   jwtService: {
     createOpenBadgesApiClient: vi.fn(() => ({
       token: 'mock-jwt-token',
@@ -20,6 +20,8 @@ vi.mock('../services/jwt', () => ({
     })),
   },
 }))
+
+vi.mock('../services/jwt', () => jwtMocks)
 
 // Mock fetch for OpenBadges server requests
 global.fetch = vi.fn()

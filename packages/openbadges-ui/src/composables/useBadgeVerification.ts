@@ -1,11 +1,11 @@
 // src/composables/useBadgeVerification.ts
-import { ref, computed } from 'vue';
-import type { Ref, ComputedRef } from 'vue';
-import type { OB2, OB3 } from '@/types';
+import { ref, computed } from "vue";
+import type { Ref, ComputedRef } from "vue";
+import type { OB2, OB3 } from "@/types";
 import {
   BadgeVerificationService,
   type VerificationResult,
-} from '@services/BadgeVerificationService';
+} from "@services/BadgeVerificationService";
 
 /**
  * State for badge verification
@@ -26,7 +26,9 @@ interface UseBadgeVerificationReturn {
   expirationStatus: ComputedRef<string | undefined>;
   revocationStatus: ComputedRef<string | undefined>;
   hasBeenVerified: ComputedRef<boolean>;
-  verifyBadge: (badge: OB2.Assertion | OB3.VerifiableCredential) => Promise<VerificationResult>;
+  verifyBadge: (
+    badge: OB2.Assertion | OB3.VerifiableCredential,
+  ) => Promise<VerificationResult>;
   clearVerification: () => void;
 }
 
@@ -47,7 +49,9 @@ export function useBadgeVerification(): UseBadgeVerificationReturn {
   const isValid = computed(() => state.value.result?.isValid ?? false);
   const errors = computed(() => state.value.result?.errors ?? []);
   const warnings = computed(() => state.value.result?.warnings ?? []);
-  const verificationMethod = computed(() => state.value.result?.verificationMethod);
+  const verificationMethod = computed(
+    () => state.value.result?.verificationMethod,
+  );
   const expirationStatus = computed(() => state.value.result?.expirationStatus);
   const revocationStatus = computed(() => state.value.result?.revocationStatus);
   const hasBeenVerified = computed(() => state.value.lastVerified !== null);
@@ -58,7 +62,7 @@ export function useBadgeVerification(): UseBadgeVerificationReturn {
    * @returns Verification result
    */
   const verifyBadge = async (
-    badge: OB2.Assertion | OB3.VerifiableCredential
+    badge: OB2.Assertion | OB3.VerifiableCredential,
   ): Promise<VerificationResult> => {
     state.value.isVerifying = true;
     state.value.badge = badge;

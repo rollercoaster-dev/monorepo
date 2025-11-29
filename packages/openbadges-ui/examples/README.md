@@ -9,6 +9,7 @@ This directory contains example applications demonstrating how to use the OpenBa
 A basic example showing how to display individual badges and badge lists using the OpenBadges UI components.
 
 **Features demonstrated:**
+
 - Displaying individual badges (OB2 and OB3 formats)
 - Displaying a list of badges in a grid layout
 - Handling badge click events
@@ -17,11 +18,13 @@ A basic example showing how to display individual badges and badge lists using t
 **To run this example:**
 
 1. Build the OpenBadges UI library:
+
    ```
    npm run build
    ```
 
 2. Serve the example using a local server:
+
    ```
    npx vite serve examples/simple-badge-display
    ```
@@ -33,6 +36,7 @@ A basic example showing how to display individual badges and badge lists using t
 A more comprehensive example demonstrating the ProfileViewer component with theme selection and customization options.
 
 **Features demonstrated:**
+
 - Displaying a user profile with badges
 - Switching between different themes for accessibility
 - Customizing display options (layout, description, URL)
@@ -42,11 +46,13 @@ A more comprehensive example demonstrating the ProfileViewer component with them
 **To run this example:**
 
 1. Build the OpenBadges UI library:
+
    ```
    npm run build
    ```
 
 2. Serve the example using a local server:
+
    ```
    npx vite serve examples/profile-viewer
    ```
@@ -60,9 +66,14 @@ Feel free to create additional examples to demonstrate different aspects of the 
 1. Create a new directory under `examples/`
 2. Add your HTML, JavaScript, and CSS files
 3. Import the OpenBadges UI components from the built library:
+
    ```js
-   import { OpenBadgesUIPlugin, BadgeDisplay, BadgeList } from '../../dist/openbadges-ui.es.js';
-   import '../../dist/style.css';
+   import {
+     OpenBadgesUIPlugin,
+     BadgeDisplay,
+     BadgeList,
+   } from "../../dist/openbadges-ui.es.js";
+   import "../../dist/style.css";
    ```
 
 4. Use the components in your application

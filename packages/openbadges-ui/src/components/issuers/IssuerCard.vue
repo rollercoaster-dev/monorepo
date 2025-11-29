@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { OB2, OB3 } from '@/types';
+import { computed, ref } from "vue";
+import type { OB2, OB3 } from "@/types";
 
 interface Props {
   issuer: OB2.Profile | OB3.Profile;
   interactive?: boolean;
   showDescription?: boolean;
   showContact?: boolean;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
 }
 
 const props = withDefaults(defineProps<Props>(), {
   interactive: false,
   showDescription: true,
   showContact: false,
-  density: 'normal',
+  density: "normal",
 });
 
 const emit = defineEmits<{
-  (e: 'click', issuer: OB2.Profile | OB3.Profile): void;
+  (e: "click", issuer: OB2.Profile | OB3.Profile): void;
 }>();
 
 /**
@@ -30,13 +30,13 @@ const emit = defineEmits<{
  */
 const getLocalizedString = (
   value: string | Record<string, string> | undefined,
-  fallback = ''
+  fallback = "",
 ): string => {
   if (!value) return fallback;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object') {
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
     // Try common language codes in order of preference
-    const preferredLangs = ['en', 'en-US', 'en-GB', Object.keys(value)[0]];
+    const preferredLangs = ["en", "en-US", "en-GB", Object.keys(value)[0]];
     for (const lang of preferredLangs) {
       if (lang && value[lang]) return value[lang];
     }
@@ -49,29 +49,35 @@ const normalizedIssuer = computed(() => {
   const issuer = props.issuer;
 
   // Get name - required in both OB2 and OB3, may be localized in OB3
-  const name = getLocalizedString(issuer.name as string | Record<string, string>, 'Unknown Issuer');
+  const name = getLocalizedString(
+    issuer.name as string | Record<string, string>,
+    "Unknown Issuer",
+  );
 
   // Get description - may be localized in OB3
-  const description = getLocalizedString(issuer.description as string | Record<string, string>, '');
+  const description = getLocalizedString(
+    issuer.description as string | Record<string, string>,
+    "",
+  );
 
   // Get URL - OB2 uses url, OB3 also uses url
-  const url = issuer.url || '';
+  const url = issuer.url || "";
 
   // Get email
-  const email = issuer.email || '';
+  const email = issuer.email || "";
 
   // Get image - OB2 can be string or Image object, OB3 uses Image object
-  let image = '';
+  let image = "";
   if (issuer.image) {
-    if (typeof issuer.image === 'string') {
+    if (typeof issuer.image === "string") {
       image = issuer.image;
-    } else if (typeof issuer.image === 'object' && 'id' in issuer.image) {
+    } else if (typeof issuer.image === "object" && "id" in issuer.image) {
       image = issuer.image.id;
     }
   }
 
   // Get ID
-  const id = issuer.id || '';
+  const id = issuer.id || "";
 
   return {
     id,
@@ -91,7 +97,7 @@ const generateAltText = (issuerName: string): string => {
 // Handle click events when card is interactive
 const handleClick = () => {
   if (props.interactive) {
-    emit('click', props.issuer);
+    emit("click", props.issuer);
   }
 };
 
@@ -112,10 +118,10 @@ const densityClass = computed(() => {
 // Truncate description for display
 const truncatedDescription = computed(() => {
   const desc = normalizedIssuer.value.description;
-  if (!desc) return '';
-  const maxLength = props.density === 'compact' ? 80 : 150;
+  if (!desc) return "";
+  const maxLength = props.density === "compact" ? 80 : 150;
   if (desc.length <= maxLength) return desc;
-  return desc.slice(0, maxLength).trim() + '...';
+  return desc.slice(0, maxLength).trim() + "...";
 });
 </script>
 
@@ -138,7 +144,7 @@ const truncatedDescription = computed(() => {
         :src="normalizedIssuer.image"
         :alt="generateAltText(normalizedIssuer.name)"
         class="manus-issuer-img"
-      >
+      />
       <div
         v-else
         class="manus-issuer-img-fallback"
@@ -159,10 +165,7 @@ const truncatedDescription = computed(() => {
       >
         {{ truncatedDescription }}
       </p>
-      <div
-        v-if="showContact && normalizedIssuer.url"
-        class="manus-issuer-url"
-      >
+      <div v-if="showContact && normalizedIssuer.url" class="manus-issuer-url">
         <a
           :href="normalizedIssuer.url"
           target="_blank"
@@ -176,10 +179,7 @@ const truncatedDescription = computed(() => {
         v-if="showContact && normalizedIssuer.email"
         class="manus-issuer-email"
       >
-        <a
-          :href="`mailto:${normalizedIssuer.email}`"
-          @click.stop
-        >
+        <a :href="`mailto:${normalizedIssuer.email}`" @click.stop>
           {{ normalizedIssuer.email }}
         </a>
       </div>

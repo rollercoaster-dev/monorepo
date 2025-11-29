@@ -5,10 +5,10 @@
  * ensuring proper handling of OpenBadges types and database-specific conversions.
  */
 
-import type { Shared, OB2 } from 'openbadges-types';
+import type { Shared, OB2 } from "openbadges-types";
 // OB3 imports available for future use if needed
-import { logger } from '@utils/logging/logger.service';
-import { createOrGenerateIRI } from '@utils/types/iri-utils';
+import { logger } from "@utils/logging/logger.service";
+import { createOrGenerateIRI } from "@utils/types/iri-utils";
 import type {
   TypeConversionResult,
   OpenBadgesImageType,
@@ -16,11 +16,12 @@ import type {
   OpenBadgesVerificationType,
   OpenBadgesEvidenceType,
   OpenBadgesCriteriaType,
-  OpenBadgesAlignmentType} from '../types/sqlite-database.types';
+  OpenBadgesAlignmentType,
+} from "../types/sqlite-database.types";
 import {
   SqliteTypeConversionError,
   SqliteValidationError,
-} from '../types/sqlite-database.types';
+} from "../types/sqlite-database.types";
 
 /**
  * SQLite-specific type conversion utilities with strict type safety
@@ -37,13 +38,13 @@ export namespace SqliteTypeConverters {
    * Validates and converts a string to Shared.IRI
    */
   export function validateAndConvertIRI(
-    value: string
+    value: string,
   ): TypeConversionResult<Shared.IRI> {
-    if (!value || typeof value !== 'string') {
+    if (!value || typeof value !== "string") {
       return {
         success: false,
         data: null,
-        error: 'Invalid IRI value: must be a non-empty string',
+        error: "Invalid IRI value: must be a non-empty string",
       };
     }
 
@@ -52,7 +53,7 @@ export namespace SqliteTypeConverters {
       return {
         success: false,
         data: null,
-        error: 'Invalid IRI value: cannot be empty',
+        error: "Invalid IRI value: cannot be empty",
       };
     }
 
@@ -66,22 +67,22 @@ export namespace SqliteTypeConverters {
    * Converts OpenBadges image types to SQLite string format
    */
   export function convertImageToString(
-    image: OpenBadgesImageType | undefined
+    image: OpenBadgesImageType | undefined,
   ): string | null {
     if (!image) return null;
 
-    if (typeof image === 'string') {
+    if (typeof image === "string") {
       return image;
     }
 
     try {
       return JSON.stringify(image);
     } catch (error) {
-      logger.error('Failed to convert image to string', { image, error });
+      logger.error("Failed to convert image to string", { image, error });
       throw new SqliteTypeConversionError(
-        'Failed to serialize image object',
+        "Failed to serialize image object",
         image,
-        'string'
+        "string",
       );
     }
   }
@@ -90,29 +91,29 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to OpenBadges image type
    */
   export function convertImageFromString(
-    imageStr: string | null
+    imageStr: string | null,
   ): Shared.IRI | Shared.OB3ImageObject | OB2.Image | null {
     if (!imageStr) return null;
 
     // Try to parse as JSON first
     try {
       const parsed = JSON.parse(imageStr);
-      if (typeof parsed === 'object' && parsed !== null) {
+      if (typeof parsed === "object" && parsed !== null) {
         // Check if it matches OB2.Image structure:
         // - Has id property as a string
         // - May have a type property (usually "Image")
         // - May have caption or author properties
         // - Generally simpler than OB3ImageObject
-        if ('id' in parsed && typeof parsed.id === 'string') {
+        if ("id" in parsed && typeof parsed.id === "string") {
           // Check additional properties that might indicate an OB2.Image
           // OB2.Image typically has a subset of: id, type, caption, author
           if (
             // OB2.Image is typically simpler with fewer properties
             Object.keys(parsed).length <= 4 &&
             // Check for common OB2.Image properties
-            (parsed.type === 'Image' ||
-              typeof parsed.caption === 'string' ||
-              typeof parsed.author === 'string' ||
+            (parsed.type === "Image" ||
+              typeof parsed.caption === "string" ||
+              typeof parsed.author === "string" ||
               // Simple object with mainly an ID
               Object.keys(parsed).length <= 2)
           ) {
@@ -135,14 +136,14 @@ export namespace SqliteTypeConverters {
    */
   export function safeJsonParse<T>(
     value: string | null,
-    fieldName: string
+    fieldName: string,
   ): T | null {
     if (!value) return null;
 
     try {
       return JSON.parse(value) as T;
     } catch (error) {
-      logger.warn('Failed to parse JSON field', { fieldName, value, error });
+      logger.warn("Failed to parse JSON field", { fieldName, value, error });
       return null;
     }
   }
@@ -152,14 +153,14 @@ export namespace SqliteTypeConverters {
    */
   export function safeJsonStringify(
     value: unknown,
-    fieldName: string
+    fieldName: string,
   ): string | null {
     if (value === null || value === undefined) return null;
 
     try {
       return JSON.stringify(value);
     } catch (error) {
-      logger.error('Failed to stringify JSON field', {
+      logger.error("Failed to stringify JSON field", {
         fieldName,
         value,
         error,
@@ -167,7 +168,7 @@ export namespace SqliteTypeConverters {
       throw new SqliteTypeConversionError(
         `Failed to serialize ${fieldName}`,
         value,
-        'string'
+        "string",
       );
     }
   }
@@ -176,19 +177,19 @@ export namespace SqliteTypeConverters {
    * Converts recipient object to SQLite string format
    */
   export function convertRecipientToString(
-    recipient: OpenBadgesRecipientType
+    recipient: OpenBadgesRecipientType,
   ): string {
     try {
       return JSON.stringify(recipient);
     } catch (error) {
-      logger.error('Failed to convert recipient to string', {
+      logger.error("Failed to convert recipient to string", {
         recipient,
         error,
       });
       throw new SqliteTypeConversionError(
-        'Failed to serialize recipient object',
+        "Failed to serialize recipient object",
         recipient,
-        'string'
+        "string",
       );
     }
   }
@@ -197,20 +198,20 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to recipient object
    */
   export function convertRecipientFromString(
-    recipientStr: string
+    recipientStr: string,
   ): OpenBadgesRecipientType {
     try {
       const parsed = JSON.parse(recipientStr);
       return parsed as OpenBadgesRecipientType;
     } catch (error) {
-      logger.error('Failed to parse recipient from string', {
+      logger.error("Failed to parse recipient from string", {
         recipientStr,
         error,
       });
       throw new SqliteTypeConversionError(
-        'Failed to parse recipient object',
+        "Failed to parse recipient object",
         recipientStr,
-        'OpenBadgesRecipientType'
+        "OpenBadgesRecipientType",
       );
     }
   }
@@ -219,21 +220,21 @@ export namespace SqliteTypeConverters {
    * Converts verification object to SQLite string format
    */
   export function convertVerificationToString(
-    verification: OpenBadgesVerificationType | undefined
+    verification: OpenBadgesVerificationType | undefined,
   ): string | null {
     if (!verification) return null;
 
     try {
       return JSON.stringify(verification);
     } catch (error) {
-      logger.error('Failed to convert verification to string', {
+      logger.error("Failed to convert verification to string", {
         verification,
         error,
       });
       throw new SqliteTypeConversionError(
-        'Failed to serialize verification object',
+        "Failed to serialize verification object",
         verification,
-        'string'
+        "string",
       );
     }
   }
@@ -242,7 +243,7 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to verification object
    */
   export function convertVerificationFromString(
-    verificationStr: string | null
+    verificationStr: string | null,
   ): OpenBadgesVerificationType | null {
     if (!verificationStr) return null;
 
@@ -250,14 +251,14 @@ export namespace SqliteTypeConverters {
       const parsed = JSON.parse(verificationStr);
       return parsed as OpenBadgesVerificationType;
     } catch (error) {
-      logger.error('Failed to parse verification from string', {
+      logger.error("Failed to parse verification from string", {
         verificationStr,
         error,
       });
       throw new SqliteTypeConversionError(
-        'Failed to parse verification object',
+        "Failed to parse verification object",
         verificationStr,
-        'OpenBadgesVerificationType'
+        "OpenBadgesVerificationType",
       );
     }
   }
@@ -266,18 +267,18 @@ export namespace SqliteTypeConverters {
    * Converts evidence array to SQLite string format
    */
   export function convertEvidenceToString(
-    evidence: OpenBadgesEvidenceType | undefined
+    evidence: OpenBadgesEvidenceType | undefined,
   ): string | null {
     if (!evidence) return null;
 
     try {
       return JSON.stringify(evidence);
     } catch (error) {
-      logger.error('Failed to convert evidence to string', { evidence, error });
+      logger.error("Failed to convert evidence to string", { evidence, error });
       throw new SqliteTypeConversionError(
-        'Failed to serialize evidence array',
+        "Failed to serialize evidence array",
         evidence,
-        'string'
+        "string",
       );
     }
   }
@@ -286,7 +287,7 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to evidence array
    */
   export function convertEvidenceFromString(
-    evidenceStr: string | null
+    evidenceStr: string | null,
   ): OpenBadgesEvidenceType | null {
     if (!evidenceStr) return null;
 
@@ -294,7 +295,7 @@ export namespace SqliteTypeConverters {
       const parsed = JSON.parse(evidenceStr);
       return parsed as OpenBadgesEvidenceType;
     } catch (error) {
-      logger.warn('Failed to parse evidence from string', {
+      logger.warn("Failed to parse evidence from string", {
         evidenceStr,
         error,
       });
@@ -306,7 +307,7 @@ export namespace SqliteTypeConverters {
    * Converts criteria object to SQLite string format
    */
   export function convertCriteriaToString(
-    criteria: OpenBadgesCriteriaType | undefined
+    criteria: OpenBadgesCriteriaType | undefined,
   ): string {
     if (!criteria) {
       // Return default empty criteria as string
@@ -316,11 +317,11 @@ export namespace SqliteTypeConverters {
     try {
       return JSON.stringify(criteria);
     } catch (error) {
-      logger.error('Failed to convert criteria to string', { criteria, error });
+      logger.error("Failed to convert criteria to string", { criteria, error });
       throw new SqliteTypeConversionError(
-        'Failed to serialize criteria object',
+        "Failed to serialize criteria object",
         criteria,
-        'string'
+        "string",
       );
     }
   }
@@ -329,7 +330,7 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to criteria object
    */
   export function convertCriteriaFromString(
-    criteriaStr: string
+    criteriaStr: string,
   ): OpenBadgesCriteriaType | undefined {
     if (!criteriaStr) return undefined;
 
@@ -337,7 +338,7 @@ export namespace SqliteTypeConverters {
       const parsed = JSON.parse(criteriaStr);
       return parsed as OpenBadgesCriteriaType;
     } catch (error) {
-      logger.warn('Failed to parse criteria from string', {
+      logger.warn("Failed to parse criteria from string", {
         criteriaStr,
         error,
       });
@@ -349,21 +350,21 @@ export namespace SqliteTypeConverters {
    * Converts alignment array to SQLite string format
    */
   export function convertAlignmentToString(
-    alignment: OpenBadgesAlignmentType | undefined
+    alignment: OpenBadgesAlignmentType | undefined,
   ): string | null {
     if (!alignment) return null;
 
     try {
       return JSON.stringify(alignment);
     } catch (error) {
-      logger.error('Failed to convert alignment to string', {
+      logger.error("Failed to convert alignment to string", {
         alignment,
         error,
       });
       throw new SqliteTypeConversionError(
-        'Failed to serialize alignment array',
+        "Failed to serialize alignment array",
         alignment,
-        'string'
+        "string",
       );
     }
   }
@@ -372,7 +373,7 @@ export namespace SqliteTypeConverters {
    * Converts SQLite string back to alignment array
    */
   export function convertAlignmentFromString(
-    alignmentStr: string | null
+    alignmentStr: string | null,
   ): OpenBadgesAlignmentType | null {
     if (!alignmentStr) return null;
 
@@ -380,7 +381,7 @@ export namespace SqliteTypeConverters {
       const parsed = JSON.parse(alignmentStr);
       return parsed as OpenBadgesAlignmentType;
     } catch (error) {
-      logger.warn('Failed to parse alignment from string', {
+      logger.warn("Failed to parse alignment from string", {
         alignmentStr,
         error,
       });
@@ -392,7 +393,7 @@ export namespace SqliteTypeConverters {
    * Converts boolean to SQLite integer format
    */
   export function convertBooleanToInteger(
-    value: boolean | undefined
+    value: boolean | undefined,
   ): number | null {
     if (value === undefined) return null;
     return value ? 1 : 0;
@@ -403,14 +404,14 @@ export namespace SqliteTypeConverters {
    */
   export function convertIntegerToBoolean(
     value: number | null,
-    fieldName: string
+    fieldName: string,
   ): boolean | undefined {
     if (value === null) return undefined;
     if (value !== 0 && value !== 1) {
       throw new SqliteValidationError(
-        'Invalid boolean integer value',
+        "Invalid boolean integer value",
         fieldName,
-        value
+        value,
       );
     }
     return value === 1;
@@ -421,7 +422,7 @@ export namespace SqliteTypeConverters {
    * Returns null when date is undefined to prevent silent insertion of current timestamp
    */
   export function convertDateToTimestamp(
-    date: Date | string | undefined
+    date: Date | string | undefined,
   ): number | null {
     if (!date) return null;
 
@@ -429,13 +430,13 @@ export namespace SqliteTypeConverters {
       return date.getTime();
     }
 
-    if (typeof date === 'string') {
+    if (typeof date === "string") {
       const parsed = new Date(date);
       if (isNaN(parsed.getTime())) {
         throw new SqliteValidationError(
-          'Invalid date string provided',
-          'date',
-          date
+          "Invalid date string provided",
+          "date",
+          date,
         );
       }
       return parsed.getTime();
@@ -449,7 +450,7 @@ export namespace SqliteTypeConverters {
    * Returns undefined for null timestamps
    */
   export function convertTimestampToDate(
-    timestamp: number | null
+    timestamp: number | null,
   ): Date | undefined {
     if (timestamp === null) return undefined;
     return new Date(timestamp);
@@ -459,7 +460,7 @@ export namespace SqliteTypeConverters {
    * Converts SQLite timestamp to ISO string
    */
   export function convertTimestampToISOString(
-    timestamp: number | null
+    timestamp: number | null,
   ): string | undefined {
     if (timestamp === null) return undefined;
     return new Date(timestamp).toISOString();
@@ -469,9 +470,9 @@ export namespace SqliteTypeConverters {
    * Validates additional fields object
    */
   export function validateAdditionalFields(
-    fields: Record<string, unknown>
+    fields: Record<string, unknown>,
   ): TypeConversionResult<Record<string, unknown>> {
-    if (!fields || typeof fields !== 'object') {
+    if (!fields || typeof fields !== "object") {
       return {
         success: true,
         data: {},
@@ -480,29 +481,29 @@ export namespace SqliteTypeConverters {
 
     // Filter out standard fields that shouldn't be in additionalFields
     const standardFields = [
-      'id',
-      'name',
-      'url',
-      'email',
-      'description',
-      'image',
-      'publicKey',
-      'issuer',
-      'badgeClass',
-      'recipient',
-      'issuedOn',
-      'expires',
-      'evidence',
-      'verification',
-      'revoked',
-      'revocationReason',
-      'criteria',
-      'alignment',
-      'tags',
+      "id",
+      "name",
+      "url",
+      "email",
+      "description",
+      "image",
+      "publicKey",
+      "issuer",
+      "badgeClass",
+      "recipient",
+      "issuedOn",
+      "expires",
+      "evidence",
+      "verification",
+      "revoked",
+      "revocationReason",
+      "criteria",
+      "alignment",
+      "tags",
     ];
 
     const filtered = Object.fromEntries(
-      Object.entries(fields).filter(([key]) => !standardFields.includes(key))
+      Object.entries(fields).filter(([key]) => !standardFields.includes(key)),
     );
 
     return {

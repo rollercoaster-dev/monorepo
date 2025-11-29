@@ -1,6 +1,6 @@
 // src/services/BadgeVerificationService.mock.ts
-import { vi } from 'vitest';
-import type { VerificationResult } from './BadgeVerificationService';
+import { vi } from "vitest";
+import type { VerificationResult } from "./BadgeVerificationService";
 
 // Create a typed mock for the verification function
 // Use explicit types instead of importing from openbadges-types

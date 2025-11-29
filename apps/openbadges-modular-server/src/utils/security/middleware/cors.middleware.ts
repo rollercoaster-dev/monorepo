@@ -4,9 +4,9 @@
  * Provides Cross-Origin Resource Sharing configuration using Hono's cors helper.
  */
 
-import type { MiddlewareHandler } from 'hono';
-import { cors } from 'hono/cors';
-import { config } from '@/config/config';
+import type { MiddlewareHandler } from "hono";
+import { cors } from "hono/cors";
+import { config } from "@/config/config";
 
 /**
  * Creates a CORS middleware with sensible defaults.
@@ -19,20 +19,30 @@ export function createCorsMiddleware(): MiddlewareHandler {
   // Resolve allowed origins
   const envOrigins = process.env.CORS_ORIGINS?.trim();
   const allowedOrigins = envOrigins
-    ? envOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+    ? envOrigins
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean)
     : [];
 
   // In dev allow all; in prod require explicit list (fallback to same-origin only by omitting origin option)
   const baseOptions = {
-    allowHeaders: ['Content-Type', 'Authorization'] as string[],
-    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] as string[],
-    exposeHeaders: ['Content-Length'] as string[],
+    allowHeaders: ["Content-Type", "Authorization"] as string[],
+    allowMethods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ] as string[],
+    exposeHeaders: ["Content-Length"] as string[],
     maxAge: 600,
     credentials: false,
   };
 
   if (isDevelopment) {
-    return cors({ origin: '*', ...baseOptions });
+    return cors({ origin: "*", ...baseOptions });
   }
 
   if (allowedOrigins.length > 0) {
@@ -43,5 +53,3 @@ export function createCorsMiddleware(): MiddlewareHandler {
   // Provide an empty allow-list to avoid setting CORS headers for cross-origin requests
   return cors({ origin: [] as string[], ...baseOptions });
 }
-
-

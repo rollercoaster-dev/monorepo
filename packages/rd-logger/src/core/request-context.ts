@@ -1,5 +1,5 @@
-import { AsyncLocalStorage } from 'async_hooks';
-import { randomUUID } from 'crypto';
+import { AsyncLocalStorage } from "async_hooks";
+import { randomUUID } from "crypto";
 
 export interface RequestStore {
   requestId: string;
@@ -19,7 +19,7 @@ const requestContext = new AsyncLocalStorage<RequestStore>();
  */
 export function runWithRequestContext<T>(
   fn: () => T,
-  existingRequestId?: string | null
+  existingRequestId?: string | null,
 ): T {
   const store: RequestStore = {
     requestId: existingRequestId || randomUUID(),
@@ -44,7 +44,7 @@ export function getRequestStore(): RequestStore | undefined {
  * @returns The current request ID or 'unknown' if not in a request context.
  */
 export function getCurrentRequestId(): string {
-  return getRequestStore()?.requestId || 'unknown';
+  return getRequestStore()?.requestId || "unknown";
 }
 
 /**

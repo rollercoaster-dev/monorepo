@@ -5,7 +5,7 @@
  * It follows semantic versioning principles (MAJOR.MINOR.PATCH).
  */
 
-import { logger } from '../logging/logger.service';
+import { logger } from "../logging/logger.service";
 
 /**
  * Interface for version information
@@ -29,17 +29,20 @@ export interface VersionInfo {
 export function parseVersion(version: string): VersionInfo {
   // Semantic version regex pattern
   // Matches: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]
-  const semverPattern = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+  const semverPattern =
+    /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 
   const match = version.match(semverPattern);
 
   if (!match) {
-    logger.warn(`Invalid version format: ${version}. Expected format: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]. Using default values.`);
+    logger.warn(
+      `Invalid version format: ${version}. Expected format: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILDMETADATA]. Using default values.`,
+    );
     return {
       version,
       major: 0,
       minor: 0,
-      patch: 0
+      patch: 0,
     };
   }
 
@@ -49,7 +52,7 @@ export function parseVersion(version: string): VersionInfo {
     minor: parseInt(match[2], 10),
     patch: parseInt(match[3], 10),
     preRelease: match[4],
-    buildMetadata: match[5]
+    buildMetadata: match[5],
   };
 }
 
@@ -90,7 +93,7 @@ export function getAppVersion(): VersionInfo {
   try {
     // Try to get version from package.json
     // Note: In production builds, this might need to be injected during build time
-    const packageJson = { version: process.env.APP_VERSION || '1.0.0' };
+    const packageJson = { version: process.env.APP_VERSION || "1.0.0" };
 
     const versionInfo = parseVersion(packageJson.version);
 
@@ -106,12 +109,12 @@ export function getAppVersion(): VersionInfo {
 
     return versionInfo;
   } catch (error) {
-    logger.warn('Failed to get application version', { error });
+    logger.warn("Failed to get application version", { error });
     return {
-      version: '1.0.0',
+      version: "1.0.0",
       major: 1,
       minor: 0,
-      patch: 0
+      patch: 0,
     };
   }
 }

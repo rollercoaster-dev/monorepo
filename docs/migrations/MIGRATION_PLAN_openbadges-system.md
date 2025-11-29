@@ -11,6 +11,7 @@
 ## Overview
 
 ### Package Information
+
 - **Name**: openbadges-system
 - **Current Version**: (not versioned - private package)
 - **Type**: Full-stack Vue 3 + Bun/Hono application
@@ -18,6 +19,7 @@
 - **Target Location**: `apps/openbadges-system/`
 
 ### Key Characteristics
+
 - **Frontend**: Vue 3 + Vite + TailwindCSS + Pinia
 - **Backend**: Bun + Hono (already Bun-native)
 - **Database**: Kysely ORM with SQLite/PostgreSQL support
@@ -25,11 +27,13 @@
 - **Test Framework**: Dual - Vitest (client) + Bun test (server)
 
 ### File Counts
+
 - 38 Vue components
 - 46 TypeScript files
 - 14 test files (5 client tests, 2 Bun tests, 7 Vitest server tests)
 
 ### Migration Objectives
+
 1. Convert from pnpm to Bun workspaces
 2. Replace npm dependencies with workspace dependencies (openbadges-types, openbadges-ui)
 3. Adapt configuration for monorepo structure
@@ -38,6 +42,7 @@
 6. Maintain dual test runner strategy (Vitest for client, Bun test for server)
 
 ### Success Criteria
+
 - All tests pass (14 tests across both runners)
 - Build succeeds (`vite build` for client, Bun for server)
 - Type-checking passes (`vue-tsc`)
@@ -50,6 +55,7 @@
 ## Prerequisites
 
 ### Required
+
 - [x] Migration analysis complete
 - [x] openbadges-types already in monorepo (`packages/openbadges-types`)
 - [x] openbadges-ui already in monorepo (`packages/openbadges-ui`)
@@ -58,25 +64,28 @@
 
 ### Dependencies Analysis
 
-#### Workspace Dependencies (convert to workspace:*)
-| Package | Current Version | Monorepo Version | Action |
-|---------|----------------|------------------|--------|
-| openbadges-types | ^3.2.3 | 3.2.3 | `workspace:*` |
-| openbadges-ui | ^1.0.3 | 1.3.0 | `workspace:*` |
+#### Workspace Dependencies (convert to workspace:\*)
+
+| Package          | Current Version | Monorepo Version | Action        |
+| ---------------- | --------------- | ---------------- | ------------- |
+| openbadges-types | ^3.2.3          | 3.2.3            | `workspace:*` |
+| openbadges-ui    | ^1.0.3          | 1.3.0            | `workspace:*` |
 
 #### Dependencies to Update
-| Package | Current | Monorepo Concern | Action |
-|---------|---------|------------------|--------|
-| zod | ^4.0.15 | Different major (v4 vs v3 in modular-server) | Keep v4 - app-specific |
-| hono | ^4.7.10 | Compatible with modular-server (^4.7.8) | Keep |
-| typescript | ^5.3.3 | Root has ^5.3.3 | Use root version |
+
+| Package    | Current | Monorepo Concern                             | Action                 |
+| ---------- | ------- | -------------------------------------------- | ---------------------- |
+| zod        | ^4.0.15 | Different major (v4 vs v3 in modular-server) | Keep v4 - app-specific |
+| hono       | ^4.7.10 | Compatible with modular-server (^4.7.8)      | Keep                   |
+| typescript | ^5.3.3  | Root has ^5.3.3                              | Use root version       |
 
 #### Native Module Concerns
-| Package | Issue | Mitigation |
-|---------|-------|------------|
-| better-sqlite3 | Native Node module, devDependency | Bun has built-in SQLite |
-| sqlite3 | Native Node module, dependency | May need replacement with bun:sqlite |
-| pg | PostgreSQL driver | Works with Bun |
+
+| Package        | Issue                             | Mitigation                           |
+| -------------- | --------------------------------- | ------------------------------------ |
+| better-sqlite3 | Native Node module, devDependency | Bun has built-in SQLite              |
+| sqlite3        | Native Node module, dependency    | May need replacement with bun:sqlite |
+| pg             | PostgreSQL driver                 | Works with Bun                       |
 
 ---
 
@@ -91,19 +100,23 @@
 #### Tasks
 
 1. **Create migration branch and sub-issues**
+
    ```bash
    git checkout -b migrate/openbadges-system
    ```
+
    - Create sub-issues for each phase (optional)
    - Commit: N/A (branch creation only)
 
 2. **Clone and import repository**
+
    ```bash
    gh repo clone rollercoaster-dev/openbadges-system temp-openbadges-system
    rm -rf temp-openbadges-system/.git
    cp -r temp-openbadges-system apps/openbadges-system
    rm -rf temp-openbadges-system
    ```
+
    - Remove standalone git history
    - Commit: `migrate(openbadges-system): import raw repository to monorepo`
 
@@ -120,11 +133,13 @@
    - Commit: `docs(openbadges-system): add migration tracking document`
 
 #### Validation
+
 - [ ] Package exists in `apps/openbadges-system/`
 - [ ] Standalone workflows removed
 - [ ] Lock files removed
 
 #### Rollback
+
 ```bash
 git checkout main
 git branch -D migrate/openbadges-system
@@ -144,6 +159,7 @@ rm -rf apps/openbadges-system
 1. **Update package.json for Bun workspaces**
 
    Changes needed:
+
    ```json
    {
      "name": "openbadges-system",
@@ -176,6 +192,7 @@ rm -rf apps/openbadges-system
    - Commit: `migrate(openbadges-system): convert package.json from pnpm to Bun`
 
 2. **Update workspace dependencies**
+
    ```json
    {
      "dependencies": {
@@ -184,6 +201,7 @@ rm -rf apps/openbadges-system
      }
    }
    ```
+
    - Replace npm versions with workspace references
    - Commit: `migrate(openbadges-system): use workspace dependencies`
 
@@ -194,26 +212,29 @@ rm -rf apps/openbadges-system
    - **Option B**: Migrate to bun:sqlite (requires Kysely adapter changes)
 
    For this migration, keep better-sqlite3 as Bun supports it.
-
    - Verify `better-sqlite3` works with Bun
    - Remove `sqlite3` if not needed (appears unused)
    - Commit: `migrate(openbadges-system): verify SQLite compatibility with Bun`
 
 4. **Run bun install from monorepo root**
+
    ```bash
    cd /path/to/monorepo
    bun install
    ```
+
    - Verify all dependencies resolve
    - Check for workspace link creation
 
 #### Validation
+
 - [ ] `bun install` succeeds from monorepo root
 - [ ] Workspace links created for openbadges-types and openbadges-ui
 - [ ] No dependency warnings
 - [ ] `node_modules` contains linked packages
 
 #### Rollback
+
 Restore original `package.json` from git history.
 
 ---
@@ -229,6 +250,7 @@ Restore original `package.json` from git history.
 1. **Update TypeScript configuration**
 
    Current `tsconfig.json` is already well-configured. Minor updates:
+
    ```json
    {
      "compilerOptions": {
@@ -237,6 +259,7 @@ Restore original `package.json` from git history.
      }
    }
    ```
+
    - Add `bun-types` for server code
    - Ensure path aliases work with monorepo structure
    - Commit: `migrate(openbadges-system): update TypeScript configuration for monorepo`
@@ -259,6 +282,7 @@ Restore original `package.json` from git history.
      ],
    },
    ```
+
    - Commit: `migrate(openbadges-system): update Vite configuration for monorepo`
 
 3. **Update Vitest configuration**
@@ -290,12 +314,14 @@ Restore original `package.json` from git history.
    - Commit: (may be combined with other config commit)
 
 #### Validation
+
 - [ ] `bun run type-check` passes (may have errors to fix in Phase 4)
 - [ ] Vite dev server starts
 - [ ] ESLint runs without config errors
 - [ ] TailwindCSS processes correctly
 
 #### Rollback
+
 Restore original configuration files from git history.
 
 ---
@@ -311,6 +337,7 @@ Restore original configuration files from git history.
 1. **Fix TypeScript errors**
 
    Run type-check and fix errors:
+
    ```bash
    cd apps/openbadges-system
    bun run type-check
@@ -333,9 +360,10 @@ Restore original configuration files from git history.
    - `src/test/integration/verification.test.ts`
 
    Verify imports resolve correctly:
+
    ```typescript
-   import { BadgeClass } from 'openbadges-types'
-   import { ObBadgeCard } from 'openbadges-ui'
+   import { BadgeClass } from "openbadges-types";
+   import { ObBadgeCard } from "openbadges-ui";
    ```
 
    - Commit: `migrate(openbadges-system): update imports for workspace packages`
@@ -362,12 +390,14 @@ Restore original configuration files from git history.
    - Commit: (if needed) `migrate(openbadges-system): ensure database compatibility`
 
 #### Validation
+
 - [ ] `bun run type-check` passes
 - [ ] All imports resolve
 - [ ] No runtime errors when starting dev server
 - [ ] Database connections work
 
 #### Rollback
+
 ```bash
 git checkout HEAD~n -- apps/openbadges-system/src/
 ```
@@ -383,6 +413,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 #### Tasks
 
 1. **Run client tests (Vitest)**
+
    ```bash
    cd apps/openbadges-system
    bun run test:client
@@ -401,6 +432,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `migrate(openbadges-system): fix client test failures`
 
 2. **Run server tests (Bun test)**
+
    ```bash
    cd apps/openbadges-system
    bun run test:server
@@ -417,6 +449,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `migrate(openbadges-system): fix server test failures`
 
 3. **Run integration tests (if applicable)**
+
    ```bash
    cd apps/openbadges-system
    # Integration tests in src/test/integration/
@@ -425,6 +458,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `migrate(openbadges-system): fix integration test failures`
 
 4. **Verify full test suite**
+
    ```bash
    cd apps/openbadges-system
    bun run test
@@ -434,17 +468,19 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Ensure coverage is maintained
 
 #### Validation
+
 - [ ] All client tests pass (Vitest)
 - [ ] All server tests pass (Bun test)
 - [ ] Integration tests pass (if any)
 - [ ] Test coverage documented
 
 #### Test Summary Target
-| Runner | Files | Tests | Expected Result |
-|--------|-------|-------|-----------------|
-| Vitest (client) | 3+ | TBD | PASS |
-| Bun test (server) | 2 | TBD | PASS |
-| Integration | TBD | TBD | PASS |
+
+| Runner            | Files | Tests | Expected Result |
+| ----------------- | ----- | ----- | --------------- |
+| Vitest (client)   | 3+    | TBD   | PASS            |
+| Bun test (server) | 2     | TBD   | PASS            |
+| Integration       | TBD   | TBD   | PASS            |
 
 ---
 
@@ -457,6 +493,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 #### Tasks
 
 1. **Verify development mode**
+
    ```bash
    cd apps/openbadges-system
    bun run dev
@@ -471,6 +508,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: (fix issues if needed)
 
 2. **Verify client build**
+
    ```bash
    cd apps/openbadges-system
    bun run build
@@ -484,6 +522,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: (fix issues if needed)
 
 3. **Verify production mode**
+
    ```bash
    cd apps/openbadges-system
    bun run preview  # For client
@@ -495,6 +534,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 4. **Verify Docker Compose integration**
 
    The app uses Docker Compose to run openbadges-modular-server:
+
    ```bash
    cd apps/openbadges-system
    docker compose up -d
@@ -508,6 +548,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `migrate(openbadges-system): verify Docker Compose integration`
 
 #### Validation
+
 - [ ] `bun run dev` starts both servers
 - [ ] `bun run build` succeeds
 - [ ] `bun run start` works in production mode
@@ -526,7 +567,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 1. **Add to Turborepo pipeline**
 
    Update root `turbo.json`:
-   - Already configured for apps/* pattern
+   - Already configured for apps/\* pattern
    - Verify tasks work:
      - `build` -> `vite build`
      - `dev` -> concurrent client/server
@@ -539,18 +580,18 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 2. **Update root TypeScript references (if needed)**
 
    If using composite mode:
+
    ```json
    // root tsconfig.json
    {
-     "references": [
-       { "path": "./apps/openbadges-system" }
-     ]
+     "references": [{ "path": "./apps/openbadges-system" }]
    }
    ```
 
    - Commit: `build(typescript): add openbadges-system project reference`
 
 3. **Verify monorepo-wide commands**
+
    ```bash
    # From monorepo root
    bun run build           # Should build openbadges-system
@@ -575,6 +616,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `ci(openbadges-system): add to monorepo CI workflow`
 
 #### Validation
+
 - [ ] Turborepo runs tasks for openbadges-system
 - [ ] Root commands include openbadges-system
 - [ ] CI workflow configured
@@ -612,10 +654,12 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 3. **Update root monorepo CLAUDE.md**
 
    Add openbadges-system to apps section:
+
    ```markdown
    ### Apps
 
    #### openbadges-system
+
    - **Purpose**: Full-stack Vue 3 + Bun/Hono OpenBadges application
    - **Location**: `apps/openbadges-system/`
    - **Status**: Migrated
@@ -638,6 +682,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    - Commit: `docs(migration): archive openbadges-system migration plan`
 
 #### Validation
+
 - [ ] Package README accurate and helpful
 - [ ] CLAUDE.md files updated
 - [ ] Monorepo docs reference openbadges-system
@@ -655,6 +700,7 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 1. **Final validation checklist**
 
    Run all checks:
+
    ```bash
    # From apps/openbadges-system
    bun run lint
@@ -681,11 +727,11 @@ git checkout HEAD~n -- apps/openbadges-system/src/
    Use: `Closes #10`
 
 3. **Request review**
-
    - Code review for configuration changes
    - Test verification
 
 #### Validation
+
 - [ ] All CI checks pass
 - [ ] PR description complete
 - [ ] Issue #10 linked with closing keyword
@@ -696,27 +742,27 @@ git checkout HEAD~n -- apps/openbadges-system/src/
 
 ### High Risk Areas
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Native SQLite module (better-sqlite3) incompatibility | LOW | HIGH | Test early, have bun:sqlite fallback plan |
-| Zod v4 vs v3 conflicts | LOW | MEDIUM | Keep Zod isolated to app, no cross-package sharing |
-| Vitest/Vue Test Utils issues in monorepo | MEDIUM | MEDIUM | Ensure proper workspace resolution |
-| Docker Compose path issues | LOW | LOW | Update paths as needed |
+| Risk                                                  | Likelihood | Impact | Mitigation                                         |
+| ----------------------------------------------------- | ---------- | ------ | -------------------------------------------------- |
+| Native SQLite module (better-sqlite3) incompatibility | LOW        | HIGH   | Test early, have bun:sqlite fallback plan          |
+| Zod v4 vs v3 conflicts                                | LOW        | MEDIUM | Keep Zod isolated to app, no cross-package sharing |
+| Vitest/Vue Test Utils issues in monorepo              | MEDIUM     | MEDIUM | Ensure proper workspace resolution                 |
+| Docker Compose path issues                            | LOW        | LOW    | Update paths as needed                             |
 
 ### Medium Risk Areas
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| openbadges-ui version differences (1.0.3 -> 1.3.0) | MEDIUM | MEDIUM | Test UI components thoroughly |
-| Path alias resolution | MEDIUM | LOW | Update tsconfig and vite.config |
-| ESLint configuration conflicts | LOW | LOW | Keep app-specific config |
+| Risk                                               | Likelihood | Impact | Mitigation                      |
+| -------------------------------------------------- | ---------- | ------ | ------------------------------- |
+| openbadges-ui version differences (1.0.3 -> 1.3.0) | MEDIUM     | MEDIUM | Test UI components thoroughly   |
+| Path alias resolution                              | MEDIUM     | LOW    | Update tsconfig and vite.config |
+| ESLint configuration conflicts                     | LOW        | LOW    | Keep app-specific config        |
 
 ### Low Risk Areas
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Script command changes | LOW | LOW | Document clearly |
-| Environment variable changes | LOW | LOW | Keep .env.example updated |
+| Risk                         | Likelihood | Impact | Mitigation                |
+| ---------------------------- | ---------- | ------ | ------------------------- |
+| Script command changes       | LOW        | LOW    | Document clearly          |
+| Environment variable changes | LOW        | LOW    | Keep .env.example updated |
 
 ---
 
@@ -766,18 +812,19 @@ rm -rf apps/openbadges-system
 
 ### Milestones
 
-| Day | Phases | Deliverables |
-|-----|--------|--------------|
-| Day 1 | 1-2 | Raw import, package manager migration |
-| Day 2 | 3 | Configuration updates |
-| Day 3 | 4 | Code adaptations, TypeScript fixes |
-| Day 4 | 5 | Test migration and fixes |
-| Day 5 | 6-7 | Build verification, monorepo integration |
-| Day 6 | 8-9 | Documentation, finalization, PR |
+| Day   | Phases | Deliverables                             |
+| ----- | ------ | ---------------------------------------- |
+| Day 1 | 1-2    | Raw import, package manager migration    |
+| Day 2 | 3      | Configuration updates                    |
+| Day 3 | 4      | Code adaptations, TypeScript fixes       |
+| Day 4 | 5      | Test migration and fixes                 |
+| Day 5 | 6-7    | Build verification, monorepo integration |
+| Day 6 | 8-9    | Documentation, finalization, PR          |
 
 ### Contingency
 
 Add 20% buffer for unexpected issues:
+
 - Native module compilation issues
 - Complex test failures
 - Integration problems
@@ -787,39 +834,46 @@ Add 20% buffer for unexpected issues:
 ## Validation Checklist
 
 ### Code Quality
+
 - [ ] All TypeScript errors resolved
 - [ ] All tests passing
 - [ ] Linting passes
 - [ ] No console errors/warnings in development
 
 ### Package Manager Migration
+
 - [ ] package.json uses Bun workspace syntax
 - [ ] pnpm references replaced with bun
 - [ ] Lock files cleaned up
 - [ ] `bun install` works from root
 
 ### Workspace Dependencies
+
 - [ ] openbadges-types uses `workspace:*`
 - [ ] openbadges-ui uses `workspace:*`
 - [ ] Imports resolve correctly
 
 ### Build & Runtime
+
 - [ ] `bun run dev` starts successfully
 - [ ] `bun run build` completes
 - [ ] `bun run start` works
 - [ ] Docker Compose integration works
 
 ### Testing
+
 - [ ] Client tests pass (Vitest)
 - [ ] Server tests pass (Bun test)
 - [ ] Integration tests pass
 
 ### Monorepo Integration
+
 - [ ] Turborepo tasks work
 - [ ] Root commands include package
 - [ ] CI workflow configured
 
 ### Documentation
+
 - [ ] Package README updated
 - [ ] CLAUDE.md files updated
 - [ ] Monorepo docs updated
@@ -855,6 +909,7 @@ Add 20% buffer for unexpected issues:
 ## Next Steps
 
 After this plan is approved:
+
 1. Create migration branch
 2. Execute Phase 1 (Initial Setup)
 3. Proceed through phases sequentially

@@ -1,6 +1,6 @@
 // tests/integration/setup.ts
-import { vi, beforeAll, afterAll, beforeEach } from 'vitest';
-import { config } from '@vue/test-utils';
+import { vi, beforeAll, afterAll, beforeEach } from "vitest";
+import { config } from "@vue/test-utils";
 
 // Global test setup for integration tests
 beforeAll(() => {

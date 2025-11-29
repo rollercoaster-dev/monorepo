@@ -5,7 +5,7 @@
  * It provides methods for securely handling user passwords.
  */
 
-import { logger } from '../../utils/logging/logger.service';
+import { logger } from "../../utils/logging/logger.service";
 
 /**
  * Password service for hashing and verifying passwords
@@ -24,11 +24,11 @@ export class PasswordService {
   static async hashPassword(password: string): Promise<string> {
     try {
       // Import bcrypt dynamically to avoid issues with Bun
-      const bcrypt = await import('bcrypt');
+      const bcrypt = await import("bcrypt");
       return await bcrypt.hash(password, this.SALT_ROUNDS);
     } catch (error) {
-      logger.logError('Failed to hash password', error as Error);
-      throw new Error('Password hashing failed');
+      logger.logError("Failed to hash password", error as Error);
+      throw new Error("Password hashing failed");
     }
   }
 
@@ -38,14 +38,17 @@ export class PasswordService {
    * @param hash The hashed password
    * @returns True if the password matches the hash
    */
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
+  static async verifyPassword(
+    password: string,
+    hash: string,
+  ): Promise<boolean> {
     try {
       // Import bcrypt dynamically to avoid issues with Bun
-      const bcrypt = await import('bcrypt');
+      const bcrypt = await import("bcrypt");
       return await bcrypt.compare(password, hash);
     } catch (error) {
-      logger.logError('Failed to verify password', error as Error);
-      throw new Error('Password verification failed');
+      logger.logError("Failed to verify password", error as Error);
+      throw new Error("Password verification failed");
     }
   }
 
@@ -55,8 +58,9 @@ export class PasswordService {
    * @returns A secure random password
    */
   static generateRandomPassword(length = 12): string {
-    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+';
-    let password = '';
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+    let password = "";
 
     // Generate cryptographically secure random values
     const randomValues = new Uint8Array(length);

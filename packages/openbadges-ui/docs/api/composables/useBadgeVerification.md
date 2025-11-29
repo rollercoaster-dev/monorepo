@@ -6,17 +6,17 @@ The `useBadgeVerification` composable provides functionality for verifying badge
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { useBadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   // ... other badge properties
   verification: {
-    type: 'hosted'
-  }
+    type: "hosted",
+  },
 });
 
 const {
@@ -29,40 +29,42 @@ const {
   revocationStatus,
   hasBeenVerified,
   verifyBadge,
-  clearVerification
+  clearVerification,
 } = useBadgeVerification();
 
 // Verify the badge
 const handleVerify = async () => {
   const result = await verifyBadge(badge.value);
-  console.log('Verification result:', result);
+  console.log("Verification result:", result);
 };
 </script>
 
 <template>
   <div>
     <button @click="handleVerify" :disabled="state.isVerifying">
-      {{ state.isVerifying ? 'Verifying...' : 'Verify Badge' }}
+      {{ state.isVerifying ? "Verifying..." : "Verify Badge" }}
     </button>
-    
+
     <div v-if="hasBeenVerified">
-      <p>Valid: {{ isValid ? 'Yes' : 'No' }}</p>
-      
+      <p>Valid: {{ isValid ? "Yes" : "No" }}</p>
+
       <div v-if="verificationMethod">
         <p>Method: {{ verificationMethod }}</p>
       </div>
-      
+
       <div v-if="errors.length > 0">
         <h4>Errors:</h4>
         <ul>
           <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
         </ul>
       </div>
-      
+
       <div v-if="warnings.length > 0">
         <h4>Warnings:</h4>
         <ul>
-          <li v-for="(warning, index) in warnings" :key="index">{{ warning }}</li>
+          <li v-for="(warning, index) in warnings" :key="index">
+            {{ warning }}
+          </li>
         </ul>
       </div>
     </div>
@@ -76,18 +78,18 @@ The `useBadgeVerification` composable does not take any parameters.
 
 ## Returns
 
-| Name | Type | Description |
-|------|------|-------------|
-| `state` | `Ref<BadgeVerificationState>` | Reactive state object containing verification data and status. |
-| `isValid` | `ComputedRef<boolean>` | Whether the badge is valid. Returns `false` if no verification has been performed. |
-| `errors` | `ComputedRef<string[]>` | Array of verification errors. Empty if no errors or no verification has been performed. |
-| `warnings` | `ComputedRef<string[]>` | Array of verification warnings. Empty if no warnings or no verification has been performed. |
-| `verificationMethod` | `ComputedRef<'hosted' \| 'signed' \| undefined>` | Method used for verification. `undefined` if no verification has been performed. |
-| `expirationStatus` | `ComputedRef<'valid' \| 'expired' \| 'not-applicable' \| undefined>` | Badge expiration status. `undefined` if no verification has been performed. |
-| `revocationStatus` | `ComputedRef<'valid' \| 'revoked' \| 'unknown' \| undefined>` | Badge revocation status. `undefined` if no verification has been performed. |
-| `hasBeenVerified` | `ComputedRef<boolean>` | Whether the badge has been verified. |
-| `verifyBadge` | `(badge: OB2.Assertion \| OB3.VerifiableCredential) => Promise<VerificationResult>` | Function to verify a badge. Returns a promise that resolves to the verification result. |
-| `clearVerification` | `() => void` | Function to clear verification state. |
+| Name                 | Type                                                                                | Description                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `state`              | `Ref<BadgeVerificationState>`                                                       | Reactive state object containing verification data and status.                              |
+| `isValid`            | `ComputedRef<boolean>`                                                              | Whether the badge is valid. Returns `false` if no verification has been performed.          |
+| `errors`             | `ComputedRef<string[]>`                                                             | Array of verification errors. Empty if no errors or no verification has been performed.     |
+| `warnings`           | `ComputedRef<string[]>`                                                             | Array of verification warnings. Empty if no warnings or no verification has been performed. |
+| `verificationMethod` | `ComputedRef<'hosted' \| 'signed' \| undefined>`                                    | Method used for verification. `undefined` if no verification has been performed.            |
+| `expirationStatus`   | `ComputedRef<'valid' \| 'expired' \| 'not-applicable' \| undefined>`                | Badge expiration status. `undefined` if no verification has been performed.                 |
+| `revocationStatus`   | `ComputedRef<'valid' \| 'revoked' \| 'unknown' \| undefined>`                       | Badge revocation status. `undefined` if no verification has been performed.                 |
+| `hasBeenVerified`    | `ComputedRef<boolean>`                                                              | Whether the badge has been verified.                                                        |
+| `verifyBadge`        | `(badge: OB2.Assertion \| OB3.VerifiableCredential) => Promise<VerificationResult>` | Function to verify a badge. Returns a promise that resolves to the verification result.     |
+| `clearVerification`  | `() => void`                                                                        | Function to clear verification state.                                                       |
 
 ## State Structure
 
@@ -101,6 +103,7 @@ interface BadgeVerificationState {
 ```
 
 The state object contains:
+
 - `isVerifying`: Whether a verification is currently in progress
 - `lastVerified`: Timestamp of the last verification, or `null` if no verification has been performed
 - `result`: The result of the last verification, or `null` if no verification has been performed
@@ -113,13 +116,14 @@ interface VerificationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  verificationMethod?: 'hosted' | 'signed';
-  expirationStatus?: 'valid' | 'expired' | 'not-applicable';
-  revocationStatus?: 'valid' | 'revoked' | 'unknown';
+  verificationMethod?: "hosted" | "signed";
+  expirationStatus?: "valid" | "expired" | "not-applicable";
+  revocationStatus?: "valid" | "revoked" | "unknown";
 }
 ```
 
 The verification result contains:
+
 - `isValid`: Whether the badge is valid
 - `errors`: Array of verification errors
 - `warnings`: Array of verification warnings
@@ -135,8 +139,8 @@ Verifies a badge and updates the verification state.
 
 #### Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name    | Type                                        | Description                                                                                                  |
+| ------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `badge` | `OB2.Assertion \| OB3.VerifiableCredential` | The badge to verify. Can be either an Open Badges 2.0 Assertion or an Open Badges 3.0 Verifiable Credential. |
 
 #### Returns
@@ -147,19 +151,19 @@ Verifies a badge and updates the verification state.
 
 ```javascript
 const badge = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   // ... other badge properties
   verification: {
-    type: 'hosted'
-  }
+    type: "hosted",
+  },
 };
 
 const result = await verifyBadge(badge);
-console.log('Is valid:', result.isValid);
-console.log('Errors:', result.errors);
-console.log('Warnings:', result.warnings);
+console.log("Is valid:", result.isValid);
+console.log("Errors:", result.errors);
+console.log("Warnings:", result.warnings);
 ```
 
 ### clearVerification()
@@ -187,8 +191,8 @@ console.log(errors.value); // []
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { useBadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
   // Badge data
@@ -212,8 +216,8 @@ const handleVerify = async () => {
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { useBadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
   // Badge data
@@ -225,7 +229,7 @@ const {
   verificationMethod,
   expirationStatus,
   revocationStatus,
-  hasBeenVerified
+  hasBeenVerified,
 } = useBadgeVerification();
 
 const handleVerify = async () => {
@@ -235,21 +239,25 @@ const handleVerify = async () => {
 
 <template>
   <button @click="handleVerify">Verify Badge</button>
-  
+
   <div v-if="hasBeenVerified">
     <h3>Verification Result</h3>
-    <p>Valid: {{ isValid ? 'Yes' : 'No' }}</p>
-    
+    <p>Valid: {{ isValid ? "Yes" : "No" }}</p>
+
     <div v-if="verificationMethod">
       <p>Method: {{ verificationMethod }}</p>
     </div>
-    
+
     <div v-if="expirationStatus !== 'not-applicable'">
-      <p>Expiration: {{ expirationStatus === 'valid' ? 'Valid' : 'Expired' }}</p>
+      <p>
+        Expiration: {{ expirationStatus === "valid" ? "Valid" : "Expired" }}
+      </p>
     </div>
-    
+
     <div v-if="revocationStatus !== 'unknown'">
-      <p>Revocation: {{ revocationStatus === 'valid' ? 'Valid' : 'Revoked' }}</p>
+      <p>
+        Revocation: {{ revocationStatus === "valid" ? "Valid" : "Revoked" }}
+      </p>
     </div>
   </div>
 </template>
@@ -259,38 +267,30 @@ const handleVerify = async () => {
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { useBadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
   // Badge data
 });
 
-const {
-  state,
-  verifyBadge,
-  errors,
-  warnings,
-  hasBeenVerified
-} = useBadgeVerification();
+const { state, verifyBadge, errors, warnings, hasBeenVerified } =
+  useBadgeVerification();
 
 const handleVerify = async () => {
   try {
     await verifyBadge(badge.value);
   } catch (error) {
-    console.error('Verification failed:', error);
+    console.error("Verification failed:", error);
   }
 };
 </script>
 
 <template>
-  <button 
-    @click="handleVerify" 
-    :disabled="state.isVerifying"
-  >
-    {{ state.isVerifying ? 'Verifying...' : 'Verify Badge' }}
+  <button @click="handleVerify" :disabled="state.isVerifying">
+    {{ state.isVerifying ? "Verifying..." : "Verify Badge" }}
   </button>
-  
+
   <div v-if="hasBeenVerified">
     <div v-if="errors.length > 0" class="errors">
       <h4>Errors:</h4>
@@ -298,7 +298,7 @@ const handleVerify = async () => {
         <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
       </ul>
     </div>
-    
+
     <div v-if="warnings.length > 0" class="warnings">
       <h4>Warnings:</h4>
       <ul>

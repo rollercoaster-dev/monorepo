@@ -6,8 +6,8 @@ The `BadgeDisplay` component renders a single badge with its image, name, descri
 
 ```vue
 <template>
-  <BadgeDisplay 
-    :badge="myBadge" 
+  <BadgeDisplay
+    :badge="myBadge"
     :show-description="true"
     :show-issued-date="true"
     :interactive="true"
@@ -18,87 +18,88 @@ The `BadgeDisplay` component renders a single badge with its image, name, descri
 </template>
 
 <script setup>
-import { BadgeDisplay } from 'openbadges-ui';
-import { ref } from 'vue';
+import { BadgeDisplay } from "openbadges-ui";
+import { ref } from "vue";
 
 // Example badge (OB2 format)
 const myBadge = ref({
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    identity: 'alice@example.org',
-    type: 'email',
-    hashed: false
+    identity: "alice@example.org",
+    type: "email",
+    hashed: false,
   },
   badge: {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'AI Ethics Fundamentals',
-    description: 'Awarded for demonstrating understanding of core AI ethics principles.',
-    image: 'https://example.org/badges/ai-ethics.png',
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "AI Ethics Fundamentals",
+    description:
+      "Awarded for demonstrating understanding of core AI ethics principles.",
+    image: "https://example.org/badges/ai-ethics.png",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Academy'
-    }
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Academy",
+    },
   },
-  issuedOn: '2023-01-15T12:00:00Z',
+  issuedOn: "2023-01-15T12:00:00Z",
   verification: {
-    type: 'hosted'
-  }
+    type: "hosted",
+  },
 });
 
 const handleBadgeClick = (badge) => {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
 };
 
 const handleVerified = (isValid) => {
-  console.log('Badge verification result:', isValid);
+  console.log("Badge verification result:", isValid);
 };
 </script>
 ```
 
 ## Props
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
-| `badge` | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to display. Can be either an Open Badges 2.0 Assertion or an Open Badges 3.0 Verifiable Credential. |
-| `showDescription` | `boolean` | `true` | Whether to show the badge description. |
-| `showIssuedDate` | `boolean` | `true` | Whether to show the badge issue date. |
-| `showExpiryDate` | `boolean` | `false` | Whether to show the badge expiry date (if available). |
-| `interactive` | `boolean` | `false` | Whether the badge is clickable. When `true`, the badge will have hover and focus styles, and will emit a `click` event when clicked. |
-| `showVerification` | `boolean` | `false` | Whether to show badge verification controls. When `true`, a button to toggle verification details will be displayed. |
-| `autoVerify` | `boolean` | `false` | Whether to automatically verify the badge when the verification component is displayed. |
+| Name               | Type                                        | Default  | Description                                                                                                                          |
+| ------------------ | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `badge`            | `OB2.Assertion \| OB3.VerifiableCredential` | Required | The badge to display. Can be either an Open Badges 2.0 Assertion or an Open Badges 3.0 Verifiable Credential.                        |
+| `showDescription`  | `boolean`                                   | `true`   | Whether to show the badge description.                                                                                               |
+| `showIssuedDate`   | `boolean`                                   | `true`   | Whether to show the badge issue date.                                                                                                |
+| `showExpiryDate`   | `boolean`                                   | `false`  | Whether to show the badge expiry date (if available).                                                                                |
+| `interactive`      | `boolean`                                   | `false`  | Whether the badge is clickable. When `true`, the badge will have hover and focus styles, and will emit a `click` event when clicked. |
+| `showVerification` | `boolean`                                   | `false`  | Whether to show badge verification controls. When `true`, a button to toggle verification details will be displayed.                 |
+| `autoVerify`       | `boolean`                                   | `false`  | Whether to automatically verify the badge when the verification component is displayed.                                              |
 
 ## Events
 
-| Name | Payload | Description |
-|------|---------|-------------|
-| `click` | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when the badge is clicked (if `interactive` is `true`). The payload is the original badge object. |
-| `verified` | `boolean` | Emitted when a badge has been verified, with the verification result (`true` if valid, `false` if invalid). |
+| Name       | Payload                                     | Description                                                                                                 |
+| ---------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `click`    | `OB2.Assertion \| OB3.VerifiableCredential` | Emitted when the badge is clicked (if `interactive` is `true`). The payload is the original badge object.   |
+| `verified` | `boolean`                                   | Emitted when a badge has been verified, with the verification result (`true` if valid, `false` if invalid). |
 
 ## Slots
 
-| Name | Description |
-|------|-------------|
+| Name            | Description                                                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `badge-actions` | Additional actions to display below the badge content. This slot can be used to add custom buttons or other interactive elements. |
 
 ## CSS Variables
 
 The component uses CSS variables for styling, which can be overridden to customize its appearance:
 
-| Name | Default | Description |
-|------|---------|-------------|
-| `--badge-border-color` | `#e2e8f0` | The color of the badge border. |
-| `--badge-border-radius` | `8px` | The border radius of the badge. |
-| `--badge-padding` | `16px` | The padding inside the badge. |
-| `--badge-background` | `#ffffff` | The background color of the badge. |
-| `--badge-shadow` | `0 2px 4px rgba(0, 0, 0, 0.1)` | The shadow effect of the badge. |
-| `--badge-title-color` | `#1a202c` | The color of the badge title. |
-| `--badge-text-color` | `#4a5568` | The color of the badge text. |
-| `--badge-hover-shadow` | `0 4px 8px rgba(0, 0, 0, 0.15)` | The shadow effect when hovering over an interactive badge. |
-| `--badge-focus-outline-color` | `#3182ce` | The outline color when an interactive badge is focused. |
+| Name                          | Default                         | Description                                                |
+| ----------------------------- | ------------------------------- | ---------------------------------------------------------- |
+| `--badge-border-color`        | `#e2e8f0`                       | The color of the badge border.                             |
+| `--badge-border-radius`       | `8px`                           | The border radius of the badge.                            |
+| `--badge-padding`             | `16px`                          | The padding inside the badge.                              |
+| `--badge-background`          | `#ffffff`                       | The background color of the badge.                         |
+| `--badge-shadow`              | `0 2px 4px rgba(0, 0, 0, 0.1)`  | The shadow effect of the badge.                            |
+| `--badge-title-color`         | `#1a202c`                       | The color of the badge title.                              |
+| `--badge-text-color`          | `#4a5568`                       | The color of the badge text.                               |
+| `--badge-hover-shadow`        | `0 4px 8px rgba(0, 0, 0, 0.15)` | The shadow effect when hovering over an interactive badge. |
+| `--badge-focus-outline-color` | `#3182ce`                       | The outline color when an interactive badge is focused.    |
 
 ## Accessibility
 
@@ -125,11 +126,7 @@ The BadgeDisplay component includes several accessibility features:
 
 ```vue
 <template>
-  <BadgeDisplay 
-    :badge="badge" 
-    :interactive="true"
-    @click="handleBadgeClick"
-  />
+  <BadgeDisplay :badge="badge" :interactive="true" @click="handleBadgeClick" />
 </template>
 ```
 
@@ -137,8 +134,8 @@ The BadgeDisplay component includes several accessibility features:
 
 ```vue
 <template>
-  <BadgeDisplay 
-    :badge="badge" 
+  <BadgeDisplay
+    :badge="badge"
     :show-verification="true"
     :auto-verify="true"
     @verified="handleVerified"
@@ -163,10 +160,7 @@ The BadgeDisplay component includes several accessibility features:
 
 ```vue
 <template>
-  <BadgeDisplay 
-    :badge="badgeWithExpiry" 
-    :show-expiry-date="true"
-  />
+  <BadgeDisplay :badge="badgeWithExpiry" :show-expiry-date="true" />
 </template>
 ```
 

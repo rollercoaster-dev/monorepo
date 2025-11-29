@@ -1,4 +1,4 @@
-import { join, dirname } from 'path';
+import { join, dirname } from "path";
 
 /**
  * Resolves the migrations path relative to the project root.
@@ -11,7 +11,7 @@ export function getMigrationsPath(): string {
 
   // Navigate up to the project root and then to migrations
   // tests/test-utils -> tests -> project-root -> drizzle/migrations
-  return join(currentFileDir, '../../drizzle/migrations');
+  return join(currentFileDir, "../../drizzle/migrations");
 }
 
 /**
@@ -24,6 +24,6 @@ export function getMigrationsPathSafe(): string {
     return getMigrationsPath();
   } catch (_error) {
     // Fallback to process.cwd() based approach
-    return join(process.cwd(), 'drizzle/migrations');
+    return join(process.cwd(), "drizzle/migrations");
   }
 }

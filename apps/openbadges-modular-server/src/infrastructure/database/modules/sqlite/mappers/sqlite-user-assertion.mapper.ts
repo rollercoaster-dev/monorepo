@@ -5,18 +5,18 @@
  * handling the conversion between domain entities and database records.
  */
 
-import { UserAssertion } from '@domains/backpack/user-assertion.entity';
-import type { Shared } from 'openbadges-types';
+import { UserAssertion } from "@domains/backpack/user-assertion.entity";
+import type { Shared } from "openbadges-types";
 import {
   convertJson,
   convertTimestamp,
   convertUuid,
-} from '@infrastructure/database/utils/type-conversion';
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import type { userAssertions } from '../schema';
+} from "@infrastructure/database/utils/type-conversion";
+import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
+import type { userAssertions } from "../schema";
 // Import logger if needed for error handling
 // import { logger } from '@utils/logging/logger.service';
-import type { UserAssertionStatus } from '@domains/backpack/backpack.types';
+import type { UserAssertionStatus } from "@domains/backpack/backpack.types";
 
 /**
  * SQLite mapper for the UserAssertion domain entity
@@ -28,24 +28,24 @@ export class SqliteUserAssertionMapper {
    * @returns A database record suitable for insertion
    */
   toPersistence(
-    entity: UserAssertion
+    entity: UserAssertion,
   ): InferInsertModel<typeof userAssertions> {
     // Get entity data
     const data = entity.toObject();
 
     // Create the record with required fields
     const record: InferInsertModel<typeof userAssertions> = {
-      id: convertUuid(data.id as string, 'sqlite', 'to') as string,
-      userId: convertUuid(data.userId as string, 'sqlite', 'to') as string,
+      id: convertUuid(data.id as string, "sqlite", "to") as string,
+      userId: convertUuid(data.userId as string, "sqlite", "to") as string,
       assertionId: convertUuid(
         data.assertionId as string,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string,
-      addedAt: convertTimestamp(data.addedAt as Date, 'sqlite', 'to') as number,
+      addedAt: convertTimestamp(data.addedAt as Date, "sqlite", "to") as number,
       // updatedAt will be set by the repository during insert/update
       updatedAt: data.updatedAt
-        ? (convertTimestamp(data.updatedAt as Date, 'sqlite', 'to') as number)
+        ? (convertTimestamp(data.updatedAt as Date, "sqlite", "to") as number)
         : Date.now(),
     };
 
@@ -60,8 +60,8 @@ export class SqliteUserAssertionMapper {
     if (data.metadata !== undefined) {
       extendedRecord.metadata = convertJson(
         data.metadata,
-        'sqlite',
-        'to'
+        "sqlite",
+        "to",
       ) as string;
     }
 
@@ -75,23 +75,23 @@ export class SqliteUserAssertionMapper {
    */
   toDomain(record: InferSelectModel<typeof userAssertions>): UserAssertion {
     // Parse metadata
-    const parsedMetadata = convertJson(record.metadata, 'sqlite', 'from');
+    const parsedMetadata = convertJson(record.metadata, "sqlite", "from");
     const metadata =
-      typeof parsedMetadata === 'object'
+      typeof parsedMetadata === "object"
         ? (parsedMetadata as Record<string, unknown>)
         : undefined;
 
     // Create and return domain entity
     return UserAssertion.create({
-      id: convertUuid(record.id, 'sqlite', 'from') as Shared.IRI,
-      userId: convertUuid(record.userId, 'sqlite', 'from') as Shared.IRI,
+      id: convertUuid(record.id, "sqlite", "from") as Shared.IRI,
+      userId: convertUuid(record.userId, "sqlite", "from") as Shared.IRI,
       assertionId: convertUuid(
         record.assertionId,
-        'sqlite',
-        'from'
+        "sqlite",
+        "from",
       ) as Shared.IRI,
-      addedAt: convertTimestamp(record.addedAt, 'sqlite', 'from') as Date,
-      updatedAt: convertTimestamp(record.updatedAt, 'sqlite', 'from') as Date,
+      addedAt: convertTimestamp(record.addedAt, "sqlite", "from") as Date,
+      updatedAt: convertTimestamp(record.updatedAt, "sqlite", "from") as Date,
       status: record.status as UserAssertionStatus,
       metadata,
     });

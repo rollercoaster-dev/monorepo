@@ -4,7 +4,7 @@
  */
 
 // Import utility functions from shared modules
-import { createIRI, createDateTime, isIRI, isDateTime } from './shared/common';
+import { createIRI, createDateTime, isIRI, isDateTime } from "./shared/common";
 import {
   isJsonLdObject,
   isJsonLdArray,
@@ -13,7 +13,7 @@ import {
   OB2Context,
   OB3Context,
   VCContext,
-} from './shared/jsonld';
+} from "./shared/jsonld";
 
 // Import badge normalization functions
 import {
@@ -22,10 +22,10 @@ import {
   filterBadgesBySearchTerm,
   sortBadges,
   groupBadges,
-} from './badge-normalizer';
+} from "./badge-normalizer";
 
 // Import validation functions
-import { validateBadge } from './validation';
+import { validateBadge } from "./validation";
 
 // Re-export all utility functions
 export {

@@ -3,19 +3,19 @@
  * This test validates the fix for storing numeric values as text in PostgreSQL/SQLite
  */
 
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { StatusList } from '@domains/status-list/status-list.entity';
-import { StatusPurpose } from '@domains/status-list/status-list.types';
-import { PostgresStatusListMapper } from '@infrastructure/database/modules/postgresql/mappers/postgres-status-list.mapper';
-import { SqliteStatusListMapper } from '@infrastructure/database/modules/sqlite/mappers/sqlite-status-list.mapper';
+import { describe, it, expect, beforeEach } from "bun:test";
+import { StatusList } from "@domains/status-list/status-list.entity";
+import { StatusPurpose } from "@domains/status-list/status-list.types";
+import { PostgresStatusListMapper } from "@infrastructure/database/modules/postgresql/mappers/postgres-status-list.mapper";
+import { SqliteStatusListMapper } from "@infrastructure/database/modules/sqlite/mappers/sqlite-status-list.mapper";
 
-describe('Status List Numeric Columns', () => {
+describe("Status List Numeric Columns", () => {
   let statusList: StatusList;
 
   beforeEach(async () => {
     // Create a test status list with numeric values
     statusList = await StatusList.create({
-      issuerId: 'test-issuer-id',
+      issuerId: "test-issuer-id",
       purpose: StatusPurpose.REVOCATION,
       statusSize: 2,
       totalEntries: 262144,
@@ -26,31 +26,31 @@ describe('Status List Numeric Columns', () => {
     statusList.usedEntries = 1024;
   });
 
-  describe('PostgreSQL Mapper', () => {
+  describe("PostgreSQL Mapper", () => {
     let mapper: PostgresStatusListMapper;
 
     beforeEach(() => {
       mapper = new PostgresStatusListMapper();
     });
 
-    it('should convert StatusList to persistence format with numeric values', () => {
+    it("should convert StatusList to persistence format with numeric values", () => {
       const persistenceData = mapper.toPersistence(statusList);
 
       // Verify that numeric fields are stored as numbers, not strings
-      expect(typeof persistenceData.statusSize).toBe('number');
+      expect(typeof persistenceData.statusSize).toBe("number");
       expect(persistenceData.statusSize).toBe(2);
 
-      expect(typeof persistenceData.totalEntries).toBe('number');
+      expect(typeof persistenceData.totalEntries).toBe("number");
       expect(persistenceData.totalEntries).toBe(262144);
 
-      expect(typeof persistenceData.usedEntries).toBe('number');
+      expect(typeof persistenceData.usedEntries).toBe("number");
       expect(persistenceData.usedEntries).toBe(1024);
 
-      expect(typeof persistenceData.ttl).toBe('number');
+      expect(typeof persistenceData.ttl).toBe("number");
       expect(persistenceData.ttl).toBe(86400000);
     });
 
-    it('should convert persistence data back to domain entity correctly', () => {
+    it("should convert persistence data back to domain entity correctly", () => {
       // Simulate a database record with numeric values
       const mockRecord = {
         id: statusList.id,
@@ -75,10 +75,10 @@ describe('Status List Numeric Columns', () => {
       expect(domainEntity.ttl).toBe(86400000);
     });
 
-    it('should handle null ttl correctly', async () => {
+    it("should handle null ttl correctly", async () => {
       // Create status list without TTL
       const statusListWithoutTtl = await StatusList.create({
-        issuerId: 'test-issuer-id',
+        issuerId: "test-issuer-id",
         purpose: StatusPurpose.REVOCATION,
         statusSize: 1,
       });
@@ -106,31 +106,31 @@ describe('Status List Numeric Columns', () => {
     });
   });
 
-  describe('SQLite Mapper', () => {
+  describe("SQLite Mapper", () => {
     let mapper: SqliteStatusListMapper;
 
     beforeEach(() => {
       mapper = new SqliteStatusListMapper();
     });
 
-    it('should convert StatusList to persistence format with numeric values', () => {
+    it("should convert StatusList to persistence format with numeric values", () => {
       const persistenceData = mapper.toPersistence(statusList);
 
       // Verify that numeric fields are stored as numbers, not strings
-      expect(typeof persistenceData.statusSize).toBe('number');
+      expect(typeof persistenceData.statusSize).toBe("number");
       expect(persistenceData.statusSize).toBe(2);
 
-      expect(typeof persistenceData.totalEntries).toBe('number');
+      expect(typeof persistenceData.totalEntries).toBe("number");
       expect(persistenceData.totalEntries).toBe(262144);
 
-      expect(typeof persistenceData.usedEntries).toBe('number');
+      expect(typeof persistenceData.usedEntries).toBe("number");
       expect(persistenceData.usedEntries).toBe(1024);
 
-      expect(typeof persistenceData.ttl).toBe('number');
+      expect(typeof persistenceData.ttl).toBe("number");
       expect(persistenceData.ttl).toBe(86400000);
     });
 
-    it('should convert persistence data back to domain entity correctly', () => {
+    it("should convert persistence data back to domain entity correctly", () => {
       // Simulate a database record with numeric values (SQLite returns numbers for integer columns)
       const mockRecord = {
         id: statusList.id,
@@ -155,10 +155,10 @@ describe('Status List Numeric Columns', () => {
       expect(domainEntity.ttl).toBe(86400000);
     });
 
-    it('should handle null ttl correctly', async () => {
+    it("should handle null ttl correctly", async () => {
       // Create status list without TTL
       const statusListWithoutTtl = await StatusList.create({
-        issuerId: 'test-issuer-id',
+        issuerId: "test-issuer-id",
         purpose: StatusPurpose.REVOCATION,
         statusSize: 1,
       });
@@ -186,19 +186,19 @@ describe('Status List Numeric Columns', () => {
     });
   });
 
-  describe('Credential Status Entry Mappers', () => {
-    it('should handle numeric values in credential status entries (PostgreSQL)', () => {
+  describe("Credential Status Entry Mappers", () => {
+    it("should handle numeric values in credential status entries (PostgreSQL)", () => {
       const mapper = new PostgresStatusListMapper();
 
       const statusEntry = {
-        id: 'test-entry-id',
-        credentialId: 'test-credential-id',
+        id: "test-entry-id",
+        credentialId: "test-credential-id",
         statusListId: statusList.id,
         statusListIndex: 12345,
         statusSize: 4,
         purpose: StatusPurpose.REVOCATION,
         currentStatus: 3,
-        statusReason: 'Test reason',
+        statusReason: "Test reason",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -206,28 +206,28 @@ describe('Status List Numeric Columns', () => {
       const persistenceData = mapper.statusEntryToPersistence(statusEntry);
 
       // Verify numeric fields are numbers
-      expect(typeof persistenceData.statusListIndex).toBe('number');
+      expect(typeof persistenceData.statusListIndex).toBe("number");
       expect(persistenceData.statusListIndex).toBe(12345);
 
-      expect(typeof persistenceData.statusSize).toBe('number');
+      expect(typeof persistenceData.statusSize).toBe("number");
       expect(persistenceData.statusSize).toBe(4);
 
-      expect(typeof persistenceData.currentStatus).toBe('number');
+      expect(typeof persistenceData.currentStatus).toBe("number");
       expect(persistenceData.currentStatus).toBe(3);
     });
 
-    it('should handle numeric values in credential status entries (SQLite)', () => {
+    it("should handle numeric values in credential status entries (SQLite)", () => {
       const mapper = new SqliteStatusListMapper();
 
       const statusEntry = {
-        id: 'test-entry-id',
-        credentialId: 'test-credential-id',
+        id: "test-entry-id",
+        credentialId: "test-credential-id",
         statusListId: statusList.id,
         statusListIndex: 12345,
         statusSize: 4,
         purpose: StatusPurpose.REVOCATION,
         currentStatus: 3,
-        statusReason: 'Test reason',
+        statusReason: "Test reason",
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -235,13 +235,13 @@ describe('Status List Numeric Columns', () => {
       const persistenceData = mapper.statusEntryToPersistence(statusEntry);
 
       // Verify numeric fields are numbers
-      expect(typeof persistenceData.statusListIndex).toBe('number');
+      expect(typeof persistenceData.statusListIndex).toBe("number");
       expect(persistenceData.statusListIndex).toBe(12345);
 
-      expect(typeof persistenceData.statusSize).toBe('number');
+      expect(typeof persistenceData.statusSize).toBe("number");
       expect(persistenceData.statusSize).toBe(4);
 
-      expect(typeof persistenceData.currentStatus).toBe('number');
+      expect(typeof persistenceData.currentStatus).toBe("number");
       expect(persistenceData.currentStatus).toBe(3);
     });
   });

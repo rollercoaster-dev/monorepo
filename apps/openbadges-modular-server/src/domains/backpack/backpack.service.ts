@@ -5,30 +5,30 @@
  * including managing platform users and their assertions.
  */
 
-import type { PlatformRepository } from './platform.repository';
-import type { PlatformUserRepository } from './platform-user.repository';
-import type { UserAssertionRepository } from './user-assertion.repository';
-import type { AssertionRepository } from '../assertion/assertion.repository';
-import type { Platform } from './platform.entity';
-import type { PlatformUser } from './platform-user.entity';
-import type { UserAssertion } from './user-assertion.entity';
-import { logger } from '../../utils/logging/logger.service';
-import type { Shared } from 'openbadges-types';
-import type { UserAssertionStatus } from './backpack.types';
+import type { PlatformRepository } from "./platform.repository";
+import type { PlatformUserRepository } from "./platform-user.repository";
+import type { UserAssertionRepository } from "./user-assertion.repository";
+import type { AssertionRepository } from "../assertion/assertion.repository";
+import type { Platform } from "./platform.entity";
+import type { PlatformUser } from "./platform-user.entity";
+import type { UserAssertion } from "./user-assertion.entity";
+import { logger } from "../../utils/logging/logger.service";
+import type { Shared } from "openbadges-types";
+import type { UserAssertionStatus } from "./backpack.types";
 import type {
   PlatformCreateParams,
   PlatformUpdateParams,
   PlatformQueryParams,
   UserAssertionCreateParams,
-  UserAssertionQueryParams
-} from './repository.types';
+  UserAssertionQueryParams,
+} from "./repository.types";
 
 export class BackpackService {
   constructor(
     private platformRepository: PlatformRepository,
     private platformUserRepository: PlatformUserRepository,
     private userAssertionRepository: UserAssertionRepository,
-    private assertionRepository: AssertionRepository
+    private assertionRepository: AssertionRepository,
   ) {}
 
   /**
@@ -40,8 +40,8 @@ export class BackpackService {
     try {
       return await this.platformRepository.create(params);
     } catch (error) {
-      logger.logError('Failed to create platform', error as Error);
-      throw new Error('Failed to create platform');
+      logger.logError("Failed to create platform", error as Error);
+      throw new Error("Failed to create platform");
     }
   }
 
@@ -53,8 +53,8 @@ export class BackpackService {
     try {
       return await this.platformRepository.findAll(params);
     } catch (error) {
-      logger.logError('Failed to get all platforms', error as Error);
-      throw new Error('Failed to get platforms');
+      logger.logError("Failed to get all platforms", error as Error);
+      throw new Error("Failed to get platforms");
     }
   }
 
@@ -67,8 +67,8 @@ export class BackpackService {
     try {
       return await this.platformRepository.findById(id);
     } catch (error) {
-      logger.logError('Failed to get platform by ID', error as Error);
-      throw new Error('Failed to get platform');
+      logger.logError("Failed to get platform by ID", error as Error);
+      throw new Error("Failed to get platform");
     }
   }
 
@@ -78,12 +78,15 @@ export class BackpackService {
    * @param platform The updated platform data
    * @returns The updated platform if found, null otherwise
    */
-  async updatePlatform(id: Shared.IRI, params: PlatformUpdateParams): Promise<Platform | null> {
+  async updatePlatform(
+    id: Shared.IRI,
+    params: PlatformUpdateParams,
+  ): Promise<Platform | null> {
     try {
       return await this.platformRepository.update(id, params);
     } catch (error) {
-      logger.logError('Failed to update platform', error as Error);
-      throw new Error('Failed to update platform');
+      logger.logError("Failed to update platform", error as Error);
+      throw new Error("Failed to update platform");
     }
   }
 
@@ -96,8 +99,8 @@ export class BackpackService {
     try {
       return await this.platformRepository.delete(id);
     } catch (error) {
-      logger.logError('Failed to delete platform', error as Error);
-      throw new Error('Failed to delete platform');
+      logger.logError("Failed to delete platform", error as Error);
+      throw new Error("Failed to delete platform");
     }
   }
 
@@ -113,23 +116,26 @@ export class BackpackService {
     platformId: Shared.IRI,
     externalUserId: string,
     displayName?: string,
-    email?: string
+    email?: string,
   ): Promise<PlatformUser> {
     try {
       // Check if the user already exists
-      const existingUser = await this.platformUserRepository.findByPlatformAndExternalId(
-        platformId,
-        externalUserId
-      );
+      const existingUser =
+        await this.platformUserRepository.findByPlatformAndExternalId(
+          platformId,
+          externalUserId,
+        );
 
       if (existingUser) {
         // Update user information if provided
-        if ((displayName && existingUser.displayName !== displayName) ||
-            (email && existingUser.email !== email)) {
-          return await this.platformUserRepository.update(existingUser.id, {
+        if (
+          (displayName && existingUser.displayName !== displayName) ||
+          (email && existingUser.email !== email)
+        ) {
+          return (await this.platformUserRepository.update(existingUser.id, {
             displayName: displayName || existingUser.displayName,
-            email: email || existingUser.email
-          }) as PlatformUser;
+            email: email || existingUser.email,
+          })) as PlatformUser;
         }
         return existingUser;
       }
@@ -139,11 +145,11 @@ export class BackpackService {
         platformId,
         externalUserId,
         displayName,
-        email
+        email,
       });
     } catch (error) {
-      logger.logError('Failed to get or create platform user', error as Error);
-      throw new Error('Failed to get or create user');
+      logger.logError("Failed to get or create platform user", error as Error);
+      throw new Error("Failed to get or create user");
     }
   }
 
@@ -157,7 +163,7 @@ export class BackpackService {
   async addAssertion(
     userId: Shared.IRI,
     assertionId: Shared.IRI,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<UserAssertion>;
 
   /**
@@ -177,17 +183,19 @@ export class BackpackService {
   async addAssertion(
     userIdOrParams: Shared.IRI | UserAssertionCreateParams,
     assertionId?: Shared.IRI,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<UserAssertion> {
     try {
       // Handle params object
-      if (typeof userIdOrParams !== 'string') {
+      if (typeof userIdOrParams !== "string") {
         const params = userIdOrParams;
 
         // Check if the assertion exists
-        const assertion = await this.assertionRepository.findById(params.assertionId);
+        const assertion = await this.assertionRepository.findById(
+          params.assertionId,
+        );
         if (!assertion) {
-          throw new Error('Assertion not found');
+          throw new Error("Assertion not found");
         }
 
         // Add the assertion to the user's backpack
@@ -196,20 +204,24 @@ export class BackpackService {
 
       // Handle individual parameters
       if (!assertionId) {
-        throw new Error('Assertion ID is required');
+        throw new Error("Assertion ID is required");
       }
 
       // Check if the assertion exists
       const assertion = await this.assertionRepository.findById(assertionId);
       if (!assertion) {
-        throw new Error('Assertion not found');
+        throw new Error("Assertion not found");
       }
 
       // Add the assertion to the user's backpack
-      return await this.userAssertionRepository.addAssertion(userIdOrParams, assertionId, metadata);
+      return await this.userAssertionRepository.addAssertion(
+        userIdOrParams,
+        assertionId,
+        metadata,
+      );
     } catch (error) {
-      logger.logError('Failed to add assertion to backpack', error as Error);
-      throw new Error('Failed to add assertion to backpack');
+      logger.logError("Failed to add assertion to backpack", error as Error);
+      throw new Error("Failed to add assertion to backpack");
     }
   }
 
@@ -219,12 +231,21 @@ export class BackpackService {
    * @param assertionId The assertion ID
    * @returns True if the assertion was removed, false otherwise
    */
-  async removeAssertion(userId: Shared.IRI, assertionId: Shared.IRI): Promise<boolean> {
+  async removeAssertion(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+  ): Promise<boolean> {
     try {
-      return await this.userAssertionRepository.removeAssertion(userId, assertionId);
+      return await this.userAssertionRepository.removeAssertion(
+        userId,
+        assertionId,
+      );
     } catch (error) {
-      logger.logError('Failed to remove assertion from backpack', error as Error);
-      throw new Error('Failed to remove assertion from backpack');
+      logger.logError(
+        "Failed to remove assertion from backpack",
+        error as Error,
+      );
+      throw new Error("Failed to remove assertion from backpack");
     }
   }
 
@@ -238,13 +259,17 @@ export class BackpackService {
   async updateAssertionStatus(
     userId: Shared.IRI,
     assertionId: Shared.IRI,
-    status: UserAssertionStatus
+    status: UserAssertionStatus,
   ): Promise<boolean> {
     try {
-      return await this.userAssertionRepository.updateStatus(userId, assertionId, status);
+      return await this.userAssertionRepository.updateStatus(
+        userId,
+        assertionId,
+        status,
+      );
     } catch (error) {
-      logger.logError('Failed to update assertion status', error as Error);
-      throw new Error('Failed to update assertion status');
+      logger.logError("Failed to update assertion status", error as Error);
+      throw new Error("Failed to update assertion status");
     }
   }
 
@@ -253,12 +278,18 @@ export class BackpackService {
    * @param userId The platform user ID
    * @returns The assertions in the user's backpack
    */
-  async getUserAssertions(userId: Shared.IRI, params?: UserAssertionQueryParams): Promise<UserAssertion[]> {
+  async getUserAssertions(
+    userId: Shared.IRI,
+    params?: UserAssertionQueryParams,
+  ): Promise<UserAssertion[]> {
     try {
-      return await this.userAssertionRepository.getUserAssertions(userId, params);
+      return await this.userAssertionRepository.getUserAssertions(
+        userId,
+        params,
+      );
     } catch (error) {
-      logger.logError('Failed to get user assertions', error as Error);
-      throw new Error('Failed to get assertions from backpack');
+      logger.logError("Failed to get user assertions", error as Error);
+      throw new Error("Failed to get assertions from backpack");
     }
   }
 
@@ -268,12 +299,18 @@ export class BackpackService {
    * @param assertionId The assertion ID
    * @returns True if the user has the assertion, false otherwise
    */
-  async hasAssertion(userId: Shared.IRI, assertionId: Shared.IRI): Promise<boolean> {
+  async hasAssertion(
+    userId: Shared.IRI,
+    assertionId: Shared.IRI,
+  ): Promise<boolean> {
     try {
-      return await this.userAssertionRepository.hasAssertion(userId, assertionId);
+      return await this.userAssertionRepository.hasAssertion(
+        userId,
+        assertionId,
+      );
     } catch (error) {
-      logger.logError('Failed to check if user has assertion', error as Error);
-      throw new Error('Failed to check assertion in backpack');
+      logger.logError("Failed to check if user has assertion", error as Error);
+      throw new Error("Failed to check assertion in backpack");
     }
   }
 }

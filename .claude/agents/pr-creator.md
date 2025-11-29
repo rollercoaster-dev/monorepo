@@ -28,10 +28,12 @@ Creates a well-formatted GitHub Pull Request from a feature branch, triggers Cod
 ## Inputs
 
 The user should provide:
+
 - **Issue number**: The GitHub issue being closed
 - **Branch name**: (optional, auto-detected from current branch)
 
 Optional:
+
 - **Reviewers**: Specific reviewers to request
 - **Labels**: Additional labels to add
 - **Draft**: Whether to create as draft
@@ -41,21 +43,25 @@ Optional:
 ### Phase 1: Gather Information
 
 1. **Get current branch:**
+
    ```bash
    git branch --show-current
    ```
 
 2. **Get issue details:**
+
    ```bash
    gh issue view <number> --json title,body,labels
    ```
 
 3. **Get commit history:**
+
    ```bash
    git log main..HEAD --oneline
    ```
 
 4. **Get diff stats:**
+
    ```bash
    git diff main --stat
    git diff main --numstat | awk '{add+=$1; del+=$2} END {print "+"add"/-"del}'
@@ -69,6 +75,7 @@ Optional:
 ### Phase 2: Push Branch
 
 1. **Push to remote:**
+
    ```bash
    git push -u origin <branch-name>
    ```
@@ -92,10 +99,12 @@ Generate PR body following this template:
 <List of key changes, grouped by area>
 
 ### <Area 1>
+
 - <Change 1>
 - <Change 2>
 
 ### <Area 2>
+
 - <Change 1>
 
 ## Testing
@@ -121,6 +130,7 @@ Closes #<issue-number>
 ### Phase 4: Create PR
 
 1. **Create the PR:**
+
    ```bash
    gh pr create \
      --title "<type>(<scope>): <description>" \
@@ -132,16 +142,19 @@ Closes #<issue-number>
    ```
 
 2. **Add labels (if applicable):**
+
    ```bash
    gh pr edit <pr-number> --add-label "<label>"
    ```
 
 3. **Request reviewers (if specified):**
+
    ```bash
    gh pr edit <pr-number> --add-reviewer "<username>"
    ```
 
 4. **Trigger CodeRabbit review (IMPORTANT - must be a comment, not in body):**
+
    ```bash
    gh pr comment <pr-number> --body "@coderabbitai full review"
    ```
@@ -156,6 +169,7 @@ Closes #<issue-number>
 ### Phase 5: Update GitHub Project Board - Set "In Review"
 
 1. **Update status:**
+
    ```bash
    # Get item ID
    ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
@@ -167,6 +181,7 @@ Closes #<issue-number>
 ### Phase 6: Verify and Report
 
 1. **Get PR details:**
+
    ```bash
    gh pr view --json number,url,title
    ```
@@ -192,6 +207,7 @@ Closes #<issue-number>
 ```
 
 Examples:
+
 - `feat(keys): add JWKS endpoint for issuer keys`
 - `fix(baking): resolve PNG chunk encoding issue`
 - `refactor(verify): extract proof validation logic`
@@ -200,11 +216,13 @@ Examples:
 ## CodeRabbit Integration
 
 **Trigger full review:**
+
 ```
 @coderabbitai full review
 ```
 
 **Other CodeRabbit commands (for reference):**
+
 - `@coderabbitai summary` - Get PR summary
 - `@coderabbitai generate docstrings` - Generate docstrings
 - `@coderabbitai configuration` - Show config
@@ -214,6 +232,7 @@ Examples:
 ### Push Fails
 
 1. **Check remote:**
+
    ```bash
    git remote -v
    ```
@@ -229,6 +248,7 @@ Examples:
 ### PR Creation Fails
 
 1. **Check existing PRs:**
+
    ```bash
    gh pr list --head <branch-name>
    ```
@@ -262,16 +282,19 @@ Examples:
 **Branch**: <branch> → main
 
 ### Stats
+
 - Commits: <n>
 - Files changed: <n>
 - Lines: +<added> / -<removed>
 
 ### Status
+
 - Tests: PASS
 - CodeRabbit: Review requested
 - Claude: Review requested
 
 ### Next Steps
+
 1. Wait for AI reviews (~2-5 minutes)
 2. Address CodeRabbit and Claude feedback
 3. Request human review if needed
@@ -283,10 +306,12 @@ To check review status: "check pr #<number> reviews"
 ## Tools Required
 
 **Required:**
+
 - Bash (git, gh commands)
 - Read (development plan, commit messages)
 
 **Optional:**
+
 - Glob (find related files)
 - Grep (search for related code)
 
@@ -311,6 +336,7 @@ Agent:
 ## Success Criteria
 
 This agent is successful when:
+
 - PR is created with proper formatting
 - Issue is linked with "Closes #X"
 - CodeRabbit review is triggered (comment posted)

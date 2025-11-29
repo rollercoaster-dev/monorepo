@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import FontSelector from './FontSelector.vue';
-import ThemeSelector from './ThemeSelector.vue';
-import AccessibilitySettings from './AccessibilitySettings.vue';
+import { ref } from "vue";
+import FontSelector from "./FontSelector.vue";
+import ThemeSelector from "./ThemeSelector.vue";
+import AccessibilitySettings from "./AccessibilitySettings.vue";
 
 /**
  * # Accessibility Guide
@@ -23,8 +23,8 @@ import AccessibilitySettings from './AccessibilitySettings.vue';
  * - Screen reader compatibility
  */
 
-const selectedFont = ref('system');
-const selectedTheme = ref('default');
+const selectedFont = ref("system");
+const selectedTheme = ref("default");
 const isOpen = ref(true);
 </script>
 
@@ -38,37 +38,53 @@ const isOpen = ref(true);
         <h1>Accessibility Features Guide</h1>
 
         <p>
-          The OpenBadges UI library includes a comprehensive set of accessibility features designed
-          to make the components usable by as many people as possible, regardless of ability or
-          circumstance.
+          The OpenBadges UI library includes a comprehensive set of
+          accessibility features designed to make the components usable by as
+          many people as possible, regardless of ability or circumstance.
         </p>
 
         <h2>Key Accessibility Features</h2>
 
         <ul>
           <li>
-            <strong>Accessible Fonts</strong>: Multiple font options including dyslexia-friendly and
-            low vision fonts
+            <strong>Accessible Fonts</strong>: Multiple font options including
+            dyslexia-friendly and low vision fonts
           </li>
           <li>
-            <strong>Theme Options</strong>: Themes designed for various accessibility needs
-            including dyslexia, low vision, and autism
+            <strong>Theme Options</strong>: Themes designed for various
+            accessibility needs including dyslexia, low vision, and autism
           </li>
           <li>
-            <strong>Motion Controls</strong>: Options to reduce or eliminate animations and
-            transitions
+            <strong>Motion Controls</strong>: Options to reduce or eliminate
+            animations and transitions
           </li>
-          <li><strong>Focus Mode</strong>: Reduces visual distractions to help maintain focus</li>
           <li>
-            <strong>Text Spacing</strong>: Adjustable letter spacing, word spacing, and line height
+            <strong>Focus Mode</strong>: Reduces visual distractions to help
+            maintain focus
           </li>
-          <li><strong>Font Size Controls</strong>: Easy adjustment of text size</li>
-          <li><strong>High Contrast Support</strong>: Compatible with high contrast mode</li>
-          <li><strong>Keyboard Navigation</strong>: Full keyboard accessibility</li>
-          <li><strong>Screen Reader Support</strong>: Proper ARIA attributes and semantic HTML</li>
+          <li>
+            <strong>Text Spacing</strong>: Adjustable letter spacing, word
+            spacing, and line height
+          </li>
+          <li>
+            <strong>Font Size Controls</strong>: Easy adjustment of text size
+          </li>
+          <li>
+            <strong>High Contrast Support</strong>: Compatible with high
+            contrast mode
+          </li>
+          <li>
+            <strong>Keyboard Navigation</strong>: Full keyboard accessibility
+          </li>
+          <li>
+            <strong>Screen Reader Support</strong>: Proper ARIA attributes and
+            semantic HTML
+          </li>
         </ul>
 
-        <p>This guide demonstrates how to use these features in your application.</p>
+        <p>
+          This guide demonstrates how to use these features in your application.
+        </p>
       </div>
     </Variant>
 
@@ -77,36 +93,39 @@ const isOpen = ref(true);
         <h1>Accessible Fonts</h1>
 
         <p>
-          The OpenBadges UI library includes several accessible font options designed to improve
-          readability for users with different needs:
+          The OpenBadges UI library includes several accessible font options
+          designed to improve readability for users with different needs:
         </p>
 
         <ul>
           <li>
-            <strong>Atkinson Hyperlegible</strong>: Designed specifically for low vision readers by
-            the Braille Institute. It features distinct letterforms that are easy to differentiate.
+            <strong>Atkinson Hyperlegible</strong>: Designed specifically for
+            low vision readers by the Braille Institute. It features distinct
+            letterforms that are easy to differentiate.
           </li>
           <li>
-            <strong>OpenDyslexic</strong>: A typeface specifically designed for readers with
-            dyslexia. It features weighted bottoms to the letters, which helps prevent them from
-            flipping and swapping in the reader's mind.
+            <strong>OpenDyslexic</strong>: A typeface specifically designed for
+            readers with dyslexia. It features weighted bottoms to the letters,
+            which helps prevent them from flipping and swapping in the reader's
+            mind.
           </li>
           <li>
-            <strong>Lexend</strong>: Designed to reduce visual stress and improve reading fluency.
-            It features carefully adjusted letter spacing and shapes.
+            <strong>Lexend</strong>: Designed to reduce visual stress and
+            improve reading fluency. It features carefully adjusted letter
+            spacing and shapes.
           </li>
           <li>
-            <strong>Inter</strong>: A modern, highly legible sans-serif font designed for computer
-            screens. It features a tall x-height and open forms, making it highly readable at small
-            sizes.
+            <strong>Inter</strong>: A modern, highly legible sans-serif font
+            designed for computer screens. It features a tall x-height and open
+            forms, making it highly readable at small sizes.
           </li>
         </ul>
 
         <h2>Font Selector Component</h2>
 
         <p>
-          The <code>FontSelector</code> component allows users to choose their preferred font,
-          adjust font size, and enable enhanced text spacing:
+          The <code>FontSelector</code> component allows users to choose their
+          preferred font, adjust font size, and enable enhanced text spacing:
         </p>
 
         <div class="component-demo">
@@ -151,45 +170,49 @@ const isOpen = ref(true);
         <h1>Accessible Themes</h1>
 
         <p>
-          The OpenBadges UI library includes several themes designed to address specific
-          accessibility needs:
+          The OpenBadges UI library includes several themes designed to address
+          specific accessibility needs:
         </p>
 
         <ul>
           <li>
-            <strong>Default Theme</strong>: A balanced theme with good contrast and readability.
+            <strong>Default Theme</strong>: A balanced theme with good contrast
+            and readability.
           </li>
           <li>
-            <strong>Dyslexia-Friendly Theme</strong>: Optimized for readers with dyslexia, featuring
-            the OpenDyslexic font, increased spacing, and a cream background to reduce visual
-            stress.
+            <strong>Dyslexia-Friendly Theme</strong>: Optimized for readers with
+            dyslexia, featuring the OpenDyslexic font, increased spacing, and a
+            cream background to reduce visual stress.
           </li>
           <li>
-            <strong>Low Vision Theme</strong>: Features the Atkinson Hyperlegible font, larger text
-            sizes, and high contrast colors for better visibility.
+            <strong>Low Vision Theme</strong>: Features the Atkinson
+            Hyperlegible font, larger text sizes, and high contrast colors for
+            better visibility.
           </li>
           <li>
-            <strong>Low Information Density Theme</strong>: Reduces visual complexity for easier
-            focus, helpful for users with cognitive disabilities or ADHD.
+            <strong>Low Information Density Theme</strong>: Reduces visual
+            complexity for easier focus, helpful for users with cognitive
+            disabilities or ADHD.
           </li>
           <li>
-            <strong>Autism-Friendly Theme</strong>: Features predictable layouts with reduced
-            sensory stimulation.
+            <strong>Autism-Friendly Theme</strong>: Features predictable layouts
+            with reduced sensory stimulation.
           </li>
           <li>
-            <strong>Dark Theme</strong>: Reduces light emission for comfortable viewing in low light
-            and for users with light sensitivity.
+            <strong>Dark Theme</strong>: Reduces light emission for comfortable
+            viewing in low light and for users with light sensitivity.
           </li>
           <li>
-            <strong>High Contrast Theme</strong>: Maximizes contrast for better visibility, helpful
-            for users with low vision.
+            <strong>High Contrast Theme</strong>: Maximizes contrast for better
+            visibility, helpful for users with low vision.
           </li>
         </ul>
 
         <h2>Theme Selector Component</h2>
 
         <p>
-          The <code>ThemeSelector</code> component allows users to choose their preferred theme:
+          The <code>ThemeSelector</code> component allows users to choose their
+          preferred theme:
         </p>
 
         <div class="component-demo">
@@ -203,8 +226,9 @@ const isOpen = ref(true);
         <h1>Accessibility Settings Component</h1>
 
         <p>
-          The <code>AccessibilitySettings</code> component combines font selection, theme selection,
-          and additional accessibility options into a single, user-friendly interface:
+          The <code>AccessibilitySettings</code> component combines font
+          selection, theme selection, and additional accessibility options into
+          a single, user-friendly interface:
         </p>
 
         <div
@@ -222,12 +246,24 @@ const isOpen = ref(true);
 
         <ul>
           <li>
-            <strong>Theme Selection</strong>: Choose from various accessibility-focused themes
+            <strong>Theme Selection</strong>: Choose from various
+            accessibility-focused themes
           </li>
-          <li><strong>Font Selection</strong>: Choose from accessible font options</li>
-          <li><strong>Font Size Adjustment</strong>: Increase text size for better readability</li>
-          <li><strong>Text Spacing</strong>: Enable enhanced spacing for easier reading</li>
-          <li><strong>Motion Reduction</strong>: Minimize animations and transitions</li>
+          <li>
+            <strong>Font Selection</strong>: Choose from accessible font options
+          </li>
+          <li>
+            <strong>Font Size Adjustment</strong>: Increase text size for better
+            readability
+          </li>
+          <li>
+            <strong>Text Spacing</strong>: Enable enhanced spacing for easier
+            reading
+          </li>
+          <li>
+            <strong>Motion Reduction</strong>: Minimize animations and
+            transitions
+          </li>
           <li><strong>Focus Mode</strong>: Reduce visual distractions</li>
           <li><strong>Reset Option</strong>: Return to default settings</li>
         </ul>
@@ -238,12 +274,20 @@ const isOpen = ref(true);
 
         <ol>
           <li>
-            Placing the <code>AccessibilitySettings</code> component in a consistent location across
-            your application, such as in the header or footer.
+            Placing the <code>AccessibilitySettings</code> component in a
+            consistent location across your application, such as in the header
+            or footer.
           </li>
-          <li>Persisting user preferences using localStorage or a similar mechanism.</li>
-          <li>Applying the selected theme and font to the entire application.</li>
-          <li>Ensuring that all custom components respect the theme variables.</li>
+          <li>
+            Persisting user preferences using localStorage or a similar
+            mechanism.
+          </li>
+          <li>
+            Applying the selected theme and font to the entire application.
+          </li>
+          <li>
+            Ensuring that all custom components respect the theme variables.
+          </li>
         </ol>
       </div>
     </Variant>
@@ -253,53 +297,58 @@ const isOpen = ref(true);
         <h1>Accessibility Best Practices</h1>
 
         <p>
-          When implementing the OpenBadges UI components in your application, follow these best
-          practices to ensure maximum accessibility:
+          When implementing the OpenBadges UI components in your application,
+          follow these best practices to ensure maximum accessibility:
         </p>
 
         <h2>General Guidelines</h2>
 
         <ul>
           <li>
-            <strong>Semantic HTML</strong>: Use appropriate HTML elements for their intended
-            purpose.
+            <strong>Semantic HTML</strong>: Use appropriate HTML elements for
+            their intended purpose.
           </li>
           <li>
-            <strong>Keyboard Navigation</strong>: Ensure all interactive elements are keyboard
-            accessible.
+            <strong>Keyboard Navigation</strong>: Ensure all interactive
+            elements are keyboard accessible.
           </li>
           <li>
-            <strong>Focus Management</strong>: Maintain a logical tab order and visible focus
-            indicators.
+            <strong>Focus Management</strong>: Maintain a logical tab order and
+            visible focus indicators.
           </li>
           <li>
-            <strong>Screen Reader Support</strong>: Use appropriate ARIA attributes and ensure
-            meaningful text alternatives.
+            <strong>Screen Reader Support</strong>: Use appropriate ARIA
+            attributes and ensure meaningful text alternatives.
           </li>
           <li>
-            <strong>Color Contrast</strong>: Maintain sufficient contrast between text and
-            background colors.
+            <strong>Color Contrast</strong>: Maintain sufficient contrast
+            between text and background colors.
           </li>
           <li>
-            <strong>Text Resizing</strong>: Ensure the interface remains usable when text is resized
-            up to 200%.
+            <strong>Text Resizing</strong>: Ensure the interface remains usable
+            when text is resized up to 200%.
           </li>
           <li>
-            <strong>Responsive Design</strong>: Ensure the interface adapts to different screen
-            sizes and orientations.
+            <strong>Responsive Design</strong>: Ensure the interface adapts to
+            different screen sizes and orientations.
           </li>
         </ul>
 
         <h2>Font and Typography</h2>
 
         <ul>
-          <li>Offer users a choice of fonts, including dyslexia-friendly options.</li>
+          <li>
+            Offer users a choice of fonts, including dyslexia-friendly options.
+          </li>
           <li>Use a minimum font size of 16px (1rem) for body text.</li>
           <li>Maintain a line height of at least 1.5 for body text.</li>
           <li>
-            Avoid justified text, which can create uneven spacing and "rivers" of white space.
+            Avoid justified text, which can create uneven spacing and "rivers"
+            of white space.
           </li>
-          <li>Limit line length to 80 characters or less for optimal readability.</li>
+          <li>
+            Limit line length to 80 characters or less for optimal readability.
+          </li>
           <li>Use sufficient spacing between paragraphs.</li>
         </ul>
 
@@ -307,11 +356,14 @@ const isOpen = ref(true);
 
         <ul>
           <li>
-            Ensure text has a contrast ratio of at least 4.5:1 against its background (WCAG AA).
+            Ensure text has a contrast ratio of at least 4.5:1 against its
+            background (WCAG AA).
           </li>
           <li>Don't rely on color alone to convey information.</li>
           <li>Provide high contrast themes for users with low vision.</li>
-          <li>Consider offering a dark theme for users with light sensitivity.</li>
+          <li>
+            Consider offering a dark theme for users with light sensitivity.
+          </li>
           <li>Test your interface in high contrast mode.</li>
         </ul>
 
@@ -319,7 +371,10 @@ const isOpen = ref(true);
 
         <ul>
           <li>
-            Respect the user's motion preferences (<code>prefers-reduced-motion</code> media query).
+            Respect the user's motion preferences (<code
+              >prefers-reduced-motion</code
+            >
+            media query).
           </li>
           <li>Provide options to reduce or disable animations.</li>
           <li>Avoid content that flashes more than three times per second.</li>
@@ -330,9 +385,12 @@ const isOpen = ref(true);
 
         <ul>
           <li>Use clear, descriptive labels for form fields.</li>
-          <li>Provide helpful error messages that suggest how to fix the problem.</li>
           <li>
-            Ensure form fields have sufficient size for touch interaction (minimum 44x44 pixels).
+            Provide helpful error messages that suggest how to fix the problem.
+          </li>
+          <li>
+            Ensure form fields have sufficient size for touch interaction
+            (minimum 44x44 pixels).
           </li>
           <li>Group related form fields using fieldset and legend.</li>
           <li>Provide clear focus states for all interactive elements.</li>
@@ -345,31 +403,28 @@ const isOpen = ref(true);
             <a
               href="https://www.w3.org/WAI/standards-guidelines/wcag/"
               target="_blank"
-            >Web Content Accessibility Guidelines (WCAG)</a>
+              >Web Content Accessibility Guidelines (WCAG)</a
+            >
           </li>
           <li>
-            <a
-              href="https://www.w3.org/WAI/ARIA/apg/"
-              target="_blank"
-            >ARIA Authoring Practices Guide</a>
+            <a href="https://www.w3.org/WAI/ARIA/apg/" target="_blank"
+              >ARIA Authoring Practices Guide</a
+            >
           </li>
           <li>
-            <a
-              href="https://webaim.org/"
-              target="_blank"
-            >WebAIM</a>
+            <a href="https://webaim.org/" target="_blank">WebAIM</a>
           </li>
           <li>
-            <a
-              href="https://www.a11yproject.com/"
-              target="_blank"
-            >The A11Y Project</a>
+            <a href="https://www.a11yproject.com/" target="_blank"
+              >The A11Y Project</a
+            >
           </li>
           <li>
             <a
               href="https://www.bdadyslexia.org.uk/advice/employers/creating-a-dyslexia-friendly-workplace/dyslexia-friendly-style-guide"
               target="_blank"
-            >British Dyslexia Association Style Guide</a>
+              >British Dyslexia Association Style Guide</a
+            >
           </li>
         </ul>
       </div>
@@ -382,8 +437,15 @@ const isOpen = ref(true);
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }
 
 h1 {

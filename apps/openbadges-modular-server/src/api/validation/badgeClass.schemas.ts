@@ -5,7 +5,7 @@
  * for versioning and relationship fields introduced in OB 3.0.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Alignment schema for achievement alignment objects
@@ -23,7 +23,7 @@ const AlignmentSchema = z.object({
  * Includes all standard OB 2.0 fields plus OB 3.0 extensions
  */
 const BaseBadgeClassSchema = z.object({
-  '@context': z
+  "@context": z
     .union([
       z.string(),
       z.array(z.string()),
@@ -33,17 +33,17 @@ const BaseBadgeClassSchema = z.object({
   id: z.string().optional(), // IRI - optional for creation, required for updates
   type: z
     .union([
-      z.literal('BadgeClass'), // OB 2.0
+      z.literal("BadgeClass"), // OB 2.0
       z.array(z.string()), // OB 3.0 - array of types including 'Achievement'
     ])
     .optional(),
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().min(1, 'Description is required'),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
   image: z.union([
     z.string().url(), // IRI to image
     z.object({
       id: z.string().url(),
-      type: z.literal('Image'),
+      type: z.literal("Image"),
       caption: z.string().optional(),
     }), // OB 3.0 Image object
   ]),
@@ -64,17 +64,17 @@ const BaseBadgeClassSchema = z.object({
     .array(
       z.object({
         id: z.string(), // IRI of related achievement
-        type: z.tuple([z.literal('Related')]), // Must be ["Related"]
+        type: z.tuple([z.literal("Related")]), // Must be ["Related"]
         inLanguage: z.string().optional(), // BCP47 language code
         version: z.string().optional(), // Version of related achievement
-      })
+      }),
     )
     .optional(),
   endorsement: z
     .array(
       z
         .object({
-          '@context': z.array(z.string()),
+          "@context": z.array(z.string()),
           id: z.string(),
           type: z.array(z.string()),
           issuer: z.union([
@@ -92,7 +92,7 @@ const BaseBadgeClassSchema = z.object({
             endorsementComment: z.string().optional(),
           }),
         })
-        .passthrough()
+        .passthrough(),
     )
     .optional(), // Allow additional VC fields
 }); // Not strict here, allow extension by OB2/OB3 and unknown keys
@@ -116,7 +116,7 @@ export const UpdateBadgeClassSchema = BaseBadgeClassSchema.partial().extend({
  */
 export const RelatedAchievementSchema = z.object({
   id: z.string(), // IRI of related achievement
-  type: z.tuple([z.literal('Related')]), // Must be ["Related"]
+  type: z.tuple([z.literal("Related")]), // Must be ["Related"]
   inLanguage: z.string().optional(), // BCP47 language code
   version: z.string().optional(), // Version of related achievement
 });
@@ -126,7 +126,7 @@ export const RelatedAchievementSchema = z.object({
  */
 export const EndorsementCredentialSchema = z
   .object({
-    '@context': z.array(z.string()),
+    "@context": z.array(z.string()),
     id: z.string(),
     type: z.array(z.string()),
     issuer: z.union([

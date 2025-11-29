@@ -11,6 +11,7 @@ bun run version:manage
 ```
 
 This tool provides options for:
+
 - Setting beta/prerelease versions
 - Cleaning up failed releases
 - Managing tags and releases
@@ -19,17 +20,20 @@ This tool provides options for:
 ## Current Situation
 
 ### Version Status
+
 - **Clean Slate Reset**: All previous releases and tags have been wiped
 - **Current Version**: `1.0.0-beta.1` (fresh beta release cycle)
 - **Latest Tag**: None (clean start)
 - **Next Expected**: `1.0.0-beta.1` (first beta release)
 
 ### What Happened
+
 The CI/CD pipeline was failing because semantic-release wasn't updating package.json versions due to a missing @semantic-release/npm plugin. A clean slate approach was implemented to resolve all version conflicts and establish a proper beta release workflow.
 
 ## Version Management Strategies
 
 ### Option 1: Continue with Beta Releases
+
 **Best for**: Feature development and testing
 
 ```bash
@@ -40,6 +44,7 @@ bun run version:manage
 ```
 
 ### Option 2: Move to Beta Development
+
 **Best for**: Major feature development
 
 ```bash
@@ -50,6 +55,7 @@ bun run version:manage
 ```
 
 ### Option 3: Prepare for Minor Release
+
 **Best for**: New features ready for production
 
 ```bash
@@ -62,6 +68,7 @@ bun run version:manage
 ## Handling Failed Releases
 
 ### Automatic Cleanup
+
 The version management tool can detect and clean up failed releases:
 
 ```bash
@@ -70,11 +77,13 @@ bun run version:manage
 ```
 
 This will:
+
 - Detect version mismatches
 - Reset package.json to last successful release
 - Clean up any orphaned tags
 
 ### Manual Cleanup
+
 If you need to manually clean up:
 
 ```bash
@@ -94,6 +103,7 @@ git log --oneline -5
 ### Setting Up Beta Development
 
 1. **Set beta version**:
+
    ```bash
    bun run version:manage
    # Select "Set beta/prerelease version"
@@ -101,17 +111,19 @@ git log --oneline -5
    ```
 
 2. **Development cycle**:
+
    ```bash
    # Make changes, commit normally
    git add .
    git commit -m "feat: add new feature"
-   
+
    # For next beta
    bun run version:manage
    # Increment to 1.1.0-beta.2
    ```
 
 3. **Release beta**:
+
    ```bash
    # Push to trigger release workflow
    git push origin main
@@ -127,6 +139,7 @@ git log --oneline -5
    ```
 
 ### Beta Release Benefits
+
 - **Safe testing**: Beta releases don't affect production users
 - **Feature validation**: Test new features before production
 - **Docker images**: Beta versions get their own Docker tags
@@ -142,6 +155,7 @@ git log --oneline -5
 - **PRERELEASE**: alpha, beta, rc (release candidate)
 
 ### Examples
+
 ```
 1.0.0-beta.1   # Current beta (clean slate start)
 1.0.0-beta.2   # Next beta iteration
@@ -158,6 +172,7 @@ git log --oneline -5
 Given the recent major features (JWT proofs, achievement versioning), I recommend:
 
 1. **Set beta version for continued development**:
+
    ```bash
    bun run version:manage
    # Set to 1.1.0-beta.1
@@ -177,14 +192,18 @@ Given the recent major features (JWT proofs, achievement versioning), I recommen
 ## Release Workflow Integration
 
 ### Automatic Releases
+
 The improved release workflow handles:
+
 - Version detection and validation
 - Conflict resolution
 - Retry logic for failed pushes
 - Quality gates (tests, builds)
 
 ### Manual Releases
+
 For manual control:
+
 ```bash
 # Check if release is needed
 bun run release:check
@@ -199,6 +218,7 @@ bun run release:manual
 ## Tag Management
 
 ### Viewing Tags
+
 ```bash
 # List all tags
 git tag -l
@@ -211,6 +231,7 @@ git show v1.0.9
 ```
 
 ### Deleting Tags
+
 ```bash
 # Use the management tool (recommended)
 bun run version:manage
@@ -224,11 +245,13 @@ git push origin :refs/tags/v1.0.0-beta.1  # Delete remote
 ## Best Practices
 
 ### 1. Always Use Tools
+
 - Use `bun run version:manage` for version changes
 - Use `bun run release:check` before releases
 - Avoid manual package.json edits
 
 ### 2. Follow Conventional Commits
+
 ```bash
 feat: add new feature      # Minor version bump
 fix: resolve bug          # Patch version bump
@@ -236,6 +259,7 @@ feat!: breaking change    # Major version bump
 ```
 
 ### 3. Test Before Release
+
 ```bash
 # Run tests
 bun test
@@ -248,6 +272,7 @@ bun run release:dry-run
 ```
 
 ### 4. Document Changes
+
 - Semantic-release generates CHANGELOG.md automatically
 - Do not edit `CHANGELOG.md` manually; it is regenerated on each release.
 - Use clear commit messages
@@ -263,6 +288,7 @@ bun run release:dry-run
 4. **Wrong version**: Reset using version management tool
 
 ### Getting Help
+
 ```bash
 # Check version status
 bun run version:manage

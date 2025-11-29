@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import type { OB2, OB3 } from '@/types';
-import IssuerCard from '@components/issuers/IssuerCard.vue';
+import { computed, ref, watch } from "vue";
+import type { OB2, OB3 } from "@/types";
+import IssuerCard from "@components/issuers/IssuerCard.vue";
 
 interface Props {
   issuers: (OB2.Profile | OB3.Profile)[];
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
   loading?: boolean;
   pageSize?: number;
   currentPage?: number;
   showPagination?: boolean;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
   ariaLabel?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  layout: 'grid',
+  layout: "grid",
   loading: false,
   pageSize: 9,
   currentPage: 1,
   showPagination: false,
-  density: 'normal',
-  ariaLabel: 'List of issuers',
+  density: "normal",
+  ariaLabel: "List of issuers",
 });
 
 const emit = defineEmits<{
-  (e: 'issuer-click', issuer: OB2.Profile | OB3.Profile): void;
-  (e: 'page-change', page: number): void;
-  (e: 'update:density', density: 'compact' | 'normal' | 'spacious'): void;
+  (e: "issuer-click", issuer: OB2.Profile | OB3.Profile): void;
+  (e: "page-change", page: number): void;
+  (e: "update:density", density: "compact" | "normal" | "spacious"): void;
 }>();
 
 // Internal state for pagination
 const internalCurrentPage = ref(props.currentPage);
 
 // Internal state for density
-const internalDensity = ref<'compact' | 'normal' | 'spacious'>(props.density);
+const internalDensity = ref<"compact" | "normal" | "spacious">(props.density);
 
 // Watch for external currentPage changes
 watch(
   () => props.currentPage,
   (newPage) => {
     internalCurrentPage.value = newPage;
-  }
+  },
 );
 
 // Watch for external density changes
@@ -49,11 +49,11 @@ watch(
   () => props.density,
   (newValue) => {
     internalDensity.value = newValue;
-  }
+  },
 );
 
 // Search filter state
-const searchText = ref('');
+const searchText = ref("");
 
 /**
  * Get a localized string from a value that may be a plain string or a JSON-LD language map.
@@ -64,13 +64,13 @@ const searchText = ref('');
  */
 const getLocalizedString = (
   value: string | Record<string, string> | undefined,
-  fallback = ''
+  fallback = "",
 ): string => {
   if (!value) return fallback;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object') {
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
     // Try common language codes in order of preference
-    const preferredLangs = ['en', 'en-US', 'en-GB', Object.keys(value)[0]];
+    const preferredLangs = ["en", "en-US", "en-GB", Object.keys(value)[0]];
     for (const lang of preferredLangs) {
       if (lang && value[lang]) return value[lang];
     }
@@ -81,15 +81,21 @@ const getLocalizedString = (
 // Normalize issuer for search/display
 const normalizeIssuer = (issuer: OB2.Profile | OB3.Profile) => {
   // Use getLocalizedString to handle OB3 multi-language fields
-  const name = getLocalizedString(issuer.name as string | Record<string, string>, 'Unknown Issuer');
-  const description = getLocalizedString(issuer.description as string | Record<string, string>, '');
-  const id = issuer.id || '';
+  const name = getLocalizedString(
+    issuer.name as string | Record<string, string>,
+    "Unknown Issuer",
+  );
+  const description = getLocalizedString(
+    issuer.description as string | Record<string, string>,
+    "",
+  );
+  const id = issuer.id || "";
 
-  let image = '';
+  let image = "";
   if (issuer.image) {
-    if (typeof issuer.image === 'string') {
+    if (typeof issuer.image === "string") {
       image = issuer.image;
-    } else if (typeof issuer.image === 'object' && 'id' in issuer.image) {
+    } else if (typeof issuer.image === "object" && "id" in issuer.image) {
       image = issuer.image.id;
     }
   }
@@ -106,8 +112,14 @@ const filteredIssuers = computed(() => {
   const search = searchText.value.toLowerCase();
   return props.issuers.filter((issuer) => {
     // Use getLocalizedString to handle OB3 multi-language fields in search
-    const name = getLocalizedString(issuer.name as string | Record<string, string>, '').toLowerCase();
-    const description = getLocalizedString(issuer.description as string | Record<string, string>, '').toLowerCase();
+    const name = getLocalizedString(
+      issuer.name as string | Record<string, string>,
+      "",
+    ).toLowerCase();
+    const description = getLocalizedString(
+      issuer.description as string | Record<string, string>,
+      "",
+    ).toLowerCase();
     return name.includes(search) || description.includes(search);
   });
 });
@@ -130,7 +142,7 @@ watch(
     if (internalCurrentPage.value > total) {
       internalCurrentPage.value = total;
     }
-  }
+  },
 );
 
 // Get current page of issuers
@@ -151,32 +163,39 @@ const normalizedIssuers = computed(() => {
 
 // Handle issuer click
 const handleIssuerClick = (issuer: OB2.Profile | OB3.Profile) => {
-  emit('issuer-click', issuer);
+  emit("issuer-click", issuer);
 };
 
 // Handle page change
 const handlePageChange = (page: number) => {
   if (page < 1 || page > totalPages.value) return;
   internalCurrentPage.value = page;
-  emit('page-change', page);
+  emit("page-change", page);
 };
 
 // Handle density change
 const handleDensityChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
-  const value = target.value as 'compact' | 'normal' | 'spacious';
+  const value = target.value as "compact" | "normal" | "spacious";
   internalDensity.value = value;
-  emit('update:density', value);
+  emit("update:density", value);
 };
 </script>
 
 <template>
   <div
     class="manus-issuer-list"
-    :class="[`density-${internalDensity}`, { 'grid-layout': layout === 'grid' }]"
+    :class="[
+      `density-${internalDensity}`,
+      { 'grid-layout': layout === 'grid' },
+    ]"
   >
     <!-- Search and density controls -->
-    <div class="manus-issuer-list-controls" role="region" aria-label="Issuer list controls">
+    <div
+      class="manus-issuer-list-controls"
+      role="region"
+      aria-label="Issuer list controls"
+    >
       <input
         v-model="searchText"
         class="manus-issuer-list-search"
@@ -218,21 +237,13 @@ const handleDensityChange = (event: Event) => {
     </div>
 
     <!-- Issuer list -->
-    <ul
-      v-else
-      class="manus-issuer-list-items"
-      :aria-label="ariaLabel"
-    >
+    <ul v-else class="manus-issuer-list-items" :aria-label="ariaLabel">
       <li
         v-for="issuer in normalizedIssuers"
         :key="issuer.id"
         class="manus-issuer-list-item"
       >
-        <slot
-          name="issuer"
-          :issuer="issuer.original"
-          :normalized="issuer"
-        >
+        <slot name="issuer" :issuer="issuer.original" :normalized="issuer">
           <IssuerCard
             :issuer="issuer.original"
             :density="internalDensity"
@@ -355,7 +366,9 @@ const handleDensityChange = (event: Event) => {
 }
 
 /* Make cards stretch to fill grid cell */
-.manus-issuer-list.grid-layout .manus-issuer-list-item :deep(.manus-issuer-card) {
+.manus-issuer-list.grid-layout
+  .manus-issuer-list-item
+  :deep(.manus-issuer-card) {
   width: 100%;
   max-width: none;
 }

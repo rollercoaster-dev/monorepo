@@ -5,8 +5,13 @@
  * following RFC 7517 (JSON Web Key) specifications.
  */
 
-import { generateKeyPair, randomUUID, createPublicKey, createPrivateKey } from 'crypto';
-import { promisify } from 'util';
+import {
+  generateKeyPair,
+  randomUUID,
+  createPublicKey,
+  createPrivateKey,
+} from "crypto";
+import { promisify } from "util";
 import type {
   KeyPair,
   KeyPairWithJWK,
@@ -19,7 +24,7 @@ import type {
   OKPPrivateKey,
   JWKPublic,
   JWKPrivate,
-} from './types';
+} from "./types";
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 
@@ -42,7 +47,7 @@ const MIN_RSA_MODULUS_LENGTH = 2048;
 /**
  * Supported RSA algorithms for digital signatures
  */
-const SUPPORTED_RSA_ALGORITHMS = new Set(['RS256', 'RS384', 'RS512']);
+const SUPPORTED_RSA_ALGORITHMS = new Set(["RS256", "RS384", "RS512"]);
 
 // =============================================================================
 // Internal Helper Functions (defined first to avoid use-before-define)
@@ -55,19 +60,19 @@ function rsaKeyPairToJWK(
   publicKeyPem: string,
   privateKeyPem: string,
   algorithm: KeyAlgorithm,
-  keyId: string
+  keyId: string,
 ): { publicJwk: RSAPublicKey; privateJwk: RSAPrivateKey } {
   // Import keys as KeyObject instances
   const publicKeyObject = createPublicKey(publicKeyPem);
   const privateKeyObject = createPrivateKey(privateKeyPem);
 
   // Export as JWK
-  const publicJwkRaw = publicKeyObject.export({ format: 'jwk' }) as {
+  const publicJwkRaw = publicKeyObject.export({ format: "jwk" }) as {
     kty: string;
     n: string;
     e: string;
   };
-  const privateJwkRaw = privateKeyObject.export({ format: 'jwk' }) as {
+  const privateJwkRaw = privateKeyObject.export({ format: "jwk" }) as {
     kty: string;
     n: string;
     e: string;
@@ -80,16 +85,16 @@ function rsaKeyPairToJWK(
   };
 
   const publicJwk: RSAPublicKey = {
-    kty: 'RSA',
+    kty: "RSA",
     n: publicJwkRaw.n,
     e: publicJwkRaw.e,
     kid: keyId,
     alg: algorithm,
-    use: 'sig',
+    use: "sig",
   };
 
   const privateJwk: RSAPrivateKey = {
-    kty: 'RSA',
+    kty: "RSA",
     n: privateJwkRaw.n,
     e: privateJwkRaw.e,
     d: privateJwkRaw.d,
@@ -100,7 +105,7 @@ function rsaKeyPairToJWK(
     qi: privateJwkRaw.qi,
     kid: keyId,
     alg: algorithm,
-    use: 'sig',
+    use: "sig",
   };
 
   return { publicJwk, privateJwk };
@@ -112,19 +117,19 @@ function rsaKeyPairToJWK(
 function eddsaKeyPairToJWK(
   publicKeyPem: string,
   privateKeyPem: string,
-  keyId: string
+  keyId: string,
 ): { publicJwk: OKPPublicKey; privateJwk: OKPPrivateKey } {
   // Import keys as KeyObject instances
   const publicKeyObject = createPublicKey(publicKeyPem);
   const privateKeyObject = createPrivateKey(privateKeyPem);
 
   // Export as JWK
-  const publicJwkRaw = publicKeyObject.export({ format: 'jwk' }) as {
+  const publicJwkRaw = publicKeyObject.export({ format: "jwk" }) as {
     kty: string;
     crv: string;
     x: string;
   };
-  const privateJwkRaw = privateKeyObject.export({ format: 'jwk' }) as {
+  const privateJwkRaw = privateKeyObject.export({ format: "jwk" }) as {
     kty: string;
     crv: string;
     x: string;
@@ -132,22 +137,22 @@ function eddsaKeyPairToJWK(
   };
 
   const publicJwk: OKPPublicKey = {
-    kty: 'OKP',
-    crv: 'Ed25519',
+    kty: "OKP",
+    crv: "Ed25519",
     x: publicJwkRaw.x,
     kid: keyId,
-    alg: 'EdDSA',
-    use: 'sig',
+    alg: "EdDSA",
+    use: "sig",
   };
 
   const privateJwk: OKPPrivateKey = {
-    kty: 'OKP',
-    crv: 'Ed25519',
+    kty: "OKP",
+    crv: "Ed25519",
     x: privateJwkRaw.x,
     d: privateJwkRaw.d,
     kid: keyId,
-    alg: 'EdDSA',
-    use: 'sig',
+    alg: "EdDSA",
+    use: "sig",
   };
 
   return { publicJwk, privateJwk };
@@ -165,49 +170,58 @@ function eddsaKeyPairToJWK(
  * @throws Error if key generation fails
  */
 export async function generateRSAKeyPair(
-  options: Partial<KeyGenerationOptions> = {}
+  options: Partial<KeyGenerationOptions> = {},
 ): Promise<KeyPairWithJWK> {
-  const algorithm: KeyAlgorithm = options.algorithm ?? 'RS256';
+  const algorithm: KeyAlgorithm = options.algorithm ?? "RS256";
   const modulusLength = options.modulusLength ?? DEFAULT_RSA_MODULUS_LENGTH;
   const keyId = options.keyId ?? randomUUID();
 
   if (!SUPPORTED_RSA_ALGORITHMS.has(algorithm)) {
-    throw new Error(`Unsupported RSA algorithm: ${algorithm}. Supported: RS256, RS384, RS512`);
+    throw new Error(
+      `Unsupported RSA algorithm: ${algorithm}. Supported: RS256, RS384, RS512`,
+    );
   }
 
   if (modulusLength < MIN_RSA_MODULUS_LENGTH) {
     throw new Error(
-      `RSA modulus length must be at least ${MIN_RSA_MODULUS_LENGTH} bits. Got: ${modulusLength}`
+      `RSA modulus length must be at least ${MIN_RSA_MODULUS_LENGTH} bits. Got: ${modulusLength}`,
     );
   }
 
-  const { publicKey, privateKey } = await generateKeyPairAsync('rsa', {
+  const { publicKey, privateKey } = await generateKeyPairAsync("rsa", {
     modulusLength,
     publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem',
+      type: "spki",
+      format: "pem",
     },
     privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
+      type: "pkcs8",
+      format: "pem",
     },
   });
 
   const now = new Date().toISOString();
   const expiresAt = options.expiresInDays
-    ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+    ? new Date(
+        Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000,
+      ).toISOString()
     : undefined;
 
   // Convert to JWK format
-  const { publicJwk, privateJwk } = rsaKeyPairToJWK(publicKey, privateKey, algorithm, keyId);
+  const { publicJwk, privateJwk } = rsaKeyPairToJWK(
+    publicKey,
+    privateKey,
+    algorithm,
+    keyId,
+  );
 
   return {
     id: keyId,
     publicKey,
     privateKey,
-    keyType: 'RSA',
+    keyType: "RSA",
     algorithm,
-    status: 'active',
+    status: "active",
     createdAt: now,
     expiresAt,
     publicJwk,
@@ -227,36 +241,42 @@ export async function generateRSAKeyPair(
  * @throws Error if key generation fails
  */
 export async function generateEdDSAKeyPair(
-  options: Partial<KeyGenerationOptions> = {}
+  options: Partial<KeyGenerationOptions> = {},
 ): Promise<KeyPairWithJWK> {
   const keyId = options.keyId ?? randomUUID();
 
-  const { publicKey, privateKey } = await generateKeyPairAsync('ed25519', {
+  const { publicKey, privateKey } = await generateKeyPairAsync("ed25519", {
     publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem',
+      type: "spki",
+      format: "pem",
     },
     privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
+      type: "pkcs8",
+      format: "pem",
     },
   });
 
   const now = new Date().toISOString();
   const expiresAt = options.expiresInDays
-    ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+    ? new Date(
+        Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000,
+      ).toISOString()
     : undefined;
 
   // Convert to JWK format
-  const { publicJwk, privateJwk } = eddsaKeyPairToJWK(publicKey, privateKey, keyId);
+  const { publicJwk, privateJwk } = eddsaKeyPairToJWK(
+    publicKey,
+    privateKey,
+    keyId,
+  );
 
   return {
     id: keyId,
     publicKey,
     privateKey,
-    keyType: 'OKP',
-    algorithm: 'EdDSA',
-    status: 'active',
+    keyType: "OKP",
+    algorithm: "EdDSA",
+    status: "active",
     createdAt: now,
     expiresAt,
     publicJwk,
@@ -276,20 +296,22 @@ export async function generateEdDSAKeyPair(
  * @throws Error if the key type/algorithm combination is not supported
  */
 export async function generateKeyPairFromOptions(
-  options: KeyGenerationOptions
+  options: KeyGenerationOptions,
 ): Promise<KeyPairWithJWK> {
   const { keyType, algorithm } = options;
 
-  if (keyType === 'RSA') {
-    if (!['RS256', 'RS384', 'RS512'].includes(algorithm)) {
+  if (keyType === "RSA") {
+    if (!["RS256", "RS384", "RS512"].includes(algorithm)) {
       throw new Error(`Invalid algorithm ${algorithm} for RSA key type`);
     }
     return generateRSAKeyPair(options);
   }
 
-  if (keyType === 'OKP') {
-    if (algorithm !== 'EdDSA') {
-      throw new Error(`Invalid algorithm ${algorithm} for OKP key type. Use EdDSA.`);
+  if (keyType === "OKP") {
+    if (algorithm !== "EdDSA") {
+      throw new Error(
+        `Invalid algorithm ${algorithm} for OKP key type. Use EdDSA.`,
+      );
     }
     return generateEdDSAKeyPair(options);
   }
@@ -317,8 +339,14 @@ export function extractPublicJWK(keyPair: KeyPairWithJWK): JWKPublic {
  * @param keyPairWithJwk - The key pair with JWK representations
  * @returns KeyPair without JWK fields
  */
-export function keyPairWithJWKToKeyPair(keyPairWithJwk: KeyPairWithJWK): KeyPair {
-  const { publicJwk: _publicJwk, privateJwk: _privateJwk, ...keyPair } = keyPairWithJwk;
+export function keyPairWithJWKToKeyPair(
+  keyPairWithJwk: KeyPairWithJWK,
+): KeyPair {
+  const {
+    publicJwk: _publicJwk,
+    privateJwk: _privateJwk,
+    ...keyPair
+  } = keyPairWithJwk;
   return keyPair;
 }
 
@@ -337,18 +365,20 @@ export function keyPairToJWK(
   privateKeyPem: string,
   keyType: KeyType,
   algorithm: KeyAlgorithm,
-  keyId: string
+  keyId: string,
 ): { publicJwk: JWKPublic; privateJwk: JWKPrivate } {
-  if (keyType === 'RSA') {
+  if (keyType === "RSA") {
     if (!SUPPORTED_RSA_ALGORITHMS.has(algorithm)) {
       throw new Error(`Invalid algorithm ${algorithm} for RSA key type`);
     }
     return rsaKeyPairToJWK(publicKeyPem, privateKeyPem, algorithm, keyId);
   }
 
-  if (keyType === 'OKP') {
-    if (algorithm !== 'EdDSA') {
-      throw new Error(`Invalid algorithm ${algorithm} for OKP key type. Use EdDSA.`);
+  if (keyType === "OKP") {
+    if (algorithm !== "EdDSA") {
+      throw new Error(
+        `Invalid algorithm ${algorithm} for OKP key type. Use EdDSA.`,
+      );
     }
     return eddsaKeyPairToJWK(publicKeyPem, privateKeyPem, keyId);
   }

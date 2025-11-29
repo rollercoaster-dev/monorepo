@@ -20,7 +20,7 @@ The `database-sync.helper.ts` provides robust alternatives to `setTimeout` for e
 Verifies that specific entities exist and are readable from the database:
 
 ```typescript
-import { ensureDatabaseSync } from './helpers/database-sync.helper';
+import { ensureDatabaseSync } from "./helpers/database-sync.helper";
 
 // Replace this fragile approach:
 await new Promise((resolve) => setTimeout(resolve, 100));
@@ -30,6 +30,7 @@ await ensureDatabaseSync([testUser.id, testIssuer.id, testBadgeClass.id]);
 ```
 
 **Benefits:**
+
 - Verifies actual data persistence
 - Fails fast if data is not available
 - Configurable timeout and polling intervals
@@ -40,7 +41,7 @@ await ensureDatabaseSync([testUser.id, testIssuer.id, testBadgeClass.id]);
 Ensures database transactions are committed without requiring specific entity IDs:
 
 ```typescript
-import { ensureTransactionCommitted } from './helpers/database-sync.helper';
+import { ensureTransactionCommitted } from "./helpers/database-sync.helper";
 
 // After bulk operations or when you don't have specific IDs to verify
 await ensureTransactionCommitted();
@@ -51,12 +52,15 @@ await ensureTransactionCommitted();
 Provides database-specific optimizations:
 
 ```typescript
-import { ensureSqliteSync, ensurePostgresSync } from './helpers/database-sync.helper';
+import {
+  ensureSqliteSync,
+  ensurePostgresSync,
+} from "./helpers/database-sync.helper";
 
 // SQLite-specific synchronization
 await ensureSqliteSync();
 
-// PostgreSQL-specific synchronization  
+// PostgreSQL-specific synchronization
 await ensurePostgresSync();
 ```
 
@@ -65,11 +69,15 @@ await ensurePostgresSync();
 For operations that might fail due to timing issues:
 
 ```typescript
-import { retryWithBackoff } from './helpers/database-sync.helper';
+import { retryWithBackoff } from "./helpers/database-sync.helper";
 
-const result = await retryWithBackoff(async () => {
-  return await someOperationThatMightFail();
-}, 3, 100); // 3 retries, starting with 100ms delay
+const result = await retryWithBackoff(
+  async () => {
+    return await someOperationThatMightFail();
+  },
+  3,
+  100,
+); // 3 retries, starting with 100ms delay
 ```
 
 ### 5. Condition Polling
@@ -77,7 +85,7 @@ const result = await retryWithBackoff(async () => {
 Wait for specific conditions to be met:
 
 ```typescript
-import { pollUntilCondition } from './helpers/database-sync.helper';
+import { pollUntilCondition } from "./helpers/database-sync.helper";
 
 await pollUntilCondition(async () => {
   const statusList = await getStatusList(statusListId);
@@ -91,16 +99,16 @@ All synchronization functions accept optional configuration:
 
 ```typescript
 interface DatabaseSyncConfig {
-  maxWaitMs: number;      // Maximum wait time (default: 5000ms)
+  maxWaitMs: number; // Maximum wait time (default: 5000ms)
   pollIntervalMs: number; // Polling interval (default: 50ms)
-  maxAttempts: number;    // Maximum attempts (default: 100)
+  maxAttempts: number; // Maximum attempts (default: 100)
 }
 
 // Custom configuration example
 await ensureDatabaseSync(entityIds, {
-  maxWaitMs: 10000,     // Wait up to 10 seconds
-  pollIntervalMs: 100,  // Poll every 100ms
-  maxAttempts: 50       // Maximum 50 attempts
+  maxWaitMs: 10000, // Wait up to 10 seconds
+  pollIntervalMs: 100, // Poll every 100ms
+  maxAttempts: 50, // Maximum 50 attempts
 });
 ```
 
@@ -142,7 +150,7 @@ beforeEach(async () => {
 
   // Ensure all entities are committed and readable
   await ensureDatabaseSync([testUser.id, testIssuer.id, testBadgeClass.id]);
-  
+
   // Now safe to proceed with HTTP requests
 });
 ```
@@ -150,15 +158,15 @@ beforeEach(async () => {
 ### Transaction-Based Synchronization
 
 ```typescript
-it('should handle complex operations', async () => {
+it("should handle complex operations", async () => {
   // Perform multiple database operations
   await performBulkOperations();
-  
+
   // Ensure all transactions are committed
   await ensureTransactionCommitted();
-  
+
   // Proceed with verification
-  const result = await app.request('/api/endpoint');
+  const result = await app.request("/api/endpoint");
   expect(result.status).toBe(200);
 });
 ```
@@ -166,18 +174,18 @@ it('should handle complex operations', async () => {
 ### Condition-Based Waiting
 
 ```typescript
-it('should update status list', async () => {
+it("should update status list", async () => {
   const initialStatusList = await getStatusList(statusListId);
-  
+
   // Perform status update
   await updateCredentialStatus(credentialId, 1);
-  
+
   // Wait for status list to be updated
   await pollUntilCondition(async () => {
     const updatedStatusList = await getStatusList(statusListId);
     return updatedStatusList.encodedList !== initialStatusList.encodedList;
   });
-  
+
   // Verify the change
   const finalStatusList = await getStatusList(statusListId);
   expect(finalStatusList.encodedList).not.toBe(initialStatusList.encodedList);
@@ -197,7 +205,7 @@ await issuerRepository.create(testIssuer);
 await new Promise((resolve) => setTimeout(resolve, 100));
 
 // Proceed with HTTP requests
-const response = await app.request('/api/endpoint');
+const response = await app.request("/api/endpoint");
 ```
 
 ### After (Robust)
@@ -211,7 +219,7 @@ await issuerRepository.create(testIssuer);
 await ensureDatabaseSync([testUser.id, testIssuer.id]);
 
 // Proceed with HTTP requests
-const response = await app.request('/api/endpoint');
+const response = await app.request("/api/endpoint");
 ```
 
 ## Benefits

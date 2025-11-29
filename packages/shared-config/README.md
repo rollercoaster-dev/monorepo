@@ -81,6 +81,7 @@ export default {
 ## 🔧 Key Settings
 
 ### TypeScript
+
 - ✅ Strict mode enabled
 - ✅ No unchecked indexed access
 - ✅ Isolated modules
@@ -88,6 +89,7 @@ export default {
 - ✅ ESM module system
 
 ### ESLint
+
 - ✅ TypeScript recommended rules
 - ✅ Consistent type imports
 - ✅ No unused vars (except `_` prefix)
@@ -95,6 +97,7 @@ export default {
 - ✅ Prettier conflict resolution
 
 ### Prettier
+
 - ✅ 100-char line width
 - ✅ 2-space indentation
 - ✅ Single quotes

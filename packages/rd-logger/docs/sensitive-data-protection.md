@@ -13,14 +13,14 @@ The rd-logger package includes robust mechanisms to prevent accidental logging o
 The `SensitiveValue` wrapper is the primary way to protect sensitive data:
 
 ```typescript
-import { logger, SensitiveValue } from '@rollercoaster-dev/rd-logger';
+import { logger, SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 // Create a sensitive value
-const apiKey = 'api_key_12345';
+const apiKey = "api_key_12345";
 const sensitiveApiKey = SensitiveValue.from(apiKey);
 
 // Safe logging - will show [REDACTED]
-logger.info('Created API key', { key: sensitiveApiKey });
+logger.info("Created API key", { key: sensitiveApiKey });
 
 // Accessing the actual value when needed for operations
 const actualKey = sensitiveApiKey.getValue();
@@ -32,10 +32,10 @@ You can customize the redacted text:
 
 ```typescript
 // Custom redaction text
-const password = 'super-secret-password';
-const sensitivePassword = SensitiveValue.from(password, '[PASSWORD HIDDEN]');
+const password = "super-secret-password";
+const sensitivePassword = SensitiveValue.from(password, "[PASSWORD HIDDEN]");
 
-logger.info('User created', { password: sensitivePassword });
+logger.info("User created", { password: sensitivePassword });
 // Will show: [PASSWORD HIDDEN] instead of [REDACTED]
 ```
 
@@ -44,14 +44,14 @@ logger.info('User created', { password: sensitivePassword });
 The wrapper works with any type of value, including objects:
 
 ```typescript
-const userData = { 
-  id: 123, 
-  name: 'John Doe', 
-  ssn: '123-45-6789' 
+const userData = {
+  id: 123,
+  name: "John Doe",
+  ssn: "123-45-6789",
 };
 const sensitiveUserData = SensitiveValue.from(userData);
 
-logger.info('User data', { user: sensitiveUserData });
+logger.info("User data", { user: sensitiveUserData });
 // The entire object will be redacted
 ```
 
@@ -74,7 +74,10 @@ This provides an additional layer of protection even when the `SensitiveValue` w
 
 ```typescript
 // Even without SensitiveValue, this will be automatically redacted
-logger.info('Debug info', { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U' });
+logger.info("Debug info", {
+  token:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+});
 ```
 
 ## Explicitly Logging Sensitive Data
@@ -82,29 +85,38 @@ logger.info('Debug info', { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI
 In rare cases where logging sensitive data is necessary (e.g., debugging critical issues), use the explicit opt-in methods:
 
 ```typescript
-import { logger, SensitiveLoggingApproval } from '@rollercoaster-dev/rd-logger';
+import { logger, SensitiveLoggingApproval } from "@rollercoaster-dev/rd-logger";
 
 // Create approval information
 const approval: SensitiveLoggingApproval = {
-  reason: 'Debugging authentication issue #1234',
-  approvedBy: 'Security Team',
-  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+  reason: "Debugging authentication issue #1234",
+  approvedBy: "Security Team",
+  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
 };
 
 // Log with sensitive data
 logger.logWithSensitiveData(
-  'info',
-  'Debug API key issue',
-  { key: 'api_key_12345' },
-  approval
+  "info",
+  "Debug API key issue",
+  { key: "api_key_12345" },
+  approval,
 );
 
 // Convenience methods for common log levels
-logger.infoWithSensitiveData('Info with sensitive data', { key: 'api_key_12345' }, approval);
-logger.errorWithSensitiveData('Error with sensitive data', { key: 'api_key_12345' }, approval);
+logger.infoWithSensitiveData(
+  "Info with sensitive data",
+  { key: "api_key_12345" },
+  approval,
+);
+logger.errorWithSensitiveData(
+  "Error with sensitive data",
+  { key: "api_key_12345" },
+  approval,
+);
 ```
 
 These methods:
+
 - Require explicit approval information
 - Add metadata about who approved the logging and why
 - Add special highlighting in the logs

@@ -27,9 +27,11 @@ This document describes the comprehensive navigation system implemented for the 
 ## Components
 
 ### 1. MainNavigation.vue
+
 **Location:** `src/client/components/Navigation/MainNavigation.vue`
 
 The primary navigation component featuring:
+
 - Logo/brand with home link
 - Hierarchical menu structure
 - User authentication menu
@@ -38,6 +40,7 @@ The primary navigation component featuring:
 - Screen reader optimizations
 
 **Key Features:**
+
 - Automatic active state detection
 - Role-based menu filtering
 - Click-outside closing behavior
@@ -45,9 +48,11 @@ The primary navigation component featuring:
 - Focus management
 
 ### 2. UserMenu.vue
+
 **Location:** `src/client/components/Navigation/UserMenu.vue`
 
 User-specific navigation component with:
+
 - Authentication state management
 - User profile dropdown
 - Admin menu section (role-based)
@@ -55,20 +60,24 @@ User-specific navigation component with:
 - Sign in/out functionality
 
 **Authentication States:**
+
 - **Not Logged In:** Sign In/Sign Up buttons
 - **Logged In:** User avatar, profile menu, notifications
 - **Admin Users:** Additional admin panel access
 
 ### 3. Breadcrumb.vue
+
 **Location:** `src/client/components/Navigation/Breadcrumb.vue`
 
 Contextual navigation breadcrumbs featuring:
+
 - Dynamic route-based generation
 - Support for nested routes
 - Truncation for long paths
 - Accessible navigation trail
 
 **Supported Routes:**
+
 - Static routes (badges, issuers, admin)
 - Dynamic routes (badge/:id, issuer/:id)
 - Nested routes (badges/:id/edit, badges/:id/issue)
@@ -76,6 +85,7 @@ Contextual navigation breadcrumbs featuring:
 ## Navigation Structure
 
 ### Primary Navigation
+
 ```
 ┌─ Dashboard (/)
 ├─ Badges
@@ -90,6 +100,7 @@ Contextual navigation breadcrumbs featuring:
 ```
 
 ### User Menu
+
 ```
 ┌─ Profile (/auth/profile)
 ├─ My Backpack (/backpack)
@@ -129,12 +140,14 @@ Contextual navigation breadcrumbs featuring:
 ## Responsive Design
 
 ### 📱 **Mobile (< 768px)**
+
 - Hamburger menu with slide-out navigation
 - Stacked menu items
 - Touch-optimized spacing
 - Simplified user menu
 
 ### 💻 **Desktop (≥ 768px)**
+
 - Horizontal navigation bar
 - Dropdown menus
 - Hover states
@@ -151,12 +164,14 @@ Contextual navigation breadcrumbs featuring:
 ## Performance Optimizations
 
 ### ⚡ **Loading Performance**
+
 - **Code Splitting:** Route-based lazy loading
 - **Tree Shaking:** Unused code elimination
 - **Icon Optimization:** SVG sprites for icons
 - **CSS Purging:** Unused styles removal
 
 ### 🔄 **Runtime Performance**
+
 - **Memoization:** Cached computed properties
 - **Event Delegation:** Efficient event handling
 - **Debounced Search:** Optimized search interactions
@@ -165,12 +180,14 @@ Contextual navigation breadcrumbs featuring:
 ## Security Considerations
 
 ### 🔒 **Authentication Security**
+
 - **Role-Based Access:** Menu items filtered by user permissions
 - **Route Guards:** Protected routes with authentication checks
 - **Token Validation:** JWT token verification
 - **Session Management:** Secure session handling
 
 ### 🛡️ **XSS Prevention**
+
 - **Input Sanitization:** All user inputs sanitized
 - **CSP Headers:** Content Security Policy implementation
 - **Safe HTML:** Vue's built-in XSS protection
@@ -181,6 +198,7 @@ Contextual navigation breadcrumbs featuring:
 ### 📝 **Adding New Navigation Items**
 
 1. **Update Navigation Config:**
+
 ```typescript
 const navigationItems = [
   {
@@ -189,19 +207,21 @@ const navigationItems = [
     to: '/new-feature',
     icon: NewIcon,
     requiresAuth: true, // Optional
-    requiresAdmin: false // Optional
-  }
+    requiresAdmin: false, // Optional
+  },
 ]
 ```
 
 2. **Add Breadcrumb Support:**
+
 ```typescript
 const routeBreadcrumbs = {
-  '/new-feature': [{ label: 'New Feature' }]
+  '/new-feature': [{ label: 'New Feature' }],
 }
 ```
 
 3. **Update Route Permissions:**
+
 ```typescript
 const canAccessRoute = (item: NavigationItem) => {
   // Add permission logic
@@ -224,12 +244,14 @@ await page.click('[aria-label="Toggle navigation menu"]')
 ## Browser Support
 
 ### ✅ **Supported Browsers**
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+
 - Edge 90+
 
 ### 📱 **Mobile Support**
+
 - iOS Safari 14+
 - Android Chrome 90+
 - Samsung Internet 14+
@@ -237,6 +259,7 @@ await page.click('[aria-label="Toggle navigation menu"]')
 ## Future Enhancements
 
 ### 🚀 **Planned Features**
+
 - **Search Integration:** Global search in navigation
 - **Favorites/Bookmarks:** User-customizable quick access
 - **Notifications:** Real-time notification system
@@ -245,6 +268,7 @@ await page.click('[aria-label="Toggle navigation menu"]')
 - **Advanced Analytics:** Navigation tracking and optimization
 
 ### 🔄 **Continuous Improvements**
+
 - **Performance Monitoring:** Core Web Vitals tracking
 - **A/B Testing:** Navigation layout experiments
 - **User Feedback:** Accessibility and usability testing
@@ -253,16 +277,19 @@ await page.click('[aria-label="Toggle navigation menu"]')
 ## Getting Started
 
 1. **Install Dependencies** (from monorepo root):
+
 ```bash
 bun install
 ```
 
 2. **Run Development Server:**
+
 ```bash
 bun dev
 ```
 
 3. **Build for Production:**
+
 ```bash
 bun run build
 ```

@@ -36,6 +36,7 @@ Releases are automatically created when code is merged to the `main` branch. The
 ### Improved Reliability
 
 The release workflow now includes:
+
 - **Conflict Resolution**: Automatically handles concurrent commits by pulling latest changes
 - **Retry Logic**: Attempts release up to 3 times if conflicts occur
 - **Validation**: Checks for existing releases to prevent duplicates
@@ -55,11 +56,13 @@ The Docker image build is triggered by the "release published" event from semant
 #### Docker Image Tags
 
 Each release creates multiple tags for the Docker image:
+
 - Full semantic version (e.g., `v1.2.3`)
 - Major.minor version (e.g., `v1.2`)
 - Major version only (e.g., `v1`)
 
 This allows users to choose their preferred level of version pinning:
+
 ```bash
 # Always use the exact version (most stable)
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1.2.3
@@ -74,6 +77,7 @@ docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1
 #### Manual Docker Builds
 
 You can also manually trigger a Docker build for any tag or branch using the GitHub Actions interface:
+
 1. Go to the Actions tab in GitHub
 2. Select the "Build and Push Docker Image" workflow
 3. Click "Run workflow"
@@ -92,6 +96,7 @@ bun run release:check
 ```
 
 This script will:
+
 - Verify you're on the main branch
 - Check for uncommitted changes
 - Show commits since the last release
@@ -197,6 +202,7 @@ bun test
 3. **Release Prevention Logic**: The workflow checks if a release already exists for the latest commit. Manual tags cause this check to succeed, preventing semantic-release from running.
 
 **Solution**:
+
 - **Never create or push tags manually** for releases
 - Use the automated process by pushing conventional commits to `main` or `beta`
 - If manual tags were created, consider deleting them to avoid confusion with official releases
@@ -206,6 +212,7 @@ bun test
 If a release is not created when you expect it to be:
 
 1. **Check release status first**:
+
    ```bash
    bun run release:check
    ```
@@ -232,11 +239,13 @@ The improved release workflow handles most common failures automatically, but if
 If the automatic release fails completely:
 
 1. **Check what went wrong**:
+
    ```bash
    bun run release:check
    ```
 
 2. **Try a manual release**:
+
    ```bash
    bun run release:manual
    ```

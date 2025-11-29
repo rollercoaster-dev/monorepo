@@ -5,6 +5,7 @@ This document outlines how the Open Badges project management will be structured
 ## Integration Strategy
 
 We'll use a hybrid approach where:
+
 1. `distributed-badges-concept` repository serves as the project management hub and source of truth
 2. Content is integrated into rollercoaster.dev-platform via VitePress
 3. GitHub Projects handles task management across repositories
@@ -117,12 +118,14 @@ rollercoaster.dev-platform/
 ### Main Project Board: "Open Badges Ecosystem"
 
 **Views:**
+
 - **Roadmap**: Timeline view of planned features
 - **Components**: Group by component (server, types, UI)
 - **Status**: Track implementation status
 - **Priorities**: Focus on high-priority items
 
 **Custom Fields:**
+
 - **Component**: server, types, ui, integration, etc.
 - **Priority**: high, medium, low
 - **Effort**: small, medium, large
@@ -130,6 +133,7 @@ rollercoaster.dev-platform/
 - **Status**: backlog, planned, in-progress, review, done
 
 **Automation Rules:**
+
 - Auto-assign new issues to the appropriate project
 - Auto-update status based on PR activity
 - Auto-link related issues across repositories
@@ -141,26 +145,26 @@ rollercoaster.dev-platform/
 ```typescript
 // docs/.vitepress/config.ts
 export default {
-  title: 'Rollercoaster.dev',
-  description: 'Developer platform documentation',
+  title: "Rollercoaster.dev",
+  description: "Developer platform documentation",
   themeConfig: {
     sidebar: {
-      '/open-badges/': [
+      "/open-badges/": [
         {
-          text: 'Open Badges',
+          text: "Open Badges",
           items: [
-            { text: 'Overview', link: '/open-badges/' },
-            { text: 'Architecture', link: '/open-badges/architecture/' },
-            { text: 'Projects', link: '/open-badges/projects/' },
-            { text: 'Roadmap', link: '/open-badges/roadmap/' },
-            { text: 'Gap Analysis', link: '/open-badges/gap-analysis/' }
-          ]
-        }
-      ]
+            { text: "Overview", link: "/open-badges/" },
+            { text: "Architecture", link: "/open-badges/architecture/" },
+            { text: "Projects", link: "/open-badges/projects/" },
+            { text: "Roadmap", link: "/open-badges/roadmap/" },
+            { text: "Gap Analysis", link: "/open-badges/gap-analysis/" },
+          ],
+        },
+      ],
       // Other sidebar sections...
-    }
-  }
-}
+    },
+  },
+};
 ```
 
 ### Sync Workflow
@@ -173,7 +177,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
+      - "docs/**"
 
 jobs:
   sync:
@@ -193,14 +197,14 @@ jobs:
         run: |
           mkdir -p target/docs/open-badges
           cp -r source/docs/* target/docs/open-badges/
-          
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           path: target
-          commit-message: 'docs: sync Open Badges documentation'
-          title: 'docs: sync Open Badges documentation'
-          body: 'Automated sync from distributed-badges-concept repository'
+          commit-message: "docs: sync Open Badges documentation"
+          title: "docs: sync Open Badges documentation"
+          body: "Automated sync from distributed-badges-concept repository"
           branch: sync-open-badges-docs
 ```
 
@@ -216,4 +220,4 @@ jobs:
 
 This integration plan provides a clear path forward for managing the Open Badges project while leveraging the refactored rollercoaster.dev platform. By using a hybrid approach with distributed-badges-concept as the source of truth and VitePress for documentation integration, we can start immediately while ensuring seamless integration with rollercoaster.dev after its refactor.
 
-The plan balances immediate needs for project management with the long-term goal of integrated documentation and visualization. GitHub Projects provides the task management capabilities needed across repositories, while the documentation structure ensures compatibility with VitePress for easy integration. 
+The plan balances immediate needs for project management with the long-term goal of integrated documentation and visualization. GitHub Projects provides the task management capabilities needed across repositories, while the documentation structure ensures compatibility with VitePress for easy integration.

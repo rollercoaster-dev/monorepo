@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { OB2, OB3 } from '@/types';
+import { computed, ref } from "vue";
+import type { OB2, OB3 } from "@/types";
 
 interface Props {
   badgeClass: OB2.BadgeClass | OB3.Achievement;
@@ -9,7 +9,7 @@ interface Props {
   showCriteria?: boolean;
   showIssuer?: boolean;
   showTags?: boolean;
-  density?: 'compact' | 'normal' | 'spacious';
+  density?: "compact" | "normal" | "spacious";
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -18,19 +18,21 @@ const props = withDefaults(defineProps<Props>(), {
   showCriteria: false,
   showIssuer: true,
   showTags: true,
-  density: 'normal',
+  density: "normal",
 });
 
 const emit = defineEmits<{
-  (e: 'click', badgeClass: OB2.BadgeClass | OB3.Achievement): void;
+  (e: "click", badgeClass: OB2.BadgeClass | OB3.Achievement): void;
 }>();
 
 // Helper to get string from MultiLanguageString
-const getLocalizedString = (value: string | { [key: string]: string } | undefined): string => {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
+const getLocalizedString = (
+  value: string | { [key: string]: string } | undefined,
+): string => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
   // For MultiLanguageString, prefer 'en' or first available
-  return value['en'] || Object.values(value)[0] || '';
+  return value["en"] || Object.values(value)[0] || "";
 };
 
 // Normalize badge class data between OB2 and OB3 formats
@@ -38,48 +40,56 @@ const normalizedBadgeClass = computed(() => {
   const badge = props.badgeClass;
 
   // Get ID
-  const id = badge.id || '';
+  const id = badge.id || "";
 
   // Get name - required in both OB2 and OB3
-  const name = getLocalizedString(badge.name) || 'Unnamed Badge';
+  const name = getLocalizedString(badge.name) || "Unnamed Badge";
 
   // Get description
-  const description = getLocalizedString(badge.description) || '';
+  const description = getLocalizedString(badge.description) || "";
 
   // Get image - OB2 can be string or Image object, OB3 uses Image object
-  let image = '';
+  let image = "";
   if (badge.image) {
-    if (typeof badge.image === 'string') {
+    if (typeof badge.image === "string") {
       image = badge.image;
-    } else if (typeof badge.image === 'object' && 'id' in badge.image) {
+    } else if (typeof badge.image === "object" && "id" in badge.image) {
       image = badge.image.id;
     }
   }
 
   // Get criteria
-  let criteria = '';
+  let criteria = "";
   if (badge.criteria) {
-    if (typeof badge.criteria === 'string') {
+    if (typeof badge.criteria === "string") {
       criteria = badge.criteria;
-    } else if (typeof badge.criteria === 'object' && 'narrative' in badge.criteria) {
+    } else if (
+      typeof badge.criteria === "object" &&
+      "narrative" in badge.criteria
+    ) {
       criteria = getLocalizedString(badge.criteria.narrative as string);
     }
   }
 
   // Get issuer name - OB2 uses 'issuer', OB3 uses 'creator'
-  let issuerName = '';
-  const issuerField = 'issuer' in badge ? badge.issuer : ('creator' in badge ? badge.creator : null);
+  let issuerName = "";
+  const issuerField =
+    "issuer" in badge
+      ? badge.issuer
+      : "creator" in badge
+        ? badge.creator
+        : null;
   if (issuerField) {
-    if (typeof issuerField === 'string') {
+    if (typeof issuerField === "string") {
       issuerName = issuerField;
-    } else if (typeof issuerField === 'object' && 'name' in issuerField) {
+    } else if (typeof issuerField === "object" && "name" in issuerField) {
       issuerName = getLocalizedString(issuerField.name as string);
     }
   }
 
   // Get tags - OB2 has tags, OB3 might have different structure
   const tags: string[] = [];
-  if ('tags' in badge && Array.isArray(badge.tags)) {
+  if ("tags" in badge && Array.isArray(badge.tags)) {
     tags.push(...badge.tags);
   }
 
@@ -102,7 +112,7 @@ const generateAltText = (badgeName: string): string => {
 // Handle click events when card is interactive
 const handleClick = () => {
   if (props.interactive) {
-    emit('click', props.badgeClass);
+    emit("click", props.badgeClass);
   }
 };
 
@@ -123,19 +133,19 @@ const densityClass = computed(() => {
 // Truncate description for display
 const truncatedDescription = computed(() => {
   const desc = normalizedBadgeClass.value.description;
-  if (!desc) return '';
-  const maxLength = props.density === 'compact' ? 60 : 120;
+  if (!desc) return "";
+  const maxLength = props.density === "compact" ? 60 : 120;
   if (desc.length <= maxLength) return desc;
-  return desc.slice(0, maxLength).trim() + '...';
+  return desc.slice(0, maxLength).trim() + "...";
 });
 
 // Truncate criteria for display
 const truncatedCriteria = computed(() => {
   const crit = normalizedBadgeClass.value.criteria;
-  if (!crit) return '';
-  const maxLength = props.density === 'compact' ? 50 : 100;
+  if (!crit) return "";
+  const maxLength = props.density === "compact" ? 50 : 100;
   if (crit.length <= maxLength) return crit;
-  return crit.slice(0, maxLength).trim() + '...';
+  return crit.slice(0, maxLength).trim() + "...";
 });
 </script>
 
@@ -158,7 +168,7 @@ const truncatedCriteria = computed(() => {
         :src="normalizedBadgeClass.image"
         :alt="generateAltText(normalizedBadgeClass.name)"
         class="manus-badge-class-img"
-      >
+      />
       <div
         v-else
         class="manus-badge-class-img-fallback"

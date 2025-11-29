@@ -5,26 +5,27 @@
  * error handling, and connection state management.
  */
 
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import type { Database } from 'bun:sqlite';
-import { logger } from '@utils/logging/logger.service';
-import { SqlitePragmaManager } from '../utils/sqlite-pragma.manager';
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import type { Database } from "bun:sqlite";
+import { logger } from "@utils/logging/logger.service";
+import { SqlitePragmaManager } from "../utils/sqlite-pragma.manager";
 import type {
   SqliteConnectionConfig,
   SqliteConnectionConfigInput,
   SqliteConnectionState,
   SqliteDatabaseClient,
-  SqliteDatabaseHealth} from '../types/sqlite-database.types';
+  SqliteDatabaseHealth,
+} from "../types/sqlite-database.types";
 import {
   SqliteConnectionError,
   createSqliteConnectionConfig,
-} from '../types/sqlite-database.types';
+} from "../types/sqlite-database.types";
 
 /**
  * Manages SQLite database connections with type safety and proper error handling
  */
 export class SqliteConnectionManager {
-  private connectionState: SqliteConnectionState = 'disconnected';
+  private connectionState: SqliteConnectionState = "disconnected";
   private connectionPromise: Promise<void> | null = null;
   private connectionAttempts = 0;
   private lastConnectionTime = 0;
@@ -45,7 +46,7 @@ export class SqliteConnectionManager {
   constructor(client: Database, config: SqliteConnectionConfigInput = {}) {
     try {
       if (!client) {
-        throw new Error('SQLite client is required for connection manager');
+        throw new Error("SQLite client is required for connection manager");
       }
 
       this.client = client;
@@ -58,7 +59,7 @@ export class SqliteConnectionManager {
       // This may throw for critical settings - let it propagate
       this.applyConfigurationPragmas();
 
-      logger.info('SQLite connection manager initialized successfully');
+      logger.info("SQLite connection manager initialized successfully");
     } catch (error) {
       const errorMsg = `Failed to initialize SQLite connection manager: ${
         error instanceof Error ? error.message : String(error)
@@ -85,40 +86,40 @@ export class SqliteConnectionManager {
     const startTime = Date.now();
 
     // Prevent operations on closed connections
-    if (this.connectionState === 'closed') {
+    if (this.connectionState === "closed") {
       throw new Error(
-        'Cannot connect to a closed database connection. Create a new connection manager.'
+        "Cannot connect to a closed database connection. Create a new connection manager.",
       );
     }
 
     // If already connected, return immediately
-    if (this.connectionState === 'connected') {
+    if (this.connectionState === "connected") {
       return;
     }
 
     // If currently connecting, wait for the existing connection attempt
-    if (this.connectionState === 'connecting' && this.connectionPromise) {
+    if (this.connectionState === "connecting" && this.connectionPromise) {
       return this.connectionPromise;
     }
 
     // Start new connection attempt
-    this.connectionState = 'connecting';
+    this.connectionState = "connecting";
     this.connectionPromise = this.performConnection();
 
     try {
       await this.connectionPromise;
-      this.connectionState = 'connected';
+      this.connectionState = "connected";
       this.lastConnectionTime = Date.now();
       this.lastError = null;
 
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('SQLite database connected successfully', {
+      if (process.env.NODE_ENV !== "production") {
+        logger.info("SQLite database connected successfully", {
           attempts: this.connectionAttempts + 1,
           duration: Date.now() - startTime,
         });
       }
     } catch (error) {
-      this.connectionState = 'error';
+      this.connectionState = "error";
       this.lastError =
         error instanceof Error ? error : new Error(String(error));
       throw error;
@@ -158,7 +159,7 @@ export class SqliteConnectionManager {
             `${errorMessage}: ${
               error instanceof Error ? error.message : String(error)
             }`,
-            attempt
+            attempt,
           );
         }
 
@@ -166,7 +167,7 @@ export class SqliteConnectionManager {
         const delay =
           this.config.connectionRetryDelayMs * Math.pow(2, attempt - 1);
 
-        logger.warn('SQLite connection attempt failed, retrying', {
+        logger.warn("SQLite connection attempt failed, retrying", {
           attempt,
           maxAttempts: this.config.maxConnectionAttempts,
           retryDelay: `${delay}ms`,
@@ -185,12 +186,12 @@ export class SqliteConnectionManager {
   private async testConnection(): Promise<void> {
     try {
       // Test the connection with a simple query
-      this.client.prepare('SELECT 1 as test').get();
+      this.client.prepare("SELECT 1 as test").get();
     } catch (error) {
       throw new Error(
         `SQLite connection test failed: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -200,7 +201,7 @@ export class SqliteConnectionManager {
    * Note: This method doesn't fully close the client to allow for reconnection
    */
   async disconnect(): Promise<void> {
-    if (this.connectionState === 'disconnected') {
+    if (this.connectionState === "disconnected") {
       return;
     }
 
@@ -210,19 +211,19 @@ export class SqliteConnectionManager {
 
       // Mark the connection as logically disconnected without closing the client
       // This allows the client to be reused for reconnection
-      this.connectionState = 'disconnected';
+      this.connectionState = "disconnected";
       this.connectionAttempts = 0;
       this.lastError = null;
 
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('SQLite database disconnected successfully');
+      if (process.env.NODE_ENV !== "production") {
+        logger.info("SQLite database disconnected successfully");
       }
     } catch (error) {
-      this.connectionState = 'error';
+      this.connectionState = "error";
       this.lastError =
         error instanceof Error ? error : new Error(String(error));
 
-      logger.error('Failed to disconnect SQLite database', {
+      logger.error("Failed to disconnect SQLite database", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -237,8 +238,8 @@ export class SqliteConnectionManager {
    */
   async close(): Promise<void> {
     if (
-      this.connectionState === 'disconnected' ||
-      this.connectionState === 'closed'
+      this.connectionState === "disconnected" ||
+      this.connectionState === "closed"
     ) {
       return;
     }
@@ -248,24 +249,24 @@ export class SqliteConnectionManager {
       this.performWalCheckpoint();
 
       // Actually close the database connection
-      if (typeof this.client.close === 'function') {
+      if (typeof this.client.close === "function") {
         this.client.close();
       }
 
       // Mark as truly closed so that reconnect() won't reuse a closed client
-      this.connectionState = 'closed';
+      this.connectionState = "closed";
       this.connectionAttempts = 0;
       this.lastError = null;
 
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('SQLite database fully closed');
+      if (process.env.NODE_ENV !== "production") {
+        logger.info("SQLite database fully closed");
       }
     } catch (error) {
-      this.connectionState = 'error';
+      this.connectionState = "error";
       this.lastError =
         error instanceof Error ? error : new Error(String(error));
 
-      logger.error('Failed to fully close SQLite database', {
+      logger.error("Failed to fully close SQLite database", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -277,7 +278,7 @@ export class SqliteConnectionManager {
    * Checks if the database is currently connected
    */
   isConnected(): boolean {
-    return this.connectionState === 'connected';
+    return this.connectionState === "connected";
   }
 
   /**
@@ -293,7 +294,7 @@ export class SqliteConnectionManager {
    */
   getDatabase(): ReturnType<typeof drizzle> {
     if (!this.isConnected()) {
-      throw new Error('Database is not connected. Call connect() first.');
+      throw new Error("Database is not connected. Call connect() first.");
     }
     return this.db;
   }
@@ -304,7 +305,7 @@ export class SqliteConnectionManager {
    */
   getClient(): Database {
     if (!this.isConnected()) {
-      throw new Error('Database is not connected. Call connect() first.');
+      throw new Error("Database is not connected. Call connect() first.");
     }
     return this.client;
   }
@@ -315,7 +316,7 @@ export class SqliteConnectionManager {
    */
   getDatabaseClient(): SqliteDatabaseClient {
     if (!this.isConnected()) {
-      throw new Error('Database is not connected. Call connect() first.');
+      throw new Error("Database is not connected. Call connect() first.");
     }
     return {
       db: this.db,
@@ -328,7 +329,7 @@ export class SqliteConnectionManager {
    */
   ensureConnected(): void {
     if (!this.isConnected()) {
-      throw new Error('Database is not connected. Call connect() first.');
+      throw new Error("Database is not connected. Call connect() first.");
     }
   }
 
@@ -341,7 +342,7 @@ export class SqliteConnectionManager {
     let responseTime = 0;
 
     // Will store SQLite PRAGMA results
-    const configInfo: SqliteDatabaseHealth['configuration'] = {
+    const configInfo: SqliteDatabaseHealth["configuration"] = {
       appliedSettings: {
         busyTimeout: false,
         syncMode: false,
@@ -352,7 +353,7 @@ export class SqliteConnectionManager {
     };
 
     try {
-      if (this.connectionState === 'connected') {
+      if (this.connectionState === "connected") {
         // Test basic connection
         await this.testConnection();
         connected = true;
@@ -387,14 +388,14 @@ export class SqliteConnectionManager {
       const health = await this.getHealth();
 
       if (health.connected) {
-        logger.info('SQLite database health check passed', {
+        logger.info("SQLite database health check passed", {
           responseTime: health.responseTime,
           uptime: health.uptime,
           configuration: health.configuration,
         });
         return true;
       } else {
-        logger.warn('SQLite database health check failed', {
+        logger.warn("SQLite database health check failed", {
           lastError: health.lastError?.message,
           connectionAttempts: health.connectionAttempts,
           partialConfiguration: health.configuration,
@@ -402,7 +403,7 @@ export class SqliteConnectionManager {
         return false;
       }
     } catch (error) {
-      logger.logError('SQLite database health check error', error);
+      logger.logError("SQLite database health check error", error);
       return false;
     }
   }
@@ -412,24 +413,24 @@ export class SqliteConnectionManager {
    */
   async reconnect(): Promise<void> {
     // Prevent reconnection on closed connections
-    if (this.connectionState === 'closed') {
+    if (this.connectionState === "closed") {
       throw new Error(
-        'Cannot reconnect a closed database connection. Create a new connection manager.'
+        "Cannot reconnect a closed database connection. Create a new connection manager.",
       );
     }
 
-    logger.info('Reconnecting to SQLite database');
+    logger.info("Reconnecting to SQLite database");
 
     try {
       await this.disconnect();
     } catch (error) {
-      logger.warn('Error during disconnect in reconnect', {
+      logger.warn("Error during disconnect in reconnect", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
 
     // Reset the connection state to ensure we can attempt a fresh connection
-    this.connectionState = 'disconnected';
+    this.connectionState = "disconnected";
     this.connectionPromise = null;
 
     await this.connect();
@@ -460,56 +461,56 @@ export class SqliteConnectionManager {
    * Populates configuration information by querying SQLite PRAGMA settings
    */
   private populateConfigurationInfo(
-    configInfo: SqliteDatabaseHealth['configuration']
+    configInfo: SqliteDatabaseHealth["configuration"],
   ): void {
     try {
       // Get busy_timeout setting
       this.queryPragmaSetting(
-        'PRAGMA busy_timeout;',
-        'busy_timeout',
+        "PRAGMA busy_timeout;",
+        "busy_timeout",
         (result) => {
           configInfo.busyTimeout = result.busy_timeout as number;
           configInfo.appliedSettings.busyTimeout = true;
-        }
+        },
       );
 
       // Get synchronous mode
       this.queryPragmaSetting(
-        'PRAGMA synchronous;',
-        'synchronous',
+        "PRAGMA synchronous;",
+        "synchronous",
         (result) => {
           configInfo.syncMode = String(result.synchronous);
           configInfo.appliedSettings.syncMode = true;
-        }
+        },
       );
 
       // Get cache size
-      this.queryPragmaSetting('PRAGMA cache_size;', 'cache_size', (result) => {
+      this.queryPragmaSetting("PRAGMA cache_size;", "cache_size", (result) => {
         configInfo.cacheSize = result.cache_size as number;
         configInfo.appliedSettings.cacheSize = true;
       });
 
       // Get journal mode
       this.queryPragmaSetting(
-        'PRAGMA journal_mode;',
-        'journal_mode',
+        "PRAGMA journal_mode;",
+        "journal_mode",
         (result) => {
           configInfo.journalMode = String(result.journal_mode);
-        }
+        },
       );
 
       // Check foreign keys status
       this.queryPragmaSetting(
-        'PRAGMA foreign_keys;',
-        'foreign_keys',
+        "PRAGMA foreign_keys;",
+        "foreign_keys",
         (result) => {
           configInfo.foreignKeys = Boolean(result.foreign_keys);
           configInfo.appliedSettings.foreignKeys = true;
-        }
+        },
       );
 
       // Get temp_store setting
-      this.queryPragmaSetting('PRAGMA temp_store;', 'temp_store', (result) => {
+      this.queryPragmaSetting("PRAGMA temp_store;", "temp_store", (result) => {
         if (result.temp_store === 2) {
           // 2 = MEMORY
           configInfo.appliedSettings.tempStore = true;
@@ -519,11 +520,11 @@ export class SqliteConnectionManager {
       // Estimate memory usage (if available)
       try {
         this.queryPragmaSetting(
-          'PRAGMA memory_used;',
-          'memory_used',
+          "PRAGMA memory_used;",
+          "memory_used",
           (result) => {
             configInfo.memoryUsage = result.memory_used as number;
-          }
+          },
         );
       } catch {
         // Memory usage stats not available in all SQLite versions
@@ -531,13 +532,13 @@ export class SqliteConnectionManager {
     } catch (configError) {
       // Log but don't fail the health check due to config info issues
       logger.warn(
-        'Error getting SQLite configuration details during health check',
+        "Error getting SQLite configuration details during health check",
         {
           error:
             configError instanceof Error
               ? configError.message
               : String(configError),
-        }
+        },
       );
     }
   }
@@ -548,7 +549,7 @@ export class SqliteConnectionManager {
   private queryPragmaSetting<T extends Record<string, unknown>>(
     query: string,
     expectedKey: string,
-    processor: (result: T) => void
+    processor: (result: T) => void,
   ): void {
     const result = this.client.query(query).get() as T | null;
     if (result && expectedKey in result) {
@@ -562,9 +563,9 @@ export class SqliteConnectionManager {
    */
   private performWalCheckpoint(): void {
     try {
-      this.client.prepare('PRAGMA wal_checkpoint(FULL)').run();
+      this.client.prepare("PRAGMA wal_checkpoint(FULL)").run();
     } catch (checkpointError) {
-      logger.warn('Error during WAL checkpoint', {
+      logger.warn("Error during WAL checkpoint", {
         errorMessage:
           checkpointError instanceof Error
             ? checkpointError.message
@@ -588,13 +589,13 @@ export class SqliteConnectionManager {
       // Use the centralized PRAGMA manager for consistent application
       const result = SqlitePragmaManager.applyPragmas(
         this.client,
-        pragmaConfig
+        pragmaConfig,
       );
 
       // Log successful application in development mode only
       // (Failures are already logged by the PRAGMA manager in both dev and production)
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('SQLite PRAGMA settings applied via centralized manager', {
+      if (process.env.NODE_ENV !== "production") {
+        logger.info("SQLite PRAGMA settings applied via centralized manager", {
           appliedSettings: result.appliedSettings,
           criticalSettingsApplied: result.criticalSettingsApplied,
           failedSettingsCount: result.failedSettings.length,
@@ -602,7 +603,7 @@ export class SqliteConnectionManager {
       }
     } catch (error) {
       // Critical PRAGMA settings failed - this should halt initialization
-      logger.error('Critical SQLite PRAGMA settings failed to apply', {
+      logger.error("Critical SQLite PRAGMA settings failed to apply", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });

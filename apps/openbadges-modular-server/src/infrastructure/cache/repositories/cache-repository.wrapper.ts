@@ -5,9 +5,9 @@
  * It wraps a repository instance and adds caching functionality.
  */
 
-import type { CacheInterface } from '../cache.interface';
-import { CacheFactory } from '../cache.factory';
-import { config } from '@/config/config';
+import type { CacheInterface } from "../cache.interface";
+import { CacheFactory } from "../cache.factory";
+import { config } from "@/config/config";
 
 export abstract class CacheRepositoryWrapper<T, R> {
   protected repository: R;
@@ -62,8 +62,8 @@ export abstract class CacheRepositoryWrapper<T, R> {
     // Filter out any undefined/null values that might be returned by the cache
     const keys = this.cache
       .keys()
-      .filter((key): key is string => key != null && typeof key === 'string')
-      .filter((key) => key.startsWith('collection:'));
+      .filter((key): key is string => key != null && typeof key === "string")
+      .filter((key) => key.startsWith("collection:"));
 
     // Delete all collection keys
     for (const key of keys) {

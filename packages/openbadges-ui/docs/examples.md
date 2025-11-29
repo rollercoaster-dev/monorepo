@@ -10,45 +10,50 @@ This example shows how to display a single badge:
 <template>
   <div class="badge-example">
     <h2>Badge Display Example</h2>
-    <BadgeDisplay :badge="exampleBadge" :interactive="true" @click="showBadgeDetails" />
+    <BadgeDisplay
+      :badge="exampleBadge"
+      :interactive="true"
+      @click="showBadgeDetails"
+    />
   </div>
 </template>
 
 <script setup>
-import { BadgeDisplay } from 'openbadges-ui';
-import { ref } from 'vue';
+import { BadgeDisplay } from "openbadges-ui";
+import { ref } from "vue";
 
 // Example badge in Open Badges 2.0 format
 const exampleBadge = ref({
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    identity: 'recipient@example.org',
-    type: 'email',
+    identity: "recipient@example.org",
+    type: "email",
     hashed: false,
   },
   badge: {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'AI Ethics Fundamentals',
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "AI Ethics Fundamentals",
     description:
-      'Awarded for demonstrating understanding of core AI ethics principles and their application.',
-    image: 'https://ui-avatars.com/api/?name=AI+Ethics&background=2A9D8F&color=fff',
+      "Awarded for demonstrating understanding of core AI ethics principles and their application.",
+    image:
+      "https://ui-avatars.com/api/?name=AI+Ethics&background=2A9D8F&color=fff",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Academy',
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Academy",
     },
   },
-  issuedOn: '2025-01-15T12:00:00Z',
+  issuedOn: "2025-01-15T12:00:00Z",
   verification: {
-    type: 'hosted',
+    type: "hosted",
   },
 });
 
 const showBadgeDetails = (badge) => {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
   alert(`Badge details: ${badge.badge.name}`);
 };
 </script>
@@ -72,7 +77,11 @@ This example shows how to display a collection of badges with filtering and sort
     <h2>My Badges</h2>
 
     <div class="filter-controls">
-      <input v-model="filterText" placeholder="Search badges..." class="filter-input" />
+      <input
+        v-model="filterText"
+        placeholder="Search badges..."
+        class="filter-input"
+      />
 
       <div class="sort-controls">
         <label for="sort-select">Sort by:</label>
@@ -97,7 +106,9 @@ This example shows how to display a collection of badges with filtering and sort
       <template #empty>
         <div class="empty-state">
           <p>No badges found matching your criteria.</p>
-          <button @click="clearFilters" class="clear-button">Clear filters</button>
+          <button @click="clearFilters" class="clear-button">
+            Clear filters
+          </button>
         </div>
       </template>
     </BadgeList>
@@ -105,8 +116,8 @@ This example shows how to display a collection of badges with filtering and sort
 </template>
 
 <script setup>
-import { BadgeList } from 'openbadges-ui';
-import { ref, watch } from 'vue';
+import { BadgeList } from "openbadges-ui";
+import { ref, watch } from "vue";
 
 // In a real app, you would fetch these from an API
 const allBadges = [
@@ -115,8 +126,8 @@ const allBadges = [
 ];
 
 const badges = ref(allBadges);
-const filterText = ref('');
-const sortOption = ref('newest');
+const filterText = ref("");
+const sortOption = ref("newest");
 const currentPage = ref(1);
 
 // Filter and sort badges when criteria change
@@ -137,13 +148,13 @@ watch([filterText, sortOption], () => {
 
   // Apply sort
   filtered.sort((a, b) => {
-    if (sortOption.value === 'newest') {
+    if (sortOption.value === "newest") {
       return new Date(b.issuedOn) - new Date(a.issuedOn);
-    } else if (sortOption.value === 'oldest') {
+    } else if (sortOption.value === "oldest") {
       return new Date(a.issuedOn) - new Date(b.issuedOn);
-    } else if (sortOption.value === 'name-asc') {
+    } else if (sortOption.value === "name-asc") {
       return a.badge.name.localeCompare(b.badge.name);
-    } else if (sortOption.value === 'name-desc') {
+    } else if (sortOption.value === "name-desc") {
       return b.badge.name.localeCompare(a.badge.name);
     }
     return 0;
@@ -154,7 +165,7 @@ watch([filterText, sortOption], () => {
 });
 
 const handleBadgeClick = (badge) => {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
   // Navigate to badge details or show modal
 };
 
@@ -163,8 +174,8 @@ const handlePageChange = (page) => {
 };
 
 const clearFilters = () => {
-  filterText.value = '';
-  sortOption.value = 'newest';
+  filterText.value = "";
+  sortOption.value = "newest";
 };
 </script>
 
@@ -250,8 +261,8 @@ This example shows how to display a user profile with their earned badges:
 </template>
 
 <script setup>
-import { ProfileViewer } from 'openbadges-ui';
-import { ref, onMounted } from 'vue';
+import { ProfileViewer } from "openbadges-ui";
+import { ref, onMounted } from "vue";
 
 const userProfile = ref(null);
 const userBadges = ref([]);
@@ -269,12 +280,13 @@ const loadUserProfile = async () => {
 
     // Mock data
     userProfile.value = {
-      id: 'user-123',
-      name: 'Alice Johnson',
-      image: 'https://ui-avatars.com/api/?name=Alice+J&background=553C9A&color=fff',
-      description: 'AI researcher and machine learning enthusiast',
-      email: 'alice@example.org',
-      type: 'Recipient',
+      id: "user-123",
+      name: "Alice Johnson",
+      image:
+        "https://ui-avatars.com/api/?name=Alice+J&background=553C9A&color=fff",
+      description: "AI researcher and machine learning enthusiast",
+      email: "alice@example.org",
+      type: "Recipient",
     };
 
     userBadges.value = [
@@ -282,7 +294,7 @@ const loadUserProfile = async () => {
       // ...
     ];
   } catch (err) {
-    error.value = 'Failed to load profile. Please try again.';
+    error.value = "Failed to load profile. Please try again.";
     console.error(err);
   } finally {
     loading.value = false;
@@ -290,7 +302,7 @@ const loadUserProfile = async () => {
 };
 
 const handleBadgeClick = (badge) => {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
   // Navigate to badge details or show modal
 };
 
@@ -347,23 +359,25 @@ This example shows how to implement a badge issuer dashboard:
 </template>
 
 <script setup>
-import { IssuerDashboard } from 'openbadges-ui';
-import { ref, onMounted } from 'vue';
+import { IssuerDashboard } from "openbadges-ui";
+import { ref, onMounted } from "vue";
 
 const issuerProfile = ref({
-  id: 'issuer-123',
-  name: 'Academy',
-  image: 'https://ui-avatars.com/api/?name=Manus+AI&background=0D8ABC&color=fff',
-  description: 'An organization dedicated to advancing AI education and certification.',
-  url: 'https://example.org',
-  email: 'badges@example.org',
+  id: "issuer-123",
+  name: "Academy",
+  image:
+    "https://ui-avatars.com/api/?name=Manus+AI&background=0D8ABC&color=fff",
+  description:
+    "An organization dedicated to advancing AI education and certification.",
+  url: "https://example.org",
+  email: "badges@example.org",
 });
 
 const issuedBadges = ref([]);
 
 // In a real app, this would send to an API
 const handleBadgeIssued = async (assertion) => {
-  console.log('Badge issued:', assertion);
+  console.log("Badge issued:", assertion);
 
   try {
     // Simulate API call
@@ -372,15 +386,15 @@ const handleBadgeIssued = async (assertion) => {
     // Add the new badge to the list
     issuedBadges.value = [assertion, ...issuedBadges.value];
 
-    alert('Badge successfully issued!');
+    alert("Badge successfully issued!");
   } catch (err) {
-    console.error('Failed to save badge:', err);
-    alert('Failed to issue badge. Please try again.');
+    console.error("Failed to save badge:", err);
+    alert("Failed to issue badge. Please try again.");
   }
 };
 
 const handleBadgeClick = (badge) => {
-  console.log('Badge clicked:', badge);
+  console.log("Badge clicked:", badge);
   // Show badge details or edit modal
 };
 
@@ -396,7 +410,7 @@ const loadIssuedBadges = async () => {
       // ...
     ];
   } catch (err) {
-    console.error('Failed to load badges:', err);
+    console.error("Failed to load badges:", err);
   }
 };
 
@@ -444,18 +458,18 @@ This example shows how to implement theme switching:
 </template>
 
 <script setup>
-import { BadgeDisplay, AccessibilityService } from 'openbadges-ui';
-import { ref } from 'vue';
+import { BadgeDisplay, AccessibilityService } from "openbadges-ui";
+import { ref } from "vue";
 
 const themes = [
-  { label: 'Default', value: 'default' },
-  { label: 'Dark', value: 'dark' },
-  { label: 'High Contrast', value: 'high-contrast' },
-  { label: 'Large Text', value: 'large-text' },
-  { label: 'Dyslexia Friendly', value: 'dyslexia-friendly' },
+  { label: "Default", value: "default" },
+  { label: "Dark", value: "dark" },
+  { label: "High Contrast", value: "high-contrast" },
+  { label: "Large Text", value: "large-text" },
+  { label: "Dyslexia Friendly", value: "dyslexia-friendly" },
 ];
 
-const currentTheme = ref('default');
+const currentTheme = ref("default");
 
 const applyTheme = (theme) => {
   currentTheme.value = theme;
@@ -464,30 +478,31 @@ const applyTheme = (theme) => {
 
 // Example badge for preview
 const exampleBadge = ref({
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    identity: 'recipient@example.org',
-    type: 'email',
+    identity: "recipient@example.org",
+    type: "email",
     hashed: false,
   },
   badge: {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'Theme Example Badge',
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "Theme Example Badge",
     description:
-      'This badge demonstrates how different themes affect the appearance of components.',
-    image: 'https://ui-avatars.com/api/?name=Theme+Example&background=3182CE&color=fff',
+      "This badge demonstrates how different themes affect the appearance of components.",
+    image:
+      "https://ui-avatars.com/api/?name=Theme+Example&background=3182CE&color=fff",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Academy',
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Academy",
     },
   },
-  issuedOn: '2025-04-15T12:00:00Z',
+  issuedOn: "2025-04-15T12:00:00Z",
   verification: {
-    type: 'hosted',
+    type: "hosted",
   },
 });
 </script>
@@ -582,7 +597,7 @@ This example demonstrates how to use the accessibility features:
       <h3>Reduced Motion Detection</h3>
       <p>
         Reduced motion preference:
-        <strong>{{ prefersReducedMotion ? 'Enabled' : 'Disabled' }}</strong>
+        <strong>{{ prefersReducedMotion ? "Enabled" : "Disabled" }}</strong>
       </p>
       <p>When enabled, animations will be minimized or disabled.</p>
     </div>
@@ -590,8 +605,8 @@ This example demonstrates how to use the accessibility features:
 </template>
 
 <script setup>
-import { AccessibilityService } from 'openbadges-ui';
-import { ref, onMounted } from 'vue';
+import { AccessibilityService } from "openbadges-ui";
+import { ref, onMounted } from "vue";
 
 const prefersReducedMotion = ref(false);
 
@@ -599,8 +614,8 @@ onMounted(() => {
   prefersReducedMotion.value = AccessibilityService.prefersReducedMotion();
 
   // Listen for changes to the prefers-reduced-motion media query
-  const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-  mediaQuery.addEventListener('change', () => {
+  const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mediaQuery.addEventListener("change", () => {
     prefersReducedMotion.value = AccessibilityService.prefersReducedMotion();
   });
 });

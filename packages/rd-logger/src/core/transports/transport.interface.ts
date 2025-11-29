@@ -15,7 +15,12 @@ export interface Transport {
    * @param timestamp Timestamp of the log
    * @param context Additional context
    */
-  log(level: string, message: string, timestamp: string, context: Record<string, any>): void;
+  log(
+    level: string,
+    message: string,
+    timestamp: string,
+    context: Record<string, any>,
+  ): void;
 
   /**
    * Initialize the transport

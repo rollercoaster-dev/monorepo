@@ -5,22 +5,22 @@ import {
   beforeAll,
   beforeEach,
   afterAll,
-} from 'bun:test';
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { SqliteAssertionRepository } from '@infrastructure/database/modules/sqlite/repositories/sqlite-assertion.repository';
-import { SqliteConnectionManager } from '@infrastructure/database/modules/sqlite/connection/sqlite-connection.manager';
-import type { Assertion } from '@domains/assertion/assertion.entity';
-import { queryLogger } from '@utils/logging/logger.service';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import type { Shared, OB2 } from 'openbadges-types';
-import { createId } from '@paralleldrive/cuid2';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import { assertions } from '@infrastructure/database/modules/sqlite/schema';
-import * as schema from '@infrastructure/database/modules/sqlite/schema';
-import { getMigrationsPath } from '@tests/test-utils/migrations-path';
-import { EXAMPLE_ISSUER_URL } from '@/constants/urls';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
+} from "bun:test";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import { SqliteAssertionRepository } from "@infrastructure/database/modules/sqlite/repositories/sqlite-assertion.repository";
+import { SqliteConnectionManager } from "@infrastructure/database/modules/sqlite/connection/sqlite-connection.manager";
+import type { Assertion } from "@domains/assertion/assertion.entity";
+import { queryLogger } from "@utils/logging/logger.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import type { Shared, OB2 } from "openbadges-types";
+import { createId } from "@paralleldrive/cuid2";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { assertions } from "@infrastructure/database/modules/sqlite/schema";
+import * as schema from "@infrastructure/database/modules/sqlite/schema";
+import { getMigrationsPath } from "@tests/test-utils/migrations-path";
+import { EXAMPLE_ISSUER_URL } from "@/constants/urls";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
 
 // --- Test Setup ---
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -34,13 +34,13 @@ const MIGRATIONS_PATH = getMigrationsPath();
 
 // Helper to create a test issuer in the database
 const createTestIssuer = async (
-  db: ReturnType<typeof drizzle<typeof schema>>
+  db: ReturnType<typeof drizzle<typeof schema>>,
 ) => {
   const issuerId = `urn:uuid:${createId()}`;
 
   await db.insert(schema.issuers).values({
-    id: convertUuid(issuerId as string, 'sqlite', 'to') as string,
-    name: 'Test Issuer',
+    id: convertUuid(issuerId as string, "sqlite", "to") as string,
+    name: "Test Issuer",
     url: EXAMPLE_ISSUER_URL,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -52,17 +52,17 @@ const createTestIssuer = async (
 // Helper to create a test badge class in the database
 const createTestBadgeClass = async (
   db: ReturnType<typeof drizzle<typeof schema>>,
-  issuerId: string
+  issuerId: string,
 ) => {
   const badgeClassId = `urn:uuid:${createId()}`;
 
   await db.insert(schema.badgeClasses).values({
-    id: convertUuid(badgeClassId as string, 'sqlite', 'to') as string,
-    issuerId: convertUuid(issuerId as string, 'sqlite', 'to') as string,
-    name: 'Test Badge Class',
-    description: 'A test badge class',
-    image: 'https://example.com/badge.png',
-    criteria: JSON.stringify({ narrative: 'Complete the test' }),
+    id: convertUuid(badgeClassId as string, "sqlite", "to") as string,
+    issuerId: convertUuid(issuerId as string, "sqlite", "to") as string,
+    name: "Test Badge Class",
+    description: "A test badge class",
+    image: "https://example.com/badge.png",
+    criteria: JSON.stringify({ narrative: "Complete the test" }),
     createdAt: Date.now(),
     updatedAt: Date.now(),
   });
@@ -70,10 +70,10 @@ const createTestBadgeClass = async (
   return badgeClassId;
 };
 
-describe('SqliteAssertionRepository Integration - Query Logging', () => {
+describe("SqliteAssertionRepository Integration - Query Logging", () => {
   beforeAll(async () => {
     // Initialize in-memory SQLite database
-    testDbInstance = new Database(':memory:');
+    testDbInstance = new Database(":memory:");
     db = drizzle(testDbInstance, { schema });
 
     // Apply migrations
@@ -85,7 +85,7 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
       migrate(db, { migrationsFolder: MIGRATIONS_PATH });
     } catch (_error) {
       // Fail fast if migrations don't work
-      throw new Error('SQLite migration failed, cannot run integration tests.');
+      throw new Error("SQLite migration failed, cannot run integration tests.");
     }
 
     // Create connection manager for the new pattern
@@ -121,25 +121,25 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
   });
 
   // --- Test Data ---
-  const createTestAssertionData = (): Omit<Assertion, 'id'> => ({
+  const createTestAssertionData = (): Omit<Assertion, "id"> => ({
     badgeClass: testBadgeClassId as Shared.IRI,
     issuer: testIssuerId as Shared.IRI,
     recipient: {
-      type: 'email',
+      type: "email",
       identity: `test-${createId()}@example.com`,
       hashed: false, // Use non-hashed for easier testing if needed
     },
     issuedOn: new Date().toISOString(),
     verification: {
-      type: 'hosted',
+      type: "hosted",
     },
     // Add other optional fields as needed for specific tests
-    narrative: 'Test narrative',
+    narrative: "Test narrative",
   });
 
   // --- Test Cases ---
 
-  it('should log query on create', async () => {
+  it("should log query on create", async () => {
     const assertionData = createTestAssertionData();
     await repository.create(assertionData);
 
@@ -147,13 +147,13 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('INSERT Assertion');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("INSERT Assertion");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toBeUndefined();
   });
 
-  it('should log query on findAll', async () => {
+  it("should log query on findAll", async () => {
     // Arrange: Create some data first
     await repository.create(createTestAssertionData());
     await repository.create(createTestAssertionData());
@@ -167,13 +167,13 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('SELECT All Assertions');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("SELECT All Assertions");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toBeUndefined(); // No parameters for findAll
   });
 
-  it('should log query on findById', async () => {
+  it("should log query on findById", async () => {
     const createdAssertion = await repository.create(createTestAssertionData());
     queryLogger.clearLogs(); // Clear logs from setup
 
@@ -183,13 +183,13 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('SELECT Assertion by ID');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("SELECT Assertion by ID");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toEqual([createdAssertion.id]);
   });
 
-  it('should log query on findByRecipient', async () => {
+  it("should log query on findByRecipient", async () => {
     const assertionData = createTestAssertionData();
     await repository.create(assertionData);
     queryLogger.clearLogs(); // Clear logs from setup
@@ -203,19 +203,19 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('SELECT Assertions by Recipient');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("SELECT Assertions by Recipient");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toBeArrayOfSize(1);
     // Check that the parameter is an instance of SensitiveValue
     expect(log.params?.[0]).toBeInstanceOf(SensitiveValue);
   });
 
-  it('should log queries on update (transaction-based)', async () => {
+  it("should log queries on update (transaction-based)", async () => {
     const createdAssertion = await repository.create(createTestAssertionData());
     queryLogger.clearLogs(); // Clear logs from setup
 
-    const updateData = { narrative: 'Updated Narrative!' };
+    const updateData = { narrative: "Updated Narrative!" };
     await repository.update(createdAssertion.id, updateData);
 
     const logs = queryLogger.getLogs();
@@ -223,13 +223,13 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
 
     // Check transaction log
     const updateLog = logs[0];
-    expect(updateLog.query).toBe('UPDATE Assertion');
-    expect(updateLog.database).toBe('sqlite');
+    expect(updateLog.query).toBe("UPDATE Assertion");
+    expect(updateLog.database).toBe("sqlite");
     expect(updateLog.duration).toBeGreaterThanOrEqual(0);
     expect(updateLog.params).toEqual([createdAssertion.id]);
   });
 
-  it('should log query on delete', async () => {
+  it("should log query on delete", async () => {
     const createdAssertion = await repository.create(createTestAssertionData());
     queryLogger.clearLogs(); // Clear logs from setup
 
@@ -239,42 +239,42 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('DELETE Assertion');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("DELETE Assertion");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toEqual([createdAssertion.id]);
   });
 
   // Add tests for revoke and verify similarly, checking logs for underlying operations
-  it('should log queries on revoke (transaction-based)', async () => {
+  it("should log queries on revoke (transaction-based)", async () => {
     const createdAssertion = await repository.create(createTestAssertionData());
     queryLogger.clearLogs(); // Clear logs from setup
 
-    const reason = 'Test Revocation';
+    const reason = "Test Revocation";
     await repository.revoke(createdAssertion.id, reason);
 
     const logs = queryLogger.getLogs();
     expect(logs.length).toBe(3); // findById (revoke) + update (transaction) + revoke (transaction)
 
     // Check logs (simplified check, focus on query names)
-    expect(logs[0].query).toBe('SELECT Assertion by ID'); // From findById in revoke
-    expect(logs[1].query).toBe('UPDATE Assertion'); // From update method (transaction-based)
-    expect(logs[2].query).toBe('REVOKE Assertion'); // From revoke transaction
+    expect(logs[0].query).toBe("SELECT Assertion by ID"); // From findById in revoke
+    expect(logs[1].query).toBe("UPDATE Assertion"); // From update method (transaction-based)
+    expect(logs[2].query).toBe("REVOKE Assertion"); // From revoke transaction
 
     // Verify parameters for the initial findById
     expect(logs[0].params).toEqual([createdAssertion.id]);
-    expect(logs[0].database).toBe('sqlite');
+    expect(logs[0].database).toBe("sqlite");
 
     // Verify parameters for the UPDATE operation
     expect(logs[1].params).toEqual([createdAssertion.id]);
-    expect(logs[1].database).toBe('sqlite');
+    expect(logs[1].database).toBe("sqlite");
 
     // Verify parameters for the REVOKE operation
     expect(logs[2].params).toEqual([createdAssertion.id]);
-    expect(logs[2].database).toBe('sqlite');
+    expect(logs[2].database).toBe("sqlite");
   });
 
-  it('should log query on verify (findById)', async () => {
+  it("should log query on verify (findById)", async () => {
     const createdAssertion = await repository.create(createTestAssertionData());
     queryLogger.clearLogs(); // Clear logs from setup
 
@@ -284,8 +284,8 @@ describe('SqliteAssertionRepository Integration - Query Logging', () => {
     expect(logs.length).toBe(1);
     const log = logs[0];
 
-    expect(log.query).toBe('SELECT Assertion by ID');
-    expect(log.database).toBe('sqlite');
+    expect(log.query).toBe("SELECT Assertion by ID");
+    expect(log.database).toBe("sqlite");
     expect(log.duration).toBeGreaterThanOrEqual(0);
     expect(log.params).toEqual([createdAssertion.id]);
   });

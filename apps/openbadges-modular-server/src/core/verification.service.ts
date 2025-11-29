@@ -5,17 +5,16 @@
  * the Open Badges 3.0 specification.
  */
 
-import { Assertion } from '@domains/assertion/assertion.entity';
-import { KeyService } from '@core/key.service';
-import type {
-  DataIntegrityProof} from '@utils/crypto/signature';
+import { Assertion } from "@domains/assertion/assertion.entity";
+import { KeyService } from "@core/key.service";
+import type { DataIntegrityProof } from "@utils/crypto/signature";
 import {
   createVerification,
   verifyAssertion, // Import local DataIntegrityProof
   Cryptosuite,
   KeyType,
   detectKeyType,
-} from '@utils/crypto/signature';
+} from "@utils/crypto/signature";
 import {
   generateJWTProof,
   verifyJWTProof,
@@ -23,36 +22,34 @@ import {
   type JWTProofGenerationOptions,
   type JWTProofVerificationOptions,
   type SupportedJWTAlgorithm,
-} from '@utils/crypto/jwt-proof';
-import type {
-  JWTProof} from '@utils/types/proof.types';
+} from "@utils/crypto/jwt-proof";
+import type { JWTProof } from "@utils/types/proof.types";
 import {
   isJWTProof,
   type VerifiableCredentialClaims,
-} from '@utils/types/proof.types';
-import { logger } from '@utils/logging/logger.service';
-import type { OB3, Shared } from 'openbadges-types'; // For OB3.Proof and Shared types
-import type {
-  VerificationStatus} from '@utils/types/verification-status';
+} from "@utils/types/proof.types";
+import { logger } from "@utils/logging/logger.service";
+import type { OB3, Shared } from "openbadges-types"; // For OB3.Proof and Shared types
+import type { VerificationStatus } from "@utils/types/verification-status";
 import {
   VerificationErrorCode,
   createVerificationError,
   createSuccessfulVerification,
-} from '@utils/types/verification-status';
+} from "@utils/types/verification-status";
 
 // Type guard to check if an object is our specific DataIntegrityProof
 function isDataIntegrityProof(proof: unknown): proof is DataIntegrityProof {
   // Uses local DataIntegrityProof
   return (
-    typeof proof === 'object' &&
+    typeof proof === "object" &&
     proof !== null &&
-    'type' in proof &&
-    (proof as OB3.Proof).type === 'DataIntegrityProof' && // Check type property against OB3.Proof structure
-    'cryptosuite' in proof && // Check for properties of local DataIntegrityProof
-    'created' in proof &&
-    'proofPurpose' in proof &&
-    'verificationMethod' in proof &&
-    'proofValue' in proof
+    "type" in proof &&
+    (proof as OB3.Proof).type === "DataIntegrityProof" && // Check type property against OB3.Proof structure
+    "cryptosuite" in proof && // Check for properties of local DataIntegrityProof
+    "created" in proof &&
+    "proofPurpose" in proof &&
+    "verificationMethod" in proof &&
+    "proofValue" in proof
   );
 }
 
@@ -66,8 +63,8 @@ export class VerificationService {
    */
   static async createJWTProofForAssertion(
     assertion: Assertion,
-    keyId: string = 'default',
-    algorithm?: SupportedJWTAlgorithm
+    keyId: string = "default",
+    algorithm?: SupportedJWTAlgorithm,
   ): Promise<JWTProof> {
     try {
       // Ensure the key service is initialized
@@ -84,19 +81,19 @@ export class VerificationService {
 
       // Create credential data for JWT payload
       const credentialData: VerifiableCredentialClaims = {
-        '@context': [
-          'https://www.w3.org/ns/credentials/v2',
-          'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
         ],
-        type: ['VerifiableCredential', 'OpenBadgeCredential'],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
         id: assertion.id,
         issuer:
           assertion.issuer ||
-          `${process.env['BASE_URL'] || 'http://localhost:3000'}/issuer`, // Fallback issuer
+          `${process.env["BASE_URL"] || "http://localhost:3000"}/issuer`, // Fallback issuer
         issuanceDate: assertion.issuedOn,
         credentialSubject: {
           id: assertion.recipient,
-          type: 'AchievementSubject',
+          type: "AchievementSubject",
           achievement: assertion.badgeClass,
         },
         ...(assertion.expires && { expirationDate: assertion.expires }),
@@ -114,21 +111,21 @@ export class VerificationService {
         algorithm: actualAlgorithm,
         keyId,
         verificationMethod: `${
-          process.env.BASE_URL || 'http://localhost:3000'
+          process.env.BASE_URL || "http://localhost:3000"
         }/public-keys/${keyId}` as Shared.IRI,
         issuer:
           (assertion.issuer as Shared.IRI) ||
           (`${
-            process.env.BASE_URL || 'http://localhost:3000'
+            process.env.BASE_URL || "http://localhost:3000"
           }/issuer` as Shared.IRI),
-        proofPurpose: 'assertionMethod',
+        proofPurpose: "assertionMethod",
       };
 
       // Generate and return the JWT proof
       return await generateJWTProof(credentialData, options);
     } catch (error) {
-      logger.error('Failed to create JWT proof for assertion', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to create JWT proof for assertion", {
+        error: error instanceof Error ? error.message : "Unknown error",
         assertionId: assertion.id,
         keyId,
       });
@@ -144,7 +141,7 @@ export class VerificationService {
    */
   static async createVerificationForAssertion(
     assertion: Assertion,
-    keyId: string = 'default'
+    keyId: string = "default",
   ): Promise<Assertion> {
     try {
       // Ensure the key service is initialized
@@ -177,7 +174,7 @@ export class VerificationService {
         canonicalData,
         privateKey,
         detectedKeyType,
-        cryptosuite
+        cryptosuite,
       );
 
       // The verificationMethod in DataIntegrityProof already contains the key's IRI.
@@ -209,8 +206,8 @@ export class VerificationService {
         verification: proof as unknown as OB3.Proof,
       });
     } catch (error) {
-      logger.error('Failed to create verification for assertion', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to create verification for assertion", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -225,7 +222,7 @@ export class VerificationService {
    * @returns A string representation of the canonical data
    */
   private static createCanonicalDataForSigning(
-    data: Partial<Assertion>
+    data: Partial<Assertion>,
   ): string {
     // Create a minimal object with only the essential properties
     const essentialData = {
@@ -250,7 +247,7 @@ export class VerificationService {
    */
   static async verifyJWTProofForAssertion(
     jwtProof: JWTProof,
-    keyId: string = 'default'
+    keyId: string = "default",
   ): Promise<VerificationStatus> {
     try {
       // Ensure the key service is initialized
@@ -262,7 +259,7 @@ export class VerificationService {
       if (!publicKey) {
         return createVerificationError(
           VerificationErrorCode.KEY_NOT_FOUND,
-          `Public key not found for ID: ${keyId}. Cannot verify JWT proof`
+          `Public key not found for ID: ${keyId}. Cannot verify JWT proof`,
         );
       }
 
@@ -282,17 +279,17 @@ export class VerificationService {
       } else {
         return createVerificationError(
           VerificationErrorCode.SIGNATURE_VERIFICATION_FAILED,
-          result.error || 'JWT proof verification failed'
+          result.error || "JWT proof verification failed",
         );
       }
     } catch (error) {
-      logger.error('Error verifying JWT proof', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error verifying JWT proof", {
+        error: error instanceof Error ? error.message : "Unknown error",
         verificationMethod: jwtProof.verificationMethod,
       });
       return createVerificationError(
         VerificationErrorCode.INTERNAL_ERROR,
-        `Internal error: ${(error as Error).message}`
+        `Internal error: ${(error as Error).message}`,
       );
     }
   }
@@ -303,7 +300,7 @@ export class VerificationService {
    * @returns The extracted keyId or 'default' if extraction fails
    */
   private static extractKeyIdFromVerificationMethod(
-    verificationMethod: string
+    verificationMethod: string,
   ): string {
     try {
       // Attempt to extract keyId from the verificationMethod IRI
@@ -316,10 +313,10 @@ export class VerificationService {
     } catch (e: unknown) {
       logger.warn(
         `Error parsing verificationMethod URL: ${verificationMethod}`,
-        { message: (e as Error).message }
+        { message: (e as Error).message },
       );
     }
-    return 'default';
+    return "default";
   }
 
   /**
@@ -328,16 +325,16 @@ export class VerificationService {
    * @returns A verification status object with detailed information
    */
   public static async verifyAssertionSignature(
-    assertion: Assertion
+    assertion: Assertion,
   ): Promise<VerificationStatus> {
     try {
       if (
         !assertion.verification ||
-        typeof assertion.verification !== 'object'
+        typeof assertion.verification !== "object"
       ) {
         return createVerificationError(
           VerificationErrorCode.PROOF_MISSING,
-          'Verification object is missing or not an object'
+          "Verification object is missing or not an object",
         );
       }
 
@@ -348,13 +345,13 @@ export class VerificationService {
         // Extract keyId from verification method if possible
         const keyId = proofInput.verificationMethod
           ? VerificationService.extractKeyIdFromVerificationMethod(
-              proofInput.verificationMethod as string
+              proofInput.verificationMethod as string,
             )
-          : 'default';
+          : "default";
 
         return await VerificationService.verifyJWTProofForAssertion(
           proofInput,
-          keyId
+          keyId,
         );
       }
 
@@ -364,20 +361,20 @@ export class VerificationService {
       delete (assertionDataToCanonicalize as Partial<Assertion>).verification; // Remove the whole verification field
 
       const canonicalData = this.createCanonicalDataForSigning(
-        assertionDataToCanonicalize
+        assertionDataToCanonicalize,
       );
 
       const keyId = proofInput.verificationMethod
         ? VerificationService.extractKeyIdFromVerificationMethod(
-            proofInput.verificationMethod as string
+            proofInput.verificationMethod as string,
           )
-        : 'default';
+        : "default";
 
       // If a specific keyId was derived from verificationMethod and that key doesn't exist, fail verification.
-      if (keyId !== 'default' && !(await KeyService.keyExists(keyId))) {
+      if (keyId !== "default" && !(await KeyService.keyExists(keyId))) {
         return createVerificationError(
           VerificationErrorCode.KEY_NOT_FOUND,
-          `Public key not found for specific keyId derived from verificationMethod: ${keyId}`
+          `Public key not found for specific keyId derived from verificationMethod: ${keyId}`,
         );
       }
 
@@ -387,7 +384,7 @@ export class VerificationService {
       if (!publicKey) {
         return createVerificationError(
           VerificationErrorCode.KEY_NOT_FOUND,
-          `Public key not found for ID: ${keyId}. Cannot verify signature`
+          `Public key not found for ID: ${keyId}. Cannot verify signature`,
         );
       }
 
@@ -395,7 +392,7 @@ export class VerificationService {
       if (!isDataIntegrityProof(proofInput)) {
         return createVerificationError(
           VerificationErrorCode.PROOF_INVALID,
-          'Proof object is not a valid DataIntegrityProof structure'
+          "Proof object is not a valid DataIntegrityProof structure",
         );
       }
 
@@ -403,7 +400,7 @@ export class VerificationService {
       if (!proofInput.proofValue) {
         return createVerificationError(
           VerificationErrorCode.SIGNATURE_MISSING,
-          'Proof object does not contain a proofValue'
+          "Proof object does not contain a proofValue",
         );
       }
 
@@ -426,14 +423,14 @@ export class VerificationService {
             return createVerificationError(
               VerificationErrorCode.CRYPTOSUITE_UNSUPPORTED,
               `Unsupported cryptosuite: ${cryptosuite}. This server only supports ${Object.values(
-                Cryptosuite
-              ).join(', ')}`
+                Cryptosuite,
+              ).join(", ")}`,
             );
         }
       } else {
         // If no cryptosuite specified, log a warning and attempt to auto-detect
         logger.warn(
-          'No cryptosuite specified in proof. Attempting to auto-detect key type.'
+          "No cryptosuite specified in proof. Attempting to auto-detect key type.",
         );
 
         // Auto-detect key type from the public key
@@ -448,12 +445,12 @@ export class VerificationService {
           // This should never happen with our current implementation, but handle it just in case
           return createVerificationError(
             VerificationErrorCode.INTERNAL_ERROR,
-            'Failed to determine appropriate cryptosuite from key material'
+            "Failed to determine appropriate cryptosuite from key material",
           );
         }
 
         logger.info(
-          `Auto-detected key type: ${keyType}, using cryptosuite: ${cryptosuite}`
+          `Auto-detected key type: ${keyType}, using cryptosuite: ${cryptosuite}`,
         );
       }
 
@@ -462,16 +459,16 @@ export class VerificationService {
       const isValidSignature = verifyAssertion(
         canonicalData,
         proofInput, // This is now correctly typed as local DataIntegrityProof
-        publicKey
+        publicKey,
       );
 
       if (!isValidSignature) {
         logger.warn(
-          `Signature verification failed for assertion: ${assertion.id}`
+          `Signature verification failed for assertion: ${assertion.id}`,
         );
         return createVerificationError(
           VerificationErrorCode.SIGNATURE_VERIFICATION_FAILED,
-          'Signature verification failed'
+          "Signature verification failed",
         );
       }
 
@@ -481,12 +478,12 @@ export class VerificationService {
         cryptosuite,
       });
     } catch (error) {
-      logger.error('Error verifying assertion signature', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error verifying assertion signature", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return createVerificationError(
         VerificationErrorCode.INTERNAL_ERROR,
-        `Internal error: ${(error as Error).message}`
+        `Internal error: ${(error as Error).message}`,
       );
     }
   }
@@ -497,12 +494,12 @@ export class VerificationService {
    * @returns A verification status object with detailed information
    */
   static async verifyAssertion(
-    assertion: Assertion
+    assertion: Assertion,
   ): Promise<VerificationStatus> {
     try {
       // Check if revoked
       const isRevoked = !!assertion.revoked;
-      let revocationReason = '';
+      let revocationReason = "";
       if (isRevoked && assertion.revocationReason) {
         revocationReason = assertion.revocationReason;
       }
@@ -524,8 +521,8 @@ export class VerificationService {
         return createVerificationError(
           VerificationErrorCode.ASSERTION_REVOKED,
           `Assertion has been revoked${
-            revocationReason ? `: ${revocationReason}` : ''
-          }`
+            revocationReason ? `: ${revocationReason}` : ""
+          }`,
         );
       }
 
@@ -533,7 +530,7 @@ export class VerificationService {
       if (isExpired) {
         return createVerificationError(
           VerificationErrorCode.ASSERTION_EXPIRED,
-          'Assertion has expired'
+          "Assertion has expired",
         );
       }
 
@@ -548,12 +545,12 @@ export class VerificationService {
         cryptosuite: signatureStatus.cryptosuite,
       });
     } catch (error) {
-      logger.error('Failed to verify assertion', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Failed to verify assertion", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return createVerificationError(
         VerificationErrorCode.INTERNAL_ERROR,
-        `Error during verification process: ${(error as Error).message}`
+        `Error during verification process: ${(error as Error).message}`,
       );
     }
   }
@@ -568,7 +565,7 @@ export class VerificationService {
     assertionId: Shared.IRI,
     assertionRepository: {
       findById: (id: Shared.IRI) => Promise<Assertion | null>;
-    }
+    },
   ): Promise<VerificationStatus> {
     try {
       // Fetch the assertion
@@ -577,7 +574,7 @@ export class VerificationService {
       if (!assertion) {
         return createVerificationError(
           VerificationErrorCode.ASSERTION_NOT_FOUND,
-          `Assertion with ID ${assertionId} not found`
+          `Assertion with ID ${assertionId} not found`,
         );
       }
 
@@ -585,11 +582,11 @@ export class VerificationService {
       return await this.verifyAssertion(assertion);
     } catch (error) {
       logger.error(`Failed to verify assertion with ID ${assertionId}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return createVerificationError(
         VerificationErrorCode.INTERNAL_ERROR,
-        `Error during verification process: ${(error as Error).message}`
+        `Error during verification process: ${(error as Error).message}`,
       );
     }
   }

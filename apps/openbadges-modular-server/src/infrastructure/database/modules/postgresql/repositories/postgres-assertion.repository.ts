@@ -5,19 +5,19 @@
  * and the Data Mapper pattern with the base repository class.
  */
 
-import { eq, sql, inArray } from 'drizzle-orm';
-import type postgres from 'postgres';
-import { Assertion } from '@domains/assertion/assertion.entity';
-import type { AssertionRepository } from '@domains/assertion/assertion.repository';
-import { assertions } from '../schema';
-import { PostgresAssertionMapper } from '../mappers/postgres-assertion.mapper';
+import { eq, sql, inArray } from "drizzle-orm";
+import type postgres from "postgres";
+import { Assertion } from "@domains/assertion/assertion.entity";
+import type { AssertionRepository } from "@domains/assertion/assertion.repository";
+import { assertions } from "../schema";
+import { PostgresAssertionMapper } from "../mappers/postgres-assertion.mapper";
 
-import type { Shared } from 'openbadges-types';
-import { SensitiveValue } from '@rollercoaster-dev/rd-logger';
-import { BasePostgresRepository } from './base-postgres.repository';
-import type { PostgresEntityType } from '../types/postgres-database.types';
-import { convertUuid } from '@infrastructure/database/utils/type-conversion';
-import { batchInsert } from '@infrastructure/database/utils/batch-operations';
+import type { Shared } from "openbadges-types";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
+import { BasePostgresRepository } from "./base-postgres.repository";
+import type { PostgresEntityType } from "../types/postgres-database.types";
+import { convertUuid } from "@infrastructure/database/utils/type-conversion";
+import { batchInsert } from "@infrastructure/database/utils/batch-operations";
 
 export class PostgresAssertionRepository
   extends BasePostgresRepository
@@ -34,18 +34,18 @@ export class PostgresAssertionRepository
    * Returns the entity type for this repository
    */
   protected getEntityType(): PostgresEntityType {
-    return 'assertion';
+    return "assertion";
   }
 
   /**
    * Returns the table name for this repository
    */
   protected getTableName(): string {
-    return 'assertions';
+    return "assertions";
   }
 
-  async create(assertion: Omit<Assertion, 'id'>): Promise<Assertion> {
-    const context = this.createOperationContext('CREATE Assertion');
+  async create(assertion: Omit<Assertion, "id">): Promise<Assertion> {
+    const context = this.createOperationContext("CREATE Assertion");
 
     // Convert domain entity to database record
     const record = this.mapper.toPersistence(assertion);
@@ -59,15 +59,15 @@ export class PostgresAssertionRepository
           .returning();
         return this.mapper.toDomain(result[0]);
       },
-      1
+      1,
     );
   }
 
   async findAll(): Promise<Assertion[]> {
-    const context = this.createOperationContext('SELECT All Assertions');
+    const context = this.createOperationContext("SELECT All Assertions");
 
     // Log warning for unbounded query
-    this.logUnboundedQueryWarning('findAll');
+    this.logUnboundedQueryWarning("findAll");
 
     return this.executeQuery(context, async (db) => {
       const result = await db.select().from(assertions);
@@ -76,29 +76,29 @@ export class PostgresAssertionRepository
   }
 
   async findById(id: Shared.IRI): Promise<Assertion | null> {
-    this.validateEntityId(id, 'findById');
-    const context = this.createOperationContext('SELECT Assertion by ID', id);
+    this.validateEntityId(id, "findById");
+    const context = this.createOperationContext("SELECT Assertion by ID", id);
 
     return this.executeSingleQuery(
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .select()
           .from(assertions)
           .where(eq(assertions.id, dbId));
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id]
+      [id],
     );
   }
 
   async findByBadgeClass(badgeClassId: Shared.IRI): Promise<Assertion[]> {
-    this.validateEntityId(badgeClassId, 'findByBadgeClass');
+    this.validateEntityId(badgeClassId, "findByBadgeClass");
     const context = this.createOperationContext(
-      'SELECT Assertions by BadgeClass',
-      badgeClassId
+      "SELECT Assertions by BadgeClass",
+      badgeClassId,
     );
 
     return this.executeQuery(
@@ -107,8 +107,8 @@ export class PostgresAssertionRepository
         // Convert URN to UUID for PostgreSQL query
         const dbBadgeClassId = convertUuid(
           badgeClassId as string,
-          'postgresql',
-          'to'
+          "postgresql",
+          "to",
         );
         const result = await db
           .select()
@@ -116,23 +116,23 @@ export class PostgresAssertionRepository
           .where(eq(assertions.badgeClassId, dbBadgeClassId));
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [badgeClassId]
+      [badgeClassId],
     );
   }
 
   async findByRecipient(recipientId: string): Promise<Assertion[]> {
     if (
       !recipientId ||
-      typeof recipientId !== 'string' ||
+      typeof recipientId !== "string" ||
       recipientId.trim().length === 0
     ) {
       throw new Error(
-        `Invalid recipient ID provided for findByRecipient: ${recipientId}`
+        `Invalid recipient ID provided for findByRecipient: ${recipientId}`,
       );
     }
 
     const context = this.createOperationContext(
-      'SELECT Assertions by Recipient'
+      "SELECT Assertions by Recipient",
     );
 
     return this.executeQuery(
@@ -144,20 +144,20 @@ export class PostgresAssertionRepository
           .select()
           .from(assertions)
           .where(
-            sql`(${assertions.recipient}->>'identity' = ${recipientId}) OR (${assertions.recipient}->>'id' = ${recipientId})`
+            sql`(${assertions.recipient}->>'identity' = ${recipientId}) OR (${assertions.recipient}->>'id' = ${recipientId})`,
           );
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [SensitiveValue.from(recipientId)]
+      [SensitiveValue.from(recipientId)],
     );
   }
 
   async update(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null> {
-    this.validateEntityId(id, 'update');
-    const context = this.createOperationContext('UPDATE Assertion', id);
+    this.validateEntityId(id, "update");
+    const context = this.createOperationContext("UPDATE Assertion", id);
 
     // Check if assertion exists
     const existingAssertion = await this.findById(id);
@@ -168,7 +168,7 @@ export class PostgresAssertionRepository
     // Create a merged entity
     const existingData = Object.assign(
       Object.create(Object.getPrototypeOf(existingAssertion)),
-      existingAssertion
+      existingAssertion,
     );
 
     // Create a merged assertion
@@ -184,7 +184,7 @@ export class PostgresAssertionRepository
       context,
       async (db) => {
         // Convert URN to UUID for PostgreSQL query
-        const dbId = convertUuid(id as string, 'postgresql', 'to');
+        const dbId = convertUuid(id as string, "postgresql", "to");
         const result = await db
           .update(assertions)
           .set(record)
@@ -192,17 +192,17 @@ export class PostgresAssertionRepository
           .returning();
         return result.map((record) => this.mapper.toDomain(record));
       },
-      [id, SensitiveValue.from(record)]
+      [id, SensitiveValue.from(record)],
     );
   }
 
   async delete(id: Shared.IRI): Promise<boolean> {
-    this.validateEntityId(id, 'delete');
-    const context = this.createOperationContext('DELETE Assertion', id);
+    this.validateEntityId(id, "delete");
+    const context = this.createOperationContext("DELETE Assertion", id);
 
     return this.executeDelete(context, async (db) => {
       // Convert URN to UUID for PostgreSQL query
-      const dbId = convertUuid(id as string, 'postgresql', 'to');
+      const dbId = convertUuid(id as string, "postgresql", "to");
       return await db
         .delete(assertions)
         .where(eq(assertions.id, dbId))
@@ -234,14 +234,14 @@ export class PostgresAssertionRepository
 
     // If not found, return false with reason
     if (!assertion) {
-      return { isValid: false, reason: 'Assertion not found' };
+      return { isValid: false, reason: "Assertion not found" };
     }
 
     // Check if revoked
     if (assertion.revoked) {
       return {
         isValid: false,
-        reason: assertion.revocationReason || 'Assertion has been revoked',
+        reason: assertion.revocationReason || "Assertion has been revoked",
       };
     }
 
@@ -250,7 +250,7 @@ export class PostgresAssertionRepository
       const expiryDate = new Date(assertion.expires);
       const now = new Date();
       if (expiryDate < now) {
-        return { isValid: false, reason: 'Assertion has expired' };
+        return { isValid: false, reason: "Assertion has expired" };
       }
     }
 
@@ -258,7 +258,7 @@ export class PostgresAssertionRepository
     return { isValid: true };
   }
 
-  async createBatch(assertionList: Omit<Assertion, 'id'>[]): Promise<
+  async createBatch(assertionList: Omit<Assertion, "id">[]): Promise<
     Array<{
       success: boolean;
       assertion?: Assertion;
@@ -274,7 +274,7 @@ export class PostgresAssertionRepository
     try {
       // Convert domain entities to database records
       const records = assertionList.map((assertion) =>
-        this.mapper.toPersistence(assertion)
+        this.mapper.toPersistence(assertion),
       );
 
       // Use batch insert utility
@@ -283,7 +283,7 @@ export class PostgresAssertionRepository
         this.db as unknown as Parameters<typeof batchInsert>[0], // DatabaseClient interface compatibility
         assertions as unknown as Parameters<typeof batchInsert>[1], // DatabaseTable interface compatibility
         records,
-        'postgresql'
+        "postgresql",
       );
 
       // Convert results back to domain entities
@@ -298,13 +298,13 @@ export class PostgresAssertionRepository
           } else {
             return {
               success: false,
-              error: 'Failed to create assertion',
+              error: "Failed to create assertion",
             };
           }
         } catch (error) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           };
         }
       });
@@ -313,7 +313,7 @@ export class PostgresAssertionRepository
       return assertionList.map(() => ({
         success: false,
         error:
-          error instanceof Error ? error.message : 'Batch operation failed',
+          error instanceof Error ? error.message : "Batch operation failed",
       }));
     }
   }
@@ -323,14 +323,14 @@ export class PostgresAssertionRepository
       return [];
     }
 
-    const context = this.createOperationContext('SELECT Assertions by IDs');
+    const context = this.createOperationContext("SELECT Assertions by IDs");
 
     return this.executeQuery(
       context,
       async (db) => {
         // Convert URNs to UUIDs for PostgreSQL query
         const dbIds = ids.map((id) =>
-          convertUuid(id as string, 'postgresql', 'to')
+          convertUuid(id as string, "postgresql", "to"),
         );
 
         const result = await db
@@ -348,16 +348,16 @@ export class PostgresAssertionRepository
         // Return results in the same order as input IDs
         return ids.map((id) => assertionMap.get(id) || null);
       },
-      ids
+      ids,
     );
   }
 
   async updateStatusBatch(
     updates: Array<{
       id: Shared.IRI;
-      status: 'revoked' | 'suspended' | 'active';
+      status: "revoked" | "suspended" | "active";
       reason?: string;
-    }>
+    }>,
   ): Promise<
     Array<{
       id: Shared.IRI;
@@ -388,7 +388,7 @@ export class PostgresAssertionRepository
           results.push({
             id: update.id,
             success: false,
-            error: 'Assertion not found',
+            error: "Assertion not found",
           });
           continue;
         }
@@ -397,16 +397,16 @@ export class PostgresAssertionRepository
         const updateData: Partial<Assertion> = {};
 
         switch (update.status) {
-          case 'revoked':
+          case "revoked":
             updateData.revoked = true;
-            updateData.revocationReason = update.reason || 'Revoked';
+            updateData.revocationReason = update.reason || "Revoked";
             break;
-          case 'suspended':
+          case "suspended":
             // For now, treat suspended as revoked with a specific reason
             updateData.revoked = true;
-            updateData.revocationReason = update.reason || 'Suspended';
+            updateData.revocationReason = update.reason || "Suspended";
             break;
-          case 'active':
+          case "active":
             updateData.revoked = false;
             updateData.revocationReason = undefined;
             break;
@@ -423,14 +423,14 @@ export class PostgresAssertionRepository
           results.push({
             id: update.id,
             success: false,
-            error: 'Failed to update assertion',
+            error: "Failed to update assertion",
           });
         }
       } catch (error) {
         results.push({
           id: update.id,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }

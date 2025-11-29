@@ -5,6 +5,7 @@ This project implements a dual-database strategy supporting both SQLite and Post
 ## Architecture Overview
 
 The database abstraction layer consists of:
+
 - **Database Factory**: Creates database instances based on environment configuration
 - **Migration System**: Shared SQL files compatible with both engines
 - **Transaction Manager**: Unified transaction handling
@@ -37,7 +38,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     POSTS {
         uuid id PK
         uuid user_id FK
@@ -48,7 +49,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     COMMENTS {
         uuid id PK
         uuid post_id FK
@@ -58,7 +59,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     TAGS {
         uuid id PK
         string name UK
@@ -67,12 +68,12 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     POST_TAGS {
         uuid post_id FK
         uuid tag_id FK
     }
-    
+
     USER_SESSIONS {
         uuid id PK
         uuid user_id FK
@@ -91,43 +92,44 @@ erDiagram
 
 ## Database Compatibility Matrix
 
-| Feature | SQLite | PostgreSQL | Implementation Notes |
-|---------|---------|------------|---------------------|
-| **Data Types** | | | |
-| UUID | ✅ | ✅ | SQLite uses TEXT, PostgreSQL uses UUID |
-| JSON | ✅ | ✅ | Native support in both |
-| Boolean | ✅ | ✅ | SQLite uses INTEGER(0,1), PostgreSQL uses BOOLEAN |
-| Timestamp | ✅ | ✅ | ISO 8601 strings in SQLite, native in PostgreSQL |
-| Text/VARCHAR | ✅ | ✅ | No length limits in SQLite |
-| **Constraints** | | | |
-| Primary Keys | ✅ | ✅ | Both support composite PKs |
-| Foreign Keys | ✅ | ✅ | Enforced in both (pragma required in SQLite) |
-| Unique Constraints | ✅ | ✅ | Full support |
-| Check Constraints | ✅ | ✅ | Full support |
-| **Indexes** | | | |
-| B-Tree Indexes | ✅ | ✅ | Default index type |
-| Partial Indexes | ✅ | ✅ | WHERE clause support |
-| Multi-column Indexes | ✅ | ✅ | Full support |
-| **Transactions** | | | |
-| ACID Properties | ✅ | ✅ | Full ACID compliance |
-| Isolation Levels | ⚠️ | ✅ | SQLite: Serializable only |
-| Nested Transactions | ❌ | ✅ | PostgreSQL supports savepoints |
-| **Advanced Features** | | | |
-| Full-Text Search | ✅ | ✅ | FTS5 in SQLite, built-in in PostgreSQL |
-| JSON Operations | ✅ | ✅ | JSON1 extension in SQLite |
-| Window Functions | ✅ | ✅ | Both support SQL window functions |
-| CTEs (WITH) | ✅ | ✅ | Recursive CTEs supported |
-| **Performance** | | | |
-| Concurrent Reads | ✅ | ✅ | SQLite: Multiple readers |
-| Concurrent Writes | ❌ | ✅ | SQLite: Single writer |
-| Connection Pooling | ❌ | ✅ | Not applicable for SQLite |
-| **Deployment** | | | |
-| File-based | ✅ | ❌ | SQLite is serverless |
-| Network Access | ❌ | ✅ | PostgreSQL supports remote connections |
-| Memory Usage | ✅ | ⚠️ | SQLite more memory efficient |
-| Setup Complexity | ✅ | ⚠️ | SQLite requires no setup |
+| Feature               | SQLite | PostgreSQL | Implementation Notes                              |
+| --------------------- | ------ | ---------- | ------------------------------------------------- |
+| **Data Types**        |        |            |                                                   |
+| UUID                  | ✅     | ✅         | SQLite uses TEXT, PostgreSQL uses UUID            |
+| JSON                  | ✅     | ✅         | Native support in both                            |
+| Boolean               | ✅     | ✅         | SQLite uses INTEGER(0,1), PostgreSQL uses BOOLEAN |
+| Timestamp             | ✅     | ✅         | ISO 8601 strings in SQLite, native in PostgreSQL  |
+| Text/VARCHAR          | ✅     | ✅         | No length limits in SQLite                        |
+| **Constraints**       |        |            |                                                   |
+| Primary Keys          | ✅     | ✅         | Both support composite PKs                        |
+| Foreign Keys          | ✅     | ✅         | Enforced in both (pragma required in SQLite)      |
+| Unique Constraints    | ✅     | ✅         | Full support                                      |
+| Check Constraints     | ✅     | ✅         | Full support                                      |
+| **Indexes**           |        |            |                                                   |
+| B-Tree Indexes        | ✅     | ✅         | Default index type                                |
+| Partial Indexes       | ✅     | ✅         | WHERE clause support                              |
+| Multi-column Indexes  | ✅     | ✅         | Full support                                      |
+| **Transactions**      |        |            |                                                   |
+| ACID Properties       | ✅     | ✅         | Full ACID compliance                              |
+| Isolation Levels      | ⚠️     | ✅         | SQLite: Serializable only                         |
+| Nested Transactions   | ❌     | ✅         | PostgreSQL supports savepoints                    |
+| **Advanced Features** |        |            |                                                   |
+| Full-Text Search      | ✅     | ✅         | FTS5 in SQLite, built-in in PostgreSQL            |
+| JSON Operations       | ✅     | ✅         | JSON1 extension in SQLite                         |
+| Window Functions      | ✅     | ✅         | Both support SQL window functions                 |
+| CTEs (WITH)           | ✅     | ✅         | Recursive CTEs supported                          |
+| **Performance**       |        |            |                                                   |
+| Concurrent Reads      | ✅     | ✅         | SQLite: Multiple readers                          |
+| Concurrent Writes     | ❌     | ✅         | SQLite: Single writer                             |
+| Connection Pooling    | ❌     | ✅         | Not applicable for SQLite                         |
+| **Deployment**        |        |            |                                                   |
+| File-based            | ✅     | ❌         | SQLite is serverless                              |
+| Network Access        | ❌     | ✅         | PostgreSQL supports remote connections            |
+| Memory Usage          | ✅     | ⚠️         | SQLite more memory efficient                      |
+| Setup Complexity      | ✅     | ⚠️         | SQLite requires no setup                          |
 
 ### Legend
+
 - ✅ Full support
 - ⚠️ Partial support or limitations
 - ❌ Not supported
@@ -168,9 +170,9 @@ Type mapping is handled transparently by the database factory:
 ### Basic Database Operations
 
 ```typescript
-import { getDatabaseInstance } from './database/factory';
+import { getDatabaseInstance } from './database/factory'
 
-const db = getDatabaseInstance();
+const db = getDatabaseInstance()
 
 // Insert with type safety
 const user = await db
@@ -181,10 +183,10 @@ const user = await db
     username: 'johndoe',
     password_hash: 'hashed_password',
     first_name: 'John',
-    last_name: 'Doe'
+    last_name: 'Doe',
   })
   .returningAll()
-  .executeTakeFirstOrThrow();
+  .executeTakeFirstOrThrow()
 
 // Query with joins
 const postsWithAuthors = await db
@@ -196,46 +198,48 @@ const postsWithAuthors = await db
     'posts.content',
     'users.username',
     'users.first_name',
-    'users.last_name'
+    'users.last_name',
   ])
-  .execute();
+  .execute()
 ```
 
 ### Transaction Management
 
 ```typescript
-import { withTransaction } from './database/transaction';
+import { withTransaction } from './database/transaction'
 
-const result = await withTransaction(async (trx) => {
+const result = await withTransaction(async trx => {
   // Create user
   const user = await trx
     .insertInto('users')
     .values(userData)
     .returningAll()
-    .executeTakeFirstOrThrow();
+    .executeTakeFirstOrThrow()
 
   // Create initial post
   const post = await trx
     .insertInto('posts')
     .values({
       ...postData,
-      user_id: user.id
+      user_id: user.id,
     })
     .returningAll()
-    .executeTakeFirstOrThrow();
+    .executeTakeFirstOrThrow()
 
-  return { user, post };
-});
+  return { user, post }
+})
 ```
 
 ## Performance Considerations
 
 ### SQLite Optimizations
+
 - Enable WAL mode for better concurrent access
 - Use connection pooling with a single connection
 - Regular VACUUM operations for maintenance
 
 ### PostgreSQL Optimizations
+
 - Connection pooling with appropriate pool size
 - Index optimization for query patterns
 - Regular ANALYZE for query planner statistics
@@ -243,12 +247,14 @@ const result = await withTransaction(async (trx) => {
 ## Development vs Production
 
 ### Development (SQLite)
+
 - Zero configuration
 - File-based database
 - Perfect for local development
 - Easy to reset and seed
 
 ### Production (PostgreSQL)
+
 - Robust concurrent access
 - Advanced features and performance
 - Backup and replication support
@@ -260,14 +266,14 @@ Both databases are tested with the same test suite to ensure compatibility:
 
 ```typescript
 // Tests run against both SQLite and PostgreSQL
-describe.each(['sqlite', 'postgres'])('Database Tests - %s', (dbType) => {
+describe.each(['sqlite', 'postgres'])('Database Tests - %s', dbType => {
   beforeEach(async () => {
-    process.env.DB_TYPE = dbType;
-    await setupTestDatabase();
-  });
+    process.env.DB_TYPE = dbType
+    await setupTestDatabase()
+  })
 
   test('should create and retrieve users', async () => {
     // Test implementation
-  });
-});
+  })
+})
 ```

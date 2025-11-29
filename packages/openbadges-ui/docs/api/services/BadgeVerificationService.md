@@ -10,8 +10,8 @@ Verifies a badge assertion or verifiable credential.
 
 #### Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name    | Type                                        | Description                                                                                                  |
+| ------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `badge` | `OB2.Assertion \| OB3.VerifiableCredential` | The badge to verify. Can be either an Open Badges 2.0 Assertion or an Open Badges 3.0 Verifiable Credential. |
 
 #### Returns
@@ -25,41 +25,42 @@ Verifies a badge assertion or verifiable credential.
 #### Example
 
 ```typescript
-import { BadgeVerificationService } from 'openbadges-ui';
-import type { OB2 } from 'openbadges-types';
+import { BadgeVerificationService } from "openbadges-ui";
+import type { OB2 } from "openbadges-types";
 
 const badge: OB2.Assertion = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    identity: 'alice@example.org',
-    type: 'email',
-    hashed: false
+    identity: "alice@example.org",
+    type: "email",
+    hashed: false,
   },
   badge: {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'AI Ethics Fundamentals',
-    description: 'Awarded for demonstrating understanding of core AI ethics principles.',
-    image: 'https://example.org/badges/ai-ethics.png',
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "AI Ethics Fundamentals",
+    description:
+      "Awarded for demonstrating understanding of core AI ethics principles.",
+    image: "https://example.org/badges/ai-ethics.png",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Academy'
-    }
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Academy",
+    },
   },
-  issuedOn: '2023-01-15T12:00:00Z',
+  issuedOn: "2023-01-15T12:00:00Z",
   verification: {
-    type: 'hosted'
-  }
+    type: "hosted",
+  },
 };
 
 try {
   const result = await BadgeVerificationService.verifyBadge(badge);
-  console.log('Verification result:', result);
+  console.log("Verification result:", result);
 } catch (error) {
-  console.error('Verification error:', error);
+  console.error("Verification error:", error);
 }
 ```
 
@@ -72,13 +73,14 @@ interface VerificationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  verificationMethod?: 'hosted' | 'signed';
-  expirationStatus?: 'valid' | 'expired' | 'not-applicable';
-  revocationStatus?: 'valid' | 'revoked' | 'unknown';
+  verificationMethod?: "hosted" | "signed";
+  expirationStatus?: "valid" | "expired" | "not-applicable";
+  revocationStatus?: "valid" | "revoked" | "unknown";
 }
 ```
 
 The verification result contains:
+
 - `isValid`: Whether the badge is valid
 - `errors`: Array of verification errors
 - `warnings`: Array of verification warnings
@@ -139,97 +141,97 @@ The BadgeVerificationService performs the following checks when verifying a badg
 ### Verifying an OB2 Badge
 
 ```typescript
-import { BadgeVerificationService } from 'openbadges-ui';
-import type { OB2 } from 'openbadges-types';
+import { BadgeVerificationService } from "openbadges-ui";
+import type { OB2 } from "openbadges-types";
 
 const ob2Badge: OB2.Assertion = {
   // OB2 badge data with hosted verification
-  '@context': 'https://w3id.org/openbadges/v2',
-  type: 'Assertion',
-  id: 'https://example.org/assertions/123',
+  "@context": "https://w3id.org/openbadges/v2",
+  type: "Assertion",
+  id: "https://example.org/assertions/123",
   verification: {
-    type: 'hosted'
+    type: "hosted",
   },
   // ... other badge properties
 };
 
 const result = await BadgeVerificationService.verifyBadge(ob2Badge);
-console.log('Is valid:', result.isValid);
-console.log('Verification method:', result.verificationMethod);
-console.log('Errors:', result.errors);
-console.log('Warnings:', result.warnings);
+console.log("Is valid:", result.isValid);
+console.log("Verification method:", result.verificationMethod);
+console.log("Errors:", result.errors);
+console.log("Warnings:", result.warnings);
 ```
 
 ### Verifying an OB3 Badge
 
 ```typescript
-import { BadgeVerificationService } from 'openbadges-ui';
-import type { OB3 } from 'openbadges-types';
+import { BadgeVerificationService } from "openbadges-ui";
+import type { OB3 } from "openbadges-types";
 
 const ob3Badge: OB3.VerifiableCredential = {
   // OB3 badge data with proof
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    'https://purl.imsglobal.org/spec/ob/v3p0/context.json'
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
   ],
-  id: 'https://example.org/credentials/123',
-  type: ['VerifiableCredential', 'OpenBadgeCredential'],
+  id: "https://example.org/credentials/123",
+  type: ["VerifiableCredential", "OpenBadgeCredential"],
   issuer: {
-    id: 'https://example.org/issuers/1',
-    type: 'Profile',
-    name: 'Example Issuer'
+    id: "https://example.org/issuers/1",
+    type: "Profile",
+    name: "Example Issuer",
   },
-  issuanceDate: '2023-01-15T12:00:00Z',
+  issuanceDate: "2023-01-15T12:00:00Z",
   credentialSubject: {
-    id: 'https://example.org/recipients/alice',
-    type: 'AchievementSubject',
+    id: "https://example.org/recipients/alice",
+    type: "AchievementSubject",
     achievement: {
-      id: 'https://example.org/achievements/1',
-      type: 'Achievement',
-      name: 'Example Achievement',
-      description: 'An example achievement',
+      id: "https://example.org/achievements/1",
+      type: "Achievement",
+      name: "Example Achievement",
+      description: "An example achievement",
       criteria: {
-        narrative: 'The recipient demonstrated the required skills.'
+        narrative: "The recipient demonstrated the required skills.",
       },
       image: {
-        id: 'https://example.org/images/badge.png',
-        type: 'Image'
-      }
-    }
+        id: "https://example.org/images/badge.png",
+        type: "Image",
+      },
+    },
   },
   proof: {
-    type: 'Ed25519Signature2020',
-    created: '2023-01-15T12:00:00Z',
-    verificationMethod: 'https://example.org/issuers/1/keys/1',
-    proofPurpose: 'assertionMethod',
-    proofValue: 'z3JD4tQvcBwWkzs7Lhyz89t5dZ2q5fwTKxr7xB1rKDF2Za'
-  }
+    type: "Ed25519Signature2020",
+    created: "2023-01-15T12:00:00Z",
+    verificationMethod: "https://example.org/issuers/1/keys/1",
+    proofPurpose: "assertionMethod",
+    proofValue: "z3JD4tQvcBwWkzs7Lhyz89t5dZ2q5fwTKxr7xB1rKDF2Za",
+  },
 };
 
 const result = await BadgeVerificationService.verifyBadge(ob3Badge);
-console.log('Is valid:', result.isValid);
-console.log('Verification method:', result.verificationMethod);
-console.log('Errors:', result.errors);
-console.log('Warnings:', result.warnings);
+console.log("Is valid:", result.isValid);
+console.log("Verification method:", result.verificationMethod);
+console.log("Errors:", result.errors);
+console.log("Warnings:", result.warnings);
 ```
 
 ### Handling Verification Errors
 
 ```typescript
-import { BadgeVerificationService } from 'openbadges-ui';
+import { BadgeVerificationService } from "openbadges-ui";
 
 try {
   const result = await BadgeVerificationService.verifyBadge(badge);
-  
+
   if (result.isValid) {
-    console.log('Badge is valid!');
+    console.log("Badge is valid!");
   } else {
-    console.log('Badge is invalid:');
-    result.errors.forEach(error => console.log(`- ${error}`));
-    result.warnings.forEach(warning => console.log(`- Warning: ${warning}`));
+    console.log("Badge is invalid:");
+    result.errors.forEach((error) => console.log(`- ${error}`));
+    result.warnings.forEach((warning) => console.log(`- Warning: ${warning}`));
   }
 } catch (error) {
-  console.error('Verification failed:', error);
+  console.error("Verification failed:", error);
 }
 ```
 

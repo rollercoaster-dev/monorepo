@@ -4,14 +4,14 @@
  * This utility provides functions for performing batch database operations.
  */
 
-import { eq, inArray } from 'drizzle-orm';
-import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import type { PgColumn } from 'drizzle-orm/pg-core';
-import { QueryLoggerService } from './query-logger.service';
-import { logger } from '@/utils/logging/logger.service';
+import { eq, inArray } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
+import type { PgColumn } from "drizzle-orm/pg-core";
+import { QueryLoggerService } from "./query-logger.service";
+import { logger } from "@/utils/logging/logger.service";
 
 // Re-export the types we need for batch operations
-export type { DatabaseClient } from '@/utils/types/common-types';
+export type { DatabaseClient } from "@/utils/types/common-types";
 
 // Define proper Drizzle table types that support column access
 type DrizzleColumn = SQLiteColumn | PgColumn;
@@ -60,7 +60,7 @@ type DatabaseClient = {
 export async function executeBatch<T>(
   db: DatabaseClient,
   operations: (() => Promise<T>)[],
-  dbType: 'sqlite' | 'postgresql'
+  dbType: "sqlite" | "postgresql",
 ): Promise<T[]> {
   const startTime = Date.now();
   let transaction: DatabaseClient | { exec: (sql: string) => void } | null =
@@ -68,13 +68,13 @@ export async function executeBatch<T>(
 
   try {
     // Start transaction
-    if (dbType === 'postgresql') {
-      await db.query('BEGIN');
+    if (dbType === "postgresql") {
+      await db.query("BEGIN");
       transaction = db;
-    } else if (dbType === 'sqlite') {
+    } else if (dbType === "sqlite") {
       // For SQLite, we need to use the underlying client
       const client = db.session?.client;
-      client.exec('BEGIN TRANSACTION');
+      client.exec("BEGIN TRANSACTION");
       transaction = client;
     } else {
       throw new Error(`Unsupported database type: ${dbType}`);
@@ -88,12 +88,12 @@ export async function executeBatch<T>(
     }
 
     // Commit transaction
-    if (dbType === 'postgresql') {
-      await db.query('COMMIT');
-    } else if (dbType === 'sqlite') {
-      if ('exec' in transaction) {
+    if (dbType === "postgresql") {
+      await db.query("COMMIT");
+    } else if (dbType === "sqlite") {
+      if ("exec" in transaction) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (transaction as any).exec('COMMIT');
+        (transaction as any).exec("COMMIT");
       }
     }
 
@@ -102,27 +102,27 @@ export async function executeBatch<T>(
       `BATCH OPERATION (${operations.length} operations)`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     return results;
   } catch (error) {
     // Rollback transaction on error
     try {
-      if (dbType === 'postgresql') {
-        await db.query('ROLLBACK');
-      } else if (dbType === 'sqlite') {
-        if (transaction && 'exec' in transaction) {
+      if (dbType === "postgresql") {
+        await db.query("ROLLBACK");
+      } else if (dbType === "sqlite") {
+        if (transaction && "exec" in transaction) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (transaction as any).exec('ROLLBACK');
+          (transaction as any).exec("ROLLBACK");
         }
       }
     } catch (rollbackError) {
-      logger.error('Error rolling back transaction', {
+      logger.error("Error rolling back transaction", {
         error:
           rollbackError instanceof Error
             ? rollbackError.message
-            : 'Unknown error',
+            : "Unknown error",
         dbType,
         operationsCount: operations.length,
       });
@@ -133,7 +133,7 @@ export async function executeBatch<T>(
       `ERROR BATCH OPERATION (${operations.length} operations): ${error.message}`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     throw error;
@@ -152,7 +152,7 @@ export async function batchInsert<T>(
   db: DatabaseClient,
   table: DrizzleTable,
   records: Record<string, unknown>[],
-  dbType: 'sqlite' | 'postgresql'
+  dbType: "sqlite" | "postgresql",
 ): Promise<T[]> {
   if (records.length === 0) {
     return [];
@@ -175,10 +175,10 @@ export async function batchInsert<T>(
 
     // For larger batches, use bulk insert if supported
     let result: unknown[] = [];
-    if (dbType === 'postgresql') {
+    if (dbType === "postgresql") {
       // PostgreSQL supports bulk insert
       result = await db.insert(table).values(records).returning();
-    } else if (dbType === 'sqlite') {
+    } else if (dbType === "sqlite") {
       // SQLite doesn't support bulk insert with returning, so we need to use a transaction
       const operations = records.map((record) => {
         return async () => {
@@ -197,7 +197,7 @@ export async function batchInsert<T>(
       `BATCH INSERT INTO ${table.name} (${records.length} records)`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     return result as T[];
@@ -207,7 +207,7 @@ export async function batchInsert<T>(
       `ERROR BATCH INSERT INTO ${table.name} (${records.length} records): ${error.message}`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     throw error;
@@ -228,7 +228,7 @@ export async function batchUpdate<T>(
   table: DrizzleTable,
   records: Record<string, unknown>[],
   idField: string,
-  dbType: 'sqlite' | 'postgresql'
+  dbType: "sqlite" | "postgresql",
 ): Promise<T[]> {
   if (records.length === 0) {
     return [];
@@ -265,7 +265,7 @@ export async function batchUpdate<T>(
       `BATCH UPDATE ${table.name} (${records.length} records)`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     return flatResults;
@@ -275,7 +275,7 @@ export async function batchUpdate<T>(
       `ERROR BATCH UPDATE ${table.name} (${records.length} records): ${error.message}`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     throw error;
@@ -296,7 +296,7 @@ export async function batchDelete(
   table: DrizzleTable,
   ids: string[],
   idField: string,
-  dbType: 'sqlite' | 'postgresql'
+  dbType: "sqlite" | "postgresql",
 ): Promise<number> {
   if (ids.length === 0) {
     return 0;
@@ -323,14 +323,14 @@ export async function batchDelete(
       deletedCount = results.reduce((sum, count) => sum + count, 0);
     } else {
       // For larger batches, use IN clause if supported
-      if (dbType === 'postgresql') {
+      if (dbType === "postgresql") {
         // PostgreSQL supports IN clause
         const result = await db
           .delete(table)
           .where(inArray(table[idField], ids))
           .returning();
         deletedCount = result.length;
-      } else if (dbType === 'sqlite') {
+      } else if (dbType === "sqlite") {
         // SQLite supports IN clause but might be less efficient
         // We'll use a transaction with individual deletes for better control
         const operations = ids.map((id) => {
@@ -355,7 +355,7 @@ export async function batchDelete(
       `BATCH DELETE FROM ${table.name} (${ids.length} records, deleted ${deletedCount})`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     return deletedCount;
@@ -365,7 +365,7 @@ export async function batchDelete(
       `ERROR BATCH DELETE FROM ${table.name} (${ids.length} records): ${error.message}`,
       undefined,
       duration,
-      dbType
+      dbType,
     );
 
     throw error;

@@ -14,13 +14,13 @@ This document references the GitHub Project board used for tracking monorepo dev
 
 ## Status Columns
 
-| Status | Description | Color |
-|--------|-------------|-------|
-| Backlog | Not yet ready to start (blocked or needs prioritization) | Gray |
-| Next | Ready to pick up - dependencies met | Blue |
-| In Progress | Currently being worked on | Yellow |
-| In Review | PR created, awaiting review | Purple |
-| Done | Merged to main | Green |
+| Status      | Description                                              | Color  |
+| ----------- | -------------------------------------------------------- | ------ |
+| Backlog     | Not yet ready to start (blocked or needs prioritization) | Gray   |
+| Next        | Ready to pick up - dependencies met                      | Blue   |
+| In Progress | Currently being worked on                                | Yellow |
+| In Review   | PR created, awaiting review                              | Purple |
+| Done        | Merged to main                                           | Green  |
 
 ---
 
@@ -44,19 +44,21 @@ gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id <item-id> --field-id
 
 ### Status Option IDs
 
-| Status | Option ID |
-|--------|-----------|
-| Backlog | `8b7bb58f` |
-| Next | `266160c2` |
+| Status      | Option ID  |
+| ----------- | ---------- |
+| Backlog     | `8b7bb58f` |
+| Next        | `266160c2` |
 | In Progress | `3e320f16` |
-| In Review | `51c2af7b` |
-| Done | `56048761` |
+| In Review   | `51c2af7b` |
+| Done        | `56048761` |
 
 **Project IDs:**
+
 - Project ID: `PVT_kwDOB1lz3c4BI2yZ`
 - Status Field ID: `PVTSSF_lADOB1lz3c4BI2yZzg5MUx4`
 
 Query current option IDs (if they change):
+
 ```bash
 gh api graphql -f query='
 query {
@@ -99,18 +101,22 @@ PR 20 → PR 21
 ## Parallel Work Opportunities
 
 **Right Now (No Dependencies) - Status: Next:**
+
 - #108: Key management types
 - #114: Baking service types
 - #121: Verification service types
 
 **After #108:**
+
 - #109: Key generation service
 
 **After #114:**
+
 - #115: PNG chunk utilities
 - #117: SVG parsing utilities
 
 **After #121:**
+
 - #122: Proof verification
 - #123: Issuer verification
 
@@ -118,30 +124,30 @@ PR 20 → PR 21
 
 ## Issue to PR Mapping
 
-| PR | Issue | Title |
-|----|-------|-------|
-| 1 | #108 | Key management types |
-| 2 | #109 | Key generation service |
-| 3 | #110 | Key storage service |
-| 4 | #111 | JWKS endpoint |
-| 5 | #112 | DID:web endpoint |
-| 6 | #113 | Issuer DID update |
-| 7 | #114 | Baking service types |
-| 8 | #115 | PNG chunk utilities |
-| 9 | #116 | PNG baking service |
-| 10 | #117 | SVG parsing utilities |
-| 11 | #118 | SVG baking service |
-| 12 | #119 | Unified baking service |
-| 13 | #120 | Bake credential endpoint |
-| 14 | #121 | Verification service types |
-| 15 | #122 | Proof verification |
-| 16 | #123 | Issuer verification |
-| 17 | #124 | Unified verification service |
-| 18 | #125 | Verify credential endpoint |
-| 19 | #126 | Verify baked image endpoint |
-| 20 | #127 | E2E tests |
-| 21 | #128 | API documentation |
+| PR  | Issue | Title                        |
+| --- | ----- | ---------------------------- |
+| 1   | #108  | Key management types         |
+| 2   | #109  | Key generation service       |
+| 3   | #110  | Key storage service          |
+| 4   | #111  | JWKS endpoint                |
+| 5   | #112  | DID:web endpoint             |
+| 6   | #113  | Issuer DID update            |
+| 7   | #114  | Baking service types         |
+| 8   | #115  | PNG chunk utilities          |
+| 9   | #116  | PNG baking service           |
+| 10  | #117  | SVG parsing utilities        |
+| 11  | #118  | SVG baking service           |
+| 12  | #119  | Unified baking service       |
+| 13  | #120  | Bake credential endpoint     |
+| 14  | #121  | Verification service types   |
+| 15  | #122  | Proof verification           |
+| 16  | #123  | Issuer verification          |
+| 17  | #124  | Unified verification service |
+| 18  | #125  | Verify credential endpoint   |
+| 19  | #126  | Verify baked image endpoint  |
+| 20  | #127  | E2E tests                    |
+| 21  | #128  | API documentation            |
 
 ---
 
-*Last Updated: 2025-11-23*
+_Last Updated: 2025-11-23_

@@ -7,6 +7,7 @@ Create a standalone, reusable logger package based on the existing logger implem
 ## Background
 
 The openbadges-modular-server includes a well-designed, neuro-friendly logging system with features like:
+
 - Multiple log levels (debug, info, warn, error, fatal)
 - Neuro-friendly formatting with color-coding, icons, and proper spacing
 - Human-readable timestamps with relative time support
@@ -108,6 +109,7 @@ The package should provide a simple way to create a logger instance with custom 
 ### Framework Integration
 
 The package should provide middleware or plugins for different frameworks (Elysia, Hono, Express) that handle:
+
 - Request ID generation and propagation
 - Request/response logging
 - Error handling and logging
@@ -130,23 +132,23 @@ The package should provide adapters for different database clients to log querie
 Based on research into neurodiversity and accessibility best practices, consider the following enhancements beyond the initial neuro-friendly features:
 
 1.  **Reduce Sensory Overload:**
-    *   Prioritize clean, simple formatting.
-    *   Offer highly customizable themes (colors, icons, layout) including high-contrast, low-contrast, and colorblind-friendly options (check defaults against WCAG contrast ratios).
-    *   Consider a "minimal" or "quiet" output mode to reduce visual clutter.
+    - Prioritize clean, simple formatting.
+    - Offer highly customizable themes (colors, icons, layout) including high-contrast, low-contrast, and colorblind-friendly options (check defaults against WCAG contrast ratios).
+    - Consider a "minimal" or "quiet" output mode to reduce visual clutter.
 
 2.  **Support Different Processing Needs:**
-    *   Ensure clear, consistent structure (icons, spacing, indentation).
-    *   Provide configurable verbosity beyond standard log levels (e.g., toggle default display of stack traces, context details).
-    *   Ensure output format facilitates easy filtering/searching (e.g., optional structured JSON output).
+    - Ensure clear, consistent structure (icons, spacing, indentation).
+    - Provide configurable verbosity beyond standard log levels (e.g., toggle default display of stack traces, context details).
+    - Ensure output format facilitates easy filtering/searching (e.g., optional structured JSON output).
 
 3.  **Enhance Customization:**
-    *   Allow users extensive control over formatting: colors, icons/symbols, timestamp format (relative/absolute, custom formats), layout (single/multi-line), information density.
+    - Allow users extensive control over formatting: colors, icons/symbols, timestamp format (relative/absolute, custom formats), layout (single/multi-line), information density.
 
 4.  **Maintain Consistency:**
-    *   Ensure strict consistency in format, icons, and terminology across all log messages and levels.
+    - Ensure strict consistency in format, icons, and terminology across all log messages and levels.
 
 5.  **Avoid Distractions:**
-    *   Ensure logger output contains no blinking or animated elements.
+    - Ensure logger output contains no blinking or animated elements.
 
 6.  **Documentation:**
-    *   Clearly document all customization options, especially those related to accessibility, with examples.
+    - Clearly document all customization options, especially those related to accessibility, with examples.

@@ -1,2 +1,3 @@
 ---
-*Rollercoaster.dev Documentation - Generated from `apps/docs`*
+
+_Rollercoaster.dev Documentation - Generated from `apps/docs`_

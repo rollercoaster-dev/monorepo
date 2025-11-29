@@ -22,11 +22,13 @@ Automatically fetch and summarize GitHub issues when the user asks about issue s
 ## Instructions
 
 ### Fetch Single Issue
+
 ```bash
 gh issue view <number> --json title,body,state,labels,milestone,assignees
 ```
 
 ### List Issues
+
 ```bash
 # All open issues
 gh issue list --state open
@@ -39,7 +41,9 @@ gh issue list --label "type:feature"
 ```
 
 ### Check Dependencies
+
 Look for "depends on", "blocks", "after #X" in issue bodies:
+
 ```bash
 gh issue view <number> --json body | jq -r '.body'
 ```
@@ -58,6 +62,7 @@ Summarize findings clearly:
 **Summary:** <1-2 sentence description>
 
 **Dependencies:**
+
 - Depends on: #Y, #Z
 - Blocks: #A, #B
 ```

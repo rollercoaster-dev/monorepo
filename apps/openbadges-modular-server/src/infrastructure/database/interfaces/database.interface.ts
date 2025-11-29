@@ -6,10 +6,10 @@
  * Enhanced with health monitoring, transaction support, and configuration management.
  */
 
-import type { Issuer } from '../../../domains/issuer/issuer.entity';
-import type { BadgeClass } from '../../../domains/badgeClass/badgeClass.entity';
-import type { Assertion } from '../../../domains/assertion/assertion.entity';
-import type { Shared } from 'openbadges-types';
+import type { Issuer } from "../../../domains/issuer/issuer.entity";
+import type { BadgeClass } from "../../../domains/badgeClass/badgeClass.entity";
+import type { Assertion } from "../../../domains/assertion/assertion.entity";
+import type { Shared } from "openbadges-types";
 
 /**
  * Serializable error information for database health
@@ -60,41 +60,41 @@ export interface DatabaseQueryOptions {
 
 export interface DatabaseInterface {
   // Issuer operations
-  createIssuer(issuer: Omit<Issuer, 'id'>): Promise<Issuer>;
+  createIssuer(issuer: Omit<Issuer, "id">): Promise<Issuer>;
   getIssuerById(id: Shared.IRI): Promise<Issuer | null>;
   getAllIssuers(options?: DatabaseQueryOptions): Promise<Issuer[]>;
   updateIssuer(id: Shared.IRI, issuer: Partial<Issuer>): Promise<Issuer | null>;
   deleteIssuer(id: Shared.IRI): Promise<boolean>;
 
   // BadgeClass operations
-  createBadgeClass(badgeClass: Omit<BadgeClass, 'id'>): Promise<BadgeClass>;
+  createBadgeClass(badgeClass: Omit<BadgeClass, "id">): Promise<BadgeClass>;
   getBadgeClassById(id: Shared.IRI): Promise<BadgeClass | null>;
   getAllBadgeClasses(options?: DatabaseQueryOptions): Promise<BadgeClass[]>;
   getBadgeClassesByIssuer(
     issuerId: Shared.IRI,
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<BadgeClass[]>;
   updateBadgeClass(
     id: Shared.IRI,
-    badgeClass: Partial<BadgeClass>
+    badgeClass: Partial<BadgeClass>,
   ): Promise<BadgeClass | null>;
   deleteBadgeClass(id: Shared.IRI): Promise<boolean>;
 
   // Assertion operations
-  createAssertion(assertion: Omit<Assertion, 'id'>): Promise<Assertion>;
+  createAssertion(assertion: Omit<Assertion, "id">): Promise<Assertion>;
   getAssertionById(id: Shared.IRI): Promise<Assertion | null>;
   getAllAssertions(options?: DatabaseQueryOptions): Promise<Assertion[]>;
   getAssertionsByBadgeClass(
     badgeClassId: Shared.IRI,
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<Assertion[]>;
   getAssertionsByRecipient(
     recipientId: string,
-    options?: DatabaseQueryOptions
+    options?: DatabaseQueryOptions,
   ): Promise<Assertion[]>;
   updateAssertion(
     id: Shared.IRI,
-    assertion: Partial<Assertion>
+    assertion: Partial<Assertion>,
   ): Promise<Assertion | null>;
   deleteAssertion(id: Shared.IRI): Promise<boolean>;
 

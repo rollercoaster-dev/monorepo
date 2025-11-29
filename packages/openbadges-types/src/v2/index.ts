@@ -1,6 +1,6 @@
-export * from './guards';
-import type { IRI, DateTime, MarkdownText } from '../shared/common';
-import type { JsonLdObject, JsonLdArray } from '../shared/jsonld';
+export * from "./guards";
+import type { IRI, DateTime, MarkdownText } from "../shared/common";
+import type { JsonLdObject, JsonLdArray } from "../shared/jsonld";
 
 /**
  * IdentityObject interface for Open Badges 2.0
@@ -18,7 +18,7 @@ export interface IdentityObject {
  * Contains instructions for third parties to verify this assertion
  */
 export interface VerificationObject {
-  type: 'hosted' | 'signed' | string;
+  type: "hosted" | "signed" | string;
   verificationProperty?: string;
   startsWith?: string;
   allowedOrigins?: string | string[];
@@ -78,9 +78,9 @@ export interface Criteria {
  * Represents the type of achievement being awarded
  */
 export interface BadgeClass extends JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'BadgeClass' | string | string[];
+  type: "BadgeClass" | string | string[];
   name: string;
   description: string;
   image: IRI | Image;
@@ -96,9 +96,9 @@ export interface BadgeClass extends JsonLdObject {
  * Represents an issuer of badges
  */
 export interface Profile extends JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'Profile' | 'Issuer' | string | string[];
+  type: "Profile" | "Issuer" | string | string[];
   name: string;
   url?: IRI;
   email?: string;
@@ -114,9 +114,9 @@ export interface Profile extends JsonLdObject {
  * Represents an awarded badge to a specific recipient
  */
 export interface Assertion extends JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'Assertion' | string | string[];
+  type: "Assertion" | string | string[];
   recipient: IdentityObject;
   badge: IRI | BadgeClass;
   verification: VerificationObject;
@@ -135,9 +135,9 @@ export interface Assertion extends JsonLdObject {
  * Contains a list of revoked assertions
  */
 export interface RevocationList extends JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'RevocationList' | string | string[];
+  type: "RevocationList" | string | string[];
   revokedAssertions: string[];
 }
 
@@ -146,9 +146,9 @@ export interface RevocationList extends JsonLdObject {
  * Represents a cryptographic key used for verification
  */
 export interface CryptographicKey extends JsonLdObject {
-  '@context'?: string | string[] | Record<string, unknown>;
+  "@context"?: string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'CryptographicKey' | string | string[];
+  type: "CryptographicKey" | string | string[];
   owner: IRI;
   publicKeyPem?: string;
 }

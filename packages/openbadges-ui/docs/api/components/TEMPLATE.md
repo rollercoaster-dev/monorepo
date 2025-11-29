@@ -6,52 +6,49 @@ Brief description of the component and its purpose.
 
 ```vue
 <template>
-  <ComponentName 
-    :prop1="value1"
-    :prop2="value2"
-    @event1="handleEvent1"
-  />
+  <ComponentName :prop1="value1" :prop2="value2" @event1="handleEvent1" />
 </template>
 
 <script setup>
-import { ComponentName } from 'openbadges-ui';
+import { ComponentName } from "openbadges-ui";
 
 const handleEvent1 = (payload) => {
-  console.log('Event received:', payload);
+  console.log("Event received:", payload);
 };
 </script>
 ```
 
 ## Props
 
-| Name | Type | Default | Description |
-|------|------|---------|-------------|
+| Name    | Type   | Default        | Description                              |
+| ------- | ------ | -------------- | ---------------------------------------- |
 | `prop1` | `Type` | `defaultValue` | Description of the prop and its purpose. |
 | `prop2` | `Type` | `defaultValue` | Description of the prop and its purpose. |
 
 ## Events
 
-| Name | Payload | Description |
-|------|---------|-------------|
+| Name     | Payload       | Description                                                             |
+| -------- | ------------- | ----------------------------------------------------------------------- |
 | `event1` | `PayloadType` | Description of when the event is emitted and what the payload contains. |
 | `event2` | `PayloadType` | Description of when the event is emitted and what the payload contains. |
 
 ## Slots
 
-| Name | Props | Description |
-|------|-------|-------------|
-| `default` | None | Description of the default slot. |
+| Name        | Props            | Description                                              |
+| ----------- | ---------------- | -------------------------------------------------------- |
+| `default`   | None             | Description of the default slot.                         |
 | `namedSlot` | `{ item: Item }` | Description of the named slot and the props it receives. |
 
 ## CSS Variables
 
-| Name | Default | Description |
-|------|---------|-------------|
+| Name              | Default        | Description                                                       |
+| ----------------- | -------------- | ----------------------------------------------------------------- |
 | `--variable-name` | `defaultValue` | Description of the CSS variable and how it affects the component. |
 
 ## Accessibility
 
 Information about the component's accessibility features, including:
+
 - ARIA attributes
 - Keyboard navigation
 - Screen reader considerations
@@ -70,11 +67,7 @@ Information about the component's accessibility features, including:
 
 ```vue
 <template>
-  <ComponentName 
-    :prop1="value1"
-    :prop2="value2"
-    @event1="handleEvent1"
-  >
+  <ComponentName :prop1="value1" :prop2="value2" @event1="handleEvent1">
     <template #namedSlot="{ item }">
       Custom content for {{ item.name }}
     </template>

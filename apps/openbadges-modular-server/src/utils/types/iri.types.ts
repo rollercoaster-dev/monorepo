@@ -1,11 +1,11 @@
 /**
  * Type definitions for IRI-related utilities
- * 
+ *
  * These types are used across the application for handling IRIs
  * (Internationalized Resource Identifiers).
  */
 
-import type { Shared } from 'openbadges-types';
+import type { Shared } from "openbadges-types";
 
 /**
  * Type representing values that can be converted to an IRI

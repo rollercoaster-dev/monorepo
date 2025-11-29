@@ -105,6 +105,7 @@ BadgeForge follows a phased approach to implementing the Open Badges specificati
 ### Current Status: Open Badges 2.0 "Hosted" Implementation
 
 The current version provides a robust implementation of the Open Badges 2.0 specification for "hosted" badges, including:
+
 - Core entities (Issuer, BadgeClass, Assertion) structured according to the OB2 JSON-LD schema
 - Issuance workflow for creating issuers, defining badge classes, and issuing assertions
 - Hosted verification with proper verification objects and programmatic status checks
@@ -137,6 +138,7 @@ For the detailed roadmap with specific tasks and success criteria, see the [OB3 
 ### Interactive Documentation
 
 When running the server, interactive API documentation is available at:
+
 - `/docs` - Interactive API explorer with request/response examples
 
 ### Developer Guides
@@ -309,7 +311,7 @@ The project uses GitHub Actions for continuous integration and deployment:
   - E2E tests with both SQLite and PostgreSQL
   - Sequential test execution to avoid resource conflicts
 
-- **CI/CD Pipeline**: Runs on release tags (v*)
+- **CI/CD Pipeline**: Runs on release tags (v\*)
   - Full test suite with coverage reporting
   - Docker image building and publishing to GitHub Container Registry
   - Automated deployment for tagged releases

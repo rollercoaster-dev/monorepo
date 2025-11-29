@@ -8,9 +8,11 @@ model: sonnet
 # Migration Planner Agent
 
 ## Purpose
+
 Creates a detailed, step-by-step migration plan based on the analysis from migration-analyzer. Defines atomic commits, identifies risks, and establishes a rollback strategy.
 
 ## When to Use This Agent
+
 - After migration-analyzer completes (Phase 2)
 - When creating a structured migration plan
 - Before executing any migration work
@@ -19,10 +21,12 @@ Creates a detailed, step-by-step migration plan based on the analysis from migra
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of package to migrate
 - **Analysis report**: Output from migration-analyzer (or path to it)
 
 Optional:
+
 - **Target completion date**: When migration should be done
 - **Special requirements**: Any constraints or requirements
 - **Approval process**: Who needs to review the plan
@@ -52,6 +56,7 @@ Optional:
 Organize migration into logical phases with atomic commits:
 
 **Template Structure:**
+
 ```
 Phase 1: Initial Setup (3-5 commits)
   - Create sub-issues for tracking
@@ -100,6 +105,7 @@ Phase 8: Finalization (1-2 commits)
 ### Phase 3: Plan Dependency Changes
 
 1. **Review dependency conflicts (from dependency-analyzer):**
+
    ```
    Conflicts to resolve:
    - zod: v3.21.0 (monorepo) → v3.22.0 (target)
@@ -109,6 +115,7 @@ Phase 8: Finalization (1-2 commits)
    ```
 
 2. **Plan workspace dependency updates:**
+
    ```json
    {
      "dependencies": {
@@ -125,6 +132,7 @@ Phase 8: Finalization (1-2 commits)
 ### Phase 4: Plan Bun Integration Steps
 
 1. **Package.json changes:**
+
    ```
    Step 1: Update packageManager field
    Step 2: Update scripts for Bun
@@ -134,6 +142,7 @@ Phase 8: Finalization (1-2 commits)
    ```
 
 2. **TypeScript configuration changes:**
+
    ```
    Step 1: Extend shared config
    Step 2: Set moduleResolution: "Bundler"
@@ -167,13 +176,14 @@ Phase 8: Finalization (1-2 commits)
 3. **Module system updates:**
    - Convert CommonJS to ESM (if needed)
    - Update dynamic imports
-   - Fix __dirname/__filename usage
+   - Fix **dirname/**filename usage
 
 ### Phase 6: Plan Validation Steps
 
 Define validation at each phase:
 
 **After Dependency Resolution:**
+
 ```
 ✓ bun install succeeds
 ✓ No dependency warnings
@@ -181,6 +191,7 @@ Define validation at each phase:
 ```
 
 **After Bun Integration:**
+
 ```
 ✓ bun run type-check passes
 ✓ Package.json scripts work
@@ -188,6 +199,7 @@ Define validation at each phase:
 ```
 
 **After Code Adaptation:**
+
 ```
 ✓ No TypeScript errors
 ✓ All imports resolve
@@ -195,6 +207,7 @@ Define validation at each phase:
 ```
 
 **After Testing:**
+
 ```
 ✓ All tests pass
 ✓ Coverage maintained or improved
@@ -202,6 +215,7 @@ Define validation at each phase:
 ```
 
 **Final Validation:**
+
 ```
 ✓ Full monorepo build works
 ✓ Type-check across packages passes
@@ -219,12 +233,14 @@ Define how to undo migration if needed:
 **If migration fails or needs to be reverted:**
 
 ### Quick Rollback (Before PR Merge)
+
 1. Checkout main branch: `git checkout main`
 2. Delete feature branch: `git branch -D migrate/{package-name}`
 3. Remove package from packages/: `rm -rf packages/{package-name}`
 4. Original repo remains at: {url}
 
 ### Full Rollback (After PR Merge)
+
 1. Revert merge commit: `git revert {merge-commit-sha} -m 1`
 2. Push revert: `git push origin main`
 3. Remove package from packages/: `rm -rf packages/{package-name}`
@@ -232,12 +248,14 @@ Define how to undo migration if needed:
 5. Restore original repository if needed
 
 ### Data Preservation
+
 - Git history: Preserved in feature branch
 - Migration plan: Saved in docs/migrations/
 - Original repo: {url}
 - Backup location (if applicable): {path}
 
 ### Rollback Validation
+
 - ✓ Monorepo builds without package
 - ✓ No broken imports in other packages
 - ✓ CI/CD passes
@@ -271,7 +289,7 @@ Target Completion: {date}
 
 Generate detailed migration plan:
 
-```markdown
+````markdown
 # Migration Plan: {package-name}
 
 **Status**: 📋 PLANNED
@@ -284,6 +302,7 @@ Generate detailed migration plan:
 ## Overview
 
 ### Package Information
+
 - **Name**: {package-name}
 - **Current Version**: v{version}
 - **Type**: {library|application|internal-tool}
@@ -291,11 +310,13 @@ Generate detailed migration plan:
 - **Target Location**: packages/{package-name}/
 
 ### Migration Objectives
+
 1. {Objective 1}
 2. {Objective 2}
 3. {Objective 3}
 
 ### Success Criteria
+
 - ✓ All tests pass
 - ✓ Coverage maintained ({pct}%)
 - ✓ Bun compatibility verified
@@ -307,11 +328,13 @@ Generate detailed migration plan:
 ## Prerequisites
 
 ### Required
+
 - [ ] Migration analysis complete
 - [ ] Dependency conflicts resolved
 - [ ] {Other requirements}
 
 ### Optional
+
 - [ ] Dependent packages notified
 - [ ] Migration branch created
 - [ ] Sub-issues created
@@ -326,17 +349,18 @@ Generate detailed migration plan:
 **Estimated Time**: 1 hour
 
 #### Tasks
+
 1. **Create sub-issues for tracking**
    - Command: `gh issue create --title "..."`
    - Sub-issues:
-     * Phase 1: Initial Setup
-     * Phase 2: Dependency Resolution
-     * Phase 3: Bun Integration
-     * Phase 4: Code Adaptation
-     * Phase 5: Validation
-     * Phase 6: Documentation
-     * Phase 7: Integration
-     * Phase 8: Finalization
+     - Phase 1: Initial Setup
+     - Phase 2: Dependency Resolution
+     - Phase 3: Bun Integration
+     - Phase 4: Code Adaptation
+     - Phase 5: Validation
+     - Phase 6: Documentation
+     - Phase 7: Integration
+     - Phase 8: Finalization
 
 2. **Clone and import repository**
    - Clone: `git clone {url} temp-{package}`
@@ -349,6 +373,7 @@ Generate detailed migration plan:
    - Commit: `docs: create migration plan for {package}`
 
 #### Validation
+
 - [ ] Package exists in packages/{package-name}/
 - [ ] Migration plan created
 - [ ] Sub-issues created and linked
@@ -371,7 +396,7 @@ Generate detailed migration plan:
    - Commit: `migrate({package}): resolve {dep} version conflict`
 
 2. **Add workspace dependencies**
-   - Add @rollercoaster-dev/* dependencies
+   - Add @rollercoaster-dev/\* dependencies
    - Update imports to use workspace packages
    - Commit: `migrate({package}): add workspace dependencies`
 
@@ -381,6 +406,7 @@ Generate detailed migration plan:
    - Commit: `migrate({package}): remove duplicate dependencies`
 
 #### Validation
+
 - [ ] `bun install` succeeds
 - [ ] No dependency warnings
 - [ ] Workspace links created
@@ -406,9 +432,12 @@ Generate detailed migration plan:
      }
    }
    ```
-   - Commit: `migrate({package}): configure package.json for Bun`
+````
+
+- Commit: `migrate({package}): configure package.json for Bun`
 
 2. **Update TypeScript configuration**
+
    ```json
    {
      "extends": "@rollercoaster-dev/shared-config/tsconfig",
@@ -418,11 +447,12 @@ Generate detailed migration plan:
      }
    }
    ```
+
    - Commit: `migrate({package}): configure TypeScript for Bun`
 
 3. **Migrate test runner**
    - Update test files if needed
-   - Remove jest.config.*/vitest.config.*
+   - Remove jest.config._/vitest.config._
    - Commit: `migrate({package}): migrate to Bun test runner`
 
 4. **Update build configuration**
@@ -435,6 +465,7 @@ Generate detailed migration plan:
    - Commit: `migrate({package}): add TypeScript project references`
 
 #### Validation
+
 - [ ] `bun run type-check` passes
 - [ ] `bun test` runs (may fail, fixed in Phase 5)
 - [ ] Package.json scripts execute
@@ -473,6 +504,7 @@ Generate detailed migration plan:
    - Commit: `migrate({package}): remove standalone repository artifacts`
 
 #### Validation
+
 - [ ] No TypeScript errors
 - [ ] All imports resolve
 - [ ] Code follows monorepo patterns
@@ -504,6 +536,7 @@ Generate detailed migration plan:
    - Document results
 
 #### Validation
+
 - [ ] All {n} tests pass
 - [ ] Build succeeds
 - [ ] Coverage: {pct}% (target: {pct}%)
@@ -536,6 +569,7 @@ Generate detailed migration plan:
    - Commit: `docs: archive {package} migration plan`
 
 #### Validation
+
 - [ ] Package README accurate
 - [ ] Monorepo docs updated
 - [ ] No broken links
@@ -565,6 +599,7 @@ Generate detailed migration plan:
    - Verify everything works together
 
 #### Validation
+
 - [ ] Turborepo includes package
 - [ ] CI runs for package
 - [ ] Full monorepo build passes
@@ -594,6 +629,7 @@ Generate detailed migration plan:
    - Close all sub-issues
 
 #### Validation
+
 - [ ] All success criteria met
 - [ ] PR created with complete description
 - [ ] Sub-issues closed
@@ -625,6 +661,7 @@ Generate detailed migration plan:
 **Total Estimated Time**: {hours} hours ({days} days)
 
 ### Milestones
+
 - [ ] Day 1: Phases 1-2 complete
 - [ ] Day 2: Phase 3 complete
 - [ ] Day 3-4: Phases 4-5 complete
@@ -635,6 +672,7 @@ Generate detailed migration plan:
 ## Validation Checklist
 
 ### Code Quality
+
 - [ ] All TypeScript errors resolved
 - [ ] All tests passing ({n}/{n})
 - [ ] Coverage maintained ({pct}%)
@@ -642,6 +680,7 @@ Generate detailed migration plan:
 - [ ] No console errors/warnings
 
 ### Bun Integration
+
 - [ ] Package.json configured for Bun
 - [ ] TypeScript uses Bundler resolution
 - [ ] Tests run with `bun test`
@@ -649,6 +688,7 @@ Generate detailed migration plan:
 - [ ] Bun APIs used correctly (if applicable)
 
 ### Monorepo Integration
+
 - [ ] Package in correct location
 - [ ] Workspace dependencies configured
 - [ ] TypeScript project references added
@@ -656,6 +696,7 @@ Generate detailed migration plan:
 - [ ] CI/CD configured
 
 ### Documentation
+
 - [ ] Package README updated
 - [ ] CLAUDE.md updated
 - [ ] MIGRATION.md updated
@@ -663,6 +704,7 @@ Generate detailed migration plan:
 - [ ] API docs updated (if needed)
 
 ### Process
+
 - [ ] Sub-issues created and tracked
 - [ ] Atomic commits with good messages
 - [ ] PR description comprehensive
@@ -678,6 +720,7 @@ Generate detailed migration plan:
 ---
 
 **Next Step**: Review and approve this plan, then proceed with **migration-executor** to execute the migration.
+
 ```
 
 ### Phase 10: Request Approval
@@ -734,9 +777,11 @@ If planning fails:
 ## Example Usage
 
 ```
+
 User: "Create migration plan for openbadges-types"
 
 Agent:
+
 1. Reads analysis report from migration-analyzer
 2. Extracts: EASY complexity, FULL Bun compat, 2 dep conflicts
 3. Defines 8 phases with 20-25 atomic commits
@@ -747,6 +792,7 @@ Agent:
 8. Writes MIGRATION_PLAN_openbadges-types.md
 9. Presents plan for approval
 10. Returns: "Plan ready. Approve to proceed with migration-executor."
+
 ```
 
 ## Success Criteria
@@ -768,3 +814,4 @@ This agent is designed to be called:
 - Standalone if user wants to plan manually
 - To update existing migration plans
 - For complex migrations needing detailed planning
+```

@@ -4,59 +4,59 @@
  * This file contains tests for the API Key entity and repository.
  */
 
-import { describe, test, expect } from 'bun:test';
-import { ApiKey } from '@/domains/auth/apiKey.entity';
+import { describe, test, expect } from "bun:test";
+import { ApiKey } from "@/domains/auth/apiKey.entity";
 
-describe('API Key', () => {
+describe("API Key", () => {
   // Test the API Key entity
-  describe('Entity', () => {
-    test('should create a new API Key', () => {
+  describe("Entity", () => {
+    test("should create a new API Key", () => {
       const apiKey = ApiKey.create({
-        name: 'Test API Key',
-        userId: 'test-user',
-        description: 'Test API Key description',
+        name: "Test API Key",
+        userId: "test-user",
+        description: "Test API Key description",
         permissions: {
-          roles: ['user'],
-          permissions: ['read:badges']
-        }
+          roles: ["user"],
+          permissions: ["read:badges"],
+        },
       });
 
       expect(apiKey).toBeDefined();
       expect(apiKey.id).toBeDefined();
       expect(apiKey.key).toBeDefined();
-      expect(apiKey.name).toBe('Test API Key');
-      expect(apiKey.userId).toBe('test-user');
-      expect(apiKey.description).toBe('Test API Key description');
+      expect(apiKey.name).toBe("Test API Key");
+      expect(apiKey.userId).toBe("test-user");
+      expect(apiKey.description).toBe("Test API Key description");
       expect(apiKey.permissions).toEqual({
-        roles: ['user'],
-        permissions: ['read:badges']
+        roles: ["user"],
+        permissions: ["read:badges"],
       });
       expect(apiKey.revoked).toBe(false);
       expect(apiKey.createdAt).toBeInstanceOf(Date);
       expect(apiKey.updatedAt).toBeInstanceOf(Date);
     });
 
-    test('should check if an API Key is valid', () => {
+    test("should check if an API Key is valid", () => {
       const apiKey = ApiKey.create({
-        name: 'Test API Key',
-        userId: 'test-user'
+        name: "Test API Key",
+        userId: "test-user",
       });
 
       expect(apiKey.isValid()).toBe(true);
 
       // Test with an expired API Key
       const expiredApiKey = ApiKey.create({
-        name: 'Expired API Key',
-        userId: 'test-user',
-        expiresAt: new Date(Date.now() - 1000) // 1 second ago
+        name: "Expired API Key",
+        userId: "test-user",
+        expiresAt: new Date(Date.now() - 1000), // 1 second ago
       });
 
       expect(expiredApiKey.isValid()).toBe(false);
 
       // Test with a revoked API Key
       const revokedApiKey = ApiKey.create({
-        name: 'Revoked API Key',
-        userId: 'test-user'
+        name: "Revoked API Key",
+        userId: "test-user",
       });
 
       revokedApiKey.revoke();
@@ -64,10 +64,10 @@ describe('API Key', () => {
       expect(revokedApiKey.isValid()).toBe(false);
     });
 
-    test('should update the last used timestamp', () => {
+    test("should update the last used timestamp", () => {
       const apiKey = ApiKey.create({
-        name: 'Test API Key',
-        userId: 'test-user'
+        name: "Test API Key",
+        userId: "test-user",
       });
 
       // Store the original values
@@ -81,10 +81,10 @@ describe('API Key', () => {
       expect(apiKey.lastUsedAt).toBeDefined();
     });
 
-    test('should revoke an API Key', () => {
+    test("should revoke an API Key", () => {
       const apiKey = ApiKey.create({
-        name: 'Test API Key',
-        userId: 'test-user'
+        name: "Test API Key",
+        userId: "test-user",
       });
 
       // Store the original values

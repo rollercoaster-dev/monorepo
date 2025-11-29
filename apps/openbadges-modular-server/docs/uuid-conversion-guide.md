@@ -66,13 +66,13 @@ export const issuers = pgTable('issuers', {
 
 ### Key Differences Summary
 
-| Aspect | SQLite | PostgreSQL |
-|--------|--------|------------|
-| **ID Format** | URN (`urn:uuid:...`) | Plain UUID (`...`) |
-| **JSON Storage** | Text string | Native JSONB |
-| **Timestamps** | Integer (epoch ms) | Native timestamp |
-| **Type Safety** | String-based | Native types |
-| **Performance** | Text operations | Optimized native ops |
+| Aspect           | SQLite               | PostgreSQL           |
+| ---------------- | -------------------- | -------------------- |
+| **ID Format**    | URN (`urn:uuid:...`) | Plain UUID (`...`)   |
+| **JSON Storage** | Text string          | Native JSONB         |
+| **Timestamps**   | Integer (epoch ms)   | Native timestamp     |
+| **Type Safety**  | String-based         | Native types         |
+| **Performance**  | Text operations      | Optimized native ops |
 
 ## UUID Conversion System
 
@@ -86,26 +86,26 @@ Located in `src/infrastructure/database/utils/type-conversion.ts`:
  */
 export function convertUuid(
   value: string | null | undefined,
-  dbType: 'postgresql' | 'sqlite',
-  direction: 'to' | 'from'
-): string | null | undefined
+  dbType: "postgresql" | "sqlite",
+  direction: "to" | "from",
+): string | null | undefined;
 
 /**
  * Converts URN format to plain UUID
  * "urn:uuid:550e8400-..." → "550e8400-..."
  */
-export function urnToUuid(urn: string): string
+export function urnToUuid(urn: string): string;
 
 /**
- * Converts plain UUID to URN format  
+ * Converts plain UUID to URN format
  * "550e8400-..." → "urn:uuid:550e8400-..."
  */
-export function uuidToUrn(uuid: string): string
+export function uuidToUrn(uuid: string): string;
 
 /**
  * Validates UUID format (plain UUID only)
  */
-export function isValidUuid(value: string): boolean
+export function isValidUuid(value: string): boolean;
 ```
 
 ### Conversion Logic Flow
@@ -129,18 +129,18 @@ graph TD
 const appId = "urn:uuid:550e8400-e29b-41d4-a716-446655440000";
 
 // SQLite - no conversion
-const sqliteId = convertUuid(appId, 'sqlite', 'to');
+const sqliteId = convertUuid(appId, "sqlite", "to");
 // Result: "urn:uuid:550e8400-e29b-41d4-a716-446655440000"
 
 // PostgreSQL - URN to UUID
-const pgId = convertUuid(appId, 'postgresql', 'to');
+const pgId = convertUuid(appId, "postgresql", "to");
 // Result: "550e8400-e29b-41d4-a716-446655440000"
 
 // Database to Application (direction: 'from')
 const dbUuid = "550e8400-e29b-41d4-a716-446655440000";
 
 // PostgreSQL - UUID to URN
-const appResult = convertUuid(dbUuid, 'postgresql', 'from');
+const appResult = convertUuid(dbUuid, "postgresql", "from");
 // Result: "urn:uuid:550e8400-e29b-41d4-a716-446655440000"
 ```
 
@@ -156,7 +156,7 @@ export class PostgresIssuerMapper {
   toPersistence(entity: Issuer): PostgresIssuerRecord {
     return {
       // Convert URN to UUID for PostgreSQL storage
-      id: convertUuid(entity.id, 'postgresql', 'to') as string,
+      id: convertUuid(entity.id, "postgresql", "to") as string,
       name: entity.name,
       // ... other fields
     };
@@ -165,7 +165,7 @@ export class PostgresIssuerMapper {
   toDomain(record: PostgresIssuerRecord): Issuer {
     return Issuer.create({
       // Convert UUID back to URN for application
-      id: convertUuid(record.id, 'postgresql', 'from') as Shared.IRI,
+      id: convertUuid(record.id, "postgresql", "from") as Shared.IRI,
       name: record.name,
       // ... other fields
     });
@@ -207,22 +207,25 @@ The conversion system includes comprehensive error handling:
 ```typescript
 // Invalid UUID format handling
 export function urnToUuid(urn: string): string {
-  if (urn.startsWith('urn:uuid:')) {
+  if (urn.startsWith("urn:uuid:")) {
     const uuid = urn.substring(9);
     if (isValidUuid(uuid)) {
       return uuid;
     } else {
-      logger.warn('Invalid UUID extracted from URN', { urn, extractedUuid: uuid });
+      logger.warn("Invalid UUID extracted from URN", {
+        urn,
+        extractedUuid: uuid,
+      });
       return urn; // Return original if extraction failed
     }
   }
-  
+
   // Handle non-URN format
   if (isValidUuid(urn)) {
     return urn; // Already plain UUID
   }
-  
-  logger.warn('Value is neither valid URN nor UUID format', { value: urn });
+
+  logger.warn("Value is neither valid URN nor UUID format", { value: urn });
   return urn; // Return original with warning
 }
 ```
@@ -257,13 +260,13 @@ CREATE TABLE issuers (
 
 ```typescript
 // Export from PostgreSQL (UUID) to SQLite (URN)
-const exportedData = postgresRecords.map(record => ({
+const exportedData = postgresRecords.map((record) => ({
   ...record,
   id: uuidToUrn(record.id), // Convert to URN for SQLite
 }));
 
 // Import from SQLite (URN) to PostgreSQL (UUID)
-const importedData = sqliteRecords.map(record => ({
+const importedData = sqliteRecords.map((record) => ({
   ...record,
   id: urnToUuid(record.id), // Convert to UUID for PostgreSQL
 }));
@@ -304,17 +307,22 @@ Warning: Value is neither valid URN nor UUID format
 
 ```typescript
 // Enable detailed UUID conversion logging
-process.env.LOG_LEVEL = 'debug';
+process.env.LOG_LEVEL = "debug";
 
 // Test conversion functions
-import { convertUuid, urnToUuid, uuidToUrn, isValidUuid } from '@/infrastructure/database/utils/type-conversion';
+import {
+  convertUuid,
+  urnToUuid,
+  uuidToUrn,
+  isValidUuid,
+} from "@/infrastructure/database/utils/type-conversion";
 
 // Validate UUID format
-console.log(isValidUuid('550e8400-e29b-41d4-a716-446655440000')); // true
-console.log(isValidUuid('urn:uuid:550e8400-e29b-41d4-a716-446655440000')); // false
+console.log(isValidUuid("550e8400-e29b-41d4-a716-446655440000")); // true
+console.log(isValidUuid("urn:uuid:550e8400-e29b-41d4-a716-446655440000")); // false
 
 // Test conversions
-const urn = 'urn:uuid:550e8400-e29b-41d4-a716-446655440000';
+const urn = "urn:uuid:550e8400-e29b-41d4-a716-446655440000";
 const uuid = urnToUuid(urn);
 const backToUrn = uuidToUrn(uuid);
 console.log({ urn, uuid, backToUrn });
@@ -326,7 +334,7 @@ console.log({ urn, uuid, backToUrn });
 
 ```typescript
 // ✅ Correct - use conversion utilities
-const dbId = convertUuid(entity.id, dbType, 'to');
+const dbId = convertUuid(entity.id, dbType, "to");
 
 // ❌ Incorrect - direct assignment
 const dbId = entity.id; // May cause format mismatch
@@ -356,15 +364,16 @@ if (converted === null || converted === undefined) {
 
 ```typescript
 // ✅ Correct - maintain type safety
-const id: Shared.IRI = convertUuid(dbId, 'postgresql', 'from') as Shared.IRI;
+const id: Shared.IRI = convertUuid(dbId, "postgresql", "from") as Shared.IRI;
 
 // ❌ Incorrect - lose type information
-const id = convertUuid(dbId, 'postgresql', 'from');
+const id = convertUuid(dbId, "postgresql", "from");
 ```
 
 ---
 
 **Related Documentation:**
+
 - [Database Architecture Overview](./database-architecture-overview.md) - Complete system architecture
 - [Repository Implementation Guide](./repository-implementation-guide.md) - Implementing custom repositories
 - [Database Connection Guide](./database-connection-guide.md) - Connection setup and configuration

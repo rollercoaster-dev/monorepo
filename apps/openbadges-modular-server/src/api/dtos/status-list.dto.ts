@@ -9,7 +9,7 @@ import type {
   StatusPurpose,
   BitstringStatusListCredential,
   BitstringStatusListEntry,
-} from '../../domains/status-list/status-list.types';
+} from "../../domains/status-list/status-list.types";
 
 /**
  * DTO for creating a new status list
@@ -55,7 +55,7 @@ export interface BatchUpdateCredentialStatusDto {
     id: string;
 
     /** New status value - should be string enum values */
-    status: 'active' | 'suspended' | 'revoked';
+    status: "active" | "suspended" | "revoked";
 
     /** Reason for the status change */
     reason?: string;
@@ -284,10 +284,10 @@ export interface StatusListSearchDto {
   maxUtilization?: number;
 
   /** Sort field */
-  sortBy?: 'createdAt' | 'updatedAt' | 'utilizationPercent' | 'usedEntries';
+  sortBy?: "createdAt" | "updatedAt" | "utilizationPercent" | "usedEntries";
 
   /** Sort order */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 
   /** Page number (1-based) */
   page?: number;

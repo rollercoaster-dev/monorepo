@@ -178,10 +178,6 @@
     "collected_at": "2025-01-09T14:30:00Z",
     "collection_method": "GitHub CLI run logs analysis",
     "workflows_analyzed": ["Example Repository Dispatch"],
-    "runs_examined": [
-      "16177609854",
-      "16177542001", 
-      "16177098017"
-    ]
+    "runs_examined": ["16177609854", "16177542001", "16177098017"]
   }
 }

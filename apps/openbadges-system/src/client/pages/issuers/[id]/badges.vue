@@ -11,16 +11,9 @@
     </div>
 
     <!-- Error state -->
-    <div
-      v-if="error"
-      class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
-      role="alert"
-    >
+    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
       <p class="text-red-800">{{ error }}</p>
-      <button
-        class="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-        @click="loadData"
-      >
+      <button class="mt-2 text-sm text-red-600 hover:text-red-800 underline" @click="loadData">
         Try again
       </button>
     </div>
@@ -28,9 +21,7 @@
     <div class="space-y-6">
       <!-- Issuer info section -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-lg font-semibold mb-4 text-gray-700">
-          Issuer Information
-        </h2>
+        <h2 class="text-lg font-semibold mb-4 text-gray-700">Issuer Information</h2>
         <div v-if="issuerLoading" class="animate-pulse">
           <div class="flex items-center gap-4">
             <div class="w-16 h-16 bg-gray-200 rounded-full"></div>
@@ -65,13 +56,8 @@
         >
           <template #empty>
             <div class="text-center py-8">
-              <p class="text-gray-500 mb-4">
-                No badge classes found for this issuer.
-              </p>
-              <RouterLink
-                to="/badges/create"
-                class="text-blue-600 hover:text-blue-800 underline"
-              >
+              <p class="text-gray-500 mb-4">No badge classes found for this issuer.</p>
+              <RouterLink to="/badges/create" class="text-blue-600 hover:text-blue-800 underline">
                 Create a badge class
               </RouterLink>
             </div>
@@ -83,63 +69,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { IssuerCard, BadgeClassList } from 'openbadges-ui';
-import { badgeApi, type Issuer, type BadgeClass } from '@/services/badgeApi';
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { IssuerCard, BadgeClassList } from 'openbadges-ui'
+import { badgeApi, type Issuer, type BadgeClass } from '@/services/badgeApi'
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
 
 // State
-const issuer = ref<Issuer | null>(null);
-const badgeClasses = ref<BadgeClass[]>([]);
-const issuerLoading = ref(true);
-const badgesLoading = ref(true);
-const error = ref<string | null>(null);
+const issuer = ref<Issuer | null>(null)
+const badgeClasses = ref<BadgeClass[]>([])
+const issuerLoading = ref(true)
+const badgesLoading = ref(true)
+const error = ref<string | null>(null)
 
 // Get issuer ID from route
-const issuerId = decodeURIComponent(route.params.id as string);
+const issuerId = decodeURIComponent(route.params.id as string)
 
 // Load issuer details
 async function loadIssuer() {
-  issuerLoading.value = true;
+  issuerLoading.value = true
   try {
-    issuer.value = await badgeApi.getIssuerById(issuerId);
+    issuer.value = await badgeApi.getIssuerById(issuerId)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load issuer';
+    error.value = err instanceof Error ? err.message : 'Failed to load issuer'
   } finally {
-    issuerLoading.value = false;
+    issuerLoading.value = false
   }
 }
 
 // Load badge classes for this issuer (uses server-side filtering)
 async function loadBadgeClasses() {
-  badgesLoading.value = true;
+  badgesLoading.value = true
   try {
-    badgeClasses.value = await badgeApi.getBadgeClassesByIssuer(issuerId);
+    badgeClasses.value = await badgeApi.getBadgeClassesByIssuer(issuerId)
   } catch (err) {
-    error.value =
-      err instanceof Error ? err.message : 'Failed to load badge classes';
+    error.value = err instanceof Error ? err.message : 'Failed to load badge classes'
   } finally {
-    badgesLoading.value = false;
+    badgesLoading.value = false
   }
 }
 
 // Load all data
 async function loadData() {
-  error.value = null;
-  await Promise.all([loadIssuer(), loadBadgeClasses()]);
+  error.value = null
+  await Promise.all([loadIssuer(), loadBadgeClasses()])
 }
 
 // Handle badge click - navigate to badge detail page
 function handleBadgeClick(badge: BadgeClass) {
-  const id = encodeURIComponent(badge.id);
-  router.push(`/badges/${id}`);
+  const id = encodeURIComponent(badge.id)
+  router.push(`/badges/${id}`)
 }
 
 // Load data on mount
 onMounted(() => {
-  loadData();
-});
+  loadData()
+})
 </script>

@@ -8,13 +8,13 @@
  * It also provides role-based access control functionality.
  */
 
-import type { MiddlewareHandler } from 'hono';
-import { createMiddleware } from 'hono/factory';
-import type { AuthAdapter } from '../adapters/auth-adapter.interface';
-import { JwtService } from '../services/jwt.service';
-import { logger } from '../../utils/logging/logger.service';
-import { config } from '../../config/config';
-import { v4 as uuidv4 } from 'uuid';
+import type { MiddlewareHandler } from "hono";
+import { createMiddleware } from "hono/factory";
+import type { AuthAdapter } from "../adapters/auth-adapter.interface";
+import { JwtService } from "../services/jwt.service";
+import { logger } from "../../utils/logging/logger.service";
+import { config } from "../../config/config";
+import { v4 as uuidv4 } from "uuid";
 
 // Store registered auth adapters
 const authAdapters: AuthAdapter[] = [];
@@ -49,7 +49,7 @@ function isPublicPath(path: string): boolean {
     }
 
     // Path starts with public path + '/'
-    if (publicPath.endsWith('*') && path.startsWith(publicPath.slice(0, -1))) {
+    if (publicPath.endsWith("*") && path.startsWith(publicPath.slice(0, -1))) {
       return true;
     }
 
@@ -64,16 +64,14 @@ function isPublicPath(path: string): boolean {
 export function registerAuthAdapter(adapter: AuthAdapter): void {
   authAdapters.push(adapter);
   logger.info(
-    `Registered authentication adapter: ${adapter.getProviderName()}`
+    `Registered authentication adapter: ${adapter.getProviderName()}`,
   );
 }
 
 /**
  * Authentication handler for middleware
  */
-async function authenticateRequest(
-  request: Request
-): Promise<{
+async function authenticateRequest(request: Request): Promise<{
   isAuthenticated: boolean;
   user: AuthenticatedUserContext | null;
   token?: string;
@@ -83,9 +81,9 @@ async function authenticateRequest(
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
-    const requestId = request.headers.get('x-request-id') || uuidv4();
-    const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
+    const requestId = request.headers.get("x-request-id") || uuidv4();
+    const clientIp = request.headers.get("x-forwarded-for") || "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
 
     // Create context for structured logging
     const logContext = {
@@ -96,35 +94,35 @@ async function authenticateRequest(
       userAgent: userAgent.substring(0, 100), // Truncate long user agents
     };
 
-    logger.debug('Processing authentication request', logContext);
+    logger.debug("Processing authentication request", logContext);
 
     // Skip authentication for certain paths (e.g., public endpoints)
     if (isPublicPath(path)) {
       logger.debug(
         `Skipping authentication for public path: ${path}`,
-        logContext
+        logContext,
       );
       return { isAuthenticated: false, user: null };
     }
 
     // If authentication is disabled globally, skip authentication
     if (config.auth?.enabled === false) {
-      logger.debug('Authentication is disabled globally', logContext);
+      logger.debug("Authentication is disabled globally", logContext);
       return { isAuthenticated: false, user: null };
     }
 
     // Check for JWT token in Authorization header
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get("authorization");
 
     // Don't log the full auth header for security reasons
     if (authHeader) {
-      logContext['authType'] = authHeader.split(' ')[0];
-      logger.debug('Processing authentication with auth header', logContext);
+      logContext["authType"] = authHeader.split(" ")[0];
+      logger.debug("Processing authentication with auth header", logContext);
     } else {
-      logger.debug('No authorization header present', logContext);
+      logger.debug("No authorization header present", logContext);
     }
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       // Only log a truncated token for debugging
       const truncatedToken =
@@ -143,13 +141,13 @@ async function authenticateRequest(
           roles: payload.claims?.roles || [],
         };
 
-        logger.info('JWT authentication successful', authLogContext);
+        logger.info("JWT authentication successful", authLogContext);
 
         return {
           isAuthenticated: true,
           user: {
             id: payload.sub,
-            provider: payload.provider || 'jwt',
+            provider: payload.provider || "jwt",
             claims: payload.claims || {},
           },
         };
@@ -157,19 +155,19 @@ async function authenticateRequest(
         // Log failed JWT authentication with detailed error
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        logger.warn('JWT authentication failed', {
+        logger.warn("JWT authentication failed", {
           ...logContext,
           error: errorMessage,
-          errorType: error instanceof Error ? error.name : 'Unknown',
+          errorType: error instanceof Error ? error.name : "Unknown",
         });
       }
     }
 
     // Legacy token extraction - can be removed once all clients use Bearer format
-    const legacyAuthHeader = request.headers.get('Authorization');
+    const legacyAuthHeader = request.headers.get("Authorization");
     const legacyToken = JwtService.extractTokenFromHeader(legacyAuthHeader);
     if (legacyToken) {
-      logger.debug('Processing legacy token format', logContext);
+      logger.debug("Processing legacy token format", logContext);
       try {
         const payload = await JwtService.verifyToken(legacyToken);
 
@@ -178,27 +176,27 @@ async function authenticateRequest(
           ...logContext,
           userId: payload.sub,
           provider: payload.provider,
-          authMethod: 'legacy-jwt',
+          authMethod: "legacy-jwt",
         };
 
-        logger.info('Legacy JWT authentication successful', authLogContext);
+        logger.info("Legacy JWT authentication successful", authLogContext);
 
         return {
           isAuthenticated: true,
           user: {
             id: payload.sub,
-            provider: payload.provider || 'jwt',
+            provider: payload.provider || "jwt",
             claims: payload.claims || {},
           },
         };
       } catch (error) {
         // Log failed legacy JWT authentication
         logger.debug(
-          'Legacy JWT token invalid, trying adapter authentication',
+          "Legacy JWT token invalid, trying adapter authentication",
           {
             ...logContext,
             error: error instanceof Error ? error.message : String(error),
-          }
+          },
         );
       }
     }
@@ -211,7 +209,7 @@ async function authenticateRequest(
       if (adapter.canHandle(request)) {
         logger.debug(
           `Attempting authentication with ${adapterName} adapter`,
-          adapterLogContext
+          adapterLogContext,
         );
 
         const result = await adapter.authenticate(request);
@@ -244,7 +242,7 @@ async function authenticateRequest(
           // Log failed adapter authentication
           logger.debug(`Authentication failed with ${adapterName} adapter`, {
             ...adapterLogContext,
-            error: result.error || 'Unknown error',
+            error: result.error || "Unknown error",
           });
         }
       }
@@ -252,14 +250,14 @@ async function authenticateRequest(
 
     // No adapter could authenticate the request
     logger.warn(
-      'Authentication failed - no adapter could handle the request',
-      logContext
+      "Authentication failed - no adapter could handle the request",
+      logContext,
     );
     return { isAuthenticated: false, user: null };
   } catch (error) {
     // Log unexpected authentication errors
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Unexpected authentication error', {
+    logger.error("Unexpected authentication error", {
       path: new URL(request.url).pathname,
       method: request.method,
       error: errorMessage,
@@ -281,12 +279,12 @@ export function createAuthMiddleware(): MiddlewareHandler<{
     const authResult = await authenticateRequest(c.req.raw);
 
     // Set authentication result in context
-    c.set('isAuthenticated', authResult.isAuthenticated);
-    c.set('user', authResult.user);
+    c.set("isAuthenticated", authResult.isAuthenticated);
+    c.set("user", authResult.user);
 
     // If token was generated, set it in response header
     if (authResult.token) {
-      c.header('X-Auth-Token', authResult.token);
+      c.header("X-Auth-Token", authResult.token);
     }
 
     // Continue to the next middleware/handler
@@ -303,13 +301,13 @@ export function createAuthDebugMiddleware(): MiddlewareHandler<{
   return createMiddleware<{
     Variables: AuthVariables;
   }>(async (c, next) => {
-    const isAuthenticated = c.get('isAuthenticated');
-    const user = c.get('user');
-    const authHeader = c.req.header('authorization');
+    const isAuthenticated = c.get("isAuthenticated");
+    const user = c.get("user");
+    const authHeader = c.req.header("authorization");
     logger.debug(
       `Auth status: ${
-        isAuthenticated ? 'authenticated' : 'not authenticated'
-      }, User: ${user ? user.id : 'none'}, Auth header: ${authHeader || 'none'}`
+        isAuthenticated ? "authenticated" : "not authenticated"
+      }, User: ${user ? user.id : "none"}, Auth header: ${authHeader || "none"}`,
     );
 
     await next();

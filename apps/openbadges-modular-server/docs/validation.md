@@ -66,15 +66,19 @@ After validation, data is mapped to internal entity formats using dedicated mapp
 
 ```typescript
 function mapToAssertionEntity(
-  data: ValidatedCreateAssertionData | ValidatedUpdateAssertionData
+  data: ValidatedCreateAssertionData | ValidatedUpdateAssertionData,
 ): Partial<Assertion> {
   const mappedData: Partial<Assertion> = {};
-  
+
   // Map properties with appropriate type handling
-  if (data.badge !== undefined) mappedData.badgeClass = data.badge as Shared.IRI;
-  if (data.recipient !== undefined) mappedData.recipient = data.recipient as OB2.IdentityObject | OB3.CredentialSubject;
+  if (data.badge !== undefined)
+    mappedData.badgeClass = data.badge as Shared.IRI;
+  if (data.recipient !== undefined)
+    mappedData.recipient = data.recipient as
+      | OB2.IdentityObject
+      | OB3.CredentialSubject;
   // ...other mappings
-  
+
   return mappedData;
 }
 ```

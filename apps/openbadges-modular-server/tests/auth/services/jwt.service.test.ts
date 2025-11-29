@@ -4,18 +4,18 @@
  * This file contains tests for the JWT service.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { JwtService } from '@/auth/services/jwt.service';
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { JwtService } from "@/auth/services/jwt.service";
 
-describe('JWT Service', () => {
+describe("JWT Service", () => {
   // Save original environment variables
   const originalEnv = { ...process.env };
 
   beforeAll(() => {
     // Set environment variables for testing
-    process.env.JWT_SECRET = 'test-secret';
-    process.env.JWT_TOKEN_EXPIRY_SECONDS = '3600';
-    process.env.JWT_ISSUER = 'test-issuer';
+    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_TOKEN_EXPIRY_SECONDS = "3600";
+    process.env.JWT_ISSUER = "test-issuer";
   });
 
   afterAll(() => {
@@ -23,37 +23,37 @@ describe('JWT Service', () => {
     process.env = originalEnv;
   });
 
-  test('should generate a JWT token', async () => {
+  test("should generate a JWT token", async () => {
     const payload = {
-      sub: 'test-user',
-      provider: 'test-provider',
-      claims: { roles: ['user'] }
+      sub: "test-user",
+      provider: "test-provider",
+      claims: { roles: ["user"] },
     };
 
     const token = await JwtService.generateToken(payload);
 
     expect(token).toBeDefined();
-    expect(typeof token).toBe('string');
-    expect(token.split('.').length).toBe(3); // JWT has 3 parts
+    expect(typeof token).toBe("string");
+    expect(token.split(".").length).toBe(3); // JWT has 3 parts
   });
 
-  test('should verify a valid JWT token', async () => {
+  test("should verify a valid JWT token", async () => {
     // Mock the JWT verification function
     const originalVerifyToken = JwtService.verifyToken;
     JwtService.verifyToken = async () => ({
-      sub: 'test-user',
-      provider: 'test-provider',
-      claims: { roles: ['user'] },
-      iss: 'test-issuer',
-      exp: Math.floor(Date.now() / 1000) + 3600
+      sub: "test-user",
+      provider: "test-provider",
+      claims: { roles: ["user"] },
+      iss: "test-issuer",
+      exp: Math.floor(Date.now() / 1000) + 3600,
     });
 
     try {
       // Generate a token
       const payload = {
-        sub: 'test-user',
-        provider: 'test-provider',
-        claims: { roles: ['user'] }
+        sub: "test-user",
+        provider: "test-provider",
+        claims: { roles: ["user"] },
       };
 
       const token = await JwtService.generateToken(payload);
@@ -71,16 +71,16 @@ describe('JWT Service', () => {
     }
   });
 
-  test('should reject an invalid JWT token', async () => {
+  test("should reject an invalid JWT token", async () => {
     // Mock the JWT verification function to throw an error
     const originalVerifyToken = JwtService.verifyToken;
     JwtService.verifyToken = async () => {
-      throw new Error('Invalid token');
+      throw new Error("Invalid token");
     };
 
     try {
       // Try to verify an invalid token
-      const invalidToken = 'invalid.token.signature';
+      const invalidToken = "invalid.token.signature";
 
       try {
         await JwtService.verifyToken(invalidToken);
@@ -95,8 +95,8 @@ describe('JWT Service', () => {
     }
   });
 
-  test('should extract token from Authorization header', () => {
-    const token = 'test-token';
+  test("should extract token from Authorization header", () => {
+    const token = "test-token";
     const authHeader = `Bearer ${token}`;
 
     const extractedToken = JwtService.extractTokenFromHeader(authHeader);
@@ -104,23 +104,23 @@ describe('JWT Service', () => {
     expect(extractedToken).toBe(token);
   });
 
-  test('should return null for invalid Authorization header', () => {
-    const invalidHeader = 'Basic dXNlcjpwYXNz';
+  test("should return null for invalid Authorization header", () => {
+    const invalidHeader = "Basic dXNlcjpwYXNz";
 
     const extractedToken = JwtService.extractTokenFromHeader(invalidHeader);
 
     expect(extractedToken).toBeNull();
   });
 
-  test('should return null for null Authorization header', () => {
+  test("should return null for null Authorization header", () => {
     const extractedToken = JwtService.extractTokenFromHeader(null);
 
     expect(extractedToken).toBeNull();
   });
 
-  test('should extract token from Authorization header with Bearer prefix', async () => {
+  test("should extract token from Authorization header with Bearer prefix", async () => {
     // Create a token
-    const token = 'test-token';
+    const token = "test-token";
 
     // Create an Authorization header
     const authHeader = `Bearer ${token}`;
@@ -132,12 +132,14 @@ describe('JWT Service', () => {
     expect(extractedToken).toBe(token);
   });
 
-  test('should return null for missing Authorization header', () => {
+  test("should return null for missing Authorization header", () => {
     // Create a request with no Authorization header
-    const request = new Request('http://localhost/api/protected');
+    const request = new Request("http://localhost/api/protected");
 
     // Extract token from Authorization header
-    const extractedToken = JwtService.extractTokenFromHeader(request.headers.get('Authorization'));
+    const extractedToken = JwtService.extractTokenFromHeader(
+      request.headers.get("Authorization"),
+    );
 
     // Check the result
     expect(extractedToken).toBeNull();

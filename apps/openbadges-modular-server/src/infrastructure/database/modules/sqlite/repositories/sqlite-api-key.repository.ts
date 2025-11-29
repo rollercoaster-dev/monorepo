@@ -6,11 +6,11 @@
  */
 
 // import { drizzle } from 'drizzle-orm/bun-sqlite'; // Will be used in future implementation
-import type { ApiKey } from '@domains/auth/apiKey.entity';
-import type { ApiKeyRepository } from '@domains/auth/apiKey.repository';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@utils/logging/logger.service';
-import type { SqliteConnectionManager } from '../connection/sqlite-connection.manager';
+import type { ApiKey } from "@domains/auth/apiKey.entity";
+import type { ApiKeyRepository } from "@domains/auth/apiKey.repository";
+import type { Shared } from "openbadges-types";
+import { logger } from "@utils/logging/logger.service";
+import type { SqliteConnectionManager } from "../connection/sqlite-connection.manager";
 // These imports will be used in the full implementation
 // import { eq } from 'drizzle-orm';
 // import { apiKeys } from '../schema';
@@ -35,8 +35,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return apiKey;
     } catch (error) {
-      logger.error('Error creating API Key', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error creating API Key", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -47,8 +47,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return null;
     } catch (error) {
-      logger.error('Error finding API Key by ID', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error finding API Key by ID", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -59,8 +59,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return null;
     } catch (error) {
-      logger.error('Error finding API Key by key', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error finding API Key by key", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -71,8 +71,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return [];
     } catch (error) {
-      logger.error('Error finding API Keys by user ID', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error finding API Keys by user ID", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -83,8 +83,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return [];
     } catch (error) {
-      logger.error('Error finding all API Keys', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error finding all API Keys", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -92,14 +92,14 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
 
   async update(
     _id: Shared.IRI,
-    _data: Partial<ApiKey>
+    _data: Partial<ApiKey>,
   ): Promise<ApiKey | null> {
     try {
       // Implementation will be added later
       return null;
     } catch (error) {
-      logger.error('Error updating API Key', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error updating API Key", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -110,8 +110,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return false;
     } catch (error) {
-      logger.error('Error deleting API Key', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error deleting API Key", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -122,8 +122,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return null;
     } catch (error) {
-      logger.error('Error revoking API Key', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error revoking API Key", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -134,8 +134,8 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       // Implementation will be added later
       return null;
     } catch (error) {
-      logger.error('Error updating API Key last used timestamp', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+      logger.error("Error updating API Key last used timestamp", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }

@@ -14,7 +14,14 @@
 /**
  * Supported key algorithms for digital signatures
  */
-export type KeyAlgorithm = 'RS256' | 'RS384' | 'RS512' | 'ES256' | 'ES384' | 'ES512' | 'EdDSA';
+export type KeyAlgorithm =
+  | "RS256"
+  | "RS384"
+  | "RS512"
+  | "ES256"
+  | "ES384"
+  | "ES512"
+  | "EdDSA";
 
 /**
  * Key type identifiers as defined in RFC 7517
@@ -22,32 +29,39 @@ export type KeyAlgorithm = 'RS256' | 'RS384' | 'RS512' | 'ES256' | 'ES384' | 'ES
  * - EC: Elliptic Curve key pair
  * - OKP: Octet Key Pair (for Ed25519, X25519)
  */
-export type KeyType = 'RSA' | 'EC' | 'OKP';
+export type KeyType = "RSA" | "EC" | "OKP";
 
 /**
  * Elliptic curve identifiers for EC and OKP key types
  */
-export type KeyCurve = 'P-256' | 'P-384' | 'P-521' | 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+export type KeyCurve =
+  | "P-256"
+  | "P-384"
+  | "P-521"
+  | "Ed25519"
+  | "Ed448"
+  | "X25519"
+  | "X448";
 
 /**
  * Key usage types as defined in RFC 7517
  * - sig: Key is used for signatures
  * - enc: Key is used for encryption
  */
-export type KeyUse = 'sig' | 'enc';
+export type KeyUse = "sig" | "enc";
 
 /**
  * Key operations as defined in RFC 7517
  */
 export type KeyOperation =
-  | 'sign'
-  | 'verify'
-  | 'encrypt'
-  | 'decrypt'
-  | 'wrapKey'
-  | 'unwrapKey'
-  | 'deriveKey'
-  | 'deriveBits';
+  | "sign"
+  | "verify"
+  | "encrypt"
+  | "decrypt"
+  | "wrapKey"
+  | "unwrapKey"
+  | "deriveKey"
+  | "deriveBits";
 
 // =============================================================================
 // Key Status and Lifecycle
@@ -56,7 +70,7 @@ export type KeyOperation =
 /**
  * Key lifecycle status
  */
-export type KeyStatus = 'active' | 'inactive' | 'revoked' | 'expired';
+export type KeyStatus = "active" | "inactive" | "revoked" | "expired";
 
 // =============================================================================
 // JSON Web Key (JWK) - RFC 7517
@@ -83,14 +97,14 @@ export interface JWKBase {
   /** X.509 Certificate SHA-1 Thumbprint (RFC 7517 Section 4.8) */
   x5t?: string;
   /** X.509 Certificate SHA-256 Thumbprint (RFC 7517 Section 4.9) */
-  'x5t#S256'?: string;
+  "x5t#S256"?: string;
 }
 
 /**
  * RSA Public Key parameters (RFC 7518 Section 6.3.1)
  */
 export interface RSAPublicKey extends JWKBase {
-  kty: 'RSA';
+  kty: "RSA";
   /** Modulus (Base64urlUInt-encoded) */
   n: string;
   /** Exponent (Base64urlUInt-encoded) */
@@ -119,9 +133,9 @@ export interface RSAPrivateKey extends RSAPublicKey {
  * Elliptic Curve Public Key parameters (RFC 7518 Section 6.2.1)
  */
 export interface ECPublicKey extends JWKBase {
-  kty: 'EC';
+  kty: "EC";
   /** Curve identifier */
-  crv: 'P-256' | 'P-384' | 'P-521';
+  crv: "P-256" | "P-384" | "P-521";
   /** X Coordinate (Base64urlUInt-encoded) */
   x: string;
   /** Y Coordinate (Base64urlUInt-encoded) */
@@ -141,9 +155,9 @@ export interface ECPrivateKey extends ECPublicKey {
  * Used for Ed25519, Ed448, X25519, X448 curves
  */
 export interface OKPPublicKey extends JWKBase {
-  kty: 'OKP';
+  kty: "OKP";
   /** Curve identifier */
-  crv: 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+  crv: "Ed25519" | "Ed448" | "X25519" | "X448";
   /** Public Key (Base64url-encoded) */
   x: string;
 }
@@ -251,8 +265,8 @@ export const DEFAULT_KEY_ROTATION_CONFIG: KeyRotationConfig = {
   rotationIntervalDays: 90,
   overlapPeriodDays: 7,
   retainedKeyCount: 3,
-  preferredAlgorithm: 'RS256',
-  preferredKeyType: 'RSA',
+  preferredAlgorithm: "RS256",
+  preferredKeyType: "RSA",
 };
 
 // =============================================================================
@@ -285,28 +299,28 @@ export interface KeyGenerationOptions {
  * Type guard to check if a JWK is an RSA key
  */
 export function isRSAKey(jwk: JWK): jwk is RSAPublicKey | RSAPrivateKey {
-  return jwk.kty === 'RSA';
+  return jwk.kty === "RSA";
 }
 
 /**
  * Type guard to check if a JWK is an EC key
  */
 export function isECKey(jwk: JWK): jwk is ECPublicKey | ECPrivateKey {
-  return jwk.kty === 'EC';
+  return jwk.kty === "EC";
 }
 
 /**
  * Type guard to check if a JWK is an OKP key
  */
 export function isOKPKey(jwk: JWK): jwk is OKPPublicKey | OKPPrivateKey {
-  return jwk.kty === 'OKP';
+  return jwk.kty === "OKP";
 }
 
 /**
  * Type guard to check if a JWK is a private key
  */
 export function isPrivateKey(jwk: JWK): jwk is JWKPrivate {
-  return 'd' in jwk;
+  return "d" in jwk;
 }
 
 // =============================================================================
@@ -329,17 +343,17 @@ export interface KeyFileFormat {
 }
 
 /** Valid key types for file storage */
-const VALID_KEY_TYPES = ['RSA', 'EC', 'OKP'] as const;
+const VALID_KEY_TYPES = ["RSA", "EC", "OKP"] as const;
 
 /** Valid algorithms for file storage */
 const VALID_ALGORITHMS = [
-  'RS256',
-  'RS384',
-  'RS512',
-  'ES256',
-  'ES384',
-  'ES512',
-  'EdDSA',
+  "RS256",
+  "RS384",
+  "RS512",
+  "ES256",
+  "ES384",
+  "ES512",
+  "EdDSA",
 ] as const;
 
 /**
@@ -360,19 +374,19 @@ function isValidISO8601(date: string): boolean {
  * - createdAt is a valid ISO 8601 date string
  */
 export function isValidKeyFileFormat(data: unknown): data is KeyFileFormat {
-  if (typeof data !== 'object' || data === null) return false;
+  if (typeof data !== "object" || data === null) return false;
   const obj = data as Record<string, unknown>;
   return (
-    typeof obj.id === 'string' &&
-    typeof obj.publicKey === 'string' &&
-    typeof obj.privateKey === 'string' &&
-    typeof obj.keyType === 'string' &&
+    typeof obj.id === "string" &&
+    typeof obj.publicKey === "string" &&
+    typeof obj.privateKey === "string" &&
+    typeof obj.keyType === "string" &&
     VALID_KEY_TYPES.includes(obj.keyType as (typeof VALID_KEY_TYPES)[number]) &&
-    typeof obj.algorithm === 'string' &&
+    typeof obj.algorithm === "string" &&
     VALID_ALGORITHMS.includes(
-      obj.algorithm as (typeof VALID_ALGORITHMS)[number]
+      obj.algorithm as (typeof VALID_ALGORITHMS)[number],
     ) &&
-    typeof obj.createdAt === 'string' &&
+    typeof obj.createdAt === "string" &&
     isValidISO8601(obj.createdAt)
   );
 }

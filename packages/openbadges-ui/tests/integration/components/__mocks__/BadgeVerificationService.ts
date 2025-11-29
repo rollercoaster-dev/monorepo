@@ -1,14 +1,14 @@
 // tests/integration/components/__mocks__/BadgeVerificationService.ts
-import { vi } from 'vitest';
-import type { VerificationResult } from '../../../../src/services/BadgeVerificationService';
+import { vi } from "vitest";
+import type { VerificationResult } from "../../../../src/services/BadgeVerificationService";
 
 const defaultResult: VerificationResult = {
   isValid: true,
   errors: [],
   warnings: [],
-  verificationMethod: 'hosted' as const,
-  expirationStatus: 'valid',
-  revocationStatus: 'valid',
+  verificationMethod: "hosted" as const,
+  expirationStatus: "valid",
+  revocationStatus: "valid",
   structureValidation: {
     isValid: true,
     errors: [],
@@ -31,7 +31,9 @@ export function setupSuccessfulVerification(): void {
 }
 
 // Helper function to set up a failed verification result
-export function setupFailedVerification(errors: string[] = ['Invalid badge format']): void {
+export function setupFailedVerification(
+  errors: string[] = ["Invalid badge format"],
+): void {
   const failedResult: VerificationResult = {
     ...defaultResult,
     isValid: false,
@@ -46,7 +48,9 @@ export function setupFailedVerification(errors: string[] = ['Invalid badge forma
 }
 
 // Helper function to set up verification result with warnings
-export function setupVerificationWithWarnings(warnings: string[] = ['Test warning']): void {
+export function setupVerificationWithWarnings(
+  warnings: string[] = ["Test warning"],
+): void {
   const warningResult: VerificationResult = {
     ...defaultResult,
     warnings,
@@ -60,7 +64,9 @@ export function setupVerificationWithWarnings(warnings: string[] = ['Test warnin
 }
 
 // Helper function to set up a custom verification result
-export function setupCustomVerification(result: Partial<VerificationResult>): void {
+export function setupCustomVerification(
+  result: Partial<VerificationResult>,
+): void {
   BadgeVerificationService.verifyBadge.mockResolvedValue({
     ...defaultResult,
     ...result,

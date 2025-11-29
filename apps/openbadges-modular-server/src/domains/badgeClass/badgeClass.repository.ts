@@ -6,8 +6,8 @@
  * BadgeClass repository implementations must fulfill.
  */
 
-import type { BadgeClass } from './badgeClass.entity';
-import type { Shared } from 'openbadges-types';
+import type { BadgeClass } from "./badgeClass.entity";
+import type { Shared } from "openbadges-types";
 
 export interface BadgeClassRepository {
   /**
@@ -43,7 +43,10 @@ export interface BadgeClassRepository {
    * @param badgeClass The updated badge class data
    * @returns The updated badge class if found, null otherwise
    */
-  update(id: Shared.IRI, badgeClass: Partial<BadgeClass>): Promise<BadgeClass | null>;
+  update(
+    id: Shared.IRI,
+    badgeClass: Partial<BadgeClass>,
+  ): Promise<BadgeClass | null>;
 
   /**
    * Deletes a badge class by its ID

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import BadgeClassCard from './BadgeClassCard.vue';
-import type { OB2, OB3 } from 'openbadges-types';
+import { ref } from "vue";
+import BadgeClassCard from "./BadgeClassCard.vue";
+import type { OB2, OB3 } from "openbadges-types";
 
 /**
  * # BadgeClassCard
@@ -46,71 +46,85 @@ import type { OB2, OB3 } from 'openbadges-types';
 
 // Mock OB2 BadgeClass data
 const mockOB2BadgeClass: OB2.BadgeClass = {
-  id: 'https://example.org/badges/1',
-  type: 'BadgeClass',
-  name: 'Web Developer Certificate',
-  description: 'Demonstrates proficiency in modern web development technologies including HTML5, CSS3, JavaScript, and responsive design patterns.',
-  image: 'https://placehold.co/200x200/3182ce/white?text=WD',
+  id: "https://example.org/badges/1",
+  type: "BadgeClass",
+  name: "Web Developer Certificate",
+  description:
+    "Demonstrates proficiency in modern web development technologies including HTML5, CSS3, JavaScript, and responsive design patterns.",
+  image: "https://placehold.co/200x200/3182ce/white?text=WD",
   criteria: {
-    narrative: 'Complete all required courses, pass the final exam with 80% or higher, and submit a portfolio project.',
+    narrative:
+      "Complete all required courses, pass the final exam with 80% or higher, and submit a portfolio project.",
   },
   issuer: {
-    id: 'https://example.org/issuers/1',
-    name: 'Tech Academy',
+    id: "https://example.org/issuers/1",
+    name: "Tech Academy",
   },
-  tags: ['web', 'development', 'javascript', 'html', 'css', 'frontend'],
+  tags: ["web", "development", "javascript", "html", "css", "frontend"],
 };
 
 // Mock OB3 Achievement data
 const mockOB3Achievement = {
-  id: 'https://example.org/achievements/2',
-  type: ['Achievement'] as [string, ...string[]],
-  name: 'Data Science Fundamentals',
-  description: 'Understanding of core data science concepts including statistical analysis, machine learning basics, and data visualization.',
+  id: "https://example.org/achievements/2",
+  type: ["Achievement"] as [string, ...string[]],
+  name: "Data Science Fundamentals",
+  description:
+    "Understanding of core data science concepts including statistical analysis, machine learning basics, and data visualization.",
   image: {
-    id: 'https://placehold.co/200x200/805ad5/white?text=DS',
-    type: 'Image' as const,
+    id: "https://placehold.co/200x200/805ad5/white?text=DS",
+    type: "Image" as const,
   },
   criteria: {
-    narrative: 'Pass the data science assessment with 75% or higher and complete the capstone project.',
+    narrative:
+      "Pass the data science assessment with 75% or higher and complete the capstone project.",
   },
   creator: {
-    id: 'https://example.org/issuers/2',
-    name: 'Data Institute',
+    id: "https://example.org/issuers/2",
+    name: "Data Institute",
   },
 } as OB3.Achievement;
 
 // Badge without image
 const badgeNoImage: OB2.BadgeClass = {
-  id: 'https://example.org/badges/3',
-  type: 'BadgeClass',
-  name: 'Project Management Basics',
-  description: 'Foundational knowledge in project management methodologies and tools.',
+  id: "https://example.org/badges/3",
+  type: "BadgeClass",
+  name: "Project Management Basics",
+  description:
+    "Foundational knowledge in project management methodologies and tools.",
   criteria: {
-    narrative: 'Complete the PM fundamentals course.',
+    narrative: "Complete the PM fundamentals course.",
   },
   issuer: {
-    id: 'https://example.org/issuers/3',
-    name: 'Business School',
+    id: "https://example.org/issuers/3",
+    name: "Business School",
   },
-  tags: ['management', 'leadership'],
+  tags: ["management", "leadership"],
 };
 
 // Badge with many tags
 const badgeManyTags: OB2.BadgeClass = {
-  id: 'https://example.org/badges/4',
-  type: 'BadgeClass',
-  name: 'Full Stack Developer',
-  description: 'Comprehensive full-stack development skills.',
-  image: 'https://placehold.co/200x200/38a169/white?text=FS',
+  id: "https://example.org/badges/4",
+  type: "BadgeClass",
+  name: "Full Stack Developer",
+  description: "Comprehensive full-stack development skills.",
+  image: "https://placehold.co/200x200/38a169/white?text=FS",
   criteria: {
-    narrative: 'Build and deploy a full-stack application.',
+    narrative: "Build and deploy a full-stack application.",
   },
   issuer: {
-    id: 'https://example.org/issuers/1',
-    name: 'Tech Academy',
+    id: "https://example.org/issuers/1",
+    name: "Tech Academy",
   },
-  tags: ['javascript', 'typescript', 'react', 'node', 'postgresql', 'docker', 'aws', 'testing'],
+  tags: [
+    "javascript",
+    "typescript",
+    "react",
+    "node",
+    "postgresql",
+    "docker",
+    "aws",
+    "testing",
+  ],
 };
 
 const state = ref({
@@ -120,11 +134,11 @@ const state = ref({
   showCriteria: false,
   showIssuer: true,
   showTags: true,
-  density: 'normal' as 'compact' | 'normal' | 'spacious',
+  density: "normal" as "compact" | "normal" | "spacious",
 });
 
 function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
-  console.log('Badge class clicked:', badgeClass);
+  console.log("Badge class clicked:", badgeClass);
 }
 </script>
 
@@ -138,8 +152,9 @@ function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
         <h1>BadgeClassCard</h1>
 
         <p>
-          The <code>BadgeClassCard</code> component displays a badge class (OB2) or
-          achievement (OB3) with its image, description, issuer, criteria, and tags.
+          The <code>BadgeClassCard</code> component displays a badge class (OB2)
+          or achievement (OB3) with its image, description, issuer, criteria,
+          and tags.
         </p>
 
         <h2>When To Use</h2>
@@ -162,8 +177,8 @@ function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
 
         <h2>Tag Overflow</h2>
         <p>
-          When a badge has more than 5 tags, only the first 5 are displayed with a
-          "+N" indicator showing how many additional tags exist.
+          When a badge has more than 5 tags, only the first 5 are displayed with
+          a "+N" indicator showing how many additional tags exist.
         </p>
 
         <h2>Accessibility</h2>
@@ -178,33 +193,18 @@ function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
     </template>
 
     <template #controls>
-      <HstCheckbox
-        v-model="state.showDescription"
-        title="Show Description"
-      />
-      <HstCheckbox
-        v-model="state.showCriteria"
-        title="Show Criteria"
-      />
-      <HstCheckbox
-        v-model="state.showIssuer"
-        title="Show Issuer"
-      />
-      <HstCheckbox
-        v-model="state.showTags"
-        title="Show Tags"
-      />
-      <HstCheckbox
-        v-model="state.interactive"
-        title="Interactive"
-      />
+      <HstCheckbox v-model="state.showDescription" title="Show Description" />
+      <HstCheckbox v-model="state.showCriteria" title="Show Criteria" />
+      <HstCheckbox v-model="state.showIssuer" title="Show Issuer" />
+      <HstCheckbox v-model="state.showTags" title="Show Tags" />
+      <HstCheckbox v-model="state.interactive" title="Interactive" />
       <HstSelect
         v-model="state.density"
         title="Density"
         :options="[
           { label: 'Compact', value: 'compact' },
           { label: 'Normal', value: 'normal' },
-          { label: 'Spacious', value: 'spacious' }
+          { label: 'Spacious', value: 'spacious' },
         ]"
       />
     </template>

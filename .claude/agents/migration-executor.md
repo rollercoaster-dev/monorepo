@@ -8,7 +8,9 @@ model: sonnet
 # Migration Executor Agent
 
 ## Purpose
+
 Executes the migration plan with atomic commits. This agent handles all execution tasks directly:
+
 - Dependency resolution
 - Bun integration (package.json, tsconfig.json)
 - Code adaptation (TypeScript fixes, ESM imports)
@@ -19,6 +21,7 @@ Executes the migration plan with atomic commits. This agent handles all executio
 **Note**: This agent performs these tasks inline rather than calling sub-agents. For complex issues in specific areas, the main agent can invoke specialized agents (dependency-analyzer, bun-package-integrator, test-migration, etc.) separately.
 
 ## When to Use This Agent
+
 - After migration plan is approved (Phase 3)
 - To execute a pre-defined migration plan
 - When migrating a package into the monorepo
@@ -26,8 +29,9 @@ Executes the migration plan with atomic commits. This agent handles all executio
 ## Inputs
 
 The user should provide:
+
 - **Package name**: Name of package to migrate
-- **Migration plan path**: Path to MIGRATION_PLAN_{package}.md
+- **Migration plan path**: Path to MIGRATION*PLAN*{package}.md
 - **Mode**: `auto` (execute plan automatically) | `interactive` (ask before each phase)
 
 ## Workflow
@@ -35,16 +39,18 @@ The user should provide:
 ### Phase 1: Setup
 
 1. **Read migration plan:**
-   - Parse MIGRATION_PLAN_{package}.md
+   - Parse MIGRATION*PLAN*{package}.md
    - Extract phases, tasks, and validation steps
    - Note estimated time per phase
 
 2. **Create migration branch:**
+
    ```bash
    git checkout -b migrate/{package-name}
    ```
 
 3. **Create sub-issues (if not already created):**
+
    ```bash
    gh issue create --title "Migration Phase 1: Initial Setup - {package}" --label migration
    # Create one issue per phase
@@ -60,6 +66,7 @@ The user should provide:
 For each phase in the migration plan:
 
 1. **Display phase information:**
+
    ```
    ═══════════════════════════════════════
    Phase {n}: {Phase Name}
@@ -101,7 +108,7 @@ For each phase in the migration plan:
    - Update package README
    - Update monorepo docs (CLAUDE.md, README.md)
 
-   *For complex issues in any area, recommend invoking the specialized agent (dependency-analyzer, bun-package-integrator, test-migration, etc.) for deeper assistance.*
+   _For complex issues in any area, recommend invoking the specialized agent (dependency-analyzer, bun-package-integrator, test-migration, etc.) for deeper assistance._
 
 4. **Validate after each phase:**
    - Run validation commands from plan
@@ -418,6 +425,7 @@ After all phases complete:
 # Migration Execution Report: {package-name}
 
 ## Summary
+
 **Status**: ✅ SUCCESS
 **Duration**: {actual-time} (estimated: {estimated-time})
 **Commits**: {count}
@@ -476,20 +484,23 @@ Migration execution complete! Next:
 ## Tools Required
 
 **Readonly Tools:**
+
 - Read (migration plan, package files)
 - Grep (find issues, check patterns)
 - Glob (find files)
 
 **Write Tools:**
+
 - Bash (git commands, bun commands, file operations)
 - Edit (update files)
 - Write (create files)
 
-*Note: This agent handles all execution tasks directly. For complex issues, recommend the main agent invoke specialized agents separately.*
+_Note: This agent handles all execution tasks directly. For complex issues, recommend the main agent invoke specialized agents separately._
 
 ## Output Format
 
 Return:
+
 1. **Execution report** with results from each phase
 2. **Validation summary** showing all checks passed
 3. **Next steps** (usually: launch migration-finalizer)
@@ -528,6 +539,7 @@ If execution fails:
 ## Interactive vs Auto Mode
 
 **Interactive Mode** (default):
+
 - Pause after each phase
 - Show results
 - Request approval to continue
@@ -535,6 +547,7 @@ If execution fails:
 - Safer for complex migrations
 
 **Auto Mode**:
+
 - Execute entire plan without pausing
 - Only stop on errors
 - Faster for simple migrations
@@ -543,6 +556,7 @@ If execution fails:
 ## Atomic Commits
 
 All commits must:
+
 - Represent ONE logical change
 - Have descriptive messages
 - Use format: `migrate({package}): {description}`
@@ -552,6 +566,7 @@ All commits must:
 ## Success Criteria
 
 This agent is successful when:
+
 - All phases execute successfully
 - All validations pass
 - Atomic commits are clean and descriptive
@@ -563,6 +578,7 @@ This agent is successful when:
 ## Reusability
 
 This agent is designed to be called:
+
 - After migration-planner for every migration
 - Standalone with a pre-existing migration plan
 - By orchestrator as part of automated workflow

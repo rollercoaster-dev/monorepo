@@ -1,5 +1,5 @@
-import type { Formatter } from './formatter.interface.js';
-import { safeStringify } from '../utils.js';
+import type { Formatter } from "./formatter.interface.js";
+import { safeStringify } from "../utils.js";
 
 /**
  * Text formatter for the logger
@@ -8,13 +8,18 @@ export class TextFormatter implements Formatter {
   /**
    * Format a log message as plain text
    */
-  public format(level: string, message: string, timestamp: string, context: Record<string, any>): string {
+  public format(
+    level: string,
+    message: string,
+    timestamp: string,
+    context: Record<string, any>,
+  ): string {
     let output = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-    
+
     if (Object.keys(context).length > 0) {
       output += ` | ${safeStringify(context)}`;
     }
-    
+
     return output;
   }
 }

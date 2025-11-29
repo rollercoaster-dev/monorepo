@@ -11,6 +11,7 @@ Badge verification is a crucial aspect of the Open Badges standard. It ensures t
 #### Hosted Verification (OB2)
 
 In hosted verification, the badge assertion is hosted at a URL that matches the badge's ID. The verification process involves:
+
 1. Retrieving the badge from its ID URL
 2. Comparing it with the badge being verified
 3. Checking if the issuer is authorized to issue the badge
@@ -18,6 +19,7 @@ In hosted verification, the badge assertion is hosted at a URL that matches the 
 #### Signed Verification (OB2)
 
 In signed verification, the badge assertion includes a digital signature created by the issuer. The verification process involves:
+
 1. Retrieving the issuer's public key
 2. Verifying the signature using the public key
 3. Checking if the issuer is authorized to issue the badge
@@ -25,6 +27,7 @@ In signed verification, the badge assertion includes a digital signature created
 #### Proof Verification (OB3)
 
 OB3 badges use the W3C Verifiable Credentials model, which includes a proof property. The verification process involves:
+
 1. Checking the proof type
 2. Verifying the proof using the appropriate cryptographic method
 3. Checking if the issuer is authorized to issue the badge
@@ -32,6 +35,7 @@ OB3 badges use the W3C Verifiable Credentials model, which includes a proof prop
 ### Additional Checks
 
 In addition to the verification method-specific checks, the library also performs:
+
 - **Expiration Check**: Checks if the badge has expired
 - **Revocation Check**: Checks if the badge has been revoked
 
@@ -43,22 +47,19 @@ The easiest way to add verification to your application is to use the `BadgeVeri
 
 ```vue
 <template>
-  <BadgeVerification 
-    :badge="badge" 
-    @verified="handleVerified"
-  />
+  <BadgeVerification :badge="badge" @verified="handleVerified" />
 </template>
 
 <script setup>
-import { BadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { BadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
   // Badge data
 });
 
 const handleVerified = (isValid) => {
-  console.log('Badge verification result:', isValid);
+  console.log("Badge verification result:", isValid);
 };
 </script>
 ```
@@ -69,8 +70,8 @@ You can set the `auto-verify` prop to automatically verify the badge when the co
 
 ```vue
 <template>
-  <BadgeVerification 
-    :badge="badge" 
+  <BadgeVerification
+    :badge="badge"
     :auto-verify="true"
     @verified="handleVerified"
   />
@@ -83,8 +84,8 @@ You can customize what information is displayed using the following props:
 
 ```vue
 <template>
-  <BadgeVerification 
-    :badge="badge" 
+  <BadgeVerification
+    :badge="badge"
     :show-status="true"
     :show-details="true"
     :show-last-verified="true"
@@ -98,8 +99,8 @@ The `BadgeDisplay` component can include verification functionality:
 
 ```vue
 <template>
-  <BadgeDisplay 
-    :badge="badge" 
+  <BadgeDisplay
+    :badge="badge"
     :show-verification="true"
     :auto-verify="false"
     @verified="handleVerified"
@@ -113,8 +114,8 @@ For more control over the verification process, you can use the `useBadgeVerific
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
-import { ref } from 'vue';
+import { useBadgeVerification } from "openbadges-ui";
+import { ref } from "vue";
 
 const badge = ref({
   // Badge data
@@ -130,51 +131,54 @@ const {
   revocationStatus,
   hasBeenVerified,
   verifyBadge,
-  clearVerification
+  clearVerification,
 } = useBadgeVerification();
 
 const handleVerify = async () => {
   const result = await verifyBadge(badge.value);
-  console.log('Verification result:', result);
+  console.log("Verification result:", result);
 };
 </script>
 
 <template>
   <div>
-    <button 
-      @click="handleVerify" 
-      :disabled="state.isVerifying"
-    >
-      {{ state.isVerifying ? 'Verifying...' : 'Verify Badge' }}
+    <button @click="handleVerify" :disabled="state.isVerifying">
+      {{ state.isVerifying ? "Verifying..." : "Verify Badge" }}
     </button>
-    
+
     <div v-if="hasBeenVerified">
       <h3>Verification Result</h3>
-      <p>Valid: {{ isValid ? 'Yes' : 'No' }}</p>
-      
+      <p>Valid: {{ isValid ? "Yes" : "No" }}</p>
+
       <div v-if="verificationMethod">
         <p>Method: {{ verificationMethod }}</p>
       </div>
-      
+
       <div v-if="expirationStatus !== 'not-applicable'">
-        <p>Expiration: {{ expirationStatus === 'valid' ? 'Valid' : 'Expired' }}</p>
+        <p>
+          Expiration: {{ expirationStatus === "valid" ? "Valid" : "Expired" }}
+        </p>
       </div>
-      
+
       <div v-if="revocationStatus !== 'unknown'">
-        <p>Revocation: {{ revocationStatus === 'valid' ? 'Valid' : 'Revoked' }}</p>
+        <p>
+          Revocation: {{ revocationStatus === "valid" ? "Valid" : "Revoked" }}
+        </p>
       </div>
-      
+
       <div v-if="errors.length > 0">
         <h4>Errors:</h4>
         <ul>
           <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
         </ul>
       </div>
-      
+
       <div v-if="warnings.length > 0">
         <h4>Warnings:</h4>
         <ul>
-          <li v-for="(warning, index) in warnings" :key="index">{{ warning }}</li>
+          <li v-for="(warning, index) in warnings" :key="index">
+            {{ warning }}
+          </li>
         </ul>
       </div>
     </div>
@@ -187,8 +191,8 @@ const handleVerify = async () => {
 For advanced use cases, you can use the `BadgeVerificationService` directly:
 
 ```typescript
-import { BadgeVerificationService } from 'openbadges-ui';
-import type { OB2 } from 'openbadges-types';
+import { BadgeVerificationService } from "openbadges-ui";
+import type { OB2 } from "openbadges-types";
 
 const badge: OB2.Assertion = {
   // Badge data
@@ -196,16 +200,16 @@ const badge: OB2.Assertion = {
 
 try {
   const result = await BadgeVerificationService.verifyBadge(badge);
-  
+
   if (result.isValid) {
-    console.log('Badge is valid!');
+    console.log("Badge is valid!");
   } else {
-    console.log('Badge is invalid:');
-    result.errors.forEach(error => console.log(`- ${error}`));
-    result.warnings.forEach(warning => console.log(`- Warning: ${warning}`));
+    console.log("Badge is invalid:");
+    result.errors.forEach((error) => console.log(`- ${error}`));
+    result.warnings.forEach((warning) => console.log(`- Warning: ${warning}`));
   }
 } catch (error) {
-  console.error('Verification failed:', error);
+  console.error("Verification failed:", error);
 }
 ```
 
@@ -217,11 +221,11 @@ The verification functionality automatically detects the badge format (OB2 or OB
 
 ```typescript
 const ob2Badge = {
-  '@context': 'https://w3id.org/openbadges/v2',
-  type: 'Assertion',
-  id: 'https://example.org/assertions/123',
+  "@context": "https://w3id.org/openbadges/v2",
+  type: "Assertion",
+  id: "https://example.org/assertions/123",
   verification: {
-    type: 'hosted'
+    type: "hosted",
   },
   // ... other badge properties
 };
@@ -233,14 +237,14 @@ const result = await BadgeVerificationService.verifyBadge(ob2Badge);
 
 ```typescript
 const ob3Badge = {
-  '@context': [
-    'https://www.w3.org/2018/credentials/v1',
-    'https://purl.imsglobal.org/spec/ob/v3p0/context.json'
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
   ],
-  id: 'https://example.org/credentials/123',
-  type: ['VerifiableCredential', 'OpenBadgeCredential'],
+  id: "https://example.org/credentials/123",
+  type: ["VerifiableCredential", "OpenBadgeCredential"],
   proof: {
-    type: 'Ed25519Signature2020',
+    type: "Ed25519Signature2020",
     // ... other proof properties
   },
   // ... other badge properties
@@ -252,6 +256,7 @@ const result = await BadgeVerificationService.verifyBadge(ob3Badge);
 ## Handling Verification Errors
 
 The verification process can encounter various errors, such as:
+
 - Missing verification information
 - Invalid verification type
 - Missing required properties
@@ -262,7 +267,7 @@ You should handle these errors gracefully in your application:
 
 ```vue
 <script setup>
-import { useBadgeVerification } from 'openbadges-ui';
+import { useBadgeVerification } from "openbadges-ui";
 
 const { verifyBadge, isValid, errors, warnings } = useBadgeVerification();
 
@@ -270,25 +275,23 @@ const handleVerify = async () => {
   try {
     await verifyBadge(badge.value);
   } catch (error) {
-    console.error('Verification failed:', error);
+    console.error("Verification failed:", error);
   }
 };
 </script>
 
 <template>
   <button @click="handleVerify">Verify Badge</button>
-  
-  <div v-if="isValid" class="success">
-    Badge is valid!
-  </div>
-  
+
+  <div v-if="isValid" class="success">Badge is valid!</div>
+
   <div v-else-if="errors.length > 0" class="error">
     <h4>Verification Failed:</h4>
     <ul>
       <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
     </ul>
   </div>
-  
+
   <div v-if="warnings.length > 0" class="warning">
     <h4>Warnings:</h4>
     <ul>

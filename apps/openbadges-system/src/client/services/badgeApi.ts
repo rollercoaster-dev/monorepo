@@ -5,24 +5,24 @@
  * for the directory pages. It uses the badge server proxy at /api/bs/
  */
 
-import type { OB2 } from 'openbadges-types';
+import type { OB2 } from 'openbadges-types'
 
 // Type aliases for clarity
-export type Issuer = OB2.Profile;
-export type BadgeClass = OB2.BadgeClass;
+export type Issuer = OB2.Profile
+export type BadgeClass = OB2.BadgeClass
 
 // API response error interface
 interface ApiError {
-  error?: string;
-  message?: string;
-  status?: number;
+  error?: string
+  message?: string
+  status?: number
 }
 
 // API response wrapper interface for paginated/wrapped responses
 interface ApiListResponse<T> {
-  items?: T[];
-  data?: T[];
-  [key: string]: unknown;
+  items?: T[]
+  data?: T[]
+  [key: string]: unknown
 }
 
 /**
@@ -35,38 +35,36 @@ export const badgeApi = {
   getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-    };
-
-    // Add auth token if available (guard for SSR)
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('auth_token')
-      : null;
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
     }
 
-    return headers;
+    // Add auth token if available (guard for SSR)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    return headers
   },
 
   /**
    * Handle API errors with user-friendly messages
    */
   async handleError(response: Response): Promise<never> {
-    let errorMessage = `Request failed with status ${response.status}`;
+    let errorMessage = `Request failed with status ${response.status}`
 
     try {
-      const data = (await response.json()) as ApiError;
+      const data = (await response.json()) as ApiError
       if (data.error || data.message) {
-        errorMessage = data.error || data.message || errorMessage;
+        errorMessage = data.error || data.message || errorMessage
       }
     } catch {
       // If we can't parse JSON, use status text
       if (response.statusText) {
-        errorMessage = `${response.status}: ${response.statusText}`;
+        errorMessage = `${response.status}: ${response.statusText}`
       }
     }
 
-    throw new Error(errorMessage);
+    throw new Error(errorMessage)
   },
 
   /**
@@ -77,23 +75,23 @@ export const badgeApi = {
       const response = await fetch('/api/bs/v2/issuers', {
         method: 'GET',
         headers: this.getHeaders(),
-      });
+      })
 
       if (!response.ok) {
-        await this.handleError(response);
+        await this.handleError(response)
       }
 
-      const data = (await response.json()) as Issuer[] | ApiListResponse<Issuer>;
+      const data = (await response.json()) as Issuer[] | ApiListResponse<Issuer>
       // Handle both array and object with items property
       if (Array.isArray(data)) {
-        return data;
+        return data
       }
-      return data.items || data.data || [];
+      return data.items || data.data || []
     } catch (error) {
       if (error instanceof Error) {
-        throw error;
+        throw error
       }
-      throw new Error('Failed to fetch issuers');
+      throw new Error('Failed to fetch issuers')
     }
   },
 
@@ -105,22 +103,22 @@ export const badgeApi = {
       const response = await fetch(`/api/bs/v2/issuers/${encodeURIComponent(id)}`, {
         method: 'GET',
         headers: this.getHeaders(),
-      });
+      })
 
       if (response.status === 404) {
-        return null;
+        return null
       }
 
       if (!response.ok) {
-        await this.handleError(response);
+        await this.handleError(response)
       }
 
-      return await response.json();
+      return await response.json()
     } catch (error) {
       if (error instanceof Error) {
-        throw error;
+        throw error
       }
-      throw new Error('Failed to fetch issuer');
+      throw new Error('Failed to fetch issuer')
     }
   },
 
@@ -132,23 +130,23 @@ export const badgeApi = {
       const response = await fetch('/api/bs/v2/badge-classes', {
         method: 'GET',
         headers: this.getHeaders(),
-      });
+      })
 
       if (!response.ok) {
-        await this.handleError(response);
+        await this.handleError(response)
       }
 
-      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>;
+      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>
       // Handle both array and object with items property
       if (Array.isArray(data)) {
-        return data;
+        return data
       }
-      return data.items || data.data || [];
+      return data.items || data.data || []
     } catch (error) {
       if (error instanceof Error) {
-        throw error;
+        throw error
       }
-      throw new Error('Failed to fetch badge classes');
+      throw new Error('Failed to fetch badge classes')
     }
   },
 
@@ -160,22 +158,22 @@ export const badgeApi = {
       const response = await fetch(`/api/bs/v2/badge-classes/${encodeURIComponent(id)}`, {
         method: 'GET',
         headers: this.getHeaders(),
-      });
+      })
 
       if (response.status === 404) {
-        return null;
+        return null
       }
 
       if (!response.ok) {
-        await this.handleError(response);
+        await this.handleError(response)
       }
 
-      return await response.json();
+      return await response.json()
     } catch (error) {
       if (error instanceof Error) {
-        throw error;
+        throw error
       }
-      throw new Error('Failed to fetch badge class');
+      throw new Error('Failed to fetch badge class')
     }
   },
 
@@ -190,25 +188,25 @@ export const badgeApi = {
           method: 'GET',
           headers: this.getHeaders(),
         }
-      );
+      )
 
       if (!response.ok) {
-        await this.handleError(response);
+        await this.handleError(response)
       }
 
-      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>;
+      const data = (await response.json()) as BadgeClass[] | ApiListResponse<BadgeClass>
       // Handle both array and object with items property
       if (Array.isArray(data)) {
-        return data;
+        return data
       }
-      return data.items || data.data || [];
+      return data.items || data.data || []
     } catch (error) {
       if (error instanceof Error) {
-        throw error;
+        throw error
       }
-      throw new Error('Failed to fetch badge classes for issuer');
+      throw new Error('Failed to fetch badge classes for issuer')
     }
   },
-};
+}
 
-export default badgeApi;
+export default badgeApi

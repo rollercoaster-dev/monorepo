@@ -54,7 +54,7 @@ For a more complete setup with PostgreSQL:
 1. Create a `docker-compose.yml` file:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -109,31 +109,31 @@ The Docker container is configured using environment variables. Here are the mos
 
 #### Server Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Port the server listens on | `3000` |
-| `HOST` | Host the server binds to | `0.0.0.0` |
-| `NODE_ENV` | Environment mode | `production` |
-| `BASE_URL` | Public URL of the server | `http://localhost:3000` |
+| Variable   | Description                | Default                 |
+| ---------- | -------------------------- | ----------------------- |
+| `PORT`     | Port the server listens on | `3000`                  |
+| `HOST`     | Host the server binds to   | `0.0.0.0`               |
+| `NODE_ENV` | Environment mode           | `production`            |
+| `BASE_URL` | Public URL of the server   | `http://localhost:3000` |
 
 #### Database Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_TYPE` | Database type (`sqlite` or `postgresql`) | `sqlite` |
-| `SQLITE_FILE` | Path to SQLite database file | `/data/sqlite.db` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgres://postgres:postgres@db:5432/openbadges` |
+| Variable       | Description                              | Default                                           |
+| -------------- | ---------------------------------------- | ------------------------------------------------- |
+| `DB_TYPE`      | Database type (`sqlite` or `postgresql`) | `sqlite`                                          |
+| `SQLITE_FILE`  | Path to SQLite database file             | `/data/sqlite.db`                                 |
+| `DATABASE_URL` | PostgreSQL connection string             | `postgres://postgres:postgres@db:5432/openbadges` |
 
 #### Authentication Configuration
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_ENABLED` | Enable authentication | `true` |
-| `JWT_SECRET` | Secret for JWT tokens | `change-this-in-production` |
-| `JWT_TOKEN_EXPIRY_SECONDS` | JWT token expiry in seconds | `3600` |
-| `AUTH_API_KEY_ENABLED` | Enable API key authentication | `true` |
-| `AUTH_BASIC_AUTH_ENABLED` | Enable basic authentication | `true` |
-| `AUTH_OAUTH2_ENABLED` | Enable OAuth2 authentication | `false` |
+| Variable                   | Description                   | Default                     |
+| -------------------------- | ----------------------------- | --------------------------- |
+| `AUTH_ENABLED`             | Enable authentication         | `true`                      |
+| `JWT_SECRET`               | Secret for JWT tokens         | `change-this-in-production` |
+| `JWT_TOKEN_EXPIRY_SECONDS` | JWT token expiry in seconds   | `3600`                      |
+| `AUTH_API_KEY_ENABLED`     | Enable API key authentication | `true`                      |
+| `AUTH_BASIC_AUTH_ENABLED`  | Enable basic authentication   | `true`                      |
+| `AUTH_OAUTH2_ENABLED`      | Enable OAuth2 authentication  | `false`                     |
 
 For a complete list of environment variables, see the [Environment Variables Reference](./environment-variables-reference.md).
 
@@ -141,8 +141,8 @@ For a complete list of environment variables, see the [Environment Variables Ref
 
 The Docker container uses the following volumes:
 
-| Volume | Description |
-|--------|-------------|
+| Volume  | Description                               |
+| ------- | ----------------------------------------- |
 | `/data` | SQLite database and other persistent data |
 
 ## Integration with Existing Systems
@@ -161,6 +161,7 @@ docker run -p 3000:3000 \
 ```
 
 Ensure your database user has the following permissions:
+
 - `CREATE TABLE` - For running migrations
 - `INSERT`, `UPDATE`, `DELETE`, `SELECT` - For normal operations
 
@@ -277,10 +278,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 1G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
     # ... other configuration
 ```
@@ -298,6 +299,7 @@ docker logs <container-id>
 ```
 
 Common issues:
+
 - Database connection problems
 - Invalid environment variables
 - Insufficient permissions

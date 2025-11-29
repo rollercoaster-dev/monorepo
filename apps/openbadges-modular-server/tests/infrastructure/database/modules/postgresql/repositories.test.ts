@@ -15,20 +15,20 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
-} from 'bun:test';
-import postgres from 'postgres';
-import { drizzle } from 'drizzle-orm/postgres-js';
+} from "bun:test";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 
-import { PostgresIssuerRepository } from '@/infrastructure/database/modules/postgresql/repositories/postgres-issuer.repository';
-import { PostgresBadgeClassRepository } from '@/infrastructure/database/modules/postgresql/repositories/postgres-badge-class.repository';
-import { PostgresAssertionRepository } from '@/infrastructure/database/modules/postgresql/repositories/postgres-assertion.repository';
-import { Issuer } from '@/domains/issuer/issuer.entity';
-import { BadgeClass } from '@/domains/badgeClass/badgeClass.entity';
-import { Assertion } from '@/domains/assertion/assertion.entity';
-import * as schema from '@/infrastructure/database/modules/postgresql/schema';
-import type { Shared } from 'openbadges-types';
-import { logger } from '@/utils/logging/logger.service';
-import { describePostgres as getDescribePostgres } from '../../../../helpers/database-test-filter';
+import { PostgresIssuerRepository } from "@/infrastructure/database/modules/postgresql/repositories/postgres-issuer.repository";
+import { PostgresBadgeClassRepository } from "@/infrastructure/database/modules/postgresql/repositories/postgres-badge-class.repository";
+import { PostgresAssertionRepository } from "@/infrastructure/database/modules/postgresql/repositories/postgres-assertion.repository";
+import { Issuer } from "@/domains/issuer/issuer.entity";
+import { BadgeClass } from "@/domains/badgeClass/badgeClass.entity";
+import { Assertion } from "@/domains/assertion/assertion.entity";
+import * as schema from "@/infrastructure/database/modules/postgresql/schema";
+import type { Shared } from "openbadges-types";
+import { logger } from "@/utils/logging/logger.service";
+import { describePostgres as getDescribePostgres } from "../../../../helpers/database-test-filter";
 
 // Define the describe function variable that will be initialized in beforeAll
 let describePg: (label: string, fn: () => void) => void = describe.skip;
@@ -39,13 +39,13 @@ beforeAll(async () => {
 });
 
 // Get the database connection string from the test helper
-import { getDefaultTestConnectionString } from './postgres-test-helper';
+import { getDefaultTestConnectionString } from "./postgres-test-helper";
 
 // Use the same connection string as the test helper
 const TEST_DB_URL =
   process.env.TEST_DATABASE_URL || getDefaultTestConnectionString();
 
-describePg('PostgreSQL Repositories', () => {
+describePg("PostgreSQL Repositories", () => {
   let client: postgres.Sql;
   let db: ReturnType<typeof drizzle>;
   let issuerRepository: PostgresIssuerRepository;
@@ -54,11 +54,11 @@ describePg('PostgreSQL Repositories', () => {
 
   // Test data
   const testIssuerData = {
-    name: 'Test University',
-    url: 'https://test.edu' as Shared.IRI,
-    email: 'badges@test.edu',
-    description: 'A test university for testing',
-    image: 'https://test.edu/logo.png' as Shared.IRI,
+    name: "Test University",
+    url: "https://test.edu" as Shared.IRI,
+    email: "badges@test.edu",
+    description: "A test university for testing",
+    image: "https://test.edu/logo.png" as Shared.IRI,
   };
 
   // Setup database connection
@@ -124,7 +124,7 @@ describePg('PostgreSQL Repositories', () => {
         );
       `);
     } catch (error) {
-      logger.error('Error setting up test database', { error });
+      logger.error("Error setting up test database", { error });
       throw error;
     }
   });
@@ -150,8 +150,8 @@ describePg('PostgreSQL Repositories', () => {
     await db.delete(schema.issuers);
   });
 
-  describe('IssuerRepository', () => {
-    it('should create an issuer', async () => {
+  describe("IssuerRepository", () => {
+    it("should create an issuer", async () => {
       // Create issuer entity
       const issuer = Issuer.create(testIssuerData);
 
@@ -168,7 +168,7 @@ describePg('PostgreSQL Repositories', () => {
       expect(createdIssuer.image).toBe(testIssuerData.image);
     });
 
-    it('should find an issuer by ID', async () => {
+    it("should find an issuer by ID", async () => {
       // Create issuer entity
       const issuer = Issuer.create(testIssuerData);
 
@@ -185,17 +185,17 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundIssuer!.url).toBe(testIssuerData.url);
     });
 
-    it('should return null when finding a non-existent issuer by ID', async () => {
+    it("should return null when finding a non-existent issuer by ID", async () => {
       // Attempt to find an issuer with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const foundIssuer = await issuerRepository.findById(nonExistentId);
 
       // Verify
       expect(foundIssuer).toBeNull();
     });
 
-    it('should update an issuer', async () => {
+    it("should update an issuer", async () => {
       // Create issuer entity
       const issuer = Issuer.create(testIssuerData);
 
@@ -204,32 +204,32 @@ describePg('PostgreSQL Repositories', () => {
 
       // Update issuer
       const updatedIssuer = await issuerRepository.update(createdIssuer.id, {
-        name: 'Updated University',
-        description: 'An updated description',
+        name: "Updated University",
+        description: "An updated description",
       });
 
       // Verify
       expect(updatedIssuer).toBeDefined();
       expect(updatedIssuer!.id).toBe(createdIssuer.id);
-      expect(updatedIssuer!.name).toBe('Updated University');
-      expect(updatedIssuer!.description).toBe('An updated description');
+      expect(updatedIssuer!.name).toBe("Updated University");
+      expect(updatedIssuer!.description).toBe("An updated description");
       expect(updatedIssuer!.url).toBe(testIssuerData.url); // Unchanged
     });
 
-    it('should return false when updating a non-existent issuer', async () => {
+    it("should return false when updating a non-existent issuer", async () => {
       // Attempt to update an issuer with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const updatedIssuer = await issuerRepository.update(nonExistentId, {
-        name: 'Updated University',
-        description: 'An updated description',
+        name: "Updated University",
+        description: "An updated description",
       });
 
       // Verify
       expect(updatedIssuer).toBeNull();
     });
 
-    it('should delete an issuer', async () => {
+    it("should delete an issuer", async () => {
       // Create issuer entity
       const issuer = Issuer.create(testIssuerData);
 
@@ -249,10 +249,10 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundIssuer).toBeNull();
     });
 
-    it('should return false when deleting a non-existent issuer', async () => {
+    it("should return false when deleting a non-existent issuer", async () => {
       // Attempt to delete an issuer with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const deleted = await issuerRepository.delete(nonExistentId);
 
       // Verify
@@ -266,20 +266,20 @@ describePg('PostgreSQL Repositories', () => {
     // 1. Use a unique database schema for each test run
     // 2. Implement a test helper that generates guaranteed unique IDs for test entities
     // 3. Add proper cleanup between test runs to ensure a clean state
-    it.skip('should find all issuers', async () => {
+    it.skip("should find all issuers", async () => {
       // Clear any existing issuers
       await db.delete(schema.issuers);
 
       // Create multiple issuers with unique IDs
       const issuer1 = Issuer.create({
         ...testIssuerData,
-        name: 'Issuer 1',
-        url: 'https://issuer1.test' as Shared.IRI,
+        name: "Issuer 1",
+        url: "https://issuer1.test" as Shared.IRI,
       });
       const issuer2 = Issuer.create({
         ...testIssuerData,
-        name: 'Issuer 2',
-        url: 'https://issuer2.test' as Shared.IRI,
+        name: "Issuer 2",
+        url: "https://issuer2.test" as Shared.IRI,
       });
 
       // Save to repository
@@ -292,11 +292,11 @@ describePg('PostgreSQL Repositories', () => {
       // Verify
       expect(allIssuers).toBeDefined();
       expect(allIssuers.length).toBe(2);
-      expect(allIssuers.some((i) => i.name === 'Issuer 1')).toBe(true);
-      expect(allIssuers.some((i) => i.name === 'Issuer 2')).toBe(true);
+      expect(allIssuers.some((i) => i.name === "Issuer 1")).toBe(true);
+      expect(allIssuers.some((i) => i.name === "Issuer 2")).toBe(true);
     });
 
-    it('should return an empty array when finding all issuers and none exist', async () => {
+    it("should return an empty array when finding all issuers and none exist", async () => {
       // Find all issuers when the table is empty
       const allIssuers = await issuerRepository.findAll();
 
@@ -306,7 +306,7 @@ describePg('PostgreSQL Repositories', () => {
     });
   });
 
-  describe('BadgeClassRepository', () => {
+  describe("BadgeClassRepository", () => {
     let testIssuer: Issuer;
 
     beforeEach(async () => {
@@ -315,15 +315,15 @@ describePg('PostgreSQL Repositories', () => {
       testIssuer = await issuerRepository.create(issuer);
     });
 
-    it('should create a badge class', async () => {
+    it("should create a badge class", async () => {
       // Create badge class entity
       const badgeClass = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test.png' as Shared.IRI,
+        name: "Test Badge",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
 
@@ -334,25 +334,25 @@ describePg('PostgreSQL Repositories', () => {
       expect(createdBadgeClass).toBeDefined();
       expect(createdBadgeClass.id).toBeDefined();
       expect(createdBadgeClass.issuer).toBe(testIssuer.id);
-      expect(createdBadgeClass.name).toBe('Test Badge');
-      expect(createdBadgeClass.description).toBe('A test badge for testing');
+      expect(createdBadgeClass.name).toBe("Test Badge");
+      expect(createdBadgeClass.description).toBe("A test badge for testing");
       expect(createdBadgeClass.image).toBe(
-        'https://test.edu/badges/test.png' as Shared.IRI
+        "https://test.edu/badges/test.png" as Shared.IRI,
       );
       expect(createdBadgeClass.criteria).toEqual({
-        narrative: 'Complete the test',
+        narrative: "Complete the test",
       });
     });
 
-    it('should find a badge class by ID', async () => {
+    it("should find a badge class by ID", async () => {
       // Create badge class entity
       const badgeClass = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test.png' as Shared.IRI,
+        name: "Test Badge",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
 
@@ -361,47 +361,46 @@ describePg('PostgreSQL Repositories', () => {
 
       // Find by ID
       const foundBadgeClass = await badgeClassRepository.findById(
-        createdBadgeClass.id
+        createdBadgeClass.id,
       );
 
       // Verify
       expect(foundBadgeClass).toBeDefined();
       expect(foundBadgeClass!.id).toBe(createdBadgeClass.id);
       expect(foundBadgeClass!.issuer).toBe(testIssuer.id);
-      expect(foundBadgeClass!.name).toBe('Test Badge');
+      expect(foundBadgeClass!.name).toBe("Test Badge");
     });
 
-    it('should return null when finding a non-existent badge class by ID', async () => {
+    it("should return null when finding a non-existent badge class by ID", async () => {
       // Attempt to find a badge class with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
-      const foundBadgeClass = await badgeClassRepository.findById(
-        nonExistentId
-      );
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
+      const foundBadgeClass =
+        await badgeClassRepository.findById(nonExistentId);
 
       // Verify
       expect(foundBadgeClass).toBeNull();
     });
 
-    it('should find badge classes by issuer', async () => {
+    it("should find badge classes by issuer", async () => {
       // Create multiple badge classes
       const badgeClass1 = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge 1',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test1.png' as Shared.IRI,
+        name: "Test Badge 1",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test1.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
 
       const badgeClass2 = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge 2',
-        description: 'Another test badge for testing',
-        image: 'https://test.edu/badges/test2.png' as Shared.IRI,
+        name: "Test Badge 2",
+        description: "Another test badge for testing",
+        image: "https://test.edu/badges/test2.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test again',
+          narrative: "Complete the test again",
         },
       });
 
@@ -411,7 +410,7 @@ describePg('PostgreSQL Repositories', () => {
 
       // Find by issuer
       const foundBadgeClasses = await badgeClassRepository.findByIssuer(
-        testIssuer.id
+        testIssuer.id,
       );
 
       // Verify
@@ -421,10 +420,10 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundBadgeClasses[1].issuer).toBe(testIssuer.id);
     });
 
-    it('should return an empty array when finding badge classes by issuer and none exist', async () => {
+    it("should return an empty array when finding badge classes by issuer and none exist", async () => {
       // Find by issuer when the table is empty
       const foundBadgeClasses = await badgeClassRepository.findByIssuer(
-        testIssuer.id
+        testIssuer.id,
       );
 
       // Verify
@@ -432,21 +431,21 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundBadgeClasses.length).toBe(0);
     });
 
-    it('should find all badge classes', async () => {
+    it("should find all badge classes", async () => {
       // Create multiple badge classes for the same issuer
       const badgeClass1 = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Badge 1',
-        description: 'Description 1',
-        image: 'https://test.edu/badge1.png' as Shared.IRI,
-        criteria: { narrative: 'Criteria 1' },
+        name: "Badge 1",
+        description: "Description 1",
+        image: "https://test.edu/badge1.png" as Shared.IRI,
+        criteria: { narrative: "Criteria 1" },
       });
       const badgeClass2 = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Badge 2',
-        description: 'Description 2',
-        image: 'https://test.edu/badge2.png' as Shared.IRI,
-        criteria: { narrative: 'Criteria 2' },
+        name: "Badge 2",
+        description: "Description 2",
+        image: "https://test.edu/badge2.png" as Shared.IRI,
+        criteria: { narrative: "Criteria 2" },
       });
       await badgeClassRepository.create(badgeClass1);
       await badgeClassRepository.create(badgeClass2);
@@ -457,11 +456,11 @@ describePg('PostgreSQL Repositories', () => {
       // Verify
       expect(allBadgeClasses).toBeDefined();
       expect(allBadgeClasses.length).toBe(2);
-      expect(allBadgeClasses.some((b) => b.name === 'Badge 1')).toBe(true);
-      expect(allBadgeClasses.some((b) => b.name === 'Badge 2')).toBe(true);
+      expect(allBadgeClasses.some((b) => b.name === "Badge 1")).toBe(true);
+      expect(allBadgeClasses.some((b) => b.name === "Badge 2")).toBe(true);
     });
 
-    it('should return an empty array when finding all badge classes and none exist', async () => {
+    it("should return an empty array when finding all badge classes and none exist", async () => {
       // Find all badge classes when the table is empty
       const allBadgeClasses = await badgeClassRepository.findAll();
 
@@ -470,15 +469,15 @@ describePg('PostgreSQL Repositories', () => {
       expect(allBadgeClasses.length).toBe(0);
     });
 
-    it('should update a badge class', async () => {
+    it("should update a badge class", async () => {
       // Create badge class entity
       const badgeClass = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test.png' as Shared.IRI,
+        name: "Test Badge",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
 
@@ -489,44 +488,44 @@ describePg('PostgreSQL Repositories', () => {
       const updatedBadgeClass = await badgeClassRepository.update(
         createdBadgeClass.id,
         {
-          name: 'Updated Badge',
-          description: 'An updated description',
-        }
+          name: "Updated Badge",
+          description: "An updated description",
+        },
       );
 
       // Verify
       expect(updatedBadgeClass).toBeDefined();
       expect(updatedBadgeClass!.id).toBe(createdBadgeClass.id);
-      expect(updatedBadgeClass!.name).toBe('Updated Badge');
-      expect(updatedBadgeClass!.description).toBe('An updated description');
+      expect(updatedBadgeClass!.name).toBe("Updated Badge");
+      expect(updatedBadgeClass!.description).toBe("An updated description");
       expect(updatedBadgeClass!.issuer).toBe(testIssuer.id); // Unchanged
     });
 
-    it('should return null when updating a non-existent badge class', async () => {
+    it("should return null when updating a non-existent badge class", async () => {
       // Attempt to update a badge class with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const updatedBadgeClass = await badgeClassRepository.update(
         nonExistentId,
         {
-          name: 'Updated Badge',
-          description: 'An updated description',
-        }
+          name: "Updated Badge",
+          description: "An updated description",
+        },
       );
 
       // Verify
       expect(updatedBadgeClass).toBeNull();
     });
 
-    it('should delete a badge class', async () => {
+    it("should delete a badge class", async () => {
       // Create badge class entity
       const badgeClass = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test.png' as Shared.IRI,
+        name: "Test Badge",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
 
@@ -541,17 +540,17 @@ describePg('PostgreSQL Repositories', () => {
 
       // Try to find the deleted badge class
       const foundBadgeClass = await badgeClassRepository.findById(
-        createdBadgeClass.id
+        createdBadgeClass.id,
       );
 
       // Verify it's gone
       expect(foundBadgeClass).toBeNull();
     });
 
-    it('should return false when deleting a non-existent badge class', async () => {
+    it("should return false when deleting a non-existent badge class", async () => {
       // Attempt to delete a badge class with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const deleted = await badgeClassRepository.delete(nonExistentId);
 
       // Verify
@@ -559,7 +558,7 @@ describePg('PostgreSQL Repositories', () => {
     });
   });
 
-  describe('AssertionRepository', () => {
+  describe("AssertionRepository", () => {
     let testIssuer: Issuer;
     let testBadgeClass: BadgeClass;
 
@@ -571,23 +570,23 @@ describePg('PostgreSQL Repositories', () => {
       // Create a test badge class
       const badgeClass = BadgeClass.create({
         issuer: testIssuer.id as Shared.IRI,
-        name: 'Test Badge',
-        description: 'A test badge for testing',
-        image: 'https://test.edu/badges/test.png' as Shared.IRI,
+        name: "Test Badge",
+        description: "A test badge for testing",
+        image: "https://test.edu/badges/test.png" as Shared.IRI,
         criteria: {
-          narrative: 'Complete the test',
+          narrative: "Complete the test",
         },
       });
       testBadgeClass = await badgeClassRepository.create(badgeClass);
     });
 
-    it('should create an assertion', async () => {
+    it("should create an assertion", async () => {
       // Create assertion entity
       const assertion = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -601,20 +600,20 @@ describePg('PostgreSQL Repositories', () => {
       expect(createdAssertion.id).toBeDefined();
       expect(createdAssertion.badgeClass).toBe(testBadgeClass.id);
       expect(createdAssertion.recipient).toEqual({
-        type: 'email',
-        identity: 'recipient@test.edu',
+        type: "email",
+        identity: "recipient@test.edu",
         hashed: false,
       });
       expect(createdAssertion.issuedOn).toBeDefined();
     });
 
-    it('should find an assertion by ID', async () => {
+    it("should find an assertion by ID", async () => {
       // Create assertion entity
       const assertion = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -625,7 +624,7 @@ describePg('PostgreSQL Repositories', () => {
 
       // Find by ID
       const foundAssertion = await assertionRepository.findById(
-        createdAssertion.id
+        createdAssertion.id,
       );
 
       // Verify
@@ -633,29 +632,29 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundAssertion!.id).toBe(createdAssertion.id);
       expect(foundAssertion!.badgeClass).toBe(testBadgeClass.id);
       expect(foundAssertion!.recipient).toEqual({
-        type: 'email',
-        identity: 'recipient@test.edu',
+        type: "email",
+        identity: "recipient@test.edu",
         hashed: false,
       });
     });
 
-    it('should return null when finding a non-existent assertion by ID', async () => {
+    it("should return null when finding a non-existent assertion by ID", async () => {
       // Attempt to find an assertion with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const foundAssertion = await assertionRepository.findById(nonExistentId);
 
       // Verify
       expect(foundAssertion).toBeNull();
     });
 
-    it('should find assertions by badge class', async () => {
+    it("should find assertions by badge class", async () => {
       // Create multiple assertions
       const assertion1 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient1@test.edu',
+          type: "email",
+          identity: "recipient1@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -664,8 +663,8 @@ describePg('PostgreSQL Repositories', () => {
       const assertion2 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient2@test.edu',
+          type: "email",
+          identity: "recipient2@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -677,7 +676,7 @@ describePg('PostgreSQL Repositories', () => {
 
       // Find by badge class
       const foundAssertions = await assertionRepository.findByBadgeClass(
-        testBadgeClass.id
+        testBadgeClass.id,
       );
 
       // Verify
@@ -687,10 +686,10 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundAssertions[1].badgeClass).toBe(testBadgeClass.id);
     });
 
-    it('should return an empty array when finding assertions by badge class and none exist', async () => {
+    it("should return an empty array when finding assertions by badge class and none exist", async () => {
       // Find by badge class when the table is empty
       const foundAssertions = await assertionRepository.findByBadgeClass(
-        testBadgeClass.id
+        testBadgeClass.id,
       );
 
       // Verify
@@ -698,26 +697,25 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundAssertions.length).toBe(0);
     });
 
-    it('should find assertions by recipient', async () => {
+    it("should find assertions by recipient", async () => {
       // Create multiple assertions for the same recipient
-      const recipientId = 'test-recipient@example.com';
+      const recipientId = "test-recipient@example.com";
       const assertion1 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
-        recipient: { type: 'email', identity: recipientId, hashed: false },
+        recipient: { type: "email", identity: recipientId, hashed: false },
         issuedOn: new Date().toISOString(),
       });
       const assertion2 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
-        recipient: { type: 'email', identity: recipientId, hashed: false },
+        recipient: { type: "email", identity: recipientId, hashed: false },
         issuedOn: new Date().toISOString(),
       });
       await assertionRepository.create(assertion1);
       await assertionRepository.create(assertion2);
 
       // Find by recipient
-      const foundAssertions = await assertionRepository.findByRecipient(
-        recipientId
-      );
+      const foundAssertions =
+        await assertionRepository.findByRecipient(recipientId);
 
       // Verify
       expect(foundAssertions).toBeDefined();
@@ -726,10 +724,10 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundAssertions[1].recipient.identity).toBe(recipientId);
     });
 
-    it('should return an empty array when finding assertions by recipient and none exist', async () => {
+    it("should return an empty array when finding assertions by recipient and none exist", async () => {
       // Find by recipient when the table is empty
       const foundAssertions = await assertionRepository.findByRecipient(
-        'non-existent@example.com'
+        "non-existent@example.com",
       );
 
       // Verify
@@ -737,13 +735,13 @@ describePg('PostgreSQL Repositories', () => {
       expect(foundAssertions.length).toBe(0);
     });
 
-    it('should find all assertions', async () => {
+    it("should find all assertions", async () => {
       // Create multiple assertions
       const assertion1 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient1@example.com',
+          type: "email",
+          identity: "recipient1@example.com",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -751,8 +749,8 @@ describePg('PostgreSQL Repositories', () => {
       const assertion2 = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient2@example.com',
+          type: "email",
+          identity: "recipient2@example.com",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -768,7 +766,7 @@ describePg('PostgreSQL Repositories', () => {
       expect(allAssertions.length).toBe(2);
     });
 
-    it('should return an empty array when finding all assertions and none exist', async () => {
+    it("should return an empty array when finding all assertions and none exist", async () => {
       // Find all assertions when the table is empty
       const allAssertions = await assertionRepository.findAll();
 
@@ -777,13 +775,13 @@ describePg('PostgreSQL Repositories', () => {
       expect(allAssertions.length).toBe(0);
     });
 
-    it('should revoke an assertion', async () => {
+    it("should revoke an assertion", async () => {
       // Create assertion entity
       const assertion = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -795,36 +793,36 @@ describePg('PostgreSQL Repositories', () => {
       // Revoke assertion
       const revokedAssertion = await assertionRepository.revoke(
         createdAssertion.id,
-        'Test revocation reason'
+        "Test revocation reason",
       );
 
       // Verify
       expect(revokedAssertion).toBeDefined();
       expect(revokedAssertion!.id).toBe(createdAssertion.id);
       expect(revokedAssertion!.revoked).toBe(true);
-      expect(revokedAssertion!.revocationReason).toBe('Test revocation reason');
+      expect(revokedAssertion!.revocationReason).toBe("Test revocation reason");
     });
 
-    it('should return null when revoking a non-existent assertion', async () => {
+    it("should return null when revoking a non-existent assertion", async () => {
       // Attempt to revoke an assertion with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
       const revokedAssertion = await assertionRepository.revoke(
         nonExistentId,
-        'Test revocation reason'
+        "Test revocation reason",
       );
 
       // Verify
       expect(revokedAssertion).toBeNull();
     });
 
-    it('should verify an assertion', async () => {
+    it("should verify an assertion", async () => {
       // Create assertion entity
       const assertion = Assertion.create({
         badgeClass: testBadgeClass.id as Shared.IRI,
         recipient: {
-          type: 'email',
-          identity: 'recipient@test.edu',
+          type: "email",
+          identity: "recipient@test.edu",
           hashed: false,
         },
         issuedOn: new Date().toISOString(),
@@ -835,7 +833,7 @@ describePg('PostgreSQL Repositories', () => {
 
       // Verify assertion
       const verificationResult = await assertionRepository.verify(
-        createdAssertion.id
+        createdAssertion.id,
       );
 
       // Verify
@@ -844,29 +842,28 @@ describePg('PostgreSQL Repositories', () => {
       // Revoke assertion
       await assertionRepository.revoke(
         createdAssertion.id,
-        'Test revocation reason'
+        "Test revocation reason",
       );
 
       // Verify revoked assertion
       const verificationResultAfterRevoke = await assertionRepository.verify(
-        createdAssertion.id
+        createdAssertion.id,
       );
 
       // Verify
       expect(verificationResultAfterRevoke.isValid).toBe(false);
     });
 
-    it('should return an invalid verification result when verifying a non-existent assertion', async () => {
+    it("should return an invalid verification result when verifying a non-existent assertion", async () => {
       // Attempt to verify an assertion with a non-existent ID
       const nonExistentId =
-        '00000000-0000-0000-0000-000000000000' as Shared.IRI;
-      const verificationResult = await assertionRepository.verify(
-        nonExistentId
-      );
+        "00000000-0000-0000-0000-000000000000" as Shared.IRI;
+      const verificationResult =
+        await assertionRepository.verify(nonExistentId);
 
       // Verify
       expect(verificationResult.isValid).toBe(false);
-      expect(verificationResult.reason).toBe('Assertion not found');
+      expect(verificationResult.reason).toBe("Assertion not found");
     });
   });
 });

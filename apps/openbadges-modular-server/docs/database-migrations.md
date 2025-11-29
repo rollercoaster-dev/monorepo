@@ -66,33 +66,33 @@ The migration configuration is in `drizzle.config.ts` in the project root. It su
 
 ```typescript
 // Determine database type from environment variable or config
-const dbType = process.env.DB_TYPE || config.database.type || 'sqlite';
+const dbType = process.env.DB_TYPE || config.database.type || "sqlite";
 
 // Configure based on database type
 let drizzleConfig: Config;
 
-if (dbType === 'postgresql') {
+if (dbType === "postgresql") {
   // PostgreSQL configuration
   drizzleConfig = {
-    dialect: 'postgresql',
-    schema: './src/infrastructure/database/modules/postgresql/schema.ts',
-    out: './drizzle/pg-migrations',
+    dialect: "postgresql",
+    schema: "./src/infrastructure/database/modules/postgresql/schema.ts",
+    out: "./drizzle/pg-migrations",
     dbCredentials: {
-      host: 'localhost',
+      host: "localhost",
       port: 5432,
-      user: 'postgres',
-      password: 'postgres',
-      database: 'openbadges',
+      user: "postgres",
+      password: "postgres",
+      database: "openbadges",
     },
   };
 } else {
   // SQLite configuration (default)
   drizzleConfig = {
-    dialect: 'sqlite',
-    schema: './src/infrastructure/database/modules/sqlite/schema.ts',
-    out: './drizzle/migrations',
+    dialect: "sqlite",
+    schema: "./src/infrastructure/database/modules/sqlite/schema.ts",
+    out: "./drizzle/migrations",
     dbCredentials: {
-      url: 'sqlite.db',
+      url: "sqlite.db",
     },
   };
 }

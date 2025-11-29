@@ -1,6 +1,6 @@
 /**
  * Cache Interface for Open Badges API
- * 
+ *
  * This interface defines the contract that all cache implementations must fulfill.
  * It provides methods for storing, retrieving, and invalidating cached data.
  */

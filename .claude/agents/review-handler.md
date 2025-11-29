@@ -29,9 +29,11 @@ Fetches review comments from a GitHub PR (CodeRabbit, Claude, or human reviewers
 ## Inputs
 
 The user should provide:
+
 - **PR number**: The GitHub PR to check
 
 Optional:
+
 - **Reviewer filter**: Only show comments from specific reviewer
 - **Comment type**: Only unresolved, only actionable, etc.
 
@@ -40,16 +42,19 @@ Optional:
 ### Phase 1: Fetch Reviews
 
 1. **Get PR details:**
+
    ```bash
    gh pr view <number> --json reviews,comments,reviewDecision
    ```
 
 2. **Get review comments:**
+
    ```bash
    gh api repos/{owner}/{repo}/pulls/<number>/comments
    ```
 
 3. **Get issue comments (includes CodeRabbit):**
+
    ```bash
    gh api repos/{owner}/{repo}/issues/<number>/comments
    ```
@@ -95,22 +100,27 @@ Show user a summary:
 ## Review Summary for PR #<number>
 
 ### Critical (Must Fix): <n>
+
 1. **<file>:<line>** - <issue>
 2. ...
 
 ### Should Fix: <n>
+
 1. **<file>:<line>** - <issue>
 2. ...
 
 ### Suggestions: <n>
+
 1. **<file>:<line>** - <issue>
 2. ...
 
 ### AI Reviews
+
 - **CodeRabbit**: <approved|changes_requested|commented>
 - **Claude**: <reviewed|not_triggered>
 
 ### Human Reviews
+
 - <reviewer>: <status>
 - ...
 
@@ -124,6 +134,7 @@ Recommend fixing <n> issues. Proceed?
 For each fix:
 
 1. **Checkout PR branch:**
+
    ```bash
    git checkout <pr-branch>
    git pull origin <pr-branch>
@@ -136,12 +147,14 @@ For each fix:
    - Follow existing patterns
 
 3. **Commit fix:**
+
    ```bash
    git add <file>
    git commit -m "fix(<scope>): address review - <description>"
    ```
 
 4. **Push:**
+
    ```bash
    git push origin <pr-branch>
    ```
@@ -171,33 +184,40 @@ If you disagree with a review comment:
 ### Phase 6: Verify and Report
 
 1. **Run validation:**
+
    ```bash
    bun run type-check && bun run lint && bun test
    ```
 
 2. **Push all fixes:**
+
    ```bash
    git push origin <pr-branch>
    ```
 
 3. **Report:**
+
    ```markdown
    ## Review Fixes Complete
 
    ### Commits Added
+
    1. `fix(scope): address review - <description>`
    2. ...
 
    ### Issues Addressed
+
    - [x] <issue 1>
    - [x] <issue 2>
    - [ ] <issue skipped - reason>
 
    ### Status
+
    - Tests: PASS
    - Ready for re-review
 
    ### Next Steps
+
    1. CodeRabbit will auto-review new commits
    2. Request re-review from human reviewers
    3. Check: "check pr #<number> reviews"
@@ -224,17 +244,20 @@ gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id 
 CodeRabbit reviews typically include:
 
 **Walkthrough Section:**
+
 - Summary of changes
 - File-by-file breakdown
 
 **Actionable Comments:**
 Format: Usually inline on specific lines
+
 ```
 <category>: <issue>
 <suggestion or fix>
 ```
 
 **Summary Section:**
+
 - Overall assessment
 - Key concerns
 - Recommendations
@@ -244,17 +267,20 @@ Format: Usually inline on specific lines
 Claude reviews typically include:
 
 **Structured sections:**
+
 - Overview/Summary of the PR
 - Detailed feedback by area
 - Suggestions with rationale
 
 **Look for:**
+
 - Inline code suggestions
 - Architecture/design feedback
 - Type safety improvements
 - Documentation suggestions
 
 **Claude vs CodeRabbit:**
+
 - CodeRabbit focuses on code quality, security, best practices
 - Claude provides deeper architectural insight and documentation focus
 - Both may catch different issues - address feedback from both
@@ -262,23 +288,27 @@ Claude reviews typically include:
 ## Reply Templates
 
 ### Acknowledging Fix
+
 ```
 Fixed in <commit-sha>. Thanks for catching this!
 ```
 
 ### Explaining No Change
+
 ```
 Intentionally keeping this as-is because <reason>.
 <optional: link to documentation or convention>
 ```
 
 ### Out of Scope
+
 ```
 Good suggestion! Created issue #<number> to track this separately.
 This PR focuses on <scope>.
 ```
 
 ### Requesting Clarification
+
 ```
 Could you clarify what you mean by <question>?
 I want to make sure I address this correctly.
@@ -297,6 +327,7 @@ I want to make sure I address this correctly.
    - May have failed
 
 3. **Manual triggers:**
+
    ```
    CodeRabbit: "@coderabbitai full review"
    Claude: "@claude review"
@@ -322,6 +353,7 @@ I want to make sure I address this correctly.
 ### Push Conflicts
 
 1. **Pull before push:**
+
    ```bash
    git pull origin <branch> --rebase
    ```
@@ -333,6 +365,7 @@ I want to make sure I address this correctly.
 ## Output Format
 
 ### Review Summary
+
 ```markdown
 ## PR #<number> Review Status
 
@@ -342,15 +375,18 @@ I want to make sure I address this correctly.
 **Unresolved Comments**: <count>
 
 ### Action Items
-| # | File | Line | Issue | Severity |
-|---|------|------|-------|----------|
-| 1 | ... | ... | ... | Critical |
+
+| #   | File | Line | Issue | Severity |
+| --- | ---- | ---- | ----- | -------- |
+| 1   | ...  | ...  | ...   | Critical |
 
 ### Recommendations
+
 <What to fix and in what order>
 ```
 
 ### After Fixes
+
 ```markdown
 ## Fixes Applied
 
@@ -359,10 +395,12 @@ I want to make sure I address this correctly.
 **Tests**: PASS
 
 ### Addressed
+
 - [x] Issue 1
 - [x] Issue 2
 
 ### Skipped (with reason)
+
 - [ ] Issue 3 - Out of scope
 
 **Next**: Wait for re-review or request human review
@@ -371,12 +409,14 @@ I want to make sure I address this correctly.
 ## Tools Required
 
 **Required:**
+
 - Bash (gh api, git commands)
 - Read (examine code)
 - Write (create new files if needed)
 - Edit (fix existing code)
 
 **Optional:**
+
 - Glob (find related files)
 - Grep (search codebase)
 
@@ -402,6 +442,7 @@ Agent:
 ## Success Criteria
 
 This agent is successful when:
+
 - All reviews are fetched and categorized
 - User understands what needs attention
 - Fixes are made with atomic commits

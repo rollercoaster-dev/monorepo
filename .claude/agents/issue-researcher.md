@@ -28,9 +28,11 @@ Fetches a GitHub issue, analyzes the codebase to understand the context, and cre
 ## Inputs
 
 The user should provide:
+
 - **Issue number or URL**: The GitHub issue to research
 
 Optional:
+
 - **Repository**: If not the current repo
 - **Specific questions**: Areas to focus on
 
@@ -39,6 +41,7 @@ Optional:
 ### Phase 1: Fetch Issue
 
 1. **Get issue details:**
+
    ```bash
    gh issue view <number> --json title,body,labels,assignees,milestone
    ```
@@ -103,36 +106,44 @@ Generate a detailed plan document:
 # Development Plan: Issue #<number>
 
 ## Issue Summary
+
 **Title**: <title>
 **Type**: <feature|bug|enhancement|refactor>
 **Complexity**: <TRIVIAL|SMALL|MEDIUM|LARGE>
 **Estimated Lines**: ~<n> lines
 
 ## Objective
+
 <What this PR will accomplish>
 
 ## Affected Areas
+
 - `<file-path>`: <what changes>
 - `<file-path>`: <what changes>
 
 ## Implementation Plan
 
 ### Step 1: <description>
+
 **Files**: <file-path>
 **Commit**: `<type>(<scope>): <message>`
 **Changes**:
+
 - <specific change>
 - <specific change>
 
 ### Step 2: <description>
+
 ...
 
 ## Testing Strategy
+
 - [ ] Unit tests for <component>
 - [ ] Integration tests for <flow>
 - [ ] Manual testing: <steps>
 
 ## Definition of Done
+
 - [ ] All implementation steps complete
 - [ ] Tests passing
 - [ ] Type-check passing
@@ -140,6 +151,7 @@ Generate a detailed plan document:
 - [ ] Ready for PR
 
 ## Notes
+
 <Any considerations, risks, or questions>
 ```
 
@@ -163,11 +175,13 @@ Generate a detailed plan document:
 ### Phase 6: Update GitHub Project Board
 
 1. **Add issue to project (if not already):**
+
    ```bash
    gh project item-add 11 --owner rollercoaster-dev --url https://github.com/rollercoaster-dev/monorepo/issues/<number>
    ```
 
 2. **Set status to "Next" (ready for development):**
+
    ```bash
    # Get item ID
    ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <number>) | .id')
@@ -191,6 +205,7 @@ Generate a detailed plan document:
 ## Output Format
 
 Return:
+
 1. **Issue summary** (1-2 sentences)
 2. **Complexity assessment** (with reasoning)
 3. **Development plan** (full markdown)
@@ -199,12 +214,14 @@ Return:
 ## Tools Required
 
 **Required:**
+
 - Bash (gh issue view)
 - Read (examine code files)
 - Glob (find relevant files)
 - Grep (search codebase)
 
 **Optional:**
+
 - WebFetch (external documentation)
 - Write (save dev plan)
 
@@ -245,6 +262,7 @@ Agent:
 ## Success Criteria
 
 This agent is successful when:
+
 - Issue is fully understood
 - All affected code is identified
 - Plan has clear, atomic commits

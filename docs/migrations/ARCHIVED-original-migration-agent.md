@@ -11,11 +11,13 @@ This document archives the original `monorepo-migration-orchestrator` agent that
 ## Why It Was Replaced
 
 The original agent was:
+
 - ✅ **Successful** - Successfully migrated rd-logger
 - ✅ **Well-designed** - Good atomic commit structure, approval gates
 - ✅ **Safe** - Emphasized safety and reversibility
 
 But it had limitations:
+
 - ❌ **Monolithic** - One large agent doing everything
 - ❌ **pnpm-focused** - Not designed for Bun runtime/tooling
 - ❌ **Sequential** - Couldn't parallelize analysis tasks
@@ -26,6 +28,7 @@ But it had limitations:
 **Single Monolithic Agent**: `monorepo-migration-orchestrator`
 
 **4-Phase Sequential Workflow**:
+
 1. **Phase 1: Initial Setup**
    - Create sub-issues for tracking
    - Clone repository and analyze
@@ -34,7 +37,7 @@ But it had limitations:
    - STOP for user review
 
 2. **Phase 2: Migration Planning**
-   - Create MIGRATION_PLAN_{repo}.md
+   - Create MIGRATION*PLAN*{repo}.md
    - Document all required changes
    - STOP for approval
 
@@ -50,6 +53,7 @@ But it had limitations:
    - Archive migration plan
 
 **Key Principles** (still relevant):
+
 - **Safety first** - Never proceed without approval
 - **Atomic commits** - One logical change per commit
 - **Documentation** - Clear migration records
@@ -62,21 +66,25 @@ But it had limitations:
 The replacement architecture splits responsibilities:
 
 **Core Workflow Agents**:
+
 1. **migration-analyzer** - Repository analysis and Bun compatibility
 2. **migration-planner** - Detailed migration plan creation
 3. **migration-executor** - Execution with atomic commits
 4. **migration-finalizer** - PR creation and issue management
 
 **Specialized Task Agents**:
+
 - **dependency-analyzer** - Version conflicts, Bun compatibility
 - **bun-package-integrator** - Bun-specific configuration
 - **test-coverage-validator** - Coverage validation
 - **documentation-updater** - Documentation updates
 
 **Orchestrator**:
+
 - **migration-orchestrator** - Coordinates all agents
 
 **Benefits**:
+
 - ✅ Bun-focused design
 - ✅ Parallel execution (faster)
 - ✅ Reusable components
@@ -106,6 +114,7 @@ The replacement architecture splits responsibilities:
 ### Phase 2: Migration Planning
 
 Create `MIGRATION_PLAN_{repo}.md` with:
+
 - Current repository structure
 - Target location in monorepo
 - Required changes (imports, dependencies, build, env, scripts, CI/CD)
@@ -118,6 +127,7 @@ STOP for user approval before proceeding.
 ### Phase 3: Incremental Migration
 
 Execute changes with:
+
 - Small, atomic commits
 - One aspect per commit
 - Clear, descriptive messages
@@ -136,6 +146,7 @@ Execute changes with:
 ## Key Guidelines (Still Relevant)
 
 **Always Ask Before**:
+
 - Making file modifications (except migration plan)
 - Deleting code or configuration
 - Changing dependency versions
@@ -143,6 +154,7 @@ Execute changes with:
 - Merging or rebasing branches
 
 **Atomic Commit Standards**:
+
 - Each commit = one logical change
 - Format: `migrate(repo-name): specific change description`
 - Examples:
@@ -151,12 +163,14 @@ Execute changes with:
   - `migrate(rd-logger): integrate with monorepo build system`
 
 **Communication Standards**:
+
 - Explain the "why" behind changes
 - Highlight risks or breaking changes
 - Point out architectural decisions
 - Summarize progress after each phase
 
 **Quality Assurance**:
+
 - Verify file paths are correct
 - Check for circular dependencies
 - Ensure no secrets exposed
@@ -166,6 +180,7 @@ Execute changes with:
 ## rd-logger Migration
 
 The original agent successfully migrated rd-logger (PR #36) with:
+
 - **13 atomic commits** organized by phase
 - **Sub-issues** for each phase (issues #30-33)
 - **Migration plan** (now in `docs/migrations/MIGRATION_PLAN_rd-logger.md`)
@@ -179,6 +194,7 @@ This migration established patterns that influenced the new architecture.
 From the rd-logger migration using this agent:
 
 **What Worked Well**:
+
 - ✅ Atomic commits made review easy
 - ✅ Sub-issues provided clear tracking
 - ✅ Approval gates prevented mistakes
@@ -186,6 +202,7 @@ From the rd-logger migration using this agent:
 - ✅ Safety-first approach was correct
 
 **What Could Be Better**:
+
 - ⚠️ TypeScript project references not completed (root tsconfig not updated)
 - ⚠️ Migration plan left in repo root (should be archived)
 - ⚠️ Sub-issues closed but not preserved for audit
@@ -197,6 +214,7 @@ These insights led to improvements in the new architecture.
 ## For Historical Reference
 
 When reviewing the rd-logger migration (PR #36), remember:
+
 - Used this original monolithic agent
 - Migration plan created manually by agent
 - 4-phase structure with approval gates
@@ -208,6 +226,7 @@ The new architecture addresses those gaps while preserving the good practices.
 ## Migration Path
 
 **Old Way** (rd-logger):
+
 ```
 User: "Migrate rd-logger"
 → Launch monorepo-migration-orchestrator
@@ -219,6 +238,7 @@ User: "Migrate rd-logger"
 ```
 
 **New Way** (future packages):
+
 ```
 User: "Migrate openbadges-types"
 → Launch migration-orchestrator

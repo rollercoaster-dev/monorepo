@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch } from "vue";
 
 /**
  * Props for the FontSelector component
@@ -54,42 +54,42 @@ interface FontSelectorProps {
 }
 
 const props = withDefaults(defineProps<FontSelectorProps>(), {
-  modelValue: 'system',
+  modelValue: "system",
   showFontSize: true,
   showTextSpacing: true,
-  fontLabel: 'Font Family',
-  fontSizeLabel: 'Font Size',
-  textSpacingLabel: 'Text Spacing',
+  fontLabel: "Font Family",
+  fontSizeLabel: "Font Size",
+  textSpacingLabel: "Text Spacing",
   availableFonts: () => [
     {
-      id: 'system',
-      name: 'System Font',
+      id: "system",
+      name: "System Font",
       description: "Your device's default font",
-      className: 'ob-font-system',
+      className: "ob-font-system",
     },
     {
-      id: 'atkinson',
-      name: 'Atkinson Hyperlegible',
-      description: 'Designed for low vision readers',
-      className: 'ob-font-accessible',
+      id: "atkinson",
+      name: "Atkinson Hyperlegible",
+      description: "Designed for low vision readers",
+      className: "ob-font-accessible",
     },
     {
-      id: 'opendyslexic',
-      name: 'OpenDyslexic',
-      description: 'Designed for readers with dyslexia',
-      className: 'ob-font-dyslexic',
+      id: "opendyslexic",
+      name: "OpenDyslexic",
+      description: "Designed for readers with dyslexia",
+      className: "ob-font-dyslexic",
     },
     {
-      id: 'lexend',
-      name: 'Lexend',
-      description: 'Designed for improved reading fluency',
-      className: 'ob-font-readable',
+      id: "lexend",
+      name: "Lexend",
+      description: "Designed for improved reading fluency",
+      className: "ob-font-readable",
     },
     {
-      id: 'inter',
-      name: 'Inter',
-      description: 'Modern, highly legible sans-serif',
-      className: 'ob-font-standard',
+      id: "inter",
+      name: "Inter",
+      description: "Modern, highly legible sans-serif",
+      className: "ob-font-standard",
     },
   ],
 });
@@ -102,45 +102,45 @@ const emit = defineEmits<{
    * Emitted when the selected font changes
    * @param value The new font value
    */
-  (e: 'update:modelValue', value: string): void;
+  (e: "update:modelValue", value: string): void;
 
   /**
    * Emitted when the font size changes
    * @param value The new font size value
    */
-  (e: 'fontSizeChange', value: string): void;
+  (e: "fontSizeChange", value: string): void;
 
   /**
    * Emitted when the text spacing changes
    * @param value The new text spacing value
    */
-  (e: 'textSpacingChange', value: boolean): void;
+  (e: "textSpacingChange", value: boolean): void;
 }>();
 
 // Internal state
 const selectedFont = ref(props.modelValue);
-const selectedFontSize = ref('base');
+const selectedFontSize = ref("base");
 const enhancedSpacing = ref(false);
 
 // Computed properties
 const currentFontClass = computed(() => {
   const font = props.availableFonts.find((f) => f.id === selectedFont.value);
-  return font ? font.className : 'ob-font-system';
+  return font ? font.className : "ob-font-system";
 });
 
 const currentFontSizeClass = computed(() => {
   switch (selectedFontSize.value) {
-    case 'large':
-      return 'ob-text-size-large';
-    case 'xl':
-      return 'ob-text-size-xl';
+    case "large":
+      return "ob-text-size-large";
+    case "xl":
+      return "ob-text-size-xl";
     default:
-      return 'ob-text-size-base';
+      return "ob-text-size-base";
   }
 });
 
 const spacingClass = computed(() => {
-  return enhancedSpacing.value ? 'ob-text-spacing-enhanced' : '';
+  return enhancedSpacing.value ? "ob-text-spacing-enhanced" : "";
 });
 
 // Watch for changes in props
@@ -148,36 +148,35 @@ watch(
   () => props.modelValue,
   (newValue) => {
     selectedFont.value = newValue;
-  }
+  },
 );
 
 // Methods
 const handleFontChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
   selectedFont.value = target.value;
-  emit('update:modelValue', target.value);
+  emit("update:modelValue", target.value);
 };
 
 const handleFontSizeChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
   selectedFontSize.value = target.value;
-  emit('fontSizeChange', target.value);
+  emit("fontSizeChange", target.value);
 };
 
 const handleSpacingChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   enhancedSpacing.value = target.checked;
-  emit('textSpacingChange', target.checked);
+  emit("textSpacingChange", target.checked);
 };
 </script>
 
 <template>
   <div class="ob-font-selector">
     <div class="ob-font-selector-group">
-      <label
-        :for="'ob-font-family-select'"
-        class="ob-font-selector-label"
-      >{{ fontLabel }}</label>
+      <label :for="'ob-font-family-select'" class="ob-font-selector-label">{{
+        fontLabel
+      }}</label>
       <select
         :id="'ob-font-family-select'"
         class="ob-font-selector-select"
@@ -195,21 +194,20 @@ const handleSpacingChange = (event: Event) => {
         </option>
       </select>
       <p
-        v-if="selectedFont && availableFonts.find((f) => f.id === selectedFont)?.description"
+        v-if="
+          selectedFont &&
+          availableFonts.find((f) => f.id === selectedFont)?.description
+        "
         class="ob-font-selector-description"
       >
         {{ availableFonts.find((f) => f.id === selectedFont)?.description }}
       </p>
     </div>
 
-    <div
-      v-if="showFontSize"
-      class="ob-font-selector-group"
-    >
-      <label
-        :for="'ob-font-size-select'"
-        class="ob-font-selector-label"
-      >{{ fontSizeLabel }}</label>
+    <div v-if="showFontSize" class="ob-font-selector-group">
+      <label :for="'ob-font-size-select'" class="ob-font-selector-label">{{
+        fontSizeLabel
+      }}</label>
       <select
         :id="'ob-font-size-select'"
         class="ob-font-selector-select"
@@ -217,22 +215,13 @@ const handleSpacingChange = (event: Event) => {
         :class="[currentFontClass, currentFontSizeClass]"
         @change="handleFontSizeChange"
       >
-        <option value="base">
-          Normal
-        </option>
-        <option value="large">
-          Large
-        </option>
-        <option value="xl">
-          Extra Large
-        </option>
+        <option value="base">Normal</option>
+        <option value="large">Large</option>
+        <option value="xl">Extra Large</option>
       </select>
     </div>
 
-    <div
-      v-if="showTextSpacing"
-      class="ob-font-selector-group"
-    >
+    <div v-if="showTextSpacing" class="ob-font-selector-group">
       <div class="ob-font-selector-checkbox-group">
         <input
           :id="'ob-text-spacing-checkbox'"
@@ -240,7 +229,7 @@ const handleSpacingChange = (event: Event) => {
           class="ob-font-selector-checkbox"
           :checked="enhancedSpacing"
           @change="handleSpacingChange"
-        >
+        />
         <label
           :for="'ob-text-spacing-checkbox'"
           class="ob-font-selector-checkbox-label"

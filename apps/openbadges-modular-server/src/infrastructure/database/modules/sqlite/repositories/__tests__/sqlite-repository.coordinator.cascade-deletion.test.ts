@@ -6,28 +6,28 @@
  * and rollback behavior.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { Database } from 'bun:sqlite';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import { SqliteRepositoryCoordinator } from '../sqlite-repository.coordinator';
-import { SqliteConnectionManager } from '../../connection/sqlite-connection.manager';
-import type { Shared } from 'openbadges-types';
-import * as schema from '../../schema';
-import { getMigrationsPath } from '@tests/test-utils/migrations-path';
-import { logger } from '@utils/logging/logger.service';
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import { migrate } from "drizzle-orm/bun-sqlite/migrator";
+import { SqliteRepositoryCoordinator } from "../sqlite-repository.coordinator";
+import { SqliteConnectionManager } from "../../connection/sqlite-connection.manager";
+import type { Shared } from "openbadges-types";
+import * as schema from "../../schema";
+import { getMigrationsPath } from "@tests/test-utils/migrations-path";
+import { logger } from "@utils/logging/logger.service";
 
-describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
+describe("SqliteRepositoryCoordinator - Cascade Deletion", () => {
   let coordinator: SqliteRepositoryCoordinator;
   let connectionManager: SqliteConnectionManager;
   let testDbInstance: Database;
 
   beforeEach(async () => {
     // Create in-memory SQLite database for testing
-    testDbInstance = new Database(':memory:');
+    testDbInstance = new Database(":memory:");
 
     // Enable foreign keys BEFORE creating connection manager
-    testDbInstance.exec('PRAGMA foreign_keys = ON;');
+    testDbInstance.exec("PRAGMA foreign_keys = ON;");
 
     // Create connection manager with proper config
     connectionManager = new SqliteConnectionManager(testDbInstance, {
@@ -42,13 +42,13 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
     try {
       migrate(db, { migrationsFolder: getMigrationsPath() });
     } catch (_err) {
-      logger.error('❌  Migration failed in cascade-deletion test:', _err);
+      logger.error("❌  Migration failed in cascade-deletion test:", _err);
       // Falling back keeps the test running, but re-throw if you
       // want migrations to stay the single source of truth.
       // throw err;
       // If migrations fail, create tables manually for testing
       // First enable foreign keys
-      testDbInstance.exec('PRAGMA foreign_keys = ON;');
+      testDbInstance.exec("PRAGMA foreign_keys = ON;");
 
       testDbInstance.exec(`
         CREATE TABLE IF NOT EXISTS issuers (
@@ -107,28 +107,28 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
     testDbInstance.close();
   });
 
-  describe('deleteIssuerCascade', () => {
-    it('should delete issuer and cascade to badge classes and assertions atomically', async () => {
+  describe("deleteIssuerCascade", () => {
+    it("should delete issuer and cascade to badge classes and assertions atomically", async () => {
       // Arrange: Create a complete badge ecosystem
       const issuerData = {
-        name: 'Test Issuer',
-        url: 'https://test-issuer.com',
-        email: 'test@issuer.com',
-        description: 'A test issuer for cascade deletion testing',
+        name: "Test Issuer",
+        url: "https://test-issuer.com",
+        email: "test@issuer.com",
+        description: "A test issuer for cascade deletion testing",
       };
 
       const badgeClassData = {
-        name: 'Test Badge',
-        description: 'A test badge class',
-        image: 'https://example.com/badge.png' as Shared.IRI,
-        criteria: { narrative: 'Complete the test' },
+        name: "Test Badge",
+        description: "A test badge class",
+        image: "https://example.com/badge.png" as Shared.IRI,
+        criteria: { narrative: "Complete the test" },
       };
 
       const assertionData = {
         recipient: {
-          type: 'email',
+          type: "email",
           hashed: false,
-          identity: 'recipient@example.com',
+          identity: "recipient@example.com",
         },
         issuedOn: new Date(),
       };
@@ -137,7 +137,7 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       const ecosystem = await coordinator.createBadgeEcosystem(
         issuerData,
         badgeClassData,
-        assertionData
+        assertionData,
       );
 
       // Verify entities were created
@@ -147,10 +147,10 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
 
       const createdIssuer = await issuerRepo.findById(ecosystem.issuer.id);
       const createdBadgeClass = await badgeClassRepo.findById(
-        ecosystem.badgeClass.id
+        ecosystem.badgeClass.id,
       );
       const createdAssertion = await assertionRepo.findById(
-        ecosystem.assertion.id
+        ecosystem.assertion.id,
       );
 
       expect(createdIssuer).toBeTruthy();
@@ -159,7 +159,7 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
 
       // Act: Delete the issuer with cascade
       const deleteResult = await coordinator.deleteIssuerCascade(
-        ecosystem.issuer.id
+        ecosystem.issuer.id,
       );
 
       // Assert: Verify deletion results
@@ -170,10 +170,10 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       // Verify entities are actually deleted from database
       const deletedIssuer = await issuerRepo.findById(ecosystem.issuer.id);
       const deletedBadgeClass = await badgeClassRepo.findById(
-        ecosystem.badgeClass.id
+        ecosystem.badgeClass.id,
       );
       const deletedAssertion = await assertionRepo.findById(
-        ecosystem.assertion.id
+        ecosystem.assertion.id,
       );
 
       expect(deletedIssuer).toBeNull();
@@ -181,13 +181,13 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       expect(deletedAssertion).toBeNull();
     });
 
-    it('should handle multiple badge classes and assertions correctly', async () => {
+    it("should handle multiple badge classes and assertions correctly", async () => {
       // Arrange: Create issuer with multiple badge classes and assertions
       const issuerData = {
-        name: 'Multi Badge Issuer',
-        url: 'https://multi-badge.com',
-        email: 'multi@badge.com',
-        description: 'An issuer with multiple badges',
+        name: "Multi Badge Issuer",
+        url: "https://multi-badge.com",
+        email: "multi@badge.com",
+        description: "An issuer with multiple badges",
       };
 
       // Create issuer first
@@ -195,27 +195,27 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
 
       // Create multiple badge classes
       const badgeClass1 = await coordinator.getBadgeClassRepository().create({
-        name: 'Badge 1',
-        description: 'First badge',
-        image: 'https://example.com/badge1.png' as Shared.IRI,
-        criteria: { narrative: 'Complete task 1' },
+        name: "Badge 1",
+        description: "First badge",
+        image: "https://example.com/badge1.png" as Shared.IRI,
+        criteria: { narrative: "Complete task 1" },
         issuer: issuer.id,
       });
 
       const badgeClass2 = await coordinator.getBadgeClassRepository().create({
-        name: 'Badge 2',
-        description: 'Second badge',
-        image: 'https://example.com/badge2.png' as Shared.IRI,
-        criteria: { narrative: 'Complete task 2' },
+        name: "Badge 2",
+        description: "Second badge",
+        image: "https://example.com/badge2.png" as Shared.IRI,
+        criteria: { narrative: "Complete task 2" },
         issuer: issuer.id,
       });
 
       // Create multiple assertions for each badge class
       const assertion1a = await coordinator.getAssertionRepository().create({
         recipient: {
-          type: 'email',
+          type: "email",
           hashed: false,
-          identity: 'user1@example.com',
+          identity: "user1@example.com",
         },
         issuedOn: new Date(),
         badgeClass: badgeClass1.id,
@@ -223,9 +223,9 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
 
       const assertion1b = await coordinator.getAssertionRepository().create({
         recipient: {
-          type: 'email',
+          type: "email",
           hashed: false,
-          identity: 'user2@example.com',
+          identity: "user2@example.com",
         },
         issuedOn: new Date(),
         badgeClass: badgeClass1.id,
@@ -233,9 +233,9 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
 
       const assertion2a = await coordinator.getAssertionRepository().create({
         recipient: {
-          type: 'email',
+          type: "email",
           hashed: false,
-          identity: 'user3@example.com',
+          identity: "user3@example.com",
         },
         issuedOn: new Date(),
         badgeClass: badgeClass2.id,
@@ -262,13 +262,13 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       expect(await assertionRepo.findById(assertion2a.id)).toBeNull();
     });
 
-    it('should return correct counts when issuer has no badge classes', async () => {
+    it("should return correct counts when issuer has no badge classes", async () => {
       // Arrange: Create issuer with no badge classes
       const issuerData = {
-        name: 'Empty Issuer',
-        url: 'https://empty-issuer.com',
-        email: 'empty@issuer.com',
-        description: 'An issuer with no badges',
+        name: "Empty Issuer",
+        url: "https://empty-issuer.com",
+        email: "empty@issuer.com",
+        description: "An issuer with no badges",
       };
 
       const issuer = await coordinator.getIssuerRepository().create(issuerData);
@@ -288,9 +288,9 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       expect(deletedIssuer).toBeNull();
     });
 
-    it('should return false when trying to delete non-existent issuer', async () => {
+    it("should return false when trying to delete non-existent issuer", async () => {
       // Arrange: Use a non-existent issuer ID
-      const nonExistentId = 'non-existent-issuer-id' as Shared.IRI;
+      const nonExistentId = "non-existent-issuer-id" as Shared.IRI;
 
       // Act: Try to delete non-existent issuer
       const deleteResult = await coordinator.deleteIssuerCascade(nonExistentId);
@@ -301,14 +301,14 @@ describe('SqliteRepositoryCoordinator - Cascade Deletion', () => {
       expect(deleteResult.assertionsDeleted).toBe(0);
     });
 
-    it('should maintain transaction atomicity on error', async () => {
+    it("should maintain transaction atomicity on error", async () => {
       // This test verifies that the method handles connection issues gracefully
       // Since the coordinator automatically reconnects, we'll test with a closed database
 
       // Arrange: Close the database completely to simulate an unrecoverable error
       testDbInstance.close();
 
-      const issuerId = 'test-issuer-id' as Shared.IRI;
+      const issuerId = "test-issuer-id" as Shared.IRI;
 
       // Act & Assert: Verify error is thrown when database is completely unavailable
       await expect(coordinator.deleteIssuerCascade(issuerId)).rejects.toThrow();

@@ -2,16 +2,16 @@
  * Simple script to create SQLite tables for testing
  */
 
-import { Database } from 'bun:sqlite';
-import { logger } from './src/utils/logging/logger.service';
+import { Database } from "bun:sqlite";
+import { logger } from "./src/utils/logging/logger.service";
 
 async function createTables() {
   try {
-    logger.info('Creating SQLite tables for testing...');
-    
+    logger.info("Creating SQLite tables for testing...");
+
     // Create SQLite database connection
-    const db = new Database('./sqlite.db');
-    
+    const db = new Database("./sqlite.db");
+
     // Create users table
     db.exec(`
       CREATE TABLE IF NOT EXISTS users (
@@ -33,7 +33,7 @@ async function createTables() {
       CREATE INDEX IF NOT EXISTS user_username_idx ON users (username);
       CREATE INDEX IF NOT EXISTS user_email_idx ON users (email);
     `);
-    
+
     // Create issuers table
     db.exec(`
       CREATE TABLE IF NOT EXISTS issuers (
@@ -54,7 +54,7 @@ async function createTables() {
       CREATE INDEX IF NOT EXISTS issuer_email_idx ON issuers (email);
       CREATE INDEX IF NOT EXISTS issuer_created_at_idx ON issuers (created_at);
     `);
-    
+
     // Create badge_classes table
     db.exec(`
       CREATE TABLE IF NOT EXISTS badge_classes (
@@ -76,7 +76,7 @@ async function createTables() {
       CREATE INDEX IF NOT EXISTS badge_class_name_idx ON badge_classes (name);
       CREATE INDEX IF NOT EXISTS badge_class_created_at_idx ON badge_classes (created_at);
     `);
-    
+
     // Create assertions table
     db.exec(`
       CREATE TABLE IF NOT EXISTS assertions (
@@ -100,15 +100,15 @@ async function createTables() {
       CREATE INDEX IF NOT EXISTS assertion_revoked_idx ON assertions (revoked);
       CREATE INDEX IF NOT EXISTS assertion_expires_idx ON assertions (expires);
     `);
-    
-    logger.info('SQLite tables created successfully');
-    
+
+    logger.info("SQLite tables created successfully");
+
     // Close database connection
     db.close();
   } catch (error) {
-    logger.error('Error creating SQLite tables', { 
+    logger.error("Error creating SQLite tables", {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
     process.exit(1);
   }

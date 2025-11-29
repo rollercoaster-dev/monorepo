@@ -255,7 +255,7 @@ After deployment, verify:
 Here's an example of a production-ready Docker Compose configuration:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # Reverse proxy
@@ -286,24 +286,24 @@ services:
       - HOST=0.0.0.0
       - NODE_ENV=production
       - BASE_URL=https://badges.example.com
-      
+
       # Database configuration
       - DB_TYPE=postgresql
       - DATABASE_URL=postgres://openbadges:${DB_PASSWORD}@db:5432/openbadges
       - DB_MAX_CONNECTION_ATTEMPTS=10
       - DB_CONNECTION_RETRY_DELAY_MS=2000
-      
+
       # Authentication configuration
       - AUTH_ENABLED=true
       - JWT_SECRET=${JWT_SECRET}
       - JWT_TOKEN_EXPIRY_SECONDS=3600
       - AUTH_API_KEY_ENABLED=true
       - AUTH_API_KEY_SYSTEM=${API_KEY}:system-user:System integration
-      
+
       # Logging configuration
       - LOG_LEVEL=info
       - LOG_FORMAT=json
-      
+
       # Cache configuration
       - CACHE_ENABLED=true
       - CACHE_MAX_ITEMS=10000
@@ -316,10 +316,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 1G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -349,10 +349,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 1G
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
 
   # Backup service
@@ -382,12 +382,14 @@ volumes:
 ```
 
 This configuration includes:
+
 - Nginx reverse proxy with SSL termination
 - API service with appropriate resource limits
 - PostgreSQL database with custom configuration
 - Automated backup service
 
 Remember to create a `.env` file with the necessary secrets:
+
 ```
 DB_PASSWORD=secure-database-password
 JWT_SECRET=secure-jwt-secret

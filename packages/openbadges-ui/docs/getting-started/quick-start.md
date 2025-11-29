@@ -5,6 +5,7 @@ This guide will help you get started with the OpenBadges UI library by creating 
 ## Prerequisites
 
 Before you begin, make sure you have:
+
 - Installed the OpenBadges UI library (see [Installation](./installation.md))
 - Set up a Vue 3 project
 
@@ -18,19 +19,19 @@ First, make sure you've imported the library and its styles in your main file:
 
 ```javascript
 // main.js or main.ts
-import { createApp } from 'vue';
-import App from './App.vue';
-import { OpenBadgesUIPlugin } from 'openbadges-ui';
+import { createApp } from "vue";
+import App from "./App.vue";
+import { OpenBadgesUIPlugin } from "openbadges-ui";
 
 // Import styles
-import 'openbadges-ui/dist/style.css';
+import "openbadges-ui/dist/style.css";
 
 const app = createApp(App);
 
 // Use the plugin
 app.use(OpenBadgesUIPlugin);
 
-app.mount('#app');
+app.mount("#app");
 ```
 
 ### Step 2: Create a Badge Component
@@ -42,8 +43,8 @@ Create a new component that will display a badge:
 <template>
   <div class="badge-viewer">
     <h1>My Badge</h1>
-    <BadgeDisplay 
-      :badge="badge" 
+    <BadgeDisplay
+      :badge="badge"
       :show-description="true"
       :show-issued-date="true"
       :show-verification="true"
@@ -52,34 +53,35 @@ Create a new component that will display a badge:
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 // Example badge in Open Badges 2.0 format
 const badge = ref({
-  '@context': 'https://w3id.org/openbadges/v2',
-  id: 'https://example.org/assertions/123',
-  type: 'Assertion',
+  "@context": "https://w3id.org/openbadges/v2",
+  id: "https://example.org/assertions/123",
+  type: "Assertion",
   recipient: {
-    identity: 'jane@example.org',
-    type: 'email',
-    hashed: false
+    identity: "jane@example.org",
+    type: "email",
+    hashed: false,
   },
   badge: {
-    id: 'https://example.org/badges/1',
-    type: 'BadgeClass',
-    name: 'Web Development Fundamentals',
-    description: 'This badge is awarded for demonstrating proficiency in web development fundamentals including HTML, CSS, and JavaScript.',
-    image: 'https://example.org/badges/web-dev.png',
+    id: "https://example.org/badges/1",
+    type: "BadgeClass",
+    name: "Web Development Fundamentals",
+    description:
+      "This badge is awarded for demonstrating proficiency in web development fundamentals including HTML, CSS, and JavaScript.",
+    image: "https://example.org/badges/web-dev.png",
     issuer: {
-      id: 'https://example.org/issuer',
-      type: 'Profile',
-      name: 'Web Development Academy'
-    }
+      id: "https://example.org/issuer",
+      type: "Profile",
+      name: "Web Development Academy",
+    },
   },
-  issuedOn: '2023-01-15T12:00:00Z',
+  issuedOn: "2023-01-15T12:00:00Z",
   verification: {
-    type: 'hosted'
-  }
+    type: "hosted",
+  },
 });
 </script>
 
@@ -105,7 +107,7 @@ Now, use the BadgeViewer component in your App.vue file:
 </template>
 
 <script setup>
-import BadgeViewer from './components/BadgeViewer.vue';
+import BadgeViewer from "./components/BadgeViewer.vue";
 </script>
 
 <style>
@@ -136,22 +138,22 @@ Let's enhance our application by adding badge verification functionality:
 <template>
   <div class="badge-viewer">
     <h1>My Badge</h1>
-    <BadgeDisplay 
-      :badge="badge" 
+    <BadgeDisplay
+      :badge="badge"
       :show-description="true"
       :show-issued-date="true"
       :show-verification="true"
       @verified="handleVerified"
     />
-    
+
     <div v-if="verificationResult" class="verification-result">
       <h2>Verification Result</h2>
       <p>
-        <strong>Status:</strong> 
-        {{ verificationResult.isValid ? 'Valid' : 'Invalid' }}
+        <strong>Status:</strong>
+        {{ verificationResult.isValid ? "Valid" : "Invalid" }}
       </p>
       <p v-if="verificationResult.verificationMethod">
-        <strong>Method:</strong> 
+        <strong>Method:</strong>
         {{ verificationResult.verificationMethod }}
       </p>
     </div>
@@ -159,7 +161,7 @@ Let's enhance our application by adding badge verification functionality:
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 
 // Example badge in Open Badges 2.0 format
 const badge = ref({
@@ -173,7 +175,7 @@ const verificationResult = ref(null);
 const handleVerified = (isValid) => {
   verificationResult.value = {
     isValid,
-    verificationMethod: badge.value.verification.type
+    verificationMethod: badge.value.verification.type,
   };
 };
 </script>
@@ -204,22 +206,22 @@ Now, let's create a component that displays a list of badges:
 <template>
   <div class="badge-list-viewer">
     <h1>My Badges</h1>
-    
+
     <div class="controls">
-      <input 
-        v-model="filterText" 
-        placeholder="Filter badges..." 
+      <input
+        v-model="filterText"
+        placeholder="Filter badges..."
         class="filter-input"
       />
-      
+
       <select v-model="layout" class="layout-select">
         <option value="grid">Grid Layout</option>
         <option value="list">List Layout</option>
       </select>
     </div>
-    
-    <BadgeList 
-      :badges="badges" 
+
+    <BadgeList
+      :badges="badges"
       :layout="layout"
       :interactive="true"
       :show-pagination="true"
@@ -230,7 +232,7 @@ Now, let's create a component that displays a list of badges:
         <p>No badges found. Earn your first badge!</p>
       </template>
     </BadgeList>
-    
+
     <div v-if="selectedBadge" class="selected-badge">
       <h2>Selected Badge</h2>
       <BadgeDisplay :badge="selectedBadge" />
@@ -239,51 +241,48 @@ Now, let's create a component that displays a list of badges:
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useBadges } from 'openbadges-ui';
+import { ref } from "vue";
+import { useBadges } from "openbadges-ui";
 
 // Create some example badges
 const exampleBadges = [
   // First badge from previous example
   {
-    '@context': 'https://w3id.org/openbadges/v2',
-    id: 'https://example.org/assertions/123',
-    type: 'Assertion',
+    "@context": "https://w3id.org/openbadges/v2",
+    id: "https://example.org/assertions/123",
+    type: "Assertion",
     recipient: {
-      identity: 'jane@example.org',
-      type: 'email',
-      hashed: false
+      identity: "jane@example.org",
+      type: "email",
+      hashed: false,
     },
     badge: {
-      id: 'https://example.org/badges/1',
-      type: 'BadgeClass',
-      name: 'Web Development Fundamentals',
-      description: 'This badge is awarded for demonstrating proficiency in web development fundamentals including HTML, CSS, and JavaScript.',
-      image: 'https://example.org/badges/web-dev.png',
+      id: "https://example.org/badges/1",
+      type: "BadgeClass",
+      name: "Web Development Fundamentals",
+      description:
+        "This badge is awarded for demonstrating proficiency in web development fundamentals including HTML, CSS, and JavaScript.",
+      image: "https://example.org/badges/web-dev.png",
       issuer: {
-        id: 'https://example.org/issuer',
-        type: 'Profile',
-        name: 'Web Development Academy'
-      }
+        id: "https://example.org/issuer",
+        type: "Profile",
+        name: "Web Development Academy",
+      },
     },
-    issuedOn: '2023-01-15T12:00:00Z',
+    issuedOn: "2023-01-15T12:00:00Z",
     verification: {
-      type: 'hosted'
-    }
+      type: "hosted",
+    },
   },
   // Add more example badges...
 ];
 
 // Use the useBadges composable
-const { 
-  badges, 
-  filterText, 
-  filteredBadges, 
-  setBadges 
-} = useBadges(exampleBadges);
+const { badges, filterText, filteredBadges, setBadges } =
+  useBadges(exampleBadges);
 
 // Set up layout and selected badge
-const layout = ref('grid');
+const layout = ref("grid");
 const selectedBadge = ref(null);
 
 // Handle badge click

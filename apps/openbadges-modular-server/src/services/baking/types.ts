@@ -9,7 +9,7 @@
  * verification, making badges portable and shareable.
  */
 
-import type { OB2, OB3, OpenBadgesVersion } from 'openbadges-types';
+import type { OB2, OB3, OpenBadgesVersion } from "openbadges-types";
 
 /**
  * Supported image formats for badge baking
@@ -17,7 +17,7 @@ import type { OB2, OB3, OpenBadgesVersion } from 'openbadges-types';
  * - png: Embeds credential as iTXt chunk with keyword 'openbadges'
  * - svg: Embeds credential in metadata or assertion element
  */
-export type ImageFormat = 'png' | 'svg';
+export type ImageFormat = "png" | "svg";
 
 /**
  * Options for baking a badge credential into an image
@@ -65,7 +65,7 @@ export interface BakedImage {
    * The MIME type of the baked image
    * Either 'image/png' or 'image/svg+xml'
    */
-  mimeType: 'image/png' | 'image/svg+xml';
+  mimeType: "image/png" | "image/svg+xml";
 
   /**
    * The format of the baked image
@@ -141,7 +141,7 @@ export interface BakingService {
   bake(
     imageData: Buffer,
     credential: OB2.Assertion | OB3.VerifiableCredential,
-    options: BakeOptions
+    options: BakeOptions,
   ): Promise<BakedImage>;
 
   /**
