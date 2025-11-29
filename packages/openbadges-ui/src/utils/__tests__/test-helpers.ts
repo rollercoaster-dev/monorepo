@@ -64,7 +64,7 @@ export function createTestOB3Credential(
       name: 'Test Issuer',
       url: createIRI('http://example.org/test-issuer'),
     },
-    issuanceDate: createDateTime('2023-01-01T00:00:00Z'),
+    validFrom: createDateTime('2023-01-01T00:00:00Z'),
     credentialSubject: {
       id: createIRI('did:example:123'),
       type: 'AchievementSubject',

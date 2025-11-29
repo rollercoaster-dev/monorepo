@@ -226,10 +226,10 @@ function validateOB3VerifiableCredential(
     result.isValid = false;
   }
 
-  // Validate issuanceDate
-  if (!Shared.isDateTime(credential.issuanceDate)) {
+  // Validate validFrom (was issuanceDate in VC 1.0)
+  if (!Shared.isDateTime(credential.validFrom)) {
     result.errors.push(
-      'VerifiableCredential issuanceDate must be a valid DateTime in ISO 8601 format'
+      'VerifiableCredential validFrom must be a valid DateTime in ISO 8601 format'
     );
     result.isValid = false;
   }

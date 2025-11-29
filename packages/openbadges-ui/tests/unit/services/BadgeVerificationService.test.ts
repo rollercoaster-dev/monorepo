@@ -94,7 +94,7 @@ describe('BadgeVerificationService', () => {
       name: 'Test Issuer',
       url: createIRI('http://example.org/issuers/1'),
     },
-    issuanceDate: createDateTime('2023-01-01T00:00:00Z'),
+    validFrom: createDateTime('2023-01-01T00:00:00Z'),
     credentialSubject: {
       id: createIRI('did:example:ebfeb1f712ebc6f1c276e12ec21'),
       type: 'AchievementSubject',
@@ -106,6 +106,9 @@ describe('BadgeVerificationService', () => {
         image: {
           id: createIRI('http://example.org/badges/5/image'),
           type: 'Image',
+        },
+        criteria: {
+          narrative: 'Complete the verification requirements.',
         },
       },
     },

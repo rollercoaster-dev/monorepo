@@ -174,7 +174,7 @@ export function getBadgeIssuanceDate(badge: Badge): string | null {
   if (OB2.isAssertion(badge)) {
     return badge.issuedOn;
   } else if (OB3.isVerifiableCredential(badge)) {
-    return badge.issuanceDate;
+    return badge.validFrom;
   }
   return null;
 }
@@ -188,7 +188,7 @@ export function getBadgeExpirationDate(badge: Badge): string | null {
   if (OB2.isAssertion(badge)) {
     return badge.expires || null;
   } else if (OB3.isVerifiableCredential(badge)) {
-    return badge.expirationDate || null;
+    return badge.validUntil || null;
   }
   return null;
 }

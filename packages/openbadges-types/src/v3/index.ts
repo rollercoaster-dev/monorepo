@@ -5,14 +5,16 @@ import type { JsonLdObject } from '../shared/jsonld';
 /**
  * VerifiableCredential interface for Open Badges 3.0
  * Based on the W3C Verifiable Credentials Data Model v2.0
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#openbadgecredential
  */
 export interface VerifiableCredential extends JsonLdObject {
   '@context': string | string[] | Record<string, unknown>;
   id: IRI;
-  type: 'VerifiableCredential' | string | string[];
+  /** Must include both 'VerifiableCredential' and 'OpenBadgeCredential' */
+  type: string[];
   issuer: IRI | Issuer;
-  issuanceDate: DateTime;
-  expirationDate?: DateTime;
+  validFrom: DateTime;
+  validUntil?: DateTime;
   credentialSubject: CredentialSubject;
   proof?: Proof;
   credentialStatus?: CredentialStatus;
@@ -68,13 +70,14 @@ export interface CredentialSubject {
 /**
  * Achievement interface for Open Badges 3.0
  * Represents the achievement being recognized
+ * @see https://www.imsglobal.org/spec/ob/v3p0/#achievement
  */
 export interface Achievement extends JsonLdObject {
   id: IRI;
   type: string | string[];
   name: string | MultiLanguageString;
-  description?: string | MultiLanguageString;
-  criteria?: Criteria;
+  description: string | MultiLanguageString;
+  criteria: Criteria;
   image?: IRI | OB3ImageObject;
   creator?: IRI | Issuer;
   alignments?: Alignment[];

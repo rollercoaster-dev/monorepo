@@ -29,7 +29,7 @@ test('OB3 VerifiableCredential missing required field fails validation', () => {
 });
 
 test('OB3 VerifiableCredential with wrong type fails validation', () => {
-  const credential = { ...createOB3VerifiableCredential(), issuanceDate: 12345 };
+  const credential = { ...createOB3VerifiableCredential(), validFrom: 12345 };
   const result = validateOB3Credential(credential);
   expect(result.valid).toBe(false);
   console.log('Wrong type errors:', result.errors);
@@ -111,20 +111,22 @@ test('OB3 E2E: real-world minimal valid credential', () => {
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: 'https://example.org/credentials/1001',
-    type: ['VerifiableCredential'],
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: {
       id: 'https://example.org/issuers/1',
       type: ['Profile'],
       name: 'Example Issuer',
       url: 'https://example.org',
     },
-    issuanceDate: '2024-01-01T00:00:00Z',
+    validFrom: '2024-01-01T00:00:00Z',
     credentialSubject: {
       id: 'did:example:123',
       achievement: {
         id: 'https://example.org/achievements/1',
         type: ['Achievement'],
         name: 'Test Achievement',
+        description: 'A test achievement for validation',
+        criteria: { narrative: 'Complete the test' },
       },
     },
   };
@@ -139,19 +141,21 @@ test('OB3 E2E: real-world invalid credential (missing achievement name)', () => 
       'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
     ],
     id: 'https://example.org/credentials/1002',
-    type: ['VerifiableCredential'],
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
     issuer: {
       id: 'https://example.org/issuers/1',
       type: ['Profile'],
       name: 'Example Issuer',
       url: 'https://example.org',
     },
-    issuanceDate: '2024-01-01T00:00:00Z',
+    validFrom: '2024-01-01T00:00:00Z',
     credentialSubject: {
       id: 'did:example:123',
       achievement: {
         id: 'https://example.org/achievements/1',
         type: ['Achievement'],
+        description: 'A test achievement',
+        criteria: { narrative: 'Complete the test' },
         // name missing
       },
     },
