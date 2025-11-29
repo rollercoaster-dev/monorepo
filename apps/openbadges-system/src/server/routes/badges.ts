@@ -277,7 +277,7 @@ badgesRoutes.all('/*', async c => {
             const result = validateBadgeClassPayload(incoming)
             if (!result.valid) {
               return c.json(
-                { error: 'Invalid OB2 BadgeClass payload', details: result.errors },
+                { error: 'Invalid OB2 BadgeClass payload', report: result.report },
                 400
               )
             }
@@ -286,7 +286,10 @@ badgesRoutes.all('/*', async c => {
             const { validateAssertionPayload } = await import('../middleware/ob2Validation')
             const result = validateAssertionPayload(incoming)
             if (!result.valid) {
-              return c.json({ error: 'Invalid OB2 Assertion payload', details: result.errors }, 400)
+              return c.json(
+                { error: 'Invalid OB2 Assertion payload', report: result.report },
+                400
+              )
             }
             bodyToForward = JSON.stringify(result.data)
           }
