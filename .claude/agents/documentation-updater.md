@@ -161,13 +161,16 @@ Optional for migrations:
    - Package manager commands
 
 4. **Update monorepo structure diagram:**
+
    ```markdown
 
    ```
+
    monorepo/
    ├── packages/
    │ ├── rd-logger/ ✅
    │ └── {new-package}/ ✅ # ← Add this
+
    ```
 
    ```

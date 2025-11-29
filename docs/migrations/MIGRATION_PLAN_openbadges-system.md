@@ -217,6 +217,7 @@ rm -rf apps/openbadges-system
    - Commit: `migrate(openbadges-system): verify SQLite compatibility with Bun`
 
 4. **Run bun install from monorepo root**
+
    ```bash
    cd /path/to/monorepo
    bun install
