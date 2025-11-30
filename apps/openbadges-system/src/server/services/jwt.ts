@@ -1,6 +1,7 @@
 import jwt, { type SignOptions, type VerifyOptions } from 'jsonwebtoken'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { logger } from '../utils/logger'
 
 interface PlatformUser {
   id: string
@@ -51,10 +52,10 @@ export class JWTService {
           return decoded
         } catch (err) {
           if (process.env.NODE_ENV !== 'test') {
-            console.error(
-              `Failed to base64 decode ${which ?? 'key'}:`,
-              err instanceof Error ? err.message : err
-            )
+            logger.error('Failed to base64 decode key', {
+              keyType: which ?? 'key',
+              error: err instanceof Error ? err.message : String(err),
+            })
           }
           // Surface the error to avoid masking misconfiguration
           throw err
@@ -75,7 +76,7 @@ export class JWTService {
         this.privateKey = readFileSync(join(process.cwd(), 'keys', 'platform-private.pem'), 'utf8')
       } catch {
         if (process.env.NODE_ENV !== 'test') {
-          console.error('Private key unavailable (env/fs).')
+          logger.error('Private key unavailable (env/fs)')
         }
         throw new Error(
           'Private key not configured. Set PLATFORM_JWT_PRIVATE_KEY or provide keys/platform-private.pem'
@@ -86,7 +87,7 @@ export class JWTService {
         this.publicKey = readFileSync(join(process.cwd(), 'keys', 'platform-public.pem'), 'utf8')
       } catch {
         if (process.env.NODE_ENV !== 'test') {
-          console.error('Public key unavailable (env/fs).')
+          logger.error('Public key unavailable (env/fs)')
         }
         throw new Error(
           'Public key not configured. Set PLATFORM_JWT_PUBLIC_KEY or provide keys/platform-public.pem'
@@ -158,7 +159,7 @@ export class JWTService {
       return decoded as unknown as JWTPayload
     } catch (error) {
       if (process.env.NODE_ENV !== 'test') {
-        console.error('JWT verification failed:', error)
+        logger.warn('JWT verification failed', { error })
       }
       return null
     }
