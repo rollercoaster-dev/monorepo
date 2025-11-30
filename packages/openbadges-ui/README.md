@@ -21,9 +21,14 @@ A Vue 3 component library for implementing Open Badges functionality, with a foc
 ### For External Projects
 
 ```bash
-npm install openbadges-ui openbadges-types
-# or
+# Using bun (recommended)
 bun add openbadges-ui openbadges-types
+
+# Using npm
+npm install openbadges-ui openbadges-types
+
+# Using yarn
+yarn add openbadges-ui openbadges-types
 ```
 
 ### For Monorepo Development
