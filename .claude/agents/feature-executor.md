@@ -28,10 +28,10 @@ Executes a development plan with atomic commits. This agent handles all executio
 
 ## Relationship to Other Agents
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
+| Agent              | Purpose                                   | When to Use                  |
+| ------------------ | ----------------------------------------- | ---------------------------- |
 | `atomic-developer` | Quick implementations with atomic commits | Simple features, 1-3 commits |
-| `feature-executor` | Structured execution of detailed plans | Complex features, 4+ commits |
+| `feature-executor` | Structured execution of detailed plans    | Complex features, 4+ commits |
 
 ## Inputs
 
@@ -51,6 +51,7 @@ The user should provide:
    - Note estimated time per step
 
 2. **Check dependencies:**
+
    ```bash
    gh issue view <number> --json body | grep -iE "(blocked by|depends on) #[0-9]+"
    ```
@@ -58,6 +59,7 @@ The user should provide:
    If unmet blockers exist, STOP and warn user.
 
 3. **Create feature branch:**
+
    ```bash
    git checkout -b <type>/issue-<number>-<short-description>
    ```
@@ -73,6 +75,7 @@ The user should provide:
 For each step in the development plan:
 
 1. **Display step information:**
+
    ```
    ═══════════════════════════════════════
    Step {n}/{total}: {Step Name}
@@ -87,6 +90,7 @@ For each step in the development plan:
    - Include tests where specified
 
 3. **Validate after each step:**
+
    ```bash
    bun run type-check
    bun run lint
@@ -94,6 +98,7 @@ For each step in the development plan:
    ```
 
 4. **Create atomic commit:**
+
    ```bash
    git add <specific-files>
    git commit -m "<type>(<scope>): <message>
@@ -116,18 +121,21 @@ For each step in the development plan:
 If errors occur during execution:
 
 **TypeScript/Lint Errors:**
+
 1. Analyze error messages
 2. Fix in same commit if related
 3. Create separate fix commit if unrelated
 4. Note deviation from plan
 
 **Test Failures:**
+
 1. Analyze failure
 2. Fix test or implementation
 3. Include fix in current commit or create new commit
 4. Report deviation
 
 **Blockers:**
+
 1. Stop immediately
 2. Describe the blocker
 3. Suggest resolution
@@ -138,6 +146,7 @@ If errors occur during execution:
 After all steps complete:
 
 1. **Run full validation suite:**
+
    ```bash
    bun run type-check
    bun run lint
@@ -146,11 +155,13 @@ After all steps complete:
    ```
 
 2. **Verify coverage (if applicable):**
+
    ```bash
    bun test --coverage
    ```
 
 3. **Review commit history:**
+
    ```bash
    git log --oneline main..HEAD
    ```
@@ -179,7 +190,7 @@ Generate completion report:
 
 1. ✅ <Step 1 name> - <commit sha>
 2. ✅ <Step 2 name> - <commit sha>
-...
+   ...
 
 ## Validation Results
 
@@ -215,6 +226,7 @@ Related to #<issue-number>
 ## Interactive vs Auto Mode
 
 **Interactive Mode** (default):
+
 - Pause after each step
 - Show what will be done
 - Request approval to continue
@@ -222,6 +234,7 @@ Related to #<issue-number>
 - Safer for complex work
 
 **Auto Mode**:
+
 - Execute entire plan without pausing
 - Only stop on errors
 - Faster for confident implementations
@@ -260,12 +273,14 @@ Related to #<issue-number>
 ## Tools Required
 
 **Required:**
+
 - Bash (git commands, bun commands)
 - Read (examine existing code, read plan)
 - Write (create new files)
 - Edit (modify existing files)
 
 **Optional:**
+
 - Glob (find files)
 - Grep (search code)
 

@@ -50,6 +50,7 @@ gh issue view <number> --json body | grep -iE "(blocked by|depends on) #[0-9]+"
 ```
 
 **Decision logic:**
+
 - If "Blocked by #X" dependencies are open → STOP and warn user
 - If "Depends on #X" dependencies are open → WARN but can proceed
 - If no dependencies or all met → Continue
@@ -85,12 +86,12 @@ Task(subagent_type: "issue-researcher", prompt: "
 
 **Choose implementation agent based on complexity:**
 
-| Complexity | Commits | Agent |
-|------------|---------|-------|
-| TRIVIAL | 1-2 | atomic-developer |
-| SMALL | 2-4 | atomic-developer |
-| MEDIUM | 4-8 | feature-executor |
-| LARGE | 8+ | feature-executor (or split issue) |
+| Complexity | Commits | Agent                             |
+| ---------- | ------- | --------------------------------- |
+| TRIVIAL    | 1-2     | atomic-developer                  |
+| SMALL      | 2-4     | atomic-developer                  |
+| MEDIUM     | 4-8     | feature-executor                  |
+| LARGE      | 8+      | feature-executor (or split issue) |
 
 **For simple work (atomic-developer):**
 
@@ -139,10 +140,10 @@ Task(subagent_type: "feature-executor", prompt: "
 
 **Choose PR agent based on complexity:**
 
-| Complexity | Agent | Use When |
-|------------|-------|----------|
-| TRIVIAL/SMALL | pr-creator | Simple PRs, single issue |
-| MEDIUM/LARGE | pr-finalizer | Complex PRs, multiple issues |
+| Complexity    | Agent        | Use When                     |
+| ------------- | ------------ | ---------------------------- |
+| TRIVIAL/SMALL | pr-creator   | Simple PRs, single issue     |
+| MEDIUM/LARGE  | pr-finalizer | Complex PRs, multiple issues |
 
 **For simple PRs (pr-creator):**
 

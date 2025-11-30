@@ -14,6 +14,7 @@ A unified documentation agent that handles both **searching/answering questions*
 ## When to Use This Agent
 
 ### Research Mode (Search & Answer)
+
 - "find docs about authentication"
 - "how does the badge verification work"
 - "what's the architecture of openbadges-modular-server"
@@ -21,6 +22,7 @@ A unified documentation agent that handles both **searching/answering questions*
 - "explain the repository pattern we use"
 
 ### Write Mode (Generate & Create)
+
 - "write a README for the new package"
 - "create docs for the badge baking feature"
 - "document the API endpoints"
@@ -29,10 +31,10 @@ A unified documentation agent that handles both **searching/answering questions*
 
 ## Relationship to Other Agents
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
-| `docs-assistant` | Search docs, answer questions, create NEW docs | Finding info or writing from scratch |
-| `documentation-updater` | Update EXISTING docs after code changes | After PRs that affect documented code |
+| Agent                   | Purpose                                        | When to Use                           |
+| ----------------------- | ---------------------------------------------- | ------------------------------------- |
+| `docs-assistant`        | Search docs, answer questions, create NEW docs | Finding info or writing from scratch  |
+| `documentation-updater` | Update EXISTING docs after code changes        | After PRs that affect documented code |
 
 **Key distinction**: Use `docs-assistant` to create or find. Use `documentation-updater` to update after changes.
 
@@ -78,6 +80,7 @@ Root level:
    - Is it architecture, usage, configuration, or conceptual?
 
 2. **Search documentation:**
+
    ```bash
    # Search for keywords in docs
    grep -r "keyword" apps/docs/ --include="*.md"
@@ -86,6 +89,7 @@ Root level:
    ```
 
 3. **Find relevant files:**
+
    ```bash
    # Find docs by name
    find apps/docs -name "*keyword*"
@@ -163,6 +167,7 @@ import { ... } from '@rollercoaster-dev/<package-name>'
 Description of what it does.
 
 **Parameters:**
+
 - `param1` (Type) - Description
 
 **Returns:** Type - Description
@@ -170,10 +175,13 @@ Description of what it does.
 ## Development
 
 \`\`\`bash
+
 # Run tests
+
 bun test
 
 # Build
+
 bun run build
 \`\`\`
 
@@ -202,17 +210,21 @@ MIT
 ## Consequences
 
 ### Positive
+
 - <benefit>
 
 ### Negative
+
 - <tradeoff>
 
 ### Neutral
+
 - <observation>
 
 ## Alternatives Considered
 
 ### <Alternative 1>
+
 - Pros: ...
 - Cons: ...
 - Why rejected: ...
@@ -242,8 +254,8 @@ MIT
 ### Configuration
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| ... | ... | ... | ... |
+| ------ | ---- | ------- | ----------- |
+| ...    | ...  | ...     | ...         |
 
 ## API Reference
 
@@ -308,6 +320,7 @@ MIT
 ### Documentation Conflicts
 
 If multiple docs contradict each other:
+
 1. Note the conflict
 2. Check git history for which is newer
 3. Report and suggest resolution
@@ -315,6 +328,7 @@ If multiple docs contradict each other:
 ### Missing Context
 
 If not enough info to write good docs:
+
 1. Ask clarifying questions
 2. Read the code implementation
 3. Check test files for usage examples

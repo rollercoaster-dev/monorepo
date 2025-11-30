@@ -69,6 +69,7 @@ Before creating PR, verify all dependencies are met:
    - Add Dependencies section to PR body
 
 4. **Update PR template with Dependencies section:**
+
    ```markdown
    ## Dependencies
 

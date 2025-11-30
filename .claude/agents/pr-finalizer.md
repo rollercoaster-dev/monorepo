@@ -20,9 +20,9 @@ Finalizes completed development work by creating a comprehensive PR, updating do
 
 ## Relationship to Other Agents
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
-| `pr-creator` | Quick PR creation with standard format | Simple PRs, single issue |
+| Agent          | Purpose                                  | When to Use                           |
+| -------------- | ---------------------------------------- | ------------------------------------- |
+| `pr-creator`   | Quick PR creation with standard format   | Simple PRs, single issue              |
 | `pr-finalizer` | Comprehensive PR with full documentation | Complex work, multiple commits/issues |
 
 ## Inputs
@@ -48,12 +48,14 @@ Optional:
    - Collect commit history
 
 2. **Get package information:**
+
    ```bash
    # If work touched a specific package
    cat packages/<package-name>/package.json | jq '{name, version, description}'
    ```
 
 3. **Get git information:**
+
    ```bash
    git log main..HEAD --oneline | wc -l  # Commit count
    git diff main...HEAD --stat  # Change summary
@@ -61,6 +63,7 @@ Optional:
    ```
 
 4. **Find related issues:**
+
    ```bash
    git log main..HEAD --grep="Related to" | grep -o "#[0-9]*" | sort -u
    ```
@@ -76,11 +79,13 @@ Optional:
 ### Phase 2: Check Dependencies
 
 1. **Parse issue for dependencies:**
+
    ```bash
    gh issue view <number> --json body | grep -iE "(blocked by|depends on) #[0-9]+"
    ```
 
 2. **Check each dependency status:**
+
    ```bash
    gh issue view <dep-number> --json state,title,number
    ```
@@ -92,6 +97,7 @@ Optional:
 ### Phase 3: Prepare for PR
 
 1. **Run final validation sweep:**
+
    ```bash
    bun install
    bun run lint
@@ -101,6 +107,7 @@ Optional:
    ```
 
 2. **Check for uncommitted changes:**
+
    ```bash
    git status
    # Should be clean
@@ -146,20 +153,23 @@ Generate PR body:
 ## Testing
 
 ### Automated
+
 - [x] Type-check passes
 - [x] Lint passes
 - [x] All tests pass (<n> tests)
 - [x] Build succeeds
 
 ### Manual Testing
+
 <Steps taken to verify functionality>
 
 ## Validation Results
-
 ```
+
 Tests: <n>/<n> passing
 Coverage: <pct>%
 Build: SUCCESS
+
 ```
 
 ## Commits
@@ -189,6 +199,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ### Phase 5: Create Pull Request
 
 1. **Create PR:**
+
    ```bash
    gh pr create \
      --title "<type>(<scope>): <description>" \
@@ -201,16 +212,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>
    ```
 
 2. **Add labels:**
+
    ```bash
    gh pr edit <pr-number> --add-label "<label>"
    ```
 
 3. **Request reviews (if specified):**
+
    ```bash
    gh pr edit <pr-number> --add-reviewer "<username>"
    ```
 
 4. **Trigger CodeRabbit review:**
+
    ```bash
    gh pr comment <pr-number> --body "@coderabbitai full review"
    ```
@@ -225,6 +239,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 For each sub-issue or related issue:
 
 1. **Add completion comment:**
+
    ```bash
    gh issue comment <issue-number> --body "✅ Completed in PR #<pr-number>
 
@@ -239,6 +254,7 @@ For each sub-issue or related issue:
 ### Phase 7: Update Project Board
 
 1. **Set status to "In Review":**
+
    ```bash
    ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
 
@@ -294,6 +310,7 @@ For each sub-issue or related issue:
 ## Documentation
 
 <!-- Include if PR adds new feature/component -->
+
 Consider documenting this feature:
 → Run `docs-assistant` to create feature documentation
 ```
@@ -301,11 +318,13 @@ Consider documenting this feature:
 ## Tools Required
 
 **Readonly Tools:**
+
 - Read (dev plan, package files)
 - Grep (find issue references)
 - Bash (git commands, gh commands)
 
 **Write Tools:**
+
 - Bash (gh CLI for PR and issue management, git push)
 - Edit (update documentation if needed)
 
