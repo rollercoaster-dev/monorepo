@@ -9,6 +9,7 @@ import { publicAuthRoutes } from './routes/public-auth'
 import { requireAuth } from './middleware/auth'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
+import { openApiConfig } from './openapi'
 
 // Define a simpler JSON value type to avoid deep type recursion
 type JSONValue =
@@ -37,6 +38,188 @@ app.use(
 // Health check endpoint
 app.get('/api/health', c => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Root route with API information
+app.get('/', c => {
+  return c.json({
+    name: 'OpenBadges System API',
+    version: '1.0.0',
+    documentation: {
+      swagger: '/swagger',
+      swaggerUI: '/docs',
+    },
+  })
+})
+
+// OpenAPI JSON endpoint
+app.get('/swagger', c => c.json(openApiConfig))
+
+// Swagger UI static assets
+app.get('/swagger-ui/*', async c => {
+  // Decode URL-encoded characters first to prevent bypass attacks
+  let path: string
+  try {
+    path = decodeURIComponent(c.req.path.replace('/swagger-ui/', ''))
+  } catch {
+    // Invalid URL encoding
+    return c.notFound()
+  }
+
+  // Prevent directory traversal attacks - check after decoding
+  if (path.includes('..') || path.includes('/') || path.startsWith('.') || path.includes('\\')) {
+    return c.notFound()
+  }
+
+  // Additional check: ensure filename contains no null bytes or other dangerous characters
+  if (path.includes('\0') || path.includes(':')) {
+    return c.notFound()
+  }
+
+  // Only allow specific file extensions for security
+  const allowedExtensions = ['js', 'css', 'map', 'png', 'html', 'ico', 'svg']
+  const ext = path.split('.').pop()?.toLowerCase()
+  if (!ext || !allowedExtensions.includes(ext)) {
+    return c.notFound()
+  }
+
+  const filePath = `./node_modules/swagger-ui-dist/${path}`
+
+  try {
+    const file = Bun.file(filePath)
+
+    if (await file.exists()) {
+      // Set appropriate content type based on file extension
+      let contentType = 'text/plain'
+
+      switch (ext) {
+        case 'js':
+          contentType = 'text/javascript'
+          break
+        case 'css':
+          contentType = 'text/css'
+          break
+        case 'map':
+          contentType = 'application/json'
+          break
+        case 'png':
+          contentType = 'image/png'
+          break
+        case 'html':
+          contentType = 'text/html'
+          break
+        case 'ico':
+          contentType = 'image/x-icon'
+          break
+        case 'svg':
+          contentType = 'image/svg+xml'
+          break
+      }
+
+      return new Response(file.stream(), {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=3600',
+        },
+      })
+    }
+  } catch (error) {
+    console.error('Error serving swagger-ui asset', { path, error })
+  }
+
+  return c.notFound()
+})
+
+// Swagger UI HTML endpoint
+app.get('/docs', c => {
+  c.header('Content-Type', 'text/html')
+
+  return c.html(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="OpenBadges System API Documentation" />
+  <title>OpenBadges System API - Swagger UI</title>
+  <link rel="stylesheet" href="/swagger-ui/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="/swagger-ui/swagger-ui-bundle.js" onload="checkSwaggerUI();" onerror="console.error('Failed to load swagger-ui-bundle.js');"></script>
+  <script src="/swagger-ui/swagger-ui-standalone-preset.js" onload="checkSwaggerUI();" onerror="console.error('Failed to load swagger-ui-standalone-preset.js');"></script>
+  <script>
+    function checkSwaggerUI() {
+      if (typeof SwaggerUIBundle !== 'undefined' && typeof SwaggerUIStandalonePreset !== 'undefined') {
+        initializeSwaggerUI();
+      }
+    }
+
+    window.addEventListener('load', function() {
+      setTimeout(checkSwaggerUI, 100);
+    });
+
+    function initializeSwaggerUI() {
+      try {
+        window.ui = SwaggerUIBundle({
+          url: '/swagger',
+          dom_id: '#swagger-ui',
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: "StandaloneLayout",
+          deepLinking: true,
+          showExtensions: true,
+          showCommonExtensions: true,
+          onComplete: () => {
+            // Swagger UI loaded successfully
+          },
+          onFailure: (error) => {
+            console.error('Swagger UI failed to load:', error);
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.color = 'red';
+            container.style.fontFamily = 'Arial, sans-serif';
+            const heading = document.createElement('h2');
+            heading.textContent = 'Error loading Swagger UI';
+            container.appendChild(heading);
+            const desc = document.createElement('p');
+            desc.textContent = 'The Swagger UI failed to initialize properly.';
+            container.appendChild(desc);
+            const errorMsg = document.createElement('p');
+            errorMsg.textContent = 'Error: ' + (error?.message || String(error) || 'Unknown error');
+            container.appendChild(errorMsg);
+            const swaggerUiDiv = document.getElementById('swagger-ui');
+            if (swaggerUiDiv) {
+              swaggerUiDiv.innerHTML = '';
+              swaggerUiDiv.appendChild(container);
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing Swagger UI:', error);
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.color = 'red';
+        container.style.fontFamily = 'Arial, sans-serif';
+        const heading = document.createElement('h2');
+        heading.textContent = 'Error initializing Swagger UI';
+        container.appendChild(heading);
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = 'Error: ' + (error?.message || String(error) || 'Unknown error');
+        container.appendChild(errorMsg);
+        const swaggerUiDiv = document.getElementById('swagger-ui');
+        if (swaggerUiDiv) {
+          swaggerUiDiv.innerHTML = '';
+          swaggerUiDiv.appendChild(container);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
+`)
 })
 
 // JWKS endpoint for OAuth2 verification
@@ -206,6 +389,7 @@ if (oauthConfig.enabled) {
 // Start the server
 const port = parseInt(process.env.PORT || '8888')
 console.log(`Server is running on http://localhost:${port}`)
+console.log(`API Documentation available at http://localhost:${port}/docs`)
 
 // Export for Bun to pick up
 export default {
