@@ -57,10 +57,22 @@ app.get('/swagger', c => c.json(openApiConfig))
 
 // Swagger UI static assets
 app.get('/swagger-ui/*', async c => {
-  const path = c.req.path.replace('/swagger-ui/', '')
+  // Decode URL-encoded characters first to prevent bypass attacks
+  let path: string
+  try {
+    path = decodeURIComponent(c.req.path.replace('/swagger-ui/', ''))
+  } catch {
+    // Invalid URL encoding
+    return c.notFound()
+  }
 
-  // Prevent directory traversal attacks
+  // Prevent directory traversal attacks - check after decoding
   if (path.includes('..') || path.includes('/') || path.startsWith('.') || path.includes('\\')) {
+    return c.notFound()
+  }
+
+  // Additional check: ensure filename contains no null bytes or other dangerous characters
+  if (path.includes('\0') || path.includes(':')) {
     return c.notFound()
   }
 
@@ -165,21 +177,43 @@ app.get('/docs', c => {
           },
           onFailure: (error) => {
             console.error('Swagger UI failed to load:', error);
-            document.getElementById('swagger-ui').innerHTML =
-              '<div style="padding: 20px; color: red; font-family: Arial, sans-serif;">' +
-              '<h2>Error loading Swagger UI</h2>' +
-              '<p>The Swagger UI failed to initialize properly.</p>' +
-              '<p>Error: ' + (error?.message || error || 'Unknown error') + '</p>' +
-              '</div>';
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.color = 'red';
+            container.style.fontFamily = 'Arial, sans-serif';
+            const heading = document.createElement('h2');
+            heading.textContent = 'Error loading Swagger UI';
+            container.appendChild(heading);
+            const desc = document.createElement('p');
+            desc.textContent = 'The Swagger UI failed to initialize properly.';
+            container.appendChild(desc);
+            const errorMsg = document.createElement('p');
+            errorMsg.textContent = 'Error: ' + (error?.message || String(error) || 'Unknown error');
+            container.appendChild(errorMsg);
+            const swaggerUiDiv = document.getElementById('swagger-ui');
+            if (swaggerUiDiv) {
+              swaggerUiDiv.innerHTML = '';
+              swaggerUiDiv.appendChild(container);
+            }
           }
         });
       } catch (error) {
         console.error('Error initializing Swagger UI:', error);
-        document.getElementById('swagger-ui').innerHTML =
-          '<div style="padding: 20px; color: red; font-family: Arial, sans-serif;">' +
-          '<h2>Error initializing Swagger UI</h2>' +
-          '<p>Error: ' + error.message + '</p>' +
-          '</div>';
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.color = 'red';
+        container.style.fontFamily = 'Arial, sans-serif';
+        const heading = document.createElement('h2');
+        heading.textContent = 'Error initializing Swagger UI';
+        container.appendChild(heading);
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = 'Error: ' + (error?.message || String(error) || 'Unknown error');
+        container.appendChild(errorMsg);
+        const swaggerUiDiv = document.getElementById('swagger-ui');
+        if (swaggerUiDiv) {
+          swaggerUiDiv.innerHTML = '';
+          swaggerUiDiv.appendChild(container);
+        }
       }
     }
   </script>

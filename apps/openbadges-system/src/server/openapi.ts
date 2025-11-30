@@ -6,7 +6,11 @@
 
 import type { OpenAPIObject } from 'openapi3-ts/oas30'
 
+// Server URL configuration - supports environment-based configuration
+const HOST = process.env.API_HOST || 'localhost'
 const PORT = process.env.PORT || '8888'
+const PROTOCOL = process.env.API_PROTOCOL || 'http'
+const isProduction = process.env.NODE_ENV === 'production'
 
 export const openApiConfig: OpenAPIObject = {
   openapi: '3.0.0',
@@ -26,8 +30,8 @@ export const openApiConfig: OpenAPIObject = {
   },
   servers: [
     {
-      url: `http://localhost:${PORT}`,
-      description: 'Development server',
+      url: `${PROTOCOL}://${HOST}:${PORT}`,
+      description: isProduction ? 'Production server' : 'Development server',
     },
   ],
   tags: [
@@ -838,7 +842,8 @@ export const openApiConfig: OpenAPIObject = {
       delete: {
         tags: ['OAuth'],
         summary: 'Unlink OAuth provider',
-        description: 'Removes OAuth provider link from user account',
+        description: 'Removes OAuth provider link from user account (requires self or admin authentication)',
+        security: [{ bearerAuth: [] }],
         parameters: [
           { name: 'provider', in: 'path', required: true, schema: { type: 'string' } },
           { name: 'user_id', in: 'query', required: true, schema: { type: 'string' } },
@@ -859,6 +864,22 @@ export const openApiConfig: OpenAPIObject = {
             },
           },
           '400': { $ref: '#/components/responses/BadRequest' },
+          '401': {
+            description: 'Unauthorized - Missing or invalid token',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
+          '403': {
+            description: 'Forbidden - Can only unlink own providers or require admin access',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
         },
       },
     },
@@ -866,7 +887,8 @@ export const openApiConfig: OpenAPIObject = {
       get: {
         tags: ['OAuth'],
         summary: "Get user's linked providers",
-        description: 'Returns all OAuth providers linked to a user',
+        description: 'Returns all OAuth providers linked to a user (requires self or admin authentication)',
+        security: [{ bearerAuth: [] }],
         parameters: [
           { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
         ],
@@ -896,6 +918,22 @@ export const openApiConfig: OpenAPIObject = {
               },
             },
           },
+          '401': {
+            description: 'Unauthorized - Missing or invalid token',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
+          '403': {
+            description: 'Forbidden - Can only view own providers or require admin access',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
         },
       },
     },
@@ -903,7 +941,8 @@ export const openApiConfig: OpenAPIObject = {
       post: {
         tags: ['OAuth'],
         summary: 'Cleanup expired sessions',
-        description: 'Removes expired OAuth sessions (admin endpoint)',
+        description: 'Removes expired OAuth sessions (admin endpoint, requires admin authentication)',
+        security: [{ bearerAuth: [] }],
         responses: {
           '200': {
             description: 'Sessions cleaned up',
@@ -916,6 +955,22 @@ export const openApiConfig: OpenAPIObject = {
                     message: { type: 'string' },
                   },
                 },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized - Missing or invalid token',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
+          '403': {
+            description: 'Forbidden - Admin access required',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
               },
             },
           },
