@@ -15,13 +15,13 @@ A full-stack Vue 3 + Bun/Hono application for managing digital credentials using
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Vue 3, Vue Router, Pinia, TailwindCSS |
-| Backend | Bun runtime, Hono framework |
+| Layer    | Technology                                  |
+| -------- | ------------------------------------------- |
+| Frontend | Vue 3, Vue Router, Pinia, TailwindCSS       |
+| Backend  | Bun runtime, Hono framework                 |
 | Database | SQLite (dev) / PostgreSQL (prod) via Kysely |
-| Auth | GitHub OAuth, JWT (RS256) |
-| Build | Vite (frontend), Bun (backend) |
+| Auth     | GitHub OAuth, JWT (RS256)                   |
+| Build    | Vite (frontend), Bun (backend)              |
 
 ## Quick Start
 
@@ -50,6 +50,7 @@ bun dev
 ```
 
 This starts:
+
 - **Backend** at `http://localhost:8888` (Bun with hot reload)
 - **Frontend** at `http://localhost:7777` (Vite dev server)
 
@@ -154,21 +155,21 @@ User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3000)
 
 Protected endpoints use middleware:
 
-| Middleware | Purpose |
-|------------|---------|
-| `requireAuth` | Validates JWT tokens |
-| `requireAdmin` | Admin-only access |
+| Middleware                      | Purpose               |
+| ------------------------------- | --------------------- |
+| `requireAuth`                   | Validates JWT tokens  |
+| `requireAdmin`                  | Admin-only access     |
 | `requireSelfOrAdminFromParam()` | Owner or admin access |
 
 **Endpoint Protections:**
 
-| Endpoint | Access Level |
-|----------|--------------|
-| `GET /api/bs/users` | Admin only |
-| `GET /api/bs/users/:id` | Self or admin |
-| `POST /api/bs/users` | Admin only |
-| `PUT /api/bs/users/:id` | Self or admin |
-| `DELETE /api/bs/users/:id` | Admin only |
+| Endpoint                   | Access Level  |
+| -------------------------- | ------------- |
+| `GET /api/bs/users`        | Admin only    |
+| `GET /api/bs/users/:id`    | Self or admin |
+| `POST /api/bs/users`       | Admin only    |
+| `PUT /api/bs/users/:id`    | Self or admin |
+| `DELETE /api/bs/users/:id` | Admin only    |
 
 ## Configuration
 
