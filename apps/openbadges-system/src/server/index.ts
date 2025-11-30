@@ -1,14 +1,15 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
 import { userRoutes } from './routes/users'
 import { authRoutes } from './routes/auth'
 import { badgesRoutes } from './routes/badges'
 import { oauthRoutes } from './routes/oauth'
 import { publicAuthRoutes } from './routes/public-auth'
 import { requireAuth } from './middleware/auth'
+import { requestContextMiddleware } from './middleware/request-context'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
+import { logger } from './utils/logger'
 
 // Define a simpler JSON value type to avoid deep type recursion
 type JSONValue =
@@ -24,7 +25,7 @@ type JSONValue =
 const app = new Hono()
 
 // Middleware
-app.use('*', logger())
+app.use('*', requestContextMiddleware)
 app.use(
   '*',
   cors({
@@ -67,7 +68,7 @@ app.get('/.well-known/jwks.json', async c => {
 
     return c.json(jwks)
   } catch (error) {
-    console.error('Error generating JWKS:', error)
+    logger.error('Error generating JWKS', { error })
     return c.json({ error: 'Failed to generate JWKS' }, 500)
   }
 })
@@ -100,7 +101,7 @@ async function safeJsonResponse(response: Response): Promise<JSONValue> {
     // Fallback to empty object for invalid JSON values
     return {}
   } catch (error) {
-    console.error('Error parsing JSON response:', error)
+    logger.error('Error parsing JSON response', { error })
     return {}
   }
 }
@@ -183,9 +184,11 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as 200 | 201 | 400 | 401 | 403 | 404 | 500)
   } catch (error) {
-    console.error('Error proxying request to OpenBadges server:', error)
-    console.error('Server URL:', openbadgesUrl)
-    console.error('Request path:', c.req.path)
+    logger.error('Error proxying request to OpenBadges server', {
+      error,
+      serverUrl: openbadgesUrl,
+      requestPath: c.req.path,
+    })
     return c.json({ error: 'Failed to communicate with local OpenBadges server' }, 500)
   }
 })
@@ -194,18 +197,18 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
 if (oauthConfig.enabled) {
   try {
     validateOAuthConfig()
-    console.log('OAuth configuration validated successfully')
+    logger.info('OAuth configuration validated successfully')
   } catch (error) {
-    console.error('OAuth configuration validation failed:', error)
+    logger.error('OAuth configuration validation failed', { error })
     process.exit(1)
   }
 } else {
-  console.log('OAuth is disabled - skipping OAuth configuration validation')
+  logger.info('OAuth is disabled - skipping OAuth configuration validation')
 }
 
 // Start the server
 const port = parseInt(process.env.PORT || '8888')
-console.log(`Server is running on http://localhost:${port}`)
+logger.info(`Server is running on http://localhost:${port}`)
 
 // Export for Bun to pick up
 export default {
