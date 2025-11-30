@@ -184,9 +184,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Get user by ID',
         description: 'Returns a single user (Self or Admin)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'User retrieved successfully',
@@ -206,9 +204,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Update user',
         description: 'Updates an existing user (Self or Admin)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
           content: {
@@ -237,9 +233,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Delete user',
         description: 'Deletes a user (Admin only)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'User deleted successfully',
@@ -263,9 +257,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Get user credentials',
         description: 'Returns WebAuthn credentials for a user (Self or Admin)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Credentials retrieved successfully',
@@ -287,9 +279,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Add user credential',
         description: 'Adds a WebAuthn credential to a user (Self or Admin)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
           content: {
@@ -458,7 +448,7 @@ export const openApiConfig: OpenAPIObject = {
       post: {
         tags: ['Authentication'],
         summary: 'Refresh OAuth access token',
-        description: "Refreshes OAuth access token using refresh token",
+        description: 'Refreshes OAuth access token using refresh token',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -543,9 +533,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Get badge server user profile',
         description: "Gets user's profile from the badge server (Self or Admin)",
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Profile retrieved successfully',
@@ -652,9 +640,7 @@ export const openApiConfig: OpenAPIObject = {
         tags: ['Public Auth'],
         summary: 'Add credential to user',
         description: 'Adds a WebAuthn credential during registration',
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           required: true,
           content: {
@@ -725,9 +711,7 @@ export const openApiConfig: OpenAPIObject = {
         tags: ['Public Auth'],
         summary: 'Generate token for user',
         description: 'Generates JWT token after WebAuthn authentication',
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Token generated successfully',
@@ -782,9 +766,7 @@ export const openApiConfig: OpenAPIObject = {
         tags: ['OAuth'],
         summary: 'Initialize GitHub OAuth',
         description: 'Starts GitHub OAuth flow with PKCE',
-        parameters: [
-          { name: 'redirect_uri', in: 'query', schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'redirect_uri', in: 'query', schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'OAuth session created',
@@ -842,7 +824,8 @@ export const openApiConfig: OpenAPIObject = {
       delete: {
         tags: ['OAuth'],
         summary: 'Unlink OAuth provider',
-        description: 'Removes OAuth provider link from user account (requires self or admin authentication)',
+        description:
+          'Removes OAuth provider link from user account (requires self or admin authentication)',
         security: [{ bearerAuth: [] }],
         parameters: [
           { name: 'provider', in: 'path', required: true, schema: { type: 'string' } },
@@ -887,11 +870,10 @@ export const openApiConfig: OpenAPIObject = {
       get: {
         tags: ['OAuth'],
         summary: "Get user's linked providers",
-        description: 'Returns all OAuth providers linked to a user (requires self or admin authentication)',
+        description:
+          'Returns all OAuth providers linked to a user (requires self or admin authentication)',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Providers retrieved successfully',
@@ -941,7 +923,8 @@ export const openApiConfig: OpenAPIObject = {
       post: {
         tags: ['OAuth'],
         summary: 'Cleanup expired sessions',
-        description: 'Removes expired OAuth sessions (admin endpoint, requires admin authentication)',
+        description:
+          'Removes expired OAuth sessions (admin endpoint, requires admin authentication)',
         security: [{ bearerAuth: [] }],
         responses: {
           '200': {
@@ -1020,9 +1003,7 @@ export const openApiConfig: OpenAPIObject = {
         tags: ['Badges'],
         summary: 'Get assertion by ID',
         description: 'Retrieves a badge assertion (public, no auth required)',
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Assertion retrieved successfully',
@@ -1061,9 +1042,7 @@ export const openApiConfig: OpenAPIObject = {
         tags: ['Badges'],
         summary: 'Get badge class by ID',
         description: 'Retrieves a single badge class (public, no auth required)',
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
             description: 'Badge class retrieved successfully',
@@ -1105,9 +1084,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Proxy to OpenBadges server (GET)',
         description: 'Proxies GET requests to the OpenBadges server with authentication',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'path', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'path', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': { description: 'Proxied response from OpenBadges server' },
           '401': { $ref: '#/components/responses/Unauthorized' },
@@ -1118,9 +1095,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Proxy to OpenBadges server (POST)',
         description: 'Proxies POST requests to the OpenBadges server with authentication',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'path', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'path', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           content: {
             'application/json': {
@@ -1139,9 +1114,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Proxy to OpenBadges server (PUT)',
         description: 'Proxies PUT requests to the OpenBadges server with authentication',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'path', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'path', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
           content: {
             'application/json': {
@@ -1159,9 +1132,7 @@ export const openApiConfig: OpenAPIObject = {
         summary: 'Proxy to OpenBadges server (DELETE)',
         description: 'Proxies DELETE requests to the OpenBadges server with authentication',
         security: [{ bearerAuth: [] }],
-        parameters: [
-          { name: 'path', in: 'path', required: true, schema: { type: 'string' } },
-        ],
+        parameters: [{ name: 'path', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': { description: 'Proxied response from OpenBadges server' },
           '204': { description: 'Resource deleted on OpenBadges server' },
