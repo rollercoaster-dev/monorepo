@@ -52,6 +52,7 @@ describe('Server Endpoints', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    vi.resetModules()
     mockFetch = vi.mocked(fetch)
 
     // Import the server app dynamically to ensure mocks are applied
