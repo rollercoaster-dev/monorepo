@@ -182,10 +182,10 @@ PORT=8888
 # Badge Server Integration
 OPENBADGES_SERVER_URL=http://localhost:3000
 OPENBADGES_AUTH_ENABLED=true
-OPENBADGES_AUTH_MODE=oauth    # 'oauth' for JWT, 'docker' for Basic
+OPENBADGES_AUTH_MODE=docker   # 'docker' for Basic auth (default), 'oauth' for JWT
 OPENBADGES_PROXY_PUBLIC=false # Set true to bypass auth on /api/bs/*
 
-# JWT (RS256)
+# JWT (RS256) - Optional, keys loaded from filesystem if unset
 PLATFORM_JWT_PRIVATE_KEY=...  # PEM format (or *_B64 for base64)
 PLATFORM_JWT_PUBLIC_KEY=...
 PLATFORM_JWT_ISSUER=...       # Defaults to PLATFORM_CLIENT_ID
