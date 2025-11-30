@@ -10,7 +10,8 @@ const jwtMocks = vi.hoisted(() => ({
 
 vi.mock('../services/jwt', () => jwtMocks)
 
-global.fetch = vi.fn()
+// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+global.fetch = vi.fn() as unknown as typeof fetch
 
 describe('Badges proxy validation (integration)', () => {
   let app: {
