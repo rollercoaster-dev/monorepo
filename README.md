@@ -182,7 +182,7 @@ Documentation is available in `apps/docs/`:
 
 ## 🤝 Contributing
 
-This is an internal monorepo for Rollercoaster.dev projects. For contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md) (coming soon).
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines, including our neurodivergent-friendly development practices.
 
 ## 📄 License
 
