@@ -32,17 +32,13 @@ monorepo/
 ├── apps/                           # Applications
 │   ├── openbadges-system/         # Primary badge system (Vue 3 + Bun/Hono)
 │   ├── openbadges-modular-server/ # Stateless OB 2.0/3.0 API (Docker)
-│   ├── docs/                      # Living documentation
-│   └── landing/                   # Marketing website
+│   └── docs/                      # Living documentation (wiki structure)
 ├── packages/                       # Shared libraries
-│   ├── openbadges-types/          # TypeScript types for OB 2.0/3.0
-│   ├── openbadges-ui/             # Vue components with neurodivergent themes
-│   ├── skill-tree/                # Skill tree visualization & backpack
-│   ├── badge-image-system/        # Badge image generation (evaluating)
-│   └── rd-logger/                 # Structured logging utility
+│   ├── rd-logger/                 # Structured logging (@rollercoaster-dev/rd-logger)
+│   ├── openbadges-types/          # TypeScript types (openbadges-types)
+│   ├── openbadges-ui/             # Vue components (openbadges-ui)
+│   └── shared-config/             # Shared build/lint configurations
 └── experiments/                    # Research & prototypes
-    ├── distributed-badges-concept/ # Federation research
-    └── [future experiments]
 ```
 
 ## 🚀 Getting Started
@@ -148,64 +144,41 @@ bun test
   - Publishes Docker images to GitHub Container Registry
   - Domain-driven design, multi-database support
 
-- **landing**: Marketing and information website
-  - Vue 3 frontend
-  - Project showcase and onboarding
-
 ### Published Packages (npm)
 
+- **@rollercoaster-dev/rd-logger**: Structured logging with ADHD-friendly formatting
 - **openbadges-types**: TypeScript definitions for Open Badges 2.0 and 3.0
 - **openbadges-ui**: Vue 3 component library with 7 neurodivergent-friendly themes
-- **rd-logger**: Structured logging with ADHD-friendly formatting
 
 ### Internal Packages
 
-- **skill-tree**: Skill tree visualization and backpack UI components
-- **badge-image-system**: Badge image generation and S3 storage (under evaluation)
+- **shared-config**: Shared ESLint, Prettier, and TypeScript configurations
 
 ## 🔄 Migration Status
 
-This monorepo is actively being migrated from multiple repositories. See our [migration project](https://github.com/orgs/rollercoaster-dev/projects/10) for current progress.
+Migration from multiple repositories is **complete** (December 2025).
 
-**Timeline**: 6 weeks (Nov 1 - Dec 12, 2025)
+All packages are published to npm and applications are fully operational:
 
-### Milestones
-
-- ✅ **Phase 1**: Foundation Setup (Week 1) - COMPLETE
-- 🏗️ **Phase 2**: Migrate Shared Packages (Week 2) ← In progress
-  - ✅ rd-logger (migrated with full CI/CD)
-  - ⏳ openbadges-types, openbadges-ui
-  - ⏳ skill-tree package
-  - ⏳ Evaluate badge-image-system integration
-- ⏳ **Phase 3**: Migrate Applications (Week 3)
-  - openbadges-system, openbadges-modular-server
-  - Consolidate landing page
-- ⏳ **Phase 4**: CI/CD & Publishing (Week 4)
-  - Progressive CI with Turborepo
-  - npm publishing for packages
-  - Docker publishing for servers
-- ⏳ **Phase 5**: Cleanup (Week 5)
-- ⏳ **Phase 5.5**: Documentation Consolidation (Week 6)
-  - Migrate rc-living-docs-starter (your vision docs)
-  - Migrate distributed-badges-concept (architectural research)
-  - Archive planning repo (different author, not current vision)
+- ✅ @rollercoaster-dev/rd-logger v0.3.4
+- ✅ openbadges-types v3.2.3
+- ✅ openbadges-ui v1.3.0
+- ✅ openbadges-modular-server (Docker on GHCR)
+- ✅ openbadges-system (Vue 3 + Bun/Hono)
 
 ## 📚 Documentation
 
-Comprehensive living documentation will be available in `apps/docs/` after Phase 5.5 migration.
+Documentation is available in `apps/docs/`:
 
-**Key Documents** (coming from rc-living-docs-starter):
+- Vision & Strategy
+- Architecture Decisions (ADRs)
+- Development Processes
 
-- Vision & Strategy - now/next/later roadmap
-- Architecture Decisions (ADRs) - self-signed badges, local-first, federation
-- User Stories - rich narratives for neurodivergent users
-- Development Processes - weekly rituals, triage, contribution guidelines
+**Quick Links:**
 
-**For Now:**
-
-- [Migration Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
+- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
 - [All Issues](https://github.com/rollercoaster-dev/monorepo/issues)
-- Individual repo CLAUDE.md files (in each package/app after migration)
+- [CLAUDE.md](CLAUDE.md) - Detailed monorepo context for Claude Code
 
 ## 🤝 Contributing
 
@@ -214,49 +187,6 @@ This is an internal monorepo for Rollercoaster.dev projects. For contribution gu
 ## 📄 License
 
 Individual packages and applications maintain their original licenses. See each package's LICENSE file for details.
-
-## 🔬 Research & Future Work
-
-### Federation Protocol (Next Phase: 6-12 weeks)
-
-Federation is a core vision component but not yet implemented. Research notes are in `experiments/distributed-badges-concept/`. Key questions:
-
-- **Protocol**: AT Protocol, ActivityPub, or custom DID-based?
-- **Trust Model**: How do nodes verify each other's badges?
-- **Discovery**: How do users find and connect to other nodes?
-- **Sync Strategy**: CouchDB-style replication, IPFS, or custom?
-
-See [ADR-0003-federation-core-architecture](apps/docs/decisions/ADR-0003-federation-core-architecture.md) (after Phase 5.5) for detailed architectural thinking.
-
-### Data Marketplace (Later: 12+ weeks)
-
-User-controlled credential sharing with consent-based monetization.
-
-### Potential Architecture Gaps (To Be Evaluated)
-
-These components are referenced in vision docs but don't yet have dedicated packages. May exist within apps or need extraction:
-
-1. **DID Management**
-   - Vision: Self-signed badges using Verifiable Credentials + DIDs
-   - Question: Is DID functionality in openbadges-modular-server or needs dedicated package?
-   - Consider: `packages/did-manager/` for reusable DID operations
-
-2. **Sync/Replication Engine**
-   - Vision: Local-first with optional sync
-   - Question: Is sync logic in openbadges-system or needs extraction?
-   - Consider: `packages/sync-engine/` for offline-first replication
-
-3. **AI Badge Validation**
-   - Vision: AI-powered skill assessment and badge recommendations
-   - Question: Where does AI validation live? External service or internal?
-   - Consider: `packages/ai-validator/` or separate AI service
-
-4. **Mobile Support**
-   - Vision: Mobile-responsive design and progressive web app
-   - Question: PWA only or native mobile apps planned?
-   - Consider: Capacitor/Tauri wrapper or React Native app
-
-**Action**: These will be evaluated during Phase 2-3 migrations. If functionality exists in apps, consider extracting to shared packages for reusability.
 
 ## 🔗 Links
 
