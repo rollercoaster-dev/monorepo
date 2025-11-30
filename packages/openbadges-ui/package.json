@@ -17,6 +17,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,ts,vue}\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts,vue}\"",
     "type-check": "vue-tsc --noEmit",
     "check": "bun run lint --fix && bun run type-check",
     "test": "vitest run",

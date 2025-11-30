@@ -12,6 +12,8 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format": "prettier --write '*.{js,mjs,json}'",
+    "format:check": "prettier --check '*.{js,mjs,json}'",
     "test": "echo 'No tests for shared-config'",
     "test:unit": "echo 'No tests for shared-config'",
     "test:integration": "echo 'No tests for shared-config'",
