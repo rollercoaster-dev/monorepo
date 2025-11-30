@@ -3,6 +3,7 @@ import { oauthService } from '../services/oauth'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
 import { jwtService } from '../services/jwt'
+import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 
 const oauthRoutes = new Hono()
 
@@ -235,8 +236,8 @@ oauthRoutes.get('/github/callback', async c => {
   }
 })
 
-// Unlink OAuth provider
-oauthRoutes.delete('/:provider', async c => {
+// Unlink OAuth provider (requires auth - self or admin)
+oauthRoutes.delete('/:provider', requireAuth, async c => {
   try {
     const provider = c.req.param('provider')
     const userId = c.req.query('user_id')
@@ -248,6 +249,18 @@ oauthRoutes.delete('/:provider', async c => {
           error: 'User ID required',
         },
         400
+      )
+    }
+
+    // Check if user can unlink this provider (self or admin)
+    const authPayload = getAuthPayload(c)
+    if (authPayload?.sub !== userId && authPayload?.metadata?.isAdmin !== true) {
+      return c.json(
+        {
+          success: false,
+          error: 'Forbidden - can only unlink own providers',
+        },
+        403
       )
     }
 
@@ -270,10 +283,22 @@ oauthRoutes.delete('/:provider', async c => {
   }
 })
 
-// Get user's linked OAuth providers
-oauthRoutes.get('/user/:userId/providers', async c => {
+// Get user's linked OAuth providers (requires auth - self or admin)
+oauthRoutes.get('/user/:userId/providers', requireAuth, async c => {
   try {
     const userId = c.req.param('userId')
+
+    // Check if user can view this user's providers (self or admin)
+    const authPayload = getAuthPayload(c)
+    if (authPayload?.sub !== userId && authPayload?.metadata?.isAdmin !== true) {
+      return c.json(
+        {
+          success: false,
+          error: 'Forbidden - can only view own providers',
+        },
+        403
+      )
+    }
 
     if (!userService) {
       return c.json(
@@ -315,7 +340,7 @@ oauthRoutes.get('/user/:userId/providers', async c => {
 })
 
 // Clean up expired OAuth sessions (admin endpoint)
-oauthRoutes.post('/cleanup', async c => {
+oauthRoutes.post('/cleanup', requireAdmin, async c => {
   try {
     await oauthService.cleanupExpiredSessions()
 
