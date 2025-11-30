@@ -15,6 +15,7 @@
     "build:fast": "bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
     "clean": "rm -rf dist",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "test": "bun test src/",
     "test:unit": "bun test src/core/",

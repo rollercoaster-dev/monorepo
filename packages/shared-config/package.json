@@ -10,6 +10,8 @@
     "./tsconfig": "./tsconfig.base.json"
   },
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "echo 'No tests for shared-config'",
     "test:unit": "echo 'No tests for shared-config'",
     "test:integration": "echo 'No tests for shared-config'",
