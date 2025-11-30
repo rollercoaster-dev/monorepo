@@ -32,14 +32,13 @@ monorepo/
 ├── apps/                           # Applications
 │   ├── openbadges-system/         # Primary badge system (Vue 3 + Bun/Hono)
 │   ├── openbadges-modular-server/ # Stateless OB 2.0/3.0 API (Docker)
-│   └── docs/                      # Living documentation
+│   └── docs/                      # Living documentation (wiki structure)
 ├── packages/                       # Shared libraries
-│   ├── openbadges-types/          # TypeScript types for OB 2.0/3.0
-│   ├── openbadges-ui/             # Vue components with neurodivergent themes
-│   ├── rd-logger/                 # Structured logging utility
-│   └── shared-config/             # Shared TypeScript/ESLint/Prettier configs
+│   ├── rd-logger/                 # Structured logging (@rollercoaster-dev/rd-logger)
+│   ├── openbadges-types/          # TypeScript types (openbadges-types)
+│   ├── openbadges-ui/             # Vue components (openbadges-ui)
+│   └── shared-config/             # Shared build/lint configurations
 └── experiments/                    # Research & prototypes
-    └── [future experiments]
 ```
 
 ## 🚀 Getting Started
@@ -147,56 +146,39 @@ bun test
 
 ### Published Packages (npm)
 
-- **[openbadges-types](https://www.npmjs.com/package/openbadges-types)**: TypeScript definitions for Open Badges 2.0 and 3.0
-- **[openbadges-ui](https://www.npmjs.com/package/openbadges-ui)**: Vue 3 component library with 7 neurodivergent-friendly themes
-- **[@rollercoaster-dev/rd-logger](https://www.npmjs.com/package/@rollercoaster-dev/rd-logger)**: Structured logging with ADHD-friendly formatting
+- **@rollercoaster-dev/rd-logger**: Structured logging with ADHD-friendly formatting
+- **openbadges-types**: TypeScript definitions for Open Badges 2.0 and 3.0
+- **openbadges-ui**: Vue 3 component library with 7 neurodivergent-friendly themes
 
 ### Internal Packages
 
-- **shared-config**: Shared TypeScript, ESLint, and Prettier configurations
+- **shared-config**: Shared ESLint, Prettier, and TypeScript configurations
 
 ## 🔄 Migration Status
 
-This monorepo consolidates multiple repositories into a unified codebase. See our [migration project](https://github.com/orgs/rollercoaster-dev/projects/10) for detailed tracking.
+Migration from multiple repositories is **complete** (December 2025).
 
-### Milestones
+All packages are published to npm and applications are fully operational:
 
-- ✅ **Phase 1**: Foundation Setup - COMPLETE
-  - Turborepo, Bun workspaces, TypeScript project references
-- ✅ **Phase 2**: Migrate Shared Packages - COMPLETE
-  - ✅ rd-logger v0.3.4 (published to npm with full CI/CD)
-  - ✅ openbadges-types v3.2.3 (published to npm)
-  - ✅ openbadges-ui v1.3.0 (published to npm)
-  - ✅ shared-config (internal)
-- ✅ **Phase 3**: Migrate Applications - COMPLETE
-  - ✅ openbadges-modular-server (Docker multi-arch publishing)
-  - ✅ openbadges-system (Vue 3 + Bun/Hono)
-- ✅ **Phase 4**: CI/CD & Publishing - COMPLETE
-  - ✅ Progressive CI with Turborepo caching
-  - ✅ npm OIDC Trusted Publishing (no tokens needed)
-  - ✅ Docker multi-architecture images to GHCR
-- 🏗️ **Phase 5**: Cleanup & Documentation - IN PROGRESS
-  - ⏳ Documentation improvements ([tracking issues](https://github.com/rollercoaster-dev/monorepo/issues?q=is%3Aissue+is%3Aopen+label%3Adocumentation))
-  - ⏳ Archive legacy repositories
+- ✅ @rollercoaster-dev/rd-logger v0.3.4
+- ✅ openbadges-types v3.2.3
+- ✅ openbadges-ui v1.3.0
+- ✅ openbadges-modular-server (Docker on GHCR)
+- ✅ openbadges-system (Vue 3 + Bun/Hono)
 
 ## 📚 Documentation
 
-Strategic documentation lives in `apps/docs/`:
+Documentation is available in `apps/docs/`:
 
-- **[Vision & Strategy](apps/docs/vision/)** - now/next/later roadmap
-- **[Architecture Decisions (ADRs)](apps/docs/decisions/)** - self-signed badges, local-first, federation
-- **[Product Documentation](apps/docs/product/)** - user stories, feature specs
+- Vision & Strategy
+- Architecture Decisions (ADRs)
+- Development Processes
 
-**Package & App Documentation:**
-
-- Each package/app has its own README with usage examples
-- [CLAUDE.md](CLAUDE.md) - detailed development context for AI assistants
-- [CONTRIBUTING.md](CONTRIBUTING.md) - contribution guidelines
-
-**Project Management:**
+**Quick Links:**
 
 - [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
 - [All Issues](https://github.com/rollercoaster-dev/monorepo/issues)
+- [CLAUDE.md](CLAUDE.md) - Detailed monorepo context for Claude Code
 
 ## 🤝 Contributing
 
@@ -205,24 +187,6 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 ## 📄 License
 
 Individual packages and applications maintain their original licenses. See each package's LICENSE file for details.
-
-## 🔬 Future Work
-
-### Federation Protocol
-
-Federation is a core vision component for enabling interoperable badge networks. Key architectural questions being explored:
-
-- **Protocol**: AT Protocol, ActivityPub, or custom DID-based?
-- **Trust Model**: How do nodes verify each other's badges?
-- **Discovery**: How do users find and connect to other nodes?
-
-See [ADR-0003-federation-core-architecture](apps/docs/decisions/ADR-0003-federation-core-architecture.md) for detailed architectural thinking.
-
-### Planned Features
-
-- **Skill Tree Visualization** - Visual learning path representation
-- **Data Marketplace** - Consent-based credential sharing
-- **Enhanced Mobile Support** - PWA improvements
 
 ## 🔗 Links
 

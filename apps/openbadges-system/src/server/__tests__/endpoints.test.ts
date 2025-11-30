@@ -24,7 +24,8 @@ const jwtMocks = vi.hoisted(() => ({
 vi.mock('../services/jwt', () => jwtMocks)
 
 // Mock fetch for OpenBadges server requests
-global.fetch = vi.fn()
+// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+global.fetch = vi.fn() as unknown as typeof fetch
 
 // Mock SQLite database to avoid native binding issues
 vi.mock('sqlite3', () => ({

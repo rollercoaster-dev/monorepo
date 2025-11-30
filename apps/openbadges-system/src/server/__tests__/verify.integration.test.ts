@@ -3,7 +3,8 @@ import type { ExecutionContext } from 'hono'
 import { postVerify } from './helpers/verify'
 
 // Mock fetch for downstream calls
-global.fetch = vi.fn()
+// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+global.fetch = vi.fn() as unknown as typeof fetch
 
 describe('Verification helper integration', () => {
   let app: {

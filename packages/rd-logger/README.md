@@ -10,11 +10,14 @@ A neurodivergent-friendly logger for Rollercoaster.dev projects.
 ## Installation
 
 ```bash
+# Using bun (recommended)
+bun add @rollercoaster-dev/rd-logger
+
+# Using npm
 npm install @rollercoaster-dev/rd-logger
-# or
+
+# Using yarn
 yarn add @rollercoaster-dev/rd-logger
-# or
-pnpm add @rollercoaster-dev/rd-logger
 ```
 
 ## Usage
@@ -84,14 +87,14 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_
 ### Development
 
 ```bash
-# Install dependencies
-pnpm install
+# Install dependencies (from monorepo root)
+bun install
 
 # Run tests
-pnpm test
+bun --filter rd-logger test
 
 # Build the package
-pnpm build
+bun --filter rd-logger run build
 ```
 
 ### CI/CD
@@ -108,26 +111,20 @@ This project follows [Semantic Versioning](https://semver.org/) and uses [Conven
 
 #### Creating a Release
 
-To create a new release, you can use one of the following commands:
+This monorepo uses [Changesets](https://github.com/changesets/changesets) for version management:
 
 ```bash
-# Create a patch release (0.0.x)
-pnpm release:patch
+# Create a changeset (from monorepo root)
+bunx changeset
 
-# Create a minor release (0.x.0)
-pnpm release:minor
+# Version packages (automated via CI)
+bunx changeset version
 
-# Create a major release (x.0.0)
-pnpm release:major
-
-# Create a prerelease (alpha)
-pnpm release:alpha
-
-# Create a prerelease (beta)
-pnpm release:beta
+# Publish packages (automated via CI)
+bunx changeset publish
 ```
 
-Alternatively, you can use the GitHub Actions workflow "Create Release" to create a new release directly from GitHub.
+See the [monorepo documentation](https://github.com/rollercoaster-dev/monorepo#publishing-packages) for details on the release process.
 
 ## License
 

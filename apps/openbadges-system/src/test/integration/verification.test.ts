@@ -62,7 +62,8 @@ describe('Badge Verification Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockFetch = vi.fn()
-    global.fetch = mockFetch
+    // Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+    global.fetch = mockFetch as unknown as typeof fetch
   })
 
   describe('Valid Badge Verification', () => {

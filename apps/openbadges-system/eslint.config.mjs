@@ -85,7 +85,7 @@ export default [
     },
   },
 
-  // Node.js environment for server files
+  // Node.js/Bun environment for server files
   {
     files: ['src/server/**/*.ts', 'database/**/*.ts', 'scripts/**/*.ts', '*.ts'],
     languageOptions: {
@@ -102,6 +102,7 @@ export default [
         Response: 'readonly',
         ReadableStream: 'readonly',
         console: 'readonly',
+        Bun: 'readonly',
       },
     },
   },

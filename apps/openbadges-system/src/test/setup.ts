@@ -52,7 +52,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Mock fetch
-global.fetch = vi.fn()
+// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+global.fetch = vi.fn() as unknown as typeof fetch
 
 // Clear all mocks before each test
 beforeEach(() => {

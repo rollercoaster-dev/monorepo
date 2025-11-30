@@ -57,12 +57,13 @@ This package supports both versions to ensure backward compatibility while enabl
 ## Installation
 
 ```bash
+# Using bun (recommended)
+bun add openbadges-types
+
+# Using npm
 npm install openbadges-types
-```
 
-or
-
-```bash
+# Using yarn
 yarn add openbadges-types
 ```
 
