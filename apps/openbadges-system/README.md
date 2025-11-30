@@ -1,165 +1,216 @@
 # OpenBadges System
 
-> **Note:** This project is currently a Work In Progress (WIP).
+A full-stack Vue 3 + Bun/Hono application for managing digital credentials using the OpenBadges standard.
 
-An implementation of the OpenBadges standard for managing digital credentials.
+> **Part of the [rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo)**
+
+## Features
+
+- **Badge Management** - Create, issue, and manage OpenBadges 2.0 credentials
+- **Badge Directory** - Browse and filter badges by issuer
+- **User Authentication** - GitHub OAuth integration
+- **Badge Server Integration** - Connects to [openbadges-modular-server](../openbadges-modular-server/) via OAuth2/JWT
+- **Role-Based Access Control** - Admin and user permission levels
+- **Responsive UI** - TailwindCSS with neurodivergent-friendly design
 
 ## Tech Stack
 
-- **Frontend**: Vue 3 with Vue Router, Pinia, and TailwindCSS
-- **Backend**: Bun runtime with Hono framework
-- **Package Management**: Bun (monorepo workspaces)
-- **Build Tool**: Vite
+| Layer | Technology |
+|-------|------------|
+| Frontend | Vue 3, Vue Router, Pinia, TailwindCSS |
+| Backend | Bun runtime, Hono framework |
+| Database | SQLite (dev) / PostgreSQL (prod) via Kysely |
+| Auth | GitHub OAuth, JWT (RS256) |
+| Build | Vite (frontend), Bun (backend) |
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (v1.3.2+)
+- [Bun](https://bun.sh) >= 1.3.2
 - [Docker](https://www.docker.com/) (for badge server integration)
-
-### OAuth Integration
-
-This system integrates with the OpenBadges modular server for badge management. The integration uses OAuth2 with JWT tokens for secure service-to-service communication.
-
-**Quick Setup:**
-
-1. Start the badge server: `docker-compose up -d`
-2. Configure OAuth settings in `.env` (see `.env.example`)
-3. Start the main application: `bun dev`
-
-For detailed OAuth configuration and troubleshooting, see:
-
-- [OAuth Integration Guide](docs/OAUTH_INTEGRATION_GUIDE.md)
-- [OAuth Troubleshooting](docs/OAUTH_TROUBLESHOOTING.md)
 
 ### Installation
 
-This app is part of the **rollercoaster.dev monorepo**. Install dependencies from the monorepo root:
+This app is part of the monorepo. Install from the root:
 
 ```bash
 cd monorepo
 bun install
 ```
 
-### Running the Development Environment
-
-Start both the client and server in development mode:
+### Development
 
 ```bash
+# Start both frontend and backend
+bun --filter openbadges-system dev
+
+# Or from this directory
 bun dev
 ```
 
-This will start:
+This starts:
+- **Backend** at `http://localhost:8888` (Bun with hot reload)
+- **Frontend** at `http://localhost:7777` (Vite dev server)
 
-- Backend server using Bun (with hot reloading) at `http://localhost:8888`
-- Frontend Vue app using Vite at `http://localhost:7777`
-
-### Alternative Run Commands
-
-Run only the server:
+### Environment Setup
 
 ```bash
-bun run server
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-Run only the client:
+See [Configuration](#configuration) for details on environment variables.
+
+## Commands
+
+### Development
 
 ```bash
-bun run client
+bun dev              # Start client + server
+bun run server       # Server only
+bun run client       # Client only
 ```
 
-### Docker Support
-
-Start the containerized environment:
+### Testing
 
 ```bash
-bun run docker:up
+bun test             # All tests (client + server)
+bun run test:client  # Frontend tests (Vitest + jsdom)
+bun run test:server  # Backend tests (Bun test runner)
+bun run test:coverage # Coverage report
 ```
 
-Stop containers:
+### Code Quality
 
 ```bash
-bun run docker:down
+bun run lint         # ESLint
+bun run lint:fix     # Auto-fix issues
+bun run format       # Prettier
+bun run type-check   # TypeScript checking
 ```
 
-View logs:
+### Build & Deploy
 
 ```bash
-bun run docker:logs
+bun run build        # Production build
+bun run preview      # Preview production
+bun run start        # Start production server
 ```
 
-### Building for Production
-
-Build the frontend for production:
+### Docker
 
 ```bash
-bun run build
-```
-
-Preview the production build:
-
-```bash
-bun run preview
+bun run docker:up    # Start containers
+bun run docker:down  # Stop containers
+bun run docker:logs  # View logs
 ```
 
 ## Project Structure
 
-```text
+```
 openbadges-system/
 ├── src/
-│   ├── client/           # Vue frontend
-│   │   ├── assets/       # Static assets
-│   │   ├── components/   # Vue components
-│   │   ├── composables/  # Vue composables
-│   │   ├── layouts/      # Page layouts
-│   │   ├── pages/        # Vue pages/routes
-│   │   └── stores/       # Pinia stores
+│   ├── client/           # Vue 3 frontend
+│   │   ├── components/   # Vue components by domain
+│   │   ├── composables/  # Composition API hooks
+│   │   ├── pages/        # File-based routing
+│   │   ├── stores/       # Pinia state management
+│   │   └── services/     # API client services
 │   └── server/           # Bun + Hono backend
+│       ├── routes/       # API route handlers
+│       ├── middleware/   # Auth, validation, CORS
+│       └── services/     # Business logic
+├── docs/                 # Additional documentation
 ├── docker-compose.yml    # Docker configuration
-├── package.json          # Project dependencies & scripts
-└── vite.config.js        # Vite configuration
+└── package.json
 ```
 
-## Authentication and Authorization
+## Architecture
 
-- The backend issues and validates RS256 JWTs. Protected endpoints require an `Authorization: Bearer <token>` header.
-- Middleware:
-  - `requireAuth` protects authenticated endpoints
-  - `requireAdmin` restricts to admin users
-  - `requireSelfOrAdminFromParam('<param>')` allows access to the resource owner (matching `sub`) or admins
+### Workspace Dependencies
 
-Applied protections:
+This app uses packages from the monorepo:
 
-- `GET /api/bs/users`: admin only
-- `GET /api/bs/users/:id`: self or admin
-- `POST /api/bs/users`: admin only
-- `PUT /api/bs/users/:id`: self or admin
-- `DELETE /api/bs/users/:id`: admin only
-- `POST /api/auth/oauth-token`, `POST /api/auth/oauth-token/refresh`, `POST /api/auth/sync-user`, `GET /api/auth/badge-server-profile/:userId`: authenticated users
+```typescript
+// TypeScript types for OpenBadges
+import type { BadgeClass, Assertion } from 'openbadges-types'
 
-Proxy auth toggle:
+// Vue component library
+import { ObBadgeCard, ObBadgeList } from 'openbadges-ui'
+```
 
-- The badge server proxy `/api/bs/*` requires auth by default.
-- To allow public access (dev/testing), set env `OPENBADGES_PROXY_PUBLIC=true`.
+### Authentication Flow
+
+1. **User Auth**: Users authenticate via GitHub OAuth
+2. **Service Auth**: App communicates with badge server using JWT tokens
+3. **Token Verification**: Badge server verifies JWTs via JWKS endpoint
+
+```
+User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3000)
+```
+
+### API Authorization
+
+Protected endpoints use middleware:
+
+| Middleware | Purpose |
+|------------|---------|
+| `requireAuth` | Validates JWT tokens |
+| `requireAdmin` | Admin-only access |
+| `requireSelfOrAdminFromParam()` | Owner or admin access |
+
+**Endpoint Protections:**
+
+| Endpoint | Access Level |
+|----------|--------------|
+| `GET /api/bs/users` | Admin only |
+| `GET /api/bs/users/:id` | Self or admin |
+| `POST /api/bs/users` | Admin only |
+| `PUT /api/bs/users/:id` | Self or admin |
+| `DELETE /api/bs/users/:id` | Admin only |
 
 ## Configuration
 
-Environment variables (non-sensitive examples):
+Key environment variables:
 
-- `PORT` (default `8888`)
-- `OPENBADGES_SERVER_URL` (default `http://localhost:8888`)
-- `OPENBADGES_AUTH_ENABLED` (default `true`)
-- `OPENBADGES_AUTH_MODE` (`docker` uses Basic, `local` uses API key/basic from env)
-- `OPENBADGES_PROXY_PUBLIC` (`false` by default)
-- `PLATFORM_JWT_PRIVATE_KEY` / `PLATFORM_JWT_PUBLIC_KEY` (PEM) or base64 variants `*_B64`
-- `PLATFORM_JWT_ISSUER` (optional; defaults to `PLATFORM_CLIENT_ID` for backwards-compat)
-- `PLATFORM_JWT_AUDIENCE` (optional; when set, enforced on sign/verify)
-- `JWT_CLOCK_TOLERANCE_SEC` (optional; default `0`; allows small clock skew for `exp`/`nbf` checks)
-- `PLATFORM_ID`, `PLATFORM_CLIENT_ID`
+```bash
+# Server
+PORT=8888
 
-> Note: If `OPENBADGES_AUTH_ENABLED=false`, all endpoints are public regardless of `OPENBADGES_PROXY_PUBLIC`.
-> When auth is enabled, setting `OPENBADGES_PROXY_PUBLIC=true` allows proxy endpoints (`/api/bs/*`) to bypass auth.
+# Badge Server Integration
+OPENBADGES_SERVER_URL=http://localhost:3000
+OPENBADGES_AUTH_ENABLED=true
+OPENBADGES_AUTH_MODE=oauth    # 'oauth' for JWT, 'docker' for Basic
+OPENBADGES_PROXY_PUBLIC=false # Set true to bypass auth on /api/bs/*
+
+# JWT (RS256)
+PLATFORM_JWT_PRIVATE_KEY=...  # PEM format (or *_B64 for base64)
+PLATFORM_JWT_PUBLIC_KEY=...
+PLATFORM_JWT_ISSUER=...       # Defaults to PLATFORM_CLIENT_ID
+PLATFORM_JWT_AUDIENCE=...     # Optional, enforced if set
+JWT_CLOCK_TOLERANCE_SEC=0     # Clock skew tolerance
+
+# GitHub OAuth
+OAUTH_GITHUB_CLIENT_ID=...
+OAUTH_GITHUB_CLIENT_SECRET=...
+OAUTH_GITHUB_CALLBACK_URL=http://localhost:8888/api/oauth/github/callback
+```
+
+See `.env.example` for the complete list.
+
+## Documentation
+
+- [OAuth Integration Guide](docs/OAUTH_INTEGRATION_GUIDE.md) - Service-to-service authentication
+- [OAuth Troubleshooting](docs/OAUTH_TROUBLESHOOTING.md) - Common issues and solutions
+- [API Authentication](docs/development/api-auth.md) - Backend auth details
+- [CLAUDE.md](CLAUDE.md) - Development context for AI assistants
+
+## Related
+
+- [openbadges-modular-server](../openbadges-modular-server/) - Badge API server
+- [openbadges-types](../../packages/openbadges-types/) - TypeScript definitions
+- [openbadges-ui](../../packages/openbadges-ui/) - Vue component library
 
 ## License
 
