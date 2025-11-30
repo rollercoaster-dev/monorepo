@@ -290,6 +290,12 @@ For each sub-issue or related issue:
 2. ⏳ Address review feedback
 3. ⏳ Request human review if needed
 4. ⏳ Merge when approved
+
+## Documentation
+
+<!-- Include if PR adds new feature/component -->
+Consider documenting this feature:
+→ Run `docs-assistant` to create feature documentation
 ```
 
 ## Tools Required
