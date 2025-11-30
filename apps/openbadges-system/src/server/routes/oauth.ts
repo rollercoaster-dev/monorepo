@@ -3,6 +3,7 @@ import { oauthService } from '../services/oauth'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
 import { jwtService } from '../services/jwt'
+import { logger } from '../utils/logger'
 
 const oauthRoutes = new Hono()
 
@@ -16,7 +17,7 @@ oauthRoutes.get('/providers', async c => {
       providers,
     })
   } catch (error) {
-    console.error('Failed to get OAuth providers:', error)
+    logger.error('Failed to get OAuth providers', { error })
     return c.json(
       {
         success: false,
@@ -47,7 +48,7 @@ oauthRoutes.get('/github', async c => {
       state,
     })
   } catch (error) {
-    console.error('GitHub OAuth initialization failed:', error)
+    logger.error('GitHub OAuth initialization failed', { error })
     return c.json(
       {
         success: false,
@@ -66,7 +67,7 @@ oauthRoutes.get('/github/callback', async c => {
     const error = c.req.query('error')
 
     if (error) {
-      console.error('GitHub OAuth error:', error)
+      logger.error('GitHub OAuth error from provider', { error })
       return c.json(
         {
           success: false,
@@ -143,12 +144,18 @@ oauthRoutes.get('/github/callback', async c => {
     try {
       const syncResult = await userSyncService.syncUser(user)
       if (syncResult.success) {
-        console.log('User synced with badge server:', syncResult.created ? 'created' : 'updated')
+        logger.info('User synced with badge server', {
+          userId: user.id,
+          action: syncResult.created ? 'created' : 'updated',
+        })
       } else {
-        console.warn('Failed to sync user with badge server:', syncResult.error)
+        logger.warn('Failed to sync user with badge server', {
+          userId: user.id,
+          error: syncResult.error,
+        })
       }
     } catch (syncError) {
-      console.error('Error syncing user with badge server:', syncError)
+      logger.error('Error syncing user with badge server', { error: syncError, userId: user.id })
     }
 
     // Generate JWT token for authentication
@@ -209,7 +216,7 @@ oauthRoutes.get('/github/callback', async c => {
       return c.redirect(callbackUrl.toString())
     }
   } catch (error) {
-    console.error('GitHub OAuth callback failed:', error)
+    logger.error('GitHub OAuth callback failed', { error })
 
     // Provide more specific error messages for debugging
     let errorMessage = 'OAuth authentication failed'
@@ -259,7 +266,7 @@ oauthRoutes.delete('/:provider', async c => {
       message: `${provider} account unlinked successfully`,
     })
   } catch (error) {
-    console.error('Failed to unlink OAuth provider:', error)
+    logger.error('Failed to unlink OAuth provider', { error, provider: c.req.param('provider') })
     return c.json(
       {
         success: false,
@@ -303,7 +310,7 @@ oauthRoutes.get('/user/:userId/providers', async c => {
       providers,
     })
   } catch (error) {
-    console.error('Failed to get user OAuth providers:', error)
+    logger.error('Failed to get user OAuth providers', { error, userId: c.req.param('userId') })
     return c.json(
       {
         success: false,
@@ -324,7 +331,7 @@ oauthRoutes.post('/cleanup', async c => {
       message: 'Expired OAuth sessions cleaned up',
     })
   } catch (error) {
-    console.error('Failed to cleanup OAuth sessions:', error)
+    logger.error('Failed to cleanup OAuth sessions', { error })
     return c.json(
       {
         success: false,
