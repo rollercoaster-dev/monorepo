@@ -40,6 +40,54 @@ Optional:
 
 ## Workflow
 
+### Phase 0: Check Dependencies
+
+Before creating a PR, verify all issue dependencies are met.
+
+1. **Parse issue body for dependencies:**
+
+   ```bash
+   gh issue view <number> --json body | grep -iE "(blocked by|depends on|after) #[0-9]+"
+   ```
+
+   Also check for checkbox-style dependencies:
+
+   ```bash
+   gh issue view <number> --json body | grep -E "- \[ \] #[0-9]+"
+   ```
+
+2. **Check status of each dependency:**
+
+   ```bash
+   # For each dependency number found:
+   gh issue view <dep-number> --json state,title,number
+   ```
+
+3. **Decision logic:**
+
+   | Dependency Type | If Open | Action                                      |
+   | --------------- | ------- | ------------------------------------------- |
+   | "Blocked by #X" | 🔴 Stop | WARN user, ask to confirm before proceeding |
+   | "Depends on #X" | ⚠️ Warn | Note in PR, proceed with warning            |
+   | "After #X"      | ⚠️ Warn | Note in PR, proceed with warning            |
+
+4. **Example warning:**
+
+   ```
+   ⚠️ DEPENDENCY WARNING
+
+   This issue has unmet dependencies:
+   - 🔴 Blocked by #164 (OPEN): "Implement SQLite API Key repository"
+   - ⚠️ Depends on #165 (OPEN): "Implement PostgreSQL API Key repository"
+
+   Creating this PR may cause merge conflicts or CI failures.
+
+   Options:
+   1. Stop and work on dependencies first (recommended)
+   2. Proceed anyway (will note in PR description)
+   3. Create as Draft PR
+   ```
+
 ### Phase 1: Gather Information
 
 1. **Get current branch:**
@@ -106,6 +154,17 @@ Generate PR body following this template:
 ### <Area 2>
 
 - <Change 1>
+
+## Dependencies
+
+<!-- Include if issue had dependencies -->
+
+- [x] #123 - <title> (Merged ✅)
+- [ ] #456 - <title> (Open ⚠️ - proceeding anyway)
+
+<!-- Or if no dependencies: -->
+
+- None
 
 ## Testing
 

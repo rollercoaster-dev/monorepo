@@ -42,6 +42,48 @@ monorepo/
 - **Version Control**: GitHub with Changesets for version management
 - **Strict TypeScript**: No any
 
+## 📦 Dependency Management Strategy
+
+### Shared Dependencies (Root)
+
+Common dev dependencies are consolidated in the root `package.json` to ensure consistent versions across all packages:
+
+| Dependency    | Version     | Purpose                  |
+| ------------- | ----------- | ------------------------ |
+| `typescript`  | `^5.8.3`    | TypeScript compiler      |
+| `eslint`      | `^9.24.0`   | Linting                  |
+| `prettier`    | `^3.7.3`    | Code formatting          |
+| `@types/bun`  | `latest`    | Bun type definitions     |
+| `@types/node` | `^22.15.21` | Node.js type definitions |
+| `turbo`       | `^2.0.0`    | Build orchestration      |
+
+### Package-Specific Dependencies
+
+Individual packages should only declare dependencies they specifically need:
+
+- **Build tools**: `tsup`, `vite`, `vue-tsc` (stay in package)
+- **Framework-specific types**: `@types/express`, `@types/pg` (stay in package)
+- **Test utilities**: `vitest`, `@vue/test-utils` (stay in package)
+- **Runtime dependencies**: Always in the package that uses them
+
+### Adding New Dependencies
+
+```bash
+# Add to root (shared across all packages)
+bun add -d <package-name>
+
+# Add to specific package
+bun --filter <package-name> add <package-name>
+```
+
+### Why This Pattern?
+
+1. **Single source of truth** for common tooling versions
+2. **Bun workspace hoisting** automatically makes root deps available to all packages
+3. **Smaller package.json files** in individual packages
+4. **Easier upgrades** - update once in root, applies everywhere
+5. **Consistent formatting/linting** across the entire monorepo
+
 ## 📦 Current Packages
 
 ### Published Packages (npm)

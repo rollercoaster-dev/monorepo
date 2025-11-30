@@ -39,9 +39,7 @@ type UserAssertionConflictUpdateValues = {
   metadata?: Record<string, unknown> | null;
 };
 
-export class PostgresUserAssertionRepository
-  implements UserAssertionRepository
-{
+export class PostgresUserAssertionRepository implements UserAssertionRepository {
   private db: ReturnType<typeof drizzle>;
 
   constructor(client: postgres.Sql) {
