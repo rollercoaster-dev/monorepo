@@ -22,8 +22,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
 
-    /* Vite-specific types */
-    "types": ["unplugin-vue-router/client", "vite/client"],
+    /* Vite-specific types + Bun for server code */
+    "types": ["unplugin-vue-router/client", "vite/client", "bun"],
 
     /* Path aliases */
     "baseUrl": ".",

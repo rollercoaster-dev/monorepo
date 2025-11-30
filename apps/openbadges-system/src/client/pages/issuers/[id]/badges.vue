@@ -84,8 +84,8 @@ const issuerLoading = ref(true)
 const badgesLoading = ref(true)
 const error = ref<string | null>(null)
 
-// Get issuer ID from route
-const issuerId = decodeURIComponent(route.params.id as string)
+// Get issuer ID from route (always present due to file-based routing)
+const issuerId = decodeURIComponent(String((route.params as { id: string }).id))
 
 // Load issuer details
 async function loadIssuer() {
