@@ -34,14 +34,14 @@ This document provides a high-level overview of the openbadges-system architectu
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Vue 3 + Vite | Reactive UI with Composition API |
-| **Styling** | TailwindCSS | Utility-first CSS framework |
-| **Backend** | Hono + Bun | Fast, lightweight HTTP server |
-| **Database** | Kysely | Type-safe SQL query builder |
-| **Auth** | WebAuthn + JWT | Passwordless + token-based auth |
-| **Runtime** | Bun | Fast JavaScript runtime |
+| Layer        | Technology     | Purpose                          |
+| ------------ | -------------- | -------------------------------- |
+| **Frontend** | Vue 3 + Vite   | Reactive UI with Composition API |
+| **Styling**  | TailwindCSS    | Utility-first CSS framework      |
+| **Backend**  | Hono + Bun     | Fast, lightweight HTTP server    |
+| **Database** | Kysely         | Type-safe SQL query builder      |
+| **Auth**     | WebAuthn + JWT | Passwordless + token-based auth  |
+| **Runtime**  | Bun            | Fast JavaScript runtime          |
 
 ## Design Principles
 
@@ -58,6 +58,7 @@ End-to-end type safety from database schemas to UI components. Shared types ensu
 ### 3. Composable Architecture
 
 Vue 3 Composition API enables reusable logic through composables:
+
 - `useAuth` - Authentication state and methods
 - `useBadges` - Badge operations
 - `useUsers` - User management
@@ -65,6 +66,7 @@ Vue 3 Composition API enables reusable logic through composables:
 ### 4. Multi-Auth Support
 
 Flexible authentication supporting multiple methods:
+
 - **WebAuthn** (primary) - Passwordless passkey authentication
 - **GitHub OAuth** (optional) - Social login
 - **JWT tokens** - API authentication (RS256)
@@ -72,6 +74,7 @@ Flexible authentication supporting multiple methods:
 ### 5. Dual-Database Strategy
 
 Development and production use different databases through Kysely abstraction:
+
 - **SQLite** - Zero-config local development
 - **PostgreSQL** - Production-ready with connection pooling
 

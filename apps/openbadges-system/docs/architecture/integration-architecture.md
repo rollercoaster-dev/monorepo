@@ -65,14 +65,14 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8888',
-        changeOrigin: true
+        changeOrigin: true,
       },
       '/.well-known': {
         target: 'http://localhost:8888',
-        changeOrigin: true
-      }
-    }
-  }
+        changeOrigin: true,
+      },
+    },
+  },
 })
 ```
 
@@ -117,10 +117,7 @@ All API requests follow a consistent pattern:
 export function useApi() {
   const { token } = useAuth()
 
-  async function request<T>(
-    path: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers = new Headers(options.headers)
 
     if (token.value) {
@@ -131,7 +128,7 @@ export function useApi() {
 
     const response = await fetch(`/api${path}`, {
       ...options,
-      headers
+      headers,
     })
 
     if (!response.ok) {
@@ -148,8 +145,7 @@ export function useApi() {
       request<T>(path, { method: 'POST', body: JSON.stringify(data) }),
     put: <T>(path: string, data: unknown) =>
       request<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: <T>(path: string) =>
-      request<T>(path, { method: 'DELETE' })
+    delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
   }
 }
 ```
@@ -287,7 +283,7 @@ The backend acts as a proxy to the OpenBadges server, handling authentication:
 
 ```typescript
 // Badge server proxy
-app.all('/api/bs/*', async (c) => {
+app.all('/api/bs/*', async c => {
   const path = c.req.path.replace('/api/bs', '')
   const method = c.req.method
 
@@ -299,9 +295,9 @@ app.all('/api/bs/*', async (c) => {
     method,
     headers: {
       ...authHeaders,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: method !== 'GET' ? await c.req.text() : undefined
+    body: method !== 'GET' ? await c.req.text() : undefined,
   })
 
   // Forward response
@@ -318,12 +314,12 @@ async function getBadgeServerAuth(): Promise<Record<string, string>> {
     case 'docker':
       // Basic auth for Docker Compose
       const credentials = btoa(`${DOCKER_USER}:${DOCKER_PASS}`)
-      return { 'Authorization': `Basic ${credentials}` }
+      return { Authorization: `Basic ${credentials}` }
 
     case 'oauth':
       // JWT for service-to-service
       const token = await getServiceToken()
-      return { 'Authorization': `Bearer ${token}` }
+      return { Authorization: `Bearer ${token}` }
 
     case 'local':
       // API key for local dev
@@ -419,10 +415,13 @@ c.json({ error: 'Forbidden', message: 'Admin access required' }, 403)
 c.json({ error: 'Not Found', message: 'Badge not found' }, 404)
 
 // 422 Validation Error
-c.json({
-  error: 'Validation Error',
-  details: { email: 'Required', name: 'Too short' }
-}, 422)
+c.json(
+  {
+    error: 'Validation Error',
+    details: { email: 'Required', name: 'Too short' },
+  },
+  422
+)
 
 // 500 Internal Error
 c.json({ error: 'Internal Server Error' }, 500)
@@ -445,7 +444,7 @@ Frontend Error ◀── API Response ◀── Backend Error ◀── Badge Se
 // Accessed via import.meta.env
 const config = {
   apiUrl: import.meta.env.VITE_API_URL || '/api',
-  appName: import.meta.env.VITE_APP_NAME || 'OpenBadges System'
+  appName: import.meta.env.VITE_APP_NAME || 'OpenBadges System',
 }
 ```
 

@@ -4,13 +4,13 @@ The openbadges-system backend is built with Hono framework running on Bun runtim
 
 ## Technology Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Hono | ^4.6 | Lightweight web framework |
-| Bun | ^1.3 | JavaScript runtime |
-| Kysely | ^0.27 | Type-safe SQL query builder |
-| jose | ^5.9 | JWT operations (RS256) |
-| @simplewebauthn | ^13.0 | WebAuthn authentication |
+| Technology      | Version | Purpose                     |
+| --------------- | ------- | --------------------------- |
+| Hono            | ^4.6    | Lightweight web framework   |
+| Bun             | ^1.3    | JavaScript runtime          |
+| Kysely          | ^0.27   | Type-safe SQL query builder |
+| jose            | ^5.9    | JWT operations (RS256)      |
+| @simplewebauthn | ^13.0   | WebAuthn authentication     |
 
 ## Directory Structure
 
@@ -56,59 +56,59 @@ app.route('/api/public', publicAuthRoutes)
 app.route('/api/oauth', oauthRoutes)
 app.route('/api/users', userRoutes)
 app.route('/api/badges', badgeRoutes)
-app.route('/api/bs', badgeServerProxy)  // Badge server proxy
+app.route('/api/bs', badgeServerProxy) // Badge server proxy
 ```
 
 ### Route Definitions
 
 **Authentication Routes (`/api/auth`):**
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| POST | `/login` | Login with WebAuthn | No |
-| POST | `/logout` | End session | Yes |
-| GET | `/me` | Current user info | Yes |
-| POST | `/webauthn/register/options` | WebAuthn registration start | Yes |
-| POST | `/webauthn/register/verify` | WebAuthn registration verify | Yes |
-| POST | `/webauthn/login/options` | WebAuthn login start | No |
-| POST | `/webauthn/login/verify` | WebAuthn login verify | No |
+| Method | Path                         | Description                  | Auth |
+| ------ | ---------------------------- | ---------------------------- | ---- |
+| POST   | `/login`                     | Login with WebAuthn          | No   |
+| POST   | `/logout`                    | End session                  | Yes  |
+| GET    | `/me`                        | Current user info            | Yes  |
+| POST   | `/webauthn/register/options` | WebAuthn registration start  | Yes  |
+| POST   | `/webauthn/register/verify`  | WebAuthn registration verify | Yes  |
+| POST   | `/webauthn/login/options`    | WebAuthn login start         | No   |
+| POST   | `/webauthn/login/verify`     | WebAuthn login verify        | No   |
 
 **Public Auth Routes (`/api/public`):**
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| POST | `/register` | User registration | No |
-| GET | `/user/:id` | Public user info | No |
-| GET | `/user/email/:email` | User lookup by email | No |
+| Method | Path                 | Description          | Auth |
+| ------ | -------------------- | -------------------- | ---- |
+| POST   | `/register`          | User registration    | No   |
+| GET    | `/user/:id`          | Public user info     | No   |
+| GET    | `/user/email/:email` | User lookup by email | No   |
 
 **OAuth Routes (`/api/oauth`):**
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | `/providers` | Available OAuth providers | No |
-| GET | `/github` | GitHub OAuth redirect | No |
-| GET | `/github/callback` | GitHub OAuth callback | No |
-| POST | `/link/:provider` | Link OAuth to account | Yes |
+| Method | Path               | Description               | Auth |
+| ------ | ------------------ | ------------------------- | ---- |
+| GET    | `/providers`       | Available OAuth providers | No   |
+| GET    | `/github`          | GitHub OAuth redirect     | No   |
+| GET    | `/github/callback` | GitHub OAuth callback     | No   |
+| POST   | `/link/:provider`  | Link OAuth to account     | Yes  |
 
 **User Routes (`/api/users`):**
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | `/` | List all users | Admin |
-| GET | `/:id` | Get user by ID | Self/Admin |
-| PUT | `/:id` | Update user | Self/Admin |
-| DELETE | `/:id` | Delete user | Admin |
+| Method | Path   | Description    | Auth       |
+| ------ | ------ | -------------- | ---------- |
+| GET    | `/`    | List all users | Admin      |
+| GET    | `/:id` | Get user by ID | Self/Admin |
+| PUT    | `/:id` | Update user    | Self/Admin |
+| DELETE | `/:id` | Delete user    | Admin      |
 
 **Badge Routes (`/api/badges`):**
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| GET | `/` | List badges | Yes |
-| POST | `/` | Create badge | Admin |
-| GET | `/:id` | Get badge | Public |
-| PUT | `/:id` | Update badge | Admin |
-| POST | `/:id/issue` | Issue badge | Admin |
-| GET | `/verify/:id` | Verify badge | Public |
+| Method | Path          | Description  | Auth   |
+| ------ | ------------- | ------------ | ------ |
+| GET    | `/`           | List badges  | Yes    |
+| POST   | `/`           | Create badge | Admin  |
+| GET    | `/:id`        | Get badge    | Public |
+| PUT    | `/:id`        | Update badge | Admin  |
+| POST   | `/:id/issue`  | Issue badge  | Admin  |
+| GET    | `/verify/:id` | Verify badge | Public |
 
 ## Middleware Stack
 
@@ -196,10 +196,13 @@ app.put('/users/:id', requireAuth, requireSelfOrAdminFromParam(), updateUser)
 ```typescript
 import { cors } from 'hono/cors'
 
-app.use('/*', cors({
-  origin: ['http://localhost:7777'],  // Vite dev server
-  credentials: true
-}))
+app.use(
+  '/*',
+  cors({
+    origin: ['http://localhost:7777'], // Vite dev server
+    credentials: true,
+  })
+)
 ```
 
 ### Logger Middleware
@@ -226,7 +229,7 @@ export async function generateJWT(user: User): Promise<string> {
   return new SignJWT({
     sub: user.id,
     email: user.email,
-    role: user.role
+    role: user.role,
   })
     .setProtectedHeader({ alg: 'RS256' })
     .setIssuedAt()
@@ -247,10 +250,10 @@ Public key discovery for external services:
 
 ```typescript
 // /.well-known/jwks.json
-app.get('/.well-known/jwks.json', async (c) => {
+app.get('/.well-known/jwks.json', async c => {
   const jwk = await exportJWK(publicKey)
   return c.json({
-    keys: [{ ...jwk, kid: 'main', use: 'sig', alg: 'RS256' }]
+    keys: [{ ...jwk, kid: 'main', use: 'sig', alg: 'RS256' }],
   })
 })
 ```
@@ -289,11 +292,7 @@ export class UserService {
   constructor(private db: Database) {}
 
   async findById(id: string): Promise<User | null> {
-    return this.db
-      .selectFrom('users')
-      .where('id', '=', id)
-      .selectAll()
-      .executeTakeFirst()
+    return this.db.selectFrom('users').where('id', '=', id).selectAll().executeTakeFirst()
   }
 
   async create(data: CreateUserData): Promise<User> {
@@ -302,7 +301,7 @@ export class UserService {
       .values({
         id: generateId(),
         ...data,
-        createdAt: new Date()
+        createdAt: new Date(),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -394,7 +393,7 @@ The backend proxies requests to the external OpenBadges server:
 const BADGE_SERVER_URL = process.env.OPENBADGES_SERVER_URL
 const AUTH_MODE = process.env.OPENBADGES_AUTH_MODE // 'docker' | 'oauth' | 'local'
 
-app.all('/api/bs/*', async (c) => {
+app.all('/api/bs/*', async c => {
   const path = c.req.path.replace('/api/bs', '')
   const headers = await getBadgeServerHeaders(AUTH_MODE)
 
@@ -402,9 +401,9 @@ app.all('/api/bs/*', async (c) => {
     method: c.req.method,
     headers: {
       ...headers,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: c.req.method !== 'GET' ? await c.req.text() : undefined
+    body: c.req.method !== 'GET' ? await c.req.text() : undefined,
   })
 
   return c.json(await response.json(), response.status)
@@ -413,11 +412,11 @@ app.all('/api/bs/*', async (c) => {
 
 ### Auth Modes
 
-| Mode | Description | Use Case |
-|------|-------------|----------|
+| Mode     | Description                         | Use Case             |
+| -------- | ----------------------------------- | -------------------- |
 | `docker` | Basic Auth with service credentials | Docker Compose setup |
-| `oauth` | JWT with service-to-service auth | Production OAuth |
-| `local` | API key authentication | Local development |
+| `oauth`  | JWT with service-to-service auth    | Production OAuth     |
+| `local`  | API key authentication              | Local development    |
 
 ### OB2 Validation Middleware
 
@@ -429,10 +428,13 @@ export const validateOB2Badge = createMiddleware(async (c, next) => {
   const body = await c.req.json()
 
   if (!isValidBadgeClass(body)) {
-    return c.json({
-      error: 'Invalid badge data',
-      details: getValidationErrors(body)
-    }, 422)
+    return c.json(
+      {
+        error: 'Invalid badge data',
+        details: getValidationErrors(body),
+      },
+      422
+    )
   }
 
   await next()
@@ -456,10 +458,13 @@ app.onError((err, c) => {
   console.error(err)
 
   if (err instanceof ValidationError) {
-    return c.json({
-      error: 'Validation Error',
-      details: err.errors
-    }, 422)
+    return c.json(
+      {
+        error: 'Validation Error',
+        details: err.errors,
+      },
+      422
+    )
   }
 
   if (err instanceof AuthError) {
@@ -473,7 +478,7 @@ app.onError((err, c) => {
 ### Not Found Handler
 
 ```typescript
-app.notFound((c) => {
+app.notFound(c => {
   return c.json({ error: 'Not Found' }, 404)
 })
 ```
@@ -529,8 +534,8 @@ type Variables = {
 const app = new Hono<{ Variables: Variables }>()
 
 // Type-safe access
-app.get('/profile', requireAuth, (c) => {
-  const user = c.get('user')  // Typed as JWTPayload
+app.get('/profile', requireAuth, c => {
+  const user = c.get('user') // Typed as JWTPayload
   return c.json(user)
 })
 ```
@@ -543,16 +548,13 @@ import { z } from 'zod'
 
 const createUserSchema = z.object({
   email: z.string().email(),
-  name: z.string().min(1)
+  name: z.string().min(1),
 })
 
-app.post('/users',
-  zValidator('json', createUserSchema),
-  async (c) => {
-    const data = c.req.valid('json')  // Typed and validated
-    // ...
-  }
-)
+app.post('/users', zValidator('json', createUserSchema), async c => {
+  const data = c.req.valid('json') // Typed and validated
+  // ...
+})
 ```
 
 ### 3. Group Related Routes
@@ -576,14 +578,14 @@ Keep route handlers thin, delegate to services:
 
 ```typescript
 // Good: Route handler delegates to service
-app.post('/users', async (c) => {
+app.post('/users', async c => {
   const data = await c.req.json()
   const user = await userService.create(data)
   return c.json(user, 201)
 })
 
 // Bad: Business logic in route handler
-app.post('/users', async (c) => {
+app.post('/users', async c => {
   const data = await c.req.json()
   // Don't put all the logic here...
 })

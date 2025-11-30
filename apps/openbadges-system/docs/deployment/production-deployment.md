@@ -44,6 +44,7 @@ bun run build
 ```
 
 This creates:
+
 - `dist/client/` - Static frontend files
 - `dist/server/` - Compiled server (optional, Bun runs TypeScript directly)
 
@@ -65,6 +66,7 @@ dist/
 ### Build Optimization
 
 The Vite build includes:
+
 - Code splitting for routes
 - Tree shaking for unused code
 - Minification (JS + CSS)
@@ -152,9 +154,9 @@ For production PostgreSQL:
 // Recommended pool settings
 new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,                    // Max connections
-  idleTimeoutMillis: 30000,   // Close idle connections after 30s
-  connectionTimeoutMillis: 5000 // Fail if can't connect in 5s
+  max: 20, // Max connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
+  connectionTimeoutMillis: 5000, // Fail if can't connect in 5s
 })
 ```
 
@@ -175,21 +177,23 @@ bun run start
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'openbadges-system',
-    script: 'bun',
-    args: 'run src/server/index.ts',
-    cwd: '/path/to/apps/openbadges-system',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 8888
+  apps: [
+    {
+      name: 'openbadges-system',
+      script: 'bun',
+      args: 'run src/server/index.ts',
+      cwd: '/path/to/apps/openbadges-system',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 8888,
+      },
+      instances: 'max',
+      exec_mode: 'cluster',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
     },
-    instances: 'max',
-    exec_mode: 'cluster',
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G'
-  }]
+  ],
 }
 ```
 
@@ -369,7 +373,7 @@ services:
   app:
     build: .
     ports:
-      - "8888:8888"
+      - '8888:8888'
     environment:
       - NODE_ENV=production
       - DB_TYPE=postgresql
@@ -424,10 +428,12 @@ volumes:
 
 ```typescript
 // Restrict CORS to your domain
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,  // e.g., 'https://badges.yourdomain.com'
-  credentials: true
-}))
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN, // e.g., 'https://badges.yourdomain.com'
+    credentials: true,
+  })
+)
 ```
 
 ### Rate Limiting
@@ -436,11 +442,14 @@ app.use(cors({
 // Add rate limiting for API endpoints
 import { rateLimiter } from 'hono-rate-limiter'
 
-app.use('/api/*', rateLimiter({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  limit: 100,                 // 100 requests per window
-  message: { error: 'Too many requests' }
-}))
+app.use(
+  '/api/*',
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // 100 requests per window
+    message: { error: 'Too many requests' },
+  })
+)
 ```
 
 ## Monitoring
@@ -449,11 +458,11 @@ app.use('/api/*', rateLimiter({
 
 ```typescript
 // Add health check endpoint
-app.get('/health', (c) => {
+app.get('/health', c => {
   return c.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version
+    version: process.env.npm_package_version,
   })
 })
 ```
@@ -465,7 +474,7 @@ app.get('/health', (c) => {
 import { logger } from '@rollercoaster-dev/rd-logger'
 
 const log = new Logger({
-  level: process.env.LOG_LEVEL || 'info'
+  level: process.env.LOG_LEVEL || 'info',
 })
 
 // Log requests
@@ -478,7 +487,7 @@ app.use('*', async (c, next) => {
     method: c.req.method,
     path: c.req.path,
     status: c.res.status,
-    duration
+    duration,
   })
 })
 ```
@@ -486,6 +495,7 @@ app.use('*', async (c, next) => {
 ### Metrics
 
 Consider adding:
+
 - Request count and latency
 - Database query performance
 - Error rates
@@ -522,6 +532,7 @@ gunzip -c backup_20241201.sql.gz | psql $DATABASE_URL
 ### Common Issues
 
 **Port already in use:**
+
 ```bash
 # Find and kill process
 lsof -i :8888
@@ -529,18 +540,21 @@ kill -9 <PID>
 ```
 
 **Database connection failed:**
+
 ```bash
 # Test connection
 psql $DATABASE_URL -c "SELECT 1"
 ```
 
 **JWT verification failed:**
+
 ```bash
 # Verify key format
 echo $JWT_PUBLIC_KEY | openssl rsa -pubin -text -noout
 ```
 
 **Static files not loading:**
+
 ```bash
 # Verify build output
 ls -la dist/client/

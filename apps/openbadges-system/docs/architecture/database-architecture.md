@@ -4,13 +4,13 @@ The openbadges-system uses Kysely as a type-safe SQL query builder with support 
 
 ## Technology Stack
 
-| Technology | Purpose |
-|------------|---------|
-| Kysely | Type-safe SQL query builder |
-| SQLite | Development database |
-| PostgreSQL | Production database |
-| better-sqlite3 | SQLite driver |
-| pg | PostgreSQL driver |
+| Technology     | Purpose                     |
+| -------------- | --------------------------- |
+| Kysely         | Type-safe SQL query builder |
+| SQLite         | Development database        |
+| PostgreSQL     | Production database         |
+| better-sqlite3 | SQLite driver               |
+| pg             | PostgreSQL driver           |
 
 ## Directory Structure
 
@@ -98,7 +98,7 @@ export interface UserSessionsTable {
 export interface OAuthProvidersTable {
   id: string
   user_id: string
-  provider: string  // 'github', 'google', etc.
+  provider: string // 'github', 'google', etc.
   provider_id: string
   access_token: string | null
   refresh_token: string | null
@@ -132,17 +132,17 @@ export function createDatabase(): Kysely<DB> {
     return new Kysely<DB>({
       dialect: new PostgresDialect({
         pool: new Pool({
-          connectionString: process.env.DATABASE_URL
-        })
-      })
+          connectionString: process.env.DATABASE_URL,
+        }),
+      }),
     })
   }
 
   // Default to SQLite
   return new Kysely<DB>({
     dialect: new SqliteDialect({
-      database: new Database(process.env.SQLITE_FILE || './data/app.db')
-    })
+      database: new Database(process.env.SQLITE_FILE || './data/app.db'),
+    }),
   })
 }
 
@@ -159,13 +159,13 @@ export function getDatabase(): Kysely<DB> {
 
 ### Database Compatibility
 
-| Feature | SQLite | PostgreSQL |
-|---------|--------|------------|
-| Setup | Zero-config | Requires server |
-| Concurrent writes | Limited | Full support |
-| JSON columns | Text + parse | Native JSONB |
-| Full-text search | FTS5 | tsvector |
-| Array columns | Not supported | Native arrays |
+| Feature           | SQLite        | PostgreSQL      |
+| ----------------- | ------------- | --------------- |
+| Setup             | Zero-config   | Requires server |
+| Concurrent writes | Limited       | Full support    |
+| JSON columns      | Text + parse  | Native JSONB    |
+| Full-text search  | FTS5          | tsvector        |
+| Array columns     | Not supported | Native arrays   |
 
 ## Query Patterns
 
@@ -173,22 +173,14 @@ export function getDatabase(): Kysely<DB> {
 
 ```typescript
 // Select
-const user = await db
-  .selectFrom('users')
-  .where('id', '=', userId)
-  .selectAll()
-  .executeTakeFirst()
+const user = await db.selectFrom('users').where('id', '=', userId).selectAll().executeTakeFirst()
 
 // Select with joins
 const userWithSessions = await db
   .selectFrom('users')
   .leftJoin('user_sessions', 'users.id', 'user_sessions.user_id')
   .where('users.id', '=', userId)
-  .select([
-    'users.id',
-    'users.email',
-    'user_sessions.token'
-  ])
+  .select(['users.id', 'users.email', 'user_sessions.token'])
   .execute()
 
 // Insert
@@ -200,7 +192,7 @@ const newUser = await db
     name: 'New User',
     role: 'user',
     created_at: new Date(),
-    updated_at: new Date()
+    updated_at: new Date(),
   })
   .returningAll()
   .executeTakeFirstOrThrow()
@@ -210,16 +202,13 @@ await db
   .updateTable('users')
   .set({
     name: 'Updated Name',
-    updated_at: new Date()
+    updated_at: new Date(),
   })
   .where('id', '=', userId)
   .execute()
 
 // Delete
-await db
-  .deleteFrom('users')
-  .where('id', '=', userId)
-  .execute()
+await db.deleteFrom('users').where('id', '=', userId).execute()
 ```
 
 ### Complex Queries
@@ -260,16 +249,13 @@ Kysely provides full type safety:
 
 ```typescript
 // ✅ Type-safe: Column exists
-const user = await db
-  .selectFrom('users')
-  .select(['id', 'email', 'name'])
-  .executeTakeFirst()
+const user = await db.selectFrom('users').select(['id', 'email', 'name']).executeTakeFirst()
 // user is typed as { id: string, email: string, name: string } | undefined
 
 // ❌ Type error: Column doesn't exist
 const user = await db
   .selectFrom('users')
-  .select(['id', 'invalid_column'])  // TypeScript error!
+  .select(['id', 'invalid_column']) // TypeScript error!
   .executeTakeFirst()
 
 // ✅ Type-safe: Insert values match schema
@@ -279,13 +265,13 @@ await db.insertInto('users').values({
   name: 'Test',
   role: 'user',
   created_at: new Date(),
-  updated_at: new Date()
+  updated_at: new Date(),
 })
 
 // ❌ Type error: Missing required field
 await db.insertInto('users').values({
   id: '123',
-  email: 'test@example.com'
+  email: 'test@example.com',
   // TypeScript error: missing 'name', 'role', etc.
 })
 ```
@@ -311,7 +297,7 @@ export async function withTransaction<T>(
 
 ```typescript
 // Create user with initial session
-const { user, session } = await withTransaction(db, async (trx) => {
+const { user, session } = await withTransaction(db, async trx => {
   const user = await trx
     .insertInto('users')
     .values({
@@ -320,7 +306,7 @@ const { user, session } = await withTransaction(db, async (trx) => {
       name: 'New User',
       role: 'user',
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     })
     .returningAll()
     .executeTakeFirstOrThrow()
@@ -332,7 +318,7 @@ const { user, session } = await withTransaction(db, async (trx) => {
       user_id: user.id,
       token: generateToken(),
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      created_at: new Date()
+      created_at: new Date(),
     })
     .returningAll()
     .executeTakeFirstOrThrow()
@@ -345,7 +331,7 @@ const { user, session } = await withTransaction(db, async (trx) => {
 
 ```typescript
 try {
-  await withTransaction(db, async (trx) => {
+  await withTransaction(db, async trx => {
     await trx.insertInto('users').values(userData).execute()
 
     // If this fails, the user insert is rolled back
@@ -401,8 +387,8 @@ export async function runMigrations(db: Kysely<Database>) {
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(__dirname, 'migrations')
-    })
+      migrationFolder: path.join(__dirname, 'migrations'),
+    }),
   })
 
   const { results, error } = await migrator.migrateToLatest()
@@ -447,12 +433,14 @@ SQLITE_FILE=./data/openbadges.db
 ```
 
 **Advantages:**
+
 - Zero configuration
 - Single file database
 - Fast for development
 - No external dependencies
 
 **Limitations:**
+
 - Single writer at a time
 - No native JSON/Array types
 - Limited concurrent access
@@ -466,6 +454,7 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/openbadges
 ```
 
 **Advantages:**
+
 - Full ACID compliance
 - Concurrent writes
 - Advanced features (JSONB, arrays, full-text search)
@@ -479,11 +468,11 @@ new Kysely<DB>({
   dialect: new PostgresDialect({
     pool: new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 20,  // Max connections
+      max: 20, // Max connections
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000
-    })
-  })
+      connectionTimeoutMillis: 2000,
+    }),
+  }),
 })
 ```
 
@@ -493,7 +482,7 @@ new Kysely<DB>({
 
 ```typescript
 // Good: Atomic operation
-await withTransaction(db, async (trx) => {
+await withTransaction(db, async trx => {
   await trx.deleteFrom('user_sessions').where('user_id', '=', userId).execute()
   await trx.deleteFrom('oauth_providers').where('user_id', '=', userId).execute()
   await trx.deleteFrom('users').where('id', '=', userId).execute()
@@ -511,7 +500,7 @@ await db.deleteFrom('users').where('id', '=', userId).execute()
 // Kysely automatically parameterizes values - safe from SQL injection
 const user = await db
   .selectFrom('users')
-  .where('email', '=', userInput)  // Parameterized
+  .where('email', '=', userInput) // Parameterized
   .selectAll()
   .executeTakeFirst()
 ```
@@ -543,15 +532,9 @@ const users = await db
 ```typescript
 // Scheduled cleanup for expired sessions
 async function cleanupExpiredSessions() {
-  await db
-    .deleteFrom('user_sessions')
-    .where('expires_at', '<', new Date())
-    .execute()
+  await db.deleteFrom('user_sessions').where('expires_at', '<', new Date()).execute()
 
-  await db
-    .deleteFrom('oauth_sessions')
-    .where('expires_at', '<', new Date())
-    .execute()
+  await db.deleteFrom('oauth_sessions').where('expires_at', '<', new Date()).execute()
 }
 ```
 
@@ -569,7 +552,7 @@ const db = new Kysely<DB>({
       console.log('Parameters:', event.query.parameters)
       console.log('Duration:', event.queryDurationMillis, 'ms')
     }
-  }
+  },
 })
 ```
 

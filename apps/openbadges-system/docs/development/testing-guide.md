@@ -4,12 +4,12 @@ This guide covers the testing architecture, patterns, and best practices for ope
 
 ## Testing Stack
 
-| Tool | Purpose | Environment |
-|------|---------|-------------|
-| Vitest | Client-side unit/integration tests | jsdom |
-| Bun test | Server-side unit tests | Bun runtime |
-| Vue Test Utils | Vue component testing | jsdom |
-| @testing-library/vue | DOM testing utilities | jsdom |
+| Tool                 | Purpose                            | Environment |
+| -------------------- | ---------------------------------- | ----------- |
+| Vitest               | Client-side unit/integration tests | jsdom       |
+| Bun test             | Server-side unit tests             | Bun runtime |
+| Vue Test Utils       | Vue component testing              | jsdom       |
+| @testing-library/vue | DOM testing utilities              | jsdom       |
 
 ## Directory Structure
 
@@ -84,12 +84,12 @@ describe('UserCard', () => {
     id: '1',
     name: 'Test User',
     email: 'test@example.com',
-    role: 'user' as const
+    role: 'user' as const,
   }
 
   it('renders user name', () => {
     const wrapper = mount(UserCard, {
-      props: { user: mockUser }
+      props: { user: mockUser },
     })
 
     expect(wrapper.text()).toContain('Test User')
@@ -98,7 +98,7 @@ describe('UserCard', () => {
   it('displays admin badge for admin users', () => {
     const adminUser = { ...mockUser, role: 'admin' as const }
     const wrapper = mount(UserCard, {
-      props: { user: adminUser }
+      props: { user: adminUser },
     })
 
     expect(wrapper.find('.admin-badge').exists()).toBe(true)
@@ -106,7 +106,7 @@ describe('UserCard', () => {
 
   it('emits edit event when edit button clicked', async () => {
     const wrapper = mount(UserCard, {
-      props: { user: mockUser, editable: true }
+      props: { user: mockUser, editable: true },
     })
 
     await wrapper.find('[data-testid="edit-button"]').trigger('click')
@@ -147,7 +147,7 @@ describe('useAuth', () => {
 
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ token: 'jwt-token', user: mockUser })
+      json: () => Promise.resolve({ token: 'jwt-token', user: mockUser }),
     } as Response)
 
     const { login, user, isAuthenticated } = useAuth()
@@ -185,9 +185,7 @@ describe('BadgeDetail Page', () => {
   it('displays badge information', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [
-        { path: '/badges/:id', component: BadgeDetail }
-      ]
+      routes: [{ path: '/badges/:id', component: BadgeDetail }],
     })
 
     await router.push('/badges/123')
@@ -195,8 +193,8 @@ describe('BadgeDetail Page', () => {
 
     const wrapper = mount(BadgeDetail, {
       global: {
-        plugins: [router]
-      }
+        plugins: [router],
+      },
     })
 
     // Wait for async data
@@ -228,8 +226,8 @@ describe('User Routes', () => {
   it('GET /users returns user list for admin', async () => {
     const res = await app.request('/users', {
       headers: {
-        'Authorization': 'Bearer admin-token'
-      }
+        Authorization: 'Bearer admin-token',
+      },
     })
 
     expect(res.status).toBe(200)
@@ -246,8 +244,8 @@ describe('User Routes', () => {
   it('GET /users/:id returns specific user', async () => {
     const res = await app.request('/users/123', {
       headers: {
-        'Authorization': 'Bearer user-token'
-      }
+        Authorization: 'Bearer user-token',
+      },
     })
 
     expect(res.status).toBe(200)
@@ -277,7 +275,7 @@ describe('UserService', () => {
       insertInto: mock(() => mockDb),
       values: mock(() => mockDb),
       returningAll: mock(() => mockDb),
-      executeTakeFirstOrThrow: mock(() => Promise.resolve({}))
+      executeTakeFirstOrThrow: mock(() => Promise.resolve({})),
     }
 
     service = new UserService(mockDb)
@@ -317,7 +315,7 @@ describe('JWT Service', () => {
   const testUser = {
     id: 'user-123',
     email: 'test@example.com',
-    role: 'user' as const
+    role: 'user' as const,
   }
 
   it('generates valid JWT token', async () => {
@@ -325,7 +323,7 @@ describe('JWT Service', () => {
 
     expect(token).toBeDefined()
     expect(typeof token).toBe('string')
-    expect(token.split('.')).toHaveLength(3)  // JWT has 3 parts
+    expect(token.split('.')).toHaveLength(3) // JWT has 3 parts
   })
 
   it('verifies generated token', async () => {
@@ -363,7 +361,7 @@ vi.stubGlobal('fetch', vi.fn())
 // Setup mock response
 vi.mocked(fetch).mockResolvedValue({
   ok: true,
-  json: () => Promise.resolve({ data: 'test' })
+  json: () => Promise.resolve({ data: 'test' }),
 } as Response)
 
 // Reset between tests
@@ -379,17 +377,16 @@ beforeEach(() => {
 function createMockDb() {
   const data: Record<string, any[]> = {
     users: [],
-    user_sessions: []
+    user_sessions: [],
   }
 
   return {
     selectFrom: (table: string) => ({
       where: (col: string, op: string, val: any) => ({
         selectAll: () => ({
-          executeTakeFirst: () =>
-            Promise.resolve(data[table].find(r => r[col] === val))
-        })
-      })
+          executeTakeFirst: () => Promise.resolve(data[table].find(r => r[col] === val)),
+        }),
+      }),
     }),
     insertInto: (table: string) => ({
       values: (row: any) => ({
@@ -397,10 +394,10 @@ function createMockDb() {
           executeTakeFirstOrThrow: () => {
             data[table].push(row)
             return Promise.resolve(row)
-          }
-        })
-      })
-    })
+          },
+        }),
+      }),
+    }),
   }
 }
 ```
@@ -411,12 +408,12 @@ function createMockDb() {
 // Mock navigator.credentials for WebAuthn tests
 const mockCredentials = {
   create: vi.fn(),
-  get: vi.fn()
+  get: vi.fn(),
 }
 
 Object.defineProperty(navigator, 'credentials', {
   value: mockCredentials,
-  writable: true
+  writable: true,
 })
 
 // Mock successful registration
@@ -425,9 +422,9 @@ mockCredentials.create.mockResolvedValue({
   rawId: new ArrayBuffer(32),
   response: {
     clientDataJSON: new ArrayBuffer(100),
-    attestationObject: new ArrayBuffer(200)
+    attestationObject: new ArrayBuffer(200),
   },
-  type: 'public-key'
+  type: 'public-key',
 })
 ```
 
@@ -462,8 +459,8 @@ describe('Auth API Integration', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: 'new@example.com',
-        name: 'New User'
-      })
+        name: 'New User',
+      }),
     })
 
     expect(registerRes.status).toBe(201)
@@ -474,7 +471,7 @@ describe('Auth API Integration', () => {
     const loginRes = await fetch(`${server.url}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'new@example.com' })
+      body: JSON.stringify({ email: 'new@example.com' }),
     })
 
     expect(loginRes.status).toBe(200)
@@ -483,7 +480,7 @@ describe('Auth API Integration', () => {
 
     // Access protected route
     const meRes = await fetch(`${server.url}/api/auth/me`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     })
 
     expect(meRes.status).toBe(200)
@@ -513,9 +510,13 @@ beforeAll(() => {
   const store: Record<string, string> = {}
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => { store[key] = value },
-    removeItem: (key: string) => { delete store[key] },
-    clear: () => Object.keys(store).forEach(k => delete store[k])
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => Object.keys(store).forEach(k => delete store[k]),
   })
 })
 ```
@@ -532,7 +533,7 @@ export function createTestUser(overrides = {}) {
     role: 'user' as const,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    ...overrides
+    ...overrides,
   }
 }
 
@@ -544,7 +545,7 @@ export function createTestBadge(overrides = {}) {
     image: 'https://example.com/badge.png',
     criteria: 'Complete the test',
     issuerId: 'issuer-1',
-    ...overrides
+    ...overrides,
   }
 }
 ```
@@ -557,20 +558,17 @@ import { mount, MountingOptions } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { Component } from 'vue'
 
-export function mountWithPlugins(
-  component: Component,
-  options: MountingOptions<any> = {}
-) {
+export function mountWithPlugins(component: Component, options: MountingOptions<any> = {}) {
   return mount(component, {
     global: {
       plugins: [createPinia()],
       stubs: {
         RouterLink: true,
-        RouterView: true
+        RouterView: true,
       },
-      ...options.global
+      ...options.global,
     },
-    ...options
+    ...options,
   })
 }
 ```
@@ -590,17 +588,11 @@ export default defineConfig({
         statements: 70,
         branches: 70,
         functions: 70,
-        lines: 70
+        lines: 70,
       },
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.d.ts',
-        '**/__tests__/**',
-        '**/test/**'
-      ]
-    }
-  }
+      exclude: ['node_modules/', 'dist/', '**/*.d.ts', '**/__tests__/**', '**/test/**'],
+    },
+  },
 })
 ```
 

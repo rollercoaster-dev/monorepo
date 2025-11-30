@@ -4,13 +4,13 @@ The openbadges-system frontend is built with Vue 3 using the Composition API, Vi
 
 ## Technology Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Vue 3 | ^3.5 | Reactive UI framework |
-| Vite | ^6.0 | Build tool and dev server |
-| TailwindCSS | ^4.0 | Utility-first CSS |
-| unplugin-vue-router | ^0.10 | File-based routing |
-| unplugin-auto-import | ^19.0 | Auto-import composables |
+| Technology           | Version | Purpose                   |
+| -------------------- | ------- | ------------------------- |
+| Vue 3                | ^3.5    | Reactive UI framework     |
+| Vite                 | ^6.0    | Build tool and dev server |
+| TailwindCSS          | ^4.0    | Utility-first CSS         |
+| unplugin-vue-router  | ^0.10   | File-based routing        |
+| unplugin-auto-import | ^19.0   | Auto-import composables   |
 
 ## Directory Structure
 
@@ -65,7 +65,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  editable: false
+  editable: false,
 })
 
 const emit = defineEmits<{
@@ -84,9 +84,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const { user, isAuthenticated } = useAuth()
 
-const greeting = computed(() =>
-  isAuthenticated.value ? `Hello, ${user.value?.name}` : 'Welcome'
-)
+const greeting = computed(() => (isAuthenticated.value ? `Hello, ${user.value?.name}` : 'Welcome'))
 </script>
 ```
 
@@ -136,7 +134,7 @@ export function useAuth() {
     isAdmin,
     login,
     logout,
-    checkAuth
+    checkAuth,
   }
 }
 ```
@@ -212,12 +210,12 @@ Authentication guards protect routes:
 ```typescript
 // In page component
 definePageMeta({
-  middleware: ['auth']
+  middleware: ['auth'],
 })
 
 // Or for admin routes
 definePageMeta({
-  middleware: ['auth', 'admin']
+  middleware: ['auth', 'admin'],
 })
 ```
 
@@ -246,32 +244,32 @@ export default defineConfig({
     vue(),
     VueRouter({
       routesFolder: 'src/client/pages',
-      dts: 'src/client/typed-router.d.ts'
+      dts: 'src/client/typed-router.d.ts',
     }),
     AutoImport({
       imports: ['vue', 'vue-router'],
-      dts: 'src/client/auto-imports.d.ts'
+      dts: 'src/client/auto-imports.d.ts',
     }),
     Components({
       dirs: ['src/client/components'],
-      dts: 'src/client/components.d.ts'
-    })
+      dts: 'src/client/components.d.ts',
+    }),
   ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src/client'),
-      '@server': resolve(__dirname, 'src/server')
-    }
+      '@server': resolve(__dirname, 'src/server'),
+    },
   },
   server: {
     port: 7777,
     proxy: {
       '/api': {
         target: 'http://localhost:8888',
-        changeOrigin: true
-      }
-    }
-  }
+        changeOrigin: true,
+      },
+    },
+  },
 })
 ```
 
@@ -293,9 +291,9 @@ const { user: currentUser } = useAuth()
 
 ### Path Aliases
 
-| Alias | Path | Usage |
-|-------|------|-------|
-| `@/` | `src/client/` | Frontend code |
+| Alias      | Path          | Usage                       |
+| ---------- | ------------- | --------------------------- |
+| `@/`       | `src/client/` | Frontend code               |
 | `@server/` | `src/server/` | Backend code (shared types) |
 
 ## Styling
