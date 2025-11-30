@@ -1,6 +1,6 @@
 ---
 name: dev-orchestrator
-description: Orchestrates the full development workflow from issue to merged PR. Invokes issue-researcher, atomic-developer, pr-creator, and review-handler agents in sequence, passing data between them. Use when starting work on a GitHub issue.
+description: Orchestrates the full development workflow from issue to merged PR. Coordinates issue-researcher, atomic-developer/feature-executor, pr-creator/pr-finalizer, and review-handler agents. Use when starting work on a GitHub issue.
 tools: Bash, Read, Glob, Grep, Task
 model: sonnet
 ---
@@ -9,11 +9,11 @@ model: sonnet
 
 ## Purpose
 
-Orchestrates the complete development workflow by invoking specialized agents in sequence and passing data between them. Acts as a project manager coordinating:
+Orchestrates the complete development workflow by coordinating specialized agents in sequence. Acts as a project manager guiding:
 
-1. **issue-researcher** → Creates dev plan
-2. **atomic-developer** → Implements with atomic commits
-3. **pr-creator** → Creates PR, triggers reviews
+1. **issue-researcher** → Creates dev plan, checks dependencies
+2. **atomic-developer** OR **feature-executor** → Implements with atomic commits
+3. **pr-creator** OR **pr-finalizer** → Creates PR, triggers reviews
 4. **review-handler** → Addresses feedback
 
 ## When to Use
@@ -37,8 +37,22 @@ Required:
 Optional:
 
 - **Skip phases**: Array of phases to skip (for resuming)
+- **Complexity hint**: `simple` | `complex` (affects agent selection)
 
 ## Workflow
+
+### Phase 0: Check Dependencies (NEW)
+
+Before starting any work, verify the issue can be worked on:
+
+```bash
+gh issue view <number> --json body | grep -iE "(blocked by|depends on) #[0-9]+"
+```
+
+**Decision logic:**
+- If "Blocked by #X" dependencies are open → STOP and warn user
+- If "Depends on #X" dependencies are open → WARN but can proceed
+- If no dependencies or all met → Continue
 
 ### Phase 1: Research
 
@@ -50,9 +64,12 @@ Task(subagent_type: "issue-researcher", prompt: "
 
   Create a development plan at .claude/dev-plans/issue-{number}.md
 
+  Include dependency check in the plan.
+
   Return:
   - Issue summary
-  - Complexity assessment
+  - Complexity assessment (TRIVIAL/SMALL/MEDIUM/LARGE)
+  - Dependency status
   - Path to dev plan file
 ")
 ```
@@ -60,12 +77,22 @@ Task(subagent_type: "issue-researcher", prompt: "
 **Pass to next phase:**
 
 - Dev plan path
-- Complexity estimate
+- Complexity estimate (determines which implementation agent)
+- Dependency status
 - Affected files list
 
 ### Phase 2: Implement
 
-**Invoke atomic-developer agent:**
+**Choose implementation agent based on complexity:**
+
+| Complexity | Commits | Agent |
+|------------|---------|-------|
+| TRIVIAL | 1-2 | atomic-developer |
+| SMALL | 2-4 | atomic-developer |
+| MEDIUM | 4-8 | feature-executor |
+| LARGE | 8+ | feature-executor (or split issue) |
+
+**For simple work (atomic-developer):**
 
 ```
 Task(subagent_type: "atomic-developer", prompt: "
@@ -84,6 +111,24 @@ Task(subagent_type: "atomic-developer", prompt: "
 ")
 ```
 
+**For complex work (feature-executor):**
+
+```
+Task(subagent_type: "feature-executor", prompt: "
+  Execute the development plan for issue #{number}.
+
+  Dev plan: .claude/dev-plans/issue-{number}.md
+
+  Mode: interactive (pause after each step)
+
+  Return:
+  - Branch name
+  - Commit count
+  - Validation results
+  - Any deviations from plan
+")
+```
+
 **Pass to next phase:**
 
 - Branch name
@@ -92,7 +137,14 @@ Task(subagent_type: "atomic-developer", prompt: "
 
 ### Phase 3: Create PR
 
-**Invoke pr-creator agent:**
+**Choose PR agent based on complexity:**
+
+| Complexity | Agent | Use When |
+|------------|-------|----------|
+| TRIVIAL/SMALL | pr-creator | Simple PRs, single issue |
+| MEDIUM/LARGE | pr-finalizer | Complex PRs, multiple issues |
+
+**For simple PRs (pr-creator):**
 
 ```
 Task(subagent_type: "pr-creator", prompt: "
@@ -106,6 +158,26 @@ Task(subagent_type: "pr-creator", prompt: "
   Return:
   - PR number
   - PR URL
+")
+```
+
+**For complex PRs (pr-finalizer):**
+
+```
+Task(subagent_type: "pr-finalizer", prompt: "
+  Finalize and create PR for issue #{number}.
+
+  Branch: {branch-name}
+  Related issues: {sub-issues if any}
+
+  Create comprehensive PR description.
+  Close any sub-issues.
+  Trigger reviews.
+
+  Return:
+  - PR number
+  - PR URL
+  - Issues closed
 ")
 ```
 
@@ -143,7 +215,7 @@ Task(subagent_type: "review-handler", prompt: "
 **Update project board:**
 
 ```bash
-# Set to "Done" status
+# Set to "Done" status (after merge)
 gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ ...
 ```
 
@@ -158,33 +230,49 @@ Issue: #{number}
 PR: #{pr-number} - {url}
 Status: Ready for merge
 
+Complexity: {TRIVIAL|SMALL|MEDIUM|LARGE}
 Commits: {n}
 Lines: +{added} / -{removed}
-Time: {duration}
+
+Agents used:
+- issue-researcher → dev plan
+- {atomic-developer|feature-executor} → implementation
+- {pr-creator|pr-finalizer} → PR
+
 ═══════════════════════════════════════════════════════
 ```
 
 ## Data Flow
 
 ```
-┌─────────────────┐
-│ issue-researcher│ ──→ dev plan file
-└────────┬────────┘     (.claude/dev-plans/issue-N.md)
-         │
-         ▼
-┌─────────────────┐
-│ atomic-developer│ ──→ git branch + commits
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   pr-creator    │ ──→ PR number + URL
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ review-handler  │ ──→ fixes committed
-└─────────────────┘
+┌─────────────────────┐
+│  issue-researcher   │ ──→ dev plan + complexity assessment
+└─────────┬───────────┘     (.claude/dev-plans/issue-N.md)
+          │
+          ▼
+┌─────────────────────┐
+│  COMPLEXITY CHECK   │
+│  TRIVIAL/SMALL?     │──→ atomic-developer
+│  MEDIUM/LARGE?      │──→ feature-executor
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  git branch +       │
+│  atomic commits     │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  COMPLEXITY CHECK   │
+│  TRIVIAL/SMALL?     │──→ pr-creator
+│  MEDIUM/LARGE?      │──→ pr-finalizer
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  review-handler     │ ──→ fixes committed
+└─────────────────────┘
 ```
 
 ## Error Handling
