@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { z } from 'zod'
 import { userService } from '../services/user'
 import { jwtService } from '../services/jwt'
@@ -109,7 +110,10 @@ publicAuthRoutes.get('/users/lookup', async c => {
       return c.json({ exists: false })
     }
   } catch (err) {
-    logger.error('Error looking up user', { error: err })
+    logger.logError('Error looking up user', err as Error, {
+      requestId: getCurrentRequestId(),
+      identifier: c.req.query('username') || c.req.query('email'),
+    })
     return c.json({ error: 'Failed to lookup user' }, 500)
   }
 })
@@ -167,7 +171,9 @@ publicAuthRoutes.post('/users/register', async c => {
       201
     )
   } catch (err) {
-    logger.error('Error creating user during registration', { error: err })
+    logger.logError('Error creating user during registration', err as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to create user' }, 500)
   }
 })
@@ -202,7 +208,10 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
     await userService.addUserCredential(userId, parsed.data)
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error adding user credential', { error: err, userId: c.req.param('id') })
+    logger.logError('Error adding user credential', err as Error, {
+      requestId: getCurrentRequestId(),
+      userId: c.req.param('id'),
+    })
     return c.json({ error: 'Failed to add credential' }, 500)
   }
 })
@@ -243,8 +252,8 @@ publicAuthRoutes.patch('/users/:userId/credentials/:credentialId', async c => {
     await userService.updateUserCredential(userId, credentialId, { lastUsed: parsed.data.lastUsed })
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error updating credential', {
-      error: err,
+    logger.logError('Error updating credential', err as Error, {
+      requestId: getCurrentRequestId(),
       userId: c.req.param('userId'),
       credentialId: c.req.param('credentialId'),
     })
@@ -285,7 +294,10 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (err) {
-    logger.error('Error generating token', { error: err, userId: c.req.param('id') })
+    logger.logError('Error generating token', err as Error, {
+      requestId: getCurrentRequestId(),
+      userId: c.req.param('id'),
+    })
     return c.json({ error: 'Failed to generate token' }, 500)
   }
 })
