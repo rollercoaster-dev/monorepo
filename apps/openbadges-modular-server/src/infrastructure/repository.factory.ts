@@ -97,9 +97,8 @@ export class RepositoryFactory {
           if (!RepositoryFactory.sqliteConnectionManager) {
             // Create shared SQLite connection manager for resource management
             const { Database } = await import("bun:sqlite");
-            const { SqliteConnectionManager } = await import(
-              "./database/modules/sqlite/connection/sqlite-connection.manager"
-            );
+            const { SqliteConnectionManager } =
+              await import("./database/modules/sqlite/connection/sqlite-connection.manager");
 
             const sqliteFile = config.sqliteFile || ":memory:";
             const client = new Database(sqliteFile);

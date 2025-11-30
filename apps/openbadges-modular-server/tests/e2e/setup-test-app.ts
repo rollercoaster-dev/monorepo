@@ -892,12 +892,10 @@ export async function setupTestApp(
       await RepositoryFactory.createStatusListRepository();
 
     // Initialize services
-    const { StatusListService } = await import(
-      "../../src/core/status-list.service"
-    );
-    const { CredentialStatusService } = await import(
-      "../../src/core/credential-status.service"
-    );
+    const { StatusListService } =
+      await import("../../src/core/status-list.service");
+    const { CredentialStatusService } =
+      await import("../../src/core/credential-status.service");
 
     const statusListService = new StatusListService(statusListRepository);
     const credentialStatusService = new CredentialStatusService(
@@ -918,9 +916,8 @@ export async function setupTestApp(
     );
 
     // Create JWKS controller
-    const { JwksController } = await import(
-      "../../src/api/controllers/jwks.controller"
-    );
+    const { JwksController } =
+      await import("../../src/api/controllers/jwks.controller");
     const jwksController = new JwksController();
 
     // Create API router with controllers

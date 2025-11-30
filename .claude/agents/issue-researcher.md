@@ -58,6 +58,49 @@ Optional:
    gh issue view <number> --json body | grep -oE '#[0-9]+'
    ```
 
+### Phase 1.5: Check Dependencies
+
+**Parse dependency markers from issue body:**
+
+Look for these patterns (case-insensitive):
+
+- `Blocked by #X` - Hard blocker, must be resolved first
+- `Depends on #X` - Soft dependency, recommended to complete first
+- `After #X` - Sequential work, should wait
+- `- [ ] #X` - Checkbox dependency in Dependencies section
+
+**Check status of each dependency:**
+
+```bash
+# For each dependency number found:
+gh issue view <dep-number> --json state,title,number
+
+# Check if there's a merged PR for it:
+gh pr list --state merged --search "closes #<dep-number>" --json number,title,mergedAt
+```
+
+**Dependency Status Report:**
+
+| Dependency | Status              | Blocker? |
+| ---------- | ------------------- | -------- |
+| #X: Title  | ✅ Closed / 🔴 Open | Yes/No   |
+
+**Decision logic:**
+
+- If ANY "Blocked by" dependency is open → STOP and warn user
+- If "Depends on" dependencies are open → WARN but allow proceeding
+- Report all dependency statuses in the dev plan
+
+**Example warning:**
+
+```
+⚠️ BLOCKED: This issue depends on #164 which is still open.
+   #164: "Implement SQLite API Key repository"
+   Status: Open (no PR yet)
+
+   Recommendation: Work on #164 first, or confirm with user to proceed anyway.
+```
+
 ### Phase 2: Research Codebase
 
 1. **Identify affected areas:**
@@ -111,6 +154,14 @@ Generate a detailed plan document:
 **Type**: <feature|bug|enhancement|refactor>
 **Complexity**: <TRIVIAL|SMALL|MEDIUM|LARGE>
 **Estimated Lines**: ~<n> lines
+
+## Dependencies
+
+| Issue | Title | Status            | Type         |
+| ----- | ----- | ----------------- | ------------ |
+| #X    | ...   | ✅ Met / 🔴 Unmet | Blocker/Soft |
+
+**Status**: ✅ All dependencies met / ⚠️ Has unmet dependencies
 
 ## Objective
 
