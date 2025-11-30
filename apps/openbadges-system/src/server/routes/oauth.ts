@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { oauthService } from '../services/oauth'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
@@ -17,7 +18,9 @@ oauthRoutes.get('/providers', async c => {
       providers,
     })
   } catch (error) {
-    logger.error('Failed to get OAuth providers', { error })
+    logger.logError('Failed to get OAuth providers', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         success: false,
@@ -48,7 +51,9 @@ oauthRoutes.get('/github', async c => {
       state,
     })
   } catch (error) {
-    logger.error('GitHub OAuth initialization failed', { error })
+    logger.logError('GitHub OAuth initialization failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         success: false,
@@ -67,7 +72,10 @@ oauthRoutes.get('/github/callback', async c => {
     const error = c.req.query('error')
 
     if (error) {
-      logger.error('GitHub OAuth error from provider', { error })
+      logger.warn('GitHub OAuth error from provider', {
+        error,
+        requestId: getCurrentRequestId(),
+      })
       return c.json(
         {
           success: false,
@@ -155,7 +163,10 @@ oauthRoutes.get('/github/callback', async c => {
         })
       }
     } catch (syncError) {
-      logger.error('Error syncing user with badge server', { error: syncError, userId: user.id })
+      logger.logError('Error syncing user with badge server', syncError as Error, {
+        userId: user.id,
+        requestId: getCurrentRequestId(),
+      })
     }
 
     // Generate JWT token for authentication
@@ -216,7 +227,9 @@ oauthRoutes.get('/github/callback', async c => {
       return c.redirect(callbackUrl.toString())
     }
   } catch (error) {
-    logger.error('GitHub OAuth callback failed', { error })
+    logger.logError('GitHub OAuth callback failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
 
     // Provide more specific error messages for debugging
     let errorMessage = 'OAuth authentication failed'
@@ -266,7 +279,10 @@ oauthRoutes.delete('/:provider', async c => {
       message: `${provider} account unlinked successfully`,
     })
   } catch (error) {
-    logger.error('Failed to unlink OAuth provider', { error, provider: c.req.param('provider') })
+    logger.logError('Failed to unlink OAuth provider', error as Error, {
+      provider: c.req.param('provider'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         success: false,
@@ -310,7 +326,10 @@ oauthRoutes.get('/user/:userId/providers', async c => {
       providers,
     })
   } catch (error) {
-    logger.error('Failed to get user OAuth providers', { error, userId: c.req.param('userId') })
+    logger.logError('Failed to get user OAuth providers', error as Error, {
+      userId: c.req.param('userId'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         success: false,
@@ -331,7 +350,9 @@ oauthRoutes.post('/cleanup', async c => {
       message: 'Expired OAuth sessions cleaned up',
     })
   } catch (error) {
-    logger.error('Failed to cleanup OAuth sessions', { error })
+    logger.logError('Failed to cleanup OAuth sessions', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         success: false,

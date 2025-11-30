@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { jwtService } from '../services/jwt'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
@@ -25,7 +26,9 @@ authRoutes.get('/validate', async c => {
 
     return c.json({ success: true, payload })
   } catch (error) {
-    logger.error('Token validation failed', { error })
+    logger.logError('Token validation failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ success: false, error: 'Validation error' }, 500)
   }
 })
@@ -72,7 +75,9 @@ authRoutes.post('/platform-token', requireAdmin, async c => {
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (error) {
-    logger.error('Platform token generation failed', { error })
+    logger.logError('Platform token generation failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to generate platform token' }, 500)
   }
 })
@@ -119,7 +124,9 @@ authRoutes.post('/oauth-token', requireAuth, async c => {
       expires_at: provider.token_expires_at,
     })
   } catch (error) {
-    logger.error('OAuth token retrieval failed', { error })
+    logger.logError('OAuth token retrieval failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to get OAuth token' }, 500)
   }
 })
@@ -166,7 +173,9 @@ authRoutes.post('/oauth-token/refresh', requireAuth, async c => {
     // For other providers, implement token refresh logic here
     return c.json({ error: 'Token refresh not implemented for this provider' }, 501)
   } catch (error) {
-    logger.error('OAuth token refresh failed', { error })
+    logger.logError('OAuth token refresh failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to refresh OAuth token' }, 500)
   }
 })
@@ -214,7 +223,9 @@ authRoutes.post('/sync-user', requireAuth, async c => {
       )
     }
   } catch (error) {
-    logger.error('User sync failed', { error })
+    logger.logError('User sync failed', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to sync user' }, 500)
   }
 })
@@ -249,7 +260,10 @@ authRoutes.get(
         )
       }
     } catch (error) {
-      logger.error('Failed to get badge server profile', { error, userId: c.req.param('userId') })
+      logger.logError('Failed to get badge server profile', error as Error, {
+        userId: c.req.param('userId'),
+        requestId: getCurrentRequestId(),
+      })
       return c.json({ error: 'Failed to get profile' }, 500)
     }
   }

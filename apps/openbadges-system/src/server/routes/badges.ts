@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { jwtService } from '../services/jwt'
 import { logger } from '../utils/logger'
 
@@ -37,7 +38,9 @@ async function safeJsonResponse(response: Response): Promise<JSONValue> {
     // Fallback to empty object for invalid JSON values
     return {}
   } catch (error) {
-    logger.error('Error parsing JSON response', { error })
+    logger.logError('Error parsing JSON response', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
 
     return {}
   }
@@ -73,7 +76,9 @@ badgesRoutes.post('/verify', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    logger.error('Error processing verification request', { error })
+    logger.logError('Error processing verification request', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json(
       {
         valid: false,
@@ -122,7 +127,10 @@ badgesRoutes.get('/assertions/:id', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    logger.error('Error retrieving assertion', { error, assertionId })
+    logger.logError('Error retrieving assertion', error as Error, {
+      assertionId,
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to retrieve assertion' }, 500)
   }
 })
@@ -155,7 +163,9 @@ badgesRoutes.get('/badge-classes', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    logger.error('Error retrieving badge classes', { error })
+    logger.logError('Error retrieving badge classes', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to retrieve badge classes' }, 500)
   }
 })
@@ -196,7 +206,10 @@ badgesRoutes.get('/badge-classes/:id', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    logger.error('Error retrieving badge class', { error, badgeClassId })
+    logger.logError('Error retrieving badge class', error as Error, {
+      badgeClassId,
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to retrieve badge class' }, 500)
   }
 })
@@ -226,7 +239,10 @@ badgesRoutes.get('/revocation-list', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as 200)
   } catch (error) {
-    logger.warn('Error retrieving revocation list, returning empty list', { error })
+    logger.warn('Error retrieving revocation list, returning empty list', {
+      error,
+      requestId: getCurrentRequestId(),
+    })
     // If revocation service is unavailable, return empty list (fail open)
     return c.json([])
   }
@@ -318,7 +334,10 @@ badgesRoutes.all('/*', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    logger.error('Error proxying badges request', { error, path: c.req.path })
+    logger.logError('Error proxying badges request', error as Error, {
+      path: c.req.path,
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to communicate with OpenBadges server' }, 500)
   }
 })

@@ -1,12 +1,12 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { honoLogger, honoErrorHandler, getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { userRoutes } from './routes/users'
 import { authRoutes } from './routes/auth'
 import { badgesRoutes } from './routes/badges'
 import { oauthRoutes } from './routes/oauth'
 import { publicAuthRoutes } from './routes/public-auth'
 import { requireAuth } from './middleware/auth'
-import { requestContextMiddleware } from './middleware/request-context'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
 import { logger } from './utils/logger'
@@ -25,7 +25,17 @@ type JSONValue =
 const app = new Hono()
 
 // Middleware
-app.use('*', requestContextMiddleware)
+app.use(
+  '*',
+  honoLogger({
+    loggerInstance: logger,
+    skip: c => {
+      const path = new URL(c.req.url).pathname
+      return path === '/api/health' || path === '/favicon.ico'
+    },
+  })
+)
+app.onError(honoErrorHandler(logger))
 app.use(
   '*',
   cors({
@@ -68,7 +78,9 @@ app.get('/.well-known/jwks.json', async c => {
 
     return c.json(jwks)
   } catch (error) {
-    logger.error('Error generating JWKS', { error })
+    logger.logError('Error generating JWKS', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to generate JWKS' }, 500)
   }
 })
@@ -101,7 +113,9 @@ async function safeJsonResponse(response: Response): Promise<JSONValue> {
     // Fallback to empty object for invalid JSON values
     return {}
   } catch (error) {
-    logger.error('Error parsing JSON response', { error })
+    logger.logError('Error parsing JSON response', error as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return {}
   }
 }
@@ -184,10 +198,10 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as 200 | 201 | 400 | 401 | 403 | 404 | 500)
   } catch (error) {
-    logger.error('Error proxying request to OpenBadges server', {
-      error,
+    logger.logError('Error proxying request to OpenBadges server', error as Error, {
       serverUrl: openbadgesUrl,
       requestPath: c.req.path,
+      requestId: getCurrentRequestId(),
     })
     return c.json({ error: 'Failed to communicate with local OpenBadges server' }, 500)
   }
@@ -199,7 +213,7 @@ if (oauthConfig.enabled) {
     validateOAuthConfig()
     logger.info('OAuth configuration validated successfully')
   } catch (error) {
-    logger.error('OAuth configuration validation failed', { error })
+    logger.logError('OAuth configuration validation failed', error as Error)
     process.exit(1)
   }
 } else {

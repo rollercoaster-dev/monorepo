@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { getCurrentRequestId } from '@rollercoaster-dev/rd-logger'
 import { z } from 'zod'
 import { userService } from '../services/user'
 import { requireAdmin, requireSelfOrAdminFromParam } from '../middleware/auth'
@@ -61,7 +62,9 @@ userRoutes.get('/', requireAdmin, async c => {
     const { users, total } = await userService.getUsers(page, limit, search, filters)
     return c.json({ users, total })
   } catch (err) {
-    logger.error('Error fetching users', { error: err })
+    logger.logError('Error fetching users', err as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to fetch users' }, 500)
   }
 })
@@ -85,7 +88,9 @@ userRoutes.post('/', requireAdmin, async c => {
     const newUser = await userService.createUser(parsed.data)
     return c.json(newUser, 201)
   } catch (err) {
-    logger.error('Error creating user', { error: err })
+    logger.logError('Error creating user', err as Error, {
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to create user' }, 500)
   }
 })
@@ -101,7 +106,10 @@ userRoutes.get('/:id', requireSelfOrAdminFromParam('id'), async c => {
     if (!user) return c.json({ error: 'User not found' }, 404)
     return c.json(user)
   } catch (err) {
-    logger.error('Error fetching user by ID', { error: err, userId: c.req.param('id') })
+    logger.logError('Error fetching user by ID', err as Error, {
+      userId: c.req.param('id'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to fetch user' }, 500)
   }
 })
@@ -127,7 +135,10 @@ userRoutes.put('/:id', requireSelfOrAdminFromParam('id'), async c => {
     if (!updatedUser) return c.json({ error: 'User not found' }, 404)
     return c.json(updatedUser)
   } catch (err) {
-    logger.error('Error updating user', { error: err, userId: c.req.param('id') })
+    logger.logError('Error updating user', err as Error, {
+      userId: c.req.param('id'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to update user' }, 500)
   }
 })
@@ -142,7 +153,10 @@ userRoutes.delete('/:id', requireAdmin, async c => {
     await userService.deleteUser(userId)
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error deleting user', { error: err, userId: c.req.param('id') })
+    logger.logError('Error deleting user', err as Error, {
+      userId: c.req.param('id'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to delete user' }, 500)
   }
 })
@@ -167,7 +181,10 @@ userRoutes.post('/:id/credentials', requireSelfOrAdminFromParam('id'), async c =
     await userService.addUserCredential(userId, parsed.data)
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error adding user credential', { error: err, userId: c.req.param('id') })
+    logger.logError('Error adding user credential', err as Error, {
+      userId: c.req.param('id'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to add credential' }, 500)
   }
 })
@@ -182,7 +199,10 @@ userRoutes.get('/:id/credentials', requireSelfOrAdminFromParam('id'), async c =>
     const credentials = await userService.getUserCredentials(userId)
     return c.json(credentials)
   } catch (err) {
-    logger.error('Error fetching user credentials', { error: err, userId: c.req.param('id') })
+    logger.logError('Error fetching user credentials', err as Error, {
+      userId: c.req.param('id'),
+      requestId: getCurrentRequestId(),
+    })
     return c.json({ error: 'Failed to fetch credentials' }, 500)
   }
 })
@@ -198,10 +218,10 @@ userRoutes.delete('/:id/credentials/:credentialId', requireSelfOrAdminFromParam(
     await userService.removeUserCredential(userId, credentialId)
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error removing user credential', {
-      error: err,
+    logger.logError('Error removing user credential', err as Error, {
       userId: c.req.param('id'),
       credentialId: c.req.param('credentialId'),
+      requestId: getCurrentRequestId(),
     })
     return c.json({ error: 'Failed to remove credential' }, 500)
   }
