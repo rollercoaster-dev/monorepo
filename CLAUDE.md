@@ -48,14 +48,14 @@ monorepo/
 
 Common dev dependencies are consolidated in the root `package.json` to ensure consistent versions across all packages:
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| `typescript` | `^5.8.3` | TypeScript compiler |
-| `eslint` | `^9.24.0` | Linting |
-| `prettier` | `^3.7.3` | Code formatting |
-| `@types/bun` | `latest` | Bun type definitions |
+| Dependency    | Version     | Purpose                  |
+| ------------- | ----------- | ------------------------ |
+| `typescript`  | `^5.8.3`    | TypeScript compiler      |
+| `eslint`      | `^9.24.0`   | Linting                  |
+| `prettier`    | `^3.7.3`    | Code formatting          |
+| `@types/bun`  | `latest`    | Bun type definitions     |
 | `@types/node` | `^22.15.21` | Node.js type definitions |
-| `turbo` | `^2.0.0` | Build orchestration |
+| `turbo`       | `^2.0.0`    | Build orchestration      |
 
 ### Package-Specific Dependencies
 
