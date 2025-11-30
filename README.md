@@ -147,8 +147,8 @@ bun test
 
 ### Published Packages (npm)
 
-- **[@rollercoaster-dev/openbadges-types](https://www.npmjs.com/package/@rollercoaster-dev/openbadges-types)**: TypeScript definitions for Open Badges 2.0 and 3.0
-- **[@rollercoaster-dev/openbadges-ui](https://www.npmjs.com/package/@rollercoaster-dev/openbadges-ui)**: Vue 3 component library with 7 neurodivergent-friendly themes
+- **[openbadges-types](https://www.npmjs.com/package/openbadges-types)**: TypeScript definitions for Open Badges 2.0 and 3.0
+- **[openbadges-ui](https://www.npmjs.com/package/openbadges-ui)**: Vue 3 component library with 7 neurodivergent-friendly themes
 - **[@rollercoaster-dev/rd-logger](https://www.npmjs.com/package/@rollercoaster-dev/rd-logger)**: Structured logging with ADHD-friendly formatting
 
 ### Internal Packages
