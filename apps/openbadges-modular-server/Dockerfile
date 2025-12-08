@@ -12,6 +12,7 @@ WORKDIR /build
 
 # Install system dependencies for better-sqlite3 and Node.js for native compilation
 # Node.js is needed because node-gyp requires real Node headers (Bun's fake version confuses it)
+# TODO: Remove Node.js installation when Bun properly supports node-gyp for native modules
 RUN apt-get update && \
     apt-get install -y libsqlite3-dev python3 make g++ curl && \
     curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
@@ -25,6 +26,7 @@ COPY package.json bun.lock* ./
 # Copy workspace packages that this app depends on
 COPY packages/rd-logger ./packages/rd-logger
 COPY packages/openbadges-types ./packages/openbadges-types
+# shared-config contains build/lint configs only - not needed in production image
 COPY packages/shared-config ./packages/shared-config
 
 # Copy the application package
