@@ -28,9 +28,9 @@
     "changeset:publish": "bunx changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "2.29.7",
+    "@changesets/cli": "2.29.8",
     "@types/bun": "latest",
-    "@types/node": "^22.15.21",
+    "@types/node": "^24.10.1",
     "eslint": "^9.24.0",
     "prettier": "^3.7.3",
     "turbo": "^2.0.0",

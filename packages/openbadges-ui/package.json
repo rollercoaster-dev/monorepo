@@ -54,7 +54,7 @@
     "node": ">=20.8.1"
   },
   "peerDependencies": {
-    "primevue": "^3.0.0",
+    "primevue": "^4.5.2",
     "vue": "^3.0.0"
   },
   "dependencies": {
@@ -69,17 +69,17 @@
     "@histoire/plugin-vue": "^0.17.6",
     "@rollercoaster-dev/shared-config": "workspace:*",
     "@types/uuid": "^9.0.0",
-    "@vitejs/plugin-vue": "^4.0.0",
-    "@vitest/coverage-istanbul": "^0.34.0",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@vitest/coverage-istanbul": "^4.0.15",
     "@vue/test-utils": "^2.4.0",
     "histoire": "^0.17.6",
-    "jsdom": "^22.1.0",
-    "primeicons": "^6.0.0",
-    "primevue": "^3.0.0",
+    "jsdom": "^27.3.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.2",
     "terser": "^5.39.0",
-    "vite": "^4.5.14",
+    "vite": "^7.2.7",
     "vue-tsc": "^3.0.1",
-    "vitest": "^0.34.0",
+    "vitest": "^4.0.15",
     "vue": "^3.0.0"
   },
   "publishConfig": {

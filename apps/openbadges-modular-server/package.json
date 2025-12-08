@@ -58,14 +58,14 @@
     ]
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@rollercoaster-dev/shared-config": "workspace:*",
     "@types/pg": "^8.11.13",
     "@typescript-eslint/parser": "^8.0.0",
-    "drizzle-kit": "^0.30.6",
+    "drizzle-kit": "^0.31.8",
     "get-port": "^7.1.0",
-    "lint-staged": "^15.5.1",
+    "lint-staged": "^16.2.7",
     "tsc-files": "^1.1.4"
   },
   "peerDependencies": {
