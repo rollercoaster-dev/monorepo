@@ -254,6 +254,7 @@ For each sub-issue or related issue:
 ### Phase 7: Update Project Board
 
 Use the `board-manager` skill to update status:
+
 ```
 Move issue #<issue-number> to "In Review"
 ```

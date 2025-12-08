@@ -184,6 +184,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 4. **Update GitHub Project Board - Set "In Progress":**
 
    Use the `board-manager` skill to update status:
+
    ```
    Move issue #<number> to "In Progress"
    ```

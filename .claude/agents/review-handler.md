@@ -226,6 +226,7 @@ If you disagree with a review comment:
 ### Phase 7: Update GitHub Project Board (After Merge)
 
 When PR is merged, use the `board-manager` skill to update status:
+
 ```
 Move issue #<issue-number> to "Done"
 ```

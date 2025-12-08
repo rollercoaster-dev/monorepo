@@ -228,6 +228,7 @@ Closes #<issue-number>
 ### Phase 5: Update GitHub Project Board - Set "In Review"
 
 Use the `board-manager` skill to update status:
+
 ```
 Move issue #<issue-number> to "In Review"
 ```

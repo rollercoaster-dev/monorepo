@@ -73,6 +73,7 @@ Structure PRs with:
 - Maintain migration tracking accuracy
 
 **Board Skills Reference:**
+
 - `board-status` skill: Check board status (read-only)
 - `board-manager` skill: Add issues, update status (write)
 
