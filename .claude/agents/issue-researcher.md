@@ -49,7 +49,7 @@ Optional:
 2. **Extract key information:**
    - Title and description
    - Acceptance criteria (if any)
-   - Labels (feature, bug, enhancement, etc.)
+   - Labels (bug, enhancement, test, ci, docker, cleanup, priority:_, type:tech-debt, pkg:_, app:\*)
    - Related issues or PRs mentioned
    - Any specific files or areas mentioned
 
