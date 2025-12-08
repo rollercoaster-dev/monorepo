@@ -23,6 +23,7 @@ None - this is a standalone configuration change.
 **File:** `.github/dependabot.yml`
 
 **Changes:**
+
 1. Configure npm ecosystem for root directory
    - Weekly update schedule
    - Group development dependencies
@@ -40,6 +41,7 @@ None - this is a standalone configuration change.
    - Only need root directory configuration (Dependabot auto-detects workspaces)
 
 **Rationale:**
+
 - Weekly schedule balances freshness with PR noise
 - Grouping dev dependencies reduces PR count
 - Conventional commit prefixes maintain consistency
