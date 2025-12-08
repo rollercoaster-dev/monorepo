@@ -29,12 +29,18 @@
       "Bash(gh issue view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr view:*)",
+      "Bash(gh project list:*)",
+      "Bash(gh project:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh label list:*)",
+      "Bash(gh api:*)",
       "Bash(tree:*)",
       "Bash(cat:*)",
-      "Bash(pnpm install:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm build:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(bun install:*)",
+      "Bash(bun test:*)",
+      "Bash(bun build:*)",
+      "Bash(bun dev:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

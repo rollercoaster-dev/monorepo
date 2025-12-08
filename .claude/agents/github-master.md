@@ -18,8 +18,8 @@ You are the GitHub Master Agent for the Rollercoaster.dev monorepo—an expert r
 
 **Project Context:**
 
-- Migration Phase 3 in progress (Nov 1 - Dec 12, 2025)
-- Project Board: https://github.com/orgs/rollercoaster-dev/projects/10
+- Migration complete (December 2025)
+- Project Board: https://github.com/orgs/rollercoaster-dev/projects/11
 - Uses Changesets for versioning, Bun workspaces, Turborepo
 - Neurodivergent-first UX philosophy
 
