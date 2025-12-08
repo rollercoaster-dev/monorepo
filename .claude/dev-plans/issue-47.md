@@ -1,30 +1,37 @@
 # Development Plan: Issue #47
 
 ## Issue Summary
+
 Simplify Docker workflow: auto-build on changes instead of version detection
 
 **Current Problem:**
+
 - Docker builds only trigger when package.json version changes
 - Requires manual version bumps before deployment
 - Easy to forget and feels unnecessarily manual
 
 **Goal:**
+
 - Auto-build Docker images on every merge to main that touches the app
 - Use commit SHA + semver + latest tags for flexibility
 - Eliminate manual version bump requirement for deployments
 
 ## Complexity Assessment
+
 **SMALL** (~150 lines modified)
+
 - Single workflow file modification
 - Documentation updates
 - No code changes to application logic
 - 2-3 atomic commits expected
 
 ## Dependencies
+
 - No blocking dependencies
 - Issue is ready for implementation
 
 ## Affected Files
+
 1. `.github/workflows/docker-openbadges-modular-server.yml` - Main workflow changes
 2. `CLAUDE.md` - Update Docker publishing section
 3. `apps/openbadges-modular-server/CLAUDE.md` - Update Docker publishing section
@@ -33,12 +40,14 @@ Simplify Docker workflow: auto-build on changes instead of version detection
 ## Implementation Steps
 
 ### Step 1: Update GitHub Actions Workflow
+
 **File:** `.github/workflows/docker-openbadges-modular-server.yml`
 
 **Changes:**
+
 1. Remove `check-version` job entirely (lines 37-79)
 2. Update `docker` job to remove dependency on version check:
-   - Remove `needs: check-version` 
+   - Remove `needs: check-version`
    - Remove conditional `if: needs.check-version.outputs.version_changed == 'true'`
 3. Update version determination step:
    - Get version from package.json directly
@@ -51,6 +60,7 @@ Simplify Docker workflow: auto-build on changes instead of version detection
 5. Update summary output to mention new tagging strategy
 
 **New tag structure:**
+
 ```yaml
 tags: |
   # Commit SHA (immutable, traceable)
@@ -68,9 +78,11 @@ tags: |
 **Result:** Workflow builds on any push to main affecting the app, regardless of version changes.
 
 ### Step 2: Update Root CLAUDE.md Documentation
+
 **File:** `CLAUDE.md`
 
 **Changes:**
+
 1. Update "Automated Docker Publishing" section (lines 329-336):
    - Change trigger description: "on every merge to main that touches the app"
    - Remove mention of version change detection
@@ -80,6 +92,7 @@ tags: |
 3. Update usage examples to show SHA-based deployment option
 
 **New content:**
+
 ```markdown
 ### Automated Docker Publishing
 
@@ -95,10 +108,12 @@ Docker images are automatically built and published when:
 **Registry:** `ghcr.io/rollercoaster-dev/openbadges-modular-server`
 
 **Platforms:** Multi-architecture support
+
 - `linux/amd64` (Intel/AMD 64-bit)
 - `linux/arm64` (ARM 64-bit, including Apple Silicon, AWS Graviton)
 
 **Tags:**
+
 - `sha-c7b8f5d` - Commit SHA (immutable, exact code traceability)
 - `v1.2.3` - Full semantic version from package.json
 - `v1.2` - Major.minor version
@@ -109,24 +124,29 @@ Docker images are automatically built and published when:
 ```
 
 ### Step 3: Update App-Specific CLAUDE.md
+
 **File:** `apps/openbadges-modular-server/CLAUDE.md`
 
 **Changes:**
+
 1. Update "Automated Docker Publishing" section (lines 75-77):
    - Remove version change detection mention
    - Add SHA tag information
 2. Update available tags list to include SHA tags
 
 ### Step 4: Update Docker Deployment Guide
+
 **File:** `apps/openbadges-modular-server/docs/docker-deployment-guide.md`
 
 **Changes:**
+
 1. Add section explaining new tagging strategy after "Quick Start" section
 2. Update pull examples to show different tag options
 3. Add best practices for production (use SHA or semver, not latest)
 
 **New section to add:**
-```markdown
+
+````markdown
 ## Image Tagging Strategy
 
 The OpenBadges Modular Server uses multiple Docker image tags to support different deployment workflows:
@@ -141,6 +161,7 @@ The OpenBadges Modular Server uses multiple Docker image tags to support differe
 ### Choosing the Right Tag
 
 **Production deployments:**
+
 ```bash
 # Best: Immutable SHA tag for exact traceability
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-c7b8f5d
@@ -148,8 +169,10 @@ docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-c7b8f5d
 # Good: Full semantic version for stable releases
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1.2.3
 ```
+````
 
 **Development/Testing:**
+
 ```bash
 # Latest changes from main branch
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
@@ -158,10 +181,12 @@ docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
 ### Build Triggers
 
 Images are automatically built and published when:
+
 - Any changes are merged to `main` affecting the app or its workspace dependencies
 - Manual workflow trigger via GitHub Actions UI
 
 No manual version bumps required for builds to trigger.
+
 ```
 
 ## Testing Strategy
@@ -200,3 +225,4 @@ If issues arise:
 - npm packages continue using Changesets workflow
 - Version in package.json is still meaningful for semantic version tags
 - Manual version bumps can still be done for major releases
+```

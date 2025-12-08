@@ -228,6 +228,7 @@ Generate a detailed plan document:
 Use the `board-manager` skill to manage board status:
 
 1. **Add issue to project (if not already):**
+
    ```
    Add issue #<number> to the board
    ```

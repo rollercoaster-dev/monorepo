@@ -115,6 +115,7 @@ The OpenBadges Modular Server uses multiple Docker image tags to support differe
 ### Choosing the Right Tag
 
 **Production deployments:**
+
 ```bash
 # Best: Immutable SHA tag for exact traceability
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-c7b8f5d
@@ -124,6 +125,7 @@ docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1.2.3
 ```
 
 **Development/Testing:**
+
 ```bash
 # Latest changes from main branch
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
@@ -132,6 +134,7 @@ docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
 ### Build Triggers
 
 Images are automatically built and published when:
+
 - Any changes are merged to `main` affecting the app or its workspace dependencies
 - Manual workflow trigger via GitHub Actions UI
 

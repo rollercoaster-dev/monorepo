@@ -214,6 +214,7 @@ Task(subagent_type: "review-handler", prompt: "
 ### Phase 5: Complete
 
 **Update project board** using the `board-manager` skill:
+
 ```
 Move issue #<number> to "Done"
 ```
