@@ -44,7 +44,7 @@ Keep the first line under 72 characters. Be specific but concise.
 ### 2. Issue Management
 
 - Create issues with clear titles and structured descriptions
-- Apply appropriate labels: `bug`, `enhancement`, `documentation`, `migration`, `good first issue`, `priority:high/medium/low`, package-specific labels
+- Apply appropriate labels: `bug`, `enhancement`, `documentation`, `test`, `ci`, `docker`, `cleanup`, `good first issue`, `priority:high/medium/low`, `type:tech-debt`, package-specific labels (`pkg:*`, `app:*`)
 - Link related issues using GitHub keywords
 - Ensure issues are assigned to the correct project board column
 - Reference the migration checklist when relevant
