@@ -225,17 +225,14 @@ If you disagree with a review comment:
 
 ### Phase 7: Update GitHub Project Board (After Merge)
 
-When PR is merged, update issue status to "Done":
-
-```bash
-# Get item ID for the linked issue
-ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
-
-# Set to "Done" (option ID: 56048761)
-gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 --single-select-option-id 56048761
+When PR is merged, use the `board-manager` skill to update status:
+```
+Move issue #<issue-number> to "Done"
 ```
 
-**Note:** GitHub Projects can auto-close issues when PRs with "Closes #X" are merged, but status must be updated manually.
+See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
+
+**Note:** GitHub Projects can auto-close issues when PRs with "Closes #X" are merged, but board status must be updated manually.
 
 ## AI Review Parsing
 

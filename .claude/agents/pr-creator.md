@@ -227,15 +227,12 @@ Closes #<issue-number>
 
 ### Phase 5: Update GitHub Project Board - Set "In Review"
 
-1. **Update status:**
+Use the `board-manager` skill to update status:
+```
+Move issue #<issue-number> to "In Review"
+```
 
-   ```bash
-   # Get item ID
-   ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
-
-   # Set to "In Review" (option ID: 51c2af7b)
-   gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 --single-select-option-id 51c2af7b
-   ```
+See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
 
 ### Phase 6: Verify and Report
 

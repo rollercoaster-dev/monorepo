@@ -67,10 +67,16 @@ Structure PRs with:
 
 ### 5. Project Board Organization
 
-- Keep issues in correct columns (Backlog, Ready, In Progress, Review, Done)
+- Keep issues in correct columns (Backlog, Next, In Progress, In Review, Done)
 - Ensure milestone assignments are current
 - Flag blocked or stale items
 - Maintain migration tracking accuracy
+
+**Board Skills Reference:**
+- `board-status` skill: Check board status (read-only)
+- `board-manager` skill: Add issues, update status (write)
+
+See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
 
 ## Your Standards
 

@@ -213,12 +213,12 @@ Task(subagent_type: "review-handler", prompt: "
 
 ### Phase 5: Complete
 
-**Update project board:**
-
-```bash
-# Set to "Done" status (after merge)
-gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ ...
+**Update project board** using the `board-manager` skill:
 ```
+Move issue #<number> to "Done"
+```
+
+See `.claude/skills/board-manager/SKILL.md` for command reference.
 
 **Report completion:**
 

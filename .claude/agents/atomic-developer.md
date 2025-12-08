@@ -183,13 +183,12 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 
 4. **Update GitHub Project Board - Set "In Progress":**
 
-   ```bash
-   # Get item ID
-   ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <number>) | .id')
-
-   # Set to "In Progress" (option ID: 3e320f16)
-   gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 --single-select-option-id 3e320f16
+   Use the `board-manager` skill to update status:
    ```
+   Move issue #<number> to "In Progress"
+   ```
+
+   See `.claude/skills/board-manager/SKILL.md` for command reference.
 
 ### Phase 2: Execute Plan Step by Step
 

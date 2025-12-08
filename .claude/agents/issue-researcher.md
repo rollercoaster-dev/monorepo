@@ -225,21 +225,19 @@ Generate a detailed plan document:
 
 ### Phase 6: Update GitHub Project Board
 
-1. **Add issue to project (if not already):**
+Use the `board-manager` skill to manage board status:
 
-   ```bash
-   gh project item-add 11 --owner rollercoaster-dev --url https://github.com/rollercoaster-dev/monorepo/issues/<number>
+1. **Add issue to project (if not already):**
+   ```
+   Add issue #<number> to the board
    ```
 
 2. **Set status to "Next" (ready for development):**
-
-   ```bash
-   # Get item ID
-   ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <number>) | .id')
-
-   # Set to "Next" (option ID: 266160c2)
-   gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 --single-select-option-id 266160c2
    ```
+   Move issue #<number> to "Next"
+   ```
+
+See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
 
 ### Phase 7: Save and Report
 
