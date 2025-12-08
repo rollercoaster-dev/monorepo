@@ -26,20 +26,20 @@ Add issues to the project board and update their status. This skill has **write 
 
 ### IDs Reference
 
-| Resource | ID |
-|----------|-----|
-| Project ID | `PVT_kwDOB1lz3c4BI2yZ` |
+| Resource        | ID                               |
+| --------------- | -------------------------------- |
+| Project ID      | `PVT_kwDOB1lz3c4BI2yZ`           |
 | Status Field ID | `PVTSSF_lADOB1lz3c4BI2yZzg5MUx4` |
 
 ### Status Option IDs
 
-| Status | Option ID |
-|--------|-----------|
-| Backlog | `8b7bb58f` |
-| Next | `266160c2` |
+| Status      | Option ID  |
+| ----------- | ---------- |
+| Backlog     | `8b7bb58f` |
+| Next        | `266160c2` |
 | In Progress | `3e320f16` |
-| In Review | `51c2af7b` |
-| Done | `56048761` |
+| In Review   | `51c2af7b` |
+| Done        | `56048761` |
 
 ## Commands
 
@@ -106,13 +106,13 @@ gh project item-edit \
 
 ## Status Mapping
 
-| Action | Status | Option ID |
-|--------|--------|-----------|
-| New issue, blocked | Backlog | `8b7bb58f` |
-| Ready to work | Next | `266160c2` |
-| Started work | In Progress | `3e320f16` |
-| PR created | In Review | `51c2af7b` |
-| PR merged | Done | `56048761` |
+| Action             | Status      | Option ID  |
+| ------------------ | ----------- | ---------- |
+| New issue, blocked | Backlog     | `8b7bb58f` |
+| Ready to work      | Next        | `266160c2` |
+| Started work       | In Progress | `3e320f16` |
+| PR created         | In Review   | `51c2af7b` |
+| PR merged          | Done        | `56048761` |
 
 ## Output Format
 
