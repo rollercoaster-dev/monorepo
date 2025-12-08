@@ -76,17 +76,22 @@ bun run docker:build:multiarch:push     # Build and push multi-arch image to reg
 
 Docker images are automatically published to GitHub Container Registry (GHCR) when:
 
-- A new version is merged to `main` (detected via package.json version change)
-- Changes are pushed to the app or its workspace dependencies
+- Changes are merged to `main` that affect the app or its workspace dependencies
+- Manual workflow trigger via GitHub Actions UI
+
+No manual version bumps required for builds to trigger.
 
 **Registry:** `ghcr.io/rollercoaster-dev/openbadges-modular-server`
 
 **Available tags:**
 
-- `v1.2.3` - Full semantic version
+- `sha-abc1234` - Commit SHA (immutable, exact code traceability)
+- `v1.2.3` - Full semantic version from package.json
 - `v1.2` - Major.minor version
 - `v1` - Major version only
-- `latest` - Latest release
+- `latest` - Latest release on main branch
+
+**Note:** Version in package.json is still used for semantic versioning tags, but builds are no longer gated by version changes.
 
 **Pull the image:**
 

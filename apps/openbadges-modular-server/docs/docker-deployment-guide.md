@@ -101,6 +101,42 @@ docker-compose up -d
 
 3. Access the API at http://localhost:3000
 
+## Image Tagging Strategy
+
+The OpenBadges Modular Server uses multiple Docker image tags to support different deployment workflows:
+
+### Available Tags
+
+- **SHA tags** (`sha-abc1234`): Immutable, tied to specific commit. Best for production deployments requiring exact version tracking.
+- **Semantic version** (`v1.2.3`): Full version from package.json. Updated manually for releases.
+- **Partial versions** (`v1.2`, `v1`): Track latest patch/minor releases. Auto-update within version range.
+- **Latest** (`latest`): Always points to most recent build. Good for development, avoid in production.
+
+### Choosing the Right Tag
+
+**Production deployments:**
+```bash
+# Best: Immutable SHA tag for exact traceability
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-abc1234
+
+# Good: Full semantic version for stable releases
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1.2.3
+```
+
+**Development/Testing:**
+```bash
+# Latest changes from main branch
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
+```
+
+### Build Triggers
+
+Images are automatically built and published when:
+- Any changes are merged to `main` affecting the app or its workspace dependencies
+- Manual workflow trigger via GitHub Actions UI
+
+No manual version bumps required for builds to trigger.
+
 ## Configuration Options
 
 ### Environment Variables
