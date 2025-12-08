@@ -83,9 +83,9 @@ None - this is a standalone configuration change.
 ## Acceptance Criteria
 
 - [x] `.github/dependabot.yml` created with npm and github-actions ecosystems
-- [ ] Configuration follows conventional commit format
-- [ ] PRs created with appropriate labels
-- [ ] Weekly schedule configured
+- [x] Configuration follows conventional commit format
+- [x] PRs created with appropriate labels
+- [x] Weekly schedule configured
 - [ ] Security alerts enabled (verify in repository settings)
 
 ## Notes
