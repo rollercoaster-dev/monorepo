@@ -330,8 +330,10 @@ The `openbadges-modular-server` application is published as a Docker image to Gi
 
 Docker images are automatically built and published when:
 
-- A new version is merged to `main` (detected via `package.json` version change)
-- Changes are pushed to `apps/openbadges-modular-server/` or its dependencies
+- Changes are merged to `main` that affect the app or its workspace dependencies
+- Manual workflow trigger via GitHub Actions UI
+
+No manual version bumps required for builds to trigger.
 
 **Workflow:** `.github/workflows/docker-openbadges-modular-server.yml`
 
@@ -346,10 +348,13 @@ Docker images are automatically built and published when:
 
 **Tags:**
 
-- `v1.2.3` - Full semantic version
+- `sha-c7b8f5d` - Commit SHA (immutable, exact code traceability)
+- `v1.2.3` - Full semantic version from package.json
 - `v1.2` - Major.minor version
 - `v1` - Major version only
 - `latest` - Latest release on main branch
+
+**Note:** Version in package.json is still used for semantic versioning tags, but builds are no longer gated by version changes.
 
 ### Using the Docker Image
 

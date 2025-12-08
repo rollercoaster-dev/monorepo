@@ -85,7 +85,7 @@ No manual version bumps required for builds to trigger.
 
 **Available tags:**
 
-- `sha-abc1234` - Commit SHA (immutable, exact code traceability)
+- `sha-c7b8f5d` - Commit SHA (immutable, exact code traceability)
 - `v1.2.3` - Full semantic version from package.json
 - `v1.2` - Major.minor version
 - `v1` - Major version only

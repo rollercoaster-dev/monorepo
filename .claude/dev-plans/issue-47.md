@@ -99,7 +99,7 @@ Docker images are automatically built and published when:
 - `linux/arm64` (ARM 64-bit, including Apple Silicon, AWS Graviton)
 
 **Tags:**
-- `sha-abc1234` - Commit SHA (immutable, exact code traceability)
+- `sha-c7b8f5d` - Commit SHA (immutable, exact code traceability)
 - `v1.2.3` - Full semantic version from package.json
 - `v1.2` - Major.minor version
 - `v1` - Major version only
@@ -133,7 +133,7 @@ The OpenBadges Modular Server uses multiple Docker image tags to support differe
 
 ### Available Tags
 
-- **SHA tags** (`sha-abc1234`): Immutable, tied to specific commit. Best for production deployments requiring exact version tracking.
+- **SHA tags** (`sha-c7b8f5d`): Immutable, tied to specific commit. Best for production deployments requiring exact version tracking.
 - **Semantic version** (`v1.2.3`): Full version from package.json. Updated manually for releases.
 - **Partial versions** (`v1.2`, `v1`): Track latest patch/minor releases. Auto-update within version range.
 - **Latest** (`latest`): Always points to most recent build. Good for development, avoid in production.
@@ -143,7 +143,7 @@ The OpenBadges Modular Server uses multiple Docker image tags to support differe
 **Production deployments:**
 ```bash
 # Best: Immutable SHA tag for exact traceability
-docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-abc1234
+docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:sha-c7b8f5d
 
 # Good: Full semantic version for stable releases
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:v1.2.3
