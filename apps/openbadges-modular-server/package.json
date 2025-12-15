@@ -72,19 +72,19 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@hono/zod-openapi": "^0.19.6",
+    "@hono/zod-openapi": "^1.1.5",
     "@neondatabase/serverless": "^1.0.0",
-    "@paralleldrive/cuid2": "^2.2.2",
+    "@paralleldrive/cuid2": "^3.0.4",
     "@rollercoaster-dev/rd-logger": "workspace:*",
-    "@types/bcrypt": "^5.0.2",
-    "@types/uuid": "^10.0.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/uuid": "^11.0.0",
     "aws-sdk": "^2.1692.0",
-    "bcrypt": "^5.1.1",
-    "better-sqlite3": "^11.9.1",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^12.5.0",
     "chalk": "^5.4.1",
-    "drizzle-orm": "^0.41.0",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.7.8",
-    "hono-rate-limiter": "^0.4.2",
+    "hono-rate-limiter": "^0.5.0",
     "jose": "^6.0.11",
     "lru.min": "^1.1.2",
     "mock-aws-s3": "^4.0.2",
@@ -92,8 +92,8 @@
     "openapi3-ts": "^4.4.0",
     "openbadges-types": "workspace:*",
     "postgres": "^3.4.5",
-    "swagger-ui-dist": "^5.26.2",
-    "uuid": "^11.1.0",
-    "zod": "^3.24.3"
+    "swagger-ui-dist": "^5.31.0",
+    "uuid": "^13.0.0",
+    "zod": "^4.2.0"
   }
 }
