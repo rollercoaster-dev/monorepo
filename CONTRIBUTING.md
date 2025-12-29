@@ -367,8 +367,46 @@ if (typeIncludes(badge.type, "Assertion")) {
 - `bug` - Something's broken
 - `enhancement` - New feature request
 - `docs` - Documentation improvement
-- `phase-1`, `phase-2`, etc. - Migration phases
-- `neurodivergent-ux` - UX/accessibility focus
+- `priority:critical/high/medium/low` - Issue priority
+- `pkg:*` - Package-specific (e.g., `pkg:openbadges-types`)
+- `app:*` - Application-specific (e.g., `app:openbadges-server`)
+- `ob3-compliance` - Open Badges 3.0 spec work
+
+## 🎯 Milestones & Priority
+
+### Milestone Structure
+
+Issues are organized into milestones by feature area:
+
+```
+OB3 Phase 1: Core Spec     ← Critical spec compliance (PRIORITY)
+OB3 Phase 2: UI Layer      ← Forms and components
+OB3 Phase 3: Quality       ← Test coverage and polish
+
+OpenBadges Badge Generator ← Foundation layer (baking, verification)
+MVP: Self-Signed Badges    ← Depends on Badge Generator
+MVP: Badge Backpack        ← Independent, can work in parallel
+
+Core Services              ← API keys, OAuth, conformance
+Developer Experience       ← Documentation and onboarding
+Infrastructure             ← CI/CD, tooling, tech debt
+```
+
+### Dependency Chain
+
+```
+Badge Generator (#14) → Self-Signed (#7)
+                     ↘ Backpack (#8) [parallel]
+
+OB3 Phase 1 → OB3 Phase 2 → OB3 Phase 3
+```
+
+### Picking Work
+
+1. Check [Project Board](https://github.com/orgs/rollercoaster-dev/projects/11) for current priorities
+2. Look for issues in priority milestones (OB3 Phase 1, Badge Generator)
+3. Check issue dependencies - some are blocked by other work
+4. `good first issue` labels are great for getting started
 
 ## 🎨 Design Contributions
 
@@ -412,7 +450,7 @@ When contributing design changes:
 
 ### Project Documentation
 
-- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10) - Current work
+- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/11) - Current work
 - [Issues](https://github.com/rollercoaster-dev/monorepo/issues) - Tasks and bugs
 - [Vision Docs](apps/docs/vision/) - Where we're going (after Phase 5.5)
 

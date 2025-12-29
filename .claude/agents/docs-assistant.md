@@ -1,6 +1,6 @@
 ---
 name: docs-assistant
-description: Search, answer questions about, and write project documentation. Use for finding info in docs, explaining architecture, or creating new documentation.
+description: Search, answer questions, write, and update project documentation. Handles research, creation, and maintenance of docs across the monorepo.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
@@ -9,7 +9,11 @@ model: sonnet
 
 ## Purpose
 
-A unified documentation agent that handles both **searching/answering questions** about existing docs AND **writing/generating** new documentation.
+A unified documentation agent that handles:
+
+- **Searching/answering questions** about existing docs
+- **Writing/generating** new documentation
+- **Updating** existing docs after code changes (migrations, features, refactors)
 
 ## When to Use This Agent
 
@@ -29,14 +33,12 @@ A unified documentation agent that handles both **searching/answering questions*
 - "write an ADR for choosing SQLite"
 - "create a getting started guide"
 
-## Relationship to Other Agents
+### Update Mode (Maintain & Sync)
 
-| Agent                   | Purpose                                        | When to Use                           |
-| ----------------------- | ---------------------------------------------- | ------------------------------------- |
-| `docs-assistant`        | Search docs, answer questions, create NEW docs | Finding info or writing from scratch  |
-| `documentation-updater` | Update EXISTING docs after code changes        | After PRs that affect documented code |
-
-**Key distinction**: Use `docs-assistant` to create or find. Use `documentation-updater` to update after changes.
+- "update docs for completed migration"
+- "sync documentation after refactor"
+- "update CLAUDE.md with new package"
+- "archive the migration plan"
 
 ## Documentation Locations
 
