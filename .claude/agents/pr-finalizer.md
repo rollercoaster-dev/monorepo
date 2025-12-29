@@ -253,13 +253,13 @@ For each sub-issue or related issue:
 
 ### Phase 7: Update Project Board
 
-1. **Set status to "In Review":**
+Use the `board-manager` skill to update status:
 
-   ```bash
-   ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
+```
+Move issue #<issue-number> to "In Review"
+```
 
-   gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id $ITEM_ID --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 --single-select-option-id 51c2af7b
-   ```
+See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
 
 ### Phase 8: Generate Finalization Report
 

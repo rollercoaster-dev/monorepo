@@ -68,6 +68,7 @@ apps/*
 packages/*
 !packages/rd-logger
 !packages/openbadges-types
+!packages/shared-config
 
 # Exclude specific directories within included packages
 packages/rd-logger/tests
