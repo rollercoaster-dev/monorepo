@@ -173,6 +173,42 @@ cp .env.example .env
 - Check `packages/[package-name]/.env.example` for package-specific configuration
 - Example: `packages/rd-logger/.env.example`
 
+## 🗺️ Development Roadmap
+
+### Milestone Priority
+
+```
+1. OB3 Phase 1: Core Spec     ← Critical - spec compliance foundation
+2. Badge Generator (#14)      ← Foundation - baking, verification, DID
+3. Self-Signed Badges (#7)    ← Differentiator - depends on #14
+4. Badge Backpack (#8)        ← Independent - can work in parallel
+5. Core Services              ← API keys, OAuth, conformance
+6. Developer Experience       ← Documentation and onboarding
+```
+
+### Dependency Map
+
+```
+#14 (Badge Generator)
+├── DID/Keys: #111, #112, #113
+├── Baking: #115-#120
+└── Verification: #122-#127
+    │
+    ▼
+#7 (Self-Signed Badges)
+├── #83 Self-signed workflow
+├── #84 VC proofs
+├── #85 DID support (blocked by #111, #112)
+└── #87 Creation wizard
+
+#8 (Backpack) ← Independent, parallel work
+```
+
+### Project Board
+
+- **Active Board**: [Monorepo Development (#11)](https://github.com/orgs/rollercoaster-dev/projects/11)
+- **Priority**: OB3 Phase 1 → Badge Generator → Self-Signed → Backpack
+
 ## 🔄 Migration Status
 
 Migration is **complete** (December 2025).
@@ -268,6 +304,54 @@ Personal permissions can be added to `.claude/settings.local.json` (not committe
 - Uses `$CLAUDE_PROJECT_DIR` for reliable script paths
 - Uses `CLAUDE_CODE_REMOTE` to detect web vs local
 - Uses `CLAUDE_ENV_FILE` to persist environment variables
+
+### Agent & Plugin Architecture
+
+This project uses a **plugin-first architecture** - official Claude Code plugins handle common workflows, with custom agents only for domain-specific needs.
+
+#### Plugins Used
+
+| Plugin                | Purpose                                   |
+| --------------------- | ----------------------------------------- |
+| **pr-review-toolkit** | Pre-PR code review (6 specialized agents) |
+| **feature-dev**       | 7-phase feature development workflow      |
+| **hookify**           | Create behavioral hooks                   |
+| **context7**          | Library documentation lookup              |
+| **playwright**        | E2E testing and browser automation        |
+| **frontend-design**   | Production UI generation                  |
+| **security-guidance** | Security analysis                         |
+
+#### Custom Agents (Domain-Specific)
+
+| Agent                              | Purpose                                 |
+| ---------------------------------- | --------------------------------------- |
+| **openbadges-expert**              | OB2/OB3 spec guidance                   |
+| **openbadges-compliance-reviewer** | Pre-PR spec validation                  |
+| **vue-hono-expert**                | Vue 3 + Bun/Hono stack patterns         |
+| **docs-assistant**                 | Documentation search, creation, updates |
+| **github-master**                  | Board/milestone/issue management        |
+
+#### Development Workflow
+
+Use `/work-on-issue <number>` for end-to-end issue-to-PR workflow:
+
+```
+GATE 1: Issue Review → Fetch issue, check blockers
+GATE 2: Feature Dev  → /feature-dev 7-phase workflow
+GATE 3: Pre-PR Review → pr-review-toolkit + openbadges-compliance
+GATE 4: Create PR    → CI takes over (CodeRabbit + Claude)
+```
+
+#### Review Pipeline
+
+```
+LOCAL (pre-PR)                    CI (post-PR)
+────────────────────────          ─────────────────
+pr-review-toolkit:code-reviewer   CodeRabbit
+pr-review-toolkit:pr-test-analyzer   Claude review
+pr-review-toolkit:silent-failure-hunter
+openbadges-compliance-reviewer
+```
 
 ## 📦 Publishing Packages
 
