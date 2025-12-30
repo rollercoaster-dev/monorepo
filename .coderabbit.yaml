@@ -4,7 +4,8 @@
 
 reviews:
   auto_review:
-    enabled: false # Only run reviews when requested via @coderabbitai review
+    enabled: true
+    drafts: false # Skip draft PRs - review when marked ready
 
   # Disable tools that are already handled by CI
   tools:
