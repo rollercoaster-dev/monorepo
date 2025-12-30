@@ -3,11 +3,16 @@
  *
  * Tests the JWKS endpoint functionality including response format,
  * content validation, error handling, and caching behavior.
+ * Also tests DID:web document generation.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { JwksController } from "../../../src/api/controllers/jwks.controller";
-import type { JsonWebKeySet, JsonWebKey } from "../../../src/core/key.service";
+import type {
+  JsonWebKeySet,
+  JsonWebKey,
+  DidDocument,
+} from "../../../src/core/key.service";
 import { KeyService, KeyStatus } from "../../../src/core/key.service";
 import { KeyType } from "../../../src/utils/crypto/signature";
 import * as fs from "fs";
@@ -17,6 +22,11 @@ import * as path from "path";
 interface JwksResponse {
   status: number;
   body: JsonWebKeySet | { error: string };
+}
+
+interface DidResponse {
+  status: number;
+  body: DidDocument | { error: string };
 }
 
 interface TestJwk extends JsonWebKey {
@@ -189,6 +199,128 @@ describe("JwksController", () => {
         // Ed25519 private parameter
         expect(key).not.toHaveProperty("d");
       }
+    });
+  });
+
+  describe("getDidDocument", () => {
+    it("should return valid DID document format", async () => {
+      const result: DidResponse = await jwksController.getDidDocument();
+
+      expect(result.status).toBe(200);
+      expect(result.body).toHaveProperty("@context");
+      expect(result.body).toHaveProperty("id");
+      expect(result.body).toHaveProperty("verificationMethod");
+      expect(result.body).toHaveProperty("authentication");
+      expect(result.body).toHaveProperty("assertionMethod");
+
+      const didDoc = result.body as DidDocument;
+
+      // Validate @context includes required contexts
+      expect(Array.isArray(didDoc["@context"])).toBe(true);
+      expect(didDoc["@context"]).toContain("https://www.w3.org/ns/did/v1");
+      expect(didDoc["@context"]).toContain(
+        "https://w3id.org/security/suites/jws-2020/v1",
+      );
+
+      // Validate DID format (did:web:...)
+      expect(didDoc.id).toMatch(/^did:web:/);
+    });
+
+    it("should include verification methods for all active keys", async () => {
+      // Generate additional test keys
+      await KeyService.generateKeyPair("test-rsa-did", KeyType.RSA);
+
+      const result: DidResponse = await jwksController.getDidDocument();
+      const didDoc = result.body as DidDocument;
+
+      expect(didDoc.verificationMethod.length).toBeGreaterThanOrEqual(1);
+
+      // Verify structure of each verification method
+      for (const vm of didDoc.verificationMethod) {
+        expect(vm).toHaveProperty("id");
+        expect(vm).toHaveProperty("type");
+        expect(vm).toHaveProperty("controller");
+        expect(vm).toHaveProperty("publicKeyJwk");
+
+        // Verify type is JsonWebKey2020
+        expect(vm.type).toBe("JsonWebKey2020");
+
+        // Verify controller matches DID
+        expect(vm.controller).toBe(didDoc.id);
+
+        // Verify id format matches DID#key-N pattern
+        expect(vm.id).toMatch(new RegExp(`^${didDoc.id}#key-\\d+$`));
+
+        // Verify publicKeyJwk has required properties
+        expect(vm.publicKeyJwk).toHaveProperty("kty");
+      }
+    });
+
+    it("should reference all verification methods in authentication and assertionMethod", async () => {
+      const result: DidResponse = await jwksController.getDidDocument();
+      const didDoc = result.body as DidDocument;
+
+      const vmIds = didDoc.verificationMethod.map((vm) => vm.id);
+
+      // Both arrays should contain all verification method IDs
+      expect(didDoc.authentication).toEqual(vmIds);
+      expect(didDoc.assertionMethod).toEqual(vmIds);
+    });
+
+    it("should match JWKS keys with DID verification methods", async () => {
+      const jwksResult: JwksResponse = await jwksController.getJwks();
+      const didResult: DidResponse = await jwksController.getDidDocument();
+
+      const jwks = jwksResult.body as JsonWebKeySet;
+      const didDoc = didResult.body as DidDocument;
+
+      // Should have same number of keys
+      expect(didDoc.verificationMethod.length).toBe(jwks.keys.length);
+
+      // Each verification method should have a matching JWK
+      didDoc.verificationMethod.forEach((vm, index) => {
+        expect(vm.publicKeyJwk).toEqual(jwks.keys[index]);
+      });
+    });
+
+    it("should handle errors gracefully", async () => {
+      // Mock KeyService to throw an error
+      const originalGetJwkSet = KeyService.getJwkSet;
+      KeyService.getJwkSet = async () => {
+        throw new Error("Test error");
+      };
+
+      const result: DidResponse = await jwksController.getDidDocument();
+
+      expect(result.status).toBe(500);
+      expect(result.body).toHaveProperty("error");
+      expect((result.body as { error: string }).error).toBe(
+        "Internal server error while generating DID document",
+      );
+
+      // Restore original method
+      KeyService.getJwkSet = originalGetJwkSet;
+    });
+
+    it("should only include active keys in DID document", async () => {
+      // Generate multiple keys
+      await KeyService.generateKeyPair("active-did-key", KeyType.RSA);
+      await KeyService.generateKeyPair("inactive-did-key", KeyType.RSA);
+
+      // Mark one as inactive
+      await KeyService.setKeyStatus("inactive-did-key", KeyStatus.INACTIVE);
+
+      const result: DidResponse = await jwksController.getDidDocument();
+      const didDoc = result.body as DidDocument;
+
+      // Get key IDs from verification methods
+      const vmKeyIds = didDoc.verificationMethod.map(
+        (vm) => vm.publicKeyJwk.kid,
+      );
+
+      // Should include active key but not inactive key
+      expect(vmKeyIds).toContain("active-did-key");
+      expect(vmKeyIds).not.toContain("inactive-did-key");
     });
   });
 });
