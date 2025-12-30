@@ -35,15 +35,15 @@ To request an additional review or re-review:
 
 CodeRabbit uses path-specific instructions defined in `.coderabbit.yaml`:
 
-| Path                                                            | Focus Areas                            |
-| --------------------------------------------------------------- | -------------------------------------- |
-| `packages/openbadges-ui/**/*.vue`                               | Accessibility, Vue 3 best practices    |
-| `apps/openbadges-modular-server/src/api/**`                     | Security, input validation, API design |
-| `apps/openbadges-modular-server/src/auth/**`                    | Authentication security, JWT handling  |
-| `apps/openbadges-modular-server/src/infrastructure/database/**` | SQL injection, data integrity          |
-| `packages/rd-logger/**`                                         | Sensitive data protection              |
-| `packages/openbadges-types/**`                                  | Open Badges spec compliance            |
-| `**/*.test.ts`                                                  | Test quality, edge cases               |
+| Path                                                                 | Focus Areas                            |
+| -------------------------------------------------------------------- | -------------------------------------- |
+| `packages/openbadges-ui/src/components/**/*.vue`                     | Accessibility, Vue 3 best practices    |
+| `apps/openbadges-modular-server/src/api/**/*.ts`                     | Security, input validation, API design |
+| `apps/openbadges-modular-server/src/auth/**/*.ts`                    | Authentication security, JWT handling  |
+| `apps/openbadges-modular-server/src/infrastructure/database/**/*.ts` | SQL injection, data integrity          |
+| `packages/rd-logger/**/*.ts`                                         | Sensitive data protection              |
+| `packages/openbadges-types/**/*.ts`                                  | Open Badges spec compliance            |
+| `**/*.test.ts`                                                       | Test quality, edge cases               |
 
 See [`.coderabbit.yaml`](../../.coderabbit.yaml) for full configuration.
 

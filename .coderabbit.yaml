@@ -6,7 +6,7 @@ reviews:
   auto_review:
     enabled: true
     drafts: false # Skip draft PRs - review when marked ready
-  auto_incremental_review: false # Don't auto-review on subsequent commits (saves API limits)
+    auto_incremental_review: false # Don't auto-review on subsequent commits (saves API limits)
 
   # Disable tools that are already handled by CI
   tools:
