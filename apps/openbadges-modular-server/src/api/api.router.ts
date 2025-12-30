@@ -1707,6 +1707,21 @@ export async function createApiRouter(
     }
   });
 
+  // Add DID:web document endpoint - W3C DID Core / DID:web method
+  router.get("/.well-known/did.json", async (c) => {
+    try {
+      const result = await jwksController.getDidDocument();
+
+      // Set appropriate headers for DID document
+      c.header("Content-Type", "application/did+json");
+      c.header("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+
+      return c.json(result.body, result.status as 200 | 500);
+    } catch (error) {
+      return sendApiError(c, error, { endpoint: "GET /.well-known/did.json" });
+    }
+  });
+
   // Validation middleware is applied per route
 
   // Create status list controller for v3.0 features
