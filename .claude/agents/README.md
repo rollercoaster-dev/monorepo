@@ -2,62 +2,77 @@
 
 Custom agents for domain-specific tasks. General workflows use [official plugins](https://github.com/anthropics/claude-code).
 
-## Architecture
+## Key Insight: Orchestrator-Worker Pattern
+
+**Claude (main) is the orchestrator.** Worker agents handle focused tasks.
+
+Subagents CANNOT stop mid-task and wait for approval. They complete their task and return.
+
+Therefore: **Claude (main) handles ALL gates**, worker agents do focused work and return.
+
+### Roles
+
+- **Human**: Approves at each gate
+- **Claude (Main)**: Orchestrates workflow, handles gates, spawns workers
+- **Worker Agents**: Execute focused tasks and return results
+
+### Architecture Diagram
 
 ```
-PLUGINS (Official)                    CUSTOM AGENTS (12 total)
+Human (You) - approves at each gate
+    │
+    ▼
+Claude (Main) - THE ORCHESTRATOR - handles gates
+    │
+    ├── /work-on-issue 123
+    │       │
+    │       ▼
+    │   ╔═══════════════════╗
+    │   ║  GATE 1: Issue    ║ ← Claude shows full issue
+    │   ╚═════════╤═════════╝
+    │             ▼
+    │   [issue-researcher] → returns plan
+    │             │
+    │             ▼
+    │   ╔═══════════════════╗
+    │   ║  GATE 2: Plan     ║ ← Claude shows full plan
+    │   ╚═════════╤═════════╝
+    │             ▼
+    │   For each commit:
+    │     [atomic-developer] → returns diff
+    │             │
+    │             ▼
+    │     ╔═══════════════════╗
+    │     ║  GATE 3: Commit   ║ ← Claude shows diff
+    │     ╚═══════════════════╝
+    │             ▼
+    │   [pr-review-toolkit]
+    │             │
+    │             ▼
+    │   ╔═══════════════════╗
+    │   ║  GATE 4: Review   ║ ← Claude shows findings
+    │   ╚═════════╤═════════╝
+    │             ▼
+    └── [pr-creator] → PR created
+```
+
+## Agent Inventory (9 Total)
+
+```
+PLUGINS (Official)                    CUSTOM AGENTS (9 total)
 ──────────────────                    ────────────────────────────
-feature-dev (exploration)             WORKFLOW (7):
+feature-dev (exploration)             WORKFLOW (4):
 pr-review-toolkit (pre-PR review)       issue-researcher
 hookify (behavioral hooks)              atomic-developer
-context7 (library docs)                 feature-executor
-playwright (E2E testing)                dev-orchestrator
-frontend-design (UI)                    pr-creator
-security-guidance                       pr-finalizer
-                                        review-handler
-
-                                      DOMAIN (5):
+context7 (library docs)                 pr-creator
+playwright (E2E testing)                review-handler
+frontend-design (UI)
+security-guidance                     DOMAIN (5):
                                         openbadges-expert
                                         openbadges-compliance-reviewer
                                         vue-hono-expert
                                         docs-assistant
                                         github-master
-```
-
-## Plugin vs Agent Strategy
-
-| Tool                 | Purpose                                  |
-| -------------------- | ---------------------------------------- |
-| **feature-dev**      | Architecture exploration, design options |
-| **issue-researcher** | GitHub issue → atomic commit plan        |
-| **atomic-developer** | Small implementations (1-4 commits)      |
-| **feature-executor** | Large implementations (4+ commits)       |
-| **dev-orchestrator** | Full workflow coordination               |
-| **pr-creator**       | Standard PR creation                     |
-| **pr-finalizer**     | Comprehensive PRs for complex work       |
-| **review-handler**   | Handle POST-PR review feedback           |
-
-## Issue → PR Workflow
-
-```
-/work-on-issue #123
-    │
-    ├─► issue-researcher (plan)
-    │   └─► .claude/dev-plans/issue-123.md
-    │
-    ├─► feature-dev (optional, complex architecture)
-    │
-    ├─► COMPLEXITY CHECK
-    │   ├─ SMALL → atomic-developer
-    │   └─ LARGE → feature-executor
-    │
-    ├─► pr-review-toolkit (pre-PR)
-    │
-    ├─► COMPLEXITY CHECK
-    │   ├─ SIMPLE → pr-creator
-    │   └─ COMPLEX → pr-finalizer
-    │
-    └─► review-handler (post-PR feedback)
 ```
 
 ## Workflow Agents
@@ -68,23 +83,11 @@ Creates atomic commit plans from GitHub issues. Checks dependencies, assesses co
 
 ### atomic-developer.md
 
-Executes plans with atomic commits. Minimal implementation philosophy - no over-engineering.
-
-### feature-executor.md
-
-Executes complex multi-step work. Interactive mode, progress tracking, comprehensive validation.
-
-### dev-orchestrator.md
-
-Coordinates full issue→PR workflow. Routes to appropriate agents based on complexity.
+Executes plans with atomic commits. Minimal implementation philosophy - no over-engineering. Handles both small and large work.
 
 ### pr-creator.md
 
-Creates structured PRs for simple work. Triggers CodeRabbit, links issues.
-
-### pr-finalizer.md
-
-Creates comprehensive PRs for complex work. Multi-issue closing, documentation updates.
+Creates structured PRs. Triggers CodeRabbit, links issues. Handles both simple and complex PRs.
 
 ### review-handler.md
 
@@ -98,7 +101,7 @@ OB2/OB3 specification guidance for badge-related questions.
 
 ### openbadges-compliance-reviewer.md
 
-Validates OB spec compliance before PR.
+Validates OB spec compliance before PR. Uses Opus model for authoritative review.
 
 ### vue-hono-expert.md
 
@@ -120,15 +123,18 @@ LOCAL (pre-PR)                    CI (post-PR)
 pr-review-toolkit                 CodeRabbit
 openbadges-compliance-reviewer    Claude review
         ↓
-    pr-creator/finalizer
+    pr-creator
         ↓
     review-handler (handles feedback)
 ```
 
-## Deleted Agents
+## Deleted/Consolidated Agents
 
-| Agent                   | Replaced By                |
-| ----------------------- | -------------------------- |
-| test-coverage-validator | Manual + pr-review-toolkit |
-| dependency-analyzer     | bun install + manual       |
-| documentation-updater   | docs-assistant (absorbed)  |
+| Agent                   | Replaced By                          |
+| ----------------------- | ------------------------------------ |
+| dev-orchestrator        | Claude (main) handles orchestration  |
+| feature-executor        | atomic-developer (handles all sizes) |
+| pr-finalizer            | pr-creator (handles all complexity)  |
+| test-coverage-validator | Manual + pr-review-toolkit           |
+| dependency-analyzer     | bun install + manual                 |
+| documentation-updater   | docs-assistant (absorbed)            |

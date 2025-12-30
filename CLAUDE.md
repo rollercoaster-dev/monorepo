@@ -1,3 +1,16 @@
+<do_not_act_before_instructions>
+Do not jump into implementation or change files unless clearly instructed to make changes.
+When the user's intent is ambiguous, default to:
+
+1. Providing information
+2. Doing research
+3. Providing recommendations
+
+Only proceed with edits, modifications, or implementations when the user explicitly requests them.
+
+For the /work-on-issue workflow, follow ALL gates exactly and STOP at each one.
+</do_not_act_before_instructions>
+
 # Rollercoaster.dev Monorepo - Claude Code Context
 
 This file provides context for Claude Code when working in this monorepo.
@@ -352,6 +365,54 @@ pr-review-toolkit:pr-test-analyzer   Claude review
 pr-review-toolkit:silent-failure-hunter
 openbadges-compliance-reviewer
 ```
+
+## 🎛️ Model-Specific Behavior (Opus 4.5)
+
+This project is optimized for Claude Opus 4.5. Key behaviors:
+
+### Orchestrator-Worker Pattern
+
+**Claude (main) is the orchestrator.** Worker agents handle focused tasks.
+
+- Main Claude handles ALL gates and user interaction
+- Worker agents execute focused tasks and return
+- Worker agents CANNOT stop mid-task for approval
+- Only main Claude can show output and wait for user
+
+### Workflow Gates
+
+Gates are non-negotiable checkpoints. At each gate:
+
+1. Show complete information (not summaries)
+2. **STOP** and wait for explicit approval ("proceed", "yes", "approved")
+3. Do not batch multiple gates
+4. Do not assume approval
+
+### File Modification Rules
+
+Before modifying ANY file:
+
+1. Have you been explicitly asked to modify files?
+2. Have all relevant gates been passed?
+3. Has the user approved the specific change?
+
+If NO to any of these: **STOP and ask first.**
+
+### Safe Operations (Always Allowed)
+
+- Reading files
+- Searching with Glob/Grep
+- Running read-only commands (git status, bun test, etc.)
+- Analyzing code
+- Providing recommendations
+
+### Dangerous Operations (Require Explicit Permission)
+
+- Creating new files (Write tool)
+- Editing existing files (Edit tool)
+- Git commits
+- Git push
+- Package installation
 
 ## 📦 Publishing Packages
 
