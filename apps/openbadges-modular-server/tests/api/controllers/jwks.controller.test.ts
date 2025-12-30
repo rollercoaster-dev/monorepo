@@ -248,12 +248,29 @@ describe("JwksController", () => {
         // Verify controller matches DID
         expect(vm.controller).toBe(didDoc.id);
 
-        // Verify id format matches DID#key-N pattern
-        expect(vm.id).toMatch(new RegExp(`^${didDoc.id}#key-\\d+$`));
+        // Verify id starts with DID and has fragment identifier
+        expect(vm.id).toMatch(new RegExp(`^${didDoc.id}#.+$`));
 
         // Verify publicKeyJwk has required properties
         expect(vm.publicKeyJwk).toHaveProperty("kty");
       }
+    });
+
+    it("should use JWK kid for verification method ID when available", async () => {
+      // Generate a key with a known kid
+      await KeyService.generateKeyPair("my-custom-key", KeyType.RSA);
+
+      const result: DidResponse = await jwksController.getDidDocument();
+      const didDoc = result.body as DidDocument;
+
+      // Find the verification method for our custom key
+      const customKeyVm = didDoc.verificationMethod.find(
+        (vm) => vm.publicKeyJwk.kid === "my-custom-key",
+      );
+
+      expect(customKeyVm).toBeDefined();
+      // The verification method ID should use the kid
+      expect(customKeyVm?.id).toContain("#my-custom-key");
     });
 
     it("should reference all verification methods in authentication and assertionMethod", async () => {
@@ -321,6 +338,63 @@ describe("JwksController", () => {
       // Should include active key but not inactive key
       expect(vmKeyIds).toContain("active-did-key");
       expect(vmKeyIds).not.toContain("inactive-did-key");
+    });
+
+    it("should return valid DID document with empty verification methods when no keys exist", async () => {
+      // Mock KeyService to return empty keys
+      const originalGetJwkSet = KeyService.getJwkSet;
+      KeyService.getJwkSet = async () => ({ keys: [] });
+
+      const result: DidResponse = await jwksController.getDidDocument();
+
+      expect(result.status).toBe(200);
+      const didDoc = result.body as DidDocument;
+      expect(didDoc.verificationMethod).toEqual([]);
+      expect(didDoc.authentication).toEqual([]);
+      expect(didDoc.assertionMethod).toEqual([]);
+
+      // Restore original method
+      KeyService.getJwkSet = originalGetJwkSet;
+    });
+
+    it("should handle invalid BASE_URL configuration gracefully", async () => {
+      // Save original config value
+      const { config: appConfig } = await import("../../../src/config/config");
+      const originalBaseUrl = appConfig.openBadges.baseUrl;
+
+      // Set invalid URL
+      appConfig.openBadges.baseUrl = "not-a-valid-url";
+
+      const result: DidResponse = await jwksController.getDidDocument();
+
+      expect(result.status).toBe(500);
+      expect(result.body).toHaveProperty("error");
+      expect((result.body as { error: string }).error).toBe(
+        "Server configuration error: Invalid BASE_URL format",
+      );
+
+      // Restore original config
+      appConfig.openBadges.baseUrl = originalBaseUrl;
+    });
+
+    it("should handle empty BASE_URL configuration gracefully", async () => {
+      // Save original config value
+      const { config: appConfig } = await import("../../../src/config/config");
+      const originalBaseUrl = appConfig.openBadges.baseUrl;
+
+      // Set empty URL
+      appConfig.openBadges.baseUrl = "";
+
+      const result: DidResponse = await jwksController.getDidDocument();
+
+      expect(result.status).toBe(500);
+      expect(result.body).toHaveProperty("error");
+      expect((result.body as { error: string }).error).toBe(
+        "Server configuration error: BASE_URL not configured",
+      );
+
+      // Restore original config
+      appConfig.openBadges.baseUrl = originalBaseUrl;
     });
   });
 });

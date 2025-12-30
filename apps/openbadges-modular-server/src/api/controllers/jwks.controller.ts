@@ -123,9 +123,35 @@ export class JwksController {
     try {
       logger.debug("Generating DID document");
 
-      // Extract hostname from base URL for DID identifier
+      // Validate and extract hostname from base URL
       const baseUrl = config.openBadges.baseUrl;
-      const hostname = new URL(baseUrl).host;
+
+      if (!baseUrl) {
+        logger.error("DID document generation failed: BASE_URL not configured");
+        return {
+          status: 500,
+          body: {
+            error: "Server configuration error: BASE_URL not configured",
+          },
+        };
+      }
+
+      let hostname: string;
+      try {
+        hostname = new URL(baseUrl).host;
+      } catch (urlError) {
+        logger.error("DID document generation failed: Invalid BASE_URL format", {
+          baseUrl,
+          error:
+            urlError instanceof Error ? urlError.message : "Invalid URL format",
+        });
+        return {
+          status: 500,
+          body: {
+            error: "Server configuration error: Invalid BASE_URL format",
+          },
+        };
+      }
 
       // Construct DID using did:web method
       // Note: Colons in hostname (e.g., localhost:3000) must be percent-encoded
@@ -135,10 +161,19 @@ export class JwksController {
       // Get JWKS to extract public keys
       const jwks = await KeyService.getJwkSet();
 
+      // Warn if no active keys are available
+      if (jwks.keys.length === 0) {
+        logger.warn(
+          "DID document generated with no verification methods - no active keys available",
+          { did },
+        );
+      }
+
       // Build verification methods from JWKs
+      // Use stable key IDs from JWK kid property, fallback to index if not set
       const verificationMethod: DidVerificationMethod[] = jwks.keys.map(
         (key, index) => ({
-          id: `${did}#key-${index}`,
+          id: `${did}#${key.kid || `key-${index}`}`,
           type: "JsonWebKey2020",
           controller: did,
           publicKeyJwk: key,
