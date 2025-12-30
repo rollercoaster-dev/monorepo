@@ -1,256 +1,175 @@
-# /work-on-issue
+# /work-on-issue $ARGUMENTS
 
-End-to-end workflow from GitHub issue to PR creation with gate-based approval.
+Execute the gated workflow for issue #$ARGUMENTS.
 
-## Usage
+**YOU are the orchestrator. Do not delegate gate handling to agents.**
 
-```
-/work-on-issue <issue-number>
-```
+---
 
 ## Workflow Overview
 
 ```
-GATE 1: Issue Review
-├── Fetch and display issue
-├── Check for blockers
-└── WAIT for user approval
-
-GATE 2: Feature Development
-├── Launch /feature-dev plugin
-├── 7-phase workflow
-└── WAIT for user approval
-
-GATE 3: Pre-PR Review
-├── Run pr-review-toolkit agents
-├── Run openbadges-compliance (if badge code)
-├── Fix critical issues
-└── WAIT for user approval
-
-GATE 4: Create PR
-├── Create PR with issue reference
-└── CI takes over (CodeRabbit + Claude)
+GATE 1: Issue Review    → STOP, show full issue, wait for "proceed"
+GATE 2: Plan Review     → STOP, show full plan, wait for "proceed"
+GATE 3: Commit Review   → STOP, show diff, wait for approval (repeated per commit)
+GATE 4: Pre-PR Review   → STOP, show findings, wait for approval
 ```
 
 ---
 
-## GATE 1: Issue Review
+## GATE 1: Show Issue
 
-### Step 1.1: Fetch Issue
+**STOP** - This is a hard gate.
 
-```bash
-gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees
-```
+1. Fetch the issue:
 
-### Step 1.2: Display Issue Summary
+   ```bash
+   gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees
+   ```
 
-Present to user:
+2. Check for blockers:
 
-- **Issue #**: Number and title
-- **Labels**: List of labels
-- **Milestone**: Associated milestone
-- **Description**: Issue body (summarized if long)
-- **Acceptance Criteria**: Extract from body if present
+   ```bash
+   gh issue view $ARGUMENTS --json body | grep -iE "blocked by|depends on"
+   ```
 
-### Step 1.3: Check for Blockers
+3. Show the **COMPLETE** issue to the user:
+   - Full title and number
+   - Full body (verbatim - do NOT summarize)
+   - Labels and milestone
+   - Blockers if any
 
-```bash
-gh issue view $ARGUMENTS --json body | grep -i "blocked by\|depends on"
-```
+4. **STOP HERE** and wait for user to say one of:
+   - "proceed"
+   - "yes"
+   - "go ahead"
+   - "approved"
 
-If blockers found, warn user and ask if they want to proceed.
-
-### Step 1.4: GATE - User Approval
-
-Ask user:
-
-> "Ready to start working on issue #X? This will launch the feature-dev workflow."
-
-Options:
-
-- **Yes, proceed** - Continue to Gate 2
-- **Show more details** - Display full issue body
-- **Cancel** - Exit workflow
+**Do NOT continue until you receive explicit approval.**
 
 ---
 
-## GATE 2: Feature Development
+## After Gate 1 Approval: Research & Plan
 
-### Step 2.1: Launch /feature-dev
+5. Create feature branch FIRST:
 
-Pass issue context to feature-dev plugin:
+   ```bash
+   git checkout -b feat/issue-$ARGUMENTS-{short-description}
+   ```
 
-```
-/feature-dev Implement issue #X: {issue title}
+6. Spawn `issue-researcher` agent to:
+   - Analyze codebase
+   - Check dependencies
+   - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
 
-Context from GitHub issue:
-{issue body}
-
-Acceptance criteria:
-{extracted criteria}
-```
-
-### Step 2.2: Feature-dev 7-Phase Workflow
-
-The feature-dev plugin handles:
-
-1. **Discovery** - Clarify requirements
-2. **Exploration** - code-explorer analyzes codebase
-3. **Questions** - Fill gaps
-4. **Architecture** - code-architect designs approaches
-5. **Implementation** - Build the feature
-6. **Quality Review** - code-reviewer checks
-7. **Summary** - Document what was built
-
-### Step 2.3: GATE - Implementation Approval
-
-After feature-dev completes, ask user:
-
-> "Implementation complete. Ready for pre-PR review?"
-
-Options:
-
-- **Yes, review** - Continue to Gate 3
-- **Make changes** - Return to implementation
-- **Cancel** - Exit workflow
+7. When researcher returns, READ the plan file with the Read tool.
 
 ---
 
-## GATE 3: Pre-PR Review
+## GATE 2: Show Plan
 
-### Step 3.1: Identify Changed Files
+**STOP** - This is a hard gate.
 
-```bash
-git diff --name-only main...HEAD
-```
+8. Show the **COMPLETE** plan to the user:
+   - Every section
+   - Every step
+   - Every commit planned
+   - Do NOT summarize
 
-### Step 3.2: Run pr-review-toolkit Agents
+9. **STOP HERE** and wait for explicit approval.
 
-Launch in parallel:
-
-1. **pr-review-toolkit:code-reviewer**
-   - General code quality
-   - CLAUDE.md compliance
-   - Style violations
-
-2. **pr-review-toolkit:pr-test-analyzer**
-   - Test coverage quality
-   - Critical gaps
-
-3. **pr-review-toolkit:silent-failure-hunter**
-   - Error handling
-   - Catch block issues
-
-4. **pr-review-toolkit:type-design-analyzer** (if new types added)
-   - Type design quality
-   - Invariant enforcement
-
-### Step 3.3: Run Domain-Specific Review (if applicable)
-
-If changes involve badge/credential code:
-
-```
-Launch openbadges-compliance-reviewer agent
-```
-
-Check for:
-
-- OB2/OB3 spec compliance
-- Correct context URLs
-- Valid credential structure
-
-### Step 3.4: Consolidate Review Results
-
-Present findings grouped by severity:
-
-**Critical (must fix):**
-
-- {list critical issues}
-
-**High (should fix):**
-
-- {list high issues}
-
-**Medium (consider fixing):**
-
-- {list medium issues}
-
-### Step 3.5: Auto-fix Critical Issues
-
-For Critical and High issues with clear fixes:
-
-- Apply fixes automatically
-- Show diff of changes
-- Re-run affected reviewers
-
-### Step 3.6: GATE - Review Approval
-
-Ask user:
-
-> "Review complete. X critical issues fixed, Y medium issues noted. Ready to create PR?"
-
-Options:
-
-- **Create PR** - Continue to Gate 4
-- **Fix more issues** - Address remaining issues
-- **Show all findings** - Display full review
-- **Cancel** - Exit workflow
+**Do NOT continue until you receive explicit approval.**
 
 ---
 
-## GATE 4: Create PR
+## After Gate 2 Approval: Implement
 
-### Step 4.1: Generate PR Title
+10. For each atomic commit in the plan:
+    - Make the changes according to plan
+    - Run validation: `bun run type-check && bun run lint`
+    - Prepare the diff
 
-Based on issue:
+---
 
-```
-fix: {issue title} (#issue-number)
-feat: {issue title} (#issue-number)
-```
+## GATE 3: Commit Review (Repeated Per Commit)
 
-### Step 4.2: Generate PR Body
+**STOP** - This is a hard gate for EACH commit.
 
-```markdown
-## Summary
+11. Show the diff: `git diff`
 
-Implements #{issue-number}: {issue title}
+12. Explain what changed and why
 
-## Changes
+13. **STOP HERE** and wait for approval
 
-- {list of changes from feature-dev summary}
+14. Only after approval:
 
-## Test Plan
+    ```bash
+    git add . && git commit -m "<type>(<scope>): <description>"
+    ```
 
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
+15. Repeat for each commit in the plan
 
-## Review Notes
+**Do NOT batch commits. One at a time, one approval at a time.**
 
-Pre-PR review completed:
+---
 
-- Code quality: PASSED
-- Test coverage: PASSED
-- Error handling: PASSED
-- {domain review if applicable}: PASSED
+## After All Commits: Finalization
 
-Closes #{issue-number}
-```
+16. Run full validation:
 
-### Step 4.3: Create PR
+    ```bash
+    bun test && bun run type-check && bun run lint && bun run build
+    ```
 
-```bash
-gh pr create --title "{title}" --body "{body}" --base main
-```
+17. Run pr-review-toolkit agents:
+    - pr-review-toolkit:code-reviewer
+    - pr-review-toolkit:pr-test-analyzer
+    - pr-review-toolkit:silent-failure-hunter
 
-### Step 4.4: Report Success
+18. If badge/credential code, spawn `openbadges-compliance-reviewer`
 
-Display:
+---
 
-- PR URL
-- Next steps (CI will run CodeRabbit + Claude review)
-- How to address review feedback
+## GATE 4: Pre-PR Review Results
+
+**STOP** - This is a hard gate.
+
+19. Present findings grouped by severity:
+    - **Critical (must fix)**: Security, bugs, breaking changes
+    - **High (should fix)**: Code quality, error handling
+    - **Medium (consider)**: Style, documentation
+
+20. **STOP HERE** and wait for approval to create PR.
+
+**Do NOT create PR until Critical issues are resolved and user approves.**
+
+---
+
+## After Gate 4 Approval: Create PR
+
+21. Push branch:
+
+    ```bash
+    git push -u origin HEAD
+    ```
+
+22. Create PR:
+
+    ```bash
+    gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
+    ```
+
+23. Report PR URL and next steps
+
+---
+
+## Critical Rules
+
+1. **YOU are the orchestrator** - Worker agents return to you, you handle gates
+2. **STOP means STOP** - Literally halt and wait for user input
+3. **One gate at a time** - No batching, no previewing future gates
+4. **Show, don't summarize** - Full content at every gate
+5. **Explicit approval only** - "proceed", "yes", "approved" (not silence)
 
 ---
 
@@ -259,118 +178,22 @@ Display:
 ### Issue Not Found
 
 ```
-Error: Issue #X not found. Please check the issue number and try again.
+Error: Issue #X not found. Please check the issue number.
 ```
 
-### No Changes to Commit
+### No Approval Given
+
+If user says something ambiguous, ask for clarification:
 
 ```
-Warning: No changes detected. Did you complete the implementation?
+I need explicit approval to proceed. Please say "proceed" to continue or "stop" to halt.
 ```
 
-### Review Failures
+### Skipped Gate Recovery
 
-If critical issues can't be auto-fixed:
+If you realize you skipped a gate:
 
-```
-Critical issues require manual attention:
-1. {issue description} at {file:line}
-   Suggestion: {how to fix}
-```
-
-### PR Creation Failed
-
-```
-Error creating PR. Please check:
-- You have push access to the repository
-- The branch doesn't already have an open PR
-- All changes are committed
-```
-
----
-
-## Integration Points
-
-### Plugins Used
-
-- **feature-dev** - 7-phase development workflow
-- **pr-review-toolkit** - Code review (6 agents)
-
-### Custom Agents Used
-
-- **openbadges-compliance-reviewer** - OB spec validation (if badge code)
-
-### CI Integration
-
-After PR creation, CI handles:
-
-- **CodeRabbit** - AI code review
-- **Claude** - Additional review
-- **Tests** - Automated test suite
-
----
-
-## Example Session
-
-```
-User: /work-on-issue 147
-
-Claude: ## Issue #147: Add validFrom/validUntil fields to OB3 credentials
-
-**Labels**: ob3, enhancement
-**Milestone**: OB3 Phase 1: Core Spec
-
-**Description**:
-Add support for temporal validity (validFrom, validUntil) to OB3
-credential types per the W3C VC specification.
-
-**Acceptance Criteria**:
-- [ ] Add validFrom field (ISO 8601 datetime)
-- [ ] Add validUntil field (ISO 8601 datetime)
-- [ ] Validate validFrom < validUntil when both present
-- [ ] Add tests for validity period logic
-
-No blockers detected.
-
-Ready to start working on issue #147? This will launch the
-feature-dev workflow.
-
-[Yes, proceed] [Show more details] [Cancel]
-
-User: Yes, proceed
-
-Claude: Launching /feature-dev workflow...
-
-[... feature-dev 7-phase workflow runs ...]
-
-Implementation complete. Ready for pre-PR review?
-
-[Yes, review] [Make changes] [Cancel]
-
-User: Yes, review
-
-Claude: Running pre-PR review...
-
-- pr-review-toolkit:code-reviewer... PASSED
-- pr-review-toolkit:pr-test-analyzer... PASSED
-- pr-review-toolkit:silent-failure-hunter... PASSED
-- openbadges-compliance-reviewer... PASSED
-
-No critical issues found. 2 medium suggestions noted.
-
-Ready to create PR?
-
-[Create PR] [Show all findings] [Cancel]
-
-User: Create PR
-
-Claude: PR created successfully!
-
-**PR #156**: feat: Add validFrom/validUntil fields to OB3 credentials (#147)
-https://github.com/rollercoaster-dev/monorepo/pull/156
-
-Next steps:
-- CI will run CodeRabbit and Claude reviews
-- Address any review feedback
-- Merge when approved
-```
+1. STOP immediately
+2. Acknowledge: "I skipped a gate. Let me go back."
+3. Return to missed gate
+4. Do not continue until gate passed
