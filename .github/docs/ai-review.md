@@ -17,10 +17,11 @@ CodeRabbit automatically reviews all non-draft PRs when they are created.
 
 ### Automatic Behavior
 
-- **PR creation**: Full review of all changes
-- **Subsequent commits**: Incremental review (only new/changed lines)
-- **Force push**: Full re-review if commit history changed
+- **PR creation**: Full review of all changes (one-time)
+- **Subsequent commits**: No automatic review (use manual trigger if needed)
 - **Draft PRs**: Skipped until marked ready for review
+
+> **Why no auto-review on commits?** To avoid hitting API limits and reduce noise during iterative development. Use `@coderabbitai review` when you're ready for another review.
 
 ### Manual Trigger
 
