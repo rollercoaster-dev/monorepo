@@ -140,11 +140,16 @@ export class JwksController {
       try {
         hostname = new URL(baseUrl).host;
       } catch (urlError) {
-        logger.error("DID document generation failed: Invalid BASE_URL format", {
-          baseUrl,
-          error:
-            urlError instanceof Error ? urlError.message : "Invalid URL format",
-        });
+        logger.error(
+          "DID document generation failed: Invalid BASE_URL format",
+          {
+            baseUrl,
+            error:
+              urlError instanceof Error
+                ? urlError.message
+                : "Invalid URL format",
+          },
+        );
         return {
           status: 500,
           body: {

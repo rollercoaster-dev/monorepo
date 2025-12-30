@@ -65,14 +65,18 @@ describe("Well-Known Endpoints - E2E", () => {
       const response = await fetch(`${API_URL}/.well-known/jwks.json`);
 
       expect(response.status).toBe(200);
-      expect(response.headers.get("Content-Type")).toContain("application/json");
+      expect(response.headers.get("Content-Type")).toContain(
+        "application/json",
+      );
     });
 
     it("should return JWKS with Cache-Control header", async () => {
       const response = await fetch(`${API_URL}/.well-known/jwks.json`);
 
       expect(response.status).toBe(200);
-      expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
+      expect(response.headers.get("Cache-Control")).toBe(
+        "public, max-age=3600",
+      );
     });
 
     it("should return valid JWKS structure", async () => {
@@ -111,7 +115,9 @@ describe("Well-Known Endpoints - E2E", () => {
       const response = await fetch(`${API_URL}/.well-known/did.json`);
 
       expect(response.status).toBe(200);
-      expect(response.headers.get("Cache-Control")).toBe("public, max-age=3600");
+      expect(response.headers.get("Cache-Control")).toBe(
+        "public, max-age=3600",
+      );
     });
 
     it("should return valid DID document structure", async () => {
