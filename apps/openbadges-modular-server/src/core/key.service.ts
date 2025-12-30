@@ -49,6 +49,39 @@ export interface JsonWebKeySet {
 }
 
 /**
+ * DID Verification Method as defined in W3C DID Core
+ * @see https://www.w3.org/TR/did-core/#verification-methods
+ */
+export interface DidVerificationMethod {
+  /** Verification method identifier (e.g., "did:web:example.com#key-0") */
+  id: string;
+  /** Type of verification method (e.g., "JsonWebKey2020") */
+  type: string;
+  /** The DID that controls this verification method */
+  controller: string;
+  /** The public key in JWK format */
+  publicKeyJwk: JsonWebKey;
+}
+
+/**
+ * DID Document as defined in W3C DID Core and DID:web method
+ * @see https://www.w3.org/TR/did-core/
+ * @see https://w3c-ccg.github.io/did-method-web/
+ */
+export interface DidDocument {
+  /** JSON-LD context(s) for the DID document */
+  "@context": string[];
+  /** The DID identifier (e.g., "did:web:example.com") */
+  id: string;
+  /** Array of verification methods (public keys) */
+  verificationMethod: DidVerificationMethod[];
+  /** References to verification methods for authentication */
+  authentication: string[];
+  /** References to verification methods for VC signing (assertionMethod) */
+  assertionMethod: string[];
+}
+
+/**
  * Key status for rotation management
  */
 export enum KeyStatus {
