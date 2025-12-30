@@ -2,11 +2,17 @@
  * JWKS (JSON Web Key Set) Controller
  *
  * This controller handles the JWKS endpoint for serving public keys
- * in JSON Web Key format as specified in RFC 7517.
+ * in JSON Web Key format as specified in RFC 7517, and the DID:web
+ * document endpoint for DID resolution.
  */
 
-import type { JsonWebKeySet } from "../../core/key.service";
+import type {
+  JsonWebKeySet,
+  DidDocument,
+  DidVerificationMethod,
+} from "../../core/key.service";
 import { KeyService } from "../../core/key.service";
+import { config } from "../../config/config";
 import { logger } from "../../utils/logging/logger.service";
 
 /**
@@ -95,6 +101,82 @@ export class JwksController {
         status: 500,
         body: {
           error: "Internal server error while retrieving key status",
+        },
+      };
+    }
+  }
+
+  /**
+   * Gets the DID document for DID:web resolution
+   *
+   * Generates a DID document containing verification methods derived from
+   * the JWKS keys. The DID identifier is constructed from the configured
+   * base URL using the DID:web method specification.
+   *
+   * @see https://w3c-ccg.github.io/did-method-web/
+   * @returns The DID document response
+   */
+  async getDidDocument(): Promise<{
+    status: number;
+    body: DidDocument | { error: string };
+  }> {
+    try {
+      logger.debug("Generating DID document");
+
+      // Extract hostname from base URL for DID identifier
+      const baseUrl = config.openBadges.baseUrl;
+      const hostname = new URL(baseUrl).host;
+
+      // Construct DID using did:web method
+      // Note: Colons in hostname (e.g., localhost:3000) must be percent-encoded
+      const encodedHostname = hostname.replace(/:/g, "%3A");
+      const did = `did:web:${encodedHostname}`;
+
+      // Get JWKS to extract public keys
+      const jwks = await KeyService.getJwkSet();
+
+      // Build verification methods from JWKs
+      const verificationMethod: DidVerificationMethod[] = jwks.keys.map(
+        (key, index) => ({
+          id: `${did}#key-${index}`,
+          type: "JsonWebKey2020",
+          controller: did,
+          publicKeyJwk: key,
+        }),
+      );
+
+      // Build references for authentication and assertionMethod
+      const verificationMethodIds = verificationMethod.map((vm) => vm.id);
+
+      const didDocument: DidDocument = {
+        "@context": [
+          "https://www.w3.org/ns/did/v1",
+          "https://w3id.org/security/suites/jws-2020/v1",
+        ],
+        id: did,
+        verificationMethod,
+        authentication: verificationMethodIds,
+        assertionMethod: verificationMethodIds,
+      };
+
+      logger.info("DID document generated successfully", {
+        did,
+        verificationMethodCount: verificationMethod.length,
+      });
+
+      return {
+        status: 200,
+        body: didDocument,
+      };
+    } catch (error) {
+      logger.error("Failed to generate DID document", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+
+      return {
+        status: 500,
+        body: {
+          error: "Internal server error while generating DID document",
         },
       };
     }
