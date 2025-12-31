@@ -266,11 +266,31 @@ export function verifySignature(
 }
 
 /**
- * Supported cryptosuites for data integrity proofs
+ * Supported cryptosuites for Data Integrity proofs.
+ *
+ * W3C Standard Cryptosuites:
+ * - `eddsa-rdfc-2022`: EdDSA with RDF Dataset Canonicalization (recommended for Ed25519)
+ * - `ecdsa-rdfc-2019`: ECDSA with RDF Dataset Canonicalization (P-256, P-384 curves)
+ *
+ * Note: RSA signatures are not part of W3C Data Integrity cryptosuites.
+ * For RSA keys, use JWT/JWS proof format instead of DataIntegrityProof.
+ *
+ * @see https://www.w3.org/TR/vc-data-integrity/
  */
 export enum Cryptosuite {
+  /**
+   * @deprecated Non-standard cryptosuite. RSA signatures should use JWT/JWS proof format,
+   * not DataIntegrityProof. Kept for backward compatibility when verifying existing proofs.
+   */
   RsaSha256 = "rsa-sha256",
+
+  /**
+   * @deprecated Use EddsaRdfc2022 for W3C Data Integrity compliance.
+   * Kept for backward compatibility when verifying existing proofs.
+   */
   Ed25519 = "ed25519-2020",
+
+  /** W3C standard EdDSA cryptosuite with RDF Dataset Canonicalization */
   EddsaRdfc2022 = "eddsa-rdfc-2022",
 }
 
@@ -295,14 +315,22 @@ export function createVerification(
     const actualKeyType = keyType || detectKeyType(privateKey);
 
     // Determine cryptosuite based on key type if not provided
+    // Note: For W3C compliance, Ed25519 uses eddsa-rdfc-2022, and RSA should use JWT proofs
     let actualCryptosuite = cryptosuite;
     if (!actualCryptosuite) {
       switch (actualKeyType) {
         case KeyType.RSA:
+          // RSA with DataIntegrityProof is non-standard; JWT proof format is preferred
+          // Using deprecated RsaSha256 for backward compatibility
+          logger.warn(
+            "RSA keys should use JWT proof format for W3C compliance. " +
+              "DataIntegrityProof with rsa-sha256 cryptosuite is non-standard.",
+          );
           actualCryptosuite = Cryptosuite.RsaSha256;
           break;
         case KeyType.Ed25519:
-          actualCryptosuite = Cryptosuite.Ed25519;
+          // Use W3C standard cryptosuite for Ed25519
+          actualCryptosuite = Cryptosuite.EddsaRdfc2022;
           break;
         default:
           throw new Error(
