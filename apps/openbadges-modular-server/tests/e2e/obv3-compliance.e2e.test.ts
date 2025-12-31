@@ -563,9 +563,10 @@ describe("OpenBadges v3.0 Compliance - E2E", () => {
     expect((assertion.proof as Record<string, unknown>).type).toBe(
       "DataIntegrityProof",
     );
-    // Default key type is now Ed25519 with W3C-compliant cryptosuite
-    expect((assertion.proof as Record<string, unknown>).cryptosuite).toBe(
-      "eddsa-rdfc-2022",
+    // Cryptosuite depends on key type: eddsa-rdfc-2022 for Ed25519 (new default),
+    // rsa-sha256 for existing RSA keys (backward compatible)
+    expect(["eddsa-rdfc-2022", "rsa-sha256"]).toContain(
+      (assertion.proof as Record<string, unknown>).cryptosuite as string,
     );
     expect((assertion.proof as Record<string, unknown>).proofPurpose).toBe(
       "assertionMethod",
