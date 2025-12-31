@@ -339,8 +339,8 @@ export class OpenBadges3Serializer implements BadgeSerializer {
         ...(issuer.image && { image: issuer.image }),
         ...(issuer.telephone && { telephone: issuer.telephone }), // Add telephone for OBv3
       },
-      issuanceDate: assertion.issuedOn,
-      ...(assertion.expires && { expirationDate: assertion.expires }),
+      validFrom: assertion.issuedOn,
+      ...(assertion.expires && { validUntil: assertion.expires }),
       credentialSubject: {
         id: assertion.recipient.identity,
         type: "AchievementSubject",

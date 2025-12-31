@@ -92,8 +92,8 @@ export interface VerifiableCredentialData {
   id: Shared.IRI;
   type: string | string[];
   issuer: Shared.IRI | Partial<IssuerData>;
-  issuanceDate: string;
-  expirationDate?: string;
+  validFrom: string;
+  validUntil?: string;
   credentialSubject: {
     id: string;
     type: string | string[];

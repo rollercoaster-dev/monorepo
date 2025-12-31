@@ -128,8 +128,8 @@ export function createVerifiableCredential(
       ...(issuer.description && { description: issuer.description }),
       ...(issuer.image && { image: issuer.image }),
     },
-    issuanceDate: assertion.issuedOn,
-    ...(assertion.expires && { expirationDate: assertion.expires }),
+    validFrom: assertion.issuedOn,
+    ...(assertion.expires && { validUntil: assertion.expires }),
     credentialSubject: {
       id: assertion.recipient.identity,
       type: "AchievementSubject",
