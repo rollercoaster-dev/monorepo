@@ -63,7 +63,8 @@ describe("Verification Service", () => {
     // Cast to DataIntegrityProof (or a compatible OB3.Proof) for type safety with new properties
     const proof = signedAssertion.verification as OB3.Proof;
     expect(proof.type).toBe("DataIntegrityProof");
-    expect(proof.cryptosuite).toBe("rsa-sha256");
+    // Default key type is now Ed25519 with W3C-compliant cryptosuite
+    expect(proof.cryptosuite).toBe("eddsa-rdfc-2022");
     expect(proof.proofPurpose).toBe("assertionMethod");
     expect(proof.created).toBeDefined();
     expect(proof.proofValue).toBeDefined(); // Changed from signatureValue

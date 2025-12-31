@@ -177,13 +177,15 @@ describe("Assertion Entity", () => {
     // Use type assertion to avoid TypeScript errors
     const proof = jsonLd.proof as {
       type: string;
-      cryptosuite: string;
+      cryptosuite?: string;
       created: string;
       verificationMethod: string;
       proofValue: string;
     };
     expect(proof.type).toBe("DataIntegrityProof");
-    expect(proof.cryptosuite).toBe("rsa-sha256");
+    // Legacy verification data without cryptosuite - cryptosuite is omitted
+    // New proofs created via VerificationService will use eddsa-rdfc-2022
+    expect(proof.cryptosuite).toBeUndefined();
     expect(proof.created).toBeDefined();
     expect(proof.verificationMethod).toBe(
       validAssertionData.verification.creator,
