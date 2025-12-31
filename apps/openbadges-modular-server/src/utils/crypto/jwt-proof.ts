@@ -6,7 +6,14 @@
  */
 
 import type { JWTPayload, JWTHeaderParameters } from "jose";
-import { SignJWT, jwtVerify, importJWK, importPKCS8, importSPKI } from "jose";
+import {
+  SignJWT,
+  jwtVerify,
+  importJWK,
+  importPKCS8,
+  importSPKI,
+  decodeProtectedHeader,
+} from "jose";
 import type { Shared } from "openbadges-types";
 import { logger } from "../logging/logger.service";
 import type {
@@ -229,8 +236,19 @@ export async function verifyJWTProof(
       verificationMethod: jwtProof.verificationMethod,
     });
 
-    // Import the public key
-    const publicKey = await importPublicKey(options.publicKey);
+    // Decode the JWT header to get the algorithm before importing the key
+    // This is necessary because importSPKI/importPKCS8 requires the algorithm
+    // to be specified, and EdDSA keys fail if imported with wrong algorithm (e.g., RS256)
+    const header = decodeProtectedHeader(jwtProof.jws);
+    const algorithm = header.alg || "RS256";
+
+    logger.debug("Decoded JWT header", {
+      algorithm,
+      keyId: header.kid,
+    });
+
+    // Import the public key with the correct algorithm from the JWT header
+    const publicKey = await importPublicKey(options.publicKey, algorithm);
 
     // Verify the JWT
     const { payload, protectedHeader } = await jwtVerify(

@@ -296,13 +296,23 @@ export class Assertion {
         }
       } else if (assertionData.verification) {
         // Fallback to single verification for backward compatibility
+        // Note: This path handles legacy verification data. The cryptosuite
+        // should ideally be determined by the key type used for signing.
+        // New proofs should be created via VerificationService which uses
+        // the W3C-compliant eddsa-rdfc-2022 cryptosuite for Ed25519 keys.
         const verification = assertionData.verification as unknown as Record<
           string,
           unknown
         >;
         output.proof = {
           type: "DataIntegrityProof",
-          cryptosuite: "rsa-sha256",
+          // Use cryptosuite from verification if available, otherwise omit
+          // to let the verification service determine it based on key type.
+          // Note: For legacy RSA signatures, rsa-sha256 is non-standard but
+          // kept for backward compatibility when cryptosuite is specified.
+          ...(verification.cryptosuite && {
+            cryptosuite: verification.cryptosuite,
+          }),
           created:
             verification.created || createDateTime(new Date().toISOString()),
           verificationMethod: verification.creator || `${this.id}#key-1`,
