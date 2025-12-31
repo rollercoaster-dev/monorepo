@@ -162,13 +162,13 @@ export class Assertion {
         ],
         // Cast to proper types for OB3
         issuer: this.issuer,
-        // OB3 uses string for dates but with a specific format
-        issuanceDate: createDateTime(this.issuedOn),
+        // OB3 uses validFrom per VC Data Model 2.0
+        validFrom: createDateTime(this.issuedOn),
       };
 
-      // Add expiration date if present
+      // Add validUntil if present (VC Data Model 2.0)
       if (this.expires) {
-        ob3Data.expirationDate = createDateTime(this.expires);
+        ob3Data.validUntil = createDateTime(this.expires);
       }
 
       // Add proof if verification is present
@@ -514,8 +514,8 @@ export class Assertion {
       throw new Error("VerifiableCredential must have a type");
     if (!vcData["issuer"])
       throw new Error("VerifiableCredential must have an issuer");
-    if (!vcData["issuanceDate"])
-      throw new Error("VerifiableCredential must have an issuanceDate");
+    if (!vcData["validFrom"])
+      throw new Error("VerifiableCredential must have a validFrom");
     if (!vcData["credentialSubject"])
       throw new Error("VerifiableCredential must have a credentialSubject");
     if (!vcData["@context"])
