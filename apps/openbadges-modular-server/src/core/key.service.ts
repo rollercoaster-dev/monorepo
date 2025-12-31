@@ -154,18 +154,19 @@ export class KeyService {
       await KeyService.loadKeys();
 
       // If no default key pair exists, generate one
+      // Note: Ed25519 is the default for W3C Data Integrity compliance (eddsa-rdfc-2022)
       if (!keyPairs.has("default")) {
-        const keyPairData = generateKeyPair();
+        const keyPairData = generateKeyPair(KeyType.Ed25519);
         const metadata: KeyMetadata = {
           created: new Date().toISOString(),
-          keyType: KeyType.RSA,
-          cryptosuite: Cryptosuite.RsaSha256,
+          keyType: KeyType.Ed25519,
+          cryptosuite: Cryptosuite.EddsaRdfc2022,
           status: KeyStatus.ACTIVE,
         };
         const defaultKeyPair: KeyPair = {
           ...keyPairData,
-          keyType: KeyType.RSA,
-          cryptosuite: Cryptosuite.RsaSha256,
+          keyType: KeyType.Ed25519,
+          cryptosuite: Cryptosuite.EddsaRdfc2022,
           metadata,
           status: KeyStatus.ACTIVE,
         };
@@ -174,7 +175,7 @@ export class KeyService {
         // Save the new key pair
         await KeyService.saveKeyPair("default", defaultKeyPair);
 
-        logger.info("Generated and saved default RSA key pair");
+        logger.info("Generated and saved default Ed25519 key pair");
       } else {
         logger.info("Loaded existing default key pair");
       }
@@ -238,22 +239,23 @@ export class KeyService {
             cryptosuite =
               keyType === KeyType.RSA
                 ? Cryptosuite.RsaSha256
-                : Cryptosuite.Ed25519;
+                : Cryptosuite.EddsaRdfc2022;
           }
         } else {
           // If no metadata file, detect key type from the loaded key
           keyType = detectKeyType(publicKey);
 
           // Determine cryptosuite based on key type
+          // Note: Ed25519 uses eddsa-rdfc-2022 for W3C compliance
           switch (keyType) {
             case KeyType.RSA:
               cryptosuite = Cryptosuite.RsaSha256;
               break;
             case KeyType.Ed25519:
-              cryptosuite = Cryptosuite.Ed25519;
+              cryptosuite = Cryptosuite.EddsaRdfc2022;
               break;
             default:
-              cryptosuite = Cryptosuite.RsaSha256; // Default fallback
+              cryptosuite = Cryptosuite.EddsaRdfc2022; // Default to W3C-compliant cryptosuite
           }
 
           // Create metadata file for future use
@@ -366,22 +368,23 @@ export class KeyService {
               cryptosuite =
                 keyType === KeyType.RSA
                   ? Cryptosuite.RsaSha256
-                  : Cryptosuite.Ed25519;
+                  : Cryptosuite.EddsaRdfc2022;
             }
           } else {
             // If no metadata file, detect key type from the loaded key
             keyType = detectKeyType(publicKey);
 
             // Determine cryptosuite based on key type
+            // Note: Ed25519 uses eddsa-rdfc-2022 for W3C compliance
             switch (keyType) {
               case KeyType.RSA:
                 cryptosuite = Cryptosuite.RsaSha256;
                 break;
               case KeyType.Ed25519:
-                cryptosuite = Cryptosuite.Ed25519;
+                cryptosuite = Cryptosuite.EddsaRdfc2022;
                 break;
               default:
-                cryptosuite = Cryptosuite.RsaSha256; // Default fallback
+                cryptosuite = Cryptosuite.EddsaRdfc2022; // Default to W3C-compliant cryptosuite
             }
 
             // Create metadata file for future use
@@ -592,28 +595,29 @@ export class KeyService {
   /**
    * Generates a new key pair with the given ID
    * @param id The ID for the new key pair
-   * @param keyType The type of key to generate (defaults to RSA)
+   * @param keyType The type of key to generate (defaults to Ed25519 for W3C compliance)
    * @returns The generated key pair
    */
   static async generateKeyPair(
     id: string,
-    keyType: KeyType = KeyType.RSA,
+    keyType: KeyType = KeyType.Ed25519,
   ): Promise<KeyPair> {
     try {
       // Generate the key pair with the specified type
       const keyPairData = generateKeyPair(keyType);
 
       // Determine cryptosuite based on key type
+      // Note: Ed25519 uses eddsa-rdfc-2022 for W3C compliance
       let cryptosuite: Cryptosuite;
       switch (keyType) {
         case KeyType.RSA:
           cryptosuite = Cryptosuite.RsaSha256;
           break;
         case KeyType.Ed25519:
-          cryptosuite = Cryptosuite.Ed25519;
+          cryptosuite = Cryptosuite.EddsaRdfc2022;
           break;
         default:
-          cryptosuite = Cryptosuite.RsaSha256; // Default fallback
+          cryptosuite = Cryptosuite.EddsaRdfc2022; // Default to W3C-compliant cryptosuite
       }
 
       // Attach initial metadata
