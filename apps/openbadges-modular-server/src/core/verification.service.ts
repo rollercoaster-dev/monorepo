@@ -156,17 +156,22 @@ export class VerificationService {
       const publicKey = await KeyService.getPublicKey(keyId);
 
       // Determine the appropriate cryptosuite based on key type (detect from public key)
+      // Note: Ed25519 uses eddsa-rdfc-2022 for W3C Data Integrity compliance
       const detectedKeyType = detectKeyType(publicKey);
       let cryptosuite: Cryptosuite;
       switch (detectedKeyType) {
         case KeyType.RSA:
+          // Note: RSA with DataIntegrityProof uses non-standard cryptosuite
+          // Consider using JWT proofs for RSA keys instead
           cryptosuite = Cryptosuite.RsaSha256;
           break;
         case KeyType.Ed25519:
-          cryptosuite = Cryptosuite.Ed25519;
+          // W3C standard cryptosuite for Ed25519
+          cryptosuite = Cryptosuite.EddsaRdfc2022;
           break;
         default:
-          cryptosuite = Cryptosuite.RsaSha256; // Default fallback
+          // Default to W3C-compliant cryptosuite
+          cryptosuite = Cryptosuite.EddsaRdfc2022;
       }
 
       // Create verification object (now DataIntegrityProof)
@@ -437,10 +442,11 @@ export class VerificationService {
         keyType = detectKeyType(publicKey);
 
         // Map the detected key type to a cryptosuite
+        // Note: Using W3C-compliant cryptosuite for Ed25519
         if (keyType === KeyType.RSA) {
           cryptosuite = Cryptosuite.RsaSha256;
         } else if (keyType === KeyType.Ed25519) {
-          cryptosuite = Cryptosuite.Ed25519;
+          cryptosuite = Cryptosuite.EddsaRdfc2022;
         } else {
           // This should never happen with our current implementation, but handle it just in case
           return createVerificationError(
