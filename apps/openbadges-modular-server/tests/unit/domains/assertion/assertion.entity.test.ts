@@ -117,9 +117,9 @@ describe("Assertion Entity", () => {
     );
     expect(credentialSubject.achievement).toBe(validAssertionData.badgeClass);
 
-    // Check dates
-    expect(obj.issuanceDate).toBeDefined(); // OB3 uses issuanceDate instead of issuedOn
-    expect(obj.expirationDate).toBeDefined(); // OB3 uses expirationDate instead of expires
+    // Check dates (VC Data Model 2.0 uses validFrom/validUntil)
+    expect(obj.validFrom).toBeDefined();
+    expect(obj.validUntil).toBeDefined();
 
     expect(obj.evidence).toEqual(validAssertionData.evidence);
     expect(obj.issuer).toBe(validAssertionData.issuer);
@@ -166,9 +166,9 @@ describe("Assertion Entity", () => {
     // For OB3, recipient is transformed into credentialSubject
     expect(jsonLd.credentialSubject).toBeDefined();
 
-    // Check dates
-    expect(jsonLd.issuanceDate).toBeDefined(); // OB3 uses issuanceDate instead of issuedOn
-    expect(jsonLd.expirationDate).toBeDefined(); // OB3 uses expirationDate instead of expires
+    // Check dates (VC Data Model 2.0 uses validFrom/validUntil)
+    expect(jsonLd.validFrom).toBeDefined();
+    expect(jsonLd.validUntil).toBeDefined();
 
     expect(jsonLd.evidence).toEqual(validAssertionData.evidence);
 

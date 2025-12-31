@@ -90,13 +90,13 @@ export class VerificationService {
         issuer:
           assertion.issuer ||
           `${process.env["BASE_URL"] || "http://localhost:3000"}/issuer`, // Fallback issuer
-        issuanceDate: assertion.issuedOn,
+        validFrom: assertion.issuedOn,
         credentialSubject: {
           id: assertion.recipient,
           type: "AchievementSubject",
           achievement: assertion.badgeClass,
         },
-        ...(assertion.expires && { expirationDate: assertion.expires }),
+        ...(assertion.expires && { validUntil: assertion.expires }),
         ...(assertion.credentialStatus && {
           credentialStatus: assertion.credentialStatus as unknown as Record<
             string,

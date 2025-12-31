@@ -67,7 +67,7 @@ describe("Batch Operations Unit Tests", () => {
       type: ["VerifiableCredential", "OpenBadgeCredential"],
       id: "test-id",
       issuer: "test-issuer",
-      issuanceDate: "2023-01-01T00:00:00Z",
+      validFrom: "2023-01-01T00:00:00Z",
       credentialSubject: {
         id: "test-recipient",
         achievement: {

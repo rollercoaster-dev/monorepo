@@ -128,7 +128,7 @@ export class Assertion {
   ): OB2.Assertion | OB3.VerifiableCredential {
     // Create a base object with common properties
     const baseObject = {
-      // OB2 keeps `issuedOn`; OB3 will use `issuanceDate` later
+      // OB2 keeps `issuedOn`; OB3 uses `validFrom` per VC Data Model 2.0
       ...(version === BadgeVersion.V2 && { issuedOn: this.issuedOn }),
       evidence: this.evidence,
     };
@@ -162,13 +162,13 @@ export class Assertion {
         ],
         // Cast to proper types for OB3
         issuer: this.issuer,
-        // OB3 uses string for dates but with a specific format
-        issuanceDate: createDateTime(this.issuedOn),
+        // OB3 uses validFrom per VC Data Model 2.0
+        validFrom: createDateTime(this.issuedOn),
       };
 
-      // Add expiration date if present
+      // Add validUntil if present (VC Data Model 2.0)
       if (this.expires) {
-        ob3Data.expirationDate = createDateTime(this.expires);
+        ob3Data.validUntil = createDateTime(this.expires);
       }
 
       // Add proof if verification is present
@@ -338,15 +338,15 @@ export class Assertion {
         };
       }
 
-      // Convert issuedOn to issuanceDate
-      if (output.issuedOn && !output.issuanceDate) {
-        output.issuanceDate = output.issuedOn;
+      // Convert issuedOn to validFrom (VC Data Model 2.0)
+      if (output.issuedOn && !output.validFrom) {
+        output.validFrom = output.issuedOn;
         delete output.issuedOn;
       }
 
-      // Convert expires to expirationDate
-      if (output.expires && !output.expirationDate) {
-        output.expirationDate = output.expires;
+      // Convert expires to validUntil (VC Data Model 2.0)
+      if (output.expires && !output.validUntil) {
+        output.validUntil = output.expires;
         delete output.expires;
       }
     }
@@ -514,8 +514,8 @@ export class Assertion {
       throw new Error("VerifiableCredential must have a type");
     if (!vcData["issuer"])
       throw new Error("VerifiableCredential must have an issuer");
-    if (!vcData["issuanceDate"])
-      throw new Error("VerifiableCredential must have an issuanceDate");
+    if (!vcData["validFrom"])
+      throw new Error("VerifiableCredential must have a validFrom");
     if (!vcData["credentialSubject"])
       throw new Error("VerifiableCredential must have a credentialSubject");
     if (!vcData["@context"])
