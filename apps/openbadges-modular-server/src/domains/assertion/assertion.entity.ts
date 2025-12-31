@@ -338,15 +338,15 @@ export class Assertion {
         };
       }
 
-      // Convert issuedOn to issuanceDate
-      if (output.issuedOn && !output.issuanceDate) {
-        output.issuanceDate = output.issuedOn;
+      // Convert issuedOn to validFrom (VC Data Model 2.0)
+      if (output.issuedOn && !output.validFrom) {
+        output.validFrom = output.issuedOn;
         delete output.issuedOn;
       }
 
-      // Convert expires to expirationDate
-      if (output.expires && !output.expirationDate) {
-        output.expirationDate = output.expires;
+      // Convert expires to validUntil (VC Data Model 2.0)
+      if (output.expires && !output.validUntil) {
+        output.validUntil = output.expires;
         delete output.expires;
       }
     }
