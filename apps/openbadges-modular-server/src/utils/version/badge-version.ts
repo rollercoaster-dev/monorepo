@@ -13,12 +13,18 @@ export enum BadgeVersion {
 
 /**
  * Badge version context URLs
+ *
+ * For OB3 (VC Data Model 2.0), the @context array order is critical:
+ * 1. VC 2.0 context MUST be first
+ * 2. OB3 context second
+ *
+ * @see https://www.w3.org/TR/vc-data-model-2.0/#contexts
  */
 export const BADGE_VERSION_CONTEXTS = {
   [BadgeVersion.V2]: "https://w3id.org/openbadges/v2",
   [BadgeVersion.V3]: [
-    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
     VC_V2_CONTEXT_URL,
+    "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
   ],
 };
 

@@ -325,8 +325,10 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       ? BADGE_VERSION_CONTEXTS[BadgeVersion.V3]
       : [BADGE_VERSION_CONTEXTS[BadgeVersion.V3]];
 
+    // BADGE_VERSION_CONTEXTS[V3] already has correct order: VC 2.0 first, OB3 second
+    // Per VC Data Model 2.0 spec: https://www.w3.org/TR/vc-data-model-2.0/#contexts
     return {
-      "@context": ["https://www.w3.org/2018/credentials/v1", ...contextList],
+      "@context": contextList,
       id: assertion.id as Shared.IRI,
       type: ["VerifiableCredential", "OpenBadgeCredential"],
       issuer: {
