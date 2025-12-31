@@ -128,7 +128,7 @@ export class Assertion {
   ): OB2.Assertion | OB3.VerifiableCredential {
     // Create a base object with common properties
     const baseObject = {
-      // OB2 keeps `issuedOn`; OB3 will use `issuanceDate` later
+      // OB2 keeps `issuedOn`; OB3 uses `validFrom` per VC Data Model 2.0
       ...(version === BadgeVersion.V2 && { issuedOn: this.issuedOn }),
       evidence: this.evidence,
     };
