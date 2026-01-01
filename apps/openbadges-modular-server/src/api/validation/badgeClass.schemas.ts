@@ -49,15 +49,14 @@ const BaseBadgeClassSchema = z.object({
   ]),
   criteria: z.union([
     z.string().url(), // IRI to criteria (OB 2.0)
-    z.object({
-      id: z.string().url().optional(),
-      narrative: z.string().optional(),
-    }).refine(
-      (data) => data.id || data.narrative,
-      {
+    z
+      .object({
+        id: z.string().url().optional(),
+        narrative: z.string().optional(),
+      })
+      .refine((data) => data.id || data.narrative, {
         message: "OB3 Criteria must have at least one of 'id' or 'narrative'",
-      }
-    ), // OB 3.0 Criteria object with validation
+      }), // OB 3.0 Criteria object with validation
   ]),
   issuer: z.string(), // Issuer IRI - using string for flexibility, validation happens elsewhere
   tags: z.array(z.string()).optional(),

@@ -215,7 +215,11 @@ describe("Validation Middleware", () => {
       // Check that the error message mentions the criteria requirement
       const details = result.body.details as Record<string, string[]>;
       const allErrors = Object.values(details).flat();
-      expect(allErrors.some(msg => msg.includes("id") || msg.includes("narrative"))).toBe(true);
+      expect(
+        allErrors.some(
+          (msg) => msg.includes("id") || msg.includes("narrative"),
+        ),
+      ).toBe(true);
     });
 
     it("should accept criteria with only id", async () => {

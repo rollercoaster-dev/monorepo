@@ -161,7 +161,9 @@ export class BadgeClass
       // Criteria is required for OB3 (validated at API layer)
       // If we reach here with undefined criteria, it indicates a data integrity issue
       if (version === BadgeVersion.V3) {
-        throw new Error("OB3 BadgeClass requires criteria with id or narrative");
+        throw new Error(
+          "OB3 BadgeClass requires criteria with id or narrative",
+        );
       }
       // OB2 allows empty criteria
       return "" as Shared.IRI;
