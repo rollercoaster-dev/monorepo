@@ -995,6 +995,38 @@ describe("Badge Class API - E2E", () => {
       expect(body.error).toBeDefined();
     });
 
+    it("should reject UPDATE with empty criteria object", async () => {
+      // Create a test issuer and badge class first
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+      const { id: badgeClassId } =
+        await TestDataHelper.createBadgeClass(issuerId);
+
+      // Prepare update data with empty criteria object
+      const updateData = {
+        type: "BadgeClass",
+        name: "Updated Badge",
+        description: "Updated description.",
+        issuer: issuerId,
+        criteria: {}, // Empty object - should fail
+        image: "https://example.com/badge.png",
+      };
+
+      // Execute test
+      const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      // Verify response - should reject with 400
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBeDefined();
+    });
+
     it("should accept badge class with criteria id only", async () => {
       // Create a test issuer first
       const { id: issuerId } = await TestDataHelper.createIssuer();

@@ -343,5 +343,39 @@ describe("Validation Middleware", () => {
       const details = result.body.details as Record<string, string[]>;
       expect(Object.keys(details).length).toBeGreaterThan(0);
     });
+
+    it("should reject criteria with invalid URL format for id", async () => {
+      const mockContext = {
+        req: {
+          json: async () => ({
+            name: "Test Badge",
+            description: "Test description",
+            issuer: "https://example.com/issuer",
+            criteria: {
+              id: "not-a-valid-url", // Invalid URL format
+            },
+            image: "https://example.com/image.png",
+          }),
+        },
+        json: (body: unknown, status?: number) => {
+          return { body, status } as unknown as Context;
+        },
+      } as unknown as Context;
+
+      const handler = validateBadgeClassMiddleware();
+      const result = (await handler(
+        mockContext,
+        async () => {},
+      )) as unknown as { body: ValidationResponse; status: number };
+
+      expect(result).toBeDefined();
+      expect(result.status).toBe(400);
+      expect(result.body.success).toBe(false);
+      expect(result.body.error).toBe("Validation error");
+      expect(result.body.details).toBeDefined();
+
+      const details = result.body.details as Record<string, string[]>;
+      expect(Object.keys(details).length).toBeGreaterThan(0);
+    });
   });
 });
