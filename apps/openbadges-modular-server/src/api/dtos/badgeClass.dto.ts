@@ -22,6 +22,22 @@ export interface BadgeClassBaseDto {
         url?: string;
         caption?: string;
       };
+  /**
+   * Criteria for earning the badge.
+   *
+   * Open Badges 2.0: IRI string pointing to criteria document
+   * @example "https://example.com/criteria/badge-123"
+   *
+   * Open Badges 3.0: Criteria object with at least one of:
+   * - `id`: IRI pointing to external criteria
+   * - `narrative`: Text description of requirements
+   *
+   * @example { id: "https://example.com/criteria/badge-123" }
+   * @example { narrative: "Complete all required courses" }
+   * @example { id: "https://...", narrative: "Complete..." }
+   *
+   * Note: Empty criteria object {} is invalid and will be rejected.
+   */
   criteria?:
     | string
     | {
