@@ -18,6 +18,8 @@ Therefore: **Claude (main) handles ALL gates**, worker agents do focused work an
 
 ### Architecture Diagram
 
+**Gated Workflow (`/work-on-issue`):**
+
 ```
 Human (You) - approves at each gate
     │
@@ -56,18 +58,64 @@ Claude (Main) - THE ORCHESTRATOR - handles gates
     └── [pr-creator] → PR created
 ```
 
-## Agent Inventory (9 Total)
+**Autonomous Workflow (`/auto-issue`):**
 
 ```
-PLUGINS (Official)                    CUSTOM AGENTS (9 total)
+Human (You) - intervenes only on escalation
+    │
+    ▼
+Claude (Main) - AUTONOMOUS ORCHESTRATOR
+    │
+    ├── /auto-issue 123
+    │       │
+    │       ▼
+    │   [issue-researcher] → plan (NO GATE)
+    │             │
+    │             ▼
+    │   [atomic-developer] → commits (NO GATE)
+    │             │
+    │             ▼
+    │   [pr-review-toolkit] (parallel)
+    │             │
+    │             ▼
+    │   ┌─────────────────────┐
+    │   │ Critical findings?  │
+    │   └─────────┬───────────┘
+    │         yes │ no
+    │             │  └──────────────┐
+    │             ▼                 │
+    │   [auto-fixer] ◄──────┐      │
+    │             │         │      │
+    │             ▼         │      │
+    │   ┌─────────────────┐ │      │
+    │   │ Still critical? │─┘      │
+    │   └─────────┬───────┘        │
+    │         yes │ no             │
+    │             │  └─────────────┤
+    │             ▼                │
+    │   ╔═══════════════════╗      │
+    │   ║   ESCALATION      ║      │
+    │   ║ (only gate)       ║      │
+    │   ╚═════════╤═════════╝      │
+    │             │                │
+    │             ◄────────────────┘
+    │             ▼
+    └── [pr-creator] → PR created
+```
+
+## Agent Inventory (10 Total)
+
+```
+PLUGINS (Official)                    CUSTOM AGENTS (10 total)
 ──────────────────                    ────────────────────────────
-feature-dev (exploration)             WORKFLOW (4):
+feature-dev (exploration)             WORKFLOW (5):
 pr-review-toolkit (pre-PR review)       issue-researcher
 hookify (behavioral hooks)              atomic-developer
 context7 (library docs)                 pr-creator
 playwright (E2E testing)                review-handler
-frontend-design (UI)
-security-guidance                     DOMAIN (5):
+frontend-design (UI)                    auto-fixer
+security-guidance
+                                      DOMAIN (5):
                                         openbadges-expert
                                         openbadges-compliance-reviewer
                                         vue-hono-expert
@@ -92,6 +140,10 @@ Creates structured PRs. Triggers CodeRabbit, links issues. Handles both simple a
 ### review-handler.md
 
 Handles POST-PR review feedback from CodeRabbit, Claude, or humans. Implements fixes.
+
+### auto-fixer.md
+
+Applies fixes for critical findings from review agents. Used by `/auto-issue` during auto-fix loop. Makes minimal, targeted fixes and validates before committing.
 
 ## Domain Agents
 
