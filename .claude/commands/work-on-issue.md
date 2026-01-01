@@ -147,19 +147,27 @@ GATE 4: Pre-PR Review   → STOP, show findings, wait for approval
 
 ## After Gate 4 Approval: Create PR
 
-21. Push branch:
+21. **Clean up dev-plan file:**
+
+    ```bash
+    rm .claude/dev-plans/issue-$ARGUMENTS.md
+    git add .claude/dev-plans/
+    git commit -m "chore: clean up dev-plan for issue #$ARGUMENTS"
+    ```
+
+22. Push branch:
 
     ```bash
     git push -u origin HEAD
     ```
 
-22. Create PR:
+23. Create PR:
 
     ```bash
     gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
     ```
 
-23. Report PR URL and next steps
+24. Report PR URL and next steps
 
 ---
 

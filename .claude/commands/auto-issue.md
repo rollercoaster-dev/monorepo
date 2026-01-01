@@ -171,13 +171,21 @@ else:
     - If build fails: ESCALATE
     - Otherwise: Proceed
 
-12. **Push branch:**
+12. **Clean up dev-plan file:**
+
+    ```bash
+    rm .claude/dev-plans/issue-$ARGUMENTS.md
+    git add .claude/dev-plans/
+    git commit -m "chore: clean up dev-plan for issue #$ARGUMENTS"
+    ```
+
+13. **Push branch:**
 
     ```bash
     git push -u origin HEAD
     ```
 
-13. **Create PR:**
+14. **Create PR:**
 
     ```bash
     gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
@@ -189,17 +197,17 @@ else:
     - Auto-fix log (if any fixes were applied)
     - Footer: `Closes #$ARGUMENTS`
 
-14. **Trigger reviews:**
+15. **Trigger reviews:**
 
     ```
     @coderabbitai full review
     @claude review
     ```
 
-15. **Update board:**
+16. **Update board:**
     - Move issue to "In Review"
 
-16. **Report completion:**
+17. **Report completion:**
 
     ```
     AUTO-ISSUE COMPLETE
