@@ -360,8 +360,11 @@ describe('UserSyncService', () => {
     })
 
     it('should return false when sync fails', async () => {
-      // Mock first call to getBadgeServerUser to fail
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      // Mock ALL fetch calls to fail consistently (not just the first one)
+      // getBadgeServerUser makes 2 calls (username search, then email search)
+      mockFetch.mockImplementation(() => {
+        throw new Error('Network error')
+      })
 
       const result = await service.syncUserPermissions(mockUser)
 
@@ -415,7 +418,10 @@ describe('UserSyncService', () => {
     })
 
     it('should return null on API error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      // Use mockImplementation instead of mockRejectedValueOnce for consistent behavior
+      mockFetch.mockImplementation(() => {
+        throw new Error('Network error')
+      })
 
       const result = await service.getBadgeServerUserProfile('user-123')
 
