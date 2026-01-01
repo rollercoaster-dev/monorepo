@@ -29,7 +29,6 @@ describe('UserSyncService', () => {
     }
 
     mockFetch = vi.fn()
-    mockFetch.mockReset() // Ensure clean slate - no leftover implementations
     // Cast to unknown first to avoid Bun's fetch.preconnect type requirement
     global.fetch = mockFetch as unknown as typeof fetch
   })
