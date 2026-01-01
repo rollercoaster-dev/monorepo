@@ -344,9 +344,9 @@ This project uses a **plugin-first architecture** - official Claude Code plugins
 | **docs-assistant**                 | Documentation search, creation, updates |
 | **github-master**                  | Board/milestone/issue management        |
 
-#### Development Workflow
+#### Development Workflows
 
-Use `/work-on-issue <number>` for end-to-end issue-to-PR workflow:
+**Gated Workflow** - Use `/work-on-issue <number>` for supervised issue-to-PR:
 
 ```
 GATE 1: Issue Review → Fetch issue, check blockers
@@ -354,6 +354,23 @@ GATE 2: Feature Dev  → /feature-dev 7-phase workflow
 GATE 3: Pre-PR Review → pr-review-toolkit + openbadges-compliance
 GATE 4: Create PR    → CI takes over (CodeRabbit + Claude)
 ```
+
+**Autonomous Workflow** - Use `/auto-issue <number>` for fully automated issue-to-PR:
+
+```
+Phase 1: Research    → Fetch issue, create plan (NO GATE)
+Phase 2: Implement   → atomic-developer executes plan (NO GATE)
+Phase 3: Review      → pr-review-toolkit + auto-fix loop
+Phase 4: Finalize    → Create PR (NO GATE)
+ESCALATION           → Only if auto-fix fails MAX_RETRY times
+```
+
+| Scenario                           | Use `/work-on-issue` | Use `/auto-issue` |
+| ---------------------------------- | -------------------- | ----------------- |
+| Complex architectural changes      | Yes                  | No                |
+| Simple feature, clear requirements | No                   | Yes               |
+| Learning/teaching mode             | Yes                  | No                |
+| Batch of routine fixes             | No                   | Yes               |
 
 #### Review Pipeline
 
