@@ -104,8 +104,8 @@ describe("BadgeClass Entity", () => {
     // In OB3, alignment is renamed to alignments
     expect(obj.alignments).toEqual(validBadgeClassData.alignment);
     expect(obj.tags).toEqual(validBadgeClassData.tags);
-    // Verify it's an Achievement in OB3 output
-    expect(obj.type).toBe("Achievement");
+    // Verify it's an Achievement in OB3 output (array format per OB3 spec)
+    expect(obj.type).toEqual(["Achievement"]);
   });
 
   it("should convert to JSON-LD format", () => {
