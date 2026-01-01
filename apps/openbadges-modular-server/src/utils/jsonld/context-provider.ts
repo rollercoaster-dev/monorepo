@@ -121,7 +121,7 @@ export function createVerifiableCredential(
     type: ["VerifiableCredential", "OpenBadgeCredential"],
     issuer: {
       id: issuer.id,
-      type: issuer.type || "Profile",
+      type: issuer.type || "Issuer",
       name: issuer.name,
       url: issuer.url,
       ...(issuer.email && { email: issuer.email }),
