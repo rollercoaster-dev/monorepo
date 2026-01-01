@@ -10,7 +10,9 @@ import type { OB2 } from "openbadges-types";
 const baseBadge = createMockOB2Badge().badge as OB2.BadgeClass;
 const validOB2Badge = createMockOB2Badge({
   issuedOn: createDateTime("2025-01-01T00:00:00Z"),
-  expires: createDateTime("2026-01-01T00:00:00Z"),
+  expires: createDateTime(
+    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  ),
   badge: {
     type: "BadgeClass",
     id: baseBadge.id,
