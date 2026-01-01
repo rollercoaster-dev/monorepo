@@ -963,4 +963,136 @@ describe("Badge Class API - E2E", () => {
       });
     });
   });
+
+  describe("Badge Class API - Criteria validation", () => {
+    it("should reject badge class with empty criteria object", async () => {
+      // Create a test issuer first
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+
+      // Prepare test data with empty criteria object
+      const badgeClassData = {
+        type: "BadgeClass",
+        name: "Invalid Criteria Badge",
+        description: "Badge with invalid empty criteria.",
+        issuer: issuerId,
+        criteria: {}, // Empty object - neither id nor narrative
+        image: "https://example.com/badge.png",
+      };
+
+      // Execute test
+      const res = await fetch(BADGE_CLASSES_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
+        },
+        body: JSON.stringify(badgeClassData),
+      });
+
+      // Verify response - should reject with 400
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBeDefined();
+    });
+
+    it("should reject UPDATE with empty criteria object", async () => {
+      // Create a test issuer and badge class first
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+      const { id: badgeClassId } =
+        await TestDataHelper.createBadgeClass(issuerId);
+
+      // Prepare update data with empty criteria object
+      const updateData = {
+        type: "BadgeClass",
+        name: "Updated Badge",
+        description: "Updated description.",
+        issuer: issuerId,
+        criteria: {}, // Empty object - should fail
+        image: "https://example.com/badge.png",
+      };
+
+      // Execute test
+      const res = await fetch(`${BADGE_CLASSES_ENDPOINT}/${badgeClassId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      // Verify response - should reject with 400
+      expect(res.status).toBe(400);
+      const body = (await res.json()) as { error: string };
+      expect(body.error).toBeDefined();
+    });
+
+    it("should accept badge class with criteria id only", async () => {
+      // Create a test issuer first
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+
+      // Prepare test data with criteria id only
+      const badgeClassData = {
+        type: "BadgeClass",
+        name: "Criteria ID Badge",
+        description: "Badge with criteria id only.",
+        issuer: issuerId,
+        criteria: {
+          id: "https://example.com/criteria/123",
+        },
+        image: "https://example.com/badge.png",
+      };
+
+      // Execute test
+      const res = await fetch(BADGE_CLASSES_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
+        },
+        body: JSON.stringify(badgeClassData),
+      });
+
+      // Verify response - should accept with 201
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as BadgeClassResponseDto;
+      expect(body).toBeDefined();
+      expect(body.id).toBeDefined();
+      expect(body.name).toBe(badgeClassData.name);
+    });
+
+    it("should accept badge class with criteria narrative only", async () => {
+      // Create a test issuer first
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+
+      // Prepare test data with criteria narrative only
+      const badgeClassData = {
+        type: "BadgeClass",
+        name: "Criteria Narrative Badge",
+        description: "Badge with criteria narrative only.",
+        issuer: issuerId,
+        criteria: {
+          narrative: "Complete all the required tasks",
+        },
+        image: "https://example.com/badge.png",
+      };
+
+      // Execute test
+      const res = await fetch(BADGE_CLASSES_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": API_KEY,
+        },
+        body: JSON.stringify(badgeClassData),
+      });
+
+      // Verify response - should accept with 201
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as BadgeClassResponseDto;
+      expect(body).toBeDefined();
+      expect(body.id).toBeDefined();
+      expect(body.name).toBe(badgeClassData.name);
+    });
+  });
 });

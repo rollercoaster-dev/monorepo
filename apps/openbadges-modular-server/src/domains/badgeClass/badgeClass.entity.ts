@@ -137,6 +137,40 @@ export class BadgeClass
   }
 
   /**
+   * Resolves criteria value based on badge version.
+   * Centralizes criteria handling logic to avoid duplication.
+   * @param version The badge version to use
+   * @returns The resolved criteria value
+   * @throws Error if OB3 criteria is undefined (indicates data integrity issue)
+   */
+  private resolveCriteria(
+    version: BadgeVersion,
+  ): Shared.IRI | OB2.Criteria | OB3.Criteria {
+    if (this.criteria) {
+      if (typeof this.criteria === "string") {
+        // If criteria is already an IRI string, use it directly
+        return this.criteria;
+      } else if (version === BadgeVersion.V2) {
+        // For OB2, if criteria is an object, use it directly (OB2.Criteria)
+        return this.criteria as OB2.Criteria;
+      } else {
+        // For OB3, use criteria as is (validation happens at API layer)
+        return this.criteria as OB3.Criteria;
+      }
+    } else {
+      // Criteria is required for OB3 (validated at API layer)
+      // If we reach here with undefined criteria, it indicates a data integrity issue
+      if (version === BadgeVersion.V3) {
+        throw new Error(
+          "OB3 BadgeClass requires criteria with id or narrative",
+        );
+      }
+      // OB2 allows empty criteria
+      return "" as Shared.IRI;
+    }
+  }
+
+  /**
    * Converts the badge class to a plain object
    * @param version The badge version to use (defaults to 3.0)
    * @returns A plain object representation of the badge class, properly typed as OB2.BadgeClass or OB3.Achievement
@@ -163,36 +197,8 @@ export class BadgeClass
             : "";
     }
 
-    // Handle criteria based on version
-    let criteriaValue: Shared.IRI | OB2.Criteria | OB3.Criteria;
-
-    if (this.criteria) {
-      if (typeof this.criteria === "string") {
-        // If criteria is already an IRI string, use it directly
-        criteriaValue = this.criteria;
-      } else if (version === BadgeVersion.V2) {
-        // For OB2, if criteria is an object, use it directly (OB2.Criteria)
-        criteriaValue = this.criteria as OB2.Criteria;
-      } else {
-        // For OB3, ensure criteria conforms to OB3.Criteria
-        const criteria = this.criteria as OB3.Criteria;
-        if (!criteria.id && !criteria.narrative) {
-          // If neither id nor narrative is present, create a minimal valid OB3.Criteria
-          criteriaValue = {
-            narrative: "No criteria specified",
-          } as OB3.Criteria;
-        } else {
-          // Use the criteria as is
-          criteriaValue = criteria;
-        }
-      }
-    } else {
-      // Default empty criteria
-      criteriaValue =
-        version === BadgeVersion.V2
-          ? ("" as Shared.IRI)
-          : ({ narrative: "No criteria specified" } as OB3.Criteria);
-    }
+    // Resolve criteria using centralized helper
+    const criteriaValue = this.resolveCriteria(version);
 
     // Create a base object with common properties
     const baseObject = {
@@ -320,37 +326,8 @@ export class BadgeClass
       descriptionValue = this.description || "";
     }
 
-    // Handle criteria based on version and type
-    let criteriaValue: Shared.IRI | OB2.Criteria | OB3.Criteria;
-
-    if (this.criteria) {
-      if (typeof this.criteria === "string") {
-        // If criteria is already an IRI string, use it directly
-        criteriaValue = this.criteria;
-      } else if (version === BadgeVersion.V2) {
-        // For OB2, if criteria is an object, use it directly (OB2.Criteria)
-        criteriaValue = this.criteria as OB2.Criteria;
-      } else {
-        // For OB3, ensure criteria conforms to OB3.Criteria
-        // OB3.Criteria requires either id or narrative
-        const criteria = this.criteria as OB3.Criteria;
-        if (!criteria.id && !criteria.narrative) {
-          // If neither id nor narrative is present, create a minimal valid OB3.Criteria
-          criteriaValue = {
-            narrative: criteria.narrative || "No criteria specified",
-          };
-        } else {
-          // Use the criteria as is
-          criteriaValue = criteria;
-        }
-      }
-    } else {
-      // Default empty criteria
-      criteriaValue =
-        version === BadgeVersion.V2
-          ? ("" as Shared.IRI)
-          : ({ narrative: "No criteria specified" } as OB3.Criteria);
-    }
+    // Resolve criteria using centralized helper
+    const criteriaValue = this.resolveCriteria(version);
 
     // Use direct properties instead of typedData to avoid type issues
     const dataForSerializer: BadgeClassData = {
