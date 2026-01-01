@@ -174,17 +174,8 @@ export class BadgeClass
         // For OB2, if criteria is an object, use it directly (OB2.Criteria)
         criteriaValue = this.criteria as OB2.Criteria;
       } else {
-        // For OB3, ensure criteria conforms to OB3.Criteria
-        const criteria = this.criteria as OB3.Criteria;
-        if (!criteria.id && !criteria.narrative) {
-          // If neither id nor narrative is present, create a minimal valid OB3.Criteria
-          criteriaValue = {
-            narrative: "No criteria specified",
-          } as OB3.Criteria;
-        } else {
-          // Use the criteria as is
-          criteriaValue = criteria;
-        }
+        // For OB3, use criteria as is (validation happens at API layer)
+        criteriaValue = this.criteria as OB3.Criteria;
       }
     } else {
       // Default empty criteria
@@ -331,18 +322,8 @@ export class BadgeClass
         // For OB2, if criteria is an object, use it directly (OB2.Criteria)
         criteriaValue = this.criteria as OB2.Criteria;
       } else {
-        // For OB3, ensure criteria conforms to OB3.Criteria
-        // OB3.Criteria requires either id or narrative
-        const criteria = this.criteria as OB3.Criteria;
-        if (!criteria.id && !criteria.narrative) {
-          // If neither id nor narrative is present, create a minimal valid OB3.Criteria
-          criteriaValue = {
-            narrative: criteria.narrative || "No criteria specified",
-          };
-        } else {
-          // Use the criteria as is
-          criteriaValue = criteria;
-        }
+        // For OB3, use criteria as is (validation happens at API layer)
+        criteriaValue = this.criteria as OB3.Criteria;
       }
     } else {
       // Default empty criteria
