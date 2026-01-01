@@ -178,11 +178,13 @@ export class BadgeClass
         criteriaValue = this.criteria as OB3.Criteria;
       }
     } else {
-      // Default empty criteria
-      criteriaValue =
-        version === BadgeVersion.V2
-          ? ("" as Shared.IRI)
-          : ({ narrative: "No criteria specified" } as OB3.Criteria);
+      // Criteria is required for OB3 (validated at API layer)
+      // If we reach here with undefined criteria, it indicates a data integrity issue
+      if (version === BadgeVersion.V3) {
+        throw new Error('OB3 BadgeClass requires criteria with id or narrative');
+      }
+      // OB2 allows empty criteria
+      criteriaValue = "" as Shared.IRI;
     }
 
     // Create a base object with common properties
@@ -326,11 +328,13 @@ export class BadgeClass
         criteriaValue = this.criteria as OB3.Criteria;
       }
     } else {
-      // Default empty criteria
-      criteriaValue =
-        version === BadgeVersion.V2
-          ? ("" as Shared.IRI)
-          : ({ narrative: "No criteria specified" } as OB3.Criteria);
+      // Criteria is required for OB3 (validated at API layer)
+      // If we reach here with undefined criteria, it indicates a data integrity issue
+      if (version === BadgeVersion.V3) {
+        throw new Error('OB3 BadgeClass requires criteria with id or narrative');
+      }
+      // OB2 allows empty criteria
+      criteriaValue = "" as Shared.IRI;
     }
 
     // Use direct properties instead of typedData to avoid type issues
