@@ -71,7 +71,7 @@ Completion % = (closed_issues / (open_issues + closed_issues)) * 100
 ### By Status
 
 - Done: <count>
-- In Review: <count>
+- Blocked: <count>
 - In Progress: <count>
 - Not Started: <count>
 

@@ -19,7 +19,7 @@ This document references the GitHub Project board used for tracking monorepo dev
 | Backlog     | Not yet ready to start (blocked or needs prioritization) | Gray   |
 | Next        | Ready to pick up - dependencies met                      | Blue   |
 | In Progress | Currently being worked on                                | Yellow |
-| In Review   | PR created, awaiting review                              | Purple |
+| Blocked     | PR created, awaiting review                              | Purple |
 | Done        | Merged to main                                           | Green  |
 
 ---
@@ -49,7 +49,7 @@ gh project item-edit --project-id PVT_kwDOB1lz3c4BI2yZ --id <item-id> --field-id
 | Backlog     | `8b7bb58f` |
 | Next        | `266160c2` |
 | In Progress | `3e320f16` |
-| In Review   | `51c2af7b` |
+| Blocked     | `51c2af7b` |
 | Done        | `56048761` |
 
 **Project IDs:**

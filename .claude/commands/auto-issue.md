@@ -48,6 +48,17 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 ## Phase 1: Research (Autonomous)
 
+0. **Validate input:**
+
+   ```bash
+   # Ensure $ARGUMENTS is a valid issue number
+   if ! [[ "$ARGUMENTS" =~ ^[0-9]+$ ]]; then
+     echo "[AUTO-ISSUE] ERROR: Invalid issue number: $ARGUMENTS"
+     echo "[AUTO-ISSUE] Usage: /auto-issue <issue-number>"
+     exit 1
+   fi
+   ```
+
 1. **Fetch issue details:**
 
    ```bash
@@ -74,8 +85,49 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
    - Check dependencies
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
 
-5. **Update board status:**
-   - Move issue to "In Progress" using `board-manager` skill
+5. **Update board status to "In Progress":**
+
+   ```bash
+   # Try to add issue to project (silently fails if already present)
+   gh api graphql -f query='
+     mutation {
+       addProjectV2ItemById(input: {
+         projectId: "PVT_kwDOB1lz3c4BI2yZ"
+         contentId: "'$(gh issue view $ARGUMENTS --json id -q .id)'"
+       }) { item { id } }
+     }' 2>/dev/null || true
+
+   # Get the item ID via GraphQL
+   # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
+   ITEM_ID=$(gh api graphql -f query='
+     query {
+       organization(login: "rollercoaster-dev") {
+         projectV2(number: 11) {
+           items(first: 100) {
+             nodes {
+               id
+               content { ... on Issue { number } }
+             }
+           }
+         }
+       }
+     }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+
+   # Move to "In Progress" (option-id: 3e320f16)
+   if [ -n "$ITEM_ID" ]; then
+     gh project item-edit \
+       --project-id PVT_kwDOB1lz3c4BI2yZ \
+       --id "$ITEM_ID" \
+       --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
+       --single-select-option-id 3e320f16
+     echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'In Progress'"
+   else
+     echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
+     echo "[AUTO-ISSUE #$ARGUMENTS] Continuing without board update..."
+   fi
+   ```
+
+   **If board update fails:** Log warning but continue - board updates are not critical to implementation.
 
 6. **If `--dry-run`:** Stop here, show plan, exit.
 
@@ -204,8 +256,40 @@ else:
     @claude review
     ```
 
-16. **Update board:**
-    - Move issue to "In Review"
+16. **Update board status to "Blocked" (awaiting review):**
+
+    ```bash
+    # Get the item ID via GraphQL
+    # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
+    ITEM_ID=$(gh api graphql -f query='
+      query {
+        organization(login: "rollercoaster-dev") {
+          projectV2(number: 11) {
+            items(first: 100) {
+              nodes {
+                id
+                content { ... on Issue { number } }
+              }
+            }
+          }
+        }
+      }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+
+    # Move to "Blocked" - PR created, awaiting review (option-id: 51c2af7b)
+    if [ -n "$ITEM_ID" ]; then
+      gh project item-edit \
+        --project-id PVT_kwDOB1lz3c4BI2yZ \
+        --id "$ITEM_ID" \
+        --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
+        --single-select-option-id 51c2af7b
+      echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'Blocked' (awaiting review)"
+    else
+      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
+      echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
+    fi
+    ```
+
+    **If board update fails:** Log warning but continue - PR creation is the critical step.
 
 17. **Report completion:**
 
@@ -369,5 +453,5 @@ This workflow is successful when:
 - Issue is fully implemented per plan
 - All critical findings resolved (or escalated)
 - PR created and reviews triggered
-- Board updated to "In Review"
+- Board updated to "Blocked" (awaiting review)
 - User informed of PR URL
