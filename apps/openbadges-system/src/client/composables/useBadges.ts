@@ -83,6 +83,14 @@ export const useBadges = () => {
     sortOrder: 'desc',
   })
 
+  // OB3 support: Version selection (default to 3.0 per acceptance criteria)
+  const specVersion = ref<'2.0' | '3.0'>('3.0')
+
+  // Compute API version path from spec version
+  const apiVersion = computed(() => {
+    return specVersion.value === '3.0' ? '/v3' : '/v2'
+  })
+
   const totalPages = computed(() => Math.ceil(totalBadges.value / itemsPerPage.value))
 
   const hasFilters = computed(() => {
@@ -529,6 +537,8 @@ export const useBadges = () => {
     searchQuery,
     filters,
     hasFilters,
+    specVersion,
+    apiVersion,
 
     // Actions
     fetchBadges,
