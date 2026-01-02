@@ -74,8 +74,44 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
    - Check dependencies
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
 
-5. **Update board status:**
-   - Move issue to "In Progress" using `board-manager` skill
+5. **Update board status to "In Progress":**
+
+   ```bash
+   # Add issue to project if not already present (using GraphQL for reliability)
+   gh api graphql -f query='
+     mutation {
+       addProjectV2ItemById(input: {
+         projectId: "PVT_kwDOB1lz3c4BI2yZ"
+         contentId: "'$(gh issue view $ARGUMENTS --json id -q .id)'"
+       }) { item { id } }
+     }' 2>/dev/null || true
+
+   # Get the item ID via GraphQL
+   ITEM_ID=$(gh api graphql -f query='
+     query {
+       organization(login: "rollercoaster-dev") {
+         projectV2(number: 11) {
+           items(first: 100) {
+             nodes {
+               id
+               content { ... on Issue { number } }
+             }
+           }
+         }
+       }
+     }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+
+   # Move to "In Progress" (option-id: 3e320f16)
+   if [ -n "$ITEM_ID" ]; then
+     gh project item-edit \
+       --project-id PVT_kwDOB1lz3c4BI2yZ \
+       --id "$ITEM_ID" \
+       --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
+       --single-select-option-id 3e320f16
+   fi
+   ```
+
+   Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "In Progress"`
 
 6. **If `--dry-run`:** Stop here, show plan, exit.
 
@@ -204,8 +240,35 @@ else:
     @claude review
     ```
 
-16. **Update board:**
-    - Move issue to "In Review"
+16. **Update board status to "In Review":**
+
+    ```bash
+    # Get the item ID via GraphQL
+    ITEM_ID=$(gh api graphql -f query='
+      query {
+        organization(login: "rollercoaster-dev") {
+          projectV2(number: 11) {
+            items(first: 100) {
+              nodes {
+                id
+                content { ... on Issue { number } }
+              }
+            }
+          }
+        }
+      }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+
+    # Move to "In Review" (option-id: 51c2af7b)
+    if [ -n "$ITEM_ID" ]; then
+      gh project item-edit \
+        --project-id PVT_kwDOB1lz3c4BI2yZ \
+        --id "$ITEM_ID" \
+        --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
+        --single-select-option-id 51c2af7b
+    fi
+    ```
+
+    Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "In Review"`
 
 17. **Report completion:**
 

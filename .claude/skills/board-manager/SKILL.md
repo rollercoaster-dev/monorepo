@@ -52,7 +52,20 @@ gh project item-add 11 --owner rollercoaster-dev --url https://github.com/roller
 ### Get Item ID for an Issue
 
 ```bash
-gh project item-list 11 --owner rollercoaster-dev --format json | jq '.items[] | select(.content.number == <issue-number>) | .id'
+# Using GraphQL (more reliable - doesn't require read:org scope)
+gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes {
+            id
+            content { ... on Issue { number } }
+          }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id'
 ```
 
 ### Update Issue Status
@@ -79,8 +92,17 @@ gh project item-delete 11 --owner rollercoaster-dev --id <item-id>
 # 1. Add to project
 gh project item-add 11 --owner rollercoaster-dev --url https://github.com/rollercoaster-dev/monorepo/issues/123
 
-# 2. Get the item ID
-ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == 123) | .id')
+# 2. Get the item ID (using GraphQL)
+ITEM_ID=$(gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes { id content { ... on Issue { number } } }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == 123) | .id')
 
 # 3. Set status to "Next"
 gh project item-edit \
@@ -93,8 +115,17 @@ gh project item-edit \
 ### Move Issue to In Progress
 
 ```bash
-# Get item ID
-ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
+# Get item ID (using GraphQL)
+ITEM_ID=$(gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes { id content { ... on Issue { number } } }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id')
 
 # Update to In Progress
 gh project item-edit \

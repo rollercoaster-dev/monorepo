@@ -24,12 +24,31 @@ Automatically fetch and summarize GitHub Project board status when the user asks
 ### Get All Board Items
 
 ```bash
-gh project item-list 11 --owner rollercoaster-dev --format json
+# Using GraphQL (more reliable - doesn't require read:org scope)
+gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes {
+            id
+            fieldValueByName(name: "Status") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            content {
+              ... on Issue { number title assignees(first: 5) { nodes { login } } }
+              ... on PullRequest { number title }
+            }
+          }
+        }
+      }
+    }
+  }'
 ```
 
 ### Get Items by Status
 
-Parse the JSON output and filter by status field.
+Parse the JSON output and filter by status field name (e.g., "In Progress", "In Review").
 
 ## Board Configuration
 
