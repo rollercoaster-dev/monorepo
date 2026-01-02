@@ -20,15 +20,20 @@ export function normalizeIssueBadgeData(
         hashed: false,
         identity: issueData.recipientEmail,
       },
-      issuedOn: new Date().toISOString(),
-      validFrom: issueData.validFrom || new Date().toISOString(),
-      validUntil: issueData.validUntil,
+      issuedOn: issueData.validFrom || new Date().toISOString(),
+      expires: issueData.validUntil,
       evidence: issueData.evidence,
       narrative: issueData.narrative,
     }
   } else {
     // OB3 format
     return {
+      '@context': [
+        'https://www.w3.org/ns/credentials/v2',
+        'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+      ],
+      type: ['VerifiableCredential', 'OpenBadgeCredential'],
+      issuer: '', // Placeholder - should be provided by server config
       credentialSubject: {
         achievement: issueData.badgeClassId,
         identifier: [
@@ -105,14 +110,16 @@ export interface OB2IssueBadgePayload {
     identity: string
   }
   issuedOn: string
-  validFrom?: string // OB3 compatibility field
-  validUntil?: string // OB3 compatibility field
+  expires?: string
   evidence?: string
   narrative?: string
 }
 
 // OB3 issue badge payload (VerifiableCredential creation)
 export interface OB3IssueBadgePayload {
+  '@context': [string, string]
+  type: [string, string]
+  issuer: string
   credentialSubject: {
     achievement: string // Achievement ID
     identifier: Array<{
