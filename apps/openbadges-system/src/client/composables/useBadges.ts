@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import type { OB2 } from 'openbadges-types'
+import { OB2, OB3 } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -13,7 +13,7 @@ export interface BadgeSearchFilters {
 }
 
 export interface BadgesPaginationData {
-  badges: OB2.BadgeClass[]
+  badges: (OB2.BadgeClass | OB3.Achievement)[]
   totalBadges: number
   currentPage: number
   itemsPerPage: number
@@ -63,9 +63,115 @@ export interface IssueBadgeData {
   validUntil?: string // OB3 field - when credential expires
 }
 
+/**
+ * Type guards for detecting OB2 vs OB3 response formats
+ * Used internally for response validation and normalization
+ */
+
+/**
+ * Detect if a badge response is OB2 BadgeClass format
+ */
+const isBadgeOB2 = (badge: unknown): badge is OB2.BadgeClass => {
+  return OB2.isBadgeClass(badge)
+}
+
+/**
+ * Detect if a badge response is OB3 Achievement format
+ */
+const isBadgeOB3 = (badge: unknown): badge is OB3.Achievement => {
+  return OB3.isAchievement(badge)
+}
+
+/**
+ * Detect if an assertion response is OB2 Assertion format
+ */
+const isAssertionOB2 = (assertion: unknown): assertion is OB2.Assertion => {
+  return OB2.isAssertion(assertion)
+}
+
+/**
+ * Detect if a credential response is OB3 VerifiableCredential format
+ */
+const isCredentialOB3 = (credential: unknown): credential is OB3.VerifiableCredential => {
+  return OB3.isVerifiableCredential(credential)
+}
+
+/**
+ * Normalization helpers for consistent UI consumption
+ * Handle differences between OB2 and OB3 data structures
+ */
+
+/**
+ * Normalize badge data to a common format for UI consumption
+ * Handles differences between OB2.BadgeClass and OB3.Achievement
+ */
+const normalizeBadgeData = (badge: OB2.BadgeClass | OB3.Achievement) => {
+  if (isBadgeOB2(badge)) {
+    return {
+      id: badge.id,
+      name: badge.name,
+      description: badge.description,
+      image: badge.image,
+      criteria: badge.criteria,
+      issuer: badge.issuer,
+      tags: badge.tags,
+      version: '2.0' as const,
+    }
+  } else if (isBadgeOB3(badge)) {
+    return {
+      id: badge.id,
+      name:
+        typeof badge.name === 'string'
+          ? badge.name
+          : badge.name?.en || Object.values(badge.name || {})[0] || '',
+      description:
+        typeof badge.description === 'string'
+          ? badge.description
+          : badge.description?.en || Object.values(badge.description || {})[0] || '',
+      image: badge.image,
+      criteria: badge.criteria,
+      issuer: badge.creator,
+      tags: [], // OB3 doesn't have tags field
+      version: '3.0' as const,
+    }
+  }
+  throw new Error('Unknown badge format')
+}
+
+/**
+ * Normalize assertion/credential data for UI consumption
+ * Handles differences between OB2.Assertion and OB3.VerifiableCredential
+ */
+const normalizeAssertionData = (data: BadgeAssertion | OB3.VerifiableCredential) => {
+  if (isAssertionOB2(data)) {
+    return {
+      id: data.id,
+      recipient: data.recipient,
+      issuedOn: data.issuedOn,
+      expires: data.expires,
+      validFrom: data.validFrom,
+      validUntil: data.validUntil,
+      evidence: data.evidence,
+      version: '2.0' as const,
+    }
+  } else if (isCredentialOB3(data)) {
+    return {
+      id: data.id,
+      recipient: data.credentialSubject,
+      issuedOn: data.validFrom,
+      expires: data.validUntil,
+      validFrom: data.validFrom,
+      validUntil: data.validUntil,
+      evidence: data.evidence,
+      version: '3.0' as const,
+    }
+  }
+  throw new Error('Unknown assertion format')
+}
+
 export const useBadges = () => {
-  const badges = ref<OB2.BadgeClass[]>([])
-  const assertions = ref<BadgeAssertion[]>([])
+  const badges = ref<(OB2.BadgeClass | OB3.Achievement)[]>([])
+  const assertions = ref<(BadgeAssertion | OB3.VerifiableCredential)[]>([])
   const totalBadges = ref(0)
   const totalAssertions = ref(0)
   const currentPage = ref(1)
@@ -81,6 +187,14 @@ export const useBadges = () => {
     tags: [],
     sortBy: 'createdAt',
     sortOrder: 'desc',
+  })
+
+  // OB3 support: Version selection (default to 3.0 per acceptance criteria)
+  const specVersion = ref<'2.0' | '3.0'>('3.0')
+
+  // Compute API version path from spec version
+  const apiVersion = computed(() => {
+    return specVersion.value === '3.0' ? '/v3' : '/v2'
   })
 
   const totalPages = computed(() => Math.ceil(totalBadges.value / itemsPerPage.value))
@@ -100,13 +214,14 @@ export const useBadges = () => {
 
   // API calls with platform authentication
   // eslint-disable-next-line no-undef
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = async (endpoint: string, options: RequestInit = {}, version?: string) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) ?? {}),
     }
-    const response = await fetch(`/api/badges${endpoint}`, {
+    const versionPath = version || apiVersion.value
+    const response = await fetch(`/api/badges${versionPath}${endpoint}`, {
       ...options,
       headers: mergedHeaders,
     })
@@ -125,13 +240,14 @@ export const useBadges = () => {
 
   // API calls with basic authentication (for public badge data)
   // eslint-disable-next-line no-undef
-  const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const basicApiCall = async (endpoint: string, options: RequestInit = {}, version?: string) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) ?? {}),
     }
-    const response = await fetch(`/api/bs${endpoint}`, {
+    const versionPath = version || apiVersion.value
+    const response = await fetch(`/api/bs${versionPath}${endpoint}`, {
       ...options,
       headers: mergedHeaders,
     })
@@ -185,7 +301,7 @@ export const useBadges = () => {
         sortOrder: searchFilters.sortOrder,
       })
 
-      const response = await basicApiCall(`/v2/badge-classes?${params}`)
+      const response = await basicApiCall(`/badge-classes?${params}`)
 
       // Guard against null/undefined response (204 or non-JSON)
       if (!response) {
@@ -210,7 +326,7 @@ export const useBadges = () => {
   const createBadge = async (
     user: User,
     badgeData: CreateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
@@ -218,7 +334,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Create badge class
-      const response = await apiCall('/v2/badge-classes', {
+      const response = await apiCall('/badge-classes', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -236,7 +352,7 @@ export const useBadges = () => {
         }),
       })
 
-      const newBadge = response as OB2.BadgeClass
+      const newBadge = response as OB2.BadgeClass | OB3.Achievement
 
       // Add to local badges array if we're on the first page
       if (currentPage.value === 1) {
@@ -259,7 +375,7 @@ export const useBadges = () => {
     user: User,
     badgeId: string,
     badgeData: UpdateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
@@ -267,7 +383,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Update badge class
-      const response = await apiCall(`/v2/badge-classes/${badgeId}`, {
+      const response = await apiCall(`/badge-classes/${badgeId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -275,7 +391,7 @@ export const useBadges = () => {
         body: JSON.stringify(badgeData),
       })
 
-      const updatedBadge = response as OB2.BadgeClass
+      const updatedBadge = response as OB2.BadgeClass | OB3.Achievement
 
       // Update local badges array
       const index = badges.value.findIndex(b => b.id === badgeId)
@@ -302,7 +418,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Delete badge class
-      await apiCall(`/v2/badge-classes/${badgeId}`, {
+      await apiCall(`/badge-classes/${badgeId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -327,13 +443,15 @@ export const useBadges = () => {
   }
 
   // Get badge class by ID
-  const getBadgeById = async (badgeId: string): Promise<OB2.BadgeClass | null> => {
+  const getBadgeById = async (
+    badgeId: string
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await basicApiCall(`/v2/badge-classes/${badgeId}`)
-      return response as OB2.BadgeClass
+      const response = await basicApiCall(`/badge-classes/${badgeId}`)
+      return response as OB2.BadgeClass | OB3.Achievement
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch badge'
       console.error('Error fetching badge:', err)
@@ -347,7 +465,7 @@ export const useBadges = () => {
   const issueBadge = async (
     user: User,
     issueData: IssueBadgeData
-  ): Promise<BadgeAssertion | null> => {
+  ): Promise<BadgeAssertion | OB3.VerifiableCredential | null> => {
     isLoading.value = true
     error.value = null
 
@@ -355,7 +473,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Issue badge
-      const response = await apiCall('/v2/assertions', {
+      const response = await apiCall('/assertions', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -375,7 +493,7 @@ export const useBadges = () => {
         }),
       })
 
-      return response as BadgeAssertion
+      return response as BadgeAssertion | OB3.VerifiableCredential
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to issue badge'
       console.error('Error issuing badge:', err)
@@ -397,7 +515,7 @@ export const useBadges = () => {
         ...(badgeClassId && { badgeClass: badgeClassId }),
       })
 
-      const response = await basicApiCall(`/v2/assertions?${params}`)
+      const response = await basicApiCall(`/assertions?${params}`)
 
       // Guard against null/undefined response (204 or non-JSON)
       if (!response) {
@@ -431,7 +549,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Revoke assertion
-      await apiCall(`/v2/assertions/${assertionId}/revoke`, {
+      await apiCall(`/assertions/${assertionId}/revoke`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -495,7 +613,7 @@ export const useBadges = () => {
         sortOrder: searchFilters.sortOrder,
       })
 
-      const response = await fetch(`/api/bs/v2/badge-classes/export?${params}`)
+      const response = await fetch(`/api/bs${apiVersion.value}/badge-classes/export?${params}`)
       if (!response.ok) {
         throw new Error('Export failed')
       }
@@ -529,6 +647,8 @@ export const useBadges = () => {
     searchQuery,
     filters,
     hasFilters,
+    specVersion,
+    apiVersion,
 
     // Actions
     fetchBadges,
@@ -544,5 +664,15 @@ export const useBadges = () => {
     changeItemsPerPage,
     exportBadges,
     clearError,
+
+    // Type guards (exposed for testing and external use)
+    isBadgeOB2,
+    isBadgeOB3,
+    isAssertionOB2,
+    isCredentialOB3,
+
+    // Normalization helpers (exposed for external use)
+    normalizeBadgeData,
+    normalizeAssertionData,
   }
 }
