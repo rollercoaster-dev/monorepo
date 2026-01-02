@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// Issuer management logic will go here
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
@@ -31,7 +35,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// Issuer management logic will go here
-</script>

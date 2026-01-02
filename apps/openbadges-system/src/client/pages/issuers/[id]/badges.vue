@@ -1,3 +1,64 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { IssuerCard, BadgeClassList } from 'openbadges-ui'
+import { badgeApi, type Issuer, type BadgeClass } from '@/services/badgeApi'
+
+const route = useRoute()
+const router = useRouter()
+
+// State
+const issuer = ref<Issuer | null>(null)
+const badgeClasses = ref<BadgeClass[]>([])
+const issuerLoading = ref(true)
+const badgesLoading = ref(true)
+const error = ref<string | null>(null)
+
+// Get issuer ID from route (always present due to file-based routing)
+const issuerId = decodeURIComponent(String((route.params as { id: string }).id))
+
+// Load issuer details
+async function loadIssuer() {
+  issuerLoading.value = true
+  try {
+    issuer.value = await badgeApi.getIssuerById(issuerId)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load issuer'
+  } finally {
+    issuerLoading.value = false
+  }
+}
+
+// Load badge classes for this issuer (uses server-side filtering)
+async function loadBadgeClasses() {
+  badgesLoading.value = true
+  try {
+    badgeClasses.value = await badgeApi.getBadgeClassesByIssuer(issuerId)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load badge classes'
+  } finally {
+    badgesLoading.value = false
+  }
+}
+
+// Load all data
+async function loadData() {
+  error.value = null
+  await Promise.all([loadIssuer(), loadBadgeClasses()])
+}
+
+// Handle badge click - navigate to badge detail page
+function handleBadgeClick(badge: BadgeClass) {
+  const id = encodeURIComponent(badge.id)
+  router.push(`/badges/${id}`)
+}
+
+// Load data on mount
+onMounted(() => {
+  loadData()
+})
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
@@ -67,64 +128,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { IssuerCard, BadgeClassList } from 'openbadges-ui'
-import { badgeApi, type Issuer, type BadgeClass } from '@/services/badgeApi'
-
-const route = useRoute()
-const router = useRouter()
-
-// State
-const issuer = ref<Issuer | null>(null)
-const badgeClasses = ref<BadgeClass[]>([])
-const issuerLoading = ref(true)
-const badgesLoading = ref(true)
-const error = ref<string | null>(null)
-
-// Get issuer ID from route (always present due to file-based routing)
-const issuerId = decodeURIComponent(String((route.params as { id: string }).id))
-
-// Load issuer details
-async function loadIssuer() {
-  issuerLoading.value = true
-  try {
-    issuer.value = await badgeApi.getIssuerById(issuerId)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load issuer'
-  } finally {
-    issuerLoading.value = false
-  }
-}
-
-// Load badge classes for this issuer (uses server-side filtering)
-async function loadBadgeClasses() {
-  badgesLoading.value = true
-  try {
-    badgeClasses.value = await badgeApi.getBadgeClassesByIssuer(issuerId)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load badge classes'
-  } finally {
-    badgesLoading.value = false
-  }
-}
-
-// Load all data
-async function loadData() {
-  error.value = null
-  await Promise.all([loadIssuer(), loadBadgeClasses()])
-}
-
-// Handle badge click - navigate to badge detail page
-function handleBadgeClick(badge: BadgeClass) {
-  const id = encodeURIComponent(badge.id)
-  router.push(`/badges/${id}`)
-}
-
-// Load data on mount
-onMounted(() => {
-  loadData()
-})
-</script>

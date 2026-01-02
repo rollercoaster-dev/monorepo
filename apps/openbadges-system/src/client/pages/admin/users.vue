@@ -1,3 +1,154 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import {
+  PlusIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+} from '@heroicons/vue/24/outline'
+import { useUsers } from '@/composables/useUsers'
+import type { User } from '@/composables/useAuth'
+import type { UserSearchFilters } from '@/composables/useUsers'
+import UserSearch from '@/components/User/UserSearch.vue'
+import UserList from '@/components/User/UserList.vue'
+import UserForm from '@/components/User/UserForm.vue'
+
+const {
+  users,
+  totalUsers,
+  currentPage,
+  itemsPerPage,
+  isLoading,
+  error,
+  searchQuery,
+  filters,
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  removeUserCredential,
+  changePage,
+  changeItemsPerPage,
+  exportUsers,
+  clearError,
+} = useUsers()
+
+// Component state
+const showCreateForm = ref(false)
+const showEditForm = ref(false)
+const showViewModal = ref(false)
+const selectedUser = ref<User | null>(null)
+const successMessage = ref<string | null>(null)
+
+// Load users on component mount
+onMounted(() => {
+  fetchUsers()
+})
+
+// Auto-clear success message
+watch(successMessage, message => {
+  if (message) {
+    setTimeout(() => {
+      successMessage.value = null
+    }, 5000)
+  }
+})
+
+function handleSearch(query: string, searchFilters: UserSearchFilters) {
+  searchQuery.value = query
+  filters.value = searchFilters
+  fetchUsers(1, itemsPerPage.value, query, searchFilters)
+}
+
+function handleExport(searchFilters: UserSearchFilters) {
+  exportUsers(searchFilters).then(blob => {
+    if (blob) {
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      successMessage.value = 'Users exported successfully'
+    }
+  })
+}
+
+function handleEditUser(user: User) {
+  selectedUser.value = user
+  showEditForm.value = true
+}
+
+function handleViewUser(user: User) {
+  selectedUser.value = user
+  showViewModal.value = true
+}
+
+function handleDeleteUser(user: User) {
+  if (confirm(`Are you sure you want to delete user "${user.username}"?`)) {
+    deleteUser(user.id).then(success => {
+      if (success) {
+        successMessage.value = `User "${user.username}" deleted successfully`
+      }
+    })
+  }
+}
+
+function handleSubmitUser(formData: any) {
+  if (selectedUser.value) {
+    // Update existing user
+    updateUser(selectedUser.value.id, formData).then(updatedUser => {
+      if (updatedUser) {
+        closeForm()
+        successMessage.value = `User "${updatedUser.username}" updated successfully`
+      }
+    })
+  } else {
+    // Create new user
+    createUser(formData).then(newUser => {
+      if (newUser) {
+        closeForm()
+        successMessage.value = `User "${newUser.username}" created successfully`
+      }
+    })
+  }
+}
+
+function handleRemoveCredential(userId: string, credentialId: string) {
+  removeUserCredential(userId, credentialId).then(success => {
+    if (success) {
+      successMessage.value = 'Credential removed successfully'
+    }
+  })
+}
+
+function closeForm() {
+  showCreateForm.value = false
+  showEditForm.value = false
+  selectedUser.value = null
+}
+
+function closeViewModal() {
+  showViewModal.value = false
+  selectedUser.value = null
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+</script>
+
 <template>
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
@@ -187,154 +338,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import {
-  PlusIcon,
-  XMarkIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-} from '@heroicons/vue/24/outline'
-import { useUsers } from '@/composables/useUsers'
-import type { User } from '@/composables/useAuth'
-import type { UserSearchFilters } from '@/composables/useUsers'
-import UserSearch from '@/components/User/UserSearch.vue'
-import UserList from '@/components/User/UserList.vue'
-import UserForm from '@/components/User/UserForm.vue'
-
-const {
-  users,
-  totalUsers,
-  currentPage,
-  itemsPerPage,
-  isLoading,
-  error,
-  searchQuery,
-  filters,
-  fetchUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  removeUserCredential,
-  changePage,
-  changeItemsPerPage,
-  exportUsers,
-  clearError,
-} = useUsers()
-
-// Component state
-const showCreateForm = ref(false)
-const showEditForm = ref(false)
-const showViewModal = ref(false)
-const selectedUser = ref<User | null>(null)
-const successMessage = ref<string | null>(null)
-
-// Load users on component mount
-onMounted(() => {
-  fetchUsers()
-})
-
-// Auto-clear success message
-watch(successMessage, message => {
-  if (message) {
-    setTimeout(() => {
-      successMessage.value = null
-    }, 5000)
-  }
-})
-
-function handleSearch(query: string, searchFilters: UserSearchFilters) {
-  searchQuery.value = query
-  filters.value = searchFilters
-  fetchUsers(1, itemsPerPage.value, query, searchFilters)
-}
-
-function handleExport(searchFilters: UserSearchFilters) {
-  exportUsers(searchFilters).then(blob => {
-    if (blob) {
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-      successMessage.value = 'Users exported successfully'
-    }
-  })
-}
-
-function handleEditUser(user: User) {
-  selectedUser.value = user
-  showEditForm.value = true
-}
-
-function handleViewUser(user: User) {
-  selectedUser.value = user
-  showViewModal.value = true
-}
-
-function handleDeleteUser(user: User) {
-  if (confirm(`Are you sure you want to delete user "${user.username}"?`)) {
-    deleteUser(user.id).then(success => {
-      if (success) {
-        successMessage.value = `User "${user.username}" deleted successfully`
-      }
-    })
-  }
-}
-
-function handleSubmitUser(formData: any) {
-  if (selectedUser.value) {
-    // Update existing user
-    updateUser(selectedUser.value.id, formData).then(updatedUser => {
-      if (updatedUser) {
-        closeForm()
-        successMessage.value = `User "${updatedUser.username}" updated successfully`
-      }
-    })
-  } else {
-    // Create new user
-    createUser(formData).then(newUser => {
-      if (newUser) {
-        closeForm()
-        successMessage.value = `User "${newUser.username}" created successfully`
-      }
-    })
-  }
-}
-
-function handleRemoveCredential(userId: string, credentialId: string) {
-  removeUserCredential(userId, credentialId).then(success => {
-    if (success) {
-      successMessage.value = 'Credential removed successfully'
-    }
-  })
-}
-
-function closeForm() {
-  showCreateForm.value = false
-  showEditForm.value = false
-  selectedUser.value = null
-}
-
-function closeViewModal() {
-  showViewModal.value = false
-  selectedUser.value = null
-}
-
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-</script>

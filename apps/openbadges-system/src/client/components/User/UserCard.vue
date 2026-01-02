@@ -1,3 +1,62 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { PencilIcon, EyeIcon, TrashIcon, KeyIcon, CalendarIcon } from '@heroicons/vue/24/outline'
+import type { User } from '@/composables/useAuth'
+
+interface Props {
+  user: User
+  lastLogin?: string
+}
+
+const props = defineProps<Props>()
+
+defineEmits<{
+  edit: [user: User]
+  view: [user: User]
+  delete: [user: User]
+}>()
+
+const isActive = computed(() => {
+  // For now, assume all users are active since we don't have an isActive field
+  // This can be enhanced when we add user status management
+  return true
+})
+
+const lastLoginText = computed(() => {
+  if (!props.lastLogin) return null
+
+  const date = new Date(props.lastLogin)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  return formatDate(props.lastLogin)
+})
+
+function getInitials(firstName: string, lastName: string): string {
+  const first = firstName?.charAt(0) || ''
+  const last = lastName?.charAt(0) || ''
+  const initials = `${first}${last}`.toUpperCase()
+  return initials || '??'
+}
+
+function getStatusClasses(active: boolean): string {
+  return active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+</script>
+
 <template>
   <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
     <div class="flex items-start justify-between">
@@ -89,62 +148,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue'
-import { PencilIcon, EyeIcon, TrashIcon, KeyIcon, CalendarIcon } from '@heroicons/vue/24/outline'
-import type { User } from '@/composables/useAuth'
-
-interface Props {
-  user: User
-  lastLogin?: string
-}
-
-const props = defineProps<Props>()
-
-defineEmits<{
-  edit: [user: User]
-  view: [user: User]
-  delete: [user: User]
-}>()
-
-const isActive = computed(() => {
-  // For now, assume all users are active since we don't have an isActive field
-  // This can be enhanced when we add user status management
-  return true
-})
-
-const lastLoginText = computed(() => {
-  if (!props.lastLogin) return null
-
-  const date = new Date(props.lastLogin)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  return formatDate(props.lastLogin)
-})
-
-function getInitials(firstName: string, lastName: string): string {
-  const first = firstName?.charAt(0) || ''
-  const last = lastName?.charAt(0) || ''
-  const initials = `${first}${last}`.toUpperCase()
-  return initials || '??'
-}
-
-function getStatusClasses(active: boolean): string {
-  return active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-</script>

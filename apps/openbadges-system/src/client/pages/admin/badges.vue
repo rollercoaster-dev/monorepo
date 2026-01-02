@@ -1,3 +1,236 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
+import {
+  PlusIcon,
+  XMarkIcon,
+  PencilIcon,
+  ShareIcon,
+  TrashIcon,
+  TrophyIcon,
+  CheckBadgeIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+} from '@heroicons/vue/24/outline'
+import { BadgeList, BadgeDisplay, BadgeIssuerForm } from 'openbadges-ui'
+import { useBadges } from '@/composables/useBadges'
+import { useAuth } from '@/composables/useAuth'
+import type { BadgeAssertion } from '@/composables/useBadges'
+import type { OB2 } from 'openbadges-types'
+
+const { user } = useAuth()
+
+const {
+  badges,
+  assertions,
+  totalBadges,
+  totalAssertions,
+  currentPage,
+  itemsPerPage,
+  totalPages,
+  isLoading,
+  error,
+  searchQuery,
+  filters,
+  fetchBadges,
+  fetchAssertions,
+  issueBadge,
+  revokeBadge,
+  deleteBadge,
+  changePage,
+  changeItemsPerPage,
+  clearError,
+} = useBadges()
+
+// Component state
+const activeTab = ref<'classes' | 'assertions'>('classes')
+const layout = ref<'grid' | 'list'>('grid')
+const showCreateForm = ref(false)
+const showIssueForm = ref(false)
+const selectedBadge = ref<OB2.BadgeClass | null>(null)
+const successMessage = ref<string | null>(null)
+const availableIssuers = ref<string[]>([])
+
+const issueForm = ref({
+  recipientEmail: '',
+  evidence: '',
+  narrative: '',
+})
+
+// Load data on component mount
+onMounted(() => {
+  fetchBadges()
+  fetchAssertions()
+})
+
+// Watch for tab changes
+watch(activeTab, newTab => {
+  if (newTab === 'classes') {
+    fetchBadges()
+  } else {
+    fetchAssertions()
+  }
+})
+
+// Watch for search changes
+watch(
+  [searchQuery, filters],
+  () => {
+    if (activeTab.value === 'classes') {
+      fetchBadges(1, itemsPerPage.value, searchQuery.value, filters.value)
+    }
+  },
+  { deep: true }
+)
+
+// Populate available issuers from badges for filter dropdown
+watch(
+  badges,
+  newBadges => {
+    if (newBadges && newBadges.length > 0) {
+      const issuers = new Set<string>()
+      for (const badge of newBadges) {
+        if (badge.issuer) {
+          // Handle issuer as string (URL) or object with name
+          const issuerName =
+            typeof badge.issuer === 'string'
+              ? badge.issuer
+              : (badge.issuer as { name?: string }).name || String(badge.issuer)
+          if (issuerName) issuers.add(issuerName)
+        }
+      }
+      availableIssuers.value = Array.from(issuers).sort()
+    }
+  },
+  { immediate: true }
+)
+
+// Auto-clear success message
+watch(successMessage, message => {
+  if (message) {
+    setTimeout(() => {
+      successMessage.value = null
+    }, 5000)
+  }
+})
+
+function toggleLayout() {
+  layout.value = layout.value === 'grid' ? 'list' : 'grid'
+}
+
+function clearFilters() {
+  searchQuery.value = ''
+  filters.value = {
+    issuer: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    tags: [],
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  }
+}
+
+function handleBadgeClick(badge: OB2.BadgeClass) {
+  selectedBadge.value = badge
+  // Could show a detailed view modal here
+}
+
+function handleEditBadge(badge: OB2.BadgeClass) {
+  selectedBadge.value = badge
+  // Navigate to badge edit page
+  window.location.href = `/badges/${badge.id}/edit`
+}
+
+function handleIssueBadge(badge: OB2.BadgeClass) {
+  selectedBadge.value = badge
+  showIssueForm.value = true
+  issueForm.value = {
+    recipientEmail: '',
+    evidence: '',
+    narrative: '',
+  }
+}
+
+function handleDeleteBadge(badge: OB2.BadgeClass) {
+  if (confirm(`Are you sure you want to delete the badge "${badge.name}"?`)) {
+    if (user.value) {
+      deleteBadge(user.value, badge.id).then(success => {
+        if (success) {
+          successMessage.value = `Badge "${badge.name}" deleted successfully`
+        }
+      })
+    }
+  }
+}
+
+function handleBadgeCreated(badge: OB2.BadgeClass) {
+  showCreateForm.value = false
+  successMessage.value = `Badge "${badge.name}" created successfully`
+  fetchBadges() // Refresh the list
+}
+
+function handleSubmitIssue() {
+  if (!selectedBadge.value || !user.value) return
+
+  issueBadge(user.value, {
+    badgeClassId: selectedBadge.value.id,
+    recipientEmail: issueForm.value.recipientEmail,
+    evidence: issueForm.value.evidence || undefined,
+    narrative: issueForm.value.narrative || undefined,
+  }).then(assertion => {
+    if (assertion) {
+      showIssueForm.value = false
+      successMessage.value = `Badge issued successfully to ${issueForm.value.recipientEmail}`
+      if (activeTab.value === 'assertions') {
+        fetchAssertions() // Refresh assertions if on that tab
+      }
+    }
+  })
+}
+
+function handleViewAssertion(assertion: BadgeAssertion) {
+  // Navigate to assertion verification page
+  window.location.href = `/verify/${assertion.id}`
+}
+
+function handleRevokeAssertion(assertion: BadgeAssertion) {
+  const reason = prompt('Please provide a reason for revoking this badge:')
+  if (reason && user.value) {
+    revokeBadge(user.value, assertion.id, reason).then(success => {
+      if (success) {
+        successMessage.value = `Badge assertion revoked successfully`
+        fetchAssertions() // Refresh the list
+      }
+    })
+  }
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
+  if (!image) return undefined
+  if (typeof image === 'string') return image
+  return image.id || undefined
+}
+
+function getBadgeImage(badge: string | OB2.BadgeClass): string | undefined {
+  if (typeof badge === 'string') return undefined
+  return getImageSrc(badge.image)
+}
+
+function getBadgeName(badge: string | OB2.BadgeClass): string {
+  if (typeof badge === 'string') return badge
+  return badge.name || 'Unknown Badge'
+}
+</script>
+
 <template>
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
@@ -391,235 +624,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import {
-  PlusIcon,
-  XMarkIcon,
-  PencilIcon,
-  ShareIcon,
-  TrashIcon,
-  TrophyIcon,
-  CheckBadgeIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-} from '@heroicons/vue/24/outline'
-import { BadgeList, BadgeDisplay, BadgeIssuerForm } from 'openbadges-ui'
-import { useBadges } from '@/composables/useBadges'
-import { useAuth } from '@/composables/useAuth'
-import type { BadgeAssertion } from '@/composables/useBadges'
-import type { OB2 } from 'openbadges-types'
-
-const { user } = useAuth()
-
-const {
-  badges,
-  assertions,
-  totalBadges,
-  totalAssertions,
-  currentPage,
-  itemsPerPage,
-  totalPages,
-  isLoading,
-  error,
-  searchQuery,
-  filters,
-  fetchBadges,
-  fetchAssertions,
-  // createBadge, // Not used in this component
-  issueBadge,
-  revokeBadge,
-  deleteBadge,
-  changePage,
-  changeItemsPerPage,
-  clearError,
-} = useBadges()
-
-// Component state
-const activeTab = ref<'classes' | 'assertions'>('classes')
-const layout = ref<'grid' | 'list'>('grid')
-const showCreateForm = ref(false)
-const showIssueForm = ref(false)
-const selectedBadge = ref<OB2.BadgeClass | null>(null)
-const successMessage = ref<string | null>(null)
-const availableIssuers = ref<string[]>([])
-
-const issueForm = ref({
-  recipientEmail: '',
-  evidence: '',
-  narrative: '',
-})
-
-// Load data on component mount
-onMounted(() => {
-  fetchBadges()
-  fetchAssertions()
-})
-
-// Watch for tab changes
-watch(activeTab, newTab => {
-  if (newTab === 'classes') {
-    fetchBadges()
-  } else {
-    fetchAssertions()
-  }
-})
-
-// Watch for search changes
-watch(
-  [searchQuery, filters],
-  () => {
-    if (activeTab.value === 'classes') {
-      fetchBadges(1, itemsPerPage.value, searchQuery.value, filters.value)
-    }
-  },
-  { deep: true }
-)
-
-// Populate available issuers from badges for filter dropdown
-watch(
-  badges,
-  newBadges => {
-    if (newBadges && newBadges.length > 0) {
-      const issuers = new Set<string>()
-      for (const badge of newBadges) {
-        if (badge.issuer) {
-          // Handle issuer as string (URL) or object with name
-          const issuerName =
-            typeof badge.issuer === 'string'
-              ? badge.issuer
-              : (badge.issuer as { name?: string }).name || String(badge.issuer)
-          if (issuerName) issuers.add(issuerName)
-        }
-      }
-      availableIssuers.value = Array.from(issuers).sort()
-    }
-  },
-  { immediate: true }
-)
-
-// Auto-clear success message
-watch(successMessage, message => {
-  if (message) {
-    setTimeout(() => {
-      successMessage.value = null
-    }, 5000)
-  }
-})
-
-function toggleLayout() {
-  layout.value = layout.value === 'grid' ? 'list' : 'grid'
-}
-
-function clearFilters() {
-  searchQuery.value = ''
-  filters.value = {
-    issuer: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
-    tags: [],
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  }
-}
-
-function handleBadgeClick(badge: OB2.BadgeClass) {
-  selectedBadge.value = badge
-  // Could show a detailed view modal here
-}
-
-function handleEditBadge(badge: OB2.BadgeClass) {
-  selectedBadge.value = badge
-  // TODO: Show edit form
-}
-
-function handleIssueBadge(badge: OB2.BadgeClass) {
-  selectedBadge.value = badge
-  showIssueForm.value = true
-  issueForm.value = {
-    recipientEmail: '',
-    evidence: '',
-    narrative: '',
-  }
-}
-
-function handleDeleteBadge(badge: OB2.BadgeClass) {
-  if (confirm(`Are you sure you want to delete the badge "${badge.name}"?`)) {
-    if (user.value) {
-      deleteBadge(user.value, badge.id).then(success => {
-        if (success) {
-          successMessage.value = `Badge "${badge.name}" deleted successfully`
-        }
-      })
-    }
-  }
-}
-
-function handleBadgeCreated(badge: OB2.BadgeClass) {
-  showCreateForm.value = false
-  successMessage.value = `Badge "${badge.name}" created successfully`
-  fetchBadges() // Refresh the list
-}
-
-function handleSubmitIssue() {
-  if (!selectedBadge.value || !user.value) return
-
-  issueBadge(user.value, {
-    badgeClassId: selectedBadge.value.id,
-    recipientEmail: issueForm.value.recipientEmail,
-    evidence: issueForm.value.evidence || undefined,
-    narrative: issueForm.value.narrative || undefined,
-  }).then(assertion => {
-    if (assertion) {
-      showIssueForm.value = false
-      successMessage.value = `Badge issued successfully to ${issueForm.value.recipientEmail}`
-      if (activeTab.value === 'assertions') {
-        fetchAssertions() // Refresh assertions if on that tab
-      }
-    }
-  })
-}
-
-function handleViewAssertion(_assertion: BadgeAssertion) {
-  // TODO: Show assertion details modal
-}
-
-function handleRevokeAssertion(assertion: BadgeAssertion) {
-  const reason = prompt('Please provide a reason for revoking this badge:')
-  if (reason && user.value) {
-    revokeBadge(user.value, assertion.id, reason).then(success => {
-      if (success) {
-        successMessage.value = `Badge assertion revoked successfully`
-        fetchAssertions() // Refresh the list
-      }
-    })
-  }
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
-  if (!image) return undefined
-  if (typeof image === 'string') return image
-  return image.id || undefined
-}
-
-function getBadgeImage(badge: string | OB2.BadgeClass): string | undefined {
-  if (typeof badge === 'string') return undefined
-  return getImageSrc(badge.image)
-}
-
-function getBadgeName(badge: string | OB2.BadgeClass): string {
-  if (typeof badge === 'string') return badge
-  return badge.name || 'Unknown Badge'
-}
-</script>

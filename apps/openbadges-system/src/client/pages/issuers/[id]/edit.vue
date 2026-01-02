@@ -1,3 +1,8 @@
+<script setup lang="ts">
+// Issuer editing logic will go here
+// const route = useRoute() - will be added when implementing editing
+</script>
+
 <template>
   <div class="max-w-2xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Issuer</h1>
@@ -22,8 +27,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// Issuer editing logic will go here
-// const route = useRoute() - will be added when implementing editing
-</script>

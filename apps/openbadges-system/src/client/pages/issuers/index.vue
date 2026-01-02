@@ -1,3 +1,42 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { IssuerList } from 'openbadges-ui'
+import { badgeApi, type Issuer } from '@/services/badgeApi'
+
+const router = useRouter()
+
+// State
+const issuers = ref<Issuer[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+// Load issuers
+async function loadIssuers() {
+  loading.value = true
+  error.value = null
+
+  try {
+    issuers.value = await badgeApi.getIssuers()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load issuers'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Handle issuer click - navigate to detail page
+function handleIssuerClick(issuer: Issuer) {
+  const id = encodeURIComponent(issuer.id)
+  router.push(`/issuers/${id}`)
+}
+
+// Load data on mount
+onMounted(() => {
+  loadIssuers()
+})
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
@@ -39,42 +78,3 @@
     </IssuerList>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { IssuerList } from 'openbadges-ui'
-import { badgeApi, type Issuer } from '@/services/badgeApi'
-
-const router = useRouter()
-
-// State
-const issuers = ref<Issuer[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-// Load issuers
-async function loadIssuers() {
-  loading.value = true
-  error.value = null
-
-  try {
-    issuers.value = await badgeApi.getIssuers()
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load issuers'
-  } finally {
-    loading.value = false
-  }
-}
-
-// Handle issuer click - navigate to detail page
-function handleIssuerClick(issuer: Issuer) {
-  const id = encodeURIComponent(issuer.id)
-  router.push(`/issuers/${id}`)
-}
-
-// Load data on mount
-onMounted(() => {
-  loadIssuers()
-})
-</script>

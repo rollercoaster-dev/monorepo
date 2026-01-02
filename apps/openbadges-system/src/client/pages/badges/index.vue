@@ -1,3 +1,42 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { BadgeClassList } from 'openbadges-ui'
+import { badgeApi, type BadgeClass } from '@/services/badgeApi'
+
+const router = useRouter()
+
+// State
+const badgeClasses = ref<BadgeClass[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+
+// Load badge classes
+async function loadBadgeClasses() {
+  loading.value = true
+  error.value = null
+
+  try {
+    badgeClasses.value = await badgeApi.getBadgeClasses()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load badges'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Handle badge class click - navigate to detail page
+function handleBadgeClassClick(badgeClass: BadgeClass) {
+  const id = encodeURIComponent(badgeClass.id)
+  router.push(`/badges/${id}`)
+}
+
+// Load data on mount
+onMounted(() => {
+  loadBadgeClasses()
+})
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
@@ -42,42 +81,3 @@
     </BadgeClassList>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { BadgeClassList } from 'openbadges-ui'
-import { badgeApi, type BadgeClass } from '@/services/badgeApi'
-
-const router = useRouter()
-
-// State
-const badgeClasses = ref<BadgeClass[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
-
-// Load badge classes
-async function loadBadgeClasses() {
-  loading.value = true
-  error.value = null
-
-  try {
-    badgeClasses.value = await badgeApi.getBadgeClasses()
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load badges'
-  } finally {
-    loading.value = false
-  }
-}
-
-// Handle badge class click - navigate to detail page
-function handleBadgeClassClick(badgeClass: BadgeClass) {
-  const id = encodeURIComponent(badgeClass.id)
-  router.push(`/badges/${id}`)
-}
-
-// Load data on mount
-onMounted(() => {
-  loadBadgeClasses()
-})
-</script>

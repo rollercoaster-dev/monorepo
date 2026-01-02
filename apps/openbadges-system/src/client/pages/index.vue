@@ -1,3 +1,141 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import type { OB2, Shared } from 'openbadges-types'
+import { BadgeDisplay } from 'openbadges-ui'
+import { useAuth } from '@/composables/useAuth'
+
+const { token, isAuthenticated } = useAuth()
+
+const loading = ref(true)
+const serverStatus = ref(false)
+const modularServerLoading = ref(true)
+const modularServerStatus = ref<string | null>(null)
+const featuredBadge = ref<OB2.BadgeClass | null>(null)
+const badgeError = ref<string | null>(null)
+
+// Fallback mock badge for when no real badges are available
+const mockBadge: OB2.BadgeClass = {
+  type: 'BadgeClass',
+  id: 'urn:uuid:demobadge123-monolith-master' as Shared.IRI,
+  name: 'Monolith Master Badge',
+  description:
+    'This badge is awarded for successfully setting up the demonstration monolith application and displaying this badge.',
+  image: 'https://via.placeholder.com/150/007bff/ffffff?Text=Monolith%20Badge' as Shared.IRI,
+  criteria: {
+    narrative:
+      'Successfully integrate Bun, Hono, Vue, Vite, and display a badge from openbadges-ui using mock data.',
+  },
+  issuer: {
+    type: 'Profile',
+    id: 'urn:uuid:issuer-demo-project' as Shared.IRI,
+    name: 'OpenBadges Demo Project Issuer',
+    url: 'https://example.com/issuer/demoproject' as Shared.IRI,
+  },
+}
+
+// Check server status on component mount
+onMounted(async () => {
+  loading.value = true // Set main loading true at the start
+  modularServerLoading.value = true
+
+  const monolithHealthCheck = async () => {
+    try {
+      const response = await fetch('/api/health')
+      if (response.ok) {
+        const data = await response.json()
+        serverStatus.value = data.status === 'ok'
+      } else {
+        serverStatus.value = false
+        console.error('Monolith server status check failed:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('Error checking monolith server status:', error)
+      serverStatus.value = false
+    }
+  }
+
+  const modularServerHealthCheck = async () => {
+    try {
+      // Prepare headers with authentication if available
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (isAuthenticated.value && token.value) {
+        headers.Authorization = `Bearer ${token.value}`
+      }
+
+      const bsResponse = await fetch('/api/bs/health', { headers })
+
+      if (bsResponse.ok) {
+        const bsData = await bsResponse.json()
+        // Check for valid health response structure
+        if (bsData && bsData.status === 'ok') {
+          const uptime = bsData.uptime ? Math.round(bsData.uptime) : 0
+          const dbType = bsData.database?.type || 'unknown'
+          modularServerStatus.value = `Connected (uptime: ${uptime}s, db: ${dbType})`
+        } else {
+          modularServerStatus.value = `Unexpected response: ${JSON.stringify(bsData).substring(0, 100)}`
+        }
+      } else if (bsResponse.status === 401) {
+        modularServerStatus.value = 'Authentication required - please log in to view server status'
+      } else {
+        modularServerStatus.value = `Error: ${bsResponse.status} ${bsResponse.statusText}`
+      }
+    } catch (error) {
+      console.error('Error checking OpenBadges Modular Server status:', error)
+      modularServerStatus.value = 'Connection attempt failed'
+    }
+  }
+
+  const fetchFeaturedBadge = async () => {
+    try {
+      // Prepare headers with authentication if available
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (isAuthenticated.value && token.value) {
+        headers.Authorization = `Bearer ${token.value}`
+      }
+
+      // Try to fetch badge classes from the modular server
+      const response = await fetch('/api/bs/v2/badge-classes', { headers })
+
+      if (response.ok) {
+        const badgeClasses = await response.json()
+
+        // Use the first badge class if available, otherwise fall back to mock
+        if (Array.isArray(badgeClasses) && badgeClasses.length > 0) {
+          featuredBadge.value = badgeClasses[0] as OB2.BadgeClass
+        } else {
+          // No real badges available, use mock badge
+          featuredBadge.value = mockBadge
+        }
+        badgeError.value = null
+      } else if (response.status === 401) {
+        console.warn('Authentication required for badge classes, using mock badge')
+        featuredBadge.value = mockBadge
+        badgeError.value = 'Please log in to view real badge classes'
+      } else {
+        console.warn('Failed to fetch badge classes, using mock badge')
+        featuredBadge.value = mockBadge
+        badgeError.value = `Failed to fetch badges: ${response.status}`
+      }
+    } catch (error) {
+      console.error('Error fetching badge data:', error)
+      featuredBadge.value = mockBadge
+      badgeError.value = 'Connection error while fetching badges'
+    }
+  }
+
+  await Promise.all([monolithHealthCheck(), modularServerHealthCheck(), fetchFeaturedBadge()])
+
+  loading.value = false
+  modularServerLoading.value = false
+})
+</script>
+
 <template>
   <div class="bg-white shadow rounded-lg p-6">
     <h2 class="text-2xl font-semibold text-slate-900 mb-4">Welcome to OpenBadges Demo</h2>
@@ -136,141 +274,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import type { OB2, Shared } from 'openbadges-types'
-import { BadgeDisplay } from 'openbadges-ui'
-import { useAuth } from '@/composables/useAuth'
-
-const { token, isAuthenticated } = useAuth()
-
-const loading = ref(true)
-const serverStatus = ref(false)
-const modularServerLoading = ref(true)
-const modularServerStatus = ref<string | null>(null)
-const featuredBadge = ref<OB2.BadgeClass | null>(null)
-const badgeError = ref<string | null>(null)
-
-// Fallback mock badge for when no real badges are available
-const mockBadge: OB2.BadgeClass = {
-  type: 'BadgeClass',
-  id: 'urn:uuid:demobadge123-monolith-master' as Shared.IRI,
-  name: 'Monolith Master Badge',
-  description:
-    'This badge is awarded for successfully setting up the demonstration monolith application and displaying this badge.',
-  image: 'https://via.placeholder.com/150/007bff/ffffff?Text=Monolith%20Badge' as Shared.IRI,
-  criteria: {
-    narrative:
-      'Successfully integrate Bun, Hono, Vue, Vite, and display a badge from openbadges-ui using mock data.',
-  },
-  issuer: {
-    type: 'Profile',
-    id: 'urn:uuid:issuer-demo-project' as Shared.IRI,
-    name: 'OpenBadges Demo Project Issuer',
-    url: 'https://example.com/issuer/demoproject' as Shared.IRI,
-  },
-}
-
-// Check server status on component mount
-onMounted(async () => {
-  loading.value = true // Set main loading true at the start
-  modularServerLoading.value = true
-
-  const monolithHealthCheck = async () => {
-    try {
-      const response = await fetch('/api/health')
-      if (response.ok) {
-        const data = await response.json()
-        serverStatus.value = data.status === 'ok'
-      } else {
-        serverStatus.value = false
-        console.error('Monolith server status check failed:', response.status, response.statusText)
-      }
-    } catch (error) {
-      console.error('Error checking monolith server status:', error)
-      serverStatus.value = false
-    }
-  }
-
-  const modularServerHealthCheck = async () => {
-    try {
-      // Prepare headers with authentication if available
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-
-      if (isAuthenticated.value && token.value) {
-        headers.Authorization = `Bearer ${token.value}`
-      }
-
-      const bsResponse = await fetch('/api/bs/health', { headers })
-
-      if (bsResponse.ok) {
-        const bsData = await bsResponse.json()
-        // Check for valid health response structure
-        if (bsData && bsData.status === 'ok') {
-          const uptime = bsData.uptime ? Math.round(bsData.uptime) : 0
-          const dbType = bsData.database?.type || 'unknown'
-          modularServerStatus.value = `Connected (uptime: ${uptime}s, db: ${dbType})`
-        } else {
-          modularServerStatus.value = `Unexpected response: ${JSON.stringify(bsData).substring(0, 100)}`
-        }
-      } else if (bsResponse.status === 401) {
-        modularServerStatus.value = 'Authentication required - please log in to view server status'
-      } else {
-        modularServerStatus.value = `Error: ${bsResponse.status} ${bsResponse.statusText}`
-      }
-    } catch (error) {
-      console.error('Error checking OpenBadges Modular Server status:', error)
-      modularServerStatus.value = 'Connection attempt failed'
-    }
-  }
-
-  const fetchFeaturedBadge = async () => {
-    try {
-      // Prepare headers with authentication if available
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      }
-
-      if (isAuthenticated.value && token.value) {
-        headers.Authorization = `Bearer ${token.value}`
-      }
-
-      // Try to fetch badge classes from the modular server
-      const response = await fetch('/api/bs/v2/badge-classes', { headers })
-
-      if (response.ok) {
-        const badgeClasses = await response.json()
-
-        // Use the first badge class if available, otherwise fall back to mock
-        if (Array.isArray(badgeClasses) && badgeClasses.length > 0) {
-          featuredBadge.value = badgeClasses[0] as OB2.BadgeClass
-        } else {
-          // No real badges available, use mock badge
-          featuredBadge.value = mockBadge
-        }
-        badgeError.value = null
-      } else if (response.status === 401) {
-        console.warn('Authentication required for badge classes, using mock badge')
-        featuredBadge.value = mockBadge
-        badgeError.value = 'Please log in to view real badge classes'
-      } else {
-        console.warn('Failed to fetch badge classes, using mock badge')
-        featuredBadge.value = mockBadge
-        badgeError.value = `Failed to fetch badges: ${response.status}`
-      }
-    } catch (error) {
-      console.error('Error fetching badge data:', error)
-      featuredBadge.value = mockBadge
-      badgeError.value = 'Connection error while fetching badges'
-    }
-  }
-
-  await Promise.all([monolithHealthCheck(), modularServerHealthCheck(), fetchFeaturedBadge()])
-
-  loading.value = false
-  modularServerLoading.value = false
-})
-</script>

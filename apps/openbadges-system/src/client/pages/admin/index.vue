@@ -1,3 +1,249 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import {
+  ArrowPathIcon,
+  UsersIcon,
+  TrophyIcon,
+  CheckBadgeIcon,
+  BuildingOfficeIcon,
+  ChartBarIcon,
+  CogIcon,
+  ArrowDownTrayIcon,
+  ClockIcon,
+  ServerIcon,
+  CircleStackIcon,
+  ShieldCheckIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+  UserPlusIcon,
+  PlusIcon,
+} from '@heroicons/vue/24/outline'
+import { useUsers } from '@/composables/useUsers'
+import { useBadges } from '@/composables/useBadges'
+
+const { fetchUsers, totalUsers } = useUsers()
+const { fetchBadges, fetchAssertions, totalBadges, totalAssertions } = useBadges()
+
+// Component state
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
+
+const stats = ref({
+  totalUsers: 0,
+  totalBadges: 0,
+  totalAssertions: 0,
+  totalIssuers: 0,
+  activeIssuers: 0,
+  userGrowth: 0,
+  badgeGrowth: 0,
+  assertionGrowth: 0,
+  newUsersLast30Days: 0,
+  badgesIssuedLast30Days: 0,
+})
+
+interface Activity {
+  id: string
+  type: 'user_registered' | 'badge_created' | 'badge_issued' | 'user_updated' | 'system_event'
+  description: string
+  timestamp: string
+}
+
+const recentActivity = ref<Activity[]>([])
+
+// Timeout ID for cleanup
+let successTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+// Load data on component mount
+onMounted(() => {
+  refreshData()
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (successTimeoutId) {
+    clearTimeout(successTimeoutId)
+  }
+})
+
+// Auto-clear success message
+watch(successMessage, message => {
+  if (successTimeoutId) {
+    clearTimeout(successTimeoutId)
+    successTimeoutId = null
+  }
+  if (message) {
+    successTimeoutId = setTimeout(() => {
+      successMessage.value = null
+      successTimeoutId = null
+    }, 5000)
+  }
+})
+
+async function refreshData() {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    // Fetch data from multiple sources
+    await Promise.all([
+      fetchUsers(1, 1000), // Get all users for stats
+      fetchBadges(1, 1000), // Get all badges for stats
+      fetchAssertions(1, 1000), // Get all assertions for stats
+    ])
+
+    // Update stats
+    stats.value = {
+      totalUsers: totalUsers.value,
+      totalBadges: totalBadges.value,
+      totalAssertions: totalAssertions.value,
+      totalIssuers: 5, // Placeholder
+      activeIssuers: 3, // Placeholder
+      userGrowth: 15, // Placeholder - would calculate from data
+      badgeGrowth: 8, // Placeholder - would calculate from data
+      assertionGrowth: 25, // Placeholder - would calculate from data
+      newUsersLast30Days: 12, // Placeholder - would calculate from data
+      badgesIssuedLast30Days: 45, // Placeholder - would calculate from data
+    }
+
+    // Mock recent activity data
+    recentActivity.value = [
+      {
+        id: '1',
+        type: 'user_registered',
+        description: 'New user john.doe@example.com registered',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '2',
+        type: 'badge_issued',
+        description: 'Badge "JavaScript Expert" issued to jane.smith@example.com',
+        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '3',
+        type: 'badge_created',
+        description: 'New badge class "Python Fundamentals" created',
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '4',
+        type: 'user_updated',
+        description: 'User alice.johnson@example.com updated profile',
+        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '5',
+        type: 'system_event',
+        description: 'System backup completed successfully',
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+      },
+    ]
+  } catch (err) {
+    console.error('Failed to refresh dashboard data:', err)
+    error.value = 'Failed to load dashboard data. Please try again.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function exportData() {
+  // TODO: Implement data export functionality
+  successMessage.value = 'Data export initiated. Download will begin shortly.'
+}
+
+function getActivityIcon(type: Activity['type']) {
+  switch (type) {
+    case 'user_registered':
+      return UserPlusIcon
+    case 'badge_created':
+      return PlusIcon
+    case 'badge_issued':
+      return CheckBadgeIcon
+    case 'user_updated':
+      return UsersIcon
+    case 'system_event':
+      return ServerIcon
+    default:
+      return ClockIcon
+  }
+}
+
+function getActivityColor(type: Activity['type']): string {
+  switch (type) {
+    case 'user_registered':
+      return 'bg-blue-500'
+    case 'badge_created':
+      return 'bg-green-500'
+    case 'badge_issued':
+      return 'bg-yellow-500'
+    case 'user_updated':
+      return 'bg-purple-500'
+    case 'system_event':
+      return 'bg-gray-500'
+    default:
+      return 'bg-gray-400'
+  }
+}
+
+function getActivityStatusColor(type: Activity['type']): string {
+  switch (type) {
+    case 'user_registered':
+      return 'bg-blue-100 text-blue-800'
+    case 'badge_created':
+      return 'bg-green-100 text-green-800'
+    case 'badge_issued':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'user_updated':
+      return 'bg-purple-100 text-purple-800'
+    case 'system_event':
+      return 'bg-gray-100 text-gray-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
+function getActivityLabel(type: Activity['type']): string {
+  switch (type) {
+    case 'user_registered':
+      return 'User'
+    case 'badge_created':
+      return 'Badge'
+    case 'badge_issued':
+      return 'Issued'
+    case 'user_updated':
+      return 'Updated'
+    case 'system_event':
+      return 'System'
+    default:
+      return 'Event'
+  }
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffHours < 1) {
+    return 'Just now'
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+  } else if (diffDays < 7) {
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+  } else {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+}
+</script>
+
 <template>
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
@@ -304,234 +550,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import {
-  ArrowPathIcon,
-  UsersIcon,
-  TrophyIcon,
-  CheckBadgeIcon,
-  BuildingOfficeIcon,
-  ChartBarIcon,
-  CogIcon,
-  ArrowDownTrayIcon,
-  ClockIcon,
-  ServerIcon,
-  CircleStackIcon,
-  ShieldCheckIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon,
-  UserPlusIcon,
-  PlusIcon,
-} from '@heroicons/vue/24/outline'
-import { useUsers } from '@/composables/useUsers'
-import { useBadges } from '@/composables/useBadges'
-
-const { fetchUsers, totalUsers } = useUsers()
-const { fetchBadges, fetchAssertions, totalBadges, totalAssertions } = useBadges()
-
-// Component state
-const isLoading = ref(false)
-const error = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
-
-const stats = ref({
-  totalUsers: 0,
-  totalBadges: 0,
-  totalAssertions: 0,
-  totalIssuers: 0,
-  activeIssuers: 0,
-  userGrowth: 0,
-  badgeGrowth: 0,
-  assertionGrowth: 0,
-  newUsersLast30Days: 0,
-  badgesIssuedLast30Days: 0,
-})
-
-interface Activity {
-  id: string
-  type: 'user_registered' | 'badge_created' | 'badge_issued' | 'user_updated' | 'system_event'
-  description: string
-  timestamp: string
-}
-
-const recentActivity = ref<Activity[]>([])
-
-// Load data on component mount
-onMounted(() => {
-  refreshData()
-})
-
-// Auto-clear success message
-watch(successMessage, message => {
-  if (message) {
-    setTimeout(() => {
-      successMessage.value = null
-    }, 5000)
-  }
-})
-
-async function refreshData() {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    // Fetch data from multiple sources
-    await Promise.all([
-      fetchUsers(1, 1000), // Get all users for stats
-      fetchBadges(1, 1000), // Get all badges for stats
-      fetchAssertions(1, 1000), // Get all assertions for stats
-    ])
-
-    // Update stats
-    stats.value = {
-      totalUsers: totalUsers.value,
-      totalBadges: totalBadges.value,
-      totalAssertions: totalAssertions.value,
-      totalIssuers: 5, // Placeholder
-      activeIssuers: 3, // Placeholder
-      userGrowth: 15, // Placeholder - would calculate from data
-      badgeGrowth: 8, // Placeholder - would calculate from data
-      assertionGrowth: 25, // Placeholder - would calculate from data
-      newUsersLast30Days: 12, // Placeholder - would calculate from data
-      badgesIssuedLast30Days: 45, // Placeholder - would calculate from data
-    }
-
-    // Mock recent activity data
-    recentActivity.value = [
-      {
-        id: '1',
-        type: 'user_registered',
-        description: 'New user john.doe@example.com registered',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '2',
-        type: 'badge_issued',
-        description: 'Badge "JavaScript Expert" issued to jane.smith@example.com',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '3',
-        type: 'badge_created',
-        description: 'New badge class "Python Fundamentals" created',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '4',
-        type: 'user_updated',
-        description: 'User alice.johnson@example.com updated profile',
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '5',
-        type: 'system_event',
-        description: 'System backup completed successfully',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      },
-    ]
-  } catch (err) {
-    console.error('Failed to refresh dashboard data:', err)
-    error.value = 'Failed to load dashboard data. Please try again.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-function exportData() {
-  // TODO: Implement data export functionality
-  successMessage.value = 'Data export initiated. Download will begin shortly.'
-}
-
-function getActivityIcon(type: Activity['type']) {
-  switch (type) {
-    case 'user_registered':
-      return UserPlusIcon
-    case 'badge_created':
-      return PlusIcon
-    case 'badge_issued':
-      return CheckBadgeIcon
-    case 'user_updated':
-      return UsersIcon
-    case 'system_event':
-      return ServerIcon
-    default:
-      return ClockIcon
-  }
-}
-
-function getActivityColor(type: Activity['type']): string {
-  switch (type) {
-    case 'user_registered':
-      return 'bg-blue-500'
-    case 'badge_created':
-      return 'bg-green-500'
-    case 'badge_issued':
-      return 'bg-yellow-500'
-    case 'user_updated':
-      return 'bg-purple-500'
-    case 'system_event':
-      return 'bg-gray-500'
-    default:
-      return 'bg-gray-400'
-  }
-}
-
-function getActivityStatusColor(type: Activity['type']): string {
-  switch (type) {
-    case 'user_registered':
-      return 'bg-blue-100 text-blue-800'
-    case 'badge_created':
-      return 'bg-green-100 text-green-800'
-    case 'badge_issued':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'user_updated':
-      return 'bg-purple-100 text-purple-800'
-    case 'system_event':
-      return 'bg-gray-100 text-gray-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
-}
-
-function getActivityLabel(type: Activity['type']): string {
-  switch (type) {
-    case 'user_registered':
-      return 'User'
-    case 'badge_created':
-      return 'Badge'
-    case 'badge_issued':
-      return 'Issued'
-    case 'user_updated':
-      return 'Updated'
-    case 'system_event':
-      return 'System'
-    default:
-      return 'Event'
-  }
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffHours < 1) {
-    return 'Just now'
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-  } else {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-}
-</script>
