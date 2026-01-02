@@ -12,11 +12,52 @@ process.env.OAUTH_GITHUB_CLIENT_ID = 'test-client-id'
 process.env.OAUTH_GITHUB_CLIENT_SECRET = 'test-client-secret'
 process.env.OAUTH_SESSION_SECRET = 'test-session-secret-for-testing-only'
 
-// Ensure fetch exists in node environment tests
-if (typeof global.fetch === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(global as any).fetch = vi.fn()
-}
+// Mock fetch for all tests - always set up as vi.fn() for mockResolvedValueOnce support
+globalThis.fetch = vi.fn() as unknown as typeof fetch
+
+// Mock JWT service module for integration tests
+// Provides both the singleton (jwtService) and class (JWTService) mocks
+vi.mock('./services/jwt', () => {
+  // Mock JWTService class that doesn't require keys
+  class MockJWTService {
+    generatePlatformToken = vi.fn(() => 'mock-platform-token')
+    verifyToken = vi.fn(() => ({
+      sub: 'test-user',
+      platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
+      displayName: 'Test User',
+      email: 'test@example.com',
+      metadata: { isAdmin: true },
+    }))
+    createOpenBadgesApiClient = vi.fn(() => ({
+      token: 'mock-jwt-token',
+      headers: {
+        Authorization: 'Bearer mock-jwt-token',
+        'Content-Type': 'application/json',
+      },
+    }))
+  }
+
+  return {
+    JWTService: MockJWTService,
+    jwtService: {
+      generatePlatformToken: vi.fn(() => 'mock-platform-token'),
+      createOpenBadgesApiClient: vi.fn(() => ({
+        token: 'mock-jwt-token',
+        headers: {
+          Authorization: 'Bearer mock-jwt-token',
+          'Content-Type': 'application/json',
+        },
+      })),
+      verifyToken: vi.fn(() => ({
+        sub: 'test-user',
+        platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        metadata: { isAdmin: true },
+      })),
+    },
+  }
+})
 
 // Mock sqlite3 to avoid native bindings if any code path imports it
 vi.mock('sqlite3', () => ({

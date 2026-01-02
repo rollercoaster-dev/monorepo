@@ -1,45 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 
-// Hoisted mock ensures JWTService singleton is mocked before module evaluation
-const jwtMocks = vi.hoisted(() => ({
-  jwtService: {
-    createOpenBadgesApiClient: vi.fn(() => ({
-      token: 'mock-jwt-token',
-      headers: {
-        Authorization: 'Bearer mock-jwt-token',
-        'Content-Type': 'application/json',
-      },
-    })),
-    verifyToken: vi.fn(() => ({
-      sub: 'test-user',
-      platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
-      displayName: 'Test User',
-      email: 'test@example.com',
-      metadata: { isAdmin: true },
-    })),
-  },
-}))
-
-vi.mock('../services/jwt', () => jwtMocks)
-
-// Mock fetch for OpenBadges server requests
-// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
-global.fetch = vi.fn() as unknown as typeof fetch
-
-// Mock SQLite database to avoid native binding issues
-vi.mock('sqlite3', () => ({
-  Database: vi.fn().mockImplementation(() => ({
-    prepare: vi.fn().mockReturnValue({
-      get: vi.fn(),
-      all: vi.fn(),
-      run: vi.fn(),
-      finalize: vi.fn(),
-    }),
-    exec: vi.fn(),
-    close: vi.fn(),
-  })),
-}))
+// JWT, fetch, and SQLite mocks are configured in test.setup.ts
 
 describe('Server Endpoints', () => {
   let app: {

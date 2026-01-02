@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken'
 import { readFileSync } from 'fs'
 import { JWTService } from '../jwt'
 
+// Unmock the JWT service to test the real implementation
+// (test.setup.ts mocks it globally for integration tests)
+vi.unmock('../jwt')
+
 // Mock fs module
 vi.mock('fs', async () => {
   const actual = await vi.importActual('fs')
