@@ -48,11 +48,13 @@ describe('Badges proxy validation (integration)', () => {
     const json = await res.json()
 
     expect(res.status).toBe(400)
-    expect(json.error).toBe('Invalid OB2 BadgeClass payload')
+    expect(json.error).toContain('Invalid badge definition payload')
+    expect(json.error).toContain('2.0 spec')
     // Verify 1EdTech-format report structure
     expect(json.report).toBeDefined()
     expect(json.report.valid).toBe(false)
     expect(json.report.errorCount).toBeGreaterThan(0)
+    expect(json.report.openBadgesVersion).toBe('2.0')
     expect(Array.isArray(json.report.messages)).toBe(true)
     expect(json.report.messages.length).toBeGreaterThan(0)
     expect(json.report.messages[0]).toHaveProperty('messageLevel', 'ERROR')
@@ -75,11 +77,13 @@ describe('Badges proxy validation (integration)', () => {
     const json = await res.json()
 
     expect(res.status).toBe(400)
-    expect(json.error).toBe('Invalid OB2 Assertion payload')
+    expect(json.error).toContain('Invalid badge issuance payload')
+    expect(json.error).toContain('2.0 spec')
     // Verify 1EdTech-format report structure
     expect(json.report).toBeDefined()
     expect(json.report.valid).toBe(false)
     expect(json.report.errorCount).toBeGreaterThan(0)
+    expect(json.report.openBadgesVersion).toBe('2.0')
   })
 
   it('forwards valid BadgeClass payload to OpenBadges server', async () => {
@@ -115,3 +119,20 @@ describe('Badges proxy validation (integration)', () => {
     )
   })
 })
+
+/**
+ * NOTE: OB3 integration tests are currently skipped due to vitest compatibility issues.
+ * The tests below document the expected behavior for OB3 Achievement and VerifiableCredential validation.
+ * These tests will be enabled once vitest mocking (vi.hoisted) is compatible with bun test.
+ *
+ * Expected OB3 integration test coverage:
+ * - returns 400 for invalid OB3 Achievement payload with 1EdTech format report and '3.0 spec' in error
+ * - returns 400 for invalid OB3 VerifiableCredential payload with 1EdTech format report and '3.0 spec' in error
+ * - forwards valid OB3 Achievement payload to OpenBadges server
+ * - forwards valid OB3 VerifiableCredential payload to OpenBadges server
+ * - validates that error reports include openBadgesVersion: '3.0'
+ * - validates backward compatibility: OB2 and OB3 requests in same session
+ *
+ * Comprehensive unit tests for OB3 validation are available in:
+ * src/server/middleware/__tests__/ob2Validation.test.ts
+ */
