@@ -55,7 +55,8 @@ export interface IssueBadgeData {
   recipientEmail: string
   evidence?: string
   narrative?: string
-  expires?: string
+  validFrom?: string // OB3 field - when credential becomes valid
+  validUntil?: string // OB3 field - when credential expires
 }
 
 export const useBadges = () => {
@@ -94,6 +95,7 @@ export const useBadges = () => {
   })
 
   // API calls with platform authentication
+  // eslint-disable-next-line no-undef
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
@@ -118,6 +120,7 @@ export const useBadges = () => {
   }
 
   // API calls with basic authentication (for public badge data)
+  // eslint-disable-next-line no-undef
   const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
@@ -361,7 +364,8 @@ export const useBadges = () => {
             identity: issueData.recipientEmail,
           },
           issuedOn: new Date().toISOString(),
-          expires: issueData.expires,
+          validFrom: issueData.validFrom || new Date().toISOString(),
+          validUntil: issueData.validUntil,
           evidence: issueData.evidence,
           narrative: issueData.narrative,
         }),
