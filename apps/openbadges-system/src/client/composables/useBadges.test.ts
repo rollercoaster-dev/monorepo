@@ -114,7 +114,10 @@ describe('useBadges', () => {
 
     it('should detect OB3 VerifiableCredential correctly', () => {
       const ob3Credential: OB3.VerifiableCredential = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: iri('https://example.org/credentials/1'),
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: iri('https://example.org/issuer'),
@@ -247,7 +250,10 @@ describe('useBadges', () => {
 
     it('should normalize OB3 VerifiableCredential data', () => {
       const ob3Credential: OB3.VerifiableCredential = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: iri('https://example.org/credentials/1'),
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: iri('https://example.org/issuer'),
