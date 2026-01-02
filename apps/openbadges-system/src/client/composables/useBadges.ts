@@ -108,13 +108,14 @@ export const useBadges = () => {
 
   // API calls with platform authentication
   // eslint-disable-next-line no-undef
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const apiCall = async (endpoint: string, options: RequestInit = {}, version?: string) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) ?? {}),
     }
-    const response = await fetch(`/api/badges${endpoint}`, {
+    const versionPath = version || apiVersion.value
+    const response = await fetch(`/api/badges${versionPath}${endpoint}`, {
       ...options,
       headers: mergedHeaders,
     })
@@ -133,13 +134,14 @@ export const useBadges = () => {
 
   // API calls with basic authentication (for public badge data)
   // eslint-disable-next-line no-undef
-  const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const basicApiCall = async (endpoint: string, options: RequestInit = {}, version?: string) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) ?? {}),
     }
-    const response = await fetch(`/api/bs${endpoint}`, {
+    const versionPath = version || apiVersion.value
+    const response = await fetch(`/api/bs${versionPath}${endpoint}`, {
       ...options,
       headers: mergedHeaders,
     })
