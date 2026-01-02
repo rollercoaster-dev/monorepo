@@ -55,7 +55,8 @@ export interface IssueBadgeData {
   recipientEmail: string
   evidence?: string
   narrative?: string
-  expires?: string
+  validFrom?: string // OB3: When this badge becomes valid (defaults to issuance time if not specified)
+  validUntil?: string // OB3: When this badge expires (replaces OB2 'expires')
 }
 
 export const useBadges = () => {
@@ -337,6 +338,11 @@ export const useBadges = () => {
   }
 
   // Issue badge to recipient
+  /**
+   * Issues a badge to a recipient.
+   * Accepts OB3 field names (validFrom, validUntil) and transforms them to OB2 format
+   * (issuedOn, expires) for backward compatibility with the backend server.
+   */
   const issueBadge = async (
     user: User,
     issueData: IssueBadgeData
@@ -347,24 +353,27 @@ export const useBadges = () => {
     try {
       const token = await getPlatformToken(user)
 
+      // Transform OB3 fields to OB2 for backend compatibility
+      const apiPayload = {
+        badge: issueData.badgeClassId,
+        recipient: {
+          type: 'email',
+          hashed: false,
+          identity: issueData.recipientEmail,
+        },
+        issuedOn: issueData.validFrom || new Date().toISOString(),
+        expires: issueData.validUntil, // Map OB3 validUntil to OB2 expires
+        evidence: issueData.evidence,
+        narrative: issueData.narrative,
+      }
+
       // Issue badge
       const response = await apiCall('/v2/assertions', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          badge: issueData.badgeClassId,
-          recipient: {
-            type: 'email',
-            hashed: false,
-            identity: issueData.recipientEmail,
-          },
-          issuedOn: new Date().toISOString(),
-          expires: issueData.expires,
-          evidence: issueData.evidence,
-          narrative: issueData.narrative,
-        }),
+        body: JSON.stringify(apiPayload),
       })
 
       return response as BadgeAssertion
