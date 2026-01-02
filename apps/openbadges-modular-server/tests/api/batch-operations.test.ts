@@ -72,7 +72,7 @@ describe("Batch Operations Unit Tests", () => {
         id: "test-recipient",
         achievement: {
           id: "test-badge-class",
-          type: "Achievement",
+          type: ["Achievement"],
           name: "Test Badge",
         },
       },

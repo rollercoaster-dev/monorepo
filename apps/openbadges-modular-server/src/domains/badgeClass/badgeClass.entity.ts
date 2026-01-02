@@ -227,7 +227,7 @@ export class BadgeClass
       // OB3 Achievement
       const achievement: Partial<OB3.Achievement> = {
         ...baseObject,
-        type: "Achievement",
+        type: ["Achievement"],
         name: nameValue, // Can be string or MultiLanguageString for OB3
         description: descriptionValue, // Can be string or MultiLanguageString for OB3
         issuer: this.issuer, // Can be IRI or Issuer object for OB3

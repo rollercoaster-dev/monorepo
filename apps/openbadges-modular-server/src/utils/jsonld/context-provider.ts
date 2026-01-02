@@ -135,7 +135,7 @@ export function createVerifiableCredential(
       type: "AchievementSubject",
       achievement: {
         id: badgeClass.id,
-        type: "Achievement",
+        type: ["Achievement"],
         name: badgeClass.name,
         description: badgeClass.description,
         image: badgeClass.image,

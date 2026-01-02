@@ -119,12 +119,16 @@ function validateOBv3Entity(
       expect(entity.url).toBeDefined();
       break;
     case "badgeClass":
+      // OB3 spec requires type to be an array
+      expect(Array.isArray(entity.type)).toBe(true);
       expect(entity.type).toContain("Achievement");
       expect(entity.name).toBeDefined();
       expect(entity.description).toBeDefined();
       expect(entity.criteria).toBeDefined();
       break;
     case "assertion":
+      // OB3 spec requires type to be an array
+      expect(Array.isArray(entity.type)).toBe(true);
       expect(entity.type).toContain("VerifiableCredential");
       expect(entity.type).toContain("OpenBadgeCredential");
       expect(entity.credentialSubject).toBeDefined();
