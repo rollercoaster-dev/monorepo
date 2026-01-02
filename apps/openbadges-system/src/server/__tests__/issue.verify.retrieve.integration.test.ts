@@ -122,4 +122,105 @@ describe('Issue → Verify → Retrieve flow (proxy)', () => {
     const data = await getBackpackRes.json()
     expect(data.assertions?.[0]?.id).toBe(createdAssertion.id)
   })
+
+  it('issues an assertion with OB3 validFrom and validUntil', async () => {
+    const validFrom = '2025-01-01T00:00:00Z'
+    const validUntil = '2026-01-01T00:00:00Z'
+
+    const createdAssertion = {
+      id: 'https://example.org/assertions/ob3',
+      type: 'Assertion',
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      verification: { type: 'hosted' },
+      issuedOn: validFrom,
+      expires: validUntil, // Backend returns OB2 format
+    }
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve(createdAssertion),
+    })
+
+    const issueReqBody = {
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      validFrom,
+      validUntil,
+      narrative: 'Completed requirements',
+    }
+
+    const issueReq = new Request('http://localhost/api/badges/api/v2/assertions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
+      body: JSON.stringify(issueReqBody),
+    })
+
+    const issueRes = await app.fetch(issueReq)
+    expect(issueRes.status).toBe(200)
+    const issued = await issueRes.json()
+    expect(issued.id).toBe(createdAssertion.id)
+
+    // Verify transformation happened correctly
+    const forwardedCall = mockFetch.mock.calls[0]
+    const forwardedBody = JSON.parse((forwardedCall?.[1] as RequestInit)?.body as string)
+    expect(forwardedBody.expires).toBe(validUntil)
+    expect(forwardedBody.validFrom).toBeUndefined()
+    expect(forwardedBody.validUntil).toBeUndefined()
+  })
+
+  it('rejects assertion when validFrom is after validUntil', async () => {
+    const issueReqBody = {
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      validFrom: '2026-01-01T00:00:00Z',
+      validUntil: '2025-01-01T00:00:00Z', // Before validFrom
+    }
+
+    const issueReq = new Request('http://localhost/api/badges/api/v2/assertions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
+      body: JSON.stringify(issueReqBody),
+    })
+
+    const issueRes = await app.fetch(issueReq)
+    expect(issueRes.status).toBe(400)
+    const error = await issueRes.json()
+    expect(error.error).toContain('Invalid Assertion payload')
+  })
+
+  it('maintains backward compatibility with OB2 expires field', async () => {
+    const createdAssertion = {
+      id: 'https://example.org/assertions/ob2',
+      type: 'Assertion',
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      verification: { type: 'hosted' },
+      issuedOn: '2025-01-01T00:00:00Z',
+      expires: '2026-01-01T00:00:00Z',
+    }
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve(createdAssertion),
+    })
+
+    const issueReqBody = {
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      issuedOn: '2025-01-01T00:00:00Z',
+      expires: '2026-01-01T00:00:00Z', // OB2 format
+    }
+
+    const issueReq = new Request('http://localhost/api/badges/api/v2/assertions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
+      body: JSON.stringify(issueReqBody),
+    })
+
+    const issueRes = await app.fetch(issueReq)
+    expect(issueRes.status).toBe(200)
+  })
 })

@@ -54,6 +54,31 @@ export default [
     },
   },
 
+  // Test environment globals
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts', '**/__tests__/**/*.ts'],
+    languageOptions: {
+      globals: {
+        global: 'readonly',
+        localStorage: 'readonly',
+        Headers: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
+        RequestInit: 'readonly',
+        ReadableStream: 'readonly',
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
+    },
+  },
+
   // Ignore patterns for the entire monorepo
   {
     ignores: [
