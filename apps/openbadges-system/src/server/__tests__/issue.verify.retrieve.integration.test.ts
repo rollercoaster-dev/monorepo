@@ -122,4 +122,43 @@ describe('Issue → Verify → Retrieve flow (proxy)', () => {
     const data = await getBackpackRes.json()
     expect(data.assertions?.[0]?.id).toBe(createdAssertion.id)
   })
+
+  it('issues an assertion with OB3 validity fields', async () => {
+    const createdAssertion = {
+      id: 'https://example.org/assertions/ob3-validity',
+      type: 'Assertion',
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      verification: { type: 'hosted' },
+      issuedOn: '2025-01-01T00:00:00Z',
+      validFrom: '2025-01-01T00:00:00Z',
+      validUntil: '2025-12-31T23:59:59Z',
+    }
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.resolve(createdAssertion),
+    })
+
+    const issueReqBody = {
+      badge: 'https://example.org/badges/1',
+      recipient: { type: 'email', identity: 'recipient@example.org' },
+      issuedOn: '2025-01-01T00:00:00Z',
+      validFrom: '2025-01-01T00:00:00Z',
+      validUntil: '2025-12-31T23:59:59Z',
+    }
+
+    const issueReq = new Request('http://localhost/api/badges/api/v2/assertions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer platform-token' },
+      body: JSON.stringify(issueReqBody),
+    })
+
+    const issueRes = await app.fetch(issueReq)
+    expect(issueRes.status).toBe(200)
+    const issued = await issueRes.json()
+    expect(issued.validFrom).toBe('2025-01-01T00:00:00Z')
+    expect(issued.validUntil).toBe('2025-12-31T23:59:59Z')
+  })
 })

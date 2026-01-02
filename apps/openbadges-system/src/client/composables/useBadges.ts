@@ -47,15 +47,20 @@ export interface UpdateBadgeData {
   expires?: string
 }
 
-// Use official Open Badges Assertion type
-export type BadgeAssertion = OB2.Assertion
+// Extend OB2.Assertion with OB3 validity fields for backward compatibility
+// OB3 uses validFrom/validUntil per VC Data Model 2.0, while OB2 uses expires
+export type BadgeAssertion = OB2.Assertion & {
+  validFrom?: string // OB3 field - when credential becomes valid
+  validUntil?: string // OB3 field - when credential expires
+}
 
 export interface IssueBadgeData {
   badgeClassId: string
   recipientEmail: string
   evidence?: string
   narrative?: string
-  expires?: string
+  validFrom?: string // OB3 field - when credential becomes valid
+  validUntil?: string // OB3 field - when credential expires
 }
 
 export const useBadges = () => {
@@ -94,6 +99,7 @@ export const useBadges = () => {
   })
 
   // API calls with platform authentication
+  // eslint-disable-next-line no-undef
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
@@ -118,6 +124,7 @@ export const useBadges = () => {
   }
 
   // API calls with basic authentication (for public badge data)
+  // eslint-disable-next-line no-undef
   const basicApiCall = async (endpoint: string, options: RequestInit = {}) => {
     // Compute merged headers first to ensure Content-Type isn't accidentally dropped
     const mergedHeaders: Record<string, string> = {
@@ -361,7 +368,8 @@ export const useBadges = () => {
             identity: issueData.recipientEmail,
           },
           issuedOn: new Date().toISOString(),
-          expires: issueData.expires,
+          validFrom: issueData.validFrom || new Date().toISOString(),
+          validUntil: issueData.validUntil,
           evidence: issueData.evidence,
           narrative: issueData.narrative,
         }),

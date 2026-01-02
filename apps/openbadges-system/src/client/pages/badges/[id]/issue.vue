@@ -28,7 +28,8 @@ const issueForm = ref({
   recipientEmail: '',
   evidence: '',
   narrative: '',
-  expires: '',
+  validFrom: '',
+  validUntil: '',
 })
 
 // Form validation
@@ -90,14 +91,50 @@ const validateField = (field: string) => {
         }
       }
       break
-    case 'expires':
-      if (issueForm.value.expires) {
+    case 'validFrom':
+      // validFrom is optional, no specific validation needed
+      // Cross-field validation with validUntil is handled below
+      if (issueForm.value.validFrom && issueForm.value.validUntil) {
+        const validFromStr = issueForm.value.validFrom
+        const validUntilStr = issueForm.value.validUntil
+        if (validFromStr >= validUntilStr) {
+          validationErrors.value[field] = 'Valid From must be before Valid Until'
+        }
+      }
+      // Clear validUntil cross-field error if constraint now passes
+      if (
+        validationErrors.value['validUntil']?.includes('Valid Until must be after') &&
+        issueForm.value.validFrom &&
+        issueForm.value.validUntil &&
+        issueForm.value.validFrom < issueForm.value.validUntil
+      ) {
+        clearFieldError('validUntil')
+      }
+      break
+    case 'validUntil':
+      if (issueForm.value.validUntil) {
         // Compare local date strings (YYYY-MM-DD) for consistency with <input type="date">
         const todayStr = today.value
-        const expiryStr = issueForm.value.expires
-        if (expiryStr <= todayStr) {
-          validationErrors.value[field] = 'Expiration date must be in the future'
+        const validUntilStr = issueForm.value.validUntil
+        if (validUntilStr <= todayStr) {
+          validationErrors.value[field] = 'Valid Until date must be in the future'
         }
+        // Cross-field validation with validFrom
+        if (issueForm.value.validFrom) {
+          const validFromStr = issueForm.value.validFrom
+          if (validFromStr >= validUntilStr) {
+            validationErrors.value[field] = 'Valid Until must be after Valid From'
+          }
+        }
+      }
+      // Clear validFrom cross-field error if constraint now passes
+      if (
+        validationErrors.value['validFrom']?.includes('Valid From must be before') &&
+        issueForm.value.validFrom &&
+        issueForm.value.validUntil &&
+        issueForm.value.validFrom < issueForm.value.validUntil
+      ) {
+        clearFieldError('validFrom')
       }
       break
   }
@@ -151,7 +188,8 @@ const handleIssue = async () => {
   // Validate all fields
   validateField('recipientEmail')
   validateField('evidence')
-  validateField('expires')
+  validateField('validFrom')
+  validateField('validUntil')
 
   if (!isFormValid.value) {
     issueError.value = 'Please fix the errors in the form'
@@ -168,8 +206,11 @@ const handleIssue = async () => {
       recipientEmail: issueForm.value.recipientEmail.trim(),
       evidence: issueForm.value.evidence.trim() || undefined,
       narrative: issueForm.value.narrative.trim() || undefined,
-      expires: issueForm.value.expires
-        ? new Date(issueForm.value.expires).toISOString()
+      validFrom: issueForm.value.validFrom
+        ? new Date(issueForm.value.validFrom).toISOString()
+        : undefined,
+      validUntil: issueForm.value.validUntil
+        ? new Date(issueForm.value.validUntil).toISOString()
         : undefined,
     }
 
@@ -184,7 +225,8 @@ const handleIssue = async () => {
         recipientEmail: '',
         evidence: '',
         narrative: '',
-        expires: '',
+        validFrom: '',
+        validUntil: '',
       }
     } else {
       issueError.value = 'Failed to issue badge. Please try again.'
@@ -394,31 +436,62 @@ onMounted(() => {
         </p>
       </div>
 
-      <!-- Expiration Date -->
+      <!-- Valid From -->
       <div>
-        <label for="expires" class="block text-sm font-medium text-gray-700 mb-2">
-          Expiration Date (optional)
+        <label for="validFrom" class="block text-sm font-medium text-gray-700 mb-2">
+          Valid From (optional)
         </label>
         <input
-          id="expires"
-          v-model="issueForm.expires"
+          id="validFrom"
+          v-model="issueForm.validFrom"
           type="date"
           class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           :class="
-            getFieldError('expires')
+            getFieldError('validFrom')
               ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
               : 'border-gray-300'
           "
-          :min="today"
-          aria-describedby="expires-help expires-error"
-          @blur="validateField('expires')"
-          @input="clearFieldError('expires')"
+          aria-describedby="validFrom-help validFrom-error"
+          @blur="validateField('validFrom')"
+          @input="clearFieldError('validFrom')"
         />
-        <p v-if="getFieldError('expires')" id="expires-error" class="mt-1 text-sm text-red-600">
-          {{ getFieldError('expires') }}
+        <p v-if="getFieldError('validFrom')" id="validFrom-error" class="mt-1 text-sm text-red-600">
+          {{ getFieldError('validFrom') }}
         </p>
-        <p id="expires-help" class="mt-1 text-sm text-gray-500">
-          When this badge expires (leave blank for no expiration).
+        <p id="validFrom-help" class="mt-1 text-sm text-gray-500">
+          When this credential becomes valid (defaults to issuance date if not specified).
+        </p>
+      </div>
+
+      <!-- Valid Until -->
+      <div>
+        <label for="validUntil" class="block text-sm font-medium text-gray-700 mb-2">
+          Valid Until (optional)
+        </label>
+        <input
+          id="validUntil"
+          v-model="issueForm.validUntil"
+          type="date"
+          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          :class="
+            getFieldError('validUntil')
+              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+              : 'border-gray-300'
+          "
+          :min="issueForm.validFrom || today"
+          aria-describedby="validUntil-help validUntil-error"
+          @blur="validateField('validUntil')"
+          @input="clearFieldError('validUntil')"
+        />
+        <p
+          v-if="getFieldError('validUntil')"
+          id="validUntil-error"
+          class="mt-1 text-sm text-red-600"
+        >
+          {{ getFieldError('validUntil') }}
+        </p>
+        <p id="validUntil-help" class="mt-1 text-sm text-gray-500">
+          When this credential expires (leave blank for no expiration).
         </p>
       </div>
 
