@@ -255,9 +255,7 @@ describe('OB3 Validation Schemas', () => {
       }
       const res = validateAchievementPayload(payload)
       expect(res.valid).toBe(false)
-      const criteriaError = res.report.messages.find(m =>
-        m.result.includes('id or narrative')
-      )
+      const criteriaError = res.report.messages.find(m => m.result.includes('id or narrative'))
       expect(criteriaError).toBeDefined()
     })
   })
@@ -455,8 +453,8 @@ describe('OB3 Validation Schemas', () => {
       }
       const res = validateVerifiableCredentialPayload(payload)
       expect(res.valid).toBe(false)
-      const dateError = res.report.messages.find(m =>
-        m.node_path?.includes('validFrom') && m.result.includes('ISO 8601')
+      const dateError = res.report.messages.find(
+        m => m.node_path?.includes('validFrom') && m.result.includes('ISO 8601')
       )
       expect(dateError).toBeDefined()
     })
@@ -472,9 +470,7 @@ describe('OB3 Validation Schemas', () => {
       }
       const res = validateVerifiableCredentialPayload(payload)
       expect(res.valid).toBe(false)
-      const achievementError = res.report.messages.find(m =>
-        m.node_path?.includes('achievement')
-      )
+      const achievementError = res.report.messages.find(m => m.node_path?.includes('achievement'))
       expect(achievementError).toBeDefined()
     })
   })
@@ -607,8 +603,11 @@ describe('OB3 Validation Schemas', () => {
       }
       const res = validateBadgeDefinitionPayload(payload)
       expect(res.valid).toBe(false)
-      expect(res.report.messages[0].name).toBe('VALIDATE_SPEC_VERSION')
-      expect(res.report.messages[0].result).toContain('Unable to determine badge specification version')
+      expect(res.report.messages.length).toBeGreaterThan(0)
+      expect(res.report.messages[0]!.name).toBe('VALIDATE_SPEC_VERSION')
+      expect(res.report.messages[0]!.result).toContain(
+        'Unable to determine badge specification version'
+      )
     })
 
     it('returns clear error for unknown spec version in badge issuance', () => {
@@ -617,8 +616,11 @@ describe('OB3 Validation Schemas', () => {
       }
       const res = validateBadgeIssuancePayload(payload)
       expect(res.valid).toBe(false)
-      expect(res.report.messages[0].name).toBe('VALIDATE_SPEC_VERSION')
-      expect(res.report.messages[0].result).toContain('Unable to determine badge specification version')
+      expect(res.report.messages.length).toBeGreaterThan(0)
+      expect(res.report.messages[0]!.name).toBe('VALIDATE_SPEC_VERSION')
+      expect(res.report.messages[0]!.result).toContain(
+        'Unable to determine badge specification version'
+      )
     })
   })
 })

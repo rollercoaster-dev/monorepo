@@ -270,7 +270,7 @@ const ob3EvidenceSchema = z.object({
 
 // OB3 VerifiableCredential schema
 export const verifiableCredentialSchema = z.object({
-  '@context': z.union([z.string(), z.array(z.string()), z.record(z.unknown())]),
+  '@context': z.union([z.string(), z.array(z.string()), z.record(z.string(), z.unknown())]),
   id: iriSchema,
   type: z.array(z.string()),
   issuer: z.union([iriSchema, ob3IssuerSchema]),
