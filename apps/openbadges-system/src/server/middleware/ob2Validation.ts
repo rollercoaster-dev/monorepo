@@ -277,3 +277,62 @@ export const verifiableCredentialSchema = z.object({
   proof: z.union([proofSchema, z.array(proofSchema)]).optional(),
   evidence: z.union([ob3EvidenceSchema, z.array(ob3EvidenceSchema)]).optional(),
 })
+
+/**
+ * Detects which Open Badges specification version a payload conforms to
+ *
+ * Detection heuristics:
+ * - OB3: Has @context property, type array with 'VerifiableCredential'/'OpenBadgeCredential',
+ *        or credentialSubject field
+ * - OB2: Has type field with 'BadgeClass' or 'Assertion', or recipient field
+ * - Unknown: Cannot determine spec version from payload structure
+ *
+ * @param payload The badge payload to detect
+ * @returns '2.0' | '3.0' | 'unknown'
+ */
+export function detectBadgeSpecVersion(payload: unknown): '2.0' | '3.0' | 'unknown' {
+  if (typeof payload !== 'object' || payload === null) {
+    return 'unknown'
+  }
+
+  const obj = payload as Record<string, unknown>
+
+  // Check for OB3 indicators
+  if ('@context' in obj) {
+    return '3.0'
+  }
+
+  if ('type' in obj && Array.isArray(obj.type)) {
+    const types = obj.type as string[]
+    if (
+      types.includes('VerifiableCredential') ||
+      types.includes('OpenBadgeCredential') ||
+      types.includes('Achievement')
+    ) {
+      return '3.0'
+    }
+  }
+
+  if ('credentialSubject' in obj) {
+    return '3.0'
+  }
+
+  // Check for OB2 indicators
+  if ('type' in obj && typeof obj.type === 'string') {
+    if (obj.type === 'BadgeClass' || obj.type === 'Assertion') {
+      return '2.0'
+    }
+  }
+
+  if ('recipient' in obj) {
+    return '2.0'
+  }
+
+  // Check for OB2 criteria as string (OB3 uses object with id/narrative)
+  if ('criteria' in obj && typeof obj.criteria === 'string') {
+    return '2.0'
+  }
+
+  // Cannot determine
+  return 'unknown'
+}
