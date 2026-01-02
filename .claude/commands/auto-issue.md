@@ -48,6 +48,17 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 ## Phase 1: Research (Autonomous)
 
+0. **Validate input:**
+
+   ```bash
+   # Ensure $ARGUMENTS is a valid issue number
+   if ! [[ "$ARGUMENTS" =~ ^[0-9]+$ ]]; then
+     echo "[AUTO-ISSUE] ERROR: Invalid issue number: $ARGUMENTS"
+     echo "[AUTO-ISSUE] Usage: /auto-issue <issue-number>"
+     exit 1
+   fi
+   ```
+
 1. **Fetch issue details:**
 
    ```bash
@@ -77,7 +88,7 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 5. **Update board status to "In Progress":**
 
    ```bash
-   # Add issue to project if not already present (using GraphQL for reliability)
+   # Try to add issue to project (silently fails if already present)
    gh api graphql -f query='
      mutation {
        addProjectV2ItemById(input: {
@@ -87,6 +98,7 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
      }' 2>/dev/null || true
 
    # Get the item ID via GraphQL
+   # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
    ITEM_ID=$(gh api graphql -f query='
      query {
        organization(login: "rollercoaster-dev") {
@@ -108,10 +120,14 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
        --id "$ITEM_ID" \
        --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
        --single-select-option-id 3e320f16
+     echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'In Progress'"
+   else
+     echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
+     echo "[AUTO-ISSUE #$ARGUMENTS] Continuing without board update..."
    fi
    ```
 
-   Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "In Progress"`
+   **If board update fails:** Log warning but continue - board updates are not critical to implementation.
 
 6. **If `--dry-run`:** Stop here, show plan, exit.
 
@@ -244,6 +260,7 @@ else:
 
     ```bash
     # Get the item ID via GraphQL
+    # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
     ITEM_ID=$(gh api graphql -f query='
       query {
         organization(login: "rollercoaster-dev") {
@@ -265,10 +282,14 @@ else:
         --id "$ITEM_ID" \
         --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
         --single-select-option-id 51c2af7b
+      echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'Blocked' (awaiting review)"
+    else
+      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
+      echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
     fi
     ```
 
-    Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "Blocked" (awaiting review)`
+    **If board update fails:** Log warning but continue - PR creation is the critical step.
 
 17. **Report completion:**
 
