@@ -388,3 +388,122 @@ export function validateVerifiableCredentialPayload(
     report: createValidationReport(messages, { openBadgesVersion: '3.0' }),
   }
 }
+
+/**
+ * Auto-detects and validates a badge definition payload (BadgeClass or Achievement)
+ *
+ * Automatically detects whether the payload is OB2 BadgeClass or OB3 Achievement
+ * and applies the appropriate validation schema.
+ *
+ * @param payload The badge definition payload to validate
+ * @returns ValidationResult with validated data and spec version in report
+ *
+ * @example
+ * // OB2 BadgeClass
+ * validateBadgeDefinitionPayload({
+ *   type: 'BadgeClass',
+ *   name: 'My Badge',
+ *   description: 'A great badge',
+ *   image: 'https://example.org/badge.png',
+ *   criteria: 'https://example.org/criteria',
+ *   issuer: 'https://example.org/issuer'
+ * })
+ *
+ * @example
+ * // OB3 Achievement
+ * validateBadgeDefinitionPayload({
+ *   id: 'https://example.org/achievement/1',
+ *   type: ['Achievement'],
+ *   name: 'My Achievement',
+ *   description: 'A great achievement',
+ *   criteria: { narrative: 'Complete the task' }
+ * })
+ */
+export function validateBadgeDefinitionPayload(
+  payload: unknown
+): ValidationResult<z.infer<typeof badgeClassSchema> | z.infer<typeof achievementSchema>> {
+  const version = detectBadgeSpecVersion(payload)
+
+  if (version === '2.0') {
+    return validateBadgeClassPayload(payload)
+  }
+
+  if (version === '3.0') {
+    return validateAchievementPayload(payload)
+  }
+
+  // Unknown spec version
+  const messages: ValidationMessage[] = [
+    {
+      name: 'VALIDATE_SPEC_VERSION',
+      messageLevel: 'ERROR',
+      node_path: [],
+      success: false,
+      result: 'Unable to determine badge specification version (2.0 or 3.0) from payload structure',
+    },
+  ]
+
+  return {
+    valid: false,
+    report: createValidationReport(messages),
+  }
+}
+
+/**
+ * Auto-detects and validates a badge issuance payload (Assertion or VerifiableCredential)
+ *
+ * Automatically detects whether the payload is OB2 Assertion or OB3 VerifiableCredential
+ * and applies the appropriate validation schema.
+ *
+ * @param payload The badge issuance payload to validate
+ * @returns ValidationResult with validated data and spec version in report
+ *
+ * @example
+ * // OB2 Assertion
+ * validateBadgeIssuancePayload({
+ *   badge: 'https://example.org/badge/1',
+ *   recipient: { type: 'email', identity: 'user@example.org' },
+ *   issuedOn: '2024-01-01T00:00:00Z'
+ * })
+ *
+ * @example
+ * // OB3 VerifiableCredential
+ * validateBadgeIssuancePayload({
+ *   '@context': ['https://www.w3.org/ns/credentials/v2'],
+ *   type: ['VerifiableCredential', 'OpenBadgeCredential'],
+ *   issuer: 'https://example.org/issuer',
+ *   validFrom: '2024-01-01T00:00:00Z',
+ *   credentialSubject: { achievement: {...} }
+ * })
+ */
+export function validateBadgeIssuancePayload(
+  payload: unknown
+):
+  | ValidationResult<z.infer<typeof assertionSchema>>
+  | ValidationResult<z.infer<typeof verifiableCredentialSchema>> {
+  const version = detectBadgeSpecVersion(payload)
+
+  if (version === '2.0') {
+    return validateAssertionPayload(payload)
+  }
+
+  if (version === '3.0') {
+    return validateVerifiableCredentialPayload(payload)
+  }
+
+  // Unknown spec version
+  const messages: ValidationMessage[] = [
+    {
+      name: 'VALIDATE_SPEC_VERSION',
+      messageLevel: 'ERROR',
+      node_path: [],
+      success: false,
+      result: 'Unable to determine badge specification version (2.0 or 3.0) from payload structure',
+    },
+  ]
+
+  return {
+    valid: false,
+    report: createValidationReport(messages),
+  }
+}
