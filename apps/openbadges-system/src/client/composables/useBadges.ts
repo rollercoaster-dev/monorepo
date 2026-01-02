@@ -47,8 +47,12 @@ export interface UpdateBadgeData {
   expires?: string
 }
 
-// Use official Open Badges Assertion type
-export type BadgeAssertion = OB2.Assertion
+// Extend OB2.Assertion with OB3 validity fields for backward compatibility
+// OB3 uses validFrom/validUntil per VC Data Model 2.0, while OB2 uses expires
+export type BadgeAssertion = OB2.Assertion & {
+  validFrom?: string // OB3 field - when credential becomes valid
+  validUntil?: string // OB3 field - when credential expires
+}
 
 export interface IssueBadgeData {
   badgeClassId: string
