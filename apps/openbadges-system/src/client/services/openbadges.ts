@@ -1,18 +1,15 @@
 import type { User } from '@/composables/useAuth'
-import type { OB2 } from 'openbadges-types'
+import type { OB2, OB3, CompositeGuards } from 'openbadges-types'
+import { OpenBadgesVersion } from 'openbadges-types'
 
 export interface OpenBadgesApiClient {
   token: string
   headers: Record<string, string>
 }
 
-// Extend OB2.Assertion with OB3 validity fields for backward compatibility
-// OB3 uses validFrom/validUntil per VC Data Model 2.0, while OB2 uses expires
-export type BadgeAssertion = OB2.Assertion & {
-  validFrom?: string // OB3 field - when credential becomes valid
-  validUntil?: string // OB3 field - when credential expires
-}
-export type BadgeClass = OB2.BadgeClass
+// Type aliases supporting both OB2 and OB3
+export type BadgeAssertion = CompositeGuards.Badge
+export type BadgeClass = OB2.BadgeClass | OB3.Achievement
 
 export interface UserBackpack {
   assertions: BadgeAssertion[]
@@ -311,15 +308,21 @@ export class OpenBadgesService {
 
   /**
    * Get badge classes available for issuance
+   * @param user - Optional user for authenticated requests
+   * @param version - OpenBadges version (defaults to OB3)
    */
-  async getBadgeClasses(user?: User): Promise<unknown[]> {
+  async getBadgeClasses(
+    user?: User,
+    version: OpenBadgesVersion = OpenBadgesVersion.V3
+  ): Promise<BadgeClass[]> {
+    const apiVersion = version === OpenBadgesVersion.V3 ? 'v3' : 'v2'
     let response: Response
 
     if (user) {
-      response = await this.makeAuthenticatedRequest(user, '/api/v2/badge-classes')
+      response = await this.makeAuthenticatedRequest(user, `/api/${apiVersion}/badge-classes`)
     } else {
       // Public endpoint - no authentication required
-      response = await this.makePublicRequest('/api/badges/badge-classes')
+      response = await this.makePublicRequest(`/api/badges/${apiVersion}/badge-classes`)
     }
 
     return await response.json()
@@ -359,23 +362,37 @@ export class OpenBadgesService {
 
   /**
    * Issue badge to user
+   * @param issuerUser - User issuing the badge
+   * @param badgeClassId - ID of the badge class/achievement
+   * @param recipientEmail - Email of the recipient
+   * @param evidence - Optional evidence URL
+   * @param narrative - Optional narrative text
+   * @param version - OpenBadges version (defaults to OB3)
    */
   async issueBadge(
     issuerUser: User,
     badgeClassId: string,
     recipientEmail: string,
     evidence?: string,
-    narrative?: string
+    narrative?: string,
+    version: OpenBadgesVersion = OpenBadgesVersion.V3
   ): Promise<BadgeAssertion> {
-    const response = await this.makeAuthenticatedRequest(issuerUser, '/api/v2/assertions', {
-      method: 'POST',
-      body: JSON.stringify({
-        badgeClass: badgeClassId,
-        recipient: recipientEmail,
-        evidence,
-        narrative,
-      }),
-    })
+    const apiVersion = version === OpenBadgesVersion.V3 ? 'v3' : 'v2'
+    const endpoint = version === OpenBadgesVersion.V3 ? 'credentials' : 'assertions'
+
+    const response = await this.makeAuthenticatedRequest(
+      issuerUser,
+      `/api/${apiVersion}/${endpoint}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          badgeClass: badgeClassId,
+          recipient: recipientEmail,
+          evidence,
+          narrative,
+        }),
+      }
+    )
 
     return await response.json()
   }
