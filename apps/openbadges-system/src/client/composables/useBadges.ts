@@ -537,7 +537,30 @@ export const useBadges = () => {
     }
   }
 
-  // Revoke badge assertion
+  /**
+   * Revoke a badge assertion
+   *
+   * Revocation handling differs between OB2 and OB3:
+   *
+   * **Open Badges 2.0:**
+   * - Sets `revoked: true` and `revocationReason` directly on the assertion
+   * - The server updates the hosted assertion JSON with these fields
+   * - Revoked assertions are marked explicitly in the assertion object
+   *
+   * **Open Badges 3.0:**
+   * - Uses credentialStatus with StatusList2021 for revocation
+   * - The server updates a bitstring in the status list
+   * - Client-side credentialStatus reflects server state
+   * - Follows W3C VC Data Model 2.0 revocation patterns
+   *
+   * @param user - Authenticated user performing the revocation
+   * @param assertionId - ID of the assertion/credential to revoke
+   * @param reason - Optional reason for revocation (used for OB2, logged for OB3)
+   * @returns Promise<boolean> - True if revocation succeeded
+   *
+   * @see https://www.imsglobal.org/spec/ob/v3p0/#credentialstatus
+   * @see https://w3c-ccg.github.io/vc-status-list-2021/
+   */
   const revokeBadge = async (
     user: User,
     assertionId: string,
