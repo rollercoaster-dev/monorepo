@@ -115,6 +115,79 @@ const isCredentialOB3 = (credential: unknown): credential is OB3.VerifiableCrede
   )
 }
 
+/**
+ * Normalization helpers for consistent UI consumption
+ * Handle differences between OB2 and OB3 data structures
+ */
+
+/**
+ * Normalize badge data to a common format for UI consumption
+ * Handles differences between OB2.BadgeClass and OB3.Achievement
+ */
+const normalizeBadgeData = (badge: OB2.BadgeClass | OB3.Achievement) => {
+  if (isBadgeOB2(badge)) {
+    return {
+      id: badge.id,
+      name: badge.name,
+      description: badge.description,
+      image: badge.image,
+      criteria: badge.criteria,
+      issuer: badge.issuer,
+      tags: badge.tags,
+      version: '2.0' as const,
+    }
+  } else if (isBadgeOB3(badge)) {
+    return {
+      id: badge.id,
+      name:
+        typeof badge.name === 'string'
+          ? badge.name
+          : badge.name?.en || Object.values(badge.name || {})[0] || '',
+      description:
+        typeof badge.description === 'string'
+          ? badge.description
+          : badge.description?.en || Object.values(badge.description || {})[0] || '',
+      image: badge.image,
+      criteria: badge.criteria,
+      issuer: badge.creator,
+      tags: [], // OB3 doesn't have tags field
+      version: '3.0' as const,
+    }
+  }
+  throw new Error('Unknown badge format')
+}
+
+/**
+ * Normalize assertion/credential data for UI consumption
+ * Handles differences between OB2.Assertion and OB3.VerifiableCredential
+ */
+const normalizeAssertionData = (data: BadgeAssertion | OB3.VerifiableCredential) => {
+  if (isAssertionOB2(data)) {
+    return {
+      id: data.id,
+      recipient: data.recipient,
+      issuedOn: data.issuedOn,
+      expires: data.expires,
+      validFrom: data.validFrom,
+      validUntil: data.validUntil,
+      evidence: data.evidence,
+      version: '2.0' as const,
+    }
+  } else if (isCredentialOB3(data)) {
+    return {
+      id: data.id,
+      recipient: data.credentialSubject,
+      issuedOn: data.validFrom,
+      expires: data.validUntil,
+      validFrom: data.validFrom,
+      validUntil: data.validUntil,
+      evidence: data.evidence,
+      version: '3.0' as const,
+    }
+  }
+  throw new Error('Unknown assertion format')
+}
+
 export const useBadges = () => {
   const badges = ref<(OB2.BadgeClass | OB3.Achievement)[]>([])
   const assertions = ref<(BadgeAssertion | OB3.VerifiableCredential)[]>([])
@@ -616,5 +689,9 @@ export const useBadges = () => {
     isBadgeOB3,
     isAssertionOB2,
     isCredentialOB3,
+
+    // Normalization helpers (exposed for external use)
+    normalizeBadgeData,
+    normalizeAssertionData,
   }
 }
