@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
-import type { OB2 } from 'openbadges-types'
+import type { OB2, OB3, CompositeGuards } from 'openbadges-types'
+import { OpenBadgesVersion } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -12,8 +13,11 @@ export interface BadgeSearchFilters {
   sortOrder: 'asc' | 'desc'
 }
 
+// Type alias for badge classes supporting both OB2 and OB3
+export type BadgeClass = OB2.BadgeClass | OB3.Achievement
+
 export interface BadgesPaginationData {
-  badges: OB2.BadgeClass[]
+  badges: BadgeClass[]
   totalBadges: number
   currentPage: number
   itemsPerPage: number
@@ -47,12 +51,8 @@ export interface UpdateBadgeData {
   expires?: string
 }
 
-// Extend OB2.Assertion with OB3 validity fields for backward compatibility
-// OB3 uses validFrom/validUntil per VC Data Model 2.0, while OB2 uses expires
-export type BadgeAssertion = OB2.Assertion & {
-  validFrom?: string // OB3 field - when credential becomes valid
-  validUntil?: string // OB3 field - when credential expires
-}
+// Type alias for badge assertions supporting both OB2 and OB3
+export type BadgeAssertion = CompositeGuards.Badge
 
 export interface IssueBadgeData {
   badgeClassId: string
@@ -63,8 +63,13 @@ export interface IssueBadgeData {
   validUntil?: string // OB3 field - when credential expires
 }
 
-export const useBadges = () => {
-  const badges = ref<OB2.BadgeClass[]>([])
+export const useBadges = (initialVersion: OpenBadgesVersion = OpenBadgesVersion.V3) => {
+  // Version configuration
+  const specVersion = ref<OpenBadgesVersion>(initialVersion)
+  const apiVersion = computed(() => (specVersion.value === OpenBadgesVersion.V3 ? 'v3' : 'v2'))
+
+  // State
+  const badges = ref<BadgeClass[]>([])
   const assertions = ref<BadgeAssertion[]>([])
   const totalBadges = ref(0)
   const totalAssertions = ref(0)
@@ -210,7 +215,7 @@ export const useBadges = () => {
   const createBadge = async (
     user: User,
     badgeData: CreateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<BadgeClass | null> => {
     isLoading.value = true
     error.value = null
 
@@ -236,7 +241,7 @@ export const useBadges = () => {
         }),
       })
 
-      const newBadge = response as OB2.BadgeClass
+      const newBadge = response as BadgeClass
 
       // Add to local badges array if we're on the first page
       if (currentPage.value === 1) {
@@ -259,7 +264,7 @@ export const useBadges = () => {
     user: User,
     badgeId: string,
     badgeData: UpdateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<BadgeClass | null> => {
     isLoading.value = true
     error.value = null
 
@@ -275,7 +280,7 @@ export const useBadges = () => {
         body: JSON.stringify(badgeData),
       })
 
-      const updatedBadge = response as OB2.BadgeClass
+      const updatedBadge = response as BadgeClass
 
       // Update local badges array
       const index = badges.value.findIndex(b => b.id === badgeId)
@@ -327,13 +332,13 @@ export const useBadges = () => {
   }
 
   // Get badge class by ID
-  const getBadgeById = async (badgeId: string): Promise<OB2.BadgeClass | null> => {
+  const getBadgeById = async (badgeId: string): Promise<BadgeClass | null> => {
     isLoading.value = true
     error.value = null
 
     try {
       const response = await basicApiCall(`/v2/badge-classes/${badgeId}`)
-      return response as OB2.BadgeClass
+      return response as BadgeClass
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch badge'
       console.error('Error fetching badge:', err)
@@ -516,6 +521,10 @@ export const useBadges = () => {
   }
 
   return {
+    // Version control
+    specVersion,
+    apiVersion,
+
     // State
     badges,
     assertions,
