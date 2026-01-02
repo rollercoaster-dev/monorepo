@@ -287,13 +287,21 @@ export const verifiableCredentialSchema = z
         ? data['@context']
         : [data['@context']].filter(c => typeof c === 'string')
 
-      const hasW3CContext =
-        contexts.includes('https://www.w3.org/2018/credentials/v1') ||
-        contexts.includes('https://www.w3.org/ns/credentials/v2')
+      // Required W3C Verifiable Credentials context URLs
+      const W3C_VC_CONTEXTS = [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://www.w3.org/ns/credentials/v2',
+      ] as const
 
-      const hasOB3Context =
-        contexts.includes('https://purl.imsglobal.org/spec/ob/v3p0/context.json') ||
-        contexts.includes('https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json')
+      // Required OB3 context URLs
+      const OB3_CONTEXTS = [
+        'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+      ] as const
+
+      // Use strict equality check to avoid CodeQL URL substring sanitization warning
+      const hasW3CContext = contexts.some(ctx => W3C_VC_CONTEXTS.some(vc => ctx === vc))
+      const hasOB3Context = contexts.some(ctx => OB3_CONTEXTS.some(ob => ctx === ob))
 
       return hasW3CContext && hasOB3Context
     },
