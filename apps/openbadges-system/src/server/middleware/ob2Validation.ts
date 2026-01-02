@@ -336,3 +336,55 @@ export function detectBadgeSpecVersion(payload: unknown): '2.0' | '3.0' | 'unkno
   // Cannot determine
   return 'unknown'
 }
+
+/**
+ * Validates an OB3 Achievement payload
+ *
+ * @param payload The Achievement payload to validate
+ * @returns ValidationResult with validated data or error report
+ */
+export function validateAchievementPayload(
+  payload: unknown
+): ValidationResult<z.infer<typeof achievementSchema>> {
+  const res = achievementSchema.safeParse(payload)
+
+  if (res.success) {
+    return {
+      valid: true,
+      data: res.data,
+      report: createValidationReport([], { openBadgesVersion: '3.0' }),
+    }
+  }
+
+  const messages = zodIssuesToMessages(res.error.issues)
+  return {
+    valid: false,
+    report: createValidationReport(messages, { openBadgesVersion: '3.0' }),
+  }
+}
+
+/**
+ * Validates an OB3 VerifiableCredential payload
+ *
+ * @param payload The VerifiableCredential payload to validate
+ * @returns ValidationResult with validated data or error report
+ */
+export function validateVerifiableCredentialPayload(
+  payload: unknown
+): ValidationResult<z.infer<typeof verifiableCredentialSchema>> {
+  const res = verifiableCredentialSchema.safeParse(payload)
+
+  if (res.success) {
+    return {
+      valid: true,
+      data: res.data,
+      report: createValidationReport([], { openBadgesVersion: '3.0' }),
+    }
+  }
+
+  const messages = zodIssuesToMessages(res.error.issues)
+  return {
+    valid: false,
+    report: createValidationReport(messages, { openBadgesVersion: '3.0' }),
+  }
+}
