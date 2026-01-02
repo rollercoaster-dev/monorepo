@@ -613,6 +613,7 @@ describe('useBadges', () => {
         const payload = JSON.parse(options.body)
 
         // Verify OB3 format
+        expect(payload['@context']).toBe('https://purl.imsglobal.org/spec/ob/v3p0/context.json') // OB3 requires @context
         expect(payload.type).toBe('Achievement')
         expect(payload.id).toBeDefined() // OB3 requires id
         expect(payload.creator).toBeDefined() // OB3 uses creator
@@ -661,6 +662,7 @@ describe('useBadges', () => {
         const payload = JSON.parse(options.body)
 
         // Verify required OB3 fields
+        expect(payload['@context']).toBe('https://purl.imsglobal.org/spec/ob/v3p0/context.json')
         expect(payload.id).toMatch(/^https?:\/\//) // Must be valid IRI
         expect(payload.type).toBe('Achievement')
         expect(payload.name).toBe('Test Badge')

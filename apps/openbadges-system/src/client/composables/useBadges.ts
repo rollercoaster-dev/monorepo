@@ -347,6 +347,7 @@ export const useBadges = () => {
         const achievementId = badgeData.id || `${window.location.origin}/achievements/${Date.now()}`
 
         payload = {
+          '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
           id: achievementId,
           type: 'Achievement',
           name: badgeData.name,
