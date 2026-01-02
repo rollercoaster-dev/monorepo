@@ -1,3 +1,98 @@
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
+import { MagnifyingGlassIcon, ChevronDownIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
+
+interface SearchFilters {
+  role: string
+  status: string
+  dateFrom: string
+  dateTo: string
+  credentials: string
+  lastLogin: string
+  sortBy: string
+  sortOrder: 'asc' | 'desc'
+}
+
+interface Props {
+  initialQuery?: string
+  initialFilters?: Partial<SearchFilters>
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  initialQuery: '',
+  initialFilters: () => ({}),
+})
+
+const emits = defineEmits<{
+  search: [query: string, filters: SearchFilters]
+  export: [filters: SearchFilters]
+}>()
+
+const searchQuery = ref(props.initialQuery)
+const showAdvanced = ref(false)
+
+const filters = ref<SearchFilters>({
+  role: '',
+  status: '',
+  dateFrom: '',
+  dateTo: '',
+  credentials: '',
+  lastLogin: '',
+  sortBy: 'createdAt',
+  sortOrder: 'desc',
+  ...props.initialFilters,
+})
+
+const hasActiveFilters = computed(() => {
+  return (
+    searchQuery.value.trim() !== '' ||
+    filters.value.role !== '' ||
+    filters.value.status !== '' ||
+    filters.value.dateFrom !== '' ||
+    filters.value.dateTo !== '' ||
+    filters.value.credentials !== '' ||
+    filters.value.lastLogin !== '' ||
+    filters.value.sortBy !== 'createdAt' ||
+    filters.value.sortOrder !== 'desc'
+  )
+})
+
+// Debounced search function to prevent excessive API calls
+const debouncedSearch = useDebounceFn(() => {
+  if (searchQuery.value.trim() !== '' || hasActiveFilters.value) {
+    emits('search', searchQuery.value, filters.value)
+  }
+}, 300)
+
+// Watch for changes and trigger debounced search
+watch([searchQuery, filters], debouncedSearch, { deep: true })
+
+function clearFilters() {
+  searchQuery.value = ''
+  filters.value = {
+    role: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    credentials: '',
+    lastLogin: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  }
+  // Notify parent that filters were cleared
+  emits('search', searchQuery.value, filters.value)
+}
+
+function applyFilters() {
+  emits('search', searchQuery.value, filters.value)
+}
+
+function exportUsers() {
+  emits('export', filters.value)
+}
+</script>
+
 <template>
   <div class="bg-white rounded-lg shadow-md p-6">
     <div class="flex items-center justify-between mb-6">
@@ -187,98 +282,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
-import { MagnifyingGlassIcon, ChevronDownIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
-
-interface SearchFilters {
-  role: string
-  status: string
-  dateFrom: string
-  dateTo: string
-  credentials: string
-  lastLogin: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-}
-
-interface Props {
-  initialQuery?: string
-  initialFilters?: Partial<SearchFilters>
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  initialQuery: '',
-  initialFilters: () => ({}),
-})
-
-const emits = defineEmits<{
-  search: [query: string, filters: SearchFilters]
-  export: [filters: SearchFilters]
-}>()
-
-const searchQuery = ref(props.initialQuery)
-const showAdvanced = ref(false)
-
-const filters = ref<SearchFilters>({
-  role: '',
-  status: '',
-  dateFrom: '',
-  dateTo: '',
-  credentials: '',
-  lastLogin: '',
-  sortBy: 'createdAt',
-  sortOrder: 'desc',
-  ...props.initialFilters,
-})
-
-const hasActiveFilters = computed(() => {
-  return (
-    searchQuery.value.trim() !== '' ||
-    filters.value.role !== '' ||
-    filters.value.status !== '' ||
-    filters.value.dateFrom !== '' ||
-    filters.value.dateTo !== '' ||
-    filters.value.credentials !== '' ||
-    filters.value.lastLogin !== '' ||
-    filters.value.sortBy !== 'createdAt' ||
-    filters.value.sortOrder !== 'desc'
-  )
-})
-
-// Debounced search function to prevent excessive API calls
-const debouncedSearch = useDebounceFn(() => {
-  if (searchQuery.value.trim() !== '' || hasActiveFilters.value) {
-    emits('search', searchQuery.value, filters.value)
-  }
-}, 300)
-
-// Watch for changes and trigger debounced search
-watch([searchQuery, filters], debouncedSearch, { deep: true })
-
-function clearFilters() {
-  searchQuery.value = ''
-  filters.value = {
-    role: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
-    credentials: '',
-    lastLogin: '',
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  }
-  // Notify parent that filters were cleared
-  emits('search', searchQuery.value, filters.value)
-}
-
-function applyFilters() {
-  emits('search', searchQuery.value, filters.value)
-}
-
-function exportUsers() {
-  emits('export', filters.value)
-}
-</script>

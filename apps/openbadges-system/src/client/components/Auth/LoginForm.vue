@@ -1,3 +1,99 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { UserIcon, ExclamationTriangleIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useAuth } from '@/composables/useAuth'
+import { useOAuth } from '@/composables/useOAuth'
+import OAuthProviderButton from './OAuthProviderButton.vue'
+
+const router = useRouter()
+
+// Form validation
+const {
+  createField,
+  updateField,
+  touchField,
+  validateAll,
+  getFieldError,
+  getFieldValue,
+  isFormValid,
+} = useFormValidation()
+
+// Auth composable
+const {
+  authenticateWithWebAuthn,
+  setupPasskeyForUser,
+  isLoading,
+  error: authError,
+  clearError,
+  isWebAuthnSupported,
+  isPlatformAuthAvailable,
+} = useAuth()
+
+// OAuth composable
+const { availableProviders, initiateOAuth } = useOAuth()
+
+// OAuth state
+const oauthLoading = ref<string | null>(null)
+
+// Initialize form fields
+onMounted(() => {
+  createField('usernameOrEmail', '', [
+    { validate: value => value.trim().length > 0, message: 'Username or email is required' },
+  ])
+})
+
+// Handle OAuth login
+const handleOAuthLogin = async (provider: string) => {
+  clearError()
+  oauthLoading.value = provider
+
+  try {
+    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
+    await initiateOAuth(provider, redirectPath)
+  } catch (error) {
+    console.error('OAuth login failed:', error)
+  } finally {
+    oauthLoading.value = null
+  }
+}
+
+// Handle form submission
+const handleSubmit = async () => {
+  clearError()
+
+  if (!validateAll()) {
+    return
+  }
+
+  if (!isWebAuthnSupported.value) {
+    return
+  }
+
+  const success = await authenticateWithWebAuthn(getFieldValue('usernameOrEmail'))
+
+  if (success) {
+    // Redirect to dashboard or intended page
+    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
+    router.push(redirectPath)
+  }
+}
+
+// Setup passkey CTA handler
+const handleSetupPasskey = async () => {
+  clearError()
+  const identifier = getFieldValue('usernameOrEmail')
+  if (!identifier || !identifier.trim()) return
+
+  const success = await setupPasskeyForUser(identifier)
+  if (success) {
+    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
+    router.push(redirectPath)
+  }
+}
+</script>
+
 <template>
   <div class="max-w-md mx-auto">
     <div class="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
@@ -203,99 +299,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { UserIcon, ExclamationTriangleIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
-import { useFormValidation } from '@/composables/useFormValidation'
-import { useAuth } from '@/composables/useAuth'
-import { useOAuth } from '@/composables/useOAuth'
-import OAuthProviderButton from './OAuthProviderButton.vue'
-
-const router = useRouter()
-
-// Form validation
-const {
-  createField,
-  updateField,
-  touchField,
-  validateAll,
-  getFieldError,
-  getFieldValue,
-  isFormValid,
-} = useFormValidation()
-
-// Auth composable
-const {
-  authenticateWithWebAuthn,
-  setupPasskeyForUser,
-  isLoading,
-  error: authError,
-  clearError,
-  isWebAuthnSupported,
-  isPlatformAuthAvailable,
-} = useAuth()
-
-// OAuth composable
-const { availableProviders, initiateOAuth } = useOAuth()
-
-// OAuth state
-const oauthLoading = ref<string | null>(null)
-
-// Initialize form fields
-onMounted(() => {
-  createField('usernameOrEmail', '', [
-    { validate: value => value.trim().length > 0, message: 'Username or email is required' },
-  ])
-})
-
-// Handle OAuth login
-const handleOAuthLogin = async (provider: string) => {
-  clearError()
-  oauthLoading.value = provider
-
-  try {
-    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
-    await initiateOAuth(provider, redirectPath)
-  } catch (error) {
-    console.error('OAuth login failed:', error)
-  } finally {
-    oauthLoading.value = null
-  }
-}
-
-// Handle form submission
-const handleSubmit = async () => {
-  clearError()
-
-  if (!validateAll()) {
-    return
-  }
-
-  if (!isWebAuthnSupported.value) {
-    return
-  }
-
-  const success = await authenticateWithWebAuthn(getFieldValue('usernameOrEmail'))
-
-  if (success) {
-    // Redirect to dashboard or intended page
-    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
-    router.push(redirectPath)
-  }
-}
-
-// Setup passkey CTA handler
-const handleSetupPasskey = async () => {
-  clearError()
-  const identifier = getFieldValue('usernameOrEmail')
-  if (!identifier || !identifier.trim()) return
-
-  const success = await setupPasskeyForUser(identifier)
-  if (success) {
-    const redirectPath = (router.currentRoute.value.query.redirect as string) || '/'
-    router.push(redirectPath)
-  }
-}
-</script>

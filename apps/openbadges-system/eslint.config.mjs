@@ -134,13 +134,17 @@ export default [
     },
   },
 
-  // Vue files override - use template-first block order (project preference)
+  // Vue files override - use script-first block order (matches Prettier)
   {
     files: ['**/*.vue'],
     rules: {
-      // Override shared-config's block order to match project convention
+      // Disable deprecated rule, use vue/block-order instead
       'vue/component-tags-order': 'off',
-      'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
+      // Script-first order matches Prettier and Vue 3 Composition API convention
+      'vue/block-order': [
+        'error',
+        { order: ['script[setup]', 'script:not([setup])', 'template', 'style'] },
+      ],
       'vue/component-definition-name-casing': ['error', 'PascalCase'],
       'vue/component-name-in-template-casing': ['error', 'PascalCase'],
       'vue/attributes-order': 'warn',

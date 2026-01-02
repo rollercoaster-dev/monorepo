@@ -1,3 +1,97 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  UserPlusIcon,
+  AtSymbolIcon,
+  EnvelopeIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon,
+} from '@heroicons/vue/24/outline'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useAuth } from '@/composables/useAuth'
+
+defineEmits<{
+  showTerms: []
+  showPrivacy: []
+}>()
+
+const router = useRouter()
+
+// Form validation
+const {
+  rules,
+  createField,
+  updateField,
+  touchField,
+  validateAll,
+  getFieldError,
+  getFieldValue,
+  isFormValid,
+} = useFormValidation()
+
+// Auth composable
+const {
+  registerWithWebAuthn,
+  isLoading,
+  error: authError,
+  clearError,
+  isWebAuthnSupported,
+  isPlatformAuthAvailable,
+} = useAuth()
+
+// Local state
+const acceptTerms = ref(false)
+const attemptedSubmit = ref(false)
+
+// Initialize form fields
+onMounted(() => {
+  createField('firstName', '', [
+    rules.required('First name is required'),
+    rules.minLength(2, 'First name must be at least 2 characters'),
+  ])
+
+  createField('lastName', '', [
+    rules.required('Last name is required'),
+    rules.minLength(2, 'Last name must be at least 2 characters'),
+  ])
+
+  createField('username', '', [rules.required('Username is required'), rules.username()])
+
+  createField('email', '', [rules.required('Email is required'), rules.email()])
+})
+
+// Handle form submission
+const handleSubmit = async () => {
+  attemptedSubmit.value = true
+  clearError()
+
+  if (!acceptTerms.value) {
+    return
+  }
+
+  if (!validateAll()) {
+    return
+  }
+
+  if (!isWebAuthnSupported.value) {
+    return
+  }
+
+  const success = await registerWithWebAuthn({
+    username: getFieldValue('username'),
+    email: getFieldValue('email'),
+    firstName: getFieldValue('firstName'),
+    lastName: getFieldValue('lastName'),
+  })
+
+  if (success) {
+    // Redirect to dashboard
+    router.push('/')
+  }
+}
+</script>
+
 <template>
   <div class="max-w-md mx-auto">
     <div class="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
@@ -257,97 +351,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-  UserPlusIcon,
-  AtSymbolIcon,
-  EnvelopeIcon,
-  ExclamationTriangleIcon,
-  ShieldCheckIcon,
-} from '@heroicons/vue/24/outline'
-import { useFormValidation } from '@/composables/useFormValidation'
-import { useAuth } from '@/composables/useAuth'
-
-defineEmits<{
-  showTerms: []
-  showPrivacy: []
-}>()
-
-const router = useRouter()
-
-// Form validation
-const {
-  rules,
-  createField,
-  updateField,
-  touchField,
-  validateAll,
-  getFieldError,
-  getFieldValue,
-  isFormValid,
-} = useFormValidation()
-
-// Auth composable
-const {
-  registerWithWebAuthn,
-  isLoading,
-  error: authError,
-  clearError,
-  isWebAuthnSupported,
-  isPlatformAuthAvailable,
-} = useAuth()
-
-// Local state
-const acceptTerms = ref(false)
-const attemptedSubmit = ref(false)
-
-// Initialize form fields
-onMounted(() => {
-  createField('firstName', '', [
-    rules.required('First name is required'),
-    rules.minLength(2, 'First name must be at least 2 characters'),
-  ])
-
-  createField('lastName', '', [
-    rules.required('Last name is required'),
-    rules.minLength(2, 'Last name must be at least 2 characters'),
-  ])
-
-  createField('username', '', [rules.required('Username is required'), rules.username()])
-
-  createField('email', '', [rules.required('Email is required'), rules.email()])
-})
-
-// Handle form submission
-const handleSubmit = async () => {
-  attemptedSubmit.value = true
-  clearError()
-
-  if (!acceptTerms.value) {
-    return
-  }
-
-  if (!validateAll()) {
-    return
-  }
-
-  if (!isWebAuthnSupported.value) {
-    return
-  }
-
-  const success = await registerWithWebAuthn({
-    username: getFieldValue('username'),
-    email: getFieldValue('email'),
-    firstName: getFieldValue('firstName'),
-    lastName: getFieldValue('lastName'),
-  })
-
-  if (success) {
-    // Redirect to dashboard
-    router.push('/')
-  }
-}
-</script>

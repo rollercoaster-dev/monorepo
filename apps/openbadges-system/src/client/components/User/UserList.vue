@@ -1,3 +1,98 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { UserGroupIcon, KeyIcon } from '@heroicons/vue/24/outline'
+import type { User } from '@/composables/useAuth'
+import UserCard from './UserCard.vue'
+
+interface Props {
+  users: User[]
+  loading?: boolean
+  currentPage?: number
+  totalUsers?: number
+  itemsPerPage?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
+  currentPage: 1,
+  totalUsers: 0,
+  itemsPerPage: 10,
+})
+
+const emits = defineEmits<{
+  edit: [user: User]
+  view: [user: User]
+  delete: [user: User]
+  changePage: [page: number]
+  changeItemsPerPage: [itemsPerPage: number]
+}>()
+
+const viewMode = ref<'grid' | 'table'>('grid')
+const itemsPerPage = ref(props.itemsPerPage)
+
+const totalPages = computed(() => Math.ceil(props.totalUsers / itemsPerPage.value))
+
+const visiblePages = computed(() => {
+  const delta = 2
+  const range = []
+  const rangeWithDots = []
+
+  for (
+    let i = Math.max(2, props.currentPage - delta);
+    i <= Math.min(totalPages.value - 1, props.currentPage + delta);
+    i++
+  ) {
+    range.push(i)
+  }
+
+  if (props.currentPage - delta > 2) {
+    rangeWithDots.push(1, '...')
+  } else {
+    rangeWithDots.push(1)
+  }
+
+  rangeWithDots.push(...range)
+
+  if (props.currentPage + delta < totalPages.value - 1) {
+    rangeWithDots.push('...', totalPages.value)
+  } else {
+    rangeWithDots.push(totalPages.value)
+  }
+
+  return rangeWithDots.filter(
+    (page, index, arr) => (arr.indexOf(page) === index && page !== '...') || page === '...'
+  )
+})
+
+function toggleViewMode() {
+  viewMode.value = viewMode.value === 'grid' ? 'table' : 'grid'
+}
+
+function changePage(page: number | string) {
+  if (typeof page === 'number' && page >= 1 && page <= totalPages.value) {
+    emits('changePage', page)
+  }
+}
+
+function handleItemsPerPageChange() {
+  emits('changeItemsPerPage', itemsPerPage.value)
+  emits('changePage', 1)
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+</script>
+
 <template>
   <div class="bg-white rounded-lg shadow-md">
     <div class="px-6 py-4 border-b border-gray-200">
@@ -211,98 +306,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { UserGroupIcon, KeyIcon } from '@heroicons/vue/24/outline'
-import type { User } from '@/composables/useAuth'
-import UserCard from './UserCard.vue'
-
-interface Props {
-  users: User[]
-  loading?: boolean
-  currentPage?: number
-  totalUsers?: number
-  itemsPerPage?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-  currentPage: 1,
-  totalUsers: 0,
-  itemsPerPage: 10,
-})
-
-const emits = defineEmits<{
-  edit: [user: User]
-  view: [user: User]
-  delete: [user: User]
-  changePage: [page: number]
-  changeItemsPerPage: [itemsPerPage: number]
-}>()
-
-const viewMode = ref<'grid' | 'table'>('grid')
-const itemsPerPage = ref(props.itemsPerPage)
-
-const totalPages = computed(() => Math.ceil(props.totalUsers / itemsPerPage.value))
-
-const visiblePages = computed(() => {
-  const delta = 2
-  const range = []
-  const rangeWithDots = []
-
-  for (
-    let i = Math.max(2, props.currentPage - delta);
-    i <= Math.min(totalPages.value - 1, props.currentPage + delta);
-    i++
-  ) {
-    range.push(i)
-  }
-
-  if (props.currentPage - delta > 2) {
-    rangeWithDots.push(1, '...')
-  } else {
-    rangeWithDots.push(1)
-  }
-
-  rangeWithDots.push(...range)
-
-  if (props.currentPage + delta < totalPages.value - 1) {
-    rangeWithDots.push('...', totalPages.value)
-  } else {
-    rangeWithDots.push(totalPages.value)
-  }
-
-  return rangeWithDots.filter(
-    (page, index, arr) => (arr.indexOf(page) === index && page !== '...') || page === '...'
-  )
-})
-
-function toggleViewMode() {
-  viewMode.value = viewMode.value === 'grid' ? 'table' : 'grid'
-}
-
-function changePage(page: number | string) {
-  if (typeof page === 'number' && page >= 1 && page <= totalPages.value) {
-    emits('changePage', page)
-  }
-}
-
-function handleItemsPerPageChange() {
-  emits('changeItemsPerPage', itemsPerPage.value)
-  emits('changePage', 1)
-}
-
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-</script>

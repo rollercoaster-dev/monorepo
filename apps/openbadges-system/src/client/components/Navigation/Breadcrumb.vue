@@ -1,42 +1,3 @@
-<template>
-  <nav v-if="shouldShowBreadcrumbs" class="flex" aria-label="Breadcrumb">
-    <ol class="flex items-center space-x-2 text-sm">
-      <li>
-        <RouterLink
-          to="/"
-          class="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-          aria-label="Home"
-        >
-          <HomeIcon class="w-4 h-4" aria-hidden="true" />
-          <span class="sr-only">Home</span>
-        </RouterLink>
-      </li>
-
-      <li v-for="(crumb, index) in breadcrumbs" :key="index" class="flex items-center">
-        <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" aria-hidden="true" />
-
-        <RouterLink
-          v-if="crumb.to && index < breadcrumbs.length - 1"
-          :to="crumb.to"
-          class="text-gray-500 hover:text-gray-700 transition-colors duration-200 max-w-[200px] truncate"
-          :title="crumb.label"
-        >
-          {{ crumb.label }}
-        </RouterLink>
-
-        <span
-          v-else
-          class="text-gray-900 font-medium max-w-[200px] truncate"
-          :title="crumb.label"
-          aria-current="page"
-        >
-          {{ crumb.label }}
-        </span>
-      </li>
-    </ol>
-  </nav>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -157,3 +118,42 @@ const breadcrumbs = computed(() => {
 // Only show breadcrumbs if we have any
 const shouldShowBreadcrumbs = computed(() => breadcrumbs.value.length > 0)
 </script>
+
+<template>
+  <nav v-if="shouldShowBreadcrumbs" class="flex" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2 text-sm">
+      <li>
+        <RouterLink
+          to="/"
+          class="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+          aria-label="Home"
+        >
+          <HomeIcon class="w-4 h-4" aria-hidden="true" />
+          <span class="sr-only">Home</span>
+        </RouterLink>
+      </li>
+
+      <li v-for="(crumb, index) in breadcrumbs" :key="index" class="flex items-center">
+        <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" aria-hidden="true" />
+
+        <RouterLink
+          v-if="crumb.to && index < breadcrumbs.length - 1"
+          :to="crumb.to"
+          class="text-gray-500 hover:text-gray-700 transition-colors duration-200 max-w-[200px] truncate"
+          :title="crumb.label"
+        >
+          {{ crumb.label }}
+        </RouterLink>
+
+        <span
+          v-else
+          class="text-gray-900 font-medium max-w-[200px] truncate"
+          :title="crumb.label"
+          aria-current="page"
+        >
+          {{ crumb.label }}
+        </span>
+      </li>
+    </ol>
+  </nav>
+</template>

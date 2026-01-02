@@ -1,3 +1,58 @@
+<script setup lang="ts">
+import {
+  PencilIcon,
+  EyeIcon,
+  TrashIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  CheckCircleIcon,
+} from '@heroicons/vue/24/outline'
+import type { OB2 } from 'openbadges-types'
+
+interface BadgeCardProps {
+  badge: OB2.BadgeClass & {
+    createdAt?: string
+    tags?: string[]
+    issuedCount?: number
+    earnedCount?: number
+  }
+}
+
+defineProps<BadgeCardProps>()
+
+defineEmits<{
+  edit: [badge: BadgeCardProps['badge']]
+  view: [badge: BadgeCardProps['badge']]
+  delete: [badge: BadgeCardProps['badge']]
+  issue: [badge: BadgeCardProps['badge']]
+  duplicate: [badge: BadgeCardProps['badge']]
+}>()
+
+function getIssuerName(issuer: OB2.Profile | string): string {
+  if (typeof issuer === 'string') {
+    return issuer
+  }
+  return issuer.name || 'Unknown Issuer'
+}
+
+function formatDate(dateString?: string): string {
+  if (!dateString) return 'Unknown'
+
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
+  if (!image) return undefined
+  if (typeof image === 'string') return image
+  return image.id || undefined
+}
+</script>
+
 <template>
   <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
     <div class="flex items-start justify-between mb-4">
@@ -109,61 +164,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import {
-  PencilIcon,
-  EyeIcon,
-  TrashIcon,
-  TrophyIcon,
-  UserGroupIcon,
-  CheckCircleIcon,
-} from '@heroicons/vue/24/outline'
-import type { OB2 } from 'openbadges-types'
-
-interface BadgeCardProps {
-  badge: OB2.BadgeClass & {
-    createdAt?: string
-    tags?: string[]
-    issuedCount?: number
-    earnedCount?: number
-  }
-}
-
-defineProps<BadgeCardProps>()
-
-defineEmits<{
-  edit: [badge: BadgeCardProps['badge']]
-  view: [badge: BadgeCardProps['badge']]
-  delete: [badge: BadgeCardProps['badge']]
-  issue: [badge: BadgeCardProps['badge']]
-  duplicate: [badge: BadgeCardProps['badge']]
-}>()
-
-function getIssuerName(issuer: OB2.Profile | string): string {
-  if (typeof issuer === 'string') {
-    return issuer
-  }
-  return issuer.name || 'Unknown Issuer'
-}
-
-function formatDate(dateString?: string): string {
-  if (!dateString) return 'Unknown'
-
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
-  if (!image) return undefined
-  if (typeof image === 'string') return image
-  return image.id || undefined
-}
-</script>
 
 <style scoped>
 .line-clamp-2 {

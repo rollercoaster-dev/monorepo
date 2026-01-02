@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// Profile management logic will go here
+</script>
+
 <template>
   <div class="max-w-2xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">User Profile</h1>
@@ -16,7 +20,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// Profile management logic will go here
-</script>

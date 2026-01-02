@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// System settings logic will go here
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">System Settings</h1>
@@ -29,7 +33,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// System settings logic will go here
-</script>

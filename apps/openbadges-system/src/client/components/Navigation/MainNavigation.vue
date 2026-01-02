@@ -1,3 +1,168 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  Bars3Icon,
+  XMarkIcon,
+  ChevronDownIcon,
+  HomeIcon,
+  AcademicCapIcon,
+  UserGroupIcon,
+  RectangleStackIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+} from '@heroicons/vue/24/outline'
+import UserMenu from './UserMenu.vue'
+
+// Navigation items configuration
+const navigationItems = [
+  {
+    id: 'home',
+    label: 'Dashboard',
+    to: '/',
+    icon: HomeIcon,
+  },
+  {
+    id: 'badges',
+    label: 'Badges',
+    icon: AcademicCapIcon,
+    children: [
+      { id: 'browse-badges', label: 'Browse Badges', to: '/badges', icon: AcademicCapIcon },
+      { id: 'create-badge', label: 'Create Badge', to: '/badges/create', icon: AcademicCapIcon },
+      {
+        id: 'issued-badges',
+        label: 'Issued Badges',
+        to: '/badges/issued',
+        icon: ClipboardDocumentListIcon,
+      },
+    ],
+  },
+  {
+    id: 'issuers',
+    label: 'Issuers',
+    icon: UserGroupIcon,
+    children: [
+      { id: 'browse-issuers', label: 'Browse Issuers', to: '/issuers', icon: UserGroupIcon },
+      { id: 'create-issuer', label: 'Create Issuer', to: '/issuers/create', icon: UserGroupIcon },
+      { id: 'manage-issuers', label: 'Manage Issuers', to: '/issuers/manage', icon: Cog6ToothIcon },
+    ],
+  },
+  {
+    id: 'backpack',
+    label: 'My Backpack',
+    to: '/backpack',
+    icon: RectangleStackIcon,
+  },
+]
+
+// Reactive state
+const route = useRoute()
+const isMobileMenuOpen = ref(false)
+const openDropdowns = ref(new Set<string>())
+const openMobileDropdowns = ref(new Set<string>())
+const isMobile = ref(false)
+
+// Methods
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+  openMobileDropdowns.value.clear()
+}
+
+const toggleDropdown = (id: string) => {
+  if (openDropdowns.value.has(id)) {
+    openDropdowns.value.delete(id)
+  } else {
+    openDropdowns.value.clear()
+    openDropdowns.value.add(id)
+  }
+}
+
+const closeDropdown = (id: string) => {
+  openDropdowns.value.delete(id)
+}
+
+const toggleMobileDropdown = (id: string) => {
+  if (openMobileDropdowns.value.has(id)) {
+    openMobileDropdowns.value.delete(id)
+  } else {
+    openMobileDropdowns.value.add(id)
+  }
+}
+
+const isActiveRoute = (path: string) => {
+  if (path === '/') {
+    return route.path === '/'
+  }
+  return route.path.startsWith(path)
+}
+
+const getNavItemClass = (item: any) => {
+  const isActive = item.to
+    ? isActiveRoute(item.to)
+    : item.children?.some((child: any) => isActiveRoute(child.to))
+  return {
+    'text-blue-600 bg-blue-50': isActive,
+    'text-gray-700': !isActive,
+  }
+}
+
+const getMobileNavItemClass = (item: any) => {
+  const isActive = item.to
+    ? isActiveRoute(item.to)
+    : item.children?.some((child: any) => isActiveRoute(child.to))
+  return {
+    'text-blue-600 bg-blue-50': isActive,
+    'text-gray-700': !isActive,
+  }
+}
+
+// Handle clicks outside dropdowns
+const handleClickOutside = (event: Event) => {
+  if (openDropdowns.value.size > 0) {
+    const target = event.target as HTMLElement
+    if (!target.closest('[role="menu"]') && !target.closest('[aria-haspopup="true"]')) {
+      openDropdowns.value.clear()
+    }
+  }
+}
+
+// Handle escape key
+const handleEscapeKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    openDropdowns.value.clear()
+    if (isMobileMenuOpen.value) {
+      closeMobileMenu()
+    }
+  }
+}
+
+// Handle window resize
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+  if (window.innerWidth >= 768) {
+    closeMobileMenu()
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleEscapeKey)
+  window.addEventListener('resize', handleResize)
+  handleResize()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleEscapeKey)
+  window.removeEventListener('resize', handleResize)
+})
+</script>
+
 <template>
   <nav
     class="bg-white shadow-sm border-b border-gray-200"
@@ -200,168 +365,3 @@
     </Transition>
   </nav>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  Bars3Icon,
-  XMarkIcon,
-  ChevronDownIcon,
-  HomeIcon,
-  AcademicCapIcon,
-  UserGroupIcon,
-  RectangleStackIcon,
-  ClipboardDocumentListIcon,
-  Cog6ToothIcon,
-} from '@heroicons/vue/24/outline'
-import UserMenu from './UserMenu.vue'
-
-// Navigation items configuration
-const navigationItems = [
-  {
-    id: 'home',
-    label: 'Dashboard',
-    to: '/',
-    icon: HomeIcon,
-  },
-  {
-    id: 'badges',
-    label: 'Badges',
-    icon: AcademicCapIcon,
-    children: [
-      { id: 'browse-badges', label: 'Browse Badges', to: '/badges', icon: AcademicCapIcon },
-      { id: 'create-badge', label: 'Create Badge', to: '/badges/create', icon: AcademicCapIcon },
-      {
-        id: 'issued-badges',
-        label: 'Issued Badges',
-        to: '/badges/issued',
-        icon: ClipboardDocumentListIcon,
-      },
-    ],
-  },
-  {
-    id: 'issuers',
-    label: 'Issuers',
-    icon: UserGroupIcon,
-    children: [
-      { id: 'browse-issuers', label: 'Browse Issuers', to: '/issuers', icon: UserGroupIcon },
-      { id: 'create-issuer', label: 'Create Issuer', to: '/issuers/create', icon: UserGroupIcon },
-      { id: 'manage-issuers', label: 'Manage Issuers', to: '/issuers/manage', icon: Cog6ToothIcon },
-    ],
-  },
-  {
-    id: 'backpack',
-    label: 'My Backpack',
-    to: '/backpack',
-    icon: RectangleStackIcon,
-  },
-]
-
-// Reactive state
-const route = useRoute()
-const isMobileMenuOpen = ref(false)
-const openDropdowns = ref(new Set<string>())
-const openMobileDropdowns = ref(new Set<string>())
-const isMobile = ref(false)
-
-// Methods
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
-
-const closeMobileMenu = () => {
-  isMobileMenuOpen.value = false
-  openMobileDropdowns.value.clear()
-}
-
-const toggleDropdown = (id: string) => {
-  if (openDropdowns.value.has(id)) {
-    openDropdowns.value.delete(id)
-  } else {
-    openDropdowns.value.clear()
-    openDropdowns.value.add(id)
-  }
-}
-
-const closeDropdown = (id: string) => {
-  openDropdowns.value.delete(id)
-}
-
-const toggleMobileDropdown = (id: string) => {
-  if (openMobileDropdowns.value.has(id)) {
-    openMobileDropdowns.value.delete(id)
-  } else {
-    openMobileDropdowns.value.add(id)
-  }
-}
-
-const isActiveRoute = (path: string) => {
-  if (path === '/') {
-    return route.path === '/'
-  }
-  return route.path.startsWith(path)
-}
-
-const getNavItemClass = (item: any) => {
-  const isActive = item.to
-    ? isActiveRoute(item.to)
-    : item.children?.some((child: any) => isActiveRoute(child.to))
-  return {
-    'text-blue-600 bg-blue-50': isActive,
-    'text-gray-700': !isActive,
-  }
-}
-
-const getMobileNavItemClass = (item: any) => {
-  const isActive = item.to
-    ? isActiveRoute(item.to)
-    : item.children?.some((child: any) => isActiveRoute(child.to))
-  return {
-    'text-blue-600 bg-blue-50': isActive,
-    'text-gray-700': !isActive,
-  }
-}
-
-// Handle clicks outside dropdowns
-const handleClickOutside = (event: Event) => {
-  if (openDropdowns.value.size > 0) {
-    const target = event.target as HTMLElement
-    if (!target.closest('[role="menu"]') && !target.closest('[aria-haspopup="true"]')) {
-      openDropdowns.value.clear()
-    }
-  }
-}
-
-// Handle escape key
-const handleEscapeKey = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') {
-    openDropdowns.value.clear()
-    if (isMobileMenuOpen.value) {
-      closeMobileMenu()
-    }
-  }
-}
-
-// Handle window resize
-const handleResize = () => {
-  isMobile.value = window.innerWidth < 768
-  if (window.innerWidth >= 768) {
-    closeMobileMenu()
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  document.addEventListener('keydown', handleEscapeKey)
-  window.addEventListener('resize', handleResize)
-  handleResize()
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('keydown', handleEscapeKey)
-  window.removeEventListener('resize', handleResize)
-})
-</script>

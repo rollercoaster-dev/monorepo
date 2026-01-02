@@ -1,3 +1,383 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { BadgeIssuerForm, BadgeDisplay } from 'openbadges-ui'
+import type { OB2, Shared } from 'openbadges-types'
+import { createIRI } from 'openbadges-types'
+import { useAuth } from '@/composables/useAuth'
+import { useBadges, type UpdateBadgeData } from '@/composables/useBadges'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useImageUpload } from '@/composables/useImageUpload'
+
+const route = useRoute()
+const router = useRouter()
+const { user } = useAuth()
+const { updateBadge, getBadgeById } = useBadges()
+const { createField, updateField, touchField, validateAll, getFieldError, rules } =
+  useFormValidation()
+
+// Helper function to ensure criteria is always an object with proper IRI types
+function ensureCriteriaObject(
+  c: string | OB2.Criteria | { narrative?: string; id?: string } | undefined
+): OB2.Criteria {
+  if (typeof c === 'string') {
+    return { id: createIRI(c), narrative: '' }
+  }
+  if (c) {
+    const id = 'id' in c && c.id ? createIRI(c.id) : undefined
+    const narrative =
+      'narrative' in c && typeof (c as any).narrative === 'string' ? (c as any).narrative : ''
+    return { narrative, id }
+  }
+  return { narrative: 'Badge criteria' }
+}
+
+const {
+  uploadImage,
+  isUploading,
+  error: uploadError,
+  clearError,
+} = useImageUpload({
+  maxSize: 2 * 1024 * 1024, // 2MB
+  allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+})
+
+// Component state
+const error = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
+const isSubmitting = ref(false)
+const isFormDirty = ref(false)
+const isInitialized = ref(false)
+
+// Badge data
+const originalBadge = ref<OB2.BadgeClass | null>(null)
+const badgeData = ref<Partial<UpdateBadgeData>>({
+  name: '',
+  description: '',
+  image: '',
+  criteria: {
+    narrative: '',
+  },
+  tags: [],
+  alignment: [],
+})
+
+// Available issuers
+const availableIssuers = ref<OB2.Profile[]>([])
+const criteriaUrl = ref('')
+const badgeId = computed(() => {
+  if ('id' in route.params && typeof route.params.id === 'string') {
+    return route.params.id
+  }
+  return ''
+})
+
+// Create preview badge for display
+const previewBadge = computed(
+  (): OB2.BadgeClass => ({
+    ...(originalBadge.value || {
+      id: badgeId.value as Shared.IRI,
+      type: 'BadgeClass',
+      issuer: {
+        id: 'default-issuer' as Shared.IRI,
+        type: 'Profile',
+        name: 'Default Issuer',
+        url: window.location.origin as Shared.IRI,
+        email: user.value?.email || 'admin@example.com',
+      },
+    }),
+    name: badgeData.value.name || originalBadge.value?.name || 'Badge Name',
+    description:
+      badgeData.value.description || originalBadge.value?.description || 'Badge description',
+    image: (badgeData.value.image ||
+      getImageSrc(originalBadge.value?.image) ||
+      '/placeholder-badge.png') as Shared.IRI,
+    criteria: ensureCriteriaObject(
+      badgeData.value.criteria ?? originalBadge.value?.criteria ?? { narrative: 'Badge criteria' }
+    ),
+    tags: badgeData.value.tags || originalBadge.value?.tags || [],
+    alignment: badgeData.value.alignment || originalBadge.value?.alignment || [],
+  })
+)
+
+// Initialize component
+onMounted(async () => {
+  try {
+    // Load existing badge data
+    const badge = await getBadgeById(badgeId.value)
+    if (!badge) {
+      error.value = 'Badge not found'
+      return
+    }
+
+    originalBadge.value = badge
+
+    // Initialize form with existing data
+    badgeData.value = {
+      name: badge.name,
+      description: badge.description,
+      image: getImageSrc(badge.image) || '',
+      criteria:
+        typeof badge.criteria === 'string'
+          ? { narrative: '', id: createIRI(badge.criteria) }
+          : {
+              narrative: badge.criteria?.narrative || '',
+              id: (badge.criteria as any)?.id ? createIRI((badge.criteria as any).id) : undefined,
+            },
+      tags: badge.tags || [],
+      alignment: Array.isArray(badge.alignment)
+        ? badge.alignment
+        : badge.alignment
+          ? [badge.alignment]
+          : [],
+    }
+
+    // Set criteria URL if it exists
+    if (badge.criteria && typeof badge.criteria === 'object' && 'id' in badge.criteria) {
+      criteriaUrl.value = badge.criteria.id as string
+    }
+
+    // Initialize form validation fields
+    createField('name', badge.name, [rules.required('Badge name is required'), rules.minLength(3)])
+    createField('description', badge.description, [
+      rules.required('Badge description is required'),
+      rules.minLength(10),
+    ])
+    createField(
+      'criteria',
+      (typeof badge.criteria === 'object' ? badge.criteria?.narrative : '') || '',
+      [rules.required('Badge criteria is required'), rules.minLength(10)]
+    )
+    createField('criteriaUrl', criteriaUrl.value, [rules.url('Please enter a valid URL')])
+
+    // Create default issuer
+    if (user.value) {
+      availableIssuers.value = [
+        {
+          id: `issuer-${user.value.id}` as Shared.IRI,
+          type: 'Profile',
+          name: `${user.value.firstName} ${user.value.lastName}`,
+          url: window.location.origin as Shared.IRI,
+          email: user.value.email,
+          description: `Badge issuer profile for ${user.value.firstName} ${user.value.lastName}`,
+        },
+      ]
+    }
+
+    isInitialized.value = true
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load badge'
+  }
+})
+
+// Handle form submission
+const handleSubmit = async (formData: UpdateBadgeData) => {
+  if (!user.value) {
+    error.value = 'You must be logged in to edit a badge'
+    return
+  }
+
+  error.value = null
+  successMessage.value = null
+  isSubmitting.value = true
+
+  try {
+    // Update form fields with current values
+    updateField('name', badgeData.value.name || '')
+    updateField('description', badgeData.value.description || '')
+    updateField('criteria', badgeData.value.criteria?.narrative || '')
+    updateField('criteriaUrl', criteriaUrl.value)
+
+    // Validate all fields
+    if (!validateAll()) {
+      error.value = 'Please fix the errors in the form'
+      return
+    }
+
+    // Additional validation for required fields
+    if (
+      !badgeData.value.name ||
+      !badgeData.value.description ||
+      !badgeData.value.criteria?.narrative
+    ) {
+      error.value = 'Please fill in all required fields'
+      return
+    }
+
+    // Update criteria with URL if provided (OB2: criteria.id?: string is supported)
+    if (criteriaUrl.value && formData.criteria) {
+      formData.criteria.id = criteriaUrl.value
+    }
+
+    // Update the badge
+    const updatedBadge = await updateBadge(user.value, badgeId.value, formData)
+
+    if (updatedBadge) {
+      successMessage.value = 'Badge updated successfully!'
+      isFormDirty.value = false
+
+      // Update original badge reference
+      originalBadge.value = updatedBadge
+
+      // Redirect to badge detail page after a short delay
+      setTimeout(() => {
+        router.push(`/badges/${updatedBadge.id}`)
+      }, 2000)
+    } else {
+      error.value = 'Failed to update badge. Please try again.'
+    }
+  } catch (err) {
+    console.error('Badge update error:', err)
+
+    if (err instanceof Error) {
+      // Handle specific error types
+      if (err.message.includes('network') || err.message.includes('fetch')) {
+        error.value = 'Network error. Please check your connection and try again.'
+      } else if (err.message.includes('unauthorized') || err.message.includes('auth')) {
+        error.value = 'Authentication error. Please log in again.'
+      } else if (err.message.includes('validation')) {
+        error.value = 'Please check your input and try again.'
+      } else {
+        error.value = err.message
+      }
+    } else {
+      error.value = 'An unexpected error occurred. Please try again.'
+    }
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// Handle cancel
+const handleCancel = () => {
+  if (isFormDirty.value) {
+    const confirmed = confirm('You have unsaved changes. Are you sure you want to leave?')
+    if (!confirmed) return
+  }
+  router.push(`/badges/${badgeId.value}`)
+}
+
+// Handle image upload
+const handleImageUpload = async (event: Event) => {
+  clearError()
+  clearMessages()
+
+  const target = event.target as globalThis.HTMLInputElement
+  const file = target.files?.[0]
+
+  if (!file) return
+
+  const result = await uploadImage(file)
+  if (result) {
+    badgeData.value.image = result.dataUrl
+    isFormDirty.value = true
+  } else if (uploadError.value) {
+    error.value = uploadError.value
+  }
+}
+
+// Handle drag and drop for image
+const handleImageDrop = async (event: globalThis.DragEvent) => {
+  event.preventDefault()
+  clearError()
+  clearMessages()
+
+  const file = event.dataTransfer?.files[0]
+  if (!file) return
+
+  const result = await uploadImage(file)
+  if (result) {
+    badgeData.value.image = result.dataUrl
+    isFormDirty.value = true
+  } else if (uploadError.value) {
+    error.value = uploadError.value
+  }
+}
+
+// Prevent default drag behaviors
+const handleDragOver = (event: globalThis.DragEvent) => {
+  event.preventDefault()
+}
+
+// Add alignment object
+const addAlignment = () => {
+  badgeData.value.alignment = badgeData.value.alignment || []
+  badgeData.value.alignment.push({
+    targetName: '',
+    targetUrl: '' as Shared.IRI,
+    targetDescription: '',
+  })
+  isFormDirty.value = true
+}
+
+// Remove alignment object
+const removeAlignment = (index: number) => {
+  if (badgeData.value.alignment) {
+    badgeData.value.alignment.splice(index, 1)
+    isFormDirty.value = true
+  }
+}
+
+// Handle field updates with validation
+const handleFieldUpdate = (fieldName: string, value: string) => {
+  isFormDirty.value = true
+  updateField(fieldName, value)
+
+  // Update badgeData reactive values
+  if (fieldName === 'name') {
+    badgeData.value.name = value
+  } else if (fieldName === 'description') {
+    badgeData.value.description = value
+  } else if (fieldName === 'criteria') {
+    badgeData.value.criteria = { narrative: value }
+  } else if (fieldName === 'criteriaUrl') {
+    criteriaUrl.value = value
+  }
+
+  clearMessages()
+}
+
+// Handle field blur (touch)
+const handleFieldBlur = (fieldName: string) => {
+  touchField(fieldName)
+}
+
+// Clear messages when user starts typing
+const clearMessages = () => {
+  error.value = null
+  successMessage.value = null
+}
+
+// Helper function to extract image source from IRI or Image object
+function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
+  if (!image) return undefined
+  if (typeof image === 'string') return image
+  return image.id || undefined
+}
+
+// Reset image to original
+function resetImage() {
+  badgeData.value.image = getImageSrc(originalBadge.value?.image) || ''
+  isFormDirty.value = true
+}
+
+// Handle alignment input changes
+function handleAlignmentInput() {
+  isFormDirty.value = true
+  clearMessages()
+}
+
+// Handle criteria textarea input
+function handleCriteriaInput(event: any) {
+  handleFieldUpdate('criteria', event.target.value)
+}
+
+// Handle criteria URL input
+function handleCriteriaUrlInput(event: any) {
+  handleFieldUpdate('criteriaUrl', event.target.value)
+}
+</script>
+
 <template>
   <div class="max-w-4xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
     <!-- Loading state -->
@@ -399,383 +779,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { BadgeIssuerForm, BadgeDisplay } from 'openbadges-ui'
-import type { OB2, Shared } from 'openbadges-types'
-import { createIRI } from 'openbadges-types'
-import { useAuth } from '@/composables/useAuth'
-import { useBadges, type UpdateBadgeData } from '@/composables/useBadges'
-import { useFormValidation } from '@/composables/useFormValidation'
-import { useImageUpload } from '@/composables/useImageUpload'
-
-const route = useRoute()
-const router = useRouter()
-const { user } = useAuth()
-const { updateBadge, getBadgeById } = useBadges()
-const { createField, updateField, touchField, validateAll, getFieldError, rules } =
-  useFormValidation()
-
-// Helper function to ensure criteria is always an object with proper IRI types
-function ensureCriteriaObject(
-  c: string | OB2.Criteria | { narrative?: string; id?: string } | undefined
-): OB2.Criteria {
-  if (typeof c === 'string') {
-    return { id: createIRI(c), narrative: '' }
-  }
-  if (c) {
-    const id = 'id' in c && c.id ? createIRI(c.id) : undefined
-    const narrative =
-      'narrative' in c && typeof (c as any).narrative === 'string' ? (c as any).narrative : ''
-    return { narrative, id }
-  }
-  return { narrative: 'Badge criteria' }
-}
-
-const {
-  uploadImage,
-  isUploading,
-  error: uploadError,
-  clearError,
-} = useImageUpload({
-  maxSize: 2 * 1024 * 1024, // 2MB
-  allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-})
-
-// Component state
-const error = ref<string | null>(null)
-const successMessage = ref<string | null>(null)
-const isSubmitting = ref(false)
-const isFormDirty = ref(false)
-const isInitialized = ref(false)
-
-// Badge data
-const originalBadge = ref<OB2.BadgeClass | null>(null)
-const badgeData = ref<Partial<UpdateBadgeData>>({
-  name: '',
-  description: '',
-  image: '',
-  criteria: {
-    narrative: '',
-  },
-  tags: [],
-  alignment: [],
-})
-
-// Available issuers
-const availableIssuers = ref<OB2.Profile[]>([])
-const criteriaUrl = ref('')
-const badgeId = computed(() => {
-  if ('id' in route.params && typeof route.params.id === 'string') {
-    return route.params.id
-  }
-  return ''
-})
-
-// Create preview badge for display
-const previewBadge = computed(
-  (): OB2.BadgeClass => ({
-    ...(originalBadge.value || {
-      id: badgeId.value as Shared.IRI,
-      type: 'BadgeClass',
-      issuer: {
-        id: 'default-issuer' as Shared.IRI,
-        type: 'Profile',
-        name: 'Default Issuer',
-        url: window.location.origin as Shared.IRI,
-        email: user.value?.email || 'admin@example.com',
-      },
-    }),
-    name: badgeData.value.name || originalBadge.value?.name || 'Badge Name',
-    description:
-      badgeData.value.description || originalBadge.value?.description || 'Badge description',
-    image: (badgeData.value.image ||
-      getImageSrc(originalBadge.value?.image) ||
-      '/placeholder-badge.png') as Shared.IRI,
-    criteria: ensureCriteriaObject(
-      badgeData.value.criteria ?? originalBadge.value?.criteria ?? { narrative: 'Badge criteria' }
-    ),
-    tags: badgeData.value.tags || originalBadge.value?.tags || [],
-    alignment: badgeData.value.alignment || originalBadge.value?.alignment || [],
-  })
-)
-
-// Initialize component
-onMounted(async () => {
-  try {
-    // Load existing badge data
-    const badge = await getBadgeById(badgeId.value)
-    if (!badge) {
-      error.value = 'Badge not found'
-      return
-    }
-
-    originalBadge.value = badge
-
-    // Initialize form with existing data
-    badgeData.value = {
-      name: badge.name,
-      description: badge.description,
-      image: getImageSrc(badge.image) || '',
-      criteria:
-        typeof badge.criteria === 'string'
-          ? { narrative: '', id: createIRI(badge.criteria) }
-          : {
-              narrative: badge.criteria?.narrative || '',
-              id: (badge.criteria as any)?.id ? createIRI((badge.criteria as any).id) : undefined,
-            },
-      tags: badge.tags || [],
-      alignment: Array.isArray(badge.alignment)
-        ? badge.alignment
-        : badge.alignment
-          ? [badge.alignment]
-          : [],
-    }
-
-    // Set criteria URL if it exists
-    if (badge.criteria && typeof badge.criteria === 'object' && 'id' in badge.criteria) {
-      criteriaUrl.value = badge.criteria.id as string
-    }
-
-    // Initialize form validation fields
-    createField('name', badge.name, [rules.required('Badge name is required'), rules.minLength(3)])
-    createField('description', badge.description, [
-      rules.required('Badge description is required'),
-      rules.minLength(10),
-    ])
-    createField(
-      'criteria',
-      (typeof badge.criteria === 'object' ? badge.criteria?.narrative : '') || '',
-      [rules.required('Badge criteria is required'), rules.minLength(10)]
-    )
-    createField('criteriaUrl', criteriaUrl.value, [rules.url('Please enter a valid URL')])
-
-    // Create default issuer
-    if (user.value) {
-      availableIssuers.value = [
-        {
-          id: `issuer-${user.value.id}` as Shared.IRI,
-          type: 'Profile',
-          name: `${user.value.firstName} ${user.value.lastName}`,
-          url: window.location.origin as Shared.IRI,
-          email: user.value.email,
-          description: `Badge issuer profile for ${user.value.firstName} ${user.value.lastName}`,
-        },
-      ]
-    }
-
-    isInitialized.value = true
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load badge'
-  }
-})
-
-// Handle form submission
-const handleSubmit = async (formData: UpdateBadgeData) => {
-  if (!user.value) {
-    error.value = 'You must be logged in to edit a badge'
-    return
-  }
-
-  error.value = null
-  successMessage.value = null
-  isSubmitting.value = true
-
-  try {
-    // Update form fields with current values
-    updateField('name', badgeData.value.name || '')
-    updateField('description', badgeData.value.description || '')
-    updateField('criteria', badgeData.value.criteria?.narrative || '')
-    updateField('criteriaUrl', criteriaUrl.value)
-
-    // Validate all fields
-    if (!validateAll()) {
-      error.value = 'Please fix the errors in the form'
-      return
-    }
-
-    // Additional validation for required fields
-    if (
-      !badgeData.value.name ||
-      !badgeData.value.description ||
-      !badgeData.value.criteria?.narrative
-    ) {
-      error.value = 'Please fill in all required fields'
-      return
-    }
-
-    // Update criteria with URL if provided (OB2: criteria.id?: string is supported)
-    if (criteriaUrl.value && formData.criteria) {
-      formData.criteria.id = criteriaUrl.value
-    }
-
-    // Update the badge
-    const updatedBadge = await updateBadge(user.value, badgeId.value, formData)
-
-    if (updatedBadge) {
-      successMessage.value = 'Badge updated successfully!'
-      isFormDirty.value = false
-
-      // Update original badge reference
-      originalBadge.value = updatedBadge
-
-      // Redirect to badge detail page after a short delay
-      setTimeout(() => {
-        router.push(`/badges/${updatedBadge.id}`)
-      }, 2000)
-    } else {
-      error.value = 'Failed to update badge. Please try again.'
-    }
-  } catch (err) {
-    console.error('Badge update error:', err)
-
-    if (err instanceof Error) {
-      // Handle specific error types
-      if (err.message.includes('network') || err.message.includes('fetch')) {
-        error.value = 'Network error. Please check your connection and try again.'
-      } else if (err.message.includes('unauthorized') || err.message.includes('auth')) {
-        error.value = 'Authentication error. Please log in again.'
-      } else if (err.message.includes('validation')) {
-        error.value = 'Please check your input and try again.'
-      } else {
-        error.value = err.message
-      }
-    } else {
-      error.value = 'An unexpected error occurred. Please try again.'
-    }
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Handle cancel
-const handleCancel = () => {
-  if (isFormDirty.value) {
-    const confirmed = confirm('You have unsaved changes. Are you sure you want to leave?')
-    if (!confirmed) return
-  }
-  router.push(`/badges/${badgeId.value}`)
-}
-
-// Handle image upload
-const handleImageUpload = async (event: Event) => {
-  clearError()
-  clearMessages()
-
-  const target = event.target as globalThis.HTMLInputElement
-  const file = target.files?.[0]
-
-  if (!file) return
-
-  const result = await uploadImage(file)
-  if (result) {
-    badgeData.value.image = result.dataUrl
-    isFormDirty.value = true
-  } else if (uploadError.value) {
-    error.value = uploadError.value
-  }
-}
-
-// Handle drag and drop for image
-const handleImageDrop = async (event: globalThis.DragEvent) => {
-  event.preventDefault()
-  clearError()
-  clearMessages()
-
-  const file = event.dataTransfer?.files[0]
-  if (!file) return
-
-  const result = await uploadImage(file)
-  if (result) {
-    badgeData.value.image = result.dataUrl
-    isFormDirty.value = true
-  } else if (uploadError.value) {
-    error.value = uploadError.value
-  }
-}
-
-// Prevent default drag behaviors
-const handleDragOver = (event: globalThis.DragEvent) => {
-  event.preventDefault()
-}
-
-// Add alignment object
-const addAlignment = () => {
-  badgeData.value.alignment = badgeData.value.alignment || []
-  badgeData.value.alignment.push({
-    targetName: '',
-    targetUrl: '' as Shared.IRI,
-    targetDescription: '',
-  })
-  isFormDirty.value = true
-}
-
-// Remove alignment object
-const removeAlignment = (index: number) => {
-  if (badgeData.value.alignment) {
-    badgeData.value.alignment.splice(index, 1)
-    isFormDirty.value = true
-  }
-}
-
-// Handle field updates with validation
-const handleFieldUpdate = (fieldName: string, value: string) => {
-  isFormDirty.value = true
-  updateField(fieldName, value)
-
-  // Update badgeData reactive values
-  if (fieldName === 'name') {
-    badgeData.value.name = value
-  } else if (fieldName === 'description') {
-    badgeData.value.description = value
-  } else if (fieldName === 'criteria') {
-    badgeData.value.criteria = { narrative: value }
-  } else if (fieldName === 'criteriaUrl') {
-    criteriaUrl.value = value
-  }
-
-  clearMessages()
-}
-
-// Handle field blur (touch)
-const handleFieldBlur = (fieldName: string) => {
-  touchField(fieldName)
-}
-
-// Clear messages when user starts typing
-const clearMessages = () => {
-  error.value = null
-  successMessage.value = null
-}
-
-// Helper function to extract image source from IRI or Image object
-function getImageSrc(image: string | OB2.Image | undefined): string | undefined {
-  if (!image) return undefined
-  if (typeof image === 'string') return image
-  return image.id || undefined
-}
-
-// Reset image to original
-function resetImage() {
-  badgeData.value.image = getImageSrc(originalBadge.value?.image) || ''
-  isFormDirty.value = true
-}
-
-// Handle alignment input changes
-function handleAlignmentInput() {
-  isFormDirty.value = true
-  clearMessages()
-}
-
-// Handle criteria textarea input
-function handleCriteriaInput(event: any) {
-  handleFieldUpdate('criteria', event.target.value)
-}
-
-// Handle criteria URL input
-function handleCriteriaUrlInput(event: any) {
-  handleFieldUpdate('criteriaUrl', event.target.value)
-}
-</script>

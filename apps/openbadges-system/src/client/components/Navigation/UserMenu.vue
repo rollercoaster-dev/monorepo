@@ -1,3 +1,98 @@
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  BellIcon,
+  ChevronDownIcon,
+  UserIcon,
+  CogIcon,
+  ArrowRightOnRectangleIcon,
+  UserPlusIcon,
+  RectangleStackIcon,
+  ClipboardDocumentListIcon,
+  UsersIcon,
+  ChartBarIcon,
+  ShieldCheckIcon,
+} from '@heroicons/vue/24/outline'
+import { useAuth } from '@/composables/useAuth'
+
+interface Props {
+  isMobile?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isMobile: false,
+})
+
+const emit = defineEmits<{
+  close: []
+}>()
+
+const route = useRoute()
+
+// Use actual auth state
+const { user, isAuthenticated, isAdmin, logout } = useAuth()
+
+const notificationCount = ref(3)
+const isUserDropdownOpen = ref(false)
+
+// Menu items
+const userMenuItems = [
+  { id: 'profile', label: 'Profile', to: '/auth/profile', icon: UserIcon },
+  { id: 'backpack', label: 'My Backpack', to: '/backpack', icon: RectangleStackIcon },
+  { id: 'issued', label: 'Issued Badges', to: '/badges/issued', icon: ClipboardDocumentListIcon },
+  { id: 'settings', label: 'Settings', to: '/settings', icon: CogIcon },
+]
+
+const adminMenuItems = [
+  { id: 'admin-dashboard', label: 'Dashboard', to: '/admin', icon: ChartBarIcon },
+  { id: 'admin-users', label: 'Users', to: '/admin/users', icon: UsersIcon },
+  { id: 'admin-badges', label: 'Badges', to: '/admin/badges', icon: ShieldCheckIcon },
+  { id: 'admin-system', label: 'System', to: '/admin/system', icon: CogIcon },
+]
+
+// Methods
+const toggleUserDropdown = () => {
+  isUserDropdownOpen.value = !isUserDropdownOpen.value
+}
+
+const closeUserDropdown = () => {
+  isUserDropdownOpen.value = false
+}
+
+const isActiveRoute = (path: string) => {
+  if (path === '/') {
+    return route.path === '/'
+  }
+  return route.path.startsWith(path)
+}
+
+const handleLogout = async () => {
+  logout()
+  closeUserDropdown()
+  emit('close')
+}
+
+// Handle clicks outside user dropdown
+const handleClickOutside = (event: Event) => {
+  if (isUserDropdownOpen.value && !props.isMobile) {
+    const target = event.target as HTMLElement
+    if (!target.closest('[aria-haspopup="true"]') && !target.closest('[role="menu"]')) {
+      closeUserDropdown()
+    }
+  }
+}
+
+// Lifecycle
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+</script>
+
 <template>
   <div class="relative">
     <!-- Desktop User Menu -->
@@ -233,98 +328,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  BellIcon,
-  ChevronDownIcon,
-  UserIcon,
-  CogIcon,
-  ArrowRightOnRectangleIcon,
-  UserPlusIcon,
-  RectangleStackIcon,
-  ClipboardDocumentListIcon,
-  UsersIcon,
-  ChartBarIcon,
-  ShieldCheckIcon,
-} from '@heroicons/vue/24/outline'
-import { useAuth } from '@/composables/useAuth'
-
-interface Props {
-  isMobile?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  isMobile: false,
-})
-
-const emit = defineEmits<{
-  close: []
-}>()
-
-const route = useRoute()
-
-// Use actual auth state
-const { user, isAuthenticated, isAdmin, logout } = useAuth()
-
-const notificationCount = ref(3)
-const isUserDropdownOpen = ref(false)
-
-// Menu items
-const userMenuItems = [
-  { id: 'profile', label: 'Profile', to: '/auth/profile', icon: UserIcon },
-  { id: 'backpack', label: 'My Backpack', to: '/backpack', icon: RectangleStackIcon },
-  { id: 'issued', label: 'Issued Badges', to: '/badges/issued', icon: ClipboardDocumentListIcon },
-  { id: 'settings', label: 'Settings', to: '/settings', icon: CogIcon },
-]
-
-const adminMenuItems = [
-  { id: 'admin-dashboard', label: 'Dashboard', to: '/admin', icon: ChartBarIcon },
-  { id: 'admin-users', label: 'Users', to: '/admin/users', icon: UsersIcon },
-  { id: 'admin-badges', label: 'Badges', to: '/admin/badges', icon: ShieldCheckIcon },
-  { id: 'admin-system', label: 'System', to: '/admin/system', icon: CogIcon },
-]
-
-// Methods
-const toggleUserDropdown = () => {
-  isUserDropdownOpen.value = !isUserDropdownOpen.value
-}
-
-const closeUserDropdown = () => {
-  isUserDropdownOpen.value = false
-}
-
-const isActiveRoute = (path: string) => {
-  if (path === '/') {
-    return route.path === '/'
-  }
-  return route.path.startsWith(path)
-}
-
-const handleLogout = async () => {
-  logout()
-  closeUserDropdown()
-  emit('close')
-}
-
-// Handle clicks outside user dropdown
-const handleClickOutside = (event: Event) => {
-  if (isUserDropdownOpen.value && !props.isMobile) {
-    const target = event.target as HTMLElement
-    if (!target.closest('[aria-haspopup="true"]') && !target.closest('[role="menu"]')) {
-      closeUserDropdown()
-    }
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-</script>

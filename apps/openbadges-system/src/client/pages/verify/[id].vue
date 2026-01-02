@@ -1,3 +1,113 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  ChevronLeftIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationTriangleIcon,
+  BuildingOfficeIcon,
+  CheckBadgeIcon,
+  CalendarDaysIcon,
+  LinkIcon,
+  ArrowTopRightOnSquareIcon,
+} from '@heroicons/vue/24/outline'
+import { openBadgesService, type VerificationResult } from '@/services/openbadges'
+
+const route = useRoute()
+const loading = ref(true)
+const error = ref<string | null>(null)
+const verificationResult = ref<VerificationResult | null>(null)
+const revocationStatus = ref<{
+  revoked: boolean
+  reason?: string
+  revokedAt?: string
+} | null>(null)
+const urlCopied = ref(false)
+
+// Extract assertion ID from route parameter
+const assertionId = computed(() => {
+  if ('id' in route.params && typeof route.params.id === 'string') {
+    return route.params.id
+  }
+  if ('id' in route.params && Array.isArray(route.params.id)) {
+    return route.params.id[0] || ''
+  }
+  return ''
+})
+
+// Formatted dates
+const formattedVerificationDate = computed(() => {
+  if (!verificationResult.value) return ''
+  return new Date(verificationResult.value.verifiedAt).toLocaleString()
+})
+
+const formattedIssuedDate = computed(() => {
+  if (!verificationResult.value?.assertion.issuedOn) return ''
+  return new Date(verificationResult.value.assertion.issuedOn).toLocaleString()
+})
+
+const formattedExpiryDate = computed(() => {
+  if (!verificationResult.value?.assertion.expires) return ''
+  return new Date(verificationResult.value.assertion.expires).toLocaleString()
+})
+
+// Safely extract badge image URL
+const badgeImageUrl = computed(() => {
+  if (!verificationResult.value?.badgeClass.image) return undefined
+  const image = verificationResult.value.badgeClass.image
+  return typeof image === 'string' ? image : undefined
+})
+
+// Verify the badge when component mounts
+onMounted(async () => {
+  if (!assertionId.value) {
+    error.value = 'No assertion ID provided'
+    loading.value = false
+    return
+  }
+
+  try {
+    loading.value = true
+    error.value = null
+
+    // Perform verification
+    const result = await openBadgesService.verifyBadge(assertionId.value)
+    verificationResult.value = result
+
+    // Check revocation status
+    const revocationResult = await openBadgesService.checkRevocationStatus(assertionId.value)
+    revocationStatus.value = revocationResult
+
+    // Add revocation warning if badge is revoked
+    if (revocationResult.revoked && result.valid) {
+      result.valid = false
+      result.errors = result.errors || []
+      result.errors.push('This badge has been revoked')
+    }
+  } catch (err) {
+    console.error('Failed to verify badge:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to verify badge'
+  } finally {
+    loading.value = false
+  }
+})
+
+// Copy verification URL to clipboard
+const copyVerificationUrl = async () => {
+  try {
+    const url = window.location.href
+    await navigator.clipboard.writeText(url)
+    urlCopied.value = true
+    setTimeout(() => {
+      urlCopied.value = false
+    }, 3000)
+  } catch (err) {
+    console.error('Failed to copy URL:', err)
+  }
+}
+</script>
+
 <template>
   <div class="max-w-4xl mx-auto mt-8 px-4">
     <div class="mb-6">
@@ -302,113 +412,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  ChevronLeftIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
-  BuildingOfficeIcon,
-  CheckBadgeIcon,
-  CalendarDaysIcon,
-  LinkIcon,
-  ArrowTopRightOnSquareIcon,
-} from '@heroicons/vue/24/outline'
-import { openBadgesService, type VerificationResult } from '@/services/openbadges'
-
-const route = useRoute()
-const loading = ref(true)
-const error = ref<string | null>(null)
-const verificationResult = ref<VerificationResult | null>(null)
-const revocationStatus = ref<{
-  revoked: boolean
-  reason?: string
-  revokedAt?: string
-} | null>(null)
-const urlCopied = ref(false)
-
-// Extract assertion ID from route parameter
-const assertionId = computed(() => {
-  if ('id' in route.params && typeof route.params.id === 'string') {
-    return route.params.id
-  }
-  if ('id' in route.params && Array.isArray(route.params.id)) {
-    return route.params.id[0] || ''
-  }
-  return ''
-})
-
-// Formatted dates
-const formattedVerificationDate = computed(() => {
-  if (!verificationResult.value) return ''
-  return new Date(verificationResult.value.verifiedAt).toLocaleString()
-})
-
-const formattedIssuedDate = computed(() => {
-  if (!verificationResult.value?.assertion.issuedOn) return ''
-  return new Date(verificationResult.value.assertion.issuedOn).toLocaleString()
-})
-
-const formattedExpiryDate = computed(() => {
-  if (!verificationResult.value?.assertion.expires) return ''
-  return new Date(verificationResult.value.assertion.expires).toLocaleString()
-})
-
-// Safely extract badge image URL
-const badgeImageUrl = computed(() => {
-  if (!verificationResult.value?.badgeClass.image) return undefined
-  const image = verificationResult.value.badgeClass.image
-  return typeof image === 'string' ? image : undefined
-})
-
-// Verify the badge when component mounts
-onMounted(async () => {
-  if (!assertionId.value) {
-    error.value = 'No assertion ID provided'
-    loading.value = false
-    return
-  }
-
-  try {
-    loading.value = true
-    error.value = null
-
-    // Perform verification
-    const result = await openBadgesService.verifyBadge(assertionId.value)
-    verificationResult.value = result
-
-    // Check revocation status
-    const revocationResult = await openBadgesService.checkRevocationStatus(assertionId.value)
-    revocationStatus.value = revocationResult
-
-    // Add revocation warning if badge is revoked
-    if (revocationResult.revoked && result.valid) {
-      result.valid = false
-      result.errors = result.errors || []
-      result.errors.push('This badge has been revoked')
-    }
-  } catch (err) {
-    console.error('Failed to verify badge:', err)
-    error.value = err instanceof Error ? err.message : 'Failed to verify badge'
-  } finally {
-    loading.value = false
-  }
-})
-
-// Copy verification URL to clipboard
-const copyVerificationUrl = async () => {
-  try {
-    const url = window.location.href
-    await navigator.clipboard.writeText(url)
-    urlCopied.value = true
-    setTimeout(() => {
-      urlCopied.value = false
-    }, 3000)
-  } catch (err) {
-    console.error('Failed to copy URL:', err)
-  }
-}
-</script>

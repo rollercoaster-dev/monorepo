@@ -1,3 +1,7 @@
+<script setup lang="ts">
+// Backpack logic will go here
+</script>
+
 <template>
   <div class="max-w-6xl mx-auto mt-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">My Badge Backpack</h1>
@@ -23,7 +27,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-// Backpack logic will go here
-</script>

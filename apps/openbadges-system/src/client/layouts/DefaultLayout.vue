@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import MainNavigation from '@/components/Navigation/MainNavigation.vue'
+import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
+</script>
+
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50">
     <!-- Main Navigation -->
@@ -77,11 +82,6 @@
     </footer>
   </div>
 </template>
-
-<script setup lang="ts">
-import MainNavigation from '@/components/Navigation/MainNavigation.vue'
-import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
-</script>
 
 <style scoped>
 .fade-enter-active,
