@@ -165,6 +165,7 @@ describe('Issue → Verify → Retrieve flow (proxy)', () => {
     // Verify transformation happened correctly
     const forwardedCall = mockFetch.mock.calls[0]
     const forwardedBody = JSON.parse((forwardedCall?.[1] as { body?: string })?.body as string)
+    expect(forwardedBody.issuedOn).toBe(validFrom)
     expect(forwardedBody.expires).toBe(validUntil)
     expect(forwardedBody.validFrom).toBeUndefined()
     expect(forwardedBody.validUntil).toBeUndefined()

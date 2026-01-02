@@ -304,6 +304,9 @@ badgesRoutes.all('/*', async c => {
 
             // Transform OB3 fields to OB2 for backend compatibility
             const transformed = { ...result.data }
+            if (transformed.validFrom && !transformed.issuedOn) {
+              transformed.issuedOn = transformed.validFrom
+            }
             if (transformed.validUntil && !transformed.expires) {
               transformed.expires = transformed.validUntil
             }
