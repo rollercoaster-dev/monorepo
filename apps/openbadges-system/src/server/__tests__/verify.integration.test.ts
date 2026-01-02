@@ -2,9 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 import { postVerify } from './helpers/verify'
 
-// Mock fetch for downstream calls
-// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
-global.fetch = vi.fn() as unknown as typeof fetch
+// JWT, fetch, and SQLite mocks are configured in test.setup.ts
 
 describe('Verification helper integration', () => {
   let app: {

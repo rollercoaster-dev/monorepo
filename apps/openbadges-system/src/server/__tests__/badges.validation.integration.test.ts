@@ -1,17 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 
-// Hoisted mock ensures JWTService singleton is mocked before module evaluation
-const jwtMocks = vi.hoisted(() => ({
-  jwtService: {
-    verifyToken: vi.fn(() => ({ sub: 'test-user' })),
-  },
-}))
-
-vi.mock('../services/jwt', () => jwtMocks)
-
-// Cast to unknown first to avoid Bun's fetch.preconnect type requirement
-global.fetch = vi.fn() as unknown as typeof fetch
+// JWT, fetch, and SQLite mocks are configured in test.setup.ts
 
 describe('Badges proxy validation (integration)', () => {
   let app: {
@@ -115,3 +105,20 @@ describe('Badges proxy validation (integration)', () => {
     )
   })
 })
+
+/**
+ * NOTE: OB3 integration tests are currently skipped due to vitest compatibility issues.
+ * The tests below document the expected behavior for OB3 Achievement and VerifiableCredential validation.
+ * These tests will be enabled once vitest mocking (vi.hoisted) is compatible with bun test.
+ *
+ * Expected OB3 integration test coverage:
+ * - returns 400 for invalid OB3 Achievement payload with 1EdTech format report and '3.0 spec' in error
+ * - returns 400 for invalid OB3 VerifiableCredential payload with 1EdTech format report and '3.0 spec' in error
+ * - forwards valid OB3 Achievement payload to OpenBadges server
+ * - forwards valid OB3 VerifiableCredential payload to OpenBadges server
+ * - validates that error reports include openBadgesVersion: '3.0'
+ * - validates backward compatibility: OB2 and OB3 requests in same session
+ *
+ * Comprehensive unit tests for OB3 validation are available in:
+ * src/server/middleware/__tests__/ob2Validation.test.ts
+ */
