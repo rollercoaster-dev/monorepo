@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import type { OB2, OB3 } from 'openbadges-types'
+import { typeIncludes } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -61,6 +62,57 @@ export interface IssueBadgeData {
   narrative?: string
   validFrom?: string // OB3 field - when credential becomes valid
   validUntil?: string // OB3 field - when credential expires
+}
+
+/**
+ * Type guards for detecting OB2 vs OB3 response formats
+ * Used internally for response validation and normalization
+ */
+
+/**
+ * Detect if a badge response is OB2 BadgeClass format
+ */
+const isBadgeOB2 = (badge: unknown): badge is OB2.BadgeClass => {
+  return (
+    typeof badge === 'object' && badge !== null && 'type' in badge && badge.type === 'BadgeClass'
+  )
+}
+
+/**
+ * Detect if a badge response is OB3 Achievement format
+ */
+const isBadgeOB3 = (badge: unknown): badge is OB3.Achievement => {
+  return (
+    typeof badge === 'object' &&
+    badge !== null &&
+    'type' in badge &&
+    (badge.type === 'Achievement' || typeIncludes(badge.type, 'Achievement'))
+  )
+}
+
+/**
+ * Detect if an assertion response is OB2 Assertion format
+ */
+const isAssertionOB2 = (assertion: unknown): assertion is OB2.Assertion => {
+  return (
+    typeof assertion === 'object' &&
+    assertion !== null &&
+    'type' in assertion &&
+    assertion.type === 'Assertion'
+  )
+}
+
+/**
+ * Detect if a credential response is OB3 VerifiableCredential format
+ */
+const isCredentialOB3 = (credential: unknown): credential is OB3.VerifiableCredential => {
+  return (
+    typeof credential === 'object' &&
+    credential !== null &&
+    'type' in credential &&
+    Array.isArray(credential.type) &&
+    typeIncludes(credential.type, 'VerifiableCredential')
+  )
 }
 
 export const useBadges = () => {
@@ -558,5 +610,11 @@ export const useBadges = () => {
     changeItemsPerPage,
     exportBadges,
     clearError,
+
+    // Type guards (exposed for testing and external use)
+    isBadgeOB2,
+    isBadgeOB3,
+    isAssertionOB2,
+    isCredentialOB3,
   }
 }
