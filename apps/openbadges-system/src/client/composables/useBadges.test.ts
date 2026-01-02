@@ -491,13 +491,16 @@ describe('useBadges', () => {
     })
   })
 
-   
   describe('createBadge - OB2 vs OB3 Payloads', () => {
     const mockUser: User = {
       id: 'user-123',
+      username: 'testuser',
       email: 'test@example.com',
       firstName: 'Test',
       lastName: 'User',
+      isAdmin: false,
+      createdAt: '2024-01-01T00:00:00Z',
+      credentials: [],
     }
 
     const mockBadgeData: CreateBadgeData = {
@@ -524,15 +527,18 @@ describe('useBadges', () => {
 
     beforeEach(() => {
       // Mock fetch globally
-      // @ts-expect-error - Mocking global for tests
-      global.fetch = vi.fn()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(globalThis as any).fetch = vi.fn()
       // Mock window.location for OB3 ID generation
-      // @ts-expect-error - Mocking global for tests
-      global.window = {
-        location: {
-          origin: 'https://example.org',
+      Object.defineProperty(globalThis, 'window', {
+        value: {
+          location: {
+            origin: 'https://example.org',
+          },
         },
-      }
+        writable: true,
+        configurable: true,
+      })
       composable = useBadges()
     })
 
@@ -544,8 +550,8 @@ describe('useBadges', () => {
       composable.specVersion.value = '2.0'
 
       // Mock platform token endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce(() =>
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
           headers: {
@@ -556,8 +562,7 @@ describe('useBadges', () => {
       )
 
       // Mock badge creation endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce((url: string, options: Record<string, unknown>) => {
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
         const payload = JSON.parse(options.body)
 
         // Verify OB2 format
@@ -592,8 +597,8 @@ describe('useBadges', () => {
       composable.specVersion.value = '3.0'
 
       // Mock platform token endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce(() =>
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
           headers: {
@@ -604,8 +609,7 @@ describe('useBadges', () => {
       )
 
       // Mock badge creation endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce((url: string, options: Record<string, unknown>) => {
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
         const payload = JSON.parse(options.body)
 
         // Verify OB3 format
@@ -641,8 +645,8 @@ describe('useBadges', () => {
       composable.specVersion.value = '3.0'
 
       // Mock platform token endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce(() =>
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
           headers: {
@@ -653,8 +657,7 @@ describe('useBadges', () => {
       )
 
       // Mock badge creation endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce((url: string, options: Record<string, unknown>) => {
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
         const payload = JSON.parse(options.body)
 
         // Verify required OB3 fields
@@ -682,8 +685,8 @@ describe('useBadges', () => {
       composable.specVersion.value = '3.0'
 
       // Mock platform token endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce(() =>
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
           headers: {
@@ -694,8 +697,7 @@ describe('useBadges', () => {
       )
 
       // Mock badge creation endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce((url: string, options: Record<string, unknown>) => {
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
         const payload = JSON.parse(options.body)
 
         // Verify issuer was mapped to creator
@@ -718,8 +720,8 @@ describe('useBadges', () => {
       composable.specVersion.value = '3.0'
 
       // Mock platform token endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce(() =>
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: true,
           headers: {
@@ -730,8 +732,7 @@ describe('useBadges', () => {
       )
 
       // Mock badge creation endpoint
-      // @ts-expect-error - Mocking global for tests
-      ;(global.fetch).mockImplementationOnce((url: string, options: Record<string, unknown>) => {
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
         const payload = JSON.parse(options.body)
 
         // Verify alignment was mapped to alignments (plural)
@@ -750,5 +751,4 @@ describe('useBadges', () => {
       await composable.createBadge(mockUser, mockBadgeData)
     })
   })
-   
 })
