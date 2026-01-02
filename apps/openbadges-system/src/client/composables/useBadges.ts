@@ -165,8 +165,8 @@ const extractIdentityFromCredentialSubject = (
 
   // Priority 2: Use first identifier from array if available
   // Note: OB3.IdentityObject uses identityHash/identityType, map to OB2 format (identity/type)
-  if (subject.identifier && subject.identifier.length > 0) {
-    const ob3Identity = subject.identifier[0]
+  const ob3Identity = subject.identifier?.[0]
+  if (ob3Identity) {
     return {
       type: ob3Identity.identityType || 'unknown',
       identity: ob3Identity.identityHash,
