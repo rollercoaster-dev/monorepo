@@ -16,7 +16,7 @@ Automatically fetch and summarize GitHub Project board status when the user asks
 - User asks "board status"
 - User asks "sprint status"
 - User asks "what's next to work on?"
-- User asks "what's in review?"
+- User asks "what's blocked?" or "what's awaiting review?"
 - User mentions project tracking
 
 ## Instructions
@@ -48,7 +48,7 @@ gh api graphql -f query='
 
 ### Get Items by Status
 
-Parse the JSON output and filter by status field name (e.g., "In Progress", "In Review").
+Parse the JSON output and filter by status field name (e.g., "In Progress", "Blocked").
 
 ## Board Configuration
 
@@ -57,13 +57,13 @@ Parse the JSON output and filter by status field name (e.g., "In Progress", "In 
 
 ### Status Columns
 
-| Status      | Description                                  | Color  |
-| ----------- | -------------------------------------------- | ------ |
-| Backlog     | Not yet ready (blocked/needs prioritization) | Gray   |
-| Next        | Ready to pick up - dependencies met          | Blue   |
-| In Progress | Currently being worked on                    | Yellow |
-| In Review   | PR created, awaiting review                  | Purple |
-| Done        | Merged to main                               | Green  |
+| Status      | Description                                 | Color  |
+| ----------- | ------------------------------------------- | ------ |
+| Backlog     | Not yet ready (needs triage/prioritization) | Gray   |
+| Next        | Ready to pick up - dependencies met         | Blue   |
+| In Progress | Currently being worked on                   | Yellow |
+| Blocked     | PR created, awaiting review                 | Purple |
+| Done        | Merged to main                              | Green  |
 
 ### Project IDs (for updates - use agents, not this skill)
 
@@ -75,7 +75,7 @@ Status Option IDs:
 - Backlog: `8b7bb58f`
 - Next: `266160c2`
 - In Progress: `3e320f16`
-- In Review: `51c2af7b`
+- Blocked: `51c2af7b`
 - Done: `56048761`
 
 ## Output Format
@@ -87,9 +87,9 @@ Status Option IDs:
 
 - #X: <title> (@assignee)
 
-### In Review (<count>)
+### Blocked (<count>)
 
-- #X: <title> - PR #Y
+- #X: <title> - PR #Y (awaiting review)
 
 ### Next (<count>)
 

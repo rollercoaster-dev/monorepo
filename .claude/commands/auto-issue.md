@@ -240,7 +240,7 @@ else:
     @claude review
     ```
 
-16. **Update board status to "In Review":**
+16. **Update board status to "Blocked" (awaiting review):**
 
     ```bash
     # Get the item ID via GraphQL
@@ -258,7 +258,7 @@ else:
         }
       }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
 
-    # Move to "In Review" (option-id: 51c2af7b)
+    # Move to "Blocked" - PR created, awaiting review (option-id: 51c2af7b)
     if [ -n "$ITEM_ID" ]; then
       gh project item-edit \
         --project-id PVT_kwDOB1lz3c4BI2yZ \
@@ -268,7 +268,7 @@ else:
     fi
     ```
 
-    Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "In Review"`
+    Log: `[AUTO-ISSUE #$ARGUMENTS] Board: Moved to "Blocked" (awaiting review)`
 
 17. **Report completion:**
 
@@ -432,5 +432,5 @@ This workflow is successful when:
 - Issue is fully implemented per plan
 - All critical findings resolved (or escalated)
 - PR created and reviews triggered
-- Board updated to "In Review"
+- Board updated to "Blocked" (awaiting review)
 - User informed of PR URL

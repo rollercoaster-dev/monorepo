@@ -31,7 +31,7 @@ The `board-status` skill auto-triggers and shows:
 
 - Items in "Next" column (ready to pick up)
 - Current "In Progress" items
-- Items "In Review"
+- Items "Blocked" (awaiting review)
 
 ### 2. Research the Issue
 
@@ -68,7 +68,7 @@ The `pr-creator` agent:
 3. Links issue with "Closes #108"
 4. Triggers `@coderabbitai full review` (comment)
 5. Triggers `@claude review` (comment)
-6. Updates board status to "In Review"
+6. Updates board status to "Blocked" (awaiting review)
 
 ### 5. Address Review Feedback
 
@@ -113,7 +113,7 @@ When approved:
 ### Board Status Flow
 
 ```
-Backlog → Next → In Progress → In Review → Done
+Backlog → Next → In Progress → Blocked → Done
 ```
 
 | Status      | When                            | Who Updates      |
@@ -121,7 +121,7 @@ Backlog → Next → In Progress → In Review → Done
 | Backlog     | Issue created, not ready        | Manual           |
 | Next        | Dependencies met, ready to work | Manual           |
 | In Progress | Work started                    | atomic-developer |
-| In Review   | PR created                      | pr-creator       |
+| Blocked     | PR created, awaiting review     | pr-creator       |
 | Done        | PR merged                       | review-handler   |
 
 ### Branch Naming

@@ -33,13 +33,13 @@ Add issues to the project board and update their status. This skill has **write 
 
 ### Status Option IDs
 
-| Status      | Option ID  |
-| ----------- | ---------- |
-| Backlog     | `8b7bb58f` |
-| Next        | `266160c2` |
-| In Progress | `3e320f16` |
-| In Review   | `51c2af7b` |
-| Done        | `56048761` |
+| Status      | Option ID  | Description                 |
+| ----------- | ---------- | --------------------------- |
+| Backlog     | `8b7bb58f` | Not ready / needs triage    |
+| Next        | `266160c2` | Ready to pick up            |
+| In Progress | `3e320f16` | Currently being worked on   |
+| Blocked     | `51c2af7b` | PR created, awaiting review |
+| Done        | `56048761` | Merged to main              |
 
 ## Commands
 
@@ -137,13 +137,13 @@ gh project item-edit \
 
 ## Status Mapping
 
-| Action             | Status      | Option ID  |
-| ------------------ | ----------- | ---------- |
-| New issue, blocked | Backlog     | `8b7bb58f` |
-| Ready to work      | Next        | `266160c2` |
-| Started work       | In Progress | `3e320f16` |
-| PR created         | In Review   | `51c2af7b` |
-| PR merged          | Done        | `56048761` |
+| Action               | Status      | Option ID  |
+| -------------------- | ----------- | ---------- |
+| New issue, not ready | Backlog     | `8b7bb58f` |
+| Ready to work        | Next        | `266160c2` |
+| Started work         | In Progress | `3e320f16` |
+| PR created           | Blocked     | `51c2af7b` |
+| PR merged            | Done        | `56048761` |
 
 ## Output Format
 

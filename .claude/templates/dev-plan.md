@@ -129,6 +129,6 @@ After PR is created:
 
 1. Trigger `@coderabbitai full review` (comment)
 2. Trigger `@claude review` (comment)
-3. Update board status to "In Review"
+3. Update board status to "Blocked" (awaiting review)
 4. Address review feedback
 5. Merge when approved
