@@ -44,7 +44,7 @@ export function createIssuerJsonLd(
   issuer: IssuerData,
 ): IssuerData & { "@context": string; type: string } {
   return addContext({
-    type: "Issuer",
+    type: "Profile",
     id: issuer.id,
     name: issuer.name,
     url: issuer.url,
@@ -121,7 +121,7 @@ export function createVerifiableCredential(
     type: ["VerifiableCredential", "OpenBadgeCredential"],
     issuer: {
       id: issuer.id,
-      type: issuer.type || "Issuer",
+      type: issuer.type || "Profile",
       name: issuer.name,
       url: issuer.url,
       ...(issuer.email && { email: issuer.email }),
