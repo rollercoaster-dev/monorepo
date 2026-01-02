@@ -753,6 +753,14 @@ describe('useBadges', () => {
         writable: true,
         configurable: true,
       })
+      // Mock crypto.randomUUID for deterministic testing
+      Object.defineProperty(globalThis, 'crypto', {
+        value: {
+          randomUUID: () => '550e8400-e29b-41d4-a716-446655440000',
+        },
+        writable: true,
+        configurable: true,
+      })
       composable = useBadges()
     })
 

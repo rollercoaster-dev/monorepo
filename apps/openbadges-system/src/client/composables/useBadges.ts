@@ -402,7 +402,8 @@ export const useBadges = () => {
       if (isOB3) {
         // OB3 Achievement format
         // Generate ID if not provided (backend will use this or generate its own)
-        const achievementId = badgeData.id || `${window.location.origin}/achievements/${Date.now()}`
+        const achievementId =
+          badgeData.id || `${window.location.origin}/achievements/${crypto.randomUUID()}`
 
         payload = {
           '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
