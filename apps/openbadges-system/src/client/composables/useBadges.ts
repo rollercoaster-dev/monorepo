@@ -195,7 +195,7 @@ export const useBadges = () => {
         sortOrder: searchFilters.sortOrder,
       })
 
-      const response = await basicApiCall(`/v2/badge-classes?${params}`)
+      const response = await basicApiCall(`/badge-classes?${params}`)
 
       // Guard against null/undefined response (204 or non-JSON)
       if (!response) {
@@ -228,7 +228,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Create badge class
-      const response = await apiCall('/v2/badge-classes', {
+      const response = await apiCall('/badge-classes', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -277,7 +277,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Update badge class
-      const response = await apiCall(`/v2/badge-classes/${badgeId}`, {
+      const response = await apiCall(`/badge-classes/${badgeId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -312,7 +312,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Delete badge class
-      await apiCall(`/v2/badge-classes/${badgeId}`, {
+      await apiCall(`/badge-classes/${badgeId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -342,7 +342,7 @@ export const useBadges = () => {
     error.value = null
 
     try {
-      const response = await basicApiCall(`/v2/badge-classes/${badgeId}`)
+      const response = await basicApiCall(`/badge-classes/${badgeId}`)
       return response as OB2.BadgeClass
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch badge'
@@ -365,7 +365,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Issue badge
-      const response = await apiCall('/v2/assertions', {
+      const response = await apiCall('/assertions', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -407,7 +407,7 @@ export const useBadges = () => {
         ...(badgeClassId && { badgeClass: badgeClassId }),
       })
 
-      const response = await basicApiCall(`/v2/assertions?${params}`)
+      const response = await basicApiCall(`/assertions?${params}`)
 
       // Guard against null/undefined response (204 or non-JSON)
       if (!response) {
@@ -441,7 +441,7 @@ export const useBadges = () => {
       const token = await getPlatformToken(user)
 
       // Revoke assertion
-      await apiCall(`/v2/assertions/${assertionId}/revoke`, {
+      await apiCall(`/assertions/${assertionId}/revoke`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -505,7 +505,7 @@ export const useBadges = () => {
         sortOrder: searchFilters.sortOrder,
       })
 
-      const response = await fetch(`/api/bs/v2/badge-classes/export?${params}`)
+      const response = await fetch(`/api/bs${apiVersion.value}/badge-classes/export?${params}`)
       if (!response.ok) {
         throw new Error('Export failed')
       }
