@@ -1,6 +1,6 @@
 import type { User } from '@/composables/useAuth'
 import type { OB2, OB3, CompositeGuards } from 'openbadges-types'
-import { OpenBadgesVersion } from 'openbadges-types'
+import { OpenBadgesVersion, isOB2Assertion } from 'openbadges-types'
 
 export interface OpenBadgesApiClient {
   token: string
@@ -406,9 +406,22 @@ export class OpenBadgesService {
       // Get the assertion data
       const assertion = await this.getAssertion(assertionId)
 
-      // Get the badge class data
-      const badgeClassId =
-        typeof assertion.badge === 'string' ? assertion.badge : assertion.badge.id
+      // Get the badge class data (handle both OB2 and OB3 formats)
+      let badgeClassId: string
+      if (isOB2Assertion(assertion)) {
+        // OB2 uses 'badge' field which can be string or object with id
+        badgeClassId =
+          typeof assertion.badge === 'string'
+            ? assertion.badge
+            : (assertion.badge as { id: string }).id
+      } else {
+        // OB3 VerifiableCredential - extract from credentialSubject.achievement
+        const achievement = (assertion as OB3.VerifiableCredential).credentialSubject?.achievement
+        badgeClassId =
+          typeof achievement === 'string'
+            ? achievement
+            : ((achievement as { id?: string })?.id ?? '')
+      }
       const badgeClass = await this.getBadgeClass(badgeClassId)
 
       // Perform verification through the server
@@ -455,9 +468,7 @@ export class OpenBadgesService {
         },
         signature: {
           valid: verificationData.signatureValid || false,
-          type: Array.isArray(assertion.verification)
-            ? (assertion.verification[0]?.type ?? 'unknown')
-            : (assertion.verification?.type ?? 'unknown'),
+          type: this.getVerificationType(assertion),
         },
         assertion,
         badgeClass,
@@ -482,6 +493,28 @@ export class OpenBadgesService {
         badgeClass: {} as BadgeClass,
         errors: [error instanceof Error ? error.message : 'Verification failed'],
       }
+    }
+  }
+
+  /**
+   * Extract verification type from assertion (handles both OB2 and OB3 formats)
+   * @private
+   */
+  private getVerificationType(assertion: BadgeAssertion): string {
+    if (isOB2Assertion(assertion)) {
+      // OB2 uses 'verification' field
+      const verification = assertion.verification
+      if (Array.isArray(verification)) {
+        return (verification[0] as { type?: string })?.type ?? 'unknown'
+      }
+      return (verification as { type?: string })?.type ?? 'unknown'
+    } else {
+      // OB3 uses 'proof' field
+      const proof = (assertion as OB3.VerifiableCredential).proof
+      if (Array.isArray(proof)) {
+        return proof[0]?.type ?? 'DataIntegrityProof'
+      }
+      return proof?.type ?? 'DataIntegrityProof'
     }
   }
 
