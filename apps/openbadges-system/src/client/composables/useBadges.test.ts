@@ -363,6 +363,45 @@ describe('useBadges', () => {
         })
       })
 
+      it('should default to "unknown" type when identityType is undefined', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            identifier: [
+              {
+                identityHash: 'xyz789abc012',
+                hashed: false,
+              } as OB3.IdentityObject,
+            ],
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'unknown',
+          identity: 'xyz789abc012',
+          hashed: false,
+          salt: undefined,
+        })
+      })
+
       it('should extract identity from credentialSubject.id as fallback', () => {
         const ob3Credential: OB3.VerifiableCredential = {
           '@context': [

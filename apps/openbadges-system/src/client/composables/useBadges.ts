@@ -170,7 +170,7 @@ const extractIdentityFromCredentialSubject = (
     return {
       type: ob3Identity.identityType || 'unknown',
       identity: ob3Identity.identityHash,
-      hashed: ob3Identity.hashed,
+      hashed: ob3Identity.hashed ?? false,
       salt: ob3Identity.salt,
     }
   }
