@@ -187,14 +187,17 @@ export function validateAssertionPayload(
   }
 }
 
-// OB3 Multi-language string schema
-const multiLanguageStringSchema = z.union([z.string(), z.record(z.string())])
+// OB3 Multi-language string schema (string or object with language keys)
+const multiLanguageStringSchema = z.union([
+  z.string(),
+  z.object({}).passthrough(), // Allow any object for language maps
+])
 
 // OB3 Issuer schema
 const ob3IssuerSchema = z.object({
   id: iriSchema,
   type: z.union([z.string(), z.array(z.string())]).optional(),
-  name: z.union([nonEmpty('Issuer name is required'), multiLanguageStringSchema]),
+  name: multiLanguageStringSchema,
   description: multiLanguageStringSchema.optional(),
   url: iriSchema,
   image: z.union([iriSchema, z.object({ id: iriSchema, type: z.string() })]).optional(),
@@ -226,8 +229,8 @@ const ob3AlignmentSchema = z.object({
 export const achievementSchema = z.object({
   id: iriSchema,
   type: z.union([z.string(), z.array(z.string())]).optional(),
-  name: z.union([nonEmpty('Achievement name is required'), multiLanguageStringSchema]),
-  description: z.union([nonEmpty('Achievement description is required'), multiLanguageStringSchema]),
+  name: multiLanguageStringSchema,
+  description: multiLanguageStringSchema,
   criteria: ob3CriteriaSchema,
   image: z.union([iriSchema, z.object({ id: iriSchema, type: z.string() })]).optional(),
   creator: z.union([iriSchema, ob3IssuerSchema]).optional(),
