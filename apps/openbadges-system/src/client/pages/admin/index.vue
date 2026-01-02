@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import {
   ArrowPathIcon,
   UsersIcon,
@@ -52,16 +52,31 @@ interface Activity {
 
 const recentActivity = ref<Activity[]>([])
 
+// Timeout ID for cleanup
+let successTimeoutId: ReturnType<typeof setTimeout> | null = null
+
 // Load data on component mount
 onMounted(() => {
   refreshData()
 })
 
+// Cleanup on unmount
+onUnmounted(() => {
+  if (successTimeoutId) {
+    clearTimeout(successTimeoutId)
+  }
+})
+
 // Auto-clear success message
 watch(successMessage, message => {
+  if (successTimeoutId) {
+    clearTimeout(successTimeoutId)
+    successTimeoutId = null
+  }
   if (message) {
-    setTimeout(() => {
+    successTimeoutId = setTimeout(() => {
       successMessage.value = null
+      successTimeoutId = null
     }, 5000)
   }
 })

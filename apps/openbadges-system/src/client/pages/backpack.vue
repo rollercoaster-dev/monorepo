@@ -42,6 +42,7 @@ const selectedBadges = ref<string[]>([])
 const showShareModal = ref(false)
 const showDetailModal = ref(false)
 const showExportMenu = ref(false)
+const exportMenuRef = ref<HTMLElement | null>(null)
 const selectedBadge = ref<DisplayBadge | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(12)
@@ -216,8 +217,10 @@ function getIssuerName(issuer: OB2.Profile | string): string {
   return issuer.name || 'Unknown Issuer'
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string | undefined): string {
+  if (!dateString) return 'Unknown date'
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'Invalid date'
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -307,7 +310,7 @@ function shareToSocial(platform: 'twitter' | 'linkedin' | 'facebook') {
 // Close export menu when clicking outside
 const handleClickOutside = (e: Event) => {
   const target = e.target as HTMLElement | null
-  if (target && target.closest && !target.closest('.relative')) {
+  if (exportMenuRef.value && target && !exportMenuRef.value.contains(target)) {
     showExportMenu.value = false
   }
 }
@@ -347,7 +350,7 @@ onUnmounted(() => {
           <span>Share Backpack</span>
         </button>
 
-        <div class="relative">
+        <div ref="exportMenuRef" class="relative">
           <button
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md flex items-center space-x-2"
             @click="showExportMenu = !showExportMenu"
@@ -577,7 +580,7 @@ onUnmounted(() => {
                 </button>
               </div>
 
-              <div class="absolute bottom-2 right-2">
+              <div v-if="badge.issuedOn" class="absolute bottom-2 right-2">
                 <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded">
                   {{ formatDate(badge.issuedOn) }}
                 </span>

@@ -33,7 +33,6 @@ const {
   filters,
   fetchBadges,
   fetchAssertions,
-  // createBadge, // Not used in this component
   issueBadge,
   revokeBadge,
   deleteBadge,
@@ -138,7 +137,8 @@ function handleBadgeClick(badge: OB2.BadgeClass) {
 
 function handleEditBadge(badge: OB2.BadgeClass) {
   selectedBadge.value = badge
-  // TODO: Show edit form
+  // Navigate to badge edit page
+  window.location.href = `/badges/${badge.id}/edit`
 }
 
 function handleIssueBadge(badge: OB2.BadgeClass) {
@@ -188,8 +188,9 @@ function handleSubmitIssue() {
   })
 }
 
-function handleViewAssertion(_assertion: BadgeAssertion) {
-  // TODO: Show assertion details modal
+function handleViewAssertion(assertion: BadgeAssertion) {
+  // Navigate to assertion verification page
+  window.location.href = `/verify/${assertion.id}`
 }
 
 function handleRevokeAssertion(assertion: BadgeAssertion) {
