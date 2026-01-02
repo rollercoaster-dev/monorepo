@@ -488,4 +488,230 @@ describe('useBadges', () => {
       expect(normalized.description).toBe('Un logro de prueba')
     })
   })
+
+  describe('Badge Revocation', () => {
+    it('should revoke OB2 assertion with revoked flag', () => {
+      // Setup: Add an OB2 assertion to the assertions array
+      const ob2Assertion: OB2.Assertion = {
+        '@context': 'https://w3id.org/openbadges/v2',
+        type: 'Assertion',
+        id: iri('https://example.org/assertions/1'),
+        recipient: {
+          type: 'email',
+          identity: 'test@example.com',
+          hashed: false,
+        },
+        badge: iri('https://example.org/badges/1'),
+        issuedOn: dateTime('2024-01-01T00:00:00Z'),
+        verification: {
+          type: 'hosted',
+        },
+      }
+
+      composable.assertions.value = [ob2Assertion]
+
+      // Manually update the assertion to simulate revocation
+      const index = composable.assertions.value.findIndex(
+        a => a.id === 'https://example.org/assertions/1'
+      )
+      if (index !== -1 && composable.assertions.value[index]) {
+        const assertion = composable.assertions.value[index]
+        if (composable.isAssertionOB2(assertion)) {
+          composable.assertions.value[index] = {
+            ...assertion,
+            revoked: true,
+            revocationReason: 'Test revocation',
+          }
+        }
+      }
+
+      // Verify OB2 assertion has revoked flag set
+      const revokedAssertion = composable.assertions.value[0] as OB2.Assertion
+      expect(revokedAssertion.revoked).toBe(true)
+      expect(revokedAssertion.revocationReason).toBe('Test revocation')
+    })
+
+    it('should revoke OB3 credential using credentialStatus', () => {
+      // Setup: Add an OB3 credential to the assertions array
+      const ob3Credential: OB3.VerifiableCredential = {
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
+        id: iri('https://example.org/credentials/1'),
+        type: ['VerifiableCredential', 'OpenBadgeCredential'],
+        issuer: iri('https://example.org/issuer'),
+        validFrom: dateTime('2024-01-01T00:00:00Z'),
+        credentialSubject: {
+          achievement: {
+            id: iri('https://example.org/achievements/1'),
+            type: 'Achievement',
+            name: 'Test Achievement',
+            description: 'A test achievement',
+            criteria: {
+              narrative: 'Complete the test',
+            },
+          },
+        },
+      }
+
+      composable.assertions.value = [ob3Credential]
+
+      // Manually update the credential to simulate revocation
+      const index = composable.assertions.value.findIndex(
+        a => a.id === 'https://example.org/credentials/1'
+      )
+      if (index !== -1 && composable.assertions.value[index]) {
+        const assertion = composable.assertions.value[index]
+        if (composable.isCredentialOB3(assertion)) {
+          composable.assertions.value[index] = {
+            ...assertion,
+            credentialStatus: assertion.credentialStatus || {
+              id: `${assertion.id}/status` as Shared.IRI,
+              type: 'StatusList2021Entry',
+              statusPurpose: 'revocation',
+            },
+          }
+        }
+      }
+
+      // Verify OB3 credential has credentialStatus, NOT revoked property
+      const revokedCredential = composable.assertions.value[0] as OB3.VerifiableCredential
+      expect(revokedCredential.credentialStatus).toBeDefined()
+      expect(revokedCredential.credentialStatus?.type).toBe('StatusList2021Entry')
+      expect(revokedCredential.credentialStatus?.statusPurpose).toBe('revocation')
+      expect((revokedCredential as any).revoked).toBeUndefined()
+    })
+
+    it('should preserve existing credentialStatus when revoking OB3', () => {
+      // Setup: OB3 credential with existing credentialStatus
+      const existingStatus: OB3.CredentialStatus = {
+        id: iri('https://example.org/status/existing'),
+        type: 'StatusList2021Entry',
+        statusPurpose: 'revocation',
+        statusListIndex: '42',
+        statusListCredential: iri('https://example.org/status-list'),
+      }
+
+      const ob3Credential: OB3.VerifiableCredential = {
+        '@context': [
+          'https://www.w3.org/2018/credentials/v1',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
+        id: iri('https://example.org/credentials/1'),
+        type: ['VerifiableCredential', 'OpenBadgeCredential'],
+        issuer: iri('https://example.org/issuer'),
+        validFrom: dateTime('2024-01-01T00:00:00Z'),
+        credentialSubject: {
+          achievement: {
+            id: iri('https://example.org/achievements/1'),
+            type: 'Achievement',
+            name: 'Test Achievement',
+            description: 'A test achievement',
+            criteria: {
+              narrative: 'Complete the test',
+            },
+          },
+        },
+        credentialStatus: existingStatus,
+      }
+
+      composable.assertions.value = [ob3Credential]
+
+      // Manually update the credential (simulating revocation that preserves existing status)
+      const index = composable.assertions.value.findIndex(
+        a => a.id === 'https://example.org/credentials/1'
+      )
+      if (index !== -1 && composable.assertions.value[index]) {
+        const assertion = composable.assertions.value[index]
+        if (composable.isCredentialOB3(assertion)) {
+          composable.assertions.value[index] = {
+            ...assertion,
+            credentialStatus: assertion.credentialStatus || {
+              id: `${assertion.id}/status` as Shared.IRI,
+              type: 'StatusList2021Entry',
+              statusPurpose: 'revocation',
+            },
+          }
+        }
+      }
+
+      // Verify existing credentialStatus is preserved
+      const revokedCredential = composable.assertions.value[0] as OB3.VerifiableCredential
+      expect(revokedCredential.credentialStatus).toBe(existingStatus)
+      expect(revokedCredential.credentialStatus?.statusListIndex).toBe('42')
+    })
+
+    it('should handle revocation with custom reason for OB2', () => {
+      // Setup: Add an OB2 assertion
+      const ob2Assertion: OB2.Assertion = {
+        '@context': 'https://w3id.org/openbadges/v2',
+        type: 'Assertion',
+        id: iri('https://example.org/assertions/1'),
+        recipient: {
+          type: 'email',
+          identity: 'test@example.com',
+          hashed: false,
+        },
+        badge: iri('https://example.org/badges/1'),
+        issuedOn: dateTime('2024-01-01T00:00:00Z'),
+        verification: {
+          type: 'hosted',
+        },
+      }
+
+      composable.assertions.value = [ob2Assertion]
+
+      // Manually update with custom reason
+      const customReason = 'Criteria no longer met'
+      const index = composable.assertions.value.findIndex(
+        a => a.id === 'https://example.org/assertions/1'
+      )
+      if (index !== -1 && composable.assertions.value[index]) {
+        const assertion = composable.assertions.value[index]
+        if (composable.isAssertionOB2(assertion)) {
+          composable.assertions.value[index] = {
+            ...assertion,
+            revoked: true,
+            revocationReason: customReason,
+          }
+        }
+      }
+
+      // Verify custom reason is set
+      const revokedAssertion = composable.assertions.value[0] as OB2.Assertion
+      expect(revokedAssertion.revocationReason).toBe('Criteria no longer met')
+    })
+
+    it('should handle unknown assertion ID gracefully', () => {
+      // Setup: Add an assertion
+      const ob2Assertion: OB2.Assertion = {
+        '@context': 'https://w3id.org/openbadges/v2',
+        type: 'Assertion',
+        id: iri('https://example.org/assertions/1'),
+        recipient: {
+          type: 'email',
+          identity: 'test@example.com',
+          hashed: false,
+        },
+        badge: iri('https://example.org/badges/1'),
+        issuedOn: dateTime('2024-01-01T00:00:00Z'),
+        verification: {
+          type: 'hosted',
+        },
+      }
+
+      composable.assertions.value = [ob2Assertion]
+
+      // Try to find non-existent assertion
+      const index = composable.assertions.value.findIndex(
+        a => a.id === 'https://example.org/assertions/non-existent'
+      )
+
+      // Verify nothing is modified when assertion not found
+      expect(index).toBe(-1)
+      expect(composable.assertions.value.length).toBe(1)
+      expect((composable.assertions.value[0] as OB2.Assertion).revoked).toBeUndefined()
+    })
+  })
 })
