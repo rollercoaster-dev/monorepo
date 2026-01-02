@@ -277,17 +277,31 @@ badgesRoutes.all('/*', async c => {
         try {
           const incoming = await c.req.json()
           if (isCreateBadgeClass) {
-            const { validateBadgeClassPayload } = await import('../middleware/ob2Validation')
-            const result = validateBadgeClassPayload(incoming)
+            const { validateBadgeDefinitionPayload } = await import('../middleware/ob2Validation')
+            const result = validateBadgeDefinitionPayload(incoming)
             if (!result.valid) {
-              return c.json({ error: 'Invalid OB2 BadgeClass payload', report: result.report }, 400)
+              const version = result.report.openBadgesVersion || 'unknown'
+              return c.json(
+                {
+                  error: `Invalid badge definition payload (${version} spec)`,
+                  report: result.report,
+                },
+                400
+              )
             }
             bodyToForward = JSON.stringify(result.data)
           } else if (isIssueAssertion) {
-            const { validateAssertionPayload } = await import('../middleware/ob2Validation')
-            const result = validateAssertionPayload(incoming)
+            const { validateBadgeIssuancePayload } = await import('../middleware/ob2Validation')
+            const result = validateBadgeIssuancePayload(incoming)
             if (!result.valid) {
-              return c.json({ error: 'Invalid OB2 Assertion payload', report: result.report }, 400)
+              const version = result.report.openBadgesVersion || 'unknown'
+              return c.json(
+                {
+                  error: `Invalid badge issuance payload (${version} spec)`,
+                  report: result.report,
+                },
+                400
+              )
             }
             bodyToForward = JSON.stringify(result.data)
           }
