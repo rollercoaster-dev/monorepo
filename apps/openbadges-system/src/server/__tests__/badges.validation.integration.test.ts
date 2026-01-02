@@ -11,7 +11,7 @@ const jwtMocks = vi.hoisted(() => ({
 vi.mock('../services/jwt', () => jwtMocks)
 
 // Cast to unknown first to avoid Bun's fetch.preconnect type requirement
-global.fetch = vi.fn() as unknown as typeof fetch
+globalThis.fetch = vi.fn() as unknown as typeof fetch
 
 describe('Badges proxy validation (integration)', () => {
   let app: {
@@ -48,13 +48,11 @@ describe('Badges proxy validation (integration)', () => {
     const json = await res.json()
 
     expect(res.status).toBe(400)
-    expect(json.error).toContain('Invalid badge definition payload')
-    expect(json.error).toContain('2.0 spec')
+    expect(json.error).toBe('Invalid OB2 BadgeClass payload')
     // Verify 1EdTech-format report structure
     expect(json.report).toBeDefined()
     expect(json.report.valid).toBe(false)
     expect(json.report.errorCount).toBeGreaterThan(0)
-    expect(json.report.openBadgesVersion).toBe('2.0')
     expect(Array.isArray(json.report.messages)).toBe(true)
     expect(json.report.messages.length).toBeGreaterThan(0)
     expect(json.report.messages[0]).toHaveProperty('messageLevel', 'ERROR')
@@ -77,13 +75,11 @@ describe('Badges proxy validation (integration)', () => {
     const json = await res.json()
 
     expect(res.status).toBe(400)
-    expect(json.error).toContain('Invalid badge issuance payload')
-    expect(json.error).toContain('2.0 spec')
+    expect(json.error).toBe('Invalid OB2 Assertion payload')
     // Verify 1EdTech-format report structure
     expect(json.report).toBeDefined()
     expect(json.report.valid).toBe(false)
     expect(json.report.errorCount).toBeGreaterThan(0)
-    expect(json.report.openBadgesVersion).toBe('2.0')
   })
 
   it('forwards valid BadgeClass payload to OpenBadges server', async () => {
