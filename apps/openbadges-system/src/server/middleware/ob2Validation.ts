@@ -186,3 +186,94 @@ export function validateAssertionPayload(
     report: createValidationReport(messages, { openBadgesVersion: '2.0' }),
   }
 }
+
+// OB3 Multi-language string schema
+const multiLanguageStringSchema = z.union([z.string(), z.record(z.string())])
+
+// OB3 Issuer schema
+const ob3IssuerSchema = z.object({
+  id: iriSchema,
+  type: z.union([z.string(), z.array(z.string())]).optional(),
+  name: z.union([nonEmpty('Issuer name is required'), multiLanguageStringSchema]),
+  description: multiLanguageStringSchema.optional(),
+  url: iriSchema,
+  image: z.union([iriSchema, z.object({ id: iriSchema, type: z.string() })]).optional(),
+  email: z.string().email().optional(),
+  telephone: z.string().optional(),
+})
+
+// OB3 Criteria schema (id OR narrative required)
+const ob3CriteriaSchema = z
+  .object({
+    id: iriSchema.optional(),
+    type: z.union([z.string(), z.array(z.string())]).optional(),
+    narrative: multiLanguageStringSchema.optional(),
+  })
+  .refine(data => data.id || data.narrative, {
+    message: 'Criteria must have either id or narrative',
+  })
+
+// OB3 Alignment schema
+const ob3AlignmentSchema = z.object({
+  targetName: nonEmpty('Alignment targetName is required'),
+  targetUrl: iriSchema,
+  targetDescription: z.string().optional(),
+  targetFramework: z.string().optional(),
+  targetCode: z.string().optional(),
+})
+
+// OB3 Achievement schema
+export const achievementSchema = z.object({
+  id: iriSchema,
+  type: z.union([z.string(), z.array(z.string())]).optional(),
+  name: z.union([nonEmpty('Achievement name is required'), multiLanguageStringSchema]),
+  description: z.union([nonEmpty('Achievement description is required'), multiLanguageStringSchema]),
+  criteria: ob3CriteriaSchema,
+  image: z.union([iriSchema, z.object({ id: iriSchema, type: z.string() })]).optional(),
+  creator: z.union([iriSchema, ob3IssuerSchema]).optional(),
+  alignments: z.array(ob3AlignmentSchema).optional(),
+})
+
+// OB3 CredentialSubject schema
+const credentialSubjectSchema = z.object({
+  id: iriSchema.optional(),
+  type: z.union([z.string(), z.array(z.string())]).optional(),
+  achievement: z.union([achievementSchema, z.array(achievementSchema)]),
+  name: multiLanguageStringSchema.optional(),
+  email: z.string().email().optional(),
+  role: z.string().optional(),
+})
+
+// OB3 Proof schema (optional)
+const proofSchema = z.object({
+  type: z.string(),
+  created: isoDateSchema,
+  verificationMethod: iriSchema,
+  proofPurpose: z.string(),
+  proofValue: z.string().optional(),
+  jws: z.string().optional(),
+})
+
+// OB3 Evidence schema
+const ob3EvidenceSchema = z.object({
+  id: iriSchema.optional(),
+  type: z.union([z.string(), z.array(z.string())]).optional(),
+  narrative: multiLanguageStringSchema.optional(),
+  name: multiLanguageStringSchema.optional(),
+  description: multiLanguageStringSchema.optional(),
+  genre: z.string().optional(),
+  audience: z.string().optional(),
+})
+
+// OB3 VerifiableCredential schema
+export const verifiableCredentialSchema = z.object({
+  '@context': z.union([z.string(), z.array(z.string()), z.record(z.unknown())]),
+  id: iriSchema,
+  type: z.array(z.string()),
+  issuer: z.union([iriSchema, ob3IssuerSchema]),
+  validFrom: isoDateSchema,
+  validUntil: isoDateSchema.optional(),
+  credentialSubject: credentialSubjectSchema,
+  proof: z.union([proofSchema, z.array(proofSchema)]).optional(),
+  evidence: z.union([ob3EvidenceSchema, z.array(ob3EvidenceSchema)]).optional(),
+})
