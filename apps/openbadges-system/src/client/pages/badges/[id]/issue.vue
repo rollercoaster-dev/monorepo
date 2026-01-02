@@ -1,3 +1,280 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { BadgeDisplay } from 'openbadges-ui'
+import type { OB2 } from 'openbadges-types'
+import { useAuth } from '@/composables/useAuth'
+import { useBadges, type IssueBadgeData, type BadgeAssertion } from '@/composables/useBadges'
+import { openBadgesService } from '@/services/openbadges'
+
+const route = useRoute()
+const router = useRouter()
+const { user, token, isTokenValid } = useAuth()
+const { getBadgeById, issueBadge } = useBadges()
+
+// Component state
+const badge = ref<OB2.BadgeClass | null>(null)
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const isSubmitting = ref(false)
+const successMessage = ref<string | null>(null)
+const issueError = ref<string | null>(null)
+const issuedAssertion = ref<BadgeAssertion | null>(null)
+const isVerifying = ref(false)
+const verificationStatus = ref<boolean | null>(null)
+
+// Form data
+const issueForm = ref({
+  recipientEmail: '',
+  evidence: '',
+  narrative: '',
+  validFrom: '',
+  validUntil: '',
+})
+
+// Form validation
+const validationErrors = ref<Record<string, string>>({})
+
+const isFormValid = computed(() => {
+  return (
+    issueForm.value.recipientEmail.trim() !== '' && Object.keys(validationErrors.value).length === 0
+  )
+})
+
+// Get field error
+const getFieldError = (field: string): string => {
+  return validationErrors.value[field] || ''
+}
+
+// Clear field error
+const clearFieldError = (field: string) => {
+  if (validationErrors.value[field]) {
+    delete validationErrors.value[field]
+  }
+}
+
+// Validate field
+const validateField = (field: string) => {
+  clearFieldError(field)
+
+  switch (field) {
+    case 'recipientEmail':
+      if (!issueForm.value.recipientEmail.trim()) {
+        validationErrors.value[field] = 'Recipient email is required'
+      } else if (
+        !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(
+          issueForm.value.recipientEmail
+        )
+      ) {
+        validationErrors.value[field] = 'Please enter a valid email address'
+      }
+      break
+    case 'evidence':
+      if (issueForm.value.evidence) {
+        try {
+          new URL(issueForm.value.evidence)
+        } catch {
+          validationErrors.value[field] = 'Please enter a valid URL'
+          break
+        }
+        if (!/^https?:\/\//.test(issueForm.value.evidence)) {
+          validationErrors.value[field] =
+            'Please enter a valid URL (must start with http:// or https://)'
+        }
+      }
+      break
+    case 'validFrom':
+      if (issueForm.value.validFrom) {
+        // Validate that if validUntil is also set, validFrom must be before it
+        if (issueForm.value.validUntil) {
+          const validFromDate = new Date(issueForm.value.validFrom)
+          const validUntilDate = new Date(issueForm.value.validUntil)
+          if (validFromDate >= validUntilDate) {
+            validationErrors.value[field] = 'Valid From must be before Valid Until'
+          }
+        }
+      }
+      break
+    case 'validUntil':
+      if (issueForm.value.validUntil) {
+        const now = new Date()
+        const validUntilDate = new Date(issueForm.value.validUntil)
+
+        // Must be in the future
+        if (validUntilDate <= now) {
+          validationErrors.value[field] = 'Valid Until must be in the future'
+        }
+
+        // If validFrom is set, validUntil must be after it
+        if (issueForm.value.validFrom) {
+          const validFromDate = new Date(issueForm.value.validFrom)
+          if (validUntilDate <= validFromDate) {
+            validationErrors.value[field] = 'Valid Until must be after Valid From'
+          }
+        }
+      }
+      break
+  }
+}
+
+// Load badge data
+const loadBadge = async () => {
+  const params = route.params as { id?: string | string[] }
+  const badgeId = Array.isArray(params.id) ? params.id[0] : params.id || ''
+  if (!badgeId) {
+    error.value = 'Badge ID is required'
+    return
+  }
+
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const badgeData = await getBadgeById(badgeId)
+    if (badgeData) {
+      badge.value = badgeData
+    } else {
+      error.value = 'Badge not found'
+    }
+  } catch (err) {
+    console.error('Error loading badge:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to load badge'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Handle form submission
+const handleIssue = async () => {
+  if (!user.value) {
+    issueError.value = 'You must be logged in to issue badges'
+    return
+  }
+
+  // Validate that the user session is still active
+  if (!user.value.email || !user.value.id || !token.value || !isTokenValid(token.value)) {
+    issueError.value = 'Session expired. Please log in again.'
+    return
+  }
+
+  if (!badge.value) {
+    issueError.value = 'Badge information is required'
+    return
+  }
+
+  // Validate all fields
+  validateField('recipientEmail')
+  validateField('evidence')
+  validateField('validFrom')
+  validateField('validUntil')
+
+  if (!isFormValid.value) {
+    issueError.value = 'Please fix the errors in the form'
+    return
+  }
+
+  isSubmitting.value = true
+  issueError.value = null
+  successMessage.value = null
+
+  try {
+    const issueData: IssueBadgeData = {
+      badgeClassId: badge.value.id,
+      recipientEmail: issueForm.value.recipientEmail.trim(),
+      evidence: issueForm.value.evidence.trim() || undefined,
+      narrative: issueForm.value.narrative.trim() || undefined,
+      validFrom: issueForm.value.validFrom
+        ? new Date(issueForm.value.validFrom).toISOString()
+        : undefined,
+      validUntil: issueForm.value.validUntil
+        ? new Date(issueForm.value.validUntil).toISOString()
+        : undefined,
+    }
+
+    const assertion = await issueBadge(user.value, issueData)
+
+    if (assertion) {
+      issuedAssertion.value = assertion
+      successMessage.value = `Badge successfully issued to ${issueForm.value.recipientEmail}`
+
+      // Reset form
+      issueForm.value = {
+        recipientEmail: '',
+        evidence: '',
+        narrative: '',
+        validFrom: '',
+        validUntil: '',
+      }
+    } else {
+      issueError.value = 'Failed to issue badge. Please try again.'
+    }
+  } catch (err) {
+    console.error('Badge issuance error:', err)
+
+    if (err instanceof Error) {
+      if (err.message.includes('network') || err.message.includes('fetch')) {
+        issueError.value = 'Network error. Please check your connection and try again.'
+      } else if (err.message.includes('unauthorized') || err.message.includes('auth')) {
+        issueError.value = 'Authentication error. Please log in again.'
+      } else if (err.message.includes('409') || err.message.includes('conflict')) {
+        issueError.value = 'This badge has already been issued to this recipient.'
+      } else if (err.message.includes('400') || err.message.includes('bad request')) {
+        issueError.value = 'Invalid badge data. Please check all fields and try again.'
+      } else if (err.message.includes('validation')) {
+        issueError.value = 'Please check your input and try again.'
+      } else {
+        issueError.value = err.message
+      }
+    } else {
+      issueError.value = 'An unexpected error occurred. Please try again.'
+    }
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// Verify issued badge appears in backpack
+const verifyIssuedBadge = async () => {
+  if (!user.value || !issuedAssertion.value) {
+    return
+  }
+
+  isVerifying.value = true
+  verificationStatus.value = null
+
+  try {
+    // Get user's backpack to confirm the badge appears
+    const backpack = await openBadgesService.getUserBackpack(user.value)
+
+    // Check if the issued assertion appears in the backpack
+    const foundAssertion = backpack.assertions.find(
+      assertion => String(assertion.id) === String(issuedAssertion.value?.id)
+    )
+
+    verificationStatus.value = !!foundAssertion
+  } catch (err) {
+    console.error('Error verifying issued badge:', err)
+    verificationStatus.value = false
+  } finally {
+    isVerifying.value = false
+  }
+}
+
+// Handle cancel
+const handleCancel = () => {
+  if (badge.value) {
+    router.push(`/badges/${badge.value.id}`)
+  } else {
+    router.push('/badges')
+  }
+}
+
+// Initialize component
+onMounted(() => {
+  loadBadge()
+})
+</script>
+
 <template>
   <div class="max-w-4xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">Issue Badge</h1>
@@ -136,30 +413,66 @@
         </p>
       </div>
 
-      <!-- Expiration Date -->
+      <!-- Valid From -->
       <div>
-        <label for="expires" class="block text-sm font-medium text-gray-700 mb-2">
-          Expiration Date (optional)
+        <label for="valid-from" class="block text-sm font-medium text-gray-700 mb-2">
+          Valid From (optional)
         </label>
         <input
-          id="expires"
-          v-model="issueForm.expires"
-          type="date"
+          id="valid-from"
+          v-model="issueForm.validFrom"
+          type="datetime-local"
           class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           :class="
-            getFieldError('expires')
+            getFieldError('validFrom')
               ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
               : 'border-gray-300'
           "
-          :min="today"
-          aria-describedby="expires-help expires-error"
-          @blur="validateField('expires')"
-          @input="clearFieldError('expires')"
+          :max="issueForm.validUntil || undefined"
+          aria-describedby="valid-from-help valid-from-error"
+          @blur="validateField('validFrom')"
+          @input="clearFieldError('validFrom')"
         />
-        <p v-if="getFieldError('expires')" id="expires-error" class="mt-1 text-sm text-red-600">
-          {{ getFieldError('expires') }}
+        <p
+          v-if="getFieldError('validFrom')"
+          id="valid-from-error"
+          class="mt-1 text-sm text-red-600"
+        >
+          {{ getFieldError('validFrom') }}
         </p>
-        <p id="expires-help" class="mt-1 text-sm text-gray-500">
+        <p id="valid-from-help" class="mt-1 text-sm text-gray-500">
+          When this badge becomes valid (defaults to issuance time if not specified).
+        </p>
+      </div>
+
+      <!-- Valid Until -->
+      <div>
+        <label for="valid-until" class="block text-sm font-medium text-gray-700 mb-2">
+          Valid Until (optional)
+        </label>
+        <input
+          id="valid-until"
+          v-model="issueForm.validUntil"
+          type="datetime-local"
+          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          :class="
+            getFieldError('validUntil')
+              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+              : 'border-gray-300'
+          "
+          :min="issueForm.validFrom || undefined"
+          aria-describedby="valid-until-help valid-until-error"
+          @blur="validateField('validUntil')"
+          @input="clearFieldError('validUntil')"
+        />
+        <p
+          v-if="getFieldError('validUntil')"
+          id="valid-until-error"
+          class="mt-1 text-sm text-red-600"
+        >
+          {{ getFieldError('validUntil') }}
+        </p>
+        <p id="valid-until-help" class="mt-1 text-sm text-gray-500">
           When this badge expires (leave blank for no expiration).
         </p>
       </div>
@@ -292,261 +605,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { BadgeDisplay } from 'openbadges-ui'
-import type { OB2 } from 'openbadges-types'
-import { useAuth } from '@/composables/useAuth'
-import { useBadges, type IssueBadgeData, type BadgeAssertion } from '@/composables/useBadges'
-import { openBadgesService } from '@/services/openbadges'
-
-const route = useRoute()
-const router = useRouter()
-const { user, token, isTokenValid } = useAuth()
-const { getBadgeById, issueBadge } = useBadges()
-
-// Component state
-const badge = ref<OB2.BadgeClass | null>(null)
-const isLoading = ref(false)
-const error = ref<string | null>(null)
-const isSubmitting = ref(false)
-const successMessage = ref<string | null>(null)
-const issueError = ref<string | null>(null)
-const issuedAssertion = ref<BadgeAssertion | null>(null)
-const isVerifying = ref(false)
-const verificationStatus = ref<boolean | null>(null)
-
-// Form data
-const issueForm = ref({
-  recipientEmail: '',
-  evidence: '',
-  narrative: '',
-  expires: '',
-})
-
-// Form validation
-const validationErrors = ref<Record<string, string>>({})
-
-const today = computed(() => {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-})
-
-const isFormValid = computed(() => {
-  return (
-    issueForm.value.recipientEmail.trim() !== '' && Object.keys(validationErrors.value).length === 0
-  )
-})
-
-// Get field error
-const getFieldError = (field: string): string => {
-  return validationErrors.value[field] || ''
-}
-
-// Clear field error
-const clearFieldError = (field: string) => {
-  if (validationErrors.value[field]) {
-    delete validationErrors.value[field]
-  }
-}
-
-// Validate field
-const validateField = (field: string) => {
-  clearFieldError(field)
-
-  switch (field) {
-    case 'recipientEmail':
-      if (!issueForm.value.recipientEmail.trim()) {
-        validationErrors.value[field] = 'Recipient email is required'
-      } else if (
-        !/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(
-          issueForm.value.recipientEmail
-        )
-      ) {
-        validationErrors.value[field] = 'Please enter a valid email address'
-      }
-      break
-    case 'evidence':
-      if (issueForm.value.evidence) {
-        try {
-          new URL(issueForm.value.evidence)
-        } catch {
-          validationErrors.value[field] = 'Please enter a valid URL'
-          break
-        }
-        if (!/^https?:\/\//.test(issueForm.value.evidence)) {
-          validationErrors.value[field] =
-            'Please enter a valid URL (must start with http:// or https://)'
-        }
-      }
-      break
-    case 'expires':
-      if (issueForm.value.expires) {
-        // Compare local date strings (YYYY-MM-DD) for consistency with <input type="date">
-        const todayStr = today.value
-        const expiryStr = issueForm.value.expires
-        if (expiryStr <= todayStr) {
-          validationErrors.value[field] = 'Expiration date must be in the future'
-        }
-      }
-      break
-  }
-}
-
-// Load badge data
-const loadBadge = async () => {
-  const params = route.params as { id?: string | string[] }
-  const badgeId = Array.isArray(params.id) ? params.id[0] : params.id || ''
-  if (!badgeId) {
-    error.value = 'Badge ID is required'
-    return
-  }
-
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const badgeData = await getBadgeById(badgeId)
-    if (badgeData) {
-      badge.value = badgeData
-    } else {
-      error.value = 'Badge not found'
-    }
-  } catch (err) {
-    console.error('Error loading badge:', err)
-    error.value = err instanceof Error ? err.message : 'Failed to load badge'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Handle form submission
-const handleIssue = async () => {
-  if (!user.value) {
-    issueError.value = 'You must be logged in to issue badges'
-    return
-  }
-
-  // Validate that the user session is still active
-  if (!user.value.email || !user.value.id || !token.value || !isTokenValid(token.value)) {
-    issueError.value = 'Session expired. Please log in again.'
-    return
-  }
-
-  if (!badge.value) {
-    issueError.value = 'Badge information is required'
-    return
-  }
-
-  // Validate all fields
-  validateField('recipientEmail')
-  validateField('evidence')
-  validateField('expires')
-
-  if (!isFormValid.value) {
-    issueError.value = 'Please fix the errors in the form'
-    return
-  }
-
-  isSubmitting.value = true
-  issueError.value = null
-  successMessage.value = null
-
-  try {
-    const issueData: IssueBadgeData = {
-      badgeClassId: badge.value.id,
-      recipientEmail: issueForm.value.recipientEmail.trim(),
-      evidence: issueForm.value.evidence.trim() || undefined,
-      narrative: issueForm.value.narrative.trim() || undefined,
-      expires: issueForm.value.expires
-        ? new Date(issueForm.value.expires).toISOString()
-        : undefined,
-    }
-
-    const assertion = await issueBadge(user.value, issueData)
-
-    if (assertion) {
-      issuedAssertion.value = assertion
-      successMessage.value = `Badge successfully issued to ${issueForm.value.recipientEmail}`
-
-      // Reset form
-      issueForm.value = {
-        recipientEmail: '',
-        evidence: '',
-        narrative: '',
-        expires: '',
-      }
-    } else {
-      issueError.value = 'Failed to issue badge. Please try again.'
-    }
-  } catch (err) {
-    console.error('Badge issuance error:', err)
-
-    if (err instanceof Error) {
-      if (err.message.includes('network') || err.message.includes('fetch')) {
-        issueError.value = 'Network error. Please check your connection and try again.'
-      } else if (err.message.includes('unauthorized') || err.message.includes('auth')) {
-        issueError.value = 'Authentication error. Please log in again.'
-      } else if (err.message.includes('409') || err.message.includes('conflict')) {
-        issueError.value = 'This badge has already been issued to this recipient.'
-      } else if (err.message.includes('400') || err.message.includes('bad request')) {
-        issueError.value = 'Invalid badge data. Please check all fields and try again.'
-      } else if (err.message.includes('validation')) {
-        issueError.value = 'Please check your input and try again.'
-      } else {
-        issueError.value = err.message
-      }
-    } else {
-      issueError.value = 'An unexpected error occurred. Please try again.'
-    }
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Verify issued badge appears in backpack
-const verifyIssuedBadge = async () => {
-  if (!user.value || !issuedAssertion.value) {
-    return
-  }
-
-  isVerifying.value = true
-  verificationStatus.value = null
-
-  try {
-    // Get user's backpack to confirm the badge appears
-    const backpack = await openBadgesService.getUserBackpack(user.value)
-
-    // Check if the issued assertion appears in the backpack
-    const foundAssertion = backpack.assertions.find(
-      assertion => String(assertion.id) === String(issuedAssertion.value?.id)
-    )
-
-    verificationStatus.value = !!foundAssertion
-  } catch (err) {
-    console.error('Error verifying issued badge:', err)
-    verificationStatus.value = false
-  } finally {
-    isVerifying.value = false
-  }
-}
-
-// Handle cancel
-const handleCancel = () => {
-  if (badge.value) {
-    router.push(`/badges/${badge.value.id}`)
-  } else {
-    router.push('/badges')
-  }
-}
-
-// Initialize component
-onMounted(() => {
-  loadBadge()
-})
-</script>
