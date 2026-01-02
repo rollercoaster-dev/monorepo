@@ -350,9 +350,18 @@ export class OpenBadgesService {
 
   /**
    * Create new badge class
+   * @param user - User creating the badge
+   * @param badgeClass - Badge class data
+   * @param version - OpenBadges version (defaults to OB3)
    */
-  async createBadgeClass(user: User, badgeClass: unknown): Promise<unknown> {
-    const response = await this.makeAuthenticatedRequest(user, '/api/v2/badge-classes', {
+  async createBadgeClass(
+    user: User,
+    badgeClass: unknown,
+    version: OpenBadgesVersion = OpenBadgesVersion.V3
+  ): Promise<unknown> {
+    const apiVersion = version === OpenBadgesVersion.V3 ? 'v3' : 'v2'
+
+    const response = await this.makeAuthenticatedRequest(user, `/api/${apiVersion}/badge-classes`, {
       method: 'POST',
       body: JSON.stringify(badgeClass),
     })
