@@ -47,9 +47,18 @@ const formattedIssuedDate = computed(() => {
   return new Date(verificationResult.value.assertion.issuedOn).toLocaleString()
 })
 
+const formattedValidFromDate = computed(() => {
+  if (!verificationResult.value?.assertion.validFrom) return ''
+  return new Date(verificationResult.value.assertion.validFrom).toLocaleString()
+})
+
 const formattedExpiryDate = computed(() => {
-  if (!verificationResult.value?.assertion.expires) return ''
-  return new Date(verificationResult.value.assertion.expires).toLocaleString()
+  const assertion = verificationResult.value?.assertion
+  if (!assertion) return ''
+  // OB3 field takes precedence, fallback to OB2 for backward compatibility
+  const expiryDate = assertion.validUntil || assertion.expires
+  if (!expiryDate) return ''
+  return new Date(expiryDate).toLocaleString()
 })
 
 // Safely extract badge image URL
@@ -332,8 +341,21 @@ const copyVerificationUrl = async () => {
                 </span>
               </div>
             </div>
-            <div v-if="verificationResult.assertion.expires">
-              <label class="block text-sm font-medium text-gray-700">Expires On</label>
+            <div v-if="verificationResult.assertion.validFrom">
+              <label class="block text-sm font-medium text-gray-700">Valid From</label>
+              <div class="mt-1 flex items-center">
+                <CalendarDaysIcon class="w-5 h-5 text-gray-400 mr-2" />
+                <span class="text-sm text-gray-900">
+                  {{ formattedValidFromDate }}
+                </span>
+              </div>
+            </div>
+            <div
+              v-if="verificationResult.assertion.validUntil || verificationResult.assertion.expires"
+            >
+              <label class="block text-sm font-medium text-gray-700">
+                {{ verificationResult.assertion.validUntil ? 'Valid Until' : 'Expires On' }}
+              </label>
               <div class="mt-1 flex items-center">
                 <CalendarDaysIcon class="w-5 h-5 text-gray-400 mr-2" />
                 <span class="text-sm text-gray-900">
