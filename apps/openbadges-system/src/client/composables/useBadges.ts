@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import type { OB2 } from 'openbadges-types'
+import type { OB2, OB3 } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -13,7 +13,7 @@ export interface BadgeSearchFilters {
 }
 
 export interface BadgesPaginationData {
-  badges: OB2.BadgeClass[]
+  badges: (OB2.BadgeClass | OB3.Achievement)[]
   totalBadges: number
   currentPage: number
   itemsPerPage: number
@@ -64,8 +64,8 @@ export interface IssueBadgeData {
 }
 
 export const useBadges = () => {
-  const badges = ref<OB2.BadgeClass[]>([])
-  const assertions = ref<BadgeAssertion[]>([])
+  const badges = ref<(OB2.BadgeClass | OB3.Achievement)[]>([])
+  const assertions = ref<(BadgeAssertion | OB3.VerifiableCredential)[]>([])
   const totalBadges = ref(0)
   const totalAssertions = ref(0)
   const currentPage = ref(1)
@@ -220,7 +220,7 @@ export const useBadges = () => {
   const createBadge = async (
     user: User,
     badgeData: CreateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
@@ -246,7 +246,7 @@ export const useBadges = () => {
         }),
       })
 
-      const newBadge = response as OB2.BadgeClass
+      const newBadge = response as OB2.BadgeClass | OB3.Achievement
 
       // Add to local badges array if we're on the first page
       if (currentPage.value === 1) {
@@ -269,7 +269,7 @@ export const useBadges = () => {
     user: User,
     badgeId: string,
     badgeData: UpdateBadgeData
-  ): Promise<OB2.BadgeClass | null> => {
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
@@ -285,7 +285,7 @@ export const useBadges = () => {
         body: JSON.stringify(badgeData),
       })
 
-      const updatedBadge = response as OB2.BadgeClass
+      const updatedBadge = response as OB2.BadgeClass | OB3.Achievement
 
       // Update local badges array
       const index = badges.value.findIndex(b => b.id === badgeId)
@@ -337,13 +337,15 @@ export const useBadges = () => {
   }
 
   // Get badge class by ID
-  const getBadgeById = async (badgeId: string): Promise<OB2.BadgeClass | null> => {
+  const getBadgeById = async (
+    badgeId: string
+  ): Promise<OB2.BadgeClass | OB3.Achievement | null> => {
     isLoading.value = true
     error.value = null
 
     try {
       const response = await basicApiCall(`/badge-classes/${badgeId}`)
-      return response as OB2.BadgeClass
+      return response as OB2.BadgeClass | OB3.Achievement
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch badge'
       console.error('Error fetching badge:', err)
@@ -357,7 +359,7 @@ export const useBadges = () => {
   const issueBadge = async (
     user: User,
     issueData: IssueBadgeData
-  ): Promise<BadgeAssertion | null> => {
+  ): Promise<BadgeAssertion | OB3.VerifiableCredential | null> => {
     isLoading.value = true
     error.value = null
 
@@ -385,7 +387,7 @@ export const useBadges = () => {
         }),
       })
 
-      return response as BadgeAssertion
+      return response as BadgeAssertion | OB3.VerifiableCredential
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to issue badge'
       console.error('Error issuing badge:', err)
