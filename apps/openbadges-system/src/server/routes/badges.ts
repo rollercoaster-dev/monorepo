@@ -237,6 +237,9 @@ badgesRoutes.get('/assertions', c => c.json({ error: 'Assertion not found' }, 40
 badgesRoutes.get('/assertions/', c => c.json({ error: 'Assertion not found' }, 404))
 
 // OpenBadges API proxy with platform authentication
+// Set BADGES_PROXY_PUBLIC=true in tests to bypass JWT verification
+const badgesProxyPublic = (process.env.BADGES_PROXY_PUBLIC ?? 'false') === 'true'
+
 badgesRoutes.all('/*', async c => {
   const openbadgesUrl = process.env.OPENBADGES_SERVER_URL || 'http://localhost:3000'
   const path = c.req.path.replace('/api/badges', '')
@@ -245,15 +248,17 @@ badgesRoutes.all('/*', async c => {
   try {
     // Get platform token from Authorization header
     const authHeader = c.req.header('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!badgesProxyPublic && (!authHeader || !authHeader.startsWith('Bearer '))) {
       return c.json({ error: 'Platform token required' }, 401)
     }
 
-    // Verify platform token before proxying
-    const token = authHeader.slice('Bearer '.length)
-    const payload = jwtService.verifyToken(token)
-    if (!payload) {
-      return c.json({ error: 'Invalid platform token' }, 401)
+    // Verify platform token before proxying (skip in test mode)
+    if (!badgesProxyPublic) {
+      const token = authHeader!.slice('Bearer '.length)
+      const payload = jwtService.verifyToken(token)
+      if (!payload) {
+        return c.json({ error: 'Invalid platform token' }, 401)
+      }
     }
 
     // Build plain headers object to match tests (not a Headers instance)

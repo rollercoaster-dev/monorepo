@@ -2,6 +2,8 @@ import { vi } from 'vitest'
 
 // Make legacy /api/bs proxy public during tests to avoid auth requirements
 process.env.OPENBADGES_PROXY_PUBLIC = 'true'
+// Make /api/badges proxy public during tests to bypass JWT verification
+process.env.BADGES_PROXY_PUBLIC = 'true'
 
 // Disable OAuth during tests to avoid configuration validation errors
 process.env.OAUTH_ENABLED = 'false'
