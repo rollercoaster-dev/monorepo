@@ -64,6 +64,33 @@ export interface IssueBadgeData {
   validUntil?: string // OB3 field - when credential expires
 }
 
+/**
+ * Composable for managing Open Badges with support for both OB2 and OB3 specifications
+ *
+ * @param initialVersion - The Open Badges specification version to use (defaults to OB3)
+ * @returns Badge management functions and state
+ *
+ * @example
+ * // Use OB3 (default)
+ * const { badges, fetchBadges, specVersion } = useBadges()
+ *
+ * @example
+ * // Use OB2 for backward compatibility
+ * const { badges, fetchBadges, specVersion } = useBadges(OpenBadgesVersion.V2)
+ *
+ * @example
+ * // Switch versions dynamically
+ * const { specVersion, apiVersion, fetchBadges } = useBadges()
+ * specVersion.value = OpenBadgesVersion.V2  // Switch to OB2
+ * await fetchBadges()  // Now uses /v2/ endpoints
+ *
+ * @remarks
+ * - OB2 mode: Uses /v2/badge-classes and /v2/assertions endpoints
+ * - OB3 mode: Uses /v3/badge-classes and /v3/credentials endpoints
+ * - All badges are typed as union types (BadgeClass, BadgeAssertion)
+ * - Data transformation happens automatically based on specVersion
+ * - Type guards validate API responses match expected format
+ */
 export const useBadges = (initialVersion: OpenBadgesVersion = OpenBadgesVersion.V3) => {
   // Version configuration
   const specVersion = ref<OpenBadgesVersion>(initialVersion)
