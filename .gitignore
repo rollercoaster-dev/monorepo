@@ -68,3 +68,4 @@ Thumbs.db
 .claude/dev-plans/
 # Note: .claude/settings.json should be committed (team-shared settings)
 .playwright-mcp/
+scripts/auth-github.sh
