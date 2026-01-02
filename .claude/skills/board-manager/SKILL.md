@@ -41,6 +41,69 @@ Add issues to the project board and update their status. This skill has **write 
 | Blocked     | `51c2af7b` | PR created, awaiting review |
 | Done        | `56048761` | Merged to main              |
 
+## Helper Functions
+
+These reusable functions simplify board operations:
+
+### Get Item ID for Issue
+
+```bash
+get_item_id_for_issue() {
+  local issue_number=$1
+  gh api graphql -f query='
+    query {
+      organization(login: "rollercoaster-dev") {
+        projectV2(number: 11) {
+          items(first: 100) {
+            nodes {
+              id
+              content { ... on Issue { number } }
+            }
+          }
+        }
+      }
+    }' | jq -r ".data.organization.projectV2.items.nodes[] | select(.content.number == $issue_number) | .id"
+}
+```
+
+### Update Board Status (with validation)
+
+```bash
+update_board_status() {
+  local item_id=$1
+  local option_id=$2
+  local status_name=$3
+
+  RESULT=$(gh api graphql \
+    -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+    -f itemId="$item_id" \
+    -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+    -f optionId="$option_id" \
+    -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+      updateProjectV2ItemFieldValue(input: {
+        projectId: $projectId
+        itemId: $itemId
+        fieldId: $fieldId
+        value: { singleSelectOptionId: $optionId }
+      }) {
+        projectV2Item { id }
+      }
+    }' 2>&1)
+
+  # Validate response - check for GraphQL errors
+  if echo "$RESULT" | jq -e '.errors | length > 0' > /dev/null 2>&1; then
+    echo "ERROR: Board update failed (GraphQL error)"
+    return 1
+  elif echo "$RESULT" | jq -e '.data.updateProjectV2ItemFieldValue.projectV2Item.id' > /dev/null 2>&1; then
+    echo "Board Update: Issue moved to '$status_name'"
+    return 0
+  else
+    echo "ERROR: Board update failed (unexpected response)"
+    return 1
+  fi
+}
+```
+
 ## Commands
 
 ### Add Issue to Project Board
@@ -110,67 +173,31 @@ gh api graphql -f query='
     }) { item { id } }
   }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID" 2>/dev/null || true
 
-# 2. Get the item ID (using GraphQL)
-ITEM_ID=$(gh api graphql -f query='
-  query {
-    organization(login: "rollercoaster-dev") {
-      projectV2(number: 11) {
-        items(first: 100) {
-          nodes { id content { ... on Issue { number } } }
-        }
-      }
-    }
-  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == 123) | .id')
-
-# 3. Set status to "Next" using GraphQL mutation
-gh api graphql \
-  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
-  -f itemId="$ITEM_ID" \
-  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
-  -f optionId="266160c2" \
-  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId
-      itemId: $itemId
-      fieldId: $fieldId
-      value: { singleSelectOptionId: $optionId }
-    }) {
-      projectV2Item { id }
-    }
-  }'
+# 2. Get item ID and set status using helper functions
+ITEM_ID=$(get_item_id_for_issue 123)
+update_board_status "$ITEM_ID" "266160c2" "Next"
 ```
 
 ### Move Issue to In Progress
 
 ```bash
-# Get item ID (using GraphQL)
-ITEM_ID=$(gh api graphql -f query='
-  query {
-    organization(login: "rollercoaster-dev") {
-      projectV2(number: 11) {
-        items(first: 100) {
-          nodes { id content { ... on Issue { number } } }
-        }
-      }
-    }
-  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id')
+# Using helper functions
+ITEM_ID=$(get_item_id_for_issue <issue-number>)
+update_board_status "$ITEM_ID" "3e320f16" "In Progress"
+```
 
-# Update to In Progress using GraphQL mutation
-gh api graphql \
-  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
-  -f itemId="$ITEM_ID" \
-  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
-  -f optionId="3e320f16" \
-  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-    updateProjectV2ItemFieldValue(input: {
-      projectId: $projectId
-      itemId: $itemId
-      fieldId: $fieldId
-      value: { singleSelectOptionId: $optionId }
-    }) {
-      projectV2Item { id }
-    }
-  }'
+### Move Issue to Blocked (after PR creation)
+
+```bash
+ITEM_ID=$(get_item_id_for_issue <issue-number>)
+update_board_status "$ITEM_ID" "51c2af7b" "Blocked"
+```
+
+### Move Issue to Done (after merge)
+
+```bash
+ITEM_ID=$(get_item_id_for_issue <issue-number>)
+update_board_status "$ITEM_ID" "56048761" "Done"
 ```
 
 ## Status Mapping

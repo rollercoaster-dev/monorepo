@@ -46,6 +46,71 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 ---
 
+## Helper Functions
+
+These reusable functions are used throughout the workflow:
+
+### Get Item ID for Issue
+
+```bash
+get_item_id_for_issue() {
+  local issue_number=$1
+  gh api graphql -f query='
+    query {
+      organization(login: "rollercoaster-dev") {
+        projectV2(number: 11) {
+          items(first: 100) {
+            nodes {
+              id
+              content { ... on Issue { number } }
+            }
+          }
+        }
+      }
+    }' | jq -r ".data.organization.projectV2.items.nodes[] | select(.content.number == $issue_number) | .id"
+}
+```
+
+### Update Board Status
+
+```bash
+update_board_status() {
+  local item_id=$1
+  local option_id=$2
+  local status_name=$3
+
+  RESULT=$(gh api graphql \
+    -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+    -f itemId="$item_id" \
+    -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+    -f optionId="$option_id" \
+    -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+      updateProjectV2ItemFieldValue(input: {
+        projectId: $projectId
+        itemId: $itemId
+        fieldId: $fieldId
+        value: { singleSelectOptionId: $optionId }
+      }) {
+        projectV2Item { id }
+      }
+    }' 2>&1)
+
+  # Validate response - check for errors in GraphQL response
+  if echo "$RESULT" | jq -e '.errors | length > 0' > /dev/null 2>&1; then
+    echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Board update failed (GraphQL error)"
+    return 1
+  elif echo "$RESULT" | jq -e '.data.updateProjectV2ItemFieldValue.projectV2Item.id' > /dev/null 2>&1; then
+    echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to '$status_name'"
+    return 0
+  else
+    echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Board update failed (unexpected response)"
+    return 1
+  fi
+}
+```
+
+---
+
 ## Phase 1: Research (Autonomous)
 
 0. **Validate input:**
@@ -89,7 +154,6 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
    ```bash
    # Try to add issue to project (silently fails if already present)
-   # Get issue node ID first
    ISSUE_NODE_ID=$(gh issue view $ARGUMENTS --json id -q .id)
    gh api graphql -f query='
      mutation($projectId: ID!, $contentId: ID!) {
@@ -99,40 +163,11 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
        }) { item { id } }
      }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID" 2>/dev/null || true
 
-   # Get the item ID via GraphQL
-   # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
-   ITEM_ID=$(gh api graphql -f query='
-     query {
-       organization(login: "rollercoaster-dev") {
-         projectV2(number: 11) {
-           items(first: 100) {
-             nodes {
-               id
-               content { ... on Issue { number } }
-             }
-           }
-         }
-       }
-     }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+   # Get item ID and update status using helper functions
+   ITEM_ID=$(get_item_id_for_issue "$ARGUMENTS")
 
-   # Move to "In Progress" using GraphQL mutation (avoids scope issues with gh project item-edit)
    if [ -n "$ITEM_ID" ]; then
-     gh api graphql \
-       -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
-       -f itemId="$ITEM_ID" \
-       -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
-       -f optionId="3e320f16" \
-       -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-         updateProjectV2ItemFieldValue(input: {
-           projectId: $projectId
-           itemId: $itemId
-           fieldId: $fieldId
-           value: { singleSelectOptionId: $optionId }
-         }) {
-           projectV2Item { id }
-         }
-       }'
-     echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'In Progress'"
+     update_board_status "$ITEM_ID" "3e320f16" "In Progress"
    else
      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
      echo "[AUTO-ISSUE #$ARGUMENTS] Continuing without board update..."
@@ -271,40 +306,11 @@ else:
 16. **Update board status to "Blocked" (awaiting review):**
 
     ```bash
-    # Get the item ID via GraphQL
-    # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
-    ITEM_ID=$(gh api graphql -f query='
-      query {
-        organization(login: "rollercoaster-dev") {
-          projectV2(number: 11) {
-            items(first: 100) {
-              nodes {
-                id
-                content { ... on Issue { number } }
-              }
-            }
-          }
-        }
-      }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
+    # Get item ID and update status using helper functions
+    ITEM_ID=$(get_item_id_for_issue "$ARGUMENTS")
 
-    # Move to "Blocked" - PR created, awaiting review using GraphQL mutation
     if [ -n "$ITEM_ID" ]; then
-      gh api graphql \
-        -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
-        -f itemId="$ITEM_ID" \
-        -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
-        -f optionId="51c2af7b" \
-        -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-          updateProjectV2ItemFieldValue(input: {
-            projectId: $projectId
-            itemId: $itemId
-            fieldId: $fieldId
-            value: { singleSelectOptionId: $optionId }
-          }) {
-            projectV2Item { id }
-          }
-        }'
-      echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'Blocked' (awaiting review)"
+      update_board_status "$ITEM_ID" "51c2af7b" "Blocked (awaiting review)"
     else
       echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
       echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
