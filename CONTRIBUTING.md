@@ -362,6 +362,8 @@ if (typeIncludes(badge.type, "Assertion")) {
 
 ## 🏷️ Issue Labels
 
+### Standard Labels
+
 - `good first issue` - Great for newcomers
 - `help wanted` - We'd love contributions on this
 - `bug` - Something's broken
@@ -371,6 +373,87 @@ if (typeIncludes(badge.type, "Assertion")) {
 - `pkg:*` - Package-specific (e.g., `pkg:openbadges-types`)
 - `app:*` - Application-specific (e.g., `app:openbadges-server`)
 - `ob3-compliance` - Open Badges 3.0 spec work
+
+### Parallel Development Labels
+
+We use a labeling system to enable parallel development across milestones. This helps contributors find work they can start immediately and understand dependencies.
+
+#### Dependency Status (`dep:*`)
+
+| Label             | Description                            | When to Use                       |
+| ----------------- | -------------------------------------- | --------------------------------- |
+| `dep:independent` | No dependencies, can start immediately | Issues with no blockers           |
+| `dep:blocked`     | Waiting on other issues                | Issues that need other work first |
+| `dep:blocking`    | Other issues depend on this            | Critical path items               |
+| `dep:foundation`  | Foundation work others build on        | Core infrastructure/types         |
+
+#### Work Streams (`stream:*`)
+
+| Label             | Description                     |
+| ----------------- | ------------------------------- |
+| `stream:backend`  | Server/API work                 |
+| `stream:frontend` | UI/Vue components               |
+| `stream:types`    | Type definitions and interfaces |
+| `stream:infra`    | Build/CI/tooling                |
+| `stream:docs`     | Documentation                   |
+
+#### Size/Effort (`size:*`)
+
+| Label     | Time Estimate | Use For                                |
+| --------- | ------------- | -------------------------------------- |
+| `size:xs` | < 1 hour      | Trivial fixes, typos                   |
+| `size:s`  | 1-4 hours     | Small features, simple bugs            |
+| `size:m`  | 4-8 hours     | Moderate features                      |
+| `size:l`  | 1-2 days      | Larger features                        |
+| `size:xl` | > 2 days      | Consider splitting into smaller issues |
+
+#### Execution Order (`order:*`)
+
+Within a milestone, issues are assigned execution waves. Complete one wave before starting the next.
+
+| Label     | Description                         |
+| --------- | ----------------------------------- |
+| `order:1` | Wave 1 - no dependencies, start now |
+| `order:2` | Wave 2 - depends on wave 1          |
+| `order:3` | Wave 3 - depends on wave 2          |
+| `order:4` | Wave 4 - depends on wave 3          |
+| `order:5` | Wave 5 - final integration          |
+
+**How to use:**
+
+- Issues in the same wave can be worked on **in parallel**
+- Complete all issues in a wave before starting the next wave
+- Query by wave: `gh issue list --label "order:1" --state open`
+
+### Finding Parallelizable Work
+
+```bash
+# Find current wave (what to work on now)
+gh issue list --label "order:1" --state open
+
+# See what's coming next
+gh issue list --label "order:2" --state open
+
+# Find work by dependency status
+gh issue list --label "dep:independent" --state open
+gh issue list --label "dep:foundation" --state open
+
+# Filter by stream
+gh issue list --label "order:1,stream:backend" --state open
+
+# Quick wins in current wave
+gh issue list --label "order:1,size:s" --state open
+```
+
+### GitHub Native Dependencies
+
+We also use GitHub's native issue dependency feature:
+
+- **In issue sidebar**: Use "Mark as blocked by" or "Mark as blocking"
+- **Search**: `is:blocked`, `is:blocking`, `blocked-by:#123`
+- **API/Webhooks**: Fully supported for automation
+
+The label system (`dep:*`) complements native dependencies by enabling filtering and sprint planning.
 
 ## 🎯 Milestones & Priority
 
