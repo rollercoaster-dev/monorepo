@@ -605,8 +605,8 @@ export const useBadges = () => {
    * - Revoked assertions are marked explicitly in the assertion object
    *
    * **Open Badges 3.0:**
-   * - Uses credentialStatus with StatusList2021 for revocation
-   * - The server updates a bitstring in the status list
+   * - Uses credentialStatus with W3C Bitstring Status List for revocation
+   * - The server updates a bitstring in the status list credential
    * - Client-side credentialStatus reflects server state
    * - Follows W3C VC Data Model 2.0 revocation patterns
    *
@@ -616,7 +616,7 @@ export const useBadges = () => {
    * @returns Promise<boolean> - True if revocation succeeded
    *
    * @see https://www.imsglobal.org/spec/ob/v3p0/#credentialstatus
-   * @see https://w3c-ccg.github.io/vc-status-list-2021/
+   * @see https://www.w3.org/TR/vc-bitstring-status-list/
    */
   const revokeBadge = async (
     user: User,
