@@ -2,7 +2,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ExecutionContext } from 'hono'
 import { postVerify } from './helpers/verify'
 
-// JWT, fetch, and SQLite mocks are configured in test.setup.ts
+// Mock JWT service before any imports that might load it
+vi.mock('../services/jwt', () => ({
+  jwtService: {
+    verifyToken: vi.fn(() => ({
+      sub: 'test-user',
+      platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
+      displayName: 'Test User',
+      email: 'test@example.com',
+      metadata: { isAdmin: true },
+    })),
+    generatePlatformToken: vi.fn(() => 'mock-platform-token'),
+    createOpenBadgesApiClient: vi.fn(() => ({
+      token: 'mock-jwt-token',
+      headers: {
+        Authorization: 'Bearer mock-jwt-token',
+        'Content-Type': 'application/json',
+      },
+    })),
+  },
+  JWTService: vi.fn(),
+}))
+
+// SQLite and fetch mocks are configured in test.setup.ts
 
 describe('Issue → Verify → Retrieve flow (proxy)', () => {
   let app: {
