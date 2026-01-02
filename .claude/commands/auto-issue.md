@@ -89,13 +89,15 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
    ```bash
    # Try to add issue to project (silently fails if already present)
+   # Get issue node ID first
+   ISSUE_NODE_ID=$(gh issue view $ARGUMENTS --json id -q .id)
    gh api graphql -f query='
-     mutation {
+     mutation($projectId: ID!, $contentId: ID!) {
        addProjectV2ItemById(input: {
-         projectId: "PVT_kwDOB1lz3c4BI2yZ"
-         contentId: "'$(gh issue view $ARGUMENTS --json id -q .id)'"
+         projectId: $projectId
+         contentId: $contentId
        }) { item { id } }
-     }' 2>/dev/null || true
+     }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID" 2>/dev/null || true
 
    # Get the item ID via GraphQL
    # Note: Fetches first 100 items. If project grows beyond 100, use pagination.
@@ -113,13 +115,23 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
        }
      }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
 
-   # Move to "In Progress" (option-id: 3e320f16)
+   # Move to "In Progress" using GraphQL mutation (avoids scope issues with gh project item-edit)
    if [ -n "$ITEM_ID" ]; then
-     gh project item-edit \
-       --project-id PVT_kwDOB1lz3c4BI2yZ \
-       --id "$ITEM_ID" \
-       --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
-       --single-select-option-id 3e320f16
+     gh api graphql \
+       -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+       -f itemId="$ITEM_ID" \
+       -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+       -f optionId="3e320f16" \
+       -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+         updateProjectV2ItemFieldValue(input: {
+           projectId: $projectId
+           itemId: $itemId
+           fieldId: $fieldId
+           value: { singleSelectOptionId: $optionId }
+         }) {
+           projectV2Item { id }
+         }
+       }'
      echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'In Progress'"
    else
      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
@@ -275,13 +287,23 @@ else:
         }
       }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == '$ARGUMENTS') | .id')
 
-    # Move to "Blocked" - PR created, awaiting review (option-id: 51c2af7b)
+    # Move to "Blocked" - PR created, awaiting review using GraphQL mutation
     if [ -n "$ITEM_ID" ]; then
-      gh project item-edit \
-        --project-id PVT_kwDOB1lz3c4BI2yZ \
-        --id "$ITEM_ID" \
-        --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
-        --single-select-option-id 51c2af7b
+      gh api graphql \
+        -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+        -f itemId="$ITEM_ID" \
+        -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+        -f optionId="51c2af7b" \
+        -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+          updateProjectV2ItemFieldValue(input: {
+            projectId: $projectId
+            itemId: $itemId
+            fieldId: $fieldId
+            value: { singleSelectOptionId: $optionId }
+          }) {
+            projectV2Item { id }
+          }
+        }'
       echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to 'Blocked' (awaiting review)"
     else
       echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"

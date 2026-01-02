@@ -71,11 +71,22 @@ gh api graphql -f query='
 ### Update Issue Status
 
 ```bash
-gh project item-edit \
-  --project-id PVT_kwDOB1lz3c4BI2yZ \
-  --id <item-id> \
-  --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
-  --single-select-option-id <option-id>
+# Use GraphQL mutation (avoids OAuth scope issues with gh project item-edit)
+gh api graphql \
+  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+  -f itemId="<item-id>" \
+  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+  -f optionId="<option-id>" \
+  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }'
 ```
 
 ### Remove Issue from Project
@@ -89,8 +100,15 @@ gh project item-delete 11 --owner rollercoaster-dev --id <item-id>
 ### Add New Issue and Set Status
 
 ```bash
-# 1. Add to project
-gh project item-add 11 --owner rollercoaster-dev --url https://github.com/rollercoaster-dev/monorepo/issues/123
+# 1. Add to project using GraphQL mutation
+ISSUE_NODE_ID=$(gh issue view 123 --json id -q .id)
+gh api graphql -f query='
+  mutation($projectId: ID!, $contentId: ID!) {
+    addProjectV2ItemById(input: {
+      projectId: $projectId
+      contentId: $contentId
+    }) { item { id } }
+  }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID" 2>/dev/null || true
 
 # 2. Get the item ID (using GraphQL)
 ITEM_ID=$(gh api graphql -f query='
@@ -104,12 +122,22 @@ ITEM_ID=$(gh api graphql -f query='
     }
   }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == 123) | .id')
 
-# 3. Set status to "Next"
-gh project item-edit \
-  --project-id PVT_kwDOB1lz3c4BI2yZ \
-  --id "$ITEM_ID" \
-  --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
-  --single-select-option-id 266160c2
+# 3. Set status to "Next" using GraphQL mutation
+gh api graphql \
+  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+  -f itemId="$ITEM_ID" \
+  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+  -f optionId="266160c2" \
+  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }'
 ```
 
 ### Move Issue to In Progress
@@ -127,12 +155,22 @@ ITEM_ID=$(gh api graphql -f query='
     }
   }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id')
 
-# Update to In Progress
-gh project item-edit \
-  --project-id PVT_kwDOB1lz3c4BI2yZ \
-  --id "$ITEM_ID" \
-  --field-id PVTSSF_lADOB1lz3c4BI2yZzg5MUx4 \
-  --single-select-option-id 3e320f16
+# Update to In Progress using GraphQL mutation
+gh api graphql \
+  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+  -f itemId="$ITEM_ID" \
+  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+  -f optionId="3e320f16" \
+  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) {
+      projectV2Item { id }
+    }
+  }'
 ```
 
 ## Status Mapping
