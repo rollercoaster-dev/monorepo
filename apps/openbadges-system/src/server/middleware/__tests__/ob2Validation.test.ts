@@ -263,7 +263,10 @@ describe('OB3 Validation Schemas', () => {
   describe('VerifiableCredential', () => {
     it('validates a correct VerifiableCredential payload', () => {
       const payload = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: 'https://example.org/credential/1',
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: 'https://example.org/issuer/1',
@@ -283,7 +286,10 @@ describe('OB3 Validation Schemas', () => {
 
     it('validates VerifiableCredential with embedded Achievement', () => {
       const payload = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: 'https://example.org/credential/1',
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: {
@@ -308,7 +314,10 @@ describe('OB3 Validation Schemas', () => {
 
     it('validates VerifiableCredential with proof', () => {
       const payload = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: 'https://example.org/credential/1',
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: 'https://example.org/issuer/1',
@@ -335,7 +344,10 @@ describe('OB3 Validation Schemas', () => {
 
     it('validates VerifiableCredential with evidence array', () => {
       const payload = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: 'https://example.org/credential/1',
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: 'https://example.org/issuer/1',
@@ -577,7 +589,10 @@ describe('OB3 Validation Schemas', () => {
 
     it('routes OB3 VerifiableCredential to correct validator', () => {
       const payload = {
-        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+        ],
         id: 'https://example.org/credential/1',
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: 'https://example.org/issuer/1',

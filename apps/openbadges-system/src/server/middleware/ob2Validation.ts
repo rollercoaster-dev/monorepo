@@ -190,7 +190,7 @@ export function validateAssertionPayload(
 // OB3 Multi-language string schema (string or object with language keys)
 const multiLanguageStringSchema = z.union([
   z.string(),
-  z.object({}).passthrough(), // Allow any object for language maps
+  z.record(z.string(), z.string()), // Language code → string value
 ])
 
 // OB3 Issuer schema
@@ -269,17 +269,47 @@ const ob3EvidenceSchema = z.object({
 })
 
 // OB3 VerifiableCredential schema
-export const verifiableCredentialSchema = z.object({
-  '@context': z.union([z.string(), z.array(z.string()), z.record(z.string(), z.unknown())]),
-  id: iriSchema,
-  type: z.array(z.string()),
-  issuer: z.union([iriSchema, ob3IssuerSchema]),
-  validFrom: isoDateSchema,
-  validUntil: isoDateSchema.optional(),
-  credentialSubject: credentialSubjectSchema,
-  proof: z.union([proofSchema, z.array(proofSchema)]).optional(),
-  evidence: z.union([ob3EvidenceSchema, z.array(ob3EvidenceSchema)]).optional(),
-})
+export const verifiableCredentialSchema = z
+  .object({
+    '@context': z.union([z.string(), z.array(z.string()), z.record(z.string(), z.unknown())]),
+    id: iriSchema,
+    type: z.array(z.string()),
+    issuer: z.union([iriSchema, ob3IssuerSchema]),
+    validFrom: isoDateSchema,
+    validUntil: isoDateSchema.optional(),
+    credentialSubject: credentialSubjectSchema,
+    proof: z.union([proofSchema, z.array(proofSchema)]).optional(),
+    evidence: z.union([ob3EvidenceSchema, z.array(ob3EvidenceSchema)]).optional(),
+  })
+  .refine(
+    data => {
+      const contexts = Array.isArray(data['@context'])
+        ? data['@context']
+        : [data['@context']].filter(c => typeof c === 'string')
+
+      const hasW3CContext =
+        contexts.includes('https://www.w3.org/2018/credentials/v1') ||
+        contexts.includes('https://www.w3.org/ns/credentials/v2')
+
+      const hasOB3Context =
+        contexts.includes('https://purl.imsglobal.org/spec/ob/v3p0/context.json') ||
+        contexts.includes('https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json')
+
+      return hasW3CContext && hasOB3Context
+    },
+    {
+      message:
+        '@context must include W3C Verifiable Credentials context (v1 or v2) and OB3 context (3.0 or 3.0.3)',
+    }
+  )
+  .refine(
+    data => {
+      return data.type.includes('VerifiableCredential') && data.type.includes('OpenBadgeCredential')
+    },
+    {
+      message: "type array must include both 'VerifiableCredential' and 'OpenBadgeCredential'",
+    }
+  )
 
 /**
  * Detects which Open Badges specification version a payload conforms to
