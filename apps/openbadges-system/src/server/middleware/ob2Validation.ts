@@ -67,19 +67,37 @@ const recipientSchema = z.object({
   identity: z.string().email({ message: 'recipient.identity must be a valid email' }),
 })
 
-export const assertionSchema = z.object({
-  badge: nonEmpty('badge (BadgeClass IRI or id) is required'),
-  recipient: recipientSchema,
-  issuedOn: isoDateSchema.optional(),
-  expires: isoDateSchema.optional(),
-  evidence: z
-    .union([
-      iriSchema, // single evidence URL
-      z.array(iriSchema), // or array of URLs
-    ])
-    .optional(),
-  narrative: z.string().optional(),
-})
+export const assertionSchema = z
+  .object({
+    badge: nonEmpty('badge (BadgeClass IRI or id) is required'),
+    recipient: recipientSchema,
+    issuedOn: isoDateSchema.optional(),
+    // OB2 field (deprecated, but supported for backward compatibility)
+    expires: isoDateSchema.optional(),
+    // OB3 fields (preferred)
+    validFrom: isoDateSchema.optional(),
+    validUntil: isoDateSchema.optional(),
+    evidence: z
+      .union([
+        iriSchema, // single evidence URL
+        z.array(iriSchema), // or array of URLs
+      ])
+      .optional(),
+    narrative: z.string().optional(),
+  })
+  .refine(
+    data => {
+      // Ensure validFrom < validUntil if both are provided
+      if (data.validFrom && data.validUntil) {
+        return new Date(data.validFrom) < new Date(data.validUntil)
+      }
+      return true
+    },
+    {
+      message: 'validFrom must be before validUntil',
+      path: ['validFrom'],
+    }
+  )
 
 export type ValidationResult<T> =
   | { valid: true; data: T; report: ValidationReportContent }

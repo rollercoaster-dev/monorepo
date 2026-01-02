@@ -295,13 +295,23 @@ badgesRoutes.all('/*', async c => {
             if (!result.valid) {
               return c.json(
                 {
-                  error: 'Invalid OB2 Assertion payload',
+                  error: 'Invalid Assertion payload',
                   report: result.report,
                 },
                 400
               )
             }
-            bodyToForward = JSON.stringify(result.data)
+
+            // Transform OB3 fields to OB2 for backend compatibility
+            const transformed = { ...result.data }
+            if (transformed.validUntil && !transformed.expires) {
+              transformed.expires = transformed.validUntil
+            }
+            // Remove OB3 fields before sending to OB2-compatible backend
+            delete (transformed as { validFrom?: string }).validFrom
+            delete (transformed as { validUntil?: string }).validUntil
+
+            bodyToForward = JSON.stringify(transformed)
           }
         } catch {
           return c.json({ error: 'Invalid JSON body' }, 400)
