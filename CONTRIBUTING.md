@@ -407,24 +407,42 @@ We use a labeling system to enable parallel development across milestones. This 
 | `size:l`  | 1-2 days      | Larger features                        |
 | `size:xl` | > 2 days      | Consider splitting into smaller issues |
 
+#### Execution Order (`order:*`)
+
+Within a milestone, issues are assigned execution waves. Complete one wave before starting the next.
+
+| Label     | Description                         |
+| --------- | ----------------------------------- |
+| `order:1` | Wave 1 - no dependencies, start now |
+| `order:2` | Wave 2 - depends on wave 1          |
+| `order:3` | Wave 3 - depends on wave 2          |
+| `order:4` | Wave 4 - depends on wave 3          |
+| `order:5` | Wave 5 - final integration          |
+
+**How to use:**
+
+- Issues in the same wave can be worked on **in parallel**
+- Complete all issues in a wave before starting the next wave
+- Query by wave: `gh issue list --label "order:1" --state open`
+
 ### Finding Parallelizable Work
 
 ```bash
-# Find work you can start immediately
-gh issue list --label "dep:independent" --state open
+# Find current wave (what to work on now)
+gh issue list --label "order:1" --state open
 
-# Find foundation work that unblocks others
+# See what's coming next
+gh issue list --label "order:2" --state open
+
+# Find work by dependency status
+gh issue list --label "dep:independent" --state open
 gh issue list --label "dep:foundation" --state open
 
-# Backend work ready for parallel development
-gh issue list --label "dep:independent,stream:backend" --state open
+# Filter by stream
+gh issue list --label "order:1,stream:backend" --state open
 
-# Quick wins
-gh issue list --label "dep:independent,size:xs" --state open
-gh issue list --label "dep:independent,size:s" --state open
-
-# Using GitHub's native dependency search
-gh issue list --search "-is:blocked" --state open
+# Quick wins in current wave
+gh issue list --label "order:1,size:s" --state open
 ```
 
 ### GitHub Native Dependencies
