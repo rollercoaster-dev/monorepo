@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
-import type { OB2, OB3, CompositeGuards } from 'openbadges-types'
-import { OpenBadgesVersion } from 'openbadges-types'
+import type { CompositeGuards as CompositeGuardsTypes } from 'openbadges-types'
+import { OB2, OB3, OpenBadgesVersion, CompositeGuards } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
+import { normalizeIssueBadgeData, normalizeCreateBadgeData } from '@/utils/badgeTransform'
 
 export interface BadgeSearchFilters {
   issuer: string
@@ -52,7 +53,7 @@ export interface UpdateBadgeData {
 }
 
 // Type alias for badge assertions supporting both OB2 and OB3
-export type BadgeAssertion = CompositeGuards.Badge
+export type BadgeAssertion = CompositeGuardsTypes.Badge
 
 export interface IssueBadgeData {
   badgeClassId: string
@@ -222,26 +223,26 @@ export const useBadges = (initialVersion: OpenBadgesVersion = OpenBadgesVersion.
     try {
       const token = await getPlatformToken(user)
 
+      // Normalize badge data for the appropriate version
+      const requestBody = normalizeCreateBadgeData(badgeData, specVersion.value)
+
       // Create badge class
       const response = await apiCall(`/${apiVersion.value}/badge-classes`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          type: 'BadgeClass',
-          name: badgeData.name,
-          description: badgeData.description,
-          image: badgeData.image,
-          criteria: badgeData.criteria,
-          issuer: badgeData.issuer,
-          tags: badgeData.tags,
-          alignment: badgeData.alignment,
-          expires: badgeData.expires,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       const newBadge = response as BadgeClass
+
+      // Validate response using type guards (log warning if unexpected format)
+      if (specVersion.value === OpenBadgesVersion.V3 && !OB3.isAchievement(newBadge)) {
+        console.warn('Expected OB3 Achievement but received different format:', newBadge)
+      } else if (specVersion.value === OpenBadgesVersion.V2 && !OB2.isBadgeClass(newBadge)) {
+        console.warn('Expected OB2 BadgeClass but received different format:', newBadge)
+      }
 
       // Add to local badges array if we're on the first page
       if (currentPage.value === 1) {
@@ -359,6 +360,9 @@ export const useBadges = (initialVersion: OpenBadgesVersion = OpenBadgesVersion.
     try {
       const token = await getPlatformToken(user)
 
+      // Normalize issue data for the appropriate version
+      const requestBody = normalizeIssueBadgeData(issueData, specVersion.value)
+
       // Issue badge (OB3 uses /credentials instead of /assertions)
       const assertionEndpoint =
         specVersion.value === OpenBadgesVersion.V3 ? 'credentials' : 'assertions'
@@ -367,22 +371,17 @@ export const useBadges = (initialVersion: OpenBadgesVersion = OpenBadgesVersion.
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          badge: issueData.badgeClassId,
-          recipient: {
-            type: 'email',
-            hashed: false,
-            identity: issueData.recipientEmail,
-          },
-          issuedOn: new Date().toISOString(),
-          validFrom: issueData.validFrom || new Date().toISOString(),
-          validUntil: issueData.validUntil,
-          evidence: issueData.evidence,
-          narrative: issueData.narrative,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
-      return response as BadgeAssertion
+      const assertion = response as BadgeAssertion
+
+      // Validate response using composite type guard
+      if (!CompositeGuards.isBadge(assertion)) {
+        console.warn('Received unexpected badge format:', assertion)
+      }
+
+      return assertion
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to issue badge'
       console.error('Error issuing badge:', err)
