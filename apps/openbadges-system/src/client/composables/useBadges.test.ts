@@ -638,7 +638,7 @@ describe('useBadges', () => {
 
       // Verify existing credentialStatus is preserved
       const revokedCredential = composable.assertions.value[0] as OB3.VerifiableCredential
-      expect(revokedCredential.credentialStatus).toBe(existingStatus)
+      expect(revokedCredential.credentialStatus).toStrictEqual(existingStatus)
       expect(revokedCredential.credentialStatus?.statusListIndex).toBe('42')
     })
 
