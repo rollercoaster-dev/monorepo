@@ -6,8 +6,12 @@ export interface OpenBadgesApiClient {
   headers: Record<string, string>
 }
 
-// Use official Open Badges types
-export type BadgeAssertion = OB2.Assertion
+// Extend OB2.Assertion with OB3 validity fields for backward compatibility
+// OB3 uses validFrom/validUntil per VC Data Model 2.0, while OB2 uses expires
+export type BadgeAssertion = OB2.Assertion & {
+  validFrom?: string // OB3 field - when credential becomes valid
+  validUntil?: string // OB3 field - when credential expires
+}
 export type BadgeClass = OB2.BadgeClass
 
 export interface UserBackpack {
@@ -175,6 +179,7 @@ export class OpenBadgesService {
   async makeAuthenticatedRequest(
     user: User,
     endpoint: string,
+    // eslint-disable-next-line no-undef
     options: RequestInit = {}
   ): Promise<Response> {
     let token: string
@@ -226,6 +231,7 @@ export class OpenBadgesService {
    * Make public API request (no authentication required)
    * Uses platform API endpoints that proxy to the badge server
    */
+  // eslint-disable-next-line no-undef
   async makePublicRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
     try {
       const response = await fetch(endpoint, {
