@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { OB2, OB3 } from 'openbadges-types'
+import type { Shared } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -562,8 +563,27 @@ export const useBadges = () => {
       // Update local assertions array
       const index = assertions.value.findIndex(a => a.id === assertionId)
       if (index !== -1 && assertions.value[index]) {
-        assertions.value[index].revoked = true
-        assertions.value[index].revocationReason = reason
+        const assertion = assertions.value[index]
+
+        if (isAssertionOB2(assertion)) {
+          // OB2: Set revoked flag directly on the assertion
+          assertions.value[index] = {
+            ...assertion,
+            revoked: true,
+            revocationReason: reason,
+          }
+        } else if (isCredentialOB3(assertion)) {
+          // OB3: Revocation is handled via credentialStatus (StatusList2021)
+          // Server manages the actual revocation status
+          assertions.value[index] = {
+            ...assertion,
+            credentialStatus: assertion.credentialStatus || {
+              id: `${assertion.id}/status` as Shared.IRI,
+              type: 'StatusList2021Entry',
+              statusPurpose: 'revocation',
+            },
+          }
+        }
       }
 
       return true
