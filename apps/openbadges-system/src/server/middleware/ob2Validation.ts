@@ -193,13 +193,13 @@ const multiLanguageStringSchema = z.union([
   z.record(z.string(), z.string()), // Language code → string value
 ])
 
-// OB3 Issuer schema
+// OB3 Issuer/Profile schema (per OB3 spec, only id and type are required)
 const ob3IssuerSchema = z.object({
   id: iriSchema,
-  type: z.union([z.string(), z.array(z.string())]).optional(),
-  name: multiLanguageStringSchema,
+  type: z.union([z.string(), z.array(z.string())]), // Required - must include 'Profile'
+  name: multiLanguageStringSchema.optional(),
   description: multiLanguageStringSchema.optional(),
-  url: iriSchema,
+  url: iriSchema.optional(),
   image: z.union([iriSchema, z.object({ id: iriSchema, type: z.string() })]).optional(),
   email: z.string().email().optional(),
   telephone: z.string().optional(),

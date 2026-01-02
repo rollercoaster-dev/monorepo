@@ -294,6 +294,7 @@ describe('OB3 Validation Schemas', () => {
         type: ['VerifiableCredential', 'OpenBadgeCredential'],
         issuer: {
           id: 'https://example.org/issuer/1',
+          type: 'Profile', // Required per OB3 spec
           name: 'Test Issuer',
           url: 'https://example.org',
         },
