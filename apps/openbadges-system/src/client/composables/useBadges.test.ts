@@ -558,36 +558,34 @@ describe('useBadges', () => {
       composable.assertions.value = [ob3Credential]
 
       // Manually update the credential to simulate revocation
+      // OB3: Just preserve the assertion (credentialStatus is server-managed)
       const index = composable.assertions.value.findIndex(
         a => a.id === 'https://example.org/credentials/1'
       )
       if (index !== -1 && composable.assertions.value[index]) {
         const assertion = composable.assertions.value[index]
         if (composable.isCredentialOB3(assertion)) {
+          // OB3: Server manages credentialStatus via BitstringStatusListEntry
+          // Client just preserves the assertion as-is after server revocation
           composable.assertions.value[index] = {
             ...assertion,
-            credentialStatus: assertion.credentialStatus || {
-              id: `${assertion.id}/status` as Shared.IRI,
-              type: 'StatusList2021Entry',
-              statusPurpose: 'revocation',
-            },
           }
         }
       }
 
-      // Verify OB3 credential has credentialStatus, NOT revoked property
+      // Verify OB3 credential does NOT have 'revoked' property (OB2-only)
+      // credentialStatus is managed by server, not created client-side
       const revokedCredential = composable.assertions.value[0] as OB3.VerifiableCredential
-      expect(revokedCredential.credentialStatus).toBeDefined()
-      expect(revokedCredential.credentialStatus?.type).toBe('StatusList2021Entry')
-      expect(revokedCredential.credentialStatus?.statusPurpose).toBe('revocation')
       expect((revokedCredential as any).revoked).toBeUndefined()
+      // credentialStatus is preserved as-is (undefined in this test case)
+      expect(revokedCredential.credentialStatus).toBeUndefined()
     })
 
     it('should preserve existing credentialStatus when revoking OB3', () => {
-      // Setup: OB3 credential with existing credentialStatus
+      // Setup: OB3 credential with existing credentialStatus (server-generated)
       const existingStatus: OB3.CredentialStatus = {
         id: iri('https://example.org/status/existing'),
-        type: 'StatusList2021Entry',
+        type: 'BitstringStatusListEntry', // Correct per W3C spec
         statusPurpose: 'revocation',
         statusListIndex: '42',
         statusListCredential: iri('https://example.org/status-list'),
@@ -618,7 +616,8 @@ describe('useBadges', () => {
 
       composable.assertions.value = [ob3Credential]
 
-      // Manually update the credential (simulating revocation that preserves existing status)
+      // Manually update the credential (simulating revocation)
+      // OB3: Server manages credentialStatus - client just preserves existing
       const index = composable.assertions.value.findIndex(
         a => a.id === 'https://example.org/credentials/1'
       )
@@ -627,19 +626,16 @@ describe('useBadges', () => {
         if (composable.isCredentialOB3(assertion)) {
           composable.assertions.value[index] = {
             ...assertion,
-            credentialStatus: assertion.credentialStatus || {
-              id: `${assertion.id}/status` as Shared.IRI,
-              type: 'StatusList2021Entry',
-              statusPurpose: 'revocation',
-            },
+            // credentialStatus is preserved as-is (server is source of truth)
           }
         }
       }
 
-      // Verify existing credentialStatus is preserved
+      // Verify existing credentialStatus is preserved (server-generated BitstringStatusListEntry)
       const revokedCredential = composable.assertions.value[0] as OB3.VerifiableCredential
       expect(revokedCredential.credentialStatus).toStrictEqual(existingStatus)
       expect(revokedCredential.credentialStatus?.statusListIndex).toBe('42')
+      expect(revokedCredential.credentialStatus?.type).toBe('BitstringStatusListEntry')
     })
 
     it('should handle revocation with custom reason for OB2', () => {

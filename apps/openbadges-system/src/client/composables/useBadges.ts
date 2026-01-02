@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue'
 import { OB2, OB3 } from 'openbadges-types'
-import type { Shared } from 'openbadges-types'
 import type { User } from '@/composables/useAuth'
 
 export interface BadgeSearchFilters {
@@ -596,16 +595,19 @@ export const useBadges = () => {
             revocationReason: reason,
           }
         } else if (isCredentialOB3(assertion)) {
-          // OB3: Revocation is handled via credentialStatus (StatusList2021)
-          // Server manages the actual revocation status
+          // OB3: Revocation is handled via credentialStatus (BitstringStatusListEntry)
+          // Server manages the actual revocation status via StatusList2021
+          // We preserve the existing credentialStatus - server is source of truth
           assertions.value[index] = {
             ...assertion,
-            credentialStatus: assertion.credentialStatus || {
-              id: `${assertion.id}/status` as Shared.IRI,
-              type: 'StatusList2021Entry',
-              statusPurpose: 'revocation',
-            },
+            // credentialStatus is server-managed; just mark locally that revocation was requested
           }
+        } else {
+          // Unknown assertion type - log warning but don't fail
+          console.warn(
+            `revokeBadge: Unknown assertion type for ID ${assertionId}. ` +
+              'Local state not updated, but server revocation may have succeeded.'
+          )
         }
       }
 
