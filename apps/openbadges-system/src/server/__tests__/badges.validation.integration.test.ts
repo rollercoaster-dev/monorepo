@@ -65,7 +65,7 @@ describe('Badges proxy validation (integration)', () => {
     const json = await res.json()
 
     expect(res.status).toBe(400)
-    expect(json.error).toBe('Invalid OB2 Assertion payload')
+    expect(json.error).toBe('Invalid Assertion payload')
     // Verify 1EdTech-format report structure
     expect(json.report).toBeDefined()
     expect(json.report.valid).toBe(false)
