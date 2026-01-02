@@ -263,19 +263,23 @@ badgesRoutes.all('/*', async c => {
     })
     headersObj['Authorization'] = authHeader
 
-    // OB2 validation for creation/issuance endpoints
+    // OB2/OB3 validation for creation/issuance endpoints
     const method = c.req.method.toUpperCase()
     const isJsonMethod = method !== 'GET' && method !== 'HEAD'
 
     let bodyToForward: globalThis.BodyInit | null | undefined = undefined
     if (isJsonMethod) {
-      // Only parse and validate for specific OB2 endpoints
+      // OB2 endpoints
       const isCreateBadgeClass = method === 'POST' && path.startsWith('/api/v2/badge-classes')
       const isIssueAssertion = method === 'POST' && path.startsWith('/api/v2/assertions')
+      // OB3 endpoints
+      const isCreateAchievement = method === 'POST' && path.startsWith('/api/v3/achievements')
+      const isIssueCredential = method === 'POST' && path.startsWith('/api/v3/credentials')
 
-      if (isCreateBadgeClass || isIssueAssertion) {
+      if (isCreateBadgeClass || isIssueAssertion || isCreateAchievement || isIssueCredential) {
         try {
           const incoming = await c.req.json()
+          // OB2 BadgeClass
           if (isCreateBadgeClass) {
             const { validateBadgeClassPayload } = await import('../middleware/ob2Validation')
             const result = validateBadgeClassPayload(incoming)
@@ -289,13 +293,46 @@ badgesRoutes.all('/*', async c => {
               )
             }
             bodyToForward = JSON.stringify(result.data)
-          } else if (isIssueAssertion) {
+          }
+          // OB2 Assertion
+          else if (isIssueAssertion) {
             const { validateAssertionPayload } = await import('../middleware/ob2Validation')
             const result = validateAssertionPayload(incoming)
             if (!result.valid) {
               return c.json(
                 {
                   error: 'Invalid OB2 Assertion payload',
+                  report: result.report,
+                },
+                400
+              )
+            }
+            bodyToForward = JSON.stringify(result.data)
+          }
+          // OB3 Achievement
+          else if (isCreateAchievement) {
+            const { validateAchievementPayload } = await import('../middleware/ob2Validation')
+            const result = validateAchievementPayload(incoming)
+            if (!result.valid) {
+              return c.json(
+                {
+                  error: 'Invalid OB3 Achievement payload',
+                  report: result.report,
+                },
+                400
+              )
+            }
+            bodyToForward = JSON.stringify(result.data)
+          }
+          // OB3 VerifiableCredential
+          else if (isIssueCredential) {
+            const { validateVerifiableCredentialPayload } =
+              await import('../middleware/ob2Validation')
+            const result = validateVerifiableCredentialPayload(incoming)
+            if (!result.valid) {
+              return c.json(
+                {
+                  error: 'Invalid OB3 VerifiableCredential payload',
                   report: result.report,
                 },
                 400
