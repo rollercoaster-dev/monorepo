@@ -260,6 +260,7 @@ describe('useBadges', () => {
         validFrom: dateTime('2024-01-01T00:00:00Z'),
         validUntil: dateTime('2025-01-01T00:00:00Z'),
         credentialSubject: {
+          email: 'recipient@example.com',
           achievement: {
             id: iri('https://example.org/achievements/1'),
             type: 'Achievement',
@@ -279,7 +280,220 @@ describe('useBadges', () => {
       expect(normalized.validUntil).toBe('2025-01-01T00:00:00Z')
       expect(normalized.issuedOn).toBe('2024-01-01T00:00:00Z') // Maps validFrom to issuedOn
       expect(normalized.expires).toBe('2025-01-01T00:00:00Z') // Maps validUntil to expires
-      expect(normalized.recipient).toBe(ob3Credential.credentialSubject)
+      // OB3 credentialSubject should be mapped to IdentityObject
+      expect(normalized.recipient).toEqual({
+        type: 'email',
+        identity: 'recipient@example.com',
+        hashed: false,
+      })
+    })
+
+    describe('OB3 CredentialSubject Identity Extraction', () => {
+      it('should extract identity from credentialSubject.email', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            email: 'test@example.com',
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'email',
+          identity: 'test@example.com',
+          hashed: false,
+        })
+      })
+
+      it('should extract identity from credentialSubject.identifier array', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            identifier: [
+              {
+                identityHash: 'abc123def456',
+                identityType: 'email',
+                hashed: true,
+                salt: 'random-salt',
+              },
+            ],
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'email',
+          identity: 'abc123def456',
+          hashed: true,
+          salt: 'random-salt',
+        })
+      })
+
+      it('should default to "unknown" type when identityType is undefined', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            identifier: [
+              {
+                identityHash: 'xyz789abc012',
+                hashed: false,
+              } as OB3.IdentityObject,
+            ],
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'unknown',
+          identity: 'xyz789abc012',
+          hashed: false,
+          salt: undefined,
+        })
+      })
+
+      it('should extract identity from credentialSubject.id as fallback', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            id: iri('did:example:123456'),
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'id',
+          identity: 'did:example:123456',
+          hashed: false,
+        })
+      })
+
+      it('should return anonymous identity when no identity fields present', () => {
+        const ob3Credential: OB3.VerifiableCredential = {
+          '@context': [
+            'https://www.w3.org/2018/credentials/v1',
+            'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          ],
+          id: iri('https://example.org/credentials/1'),
+          type: ['VerifiableCredential', 'OpenBadgeCredential'],
+          issuer: iri('https://example.org/issuer'),
+          validFrom: dateTime('2024-01-01T00:00:00Z'),
+          credentialSubject: {
+            achievement: {
+              id: iri('https://example.org/achievements/1'),
+              type: 'Achievement',
+              name: 'Test Achievement',
+              description: 'A test achievement',
+              criteria: {
+                narrative: 'Complete the test',
+              },
+            },
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob3Credential)
+
+        expect(normalized.recipient).toEqual({
+          type: 'unknown',
+          identity: 'anonymous',
+          hashed: false,
+        })
+      })
+
+      it('should preserve existing OB2 identity structure unchanged', () => {
+        const ob2Assertion: OB2.Assertion = {
+          '@context': 'https://w3id.org/openbadges/v2',
+          type: 'Assertion',
+          id: iri('https://example.org/assertions/1'),
+          recipient: {
+            type: 'email',
+            identity: 'original@example.com',
+            hashed: false,
+          },
+          badge: iri('https://example.org/badges/1'),
+          issuedOn: dateTime('2024-01-01T00:00:00Z'),
+          verification: {
+            type: 'hosted',
+          },
+        }
+
+        const normalized = composable.normalizeAssertionData(ob2Assertion)
+
+        expect(normalized.recipient).toEqual({
+          type: 'email',
+          identity: 'original@example.com',
+          hashed: false,
+        })
+        // Verify it's the exact same object (passthrough, not copied)
+        expect(normalized.recipient).toBe(ob2Assertion.recipient)
+      })
     })
   })
 
