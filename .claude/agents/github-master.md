@@ -67,7 +67,7 @@ Structure PRs with:
 
 ### 5. Project Board Organization
 
-- Keep issues in correct columns (Backlog, Next, In Progress, In Review, Done)
+- Keep issues in correct columns (Backlog, Next, In Progress, Blocked, Done)
 - Ensure milestone assignments are current
 - Flag blocked or stale items
 - Maintain migration tracking accuracy

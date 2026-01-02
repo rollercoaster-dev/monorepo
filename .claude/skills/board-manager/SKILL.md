@@ -33,13 +33,13 @@ Add issues to the project board and update their status. This skill has **write 
 
 ### Status Option IDs
 
-| Status      | Option ID  |
-| ----------- | ---------- |
-| Backlog     | `8b7bb58f` |
-| Next        | `266160c2` |
-| In Progress | `3e320f16` |
-| In Review   | `51c2af7b` |
-| Done        | `56048761` |
+| Status      | Option ID  | Description                 |
+| ----------- | ---------- | --------------------------- |
+| Backlog     | `8b7bb58f` | Not ready / needs triage    |
+| Next        | `266160c2` | Ready to pick up            |
+| In Progress | `3e320f16` | Currently being worked on   |
+| Blocked     | `51c2af7b` | PR created, awaiting review |
+| Done        | `56048761` | Merged to main              |
 
 ## Commands
 
@@ -52,7 +52,20 @@ gh project item-add 11 --owner rollercoaster-dev --url https://github.com/roller
 ### Get Item ID for an Issue
 
 ```bash
-gh project item-list 11 --owner rollercoaster-dev --format json | jq '.items[] | select(.content.number == <issue-number>) | .id'
+# Using GraphQL (more reliable - doesn't require read:org scope)
+gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes {
+            id
+            content { ... on Issue { number } }
+          }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id'
 ```
 
 ### Update Issue Status
@@ -79,8 +92,17 @@ gh project item-delete 11 --owner rollercoaster-dev --id <item-id>
 # 1. Add to project
 gh project item-add 11 --owner rollercoaster-dev --url https://github.com/rollercoaster-dev/monorepo/issues/123
 
-# 2. Get the item ID
-ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == 123) | .id')
+# 2. Get the item ID (using GraphQL)
+ITEM_ID=$(gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes { id content { ... on Issue { number } } }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == 123) | .id')
 
 # 3. Set status to "Next"
 gh project item-edit \
@@ -93,8 +115,17 @@ gh project item-edit \
 ### Move Issue to In Progress
 
 ```bash
-# Get item ID
-ITEM_ID=$(gh project item-list 11 --owner rollercoaster-dev --format json | jq -r '.items[] | select(.content.number == <issue-number>) | .id')
+# Get item ID (using GraphQL)
+ITEM_ID=$(gh api graphql -f query='
+  query {
+    organization(login: "rollercoaster-dev") {
+      projectV2(number: 11) {
+        items(first: 100) {
+          nodes { id content { ... on Issue { number } } }
+        }
+      }
+    }
+  }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue-number>) | .id')
 
 # Update to In Progress
 gh project item-edit \
@@ -106,13 +137,13 @@ gh project item-edit \
 
 ## Status Mapping
 
-| Action             | Status      | Option ID  |
-| ------------------ | ----------- | ---------- |
-| New issue, blocked | Backlog     | `8b7bb58f` |
-| Ready to work      | Next        | `266160c2` |
-| Started work       | In Progress | `3e320f16` |
-| PR created         | In Review   | `51c2af7b` |
-| PR merged          | Done        | `56048761` |
+| Action               | Status      | Option ID  |
+| -------------------- | ----------- | ---------- |
+| New issue, not ready | Backlog     | `8b7bb58f` |
+| Ready to work        | Next        | `266160c2` |
+| Started work         | In Progress | `3e320f16` |
+| PR created           | Blocked     | `51c2af7b` |
+| PR merged            | Done        | `56048761` |
 
 ## Output Format
 

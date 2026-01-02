@@ -225,12 +225,12 @@ Closes #<issue-number>
    gh pr comment <pr-number> --body "@claude review"
    ```
 
-### Phase 5: Update GitHub Project Board - Set "In Review"
+### Phase 5: Update GitHub Project Board - Set "Blocked"
 
 Use the `board-manager` skill to update status:
 
 ```
-Move issue #<issue-number> to "In Review"
+Move issue #<issue-number> to "Blocked" (awaiting review)
 ```
 
 See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
@@ -253,7 +253,7 @@ See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
    - PR URL
    - PR number
    - Status
-   - Board status: "In Review"
+   - Board status: "Blocked" (awaiting review)
    - Reviews requested: CodeRabbit + Claude
    - Next steps
 
@@ -398,5 +398,5 @@ This agent is successful when:
 - Issue is linked with "Closes #X"
 - CodeRabbit review is triggered (comment posted)
 - Claude review is triggered (comment posted)
-- Board status is updated to "In Review"
+- Board status is updated to "Blocked" (awaiting review)
 - User has PR URL and next steps
