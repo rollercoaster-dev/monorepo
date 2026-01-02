@@ -342,4 +342,150 @@ describe('useBadges', () => {
       expect(composable.assertions.value).toEqual([])
     })
   })
+
+  describe('Type Guards - Invalid Inputs', () => {
+    it('should reject null for badge type guards', () => {
+      expect(composable.isBadgeOB2(null)).toBe(false)
+      expect(composable.isBadgeOB3(null)).toBe(false)
+    })
+
+    it('should reject undefined for badge type guards', () => {
+      expect(composable.isBadgeOB2(undefined)).toBe(false)
+      expect(composable.isBadgeOB3(undefined)).toBe(false)
+    })
+
+    it('should reject empty object for badge type guards', () => {
+      expect(composable.isBadgeOB2({})).toBe(false)
+      expect(composable.isBadgeOB3({})).toBe(false)
+    })
+
+    it('should reject object without type field for OB2 badge', () => {
+      const badgeWithoutType = {
+        id: iri('https://example.org/badges/1'),
+        name: 'Test Badge',
+        description: 'A test badge',
+        image: iri('https://example.org/image.png'),
+        criteria: { narrative: 'Complete the test' },
+        issuer: {
+          type: 'Profile',
+          id: iri('https://example.org/issuer'),
+          name: 'Test Issuer',
+        },
+      }
+
+      expect(composable.isBadgeOB2(badgeWithoutType)).toBe(false)
+    })
+
+    it('should reject object with missing required fields for OB3 badge', () => {
+      const badgeWithoutRequiredFields = {
+        type: 'Achievement',
+        id: iri('https://example.org/achievements/1'),
+        name: 'Test Achievement',
+        // Missing description and criteria
+      }
+
+      expect(composable.isBadgeOB3(badgeWithoutRequiredFields)).toBe(false)
+    })
+
+    it('should reject null for assertion type guards', () => {
+      expect(composable.isAssertionOB2(null)).toBe(false)
+      expect(composable.isCredentialOB3(null)).toBe(false)
+    })
+
+    it('should reject undefined for assertion type guards', () => {
+      expect(composable.isAssertionOB2(undefined)).toBe(false)
+      expect(composable.isCredentialOB3(undefined)).toBe(false)
+    })
+
+    it('should reject empty object for assertion type guards', () => {
+      expect(composable.isAssertionOB2({})).toBe(false)
+      expect(composable.isCredentialOB3({})).toBe(false)
+    })
+
+    it('should reject object without type field for OB2 assertion', () => {
+      const assertionWithoutType = {
+        id: iri('https://example.org/assertions/1'),
+        recipient: {
+          type: 'email',
+          identity: 'test@example.com',
+          hashed: false,
+        },
+        badge: iri('https://example.org/badges/1'),
+        issuedOn: dateTime('2024-01-01T00:00:00Z'),
+      }
+
+      expect(composable.isAssertionOB2(assertionWithoutType)).toBe(false)
+    })
+  })
+
+  describe('Normalization - Error Paths', () => {
+    it('should throw error for unknown badge format', () => {
+      const unknownBadge = {
+        id: 'unknown',
+        name: 'Unknown Badge',
+        // Missing required fields for both OB2 and OB3
+      }
+
+      expect(() => composable.normalizeBadgeData(unknownBadge as any)).toThrow(
+        'Unknown badge format'
+      )
+    })
+
+    it('should throw error for unknown assertion format', () => {
+      const unknownAssertion = {
+        id: 'unknown',
+        recipient: 'someone',
+        // Missing required fields for both OB2 and OB3
+      }
+
+      expect(() => composable.normalizeAssertionData(unknownAssertion as any)).toThrow(
+        'Unknown assertion format'
+      )
+    })
+  })
+
+  describe('MultiLanguageString - Edge Cases', () => {
+    it('should handle empty MultiLanguageString object', () => {
+      const ob3Badge: OB3.Achievement = {
+        '@context': 'https://www.w3.org/ns/credentials/v2',
+        id: iri('https://example.org/achievements/1'),
+        type: 'Achievement',
+        name: {},
+        description: {},
+        criteria: {
+          narrative: 'Complete the test',
+        },
+      }
+
+      const normalized = composable.normalizeBadgeData(ob3Badge)
+
+      expect(normalized.name).toBe('')
+      expect(normalized.description).toBe('')
+    })
+
+    it('should handle MultiLanguageString missing en key', () => {
+      const ob3Badge: OB3.Achievement = {
+        '@context': 'https://www.w3.org/ns/credentials/v2',
+        id: iri('https://example.org/achievements/1'),
+        type: 'Achievement',
+        name: {
+          es: 'Logro de prueba',
+          fr: 'Réalisation de test',
+        },
+        description: {
+          es: 'Un logro de prueba',
+          fr: 'Une réalisation de test',
+        },
+        criteria: {
+          narrative: 'Complete the test',
+        },
+      }
+
+      const normalized = composable.normalizeBadgeData(ob3Badge)
+
+      // Should fall back to first available language
+      expect(normalized.name).toBe('Logro de prueba')
+      expect(normalized.description).toBe('Un logro de prueba')
+    })
+  })
 })
