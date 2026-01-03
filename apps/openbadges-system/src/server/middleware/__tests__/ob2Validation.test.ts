@@ -258,6 +258,52 @@ describe('OB3 Validation Schemas', () => {
       const criteriaError = res.report.messages.find(m => m.result.includes('id or narrative'))
       expect(criteriaError).toBeDefined()
     })
+
+    it('validates that Achievement type can be string or array', () => {
+      // Test with type as string
+      const payloadWithStringType = {
+        id: 'https://example.org/achievement/1',
+        type: 'Achievement',
+        name: 'Test Achievement',
+        description: 'A test achievement',
+        criteria: { narrative: 'Complete tasks' },
+      }
+      const resString = achievementSchema.safeParse(payloadWithStringType)
+      expect(resString.success).toBe(true)
+
+      // Test with type as array
+      const payloadWithArrayType = {
+        id: 'https://example.org/achievement/1',
+        type: ['Achievement'],
+        name: 'Test Achievement',
+        description: 'A test achievement',
+        criteria: { narrative: 'Complete tasks' },
+      }
+      const resArray = achievementSchema.safeParse(payloadWithArrayType)
+      expect(resArray.success).toBe(true)
+
+      // Both should be valid per OB3 spec flexibility
+      // Note: Normalization to array happens at the API response level, not in validation
+    })
+
+    it('validates Achievement with explicit type array for spec compliance', () => {
+      // OB3 spec recommends type as array
+      const payload = {
+        id: 'https://example.org/achievement/1',
+        type: ['Achievement', 'CompetencyAssertion'],
+        name: 'Test Achievement',
+        description: 'A test achievement',
+        criteria: { narrative: 'Complete tasks' },
+      }
+      const res = validateAchievementPayload(payload)
+      expect(res.valid).toBe(true)
+      expect(res.report.openBadgesVersion).toBe('3.0')
+
+      // Verify the validated data preserves the array type
+      if (res.valid) {
+        expect(Array.isArray(res.data.type)).toBe(true)
+      }
+    })
   })
 
   describe('VerifiableCredential', () => {

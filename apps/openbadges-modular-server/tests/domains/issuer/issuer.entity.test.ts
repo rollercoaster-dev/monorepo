@@ -115,4 +115,58 @@ describe("Issuer Entity", () => {
     expect(issuer.getProperty("image")).toBe(validIssuerData.image);
     expect(issuer.getProperty("nonExistentProperty")).toBeUndefined();
   });
+
+  describe("DID field", () => {
+    it("should generate DID from URL automatically", () => {
+      const issuer = Issuer.create(validIssuerData);
+
+      expect(issuer.did).toBeDefined();
+      expect(issuer.did).toBe("did:web:example.edu");
+    });
+
+    it("should generate DID with port encoding for localhost URLs", () => {
+      const issuerWithPort = Issuer.create({
+        id: "test-id" as Shared.IRI,
+        name: "Localhost Issuer",
+        url: "http://localhost:3000" as Shared.IRI,
+      });
+
+      expect(issuerWithPort.did).toBe("did:web:localhost%3A3000");
+    });
+
+    it("should not override provided DID", () => {
+      const customDid = "did:web:custom.example.com";
+      const issuerWithDid = Issuer.create({
+        ...validIssuerData,
+        did: customDid,
+      });
+
+      expect(issuerWithDid.did).toBe(customDid);
+    });
+
+    it("should include DID in toObject for OB3", () => {
+      const issuer = Issuer.create(validIssuerData);
+      const obj = issuer.toObject();
+
+      expect(obj).toHaveProperty("did");
+      expect((obj as { did?: string }).did).toBe("did:web:example.edu");
+    });
+
+    it("should include DID in toJsonLd for OB3", () => {
+      const issuer = Issuer.create(validIssuerData);
+      const jsonLd = issuer.toJsonLd();
+
+      expect(jsonLd).toHaveProperty("did");
+      expect(jsonLd.did).toBe("did:web:example.edu");
+    });
+
+    it("should not include DID when URL is not provided", () => {
+      const issuerWithoutUrl = Issuer.create({
+        id: "some-id" as Shared.IRI,
+        name: "No URL Issuer",
+      } as Partial<typeof validIssuerData>);
+
+      expect(issuerWithoutUrl.did).toBeUndefined();
+    });
+  });
 });

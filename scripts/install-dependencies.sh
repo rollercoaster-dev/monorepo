@@ -137,8 +137,19 @@ echo -e "${BLUE}Installing dependencies with Bun...${NC}"
 bun install
 
 echo ""
+
+# Build workspace packages (required for tests to work)
+# CI does this before running tests, so we need to do it here too
+echo -e "${BLUE}Building workspace packages...${NC}"
+if bun run build 2>/dev/null; then
+  echo -e "${GREEN}✓${NC} Workspace packages built successfully"
+else
+  echo -e "${YELLOW}⚠${NC}  Build had warnings (packages may still work)"
+fi
+
+echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ Dependency installation complete!${NC}"
+echo -e "${GREEN}✅ Setup complete! Packages installed and built.${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 

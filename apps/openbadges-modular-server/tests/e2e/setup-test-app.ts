@@ -5,6 +5,41 @@
  * that doesn't automatically start the server.
  */
 
+// Load .env.test BEFORE any other imports to ensure config picks up test env vars
+// This is critical when running from monorepo root where globalSetup may not run
+import * as fs from "fs";
+import * as path from "path";
+
+const APP_ROOT = path.resolve(import.meta.dir, "../..");
+const envTestPath = path.resolve(APP_ROOT, ".env.test");
+
+if (fs.existsSync(envTestPath)) {
+  const envContent = fs.readFileSync(envTestPath, "utf8");
+  // Skip these keys - tests should use in-memory SQLite
+  const skipKeys = ["SQLITE_DB_PATH", "SQLITE_FILE", "DATABASE_URL"];
+  for (const line of envContent.split("\n")) {
+    if (line.trim().startsWith("#") || !line.trim()) continue;
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      // Skip database path vars - tests use in-memory SQLite
+      if (skipKeys.includes(key)) continue;
+      let value = match[2].trim();
+      // Remove quotes if present
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.substring(1, value.length - 1);
+      }
+      // Only set if not already defined
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
 import { Hono } from "hono";
 import { RepositoryFactory } from "@/infrastructure/repository.factory";
 import { createApiRouter } from "@/api/api.router";
