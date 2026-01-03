@@ -58,3 +58,48 @@ export function bakeSVG(
   // Serialize the modified SVG back to a string
   return serializeSVG(doc);
 }
+
+/**
+ * Extract an Open Badges credential from a baked SVG image (unbaking)
+ *
+ * @param svgContent - The baked SVG content as a string
+ * @returns The extracted credential, or null if no credential is found
+ * @throws Error if the SVG content is invalid or the credential JSON is malformed
+ */
+export function unbakeSVG(
+  svgContent: string,
+): OB2.Assertion | OB3.VerifiableCredential | null {
+  // Parse the SVG content into a DOM document
+  const doc = parseSVG(svgContent);
+
+  // Look for the openbadges:credential element
+  const credentialElements = doc.getElementsByTagNameNS(
+    OPENBADGES_NAMESPACE,
+    "credential",
+  );
+
+  // If no credential element found, return null
+  if (credentialElements.length === 0) {
+    return null;
+  }
+
+  // Get the first credential element
+  const credentialElement = credentialElements[0];
+
+  // Extract the text content (credential JSON)
+  const credentialJSON = credentialElement?.textContent;
+
+  if (!credentialJSON) {
+    return null;
+  }
+
+  // Parse the JSON and return the credential
+  try {
+    const credential = JSON.parse(credentialJSON);
+    return credential as OB2.Assertion | OB3.VerifiableCredential;
+  } catch (error) {
+    throw new Error(
+      `Invalid credential JSON in SVG: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
+  }
+}
