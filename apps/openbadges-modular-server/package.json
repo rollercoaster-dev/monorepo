@@ -79,6 +79,7 @@
     "@rollercoaster-dev/rd-logger": "workspace:*",
     "@types/bcrypt": "^5.0.2",
     "@types/uuid": "^10.0.0",
+    "@xmldom/xmldom": "^0.9.6",
     "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.9.1",
