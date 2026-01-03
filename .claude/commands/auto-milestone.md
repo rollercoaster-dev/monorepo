@@ -63,6 +63,15 @@ PHASE 5: Cleanup     → Remove worktrees, report summary
 ### 1.1 Validate Input
 
 ```bash
+# Validate prerequisites
+for cmd in git gh jq bun; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "[AUTO-MILESTONE] ERROR: Required command '$cmd' not found"
+    echo "[AUTO-MILESTONE] Please install missing dependencies"
+    exit 1
+  fi
+done
+
 MILESTONE_NAME="$ARGUMENTS"
 
 # Check milestone exists
@@ -262,8 +271,10 @@ done
 
 Wait until:
 
-- CI checks complete (pass or fail)
-- At least one review exists (CodeRabbit or Claude)
+- CI checks complete (pass or fail) — **timeout: 30 minutes**
+- At least one review exists (CodeRabbit or Claude) — **timeout: 60 minutes**
+
+If timeouts are exceeded, escalate to user for manual intervention.
 
 ### 3.3 Classify Review Findings
 

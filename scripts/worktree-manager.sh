@@ -27,6 +27,22 @@ log_success() { echo -e "${GREEN}[worktree]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[worktree]${NC} $1"; }
 log_error() { echo -e "${RED}[worktree]${NC} $1"; }
 
+check_prerequisites() {
+  local missing=()
+
+  for cmd in git gh jq bun; do
+    if ! command -v "$cmd" &> /dev/null; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log_error "Missing required commands: ${missing[*]}"
+    log_error "Please install missing dependencies and try again"
+    exit 1
+  fi
+}
+
 ensure_base_dir() {
   if [[ ! -d "$WORKTREE_BASE" ]]; then
     mkdir -p "$WORKTREE_BASE"
@@ -48,7 +64,8 @@ update_state() {
 
   ensure_base_dir
 
-  local tmp_file=$(mktemp)
+  local tmp_file
+  tmp_file=$(mktemp)
   jq --arg issue "$issue_number" \
      --arg status "$status" \
      --arg branch "$branch" \
@@ -60,7 +77,8 @@ update_state() {
 
 remove_from_state() {
   local issue_number=$1
-  local tmp_file=$(mktemp)
+  local tmp_file
+  tmp_file=$(mktemp)
   jq --arg issue "$issue_number" 'del(.worktrees[$issue])' \
      "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
 }
@@ -70,6 +88,8 @@ remove_from_state() {
 #------------------------------------------------------------------------------
 
 cmd_create() {
+  check_prerequisites
+
   local issue_number=$1
   local branch_name=${2:-""}
 
@@ -80,7 +100,8 @@ cmd_create() {
 
   ensure_base_dir
 
-  local worktree_path=$(get_worktree_path "$issue_number")
+  local worktree_path
+  worktree_path=$(get_worktree_path "$issue_number")
 
   if [[ -d "$worktree_path" ]]; then
     log_warn "Worktree for issue #$issue_number already exists at $worktree_path"
@@ -94,9 +115,11 @@ cmd_create() {
   # Generate branch name if not provided
   if [[ -z "$branch_name" ]]; then
     # Get issue title for branch name
-    local issue_title=$(gh issue view "$issue_number" --json title -q '.title' 2>/dev/null || echo "issue-$issue_number")
+    local issue_title
+    issue_title=$(gh issue view "$issue_number" --json title -q '.title' 2>/dev/null || echo "issue-$issue_number")
     # Sanitize title for branch name
-    local sanitized=$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//' | cut -c1-40)
+    local sanitized
+    sanitized=$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//' | cut -c1-40)
     branch_name="feat/issue-$issue_number-$sanitized"
   fi
 
@@ -123,15 +146,17 @@ cmd_remove() {
     exit 1
   fi
 
-  local worktree_path=$(get_worktree_path "$issue_number")
+  local worktree_path
+  worktree_path=$(get_worktree_path "$issue_number")
 
   if [[ ! -d "$worktree_path" ]]; then
     log_warn "No worktree found for issue #$issue_number"
     exit 0
   fi
 
-  # Get branch name before removing
-  local branch_name=$(git -C "$REPO_ROOT" worktree list --porcelain | grep -A2 "$worktree_path" | grep "branch" | sed 's/branch refs\/heads\///')
+  # Get branch name before removing (query worktree directly for reliability)
+  local branch_name
+  branch_name=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
 
   log_info "Removing worktree for issue #$issue_number..."
   git -C "$REPO_ROOT" worktree remove "$worktree_path" --force
@@ -210,7 +235,8 @@ cmd_update_status() {
 
   ensure_base_dir
 
-  local current_branch=$(jq -r --arg issue "$issue_number" '.worktrees[$issue].branch // ""' "$STATE_FILE")
+  local current_branch
+  current_branch=$(jq -r --arg issue "$issue_number" '.worktrees[$issue].branch // ""' "$STATE_FILE")
   update_state "$issue_number" "$new_status" "$current_branch" "$pr_number"
 
   log_success "Updated issue #$issue_number status to: $new_status"
@@ -278,7 +304,8 @@ cmd_path() {
     exit 1
   fi
 
-  local worktree_path=$(get_worktree_path "$issue_number")
+  local worktree_path
+  worktree_path=$(get_worktree_path "$issue_number")
 
   if [[ -d "$worktree_path" ]]; then
     echo "$worktree_path"
@@ -296,7 +323,8 @@ cmd_rebase() {
     exit 1
   fi
 
-  local worktree_path=$(get_worktree_path "$issue_number")
+  local worktree_path
+  worktree_path=$(get_worktree_path "$issue_number")
 
   if [[ ! -d "$worktree_path" ]]; then
     log_error "No worktree found for issue #$issue_number"

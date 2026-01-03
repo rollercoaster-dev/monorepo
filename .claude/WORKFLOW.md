@@ -119,7 +119,7 @@ tmux attach -t milestone
 
 ### Flow
 
-```
+```text
 Phase 1: Plan
 ├── milestone-planner agent analyzes all issues
 ├── Builds dependency graph
