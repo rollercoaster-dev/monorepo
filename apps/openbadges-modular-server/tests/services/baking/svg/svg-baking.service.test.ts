@@ -9,13 +9,13 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { OB2, OB3 } from "openbadges-types";
-import { bakeSVG, unbakeSVG } from "../../../../src/services/baking/svg/svg-baking.service.js";
+import {
+  bakeSVG,
+  unbakeSVG,
+} from "../../../../src/services/baking/svg/svg-baking.service.js";
 
 // Load the test SVG fixture
-const TEST_SVG_PATH = join(
-  import.meta.dir,
-  "../../../fixtures/test-badge.svg",
-);
+const TEST_SVG_PATH = join(import.meta.dir, "../../../fixtures/test-badge.svg");
 const TEST_SVG = readFileSync(TEST_SVG_PATH, "utf-8");
 
 // Mock OB2 Assertion
