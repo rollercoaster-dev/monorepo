@@ -16,7 +16,7 @@
     "check:all": "bun run lint && bun run typecheck && bun run test",
     "test": "DB_TYPE=sqlite bun test",
     "test:unit": "DB_TYPE=sqlite bun test tests/unit tests/infrastructure tests/core tests/domains tests/api tests/auth",
-    "test:jwt-service": "DB_TYPE=sqlite bun test tests/unit/auth/services/jwt.service.test.ts",
+    "test:jwt-service": "DB_TYPE=sqlite bun test tests/isolated/jwt.service.test.ts",
     "test:integration": "DB_TYPE=sqlite bun test tests/integration",
     "test:coverage": "DB_TYPE=sqlite bun test tests/unit tests/infrastructure tests/core tests/domains tests/api tests/auth tests/integration --coverage",
     "test:core": "bun test --pattern \"!tests/infrastructure/database/**\"",
