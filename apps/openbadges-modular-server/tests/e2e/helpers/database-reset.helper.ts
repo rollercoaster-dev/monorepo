@@ -41,8 +41,17 @@ async function resetSqliteDatabase(): Promise<void> {
 
     // Get direct access to the SQLite database
     const { Database } = require("bun:sqlite");
-    const sqliteFile =
+    const path = require("path");
+    let sqliteFile =
       process.env.SQLITE_DB_PATH || process.env.SQLITE_FILE || ":memory:";
+
+    // Convert relative paths to absolute using app root
+    // This handles running from monorepo root where cwd differs from app dir
+    if (sqliteFile !== ":memory:" && !path.isAbsolute(sqliteFile)) {
+      const appRoot = path.resolve(import.meta.dir, "../../..");
+      sqliteFile = path.resolve(appRoot, sqliteFile);
+    }
+
     logger.debug(`Using SQLite database at: ${sqliteFile}`);
     const sqliteDb = new Database(sqliteFile);
 
