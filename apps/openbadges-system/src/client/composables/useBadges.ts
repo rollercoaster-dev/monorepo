@@ -689,7 +689,7 @@ export const useBadges = () => {
           }
         } else if (isCredentialOB3(assertion)) {
           // OB3: Revocation is handled via credentialStatus (BitstringStatusListEntry)
-          // Server manages the actual revocation status via StatusList2021
+          // Server manages the actual revocation status via W3C Bitstring Status List
           // We preserve the existing credentialStatus - server is source of truth
           assertions.value[index] = {
             ...assertion,
