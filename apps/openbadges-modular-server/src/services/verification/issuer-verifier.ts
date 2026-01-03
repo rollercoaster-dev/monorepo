@@ -284,28 +284,34 @@ export async function fetchIssuerJWKS(
 }
 
 /**
- * Verify issuer and return verification checks
+ * Verify issuer DID and fetch JWKS
  *
- * This performs DID resolution and returns structured verification results.
+ * Complete issuer verification workflow that:
+ * 1. Resolves the issuer DID to a DID document
+ * 2. Fetches the issuer's JWKS for key verification
  *
  * @param issuerDID - Issuer DID to verify
  * @returns Array of verification checks
  */
-export async function verifyIssuerDID(
+export async function verifyIssuer(
   issuerDID: Shared.IRI,
-): Promise<VerificationCheck> {
+): Promise<VerificationCheck[]> {
+  const checks: VerificationCheck[] = [];
+
+  // Step 1: Resolve DID
   const didDocument = await resolveIssuerDID(issuerDID);
 
   if (!didDocument) {
-    return {
+    checks.push({
       check: "issuer-did-resolution",
       description: "Resolve issuer DID to DID document",
       passed: false,
       error: `Failed to resolve DID: ${issuerDID}`,
-    };
+    });
+    return checks;
   }
 
-  return {
+  checks.push({
     check: "issuer-did-resolution",
     description: "Resolve issuer DID to DID document",
     passed: true,
@@ -313,5 +319,11 @@ export async function verifyIssuerDID(
       didMethod: issuerDID.split(":")[1],
       verificationMethodCount: didDocument.verificationMethod?.length ?? 0,
     },
-  };
+  });
+
+  // Step 2: Fetch JWKS
+  const { check: jwksCheck } = await fetchIssuerJWKS(didDocument);
+  checks.push(jwksCheck);
+
+  return checks;
 }
