@@ -56,10 +56,16 @@ logger.info(`Global E2E setup: Using API URL: ${API_URL}`);
 export const API_KEY =
   process.env.AUTH_API_KEY_TEST?.split(":")[0] || "verysecretkeye2e";
 
+// Get the app root directory (3 levels up from this file)
+// This file is at: tests/e2e/setup/globalSetup.ts
+// App root is at: apps/openbadges-modular-server/
+const APP_ROOT = path.resolve(import.meta.dir, "../../..");
+
 export default async (): Promise<void> => {
   try {
     // Load environment variables from .env.test
-    const envTestPath = path.resolve(process.cwd(), ".env.test");
+    // Use APP_ROOT instead of process.cwd() which may be the monorepo root
+    const envTestPath = path.resolve(APP_ROOT, ".env.test");
     loadEnvFile(envTestPath);
 
     // Set environment variables for the test server
