@@ -1,4 +1,4 @@
-import { DOMParser, XMLSerializer, type Document } from '@xmldom/xmldom';
+import { DOMParser, XMLSerializer, type Document } from "@xmldom/xmldom";
 
 /**
  * Parse an SVG string into a DOM Document.
@@ -13,27 +13,27 @@ export function parseSVG(svgContent: string): Document {
   const parser = new DOMParser({
     onError: () => {
       hasError = true;
-    }
+    },
   });
 
   try {
-    const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+    const doc = parser.parseFromString(svgContent, "image/svg+xml");
 
     // Check if errors were collected by the error handler
     if (hasError) {
-      throw new Error('Invalid SVG content: parsing failed');
+      throw new Error("Invalid SVG content: parsing failed");
     }
 
     // Also check for parsererror elements (DOM-based errors)
-    const parserError = doc.getElementsByTagName('parsererror');
+    const parserError = doc.getElementsByTagName("parsererror");
     if (parserError.length > 0) {
-      throw new Error('Invalid SVG content: parsing failed');
+      throw new Error("Invalid SVG content: parsing failed");
     }
 
     return doc;
   } catch (_error) {
     // Re-throw our standardized error message
-    throw new Error('Invalid SVG content: parsing failed');
+    throw new Error("Invalid SVG content: parsing failed");
   }
 }
 
@@ -58,13 +58,13 @@ export function serializeSVG(doc: Document): string {
 export function addNamespace(doc: Document, prefix: string, uri: string): void {
   const svgElement = doc.documentElement;
 
-  if (!svgElement || svgElement.tagName !== 'svg') {
-    throw new Error('Document does not have a valid SVG root element');
+  if (!svgElement || svgElement.tagName !== "svg") {
+    throw new Error("Document does not have a valid SVG root element");
   }
 
   svgElement.setAttributeNS(
-    'http://www.w3.org/2000/xmlns/',
+    "http://www.w3.org/2000/xmlns/",
     `xmlns:${prefix}`,
-    uri
+    uri,
   );
 }
