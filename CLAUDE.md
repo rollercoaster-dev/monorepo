@@ -270,10 +270,13 @@ Before marking a package migration complete, run:
 Run tests:
 
 ```bash
-bun test                     # All packages
-bun --filter rd-logger test  # Specific package
-bun test --coverage          # With coverage report
+bun run test:unit            # All unit tests (recommended)
+bun run test:integration     # Integration tests
+bun run test:coverage        # With coverage report
 ```
+
+> **Important**: Use `bun run test:unit` (not `bun test --filter X`) from monorepo root.
+> See [E2E Testing Guide](apps/openbadges-modular-server/docs/e2e-testing-guide.md) for troubleshooting.
 
 ## 📚 Key Documentation
 
