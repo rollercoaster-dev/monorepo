@@ -267,13 +267,51 @@ Before marking a package migration complete, run:
 - **Coverage**: Aim for high test coverage
 - **Location**: Tests are colocated with source files (`*.test.ts`)
 
-Run tests:
+### Running Tests
+
+**Recommended (uses turbo + app bunfig.toml):**
 
 ```bash
-bun test                     # All packages
-bun --filter rd-logger test  # Specific package
-bun test --coverage          # With coverage report
+bun run test:unit            # All unit tests across packages
+bun run test:integration     # Integration tests
+bun run test:coverage        # Tests with coverage report
 ```
+
+**Per-package tests:**
+
+```bash
+bun --filter openbadges-modular-server test:unit  # Specific app
+bun --filter rd-logger test                        # Specific package
+```
+
+### Test Environment Setup
+
+Tests require workspace packages to be built first. The SessionStart hook handles this automatically, but if running manually:
+
+```bash
+bun run build    # Build all workspace packages first
+bun run test:unit
+```
+
+### Important Notes for Claude Code Web
+
+1. **Always use turbo-based commands** (`bun run test:unit`) instead of raw `bun test --filter X` from monorepo root. The turbo commands ensure:
+   - Correct working directory for each app
+   - App's `bunfig.toml` with `globalSetup` is used
+   - Environment variables from `.env.test` are loaded
+
+2. **Environment variables**: Test auth keys (`AUTH_API_KEY_TEST`, `AUTH_API_KEY_E2E`) are loaded from `apps/openbadges-modular-server/.env.test`
+
+3. **Database**: Tests use in-memory SQLite (`:memory:`) by default. Database path variables from `.env.test` are skipped to ensure isolation.
+
+### Test Categories
+
+| Command            | What it runs                                         |
+| ------------------ | ---------------------------------------------------- |
+| `test:unit`        | Unit, infrastructure, core, domains, API, auth tests |
+| `test:integration` | Integration tests                                    |
+| `test:e2e:sqlite`  | E2E tests with SQLite                                |
+| `test:e2e:pg`      | E2E tests with PostgreSQL (requires Docker)          |
 
 ## 📚 Key Documentation
 
