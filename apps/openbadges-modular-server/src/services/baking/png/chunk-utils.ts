@@ -65,3 +65,39 @@ export function findiTXtChunk(chunks: Chunk[], keyword: string): Chunk | null {
 
 	return null;
 }
+
+/**
+ * Create an iTXt chunk with the specified keyword and text
+ *
+ * iTXt chunk format (uncompressed):
+ * - Keyword (null-terminated)
+ * - Compression flag (1 byte, 0 = uncompressed)
+ * - Compression method (1 byte, 0 = deflate)
+ * - Language tag (null-terminated, empty for no language)
+ * - Translated keyword (null-terminated, empty for none)
+ * - Text (UTF-8)
+ *
+ * @param keyword - The iTXt keyword (e.g., "openbadges")
+ * @param text - The text content to embed
+ * @returns PNG iTXt chunk
+ */
+export function createiTXtChunk(keyword: string, text: string): Chunk {
+	const keywordBuffer = Buffer.from(keyword, "utf-8");
+	const textBuffer = Buffer.from(text, "utf-8");
+
+	// iTXt format: keyword + null + compression_flag + compression_method + null + null + text
+	const data = Buffer.concat([
+		keywordBuffer,
+		Buffer.from([0]), // Null terminator for keyword
+		Buffer.from([0]), // Compression flag (0 = uncompressed)
+		Buffer.from([0]), // Compression method (0 = deflate, unused when uncompressed)
+		Buffer.from([0]), // Language tag (empty, null-terminated)
+		Buffer.from([0]), // Translated keyword (empty, null-terminated)
+		textBuffer,
+	]);
+
+	return {
+		name: "iTXt",
+		data: new Uint8Array(data),
+	};
+}
