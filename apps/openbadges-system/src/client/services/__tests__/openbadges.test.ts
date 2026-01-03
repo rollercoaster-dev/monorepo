@@ -3,6 +3,7 @@ import { OpenBadgesService } from '../openbadges'
 import type { User } from '@/composables/useAuth'
 
 // Mock localStorage
+// eslint-disable-next-line no-undef
 Object.defineProperty(global, 'localStorage', {
   value: {
     getItem: vi.fn(() => 'mock-auth-token'),
@@ -33,6 +34,7 @@ describe('OpenBadgesService', () => {
 
     mockFetch = vi.fn()
     // Cast to unknown first to avoid Bun's fetch.preconnect type requirement
+    // eslint-disable-next-line no-undef
     global.fetch = mockFetch as unknown as typeof fetch
   })
 
@@ -352,7 +354,7 @@ describe('OpenBadgesService', () => {
       const badgeClasses = await service.getBadgeClasses(mockUser)
 
       expect(badgeClasses).toEqual(mockBadgeClasses)
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v2/badge-classes', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v3/badge-classes', {
         headers: {
           Authorization: `Bearer ${mockToken}`,
           'Content-Type': 'application/json',
@@ -375,10 +377,10 @@ describe('OpenBadgesService', () => {
 
       expect(badgeClasses).toEqual(mockBadgeClasses)
       // Note: Unauthenticated reads go through the platform proxy endpoints
-      // (/api/badges/*) rather than direct badge server routes (/api/v2/*).
+      // (/api/badges/v3/*) rather than direct badge server routes.
       // This keeps CORS and error handling centralized on the platform API.
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/badges/badge-classes',
+        '/api/badges/v3/badge-classes',
         expect.objectContaining({
           headers: { 'Content-Type': 'application/json' },
         })
@@ -424,7 +426,7 @@ describe('OpenBadgesService', () => {
         },
         body: JSON.stringify({ userId: 'test-user' }),
       })
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v2/badge-classes', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v3/badge-classes', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${mockToken}`,
@@ -488,7 +490,7 @@ describe('OpenBadgesService', () => {
         },
         body: JSON.stringify({ userId: 'test-user' }),
       })
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v2/assertions', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/api/v3/credentials', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${mockToken}`,
