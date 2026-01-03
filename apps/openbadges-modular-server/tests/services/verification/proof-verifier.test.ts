@@ -54,13 +54,9 @@ describe("JWT Proof Verification", () => {
       return testKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(
-      testJWT,
-      "https://example.com/keys/1",
-      {
-        verificationMethodResolver: mockResolver,
-      },
-    );
+    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
+      verificationMethodResolver: mockResolver,
+    });
 
     expect(result.passed).toBe(true);
     expect(result.check).toBe("proof.jwt.signature");
@@ -75,13 +71,9 @@ describe("JWT Proof Verification", () => {
       return wrongKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(
-      testJWT,
-      "https://example.com/keys/1",
-      {
-        verificationMethodResolver: mockResolver,
-      },
-    );
+    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
+      verificationMethodResolver: mockResolver,
+    });
 
     expect(result.passed).toBe(false);
     expect(result.error).toContain("JWT verification failed");
@@ -92,13 +84,9 @@ describe("JWT Proof Verification", () => {
       return null;
     };
 
-    const result = await verifyJWTProof(
-      testJWT,
-      "https://example.com/keys/1",
-      {
-        verificationMethodResolver: mockResolver,
-      },
-    );
+    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
+      verificationMethodResolver: mockResolver,
+    });
 
     expect(result.passed).toBe(false);
     expect(result.check).toBe("proof.jwt.verification-method");
@@ -109,7 +97,10 @@ describe("JWT Proof Verification", () => {
     // Create a malformed JWT (this is hard to do with jose, so we'll test with a mock)
     const malformedJWT = "eyJhbGciOiJub25lIn0.eyJ2YyI6e319.";
 
-    const result = await verifyJWTProof(malformedJWT, "https://example.com/keys/1");
+    const result = await verifyJWTProof(
+      malformedJWT,
+      "https://example.com/keys/1",
+    );
 
     expect(result.passed).toBe(false);
   });
@@ -183,9 +174,13 @@ describe("JWT Proof Verification", () => {
       return testKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(invalidJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-    });
+    const result = await verifyJWTProof(
+      invalidJWT,
+      "https://example.com/keys/1",
+      {
+        verificationMethodResolver: mockResolver,
+      },
+    );
 
     expect(result.passed).toBe(false);
     expect(result.check).toBe("proof.jwt.type");
@@ -278,7 +273,8 @@ describe("Linked Data Proof Verification", () => {
       proofPurpose: "assertionMethod",
       verificationMethod: "did:example:issuer#key-1",
       created: "2024-01-01T00:00:00Z",
-      proofValue: "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGesjuTSwRdoWhAfGFCF5bppETSTojQCrfFPP2oumHKtz",
+      proofValue:
+        "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGesjuTSwRdoWhAfGFCF5bppETSTojQCrfFPP2oumHKtz",
     };
 
     const result = await verifyLinkedDataProof(credential, proof);
