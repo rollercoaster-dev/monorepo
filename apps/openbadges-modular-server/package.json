@@ -92,6 +92,8 @@
     "nock": "^14.0.4",
     "openapi3-ts": "^4.4.0",
     "openbadges-types": "workspace:*",
+    "png-chunks-encode": "^1.0.0",
+    "png-chunks-extract": "^1.0.0",
     "postgres": "^3.4.5",
     "swagger-ui-dist": "^5.26.2",
     "uuid": "^11.1.0",
