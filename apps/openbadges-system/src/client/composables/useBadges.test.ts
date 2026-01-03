@@ -1,6 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useBadges } from './useBadges'
 import type { OB2, OB3, Shared } from 'openbadges-types'
+import type { User } from '@/composables/useAuth'
+import type { CreateBadgeData } from './useBadges'
 
 // Helper to create IRI type (branded type)
 const iri = (value: string) => value as Shared.IRI
@@ -700,6 +702,277 @@ describe('useBadges', () => {
       // Should fall back to first available language
       expect(normalized.name).toBe('Logro de prueba')
       expect(normalized.description).toBe('Un logro de prueba')
+    })
+  })
+
+  describe('createBadge - OB2 vs OB3 Payloads', () => {
+    const mockUser: User = {
+      id: 'user-123',
+      username: 'testuser',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      isAdmin: false,
+      createdAt: '2024-01-01T00:00:00Z',
+      credentials: [],
+    }
+
+    const mockBadgeData: CreateBadgeData = {
+      name: 'Test Badge',
+      description: 'A test badge for validation',
+      image: 'https://example.org/badge.png',
+      criteria: {
+        narrative: 'Complete the test requirements',
+      },
+      issuer: {
+        type: 'Profile',
+        id: iri('https://example.org/issuer'),
+        name: 'Test Issuer',
+        url: iri('https://example.org'),
+      },
+      tags: ['test', 'demo'],
+      alignment: [
+        {
+          targetName: 'Test Standard',
+          targetUrl: iri('https://example.org/standard'),
+        },
+      ],
+    }
+
+    beforeEach(() => {
+      // Mock fetch globally
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(globalThis as any).fetch = vi.fn()
+      // Mock window.location for OB3 ID generation
+      Object.defineProperty(globalThis, 'window', {
+        value: {
+          location: {
+            origin: 'https://example.org',
+          },
+        },
+        writable: true,
+        configurable: true,
+      })
+      // Mock crypto.randomUUID for deterministic testing
+      Object.defineProperty(globalThis, 'crypto', {
+        value: {
+          randomUUID: () => '550e8400-e29b-41d4-a716-446655440000',
+        },
+        writable: true,
+        configurable: true,
+      })
+      composable = useBadges()
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('should send OB2 BadgeClass payload when specVersion is 2.0', async () => {
+      composable.specVersion.value = '2.0'
+
+      // Mock platform token endpoint
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve({ token: 'mock-platform-token' }),
+        })
+      )
+
+      // Mock badge creation endpoint
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
+        const payload = JSON.parse(options.body)
+
+        // Verify OB2 format
+        expect(payload.type).toBe('BadgeClass')
+        expect(payload.issuer).toBeDefined()
+        expect(payload.alignment).toBeDefined()
+        expect(payload.tags).toEqual(['test', 'demo'])
+        expect(payload.creator).toBeUndefined() // OB2 doesn't use creator
+        expect(payload.alignments).toBeUndefined() // OB2 uses alignment (singular)
+
+        // Verify endpoint
+        expect(url).toContain('/api/badges/v2/badge-classes')
+
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () =>
+            Promise.resolve({
+              ...payload,
+              id: iri('https://example.org/badges/123'),
+            }),
+        })
+      })
+
+      const result = await composable.createBadge(mockUser, mockBadgeData)
+      expect(result).toBeTruthy()
+    })
+
+    it('should send OB3 Achievement payload when specVersion is 3.0', async () => {
+      composable.specVersion.value = '3.0'
+
+      // Mock platform token endpoint
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve({ token: 'mock-platform-token' }),
+        })
+      )
+
+      // Mock badge creation endpoint
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
+        const payload = JSON.parse(options.body)
+
+        // Verify OB3 format
+        expect(payload['@context']).toBe('https://purl.imsglobal.org/spec/ob/v3p0/context.json') // OB3 requires @context
+        expect(payload.type).toBe('Achievement')
+        expect(payload.id).toBeDefined() // OB3 requires id
+        expect(payload.creator).toBeDefined() // OB3 uses creator
+        expect(payload.alignments).toBeDefined() // OB3 uses alignments (plural)
+        expect(payload.issuer).toBeUndefined() // OB3 doesn't use issuer
+        expect(payload.tags).toBeUndefined() // OB3 doesn't use tags
+        expect(payload.alignment).toBeUndefined() // OB3 uses alignments (plural)
+
+        // Verify endpoint
+        expect(url).toContain('/api/badges/v3/achievements')
+
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () =>
+            Promise.resolve({
+              ...payload,
+              '@context': 'https://www.w3.org/ns/credentials/v2',
+            }),
+        })
+      })
+
+      const result = await composable.createBadge(mockUser, mockBadgeData)
+      expect(result).toBeTruthy()
+    })
+
+    it('should include required OB3 fields in Achievement payload', async () => {
+      composable.specVersion.value = '3.0'
+
+      // Mock platform token endpoint
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve({ token: 'mock-platform-token' }),
+        })
+      )
+
+      // Mock badge creation endpoint
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
+        const payload = JSON.parse(options.body)
+
+        // Verify required OB3 fields
+        expect(payload['@context']).toBe('https://purl.imsglobal.org/spec/ob/v3p0/context.json')
+        expect(payload.id).toMatch(/^https?:\/\//) // Must be valid IRI
+        expect(payload.type).toBe('Achievement')
+        expect(payload.name).toBe('Test Badge')
+        expect(payload.description).toBe('A test badge for validation')
+        expect(payload.criteria).toEqual({
+          narrative: 'Complete the test requirements',
+        })
+
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve(payload),
+        })
+      })
+
+      await composable.createBadge(mockUser, mockBadgeData)
+    })
+
+    it('should map issuer to creator for OB3', async () => {
+      composable.specVersion.value = '3.0'
+
+      // Mock platform token endpoint
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve({ token: 'mock-platform-token' }),
+        })
+      )
+
+      // Mock badge creation endpoint
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
+        const payload = JSON.parse(options.body)
+
+        // Verify issuer was mapped to creator
+        expect(payload.creator).toEqual(mockBadgeData.issuer)
+        expect(payload.issuer).toBeUndefined()
+
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve(payload),
+        })
+      })
+
+      await composable.createBadge(mockUser, mockBadgeData)
+    })
+
+    it('should map alignment to alignments for OB3', async () => {
+      composable.specVersion.value = '3.0'
+
+      // Mock platform token endpoint
+      const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>
+      mockFetch.mockImplementationOnce(() =>
+        Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve({ token: 'mock-platform-token' }),
+        })
+      )
+
+      // Mock badge creation endpoint
+      mockFetch.mockImplementationOnce((url: string, options: { body: string }) => {
+        const payload = JSON.parse(options.body)
+
+        // Verify alignment was mapped to alignments (plural)
+        expect(payload.alignments).toEqual(mockBadgeData.alignment)
+        expect(payload.alignment).toBeUndefined()
+
+        return Promise.resolve({
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+          },
+          json: () => Promise.resolve(payload),
+        })
+      })
+
+      await composable.createBadge(mockUser, mockBadgeData)
     })
   })
 })
