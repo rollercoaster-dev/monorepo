@@ -186,6 +186,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       ...(issuer.image && { image: issuer.image }),
       ...(issuer.publicKey && { publicKey: issuer.publicKey }),
       ...(issuer.telephone && { telephone: issuer.telephone }), // Add telephone for OBv3
+      ...(issuer.did && { did: issuer.did }), // Add DID for OBv3
     };
   }
 

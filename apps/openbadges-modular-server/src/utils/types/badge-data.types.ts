@@ -21,6 +21,8 @@ export interface IssuerData extends Record<string, unknown> {
   telephone?: string;
   publicKey?: unknown;
   type?: string;
+  /** DID identifier for the issuer (e.g., "did:web:example.com") */
+  did?: string;
 }
 
 /**
