@@ -21,6 +21,7 @@ export interface BadgesPaginationData {
 }
 
 export interface CreateBadgeData {
+  id?: string
   name: string
   description: string
   image: string
@@ -139,8 +140,66 @@ const normalizeBadgeData = (badge: OB2.BadgeClass | OB3.Achievement) => {
 }
 
 /**
+ * Extract OB2-compatible IdentityObject from OB3 CredentialSubject
+ *
+ * Maps OB3 credentialSubject fields to OB2 IdentityObject structure for backward compatibility.
+ * Priority order:
+ * 1. credentialSubject.email (most common, direct OB2 compatibility)
+ * 2. credentialSubject.identifier[0] (OB3 native identity objects, mapped to OB2 format)
+ * 3. credentialSubject.id (DID or other identifier)
+ * 4. Anonymous fallback (edge case for incomplete data)
+ *
+ * @param subject - OB3 CredentialSubject containing identity information
+ * @returns OB2.IdentityObject with type and identity fields
+ */
+const extractIdentityFromCredentialSubject = (
+  subject: OB3.CredentialSubject
+): OB2.IdentityObject => {
+  // Priority 1: Use email if available (most common case)
+  if (subject.email) {
+    return {
+      type: 'email',
+      identity: subject.email,
+      hashed: false,
+    }
+  }
+
+  // Priority 2: Use first identifier from array if available
+  // Note: OB3.IdentityObject uses identityHash/identityType, map to OB2 format (identity/type)
+  const ob3Identity = subject.identifier?.[0]
+  if (ob3Identity) {
+    return {
+      type: ob3Identity.identityType || 'unknown',
+      identity: ob3Identity.identityHash,
+      hashed: ob3Identity.hashed ?? false,
+      salt: ob3Identity.salt,
+    }
+  }
+
+  // Priority 3: Fallback to credentialSubject.id (DID or IRI)
+  if (subject.id) {
+    return {
+      type: 'id',
+      identity: subject.id,
+      hashed: false,
+    }
+  }
+
+  // Priority 4: Anonymous fallback for incomplete data
+  return {
+    type: 'unknown',
+    identity: 'anonymous',
+    hashed: false,
+  }
+}
+
+/**
  * Normalize assertion/credential data for UI consumption
  * Handles differences between OB2.Assertion and OB3.VerifiableCredential
+ *
+ * For OB3 credentials, the credentialSubject is mapped to an OB2-compatible
+ * IdentityObject structure for backward compatibility with existing UI components
+ * that expect recipient.identity field.
  */
 const normalizeAssertionData = (data: BadgeAssertion | OB3.VerifiableCredential) => {
   if (isAssertionOB2(data)) {
@@ -157,7 +216,7 @@ const normalizeAssertionData = (data: BadgeAssertion | OB3.VerifiableCredential)
   } else if (isCredentialOB3(data)) {
     return {
       id: data.id,
-      recipient: data.credentialSubject,
+      recipient: extractIdentityFromCredentialSubject(data.credentialSubject),
       issuedOn: data.validFrom,
       expires: data.validUntil,
       validFrom: data.validFrom,
@@ -333,13 +392,38 @@ export const useBadges = () => {
     try {
       const token = await getPlatformToken(user)
 
-      // Create badge class
-      const response = await apiCall('/badge-classes', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      // Determine endpoint and payload based on spec version
+      const isOB3 = specVersion.value === '3.0'
+      const endpoint = isOB3 ? '/achievements' : '/badge-classes'
+
+      // Build version-specific payload
+      let payload: Record<string, unknown>
+
+      if (isOB3) {
+        // OB3 Achievement format
+        // Generate ID if not provided (backend will use this or generate its own)
+        const achievementId =
+          badgeData.id || `${window.location.origin}/achievements/${crypto.randomUUID()}`
+
+        payload = {
+          '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          id: achievementId,
+          type: 'Achievement',
+          name: badgeData.name,
+          description: badgeData.description,
+          criteria: badgeData.criteria,
+          // OB3 uses 'creator' instead of 'issuer'
+          ...(badgeData.issuer && { creator: badgeData.issuer }),
+          ...(badgeData.image && { image: badgeData.image }),
+          // OB3 uses 'alignments' (plural) instead of 'alignment'
+          ...(badgeData.alignment &&
+            badgeData.alignment.length > 0 && {
+              alignments: badgeData.alignment,
+            }),
+        }
+      } else {
+        // OB2 BadgeClass format (original)
+        payload = {
           type: 'BadgeClass',
           name: badgeData.name,
           description: badgeData.description,
@@ -349,7 +433,16 @@ export const useBadges = () => {
           tags: badgeData.tags,
           alignment: badgeData.alignment,
           expires: badgeData.expires,
-        }),
+        }
+      }
+
+      // Create badge with version-specific endpoint
+      const response = await apiCall(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       })
 
       const newBadge = response as OB2.BadgeClass | OB3.Achievement
