@@ -21,6 +21,7 @@ export interface BadgesPaginationData {
 }
 
 export interface CreateBadgeData {
+  id?: string
   name: string
   description: string
   image: string
@@ -391,13 +392,38 @@ export const useBadges = () => {
     try {
       const token = await getPlatformToken(user)
 
-      // Create badge class
-      const response = await apiCall('/badge-classes', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      // Determine endpoint and payload based on spec version
+      const isOB3 = specVersion.value === '3.0'
+      const endpoint = isOB3 ? '/achievements' : '/badge-classes'
+
+      // Build version-specific payload
+      let payload: Record<string, unknown>
+
+      if (isOB3) {
+        // OB3 Achievement format
+        // Generate ID if not provided (backend will use this or generate its own)
+        const achievementId =
+          badgeData.id || `${window.location.origin}/achievements/${crypto.randomUUID()}`
+
+        payload = {
+          '@context': 'https://purl.imsglobal.org/spec/ob/v3p0/context.json',
+          id: achievementId,
+          type: 'Achievement',
+          name: badgeData.name,
+          description: badgeData.description,
+          criteria: badgeData.criteria,
+          // OB3 uses 'creator' instead of 'issuer'
+          ...(badgeData.issuer && { creator: badgeData.issuer }),
+          ...(badgeData.image && { image: badgeData.image }),
+          // OB3 uses 'alignments' (plural) instead of 'alignment'
+          ...(badgeData.alignment &&
+            badgeData.alignment.length > 0 && {
+              alignments: badgeData.alignment,
+            }),
+        }
+      } else {
+        // OB2 BadgeClass format (original)
+        payload = {
           type: 'BadgeClass',
           name: badgeData.name,
           description: badgeData.description,
@@ -407,7 +433,16 @@ export const useBadges = () => {
           tags: badgeData.tags,
           alignment: badgeData.alignment,
           expires: badgeData.expires,
-        }),
+        }
+      }
+
+      // Create badge with version-specific endpoint
+      const response = await apiCall(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       })
 
       const newBadge = response as OB2.BadgeClass | OB3.Achievement
