@@ -51,6 +51,17 @@ function verifyExpiration(
 
   try {
     const expiration = new Date(expirationDate);
+
+    // Check if date is valid
+    if (isNaN(expiration.getTime())) {
+      return {
+        check: "temporal.expiration",
+        description: "Credential expiration validation",
+        passed: false,
+        error: `Invalid expiration date format: ${expirationDate}`,
+      };
+    }
+
     const now = new Date();
 
     // Apply clock tolerance if specified (in seconds)
@@ -133,6 +144,17 @@ function verifyIssuanceDate(
 
   try {
     const issued = new Date(issuanceDate);
+
+    // Check if date is valid
+    if (isNaN(issued.getTime())) {
+      return {
+        check: "temporal.issuance",
+        description: "Credential issuance date validation",
+        passed: false,
+        error: `Invalid issuance date format: ${issuanceDate}`,
+      };
+    }
+
     const now = new Date();
 
     // Apply clock tolerance if specified (in seconds)
