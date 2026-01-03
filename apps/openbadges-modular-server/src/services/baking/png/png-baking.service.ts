@@ -14,8 +14,28 @@ import {
   encodeChunks,
   findiTXtChunk,
   createiTXtChunk,
-  type Chunk,
 } from "./chunk-utils";
+
+/**
+ * Check if a buffer is a valid PNG image
+ *
+ * @param buffer - The buffer to check
+ * @returns True if the buffer starts with the PNG signature
+ */
+function isPNG(buffer: Buffer): boolean {
+  // PNG signature: 137 80 78 71 13 10 26 10
+  return (
+    buffer.length >= 8 &&
+    buffer[0] === 137 &&
+    buffer[1] === 80 &&
+    buffer[2] === 78 &&
+    buffer[3] === 71 &&
+    buffer[4] === 13 &&
+    buffer[5] === 10 &&
+    buffer[6] === 26 &&
+    buffer[7] === 10
+  );
+}
 
 /**
  * Embed an Open Badges credential into a PNG image
@@ -130,25 +150,4 @@ export function unbakePNG(
       `Failed to parse credential JSON: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-}
-
-/**
- * Check if a buffer is a valid PNG image
- *
- * @param buffer - The buffer to check
- * @returns True if the buffer starts with the PNG signature
- */
-function isPNG(buffer: Buffer): boolean {
-  // PNG signature: 137 80 78 71 13 10 26 10
-  return (
-    buffer.length >= 8 &&
-    buffer[0] === 137 &&
-    buffer[1] === 80 &&
-    buffer[2] === 78 &&
-    buffer[3] === 71 &&
-    buffer[4] === 13 &&
-    buffer[5] === 10 &&
-    buffer[6] === 26 &&
-    buffer[7] === 10
-  );
 }
