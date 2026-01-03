@@ -312,6 +312,40 @@ See the [Database Integration Guide](../database-integration-guide.md) for detai
 4. Check for hardcoded paths or URLs
 5. Check if tests are skipped when the database is not available
 
+### Tests Fail in Claude Code Web / Monorepo Root but Pass in CI
+
+This typically happens due to differences in how tests are executed:
+
+**Root Causes:**
+
+1. **Packages not built**: CI runs `bun run build` before tests. Run `bun run build` first.
+
+2. **Wrong test command**: Running `bun test --filter X` from monorepo root skips the app's `bunfig.toml` (which defines `globalSetup`).
+
+3. **Environment variables not loaded**: `.env.test` may not be found when `process.cwd()` differs from app root.
+
+4. **Relative paths break**: SQLite paths like `./tests/e2e/test.sqlite` resolve incorrectly from monorepo root.
+
+**Solutions:**
+
+```bash
+# Always use turbo-based commands from monorepo root:
+bun run test:unit                                    # All unit tests
+bun --filter openbadges-modular-server test:unit     # This app only
+
+# Or run from app directory:
+cd apps/openbadges-modular-server && bun test
+
+# NOT recommended from monorepo root:
+bun test --filter "some-test"    # Skips bunfig.toml
+```
+
+**Technical Details:**
+
+- `setup-test-app.ts` loads `.env.test` using `import.meta.dir` to resolve paths correctly
+- `globalSetup.ts` uses `import.meta.dir` instead of `process.cwd()` for path resolution
+- Database path variables (`SQLITE_DB_PATH`) are skipped in favor of in-memory SQLite
+
 ### Database Connection Issues
 
 1. Check database configuration in `.env.test`
