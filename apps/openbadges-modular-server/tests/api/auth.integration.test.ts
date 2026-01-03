@@ -1,26 +1,69 @@
 /**
  * Integration tests for Authentication and Authorization API endpoints.
+ *
+ * Uses Bun's mock.module() for proper test isolation of JwtService.
+ * This prevents flaky tests caused by global state pollution when tests run in parallel.
  */
 
-import { describe, it, beforeAll, afterAll, expect, mock } from "bun:test";
+import { describe, it, beforeAll, expect, mock } from "bun:test";
 import { testClient } from "hono/testing";
 import { Hono } from "hono";
 import type { UserService } from "@/domains/user/user.service";
-import { JwtService } from "@/auth/services/jwt.service";
 import { TEST_TOKENS } from "../test-utils/constants";
+
+// Mock JwtService at module level BEFORE importing anything that uses it
+// This ensures proper isolation - each test file gets its own mock instance
+mock.module("@/auth/services/jwt.service", () => ({
+  JwtService: {
+    generateToken: mock(async (_payload: unknown) => {
+      return TEST_TOKENS.MOCK_JWT_TOKEN;
+    }),
+    verifyToken: mock(async (token: string) => {
+      if (
+        token === TEST_TOKENS.MOCK_JWT_TOKEN ||
+        token === TEST_TOKENS.VALID_TOKEN
+      ) {
+        return {
+          sub: "test-user-id",
+          provider: "test-provider",
+          claims: { roles: ["user"] },
+        };
+      } else if (token === TEST_TOKENS.ADMIN_TOKEN) {
+        return {
+          sub: "admin-user-id",
+          provider: "test-provider",
+          claims: { roles: ["admin", "user"] },
+        };
+      } else if (token === TEST_TOKENS.ISSUER_TOKEN) {
+        return {
+          sub: "issuer-user-id",
+          provider: "test-provider",
+          claims: { roles: ["issuer", "user"] },
+        };
+      } else {
+        throw new Error("Invalid token");
+      }
+    }),
+    extractTokenFromHeader: mock((header?: string | null) => {
+      if (header?.startsWith("Bearer ")) {
+        return header.substring(7);
+      }
+      return null;
+    }),
+  },
+}));
+
+// Import after mocking to get the mocked version
+import { JwtService } from "@/auth/services/jwt.service";
 
 describe("Authentication Integration Tests", () => {
   let app: Hono;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let client: any;
-  // We don't need to store the auth token for now
-  // let _authToken: string;
 
   // Mock user service for testing
   const mockUserService = {
-    // Add findUserByCredentials which doesn't exist on the real UserService
-    // but we need it for this test
     findUserByCredentials: mock(async (username: string, password: string) => {
       if (username === "testuser" && password === "password") {
         return {
@@ -58,43 +101,7 @@ describe("Authentication Integration Tests", () => {
     } | null>;
   };
 
-  // Mock JWT service
-  const originalGenerateToken = JwtService.generateToken;
-  const originalVerifyToken = JwtService.verifyToken;
-
   beforeAll(async () => {
-    // Mock JWT service methods
-    JwtService.generateToken = mock(async (_payload: unknown) => {
-      return "mock-jwt-token";
-    });
-
-    JwtService.verifyToken = mock(async (token: string) => {
-      if (
-        token === TEST_TOKENS.MOCK_JWT_TOKEN ||
-        token === TEST_TOKENS.VALID_TOKEN
-      ) {
-        return {
-          sub: "test-user-id",
-          provider: "test-provider",
-          claims: { roles: ["user"] },
-        };
-      } else if (token === TEST_TOKENS.ADMIN_TOKEN) {
-        return {
-          sub: "admin-user-id",
-          provider: "test-provider",
-          claims: { roles: ["admin", "user"] },
-        };
-      } else if (token === TEST_TOKENS.ISSUER_TOKEN) {
-        return {
-          sub: "issuer-user-id",
-          provider: "test-provider",
-          claims: { roles: ["issuer", "user"] },
-        };
-      } else {
-        throw new Error("Invalid token");
-      }
-    });
-
     // Create a minimal test app
     app = new Hono();
 
@@ -151,12 +158,6 @@ describe("Authentication Integration Tests", () => {
     client = testClient(app);
   });
 
-  afterAll(async () => {
-    // Restore original JWT service methods
-    JwtService.generateToken = originalGenerateToken;
-    JwtService.verifyToken = originalVerifyToken;
-  });
-
   // --- Test Scenarios --- //
 
   describe("Unauthenticated Access", () => {
@@ -175,8 +176,6 @@ describe("Authentication Integration Tests", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toHaveProperty("token");
-      // We don't need to store the auth token for now
-      // _authToken = body.token;
     });
 
     it("should return 401 Unauthorized with invalid credentials", async () => {

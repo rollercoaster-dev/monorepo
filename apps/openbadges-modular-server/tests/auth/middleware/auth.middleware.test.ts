@@ -2,31 +2,21 @@
  * Authentication Middleware Tests
  *
  * This file contains tests for the authentication middleware.
+ * Uses Bun's mock.module() for proper test isolation of JwtService.
  */
 
-import { describe, test, expect, beforeAll, afterAll, mock } from "bun:test";
-import {
-  createAuthMiddleware,
-  registerAuthAdapter,
-} from "@/auth/middleware/auth.middleware";
-import type { AuthAdapter } from "@/auth/adapters/auth-adapter.interface";
-import { JwtService } from "@/auth/services/jwt.service";
+import { describe, test, expect, mock } from "bun:test";
 import type { Context } from "hono";
 import { TEST_TOKENS } from "../../test-utils/constants";
 
-describe("Authentication Middleware", () => {
-  // Mock JWT service
-  const originalGenerateToken = JwtService.generateToken;
-  const originalVerifyToken = JwtService.verifyToken;
-  const originalExtractTokenFromHeader = JwtService.extractTokenFromHeader;
-
-  beforeAll(() => {
-    // Mock JWT service methods
-    JwtService.generateToken = mock(async (_payload: unknown) => {
-      return "mock-jwt-token";
-    });
-
-    JwtService.verifyToken = mock(async (token: string) => {
+// Mock JwtService at module level BEFORE importing anything that uses it
+// This ensures proper isolation - each test file gets its own mock instance
+mock.module("@/auth/services/jwt.service", () => ({
+  JwtService: {
+    generateToken: mock(async (_payload: unknown) => {
+      return TEST_TOKENS.MOCK_JWT_TOKEN;
+    }),
+    verifyToken: mock(async (token: string) => {
       if (token === TEST_TOKENS.VALID_TOKEN) {
         return {
           sub: "test-user",
@@ -36,23 +26,24 @@ describe("Authentication Middleware", () => {
       } else {
         throw new Error("Invalid token");
       }
-    });
-
-    JwtService.extractTokenFromHeader = mock((header?: string) => {
+    }),
+    extractTokenFromHeader: mock((header?: string | null) => {
       if (header?.startsWith("Bearer ")) {
         return header.substring(7);
       }
       return null;
-    });
-  });
+    }),
+  },
+}));
 
-  afterAll(() => {
-    // Restore original methods
-    JwtService.generateToken = originalGenerateToken;
-    JwtService.verifyToken = originalVerifyToken;
-    JwtService.extractTokenFromHeader = originalExtractTokenFromHeader;
-  });
+// Import after mocking to get the mocked version
+import {
+  createAuthMiddleware,
+  registerAuthAdapter,
+} from "@/auth/middleware/auth.middleware";
+import type { AuthAdapter } from "@/auth/adapters/auth-adapter.interface";
 
+describe("Authentication Middleware", () => {
   test("should authenticate with a valid adapter", async () => {
     // Create a mock adapter that always authenticates successfully
     const mockAdapter: AuthAdapter = {
