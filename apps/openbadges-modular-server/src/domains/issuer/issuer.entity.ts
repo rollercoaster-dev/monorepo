@@ -30,6 +30,8 @@ export class Issuer
   image?: Shared.IRI | OB2.Image | Shared.OB3ImageObject;
   telephone?: string; // Added for OBv3 compliance
   publicKey?: Record<string, unknown>;
+  /** DID identifier for the issuer (e.g., "did:web:example.com") */
+  did?: string;
   [key: string]: unknown;
 
   /**
@@ -37,6 +39,23 @@ export class Issuer
    */
   private constructor(data: Partial<Issuer>) {
     Object.assign(this, data);
+  }
+
+  /**
+   * Generates a DID:web identifier from an issuer URL
+   * @param url The issuer's URL
+   * @returns A DID:web identifier or undefined if URL is invalid
+   */
+  private static generateDidFromUrl(url: string | undefined): string | undefined {
+    if (!url) return undefined;
+    try {
+      const urlObj = new URL(url);
+      // Colons in hostname (e.g., localhost:3000) must be percent-encoded per did:web spec
+      const encodedHostname = urlObj.host.replace(/:/g, "%3A");
+      return `did:web:${encodedHostname}`;
+    } catch {
+      return undefined;
+    }
   }
 
   /**
@@ -53,6 +72,11 @@ export class Issuer
     // Set default type if not provided
     if (!data.type) {
       data.type = "Issuer"; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
+    }
+
+    // Generate DID from URL if not provided
+    if (!data.did && data.url) {
+      data.did = Issuer.generateDidFromUrl(data.url as string);
     }
 
     return new Issuer(data);
@@ -101,11 +125,12 @@ export class Issuer
         type: "Issuer", // Consistent with OB2 spec
       } as OB2.Profile;
     } else {
-      // OB3 Issuer
+      // OB3 Issuer - include DID if available
       return {
         ...baseObject,
         type: "Issuer", // Changed from 'Profile' to 'Issuer' for OBv3 compliance
         telephone: this.telephone, // Add telephone for OB3
+        ...(this.did && { did: this.did }), // Include DID for OB3
       } as OB3.Issuer;
     }
   }
@@ -161,6 +186,7 @@ export class Issuer
       image: this.image,
       telephone: version === BadgeVersion.V3 ? this.telephone : undefined, // Only include for OB3
       type: version === BadgeVersion.V2 ? "Issuer" : "Issuer", // Consistent type for both versions
+      did: version === BadgeVersion.V3 ? this.did : undefined, // Only include DID for OB3
     };
 
     // Pass the properly typed data to the serializer
