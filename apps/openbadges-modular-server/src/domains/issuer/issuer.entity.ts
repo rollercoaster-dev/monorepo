@@ -46,7 +46,9 @@ export class Issuer
    * @param url The issuer's URL
    * @returns A DID:web identifier or undefined if URL is invalid
    */
-  private static generateDidFromUrl(url: string | undefined): string | undefined {
+  private static generateDidFromUrl(
+    url: string | undefined,
+  ): string | undefined {
     if (!url) return undefined;
     try {
       const urlObj = new URL(url);
@@ -64,22 +66,25 @@ export class Issuer
    * @returns A new Issuer instance
    */
   static create(data: Partial<Issuer>): Issuer {
+    // Create a shallow copy to avoid mutating the input
+    const issuerData = { ...data };
+
     // Generate ID if not provided
-    if (!data.id) {
-      data.id = createOrGenerateIRI();
+    if (!issuerData.id) {
+      issuerData.id = createOrGenerateIRI();
     }
 
     // Set default type if not provided
-    if (!data.type) {
-      data.type = "Issuer"; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
+    if (!issuerData.type) {
+      issuerData.type = "Issuer"; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
     }
 
     // Generate DID from URL if not provided
-    if (!data.did && data.url) {
-      data.did = Issuer.generateDidFromUrl(data.url as string);
+    if (!issuerData.did && issuerData.url) {
+      issuerData.did = Issuer.generateDidFromUrl(issuerData.url as string);
     }
 
-    return new Issuer(data);
+    return new Issuer(issuerData);
   }
 
   /**
