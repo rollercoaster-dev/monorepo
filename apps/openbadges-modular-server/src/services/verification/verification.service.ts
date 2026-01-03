@@ -204,9 +204,7 @@ function verifyIssuanceDate(
  * @param credential - Credential to extract issuer from
  * @returns Issuer IRI or null if not found
  */
-function extractIssuer(
-  credential: Record<string, unknown>,
-): Shared.IRI | null {
+function extractIssuer(credential: Record<string, unknown>): Shared.IRI | null {
   const issuer = credential.issuer;
 
   if (!issuer) {

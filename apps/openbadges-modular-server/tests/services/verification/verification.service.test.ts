@@ -142,7 +142,9 @@ describe("Verification Service", () => {
             (c) => c.check === "temporal.issuance",
           );
           expect(issuanceCheck?.passed).toBe(false);
-          expect(issuanceCheck?.error).toContain("missing required issuanceDate");
+          expect(issuanceCheck?.error).toContain(
+            "missing required issuanceDate",
+          );
         });
 
         it("should reject credential with future issuanceDate", async () => {
@@ -211,7 +213,9 @@ describe("Verification Service", () => {
             (c) => c.check === "temporal.issuance",
           );
           expect(issuanceCheck?.passed).toBe(false);
-          expect(issuanceCheck?.error).toContain("Invalid issuance date format");
+          expect(issuanceCheck?.error).toContain(
+            "Invalid issuance date format",
+          );
         });
       });
 
@@ -336,7 +340,9 @@ describe("Verification Service", () => {
             (c) => c.check === "temporal.expiration",
           );
           expect(expirationCheck?.passed).toBe(false);
-          expect(expirationCheck?.error).toContain("Invalid expiration date format");
+          expect(expirationCheck?.error).toContain(
+            "Invalid expiration date format",
+          );
         });
       });
 
@@ -454,7 +460,9 @@ describe("Verification Service", () => {
 
         // Should not have proof checks from verifyJWTProof/verifyLinkedDataProof
         const proofSignatureCheck = result.checks.proof.find(
-          (c) => c.check === "proof.jwt.signature" || c.check === "proof.linked-data.signature",
+          (c) =>
+            c.check === "proof.jwt.signature" ||
+            c.check === "proof.linked-data.signature",
         );
         expect(proofSignatureCheck).toBeUndefined();
       });
@@ -494,9 +502,13 @@ describe("Verification Service", () => {
         expect(result.metadata?.durationMs).toBeGreaterThanOrEqual(0);
 
         // Should extract credential info
-        expect(result.credentialId).toBe("https://example.com/credentials/123" as Shared.IRI);
+        expect(result.credentialId).toBe(
+          "https://example.com/credentials/123" as Shared.IRI,
+        );
         expect(result.issuer).toBe("did:web:example.com" as Shared.IRI);
-        expect(result.verificationMethod).toBe("did:web:example.com#key-1" as Shared.IRI);
+        expect(result.verificationMethod).toBe(
+          "did:web:example.com#key-1" as Shared.IRI,
+        );
       });
 
       it("should set isValid to match status", async () => {

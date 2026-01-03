@@ -9,7 +9,11 @@ export { verify } from "./verification.service.js";
 
 // Individual verifiers
 export { verifyJWTProof, verifyLinkedDataProof } from "./proof-verifier.js";
-export { verifyIssuer, resolveIssuerDID, fetchIssuerJWKS } from "./issuer-verifier.js";
+export {
+  verifyIssuer,
+  resolveIssuerDID,
+  fetchIssuerJWKS,
+} from "./issuer-verifier.js";
 
 // Types
 export type {
