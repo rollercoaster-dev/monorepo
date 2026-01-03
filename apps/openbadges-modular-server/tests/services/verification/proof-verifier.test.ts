@@ -12,6 +12,10 @@ import {
   verifyLinkedDataProof,
 } from "../../../src/services/verification/proof-verifier.js";
 import type { VerificationMethodResolver } from "../../../src/services/verification/types.js";
+import type { Shared } from "openbadges-types";
+
+/** Helper to cast string to IRI branded type for tests */
+const asIRI = (s: string): Shared.IRI => s as Shared.IRI;
 
 describe("JWT Proof Verification", () => {
   let testKeyPair: jose.GenerateKeyPairResult;
@@ -54,9 +58,13 @@ describe("JWT Proof Verification", () => {
       return testKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-    });
+    const result = await verifyJWTProof(
+      testJWT,
+      asIRI("https://example.com/keys/1"),
+      {
+        verificationMethodResolver: mockResolver,
+      },
+    );
 
     expect(result.passed).toBe(true);
     expect(result.check).toBe("proof.jwt.signature");
@@ -71,9 +79,13 @@ describe("JWT Proof Verification", () => {
       return wrongKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-    });
+    const result = await verifyJWTProof(
+      testJWT,
+      asIRI("https://example.com/keys/1"),
+      {
+        verificationMethodResolver: mockResolver,
+      },
+    );
 
     expect(result.passed).toBe(false);
     expect(result.error).toContain("JWT verification failed");
@@ -84,9 +96,13 @@ describe("JWT Proof Verification", () => {
       return null;
     };
 
-    const result = await verifyJWTProof(testJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-    });
+    const result = await verifyJWTProof(
+      testJWT,
+      asIRI("https://example.com/keys/1"),
+      {
+        verificationMethodResolver: mockResolver,
+      },
+    );
 
     expect(result.passed).toBe(false);
     expect(result.check).toBe("proof.jwt.verification-method");
@@ -99,7 +115,7 @@ describe("JWT Proof Verification", () => {
 
     const result = await verifyJWTProof(
       malformedJWT,
-      "https://example.com/keys/1",
+      asIRI("https://example.com/keys/1"),
     );
 
     expect(result.passed).toBe(false);
@@ -121,10 +137,14 @@ describe("JWT Proof Verification", () => {
       return testKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(oldJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-      maxProofAge: 60, // Max 60 seconds
-    });
+    const result = await verifyJWTProof(
+      oldJWT,
+      asIRI("https://example.com/keys/1"),
+      {
+        verificationMethodResolver: mockResolver,
+        maxProofAge: 60, // Max 60 seconds
+      },
+    );
 
     expect(result.passed).toBe(false);
     expect(result.check).toBe("proof.jwt.age");
@@ -149,9 +169,13 @@ describe("JWT Proof Verification", () => {
       return testKeyPair.publicKey;
     };
 
-    const result = await verifyJWTProof(vcJWT, "https://example.com/keys/1", {
-      verificationMethodResolver: mockResolver,
-    });
+    const result = await verifyJWTProof(
+      vcJWT,
+      asIRI("https://example.com/keys/1"),
+      {
+        verificationMethodResolver: mockResolver,
+      },
+    );
 
     expect(result.passed).toBe(true);
   });
@@ -176,7 +200,7 @@ describe("JWT Proof Verification", () => {
 
     const result = await verifyJWTProof(
       invalidJWT,
-      "https://example.com/keys/1",
+      asIRI("https://example.com/keys/1"),
       {
         verificationMethodResolver: mockResolver,
       },
@@ -191,17 +215,15 @@ describe("JWT Proof Verification", () => {
 describe("Verification Method Resolution", () => {
   it("should use custom resolver when provided", async () => {
     const mockKey = await jose.generateKeyPair("RS256");
+    const expectedIRI = asIRI("https://example.com/keys/1");
     const mockResolver: VerificationMethodResolver = async (vm) => {
-      if (vm === "https://example.com/keys/1") {
+      if (vm === expectedIRI) {
         return mockKey.publicKey;
       }
       return null;
     };
 
-    const result = await resolveVerificationMethod(
-      "https://example.com/keys/1",
-      mockResolver,
-    );
+    const result = await resolveVerificationMethod(expectedIRI, mockResolver);
 
     expect(result).toBe(mockKey.publicKey);
   });
@@ -212,7 +234,7 @@ describe("Verification Method Resolution", () => {
     };
 
     const result = await resolveVerificationMethod(
-      "https://example.com/keys/1",
+      asIRI("https://example.com/keys/1"),
       mockResolver,
     );
 
@@ -221,7 +243,7 @@ describe("Verification Method Resolution", () => {
 
   it("should return null for unsupported verification method format", async () => {
     const result = await resolveVerificationMethod(
-      "unsupported:method:format",
+      asIRI("unsupported:method:format"),
       undefined,
     );
 
@@ -230,7 +252,7 @@ describe("Verification Method Resolution", () => {
 
   it("should return null for did:key (not yet implemented)", async () => {
     const result = await resolveVerificationMethod(
-      "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      asIRI("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"),
       undefined,
     );
 
@@ -239,7 +261,7 @@ describe("Verification Method Resolution", () => {
 
   it("should return null for did:web (not yet implemented)", async () => {
     const result = await resolveVerificationMethod(
-      "did:web:example.com",
+      asIRI("did:web:example.com"),
       undefined,
     );
 
@@ -248,7 +270,7 @@ describe("Verification Method Resolution", () => {
 
   it("should return null for JWKS URL (not yet implemented)", async () => {
     const result = await resolveVerificationMethod(
-      "https://example.com/.well-known/jwks.json",
+      asIRI("https://example.com/.well-known/jwks.json"),
       undefined,
     );
 
