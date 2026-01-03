@@ -8,6 +8,7 @@
  * @see https://www.w3.org/TR/did-core/
  */
 
+import type * as jose from "jose";
 import type { Shared } from "openbadges-types";
 import type { VerificationCheck } from "./types.js";
 
@@ -153,6 +154,133 @@ export async function resolveIssuerDID(
     console.error("DID resolution failed:", error);
     return null;
   }
+}
+
+/**
+ * Fetch and parse JWKS from a given URI
+ *
+ * Uses jose library to fetch and validate JWKS structure.
+ *
+ * @param jwksUri - URI of the JWKS endpoint
+ * @returns Parsed JWKS or null if fetch/parse fails
+ */
+async function fetchJWKSFromURI(
+  jwksUri: string,
+): Promise<jose.JSONWebKeySet | null> {
+  try {
+    const response = await fetch(jwksUri);
+    if (!response.ok) {
+      return null;
+    }
+
+    const jwks = (await response.json()) as jose.JSONWebKeySet;
+
+    // Validate JWKS structure
+    if (!jwks.keys || !Array.isArray(jwks.keys) || jwks.keys.length === 0) {
+      return null;
+    }
+
+    return jwks;
+  } catch (error) {
+    console.error("JWKS fetch failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetch issuer JWKS and return verification check
+ *
+ * Extracts JWKS URI from DID document and fetches the key set.
+ *
+ * @param didDocument - DID document containing JWKS reference
+ * @returns Verification check result
+ */
+export async function fetchIssuerJWKS(
+  didDocument: DIDDocument,
+): Promise<{ check: VerificationCheck; jwks: jose.JSONWebKeySet | null }> {
+  // Look for JWKS URI in verification methods
+  // Common patterns:
+  // 1. service endpoint with type "JsonWebKey2020"
+  // 2. verificationMethod with publicKeyJwk
+  let jwksUri: string | null = null;
+
+  // Check for service endpoints
+  if (Array.isArray(didDocument.service)) {
+    const jwksService = didDocument.service.find(
+      (s: { type: string }) => s.type === "JwksEndpoint",
+    );
+    if (jwksService && "serviceEndpoint" in jwksService) {
+      jwksUri = jwksService.serviceEndpoint as string;
+    }
+  }
+
+  // If no JWKS URI found, try to construct from verification methods
+  if (!jwksUri && didDocument.verificationMethod?.[0]?.publicKeyJwk) {
+    // For did:key or embedded keys, we can create an inline JWKS
+    const jwks: jose.JSONWebKeySet = {
+      keys: didDocument.verificationMethod
+        .filter((vm) => vm.publicKeyJwk)
+        .map((vm) => ({
+          ...(vm.publicKeyJwk as jose.JWK),
+          kid: vm.id,
+        })),
+    };
+
+    return {
+      check: {
+        check: "issuer-jwks-fetch",
+        description: "Fetch issuer JWKS for verification",
+        passed: true,
+        details: {
+          keyCount: jwks.keys.length,
+          source: "embedded",
+        },
+      },
+      jwks,
+    };
+  }
+
+  // If we have a JWKS URI, fetch it
+  if (jwksUri) {
+    const jwks = await fetchJWKSFromURI(jwksUri);
+
+    if (!jwks) {
+      return {
+        check: {
+          check: "issuer-jwks-fetch",
+          description: "Fetch issuer JWKS for verification",
+          passed: false,
+          error: `Failed to fetch JWKS from ${jwksUri}`,
+        },
+        jwks: null,
+      };
+    }
+
+    return {
+      check: {
+        check: "issuer-jwks-fetch",
+        description: "Fetch issuer JWKS for verification",
+        passed: true,
+        details: {
+          keyCount: jwks.keys.length,
+          source: "remote",
+          jwksUri,
+        },
+      },
+      jwks,
+    };
+  }
+
+  // No JWKS found
+  return {
+    check: {
+      check: "issuer-jwks-fetch",
+      description: "Fetch issuer JWKS for verification",
+      passed: false,
+      error: "No JWKS URI or embedded keys found in DID document",
+    },
+    jwks: null,
+  };
 }
 
 /**
