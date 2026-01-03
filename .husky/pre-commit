@@ -1,3 +1,4 @@
+#!/bin/sh
 # Run lint-staged (eslint + prettier on staged files)
 bunx lint-staged
 
