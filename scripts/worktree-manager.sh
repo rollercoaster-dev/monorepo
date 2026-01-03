@@ -20,13 +20,18 @@ NC='\033[0m' # No Color
 
 #------------------------------------------------------------------------------
 # Helper Functions
-#------------------------------------------------------------------------------
+# log_info prints an informational message prefixed with `[worktree]` in blue.
 
 log_info() { echo -e "${BLUE}[worktree]${NC} $1"; }
+# log_success prints MESSAGE to stdout prefixed with "[worktree]" in green.
 log_success() { echo -e "${GREEN}[worktree]${NC} $1"; }
+# log_warn prints a warning message prefixed with [worktree] in yellow.
 log_warn() { echo -e "${YELLOW}[worktree]${NC} $1"; }
+# log_error prints an error message prefixed with "[worktree]" in red.
 log_error() { echo -e "${RED}[worktree]${NC} $1"; }
 
+# check_prerequisites verifies that required CLI tools (git, gh, jq, bun) are available.
+# Exits with error if any are missing.
 check_prerequisites() {
   local missing=()
 
@@ -43,6 +48,8 @@ check_prerequisites() {
   fi
 }
 
+# ensure_base_dir ensures the worktree base directory exists and initializes the state file if missing.
+# If created, writes an initial '{"worktrees":{}}' object to $STATE_FILE.
 ensure_base_dir() {
   if [[ ! -d "$WORKTREE_BASE" ]]; then
     mkdir -p "$WORKTREE_BASE"
@@ -51,11 +58,13 @@ ensure_base_dir() {
   fi
 }
 
+# get_worktree_path returns the filesystem path for the worktree directory for the given issue number.
 get_worktree_path() {
   local issue_number=$1
   echo "$WORKTREE_BASE/issue-$issue_number"
 }
 
+# update_state updates the persistent state file (.worktrees/.state.json) for the given issue with the provided status, optional branch and PR number, and records the current timestamp.
 update_state() {
   local issue_number=$1
   local status=$2
@@ -75,6 +84,7 @@ update_state() {
      "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
 }
 
+# remove_from_state removes the worktree entry for the given issue number from the persistent state file.
 remove_from_state() {
   local issue_number=$1
   local tmp_file
@@ -85,7 +95,7 @@ remove_from_state() {
 
 #------------------------------------------------------------------------------
 # Commands
-#------------------------------------------------------------------------------
+# cmd_create creates a new git worktree for the specified issue (optionally using the provided branch name), installs dependencies in the worktree, and records the worktree and branch in the persistent state.
 
 cmd_create() {
   check_prerequisites
@@ -138,6 +148,7 @@ cmd_create() {
   echo "  Branch: $branch_name"
 }
 
+# cmd_remove removes the worktree for a given issue number, optionally deletes its branch if it is fully merged into main, and updates the tracked state.
 cmd_remove() {
   local issue_number=$1
 
@@ -173,6 +184,7 @@ cmd_remove() {
   log_success "Removed worktree for issue #$issue_number"
 }
 
+# cmd_list lists current git worktrees and prints the tracked worktree state from the state file.
 cmd_list() {
   ensure_base_dir
 
@@ -190,6 +202,7 @@ cmd_list() {
   fi
 }
 
+# cmd_status displays a formatted table of tracked worktrees from the state file, showing Issue, Status, Branch, and PR (or prints "No active worktrees" when none are tracked).
 cmd_status() {
   ensure_base_dir
 
@@ -223,6 +236,7 @@ cmd_status() {
   echo ""
 }
 
+# cmd_update_status updates the tracked status and optional PR number for the given issue in the worktree state file.
 cmd_update_status() {
   local issue_number=$1
   local new_status=$2
@@ -242,6 +256,7 @@ cmd_update_status() {
   log_success "Updated issue #$issue_number status to: $new_status"
 }
 
+# cmd_sync syncs the persisted worktree state with the repository's actual git worktrees by removing state entries for missing worktrees and adding any untracked worktrees.
 cmd_sync() {
   log_info "Syncing worktree state with git..."
 
@@ -278,6 +293,7 @@ cmd_sync() {
   log_success "Sync complete"
 }
 
+# cmd_cleanup_all prompts for confirmation and, if confirmed, removes all tracked worktrees and their state entries.
 cmd_cleanup_all() {
   log_warn "This will remove ALL worktrees. Are you sure? (y/N)"
   read -r confirm
@@ -296,6 +312,7 @@ cmd_cleanup_all() {
   log_success "All worktrees removed"
 }
 
+# cmd_path prints the filesystem path for the worktree corresponding to the given issue number; exits with status 1 if the issue number is missing or the worktree does not exist.
 cmd_path() {
   local issue_number=$1
 
@@ -315,6 +332,7 @@ cmd_path() {
   fi
 }
 
+# cmd_rebase rebases the worktree for the specified issue onto origin/main; on conflict it aborts the rebase, reports an error, and returns a non-zero status.
 cmd_rebase() {
   local issue_number=$1
 
@@ -347,6 +365,7 @@ cmd_rebase() {
   fi
 }
 
+# cmd_help prints the usage message and a list of available commands, status values, and examples for the worktree-manager script.
 cmd_help() {
   cat << 'EOF'
 Worktree Manager for /auto-milestone
@@ -385,7 +404,7 @@ EOF
 
 #------------------------------------------------------------------------------
 # Main
-#------------------------------------------------------------------------------
+# main parses the first CLI argument as a subcommand and dispatches to the corresponding cmd_* function, defaulting to help.
 
 main() {
   local command=${1:-help}
