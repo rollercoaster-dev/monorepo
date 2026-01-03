@@ -22,7 +22,9 @@ describe("Issuer Verification Service", () => {
     });
 
     it("should return null for unsupported DID methods", async () => {
-      const result = await resolveIssuerDID("did:unsupported:123" as Shared.IRI);
+      const result = await resolveIssuerDID(
+        "did:unsupported:123" as Shared.IRI,
+      );
       expect(result).toBeNull();
     });
 
