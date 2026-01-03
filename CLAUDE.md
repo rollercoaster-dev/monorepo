@@ -372,7 +372,7 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 **Milestone Workflow** - Use `/auto-milestone <name>` for parallel milestone execution:
 
-```
+```text
 Phase 1: Plan        → Analyze dependencies, identify free issues
    GATE: If dependencies unclear → STOP for approval
 Phase 2: Execute     → Spawn parallel /auto-issue in worktrees (default: 3)

@@ -222,16 +222,32 @@ cmd_sync() {
   ensure_base_dir
 
   # Get list of actual git worktrees
-  local actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep ".worktrees/issue-" | sed 's/worktree //')
+  local actual_worktrees
+  actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep ".worktrees/issue-" | sed 's/worktree //')
 
-  # Check each tracked worktree
+  # Remove stale entries from state (worktrees that no longer exist)
   jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null | while read -r issue; do
-    local expected_path=$(get_worktree_path "$issue")
+    local expected_path
+    expected_path=$(get_worktree_path "$issue")
     if [[ ! -d "$expected_path" ]]; then
       log_warn "Worktree for issue #$issue no longer exists, removing from state"
       remove_from_state "$issue"
     fi
   done
+
+  # Add untracked worktrees to state (worktrees that exist but aren't tracked)
+  while read -r worktree_path; do
+    if [[ -n "$worktree_path" ]]; then
+      local issue_number
+      issue_number=$(basename "$worktree_path" | sed 's/issue-//')
+      if ! jq -e --arg issue "$issue_number" '.worktrees[$issue]' "$STATE_FILE" &> /dev/null; then
+        log_info "Found untracked worktree for issue #$issue_number, adding to state"
+        local branch
+        branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
+        update_state "$issue_number" "created" "$branch"
+      fi
+    fi
+  done <<< "$actual_worktrees"
 
   log_success "Sync complete"
 }
