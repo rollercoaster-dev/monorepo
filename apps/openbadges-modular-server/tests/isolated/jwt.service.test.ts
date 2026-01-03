@@ -1,11 +1,17 @@
 /**
- * JWT Service Tests
+ * JWT Service Unit Tests
  *
- * This file contains tests for the JWT service.
+ * This file contains unit tests for the JWT service.
+ * Tests the real JwtService implementation without mocking.
+ *
+ * IMPORTANT: Run this test separately from tests that mock JwtService
+ * using mock.module(), as Bun's module mocking affects the global module cache.
+ *
+ * Run with: bun run test:jwt-service
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { JwtService } from "@/auth/services/jwt.service";
+import { JwtService, type JwtPayload } from "@/auth/services/jwt.service";
 
 describe("JWT Service", () => {
   // Save original environment variables
@@ -13,7 +19,7 @@ describe("JWT Service", () => {
 
   beforeAll(() => {
     // Set environment variables for testing
-    process.env.JWT_SECRET = "test-secret";
+    process.env.JWT_SECRET = "test-secret-for-jwt-service-tests";
     process.env.JWT_TOKEN_EXPIRY_SECONDS = "3600";
     process.env.JWT_ISSUER = "test-issuer";
   });
@@ -24,7 +30,7 @@ describe("JWT Service", () => {
   });
 
   test("should generate a JWT token", async () => {
-    const payload = {
+    const payload: JwtPayload = {
       sub: "test-user",
       provider: "test-provider",
       claims: { roles: ["user"] },
@@ -38,61 +44,31 @@ describe("JWT Service", () => {
   });
 
   test("should verify a valid JWT token", async () => {
-    // Mock the JWT verification function
-    const originalVerifyToken = JwtService.verifyToken;
-    JwtService.verifyToken = async () => ({
+    // Generate a token using the real service
+    const payload: JwtPayload = {
       sub: "test-user",
       provider: "test-provider",
       claims: { roles: ["user"] },
-      iss: "test-issuer",
-      exp: Math.floor(Date.now() / 1000) + 3600,
-    });
+    };
 
-    try {
-      // Generate a token
-      const payload = {
-        sub: "test-user",
-        provider: "test-provider",
-        claims: { roles: ["user"] },
-      };
+    const token = await JwtService.generateToken(payload);
 
-      const token = await JwtService.generateToken(payload);
-      const decoded = await JwtService.verifyToken(token);
+    // Verify it using the real service
+    const decoded = await JwtService.verifyToken(token);
 
-      expect(decoded).toBeDefined();
-      expect(decoded.sub).toBe(payload.sub);
-      expect(decoded.provider).toBe(payload.provider);
-      expect(decoded.claims).toEqual(payload.claims);
-      expect(decoded.iss).toBeDefined();
-      expect(decoded.exp).toBeDefined();
-    } finally {
-      // Restore the original function
-      JwtService.verifyToken = originalVerifyToken;
-    }
+    expect(decoded).toBeDefined();
+    expect(decoded.sub).toBe(payload.sub);
+    expect(decoded.provider).toBe(payload.provider);
+    expect(decoded.claims).toEqual(payload.claims);
+    expect(decoded.iss).toBeDefined();
+    expect(decoded.exp).toBeDefined();
   });
 
   test("should reject an invalid JWT token", async () => {
-    // Mock the JWT verification function to throw an error
-    const originalVerifyToken = JwtService.verifyToken;
-    JwtService.verifyToken = async () => {
-      throw new Error("Invalid token");
-    };
+    // Try to verify a malformed token
+    const invalidToken = "invalid.token.signature";
 
-    try {
-      // Try to verify an invalid token
-      const invalidToken = "invalid.token.signature";
-
-      try {
-        await JwtService.verifyToken(invalidToken);
-        // If we get here, the test should fail
-        expect(true).toBe(false);
-      } catch (error) {
-        expect(error).toBeDefined();
-      }
-    } finally {
-      // Restore the original function
-      JwtService.verifyToken = originalVerifyToken;
-    }
+    await expect(JwtService.verifyToken(invalidToken)).rejects.toThrow();
   });
 
   test("should extract token from Authorization header", () => {
@@ -118,7 +94,7 @@ describe("JWT Service", () => {
     expect(extractedToken).toBeNull();
   });
 
-  test("should extract token from Authorization header with Bearer prefix", async () => {
+  test("should extract token from Authorization header with Bearer prefix", () => {
     // Create a token
     const token = "test-token";
 
