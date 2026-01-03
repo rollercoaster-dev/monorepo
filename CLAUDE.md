@@ -40,7 +40,8 @@ monorepo/
 ├── experiments/                    # Research & prototypes
 ├── scripts/                        # Build and maintenance scripts
 │   ├── install-dependencies.sh     # Auto-run on Claude Code session start
-│   └── migration-checklist.sh      # Validates package migrations
+│   ├── migration-checklist.sh      # Validates package migrations
+│   └── worktree-manager.sh         # Git worktree management for /auto-milestone
 └── .claude/                        # Claude Code configuration
     ├── settings.json               # Team-shared settings (committed)
     └── settings.local.json         # Personal settings (not committed)
@@ -339,13 +340,14 @@ This project uses a **plugin-first architecture** - official Claude Code plugins
 
 #### Custom Agents (Domain-Specific)
 
-| Agent                              | Purpose                                 |
-| ---------------------------------- | --------------------------------------- |
-| **openbadges-expert**              | OB2/OB3 spec guidance                   |
-| **openbadges-compliance-reviewer** | Pre-PR spec validation                  |
-| **vue-hono-expert**                | Vue 3 + Bun/Hono stack patterns         |
-| **docs-assistant**                 | Documentation search, creation, updates |
-| **github-master**                  | Board/milestone/issue management        |
+| Agent                              | Purpose                                  |
+| ---------------------------------- | ---------------------------------------- |
+| **openbadges-expert**              | OB2/OB3 spec guidance                    |
+| **openbadges-compliance-reviewer** | Pre-PR spec validation                   |
+| **vue-hono-expert**                | Vue 3 + Bun/Hono stack patterns          |
+| **docs-assistant**                 | Documentation search, creation, updates  |
+| **github-master**                  | Board/milestone/issue management         |
+| **milestone-planner**              | Dependency graph analysis, wave planning |
 
 #### Development Workflows
 
@@ -368,12 +370,26 @@ Phase 4: Finalize    → Create PR (NO GATE)
 ESCALATION           → Only if auto-fix fails MAX_RETRY times
 ```
 
-| Scenario                           | Use `/work-on-issue` | Use `/auto-issue` |
-| ---------------------------------- | -------------------- | ----------------- |
-| Complex architectural changes      | Yes                  | No                |
-| Simple feature, clear requirements | No                   | Yes               |
-| Learning/teaching mode             | Yes                  | No                |
-| Batch of routine fixes             | No                   | Yes               |
+**Milestone Workflow** - Use `/auto-milestone <name>` for parallel milestone execution:
+
+```
+Phase 1: Plan        → Analyze dependencies, identify free issues
+   GATE: If dependencies unclear → STOP for approval
+Phase 2: Execute     → Spawn parallel /auto-issue in worktrees (default: 3)
+Phase 3: Review      → Poll all PRs, dispatch parallel fixes
+Phase 4: Merge       → Merge in dependency order, handle conflicts
+Phase 5: Cleanup     → Remove worktrees, report summary
+```
+
+Run in tmux for SSH observability: `tmux new -s milestone && claude`
+
+| Scenario                           | Use `/work-on-issue` | Use `/auto-issue` | Use `/auto-milestone` |
+| ---------------------------------- | -------------------- | ----------------- | --------------------- |
+| Complex architectural changes      | Yes                  | No                | No                    |
+| Simple feature, clear requirements | No                   | Yes               | Yes (batch)           |
+| Learning/teaching mode             | Yes                  | No                | No                    |
+| Batch of routine fixes             | No                   | Yes               | Yes                   |
+| Entire milestone with deps mapped  | No                   | No                | Yes                   |
 
 #### Review Pipeline
 
