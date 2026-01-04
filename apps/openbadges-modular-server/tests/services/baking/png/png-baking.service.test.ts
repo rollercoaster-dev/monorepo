@@ -5,28 +5,23 @@
 import { describe, it, expect } from "bun:test";
 import { bakePNG, unbakePNG } from "../../../../src/services/baking/png/png-baking.service";
 import type { OB2 } from "openbadges-types";
+import { createIRI, createDateTime } from "openbadges-types";
 
 /**
  * Create a minimal valid PNG image buffer
- * This is a 1x1 transparent PNG
+ * This is a 1x1 transparent PNG with valid CRC checksums
  */
 function createMinimalPNG(): Buffer {
-  // PNG signature + IHDR + IDAT + IEND chunks
+  // Valid 1x1 transparent PNG (base64: iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==)
   return Buffer.from([
-    // PNG signature
-    137, 80, 78, 71, 13, 10, 26, 10,
-    // IHDR chunk (13 bytes data)
-    0, 0, 0, 13, 73, 72, 68, 82, // Length + "IHDR"
-    0, 0, 0, 1, // Width: 1
-    0, 0, 0, 1, // Height: 1
-    8, 6, // Bit depth: 8, Color type: 6 (RGBA)
-    0, 0, 0, // Compression, filter, interlace
-    159, 116, 14, 123, // CRC
-    // IDAT chunk (minimal compressed data)
-    0, 0, 0, 12, 73, 68, 65, 84, // Length + "IDAT"
-    120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, 180, // Compressed data
-    // IEND chunk
-    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130, // Length + "IEND" + CRC
+    137, 80, 78, 71, 13, 10, 26, 10, // PNG signature
+    0, 0, 0, 13, 73, 72, 68, 82, // IHDR chunk header
+    0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, // IHDR data
+    31, 21, 196, 137, // IHDR CRC
+    0, 0, 0, 13, 73, 68, 65, 84, // IDAT chunk header
+    120, 218, 99, 100, 248, 207, 80, 15, 0, 3, 134, 1, 128, // IDAT data
+    90, 52, 125, 107, // IDAT CRC
+    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130, // IEND chunk
   ]);
 }
 
@@ -37,14 +32,14 @@ function createMockOB2Assertion(): OB2.Assertion {
   return {
     "@context": "https://w3id.org/openbadges/v2",
     type: "Assertion",
-    id: "https://example.org/assertions/123",
+    id: createIRI("https://example.org/assertions/123"),
     recipient: {
       type: "email",
       identity: "test@example.org",
       hashed: false,
     },
-    badge: "https://example.org/badges/test-badge",
-    issuedOn: "2024-01-01T00:00:00Z",
+    badge: createIRI("https://example.org/badges/test-badge"),
+    issuedOn: createDateTime("2024-01-01T00:00:00Z"),
     verification: {
       type: "hosted",
     },
@@ -78,7 +73,7 @@ describe("PNG Baking Service", () => {
       const credential = createMockOB2Assertion();
 
       expect(() => bakePNG(invalidPNG, credential)).toThrow(
-        "Invalid PNG image: missing IEND chunk",
+        ".png file ended prematurely: no IEND header was found",
       );
     });
 
@@ -87,7 +82,7 @@ describe("PNG Baking Service", () => {
       const credential1 = createMockOB2Assertion();
       const credential2: OB2.Assertion = {
         ...credential1,
-        id: "https://example.org/assertions/456",
+        id: createIRI("https://example.org/assertions/456"),
       };
 
       const bakedPNG1 = bakePNG(png, credential1);
@@ -95,7 +90,9 @@ describe("PNG Baking Service", () => {
 
       const extracted = unbakePNG(bakedPNG2);
       expect(extracted).not.toBeNull();
-      expect(extracted?.id).toBe("https://example.org/assertions/456");
+      expect((extracted as OB2.Assertion)?.id).toBe(
+        createIRI("https://example.org/assertions/456"),
+      );
     });
   });
 
@@ -146,7 +143,7 @@ describe("PNG Baking Service", () => {
         ...createMockOB2Assertion(),
         evidence: [
           {
-            id: "https://example.org/evidence/1",
+            id: createIRI("https://example.org/evidence/1"),
             name: "Test Evidence",
             description: "Evidence description",
           },
@@ -157,7 +154,6 @@ describe("PNG Baking Service", () => {
       const extracted = unbakePNG(bakedPNG);
 
       expect(extracted).toEqual(credential);
-      expect((extracted as OB2.Assertion).evidence).toEqual(credential.evidence);
     });
   });
 });
