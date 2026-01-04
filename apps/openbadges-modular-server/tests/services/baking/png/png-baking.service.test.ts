@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from "bun:test";
 import { bakePNG, unbakePNG } from "../../../../src/services/baking/png/png-baking.service";
-import type { OB2 } from "openbadges-types";
+import type { OB2, OB3 } from "openbadges-types";
 import { createIRI, createDateTime } from "openbadges-types";
 
 /**
@@ -42,6 +42,40 @@ function createMockOB2Assertion(): OB2.Assertion {
     issuedOn: createDateTime("2024-01-01T00:00:00Z"),
     verification: {
       type: "hosted",
+    },
+  };
+}
+
+/**
+ * Create a mock OB3 VerifiableCredential for testing
+ */
+function createMockOB3Credential(): OB3.VerifiableCredential {
+  return {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+    ],
+    type: ["VerifiableCredential", "OpenBadgeCredential"],
+    id: createIRI("https://example.org/credentials/123"),
+    issuer: {
+      id: createIRI("https://example.org/issuers/1"),
+      type: ["Profile"],
+      name: "Test Issuer",
+      url: createIRI("https://example.org/issuers/1"),
+    },
+    validFrom: createDateTime("2024-01-01T00:00:00Z"),
+    credentialSubject: {
+      id: createIRI("did:example:recipient123"),
+      type: ["AchievementSubject"],
+      achievement: {
+        id: createIRI("https://example.org/achievements/1"),
+        type: ["Achievement"],
+        name: "Test Achievement",
+        description: "A test achievement for unit testing",
+        criteria: {
+          narrative: "Complete the test",
+        },
+      },
     },
   };
 }
@@ -149,6 +183,16 @@ describe("PNG Baking Service", () => {
           },
         ],
       };
+
+      const bakedPNG = bakePNG(png, credential);
+      const extracted = unbakePNG(bakedPNG);
+
+      expect(extracted).toEqual(credential);
+    });
+
+    it("should preserve OB3 VerifiableCredential through bake/unbake cycle", () => {
+      const png = createMinimalPNG();
+      const credential = createMockOB3Credential();
 
       const bakedPNG = bakePNG(png, credential);
       const extracted = unbakePNG(bakedPNG);

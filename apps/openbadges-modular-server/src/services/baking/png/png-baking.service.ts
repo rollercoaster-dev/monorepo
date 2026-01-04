@@ -120,7 +120,7 @@ export function unbakePNG(
   }
 
   // Extract the credential JSON from the iTXt chunk
-  // iTXt format: keyword + null + compression_flag + compression_method + null + null + text
+  // iTXt format: keyword\0 + compression_flag (1 byte) + compression_method (1 byte) + language_tag\0 + translated_keyword\0 + text
   const data = iTxtChunk.data;
 
   // Find the keyword end (first null byte)
@@ -129,9 +129,23 @@ export function unbakePNG(
     throw new Error("Invalid iTXt chunk: missing keyword terminator");
   }
 
-  // Skip keyword (already know it's "openbadges"), compression flag, compression method, language tag, translated keyword
-  // Format: keyword\0 + compression_flag (1 byte) + compression_method (1 byte) + \0 + \0 + text
-  const textStart = keywordEnd + 1 + 1 + 1 + 1 + 1; // After keyword null, compression flag, method, lang tag null, translated keyword null
+  // Skip keyword, compression flag, compression method, then find language tag and translated keyword terminators
+  // This approach is more robust for interoperability with PNGs baked by other implementations
+  const pos = keywordEnd + 1 + 1 + 1; // After keyword null, compression flag, compression method
+
+  // Find end of language tag
+  const langTagEnd = data.indexOf(0, pos);
+  if (langTagEnd === -1) {
+    throw new Error("Invalid iTXt chunk: missing language tag terminator");
+  }
+
+  // Find end of translated keyword
+  const translatedKeywordEnd = data.indexOf(0, langTagEnd + 1);
+  if (translatedKeywordEnd === -1) {
+    throw new Error("Invalid iTXt chunk: missing translated keyword terminator");
+  }
+
+  const textStart = translatedKeywordEnd + 1;
 
   if (textStart >= data.length) {
     throw new Error("Invalid iTXt chunk: missing credential data");
