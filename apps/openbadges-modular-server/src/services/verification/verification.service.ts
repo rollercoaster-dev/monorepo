@@ -49,65 +49,10 @@ function verifyExpiration(
     };
   }
 
-  try {
-    const expiration = new Date(expirationDate);
+  const expiration = new Date(expirationDate);
 
-    // Check if date is valid
-    if (isNaN(expiration.getTime())) {
-      return {
-        check: "temporal.expiration",
-        description: "Credential expiration validation",
-        passed: false,
-        error: `Invalid expiration date format: ${expirationDate}`,
-      };
-    }
-
-    const now = new Date();
-
-    // Apply clock tolerance if specified (in seconds)
-    const clockToleranceMs = (options?.clockTolerance ?? 0) * 1000;
-    const adjustedNow = new Date(now.getTime() - clockToleranceMs);
-
-    const isExpired = expiration < adjustedNow;
-
-    // Check if expired credentials are allowed
-    if (isExpired && options?.allowExpired) {
-      return {
-        check: "temporal.expiration",
-        description: "Credential expiration validation",
-        passed: true,
-        details: {
-          expirationDate: expirationDate,
-          isExpired: true,
-          allowExpired: true,
-        },
-      };
-    }
-
-    if (isExpired) {
-      return {
-        check: "temporal.expiration",
-        description: "Credential expiration validation",
-        passed: false,
-        error: `Credential expired on ${expirationDate}`,
-        details: {
-          expirationDate: expirationDate,
-          currentTime: now.toISOString(),
-          clockTolerance: options?.clockTolerance,
-        },
-      };
-    }
-
-    return {
-      check: "temporal.expiration",
-      description: "Credential expiration validation",
-      passed: true,
-      details: {
-        expirationDate: expirationDate,
-        expiresIn: Math.floor((expiration.getTime() - now.getTime()) / 1000),
-      },
-    };
-  } catch (_error) {
+  // Check if date is valid (new Date() returns Invalid Date, not throws)
+  if (isNaN(expiration.getTime())) {
     return {
       check: "temporal.expiration",
       description: "Credential expiration validation",
@@ -115,6 +60,52 @@ function verifyExpiration(
       error: `Invalid expiration date format: ${expirationDate}`,
     };
   }
+
+  const now = new Date();
+
+  // Apply clock tolerance if specified (in seconds)
+  const clockToleranceMs = (options?.clockTolerance ?? 0) * 1000;
+  const adjustedNow = new Date(now.getTime() - clockToleranceMs);
+
+  const isExpired = expiration < adjustedNow;
+
+  // Check if expired credentials are allowed
+  if (isExpired && options?.allowExpired) {
+    return {
+      check: "temporal.expiration",
+      description: "Credential expiration validation",
+      passed: true,
+      details: {
+        expirationDate: expirationDate,
+        isExpired: true,
+        allowExpired: true,
+      },
+    };
+  }
+
+  if (isExpired) {
+    return {
+      check: "temporal.expiration",
+      description: "Credential expiration validation",
+      passed: false,
+      error: `Credential expired on ${expirationDate}`,
+      details: {
+        expirationDate: expirationDate,
+        currentTime: now.toISOString(),
+        clockTolerance: options?.clockTolerance,
+      },
+    };
+  }
+
+  return {
+    check: "temporal.expiration",
+    description: "Credential expiration validation",
+    passed: true,
+    details: {
+      expirationDate: expirationDate,
+      expiresIn: Math.floor((expiration.getTime() - now.getTime()) / 1000),
+    },
+  };
 }
 
 /**
@@ -142,51 +133,10 @@ function verifyIssuanceDate(
     };
   }
 
-  try {
-    const issued = new Date(issuanceDate);
+  const issued = new Date(issuanceDate);
 
-    // Check if date is valid
-    if (isNaN(issued.getTime())) {
-      return {
-        check: "temporal.issuance",
-        description: "Credential issuance date validation",
-        passed: false,
-        error: `Invalid issuance date format: ${issuanceDate}`,
-      };
-    }
-
-    const now = new Date();
-
-    // Apply clock tolerance if specified (in seconds)
-    const clockToleranceMs = (options?.clockTolerance ?? 0) * 1000;
-    const adjustedNow = new Date(now.getTime() + clockToleranceMs);
-
-    const isFuture = issued > adjustedNow;
-
-    if (isFuture) {
-      return {
-        check: "temporal.issuance",
-        description: "Credential issuance date validation",
-        passed: false,
-        error: `Credential issuance date ${issuanceDate} is in the future`,
-        details: {
-          issuanceDate: issuanceDate,
-          currentTime: now.toISOString(),
-          clockTolerance: options?.clockTolerance,
-        },
-      };
-    }
-
-    return {
-      check: "temporal.issuance",
-      description: "Credential issuance date validation",
-      passed: true,
-      details: {
-        issuanceDate: issuanceDate,
-        age: Math.floor((now.getTime() - issued.getTime()) / 1000),
-      },
-    };
-  } catch (_error) {
+  // Check if date is valid (new Date() returns Invalid Date, not throws)
+  if (isNaN(issued.getTime())) {
     return {
       check: "temporal.issuance",
       description: "Credential issuance date validation",
@@ -194,6 +144,38 @@ function verifyIssuanceDate(
       error: `Invalid issuance date format: ${issuanceDate}`,
     };
   }
+
+  const now = new Date();
+
+  // Apply clock tolerance if specified (in seconds)
+  const clockToleranceMs = (options?.clockTolerance ?? 0) * 1000;
+  const adjustedNow = new Date(now.getTime() + clockToleranceMs);
+
+  const isFuture = issued > adjustedNow;
+
+  if (isFuture) {
+    return {
+      check: "temporal.issuance",
+      description: "Credential issuance date validation",
+      passed: false,
+      error: `Credential issuance date ${issuanceDate} is in the future`,
+      details: {
+        issuanceDate: issuanceDate,
+        currentTime: now.toISOString(),
+        clockTolerance: options?.clockTolerance,
+      },
+    };
+  }
+
+  return {
+    check: "temporal.issuance",
+    description: "Credential issuance date validation",
+    passed: true,
+    details: {
+      issuanceDate: issuanceDate,
+      age: Math.floor((now.getTime() - issued.getTime()) / 1000),
+    },
+  };
 }
 
 /**
@@ -262,6 +244,7 @@ function extractVerificationMethod(
  * @param checks - Verification checks performed
  * @param verifiedAt - Timestamp of verification
  * @param errorMessage - Error message
+ * @param startTime - Start time for duration calculation
  * @param credentialId - Optional credential ID
  * @param issuer - Optional issuer IRI
  * @returns Error verification result
@@ -270,6 +253,7 @@ function createErrorResult(
   checks: VerificationChecks,
   verifiedAt: string,
   errorMessage: string,
+  startTime: number,
   credentialId?: Shared.IRI,
   issuer?: Shared.IRI,
 ): VerificationResult {
@@ -281,6 +265,9 @@ function createErrorResult(
     issuer,
     verifiedAt,
     error: errorMessage,
+    metadata: {
+      durationMs: Date.now() - startTime,
+    },
   };
 }
 
@@ -310,6 +297,7 @@ export async function verify(
     temporal: [],
     issuer: [],
     schema: [],
+    general: [],
   };
 
   try {
@@ -328,7 +316,7 @@ export async function verify(
           error: "Invalid JWT format",
         });
 
-        return createErrorResult(checks, verifiedAt, "Invalid JWT format");
+        return createErrorResult(checks, verifiedAt, "Invalid JWT format", startTime);
       }
 
       try {
@@ -344,7 +332,7 @@ export async function verify(
           error: "Failed to parse JWT payload",
         });
 
-        return createErrorResult(checks, verifiedAt, "Failed to parse JWT");
+        return createErrorResult(checks, verifiedAt, "Failed to parse JWT", startTime);
       }
     } else {
       credentialObj = credential;
@@ -366,6 +354,7 @@ export async function verify(
         checks,
         verifiedAt,
         "Missing issuer",
+        startTime,
         credentialObj.id as Shared.IRI | undefined,
       );
     }
@@ -382,6 +371,7 @@ export async function verify(
         checks,
         verifiedAt,
         "Missing verification method",
+        startTime,
         credentialObj.id as Shared.IRI | undefined,
         issuer,
       );
@@ -408,8 +398,10 @@ export async function verify(
     }
 
     // Step 2: Issuer Verification
-    const issuerChecks = await verifyIssuer(issuer);
-    checks.issuer.push(...issuerChecks);
+    if (!options?.skipIssuerVerification) {
+      const issuerChecks = await verifyIssuer(issuer);
+      checks.issuer.push(...issuerChecks);
+    }
 
     // Step 3: Temporal Validation
     if (!options?.skipTemporalValidation) {
@@ -426,6 +418,7 @@ export async function verify(
       ...checks.temporal,
       ...checks.status,
       ...checks.schema,
+      ...checks.general,
     ];
 
     const hasFailures = allChecks.some((check) => !check.passed);
@@ -447,13 +440,13 @@ export async function verify(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
-    checks.proof.push({
+    checks.general.push({
       check: "verification.error",
       description: "Verification process error",
       passed: false,
       error: errorMessage,
     });
 
-    return createErrorResult(checks, verifiedAt, errorMessage);
+    return createErrorResult(checks, verifiedAt, errorMessage, startTime);
   }
 }
