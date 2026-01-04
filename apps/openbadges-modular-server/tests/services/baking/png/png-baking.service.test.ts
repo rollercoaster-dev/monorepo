@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect } from "bun:test";
-import { bakePNG, unbakePNG } from "../../../../src/services/baking/png/png-baking.service";
+import {
+  bakePNG,
+  unbakePNG,
+} from "../../../../src/services/baking/png/png-baking.service";
 import type { OB2, OB3 } from "openbadges-types";
 import { createIRI, createDateTime } from "openbadges-types";
 
@@ -14,14 +17,76 @@ import { createIRI, createDateTime } from "openbadges-types";
 function createMinimalPNG(): Buffer {
   // Valid 1x1 transparent PNG (base64: iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==)
   return Buffer.from([
-    137, 80, 78, 71, 13, 10, 26, 10, // PNG signature
-    0, 0, 0, 13, 73, 72, 68, 82, // IHDR chunk header
-    0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, // IHDR data
-    31, 21, 196, 137, // IHDR CRC
-    0, 0, 0, 13, 73, 68, 65, 84, // IDAT chunk header
-    120, 218, 99, 100, 248, 207, 80, 15, 0, 3, 134, 1, 128, // IDAT data
-    90, 52, 125, 107, // IDAT CRC
-    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130, // IEND chunk
+    137,
+    80,
+    78,
+    71,
+    13,
+    10,
+    26,
+    10, // PNG signature
+    0,
+    0,
+    0,
+    13,
+    73,
+    72,
+    68,
+    82, // IHDR chunk header
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    8,
+    6,
+    0,
+    0,
+    0, // IHDR data
+    31,
+    21,
+    196,
+    137, // IHDR CRC
+    0,
+    0,
+    0,
+    13,
+    73,
+    68,
+    65,
+    84, // IDAT chunk header
+    120,
+    218,
+    99,
+    100,
+    248,
+    207,
+    80,
+    15,
+    0,
+    3,
+    134,
+    1,
+    128, // IDAT data
+    90,
+    52,
+    125,
+    107, // IDAT CRC
+    0,
+    0,
+    0,
+    0,
+    73,
+    69,
+    78,
+    68,
+    174,
+    66,
+    96,
+    130, // IEND chunk
   ]);
 }
 

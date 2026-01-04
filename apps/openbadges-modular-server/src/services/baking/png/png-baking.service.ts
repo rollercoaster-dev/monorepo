@@ -142,7 +142,9 @@ export function unbakePNG(
   // Find end of translated keyword
   const translatedKeywordEnd = data.indexOf(0, langTagEnd + 1);
   if (translatedKeywordEnd === -1) {
-    throw new Error("Invalid iTXt chunk: missing translated keyword terminator");
+    throw new Error(
+      "Invalid iTXt chunk: missing translated keyword terminator",
+    );
   }
 
   const textStart = translatedKeywordEnd + 1;
