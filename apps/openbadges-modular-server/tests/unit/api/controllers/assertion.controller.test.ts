@@ -180,7 +180,9 @@ describe("AssertionController", () => {
       expect(result.credentialStatus).toEqual(mockCredentialStatus);
 
       // Verify the assignCredentialStatus was called
-      expect(mockCredentialStatusService.assignCredentialStatus).toHaveBeenCalled();
+      expect(
+        mockCredentialStatusService.assignCredentialStatus,
+      ).toHaveBeenCalled();
 
       // Verify the repository update was called with credentialStatus
       expect(mockAssertionRepository.update).toHaveBeenCalled();
@@ -207,10 +209,14 @@ describe("AssertionController", () => {
 
       // Assert - OB2 assertions should not have credentialStatus
       expect(result).toBeDefined();
-      expect((result as OB3.VerifiableCredential).credentialStatus).toBeUndefined();
+      expect(
+        (result as OB3.VerifiableCredential).credentialStatus,
+      ).toBeUndefined();
 
       // Verify the assignCredentialStatus was NOT called for OB2
-      expect(mockCredentialStatusService.assignCredentialStatus).not.toHaveBeenCalled();
+      expect(
+        mockCredentialStatusService.assignCredentialStatus,
+      ).not.toHaveBeenCalled();
     });
 
     it("should still return assertion if credentialStatus assignment fails", async () => {
@@ -241,7 +247,9 @@ describe("AssertionController", () => {
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
       // credentialStatus should be undefined because assignment failed
-      expect((result as OB3.VerifiableCredential).credentialStatus).toBeUndefined();
+      expect(
+        (result as OB3.VerifiableCredential).credentialStatus,
+      ).toBeUndefined();
     });
 
     it("should handle credentialStatus service exceptions gracefully", async () => {
@@ -301,7 +309,9 @@ describe("AssertionController", () => {
       // Assert - Should return assertion without credentialStatus
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
-      expect((result as OB3.VerifiableCredential).credentialStatus).toBeUndefined();
+      expect(
+        (result as OB3.VerifiableCredential).credentialStatus,
+      ).toBeUndefined();
     });
   });
 });
