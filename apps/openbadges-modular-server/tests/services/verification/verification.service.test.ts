@@ -5,10 +5,32 @@
  * proof, issuer, and temporal validation checks.
  */
 
-import { describe, expect, it, beforeEach } from "bun:test";
+import { describe, expect, it, beforeEach, beforeAll } from "bun:test";
+import * as jose from "jose";
 import { verify } from "../../../src/services/verification/verification.service.js";
-import type { VerificationOptions } from "../../../src/services/verification/types.js";
+import type {
+  VerificationOptions,
+  VerificationMethodResolver,
+} from "../../../src/services/verification/types.js";
 import type { Shared } from "openbadges-types";
+
+/** Helper function to encode base58 (for testing) */
+function encodeBase58(bytes: Uint8Array): string {
+  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let num = BigInt(0);
+  for (const byte of bytes) {
+    num = num * BigInt(256) + BigInt(byte);
+  }
+
+  let encoded = "";
+  while (num > 0) {
+    const remainder = Number(num % BigInt(58));
+    encoded = ALPHABET[remainder] + encoded;
+    num = num / BigInt(58);
+  }
+
+  return encoded || "1";
+}
 
 describe("Verification Service", () => {
   describe("verify()", () => {
@@ -767,6 +789,217 @@ describe("Verification Service", () => {
           "hasOpenBadgeCredential",
           true,
         );
+      });
+    });
+
+    describe("Linked Data Proof Integration", () => {
+      let testEd25519KeyPair: jose.GenerateKeyPairResult;
+
+      beforeAll(async () => {
+        testEd25519KeyPair = await jose.generateKeyPair("EdDSA", {
+          extractable: true,
+        });
+      });
+
+      /** Helper to canonicalize document same as implementation */
+      function sortKeys(obj: unknown): unknown {
+        if (Array.isArray(obj)) {
+          return obj.map(sortKeys);
+        }
+        if (obj !== null && typeof obj === "object") {
+          return Object.keys(obj)
+            .sort()
+            .reduce(
+              (result, key) => {
+                result[key] = sortKeys((obj as Record<string, unknown>)[key]);
+                return result;
+              },
+              {} as Record<string, unknown>,
+            );
+        }
+        return obj;
+      }
+
+      it("should verify valid Ed25519 Linked Data proof through verification service", async () => {
+        // Create test credential (without proof for signing)
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "OpenBadgeCredential"],
+          issuer: "did:example:issuer",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          credentialSubject: {
+            id: "did:example:subject",
+          },
+        };
+
+        // Canonicalize and sign
+        const canonicalDoc = JSON.stringify(sortKeys(credential));
+        const documentBytes = new TextEncoder().encode(canonicalDoc);
+        const signatureBytes = await globalThis.crypto.subtle.sign(
+          "Ed25519",
+          testEd25519KeyPair.privateKey,
+          documentBytes,
+        );
+
+        // Encode signature as multibase (z = base58btc)
+        const base58 = encodeBase58(new Uint8Array(signatureBytes));
+        const proofValue = `z${base58}`;
+
+        // Add proof to credential
+        const signedCredential = {
+          ...credential,
+          proof: {
+            type: "Ed25519Signature2020",
+            proofPurpose: "assertionMethod",
+            verificationMethod: "did:example:issuer#key-1",
+            proofValue,
+          },
+        };
+
+        // Mock resolver that returns our test public key
+        const mockResolver: VerificationMethodResolver = async () =>
+          testEd25519KeyPair.publicKey;
+
+        const result = await verify(signedCredential, {
+          skipIssuerVerification: true,
+          skipTemporalValidation: true,
+          verificationMethodResolver: mockResolver,
+        });
+
+        // Should pass proof verification
+        expect(result.proofResults).toBeDefined();
+        expect(result.proofResults).toHaveLength(1);
+        expect(result.proofResults![0].passed).toBe(true);
+        expect(result.passedProofs).toBe(1);
+        expect(result.totalProofs).toBe(1);
+      });
+
+      it("should fail verification for invalid Linked Data proof signature", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "OpenBadgeCredential"],
+          issuer: "did:example:issuer",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          credentialSubject: {
+            id: "did:example:subject",
+          },
+          proof: {
+            type: "Ed25519Signature2020",
+            proofPurpose: "assertionMethod",
+            verificationMethod: "did:example:issuer#key-1",
+            proofValue: "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGe", // Invalid signature
+          },
+        };
+
+        // Mock resolver that returns our test public key
+        const mockResolver: VerificationMethodResolver = async () =>
+          testEd25519KeyPair.publicKey;
+
+        const result = await verify(credential, {
+          skipIssuerVerification: true,
+          skipTemporalValidation: true,
+          verificationMethodResolver: mockResolver,
+        });
+
+        // Should fail proof verification
+        expect(result.proofResults).toBeDefined();
+        expect(result.proofResults).toHaveLength(1);
+        expect(result.proofResults![0].passed).toBe(false);
+        expect(result.passedProofs).toBe(0);
+        expect(result.totalProofs).toBe(1);
+        expect(result.isValid).toBe(false);
+      });
+
+      it("should verify DataIntegrityProof with eddsa-rdfc-2022 cryptosuite", async () => {
+        // Create test credential (without proof for signing)
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "OpenBadgeCredential"],
+          issuer: "did:example:issuer",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          credentialSubject: {
+            id: "did:example:subject",
+          },
+        };
+
+        // Canonicalize and sign
+        const canonicalDoc = JSON.stringify(sortKeys(credential));
+        const documentBytes = new TextEncoder().encode(canonicalDoc);
+        const signatureBytes = await globalThis.crypto.subtle.sign(
+          "Ed25519",
+          testEd25519KeyPair.privateKey,
+          documentBytes,
+        );
+
+        // Encode signature as multibase (z = base58btc)
+        const base58 = encodeBase58(new Uint8Array(signatureBytes));
+        const proofValue = `z${base58}`;
+
+        // Add DataIntegrityProof to credential
+        const signedCredential = {
+          ...credential,
+          proof: {
+            type: "DataIntegrityProof",
+            cryptosuite: "eddsa-rdfc-2022",
+            proofPurpose: "assertionMethod",
+            verificationMethod: "did:example:issuer#key-1",
+            proofValue,
+          },
+        };
+
+        // Mock resolver that returns our test public key
+        const mockResolver: VerificationMethodResolver = async () =>
+          testEd25519KeyPair.publicKey;
+
+        const result = await verify(signedCredential, {
+          skipIssuerVerification: true,
+          skipTemporalValidation: true,
+          verificationMethodResolver: mockResolver,
+        });
+
+        // Should pass proof verification
+        expect(result.proofResults).toBeDefined();
+        expect(result.proofResults).toHaveLength(1);
+        expect(result.proofResults![0].passed).toBe(true);
+        expect(result.proofResults![0].proofType).toBe("DataIntegrityProof");
+        expect(result.isValid).toBe(true);
+      });
+
+      it("should fail when verification method cannot be resolved", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "OpenBadgeCredential"],
+          issuer: "did:example:issuer",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          credentialSubject: {
+            id: "did:example:subject",
+          },
+          proof: {
+            type: "Ed25519Signature2020",
+            proofPurpose: "assertionMethod",
+            verificationMethod: "did:example:issuer#key-1",
+            proofValue: "z123",
+          },
+        };
+
+        // Mock resolver that returns null (cannot resolve)
+        const mockResolver: VerificationMethodResolver = async () => null;
+
+        const result = await verify(credential, {
+          skipIssuerVerification: true,
+          skipTemporalValidation: true,
+          verificationMethodResolver: mockResolver,
+        });
+
+        // Should fail with verification method error
+        expect(result.isValid).toBe(false);
+        const proofCheck = result.checks.proof.find(
+          (c) =>
+            c.check === "proof.linked-data.verification-method" ||
+            c.error?.includes("Failed to resolve verification method"),
+        );
+        expect(proofCheck).toBeDefined();
+        expect(proofCheck?.passed).toBe(false);
       });
     });
   });

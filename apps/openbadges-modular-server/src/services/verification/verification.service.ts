@@ -12,7 +12,7 @@
 
 import type { Shared } from "openbadges-types";
 import { logger } from "../../utils/logging/logger.service.js";
-import { verifyJWTProof } from "./proof-verifier.js";
+import { verifyJWTProof, verifyLinkedDataProof } from "./proof-verifier.js";
 import { verifyIssuer } from "./issuer-verifier.js";
 import type {
   ProofType,
@@ -646,32 +646,38 @@ export async function verify(
         } else {
           // Verify each proof
           for (const extractedProof of proofs) {
-            // TODO: #309 Implement Linked Data proof verification
-            // For now, mark as not implemented but track the proof
-            const proofCheck: VerificationCheck = {
-              check: `proof.linked-data.${extractedProof.index}`,
-              description: `Linked Data proof verification (proof ${extractedProof.index + 1}/${proofs.length})`,
-              passed: false,
-              error: "Linked Data proof verification not yet implemented",
-              details: {
-                proofIndex: extractedProof.index,
-                proofType: extractedProof.type,
-                verificationMethod: extractedProof.verificationMethod,
-              },
+            // Call the actual Linked Data proof verification
+            const proofCheck = await verifyLinkedDataProof(
+              credentialObj,
+              extractedProof.proof,
+              options,
+            );
+
+            // Update the check name to include the proof index for multi-proof credentials
+            const indexedCheck: VerificationCheck = {
+              ...proofCheck,
+              check:
+                proofs.length > 1
+                  ? `proof.linked-data.${extractedProof.index}`
+                  : proofCheck.check,
+              description:
+                proofs.length > 1
+                  ? `Linked Data proof verification (proof ${extractedProof.index + 1}/${proofs.length})`
+                  : proofCheck.description,
             };
 
-            checks.proof.push(proofCheck);
+            checks.proof.push(indexedCheck);
 
             proofResults.push({
               index: extractedProof.index,
               proofType: extractedProof.type ?? "jwt",
-              passed: proofCheck.passed,
+              passed: indexedCheck.passed,
               verificationMethod: extractedProof.verificationMethod,
-              error: proofCheck.error,
-              check: proofCheck,
+              error: indexedCheck.error,
+              check: indexedCheck,
             });
 
-            if (proofCheck.passed) {
+            if (indexedCheck.passed) {
               passedProofs++;
             }
           }
