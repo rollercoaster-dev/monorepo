@@ -1000,6 +1000,86 @@ cmd_validate_state() {
   log_success "State file validation complete"
 }
 
+# cmd_validate_hooks validates git hook configuration for a specific worktree.
+cmd_validate_hooks() {
+  local issue_number=$1
+
+  if [[ -z "$issue_number" ]]; then
+    log_error "Usage: worktree-manager.sh validate-hooks <issue-number>"
+    exit 1
+  fi
+
+  local worktree_path
+  worktree_path=$(get_worktree_path "$issue_number")
+
+  if [[ ! -d "$worktree_path" ]]; then
+    log_error "No worktree found for issue #$issue_number"
+    exit 1
+  fi
+
+  log_info "Validating git hooks for issue #$issue_number..."
+  echo ""
+
+  local validation_failed=false
+
+  # Check 1: core.hooksPath configuration
+  echo "1. Git hooks path configuration:"
+  local hooks_path
+  hooks_path=$(git -C "$worktree_path" config core.hooksPath || echo "")
+
+  if [[ "$hooks_path" == ".husky/_" ]]; then
+    log_success "  core.hooksPath = .husky/_"
+  else
+    log_error "  core.hooksPath = '${hooks_path:-<not set>}' (expected: .husky/_)"
+    validation_failed=true
+  fi
+  echo ""
+
+  # Check 2: Husky helper existence and permissions
+  echo "2. Husky helper file:"
+  if [[ -f "$worktree_path/.husky/_/h" ]]; then
+    if [[ -x "$worktree_path/.husky/_/h" ]]; then
+      log_success "  .husky/_/h exists and is executable"
+    else
+      log_error "  .husky/_/h exists but is not executable"
+      validation_failed=true
+    fi
+  else
+    log_error "  .husky/_/h not found"
+    validation_failed=true
+  fi
+  echo ""
+
+  # Check 3: lint-staged availability
+  echo "3. lint-staged availability:"
+  if (cd "$worktree_path" && command -v bunx &> /dev/null && bunx --version &> /dev/null); then
+    log_success "  bunx available"
+  else
+    log_error "  bunx not found in worktree context"
+    validation_failed=true
+  fi
+  echo ""
+
+  # Check 4: Pre-commit hook existence
+  echo "4. Pre-commit hook:"
+  if [[ -f "$worktree_path/.husky/pre-commit" ]]; then
+    log_success "  .husky/pre-commit exists"
+  else
+    log_warn "  .husky/pre-commit not found (may be optional)"
+  fi
+  echo ""
+
+  # Summary
+  if [[ "$validation_failed" == "true" ]]; then
+    log_error "Hook validation FAILED for issue #$issue_number"
+    log_info "Run 'worktree-manager.sh create $issue_number' to reinitialize hooks"
+    return 1
+  else
+    log_success "All hook validations PASSED for issue #$issue_number"
+    return 0
+  fi
+}
+
 # cmd_help prints the usage message and a list of available commands, status values, and examples for the worktree-manager script.
 cmd_help() {
   cat << 'EOF'
@@ -1089,6 +1169,7 @@ main() {
     integration-test) cmd_integration_test ;;
     summary)       cmd_summary ;;
     validate-state) cmd_validate_state ;;
+    validate-hooks) cmd_validate_hooks "$@" ;;
 
     help|--help|-h) cmd_help ;;
     *)
