@@ -7,3 +7,4 @@ export * from "./issuer.dto";
 export * from "./badgeClass.dto";
 export * from "./assertion.dto";
 export * from "./status-list.dto";
+export * from "./verify.dto";
