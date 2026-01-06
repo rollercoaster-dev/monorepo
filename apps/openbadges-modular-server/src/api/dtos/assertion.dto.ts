@@ -43,15 +43,22 @@ export interface EvidenceDto {
 /**
  * Base DTO for assertion creation and update operations
  * Contains common properties across OB2 and OB3
+ *
+ * Supports both OB2 temporal fields (issuedOn/expires) and OB3 temporal fields (validFrom/validUntil).
+ * At least one of issuedOn or validFrom is required for creation.
  */
 export interface AssertionBaseDto {
   recipient: RecipientDto;
   badge: string; // IRI of the badge class
-  issuedOn: string; // ISO date string
+  // OB2 temporal fields
+  issuedOn?: string; // ISO date string (OB2)
+  expires?: string; // ISO date string (OB2)
+  // OB3 temporal fields (VC Data Model 2.0)
+  validFrom?: string; // ISO date string (OB3) - maps to issuedOn internally
+  validUntil?: string; // ISO date string (OB3) - maps to expires internally
   verification?: VerificationDto;
   evidence?: EvidenceDto | EvidenceDto[];
   narrative?: string;
-  expires?: string; // ISO date string
   image?:
     | string
     | {

@@ -37,19 +37,31 @@ export const EvidenceSchema = z
   .strict("Unrecognized fields in evidence object");
 
 // Schema for AssertionBaseDto
+// Accepts both OB2 temporal fields (issuedOn/expires) and OB3 temporal fields (validFrom/validUntil)
 export const AssertionBaseSchema = z.object({
   recipient: RecipientSchema,
   badge: z.string(), // Badge Class IRI - using string for flexibility
+  // OB2 temporal fields
   issuedOn: z
     .string()
-    .datetime({ message: "Invalid ISO 8601 date string format for issuedOn" }),
-  verification: VerificationSchema.optional(),
-  evidence: z.union([EvidenceSchema, z.array(EvidenceSchema)]).optional(),
-  narrative: z.string().optional(),
+    .datetime({ message: "Invalid ISO 8601 date string format for issuedOn" })
+    .optional(),
   expires: z
     .string()
     .datetime({ message: "Invalid ISO 8601 date string format for expires" })
     .optional(),
+  // OB3 temporal fields (VC Data Model 2.0)
+  validFrom: z
+    .string()
+    .datetime({ message: "Invalid ISO 8601 date string format for validFrom" })
+    .optional(),
+  validUntil: z
+    .string()
+    .datetime({ message: "Invalid ISO 8601 date string format for validUntil" })
+    .optional(),
+  verification: VerificationSchema.optional(),
+  evidence: z.union([EvidenceSchema, z.array(EvidenceSchema)]).optional(),
+  narrative: z.string().optional(),
   image: z
     .union([
       z.string().url({ message: "Image must be a valid URL string" }), // Simple URL string
@@ -71,14 +83,14 @@ export const AssertionBaseSchema = z.object({
   revocationReason: z.string().optional(),
 }); // Not strict here, allow extension
 
-// Schema for CreateAssertionOB2Dto
-export const CreateAssertionOB2Schema = AssertionBaseSchema.extend({
+// Base OB2 schema without refinement (used for updates where temporal field is optional)
+const AssertionOB2BaseSchema = AssertionBaseSchema.extend({
   type: z.union([z.string(), z.array(z.string())]).optional(),
   "@context": z.string().optional(), // Allow @context field for OB2
 }).strict("Unrecognized fields in OB2 assertion data");
 
-// Schema for CreateAssertionOB3Dto
-export const CreateAssertionOB3Schema = AssertionBaseSchema.extend({
+// Base OB3 schema without refinement (used for updates where temporal field is optional)
+const AssertionOB3BaseSchema = AssertionBaseSchema.extend({
   type: z.string().optional(), // Typically string in OB3
   id: z.string().optional(), // Allow client-suggested ID
   credentialSubject: z
@@ -92,6 +104,28 @@ export const CreateAssertionOB3Schema = AssertionBaseSchema.extend({
   "@context": z.string().optional(), // Allow @context field for OB3
 }).strict("Unrecognized fields in OB3 assertion data");
 
+// Schema for CreateAssertionOB2Dto
+// OB2 uses issuedOn/expires; also accepts validFrom/validUntil and maps them internally
+// At least one temporal field (issuedOn or validFrom) is required for creation
+export const CreateAssertionOB2Schema = AssertionOB2BaseSchema.refine(
+  (data) => data.issuedOn || data.validFrom,
+  {
+    message: "Either issuedOn (OB2) or validFrom (OB3) is required",
+    path: ["issuedOn"],
+  },
+);
+
+// Schema for CreateAssertionOB3Dto
+// OB3 uses validFrom/validUntil (VC Data Model 2.0); also accepts issuedOn/expires for backward compatibility
+// At least one temporal field (issuedOn or validFrom) is required for creation
+export const CreateAssertionOB3Schema = AssertionOB3BaseSchema.refine(
+  (data) => data.issuedOn || data.validFrom,
+  {
+    message: "Either issuedOn (OB2) or validFrom (OB3) is required",
+    path: ["validFrom"],
+  },
+);
+
 // Union schema for CreateAssertionDto
 export const CreateAssertionSchema = z.union([
   CreateAssertionOB2Schema,
@@ -99,10 +133,10 @@ export const CreateAssertionSchema = z.union([
 ]);
 
 // Schema for UpdateAssertionDto
-// Apply .partial() to each member schema and create a new union
+// Apply .partial() to base schemas (without refinement) since updates don't require temporal fields
 export const UpdateAssertionSchema = z.union([
-  CreateAssertionOB2Schema.partial(),
-  CreateAssertionOB3Schema.partial(),
+  AssertionOB2BaseSchema.partial(),
+  AssertionOB3BaseSchema.partial(),
 ]);
 
 // Schema for RevokeAssertionDto
