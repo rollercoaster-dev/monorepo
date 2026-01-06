@@ -2,6 +2,7 @@ import { createAssetProvider } from "../../infrastructure/assets/asset-storage.f
 import { logger } from "../../utils/logging/logger.service";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
+import { OB3ErrorCode } from "../../utils/errors/api-error-handler";
 
 // Initialize asset storage provider
 const assetStorage = createAssetProvider();
@@ -31,7 +32,10 @@ const SuccessResponseSchema = z.object({
 });
 
 const ErrorResponseSchema = z.object({
-  error: z.string().describe("Error message"),
+  error: z.string().describe("Error type/category"),
+  message: z.string().describe("Human-readable error message"),
+  code: z.string().optional().describe("Machine-readable error code"),
+  details: z.array(z.string()).optional().describe("Additional error details"),
   allowedTypes: z
     .array(z.string())
     .optional()
@@ -115,13 +119,27 @@ export class AssetsController {
         // Cross-runtime compatible file validation
         if (!file) {
           logger.warn("Missing file upload", { requestId });
-          return c.json({ error: "Missing file upload" }, 400);
+          return c.json(
+            {
+              error: "Bad Request",
+              message: "Missing file upload",
+              code: OB3ErrorCode.VALIDATION_FAILED,
+            },
+            400,
+          );
         }
 
         // Ensure file is a File object
         if (!(file instanceof File)) {
           logger.warn("Invalid file upload - not a File object", { requestId });
-          return c.json({ error: "Invalid file upload" }, 400);
+          return c.json(
+            {
+              error: "Bad Request",
+              message: "Invalid file upload",
+              code: OB3ErrorCode.VALIDATION_FAILED,
+            },
+            400,
+          );
         }
 
         // Now TypeScript knows file is a File object
@@ -145,7 +163,9 @@ export class AssetsController {
           });
           return c.json(
             {
-              error: "Invalid file type",
+              error: "Bad Request",
+              message: "Invalid file type",
+              code: OB3ErrorCode.VALIDATION_FAILED,
               allowedTypes: ALLOWED_MIME_TYPES,
             },
             400,
@@ -165,7 +185,9 @@ export class AssetsController {
           });
           return c.json(
             {
-              error: "File too large",
+              error: "Bad Request",
+              message: "File too large",
+              code: OB3ErrorCode.VALIDATION_FAILED,
               maxSize: `${MAX_FILE_SIZE / 1024 / 1024}MB`,
             },
             400,
@@ -208,7 +230,14 @@ export class AssetsController {
             error.message.includes("write") ||
             error.message.includes("disk")
           ) {
-            return c.json({ error: "Storage error: Unable to save file" }, 500);
+            return c.json(
+              {
+                error: "Internal Server Error",
+                message: "Storage error: Unable to save file",
+                code: OB3ErrorCode.INTERNAL_ERROR,
+              },
+              500,
+            );
           }
 
           // Permission-related errors
@@ -217,7 +246,11 @@ export class AssetsController {
             error.message.includes("access")
           ) {
             return c.json(
-              { error: "Permission denied: Unable to save file" },
+              {
+                error: "Forbidden",
+                message: "Permission denied: Unable to save file",
+                code: OB3ErrorCode.AUTH_FORBIDDEN,
+              },
               403,
             );
           }
@@ -228,14 +261,25 @@ export class AssetsController {
             error.message.includes("corrupt")
           ) {
             return c.json(
-              { error: "Invalid file format: File appears to be corrupted" },
+              {
+                error: "Bad Request",
+                message: "Invalid file format: File appears to be corrupted",
+                code: OB3ErrorCode.VALIDATION_FAILED,
+              },
               400,
             );
           }
         }
 
         // Generic error fallback
-        return c.json({ error: "Internal server error" }, 500);
+        return c.json(
+          {
+            error: "Internal Server Error",
+            message: "Internal server error",
+            code: OB3ErrorCode.INTERNAL_ERROR,
+          },
+          500,
+        );
       }
     });
   }

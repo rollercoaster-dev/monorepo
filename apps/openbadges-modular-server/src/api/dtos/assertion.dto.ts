@@ -115,9 +115,28 @@ export type AssertionResponseDto = OB2.Assertion | OB3.VerifiableCredential;
 
 /**
  * Error response DTO
+ *
+ * Standardized error response format for consistent API error handling.
+ * All error responses should use this structure.
+ *
+ * @example
+ * // Basic error
+ * { error: "Not Found", message: "Issuer not found" }
+ *
+ * // Error with code
+ * { error: "Bad Request", message: "Invalid credential format", code: "INVALID_CREDENTIAL" }
+ *
+ * // Error with details
+ * { error: "Validation Error", message: "Request validation failed", details: ["name is required", "url must be valid"] }
  */
 export interface ErrorResponseDto {
+  /** Error type/category (e.g., "Not Found", "Bad Request", "Internal Server Error") */
   error: string;
+  /** Human-readable error message for display to users */
+  message: string;
+  /** Machine-readable error code for programmatic handling (optional) */
+  code?: string;
+  /** Additional error details, typically validation errors (optional) */
   details?: string[];
 }
 
