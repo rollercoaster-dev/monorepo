@@ -16,6 +16,7 @@ import { verifyJWTProof } from "./proof-verifier.js";
 import { verifyIssuer } from "./issuer-verifier.js";
 import type {
   ProofType,
+  ProofVerificationResult,
   VerificationCheck,
   VerificationChecks,
   VerificationOptions,
@@ -245,10 +246,82 @@ function extractVerificationMethod(
 }
 
 /**
+ * Proof object extracted from a credential
+ */
+interface ExtractedProof {
+  /** Index in the original proof array (0 for single proof) */
+  index: number;
+  /** The proof object itself */
+  proof: Record<string, unknown>;
+  /** Proof type */
+  type: ProofType | undefined;
+  /** Verification method from the proof */
+  verificationMethod: Shared.IRI | undefined;
+}
+
+/**
+ * Extract all proofs from a credential
+ *
+ * Handles both single proof and proof array formats as per W3C VC Data Model 2.0.
+ *
+ * @param credential - Credential to extract proofs from
+ * @returns Array of extracted proofs (empty for JWT credentials)
+ */
+function extractProofs(credential: Record<string, unknown>): ExtractedProof[] {
+  const proofField = credential.proof;
+
+  // No proof field - return empty array
+  if (!proofField) {
+    return [];
+  }
+
+  // Single proof (object)
+  if (!Array.isArray(proofField) && typeof proofField === "object") {
+    const proof = proofField as Record<string, unknown>;
+    return [
+      {
+        index: 0,
+        proof,
+        type:
+          typeof proof.type === "string"
+            ? (proof.type as ProofType)
+            : undefined,
+        verificationMethod:
+          typeof proof.verificationMethod === "string"
+            ? (proof.verificationMethod as Shared.IRI)
+            : undefined,
+      },
+    ];
+  }
+
+  // Multiple proofs (array)
+  if (Array.isArray(proofField)) {
+    return proofField.map((proof, index) => {
+      const proofObj = proof as Record<string, unknown>;
+      return {
+        index,
+        proof: proofObj,
+        type:
+          typeof proofObj.type === "string"
+            ? (proofObj.type as ProofType)
+            : undefined,
+        verificationMethod:
+          typeof proofObj.verificationMethod === "string"
+            ? (proofObj.verificationMethod as Shared.IRI)
+            : undefined,
+      };
+    });
+  }
+
+  return [];
+}
+
+/**
  * Extract proof type from credential
  *
  * For JWT credentials, returns undefined (JWT uses envelope format).
  * For Linked Data credentials, extracts from proof.type.
+ * For credentials with multiple proofs, returns the type of the first proof.
  *
  * @param credential - Credential to extract proof type from
  * @param isJWT - Whether this is a JWT credential
@@ -263,12 +336,8 @@ function extractProofType(
     return undefined;
   }
 
-  const proof = credential.proof as Record<string, unknown> | undefined;
-  if (proof && typeof proof.type === "string") {
-    return proof.type as ProofType;
-  }
-
-  return undefined;
+  const proofs = extractProofs(credential);
+  return proofs.length > 0 ? proofs[0].type : undefined;
 }
 
 /**
@@ -497,12 +566,14 @@ export async function verify(
       );
     }
 
-    if (!verificationMethod) {
+    // For JWT credentials, verification method is required upfront (from kid or issuer)
+    // For linked data credentials, verification method comes from each proof object
+    if (isJWT && !verificationMethod) {
       checks.proof.push({
         check: "proof.verification-method",
-        description: "Extract verification method from credential",
+        description: "Extract verification method from JWT credential",
         passed: false,
-        error: "No verification method found in credential",
+        error: "No verification method found in JWT credential",
       });
 
       logger.warn("Verification failed: Missing verification method", {
@@ -522,23 +593,101 @@ export async function verify(
     }
 
     // Step 1: Proof Verification (must happen first)
+    // Tracks per-proof results for multi-proof credentials
+    const proofResults: ProofVerificationResult[] = [];
+    let totalProofs = 0;
+    let passedProofs = 0;
+
     if (!options?.skipProofVerification) {
       if (isJWT) {
+        // JWT credentials have a single proof in the envelope
         const proofCheck = await verifyJWTProof(
           credential as string,
           verificationMethod,
           options,
         );
         checks.proof.push(proofCheck);
-      } else {
-        // TODO: #309 Implement Linked Data proof verification
-        // See: https://www.w3.org/TR/vc-data-integrity/
-        checks.proof.push({
-          check: "proof.linked-data",
-          description: "Linked Data proof verification",
-          passed: false,
-          error: "Linked Data proof verification not yet implemented",
+        totalProofs = 1;
+        passedProofs = proofCheck.passed ? 1 : 0;
+
+        proofResults.push({
+          index: 0,
+          proofType: "jwt",
+          passed: proofCheck.passed,
+          verificationMethod,
+          error: proofCheck.error,
+          check: proofCheck,
         });
+      } else {
+        // Linked Data credentials may have multiple proofs
+        const proofs = extractProofs(credentialObj);
+        totalProofs = proofs.length;
+
+        if (proofs.length === 0) {
+          checks.proof.push({
+            check: "proof.linked-data.missing",
+            description: "Linked Data proof presence",
+            passed: false,
+            error: "Credential has no proof field",
+          });
+        } else {
+          // Verify each proof
+          for (const extractedProof of proofs) {
+            // TODO: #309 Implement Linked Data proof verification
+            // For now, mark as not implemented but track the proof
+            const proofCheck: VerificationCheck = {
+              check: `proof.linked-data.${extractedProof.index}`,
+              description: `Linked Data proof verification (proof ${extractedProof.index + 1}/${proofs.length})`,
+              passed: false,
+              error: "Linked Data proof verification not yet implemented",
+              details: {
+                proofIndex: extractedProof.index,
+                proofType: extractedProof.type,
+                verificationMethod: extractedProof.verificationMethod,
+              },
+            };
+
+            checks.proof.push(proofCheck);
+
+            proofResults.push({
+              index: extractedProof.index,
+              proofType: extractedProof.type ?? "jwt",
+              passed: proofCheck.passed,
+              verificationMethod: extractedProof.verificationMethod,
+              error: proofCheck.error,
+              check: proofCheck,
+            });
+
+            if (proofCheck.passed) {
+              passedProofs++;
+            }
+          }
+
+          // Apply proof policy
+          const proofPolicy = options?.proofPolicy ?? "all";
+          const proofPassed =
+            proofPolicy === "all"
+              ? passedProofs === totalProofs
+              : passedProofs > 0;
+
+          // Add a summary check for multi-proof credentials
+          if (proofs.length > 1) {
+            checks.proof.push({
+              check: "proof.policy",
+              description: `Multi-proof policy check (${proofPolicy})`,
+              passed: proofPassed,
+              details: {
+                policy: proofPolicy,
+                totalProofs,
+                passedProofs,
+                requiredToPass: proofPolicy === "all" ? totalProofs : 1,
+              },
+              error: proofPassed
+                ? undefined
+                : `Proof policy '${proofPolicy}' not satisfied: ${passedProofs}/${totalProofs} proofs passed`,
+            });
+          }
+        }
       }
     }
 
@@ -606,6 +755,9 @@ export async function verify(
       issuer,
       proofType,
       verificationMethod,
+      proofResults: proofResults.length > 0 ? proofResults : undefined,
+      totalProofs: totalProofs > 0 ? totalProofs : undefined,
+      passedProofs: totalProofs > 0 ? passedProofs : undefined,
       verifiedAt,
       metadata: {
         durationMs,

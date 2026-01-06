@@ -191,12 +191,19 @@ export class SqliteApiKeyRepository implements ApiKeyRepository {
       };
 
       if (data.name !== undefined) updateValues.name = data.name;
-      if (data.description !== undefined) updateValues.description = data.description;
-      if (data.permissions !== undefined) updateValues.permissions = JSON.stringify(data.permissions);
-      if (data.revoked !== undefined) updateValues.revoked = data.revoked ? 1 : 0;
-      if (data.lastUsedAt !== undefined) updateValues.lastUsed = data.lastUsedAt.getTime();
+      if (data.description !== undefined)
+        updateValues.description = data.description;
+      if (data.permissions !== undefined)
+        updateValues.permissions = JSON.stringify(data.permissions);
+      if (data.revoked !== undefined)
+        updateValues.revoked = data.revoked ? 1 : 0;
+      if (data.lastUsedAt !== undefined)
+        updateValues.lastUsed = data.lastUsedAt.getTime();
 
-      await db.update(apiKeys).set(updateValues).where(eq(apiKeys.id, id as string));
+      await db
+        .update(apiKeys)
+        .set(updateValues)
+        .where(eq(apiKeys.id, id as string));
 
       // Fetch and return updated record
       return this.findById(id);

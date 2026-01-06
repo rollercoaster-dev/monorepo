@@ -134,10 +134,13 @@ export class PostgresApiKeyRepository implements ApiKeyRepository {
 
       return result.map((record) => this.toDomain(record));
     } catch (error) {
-      logger.error("Error finding API Keys by user ID in PostgreSQL repository", {
-        error: error instanceof Error ? error.stack : String(error),
-        userId,
-      });
+      logger.error(
+        "Error finding API Keys by user ID in PostgreSQL repository",
+        {
+          error: error instanceof Error ? error.stack : String(error),
+          userId,
+        },
+      );
       throw error;
     }
   }
@@ -179,12 +182,18 @@ export class PostgresApiKeyRepository implements ApiKeyRepository {
       };
 
       if (data.name !== undefined) updateValues.name = data.name;
-      if (data.description !== undefined) updateValues.description = data.description;
-      if (data.permissions !== undefined) updateValues.permissions = data.permissions;
+      if (data.description !== undefined)
+        updateValues.description = data.description;
+      if (data.permissions !== undefined)
+        updateValues.permissions = data.permissions;
       if (data.revoked !== undefined) updateValues.revoked = data.revoked;
-      if (data.lastUsedAt !== undefined) updateValues.lastUsed = data.lastUsedAt;
+      if (data.lastUsedAt !== undefined)
+        updateValues.lastUsed = data.lastUsedAt;
 
-      await this.db.update(apiKeys).set(updateValues).where(eq(apiKeys.id, dbId));
+      await this.db
+        .update(apiKeys)
+        .set(updateValues)
+        .where(eq(apiKeys.id, dbId));
 
       // Fetch and return updated record
       return this.findById(id);
@@ -278,10 +287,13 @@ export class PostgresApiKeyRepository implements ApiKeyRepository {
 
       return this.findById(id);
     } catch (error) {
-      logger.error("Error updating API Key last used in PostgreSQL repository", {
-        error: error instanceof Error ? error.stack : String(error),
-        id,
-      });
+      logger.error(
+        "Error updating API Key last used in PostgreSQL repository",
+        {
+          error: error instanceof Error ? error.stack : String(error),
+          id,
+        },
+      );
       throw error;
     }
   }
@@ -297,15 +309,11 @@ export class PostgresApiKeyRepository implements ApiKeyRepository {
     apiKey.id = convertUuid(
       record.id as string,
       "postgresql",
-      "from"
+      "from",
     ) as Shared.IRI;
     apiKey.key = record.key as string;
     apiKey.name = record.name as string;
-    apiKey.userId = convertUuid(
-      record.userId as string,
-      "postgresql",
-      "from"
-    );
+    apiKey.userId = convertUuid(record.userId as string, "postgresql", "from");
     apiKey.description = record.description as string | undefined;
     apiKey.permissions = record.permissions as ApiKeyPermissions;
     apiKey.revoked = Boolean(record.revoked);
