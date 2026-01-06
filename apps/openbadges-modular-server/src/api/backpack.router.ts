@@ -14,6 +14,7 @@ import type {
   AddAssertionRequest,
   UpdateAssertionStatusRequest,
 } from "../domains/backpack/api.types";
+import { OB3ErrorCode } from "../utils/errors/api-error-handler";
 // TODO: Migrate RBAC middleware for Hono
 // import { requirePermissions } from '../auth/middleware/rbac.middleware';
 // import { UserPermission } from '../domains/user/user.entity';
@@ -76,7 +77,15 @@ export function createBackpackRouter(
     const id = c.req.param("id");
     const platform = await backpackController.getPlatformById(id as Shared.IRI);
     if (!platform) {
-      return c.json({ success: false, error: "Platform not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: "Not Found",
+          message: "Platform not found",
+          code: OB3ErrorCode.NOT_FOUND,
+        },
+        404,
+      );
     }
     return c.json({ success: true, platform }, 200);
   });
@@ -98,7 +107,15 @@ export function createBackpackRouter(
     );
     const platform = result.body;
     if (!platform) {
-      return c.json({ success: false, error: "Platform not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: "Not Found",
+          message: "Platform not found",
+          code: OB3ErrorCode.NOT_FOUND,
+        },
+        404,
+      );
     }
     return c.json({ success: true, platform }, 200);
   });
@@ -106,7 +123,15 @@ export function createBackpackRouter(
     const id = c.req.param("id");
     const success = await backpackController.deletePlatform(id as Shared.IRI);
     if (!success) {
-      return c.json({ success: false, error: "Platform not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: "Not Found",
+          message: "Platform not found",
+          code: OB3ErrorCode.NOT_FOUND,
+        },
+        404,
+      );
     }
     return c.json({ success: true }, 200);
   });
@@ -117,7 +142,15 @@ export function createBackpackRouter(
   router.post("/assertions", async (c) => {
     const platformUser = c.var.platformUser;
     if (!platformUser) {
-      return c.json({ success: false, error: "Authentication required" }, 401);
+      return c.json(
+        {
+          success: false,
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
     const body = await c.req.json<AddAssertionRequest>();
     const { assertionId, metadata } = body;
@@ -133,7 +166,15 @@ export function createBackpackRouter(
   router.get("/assertions", async (c) => {
     const platformUser = c.var.platformUser;
     if (!platformUser) {
-      return c.json({ success: false, error: "Authentication required" }, 401);
+      return c.json(
+        {
+          success: false,
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
     const version = c.req.query("version") || "v3";
     const result = await backpackController.getUserAssertions(
@@ -147,7 +188,15 @@ export function createBackpackRouter(
   router.delete("/assertions/:assertionId", async (c) => {
     const platformUser = c.var.platformUser;
     if (!platformUser) {
-      return c.json({ success: false, error: "Authentication required" }, 401);
+      return c.json(
+        {
+          success: false,
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
     const assertionId = c.req.param("assertionId");
     const result = await backpackController.removeAssertion(
@@ -156,7 +205,15 @@ export function createBackpackRouter(
     );
     const success = result.body.success;
     if (!success) {
-      return c.json({ success: false, error: "Assertion not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: "Not Found",
+          message: "Assertion not found",
+          code: OB3ErrorCode.ASSERTION_NOT_FOUND,
+        },
+        404,
+      );
     }
     return c.json({ success: true }, 200);
   });
@@ -164,7 +221,15 @@ export function createBackpackRouter(
   router.patch("/assertions/:assertionId/status", async (c) => {
     const platformUser = c.var.platformUser;
     if (!platformUser) {
-      return c.json({ success: false, error: "Authentication required" }, 401);
+      return c.json(
+        {
+          success: false,
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
     const assertionId = c.req.param("assertionId");
     const body = await c.req.json<UpdateAssertionStatusRequest>();
@@ -176,7 +241,15 @@ export function createBackpackRouter(
     );
     const success = result.body.success;
     if (!success) {
-      return c.json({ success: false, error: "Assertion not found" }, 404);
+      return c.json(
+        {
+          success: false,
+          error: "Not Found",
+          message: "Assertion not found",
+          code: OB3ErrorCode.ASSERTION_NOT_FOUND,
+        },
+        404,
+      );
     }
     return c.json({ success: true }, 200);
   });

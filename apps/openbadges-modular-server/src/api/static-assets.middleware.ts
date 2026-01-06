@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import * as path from "path";
 import { logger } from "../utils/logging/logger.service";
+import { OB3ErrorCode } from "../utils/errors/api-error-handler";
 
 // Ensure UPLOADS_DIR has a trailing separator for secure path comparison
 let UPLOADS_DIR =
@@ -35,7 +36,14 @@ export function createStaticAssetsRouter(): Hono {
       const filename = c.req.param("filename");
       // Only allow alphanumeric characters, hyphens, underscores, and periods
       if (!/^[a-zA-Z0-9_\-.]+$/.test(filename)) {
-        return c.json({ error: "Invalid filename format" }, 400);
+        return c.json(
+          {
+            error: "Bad Request",
+            message: "Invalid filename format",
+            code: OB3ErrorCode.VALIDATION_FAILED,
+          },
+          400,
+        );
       }
       const sanitizedFilename = filename;
 
@@ -46,12 +54,26 @@ export function createStaticAssetsRouter(): Hono {
 
       // Check if the normalized path is within the uploads directory
       if (!normalizedPath.startsWith(UPLOADS_DIR)) {
-        return c.json({ error: "Invalid file path" }, 400);
+        return c.json(
+          {
+            error: "Bad Request",
+            message: "Invalid file path",
+            code: OB3ErrorCode.VALIDATION_FAILED,
+          },
+          400,
+        );
       }
       const filePath = normalizedPath;
 
       if (!existsSync(filePath)) {
-        return c.json({ error: "File not found" }, 404);
+        return c.json(
+          {
+            error: "Not Found",
+            message: "File not found",
+            code: OB3ErrorCode.NOT_FOUND,
+          },
+          404,
+        );
       }
 
       const fileBuffer = await readFile(filePath);
@@ -75,7 +97,14 @@ export function createStaticAssetsRouter(): Hono {
         filename: c.req.param("filename"),
         error: error instanceof Error ? error.message : String(error),
       });
-      return c.json({ error: "Internal server error" }, 500);
+      return c.json(
+        {
+          error: "Internal Server Error",
+          message: "Internal server error",
+          code: OB3ErrorCode.INTERNAL_ERROR,
+        },
+        500,
+      );
     }
   });
 

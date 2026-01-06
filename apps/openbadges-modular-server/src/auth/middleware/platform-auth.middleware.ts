@@ -8,6 +8,7 @@ import { PlatformUser } from "../../domains/backpack/platform-user.entity";
 import type { Shared } from "openbadges-types";
 import { decodeJwt } from "jose";
 import { createMiddleware } from "hono/factory";
+import { OB3ErrorCode } from "../../utils/errors/api-error-handler";
 
 // Define the variables that will be set in the context
 type PlatformAuthVariables = {
@@ -39,7 +40,14 @@ export function createPlatformAuthMiddleware(
     if (!authHeader) {
       c.set("isAuthenticated", false);
       c.set("platformUser", null);
-      return c.json({ error: "Authentication required" }, 401);
+      return c.json(
+        {
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
 
     // Extract token
@@ -47,7 +55,14 @@ export function createPlatformAuthMiddleware(
     if (!token) {
       c.set("isAuthenticated", false);
       c.set("platformUser", null);
-      return c.json({ error: "Authentication required" }, 401);
+      return c.json(
+        {
+          error: "Unauthorized",
+          message: "Authentication required",
+          code: OB3ErrorCode.AUTH_REQUIRED,
+        },
+        401,
+      );
     }
 
     try {
@@ -60,7 +75,14 @@ export function createPlatformAuthMiddleware(
       if (!platform) {
         c.set("isAuthenticated", false);
         c.set("platformUser", null);
-        return c.json({ error: "Unknown platform" }, 401);
+        return c.json(
+          {
+            error: "Unauthorized",
+            message: "Unknown platform",
+            code: OB3ErrorCode.AUTH_INVALID,
+          },
+          401,
+        );
       }
 
       // Verify token
@@ -94,7 +116,14 @@ export function createPlatformAuthMiddleware(
     } catch (_error) {
       c.set("isAuthenticated", false);
       c.set("platformUser", null);
-      return c.json({ error: "Authentication failed" }, 401);
+      return c.json(
+        {
+          error: "Unauthorized",
+          message: "Authentication failed",
+          code: OB3ErrorCode.AUTH_INVALID,
+        },
+        401,
+      );
     }
   });
 }
