@@ -551,13 +551,19 @@ cmd_preflight() {
   log_info "Running pre-flight baseline check on main..."
 
   # Ensure we're checking from main
-  local current_branch
+  # Handle detached HEAD state by saving the commit ref as fallback
+  local current_branch current_ref
   current_branch=$(git -C "$REPO_ROOT" branch --show-current)
+  current_ref=$(git -C "$REPO_ROOT" rev-parse --short HEAD)
   local switched_branch=false
+  local did_stash=false
 
   if [[ "$current_branch" != "main" ]]; then
     log_info "Temporarily checking out main for baseline..."
-    git -C "$REPO_ROOT" stash --quiet 2>/dev/null || true
+    # Only stash if there are changes
+    if git -C "$REPO_ROOT" stash --quiet 2>/dev/null; then
+      did_stash=true
+    fi
     git -C "$REPO_ROOT" checkout main --quiet
     switched_branch=true
   fi
@@ -585,8 +591,17 @@ cmd_preflight() {
 
   # Restore original branch if we switched
   if [[ "$switched_branch" == "true" ]]; then
-    git -C "$REPO_ROOT" checkout "$current_branch" --quiet
-    git -C "$REPO_ROOT" stash pop --quiet 2>/dev/null || true
+    if [[ -n "$current_branch" ]]; then
+      # Normal branch - checkout by name
+      git -C "$REPO_ROOT" checkout "$current_branch" --quiet
+    else
+      # Detached HEAD - checkout the saved commit ref
+      git -C "$REPO_ROOT" checkout --detach "$current_ref" --quiet
+    fi
+    # Only pop stash if we actually stashed
+    if [[ "$did_stash" == "true" ]]; then
+      git -C "$REPO_ROOT" stash pop --quiet 2>/dev/null || true
+    fi
   fi
 
   # Count issues
@@ -898,12 +913,14 @@ cmd_summary() {
     echo ""
   fi
 
-  # Baseline comparison
-  local baseline_lint_errors baseline_typecheck_errors
-  baseline_lint_errors=$(jq '.baseline.lint.errors // 0' "$STATE_FILE")
-  baseline_typecheck_errors=$(jq '.baseline.typecheck.errors // 0' "$STATE_FILE")
+  # Baseline comparison (only show if baseline was captured)
+  local has_baseline
+  has_baseline=$(jq 'has("baseline") and .baseline != null' "$STATE_FILE")
 
-  if [[ "$baseline_lint_errors" != "null" ]] || [[ "$baseline_typecheck_errors" != "null" ]]; then
+  if [[ "$has_baseline" == "true" ]]; then
+    local baseline_lint_errors baseline_typecheck_errors
+    baseline_lint_errors=$(jq '.baseline.lint.errors // 0' "$STATE_FILE")
+    baseline_typecheck_errors=$(jq '.baseline.typecheck.errors // 0' "$STATE_FILE")
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                    Baseline Comparison                      │"
     echo "└─────────────────────────────────────────────────────────────┘"
