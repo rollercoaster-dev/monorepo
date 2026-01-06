@@ -172,6 +172,27 @@ cmd_create() {
   log_info "Installing dependencies in worktree..."
   (cd "$worktree_path" && bun install --silent)
 
+  # Validate and enable git hooks
+  log_info "Validating git hooks in worktree..."
+  local hooks_path
+  hooks_path=$(git -C "$worktree_path" config core.hooksPath || echo "")
+
+  if [[ "$hooks_path" != ".husky/_" ]]; then
+    log_warn "Git hooks path not configured, setting to .husky/_"
+    git -C "$worktree_path" config core.hooksPath .husky/_
+  fi
+
+  # Ensure .husky/_/h helper is executable
+  if [[ -f "$worktree_path/.husky/_/h" ]]; then
+    if [[ ! -x "$worktree_path/.husky/_/h" ]]; then
+      log_warn "Husky helper not executable, fixing permissions"
+      chmod +x "$worktree_path/.husky/_/h"
+    fi
+    log_success "Git hooks enabled successfully"
+  else
+    log_error "Husky helper not found at .husky/_/h - hooks may not work!"
+  fi
+
   update_state "$issue_number" "created" "$branch_name"
 
   log_success "Created worktree for issue #$issue_number"
