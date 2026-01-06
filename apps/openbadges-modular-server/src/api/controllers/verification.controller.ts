@@ -37,9 +37,10 @@ export class VerificationController {
     request: VerifyCredentialRequestDto,
   ): Promise<VerificationResult> {
     const { credential, options } = request;
+    const credentialType = typeof credential === "string" ? "JWT" : "JSON-LD";
 
     logger.debug("Starting credential verification", {
-      credentialType: typeof credential === "string" ? "JWT" : "JSON-LD",
+      credentialType,
       hasOptions: !!options,
     });
 
@@ -61,31 +62,43 @@ export class VerificationController {
         }
       : undefined;
 
-    // Call the verification service with proper type handling
-    // The credential has been validated by Zod - it's either a string (JWT)
-    // or a JSON-LD credential object that satisfies the schema
-    let result;
-    if (typeof credential === "string") {
-      // JWT credential - pass string directly
-      result = await verify(credential, verificationOptions);
-    } else {
-      // JSON-LD credential - the Zod schema validates structure,
-      // and passthrough() allows additional properties, making it
-      // compatible with Record<string, unknown>
-      result = await verify(
-        credential as Record<string, unknown>,
-        verificationOptions,
-      );
+    try {
+      // Call the verification service with proper type handling
+      // The credential has been validated by Zod - it's either a string (JWT)
+      // or a JSON-LD credential object that satisfies the schema
+      let result;
+      if (typeof credential === "string") {
+        // JWT credential - pass string directly
+        result = await verify(credential, verificationOptions);
+      } else {
+        // JSON-LD credential - the Zod schema validates structure,
+        // and passthrough() allows additional properties, making it
+        // compatible with Record<string, unknown>
+        result = await verify(
+          credential as Record<string, unknown>,
+          verificationOptions,
+        );
+      }
+
+      logger.debug("Credential verification completed", {
+        status: result.status,
+        isValid: result.isValid,
+        credentialId: result.credentialId,
+        issuer: result.issuer,
+        durationMs: result.metadata?.durationMs,
+      });
+
+      return result;
+    } catch (error) {
+      // Log the error with full context for debugging
+      logger.error("Credential verification failed with exception", {
+        credentialType,
+        hasOptions: !!options,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      // Re-throw to let the router handle the HTTP response
+      throw error;
     }
-
-    logger.debug("Credential verification completed", {
-      status: result.status,
-      isValid: result.isValid,
-      credentialId: result.credentialId,
-      issuer: result.issuer,
-      durationMs: result.metadata?.durationMs,
-    });
-
-    return result;
   }
 }

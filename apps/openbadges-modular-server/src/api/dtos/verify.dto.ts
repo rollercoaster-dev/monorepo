@@ -31,19 +31,26 @@ const iso8601DateTimeSchema = z
   .optional();
 
 /**
- * Validates @context array contains required VC context
+ * Helper to check if a context string is a valid VC context
+ */
+const isValidVcContext = (ctx: string): boolean =>
+  ctx === "https://www.w3.org/2018/credentials/v1" ||
+  ctx === "https://www.w3.org/ns/credentials/v2";
+
+/**
+ * Validates @context contains required VC context
  * Accepts single string or array of strings
+ * Both forms must include a valid W3C VC context
  */
 const contextSchema = z.union([
-  z.string(),
+  z.string().refine(isValidVcContext, {
+    message:
+      "@context must be a W3C Verifiable Credentials context (v1 or v2)",
+  }),
   z.array(z.string()).refine(
     (contexts) => {
       // Must include at least one VC context
-      return contexts.some(
-        (ctx) =>
-          ctx === "https://www.w3.org/2018/credentials/v1" ||
-          ctx === "https://www.w3.org/ns/credentials/v2",
-      );
+      return contexts.some(isValidVcContext);
     },
     {
       message:
@@ -118,11 +125,12 @@ export const JsonLdCredentialSchema = z
 
 /**
  * Validates a string is valid base64url encoding
- * Base64url uses A-Z, a-z, 0-9, -, _ (no padding required)
+ * Base64url uses A-Z, a-z, 0-9, -, _ with optional padding (0-2 chars)
+ * Per RFC 4648, base64url padding is limited to 0, 1, or 2 '=' characters
  */
 const isValidBase64url = (str: string): boolean => {
-  // Base64url alphabet: A-Z, a-z, 0-9, -, _ (optional = padding)
-  return /^[A-Za-z0-9_-]*=*$/.test(str);
+  // Base64url alphabet: A-Z, a-z, 0-9, -, _ with 0-2 padding chars
+  return /^[A-Za-z0-9_-]*={0,2}$/.test(str);
 };
 
 /**
