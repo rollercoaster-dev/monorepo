@@ -22,6 +22,14 @@ import type { Shared } from "openbadges-types";
 // =============================================================================
 
 /**
+ * Multicodec prefixes for different key types
+ *
+ * @see https://github.com/multiformats/multicodec/blob/master/table.csv
+ */
+const MULTICODEC_ED25519_PUB = 0xed; // Ed25519 public key
+const MULTICODEC_P256_PUB = 0x1200; // P-256 (secp256r1) public key
+
+/**
  * Decode base58btc string
  *
  * Minimal base58 decoder for Bitcoin-style encoding.
@@ -32,6 +40,16 @@ import type { Shared } from "openbadges-types";
 function decodeBase58(encoded: string): Uint8Array {
   const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   const BASE = BigInt(58);
+
+  // Count leading zeros
+  let leadingZeros = 0;
+  for (let i = 0; i < encoded.length; i++) {
+    if (encoded[i] === "1") {
+      leadingZeros++;
+    } else {
+      break;
+    }
+  }
 
   let result = BigInt(0);
   for (let i = 0; i < encoded.length; i++) {
@@ -44,13 +62,156 @@ function decodeBase58(encoded: string): Uint8Array {
   }
 
   // Convert BigInt to bytes
-  const hex = result.toString(16);
-  const bytes = new Uint8Array(Math.ceil(hex.length / 2));
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  const hex = result.toString(16).padStart(2, "0");
+  // Ensure even length for proper byte conversion
+  const paddedHex = hex.length % 2 === 0 ? hex : "0" + hex;
+  const bytes = new Uint8Array(leadingZeros + paddedHex.length / 2);
+
+  // Add leading zeros
+  for (let i = 0; i < leadingZeros; i++) {
+    bytes[i] = 0;
+  }
+
+  // Add the rest of the bytes
+  for (let i = 0; i < paddedHex.length / 2; i++) {
+    bytes[leadingZeros + i] = Number.parseInt(
+      paddedHex.slice(i * 2, i * 2 + 2),
+      16,
+    );
   }
 
   return bytes;
+}
+
+/**
+ * Read a varint from bytes
+ *
+ * Varints are unsigned integers encoded with variable length.
+ * Each byte uses 7 bits for data and 1 bit to indicate continuation.
+ *
+ * @param bytes - Byte array to read from
+ * @returns Object with the decoded value and number of bytes read
+ */
+function readVarint(bytes: Uint8Array): { value: number; bytesRead: number } {
+  let value = 0;
+  let shift = 0;
+  let bytesRead = 0;
+
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i];
+    value |= (byte & 0x7f) << shift;
+    bytesRead++;
+
+    if ((byte & 0x80) === 0) {
+      break;
+    }
+    shift += 7;
+  }
+
+  return { value, bytesRead };
+}
+
+/**
+ * Modular exponentiation: (base^exp) mod mod
+ *
+ * Uses square-and-multiply algorithm for efficiency.
+ */
+function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
+  let result = BigInt(1);
+  base = base % mod;
+
+  while (exp > 0) {
+    if (exp % BigInt(2) === BigInt(1)) {
+      result = (result * base) % mod;
+    }
+    exp = exp / BigInt(2);
+    base = (base * base) % mod;
+  }
+
+  return result;
+}
+
+/**
+ * Decompress a compressed P-256 public key
+ *
+ * Compressed P-256 keys are 33 bytes: 1 byte prefix (0x02 or 0x03) + 32 bytes X coordinate.
+ * The Y coordinate is calculated from the X coordinate and the prefix indicates the sign.
+ *
+ * @param compressed - Compressed public key bytes (33 bytes)
+ * @returns Uncompressed public key bytes (65 bytes) or null on error
+ */
+async function decompressP256PublicKey(
+  compressed: Uint8Array,
+): Promise<Uint8Array | null> {
+  try {
+    if (compressed.length !== 33) {
+      return null;
+    }
+
+    const prefix = compressed[0];
+    if (prefix !== 0x02 && prefix !== 0x03) {
+      return null;
+    }
+
+    // Extract X coordinate
+    const x = compressed.slice(1);
+
+    // P-256 curve parameters
+    // p = 2^256 - 2^224 + 2^192 + 2^96 - 1
+    const p = BigInt(
+      "0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+    );
+    // a = -3 mod p
+    const a = BigInt(
+      "0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc",
+    );
+    // b
+    const b = BigInt(
+      "0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
+    );
+
+    // Convert X to BigInt
+    let xBigInt = BigInt(0);
+    for (const byte of x) {
+      xBigInt = (xBigInt << BigInt(8)) | BigInt(byte);
+    }
+
+    // Calculate y^2 = x^3 + ax + b (mod p)
+    const x3 = modPow(xBigInt, BigInt(3), p);
+    const ax = (a * xBigInt) % p;
+    let y2 = (x3 + ax + b) % p;
+    if (y2 < 0) y2 += p;
+
+    // Calculate y = sqrt(y^2) mod p using Tonelli-Shanks
+    // For P-256, p ≡ 3 (mod 4), so y = y2^((p+1)/4) mod p
+    const y = modPow(y2, (p + BigInt(1)) / BigInt(4), p);
+
+    // Check sign and adjust if needed
+    const isOdd = y % BigInt(2) === BigInt(1);
+    const wantOdd = prefix === 0x03;
+    const finalY = isOdd === wantOdd ? y : p - y;
+
+    // Convert Y to bytes
+    const yBytes = new Uint8Array(32);
+    let tempY = finalY;
+    for (let i = 31; i >= 0; i--) {
+      yBytes[i] = Number(tempY & BigInt(0xff));
+      tempY = tempY >> BigInt(8);
+    }
+
+    // Create uncompressed key: 0x04 + X (32 bytes) + Y (32 bytes)
+    const uncompressed = new Uint8Array(65);
+    uncompressed[0] = 0x04;
+    uncompressed.set(x, 1);
+    uncompressed.set(yBytes, 33);
+
+    return uncompressed;
+  } catch (error) {
+    console.error(
+      `Failed to decompress P-256 key: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    return null;
+  }
 }
 
 /**
@@ -85,15 +246,236 @@ function decodeMultibase(encoded: string): Uint8Array {
  * Implements did:key resolution according to RFC 9278.
  * Extracts the multibase-encoded public key from the DID.
  *
- * @param didKey - The did:key identifier
+ * Supported key types:
+ * - Ed25519 (multicodec 0xed)
+ * - P-256/secp256r1 (multicodec 0x1200)
+ *
+ * @param didKey - The did:key identifier (e.g., "did:key:z6Mkf5rGMoatrSj1f4CyvuHBeXJELe9RPdzo2PKGNCKVtZxP")
  * @returns Public key as CryptoKey or null
+ *
+ * @see https://w3c-ccg.github.io/did-method-key/
  */
-async function resolveDidKey(_didKey: string): Promise<CryptoKey | null> {
-  // TODO: Implement full did:key resolution
-  // For now, return null to indicate resolution not yet implemented
-  // This will be implemented in a future issue covering DID resolution
-  console.warn(`did:key resolution not yet implemented: ${_didKey}`);
+async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
+  try {
+    // Extract the multibase-encoded key from the DID
+    // Format: did:key:<multibase-encoded-public-key>[#<fragment>]
+    const keyPart = didKey.replace(/^did:key:/, "").split("#")[0];
+
+    if (!keyPart) {
+      console.error("Invalid did:key format: missing key part");
+      return null;
+    }
+
+    // Decode multibase (z prefix = base58btc)
+    const keyBytes = decodeMultibase(keyPart);
+
+    // Read multicodec prefix (varint encoded)
+    const { value: codecValue, bytesRead } = readVarint(keyBytes);
+
+    // Extract raw public key bytes (after multicodec prefix)
+    const publicKeyBytes = keyBytes.slice(bytesRead);
+
+    // Import as CryptoKey based on key type
+    if (codecValue === MULTICODEC_ED25519_PUB) {
+      // Ed25519 public key (32 bytes)
+      if (publicKeyBytes.length !== 32) {
+        console.error(
+          `Invalid Ed25519 public key length: expected 32, got ${publicKeyBytes.length}`,
+        );
+        return null;
+      }
+
+      return await globalThis.crypto.subtle.importKey(
+        "raw",
+        publicKeyBytes,
+        { name: "Ed25519" },
+        true,
+        ["verify"],
+      );
+    }
+
+    if (codecValue === MULTICODEC_P256_PUB) {
+      // P-256 public key (compressed: 33 bytes, uncompressed: 65 bytes)
+      // Web Crypto only supports uncompressed format (0x04 prefix + 64 bytes)
+      if (publicKeyBytes.length === 33) {
+        // Compressed format - need to decompress
+        const uncompressedKey = await decompressP256PublicKey(publicKeyBytes);
+        if (!uncompressedKey) {
+          console.error("Failed to decompress P-256 public key");
+          return null;
+        }
+
+        return await globalThis.crypto.subtle.importKey(
+          "raw",
+          uncompressedKey.buffer as ArrayBuffer,
+          { name: "ECDSA", namedCurve: "P-256" },
+          true,
+          ["verify"],
+        );
+      }
+
+      if (publicKeyBytes.length === 65) {
+        // Uncompressed format
+        return await globalThis.crypto.subtle.importKey(
+          "raw",
+          publicKeyBytes.buffer as ArrayBuffer,
+          { name: "ECDSA", namedCurve: "P-256" },
+          true,
+          ["verify"],
+        );
+      }
+
+      console.error(
+        `Invalid P-256 public key length: expected 33 or 65, got ${publicKeyBytes.length}`,
+      );
+      return null;
+    }
+
+    console.error(`Unsupported multicodec prefix: 0x${codecValue.toString(16)}`);
+    return null;
+  } catch (error) {
+    console.error(
+      `Failed to resolve did:key: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * DID Document structure (simplified for verification method extraction)
+ */
+interface DIDDocument {
+  id: string;
+  verificationMethod?: Array<{
+    id: string;
+    type: string;
+    controller: string;
+    publicKeyJwk?: jose.JWK;
+    publicKeyMultibase?: string;
+  }>;
+  assertionMethod?: Array<string | { id: string }>;
+  authentication?: Array<string | { id: string }>;
+}
+
+/**
+ * Find the default verification method from a DID document
+ *
+ * Looks for the first assertionMethod or authentication reference.
+ */
+function findDefaultVerificationMethod(didDocument: DIDDocument): string | null {
+  // Try assertionMethod first (preferred for credentials)
+  if (didDocument.assertionMethod && didDocument.assertionMethod.length > 0) {
+    const am = didDocument.assertionMethod[0];
+    return typeof am === "string" ? am : am.id;
+  }
+
+  // Fall back to authentication
+  if (didDocument.authentication && didDocument.authentication.length > 0) {
+    const auth = didDocument.authentication[0];
+    return typeof auth === "string" ? auth : auth.id;
+  }
+
+  // Fall back to first verification method
+  if (
+    didDocument.verificationMethod &&
+    didDocument.verificationMethod.length > 0
+  ) {
+    return didDocument.verificationMethod[0].id;
+  }
+
   return null;
+}
+
+/**
+ * Extract a CryptoKey from a verification method object
+ */
+async function extractPublicKeyFromVerificationMethod(
+  vm: NonNullable<DIDDocument["verificationMethod"]>[number],
+): Promise<CryptoKey | null> {
+  try {
+    // Handle publicKeyJwk
+    if (vm.publicKeyJwk) {
+      const imported = await jose.importJWK(vm.publicKeyJwk);
+      if (imported instanceof Uint8Array) {
+        console.error("Expected CryptoKey but got Uint8Array from importJWK");
+        return null;
+      }
+      return imported;
+    }
+
+    // Handle publicKeyMultibase (used with Ed25519VerificationKey2020)
+    if (vm.publicKeyMultibase) {
+      const keyBytes = decodeMultibase(vm.publicKeyMultibase);
+
+      // Check for multicodec prefix
+      const { value: codecValue, bytesRead } = readVarint(keyBytes);
+      const publicKeyBytes = keyBytes.slice(bytesRead);
+
+      // Determine key type from verification method type or multicodec
+      if (
+        vm.type === "Ed25519VerificationKey2020" ||
+        vm.type === "Ed25519VerificationKey2018" ||
+        codecValue === MULTICODEC_ED25519_PUB
+      ) {
+        const keyData =
+          publicKeyBytes.length === 32 ? publicKeyBytes : keyBytes;
+        return await globalThis.crypto.subtle.importKey(
+          "raw",
+          keyData.buffer as ArrayBuffer,
+          { name: "Ed25519" },
+          true,
+          ["verify"],
+        );
+      }
+
+      if (
+        vm.type === "EcdsaSecp256r1VerificationKey2019" ||
+        vm.type === "JsonWebKey2020" ||
+        codecValue === MULTICODEC_P256_PUB
+      ) {
+        // Handle P-256 key
+        const keyToUse =
+          publicKeyBytes.length === 33 || publicKeyBytes.length === 65
+            ? publicKeyBytes
+            : keyBytes;
+
+        if (keyToUse.length === 33) {
+          const uncompressed = await decompressP256PublicKey(keyToUse);
+          if (!uncompressed) {
+            return null;
+          }
+          return await globalThis.crypto.subtle.importKey(
+            "raw",
+            uncompressed.buffer as ArrayBuffer,
+            { name: "ECDSA", namedCurve: "P-256" },
+            true,
+            ["verify"],
+          );
+        }
+
+        return await globalThis.crypto.subtle.importKey(
+          "raw",
+          keyToUse.buffer as ArrayBuffer,
+          { name: "ECDSA", namedCurve: "P-256" },
+          true,
+          ["verify"],
+        );
+      }
+
+      console.error(`Unsupported verification method type: ${vm.type}`);
+      return null;
+    }
+
+    console.error(
+      "Verification method has no publicKeyJwk or publicKeyMultibase",
+    );
+    return null;
+  } catch (error) {
+    console.error(
+      `Failed to extract public key: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    return null;
+  }
 }
 
 /**
@@ -102,15 +484,96 @@ async function resolveDidKey(_didKey: string): Promise<CryptoKey | null> {
  * Implements did:web resolution by fetching the DID document from
  * the web domain specified in the DID.
  *
- * @param didWeb - The did:web identifier
+ * Conversion rules:
+ * - did:web:example.com -> https://example.com/.well-known/did.json
+ * - did:web:example.com:user:alice -> https://example.com/user/alice/did.json
+ * - did:web:example.com%3A8080 -> https://example.com:8080/.well-known/did.json
+ *
+ * @param didWeb - The did:web identifier (e.g., "did:web:example.com" or "did:web:example.com:user:alice#key-1")
  * @returns Public key as CryptoKey or null
+ *
+ * @see https://w3c-ccg.github.io/did-method-web/
  */
-async function resolveDidWeb(_didWeb: string): Promise<CryptoKey | null> {
-  // TODO: Implement full did:web resolution
-  // For now, return null to indicate resolution not yet implemented
-  // This will be implemented in a future issue covering DID resolution
-  console.warn(`did:web resolution not yet implemented: ${_didWeb}`);
-  return null;
+async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
+  try {
+    // Parse the did:web identifier
+    // Format: did:web:<domain>[:<path>...]#<fragment>
+    const [didPart, fragment] = didWeb.split("#");
+    const parts = didPart.replace(/^did:web:/, "").split(":");
+
+    if (parts.length === 0 || !parts[0]) {
+      console.error("Invalid did:web format: missing domain");
+      return null;
+    }
+
+    // First part is the domain (URL-decoded, may contain port as %3A)
+    const domain = decodeURIComponent(parts[0]);
+
+    // Remaining parts form the path
+    const pathParts = parts.slice(1).map(decodeURIComponent);
+
+    // Construct the URL
+    let url: string;
+    if (pathParts.length === 0) {
+      // No path - use .well-known
+      url = `https://${domain}/.well-known/did.json`;
+    } else {
+      // Path specified - append did.json
+      url = `https://${domain}/${pathParts.join("/")}/did.json`;
+    }
+
+    // Fetch the DID document
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/did+json, application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Failed to fetch DID document from ${url}: ${response.status} ${response.statusText}`,
+      );
+      return null;
+    }
+
+    const didDocument = (await response.json()) as DIDDocument;
+
+    // Validate DID document
+    if (!didDocument.id) {
+      console.error("Invalid DID document: missing 'id' field");
+      return null;
+    }
+
+    // Find the verification method
+    const verificationMethodId = fragment
+      ? `${didPart}#${fragment}`
+      : findDefaultVerificationMethod(didDocument);
+
+    if (!verificationMethodId) {
+      console.error("No verification method found in DID document");
+      return null;
+    }
+
+    // Look up the verification method
+    const verificationMethod = didDocument.verificationMethod?.find(
+      (vm) => vm.id === verificationMethodId || vm.id === `#${fragment}`,
+    );
+
+    if (!verificationMethod) {
+      console.error(
+        `Verification method not found: ${verificationMethodId}`,
+      );
+      return null;
+    }
+
+    // Extract public key from verification method
+    return await extractPublicKeyFromVerificationMethod(verificationMethod);
+  } catch (error) {
+    console.error(
+      `Failed to resolve did:web: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    return null;
+  }
 }
 
 /**
