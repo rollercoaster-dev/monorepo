@@ -331,7 +331,9 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
       return null;
     }
 
-    console.error(`Unsupported multicodec prefix: 0x${codecValue.toString(16)}`);
+    console.error(
+      `Unsupported multicodec prefix: 0x${codecValue.toString(16)}`,
+    );
     return null;
   } catch (error) {
     console.error(
@@ -362,7 +364,9 @@ interface DIDDocument {
  *
  * Looks for the first assertionMethod or authentication reference.
  */
-function findDefaultVerificationMethod(didDocument: DIDDocument): string | null {
+function findDefaultVerificationMethod(
+  didDocument: DIDDocument,
+): string | null {
   // Try assertionMethod first (preferred for credentials)
   if (didDocument.assertionMethod && didDocument.assertionMethod.length > 0) {
     const am = didDocument.assertionMethod[0];
@@ -560,9 +564,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
     );
 
     if (!verificationMethod) {
-      console.error(
-        `Verification method not found: ${verificationMethodId}`,
-      );
+      console.error(`Verification method not found: ${verificationMethodId}`);
       return null;
     }
 

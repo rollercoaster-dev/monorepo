@@ -329,8 +329,7 @@ describe("DID Key Resolution", () => {
     it("should resolve a known Ed25519 did:key", async () => {
       // Test vector from did:key spec
       // z6Mk... prefix = Ed25519
-      const didKey =
-        "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
+      const didKey = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
       const result = await resolveVerificationMethod(asIRI(didKey), undefined);
 
       expect(result).not.toBeNull();
