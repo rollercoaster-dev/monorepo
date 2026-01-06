@@ -210,6 +210,47 @@ describe("Unified Baking Service", () => {
       const short = Buffer.from([137, 80, 78, 71]);
       expect(detectFormat(short)).toBeNull();
     });
+
+    // Edge case tests for SVG detection with large preambles
+    // Note: SVG detection inspects only the first 1000 bytes for efficiency
+    // This is documented behavior suitable for badge use cases
+    it("should detect SVG with XML comment before svg element", () => {
+      const svg = Buffer.from(
+        '<?xml version="1.0"?><!-- This is a comment --><svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      );
+      expect(detectFormat(svg)).toBe("svg");
+    });
+
+    it("should detect SVG with processing instruction before svg element", () => {
+      const svg = Buffer.from(
+        '<?xml version="1.0"?><?xml-stylesheet type="text/css" href="style.css"?><svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      );
+      expect(detectFormat(svg)).toBe("svg");
+    });
+
+    it("should detect SVG with whitespace/newlines before svg element", () => {
+      const svg = Buffer.from(
+        '<?xml version="1.0"?>\n\n   \t\n<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      );
+      expect(detectFormat(svg)).toBe("svg");
+    });
+
+    it("should detect SVG via XML declaration even if svg element is beyond 1000 bytes", () => {
+      // Even with a large comment pushing <svg> beyond 1000 bytes,
+      // the <?xml declaration at the start still triggers SVG detection
+      const largeComment = "x".repeat(1001);
+      const svg = Buffer.from(
+        `<?xml version="1.0"?><!--${largeComment}--><svg xmlns="http://www.w3.org/2000/svg"></svg>`,
+      );
+      // Detection works because <?xml is in the first 1000 bytes
+      expect(detectFormat(svg)).toBe("svg");
+    });
+
+    it("should return null when no SVG patterns found in first 1000 bytes", () => {
+      // Random binary data without any SVG markers
+      const randomData = Buffer.alloc(1500, 0x42); // Fill with 'B' characters
+      expect(detectFormat(randomData)).toBeNull();
+    });
   });
 
   describe("bake", () => {
@@ -403,7 +444,7 @@ describe("Unified Baking Service", () => {
       const bakedResult = await bake(svg, credential);
       const unbakeResult = await unbake(bakedResult.data);
 
-      expect(unbakeResult.credential).toMatchObject(credential);
+      expect(unbakeResult.credential).toEqual(credential);
     });
 
     it("should preserve OB3 credential through SVG round-trip", async () => {
@@ -413,7 +454,7 @@ describe("Unified Baking Service", () => {
       const bakedResult = await bake(svg, credential);
       const unbakeResult = await unbake(bakedResult.data);
 
-      expect(unbakeResult.credential).toMatchObject(credential);
+      expect(unbakeResult.credential).toEqual(credential);
     });
   });
 
