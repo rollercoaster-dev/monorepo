@@ -531,6 +531,85 @@ describe("Verification Service", () => {
           expect(result.isValid).toBe(false);
         }
       });
+
+      it("should extract proofType from Linked Data credentials", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential"],
+          issuer: "did:web:example.com",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          proof: {
+            type: "DataIntegrityProof",
+            verificationMethod: "did:web:example.com#key-1",
+          },
+        };
+
+        const result = await verify(credential);
+
+        expect(result.proofType).toBe("DataIntegrityProof");
+      });
+    });
+
+    describe("Schema Validation", () => {
+      it("should reject credential without type field", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          issuer: "did:web:example.com",
+          issuanceDate: "2024-01-01T00:00:00Z",
+        };
+
+        const result = await verify(credential);
+
+        expect(result.status).toBe("error");
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain("type");
+        expect(result.checks.schema).toHaveLength(1);
+        expect(result.checks.schema[0].check).toBe("schema.type");
+        expect(result.checks.schema[0].passed).toBe(false);
+      });
+
+      it("should reject credential without VerifiableCredential type", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["OpenBadgeCredential"],
+          issuer: "did:web:example.com",
+          issuanceDate: "2024-01-01T00:00:00Z",
+        };
+
+        const result = await verify(credential);
+
+        expect(result.status).toBe("error");
+        expect(result.isValid).toBe(false);
+        expect(result.error).toContain("VerifiableCredential");
+        expect(result.checks.schema[0].passed).toBe(false);
+      });
+
+      it("should pass type validation with valid credential types", async () => {
+        const credential = {
+          "@context": ["https://www.w3.org/2018/credentials/v1"],
+          type: ["VerifiableCredential", "OpenBadgeCredential"],
+          issuer: "did:web:example.com",
+          issuanceDate: "2024-01-01T00:00:00Z",
+          proof: {
+            type: "DataIntegrityProof",
+            verificationMethod: "did:web:example.com#key-1",
+          },
+        };
+
+        const result = await verify(credential);
+
+        expect(result.checks.schema).toHaveLength(1);
+        expect(result.checks.schema[0].check).toBe("schema.type");
+        expect(result.checks.schema[0].passed).toBe(true);
+        expect(result.checks.schema[0].details).toHaveProperty(
+          "hasVerifiableCredential",
+          true,
+        );
+        expect(result.checks.schema[0].details).toHaveProperty(
+          "hasOpenBadgeCredential",
+          true,
+        );
+      });
     });
   });
 });

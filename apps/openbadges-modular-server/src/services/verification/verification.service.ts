@@ -11,9 +11,11 @@
  */
 
 import type { Shared } from "openbadges-types";
+import { logger } from "../../utils/logging/logger.service.js";
 import { verifyJWTProof } from "./proof-verifier.js";
 import { verifyIssuer } from "./issuer-verifier.js";
 import type {
+  ProofType,
   VerificationCheck,
   VerificationChecks,
   VerificationOptions,
@@ -211,19 +213,25 @@ function extractIssuer(credential: Record<string, unknown>): Shared.IRI | null {
 /**
  * Extract verification method from credential
  *
- * For JWT credentials, uses the issuer as the verification method.
+ * For JWT credentials, extracts from JWT header's `kid` field if present,
+ * otherwise falls back to the issuer DID.
  * For Linked Data credentials, extracts from proof.verificationMethod.
  *
  * @param credential - Credential to extract verification method from
  * @param isJWT - Whether this is a JWT credential
+ * @param jwtHeader - Optional parsed JWT header (for kid extraction)
  * @returns Verification method IRI or null if not found
  */
 function extractVerificationMethod(
   credential: Record<string, unknown>,
   isJWT: boolean,
+  jwtHeader?: Record<string, unknown>,
 ): Shared.IRI | null {
   if (isJWT) {
-    // For JWT, verification method is typically the issuer DID
+    // For JWT, prefer kid from header, fall back to issuer DID
+    if (jwtHeader && typeof jwtHeader.kid === "string") {
+      return jwtHeader.kid as Shared.IRI;
+    }
     return extractIssuer(credential);
   }
 
@@ -234,6 +242,83 @@ function extractVerificationMethod(
   }
 
   return null;
+}
+
+/**
+ * Extract proof type from credential
+ *
+ * For JWT credentials, returns undefined (JWT uses envelope format).
+ * For Linked Data credentials, extracts from proof.type.
+ *
+ * @param credential - Credential to extract proof type from
+ * @param isJWT - Whether this is a JWT credential
+ * @returns Proof type or undefined
+ */
+function extractProofType(
+  credential: Record<string, unknown>,
+  isJWT: boolean,
+): ProofType | undefined {
+  if (isJWT) {
+    // JWT uses VC-JWT envelope format, not embedded proof type
+    return undefined;
+  }
+
+  const proof = credential.proof as Record<string, unknown> | undefined;
+  if (proof && typeof proof.type === "string") {
+    return proof.type as ProofType;
+  }
+
+  return undefined;
+}
+
+/**
+ * Validate credential has required type fields
+ *
+ * Per OB 3.0 spec, credentials should have VerifiableCredential and
+ * OpenBadgeCredential in their type array.
+ *
+ * @param credential - Credential to validate
+ * @returns Validation result
+ */
+function validateCredentialType(
+  credential: Record<string, unknown>,
+): VerificationCheck {
+  const type = credential.type;
+
+  if (!type) {
+    return {
+      check: "schema.type",
+      description: "Credential type validation",
+      passed: false,
+      error: "Credential missing required 'type' field",
+    };
+  }
+
+  const types = Array.isArray(type) ? type : [type];
+  const hasVerifiableCredential = types.includes("VerifiableCredential");
+  const hasOpenBadgeCredential = types.includes("OpenBadgeCredential");
+
+  if (!hasVerifiableCredential) {
+    return {
+      check: "schema.type",
+      description: "Credential type validation",
+      passed: false,
+      error: "Credential must include 'VerifiableCredential' type",
+      details: { types },
+    };
+  }
+
+  // OpenBadgeCredential is recommended but not strictly required
+  return {
+    check: "schema.type",
+    description: "Credential type validation",
+    passed: true,
+    details: {
+      types,
+      hasVerifiableCredential,
+      hasOpenBadgeCredential,
+    },
+  };
 }
 
 /**
@@ -304,9 +389,10 @@ export async function verify(
     // Determine if credential is JWT or JSON-LD
     const isJWT = typeof credential === "string";
     let credentialObj: Record<string, unknown>;
+    let jwtHeader: Record<string, unknown> | undefined;
 
     if (isJWT) {
-      // Parse JWT payload to extract credential
+      // Parse JWT header and payload
       const parts = credential.split(".");
       if (parts.length !== 3) {
         checks.proof.push({
@@ -316,10 +402,18 @@ export async function verify(
           error: "Invalid JWT format",
         });
 
+        logger.warn("Verification failed: Invalid JWT format", {
+          check: "proof.format",
+        });
+
         return createErrorResult(checks, verifiedAt, "Invalid JWT format", startTime);
       }
 
       try {
+        // Parse JWT header for kid extraction
+        jwtHeader = JSON.parse(
+          Buffer.from(parts[0], "base64url").toString("utf-8"),
+        );
         const payload = JSON.parse(
           Buffer.from(parts[1], "base64url").toString("utf-8"),
         );
@@ -332,15 +426,40 @@ export async function verify(
           error: "Failed to parse JWT payload",
         });
 
+        logger.warn("Verification failed: Failed to parse JWT", {
+          check: "proof.format",
+        });
+
         return createErrorResult(checks, verifiedAt, "Failed to parse JWT", startTime);
       }
     } else {
       credentialObj = credential;
     }
 
-    // Extract issuer and verification method
+    // Step 0: Schema Validation (credential type check)
+    const typeCheck = validateCredentialType(credentialObj);
+    checks.schema.push(typeCheck);
+
+    if (!typeCheck.passed) {
+      logger.warn("Verification failed: Invalid credential type", {
+        check: typeCheck.check,
+        error: typeCheck.error,
+        credentialId: credentialObj.id,
+      });
+
+      return createErrorResult(
+        checks,
+        verifiedAt,
+        typeCheck.error || "Invalid credential type",
+        startTime,
+        credentialObj.id as Shared.IRI | undefined,
+      );
+    }
+
+    // Extract issuer, verification method, and proof type
     const issuer = extractIssuer(credentialObj);
-    const verificationMethod = extractVerificationMethod(credentialObj, isJWT);
+    const verificationMethod = extractVerificationMethod(credentialObj, isJWT, jwtHeader);
+    const proofType = extractProofType(credentialObj, isJWT);
 
     if (!issuer) {
       checks.issuer.push({
@@ -348,6 +467,11 @@ export async function verify(
         description: "Extract issuer from credential",
         passed: false,
         error: "No issuer found in credential",
+      });
+
+      logger.warn("Verification failed: Missing issuer", {
+        check: "issuer.extraction",
+        credentialId: credentialObj.id,
       });
 
       return createErrorResult(
@@ -365,6 +489,12 @@ export async function verify(
         description: "Extract verification method from credential",
         passed: false,
         error: "No verification method found in credential",
+      });
+
+      logger.warn("Verification failed: Missing verification method", {
+        check: "proof.verification-method",
+        credentialId: credentialObj.id,
+        issuer,
       });
 
       return createErrorResult(
@@ -387,7 +517,8 @@ export async function verify(
         );
         checks.proof.push(proofCheck);
       } else {
-        // Linked Data proof verification not yet implemented
+        // TODO: #309 Implement Linked Data proof verification
+        // See: https://www.w3.org/TR/vc-data-integrity/
         checks.proof.push({
           check: "proof.linked-data",
           description: "Linked Data proof verification",
@@ -423,6 +554,28 @@ export async function verify(
 
     const hasFailures = allChecks.some((check) => !check.passed);
     const status: VerificationStatus = hasFailures ? "invalid" : "valid";
+    const durationMs = Date.now() - startTime;
+
+    // Log verification result (without sensitive credential data)
+    if (hasFailures) {
+      const failedChecks = allChecks
+        .filter((c) => !c.passed)
+        .map((c) => c.check);
+      logger.warn("Verification completed with failures", {
+        credentialId: credentialObj.id,
+        issuer,
+        status,
+        failedChecks,
+        durationMs,
+      });
+    } else {
+      logger.debug("Verification completed successfully", {
+        credentialId: credentialObj.id,
+        issuer,
+        status,
+        durationMs,
+      });
+    }
 
     return {
       status,
@@ -430,10 +583,11 @@ export async function verify(
       checks,
       credentialId: credentialObj.id as Shared.IRI | undefined,
       issuer,
+      proofType,
       verificationMethod,
       verifiedAt,
       metadata: {
-        durationMs: Date.now() - startTime,
+        durationMs,
       },
     };
   } catch (error) {
@@ -445,6 +599,11 @@ export async function verify(
       description: "Verification process error",
       passed: false,
       error: errorMessage,
+    });
+
+    logger.error("Verification failed with unexpected error", {
+      error: errorMessage,
+      durationMs: Date.now() - startTime,
     });
 
     return createErrorResult(checks, verifiedAt, errorMessage, startTime);
