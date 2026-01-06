@@ -544,17 +544,18 @@ export async function verify(
 
     // Steps 2 & 3: Issuer Verification and Temporal Validation (parallel)
     // These are independent checks that don't depend on each other
+    // Note: Promise.all automatically wraps non-promise values
     const [issuerChecks, issuanceCheck, expirationCheck] = await Promise.all([
       // Step 2: Issuer Verification
-      options?.skipIssuerVerification ? Promise.resolve([]) : verifyIssuer(issuer),
+      options?.skipIssuerVerification ? [] : verifyIssuer(issuer),
       // Step 3a: Temporal Validation - Issuance Date
       options?.skipTemporalValidation
-        ? Promise.resolve(null)
-        : Promise.resolve(verifyIssuanceDate(credentialObj, options)),
+        ? null
+        : verifyIssuanceDate(credentialObj, options),
       // Step 3b: Temporal Validation - Expiration
       options?.skipTemporalValidation
-        ? Promise.resolve(null)
-        : Promise.resolve(verifyExpiration(credentialObj, options)),
+        ? null
+        : verifyExpiration(credentialObj, options),
     ]);
 
     // Add results to checks
