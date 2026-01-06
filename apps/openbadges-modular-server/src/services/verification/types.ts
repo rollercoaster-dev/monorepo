@@ -117,6 +117,13 @@ export interface VerificationOptions {
 
   /** Maximum age of proof creation timestamp in seconds */
   maxProofAge?: number;
+
+  /**
+   * Policy for verifying multiple proofs in a credential
+   * - 'all': All proofs must pass (default, strictest)
+   * - 'any': At least one proof must pass
+   */
+  proofPolicy?: "all" | "any";
 }
 
 /**
@@ -147,6 +154,29 @@ export interface VerificationKeyMaterial {
 }
 
 /**
+ * Result of verifying an individual proof within a multi-proof credential
+ */
+export interface ProofVerificationResult {
+  /** Index of the proof in the proof array (0-based) */
+  index: number;
+
+  /** Type of the proof */
+  proofType: ProofType | "jwt";
+
+  /** Whether this proof passed verification */
+  passed: boolean;
+
+  /** Verification method used for this proof */
+  verificationMethod?: Shared.IRI;
+
+  /** Error message if this proof failed */
+  error?: string;
+
+  /** Verification check for this proof */
+  check: VerificationCheck;
+}
+
+/**
  * Complete verification result
  * Contains the overall status and detailed check results
  */
@@ -169,11 +199,20 @@ export interface VerificationResult {
   /** Issuer of the credential */
   issuer?: Shared.IRI;
 
-  /** Proof type used in the credential */
+  /** Proof type used in the credential (primary proof for single-proof credentials) */
   proofType?: ProofType;
 
-  /** Verification method used */
+  /** Verification method used (primary proof for single-proof credentials) */
   verificationMethod?: Shared.IRI;
+
+  /** Results for each individual proof when credential has multiple proofs */
+  proofResults?: ProofVerificationResult[];
+
+  /** Total number of proofs in the credential */
+  totalProofs?: number;
+
+  /** Number of proofs that passed verification */
+  passedProofs?: number;
 
   /** Timestamp when verification was performed */
   verifiedAt: string;
