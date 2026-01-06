@@ -16,8 +16,7 @@ import type { Shared } from "openbadges-types";
 
 /** Helper function to encode base58 (for testing) */
 function encodeBase58(bytes: Uint8Array): string {
-  const ALPHABET =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   let num = BigInt(0);
   for (const byte of bytes) {
     num = num * BigInt(256) + BigInt(byte);
