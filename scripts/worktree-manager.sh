@@ -1109,6 +1109,7 @@ Milestone Commands:
   integration-test          Run full test suite on main after all merges
   summary                   Generate milestone completion summary report
   validate-state            Validate and migrate state file schema
+  validate-hooks <issue>    Validate git hook configuration for a worktree
 
 Status Values:
   created       Worktree created, ready for work
@@ -1129,6 +1130,9 @@ Examples:
   worktree-manager.sh create 111 feat/my-custom-branch
   worktree-manager.sh update-status 111 pr-created 145
   worktree-manager.sh remove 111
+
+  # Git hooks validation
+  worktree-manager.sh validate-hooks 111           # Check hook configuration
 
   # Milestone workflow
   worktree-manager.sh preflight                    # Baseline before work
