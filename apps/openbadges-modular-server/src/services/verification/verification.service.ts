@@ -145,8 +145,7 @@ function verifyIssuanceDate(
       check: "temporal.issuance",
       description: "Credential issuance date validation",
       passed: false,
-      error:
-        "Credential missing required validFrom or issuanceDate field",
+      error: "Credential missing required validFrom or issuanceDate field",
     };
   }
 
