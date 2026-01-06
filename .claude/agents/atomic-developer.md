@@ -374,6 +374,30 @@ refactor(<scope>): <change>
 3. **Wait for user guidance**
 4. **Do not auto-resolve**
 
+### Git Hook Failures (Worktree Context)
+
+When working in a worktree (e.g., during `/auto-milestone`), pre-commit hooks may fail:
+
+1. **Symptoms:**
+   - Commit succeeds but hooks don't run
+   - `lint-staged` errors
+   - `bunx` command not found
+
+2. **Diagnosis:**
+
+   ```bash
+   scripts/worktree-manager.sh validate-hooks <issue-number>
+   ```
+
+3. **Common causes:**
+   - `core.hooksPath` not configured
+   - `.husky/_/h` helper not executable
+   - Worktree created before hook validation feature
+
+4. **Resolution:**
+   - Hooks are auto-configured during `worktree-manager.sh create`
+   - If issues persist, manually run validation and follow suggested fixes
+
 ## Output Format
 
 After each commit:

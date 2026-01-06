@@ -196,6 +196,39 @@ update_board_status() {
    - If validation fails: Attempt to fix inline, then continue
    - If still fails: Log and proceed to review (reviewer will catch it)
 
+### Git Hook Debugging (Worktree Context)
+
+When running in a worktree (e.g., during `/auto-milestone`), git hooks may fail. If pre-commit hooks fail:
+
+1. **Check hook configuration:**
+
+   ```bash
+   scripts/worktree-manager.sh validate-hooks <issue-number>
+   ```
+
+2. **Common issues:**
+   - `core.hooksPath` not set to `.husky/_`
+   - `.husky/_/h` helper not executable
+   - `bunx` not available in worktree context
+   - `lint-staged` not accessible
+
+3. **Auto-fix on worktree creation:**
+   - The `worktree-manager.sh create` command now automatically validates and enables hooks
+   - If hooks fail during commit, re-run validation to diagnose
+
+4. **Manual recovery:**
+
+   ```bash
+   # Fix hooks path
+   git config core.hooksPath .husky/_
+
+   # Fix helper permissions
+   chmod +x .husky/_/h
+
+   # Verify
+   scripts/worktree-manager.sh validate-hooks <issue-number>
+   ```
+
 ---
 
 ## Phase 3: Review + Auto-Fix Loop
