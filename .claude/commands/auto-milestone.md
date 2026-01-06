@@ -60,6 +60,24 @@ PHASE 5: Cleanup     → Remove worktrees, report summary
 
 ## Phase 1: Planning
 
+### 1.0 Pre-flight Baseline Check
+
+**Before starting any work**, capture the baseline state of main:
+
+```bash
+# Run pre-flight check to identify pre-existing issues
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" preflight
+```
+
+This captures:
+
+- Current lint warnings/errors on main
+- Current type-check errors on main
+- Timestamp of baseline capture
+
+If pre-existing errors are found, they are flagged but work can proceed.
+This prevents mid-workflow surprises when pre-existing issues are discovered.
+
 ### 1.1 Validate Input
 
 ```bash
@@ -218,13 +236,40 @@ Important:
 - PR should include "Closes #$ISSUE" in body
 ```
 
-### 2.3 Track Progress
+### 2.3 Track Progress & Checkpointing
 
 Update worktree state as subagents complete:
 
 ```bash
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" update-status "$ISSUE" "pr-created" "$PR_NUMBER"
 ```
+
+**After each subagent completes**, save a checkpoint to enable resume after context overflow:
+
+```bash
+# Save checkpoint after each issue completes
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" checkpoint "executing" "after issue #$ISSUE"
+```
+
+This saves:
+
+- Current phase and progress
+- All worktree statuses
+- PR numbers and their CI/review states
+- Timestamp for duration tracking
+
+**To resume from a checkpoint** (after context overflow or session restart):
+
+```bash
+# Check for existing checkpoint
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" resume
+```
+
+The resume command shows:
+
+- Last checkpoint phase and timestamp
+- Completed vs pending issues
+- Next steps to continue
 
 ### 2.4 Handle Failures
 
@@ -255,18 +300,35 @@ After all subagents complete, gather PR list:
 PRS=$(jq -r '.worktrees | to_entries[] | select(.value.pr != "") | .value.pr' "$STATE_FILE")
 ```
 
-### 3.2 Wait for Reviews
+### 3.2 Wait for CI and Reviews
 
-Poll each PR for review status:
+Use the CI status helper for efficient polling with exponential backoff:
 
 ```bash
 for pr in $PRS; do
+  # Wait for CI with timeout (30 min default)
+  if ! "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" ci-status "$pr" --wait; then
+    echo "CI failed or timed out for PR #$pr"
+    # Handle failure
+  fi
+
   # Check for CodeRabbit and Claude reviews
   gh pr view "$pr" --json reviews,comments
-
-  # Check CI status
-  gh pr checks "$pr"
 done
+```
+
+The `ci-status --wait` command:
+
+- Polls CI status with exponential backoff (30s → 60s → 120s cap)
+- Default timeout: 30 minutes (configurable via `CI_POLL_TIMEOUT` env var)
+- Returns success when all checks pass, failure if any check fails
+- Avoids manual sleep loops
+
+**For non-blocking status checks:**
+
+```bash
+# Get current CI status as JSON
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" ci-status "$pr"
 ```
 
 Wait until:
@@ -424,9 +486,44 @@ After all PRs in current wave are merged:
 
 ---
 
+## Phase 4.5: Post-Merge Integration Test
+
+**After all PRs are merged**, run a full integration test on main:
+
+```bash
+# Pull latest main and run full test suite
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" integration-test
+```
+
+This runs:
+
+1. `bun run type-check` - Verify no type regressions
+2. `bun run lint` - Verify no lint regressions
+3. `bun test` - Run all unit tests
+4. `bun run build` - Verify build succeeds
+
+If integration tests fail:
+
+- Stop and report failure
+- Do NOT mark milestone complete
+- Investigate which merged PR caused the regression
+
+The integration test status is recorded in state for the final summary.
+
+---
+
 ## Phase 5: Cleanup & Report
 
 ### 5.1 Cleanup Worktrees
+
+Use `--force` to skip confirmation in autonomous mode:
+
+```bash
+# Remove all worktrees without prompting
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --force
+```
+
+Or remove individually:
 
 ```bash
 for issue in $COMPLETED_ISSUES; do
@@ -434,7 +531,30 @@ for issue in $COMPLETED_ISSUES; do
 done
 ```
 
-### 5.2 Final Report
+For a dry-run to see what would be removed:
+
+```bash
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --dry-run
+```
+
+### 5.2 Generate Summary Report
+
+Use the built-in summary command for a comprehensive report:
+
+```bash
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" summary
+```
+
+This generates a report including:
+
+- Milestone name and duration
+- Issues by status (merged, failed, pending)
+- All PRs created with links
+- Integration test results
+- Pre-existing baseline comparison
+- Issues requiring attention
+
+### 5.3 Example Final Report
 
 ```markdown
 ## AUTO-MILESTONE COMPLETE
@@ -456,6 +576,19 @@ done
 - PR #146: feat(baking): PNG baking support (#116) ✓
 - PR #147: feat(baking): SVG baking support (#118) ✓
   ...
+
+### Integration Tests
+
+✓ type-check: PASS
+✓ lint: PASS
+✓ test: PASS
+✓ build: PASS
+
+### Baseline Comparison
+
+Pre-existing lint errors: 0
+Pre-existing type errors: 0
+(No pre-existing issues to filter)
 
 ### Issues Requiring Attention
 
@@ -487,6 +620,23 @@ done
 | Script                        | Purpose                          |
 | ----------------------------- | -------------------------------- |
 | `scripts/worktree-manager.sh` | Create, track, cleanup worktrees |
+
+### Worktree Manager Commands
+
+| Command                               | Purpose                              |
+| ------------------------------------- | ------------------------------------ |
+| `create <issue>`                      | Create worktree for issue            |
+| `remove <issue>`                      | Remove worktree                      |
+| `status`                              | Show all worktree statuses           |
+| `update-status <issue> <status> [pr]` | Update worktree status               |
+| `preflight`                           | Run baseline lint/type-check on main |
+| `checkpoint [phase] [desc]`           | Save state for resume                |
+| `resume`                              | Show checkpoint info                 |
+| `ci-status <pr> [--wait]`             | Check/wait for CI status             |
+| `integration-test`                    | Run full test suite on main          |
+| `summary`                             | Generate milestone report            |
+| `cleanup-all [--force]`               | Remove all worktrees                 |
+| `validate-state`                      | Validate and migrate state file      |
 
 ---
 
@@ -530,6 +680,19 @@ All state is tracked in `.worktrees/.state.json`:
 
 ```json
 {
+  "checkpoint_version": "1.0",
+  "milestone": "OB3 Phase 1",
+  "started": "2024-01-15T09:00:00Z",
+  "phase": "executing",
+  "checkpoint_description": "after issue #116",
+  "checkpoint_timestamp": "2024-01-15T10:45:00Z",
+  "baseline": {
+    "captured_at": "2024-01-15T09:00:00Z",
+    "lint": { "exit_code": 0, "warnings": 5, "errors": 0 },
+    "typecheck": { "exit_code": 0, "errors": 0 }
+  },
+  "integration_test_status": "passed",
+  "integration_test_timestamp": "2024-01-15T12:00:00Z",
   "worktrees": {
     "111": {
       "status": "merged",
@@ -543,11 +706,29 @@ All state is tracked in `.worktrees/.state.json`:
       "pr": "146",
       "updated": "2024-01-15T10:45:00Z"
     }
+  },
+  "pr_statuses": {
+    "145": { "state": "MERGED", "mergeable": "MERGEABLE" },
+    "146": { "state": "OPEN", "mergeable": "MERGEABLE" }
   }
 }
 ```
 
-Status values:
+### State Fields
+
+| Field                | Purpose                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `checkpoint_version` | Schema version for migration                                 |
+| `milestone`          | Current milestone name                                       |
+| `started`            | Workflow start timestamp                                     |
+| `phase`              | Current phase (planning/executing/reviewing/merging/cleanup) |
+| `checkpoint_*`       | Checkpoint metadata for resume                               |
+| `baseline`           | Pre-flight lint/type-check results                           |
+| `integration_test_*` | Post-merge test results                                      |
+| `worktrees`          | Per-issue worktree state                                     |
+| `pr_statuses`        | Cached PR states at checkpoint                               |
+
+### Worktree Status Values
 
 - `created` - Worktree ready
 - `implementing` - /auto-issue running
@@ -557,6 +738,21 @@ Status values:
 - `merged` - Complete
 - `failed` - Escalated, needs manual help
 - `skipped` - Skipped due to dependency failure
+
+### State Validation
+
+Run `validate-state` to check and migrate state files:
+
+```bash
+"$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" validate-state
+```
+
+This:
+
+- Validates JSON syntax
+- Adds missing required fields
+- Sets checkpoint version
+- Syncs with actual git worktrees
 
 ---
 
