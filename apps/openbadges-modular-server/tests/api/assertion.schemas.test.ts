@@ -28,7 +28,7 @@ describe("Assertion Schemas", () => {
       expect(result.success).toBe(true);
     });
 
-    test("should validate a valid OB3 assertion", () => {
+    test("should validate a valid OB3 assertion with issuedOn (backward compatible)", () => {
       const validOB3Assertion = {
         id: EXAMPLE_ASSERTION_URL,
         type: "VerifiableCredential",
@@ -52,6 +52,58 @@ describe("Assertion Schemas", () => {
       expect(result.success).toBe(true);
     });
 
+    test("should validate a valid OB3 assertion with validFrom (VC Data Model 2.0)", () => {
+      const validOB3Assertion = {
+        id: EXAMPLE_ASSERTION_URL,
+        type: "VerifiableCredential",
+        recipient: {
+          type: "email",
+          identity: "test@example.com",
+          hashed: false,
+        },
+        badge: EXAMPLE_BADGE_CLASS_URL,
+        validFrom: new Date().toISOString(),
+        verification: {
+          type: "HostedBadge",
+        },
+        credentialSubject: {
+          id: "did:example:123",
+          type: "AchievementSubject",
+        },
+      };
+
+      const result = CreateAssertionSchema.safeParse(validOB3Assertion);
+      expect(result.success).toBe(true);
+    });
+
+    test("should validate a valid OB3 assertion with validFrom and validUntil", () => {
+      const now = new Date();
+      const validUntil = new Date(now.getTime() + 86400000); // Tomorrow
+
+      const validOB3Assertion = {
+        id: EXAMPLE_ASSERTION_URL,
+        type: "VerifiableCredential",
+        recipient: {
+          type: "email",
+          identity: "test@example.com",
+          hashed: false,
+        },
+        badge: EXAMPLE_BADGE_CLASS_URL,
+        validFrom: now.toISOString(),
+        validUntil: validUntil.toISOString(),
+        verification: {
+          type: "HostedBadge",
+        },
+        credentialSubject: {
+          id: "did:example:123",
+          type: "AchievementSubject",
+        },
+      };
+
+      const result = CreateAssertionSchema.safeParse(validOB3Assertion);
+      expect(result.success).toBe(true);
+    });
+
     test("should reject an assertion without required fields", () => {
       const invalidAssertion = {
         recipient: {
@@ -59,13 +111,39 @@ describe("Assertion Schemas", () => {
           identity: "test@example.com",
           hashed: false,
         },
-        // Missing badge and issuedOn
+        // Missing badge and issuedOn/validFrom
       };
 
       const result = CreateAssertionSchema.safeParse(invalidAssertion);
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues.length).toBeGreaterThan(0);
+      }
+    });
+
+    test("should reject an assertion without any temporal field (issuedOn or validFrom)", () => {
+      const invalidAssertion = {
+        recipient: {
+          type: "email",
+          identity: "test@example.com",
+          hashed: false,
+        },
+        badge: EXAMPLE_BADGE_CLASS_URL,
+        // Missing both issuedOn and validFrom
+        verification: {
+          type: "HostedBadge",
+        },
+      };
+
+      const result = CreateAssertionSchema.safeParse(invalidAssertion);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((issue) =>
+            issue.message.includes("issuedOn") ||
+            issue.message.includes("validFrom"),
+          ),
+        ).toBe(true);
       }
     });
 
@@ -108,12 +186,70 @@ describe("Assertion Schemas", () => {
         expect(result.error.issues.length).toBeGreaterThan(0);
       }
     });
+
+    test("should reject an assertion with invalid validFrom format", () => {
+      const invalidAssertion = {
+        recipient: {
+          type: "email",
+          identity: "test@example.com",
+          hashed: false,
+        },
+        badge: EXAMPLE_BADGE_CLASS_URL,
+        validFrom: "not-a-date", // Invalid date format
+      };
+
+      const result = CreateAssertionSchema.safeParse(invalidAssertion);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some(
+            (issue) =>
+              issue.path.includes("validFrom") &&
+              issue.message.includes("Invalid"),
+          ),
+        ).toBe(true);
+      }
+    });
+
+    test("should reject an assertion with invalid validUntil format", () => {
+      const invalidAssertion = {
+        recipient: {
+          type: "email",
+          identity: "test@example.com",
+          hashed: false,
+        },
+        badge: EXAMPLE_BADGE_CLASS_URL,
+        validFrom: new Date().toISOString(),
+        validUntil: "not-a-date", // Invalid date format
+      };
+
+      const result = CreateAssertionSchema.safeParse(invalidAssertion);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some(
+            (issue) =>
+              issue.path.includes("validUntil") &&
+              issue.message.includes("Invalid"),
+          ),
+        ).toBe(true);
+      }
+    });
   });
 
   describe("UpdateAssertionSchema", () => {
-    test("should validate a partial update with valid fields", () => {
+    test("should validate a partial update with expires (OB2)", () => {
       const validUpdate = {
         expires: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+      };
+
+      const result = UpdateAssertionSchema.safeParse(validUpdate);
+      expect(result.success).toBe(true);
+    });
+
+    test("should validate a partial update with validUntil (OB3)", () => {
+      const validUpdate = {
+        validUntil: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
       };
 
       const result = UpdateAssertionSchema.safeParse(validUpdate);

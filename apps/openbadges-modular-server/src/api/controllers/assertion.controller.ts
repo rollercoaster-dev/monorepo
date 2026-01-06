@@ -80,8 +80,21 @@ function mapToAssertionEntity(
   if (data.revoked !== undefined) mappedData.revoked = data.revoked as boolean;
   if (data.revocationReason !== undefined)
     mappedData.revocationReason = data.revocationReason as string;
-  if (data.issuedOn !== undefined) mappedData.issuedOn = data.issuedOn; // Zod validated format
-  if (data.expires !== undefined) mappedData.expires = data.expires; // Zod validated format
+
+  // Map temporal fields: OB3 uses validFrom/validUntil, OB2 uses issuedOn/expires
+  // Internally we use issuedOn/expires, so map OB3 fields to internal representation
+  // Priority: OB3 fields take precedence if both are provided (for OB3-first approach)
+  if ("validFrom" in data && data.validFrom !== undefined) {
+    mappedData.issuedOn = data.validFrom; // OB3 validFrom -> internal issuedOn
+  } else if (data.issuedOn !== undefined) {
+    mappedData.issuedOn = data.issuedOn; // OB2 issuedOn stays as-is
+  }
+
+  if ("validUntil" in data && data.validUntil !== undefined) {
+    mappedData.expires = data.validUntil; // OB3 validUntil -> internal expires
+  } else if (data.expires !== undefined) {
+    mappedData.expires = data.expires; // OB2 expires stays as-is
+  }
 
   // Properties not part of internal Assertion entity are intentionally ignored:
   // narrative, image, type, credentialSubject etc. are handled by Assertion entity itself or are not stored directly.
