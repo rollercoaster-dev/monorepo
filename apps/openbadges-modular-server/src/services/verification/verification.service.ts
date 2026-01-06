@@ -27,18 +27,24 @@ import type {
 /**
  * Verify expiration date of a credential
  *
- * Checks if credential has expired based on expirationDate field.
+ * Checks if credential has expired based on validUntil (VC Data Model 2.0/OB3)
+ * or expirationDate (VC Data Model 1.1/OB2) field.
  * Supports clock tolerance for temporal validation.
  *
  * @param credential - Credential object to check
  * @param options - Verification options
  * @returns Verification check result
+ *
+ * @see https://www.w3.org/TR/vc-data-model-2.0/#validity-period
  */
 function verifyExpiration(
   credential: Record<string, unknown>,
   options?: VerificationOptions,
 ): VerificationCheck {
-  const expirationDate = credential.expirationDate as string | undefined;
+  // VC Data Model 2.0 uses validUntil, VC Data Model 1.1 uses expirationDate
+  // Prefer validUntil (OB3) over expirationDate (OB2) for forward compatibility
+  const expirationDate = (credential.validUntil ??
+    credential.expirationDate) as string | undefined;
 
   // If no expiration date, credential does not expire
   if (!expirationDate) {
@@ -115,24 +121,31 @@ function verifyExpiration(
  * Verify issuance date of a credential
  *
  * Checks if credential's issuance date is valid (not in the future).
+ * Accepts validFrom (VC Data Model 2.0/OB3) or issuanceDate (VC Data Model 1.1/OB2).
  *
  * @param credential - Credential object to check
  * @param options - Verification options
  * @returns Verification check result
+ *
+ * @see https://www.w3.org/TR/vc-data-model-2.0/#validity-period
  */
 function verifyIssuanceDate(
   credential: Record<string, unknown>,
   options?: VerificationOptions,
 ): VerificationCheck {
-  const issuanceDate = credential.issuanceDate as string | undefined;
+  // VC Data Model 2.0 uses validFrom, VC Data Model 1.1 uses issuanceDate
+  // Prefer validFrom (OB3) over issuanceDate (OB2) for forward compatibility
+  const issuanceDate = (credential.validFrom ?? credential.issuanceDate) as
+    | string
+    | undefined;
 
-  // issuanceDate is required in Open Badges 3.0
+  // At least one of validFrom or issuanceDate is required
   if (!issuanceDate) {
     return {
       check: "temporal.issuance",
       description: "Credential issuance date validation",
       passed: false,
-      error: "Credential missing required issuanceDate field",
+      error: "Credential missing required validFrom or issuanceDate field",
     };
   }
 

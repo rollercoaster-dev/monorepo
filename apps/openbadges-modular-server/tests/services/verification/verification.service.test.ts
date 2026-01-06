@@ -123,7 +123,7 @@ describe("Verification Service", () => {
 
     describe("Temporal Validation", () => {
       describe("Issuance Date", () => {
-        it("should reject credential without issuanceDate", async () => {
+        it("should reject credential without issuanceDate or validFrom", async () => {
           const credential = {
             "@context": ["https://www.w3.org/2018/credentials/v1"],
             type: ["VerifiableCredential"],
@@ -143,8 +143,86 @@ describe("Verification Service", () => {
           );
           expect(issuanceCheck?.passed).toBe(false);
           expect(issuanceCheck?.error).toContain(
-            "missing required issuanceDate",
+            "missing required validFrom or issuanceDate",
           );
+        });
+
+        it("should accept credential with validFrom (OB3/VC 2.0 field)", async () => {
+          const pastDate = new Date();
+          pastDate.setDate(pastDate.getDate() - 30);
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: pastDate.toISOString(),
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const issuanceCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.issuance",
+          );
+          expect(issuanceCheck?.passed).toBe(true);
+          expect(issuanceCheck?.details?.age).toBeGreaterThan(0);
+        });
+
+        it("should prefer validFrom over issuanceDate when both present", async () => {
+          const validFromDate = new Date();
+          validFromDate.setDate(validFromDate.getDate() - 10);
+
+          const issuanceDateDate = new Date();
+          issuanceDateDate.setDate(issuanceDateDate.getDate() - 30);
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: validFromDate.toISOString(),
+            issuanceDate: issuanceDateDate.toISOString(),
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const issuanceCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.issuance",
+          );
+          expect(issuanceCheck?.passed).toBe(true);
+          // Age should be approximately 10 days (~864000 seconds), not 30 days
+          // This verifies validFrom is used over issuanceDate
+          expect(issuanceCheck?.details?.age).toBeLessThan(15 * 24 * 60 * 60); // Less than 15 days in seconds
+        });
+
+        it("should reject credential with future validFrom", async () => {
+          const futureDate = new Date();
+          futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: futureDate.toISOString(),
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const issuanceCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.issuance",
+          );
+          expect(issuanceCheck?.passed).toBe(false);
+          expect(issuanceCheck?.error).toContain("in the future");
         });
 
         it("should reject credential with future issuanceDate", async () => {
@@ -220,7 +298,7 @@ describe("Verification Service", () => {
       });
 
       describe("Expiration Date", () => {
-        it("should accept credential without expirationDate", async () => {
+        it("should accept credential without expirationDate or validUntil", async () => {
           const credential = {
             "@context": ["https://www.w3.org/2018/credentials/v1"],
             type: ["VerifiableCredential"],
@@ -239,6 +317,86 @@ describe("Verification Service", () => {
           );
           expect(expirationCheck?.passed).toBe(true);
           expect(expirationCheck?.details?.hasExpiration).toBe(false);
+        });
+
+        it("should accept credential with future validUntil (OB3/VC 2.0 field)", async () => {
+          const futureDate = new Date();
+          futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: "2024-01-01T00:00:00Z",
+            validUntil: futureDate.toISOString(),
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const expirationCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.expiration",
+          );
+          expect(expirationCheck?.passed).toBe(true);
+          expect(expirationCheck?.details?.expiresIn).toBeGreaterThan(0);
+        });
+
+        it("should prefer validUntil over expirationDate when both present", async () => {
+          const validUntilDate = new Date();
+          validUntilDate.setFullYear(validUntilDate.getFullYear() + 2); // 2 years from now
+
+          const expirationDateDate = new Date();
+          expirationDateDate.setDate(expirationDateDate.getDate() - 30); // 30 days ago (expired)
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: "2024-01-01T00:00:00Z",
+            validUntil: validUntilDate.toISOString(),
+            expirationDate: expirationDateDate.toISOString(), // Would fail if used
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const expirationCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.expiration",
+          );
+          // Should pass because validUntil (2 years from now) is used instead of expirationDate (30 days ago)
+          expect(expirationCheck?.passed).toBe(true);
+          expect(expirationCheck?.details?.expiresIn).toBeGreaterThan(0);
+        });
+
+        it("should reject credential with past validUntil", async () => {
+          const pastDate = new Date();
+          pastDate.setDate(pastDate.getDate() - 30);
+
+          const credential = {
+            "@context": ["https://www.w3.org/2018/credentials/v2"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            validFrom: "2023-01-01T00:00:00Z",
+            validUntil: pastDate.toISOString(),
+            proof: {
+              type: "DataIntegrityProof",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          };
+
+          const result = await verify(credential);
+
+          const expirationCheck = result.checks.temporal.find(
+            (c) => c.check === "temporal.expiration",
+          );
+          expect(expirationCheck?.passed).toBe(false);
+          expect(expirationCheck?.error).toContain("expired");
         });
 
         it("should accept credential with future expirationDate", async () => {
