@@ -521,7 +521,7 @@ export async function verify(
       );
     }
 
-    // Step 1: Proof Verification
+    // Step 1: Proof Verification (must happen first)
     if (!options?.skipProofVerification) {
       if (isJWT) {
         const proofCheck = await verifyJWTProof(
@@ -542,19 +542,26 @@ export async function verify(
       }
     }
 
-    // Step 2: Issuer Verification
-    if (!options?.skipIssuerVerification) {
-      const issuerChecks = await verifyIssuer(issuer);
-      checks.issuer.push(...issuerChecks);
-    }
+    // Steps 2 & 3: Issuer Verification and Temporal Validation (parallel)
+    // These are independent checks that don't depend on each other
+    // Note: Promise.all automatically wraps non-promise values
+    const [issuerChecks, issuanceCheck, expirationCheck] = await Promise.all([
+      // Step 2: Issuer Verification
+      options?.skipIssuerVerification ? [] : verifyIssuer(issuer),
+      // Step 3a: Temporal Validation - Issuance Date
+      options?.skipTemporalValidation
+        ? null
+        : verifyIssuanceDate(credentialObj, options),
+      // Step 3b: Temporal Validation - Expiration
+      options?.skipTemporalValidation
+        ? null
+        : verifyExpiration(credentialObj, options),
+    ]);
 
-    // Step 3: Temporal Validation
-    if (!options?.skipTemporalValidation) {
-      const issuanceCheck = verifyIssuanceDate(credentialObj, options);
-      const expirationCheck = verifyExpiration(credentialObj, options);
-
-      checks.temporal.push(issuanceCheck, expirationCheck);
-    }
+    // Add results to checks
+    checks.issuer.push(...issuerChecks);
+    if (issuanceCheck) checks.temporal.push(issuanceCheck);
+    if (expirationCheck) checks.temporal.push(expirationCheck);
 
     // Determine overall status
     const allChecks = [
