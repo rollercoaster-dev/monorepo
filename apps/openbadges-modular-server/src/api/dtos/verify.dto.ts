@@ -48,15 +48,13 @@ export const JsonLdCredentialSchema = z
     "@context": z.array(z.string()).or(z.string()),
     type: z.array(z.string()).or(z.string()),
     id: z.string().optional(),
-    issuer: z
-      .string()
-      .or(
-        z.object({
-          id: z.string(),
-          type: z.string().or(z.array(z.string())).optional(),
-          name: z.string().optional(),
-        }),
-      ),
+    issuer: z.string().or(
+      z.object({
+        id: z.string(),
+        type: z.string().or(z.array(z.string())).optional(),
+        name: z.string().optional(),
+      }),
+    ),
     issuanceDate: z.string().optional(),
     validFrom: z.string().optional(),
     expirationDate: z.string().optional(),

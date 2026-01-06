@@ -152,7 +152,8 @@ describe("Verify Credential Endpoint", () => {
             credential: "not-a-valid-jwt",
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
 
@@ -161,7 +162,8 @@ describe("Verify Credential Endpoint", () => {
             credential: "header.payload",
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
 
@@ -182,7 +184,8 @@ describe("Verify Credential Endpoint", () => {
         it("should reject missing credential", () => {
           const invalidRequest = {};
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
 
@@ -191,7 +194,8 @@ describe("Verify Credential Endpoint", () => {
             credential: null,
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
       });
@@ -233,7 +237,9 @@ describe("Verify Credential Endpoint", () => {
         expect(result.verifiedAt).toBeDefined();
 
         // Should extract credential info
-        expect(result.credentialId).toBe("https://example.com/credentials/123" as Shared.IRI);
+        expect(result.credentialId).toBe(
+          "https://example.com/credentials/123" as Shared.IRI,
+        );
         expect(result.issuer).toBe("did:web:example.com" as Shared.IRI);
       });
 
@@ -276,9 +282,7 @@ describe("Verify Credential Endpoint", () => {
             "@context": ["https://www.w3.org/2018/credentials/v1"],
             type: ["VerifiableCredential"],
             issuer: "did:web:example.com",
-            issuanceDate: new Date(
-              Date.now() + 1000 * 60 * 60,
-            ).toISOString(), // 1 hour in future
+            issuanceDate: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour in future
             proof: {
               type: "DataIntegrityProof",
               verificationMethod: "did:web:example.com#key-1",

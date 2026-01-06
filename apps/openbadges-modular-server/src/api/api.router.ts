@@ -1479,25 +1479,21 @@ export function createVersionedRouter(
     // POST /v3/verify - Verify a credential (JSON input)
     // This endpoint accepts a credential in JSON-LD or JWT format and verifies it
     const verificationController = new VerificationController();
-    router.post(
-      "/verify",
-      validateVerifyCredentialMiddleware(),
-      async (c) => {
-        try {
-          const body = getValidatedBody<VerifyCredentialRequestDto>(c);
-          const result = await verificationController.verifyCredential(body);
+    router.post("/verify", validateVerifyCredentialMiddleware(), async (c) => {
+      try {
+        const body = getValidatedBody<VerifyCredentialRequestDto>(c);
+        const result = await verificationController.verifyCredential(body);
 
-          // Return appropriate status code based on verification result
-          // 200 OK for valid credentials, 200 for invalid (verification completed successfully)
-          // The isValid field in the response indicates the actual validity
-          return c.json(result);
-        } catch (error) {
-          return sendApiError(c, error, {
-            endpoint: "POST /verify",
-          });
-        }
-      },
-    );
+        // Return appropriate status code based on verification result
+        // 200 OK for valid credentials, 200 for invalid (verification completed successfully)
+        // The isValid field in the response indicates the actual validity
+        return c.json(result);
+      } catch (error) {
+        return sendApiError(c, error, {
+          endpoint: "POST /verify",
+        });
+      }
+    });
   }
 
   return router;
