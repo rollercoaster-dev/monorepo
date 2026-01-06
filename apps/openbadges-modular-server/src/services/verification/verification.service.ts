@@ -406,7 +406,12 @@ export async function verify(
           check: "proof.format",
         });
 
-        return createErrorResult(checks, verifiedAt, "Invalid JWT format", startTime);
+        return createErrorResult(
+          checks,
+          verifiedAt,
+          "Invalid JWT format",
+          startTime,
+        );
       }
 
       try {
@@ -430,7 +435,12 @@ export async function verify(
           check: "proof.format",
         });
 
-        return createErrorResult(checks, verifiedAt, "Failed to parse JWT", startTime);
+        return createErrorResult(
+          checks,
+          verifiedAt,
+          "Failed to parse JWT",
+          startTime,
+        );
       }
     } else {
       credentialObj = credential;
@@ -458,7 +468,11 @@ export async function verify(
 
     // Extract issuer, verification method, and proof type
     const issuer = extractIssuer(credentialObj);
-    const verificationMethod = extractVerificationMethod(credentialObj, isJWT, jwtHeader);
+    const verificationMethod = extractVerificationMethod(
+      credentialObj,
+      isJWT,
+      jwtHeader,
+    );
     const proofType = extractProofType(credentialObj, isJWT);
 
     if (!issuer) {
