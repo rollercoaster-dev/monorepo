@@ -62,7 +62,7 @@
       "Edit",
       "Write"
     ],
-    "deny": [],
+    "deny": ["Bash(sudo:*)"],
     "ask": []
   }
 }
