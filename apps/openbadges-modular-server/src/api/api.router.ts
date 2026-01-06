@@ -1398,7 +1398,8 @@ export function createVersionedRouter(
           return c.json(
             {
               error: "Unauthorized",
-              message: "Authentication required - unable to determine issuer ID",
+              message:
+                "Authentication required - unable to determine issuer ID",
               code: "AUTH_REQUIRED",
             },
             401,
