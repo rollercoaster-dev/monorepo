@@ -268,21 +268,49 @@ describe("Verification Method Resolution", () => {
     expect(result).toBeNull();
   });
 
-  it("should return null for did:key (not yet implemented)", async () => {
+  it("should resolve did:key with Ed25519 public key", async () => {
+    // This is a valid did:key for Ed25519 (z6Mk... prefix indicates Ed25519)
+    // The key is multibase base58btc encoded with multicodec prefix 0xed for Ed25519
     const result = await resolveVerificationMethod(
       asIRI("did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"),
+      undefined,
+    );
+
+    expect(result).not.toBeNull();
+    expect(result).toBeInstanceOf(CryptoKey);
+    expect((result as CryptoKey).algorithm.name).toBe("Ed25519");
+  });
+
+  it("should resolve did:key with fragment", async () => {
+    // Fragment should be stripped and key should still resolve
+    const result = await resolveVerificationMethod(
+      asIRI(
+        "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      ),
+      undefined,
+    );
+
+    expect(result).not.toBeNull();
+    expect(result).toBeInstanceOf(CryptoKey);
+  });
+
+  it("should return null for invalid did:key format", async () => {
+    const result = await resolveVerificationMethod(
+      asIRI("did:key:invalid"),
       undefined,
     );
 
     expect(result).toBeNull();
   });
 
-  it("should return null for did:web (not yet implemented)", async () => {
+  it("should return null for did:web (requires network)", async () => {
+    // did:web requires fetching from the network, so without mocking it returns null
     const result = await resolveVerificationMethod(
       asIRI("did:web:example.com"),
       undefined,
     );
 
+    // Will fail because example.com doesn't have a DID document
     expect(result).toBeNull();
   });
 
@@ -293,6 +321,106 @@ describe("Verification Method Resolution", () => {
     );
 
     expect(result).toBeNull();
+  });
+});
+
+describe("DID Key Resolution", () => {
+  describe("Ed25519 keys", () => {
+    it("should resolve a known Ed25519 did:key", async () => {
+      // Test vector from did:key spec
+      // z6Mk... prefix = Ed25519
+      const didKey = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
+      const result = await resolveVerificationMethod(asIRI(didKey), undefined);
+
+      expect(result).not.toBeNull();
+      expect(result).toBeInstanceOf(CryptoKey);
+
+      const cryptoKey = result as CryptoKey;
+      expect(cryptoKey.algorithm.name).toBe("Ed25519");
+      expect(cryptoKey.type).toBe("public");
+      expect(cryptoKey.extractable).toBe(true);
+      expect(cryptoKey.usages).toContain("verify");
+    });
+
+    it("should verify a signature with resolved Ed25519 key", async () => {
+      // Generate a test Ed25519 key pair
+      const keyPair = await globalThis.crypto.subtle.generateKey(
+        "Ed25519",
+        true,
+        ["sign", "verify"],
+      );
+
+      // Export the public key to raw bytes
+      const publicKeyBytes = await globalThis.crypto.subtle.exportKey(
+        "raw",
+        keyPair.publicKey,
+      );
+
+      // Create did:key manually: z + base58btc(0xed + public_key_bytes)
+      const withCodec = new Uint8Array(34);
+      withCodec[0] = 0xed; // Ed25519 multicodec prefix
+      withCodec[1] = 0x01; // Second byte of varint
+      withCodec.set(new Uint8Array(publicKeyBytes), 2);
+
+      const didKey = "did:key:z" + encodeBase58(withCodec);
+
+      // Sign a message
+      const message = new TextEncoder().encode("test message");
+      const signature = await globalThis.crypto.subtle.sign(
+        "Ed25519",
+        keyPair.privateKey,
+        message,
+      );
+
+      // Resolve the key
+      const resolvedKey = await resolveVerificationMethod(
+        asIRI(didKey),
+        undefined,
+      );
+      expect(resolvedKey).not.toBeNull();
+
+      // Verify the signature with resolved key
+      const isValid = await globalThis.crypto.subtle.verify(
+        "Ed25519",
+        resolvedKey as CryptoKey,
+        signature,
+        message,
+      );
+
+      expect(isValid).toBe(true);
+    });
+  });
+
+  describe("Error handling", () => {
+    it("should return null for unsupported multicodec prefix", async () => {
+      // Create a key with an unsupported multicodec prefix (0xff)
+      const invalidKey = new Uint8Array(33);
+      invalidKey[0] = 0xff;
+      // Fill with random bytes
+      globalThis.crypto.getRandomValues(invalidKey.subarray(1));
+
+      const didKey = "did:key:z" + encodeBase58(invalidKey);
+      const result = await resolveVerificationMethod(asIRI(didKey), undefined);
+
+      expect(result).toBeNull();
+    });
+
+    it("should return null for empty did:key", async () => {
+      const result = await resolveVerificationMethod(
+        asIRI("did:key:"),
+        undefined,
+      );
+      expect(result).toBeNull();
+    });
+
+    it("should return null for malformed multibase", async () => {
+      // 'z' prefix but invalid base58 characters
+      const result = await resolveVerificationMethod(
+        asIRI("did:key:z000OIl"), // O, I, l are not valid base58
+        undefined,
+      );
+      expect(result).toBeNull();
+    });
   });
 });
 
