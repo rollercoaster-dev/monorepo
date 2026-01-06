@@ -76,6 +76,9 @@ export interface VerificationChecks {
 
   /** Schema and structure validation checks */
   schema: VerificationCheck[];
+
+  /** General verification errors (unexpected failures) */
+  general: VerificationCheck[];
 }
 
 /**
@@ -90,6 +93,9 @@ export interface VerificationOptions {
 
   /** Skip temporal validation (expiration/not-before) */
   skipTemporalValidation?: boolean;
+
+  /** Skip issuer verification (DID resolution, profile validation) */
+  skipIssuerVerification?: boolean;
 
   /** Clock tolerance in seconds for temporal checks */
   clockTolerance?: number;
