@@ -199,6 +199,185 @@ describe("Verify Credential Endpoint", () => {
           expect(result.success).toBe(false);
         });
       });
+
+      describe("DateTime Validation", () => {
+        it("should accept valid ISO 8601 datetime", () => {
+          const validRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+              issuanceDate: "2024-01-15T12:00:00Z",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should accept ISO 8601 datetime with milliseconds", () => {
+          const validRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+              issuanceDate: "2024-01-15T12:00:00.123Z",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should accept ISO 8601 datetime with timezone offset", () => {
+          const validRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+              issuanceDate: "2024-01-15T12:00:00+05:30",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should reject invalid datetime format", () => {
+          const invalidRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+              issuanceDate: "not-a-date",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          expect(result.success).toBe(false);
+        });
+
+        it("should reject malformed datetime", () => {
+          const invalidRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+              expirationDate: "2024-13-45T99:99:99Z", // Invalid month/day/time
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          expect(result.success).toBe(false);
+        });
+      });
+
+      describe("JWT Base64url Validation", () => {
+        it("should accept valid base64url encoded JWT", () => {
+          const validRequest = {
+            credential:
+              "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJkaWQ6ZXhhbXBsZTppZCJ9.MEUCIQDk-cA",
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should reject JWT with invalid base64url characters", () => {
+          const invalidRequest = {
+            // Contains invalid characters: +, /, =
+            credential: "abc+def/ghi=.abc+def/ghi=.abc+def/ghi=",
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          // Note: + and / are standard base64, not base64url
+          // Base64url uses - and _ instead
+          expect(result.success).toBe(false);
+        });
+
+        it("should accept JWT with base64url underscore and hyphen", () => {
+          const validRequest = {
+            credential: "abc_def-ghi.abc_def-ghi.abc_def-ghi",
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+      });
+
+      describe("@context Validation", () => {
+        it("should accept credential with VC 1.1 context", () => {
+          const validRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/2018/credentials/v1"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should accept credential with VC 2.0 context", () => {
+          const validRequest = {
+            credential: {
+              "@context": ["https://www.w3.org/ns/credentials/v2"],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should accept credential with OB3 and VC contexts", () => {
+          const validRequest = {
+            credential: {
+              "@context": [
+                "https://www.w3.org/ns/credentials/v2",
+                "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+              ],
+              type: ["VerifiableCredential", "OpenBadgeCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+
+        it("should reject credential with @context array missing VC context", () => {
+          const invalidRequest = {
+            credential: {
+              "@context": [
+                "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+              ],
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          expect(result.success).toBe(false);
+        });
+
+        it("should accept credential with single string @context", () => {
+          // When @context is a single string, we accept any value
+          // (the validator only checks arrays for required VC context)
+          const validRequest = {
+            credential: {
+              "@context": "https://www.w3.org/2018/credentials/v1",
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(validRequest);
+          expect(result.success).toBe(true);
+        });
+      });
     });
   });
 

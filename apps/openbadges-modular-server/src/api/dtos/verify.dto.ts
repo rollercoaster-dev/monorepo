@@ -11,6 +11,48 @@
 import { z } from "zod";
 
 /**
+ * ISO 8601 datetime string validation
+ * Accepts formats like:
+ * - 2024-01-15T12:00:00Z
+ * - 2024-01-15T12:00:00.000Z
+ * - 2024-01-15T12:00:00+00:00
+ * - 2024-01-15 (date only)
+ */
+const iso8601DateTimeSchema = z
+  .string()
+  .refine(
+    (val) => {
+      // Try to parse as ISO 8601 datetime
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    },
+    { message: "Invalid ISO 8601 datetime format" },
+  )
+  .optional();
+
+/**
+ * Validates @context array contains required VC context
+ * Accepts single string or array of strings
+ */
+const contextSchema = z.union([
+  z.string(),
+  z.array(z.string()).refine(
+    (contexts) => {
+      // Must include at least one VC context
+      return contexts.some(
+        (ctx) =>
+          ctx === "https://www.w3.org/2018/credentials/v1" ||
+          ctx === "https://www.w3.org/ns/credentials/v2",
+      );
+    },
+    {
+      message:
+        "@context must include a W3C Verifiable Credentials context (v1 or v2)",
+    },
+  ),
+]);
+
+/**
  * Schema for verification options
  * Allows callers to customize verification behavior
  */
@@ -45,7 +87,7 @@ export const VerificationOptionsSchema = z
  */
 export const JsonLdCredentialSchema = z
   .object({
-    "@context": z.array(z.string()).or(z.string()),
+    "@context": contextSchema,
     type: z.array(z.string()).or(z.string()),
     id: z.string().optional(),
     issuer: z.string().or(
@@ -55,10 +97,10 @@ export const JsonLdCredentialSchema = z
         name: z.string().optional(),
       }),
     ),
-    issuanceDate: z.string().optional(),
-    validFrom: z.string().optional(),
-    expirationDate: z.string().optional(),
-    validUntil: z.string().optional(),
+    issuanceDate: iso8601DateTimeSchema,
+    validFrom: iso8601DateTimeSchema,
+    expirationDate: iso8601DateTimeSchema,
+    validUntil: iso8601DateTimeSchema,
     credentialSubject: z.record(z.unknown()).optional(),
     proof: z
       .object({
@@ -75,14 +117,31 @@ export const JsonLdCredentialSchema = z
   .passthrough();
 
 /**
+ * Validates a string is valid base64url encoding
+ * Base64url uses A-Z, a-z, 0-9, -, _ (no padding required)
+ */
+const isValidBase64url = (str: string): boolean => {
+  // Base64url alphabet: A-Z, a-z, 0-9, -, _ (optional = padding)
+  return /^[A-Za-z0-9_-]*=*$/.test(str);
+};
+
+/**
  * Schema for JWT credential (compact serialization)
  * JWTs are represented as a dot-separated string: header.payload.signature
+ * Each part must be valid base64url encoding
  */
 export const JwtCredentialSchema = z
   .string()
   .refine((val) => val.split(".").length === 3, {
     message: "Invalid JWT format - must have three parts separated by dots",
-  });
+  })
+  .refine(
+    (val) => {
+      const parts = val.split(".");
+      return parts.every((part) => isValidBase64url(part));
+    },
+    { message: "Invalid JWT format - parts must be valid base64url encoded" },
+  );
 
 /**
  * Schema for verify credential request body

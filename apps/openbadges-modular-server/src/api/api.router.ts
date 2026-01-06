@@ -1478,6 +1478,9 @@ export function createVersionedRouter(
 
     // POST /v3/verify - Verify a credential (JSON input)
     // This endpoint accepts a credential in JSON-LD or JWT format and verifies it
+    // NOTE: Intentionally unauthenticated - verification must be accessible to anyone
+    // holding a credential (e.g., employers verifying job applicant badges).
+    // Rate limiting should be applied at the infrastructure level (reverse proxy/CDN).
     const verificationController = new VerificationController();
     router.post("/verify", validateVerifyCredentialMiddleware(), async (c) => {
       try {

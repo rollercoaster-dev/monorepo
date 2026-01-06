@@ -44,24 +44,39 @@ export class VerificationController {
     });
 
     // Convert DTO options to verification service options
+    // Note: The DTO deliberately exposes only safe options via the API.
+    // Internal options (keyId, verificationMethodResolver, acceptedProofTypes,
+    // maxProofAge) are not exposed to prevent abuse and maintain security.
     const verificationOptions: VerificationOptions | undefined = options
       ? {
+          // Skip flags - allow callers to disable specific verification steps
           skipProofVerification: options.skipProofVerification,
           skipStatusCheck: options.skipStatusCheck,
           skipTemporalValidation: options.skipTemporalValidation,
           skipIssuerVerification: options.skipIssuerVerification,
+          // Tolerance and exception handling
           clockTolerance: options.clockTolerance,
           allowExpired: options.allowExpired,
           allowRevoked: options.allowRevoked,
         }
       : undefined;
 
-    // Call the verification service
-    // The credential can be a string (JWT) or an object (JSON-LD)
-    const result = await verify(
-      credential as Record<string, unknown> | string,
-      verificationOptions,
-    );
+    // Call the verification service with proper type handling
+    // The credential has been validated by Zod - it's either a string (JWT)
+    // or a JSON-LD credential object that satisfies the schema
+    let result;
+    if (typeof credential === "string") {
+      // JWT credential - pass string directly
+      result = await verify(credential, verificationOptions);
+    } else {
+      // JSON-LD credential - the Zod schema validates structure,
+      // and passthrough() allows additional properties, making it
+      // compatible with Record<string, unknown>
+      result = await verify(
+        credential as Record<string, unknown>,
+        verificationOptions,
+      );
+    }
 
     logger.debug("Credential verification completed", {
       status: result.status,
