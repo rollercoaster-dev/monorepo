@@ -433,7 +433,9 @@ describe("Unified Baking Service", () => {
       const png = createMinimalPNG();
       const credential = createMockOB2Assertion();
 
-      const bakedResult = await service.bake(png, credential, { format: "png" });
+      const bakedResult = await service.bake(png, credential, {
+        format: "png",
+      });
       expect(bakedResult.format).toBe("png");
 
       const unbakeResult = await service.unbake(bakedResult.data);
