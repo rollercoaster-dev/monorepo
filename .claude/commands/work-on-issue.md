@@ -31,7 +31,7 @@ END:        Mark completed
 
 2. **If existing workflow found** (not null):
    - Show the workflow state:
-     ```
+     ```text
      Found existing workflow for issue #$ARGUMENTS
      - Phase: <phase>
      - Status: <status>
@@ -55,7 +55,24 @@ END:        Mark completed
      ```
    - Store the workflow ID for subsequent commands
 
-**IMPORTANT**: Store the `WORKFLOW_ID` from the create command output (it's in the `id` field of the JSON response). You'll need it for all subsequent checkpoint commands.
+**IMPORTANT**: Store the `WORKFLOW_ID` from the create command output. Example:
+
+```json
+{
+  "id": "workflow-364-1736285400000",
+  "issueNumber": 364,
+  "branch": "feat/issue-364-schema-extension",
+  "phase": "research",
+  "status": "running",
+  ...
+}
+```
+
+Extract and store the ID for subsequent commands:
+
+```bash
+WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUMENTS-desc" | jq -r '.id')
+```
 
 ---
 
