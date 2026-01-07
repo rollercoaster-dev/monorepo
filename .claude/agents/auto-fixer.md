@@ -135,15 +135,17 @@ If validation fails, rollback and report failure.
 
 ### Step 3: Validate
 
-1. **Run validation:**
+1. **Run validation and capture output:**
 
    ```bash
-   bun run type-check && bun run lint
+   validationError=$(bun run type-check 2>&1) && \
+   validationError=$(bun run lint 2>&1)
+   validationPassed=$?
    ```
 
 2. **Check result:**
-   - If PASS: Proceed to commit
-   - If FAIL: Rollback and report failure
+   - If `validationPassed` is 0: Proceed to commit
+   - If non-zero: Rollback and report failure (use `validationError` for details)
 
 ### Step 4: Commit or Rollback
 
