@@ -496,7 +496,7 @@ fi
 
 22. **Report completion:**
 
-    ```
+    ```text
     AUTO-ISSUE COMPLETE
 
     Issue: #$ARGUMENTS

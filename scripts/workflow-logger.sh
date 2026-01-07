@@ -472,8 +472,13 @@ list_workflows() {
     if [[ -d "$dir" && "$dir" != *"/archive" && -f "$dir/state.json" ]]; then
       local workflow_id
       workflow_id=$(basename "$dir")
+
+      # Handle race condition: file could be deleted between check and read
       local state
-      state=$(cat "$dir/state.json")
+      if ! state=$(cat "$dir/state.json" 2>/dev/null); then
+        # File disappeared, skip silently
+        continue
+      fi
 
       local workflow_type
       workflow_type=$(echo "$state" | jq -r '.workflow')
@@ -510,8 +515,12 @@ list_workflows() {
       if [[ -d "$dir" && -f "$dir/state.json" ]]; then
         local workflow_id
         workflow_id=$(basename "$dir")
+
+        # Handle race condition: file could be deleted between check and read
         local state
-        state=$(cat "$dir/state.json")
+        if ! state=$(cat "$dir/state.json" 2>/dev/null); then
+          continue
+        fi
 
         local workflow_type
         workflow_type=$(echo "$state" | jq -r '.workflow')
@@ -561,7 +570,10 @@ log_phase_complete() {
 
   # Update phase data to mark as completed
   local current_data
-  current_data=$(get_workflow_state "$workflow_id" | jq ".phaseData.\"${phase}\" // {}")
+  if ! current_data=$(get_workflow_state "$workflow_id" | jq ".phaseData.\"${phase}\" // {}"); then
+    echo "Error: Failed to get current phase data for $workflow_id" >&2
+    return 1
+  fi
   local updated_data
   updated_data=$(echo "$current_data" | jq '. + {completed: true}')
   update_phase "$workflow_id" "$phase" "$updated_data"
@@ -588,6 +600,12 @@ log_commit() {
   local message=$3
   local metadata=${4:-"{}"}
 
+  # Validate SHA is a valid git hash (7-40 hex characters)
+  if ! [[ "$sha" =~ ^[a-f0-9]{7,40}$ ]]; then
+    echo "Error: Invalid commit SHA: $sha" >&2
+    return 1
+  fi
+
   local event_metadata
   event_metadata=$(jq -n \
     --arg sha "$sha" \
@@ -602,6 +620,12 @@ log_pr_created() {
   local workflow_id=$1
   local pr_number=$2
   local pr_url=$3
+
+  # Validate PR number is numeric
+  if ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+    echo "Error: Invalid PR number: $pr_number" >&2
+    return 1
+  fi
 
   local event_metadata
   event_metadata=$(jq -n \

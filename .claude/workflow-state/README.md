@@ -22,7 +22,7 @@ They provide:
 
 Each workflow creates a directory:
 
-```
+```text
 .claude/workflow-state/
 ├── auto-issue-338/
 │   ├── state.json          # Current workflow state (checkpointed)

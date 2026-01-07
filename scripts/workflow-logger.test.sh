@@ -2,8 +2,13 @@
 # Test suite for workflow-logger.sh
 # Simple validation tests for workflow logging functions
 
-export CLAUDE_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$CLAUDE_PROJECT_DIR"
+# Declare and assign separately to avoid masking return values (shellcheck SC2155)
+CLAUDE_PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" || {
+  echo "Failed to determine CLAUDE_PROJECT_DIR" >&2
+  exit 1
+}
+export CLAUDE_PROJECT_DIR
+cd "$CLAUDE_PROJECT_DIR" || exit 1
 
 # Test counters
 TESTS_RUN=0
