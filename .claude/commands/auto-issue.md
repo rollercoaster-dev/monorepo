@@ -455,6 +455,7 @@ else:
 
     ```bash
     gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
+    PR_NUMBER=$(gh pr view --json number -q .number)
     ```
 
     PR body includes:
@@ -462,6 +463,19 @@ else:
     - Non-critical findings (for reviewer awareness)
     - Auto-fix log (if any fixes were applied)
     - Footer: `Closes #$ARGUMENTS`
+
+14b. **Log workflow completion:**
+
+     ```typescript
+     checkpoint.setStatus(WORKFLOW_ID, "completed");
+     checkpoint.logAction(WORKFLOW_ID, "pr_created", "success", {
+       prNumber: PR_NUMBER,
+       commitCount: $TOTAL_COMMITS,
+       fixCommitCount: $FIX_COMMIT_COUNT,
+       branch: branchName
+     });
+     console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
+     ```
 
 15. **Trigger reviews:**
 
@@ -551,6 +565,22 @@ else:
 2. **Force PR** - Type `force-pr` to create PR with issues flagged
 3. **Abort** - Type `abort` to delete branch and exit
 4. **Reset** - Type `reset` to go back to last good state and retry
+```
+
+### Log Escalation to Checkpoint
+
+When escalation is triggered, log the failure:
+
+```typescript
+checkpoint.setStatus(WORKFLOW_ID, "failed");
+checkpoint.logAction(WORKFLOW_ID, "escalation", "failed", {
+  reason: "MAX_RETRY exceeded",
+  unresolvedFindings: criticalFindings.length,
+  retryCount: workflow.retryCount,
+  fixAttempts: $FIX_COMMIT_COUNT,
+  trigger: escalationTrigger, // e.g., "max_retry", "build_failed", "test_failed"
+});
+console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: Escalation required`);
 ```
 
 ### Escalation Flag Behaviors
