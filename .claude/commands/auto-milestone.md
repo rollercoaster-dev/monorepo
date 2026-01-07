@@ -104,6 +104,66 @@ if [[ -z "$MILESTONE_DATA" ]]; then
 fi
 ```
 
+### 1.1b Initialize Checkpoint
+
+Check for existing milestone checkpoint and create if needed:
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+
+// Check for existing milestone workflow
+const milestoneId = `milestone-${MILESTONE_NAME.replace(/\s+/g, '-').toLowerCase()}`;
+const existing = checkpoint.load(milestoneId);
+
+let WORKFLOW_ID: string;
+
+if (existing && existing.workflow.status === "running") {
+  console.log(`[AUTO-MILESTONE] Resuming milestone: ${MILESTONE_NAME}`);
+  console.log(`[AUTO-MILESTONE] Phase: ${existing.workflow.phase}`);
+  console.log(`[AUTO-MILESTONE] Actions: ${existing.actions.length}`);
+  console.log(`[AUTO-MILESTONE] Started: ${existing.workflow.createdAt}`);
+
+  WORKFLOW_ID = existing.workflow.id;
+
+  // Resume based on phase
+  switch (existing.workflow.phase) {
+    case "execute":
+      // Skip to Phase 2
+      goto PHASE_2;
+    case "review":
+      // Skip to Phase 3
+      goto PHASE_3;
+    case "merge":
+      // Skip to Phase 4
+      goto PHASE_4;
+    case "cleanup":
+      // Skip to Phase 5
+      goto PHASE_5;
+    default:
+      // Continue from planning phase
+      break;
+  }
+} else {
+  // Create new milestone checkpoint
+  // Note: Use milestone name as "issue number" for milestone-level workflow
+  const workflow = checkpoint.create(
+    0, // No specific issue for milestone-level workflow
+    "main", // Milestone operates on main branch
+    null // No single worktree (manages multiple)
+  );
+
+  // Store milestone name in metadata
+  checkpoint.logAction(workflow.id, "milestone_started", "success", {
+    milestoneName: MILESTONE_NAME,
+    phase: "planning"
+  });
+
+  WORKFLOW_ID = workflow.id;
+
+  console.log(`[AUTO-MILESTONE] Checkpoint created: ${WORKFLOW_ID}`);
+}
+```
+
 ### 1.2 Spawn Milestone Planner Agent
 
 Use the `milestone-planner` agent to:
