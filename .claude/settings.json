@@ -46,6 +46,7 @@
       "Bash(bun build:*)",
       "Bash(bun dev:*)",
       "Bash(bun run:*)",
+      "Bash(bun scripts/checkpoint-cli.ts:*)",
       "Bash(git checkout:*)",
       "Bash(git branch:*)",
       "Bash(git status:*)",
