@@ -1,0 +1,10 @@
+{
+  "extends": "@rollercoaster-dev/shared-config/tsconfig",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

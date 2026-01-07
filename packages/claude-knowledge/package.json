@@ -1,0 +1,18 @@
+{
+  "name": "claude-knowledge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "bun test",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rollercoaster-dev/rd-logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@rollercoaster-dev/shared-config": "workspace:*"
+  }
+}
