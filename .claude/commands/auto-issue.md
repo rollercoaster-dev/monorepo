@@ -32,6 +32,27 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ---
 
+## Checkpoint Integration
+
+This workflow uses `claude-knowledge` checkpoint API to persist state across context compactions.
+
+### Import
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+```
+
+### Workflow ID
+
+A `WORKFLOW_ID` is established at workflow start and passed to all sub-agents for state tracking.
+
+```typescript
+// Set at Phase 1 start, used throughout
+let WORKFLOW_ID: string;
+```
+
+---
+
 ## Workflow Overview
 
 ```
@@ -124,6 +145,37 @@ update_board_status() {
    fi
    ```
 
+0b. **Check for existing workflow (resume detection):**
+
+    ```typescript
+    import { checkpoint } from "claude-knowledge";
+
+    const existing = checkpoint.findByIssue($ARGUMENTS);
+    if (existing && existing.workflow.status === "running") {
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Resuming from phase: ${existing.workflow.phase}`);
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous actions: ${existing.actions.length}`);
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous commits: ${existing.commits.length}`);
+
+      WORKFLOW_ID = existing.workflow.id;
+
+      // Resume based on phase
+      switch (existing.workflow.phase) {
+        case "implement":
+          // Skip to Phase 2
+          goto PHASE_2;
+        case "review":
+          // Skip to Phase 3
+          goto PHASE_3;
+        case "finalize":
+          // Skip to Phase 4
+          goto PHASE_4;
+        default:
+          // Continue from research phase
+          break;
+      }
+    }
+    ```
+
 1. **Fetch issue details:**
 
    ```bash
@@ -145,10 +197,44 @@ update_board_status() {
    git checkout -b feat/issue-$ARGUMENTS-{short-description}
    ```
 
+3b. **Create workflow checkpoint (if not resuming):**
+
+    ```typescript
+    if (!WORKFLOW_ID) {
+      const branchName = `feat/issue-$ARGUMENTS-{short-description}`;
+      const workflow = checkpoint.create($ARGUMENTS, branchName);
+      WORKFLOW_ID = workflow.id;
+
+      checkpoint.logAction(WORKFLOW_ID, "workflow_started", "success", {
+        issueNumber: $ARGUMENTS,
+        branch: branchName,
+        flags: {
+          dryRun: $DRY_RUN,
+          requireTests: $REQUIRE_TESTS,
+          forcePr: $FORCE_PR,
+          abortOnFail: $ABORT_ON_FAIL
+        }
+      });
+
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Checkpoint created: ${WORKFLOW_ID}`);
+    }
+    ```
+
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
    - Check dependencies
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
+   - Pass `WORKFLOW_ID` for checkpoint integration
+
+   **Log agent spawn:**
+
+   ```typescript
+   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+     agent: "issue-researcher",
+     task: "analyze codebase and create dev plan",
+     issueNumber: $ARGUMENTS,
+   });
+   ```
 
 5. **Update board status to "In Progress":**
 
@@ -178,6 +264,18 @@ update_board_status() {
 
 6. **If `--dry-run`:** Stop here, show plan, exit.
 
+6b. **Log phase transition (research → implement):**
+
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "implement");
+    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+      from: "research",
+      to: "implement",
+      devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`
+    });
+    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement`);
+    ```
+
 ---
 
 ## Phase 2: Implement (Autonomous)
@@ -186,6 +284,17 @@ update_board_status() {
    - Execute all commits per plan
    - Each commit is atomic and buildable
    - Agent handles validation internally
+   - Pass `WORKFLOW_ID` for commit tracking
+
+   **Log agent spawn:**
+
+   ```typescript
+   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+     agent: "atomic-developer",
+     task: "execute dev plan with atomic commits",
+     devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`,
+   });
+   ```
 
 8. **On completion, run validation:**
 
@@ -195,6 +304,18 @@ update_board_status() {
 
    - If validation fails: Attempt to fix inline, then continue
    - If still fails: Log and proceed to review (reviewer will catch it)
+
+8b. **Log phase transition (implement → review):**
+
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "review");
+    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+      from: "implement",
+      to: "review",
+      commitCount: $COMMIT_COUNT  // Number of commits from atomic-developer
+    });
+    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review`);
+    ```
 
 ---
 
@@ -209,6 +330,29 @@ update_board_status() {
    - pr-review-toolkit:pr-test-analyzer
    - pr-review-toolkit:silent-failure-hunter
    - openbadges-compliance-reviewer (if badge code detected)
+   ```
+
+   **Log each agent spawn:**
+
+   ```typescript
+   const reviewAgents = [
+     "pr-review-toolkit:code-reviewer",
+     "pr-review-toolkit:pr-test-analyzer",
+     "pr-review-toolkit:silent-failure-hunter",
+   ];
+
+   // Add OB compliance if badge code detected
+   if (hasBadgeCode) {
+     reviewAgents.push("openbadges-compliance-reviewer");
+   }
+
+   for (const agent of reviewAgents) {
+     checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+       agent,
+       task: "code review",
+       phase: "review",
+     });
+   }
    ```
 
    **Badge code detection:** Files matching:
@@ -240,6 +384,15 @@ while has_critical_findings AND retry_count < MAX_RETRY:
 
         spawn auto-fixer agent with finding
 
+        # Log auto-fixer spawn
+        checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+          agent: "auto-fixer",
+          task: "fix critical finding",
+          finding: finding.description,
+          file: finding.file,
+          attemptNumber: retry_count + 1
+        })
+
         if fix successful:
             fix_commit_count++
         else:
@@ -255,6 +408,20 @@ if has_critical_findings:
 else:
     PROCEED_TO_PHASE_4()
 ```
+
+10b. **Log phase transition (review → finalize):**
+
+     ```typescript
+     checkpoint.setPhase(WORKFLOW_ID, "finalize");
+     checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+       from: "review",
+       to: "finalize",
+       criticalResolved: $CRITICAL_RESOLVED,
+       fixCommits: $FIX_COMMIT_COUNT,
+       retryCount: $RETRY_COUNT
+     });
+     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize`);
+     ```
 
 ---
 
@@ -288,6 +455,7 @@ else:
 
     ```bash
     gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
+    PR_NUMBER=$(gh pr view --json number -q .number)
     ```
 
     PR body includes:
@@ -295,6 +463,19 @@ else:
     - Non-critical findings (for reviewer awareness)
     - Auto-fix log (if any fixes were applied)
     - Footer: `Closes #$ARGUMENTS`
+
+14b. **Log workflow completion:**
+
+     ```typescript
+     checkpoint.setStatus(WORKFLOW_ID, "completed");
+     checkpoint.logAction(WORKFLOW_ID, "pr_created", "success", {
+       prNumber: PR_NUMBER,
+       commitCount: $TOTAL_COMMITS,
+       fixCommitCount: $FIX_COMMIT_COUNT,
+       branch: branchName
+     });
+     console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
+     ```
 
 15. **Trigger reviews:**
 
@@ -386,6 +567,22 @@ else:
 4. **Reset** - Type `reset` to go back to last good state and retry
 ```
 
+### Log Escalation to Checkpoint
+
+When escalation is triggered, log the failure:
+
+```typescript
+checkpoint.setStatus(WORKFLOW_ID, "failed");
+checkpoint.logAction(WORKFLOW_ID, "escalation", "failed", {
+  reason: "MAX_RETRY exceeded",
+  unresolvedFindings: criticalFindings.length,
+  retryCount: workflow.retryCount,
+  fixAttempts: $FIX_COMMIT_COUNT,
+  trigger: escalationTrigger, // e.g., "max_retry", "build_failed", "test_failed"
+});
+console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: Escalation required`);
+```
+
 ### Escalation Flag Behaviors
 
 | Flag              | Behavior on Escalation                                                     |
@@ -410,6 +607,76 @@ The user can intervene at ANY time by typing in the chat:
 | `reset`           | Reset to last good commit, retry                  |
 
 Between phases, the orchestrator checks for user input. If detected, handle appropriately.
+
+---
+
+## Resuming Interrupted Workflows
+
+If `/auto-issue` is interrupted (context compaction, timeout, manual stop), the checkpoint API enables resumption.
+
+### Detect Existing Workflow
+
+At workflow start (step 0b), the orchestrator checks for existing workflows:
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+
+const existing = checkpoint.findByIssue($ARGUMENTS);
+if (existing && existing.workflow.status === "running") {
+  // Workflow found - can resume
+}
+```
+
+### Resume Based on Phase
+
+| Phase     | Resume Action                                       |
+| --------- | --------------------------------------------------- |
+| research  | Re-run issue-researcher (idempotent)                |
+| implement | Check `existing.commits`, continue from last commit |
+| review    | Re-run review agents, check previous findings       |
+| finalize  | Re-run validation, attempt PR creation again        |
+
+### Verify Checkpoint State
+
+Before resuming, verify the checkpoint data:
+
+```typescript
+const data = checkpoint.findByIssue($ARGUMENTS);
+if (data) {
+  console.log(`Workflow ${data.workflow.id}:`);
+  console.log(`- Phase: ${data.workflow.phase}`);
+  console.log(`- Status: ${data.workflow.status}`);
+  console.log(`- Retry Count: ${data.workflow.retryCount}`);
+  console.log(`- Actions: ${data.actions.length}`);
+  console.log(`- Commits: ${data.commits.length}`);
+
+  // List commits made so far
+  data.commits.forEach((c) => {
+    console.log(`  ${c.sha.slice(0, 7)} ${c.message}`);
+  });
+}
+```
+
+### Manual Resume Commands
+
+If automatic resume fails, use these commands:
+
+```bash
+# Check database state
+bun repl
+> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
+> checkpoint.findByIssue(354)
+
+# List all active workflows
+> checkpoint.listActive()
+
+# Mark workflow as failed (to start fresh)
+> checkpoint.setStatus("workflow-id", "failed")
+```
+
+### Database Location
+
+Checkpoint data is stored in `.claude/execution-state.db` (SQLite, gitignored).
 
 ---
 

@@ -29,6 +29,7 @@ interface AutoFixerInput {
     devPlanPath: string;
     attemptNumber: number;
     maxRetry: number;
+    WORKFLOW_ID: string; // For checkpoint tracking
   };
 }
 
@@ -103,6 +104,20 @@ If validation fails, rollback and report failure.
 
 ### Step 2: Apply Fix
 
+0. **Log fix attempt to checkpoint:**
+
+   ```typescript
+   import { checkpoint } from "claude-knowledge";
+
+   checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "pending", {
+     findingAgent: finding.agent,
+     file: finding.file,
+     line: finding.line,
+     description: finding.description,
+     attemptNumber: context.attemptNumber,
+   });
+   ```
+
 1. **Make the edit:**
    - Use Edit tool for surgical changes
    - Use Write tool only if creating new file (rare)
@@ -120,15 +135,17 @@ If validation fails, rollback and report failure.
 
 ### Step 3: Validate
 
-1. **Run validation:**
+1. **Run validation and capture output:**
 
    ```bash
-   bun run type-check && bun run lint
+   validationError=$(bun run type-check 2>&1) && \
+   validationError=$(bun run lint 2>&1)
+   validationPassed=$?
    ```
 
 2. **Check result:**
-   - If PASS: Proceed to commit
-   - If FAIL: Rollback and report failure
+   - If `validationPassed` is 0: Proceed to commit
+   - If non-zero: Rollback and report failure (use `validationError` for details)
 
 ### Step 4: Commit or Rollback
 
@@ -137,6 +154,22 @@ If validation fails, rollback and report failure.
 ```bash
 git add <file>
 git commit -m "fix(<scope>): address review - <description>"
+COMMIT_SHA=$(git rev-parse HEAD)
+```
+
+Log success to checkpoint:
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "success", {
+  file: finding.file,
+  commitSha: COMMIT_SHA,
+});
+
+checkpoint.logCommit(
+  WORKFLOW_ID,
+  COMMIT_SHA,
+  `fix(<scope>): address review - <description>`,
+);
 ```
 
 Commit message format:
@@ -149,6 +182,18 @@ Commit message format:
 
 ```bash
 git checkout -- <file>
+```
+
+Log failure and increment retry count:
+
+```typescript
+const newRetryCount = checkpoint.incrementRetry(WORKFLOW_ID);
+checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "failed", {
+  file: finding.file,
+  reason: "validation_failed",
+  errorOutput: validationError,
+  retryCount: newRetryCount,
+});
 ```
 
 Report the failure with details.
