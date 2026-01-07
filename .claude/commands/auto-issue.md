@@ -32,6 +32,27 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ---
 
+## Checkpoint Integration
+
+This workflow uses `claude-knowledge` checkpoint API to persist state across context compactions.
+
+### Import
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+```
+
+### Workflow ID
+
+A `WORKFLOW_ID` is established at workflow start and passed to all sub-agents for state tracking.
+
+```typescript
+// Set at Phase 1 start, used throughout
+let WORKFLOW_ID: string;
+```
+
+---
+
 ## Workflow Overview
 
 ```
@@ -124,6 +145,37 @@ update_board_status() {
    fi
    ```
 
+0b. **Check for existing workflow (resume detection):**
+
+    ```typescript
+    import { checkpoint } from "claude-knowledge";
+
+    const existing = checkpoint.findByIssue($ARGUMENTS);
+    if (existing && existing.workflow.status === "running") {
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Resuming from phase: ${existing.workflow.phase}`);
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous actions: ${existing.actions.length}`);
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous commits: ${existing.commits.length}`);
+
+      WORKFLOW_ID = existing.workflow.id;
+
+      // Resume based on phase
+      switch (existing.workflow.phase) {
+        case "implement":
+          // Skip to Phase 2
+          goto PHASE_2;
+        case "review":
+          // Skip to Phase 3
+          goto PHASE_3;
+        case "finalize":
+          // Skip to Phase 4
+          goto PHASE_4;
+        default:
+          // Continue from research phase
+          break;
+      }
+    }
+    ```
+
 1. **Fetch issue details:**
 
    ```bash
@@ -144,6 +196,29 @@ update_board_status() {
    ```bash
    git checkout -b feat/issue-$ARGUMENTS-{short-description}
    ```
+
+3b. **Create workflow checkpoint (if not resuming):**
+
+    ```typescript
+    if (!WORKFLOW_ID) {
+      const branchName = `feat/issue-$ARGUMENTS-{short-description}`;
+      const workflow = checkpoint.create($ARGUMENTS, branchName);
+      WORKFLOW_ID = workflow.id;
+
+      checkpoint.logAction(WORKFLOW_ID, "workflow_started", "success", {
+        issueNumber: $ARGUMENTS,
+        branch: branchName,
+        flags: {
+          dryRun: $DRY_RUN,
+          requireTests: $REQUIRE_TESTS,
+          forcePr: $FORCE_PR,
+          abortOnFail: $ABORT_ON_FAIL
+        }
+      });
+
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Checkpoint created: ${WORKFLOW_ID}`);
+    }
+    ```
 
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
