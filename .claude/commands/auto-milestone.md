@@ -280,6 +280,24 @@ for issue in "${FREE_ISSUES[@]:0:$PARALLEL}"; do
 done
 ```
 
+**After creating worktrees:**
+
+```typescript
+checkpoint.setPhase(WORKFLOW_ID, "execute");
+
+for (const issue of FREE_ISSUES.slice(0, PARALLEL)) {
+  const worktreePath = `$WORKTREE_BASE/issue-${issue}`;
+
+  checkpoint.logAction(WORKFLOW_ID, "worktree_created", "success", {
+    issueNumber: issue,
+    worktreePath: worktreePath,
+    wave: currentWave,
+  });
+}
+
+console.log(`[AUTO-MILESTONE] Phase: planning → execute`);
+```
+
 ### 2.2 Spawn Parallel /auto-issue Subagents
 
 Use the Task tool to spawn parallel subagents. Each subagent:
@@ -325,6 +343,32 @@ Important:
 - Do NOT escalate interactively - if you hit blockers, return status: "failed" with error
 - Commit message format: <type>(<scope>): <description> (#$ISSUE)
 - PR should include "Closes #$ISSUE" in body
+```
+
+**When spawning each subagent:**
+
+```typescript
+// Each /auto-issue creates its own checkpoint with worktree path
+// The milestone tracks the relationship via metadata
+
+checkpoint.logAction(WORKFLOW_ID, "spawned_child_workflow", "success", {
+  issueNumber: issue,
+  worktreePath: worktreePath,
+  childWorkflowType: "auto-issue",
+  wave: currentWave,
+});
+```
+
+**After each subagent completes:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "child_workflow_complete", "success", {
+  issueNumber: issue,
+  status: result.status,
+  prNumber: result.pr_number,
+  branch: result.branch,
+  error: result.error || null,
+});
 ```
 
 ### 2.3 Track Progress & Checkpointing
