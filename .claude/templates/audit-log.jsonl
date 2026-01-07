@@ -1,0 +1,9 @@
+{"timestamp":"2026-01-07T10:00:00Z","event":"workflow.start","workflow":"auto-issue","issue":338,"metadata":{"title":"feat(dx): Add workflow logging system for autonomous agents"}}
+{"timestamp":"2026-01-07T10:01:00Z","event":"phase.start","phase":"research","metadata":{}}
+{"timestamp":"2026-01-07T10:05:00Z","event":"agent.spawn","agent":"issue-researcher","metadata":{}}
+{"timestamp":"2026-01-07T10:10:00Z","event":"phase.complete","phase":"research","metadata":{"planPath":".claude/dev-plans/issue-338.md","duration":300}}
+{"timestamp":"2026-01-07T10:11:00Z","event":"phase.start","phase":"implement","metadata":{}}
+{"timestamp":"2026-01-07T10:12:00Z","event":"agent.spawn","agent":"atomic-developer","metadata":{"planPath":".claude/dev-plans/issue-338.md"}}
+{"timestamp":"2026-01-07T10:20:00Z","event":"commit.created","sha":"abc123def456","message":"feat(dx): add workflow logging schema and types","metadata":{"step":1,"totalSteps":8}}
+{"timestamp":"2026-01-07T10:30:00Z","event":"commit.created","sha":"def789abc012","message":"feat(dx): implement workflow logger bash utility","metadata":{"step":2,"totalSteps":8}}
+{"timestamp":"2026-01-07T10:45:00Z","event":"commit.created","sha":"ghi345jkl678","message":"feat(dx): integrate workflow logging with auto-issue","metadata":{"step":3,"totalSteps":8}}

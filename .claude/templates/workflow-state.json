@@ -1,0 +1,36 @@
+{
+  "workflow": "auto-issue",
+  "workflow_id": "1736247600-338",
+  "issue_number": 338,
+  "startedAt": "2026-01-07T10:00:00Z",
+  "lastUpdated": "2026-01-07T10:45:00Z",
+  "currentPhase": "implement",
+  "phaseData": {
+    "research": {
+      "completed": true,
+      "planPath": ".claude/dev-plans/issue-338.md",
+      "duration": 300
+    },
+    "implement": {
+      "commits": 3,
+      "lastCommit": "abc123def456",
+      "completedSteps": 3,
+      "totalSteps": 8
+    },
+    "review": {
+      "started": false
+    },
+    "finalize": {
+      "started": false
+    }
+  },
+  "resumeContext": "Issue #338 was being implemented. Phase 'implement' was in progress with 3 commits made (last: abc123). The dev plan is at .claude/dev-plans/issue-338.md. Resume by checking git log and continuing from Step 4 of the plan.",
+  "resumable": true,
+  "metadata": {
+    "branch": "feat/issue-338-workflow-logging",
+    "baseCommit": "def456abc123",
+    "title": "feat(dx): Add workflow logging system for autonomous agents",
+    "labels": ["enhancement", "developer-experience"],
+    "estimatedLines": 350
+  }
+}
