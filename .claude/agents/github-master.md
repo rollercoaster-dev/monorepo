@@ -46,8 +46,48 @@ Keep the first line under 72 characters. Be specific but concise.
 - Create issues with clear titles and structured descriptions
 - Apply appropriate labels: `bug`, `enhancement`, `documentation`, `test`, `ci`, `docker`, `cleanup`, `good first issue`, `priority:high/medium/low`, `type:tech-debt`, package-specific labels (`pkg:*`, `app:*`)
 - Link related issues using GitHub keywords
-- Ensure issues are assigned to the correct project board column
+- **Always add new issues to the project board** (see workflow below)
 - Reference the migration checklist when relevant
+
+**After Creating an Issue - ALWAYS Add to Board:**
+
+```bash
+# 1. Get the issue node ID
+ISSUE_NODE_ID=$(gh issue view <number> --json id -q .id)
+
+# 2. Add to project board
+gh api graphql -f query='
+  mutation($projectId: ID!, $contentId: ID!) {
+    addProjectV2ItemById(input: {
+      projectId: $projectId
+      contentId: $contentId
+    }) { item { id } }
+  }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID"
+
+# 3. Set initial status (usually Backlog)
+# Get item ID from response, then:
+gh api graphql \
+  -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
+  -f itemId="<item-id-from-step-2>" \
+  -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
+  -f optionId="8b7bb58f" \
+  -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+    updateProjectV2ItemFieldValue(input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: $fieldId
+      value: { singleSelectOptionId: $optionId }
+    }) { projectV2Item { id } }
+  }'
+```
+
+**Status Option IDs:**
+
+- Backlog: `8b7bb58f`
+- Next: `266160c2`
+- In Progress: `3e320f16`
+- Blocked: `51c2af7b`
+- Done: `56048761`
 
 ### 3. Pull Request Descriptions
 
