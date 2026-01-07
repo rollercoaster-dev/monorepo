@@ -69,5 +69,10 @@ Thumbs.db
 # Note: .claude/settings.json should be committed (team-shared settings)
 .playwright-mcp/
 
+# Workflow state files (local-only, contains execution logs)
+# Note: .claude/workflow-state/README.md is committed
+# Users can manually commit logs with -f if needed for debugging
+.claude/workflow-state/*/
+
 # Git worktrees for /auto-milestone
 .worktrees/
