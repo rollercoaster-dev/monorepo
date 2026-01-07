@@ -89,7 +89,59 @@ gh api graphql \
 - Blocked: `51c2af7b`
 - Done: `56048761`
 
-### 3. Pull Request Descriptions
+### 3. Issue Dependencies
+
+Use GitHub's native dependency feature to track blocked/blocking relationships:
+
+**Add a Dependency (Issue A is blocked by Issue B):**
+
+```bash
+# 1. Get node IDs for both issues
+BLOCKED_ISSUE_ID=$(gh issue view <blocked-issue-number> --json id -q .id)
+BLOCKING_ISSUE_ID=$(gh issue view <blocking-issue-number> --json id -q .id)
+
+# 2. Add the blocked-by relationship
+gh api graphql -f query='
+  mutation($issueId: ID!, $blockingIssueId: ID!) {
+    addBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
+      issue { number }
+      blockingIssue { number }
+    }
+  }' -f issueId="$BLOCKED_ISSUE_ID" -f blockingIssueId="$BLOCKING_ISSUE_ID"
+```
+
+**Remove a Dependency:**
+
+```bash
+gh api graphql -f query='
+  mutation($issueId: ID!, $blockingIssueId: ID!) {
+    removeBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
+      issue { number }
+    }
+  }' -f issueId="$BLOCKED_ISSUE_ID" -f blockingIssueId="$BLOCKING_ISSUE_ID"
+```
+
+**Query Dependencies:**
+
+```bash
+gh api graphql -f query='
+  query($number: Int!, $owner: String!, $repo: String!) {
+    repository(owner: $owner, name: $repo) {
+      issue(number: $number) {
+        blockedBy(first: 10) { nodes { number title } }
+        blocking(first: 10) { nodes { number title } }
+      }
+    }
+  }' -f number=<issue-number> -F owner=rollercoaster-dev -f repo=monorepo
+```
+
+**When Creating Issues with Dependencies:**
+
+1. Create all issues first
+2. Then add dependencies in dependency order (blocking issues first)
+3. Dependencies show as "Blocked" indicator on the issue
+
+### 4. Pull Request Descriptions
 
 Structure PRs with:
 
@@ -98,14 +150,14 @@ Structure PRs with:
 - **Testing**: How it was tested
 - **Closes #X**: Use proper GitHub keywords (Closes, Fixes, Resolves) to auto-close issues on merge—NOT "Implements"
 
-### 4. Branch Hygiene
+### 5. Branch Hygiene
 
 - Identify merged branches that can be deleted
 - Flag stale branches (no activity 30+ days)
 - Suggest branch naming: `feat/`, `fix/`, `docs/`, `refactor/`, `chore/`
 - Clean up local branches that no longer have remote tracking
 
-### 5. Project Board Organization
+### 6. Project Board Organization
 
 - Keep issues in correct columns (Backlog, Next, In Progress, Blocked, Done)
 - Ensure milestone assignments are current
