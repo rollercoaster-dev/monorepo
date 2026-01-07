@@ -224,6 +224,17 @@ update_board_status() {
    - Analyze codebase
    - Check dependencies
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
+   - Pass `WORKFLOW_ID` for checkpoint integration
+
+   **Log agent spawn:**
+
+   ```typescript
+   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+     agent: "issue-researcher",
+     task: "analyze codebase and create dev plan",
+     issueNumber: $ARGUMENTS,
+   });
+   ```
 
 5. **Update board status to "In Progress":**
 
@@ -273,6 +284,17 @@ update_board_status() {
    - Execute all commits per plan
    - Each commit is atomic and buildable
    - Agent handles validation internally
+   - Pass `WORKFLOW_ID` for commit tracking
+
+   **Log agent spawn:**
+
+   ```typescript
+   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+     agent: "atomic-developer",
+     task: "execute dev plan with atomic commits",
+     devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`,
+   });
+   ```
 
 8. **On completion, run validation:**
 
@@ -310,6 +332,29 @@ update_board_status() {
    - openbadges-compliance-reviewer (if badge code detected)
    ```
 
+   **Log each agent spawn:**
+
+   ```typescript
+   const reviewAgents = [
+     "pr-review-toolkit:code-reviewer",
+     "pr-review-toolkit:pr-test-analyzer",
+     "pr-review-toolkit:silent-failure-hunter",
+   ];
+
+   // Add OB compliance if badge code detected
+   if (hasBadgeCode) {
+     reviewAgents.push("openbadges-compliance-reviewer");
+   }
+
+   for (const agent of reviewAgents) {
+     checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+       agent,
+       task: "code review",
+       phase: "review",
+     });
+   }
+   ```
+
    **Badge code detection:** Files matching:
    - `**/badge*`, `**/credential*`, `**/issuer*`, `**/assertion*`
    - `**/ob2/**`, `**/ob3/**`, `**/openbadges/**`
@@ -338,6 +383,15 @@ while has_critical_findings AND retry_count < MAX_RETRY:
             break
 
         spawn auto-fixer agent with finding
+
+        # Log auto-fixer spawn
+        checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+          agent: "auto-fixer",
+          task: "fix critical finding",
+          finding: finding.description,
+          file: finding.file,
+          attemptNumber: retry_count + 1
+        })
 
         if fix successful:
             fix_commit_count++
