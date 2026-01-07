@@ -1,4 +1,6 @@
 // Phase 1: Execution State
+export { checkpoint } from "./checkpoint";
+export { getDatabase, closeDatabase, resetDatabase } from "./db/sqlite";
 export type {
   Workflow,
   Action,
@@ -7,5 +9,3 @@ export type {
   WorkflowPhase,
   WorkflowStatus,
 } from "./types";
-
-// checkpoint and db exports will be added in subsequent commits
