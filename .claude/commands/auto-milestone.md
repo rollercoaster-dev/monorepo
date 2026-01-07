@@ -415,6 +415,25 @@ If a subagent returns `status: "failed"`:
 3. Identify dependent issues → mark as skipped
 4. Continue with remaining issues
 
+**When a subagent fails:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "child_workflow_failed", "failed", {
+  issueNumber: failedIssue,
+  error: result.error,
+  dependentIssues: identifyDependents(failedIssue),
+});
+
+// Log each skipped dependent issue
+for (const dependentIssue of identifyDependents(failedIssue)) {
+  checkpoint.logAction(WORKFLOW_ID, "issue_skipped", "success", {
+    issueNumber: dependentIssue,
+    reason: "blocked_by_failure",
+    blockedBy: failedIssue,
+  });
+}
+```
+
 ```
 FAILURE HANDLING:
 
