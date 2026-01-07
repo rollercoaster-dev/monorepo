@@ -4,6 +4,8 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 **Mode:** Autonomous - no gates, auto-fix enabled, escalation only on MAX_RETRY exceeded
 
+**Workflow Logging:** This workflow uses `scripts/workflow-logger.sh` to persist progress to `.claude/workflow-state/auto-issue-$ARGUMENTS/`. See `.claude/workflow-state/README.md` for details on resuming workflows.
+
 ---
 
 ## Quick Reference
@@ -113,24 +115,43 @@ update_board_status() {
 
 ## Phase 1: Research (Autonomous)
 
-0. **Validate input:**
+0. **Initialize workflow logging:**
+
+   ```bash
+   # Source the workflow logger utility
+   source scripts/workflow-logger.sh
+
+   # Initialize workflow state
+   WORKFLOW_ID=$(init_workflow "auto-issue" "$ARGUMENTS")
+   echo "[AUTO-ISSUE #$ARGUMENTS] Workflow logging initialized: $WORKFLOW_ID"
+
+   # Log workflow start
+   log_phase_start "$WORKFLOW_ID" "research"
+   ```
+
+1. **Validate input:**
 
    ```bash
    # Ensure $ARGUMENTS is a valid issue number
    if ! [[ "$ARGUMENTS" =~ ^[0-9]+$ ]]; then
      echo "[AUTO-ISSUE] ERROR: Invalid issue number: $ARGUMENTS"
      echo "[AUTO-ISSUE] Usage: /auto-issue <issue-number>"
+     log_workflow_abort "$WORKFLOW_ID" "Invalid issue number"
      exit 1
    fi
    ```
 
-1. **Fetch issue details:**
+2. **Fetch issue details:**
 
    ```bash
-   gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees
+   ISSUE_DATA=$(gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees)
+   ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
+
+   # Update workflow metadata with issue title
+   update_phase "$WORKFLOW_ID" "research" "{\"issueTitle\":\"$ISSUE_TITLE\"}"
    ```
 
-2. **Check for blockers:**
+3. **Check for blockers:**
 
    ```bash
    gh issue view $ARGUMENTS --json body | grep -iE "blocked by|depends on"
@@ -139,18 +160,36 @@ update_board_status() {
    - If blockers found: **WARN but continue** (unlike /work-on-issue which stops)
    - Log: "Warning: Issue has blockers - proceeding anyway"
 
-3. **Create feature branch:**
+   ```bash
+   # Log blocker warning if found
+   if [blockers detected]; then
+     log_event "$WORKFLOW_ID" "warning.blockers" '{"message":"Issue has blockers, proceeding anyway"}'
+   fi
+   ```
+
+4. **Create feature branch:**
 
    ```bash
    git checkout -b feat/issue-$ARGUMENTS-{short-description}
    ```
 
-4. **Spawn `issue-researcher` agent:**
+5. **Spawn `issue-researcher` agent:**
+
+   ```bash
+   log_agent_spawn "$WORKFLOW_ID" "issue-researcher"
+   ```
+
    - Analyze codebase
    - Check dependencies
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
 
-5. **Update board status to "In Progress":**
+   ```bash
+   # After dev plan is created
+   log_phase_complete "$WORKFLOW_ID" "research" "{\"planPath\":\".claude/dev-plans/issue-$ARGUMENTS.md\"}"
+   set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS research complete. Dev plan created at .claude/dev-plans/issue-$ARGUMENTS.md. Next: implementation phase."
+   ```
+
+6. **Update board status to "In Progress":**
 
    ```bash
    # Try to add issue to project (silently fails if already present)
@@ -168,6 +207,7 @@ update_board_status() {
 
    if [ -n "$ITEM_ID" ]; then
      update_board_status "$ITEM_ID" "3e320f16" "In Progress"
+     log_event "$WORKFLOW_ID" "board.update" '{"status":"In Progress"}'
    else
      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
      echo "[AUTO-ISSUE #$ARGUMENTS] Continuing without board update..."
@@ -176,25 +216,62 @@ update_board_status() {
 
    **If board update fails:** Log warning but continue - board updates are not critical to implementation.
 
-6. **If `--dry-run`:** Stop here, show plan, exit.
+7. **If `--dry-run`:** Stop here, show plan, exit.
+
+   ```bash
+   if [[ "$DRY_RUN" == "true" ]]; then
+     log_workflow_abort "$WORKFLOW_ID" "Dry run completed"
+     archive_workflow "$WORKFLOW_ID"
+   fi
+   ```
 
 ---
 
 ## Phase 2: Implement (Autonomous)
 
-7. **Spawn `atomic-developer` agent with dev plan:**
+8. **Initialize implementation phase:**
+
+   ```bash
+   log_phase_start "$WORKFLOW_ID" "implement"
+   update_phase "$WORKFLOW_ID" "implement" '{"commits":0,"completedSteps":0}'
+   set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS implementation started. Plan: .claude/dev-plans/issue-$ARGUMENTS.md. Resume by checking git log and continuing implementation."
+   ```
+
+9. **Spawn `atomic-developer` agent with dev plan:**
+
+   ```bash
+   log_agent_spawn "$WORKFLOW_ID" "atomic-developer" "{\"planPath\":\".claude/dev-plans/issue-$ARGUMENTS.md\"}"
+   ```
+
    - Execute all commits per plan
    - Each commit is atomic and buildable
    - Agent handles validation internally
 
-8. **On completion, run validation:**
-
    ```bash
-   bun run type-check && bun run lint
+   # After each commit made by atomic-developer
+   COMMIT_SHA=$(git rev-parse HEAD)
+   COMMIT_MSG=$(git log -1 --pretty=%s)
+   log_commit "$WORKFLOW_ID" "$COMMIT_SHA" "$COMMIT_MSG"
+
+   # Update phase data with commit count
+   COMMIT_COUNT=$(git rev-list --count HEAD ^main)
+   update_phase "$WORKFLOW_ID" "implement" "{\"commits\":$COMMIT_COUNT,\"lastCommit\":\"$COMMIT_SHA\"}"
    ```
 
-   - If validation fails: Attempt to fix inline, then continue
-   - If still fails: Log and proceed to review (reviewer will catch it)
+10. **On completion, run validation:**
+
+    ```bash
+    bun run type-check && bun run lint
+    ```
+
+    - If validation fails: Attempt to fix inline, then continue
+    - If still fails: Log and proceed to review (reviewer will catch it)
+
+    ```bash
+    # Log implementation complete
+    log_phase_complete "$WORKFLOW_ID" "implement" "{\"commits\":$COMMIT_COUNT}"
+    set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS implementation complete with $COMMIT_COUNT commits. Next: review phase."
+    ```
 
 ---
 
@@ -202,20 +279,40 @@ update_board_status() {
 
 ### 3a. Batch Review (Parallel by Default)
 
-9. **Launch review agents in parallel:**
+11. **Initialize review phase:**
 
-   ```
-   - pr-review-toolkit:code-reviewer
-   - pr-review-toolkit:pr-test-analyzer
-   - pr-review-toolkit:silent-failure-hunter
-   - openbadges-compliance-reviewer (if badge code detected)
-   ```
+    ```bash
+    log_phase_start "$WORKFLOW_ID" "review"
+    update_phase "$WORKFLOW_ID" "review" '{"findings":[],"fixAttempts":0}'
+    set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS entering review phase. Implementation complete with $COMMIT_COUNT commits. Resume by running review agents."
+    ```
 
-   **Badge code detection:** Files matching:
-   - `**/badge*`, `**/credential*`, `**/issuer*`, `**/assertion*`
-   - `**/ob2/**`, `**/ob3/**`, `**/openbadges/**`
+12. **Launch review agents in parallel:**
 
-10. **Collect and classify findings:**
+    ```bash
+    # Log each review agent spawn
+    log_agent_spawn "$WORKFLOW_ID" "code-reviewer"
+    log_agent_spawn "$WORKFLOW_ID" "pr-test-analyzer"
+    log_agent_spawn "$WORKFLOW_ID" "silent-failure-hunter"
+
+    # If badge code detected
+    if [badge code detected]; then
+      log_agent_spawn "$WORKFLOW_ID" "openbadges-compliance-reviewer"
+    fi
+    ```
+
+    **Badge code detection:** Files matching:
+    - `**/badge*`, `**/credential*`, `**/issuer*`, `**/assertion*`
+    - `**/ob2/**`, `**/ob3/**`, `**/openbadges/**`
+
+13. **Collect and classify findings:**
+
+    ```bash
+    # Log review findings
+    for finding in findings; do
+      log_event "$WORKFLOW_ID" "review.finding" "{\"severity\":\"$severity\",\"agent\":\"$agent\",\"file\":\"$file\"}"
+    done
+    ```
 
 ### 3b. Finding Classification
 
@@ -228,39 +325,65 @@ update_board_status() {
 
 ### 3c. Auto-Fix Loop
 
-```
-retry_count = 0
-fix_commit_count = 0
+```bash
+retry_count=0
+fix_commit_count=0
 
-while has_critical_findings AND retry_count < MAX_RETRY:
-    for each critical_finding:
-        if fix_commit_count >= MAX_FIX_COMMITS:
+while has_critical_findings AND retry_count < MAX_RETRY; do
+    for each critical_finding; do
+        if [[ $fix_commit_count -ge $MAX_FIX_COMMITS ]]; then
+            log_escalation "$WORKFLOW_ID" "Max fix commits reached" "{\"fixCommits\":$fix_commit_count}"
             ESCALATE("Max fix commits reached")
             break
+        fi
 
-        spawn auto-fixer agent with finding
+        # Log fix attempt
+        log_event "$WORKFLOW_ID" "fix.attempt" "{\"finding\":\"$finding\",\"attempt\":$((retry_count + 1))}"
 
-        if fix successful:
-            fix_commit_count++
-        else:
-            log failure
+        # Spawn auto-fixer agent with finding
+        log_agent_spawn "$WORKFLOW_ID" "auto-fixer" "{\"finding\":\"$finding\"}"
+
+        if fix_successful; then
+            ((fix_commit_count++))
+            COMMIT_SHA=$(git rev-parse HEAD)
+            log_commit "$WORKFLOW_ID" "$COMMIT_SHA" "fix: $finding"
+            log_event "$WORKFLOW_ID" "fix.success" "{\"finding\":\"$finding\",\"sha\":\"$COMMIT_SHA\"}"
+        else
+            log_event "$WORKFLOW_ID" "fix.failure" "{\"finding\":\"$finding\",\"reason\":\"$failure_reason\"}"
+        fi
+    done
 
     # Re-review after fixes
     run review agents again
     classify findings
-    retry_count++
+    ((retry_count++))
 
-if has_critical_findings:
+    # Update phase data
+    update_phase "$WORKFLOW_ID" "review" "{\"findings\":$critical_count,\"fixAttempts\":$retry_count,\"fixCommits\":$fix_commit_count}"
+done
+
+if has_critical_findings; then
+    log_escalation "$WORKFLOW_ID" "Critical findings unresolved after $MAX_RETRY attempts" "{\"unresolved\":$critical_count}"
     ESCALATE_TO_HUMAN()
 else:
+    log_phase_complete "$WORKFLOW_ID" "review" "{\"fixCommits\":$fix_commit_count}"
+    set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS review complete. All critical findings resolved. Next: finalize and create PR."
     PROCEED_TO_PHASE_4()
+fi
 ```
 
 ---
 
 ## Phase 4: Finalize (Autonomous)
 
-11. **Run final validation:**
+14. **Initialize finalize phase:**
+
+    ```bash
+    log_phase_start "$WORKFLOW_ID" "finalize"
+    set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS finalizing. Running validation and preparing PR."
+    ```
+
+15. **Run final validation:**
 
     ```bash
     bun test && bun run type-check && bun run lint && bun run build
@@ -270,24 +393,32 @@ else:
     - If build fails: ESCALATE
     - Otherwise: Proceed
 
-12. **Clean up dev-plan file:**
+16. **Clean up dev-plan file:**
 
     ```bash
     rm .claude/dev-plans/issue-$ARGUMENTS.md
     git add .claude/dev-plans/
     git commit -m "chore: clean up dev-plan for issue #$ARGUMENTS"
+
+    COMMIT_SHA=$(git rev-parse HEAD)
+    log_commit "$WORKFLOW_ID" "$COMMIT_SHA" "chore: clean up dev-plan"
     ```
 
-13. **Push branch:**
+17. **Push branch:**
 
     ```bash
     git push -u origin HEAD
+    log_event "$WORKFLOW_ID" "git.push" '{"branch":"'"$(git branch --show-current)"'"}'
     ```
 
-14. **Create PR:**
+18. **Create PR:**
 
     ```bash
-    gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
+    PR_URL=$(gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..." --json url -q .url)
+    PR_NUMBER=$(gh pr view "$PR_URL" --json number -q .number)
+
+    log_pr_created "$WORKFLOW_ID" "$PR_NUMBER" "$PR_URL"
+    update_phase "$WORKFLOW_ID" "finalize" "{\"prNumber\":$PR_NUMBER,\"prUrl\":\"$PR_URL\"}"
     ```
 
     PR body includes:
@@ -296,14 +427,16 @@ else:
     - Auto-fix log (if any fixes were applied)
     - Footer: `Closes #$ARGUMENTS`
 
-15. **Trigger reviews:**
+19. **Trigger reviews:**
 
-    ```
-    @coderabbitai full review
-    @claude review
+    ```bash
+    gh pr comment "$PR_NUMBER" --body "@coderabbitai full review"
+    gh pr comment "$PR_NUMBER" --body "@claude review"
+
+    log_event "$WORKFLOW_ID" "pr.review_requested" '{"reviewers":["coderabbitai","claude"]}'
     ```
 
-16. **Update board status to "Blocked" (awaiting review):**
+20. **Update board status to "Blocked" (awaiting review):**
 
     ```bash
     # Get item ID and update status using helper functions
@@ -311,6 +444,7 @@ else:
 
     if [ -n "$ITEM_ID" ]; then
       update_board_status "$ITEM_ID" "51c2af7b" "Blocked (awaiting review)"
+      log_event "$WORKFLOW_ID" "board.update" '{"status":"Blocked (awaiting review)"}'
     else
       echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
       echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
@@ -319,7 +453,15 @@ else:
 
     **If board update fails:** Log warning but continue - PR creation is the critical step.
 
-17. **Report completion:**
+21. **Complete workflow and archive:**
+
+    ```bash
+    log_phase_complete "$WORKFLOW_ID" "finalize" "{\"prNumber\":$PR_NUMBER}"
+    log_workflow_success "$WORKFLOW_ID" "{\"prNumber\":$PR_NUMBER,\"prUrl\":\"$PR_URL\"}"
+    archive_workflow "$WORKFLOW_ID"
+    ```
+
+22. **Report completion:**
 
     ```
     AUTO-ISSUE COMPLETE
@@ -327,7 +469,9 @@ else:
     Issue: #$ARGUMENTS
     Branch: feat/issue-$ARGUMENTS-<desc>
     Commits: N implementation + M fixes
-    PR: https://github.com/.../pull/XXX
+    PR: $PR_URL
+
+    Workflow logs archived to: .claude/workflow-state/archive/auto-issue-$ARGUMENTS/
 
     Reviews triggered. Check PR for CodeRabbit/Claude feedback.
     ```
