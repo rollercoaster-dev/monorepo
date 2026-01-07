@@ -1,5 +1,79 @@
 #!/usr/bin/env bun
 import { checkpoint } from "./checkpoint";
+import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
+
+// Valid enum values for validation
+const VALID_MILESTONE_PHASES: MilestonePhase[] = [
+  "planning",
+  "execute",
+  "review",
+  "merge",
+  "cleanup",
+];
+const VALID_WORKFLOW_PHASES: WorkflowPhase[] = [
+  "research",
+  "implement",
+  "review",
+  "finalize",
+  "planning",
+  "execute",
+  "merge",
+  "cleanup",
+];
+const VALID_STATUSES: WorkflowStatus[] = [
+  "running",
+  "paused",
+  "completed",
+  "failed",
+];
+const VALID_ACTION_RESULTS = ["success", "failed", "pending"] as const;
+
+// Helper: Parse integer with NaN validation
+function parseIntSafe(value: string, name: string): number {
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) {
+    throw new Error(`Invalid ${name}: "${value}" is not a valid integer`);
+  }
+  return parsed;
+}
+
+// Helper: Validate enum value
+function validateEnum<T extends string>(
+  value: string,
+  validValues: readonly T[],
+  name: string,
+): T {
+  if (!validValues.includes(value as T)) {
+    throw new Error(
+      `Invalid ${name}: "${value}". Valid values: ${validValues.join(", ")}`,
+    );
+  }
+  return value as T;
+}
+
+// Helper: Parse JSON safely with helpful error
+function parseJsonSafe(value: string, name: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(value);
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      throw new Error("must be a JSON object, not an array or primitive");
+    }
+    return parsed as Record<string, unknown>;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(
+        `Invalid ${name}: ${error.message}. Example: '{"key": "value"}'`,
+      );
+    }
+    throw new Error(
+      `Invalid ${name}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -47,7 +121,9 @@ try {
         }
         const milestone = checkpoint.createMilestone(
           name,
-          githubNumber ? parseInt(githubNumber, 10) : undefined,
+          githubNumber
+            ? parseIntSafe(githubNumber, "github-number")
+            : undefined,
         );
         console.log(JSON.stringify(milestone, null, 2));
         break;
@@ -94,7 +170,10 @@ try {
         if (!id || !phase) {
           throw new Error("Milestone ID and phase are required");
         }
-        checkpoint.setMilestonePhase(id, phase as any);
+        checkpoint.setMilestonePhase(
+          id,
+          validateEnum(phase, VALID_MILESTONE_PHASES, "milestone phase"),
+        );
         console.log(JSON.stringify({ success: true }));
         break;
       }
@@ -108,7 +187,10 @@ try {
         if (!id || !status) {
           throw new Error("Milestone ID and status are required");
         }
-        checkpoint.setMilestoneStatus(id, status as any);
+        checkpoint.setMilestoneStatus(
+          id,
+          validateEnum(status, VALID_STATUSES, "status"),
+        );
         console.log(JSON.stringify({ success: true }));
         break;
       }
@@ -163,11 +245,11 @@ try {
 
         checkpoint.saveBaseline(milestoneId, {
           capturedAt: new Date().toISOString(),
-          lintExitCode: parseInt(lintExit, 10),
-          lintWarnings: parseInt(lintWarnings, 10),
-          lintErrors: parseInt(lintErrors, 10),
-          typecheckExitCode: parseInt(typecheckExit, 10),
-          typecheckErrors: parseInt(typecheckErrors, 10),
+          lintExitCode: parseIntSafe(lintExit, "lint-exit"),
+          lintWarnings: parseIntSafe(lintWarnings, "lint-warnings"),
+          lintErrors: parseIntSafe(lintErrors, "lint-errors"),
+          typecheckExitCode: parseIntSafe(typecheckExit, "typecheck-exit"),
+          typecheckErrors: parseIntSafe(typecheckErrors, "typecheck-errors"),
         });
         console.log(JSON.stringify({ success: true }));
         break;
@@ -191,7 +273,7 @@ try {
           throw new Error("Issue number and branch are required");
         }
         const workflow = checkpoint.create(
-          parseInt(issueNumber, 10),
+          parseIntSafe(issueNumber, "issue-number"),
           branch,
           worktree,
         );
@@ -223,7 +305,9 @@ try {
         if (!issueNumber) {
           throw new Error("Issue number is required");
         }
-        const data = checkpoint.findByIssue(parseInt(issueNumber, 10));
+        const data = checkpoint.findByIssue(
+          parseIntSafe(issueNumber, "issue-number"),
+        );
         if (!data) {
           throw new Error(`Workflow not found for issue: ${issueNumber}`);
         }
@@ -240,7 +324,10 @@ try {
         if (!id || !phase) {
           throw new Error("Workflow ID and phase are required");
         }
-        checkpoint.setPhase(id, phase as any);
+        checkpoint.setPhase(
+          id,
+          validateEnum(phase, VALID_WORKFLOW_PHASES, "workflow phase"),
+        );
         console.log(JSON.stringify({ success: true }));
         break;
       }
@@ -254,7 +341,10 @@ try {
         if (!id || !status) {
           throw new Error("Workflow ID and status are required");
         }
-        checkpoint.setStatus(id, status as any);
+        checkpoint.setStatus(
+          id,
+          validateEnum(status, VALID_STATUSES, "status"),
+        );
         console.log(JSON.stringify({ success: true }));
         break;
       }
@@ -272,8 +362,15 @@ try {
         if (!id || !action || !result) {
           throw new Error("Workflow ID, action, and result are required");
         }
-        const metadata = metadataJson ? JSON.parse(metadataJson) : undefined;
-        checkpoint.logAction(id, action, result as any, metadata);
+        const metadata = metadataJson
+          ? parseJsonSafe(metadataJson, "metadata")
+          : undefined;
+        checkpoint.logAction(
+          id,
+          action,
+          validateEnum(result, VALID_ACTION_RESULTS, "result"),
+          metadata,
+        );
         console.log(JSON.stringify({ success: true }));
         break;
       }
@@ -328,7 +425,7 @@ try {
         checkpoint.linkWorkflowToMilestone(
           workflowId,
           milestoneId,
-          wave ? parseInt(wave, 10) : undefined,
+          wave ? parseIntSafe(wave, "wave") : undefined,
         );
         console.log(JSON.stringify({ success: true }));
         break;
