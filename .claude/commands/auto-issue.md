@@ -253,6 +253,18 @@ update_board_status() {
 
 6. **If `--dry-run`:** Stop here, show plan, exit.
 
+6b. **Log phase transition (research → implement):**
+
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "implement");
+    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+      from: "research",
+      to: "implement",
+      devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`
+    });
+    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement`);
+    ```
+
 ---
 
 ## Phase 2: Implement (Autonomous)
@@ -270,6 +282,18 @@ update_board_status() {
 
    - If validation fails: Attempt to fix inline, then continue
    - If still fails: Log and proceed to review (reviewer will catch it)
+
+8b. **Log phase transition (implement → review):**
+
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "review");
+    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+      from: "implement",
+      to: "review",
+      commitCount: $COMMIT_COUNT  // Number of commits from atomic-developer
+    });
+    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review`);
+    ```
 
 ---
 
@@ -330,6 +354,20 @@ if has_critical_findings:
 else:
     PROCEED_TO_PHASE_4()
 ```
+
+10b. **Log phase transition (review → finalize):**
+
+     ```typescript
+     checkpoint.setPhase(WORKFLOW_ID, "finalize");
+     checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+       from: "review",
+       to: "finalize",
+       criticalResolved: $CRITICAL_RESOLVED,
+       fixCommits: $FIX_COMMIT_COUNT,
+       retryCount: $RETRY_COUNT
+     });
+     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize`);
+     ```
 
 ---
 
