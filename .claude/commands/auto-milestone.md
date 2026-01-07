@@ -4,6 +4,8 @@ Execute fully autonomous milestone-to-PRs workflow for milestone "$ARGUMENTS".
 
 **Mode:** Autonomous with planning gate - validates dependencies, spawns parallel work, handles reviews, merges in order.
 
+**Workflow Logging:** This workflow uses `scripts/workflow-logger.sh` to persist progress to `.claude/workflow-state/auto-milestone-<name>/`. This complements the worktree state file at `.worktrees/.state.json`. See `.claude/workflow-state/README.md` for details.
+
 **Recommended:** Run inside tmux for remote observability:
 
 ```bash
@@ -78,7 +80,21 @@ This captures:
 If pre-existing errors are found, they are flagged but work can proceed.
 This prevents mid-workflow surprises when pre-existing issues are discovered.
 
-### 1.1 Validate Input
+### 1.1 Initialize Workflow Logging
+
+```bash
+# Source workflow logger
+source scripts/workflow-logger.sh
+
+# Initialize workflow with milestone name
+WORKFLOW_ID=$(init_workflow "auto-milestone" "$ARGUMENTS")
+echo "[AUTO-MILESTONE] Workflow logging initialized: $WORKFLOW_ID"
+
+# Log planning phase start
+log_phase_start "$WORKFLOW_ID" "planning"
+```
+
+### 1.2 Validate Input
 
 ```bash
 # Validate prerequisites
@@ -86,6 +102,7 @@ for cmd in git gh jq bun; do
   if ! command -v "$cmd" &> /dev/null; then
     echo "[AUTO-MILESTONE] ERROR: Required command '$cmd' not found"
     echo "[AUTO-MILESTONE] Please install missing dependencies"
+    log_workflow_abort "$WORKFLOW_ID" "Missing required command: $cmd"
     exit 1
   fi
 done
@@ -100,11 +117,20 @@ if [[ -z "$MILESTONE_DATA" ]]; then
   echo "[AUTO-MILESTONE] ERROR: Milestone '$MILESTONE_NAME' not found"
   echo "[AUTO-MILESTONE] Available milestones:"
   gh api repos/rollercoaster-dev/monorepo/milestones --jq '.[].title'
+  log_workflow_abort "$WORKFLOW_ID" "Milestone not found: $MILESTONE_NAME"
   exit 1
 fi
+
+# Log milestone data
+MILESTONE_NUMBER=$(echo "$MILESTONE_DATA" | jq -r '.number')
+update_phase "$WORKFLOW_ID" "planning" "{\"milestoneNumber\":$MILESTONE_NUMBER,\"milestoneName\":\"$MILESTONE_NAME\"}"
 ```
 
-### 1.2 Spawn Milestone Planner Agent
+### 1.3 Spawn Milestone Planner Agent
+
+```bash
+log_agent_spawn "$WORKFLOW_ID" "milestone-planner" "{\"milestone\":\"$MILESTONE_NAME\"}"
+```
 
 Use the `milestone-planner` agent to:
 
@@ -129,18 +155,40 @@ Return JSON with:
 If dependencies are not explicitly mapped, set needs_review and propose a plan.
 ```
 
-### 1.3 Planning Gate
+```bash
+# After planner completes
+FREE_ISSUES=$(echo "$PLAN_RESULT" | jq -r '.free_issues[]')
+TOTAL_ISSUES=$(echo "$PLAN_RESULT" | jq -r '.execution_waves | map(length) | add')
 
+log_event "$WORKFLOW_ID" "dependency.analysis" "{\"freeIssues\":$FREE_ISSUES,\"totalIssues\":$TOTAL_ISSUES}"
+update_phase "$WORKFLOW_ID" "planning" "{\"freeIssues\":[$FREE_ISSUES],\"totalIssues\":$TOTAL_ISSUES}"
 ```
-IF planning_status == "needs_review":
-    Display proposed dependency plan
-    Display issues needing dependency mapping
-    STOP: "Please review the proposed plan and approve or modify"
 
-    Wait for user input:
-    - "approve" → Continue with proposed plan
-    - "abort" → Exit workflow
-    - User provides modifications → Re-analyze
+### 1.4 Planning Gate
+
+```bash
+if [[ "$PLANNING_STATUS" == "needs_review" ]]; then
+    log_event "$WORKFLOW_ID" "planning.gate" '{"status":"needs_review"}'
+    set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME planning requires review. Dependency plan proposed but not approved. Resume by reviewing and approving the plan."
+
+    # Display proposed dependency plan
+    # Display issues needing dependency mapping
+    # STOP: "Please review the proposed plan and approve or modify"
+
+    # Wait for user input:
+    # - "approve" → Continue with proposed plan
+    # - "abort" → Exit workflow
+    # - User provides modifications → Re-analyze
+
+    if [[ "$USER_INPUT" == "abort" ]]; then
+        log_workflow_abort "$WORKFLOW_ID" "User aborted at planning gate"
+        exit 0
+    fi
+fi
+
+# Log planning complete
+log_phase_complete "$WORKFLOW_ID" "planning" "{\"freeIssues\":[$FREE_ISSUES],\"waves\":$WAVE_COUNT}"
+set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME planning complete. Ready to execute $TOTAL_ISSUES issues in $WAVE_COUNT waves. Next: parallel execution."
 ```
 
 **Example output when stopping:**
@@ -178,7 +226,15 @@ Based on code analysis, I recommend:
 
 ## Phase 2: Parallel Execution
 
-### 2.1 Initialize Worktrees
+### 2.1 Initialize Execution Phase
+
+```bash
+log_phase_start "$WORKFLOW_ID" "execute"
+update_phase "$WORKFLOW_ID" "execute" "{\"wave\":1,\"parallel\":$PARALLEL,\"completed\":0}"
+set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME executing wave 1. Spawning $PARALLEL parallel /auto-issue workers."
+```
+
+### 2.2 Initialize Worktrees
 
 For each issue in the current wave (up to `--parallel` limit):
 
@@ -186,10 +242,17 @@ For each issue in the current wave (up to `--parallel` limit):
 # Create worktree for each free issue
 for issue in "${FREE_ISSUES[@]:0:$PARALLEL}"; do
   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" create "$issue"
+  log_event "$WORKFLOW_ID" "worktree.create" "{\"issue\":$issue}"
 done
 ```
 
-### 2.2 Spawn Parallel /auto-issue Subagents
+### 2.3 Spawn Parallel /auto-issue Subagents
+
+```bash
+# Log wave start
+CURRENT_WAVE_ISSUES=$(echo "${FREE_ISSUES[@]:0:$PARALLEL}" | jq -R 'split(" ") | map(tonumber)')
+log_event "$WORKFLOW_ID" "wave.start" "{\"wave\":1,\"issues\":$CURRENT_WAVE_ISSUES}"
+```
 
 Use the Task tool to spawn parallel subagents. Each subagent:
 
@@ -201,6 +264,10 @@ Use the Task tool to spawn parallel subagents. Each subagent:
 
 ```
 For issues [111, 116, 118] with --parallel 3:
+
+log_event "$WORKFLOW_ID" "issue.spawn" '{"issue":111,"worktree":"worktree-111"}'
+log_event "$WORKFLOW_ID" "issue.spawn" '{"issue":116,"worktree":"worktree-116"}'
+log_event "$WORKFLOW_ID" "issue.spawn" '{"issue":118,"worktree":"worktree-118"}'
 
 Task 1: Execute /auto-issue workflow for #111 in worktree-111
 Task 2: Execute /auto-issue workflow for #116 in worktree-116
@@ -236,12 +303,23 @@ Important:
 - PR should include "Closes #$ISSUE" in body
 ```
 
-### 2.3 Track Progress & Checkpointing
+### 2.4 Track Progress & Checkpointing
 
 Update worktree state as subagents complete:
 
 ```bash
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" update-status "$ISSUE" "pr-created" "$PR_NUMBER"
+
+# Log issue completion
+if [[ "$STATUS" == "success" ]]; then
+    log_event "$WORKFLOW_ID" "issue.complete" "{\"issue\":$ISSUE,\"pr\":$PR_NUMBER,\"status\":\"success\"}"
+else
+    log_event "$WORKFLOW_ID" "issue.failed" "{\"issue\":$ISSUE,\"error\":\"$ERROR_MSG\"}"
+fi
+
+# Update phase data
+COMPLETED_COUNT=$((COMPLETED_COUNT + 1))
+update_phase "$WORKFLOW_ID" "execute" "{\"wave\":1,\"parallel\":$PARALLEL,\"completed\":$COMPLETED_COUNT}"
 ```
 
 **After each subagent completes**, save a checkpoint to enable resume after context overflow:
@@ -405,9 +483,23 @@ PR #145 (Issue #111) has unresolved critical findings after 3 attempts.
 
 ## Phase 4: Merge (Ordered)
 
-### 4.1 Determine Merge Order
+### 4.1 Initialize Merge Phase
+
+```bash
+log_phase_start "$WORKFLOW_ID" "merge"
+update_phase "$WORKFLOW_ID" "merge" "{\"totalPRs\":$PR_COUNT,\"merged\":0}"
+set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME ready for merge. $PR_COUNT PRs to merge in dependency order."
+```
+
+### 4.2 Determine Merge Order
 
 Using the dependency graph from Phase 1:
+
+```bash
+# Log merge order
+MERGE_ORDER=$(echo "$DEPENDENCY_GRAPH" | jq -r '.merge_order[]')
+log_event "$WORKFLOW_ID" "merge.plan" "{\"order\":$MERGE_ORDER}"
+```
 
 ```
 Merge order for wave 1:
@@ -420,7 +512,7 @@ After wave 1 merges, wave 2 becomes free:
 5. #119 (depended on #116, #118)
 ```
 
-### 4.2 Pre-Merge Validation
+### 4.3 Pre-Merge Validation
 
 For each PR, before merging:
 
@@ -436,10 +528,18 @@ cd "$WORKTREE_PATH"
 bun run type-check && bun run lint && bun test && bun run build
 ```
 
-### 4.3 Merge PR
+### 4.4 Merge PR
 
 ```bash
 gh pr merge "$PR" --squash --delete-branch
+
+# Log merge
+log_event "$WORKFLOW_ID" "pr.merge" "{\"pr\":$PR,\"issue\":$ISSUE}"
+
+# Update phase data
+MERGED_COUNT=$((MERGED_COUNT + 1))
+update_phase "$WORKFLOW_ID" "merge" "{\"totalPRs\":$PR_COUNT,\"merged\":$MERGED_COUNT}"
+set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME: $MERGED_COUNT of $PR_COUNT PRs merged. Next: PR #$NEXT_PR"
 ```
 
 ### 4.4 Handle Post-Merge Conflicts
@@ -514,13 +614,23 @@ The integration test status is recorded in state for the final summary.
 
 ## Phase 5: Cleanup & Report
 
-### 5.1 Cleanup Worktrees
+### 5.1 Initialize Cleanup Phase
+
+```bash
+log_phase_start "$WORKFLOW_ID" "cleanup"
+set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME cleanup phase. All PRs merged. Cleaning up worktrees."
+```
+
+### 5.2 Cleanup Worktrees
 
 Use `--force` to skip confirmation in autonomous mode:
 
 ```bash
 # Remove all worktrees without prompting
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --force
+
+# Log cleanup
+log_event "$WORKFLOW_ID" "worktree.cleanup" "{\"count\":$WORKTREE_COUNT}"
 ```
 
 Or remove individually:
@@ -528,6 +638,7 @@ Or remove individually:
 ```bash
 for issue in $COMPLETED_ISSUES; do
   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" remove "$issue"
+  log_event "$WORKFLOW_ID" "worktree.remove" "{\"issue\":$issue}"
 done
 ```
 
@@ -537,7 +648,7 @@ For a dry-run to see what would be removed:
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --dry-run
 ```
 
-### 5.2 Generate Summary Report
+### 5.3 Generate Summary Report
 
 Use the built-in summary command for a comprehensive report:
 
@@ -554,7 +665,20 @@ This generates a report including:
 - Pre-existing baseline comparison
 - Issues requiring attention
 
-### 5.3 Example Final Report
+### 5.4 Complete Workflow and Archive
+
+```bash
+# Log completion
+log_phase_complete "$WORKFLOW_ID" "cleanup" "{\"worktreesRemoved\":$WORKTREE_COUNT}"
+log_workflow_success "$WORKFLOW_ID" "{\"milestone\":\"$MILESTONE_NAME\",\"merged\":$MERGED_COUNT,\"failed\":$FAILED_COUNT}"
+
+# Archive workflow logs
+archive_workflow "$WORKFLOW_ID"
+
+echo "Workflow logs archived to: .claude/workflow-state/archive/$WORKFLOW_ID/"
+```
+
+### 5.5 Example Final Report
 
 ```markdown
 ## AUTO-MILESTONE COMPLETE
