@@ -189,18 +189,49 @@ Return JSON with:
 If dependencies are not explicitly mapped, set needs_review and propose a plan.
 ```
 
+**After planner completes:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "planning_complete", "success", {
+  planningStatus: planResult.planning_status,
+  freeIssues: planResult.free_issues,
+  totalIssues: planResult.total_issues,
+  executionWaves: planResult.execution_waves.length,
+  needsReview: planResult.planning_status === "needs_review",
+});
+```
+
 ### 1.3 Planning Gate
 
-```
-IF planning_status == "needs_review":
-    Display proposed dependency plan
-    Display issues needing dependency mapping
-    STOP: "Please review the proposed plan and approve or modify"
+**If planning_status == "needs_review":**
 
-    Wait for user input:
-    - "approve" → Continue with proposed plan
-    - "abort" → Exit workflow
-    - User provides modifications → Re-analyze
+```typescript
+checkpoint.setStatus(WORKFLOW_ID, "paused");
+checkpoint.logAction(WORKFLOW_ID, "planning_gate", "pending", {
+  reason: "dependency mapping required",
+  unmappedIssues: unmappedIssues,
+});
+```
+
+```
+Display proposed dependency plan
+Display issues needing dependency mapping
+STOP: "Please review the proposed plan and approve or modify"
+
+Wait for user input:
+- "approve" → Continue with proposed plan
+- "abort" → Exit workflow
+- User provides modifications → Re-analyze
+```
+
+**After user approves:**
+
+```typescript
+checkpoint.setStatus(WORKFLOW_ID, "running");
+checkpoint.logAction(WORKFLOW_ID, "planning_gate", "success", {
+  userDecision: "approved",
+  approvedPlan: approvedPlan,
+});
 ```
 
 **Example output when stopping:**
