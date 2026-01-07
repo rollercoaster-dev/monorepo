@@ -8,6 +8,10 @@ export type {
   CheckpointData,
   WorkflowPhase,
   WorkflowStatus,
+  Milestone,
+  MilestonePhase,
+  Baseline,
+  MilestoneCheckpointData,
 } from "./types";
 
 // Phase 2: Knowledge Graph (stubs)

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS workflows (
   issue_number INTEGER NOT NULL,
   branch TEXT NOT NULL,
   worktree TEXT,
-  phase TEXT NOT NULL CHECK (phase IN ('research', 'implement', 'review', 'finalize')),
+  phase TEXT NOT NULL CHECK (phase IN ('research', 'implement', 'review', 'finalize', 'planning', 'execute', 'merge', 'cleanup')),
   status TEXT NOT NULL CHECK (status IN ('running', 'paused', 'completed', 'failed')),
   retry_count INTEGER DEFAULT 0,
   created_at TEXT NOT NULL,
@@ -41,11 +41,49 @@ CREATE TABLE IF NOT EXISTS commits (
   FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
 );
 
+-- Milestones for /auto-milestone workflow
+CREATE TABLE IF NOT EXISTS milestones (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  github_milestone_number INTEGER,
+  phase TEXT NOT NULL CHECK (phase IN ('planning', 'execute', 'review', 'merge', 'cleanup')),
+  status TEXT NOT NULL CHECK (status IN ('running', 'paused', 'completed', 'failed')),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+-- Baseline snapshots for preflight validation
+CREATE TABLE IF NOT EXISTS baselines (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  milestone_id TEXT NOT NULL,
+  captured_at TEXT NOT NULL,
+  lint_exit_code INTEGER NOT NULL,
+  lint_warnings INTEGER NOT NULL,
+  lint_errors INTEGER NOT NULL,
+  typecheck_exit_code INTEGER NOT NULL,
+  typecheck_errors INTEGER NOT NULL,
+  FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE
+);
+
+-- Junction table linking workflows to milestones
+CREATE TABLE IF NOT EXISTS milestone_workflows (
+  milestone_id TEXT NOT NULL,
+  workflow_id TEXT NOT NULL,
+  wave_number INTEGER,
+  PRIMARY KEY (milestone_id, workflow_id),
+  FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE,
+  FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
+);
+
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_workflows_issue ON workflows(issue_number);
 CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status);
 CREATE INDEX IF NOT EXISTS idx_actions_workflow ON actions(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_commits_workflow ON commits(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_milestones_name ON milestones(name);
+CREATE INDEX IF NOT EXISTS idx_milestones_status ON milestones(status);
+CREATE INDEX IF NOT EXISTS idx_baselines_milestone ON baselines(milestone_id);
+CREATE INDEX IF NOT EXISTS idx_milestone_workflows_milestone ON milestone_workflows(milestone_id);
 `;
 
 export function getDatabase(dbPath?: string): Database {

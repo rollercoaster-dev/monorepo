@@ -11,6 +11,13 @@ export type WorkflowPhase =
   | "cleanup";
 export type WorkflowStatus = "running" | "paused" | "completed" | "failed";
 
+export type MilestonePhase =
+  | "planning"
+  | "execute"
+  | "review"
+  | "merge"
+  | "cleanup";
+
 export interface Workflow {
   id: string;
   issueNumber: number;
@@ -44,4 +51,31 @@ export interface CheckpointData {
   workflow: Workflow;
   actions: Action[];
   commits: Commit[];
+}
+
+export interface Milestone {
+  id: string;
+  name: string;
+  githubMilestoneNumber: number | null;
+  phase: MilestonePhase;
+  status: WorkflowStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Baseline {
+  id?: number;
+  milestoneId: string;
+  capturedAt: string;
+  lintExitCode: number;
+  lintWarnings: number;
+  lintErrors: number;
+  typecheckExitCode: number;
+  typecheckErrors: number;
+}
+
+export interface MilestoneCheckpointData {
+  milestone: Milestone;
+  baseline: Baseline | null;
+  workflows: Workflow[];
 }

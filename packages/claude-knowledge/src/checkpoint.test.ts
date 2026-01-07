@@ -236,4 +236,326 @@ describe("checkpoint", () => {
       );
     });
   });
+
+  describe("milestone API", () => {
+    test("createMilestone creates a new milestone", () => {
+      const milestone = checkpoint.createMilestone("OB3 Phase 1");
+
+      expect(milestone.id).toMatch(/^milestone-ob3-phase-1-\d+$/);
+      expect(milestone.name).toBe("OB3 Phase 1");
+      expect(milestone.githubMilestoneNumber).toBeNull();
+      expect(milestone.phase).toBe("planning");
+      expect(milestone.status).toBe("running");
+    });
+
+    test("createMilestone with GitHub milestone number", () => {
+      const milestone = checkpoint.createMilestone("OB3 Phase 1", 14);
+
+      expect(milestone.githubMilestoneNumber).toBe(14);
+    });
+
+    test("getMilestone loads complete checkpoint data", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      // Save baseline
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 5,
+        lintErrors: 0,
+        typecheckExitCode: 0,
+        typecheckErrors: 2,
+      });
+
+      // Link workflows
+      const w1 = checkpoint.create(111, "feat/issue-111");
+      const w2 = checkpoint.create(112, "feat/issue-112");
+      checkpoint.linkWorkflowToMilestone(w1.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w2.id, milestone.id, 2);
+
+      const data = checkpoint.getMilestone(milestone.id);
+
+      expect(data).not.toBeNull();
+      expect(data!.milestone.id).toBe(milestone.id);
+      expect(data!.baseline).not.toBeNull();
+      expect(data!.baseline!.lintWarnings).toBe(5);
+      expect(data!.baseline!.typecheckErrors).toBe(2);
+      expect(data!.workflows).toHaveLength(2);
+      expect(data!.workflows[0].issueNumber).toBe(111);
+      expect(data!.workflows[1].issueNumber).toBe(112);
+    });
+
+    test("getMilestone returns null for non-existent milestone", () => {
+      const data = checkpoint.getMilestone("non-existent-id");
+      expect(data).toBeNull();
+    });
+
+    test("findMilestoneByName finds most recent milestone", () => {
+      checkpoint.createMilestone("Test Milestone");
+      const second = checkpoint.createMilestone("Test Milestone");
+
+      const data = checkpoint.findMilestoneByName("Test Milestone");
+
+      expect(data).not.toBeNull();
+      expect(data!.milestone.id).toBe(second.id);
+    });
+
+    test("findMilestoneByName returns null for unknown milestone", () => {
+      const data = checkpoint.findMilestoneByName("Unknown Milestone");
+      expect(data).toBeNull();
+    });
+
+    test("setMilestonePhase updates phase", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      checkpoint.setMilestonePhase(milestone.id, "execute");
+
+      const data = checkpoint.getMilestone(milestone.id);
+      expect(data!.milestone.phase).toBe("execute");
+    });
+
+    test("setMilestonePhase throws for non-existent milestone", () => {
+      expect(() =>
+        checkpoint.setMilestonePhase("non-existent-id", "execute"),
+      ).toThrow(/No milestone found with ID/);
+    });
+
+    test("setMilestoneStatus updates status", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      checkpoint.setMilestoneStatus(milestone.id, "completed");
+
+      const data = checkpoint.getMilestone(milestone.id);
+      expect(data!.milestone.status).toBe("completed");
+    });
+
+    test("setMilestoneStatus throws for non-existent milestone", () => {
+      expect(() =>
+        checkpoint.setMilestoneStatus("non-existent-id", "completed"),
+      ).toThrow(/No milestone found with ID/);
+    });
+
+    test("saveBaseline stores baseline data", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 10,
+        lintErrors: 2,
+        typecheckExitCode: 1,
+        typecheckErrors: 5,
+      });
+
+      const data = checkpoint.getMilestone(milestone.id);
+
+      expect(data!.baseline).not.toBeNull();
+      expect(data!.baseline!.lintWarnings).toBe(10);
+      expect(data!.baseline!.lintErrors).toBe(2);
+      expect(data!.baseline!.typecheckExitCode).toBe(1);
+      expect(data!.baseline!.typecheckErrors).toBe(5);
+    });
+
+    test("saveBaseline replaces existing baseline (upsert)", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      // Save first baseline
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 5,
+        lintErrors: 0,
+        typecheckExitCode: 0,
+        typecheckErrors: 2,
+      });
+
+      // Save second baseline (should replace)
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 1,
+        lintWarnings: 10,
+        lintErrors: 3,
+        typecheckExitCode: 1,
+        typecheckErrors: 7,
+      });
+
+      const data = checkpoint.getMilestone(milestone.id);
+
+      // Should only have one baseline with new values
+      expect(data!.baseline).not.toBeNull();
+      expect(data!.baseline!.lintWarnings).toBe(10);
+      expect(data!.baseline!.lintErrors).toBe(3);
+      expect(data!.baseline!.typecheckErrors).toBe(7);
+    });
+
+    test("saveBaseline throws for non-existent milestone", () => {
+      expect(() =>
+        checkpoint.saveBaseline("non-existent-id", {
+          capturedAt: new Date().toISOString(),
+          lintExitCode: 0,
+          lintWarnings: 0,
+          lintErrors: 0,
+          typecheckExitCode: 0,
+          typecheckErrors: 0,
+        }),
+      ).toThrow(/No milestone found with ID/);
+    });
+
+    test("linkWorkflowToMilestone creates junction", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+      const workflow = checkpoint.create(123, "feat/test");
+
+      checkpoint.linkWorkflowToMilestone(workflow.id, milestone.id, 1);
+
+      const data = checkpoint.getMilestone(milestone.id);
+      expect(data!.workflows).toHaveLength(1);
+      expect(data!.workflows[0].id).toBe(workflow.id);
+    });
+
+    test("linkWorkflowToMilestone throws for non-existent workflow", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      expect(() =>
+        checkpoint.linkWorkflowToMilestone(
+          "non-existent-workflow",
+          milestone.id,
+        ),
+      ).toThrow(/Either workflow .* or milestone .* does not exist/);
+    });
+
+    test("linkWorkflowToMilestone throws for non-existent milestone", () => {
+      const workflow = checkpoint.create(123, "feat/test");
+
+      expect(() =>
+        checkpoint.linkWorkflowToMilestone(
+          workflow.id,
+          "non-existent-milestone",
+        ),
+      ).toThrow(/Either workflow .* or milestone .* does not exist/);
+    });
+
+    test("listMilestoneWorkflows returns workflows ordered by wave", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      const w1 = checkpoint.create(111, "feat/issue-111");
+      const w2 = checkpoint.create(112, "feat/issue-112");
+      const w3 = checkpoint.create(113, "feat/issue-113");
+
+      // Link in non-sequential order
+      checkpoint.linkWorkflowToMilestone(w2.id, milestone.id, 2);
+      checkpoint.linkWorkflowToMilestone(w1.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w3.id, milestone.id, 3);
+
+      const workflows = checkpoint.listMilestoneWorkflows(milestone.id);
+
+      // Should be ordered by wave number
+      expect(workflows).toHaveLength(3);
+      expect(workflows[0].issueNumber).toBe(111);
+      expect(workflows[1].issueNumber).toBe(112);
+      expect(workflows[2].issueNumber).toBe(113);
+    });
+
+    test("listActiveMilestones filters by status", () => {
+      const m1 = checkpoint.createMilestone("Milestone 1");
+      const m2 = checkpoint.createMilestone("Milestone 2");
+      checkpoint.createMilestone("Milestone 3");
+
+      checkpoint.setMilestoneStatus(m1.id, "completed");
+      checkpoint.setMilestoneStatus(m2.id, "paused");
+
+      const active = checkpoint.listActiveMilestones();
+
+      // Should only have paused + running (not completed)
+      expect(active).toHaveLength(2);
+      expect(active.map((m) => m.status)).toContain("paused");
+      expect(active.map((m) => m.status)).toContain("running");
+    });
+
+    test("deleteMilestone cascades to baselines and workflows", () => {
+      const milestone = checkpoint.createMilestone("Test Milestone");
+
+      // Add baseline and workflows
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 0,
+        lintErrors: 0,
+        typecheckExitCode: 0,
+        typecheckErrors: 0,
+      });
+
+      const workflow = checkpoint.create(123, "feat/test");
+      checkpoint.linkWorkflowToMilestone(workflow.id, milestone.id);
+
+      checkpoint.deleteMilestone(milestone.id);
+
+      // Milestone should be gone
+      const data = checkpoint.getMilestone(milestone.id);
+      expect(data).toBeNull();
+
+      // Workflow should still exist (only junction deleted)
+      const workflowData = checkpoint.load(workflow.id);
+      expect(workflowData).not.toBeNull();
+    });
+
+    test("deleteMilestone silently succeeds for non-existent milestone (idempotent)", () => {
+      expect(() => checkpoint.deleteMilestone("non-existent-id")).not.toThrow();
+    });
+
+    test("full milestone workflow integration", () => {
+      // Create milestone
+      const milestone = checkpoint.createMilestone("OB3 Phase 1", 14);
+      expect(milestone.phase).toBe("planning");
+
+      // Save baseline
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 3,
+        lintErrors: 0,
+        typecheckExitCode: 0,
+        typecheckErrors: 1,
+      });
+
+      // Create and link workflows
+      const w1 = checkpoint.create(111, "feat/issue-111", "/path/worktree-111");
+      const w2 = checkpoint.create(112, "feat/issue-112", "/path/worktree-112");
+      const w3 = checkpoint.create(113, "feat/issue-113", "/path/worktree-113");
+
+      checkpoint.linkWorkflowToMilestone(w1.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w2.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w3.id, milestone.id, 2);
+
+      // Update milestone phase
+      checkpoint.setMilestonePhase(milestone.id, "execute");
+
+      // Get complete checkpoint data
+      const data = checkpoint.getMilestone(milestone.id);
+
+      expect(data).not.toBeNull();
+      expect(data!.milestone.phase).toBe("execute");
+      expect(data!.milestone.githubMilestoneNumber).toBe(14);
+      expect(data!.baseline).not.toBeNull();
+      expect(data!.baseline!.lintWarnings).toBe(3);
+      expect(data!.workflows).toHaveLength(3);
+
+      // Wave 1 workflows should come first
+      expect(data!.workflows[0].issueNumber).toBe(111);
+      expect(data!.workflows[1].issueNumber).toBe(112);
+      expect(data!.workflows[2].issueNumber).toBe(113);
+
+      // List milestone workflows
+      const workflows = checkpoint.listMilestoneWorkflows(milestone.id);
+      expect(workflows).toHaveLength(3);
+
+      // Delete milestone
+      checkpoint.deleteMilestone(milestone.id);
+      expect(checkpoint.getMilestone(milestone.id)).toBeNull();
+
+      // Workflows should still exist
+      expect(checkpoint.load(w1.id)).not.toBeNull();
+      expect(checkpoint.load(w2.id)).not.toBeNull();
+      expect(checkpoint.load(w3.id)).not.toBeNull();
+    });
+  });
 });
