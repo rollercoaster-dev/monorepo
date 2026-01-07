@@ -1,3 +1,4 @@
+import { Logger } from "@rollercoaster-dev/rd-logger";
 import { getDatabase } from "./db/sqlite";
 import type {
   Workflow,
@@ -7,6 +8,8 @@ import type {
   WorkflowPhase,
   WorkflowStatus,
 } from "./types";
+
+const logger = new Logger();
 
 function generateWorkflowId(issueNumber: number): string {
   return `workflow-${issueNumber}-${Date.now()}`;
@@ -23,11 +26,12 @@ function safeJsonParse(
   try {
     return JSON.parse(json);
   } catch (error) {
-    console.error(
-      `[claude-knowledge] Warning: Failed to parse metadata for ${context}. ` +
-        `Raw value: "${json.substring(0, 100)}${json.length > 100 ? "..." : ""}". ` +
-        `Treating as null.`,
-    );
+    logger.warn("Failed to parse metadata, treating as null", {
+      module: "claude-knowledge",
+      context,
+      rawValue: json.substring(0, 100) + (json.length > 100 ? "..." : ""),
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }

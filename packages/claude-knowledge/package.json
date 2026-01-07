@@ -9,6 +9,9 @@
     "test": "bun test",
     "type-check": "tsc --noEmit"
   },
+  "dependencies": {
+    "@rollercoaster-dev/rd-logger": "workspace:*"
+  },
   "devDependencies": {
     "@rollercoaster-dev/shared-config": "workspace:*"
   }
