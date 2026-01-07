@@ -446,6 +446,19 @@ Issue #111 failed: "Type error in key generation"
 
 ## Phase 3: Review Handling
 
+**Transition to review phase:**
+
+```typescript
+checkpoint.setPhase(WORKFLOW_ID, "review");
+checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+  from: "execute",
+  to: "review",
+  completedIssues: completedIssues.length,
+  totalPRs: PRS.length,
+});
+console.log(`[AUTO-MILESTONE] Phase: execute → review`);
+```
+
 ### 3.1 Collect All PRs
 
 After all subagents complete, gather PR list:
@@ -458,6 +471,16 @@ PRS=$(jq -r '.worktrees | to_entries[] | select(.value.pr != "") | .value.pr' "$
 
 Use the CI status helper for efficient polling with exponential backoff:
 
+**For each PR waiting on CI:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "ci_wait_started", "pending", {
+  prNumber: pr,
+  issueNumber: issue,
+  timeout: CI_POLL_TIMEOUT,
+});
+```
+
 ```bash
 for pr in $PRS; do
   # Wait for CI with timeout (30 min default)
@@ -469,6 +492,23 @@ for pr in $PRS; do
   # Check for CodeRabbit and Claude reviews
   gh pr view "$pr" --json reviews,comments
 done
+```
+
+**After CI completes:**
+
+```typescript
+checkpoint.logAction(
+  WORKFLOW_ID,
+  "ci_complete",
+  ciPassed ? "success" : "failed",
+  {
+    prNumber: pr,
+    issueNumber: issue,
+    duration: elapsedSeconds,
+    checksTotal: totalChecks,
+    checksFailed: failedChecks,
+  },
+);
 ```
 
 The `ci-status --wait` command:
@@ -501,6 +541,18 @@ For each PR, classify findings (same as /auto-issue):
 | CodeRabbit | severity: critical/high    | severity: medium/low |
 | Claude     | explicit blocker mentioned | suggestions only     |
 | CI         | any failure                | warnings only        |
+
+**After classifying findings:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "review_findings", "success", {
+  prNumber: pr,
+  issueNumber: issue,
+  criticalCount: criticalFindings.length,
+  nonCriticalCount: nonCriticalFindings.length,
+  sources: findingsSources, // ["CodeRabbit", "Claude", "CI"]
+});
+```
 
 ### 3.4 Dispatch Review Fixes
 
