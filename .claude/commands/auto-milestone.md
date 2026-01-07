@@ -1059,6 +1059,148 @@ This:
 
 ---
 
+## Resuming Interrupted Milestones
+
+If `/auto-milestone` is interrupted (context compaction, timeout, manual stop), the checkpoint API enables resumption.
+
+### Detect Existing Milestone Workflow
+
+At workflow start (step 1.1b), the orchestrator checks for existing milestone workflows:
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+
+const milestoneId = `milestone-${MILESTONE_NAME.replace(/\s+/g, "-").toLowerCase()}`;
+const existing = checkpoint.load(milestoneId);
+
+if (existing && existing.workflow.status === "running") {
+  // Milestone found - can resume
+}
+```
+
+### Resume Based on Phase
+
+| Phase    | Resume Action                                            |
+| -------- | -------------------------------------------------------- |
+| planning | Re-run milestone-planner (idempotent)                    |
+| execute  | Check child workflow status, spawn remaining free issues |
+| review   | Re-poll PR status, continue review handling              |
+| merge    | Check merge progress, continue from next unmerged PR     |
+| cleanup  | Re-run cleanup (idempotent)                              |
+
+### Child Workflow Status
+
+When resuming, check the status of all child `/auto-issue` workflows:
+
+```typescript
+const childWorkflows = existing.actions
+  .filter((a) => a.action === "spawned_child_workflow")
+  .map((a) => a.metadata.issueNumber);
+
+for (const issue of childWorkflows) {
+  const childCheckpoint = checkpoint.findByIssue(issue);
+
+  if (childCheckpoint) {
+    console.log(
+      `Issue #${issue}: ${childCheckpoint.workflow.phase} - ${childCheckpoint.workflow.status}`,
+    );
+  } else {
+    console.log(
+      `Issue #${issue}: No checkpoint found (not started or cleaned up)`,
+    );
+  }
+}
+```
+
+### Verify Checkpoint State
+
+Before resuming, verify the checkpoint data:
+
+```typescript
+const data = checkpoint.load(milestoneId);
+if (data) {
+  console.log(`Milestone ${data.workflow.id}:`);
+  console.log(`- Phase: ${data.workflow.phase}`);
+  console.log(`- Status: ${data.workflow.status}`);
+  console.log(`- Actions: ${data.actions.length}`);
+  console.log(`- Started: ${data.workflow.createdAt}`);
+
+  // List key actions
+  const keyActions = data.actions.filter(
+    (a) =>
+      a.action.includes("phase_transition") ||
+      a.action.includes("child_workflow") ||
+      a.action.includes("merge"),
+  );
+
+  keyActions.forEach((a) => {
+    console.log(`  [${a.createdAt}] ${a.action}: ${a.result}`);
+  });
+}
+```
+
+### Manual Resume Commands
+
+If automatic resume fails, use these commands:
+
+```bash
+# Check database state
+bun repl
+> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
+> checkpoint.listActive()
+
+# List all milestone workflows (filter by metadata)
+> // Milestone workflows have issueNumber: 0
+> const workflows = checkpoint.listActive().filter(w => w.issueNumber === 0)
+> workflows
+
+# Mark milestone workflow as failed (to start fresh)
+> checkpoint.setStatus("workflow-id", "failed")
+```
+
+### Coordinating with worktree-manager.sh
+
+The `/auto-milestone` workflow uses both checkpoint API and `worktree-manager.sh` state:
+
+| State Source        | Purpose                                      | Location                     |
+| ------------------- | -------------------------------------------- | ---------------------------- |
+| Checkpoint API      | Workflow-level state (phases, child links)   | `.claude/execution-state.db` |
+| worktree-manager.sh | Worktree-level state (branches, PRs, status) | `.worktrees/.state.json`     |
+
+**Resume coordination:**
+
+1. Load checkpoint to determine milestone phase
+2. Load worktree state to determine issue progress
+3. Cross-reference child workflow checkpoints for detailed status
+4. Resume from appropriate point
+
+**Example:**
+
+```bash
+# Check checkpoint state
+bun repl
+> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
+> const milestone = checkpoint.load("milestone-ob3-phase-1")
+> milestone.workflow.phase  // "review"
+
+# Check worktree state
+./scripts/worktree-manager.sh status
+# Shows: issue-111 (reviewing, PR #145), issue-116 (reviewing, PR #146)
+
+# Check child workflow state
+> checkpoint.findByIssue(111)
+# Shows: phase "review", 2 critical findings
+
+# Resume decision: Continue review handling at Phase 3
+```
+
+### Database Location
+
+Checkpoint data is stored in `.claude/execution-state.db` (SQLite, gitignored).
+Worktree state is stored in `.worktrees/.state.json` (JSON, gitignored).
+
+---
+
 ## Success Criteria
 
 This workflow is successful when:
