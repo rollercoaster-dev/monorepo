@@ -610,6 +610,76 @@ Between phases, the orchestrator checks for user input. If detected, handle appr
 
 ---
 
+## Resuming Interrupted Workflows
+
+If `/auto-issue` is interrupted (context compaction, timeout, manual stop), the checkpoint API enables resumption.
+
+### Detect Existing Workflow
+
+At workflow start (step 0b), the orchestrator checks for existing workflows:
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+
+const existing = checkpoint.findByIssue($ARGUMENTS);
+if (existing && existing.workflow.status === "running") {
+  // Workflow found - can resume
+}
+```
+
+### Resume Based on Phase
+
+| Phase     | Resume Action                                       |
+| --------- | --------------------------------------------------- |
+| research  | Re-run issue-researcher (idempotent)                |
+| implement | Check `existing.commits`, continue from last commit |
+| review    | Re-run review agents, check previous findings       |
+| finalize  | Re-run validation, attempt PR creation again        |
+
+### Verify Checkpoint State
+
+Before resuming, verify the checkpoint data:
+
+```typescript
+const data = checkpoint.findByIssue($ARGUMENTS);
+if (data) {
+  console.log(`Workflow ${data.workflow.id}:`);
+  console.log(`- Phase: ${data.workflow.phase}`);
+  console.log(`- Status: ${data.workflow.status}`);
+  console.log(`- Retry Count: ${data.workflow.retryCount}`);
+  console.log(`- Actions: ${data.actions.length}`);
+  console.log(`- Commits: ${data.commits.length}`);
+
+  // List commits made so far
+  data.commits.forEach((c) => {
+    console.log(`  ${c.sha.slice(0, 7)} ${c.message}`);
+  });
+}
+```
+
+### Manual Resume Commands
+
+If automatic resume fails, use these commands:
+
+```bash
+# Check database state
+bun repl
+> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
+> checkpoint.findByIssue(354)
+
+# List all active workflows
+> checkpoint.listActive()
+
+# Mark workflow as failed (to start fresh)
+> checkpoint.setStatus("workflow-id", "failed")
+```
+
+### Database Location
+
+Checkpoint data is stored in `.claude/execution-state.db` (SQLite, gitignored).
+
+---
+
 ## Comparison: /auto-issue vs /work-on-issue
 
 | Aspect        | /auto-issue            | /work-on-issue          |
