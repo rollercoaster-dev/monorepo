@@ -611,6 +611,19 @@ PR #145 (Issue #111) has unresolved critical findings after 3 attempts.
 
 ## Phase 4: Merge (Ordered)
 
+**Transition to merge phase:**
+
+```typescript
+checkpoint.setPhase(WORKFLOW_ID, "merge");
+checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+  from: "review",
+  to: "merge",
+  readyToMerge: readyPRs.length,
+  mergeOrder: determinedMergeOrder,
+});
+console.log(`[AUTO-MILESTONE] Phase: review → merge`);
+```
+
 ### 4.1 Determine Merge Order
 
 Using the dependency graph from Phase 1:
@@ -644,8 +657,31 @@ bun run type-check && bun run lint && bun test && bun run build
 
 ### 4.3 Merge PR
 
+**Before merging:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "merge_started", "pending", {
+  prNumber: PR,
+  issueNumber: issue,
+  mergePosition: currentMergeIndex,
+  totalToMerge: totalMergeCount,
+});
+```
+
 ```bash
 gh pr merge "$PR" --squash --delete-branch
+```
+
+**After merging:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "merge_complete", "success", {
+  prNumber: PR,
+  issueNumber: issue,
+  mergedAt: $(date - Iseconds),
+  mergePosition: currentMergeIndex,
+  totalToMerge: totalMergeCount,
+});
 ```
 
 ### 4.4 Handle Post-Merge Conflicts
@@ -662,6 +698,27 @@ for remaining_pr in $REMAINING_PRS; do
     # Escalate to user
   fi
 done
+```
+
+**When conflict detected:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "merge_conflict", "failed", {
+  prNumber: remaining_pr,
+  issueNumber: remaining_issue,
+  conflictAfterMerge: merged_pr,
+  conflictingFiles: conflictFiles,
+});
+```
+
+**After conflict resolution:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "conflict_resolved", "success", {
+  prNumber: remaining_pr,
+  issueNumber: remaining_issue,
+  resolutionMethod: "auto" | "manual",
+});
 ```
 
 If rebase fails (conflicts):
