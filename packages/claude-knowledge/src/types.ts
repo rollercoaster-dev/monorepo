@@ -1,4 +1,14 @@
-export type WorkflowPhase = "research" | "implement" | "review" | "finalize";
+// Auto-issue phases: research → implement → review → finalize
+// Auto-milestone phases: planning → execute → review → merge → cleanup
+export type WorkflowPhase =
+  | "research"
+  | "implement"
+  | "review"
+  | "finalize"
+  | "planning"
+  | "execute"
+  | "merge"
+  | "cleanup";
 export type WorkflowStatus = "running" | "paused" | "completed" | "failed";
 
 export interface Workflow {

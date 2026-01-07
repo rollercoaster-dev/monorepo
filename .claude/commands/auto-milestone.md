@@ -213,7 +213,7 @@ checkpoint.logAction(WORKFLOW_ID, "planning_gate", "pending", {
 });
 ```
 
-```
+```text
 Display proposed dependency plan
 Display issues needing dependency mapping
 STOP: "Please review the proposed plan and approve or modify"
