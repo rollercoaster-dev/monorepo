@@ -777,6 +777,20 @@ The integration test status is recorded in state for the final summary.
 
 ## Phase 5: Cleanup & Report
 
+**Transition to cleanup phase:**
+
+```typescript
+checkpoint.setPhase(WORKFLOW_ID, "cleanup");
+checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+  from: "merge",
+  to: "cleanup",
+  mergedCount: mergedPRs.length,
+  failedCount: failedIssues.length,
+  skippedCount: skippedIssues.length,
+});
+console.log(`[AUTO-MILESTONE] Phase: merge → cleanup`);
+```
+
 ### 5.1 Cleanup Worktrees
 
 Use `--force` to skip confirmation in autonomous mode:
@@ -800,6 +814,15 @@ For a dry-run to see what would be removed:
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --dry-run
 ```
 
+**After cleanup completes:**
+
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "worktrees_cleaned", "success", {
+  removedCount: removedWorktrees.length,
+  removedIssues: removedWorktrees,
+});
+```
+
 ### 5.2 Generate Summary Report
 
 Use the built-in summary command for a comprehensive report:
@@ -816,6 +839,23 @@ This generates a report including:
 - Integration test results
 - Pre-existing baseline comparison
 - Issues requiring attention
+
+**After generating summary:**
+
+```typescript
+checkpoint.setStatus(WORKFLOW_ID, "completed");
+checkpoint.logAction(WORKFLOW_ID, "milestone_complete", "success", {
+  milestoneName: MILESTONE_NAME,
+  duration: calculateDuration(workflow.createdAt, new Date().toISOString()),
+  mergedCount: mergedPRs.length,
+  failedCount: failedIssues.length,
+  skippedCount: skippedIssues.length,
+  totalPRs: allPRs.length,
+  integrationTestsPassed: integrationTestsPassed,
+});
+
+console.log(`[AUTO-MILESTONE] Milestone completed: ${WORKFLOW_ID}`);
+```
 
 ### 5.3 Example Final Report
 
