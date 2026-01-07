@@ -61,28 +61,55 @@ init_workflow() {
 
   # Build JSON with jq to ensure proper escaping
   if [[ "$workflow_type" == "auto-issue" ]]; then
-    jq -n \
-      --arg workflow "$workflow_type" \
-      --arg wf_id "$workflow_id" \
-      --arg issue_num "$identifier" \
-      --arg start "$start_time" \
-      --arg branch "$branch" \
-      --arg commit "$base_commit" \
-      '{
-        workflow: $workflow,
-        workflow_id: $wf_id,
-        issue_number: ($issue_num | tonumber),
-        startedAt: $start,
-        lastUpdated: $start,
-        currentPhase: "init",
-        phaseData: {},
-        resumeContext: "Workflow initialized but not yet started.",
-        resumable: true,
-        metadata: {
-          branch: $branch,
-          baseCommit: $commit
-        }
-      }' > "$state_file"
+    # Try to convert to number, fall back to string if not numeric
+    if [[ "$identifier" =~ ^[0-9]+$ ]]; then
+      jq -n \
+        --arg workflow "$workflow_type" \
+        --arg wf_id "$workflow_id" \
+        --arg issue_num "$identifier" \
+        --arg start "$start_time" \
+        --arg branch "$branch" \
+        --arg commit "$base_commit" \
+        '{
+          workflow: $workflow,
+          workflow_id: $wf_id,
+          issue_number: ($issue_num | tonumber),
+          startedAt: $start,
+          lastUpdated: $start,
+          currentPhase: "init",
+          phaseData: {},
+          resumeContext: "Workflow initialized but not yet started.",
+          resumable: true,
+          metadata: {
+            branch: $branch,
+            baseCommit: $commit
+          }
+        }' > "$state_file"
+    else
+      # Non-numeric identifier (e.g., for tests)
+      jq -n \
+        --arg workflow "$workflow_type" \
+        --arg wf_id "$workflow_id" \
+        --arg issue_num "$identifier" \
+        --arg start "$start_time" \
+        --arg branch "$branch" \
+        --arg commit "$base_commit" \
+        '{
+          workflow: $workflow,
+          workflow_id: $wf_id,
+          issue_number: $issue_num,
+          startedAt: $start,
+          lastUpdated: $start,
+          currentPhase: "init",
+          phaseData: {},
+          resumeContext: "Workflow initialized but not yet started.",
+          resumable: true,
+          metadata: {
+            branch: $branch,
+            baseCommit: $commit
+          }
+        }' > "$state_file"
+    fi
   else
     # For auto-milestone, no issue_number field
     jq -n \
