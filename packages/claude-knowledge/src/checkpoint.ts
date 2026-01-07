@@ -16,6 +16,22 @@ function now(): string {
   return new Date().toISOString();
 }
 
+function safeJsonParse(
+  json: string,
+  context: string,
+): Record<string, unknown> | null {
+  try {
+    return JSON.parse(json);
+  } catch (error) {
+    console.error(
+      `[claude-knowledge] Warning: Failed to parse metadata for ${context}. ` +
+        `Raw value: "${json.substring(0, 100)}${json.length > 100 ? "..." : ""}". ` +
+        `Treating as null.`,
+    );
+    return null;
+  }
+}
+
 export const checkpoint = {
   /**
    * Create a new workflow checkpoint
@@ -60,12 +76,13 @@ export const checkpoint = {
 
   /**
    * Save/update workflow state
+   * @throws Error if workflow doesn't exist
    */
   save(workflow: Workflow): void {
     const db = getDatabase();
     workflow.updatedAt = now();
 
-    db.run(
+    const result = db.run(
       `
       UPDATE workflows
       SET phase = ?, status = ?, retry_count = ?, worktree = ?, updated_at = ?
@@ -80,6 +97,13 @@ export const checkpoint = {
         workflow.id,
       ],
     );
+
+    if (result.changes === 0) {
+      throw new Error(
+        `Failed to save workflow: No workflow found with ID "${workflow.id}". ` +
+          `The workflow may have been deleted or never created.`,
+      );
+    }
   },
 
   /**
@@ -149,7 +173,9 @@ export const checkpoint = {
       workflowId: row.workflow_id,
       action: row.action,
       result: row.result,
-      metadata: row.metadata ? JSON.parse(row.metadata) : null,
+      metadata: row.metadata
+        ? safeJsonParse(row.metadata, `action ${row.id}`)
+        : null,
       createdAt: row.created_at,
     }));
 
@@ -202,6 +228,7 @@ export const checkpoint = {
 
   /**
    * Log an action
+   * @throws Error if workflow doesn't exist (foreign key constraint)
    */
   logAction(
     workflowId: string,
@@ -211,69 +238,118 @@ export const checkpoint = {
   ): void {
     const db = getDatabase();
 
-    db.run(
-      `
-      INSERT INTO actions (workflow_id, action, result, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `,
-      [
-        workflowId,
-        action,
-        result,
-        metadata ? JSON.stringify(metadata) : null,
-        now(),
-      ],
-    );
+    try {
+      db.run(
+        `
+        INSERT INTO actions (workflow_id, action, result, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `,
+        [
+          workflowId,
+          action,
+          result,
+          metadata ? JSON.stringify(metadata) : null,
+          now(),
+        ],
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("FOREIGN KEY constraint failed")
+      ) {
+        throw new Error(
+          `Failed to log action: No workflow found with ID "${workflowId}". ` +
+            `Create the workflow first with checkpoint.create().`,
+        );
+      }
+      throw error;
+    }
   },
 
   /**
    * Log a commit
+   * @throws Error if workflow doesn't exist (foreign key constraint)
    */
   logCommit(workflowId: string, sha: string, message: string): void {
     const db = getDatabase();
 
-    db.run(
-      `
-      INSERT INTO commits (workflow_id, sha, message, created_at)
-      VALUES (?, ?, ?, ?)
-    `,
-      [workflowId, sha, message, now()],
-    );
+    try {
+      db.run(
+        `
+        INSERT INTO commits (workflow_id, sha, message, created_at)
+        VALUES (?, ?, ?, ?)
+      `,
+        [workflowId, sha, message, now()],
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("FOREIGN KEY constraint failed")
+      ) {
+        throw new Error(
+          `Failed to log commit: No workflow found with ID "${workflowId}". ` +
+            `Create the workflow first with checkpoint.create().`,
+        );
+      }
+      throw error;
+    }
   },
 
   /**
    * Update workflow phase
+   * @throws Error if workflow doesn't exist
    */
   setPhase(workflowId: string, phase: WorkflowPhase): void {
     const db = getDatabase();
-    db.run(`UPDATE workflows SET phase = ?, updated_at = ? WHERE id = ?`, [
-      phase,
-      now(),
-      workflowId,
-    ]);
+    const result = db.run(
+      `UPDATE workflows SET phase = ?, updated_at = ? WHERE id = ?`,
+      [phase, now(), workflowId],
+    );
+
+    if (result.changes === 0) {
+      throw new Error(
+        `Failed to update workflow phase: No workflow found with ID "${workflowId}". ` +
+          `The workflow may have been deleted or the ID is incorrect.`,
+      );
+    }
   },
 
   /**
    * Update workflow status
+   * @throws Error if workflow doesn't exist
    */
   setStatus(workflowId: string, status: WorkflowStatus): void {
     const db = getDatabase();
-    db.run(`UPDATE workflows SET status = ?, updated_at = ? WHERE id = ?`, [
-      status,
-      now(),
-      workflowId,
-    ]);
+    const result = db.run(
+      `UPDATE workflows SET status = ?, updated_at = ? WHERE id = ?`,
+      [status, now(), workflowId],
+    );
+
+    if (result.changes === 0) {
+      throw new Error(
+        `Failed to update workflow status: No workflow found with ID "${workflowId}". ` +
+          `The workflow may have been deleted or the ID is incorrect.`,
+      );
+    }
   },
 
   /**
    * Increment retry count
+   * @throws Error if workflow doesn't exist
    */
   incrementRetry(workflowId: string): number {
     const db = getDatabase();
-    db.run(
+    const updateResult = db.run(
       `UPDATE workflows SET retry_count = retry_count + 1, updated_at = ? WHERE id = ?`,
       [now(), workflowId],
     );
+
+    if (updateResult.changes === 0) {
+      throw new Error(
+        `Failed to increment retry count: No workflow found with ID "${workflowId}". ` +
+          `Cannot track retry attempts for non-existent workflow.`,
+      );
+    }
 
     const result = db
       .query<{ retry_count: number }, [string]>(
@@ -283,7 +359,15 @@ export const checkpoint = {
       )
       .get(workflowId);
 
-    return result?.retry_count ?? 0;
+    // Defensive: should never happen after successful update
+    if (!result) {
+      throw new Error(
+        `Unexpected state: Workflow "${workflowId}" disappeared between UPDATE and SELECT. ` +
+          `Possible database corruption or race condition.`,
+      );
+    }
+
+    return result.retry_count;
   },
 
   /**
@@ -329,6 +413,7 @@ export const checkpoint = {
 
   /**
    * Delete a workflow and all its data
+   * Note: Silently succeeds if workflow doesn't exist (idempotent delete)
    */
   delete(workflowId: string): void {
     const db = getDatabase();

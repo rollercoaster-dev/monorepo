@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { checkpoint } from "./checkpoint";
-import { closeDatabase, resetDatabase } from "./db/sqlite";
+import { closeDatabase, resetDatabase, getDatabase } from "./db/sqlite";
 import { unlink, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 
@@ -173,6 +173,67 @@ describe("checkpoint", () => {
 
       const loaded = checkpoint.load(workflow.id);
       expect(loaded).toBeNull();
+    });
+
+    test("silently succeeds for non-existent workflow (idempotent)", () => {
+      expect(() => checkpoint.delete("non-existent-id")).not.toThrow();
+    });
+  });
+
+  describe("error handling", () => {
+    test("save throws for non-existent workflow", () => {
+      const fakeWorkflow = {
+        id: "non-existent-id",
+        issueNumber: 999,
+        branch: "fake-branch",
+        worktree: null,
+        phase: "research" as const,
+        status: "running" as const,
+        retryCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      expect(() => checkpoint.save(fakeWorkflow)).toThrow(
+        /No workflow found with ID/,
+      );
+    });
+
+    test("setPhase throws for non-existent workflow", () => {
+      expect(() => checkpoint.setPhase("non-existent-id", "review")).toThrow(
+        /No workflow found with ID/,
+      );
+    });
+
+    test("setStatus throws for non-existent workflow", () => {
+      expect(() =>
+        checkpoint.setStatus("non-existent-id", "completed"),
+      ).toThrow(/No workflow found with ID/);
+    });
+
+    test("incrementRetry throws for non-existent workflow", () => {
+      expect(() => checkpoint.incrementRetry("non-existent-id")).toThrow(
+        /No workflow found with ID/,
+      );
+    });
+
+    test("logAction throws for non-existent workflow", () => {
+      expect(() =>
+        checkpoint.logAction("non-existent-id", "test", "success"),
+      ).toThrow(/No workflow found with ID/);
+    });
+
+    test("logCommit throws for non-existent workflow", () => {
+      expect(() =>
+        checkpoint.logCommit("non-existent-id", "abc123", "test"),
+      ).toThrow(/No workflow found with ID/);
+    });
+
+    test("getDatabase throws on path mismatch", () => {
+      // Database is already initialized with TEST_DB from beforeEach
+      expect(() => getDatabase(".claude/different-db.db")).toThrow(
+        /Database already initialized with path/,
+      );
     });
   });
 });
