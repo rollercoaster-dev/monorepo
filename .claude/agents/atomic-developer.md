@@ -31,6 +31,7 @@ The user should provide:
 
 - **Issue number**: The GitHub issue being implemented
 - **Development plan**: From issue-researcher (or path to it)
+- **WORKFLOW_ID**: From orchestrator for checkpoint tracking (if running under /auto-issue)
 
 Optional:
 
@@ -222,6 +223,21 @@ For each step in the development plan:
    ```bash
    git add <specific-files>
    git commit -m "<type>(<scope>): <message>"
+   ```
+
+   **Log commit to checkpoint (if WORKFLOW_ID provided):**
+
+   ```typescript
+   if (WORKFLOW_ID) {
+     import { checkpoint } from "claude-knowledge";
+
+     const COMMIT_SHA = $(git rev-parse HEAD);
+     const COMMIT_MSG = $(git log -1 --pretty=%B);
+
+     checkpoint.logCommit(WORKFLOW_ID, COMMIT_SHA, COMMIT_MSG);
+
+     console.log(`[ATOMIC-DEV] Logged commit ${COMMIT_SHA.slice(0, 7)} to checkpoint`);
+   }
    ```
 
 6. **Report progress:**
