@@ -30,6 +30,7 @@ Fetches a GitHub issue, analyzes the codebase to understand the context, and cre
 The user should provide:
 
 - **Issue number or URL**: The GitHub issue to research
+- **WORKFLOW_ID**: From orchestrator for checkpoint tracking (if running under /auto-issue)
 
 Optional:
 
@@ -246,7 +247,25 @@ See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
    - Write to `.claude/dev-plans/issue-<number>.md`
    - Or return inline for user review
 
-2. **Report summary:**
+2. **Log plan creation to checkpoint (if WORKFLOW_ID provided):**
+
+   ```typescript
+   if (WORKFLOW_ID) {
+     import { checkpoint } from "claude-knowledge";
+
+     checkpoint.logAction(WORKFLOW_ID, "dev_plan_created", "success", {
+       planPath: `.claude/dev-plans/issue-${issueNumber}.md`,
+       complexity: complexity, // e.g., "SMALL", "MEDIUM"
+       estimatedLines: estimatedLines,
+       commitCount: plannedCommits.length,
+       affectedFiles: affectedFiles.length,
+     });
+
+     console.log(`[ISSUE-RESEARCHER] Logged dev plan creation to checkpoint`);
+   }
+   ```
+
+3. **Report summary:**
    - Key findings
    - Recommended approach
    - Any blockers or questions
