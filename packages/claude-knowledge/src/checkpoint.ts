@@ -339,31 +339,19 @@ export const checkpoint = {
    */
   incrementRetry(workflowId: string): number {
     const db = getDatabase();
-    const updateResult = db.run(
-      `UPDATE workflows SET retry_count = retry_count + 1, updated_at = ? WHERE id = ?`,
-      [now(), workflowId],
-    );
 
-    if (updateResult.changes === 0) {
+    // Use RETURNING clause to get updated value in single query (SQLite 3.35+)
+    const result = db
+      .query<
+        { retry_count: number },
+        [string, string]
+      >(`UPDATE workflows SET retry_count = retry_count + 1, updated_at = ? WHERE id = ? RETURNING retry_count`)
+      .get(now(), workflowId);
+
+    if (!result) {
       throw new Error(
         `Failed to increment retry count: No workflow found with ID "${workflowId}". ` +
           `Cannot track retry attempts for non-existent workflow.`,
-      );
-    }
-
-    const result = db
-      .query<{ retry_count: number }, [string]>(
-        `
-      SELECT retry_count FROM workflows WHERE id = ?
-    `,
-      )
-      .get(workflowId);
-
-    // Defensive: should never happen after successful update
-    if (!result) {
-      throw new Error(
-        `Unexpected state: Workflow "${workflowId}" disappeared between UPDATE and SELECT. ` +
-          `Possible database corruption or race condition.`,
       );
     }
 
