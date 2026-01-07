@@ -121,15 +121,19 @@ if [[ -z "$MILESTONE_DATA" ]]; then
   exit 1
 fi
 
-# Log milestone data
+# Log milestone data (use jq for safe JSON construction)
 MILESTONE_NUMBER=$(echo "$MILESTONE_DATA" | jq -r '.number')
-update_phase "$WORKFLOW_ID" "planning" "{\"milestoneNumber\":$MILESTONE_NUMBER,\"milestoneName\":\"$MILESTONE_NAME\"}"
+PLAN_META=$(jq -n --argjson num "$MILESTONE_NUMBER" --arg name "$MILESTONE_NAME" \
+  '{milestoneNumber: $num, milestoneName: $name}')
+update_phase "$WORKFLOW_ID" "planning" "$PLAN_META"
 ```
 
 ### 1.3 Spawn Milestone Planner Agent
 
 ```bash
-log_agent_spawn "$WORKFLOW_ID" "milestone-planner" "{\"milestone\":\"$MILESTONE_NAME\"}"
+# Use jq for safe JSON construction
+SPAWN_META=$(jq -n --arg name "$MILESTONE_NAME" '{milestone: $name}')
+log_agent_spawn "$WORKFLOW_ID" "milestone-planner" "$SPAWN_META"
 ```
 
 Use the `milestone-planner` agent to:
@@ -157,11 +161,14 @@ If dependencies are not explicitly mapped, set needs_review and propose a plan.
 
 ```bash
 # After planner completes
-FREE_ISSUES=$(echo "$PLAN_RESULT" | jq -r '.free_issues[]')
+FREE_ISSUES=$(echo "$PLAN_RESULT" | jq -c '.free_issues')
 TOTAL_ISSUES=$(echo "$PLAN_RESULT" | jq -r '.execution_waves | map(length) | add')
 
-log_event "$WORKFLOW_ID" "dependency.analysis" "{\"freeIssues\":$FREE_ISSUES,\"totalIssues\":$TOTAL_ISSUES}"
-update_phase "$WORKFLOW_ID" "planning" "{\"freeIssues\":[$FREE_ISSUES],\"totalIssues\":$TOTAL_ISSUES}"
+# Use jq for safe JSON construction
+DEP_META=$(jq -n --argjson free "$FREE_ISSUES" --argjson total "$TOTAL_ISSUES" \
+  '{freeIssues: $free, totalIssues: $total}')
+log_event "$WORKFLOW_ID" "dependency.analysis" "$DEP_META"
+update_phase "$WORKFLOW_ID" "planning" "$DEP_META"
 ```
 
 ### 1.4 Planning Gate
@@ -186,8 +193,10 @@ if [[ "$PLANNING_STATUS" == "needs_review" ]]; then
     fi
 fi
 
-# Log planning complete
-log_phase_complete "$WORKFLOW_ID" "planning" "{\"freeIssues\":[$FREE_ISSUES],\"waves\":$WAVE_COUNT}"
+# Log planning complete (use jq for safe JSON construction)
+PLAN_COMPLETE_META=$(jq -n --argjson free "$FREE_ISSUES" --argjson waves "$WAVE_COUNT" \
+  '{freeIssues: $free, waves: $waves}')
+log_phase_complete "$WORKFLOW_ID" "planning" "$PLAN_COMPLETE_META"
 set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME planning complete. Ready to execute $TOTAL_ISSUES issues in $WAVE_COUNT waves. Next: parallel execution."
 ```
 
@@ -230,7 +239,10 @@ Based on code analysis, I recommend:
 
 ```bash
 log_phase_start "$WORKFLOW_ID" "execute"
-update_phase "$WORKFLOW_ID" "execute" "{\"wave\":1,\"parallel\":$PARALLEL,\"completed\":0}"
+# Use jq for safe JSON construction
+EXEC_INIT_META=$(jq -n --argjson wave 1 --argjson parallel "$PARALLEL" --argjson completed 0 \
+  '{wave: $wave, parallel: $parallel, completed: $completed}')
+update_phase "$WORKFLOW_ID" "execute" "$EXEC_INIT_META"
 set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME executing wave 1. Spawning $PARALLEL parallel /auto-issue workers."
 ```
 
@@ -242,16 +254,20 @@ For each issue in the current wave (up to `--parallel` limit):
 # Create worktree for each free issue
 for issue in "${FREE_ISSUES[@]:0:$PARALLEL}"; do
   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" create "$issue"
-  log_event "$WORKFLOW_ID" "worktree.create" "{\"issue\":$issue}"
+  # Use jq for safe JSON construction
+  WT_META=$(jq -n --argjson issue "$issue" '{issue: $issue}')
+  log_event "$WORKFLOW_ID" "worktree.create" "$WT_META"
 done
 ```
 
 ### 2.3 Spawn Parallel /auto-issue Subagents
 
 ```bash
-# Log wave start
+# Log wave start (use jq for safe JSON construction)
 CURRENT_WAVE_ISSUES=$(echo "${FREE_ISSUES[@]:0:$PARALLEL}" | jq -R 'split(" ") | map(tonumber)')
-log_event "$WORKFLOW_ID" "wave.start" "{\"wave\":1,\"issues\":$CURRENT_WAVE_ISSUES}"
+WAVE_META=$(jq -n --argjson wave 1 --argjson issues "$CURRENT_WAVE_ISSUES" \
+  '{wave: $wave, issues: $issues}')
+log_event "$WORKFLOW_ID" "wave.start" "$WAVE_META"
 ```
 
 Use the Task tool to spawn parallel subagents. Each subagent:
@@ -310,16 +326,22 @@ Update worktree state as subagents complete:
 ```bash
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" update-status "$ISSUE" "pr-created" "$PR_NUMBER"
 
-# Log issue completion
+# Log issue completion (use jq for safe JSON construction)
 if [[ "$STATUS" == "success" ]]; then
-    log_event "$WORKFLOW_ID" "issue.complete" "{\"issue\":$ISSUE,\"pr\":$PR_NUMBER,\"status\":\"success\"}"
+    COMPLETE_META=$(jq -n --argjson issue "$ISSUE" --argjson pr "$PR_NUMBER" --arg status "success" \
+      '{issue: $issue, pr: $pr, status: $status}')
+    log_event "$WORKFLOW_ID" "issue.complete" "$COMPLETE_META"
 else
-    log_event "$WORKFLOW_ID" "issue.failed" "{\"issue\":$ISSUE,\"error\":\"$ERROR_MSG\"}"
+    FAIL_META=$(jq -n --argjson issue "$ISSUE" --arg error "$ERROR_MSG" \
+      '{issue: $issue, error: $error}')
+    log_event "$WORKFLOW_ID" "issue.failed" "$FAIL_META"
 fi
 
-# Update phase data
+# Update phase data (use jq for safe JSON construction)
 COMPLETED_COUNT=$((COMPLETED_COUNT + 1))
-update_phase "$WORKFLOW_ID" "execute" "{\"wave\":1,\"parallel\":$PARALLEL,\"completed\":$COMPLETED_COUNT}"
+EXEC_META=$(jq -n --argjson wave 1 --argjson parallel "$PARALLEL" --argjson completed "$COMPLETED_COUNT" \
+  '{wave: $wave, parallel: $parallel, completed: $completed}')
+update_phase "$WORKFLOW_ID" "execute" "$EXEC_META"
 ```
 
 **After each subagent completes**, save a checkpoint to enable resume after context overflow:
@@ -487,7 +509,10 @@ PR #145 (Issue #111) has unresolved critical findings after 3 attempts.
 
 ```bash
 log_phase_start "$WORKFLOW_ID" "merge"
-update_phase "$WORKFLOW_ID" "merge" "{\"totalPRs\":$PR_COUNT,\"merged\":0}"
+# Use jq for safe JSON construction
+MERGE_INIT_META=$(jq -n --argjson total "$PR_COUNT" --argjson merged 0 \
+  '{totalPRs: $total, merged: $merged}')
+update_phase "$WORKFLOW_ID" "merge" "$MERGE_INIT_META"
 set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME ready for merge. $PR_COUNT PRs to merge in dependency order."
 ```
 
@@ -496,9 +521,10 @@ set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME ready for merge. $P
 Using the dependency graph from Phase 1:
 
 ```bash
-# Log merge order
-MERGE_ORDER=$(echo "$DEPENDENCY_GRAPH" | jq -r '.merge_order[]')
-log_event "$WORKFLOW_ID" "merge.plan" "{\"order\":$MERGE_ORDER}"
+# Log merge order (use jq for safe JSON construction)
+MERGE_ORDER=$(echo "$DEPENDENCY_GRAPH" | jq -c '.merge_order')
+MERGE_PLAN_META=$(jq -n --argjson order "$MERGE_ORDER" '{order: $order}')
+log_event "$WORKFLOW_ID" "merge.plan" "$MERGE_PLAN_META"
 ```
 
 ```
@@ -533,12 +559,15 @@ bun run type-check && bun run lint && bun test && bun run build
 ```bash
 gh pr merge "$PR" --squash --delete-branch
 
-# Log merge
-log_event "$WORKFLOW_ID" "pr.merge" "{\"pr\":$PR,\"issue\":$ISSUE}"
+# Log merge (use jq for safe JSON construction)
+MERGE_META=$(jq -n --argjson pr "$PR" --argjson issue "$ISSUE" '{pr: $pr, issue: $issue}')
+log_event "$WORKFLOW_ID" "pr.merge" "$MERGE_META"
 
-# Update phase data
+# Update phase data (use jq for safe JSON construction)
 MERGED_COUNT=$((MERGED_COUNT + 1))
-update_phase "$WORKFLOW_ID" "merge" "{\"totalPRs\":$PR_COUNT,\"merged\":$MERGED_COUNT}"
+MERGE_PROGRESS_META=$(jq -n --argjson total "$PR_COUNT" --argjson merged "$MERGED_COUNT" \
+  '{totalPRs: $total, merged: $merged}')
+update_phase "$WORKFLOW_ID" "merge" "$MERGE_PROGRESS_META"
 set_resume_context "$WORKFLOW_ID" "Milestone $MILESTONE_NAME: $MERGED_COUNT of $PR_COUNT PRs merged. Next: PR #$NEXT_PR"
 ```
 
@@ -629,8 +658,9 @@ Use `--force` to skip confirmation in autonomous mode:
 # Remove all worktrees without prompting
 "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --force
 
-# Log cleanup
-log_event "$WORKFLOW_ID" "worktree.cleanup" "{\"count\":$WORKTREE_COUNT}"
+# Log cleanup (use jq for safe JSON construction)
+CLEANUP_EVENT_META=$(jq -n --argjson count "$WORKTREE_COUNT" '{count: $count}')
+log_event "$WORKFLOW_ID" "worktree.cleanup" "$CLEANUP_EVENT_META"
 ```
 
 Or remove individually:
@@ -638,7 +668,9 @@ Or remove individually:
 ```bash
 for issue in $COMPLETED_ISSUES; do
   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" remove "$issue"
-  log_event "$WORKFLOW_ID" "worktree.remove" "{\"issue\":$issue}"
+  # Use jq for safe JSON construction
+  REMOVE_META=$(jq -n --argjson issue "$issue" '{issue: $issue}')
+  log_event "$WORKFLOW_ID" "worktree.remove" "$REMOVE_META"
 done
 ```
 
@@ -668,9 +700,12 @@ This generates a report including:
 ### 5.4 Complete Workflow and Archive
 
 ```bash
-# Log completion
-log_phase_complete "$WORKFLOW_ID" "cleanup" "{\"worktreesRemoved\":$WORKTREE_COUNT}"
-log_workflow_success "$WORKFLOW_ID" "{\"milestone\":\"$MILESTONE_NAME\",\"merged\":$MERGED_COUNT,\"failed\":$FAILED_COUNT}"
+# Log completion (use jq for safe JSON construction)
+CLEANUP_META=$(jq -n --argjson count "$WORKTREE_COUNT" '{worktreesRemoved: $count}')
+log_phase_complete "$WORKFLOW_ID" "cleanup" "$CLEANUP_META"
+SUCCESS_META=$(jq -n --arg name "$MILESTONE_NAME" --argjson merged "$MERGED_COUNT" --argjson failed "$FAILED_COUNT" \
+  '{milestone: $name, merged: $merged, failed: $failed}')
+log_workflow_success "$WORKFLOW_ID" "$SUCCESS_META"
 
 # Archive workflow logs
 archive_workflow "$WORKFLOW_ID"

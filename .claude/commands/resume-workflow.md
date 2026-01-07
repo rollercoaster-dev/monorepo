@@ -73,8 +73,15 @@ for state_file in .claude/workflow-state/*/state.json; do
   RESUME_CONTEXT=$(echo "$WORKFLOW_STATE" | jq -r '.resumeContext')
   BRANCH=$(echo "$WORKFLOW_STATE" | jq -r '.metadata.branch')
 
-  # Calculate time elapsed
-  LAST_TIMESTAMP=$(date -d "$LAST_UPDATED" +%s 2>/dev/null || echo "0")
+  # Calculate time elapsed (portable: works on both GNU and BSD/macOS)
+  # Try GNU date first, fall back to python3 for BSD/macOS
+  if LAST_TIMESTAMP=$(date -d "$LAST_UPDATED" +%s 2>/dev/null); then
+    : # GNU date worked
+  elif command -v python3 &>/dev/null; then
+    LAST_TIMESTAMP=$(python3 -c "from datetime import datetime; print(int(datetime.fromisoformat('$LAST_UPDATED'.replace('Z','+00:00')).timestamp()))" 2>/dev/null || echo "0")
+  else
+    LAST_TIMESTAMP=0
+  fi
   NOW_TIMESTAMP=$(date +%s)
   ELAPSED_SECONDS=$((NOW_TIMESTAMP - LAST_TIMESTAMP))
   ELAPSED_MINUTES=$((ELAPSED_SECONDS / 60))

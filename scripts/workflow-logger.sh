@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 # Workflow Logger Utility
 # Provides logging functions for autonomous agent workflows
+#
+# NOTE: When sourced, this library does NOT alter caller shell options.
+# If you want strict mode, enable it in your script before sourcing:
+#   set -euo pipefail
+#   source scripts/workflow-logger.sh
 
-set -euo pipefail
+# Only enable strict mode if running as standalone (not sourced)
+if [[ "${WORKFLOW_LOGGER_STRICT:-}" == "1" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  set -euo pipefail
+fi
 
 # Get the monorepo root directory
 get_monorepo_root() {

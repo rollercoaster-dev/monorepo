@@ -147,8 +147,9 @@ update_board_status() {
    ISSUE_DATA=$(gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees)
    ISSUE_TITLE=$(echo "$ISSUE_DATA" | jq -r '.title')
 
-   # Update workflow metadata with issue title
-   update_phase "$WORKFLOW_ID" "research" "{\"issueTitle\":\"$ISSUE_TITLE\"}"
+   # Update workflow metadata with issue title (use jq for safe JSON construction)
+   ISSUE_META=$(jq -n --arg title "$ISSUE_TITLE" '{issueTitle: $title}')
+   update_phase "$WORKFLOW_ID" "research" "$ISSUE_META"
    ```
 
 3. **Check for blockers:**
@@ -184,9 +185,11 @@ update_board_status() {
    - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
 
    ```bash
-   # After dev plan is created
-   log_phase_complete "$WORKFLOW_ID" "research" "{\"planPath\":\".claude/dev-plans/issue-$ARGUMENTS.md\"}"
-   set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS research complete. Dev plan created at .claude/dev-plans/issue-$ARGUMENTS.md. Next: implementation phase."
+   # After dev plan is created (use jq for safe JSON construction)
+   PLAN_PATH=".claude/dev-plans/issue-$ARGUMENTS.md"
+   RESEARCH_META=$(jq -n --arg path "$PLAN_PATH" '{planPath: $path}')
+   log_phase_complete "$WORKFLOW_ID" "research" "$RESEARCH_META"
+   set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS research complete. Dev plan created at $PLAN_PATH. Next: implementation phase."
    ```
 
 6. **Update board status to "In Progress":**
@@ -240,7 +243,10 @@ update_board_status() {
 9. **Spawn `atomic-developer` agent with dev plan:**
 
    ```bash
-   log_agent_spawn "$WORKFLOW_ID" "atomic-developer" "{\"planPath\":\".claude/dev-plans/issue-$ARGUMENTS.md\"}"
+   # Use jq for safe JSON construction
+   PLAN_PATH=".claude/dev-plans/issue-$ARGUMENTS.md"
+   DEV_META=$(jq -n --arg path "$PLAN_PATH" '{planPath: $path}')
+   log_agent_spawn "$WORKFLOW_ID" "atomic-developer" "$DEV_META"
    ```
 
    - Execute all commits per plan
@@ -253,9 +259,10 @@ update_board_status() {
    COMMIT_MSG=$(git log -1 --pretty=%s)
    log_commit "$WORKFLOW_ID" "$COMMIT_SHA" "$COMMIT_MSG"
 
-   # Update phase data with commit count
+   # Update phase data with commit count (use jq for safe JSON construction)
    COMMIT_COUNT=$(git rev-list --count HEAD ^main)
-   update_phase "$WORKFLOW_ID" "implement" "{\"commits\":$COMMIT_COUNT,\"lastCommit\":\"$COMMIT_SHA\"}"
+   IMPL_META=$(jq -n --argjson commits "$COMMIT_COUNT" --arg sha "$COMMIT_SHA" '{commits: $commits, lastCommit: $sha}')
+   update_phase "$WORKFLOW_ID" "implement" "$IMPL_META"
    ```
 
 10. **On completion, run validation:**
@@ -268,8 +275,9 @@ update_board_status() {
     - If still fails: Log and proceed to review (reviewer will catch it)
 
     ```bash
-    # Log implementation complete
-    log_phase_complete "$WORKFLOW_ID" "implement" "{\"commits\":$COMMIT_COUNT}"
+    # Log implementation complete (use jq for safe JSON construction)
+    IMPL_COMPLETE_META=$(jq -n --argjson commits "$COMMIT_COUNT" '{commits: $commits}')
+    log_phase_complete "$WORKFLOW_ID" "implement" "$IMPL_COMPLETE_META"
     set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS implementation complete with $COMMIT_COUNT commits. Next: review phase."
     ```
 
@@ -308,9 +316,11 @@ update_board_status() {
 13. **Collect and classify findings:**
 
     ```bash
-    # Log review findings
+    # Log review findings (use jq for safe JSON construction)
     for finding in findings; do
-      log_event "$WORKFLOW_ID" "review.finding" "{\"severity\":\"$severity\",\"agent\":\"$agent\",\"file\":\"$file\"}"
+      FINDING_META=$(jq -n --arg sev "$severity" --arg agent "$agent" --arg file "$file" \
+        '{severity: $sev, agent: $agent, file: $file}')
+      log_event "$WORKFLOW_ID" "review.finding" "$FINDING_META"
     done
     ```
 
@@ -332,24 +342,33 @@ fix_commit_count=0
 while has_critical_findings AND retry_count < MAX_RETRY; do
     for each critical_finding; do
         if [[ $fix_commit_count -ge $MAX_FIX_COMMITS ]]; then
-            log_escalation "$WORKFLOW_ID" "Max fix commits reached" "{\"fixCommits\":$fix_commit_count}"
+            # Use jq for safe JSON construction
+            ESC_META=$(jq -n --argjson count "$fix_commit_count" '{fixCommits: $count}')
+            log_escalation "$WORKFLOW_ID" "Max fix commits reached" "$ESC_META"
             ESCALATE("Max fix commits reached")
             break
         fi
 
-        # Log fix attempt
-        log_event "$WORKFLOW_ID" "fix.attempt" "{\"finding\":\"$finding\",\"attempt\":$((retry_count + 1))}"
+        # Log fix attempt (use jq for safe JSON construction)
+        ATTEMPT_META=$(jq -n --arg finding "$finding" --argjson attempt "$((retry_count + 1))" \
+          '{finding: $finding, attempt: $attempt}')
+        log_event "$WORKFLOW_ID" "fix.attempt" "$ATTEMPT_META"
 
         # Spawn auto-fixer agent with finding
-        log_agent_spawn "$WORKFLOW_ID" "auto-fixer" "{\"finding\":\"$finding\"}"
+        FIXER_META=$(jq -n --arg finding "$finding" '{finding: $finding}')
+        log_agent_spawn "$WORKFLOW_ID" "auto-fixer" "$FIXER_META"
 
         if fix_successful; then
             ((fix_commit_count++))
             COMMIT_SHA=$(git rev-parse HEAD)
             log_commit "$WORKFLOW_ID" "$COMMIT_SHA" "fix: $finding"
-            log_event "$WORKFLOW_ID" "fix.success" "{\"finding\":\"$finding\",\"sha\":\"$COMMIT_SHA\"}"
+            SUCCESS_META=$(jq -n --arg finding "$finding" --arg sha "$COMMIT_SHA" \
+              '{finding: $finding, sha: $sha}')
+            log_event "$WORKFLOW_ID" "fix.success" "$SUCCESS_META"
         else
-            log_event "$WORKFLOW_ID" "fix.failure" "{\"finding\":\"$finding\",\"reason\":\"$failure_reason\"}"
+            FAIL_META=$(jq -n --arg finding "$finding" --arg reason "$failure_reason" \
+              '{finding: $finding, reason: $reason}')
+            log_event "$WORKFLOW_ID" "fix.failure" "$FAIL_META"
         fi
     done
 
@@ -358,15 +377,20 @@ while has_critical_findings AND retry_count < MAX_RETRY; do
     classify findings
     ((retry_count++))
 
-    # Update phase data
-    update_phase "$WORKFLOW_ID" "review" "{\"findings\":$critical_count,\"fixAttempts\":$retry_count,\"fixCommits\":$fix_commit_count}"
+    # Update phase data (use jq for safe JSON construction)
+    REVIEW_META=$(jq -n --argjson findings "$critical_count" --argjson attempts "$retry_count" \
+      --argjson fixes "$fix_commit_count" '{findings: $findings, fixAttempts: $attempts, fixCommits: $fixes}')
+    update_phase "$WORKFLOW_ID" "review" "$REVIEW_META"
 done
 
 if has_critical_findings; then
-    log_escalation "$WORKFLOW_ID" "Critical findings unresolved after $MAX_RETRY attempts" "{\"unresolved\":$critical_count}"
+    # Use jq for safe JSON construction
+    ESC_META=$(jq -n --argjson count "$critical_count" '{unresolved: $count}')
+    log_escalation "$WORKFLOW_ID" "Critical findings unresolved after $MAX_RETRY attempts" "$ESC_META"
     ESCALATE_TO_HUMAN()
 else:
-    log_phase_complete "$WORKFLOW_ID" "review" "{\"fixCommits\":$fix_commit_count}"
+    COMPLETE_META=$(jq -n --argjson fixes "$fix_commit_count" '{fixCommits: $fixes}')
+    log_phase_complete "$WORKFLOW_ID" "review" "$COMPLETE_META"
     set_resume_context "$WORKFLOW_ID" "Issue #$ARGUMENTS review complete. All critical findings resolved. Next: finalize and create PR."
     PROCEED_TO_PHASE_4()
 fi
@@ -408,7 +432,9 @@ fi
 
     ```bash
     git push -u origin HEAD
-    log_event "$WORKFLOW_ID" "git.push" '{"branch":"'"$(git branch --show-current)"'"}'
+    # Use jq for safe JSON construction
+    PUSH_META=$(jq -n --arg branch "$(git branch --show-current)" '{branch: $branch}')
+    log_event "$WORKFLOW_ID" "git.push" "$PUSH_META"
     ```
 
 18. **Create PR:**
@@ -418,7 +444,9 @@ fi
     PR_NUMBER=$(gh pr view "$PR_URL" --json number -q .number)
 
     log_pr_created "$WORKFLOW_ID" "$PR_NUMBER" "$PR_URL"
-    update_phase "$WORKFLOW_ID" "finalize" "{\"prNumber\":$PR_NUMBER,\"prUrl\":\"$PR_URL\"}"
+    # Use jq for safe JSON construction
+    PR_META=$(jq -n --argjson num "$PR_NUMBER" --arg url "$PR_URL" '{prNumber: $num, prUrl: $url}')
+    update_phase "$WORKFLOW_ID" "finalize" "$PR_META"
     ```
 
     PR body includes:
@@ -444,7 +472,9 @@ fi
 
     if [ -n "$ITEM_ID" ]; then
       update_board_status "$ITEM_ID" "51c2af7b" "Blocked (awaiting review)"
-      log_event "$WORKFLOW_ID" "board.update" '{"status":"Blocked (awaiting review)"}'
+      # Use jq for safe JSON construction
+      BOARD_META=$(jq -n --arg status "Blocked (awaiting review)" '{status: $status}')
+      log_event "$WORKFLOW_ID" "board.update" "$BOARD_META"
     else
       echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
       echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
@@ -456,8 +486,11 @@ fi
 21. **Complete workflow and archive:**
 
     ```bash
-    log_phase_complete "$WORKFLOW_ID" "finalize" "{\"prNumber\":$PR_NUMBER}"
-    log_workflow_success "$WORKFLOW_ID" "{\"prNumber\":$PR_NUMBER,\"prUrl\":\"$PR_URL\"}"
+    # Use jq for safe JSON construction
+    FINAL_META=$(jq -n --argjson num "$PR_NUMBER" '{prNumber: $num}')
+    log_phase_complete "$WORKFLOW_ID" "finalize" "$FINAL_META"
+    SUCCESS_META=$(jq -n --argjson num "$PR_NUMBER" --arg url "$PR_URL" '{prNumber: $num, prUrl: $url}')
+    log_workflow_success "$WORKFLOW_ID" "$SUCCESS_META"
     archive_workflow "$WORKFLOW_ID"
     ```
 
