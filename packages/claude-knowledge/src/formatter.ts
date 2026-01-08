@@ -123,12 +123,13 @@ export function calculatePriority(
 
   // Boost for recency (last 30 days)
   if (learning.learning.metadata?.createdAt) {
-    const age =
-      Date.now() -
-      new Date(learning.learning.metadata.createdAt as string).getTime();
-    const daysAgo = age / (1000 * 60 * 60 * 24);
-    if (daysAgo < 30) {
-      score += 0.1;
+    const parsedDate = new Date(learning.learning.metadata.createdAt as string);
+    if (!isNaN(parsedDate.getTime())) {
+      const age = Date.now() - parsedDate.getTime();
+      const daysAgo = age / (1000 * 60 * 60 * 24);
+      if (daysAgo < 30) {
+        score += 0.1;
+      }
     }
   }
 
@@ -238,8 +239,12 @@ export function formatKnowledgeContext(
     sectionLines.push("");
 
     const avgPriority =
-      areaLearnings.reduce((sum, l) => sum + calculatePriority(l, context), 0) /
-      areaLearnings.length;
+      areaLearnings.length > 0
+        ? areaLearnings.reduce(
+            (sum, l) => sum + calculatePriority(l, context),
+            0,
+          ) / areaLearnings.length
+        : 0;
 
     sections.push({
       type: "learning",
