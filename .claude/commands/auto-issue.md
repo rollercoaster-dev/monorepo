@@ -32,123 +32,30 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ---
 
-## MCP Integration (Telegram Notifications)
+## Shared References
 
-This workflow supports optional Telegram notifications via the `mcp-communicator-telegram` MCP server.
+This workflow uses patterns from [shared/](../shared/):
 
-### MCP Tools Used
+- **[telegram-helpers.md](../shared/telegram-helpers.md)** - `notifyTelegram()` for status, `askTelegram()` for escalation
+- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Workflow state persistence, phase transitions
+- **[board-operations.md](../shared/board-operations.md)** - `get_item_id_for_issue()`, `update_board_status()`
+- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint, test commands
+- **[escalation-patterns.md](../shared/escalation-patterns.md)** - Escalation triggers and response handling
 
-| Tool                                          | Purpose              | Blocking                 |
-| --------------------------------------------- | -------------------- | ------------------------ |
-| `mcp__mcp-communicator-telegram__notify_user` | One-way notification | No                       |
-| `mcp__mcp-communicator-telegram__ask_user`    | Two-way interaction  | Yes (waits for response) |
+### Telegram Notification Points
 
-### Notification Points
+| Phase      | Type        | Content                |
+| ---------- | ----------- | ---------------------- |
+| 1→2        | notify_user | Dev plan path          |
+| 2→3        | notify_user | Commit count           |
+| 3→4        | notify_user | Findings summary       |
+| Escalation | ask_user    | Findings + options     |
+| 4          | notify_user | PR link, review status |
 
-| Phase      | Type        | Trigger                 | Content                |
-| ---------- | ----------- | ----------------------- | ---------------------- |
-| 1→2        | notify_user | Research complete       | Dev plan path          |
-| 2→3        | notify_user | Implementation complete | Commit count           |
-| 3→4        | notify_user | Review complete         | Findings summary       |
-| Escalation | ask_user    | MAX_RETRY exceeded      | Findings + options     |
-| 4          | notify_user | PR created              | PR link, review status |
-
-### Graceful Degradation
-
-If the MCP server is unavailable:
-
-- `notify_user` calls fail silently (logged to console)
-- `ask_user` calls fall back to terminal input
-- Workflow continues without interruption
-
-```typescript
-// Helper: Send notification (non-blocking, fail-safe)
-function notifyTelegram(message: string): void {
-  try {
-    // prettier-ignore
-    mcp__mcp_communicator_telegram__notify_user({ message });
-  } catch {
-    console.log("[AUTO-ISSUE] (Telegram unavailable - continuing)");
-  }
-}
-
-// Helper: Ask user with fallback (blocking)
-async function askTelegram(question: string): Promise<string> {
-  try {
-    // prettier-ignore
-    return await mcp__mcp_communicator_telegram__ask_user({ question });
-  } catch {
-    console.log(
-      "[AUTO-ISSUE] (Telegram unavailable - waiting for terminal input)",
-    );
-    // Fall back to terminal - workflow will wait for user input in chat
-    return "TELEGRAM_UNAVAILABLE";
-  }
-}
-```
-
-### Permission Notifications
-
-When waiting for tool permissions (Edit, Write, Bash, etc.), notify the user:
-
-```typescript
-// Before any tool that might need permission approval
-notifyTelegram(`⏳ [AUTO-ISSUE #$ARGUMENTS] Permission needed in terminal
-
-Tool: Edit
-File: ${filePath}
-
-Waiting for approval...`);
-```
-
-This ensures users monitoring via Telegram know when to check the terminal.
-
-### Enabling Telegram MCP
-
-To enable Telegram notifications, configure the MCP server in `~/.claude.json`:
-
-```json
-{
-  "mcpServers": {
-    "mcp-communicator-telegram": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "-p", "mcp-communicator-telegram", "mcptelegram"],
-      "env": {
-        "TELEGRAM_TOKEN": "<your-bot-token>",
-        "CHAT_ID": "<your-chat-id>"
-      }
-    }
-  }
-}
-```
-
-**Getting your credentials:**
-
-1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
-2. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
-3. Restart Claude Code after configuration
-
----
-
-## Checkpoint Integration
-
-This workflow uses `claude-knowledge` checkpoint API to persist state across context compactions.
-
-### Import
-
-```typescript
-import { checkpoint } from "claude-knowledge";
-```
-
-### Workflow ID
+### Checkpoint Integration
 
 A `WORKFLOW_ID` is established at workflow start and passed to all sub-agents for state tracking.
-
-```typescript
-// Set at Phase 1 start, used throughout
-let WORKFLOW_ID: string;
-```
+See [checkpoint-patterns.md](../shared/checkpoint-patterns.md) for initialization and phase transition patterns.
 
 ---
 
@@ -168,66 +75,11 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 ## Helper Functions
 
-These reusable functions are used throughout the workflow:
+See [board-operations.md](../shared/board-operations.md) for:
 
-### Get Item ID for Issue
-
-```bash
-get_item_id_for_issue() {
-  local issue_number=$1
-  gh api graphql -f query='
-    query {
-      organization(login: "rollercoaster-dev") {
-        projectV2(number: 11) {
-          items(first: 100) {
-            nodes {
-              id
-              content { ... on Issue { number } }
-            }
-          }
-        }
-      }
-    }' | jq -r ".data.organization.projectV2.items.nodes[] | select(.content.number == $issue_number) | .id"
-}
-```
-
-### Update Board Status
-
-```bash
-update_board_status() {
-  local item_id=$1
-  local option_id=$2
-  local status_name=$3
-
-  RESULT=$(gh api graphql \
-    -f projectId="PVT_kwDOB1lz3c4BI2yZ" \
-    -f itemId="$item_id" \
-    -f fieldId="PVTSSF_lADOB1lz3c4BI2yZzg5MUx4" \
-    -f optionId="$option_id" \
-    -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-      updateProjectV2ItemFieldValue(input: {
-        projectId: $projectId
-        itemId: $itemId
-        fieldId: $fieldId
-        value: { singleSelectOptionId: $optionId }
-      }) {
-        projectV2Item { id }
-      }
-    }' 2>&1)
-
-  # Validate response - check for errors in GraphQL response
-  if echo "$RESULT" | jq -e '.errors | length > 0' > /dev/null 2>&1; then
-    echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Board update failed (GraphQL error)"
-    return 1
-  elif echo "$RESULT" | jq -e '.data.updateProjectV2ItemFieldValue.projectV2Item.id' > /dev/null 2>&1; then
-    echo "[AUTO-ISSUE #$ARGUMENTS] Board: Moved to '$status_name'"
-    return 0
-  else
-    echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Board update failed (unexpected response)"
-    return 1
-  fi
-}
-```
+- `get_item_id_for_issue()` - Get project item ID
+- `update_board_status()` - Update issue status on board
+- `add_issue_to_board()` - Add issue to project
 
 ---
 

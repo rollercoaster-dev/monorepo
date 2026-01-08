@@ -6,6 +6,28 @@ Execute the gated workflow for issue #$ARGUMENTS.
 
 ---
 
+## Shared References
+
+This workflow uses patterns from [shared/](../shared/):
+
+- **[telegram-helpers.md](../shared/telegram-helpers.md)** - `askTelegram()` for gate approvals, `notifyTelegram()` for status
+- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Workflow state persistence
+- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint, test commands
+- **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
+
+### Telegram Notification Points
+
+| Gate/Phase | Type     | Content                          |
+| ---------- | -------- | -------------------------------- |
+| START      | notify   | Workflow started, branch created |
+| GATE 1     | ask_user | Issue summary, ask to proceed    |
+| GATE 2     | ask_user | Plan summary, ask to proceed     |
+| GATE 3     | ask_user | Diff summary, ask to approve     |
+| GATE 4     | ask_user | Findings summary, ask to proceed |
+| END        | notify   | PR link                          |
+
+---
+
 ## Workflow Overview
 
 ```
@@ -54,6 +76,18 @@ END:        Mark completed
      bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUMENTS-{short-description}"
      ```
    - Store the workflow ID for subsequent commands
+   - **Notify via Telegram** (non-blocking):
+     ```typescript
+     mcp__mcp_communicator_telegram__notify_user({
+       message: `🚀 Starting /work-on-issue #$ARGUMENTS
+     ```
+
+Branch: feat/issue-$ARGUMENTS-<desc>
+Mode: Gated (4 approval gates)
+
+You'll receive Telegram prompts at each gate.`
+});
+```
 
 **IMPORTANT**: Store the `WORKFLOW_ID` from the create command output. Example:
 
@@ -92,17 +126,34 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
    gh issue view $ARGUMENTS --json body | grep -iE "blocked by|depends on"
    ```
 
-3. Show the **COMPLETE** issue to the user:
+3. Show the **COMPLETE** issue to the user (in terminal):
    - Full title and number
    - Full body (verbatim - do NOT summarize)
    - Labels and milestone
    - Blockers if any
 
-4. **STOP HERE** and wait for user to say one of:
-   - "proceed"
-   - "yes"
-   - "go ahead"
-   - "approved"
+4. **Ask via Telegram** (with terminal fallback):
+
+   ```typescript
+   const response = await mcp__mcp_communicator_telegram__ask_user({
+     question: `🚦 GATE 1: Issue Review
+   ```
+
+Issue #$ARGUMENTS: <title>
+
+<brief 2-3 line summary of what the issue asks for>
+
+Labels: <labels>
+Milestone: <milestone>
+Blockers: <none or list>
+
+Reply "proceed" to continue, or provide feedback.`
+});
+
+````
+
+- If Telegram unavailable, wait for terminal input
+- Accept: "proceed", "yes", "go ahead", "approved"
 
 **Do NOT continue until you receive explicit approval.**
 
@@ -112,9 +163,9 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
 
 5. Log the gate passage:
 
-   ```bash
-   bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-1-issue-reviewed" success '{"issue": $ARGUMENTS}'
-   ```
+```bash
+bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-1-issue-reviewed" success '{"issue": $ARGUMENTS}'
+````
 
 6. Spawn `issue-researcher` agent to:
    - Analyze codebase
@@ -135,13 +186,37 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
 
 **STOP** - This is a hard gate.
 
-9. Show the **COMPLETE** plan to the user:
+9. Show the **COMPLETE** plan to the user (in terminal):
    - Every section
    - Every step
    - Every commit planned
    - Do NOT summarize
 
-10. **STOP HERE** and wait for explicit approval.
+10. **Ask via Telegram** (with terminal fallback):
+
+    ```typescript
+    const response = await mcp__mcp_communicator_telegram__ask_user({
+      question: `🚦 GATE 2: Plan Review
+    ```
+
+Issue #$ARGUMENTS: <title>
+
+Plan created at .claude/dev-plans/issue-$ARGUMENTS.md
+
+Commits planned:
+
+1. <commit 1 summary>
+2. <commit 2 summary>
+   ...
+
+Files affected: <count>
+
+Reply "proceed" to continue, or provide feedback.`
+});
+```
+
+    - If Telegram unavailable, wait for terminal input
+    - Accept: "proceed", "yes", "go ahead", "approved"
 
 **Do NOT continue until you receive explicit approval.**
 
@@ -167,11 +242,34 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
 
 **STOP** - This is a hard gate for EACH commit.
 
-13. Show the diff: `git diff`
+13. Show the diff in terminal: `git diff`
 
 14. Explain what changed and why
 
-15. **STOP HERE** and wait for approval
+15. **Ask via Telegram** (with terminal fallback):
+
+    ```typescript
+    const response = await mcp__mcp_communicator_telegram__ask_user({
+      question: `🚦 GATE 3: Commit Review (${commitNumber}/${totalCommits})
+    ```
+
+Issue #$ARGUMENTS
+
+<type>(<scope>): <commit message>
+
+Changes:
+
+- <file1>: <what changed>
+- <file2>: <what changed>
+
+Lines: +<added> -<removed>
+
+Reply "proceed" to approve this commit, or provide feedback.`
+});
+```
+
+    - If Telegram unavailable, wait for terminal input
+    - Accept: "proceed", "yes", "go ahead", "approved"
 
 16. Only after approval, commit and log:
 
@@ -227,12 +325,34 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
 
 **STOP** - This is a hard gate.
 
-23. Present findings grouped by severity:
+23. Present findings grouped by severity (in terminal):
     - **Critical (must fix)**: Security, bugs, breaking changes
     - **High (should fix)**: Code quality, error handling
     - **Medium (consider)**: Style, documentation
 
-24. **STOP HERE** and wait for approval to create PR.
+24. **Ask via Telegram** (with terminal fallback):
+
+    ```typescript
+    const response = await mcp__mcp_communicator_telegram__ask_user({
+      question: `🚦 GATE 4: Pre-PR Review
+    ```
+
+Issue #$ARGUMENTS: <title>
+
+Review findings:
+
+- Critical: <count> (must fix before PR)
+- High: <count>
+- Medium: <count>
+
+${criticalCount > 0 ? "⚠️ Critical issues must be resolved first." : "✅ No critical issues."}
+
+Reply "proceed" to create PR, or provide feedback.`
+});
+```
+
+    - If Telegram unavailable, wait for terminal input
+    - Accept: "proceed", "yes", "go ahead", "approved"
 
 **Do NOT create PR until Critical issues are resolved and user approves.**
 
@@ -281,7 +401,26 @@ WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUM
     bun scripts/checkpoint-cli.ts set-status $WORKFLOW_ID completed
     ```
 
-30. Report PR URL and next steps
+30. **Notify via Telegram** (non-blocking):
+
+    ```typescript
+    mcp__mcp_communicator_telegram__notify_user({
+      message: `✅ PR Created!
+    ```
+
+Issue #$ARGUMENTS: <title>
+
+PR #<number>: <pr-title>
+<pr-url>
+
+Commits: <count>
+Reviews: CodeRabbit + Claude triggered
+
+Next: Wait for CI and reviews.`
+});
+```
+
+31. Report PR URL and next steps in terminal
 
 ---
 

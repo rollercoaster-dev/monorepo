@@ -7,6 +7,14 @@ model: sonnet
 
 # Issue Researcher Agent
 
+## Shared Patterns
+
+This agent uses patterns from [shared/](../shared/):
+
+- **[dependency-checking.md](../shared/dependency-checking.md)** - Blocker detection and handling
+- **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
+- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
+
 ## Purpose
 
 Fetches a GitHub issue, analyzes the codebase to understand the context, and creates a detailed development plan with atomic commits suitable for a single focused PR (~500 lines max).

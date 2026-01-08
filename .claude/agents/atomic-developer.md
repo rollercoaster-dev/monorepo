@@ -7,6 +7,15 @@ model: sonnet
 
 # Atomic Developer Agent
 
+## Shared Patterns
+
+This agent uses patterns from [shared/](../shared/):
+
+- **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
+- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint commands
+- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
+- **[board-operations.md](../shared/board-operations.md)** - Board status updates
+
 ## Purpose
 
 Implements code changes following a development plan, making atomic commits that each represent a single logical change. Follows trunk-based development practices with small, focused changes.
