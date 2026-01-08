@@ -89,28 +89,69 @@ gh api graphql \
 - Blocked: `51c2af7b`
 - Done: `56048761`
 
-### 3. Issue Dependencies
+### 3. Issue Dependencies (Native GitHub Feature)
 
-Use GitHub's native dependency feature to track blocked/blocking relationships:
+GitHub's native issue dependencies (released August 2025) provide "blocked by" / "blocking" relationships that **automatically clear when blocking issues close**.
 
-**Add a Dependency (Issue A is blocked by Issue B):**
+**Key Features:**
+
+- ✅ **Automatic clearing**: When a blocking issue closes, the dependency is automatically removed
+- ✅ **Visual indicators**: Blocked issues show "Blocked" icon on project boards and Issues tab
+- ✅ **Filters**: Query for blocked/blocking issues in search
+- ⚠️ **Limits**: Up to 50 issues per relationship type; same repository only
+- ⚠️ **No native gh CLI**: Use `gh api` with REST or GraphQL endpoints
+
+---
+
+#### REST API (Simpler)
+
+**Add a dependency (Issue A blocked by Issue B):**
 
 ```bash
-# 1. Get node IDs for both issues
-BLOCKED_ISSUE_ID=$(gh issue view <blocked-issue-number> --json id -q .id)
-BLOCKING_ISSUE_ID=$(gh issue view <blocking-issue-number> --json id -q .id)
+gh api --method POST \
+  /repos/rollercoaster-dev/monorepo/issues/<blocked-issue>/dependencies/blocked_by \
+  -f issue_id=<blocking-issue>
+```
 
-# 2. Add the blocked-by relationship
+**Remove a dependency:**
+
+```bash
+gh api --method DELETE \
+  /repos/rollercoaster-dev/monorepo/issues/<blocked-issue>/dependencies/blocked_by/<blocking-issue>
+```
+
+**List what blocks an issue:**
+
+```bash
+gh api /repos/rollercoaster-dev/monorepo/issues/<issue>/dependencies/blocked_by
+```
+
+**List what an issue is blocking:**
+
+```bash
+gh api /repos/rollercoaster-dev/monorepo/issues/<issue>/dependencies/blocking
+```
+
+---
+
+#### GraphQL API (More Flexible)
+
+**Add a dependency:**
+
+```bash
+BLOCKED_ID=$(gh issue view <blocked-issue> --json id -q .id)
+BLOCKING_ID=$(gh issue view <blocking-issue> --json id -q .id)
+
 gh api graphql -f query='
   mutation($issueId: ID!, $blockingIssueId: ID!) {
     addBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
       issue { number }
       blockingIssue { number }
     }
-  }' -f issueId="$BLOCKED_ISSUE_ID" -f blockingIssueId="$BLOCKING_ISSUE_ID"
+  }' -f issueId="$BLOCKED_ID" -f blockingIssueId="$BLOCKING_ID"
 ```
 
-**Remove a Dependency:**
+**Remove a dependency:**
 
 ```bash
 gh api graphql -f query='
@@ -118,28 +159,46 @@ gh api graphql -f query='
     removeBlockedBy(input: { issueId: $issueId, blockingIssueId: $blockingIssueId }) {
       issue { number }
     }
-  }' -f issueId="$BLOCKED_ISSUE_ID" -f blockingIssueId="$BLOCKING_ISSUE_ID"
+  }' -f issueId="$BLOCKED_ID" -f blockingIssueId="$BLOCKING_ID"
 ```
 
-**Query Dependencies:**
+**Query dependencies:**
 
 ```bash
 gh api graphql -f query='
   query($number: Int!, $owner: String!, $repo: String!) {
     repository(owner: $owner, name: $repo) {
       issue(number: $number) {
-        blockedBy(first: 10) { nodes { number title } }
-        blocking(first: 10) { nodes { number title } }
+        blockedBy(first: 10) { nodes { number title state } }
+        blocking(first: 10) { nodes { number title state } }
       }
     }
   }' -f number=<issue-number> -F owner=rollercoaster-dev -f repo=monorepo
 ```
 
+---
+
+#### Batch Setup Example
+
+For epics with dependency chains (e.g., badge generator #294):
+
+```bash
+# Layer dependencies: #116 blocked by #115, #118 blocked by #117, etc.
+for pair in "116:115" "118:117" "119:116" "119:118" "120:119"; do
+  blocked=${pair%:*}
+  blocking=${pair#*:}
+  gh api --method POST \
+    /repos/rollercoaster-dev/monorepo/issues/$blocked/dependencies/blocked_by \
+    -f issue_id=$blocking
+done
+```
+
 **When Creating Issues with Dependencies:**
 
 1. Create all issues first
-2. Then add dependencies in dependency order (blocking issues first)
+2. Add dependencies in dependency order (blocking issues first)
 3. Dependencies show as "Blocked" indicator on the issue
+4. When blocking issue closes → dependency **automatically removed**
 
 ### 4. Pull Request Descriptions
 
