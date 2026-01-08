@@ -84,6 +84,35 @@ CREATE INDEX IF NOT EXISTS idx_milestones_name ON milestones(name);
 CREATE INDEX IF NOT EXISTS idx_milestones_status ON milestones(status);
 CREATE INDEX IF NOT EXISTS idx_baselines_milestone ON baselines(milestone_id);
 CREATE INDEX IF NOT EXISTS idx_milestone_workflows_milestone ON milestone_workflows(milestone_id);
+
+-- Knowledge graph entities
+CREATE TABLE IF NOT EXISTS entities (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake')),
+  data JSON NOT NULL,
+  embedding BLOB,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+-- Relationships between entities
+CREATE TABLE IF NOT EXISTS relationships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES')),
+  data JSON,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (from_id) REFERENCES entities(id) ON DELETE CASCADE,
+  FOREIGN KEY (to_id) REFERENCES entities(id) ON DELETE CASCADE
+);
+
+-- Indexes for knowledge graph queries
+CREATE INDEX IF NOT EXISTS idx_entity_type ON entities(type);
+CREATE INDEX IF NOT EXISTS idx_rel_from ON relationships(from_id, type);
+CREATE INDEX IF NOT EXISTS idx_rel_to ON relationships(to_id, type);
+CREATE INDEX IF NOT EXISTS idx_rel_type ON relationships(type);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_rel_unique ON relationships(from_id, to_id, type);
 `;
 
 export function getDatabase(dbPath?: string): Database {

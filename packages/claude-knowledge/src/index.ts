@@ -14,6 +14,17 @@ export type {
   MilestoneCheckpointData,
 } from "./types";
 
-// Phase 2: Knowledge Graph (stubs)
-export { knowledge } from "./db/neo4j";
+// Phase 2: Knowledge Graph
+export { knowledge } from "./knowledge";
 export { hooks } from "./hooks";
+export type {
+  Learning,
+  Pattern,
+  Mistake,
+  Entity,
+  Relationship,
+  EntityType,
+  RelationshipType,
+  CodeAreaData,
+  FileData,
+} from "./types";
