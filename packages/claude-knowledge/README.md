@@ -478,9 +478,7 @@ Extract and store learnings at the end of a session:
 ```typescript
 const result = await hooks.onSessionEnd({
   workflowId: "workflow-123", // optional
-  commits: [
-    { sha: "abc123", message: "feat(api): add user endpoint" },
-  ],
+  commits: [{ sha: "abc123", message: "feat(api): add user endpoint" }],
   modifiedFiles: ["src/api/users.ts"],
 });
 
@@ -496,20 +494,28 @@ Add to `.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "SessionStart": [{
-      "matcher": "startup",
-      "hooks": [{
-        "type": "command",
-        "command": "bun run packages/claude-knowledge/src/cli.ts session-start"
-      }]
-    }],
-    "PreCompact": [{
-      "matcher": "*",
-      "hooks": [{
-        "type": "command",
-        "command": "bun run packages/claude-knowledge/src/cli.ts session-end"
-      }]
-    }]
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run packages/claude-knowledge/src/cli.ts session-start"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run packages/claude-knowledge/src/cli.ts session-end"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
