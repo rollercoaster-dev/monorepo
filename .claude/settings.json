@@ -61,6 +61,7 @@
       "Bash(git worktree:*)",
       "Bash(git rebase:*)",
       "Bash(git fetch:*)",
+      "Bash(git rev-parse:*)",
       "Bash(gh pr merge:*)",
       "Bash(gh pr checks:*)",
       "Bash(cd:*)",
