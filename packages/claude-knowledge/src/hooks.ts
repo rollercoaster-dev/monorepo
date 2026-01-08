@@ -16,6 +16,7 @@ import type {
   Mistake,
 } from "./types";
 import { knowledge } from "./knowledge";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parseIssueNumber,
   parseConventionalCommit,
@@ -125,10 +126,10 @@ async function onSessionStart(
     }
   } catch (error) {
     // Log the error so failures are visible, but allow session to continue
-    console.error(
-      "[claude-knowledge] Failed to load session knowledge:",
+    logger.error("Failed to load session knowledge", {
       error,
-    );
+      context: "onSessionStart",
+    });
     // Return empty context to allow session to continue
   }
 
@@ -240,10 +241,11 @@ async function onSessionEnd(
       await knowledge.store(learnings);
     } catch (error) {
       // Log storage failure so it's visible
-      console.error(
-        "[claude-knowledge] Failed to store session learnings:",
+      logger.error("Failed to store session learnings", {
         error,
-      );
+        context: "onSessionEnd",
+        learningsCount: learnings.length,
+      });
       return {
         learningsStored: 0,
         learningIds: [],
