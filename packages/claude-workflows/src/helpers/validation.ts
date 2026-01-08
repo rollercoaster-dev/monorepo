@@ -92,8 +92,7 @@ export async function validateStage(
   stage: ValidationStage,
   cwd?: string,
 ): Promise<ValidationResult> {
-  const command = stage === "test" ? "test" : `run ${stage}`;
-  const args = command.split(" ");
+  const args = stage === "test" ? ["test"] : ["run", stage];
 
   const result = await execNoThrow("bun", args, { cwd });
 

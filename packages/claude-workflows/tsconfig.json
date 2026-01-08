@@ -8,10 +8,6 @@
     "skipLibCheck": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
     "types": ["bun"]
   },
   "include": ["src/**/*", "tests/**/*"],

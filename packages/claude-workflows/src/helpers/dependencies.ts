@@ -200,6 +200,22 @@ export async function hasOpenBlockers(issueBody: string): Promise<boolean> {
 }
 
 /**
+ * Get human-readable display name for a dependency type
+ */
+function getDependencyTypeDisplay(type: DependencyType): string {
+  switch (type) {
+    case "blocker":
+      return "Blocked by";
+    case "depends":
+      return "Depends on";
+    case "after":
+      return "After";
+    case "checkbox":
+      return "Checkbox";
+  }
+}
+
+/**
  * Get a formatted dependency report
  */
 export function formatDependencyReport(result: DependencyCheckResult): string {
@@ -216,21 +232,13 @@ export function formatDependencyReport(result: DependencyCheckResult): string {
   for (const dep of result.blockers) {
     const impact = dep.state === "OPEN" ? "**BLOCKING**" : "OK to proceed";
     lines.push(
-      `| #${dep.issueNumber} | Blocked by | ${dep.state} | ${impact} |`,
+      `| #${dep.issueNumber} | ${getDependencyTypeDisplay(dep.type)} | ${dep.state} | ${impact} |`,
     );
   }
 
   for (const dep of result.softDeps) {
     const impact = dep.state === "OPEN" ? "Warning" : "OK";
-    // Use the actual type for display
-    const typeDisplay =
-      dep.type === "depends"
-        ? "Depends on"
-        : dep.type === "after"
-          ? "After"
-          : dep.type === "checkbox"
-            ? "Checkbox"
-            : "Depends on";
+    const typeDisplay = getDependencyTypeDisplay(dep.type);
     lines.push(
       `| #${dep.issueNumber} | ${typeDisplay} | ${dep.state} | ${impact} |`,
     );

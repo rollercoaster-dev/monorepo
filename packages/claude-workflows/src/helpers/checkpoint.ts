@@ -5,36 +5,48 @@
  */
 
 import type { PhaseMetadata } from "../types";
-import type { WorkflowPhase, WorkflowStatus } from "claude-knowledge";
+import type {
+  WorkflowPhase,
+  WorkflowStatus,
+  Workflow,
+  Action,
+  CheckpointData,
+} from "claude-knowledge";
 
 // Re-export types from claude-knowledge for convenience
 export type { WorkflowPhase, WorkflowStatus } from "claude-knowledge";
 
-// Action result type matching claude-knowledge
-type ActionResult = "success" | "failed" | "pending";
+// Use Action's result type for consistency with claude-knowledge
+type ActionResult = Action["result"];
 
 // Lazy import of claude-knowledge to handle when it's not available
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type ClaudeKnowledgeModule = typeof import("claude-knowledge");
-let checkpointModule: ClaudeKnowledgeModule | null = null;
+
+// Promise-based singleton to prevent race conditions on concurrent imports
+let checkpointPromise: Promise<
+  ClaudeKnowledgeModule["checkpoint"] | null
+> | null = null;
 let checkpointWarningShown = false;
 
-async function getCheckpoint() {
-  if (!checkpointModule) {
-    try {
-      checkpointModule = await import("claude-knowledge");
-    } catch (error) {
-      if (!checkpointWarningShown) {
-        console.warn(
-          "[checkpoint] Failed to import claude-knowledge - checkpoint persistence disabled:",
-          error instanceof Error ? error.message : String(error),
-        );
-        checkpointWarningShown = true;
-      }
-      return null;
-    }
+async function getCheckpoint(): Promise<
+  ClaudeKnowledgeModule["checkpoint"] | null
+> {
+  if (!checkpointPromise) {
+    checkpointPromise = import("claude-knowledge")
+      .then((mod) => mod.checkpoint)
+      .catch((error) => {
+        if (!checkpointWarningShown) {
+          console.warn(
+            "[checkpoint] Failed to import claude-knowledge - checkpoint persistence disabled:",
+            error instanceof Error ? error.message : String(error),
+          );
+          checkpointWarningShown = true;
+        }
+        return null;
+      });
   }
-  return checkpointModule.checkpoint;
+  return checkpointPromise;
 }
 
 /**
@@ -51,12 +63,17 @@ function logCheckpointUnavailable(operation: string): void {
 
 /**
  * Create a new workflow checkpoint
+ *
+ * @param issueNumber - The GitHub issue number
+ * @param branch - The git branch name
+ * @param worktree - Optional worktree path
+ * @returns The created workflow or null if checkpoint unavailable
  */
 export async function createWorkflow(
   issueNumber: number,
   branch: string,
   worktree?: string,
-) {
+): Promise<Workflow | null> {
   const checkpoint = await getCheckpoint();
   if (!checkpoint) {
     logCheckpointUnavailable("workflow creation");
@@ -76,13 +93,19 @@ export async function createWorkflow(
 
 /**
  * Transition between workflow phases
+ *
+ * @param workflowId - The workflow identifier
+ * @param from - The current phase (for logging)
+ * @param to - The target phase
+ * @param context - Context string for logging (e.g., "AUTO-ISSUE #123")
+ * @param metadata - Optional metadata to include in the action log
  */
 export async function transitionPhase(
   workflowId: string,
-  from: string,
+  from: WorkflowPhase,
   to: WorkflowPhase,
-  metadata: PhaseMetadata = {},
   context: string,
+  metadata: PhaseMetadata = {},
 ): Promise<void> {
   const checkpoint = await getCheckpoint();
   if (!checkpoint) {
@@ -110,6 +133,11 @@ export async function transitionPhase(
 
 /**
  * Log an agent spawn
+ *
+ * @param workflowId - The workflow identifier
+ * @param agent - The agent name
+ * @param task - Description of the task
+ * @param metadata - Optional additional metadata
  */
 export async function logAgentSpawn(
   workflowId: string,
@@ -139,6 +167,10 @@ export async function logAgentSpawn(
 
 /**
  * Log a commit
+ *
+ * @param workflowId - The workflow identifier
+ * @param sha - The commit SHA
+ * @param message - The commit message
  */
 export async function logCommit(
   workflowId: string,
@@ -155,7 +187,7 @@ export async function logCommit(
     checkpoint.logCommit(workflowId, sha, message);
   } catch (error) {
     console.error(
-      `[checkpoint] Failed to log commit (${sha.substring(0, 7)}):`,
+      `[checkpoint] Failed to log commit (${sha.slice(0, 7)}):`,
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -163,6 +195,11 @@ export async function logCommit(
 
 /**
  * Log an action with status
+ *
+ * @param workflowId - The workflow identifier
+ * @param action - The action name
+ * @param status - The action result status
+ * @param metadata - Optional additional metadata
  */
 export async function logAction(
   workflowId: string,
@@ -188,6 +225,9 @@ export async function logAction(
 
 /**
  * Set workflow status
+ *
+ * @param workflowId - The workflow identifier
+ * @param status - The new workflow status
  */
 export async function setWorkflowStatus(
   workflowId: string,
@@ -211,8 +251,13 @@ export async function setWorkflowStatus(
 
 /**
  * Load workflow checkpoint data
+ *
+ * @param workflowId - The workflow identifier
+ * @returns The checkpoint data (workflow + actions + commits) or null if not found/unavailable
  */
-export async function loadWorkflow(workflowId: string) {
+export async function loadWorkflow(
+  workflowId: string,
+): Promise<CheckpointData | null> {
   const checkpoint = await getCheckpoint();
   if (!checkpoint) {
     logCheckpointUnavailable("workflow loading");
@@ -232,6 +277,10 @@ export async function loadWorkflow(workflowId: string) {
 
 /**
  * Generate a workflow ID from issue number
+ *
+ * @param command - The command name (e.g., "auto-issue")
+ * @param issueNumber - The GitHub issue number
+ * @returns A unique workflow identifier
  */
 export function generateWorkflowId(
   command: string,

@@ -83,7 +83,7 @@ export async function getItemIdForIssue(
       `Failed to parse GraphQL response for issue #${issueNumber}:`,
       error instanceof Error ? error.message : String(error),
       "\nRaw response (first 200 chars):",
-      result.stdout.substring(0, 200),
+      result.stdout.slice(0, 200),
     );
     return null;
   }

@@ -66,6 +66,24 @@ describe("gate templates", () => {
     expect(prompt).toContain("proceed");
   });
 
+  test("gateApprovalPrompt throws on invalid gate number", () => {
+    expect(() => gateApprovalPrompt(0, "Test", "Summary")).toThrow(
+      "Invalid gate number",
+    );
+    expect(() => gateApprovalPrompt(5, "Test", "Summary")).toThrow(
+      "Invalid gate number",
+    );
+  });
+
+  test("gateApprovalPrompt throws on empty strings", () => {
+    expect(() => gateApprovalPrompt(1, "", "Summary")).toThrow(
+      "Gate name cannot be empty",
+    );
+    expect(() => gateApprovalPrompt(1, "Test", "")).toThrow(
+      "Summary cannot be empty",
+    );
+  });
+
   test("workflowStartPrompt includes all info", () => {
     const prompt = workflowStartPrompt(
       "auto-issue",
@@ -77,6 +95,15 @@ describe("gate templates", () => {
     expect(prompt).toContain("#123");
     expect(prompt).toContain("feat/test");
     expect(prompt).toContain("autonomous");
+  });
+
+  test("workflowStartPrompt throws on invalid inputs", () => {
+    expect(() => workflowStartPrompt("", 123, "branch", "mode")).toThrow(
+      "Command cannot be empty",
+    );
+    expect(() => workflowStartPrompt("cmd", 0, "branch", "mode")).toThrow(
+      "Invalid issue number",
+    );
   });
 
   test("gate1Prompt includes issue details", () => {
@@ -163,16 +190,29 @@ describe("notification templates", () => {
 });
 
 describe("board config", () => {
-  test("BOARD_CONFIG has all status options", () => {
+  test("BOARD_CONFIG has all status options with valid values", () => {
     expect(BOARD_CONFIG.statusOptions).toHaveProperty("backlog");
     expect(BOARD_CONFIG.statusOptions).toHaveProperty("next");
     expect(BOARD_CONFIG.statusOptions).toHaveProperty("inProgress");
     expect(BOARD_CONFIG.statusOptions).toHaveProperty("blocked");
     expect(BOARD_CONFIG.statusOptions).toHaveProperty("done");
+
+    // Validate each status option is a non-empty string
+    for (const value of Object.values(BOARD_CONFIG.statusOptions)) {
+      expect(typeof value).toBe("string");
+      expect(value.length).toBeGreaterThan(0);
+      // Status option IDs should be hex-like strings
+      expect(value).toMatch(/^[a-f0-9]+$/i);
+    }
   });
 
-  test("BOARD_CONFIG has project ID", () => {
+  test("BOARD_CONFIG has valid project and field IDs", () => {
     expect(BOARD_CONFIG.projectId).toBeTruthy();
+    expect(typeof BOARD_CONFIG.projectId).toBe("string");
+    expect(BOARD_CONFIG.projectId.startsWith("PVT_")).toBe(true);
+
     expect(BOARD_CONFIG.statusFieldId).toBeTruthy();
+    expect(typeof BOARD_CONFIG.statusFieldId).toBe("string");
+    expect(BOARD_CONFIG.statusFieldId.startsWith("PVTSSF_")).toBe(true);
   });
 });

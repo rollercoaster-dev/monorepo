@@ -44,7 +44,7 @@ gh issue view $DEP_ISSUE --json state -q '.state'
 
 ### Gated Workflows (/work-on-issue)
 
-```
+```text
 IF "Blocked by #X" found:
   IF #X is OPEN:
     STOP - Show blocker to user
@@ -60,7 +60,7 @@ IF "Depends on #X" found:
 
 ### Autonomous Workflows (/auto-issue)
 
-```
+```text
 IF "Blocked by #X" found:
   IF #X is OPEN:
     WARN - Log blocker (don't stop)
