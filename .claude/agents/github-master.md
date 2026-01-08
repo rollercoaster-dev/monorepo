@@ -108,9 +108,10 @@ GitHub's native issue dependencies (released August 2025) provide "blocked by" /
 **Add a dependency (Issue A blocked by Issue B):**
 
 ```bash
+# Note: Use -F (capital) for integer values
 gh api --method POST \
   /repos/rollercoaster-dev/monorepo/issues/<blocked-issue>/dependencies/blocked_by \
-  -f issue_id=<blocking-issue>
+  -F issue_id=<blocking-issue>
 ```
 
 **Remove a dependency:**
@@ -132,9 +133,11 @@ gh api /repos/rollercoaster-dev/monorepo/issues/<issue>/dependencies/blocked_by
 gh api /repos/rollercoaster-dev/monorepo/issues/<issue>/dependencies/blocking
 ```
 
+**Note:** REST API can be finicky with issue IDs. GraphQL is more reliable.
+
 ---
 
-#### GraphQL API (More Flexible)
+#### GraphQL API (Recommended)
 
 **Add a dependency:**
 
