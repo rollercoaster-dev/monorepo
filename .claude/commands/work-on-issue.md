@@ -8,12 +8,27 @@ Execute the gated workflow for issue #$ARGUMENTS.
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/):
+This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
 
-- **[telegram-helpers.md](../shared/telegram-helpers.md)** - `askTelegram()` for gate approvals, `notifyTelegram()` for status
-- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Workflow state persistence
-- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint, test commands
-- **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
+**Documentation patterns (for reference):**
+
+- [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
+- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Workflow state persistence
+- [validation-commands.md](../shared/validation-commands.md) - Type-check, lint, test
+- [conventional-commits.md](../shared/conventional-commits.md) - Commit message format
+
+**Executable helpers (for scripts):**
+
+```typescript
+import {
+  notifyTelegram,
+  askTelegram,
+  transitionPhase,
+  validateBasic,
+  checkDependencies,
+  gateApprovalPrompt,
+} from "claude-workflows";
+```
 
 ### Telegram Notification Points
 
@@ -87,7 +102,8 @@ Mode: Gated (4 approval gates)
 
 You'll receive Telegram prompts at each gate.`
 });
-```
+
+````
 
 **IMPORTANT**: Store the `WORKFLOW_ID` from the create command output. Example:
 
@@ -100,7 +116,7 @@ You'll receive Telegram prompts at each gate.`
   "status": "running",
   ...
 }
-```
+````
 
 Extract and store the ID for subsequent commands:
 
@@ -213,7 +229,8 @@ Files affected: <count>
 
 Reply "proceed" to continue, or provide feedback.`
 });
-```
+
+````
 
     - If Telegram unavailable, wait for terminal input
     - Accept: "proceed", "yes", "go ahead", "approved"
@@ -266,7 +283,7 @@ Lines: +<added> -<removed>
 
 Reply "proceed" to approve this commit, or provide feedback.`
 });
-```
+````
 
     - If Telegram unavailable, wait for terminal input
     - Accept: "proceed", "yes", "go ahead", "approved"
@@ -349,7 +366,8 @@ ${criticalCount > 0 ? "⚠️ Critical issues must be resolved first." : "✅ No
 
 Reply "proceed" to create PR, or provide feedback.`
 });
-```
+
+````
 
     - If Telegram unavailable, wait for terminal input
     - Accept: "proceed", "yes", "go ahead", "approved"
@@ -418,7 +436,7 @@ Reviews: CodeRabbit + Claude triggered
 
 Next: Wait for CI and reviews.`
 });
-```
+````
 
 31. Report PR URL and next steps in terminal
 

@@ -34,13 +34,30 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/):
+This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
 
-- **[telegram-helpers.md](../shared/telegram-helpers.md)** - `notifyTelegram()` for status, `askTelegram()` for escalation
-- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Workflow state persistence, phase transitions
-- **[board-operations.md](../shared/board-operations.md)** - `get_item_id_for_issue()`, `update_board_status()`
-- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint, test commands
-- **[escalation-patterns.md](../shared/escalation-patterns.md)** - Escalation triggers and response handling
+**Documentation patterns (for reference):**
+
+- [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
+- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Workflow state persistence
+- [board-operations.md](../shared/board-operations.md) - Board status updates
+- [validation-commands.md](../shared/validation-commands.md) - Type-check, lint, test
+- [escalation-patterns.md](../shared/escalation-patterns.md) - Escalation handling
+
+**Executable helpers (for scripts):**
+
+```typescript
+import {
+  notifyTelegram,
+  askTelegram,
+  transitionPhase,
+  moveIssueToStatus,
+  validateBasic,
+  validateFull,
+  checkDependencies,
+  escalationPrompt,
+} from "claude-workflows";
+```
 
 ### Telegram Notification Points
 
