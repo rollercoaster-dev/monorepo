@@ -93,6 +93,22 @@ async function askTelegram(question: string): Promise<string> {
 }
 ```
 
+### Permission Notifications
+
+When waiting for tool permissions (Edit, Write, Bash, etc.), notify the user:
+
+```typescript
+// Before any tool that might need permission approval
+notifyTelegram(`⏳ [AUTO-MILESTONE] Permission needed in terminal
+
+Tool: Edit
+File: ${filePath}
+
+Waiting for approval...`);
+```
+
+This ensures users monitoring via Telegram know when to check the terminal.
+
 ### Enabling Telegram MCP
 
 To enable Telegram notifications, configure the MCP server in `~/.claude.json`:
