@@ -16,6 +16,7 @@ import type {
   Mistake,
 } from "./types";
 import { knowledge } from "./knowledge";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parseIssueNumber,
   parseConventionalCommit,
@@ -24,6 +25,7 @@ import {
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
+import { formatKnowledgeContext } from "./formatter";
 
 /** Maximum number of learnings to return at session start */
 const MAX_LEARNINGS = 10;
@@ -122,15 +124,23 @@ async function onSessionStart(
         }
       }
     }
-  } catch {
-    // If knowledge queries fail, return empty context
-    // This allows session to continue even if knowledge graph is unavailable
+  } catch (error) {
+    // Log the error so failures are visible, but allow session to continue
+    logger.error("Failed to load session knowledge", {
+      error,
+      context: "onSessionStart",
+    });
+    // Return empty context to allow session to continue
   }
 
-  // Format summary for injection
-  const summary = formatKnowledgeSummary(learnings, patterns, mistakes, {
-    issueNumber,
-    primaryCodeArea,
+  // Format summary for injection using new formatter
+  const summary = formatKnowledgeContext(learnings, patterns, mistakes, {
+    maxTokens: 2000,
+    context: {
+      issueNumber,
+      primaryCodeArea,
+      modifiedFiles: context.modifiedFiles,
+    },
   });
 
   return {
@@ -139,81 +149,6 @@ async function onSessionStart(
     mistakes,
     summary,
   };
-}
-
-/**
- * Format knowledge context into a markdown summary for injection.
- */
-function formatKnowledgeSummary(
-  learnings: QueryResult[],
-  patterns: Pattern[],
-  mistakes: Mistake[],
-  context: { issueNumber?: number; primaryCodeArea?: string },
-): string {
-  const lines: string[] = [];
-
-  // Header with context
-  lines.push("## Relevant Knowledge");
-  lines.push("");
-
-  if (context.issueNumber || context.primaryCodeArea) {
-    lines.push(
-      `Context: ${[
-        context.issueNumber ? `Issue #${context.issueNumber}` : null,
-        context.primaryCodeArea ? `Area: ${context.primaryCodeArea}` : null,
-      ]
-        .filter(Boolean)
-        .join(", ")}`,
-    );
-    lines.push("");
-  }
-
-  // Learnings section
-  if (learnings.length > 0) {
-    lines.push(`### Learnings (${learnings.length})`);
-    for (const { learning } of learnings) {
-      const prefix = learning.sourceIssue
-        ? `[#${learning.sourceIssue}]`
-        : learning.codeArea
-          ? `[${learning.codeArea}]`
-          : "[-]";
-      lines.push(`- ${prefix} ${learning.content}`);
-    }
-    lines.push("");
-  }
-
-  // Patterns section
-  if (patterns.length > 0) {
-    lines.push(`### Patterns (${patterns.length})`);
-    for (const pattern of patterns) {
-      lines.push(`- **${pattern.name}**: ${pattern.description}`);
-    }
-    lines.push("");
-  }
-
-  // Mistakes section
-  if (mistakes.length > 0) {
-    lines.push(`### Mistakes to Avoid (${mistakes.length})`);
-    for (const mistake of mistakes) {
-      const location = mistake.filePath ? `${mistake.filePath}: ` : "";
-      lines.push(
-        `- ${location}${mistake.description} (Fixed: ${mistake.howFixed})`,
-      );
-    }
-    lines.push("");
-  }
-
-  // Empty state
-  if (
-    learnings.length === 0 &&
-    patterns.length === 0 &&
-    mistakes.length === 0
-  ) {
-    lines.push("*No relevant knowledge found for this context.*");
-    lines.push("");
-  }
-
-  return lines.join("\n");
 }
 
 /** Confidence level for auto-extracted learnings (lower than manual) */
@@ -304,8 +239,13 @@ async function onSessionEnd(
   if (learnings.length > 0) {
     try {
       await knowledge.store(learnings);
-    } catch {
-      // If storage fails, return empty result
+    } catch (error) {
+      // Log storage failure so it's visible
+      logger.error("Failed to store session learnings", {
+        error,
+        context: "onSessionEnd",
+        learningsCount: learnings.length,
+      });
       return {
         learningsStored: 0,
         learningIds: [],

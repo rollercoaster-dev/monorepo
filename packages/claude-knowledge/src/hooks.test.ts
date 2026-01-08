@@ -143,7 +143,8 @@ describe("hooks", () => {
       expect(result.mistakes[0].description).toBe(
         "Used string concatenation in SQL",
       );
-      expect(result.summary).toContain("Mistakes to Avoid");
+      // New formatter uses "Past Mistakes in Current Files" for modified files
+      expect(result.summary).toContain("Past Mistakes in Current Files");
     });
 
     it("should deduplicate learnings from multiple queries", async () => {
@@ -199,9 +200,11 @@ describe("hooks", () => {
       });
 
       expect(result.summary).toContain("## Relevant Knowledge");
-      expect(result.summary).toContain("### Learnings");
+      // New formatter uses "Code Area:" instead of "### Learnings"
+      expect(result.summary).toContain("### Code Area:");
       expect(result.summary).toContain("### Patterns");
-      expect(result.summary).toContain("### Mistakes to Avoid");
+      // Mistakes in modified files use different header
+      expect(result.summary).toContain("Past Mistakes in Current Files");
       expect(result.summary).toContain("[#123]");
       expect(result.summary).toContain("REST Pattern");
       expect(result.summary).toContain("Wrong HTTP method");

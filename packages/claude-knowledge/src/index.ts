@@ -17,6 +17,14 @@ export type {
 // Phase 2: Knowledge Graph
 export { knowledge } from "./knowledge";
 export { hooks } from "./hooks";
+export {
+  formatKnowledgeContext,
+  estimateTokens,
+  groupByCodeArea,
+  sortByRelevance,
+  calculatePriority,
+  type FormatOptions,
+} from "./formatter";
 export type {
   Learning,
   Pattern,
