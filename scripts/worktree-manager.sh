@@ -745,22 +745,13 @@ cmd_preflight() {
   lint_errors=$(echo "$lint_output" | grep -c "error" || echo "0")
   typecheck_errors=$(echo "$typecheck_output" | grep -c "error" || echo "0")
 
-  # Save baseline to state
-  local baseline_json
-  baseline_json=$(jq -n \
-    --arg timestamp "$(date -Iseconds)" \
-    --argjson lint_exit "$lint_exit_code" \
-    --argjson typecheck_exit "$typecheck_exit_code" \
-    --argjson lint_warnings "$lint_warnings" \
-    --argjson lint_errors "$lint_errors" \
-    --argjson typecheck_errors "$typecheck_errors" \
-    '{
-      captured_at: $timestamp,
-      lint: { exit_code: $lint_exit, warnings: $lint_warnings, errors: $lint_errors },
-      typecheck: { exit_code: $typecheck_exit, errors: $typecheck_errors }
-    }')
+  # Save baseline to CLI (create milestone if needed)
+  local milestone_id
+  milestone_id=$(get_or_create_milestone "current")
 
-  set_milestone_object "baseline" "$baseline_json"
+  cli_call baseline save "$milestone_id" \
+    "$lint_exit_code" "$lint_warnings" "$lint_errors" \
+    "$typecheck_exit_code" "$typecheck_errors" > /dev/null
 
   echo ""
   echo "┌─────────────────────────────────────────────────────────────┐"
@@ -1048,21 +1039,27 @@ cmd_summary() {
     echo ""
   fi
 
-  # Baseline comparison (only show if baseline was captured)
-  local has_baseline
-  has_baseline=$(jq 'has("baseline") and .baseline != null' "$STATE_FILE")
+  # Baseline comparison (only show if baseline exists in CLI)
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
 
-  if [[ "$has_baseline" == "true" ]]; then
-    local baseline_lint_errors baseline_typecheck_errors
-    baseline_lint_errors=$(jq '.baseline.lint.errors // 0' "$STATE_FILE")
-    baseline_typecheck_errors=$(jq '.baseline.typecheck.errors // 0' "$STATE_FILE")
-    echo "┌─────────────────────────────────────────────────────────────┐"
-    echo "│                    Baseline Comparison                      │"
-    echo "└─────────────────────────────────────────────────────────────┘"
-    echo ""
-    printf "  %-25s %s\n" "Pre-existing lint errors:" "${baseline_lint_errors:-0}"
-    printf "  %-25s %s\n" "Pre-existing type errors:" "${baseline_typecheck_errors:-0}"
-    echo ""
+  if [[ -n "$milestone_id" ]]; then
+    local milestone_data baseline_data
+    milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
+    baseline_data=$(echo "$milestone_data" | jq '.baseline // null')
+
+    if [[ "$baseline_data" != "null" ]]; then
+      local baseline_lint_errors baseline_typecheck_errors
+      baseline_lint_errors=$(echo "$baseline_data" | jq -r '.lintErrors // 0')
+      baseline_typecheck_errors=$(echo "$baseline_data" | jq -r '.typecheckErrors // 0')
+      echo "┌─────────────────────────────────────────────────────────────┐"
+      echo "│                    Baseline Comparison                      │"
+      echo "└─────────────────────────────────────────────────────────────┘"
+      echo ""
+      printf "  %-25s %s\n" "Pre-existing lint errors:" "${baseline_lint_errors:-0}"
+      printf "  %-25s %s\n" "Pre-existing type errors:" "${baseline_typecheck_errors:-0}"
+      echo ""
+    fi
   fi
 
   echo "═══════════════════════════════════════════════════════════════"
