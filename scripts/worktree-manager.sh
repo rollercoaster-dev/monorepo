@@ -9,8 +9,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKTREE_BASE="$REPO_ROOT/.worktrees"
-STATE_FILE="$WORKTREE_BASE/.state.json"
-CHECKPOINT_VERSION="1.0"
 
 # Claude Knowledge CLI for state management
 CLI_CMD="bun $REPO_ROOT/packages/claude-knowledge/src/cli.ts"
@@ -113,12 +111,10 @@ check_prerequisites() {
   fi
 }
 
-# ensure_base_dir ensures the worktree base directory exists and initializes the state file if missing.
-# If created, writes an initial '{"worktrees":{}}' object to $STATE_FILE.
+# ensure_base_dir ensures the worktree base directory exists
 ensure_base_dir() {
   if [[ ! -d "$WORKTREE_BASE" ]]; then
     mkdir -p "$WORKTREE_BASE"
-    echo '{"worktrees":{}}' > "$STATE_FILE"
     log_info "Created worktree base directory: $WORKTREE_BASE"
   fi
 }
@@ -433,32 +429,45 @@ cmd_update_status() {
   log_success "Updated issue #$issue_number status to: $new_status"
 }
 
-# cmd_sync syncs the persisted worktree state with the repository's actual git worktrees by removing state entries for missing worktrees and adding any untracked worktrees.
+# cmd_sync syncs CLI workflow state with actual git worktrees
 cmd_sync() {
   log_info "Syncing worktree state with git..."
 
   ensure_base_dir
 
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  # Remove workflows for worktrees that no longer exist
+  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+    local issue_number worktree_path
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+    worktree_path=$(get_worktree_path "$issue_number")
+
+    if [[ ! -d "$worktree_path" ]]; then
+      log_warn "Worktree for issue #$issue_number no longer exists, removing from state"
+      remove_from_state "$issue_number"
+    fi
+  done
+
   # Get list of actual git worktrees
   local actual_worktrees
   actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep ".worktrees/issue-" | sed 's/worktree //')
 
-  # Remove stale entries from state (worktrees that no longer exist)
-  jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null | while read -r issue; do
-    local expected_path
-    expected_path=$(get_worktree_path "$issue")
-    if [[ ! -d "$expected_path" ]]; then
-      log_warn "Worktree for issue #$issue no longer exists, removing from state"
-      remove_from_state "$issue"
-    fi
-  done
-
-  # Add untracked worktrees to state (worktrees that exist but aren't tracked)
+  # Add untracked worktrees to state
   while read -r worktree_path; do
     if [[ -n "$worktree_path" ]]; then
       local issue_number
       issue_number=$(basename "$worktree_path" | sed 's/issue-//')
-      if ! jq -e --arg issue "$issue_number" '.worktrees[$issue]' "$STATE_FILE" &> /dev/null; then
+
+      # Check if workflow exists
+      local result
+      result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+      local workflow_id
+      workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+      if [[ -z "$workflow_id" ]]; then
         log_info "Found untracked worktree for issue #$issue_number, adding to state"
         local branch
         branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
@@ -485,8 +494,12 @@ cmd_cleanup_all() {
 
   ensure_base_dir
 
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
   local worktree_count
-  worktree_count=$(jq '.worktrees | length' "$STATE_FILE" 2>/dev/null || echo "0")
+  worktree_count=$(echo "$workflows" | jq 'length')
 
   if [[ "$worktree_count" -eq 0 ]]; then
     log_info "No worktrees to remove"
@@ -495,7 +508,7 @@ cmd_cleanup_all() {
 
   if [[ "$dry_run_flag" == "--dry-run" ]]; then
     log_info "Dry run - would remove $worktree_count worktree(s):"
-    jq -r '.worktrees | keys[] | "  - Issue #\(.)"' "$STATE_FILE" 2>/dev/null
+    echo "$workflows" | jq -r '.[] | "  - Issue #\(.issueNumber)"'
     exit 0
   fi
 
@@ -515,7 +528,7 @@ cmd_cleanup_all() {
     if ! cmd_remove "$issue"; then
       ((failed_count++)) || true
     fi
-  done < <(jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null)
+  done < <(echo "$workflows" | jq -r '.[] | .issueNumber')
 
   if [[ $failed_count -gt 0 ]]; then
     log_warn "Cleanup completed with $failed_count failure(s)"
@@ -691,10 +704,9 @@ cmd_resume() {
   log_info "To continue from this checkpoint, resume your workflow at phase: $phase"
 }
 
-# cmd_state_path prints the path to the state file.
+# cmd_state_path prints the path to the SQLite database
 cmd_state_path() {
-  ensure_base_dir
-  echo "$STATE_FILE"
+  echo "$HOME/.claude/state/checkpoint.db"
 }
 
 # cmd_preflight runs lint and type-check on main to establish a baseline of pre-existing issues.
@@ -1105,50 +1117,36 @@ cmd_summary() {
   echo "═══════════════════════════════════════════════════════════════"
 }
 
-# cmd_validate_state validates and optionally migrates the state file schema.
+# cmd_validate_state validates SQLite state and syncs with git worktrees
 cmd_validate_state() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_info "No state file exists. Creating fresh state."
-    echo '{"worktrees":{}}' > "$STATE_FILE"
+  log_info "Validating SQLite state..."
+
+  # Check if milestone exists
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_warn "No milestone ID found. Run preflight to initialize."
     return 0
   fi
 
-  log_info "Validating state file..."
-
-  # Check if valid JSON
-  if ! jq empty "$STATE_FILE" 2>/dev/null; then
-    log_error "State file is not valid JSON!"
-    log_warn "Creating backup and resetting state..."
-    cp "$STATE_FILE" "$STATE_FILE.backup.$(date +%s)"
-    echo '{"worktrees":{}}' > "$STATE_FILE"
+  # Validate milestone exists in SQLite
+  local milestone_data
+  if ! milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null); then
+    log_error "Milestone ID $milestone_id not found in SQLite!"
+    log_warn "Clearing stale milestone ID file..."
+    rm -f "$MILESTONE_ID_FILE"
     return 1
   fi
 
-  # Check for required fields
-  local has_worktrees
-  has_worktrees=$(jq 'has("worktrees")' "$STATE_FILE")
-
-  if [[ "$has_worktrees" != "true" ]]; then
-    log_warn "State file missing 'worktrees' field. Adding..."
-    local tmp_file
-    tmp_file=$(mktemp)
-    jq '. + {worktrees: {}}' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
-  fi
-
-  # Check and set checkpoint version if missing
-  local version
-  version=$(get_milestone_field "checkpoint_version")
-  if [[ -z "$version" ]]; then
-    log_info "Adding checkpoint version to state file..."
-    set_milestone_field "checkpoint_version" "$CHECKPOINT_VERSION"
-  fi
+  log_success "Milestone validated: $(echo "$milestone_data" | jq -r '.milestone.name')"
 
   # Sync with actual worktrees
   cmd_sync
 
-  log_success "State file validation complete"
+  log_success "State validation complete"
 }
 
 # cmd_help prints the usage message and a list of available commands, status values, and examples for the worktree-manager script.
