@@ -129,7 +129,7 @@ get_worktree_path() {
   echo "$WORKTREE_BASE/issue-$issue_number"
 }
 
-# update_state updates the persistent state file (.worktrees/.state.json) for the given issue with the provided status, optional branch and PR number, and records the current timestamp.
+# update_state creates or updates a workflow using the CLI
 update_state() {
   local issue_number=$1
   local status=$2
@@ -138,24 +138,43 @@ update_state() {
 
   ensure_base_dir
 
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg issue "$issue_number" \
-     --arg status "$status" \
-     --arg branch "$branch" \
-     --arg pr "$pr_number" \
-     --arg timestamp "$(date -Iseconds)" \
-     '.worktrees[$issue] = {status: $status, branch: $branch, pr: $pr, updated: $timestamp}' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  # Find or create workflow
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  local workflow_id
+  workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+  if [[ -z "$workflow_id" ]]; then
+    # Create new workflow
+    local worktree_path
+    worktree_path=$(get_worktree_path "$issue_number")
+    result=$(cli_call workflow create "$issue_number" "$branch" "$worktree_path")
+    workflow_id=$(echo "$result" | jq -r '.workflow.id')
+  fi
+
+  # Update status
+  cli_call workflow set-status "$workflow_id" "$status" > /dev/null
+
+  # Log PR number if provided (store as metadata)
+  if [[ -n "$pr_number" ]]; then
+    cli_call workflow log-action "$workflow_id" "pr-created" "success" "{\"pr\": \"$pr_number\"}" > /dev/null
+  fi
 }
 
-# remove_from_state removes the worktree entry for the given issue number from the persistent state file.
+# remove_from_state deletes a workflow using the CLI
 remove_from_state() {
   local issue_number=$1
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg issue "$issue_number" 'del(.worktrees[$issue])' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+
+  # Find workflow
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  local workflow_id
+  workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+  # Delete if exists
+  if [[ -n "$workflow_id" ]]; then
+    cli_call workflow delete "$workflow_id" > /dev/null
+  fi
 }
 
 # set_milestone_field sets a top-level field in the state file (for milestone metadata).
@@ -340,8 +359,21 @@ cmd_update_status() {
 
   ensure_base_dir
 
-  local current_branch
-  current_branch=$(jq -r --arg issue "$issue_number" '.worktrees[$issue].branch // ""' "$STATE_FILE")
+  # Get current branch from CLI or worktree
+  local current_branch=""
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  current_branch=$(echo "$result" | jq -r '.workflow.branch // ""')
+
+  if [[ -z "$current_branch" ]]; then
+    # Fallback: get from git worktree
+    local worktree_path
+    worktree_path=$(get_worktree_path "$issue_number")
+    if [[ -d "$worktree_path" ]]; then
+      current_branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
+    fi
+  fi
+
   update_state "$issue_number" "$new_status" "$current_branch" "$pr_number"
 
   log_success "Updated issue #$issue_number status to: $new_status"
