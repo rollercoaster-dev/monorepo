@@ -40,6 +40,103 @@ tmux attach -t milestone
 
 ---
 
+## MCP Integration (Telegram Notifications)
+
+This workflow supports optional Telegram notifications via the `mcp-communicator-telegram` MCP server.
+
+### MCP Tools Used
+
+| Tool                                          | Purpose              | Blocking                 |
+| --------------------------------------------- | -------------------- | ------------------------ |
+| `mcp__mcp-communicator-telegram__notify_user` | One-way notification | No                       |
+| `mcp__mcp-communicator-telegram__ask_user`    | Two-way interaction  | Yes (waits for response) |
+
+### Notification Points
+
+| Phase | Type        | Trigger             | Content                       |
+| ----- | ----------- | ------------------- | ----------------------------- |
+| 1     | notify_user | Milestone started   | Name, issue count, waves      |
+| 2     | notify_user | Each issue complete | Issue #, PR link, status      |
+| 3     | ask_user    | Escalation          | Unresolved findings + options |
+| 5     | notify_user | Milestone complete  | Summary, duration, stats      |
+
+### Graceful Degradation
+
+If the MCP server is unavailable:
+
+- `notify_user` calls fail silently (logged to console)
+- `ask_user` calls fall back to terminal input
+- Workflow continues without interruption
+
+```typescript
+// Helper: Send notification (non-blocking, fail-safe)
+function notifyTelegram(message: string): void {
+  try {
+    // prettier-ignore
+    mcp__mcp_communicator_telegram__notify_user({ message });
+  } catch {
+    console.log("[AUTO-MILESTONE] (Telegram unavailable - continuing)");
+  }
+}
+
+// Helper: Ask user with fallback (blocking)
+async function askTelegram(question: string): Promise<string> {
+  try {
+    // prettier-ignore
+    return await mcp__mcp_communicator_telegram__ask_user({ question });
+  } catch {
+    console.log(
+      "[AUTO-MILESTONE] (Telegram unavailable - waiting for terminal input)",
+    );
+    return "TELEGRAM_UNAVAILABLE";
+  }
+}
+```
+
+### Permission Notifications
+
+When waiting for tool permissions (Edit, Write, Bash, etc.), notify the user:
+
+```typescript
+// Before any tool that might need permission approval
+notifyTelegram(`⏳ [AUTO-MILESTONE] Permission needed in terminal
+
+Tool: Edit
+File: ${filePath}
+
+Waiting for approval...`);
+```
+
+This ensures users monitoring via Telegram know when to check the terminal.
+
+### Enabling Telegram MCP
+
+To enable Telegram notifications, configure the MCP server in `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-communicator-telegram": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "-p", "mcp-communicator-telegram", "mcptelegram"],
+      "env": {
+        "TELEGRAM_TOKEN": "<your-bot-token>",
+        "CHAT_ID": "<your-chat-id>"
+      }
+    }
+  }
+}
+```
+
+**Getting your credentials:**
+
+1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
+2. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
+3. Restart Claude Code after configuration
+
+---
+
 ## Workflow Overview
 
 ```
@@ -232,6 +329,16 @@ checkpoint.logAction(WORKFLOW_ID, "planning_gate", "success", {
   userDecision: "approved",
   approvedPlan: approvedPlan,
 });
+
+// Telegram notification - milestone starting
+notifyTelegram(`🚀 [AUTO-MILESTONE] Started: ${MILESTONE_NAME}
+
+Total issues: ${planResult.total_issues}
+Execution waves: ${planResult.execution_waves.length}
+Free issues: ${planResult.free_issues.length} (${planResult.free_issues.join(", ")})
+Parallel workers: ${PARALLEL}
+
+Starting Phase 2: Parallel Execution...`);
 ```
 
 **Example output when stopping:**
@@ -369,6 +476,16 @@ checkpoint.logAction(WORKFLOW_ID, "child_workflow_complete", "success", {
   branch: result.branch,
   error: result.error || null,
 });
+
+// Telegram notification - issue complete
+const statusEmoji = result.status === "success" ? "✅" : "❌";
+notifyTelegram(`${statusEmoji} [AUTO-MILESTONE] Issue Complete
+
+Issue: #${issue} - ${issueTitle}
+PR: ${result.pr_number ? `#${result.pr_number} https://github.com/rollercoaster-dev/monorepo/pull/${result.pr_number}` : "N/A"}
+Status: ${result.status.toUpperCase()}
+Wave: ${currentWave}/${totalWaves}
+${result.error ? `Error: ${result.error}` : ""}`);
 ```
 
 ### 2.3 Track Progress & Checkpointing
@@ -605,6 +722,69 @@ PR #145 (Issue #111) has unresolved critical findings after 3 attempts.
 1. Type `skip 111` to skip this PR and its dependents
 2. Type `force 111` to mark as ready despite issues
 3. Fix manually, then type `continue`
+```
+
+### Telegram Escalation (Interactive)
+
+When review escalation is triggered, use `ask_user` for interactive response:
+
+```typescript
+const escalationMessage = `🚨 AUTO-MILESTONE ESCALATION
+
+PR #${pr} (Issue #${issue}) has unresolved critical findings after ${MAX_RETRY} attempts.
+
+Unresolved Findings:
+${criticalFindings.map((f) => `• [${f.source}] ${f.file}:${f.line} - ${f.message}`).join("\n")}
+
+Options:
+1. 'skip ${issue}' - Skip this PR and dependents
+2. 'force ${issue}' - Mark ready despite issues
+3. 'continue' - After manual fix`;
+
+// Ask via Telegram (blocking - waits for response)
+// Loop until we get a valid response
+let handled = false;
+while (!handled) {
+  const response = await askTelegram(escalationMessage);
+  const normalized = response.trim().toLowerCase();
+
+  // Handle response with validation
+  if (normalized.startsWith("skip")) {
+    const issueNum = parseInt(response.split(" ")[1], 10);
+    if (Number.isNaN(issueNum)) {
+      console.log(`[AUTO-MILESTONE] Invalid format. Use: skip <issue-number>`);
+      continue; // Re-prompt
+    }
+    console.log(`[AUTO-MILESTONE] Skipping issue #${issueNum} and dependents`);
+    // Mark issue and dependents as skipped
+    handled = true;
+  } else if (normalized.startsWith("force")) {
+    const issueNum = parseInt(response.split(" ")[1], 10);
+    if (Number.isNaN(issueNum)) {
+      console.log(`[AUTO-MILESTONE] Invalid format. Use: force <issue-number>`);
+      continue; // Re-prompt
+    }
+    console.log(`[AUTO-MILESTONE] Force-approving issue #${issueNum}`);
+    // Proceed to merge despite issues
+    handled = true;
+  } else if (normalized === "continue") {
+    console.log(`[AUTO-MILESTONE] Continuing after manual fix`);
+    // Re-run review
+    handled = true;
+  } else if (response === "TELEGRAM_UNAVAILABLE") {
+    console.log(
+      "[AUTO-MILESTONE] Telegram unavailable - waiting for terminal input",
+    );
+    // Fall through to terminal-based escalation
+    handled = true;
+  } else {
+    console.log(`[AUTO-MILESTONE] Unknown response: ${response}`);
+    console.log(
+      `[AUTO-MILESTONE] Valid options: skip <num>, force <num>, continue`,
+    );
+    // Loop continues - will re-prompt
+  }
+}
 ```
 
 ---
@@ -855,6 +1035,19 @@ checkpoint.logAction(WORKFLOW_ID, "milestone_complete", "success", {
 });
 
 console.log(`[AUTO-MILESTONE] Milestone completed: ${WORKFLOW_ID}`);
+
+// Telegram notification - milestone complete
+const testEmoji = integrationTestsPassed ? "✅" : "❌";
+notifyTelegram(`🎉 [AUTO-MILESTONE] Complete: ${MILESTONE_NAME}
+
+Duration: ${calculateDuration(workflow.createdAt, new Date().toISOString())}
+Merged: ${mergedPRs.length} PRs
+Failed: ${failedIssues.length}
+Skipped: ${skippedIssues.length}
+
+Integration Tests: ${testEmoji} ${integrationTestsPassed ? "PASS" : "FAIL"}
+
+${failedIssues.length > 0 ? `⚠️ Issues requiring attention:\n${failedIssues.map((i) => `• #${i}`).join("\n")}` : "✨ All issues completed successfully!"}`);
 ```
 
 ### 5.3 Example Final Report
