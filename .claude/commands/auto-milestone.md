@@ -40,100 +40,38 @@ tmux attach -t milestone
 
 ---
 
-## MCP Integration (Telegram Notifications)
+## Shared References
 
-This workflow supports optional Telegram notifications via the `mcp-communicator-telegram` MCP server.
+This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
 
-### MCP Tools Used
+**Documentation patterns (for reference):**
 
-| Tool                                          | Purpose              | Blocking                 |
-| --------------------------------------------- | -------------------- | ------------------------ |
-| `mcp__mcp-communicator-telegram__notify_user` | One-way notification | No                       |
-| `mcp__mcp-communicator-telegram__ask_user`    | Two-way interaction  | Yes (waits for response) |
+- [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
+- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Milestone state persistence
+- [dependency-checking.md](../shared/dependency-checking.md) - Issue dependency detection
+- [escalation-patterns.md](../shared/escalation-patterns.md) - Escalation handling
 
-### Notification Points
-
-| Phase | Type        | Trigger             | Content                       |
-| ----- | ----------- | ------------------- | ----------------------------- |
-| 1     | notify_user | Milestone started   | Name, issue count, waves      |
-| 2     | notify_user | Each issue complete | Issue #, PR link, status      |
-| 3     | ask_user    | Escalation          | Unresolved findings + options |
-| 5     | notify_user | Milestone complete  | Summary, duration, stats      |
-
-### Graceful Degradation
-
-If the MCP server is unavailable:
-
-- `notify_user` calls fail silently (logged to console)
-- `ask_user` calls fall back to terminal input
-- Workflow continues without interruption
+**Executable helpers (for scripts):**
 
 ```typescript
-// Helper: Send notification (non-blocking, fail-safe)
-function notifyTelegram(message: string): void {
-  try {
-    // prettier-ignore
-    mcp__mcp_communicator_telegram__notify_user({ message });
-  } catch {
-    console.log("[AUTO-MILESTONE] (Telegram unavailable - continuing)");
-  }
-}
-
-// Helper: Ask user with fallback (blocking)
-async function askTelegram(question: string): Promise<string> {
-  try {
-    // prettier-ignore
-    return await mcp__mcp_communicator_telegram__ask_user({ question });
-  } catch {
-    console.log(
-      "[AUTO-MILESTONE] (Telegram unavailable - waiting for terminal input)",
-    );
-    return "TELEGRAM_UNAVAILABLE";
-  }
-}
+import {
+  notifyTelegram,
+  askTelegram,
+  transitionPhase,
+  checkDependencies,
+  extractDependencies,
+  escalationPrompt,
+} from "claude-workflows";
 ```
 
-### Permission Notifications
+### Telegram Notification Points
 
-When waiting for tool permissions (Edit, Write, Bash, etc.), notify the user:
-
-```typescript
-// Before any tool that might need permission approval
-notifyTelegram(`⏳ [AUTO-MILESTONE] Permission needed in terminal
-
-Tool: Edit
-File: ${filePath}
-
-Waiting for approval...`);
-```
-
-This ensures users monitoring via Telegram know when to check the terminal.
-
-### Enabling Telegram MCP
-
-To enable Telegram notifications, configure the MCP server in `~/.claude.json`:
-
-```json
-{
-  "mcpServers": {
-    "mcp-communicator-telegram": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "-p", "mcp-communicator-telegram", "mcptelegram"],
-      "env": {
-        "TELEGRAM_TOKEN": "<your-bot-token>",
-        "CHAT_ID": "<your-chat-id>"
-      }
-    }
-  }
-}
-```
-
-**Getting your credentials:**
-
-1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
-2. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
-3. Restart Claude Code after configuration
+| Phase | Type        | Content                       |
+| ----- | ----------- | ----------------------------- |
+| 1     | notify_user | Name, issue count, waves      |
+| 2     | notify_user | Issue #, PR link, status      |
+| 3     | ask_user    | Unresolved findings + options |
+| 5     | notify_user | Summary, duration, stats      |
 
 ---
 

@@ -7,6 +7,14 @@ model: sonnet
 
 # Auto-Fixer Agent
 
+## Shared Patterns
+
+This agent uses patterns from [shared/](../shared/):
+
+- **[validation-commands.md](../shared/validation-commands.md)** - Post-fix validation
+- **[conventional-commits.md](../shared/conventional-commits.md)** - Fix commit format
+- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Fix attempt logging
+
 ## Purpose
 
 Applies fixes for critical findings identified by review agents during the `/auto-issue` workflow. Focuses on minimal, targeted fixes that address the specific issue without over-engineering or refactoring unrelated code.

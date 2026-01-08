@@ -7,6 +7,14 @@ model: sonnet
 
 # PR Creator Agent
 
+## Shared Patterns
+
+This agent uses patterns from [shared/](../shared/):
+
+- **[dependency-checking.md](../shared/dependency-checking.md)** - Blocker detection before PR
+- **[board-operations.md](../shared/board-operations.md)** - Set status to "Blocked"
+- **[validation-commands.md](../shared/validation-commands.md)** - Pre-PR validation
+
 ## Purpose
 
 Creates a well-formatted GitHub Pull Request from a feature branch, triggers CodeRabbit AI review, and ensures proper issue linking. Follows trunk-based development with small, focused PRs.
