@@ -16,7 +16,14 @@ import type {
   Mistake,
 } from "./types";
 import { knowledge } from "./knowledge";
-import { parseIssueNumber, inferCodeAreasFromFiles } from "./utils";
+import {
+  parseIssueNumber,
+  parseConventionalCommit,
+  inferCodeAreasFromFiles,
+  inferCodeArea,
+} from "./utils";
+import type { Learning } from "./types";
+import { randomUUID } from "crypto";
 
 /** Maximum number of learnings to return at session start */
 const MAX_LEARNINGS = 10;
@@ -209,21 +216,128 @@ function formatKnowledgeSummary(
   return lines.join("\n");
 }
 
+/** Confidence level for auto-extracted learnings (lower than manual) */
+const AUTO_EXTRACT_CONFIDENCE = 0.6;
+
 /**
  * Extract and store learnings from the session.
- * Placeholder for Phase 2 - onSessionEnd implementation.
  *
- * @param _session - Session summary with commits and modified files
+ * Analyzes commits made during the session to extract learnings:
+ * - Parses conventional commit messages for type and scope
+ * - Infers code areas from modified files
+ * - Stores learnings with lower confidence for auto-extracted content
+ *
+ * @param session - Session summary with commits and modified files
  * @returns Result indicating learnings stored
  */
 async function onSessionEnd(
-  _session: SessionSummary,
+  session: SessionSummary,
 ): Promise<SessionEndResult> {
-  // TODO: Implement in next commit
+  const learnings: Learning[] = [];
+  const learningIds: string[] = [];
+
+  // Extract learnings from commits
+  for (const commit of session.commits) {
+    const parsed = parseConventionalCommit(commit.message);
+
+    if (parsed) {
+      // Create learning from conventional commit
+      const learningId = `learning-auto-${randomUUID()}`;
+      learningIds.push(learningId);
+
+      const learning: Learning = {
+        id: learningId,
+        content: formatCommitLearning(parsed.type, parsed.description),
+        codeArea: parsed.scope || undefined,
+        confidence: AUTO_EXTRACT_CONFIDENCE,
+        metadata: {
+          source: "auto-extracted",
+          commitSha: commit.sha,
+          commitType: parsed.type,
+        },
+      };
+
+      learnings.push(learning);
+    }
+  }
+
+  // Extract learnings from modified files (grouped by code area)
+  if (session.modifiedFiles && session.modifiedFiles.length > 0) {
+    const areaFiles = new Map<string, string[]>();
+
+    for (const filePath of session.modifiedFiles) {
+      const area = inferCodeArea(filePath);
+      if (area) {
+        const files = areaFiles.get(area) || [];
+        files.push(filePath);
+        areaFiles.set(area, files);
+      }
+    }
+
+    // Create one learning per code area worked on
+    for (const [area, files] of areaFiles) {
+      // Skip if we already have a learning for this area from commits
+      if (learnings.some((l) => l.codeArea === area)) {
+        continue;
+      }
+
+      const learningId = `learning-auto-${randomUUID()}`;
+      learningIds.push(learningId);
+
+      const learning: Learning = {
+        id: learningId,
+        content: `Worked on ${area}: modified ${files.length} file(s)`,
+        codeArea: area,
+        confidence: AUTO_EXTRACT_CONFIDENCE * 0.8, // Even lower for file-based
+        metadata: {
+          source: "auto-extracted",
+          fileCount: files.length,
+          files: files.slice(0, 5), // Store first 5 files
+        },
+      };
+
+      learnings.push(learning);
+    }
+  }
+
+  // Store all extracted learnings
+  if (learnings.length > 0) {
+    try {
+      await knowledge.store(learnings);
+    } catch {
+      // If storage fails, return empty result
+      return {
+        learningsStored: 0,
+        learningIds: [],
+      };
+    }
+  }
+
   return {
-    learningsStored: 0,
-    learningIds: [],
+    learningsStored: learnings.length,
+    learningIds,
   };
+}
+
+/**
+ * Format a commit into a learning content string.
+ */
+function formatCommitLearning(type: string, description: string): string {
+  const typeDescriptions: Record<string, string> = {
+    feat: "Added feature",
+    fix: "Fixed issue",
+    refactor: "Refactored",
+    test: "Added tests for",
+    docs: "Documented",
+    chore: "Maintenance",
+    build: "Build configuration",
+    ci: "CI/CD update",
+    perf: "Performance improvement",
+    style: "Code style update",
+  };
+
+  const prefix = typeDescriptions[type] || "Completed";
+  return `${prefix}: ${description}`;
 }
 
 /**

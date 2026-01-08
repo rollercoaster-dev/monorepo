@@ -2,16 +2,26 @@ import { describe, expect, it, beforeEach, afterEach } from "bun:test";
 import { hooks } from "./hooks";
 import { knowledge } from "./knowledge";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
+import { unlinkSync, existsSync } from "fs";
+
+const TEST_DB = "/tmp/test-hooks.db";
 
 describe("hooks", () => {
   beforeEach(() => {
-    // Reset database before each test
-    resetDatabase();
+    // Clean up and reset test database
+    if (existsSync(TEST_DB)) {
+      unlinkSync(TEST_DB);
+    }
+    resetDatabase(TEST_DB);
   });
 
   afterEach(() => {
     // Close database after each test
     closeDatabase();
+    // Clean up test database file
+    if (existsSync(TEST_DB)) {
+      unlinkSync(TEST_DB);
+    }
   });
 
   describe("onSessionStart", () => {
@@ -227,10 +237,117 @@ describe("hooks", () => {
   });
 
   describe("onSessionEnd", () => {
-    it("should return empty result (placeholder)", async () => {
+    it("should extract learnings from conventional commits", async () => {
       const result = await hooks.onSessionEnd({
-        commits: [{ sha: "abc123", message: "feat: test" }],
-        modifiedFiles: ["src/test.ts"],
+        commits: [
+          { sha: "abc123", message: "feat(api): add user endpoint" },
+          { sha: "def456", message: "fix(db): resolve connection leak" },
+        ],
+        modifiedFiles: [],
+      });
+
+      expect(result.learningsStored).toBe(2);
+      expect(result.learningIds.length).toBe(2);
+
+      // Verify learnings were stored and are queryable
+      const apiLearnings = await knowledge.query({ codeArea: "api" });
+      expect(apiLearnings.length).toBe(1);
+      expect(apiLearnings[0].learning.content).toContain("add user endpoint");
+
+      const dbLearnings = await knowledge.query({ codeArea: "db" });
+      expect(dbLearnings.length).toBe(1);
+      expect(dbLearnings[0].learning.content).toContain(
+        "resolve connection leak",
+      );
+    });
+
+    it("should skip non-conventional commits", async () => {
+      const result = await hooks.onSessionEnd({
+        commits: [
+          { sha: "abc123", message: "feat(api): valid commit" },
+          { sha: "def456", message: "WIP: work in progress" },
+          { sha: "ghi789", message: "Merge branch main" },
+        ],
+        modifiedFiles: [],
+      });
+
+      // Only the conventional commit should be extracted
+      expect(result.learningsStored).toBe(1);
+    });
+
+    it("should extract learnings from modified files", async () => {
+      const result = await hooks.onSessionEnd({
+        commits: [],
+        modifiedFiles: [
+          "src/db/queries.ts",
+          "src/db/migrations.ts",
+          "src/api/routes.ts",
+        ],
+      });
+
+      // Should create learnings for Database and API areas
+      expect(result.learningsStored).toBe(2);
+
+      const dbLearnings = await knowledge.query({ codeArea: "Database" });
+      expect(dbLearnings.length).toBe(1);
+      expect(dbLearnings[0].learning.content).toContain("Database");
+
+      const apiLearnings = await knowledge.query({ codeArea: "API" });
+      expect(apiLearnings.length).toBe(1);
+      expect(apiLearnings[0].learning.content).toContain("API");
+    });
+
+    it("should not duplicate learnings for same code area from commits and files", async () => {
+      await hooks.onSessionEnd({
+        commits: [{ sha: "abc123", message: "feat(Database): add query" }],
+        modifiedFiles: ["src/db/queries.ts", "src/db/migrations.ts"],
+      });
+
+      // Should only create one learning for Database (from commit, not files)
+      const dbLearnings = await knowledge.query({ codeArea: "Database" });
+      expect(dbLearnings.length).toBe(1);
+      expect(dbLearnings[0].learning.content).toContain("add query");
+    });
+
+    it("should set lower confidence for auto-extracted learnings", async () => {
+      await hooks.onSessionEnd({
+        commits: [{ sha: "abc123", message: "feat(api): add endpoint" }],
+        modifiedFiles: [],
+      });
+
+      const learnings = await knowledge.query({ codeArea: "api" });
+      expect(learnings[0].learning.confidence).toBeLessThan(1);
+      expect(learnings[0].learning.confidence).toBeGreaterThan(0);
+    });
+
+    it("should include metadata for auto-extracted learnings", async () => {
+      await hooks.onSessionEnd({
+        commits: [{ sha: "abc123", message: "feat(api): add endpoint" }],
+        modifiedFiles: [],
+      });
+
+      const learnings = await knowledge.query({ codeArea: "api" });
+      expect(learnings[0].learning.metadata).toBeDefined();
+      expect(learnings[0].learning.metadata?.source).toBe("auto-extracted");
+      expect(learnings[0].learning.metadata?.commitSha).toBe("abc123");
+    });
+
+    it("should return empty result when no learnings extracted", async () => {
+      const result = await hooks.onSessionEnd({
+        commits: [
+          { sha: "abc123", message: "random non-conventional message" },
+        ],
+        modifiedFiles: ["some/unknown/path.xyz"],
+      });
+
+      expect(result.learningsStored).toBe(0);
+      expect(result.learningIds).toEqual([]);
+    });
+
+    it("should handle empty session gracefully", async () => {
+      const result = await hooks.onSessionEnd({
+        commits: [],
+        modifiedFiles: [],
       });
 
       expect(result.learningsStored).toBe(0);
