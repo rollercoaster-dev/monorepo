@@ -4,7 +4,11 @@
  * Provides functions for detecting and validating issue dependencies.
  */
 
-import type { Dependency, DependencyCheckResult } from "../types";
+import type {
+  Dependency,
+  DependencyCheckResult,
+  DependencyType,
+} from "../types";
 import { ghNoThrow } from "../utils/exec";
 
 // Regex patterns for dependency detection
@@ -13,27 +17,69 @@ const DEPENDS_REGEX = /depends on #(\d+)/gi;
 const AFTER_REGEX = /after #(\d+)/gi;
 const CHECKBOX_REGEX = /- \[ \] #(\d+)/gi;
 
+interface ExtractedDependency {
+  issueNumber: number;
+  type: DependencyType;
+}
+
 /**
- * Extract all dependencies from issue body
+ * Extract all dependencies from issue body with their types
+ */
+export function extractDependenciesWithTypes(body: string): {
+  blockers: ExtractedDependency[];
+  softDeps: ExtractedDependency[];
+} {
+  const blockers: ExtractedDependency[] = [...body.matchAll(BLOCKER_REGEX)].map(
+    (m) => ({
+      issueNumber: parseInt(m[1], 10),
+      type: "blocker" as const,
+    }),
+  );
+
+  const softDeps: ExtractedDependency[] = [
+    ...[...body.matchAll(DEPENDS_REGEX)].map((m) => ({
+      issueNumber: parseInt(m[1], 10),
+      type: "depends" as const,
+    })),
+    ...[...body.matchAll(AFTER_REGEX)].map((m) => ({
+      issueNumber: parseInt(m[1], 10),
+      type: "after" as const,
+    })),
+    ...[...body.matchAll(CHECKBOX_REGEX)].map((m) => ({
+      issueNumber: parseInt(m[1], 10),
+      type: "checkbox" as const,
+    })),
+  ];
+
+  // Remove duplicates by issue number, keeping first occurrence
+  const seenBlockers = new Set<number>();
+  const seenSoftDeps = new Set<number>();
+
+  return {
+    blockers: blockers.filter((d) => {
+      if (seenBlockers.has(d.issueNumber)) return false;
+      seenBlockers.add(d.issueNumber);
+      return true;
+    }),
+    softDeps: softDeps.filter((d) => {
+      if (seenSoftDeps.has(d.issueNumber)) return false;
+      seenSoftDeps.add(d.issueNumber);
+      return true;
+    }),
+  };
+}
+
+/**
+ * Extract all dependencies from issue body (simplified version)
  */
 export function extractDependencies(body: string): {
   blockers: number[];
   softDeps: number[];
 } {
-  const blockers = [...body.matchAll(BLOCKER_REGEX)].map((m) =>
-    parseInt(m[1], 10),
-  );
-
-  const softDeps = [
-    ...body.matchAll(DEPENDS_REGEX),
-    ...body.matchAll(AFTER_REGEX),
-    ...body.matchAll(CHECKBOX_REGEX),
-  ].map((m) => parseInt(m[1], 10));
-
-  // Remove duplicates
+  const result = extractDependenciesWithTypes(body);
   return {
-    blockers: [...new Set(blockers)],
-    softDeps: [...new Set(softDeps)],
+    blockers: result.blockers.map((d) => d.issueNumber),
+    softDeps: result.softDeps.map((d) => d.issueNumber),
   };
 }
 
@@ -59,81 +105,98 @@ export async function getIssueState(
   }
 
   const state = result.stdout.trim().toUpperCase();
-  return state === "OPEN" || state === "CLOSED" ? state : null;
+  if (state === "OPEN" || state === "CLOSED") {
+    return state;
+  }
+
+  // Log unexpected state values
+  console.warn(
+    `[dependencies] Unexpected issue state for #${issueNumber}: "${state}" (expected OPEN or CLOSED)`,
+  );
+  return null;
 }
 
 /**
- * Check all dependencies for an issue
+ * Check all dependencies for an issue (parallel execution)
  */
 export async function checkDependencies(
   issueBody: string,
   context: string,
 ): Promise<DependencyCheckResult> {
-  const { blockers, softDeps } = extractDependencies(issueBody);
+  const { blockers, softDeps } = extractDependenciesWithTypes(issueBody);
 
-  const resolvedBlockers: Dependency[] = [];
-  const resolvedSoftDeps: Dependency[] = [];
+  // Check all dependencies in parallel
+  const [resolvedBlockers, resolvedSoftDeps] = await Promise.all([
+    // Check blockers in parallel
+    Promise.all(
+      blockers.map(async (dep) => {
+        const state = await getIssueState(dep.issueNumber);
+        if (!state) return null;
 
-  // Check blockers
-  for (const issueNumber of blockers) {
-    const state = await getIssueState(issueNumber);
-    if (state) {
-      resolvedBlockers.push({
-        issueNumber,
-        type: "blocker",
-        state,
-      });
+        if (state === "OPEN") {
+          console.log(
+            `[${context}] BLOCKER: Issue #${dep.issueNumber} is still open`,
+          );
+        }
 
-      if (state === "OPEN") {
-        console.log(
-          `[${context}] BLOCKER: Issue #${issueNumber} is still open`,
-        );
-      }
-    }
-  }
+        return {
+          issueNumber: dep.issueNumber,
+          type: dep.type,
+          state,
+        } as Dependency;
+      }),
+    ),
+    // Check soft deps in parallel
+    Promise.all(
+      softDeps.map(async (dep) => {
+        const state = await getIssueState(dep.issueNumber);
+        if (!state) return null;
 
-  // Check soft dependencies
-  for (const issueNumber of softDeps) {
-    const state = await getIssueState(issueNumber);
-    if (state) {
-      resolvedSoftDeps.push({
-        issueNumber,
-        type: "depends",
-        state,
-      });
+        if (state === "OPEN") {
+          console.log(
+            `[${context}] WARNING: Dependency #${dep.issueNumber} is still open`,
+          );
+        }
 
-      if (state === "OPEN") {
-        console.log(
-          `[${context}] WARNING: Dependency #${issueNumber} is still open`,
-        );
-      }
-    }
-  }
+        return {
+          issueNumber: dep.issueNumber,
+          type: dep.type,
+          state,
+        } as Dependency;
+      }),
+    ),
+  ]);
+
+  // Filter out nulls (failed state lookups)
+  const filteredBlockers = resolvedBlockers.filter(
+    (d): d is Dependency => d !== null,
+  );
+  const filteredSoftDeps = resolvedSoftDeps.filter(
+    (d): d is Dependency => d !== null,
+  );
 
   // Can proceed if no open blockers
-  const canProceed = !resolvedBlockers.some((b) => b.state === "OPEN");
+  const canProceed = !filteredBlockers.some((b) => b.state === "OPEN");
 
   return {
-    blockers: resolvedBlockers,
-    softDeps: resolvedSoftDeps,
+    blockers: filteredBlockers,
+    softDeps: filteredSoftDeps,
     canProceed,
   };
 }
 
 /**
- * Check if an issue has open blockers
+ * Check if an issue has open blockers (parallel execution)
  */
 export async function hasOpenBlockers(issueBody: string): Promise<boolean> {
   const { blockers } = extractDependencies(issueBody);
 
-  for (const issueNumber of blockers) {
-    const state = await getIssueState(issueNumber);
-    if (state === "OPEN") {
-      return true;
-    }
-  }
+  // Check all blockers in parallel
+  const states = await Promise.all(
+    blockers.map((issueNumber) => getIssueState(issueNumber)),
+  );
 
-  return false;
+  return states.some((state) => state === "OPEN");
 }
 
 /**
@@ -159,8 +222,17 @@ export function formatDependencyReport(result: DependencyCheckResult): string {
 
   for (const dep of result.softDeps) {
     const impact = dep.state === "OPEN" ? "Warning" : "OK";
+    // Use the actual type for display
+    const typeDisplay =
+      dep.type === "depends"
+        ? "Depends on"
+        : dep.type === "after"
+          ? "After"
+          : dep.type === "checkbox"
+            ? "Checkbox"
+            : "Depends on";
     lines.push(
-      `| #${dep.issueNumber} | Depends on | ${dep.state} | ${impact} |`,
+      `| #${dep.issueNumber} | ${typeDisplay} | ${dep.state} | ${impact} |`,
     );
   }
 

@@ -9,11 +9,18 @@
 // Telegram Types
 // ============================================================================
 
-export interface TelegramResult {
-  success: boolean;
-  error?: string;
-}
+/**
+ * Result of a Telegram notification attempt
+ * Uses discriminated union to enforce success/error relationship
+ */
+export type TelegramResult =
+  | { success: true }
+  | { success: false; error: string };
 
+/**
+ * Response from Telegram question
+ * Either a user message or a sentinel indicating unavailability
+ */
 export type TelegramResponse = string | "TELEGRAM_UNAVAILABLE";
 
 // ============================================================================
@@ -33,11 +40,13 @@ export interface BoardConfig {
   statusOptions: Record<BoardStatus, string>;
 }
 
-export interface BoardUpdateResult {
-  success: boolean;
-  itemId?: string;
-  error?: string;
-}
+/**
+ * Result of a board update operation
+ * Uses discriminated union to enforce success/error relationship
+ */
+export type BoardUpdateResult =
+  | { success: true; itemId: string }
+  | { success: false; error: string };
 
 // ============================================================================
 // Phase Metadata Types
@@ -57,11 +66,13 @@ export interface PhaseMetadata {
 
 export type ValidationStage = "test" | "type-check" | "lint" | "build";
 
-export interface ValidationResult {
-  success: boolean;
-  stage?: ValidationStage;
-  output?: string;
-}
+/**
+ * Result of a validation operation
+ * Uses discriminated union to enforce success/error relationship
+ */
+export type ValidationResult =
+  | { success: true }
+  | { success: false; stage: ValidationStage; output: string };
 
 // ============================================================================
 // Dependency Types

@@ -7,6 +7,10 @@
 import type { BoardConfig, BoardStatus, BoardUpdateResult } from "../types";
 import { ghNoThrow } from "../utils/exec";
 
+// Repository configuration from environment or defaults
+const GITHUB_OWNER = process.env.GITHUB_OWNER || "rollercoaster-dev";
+const GITHUB_REPO = process.env.GITHUB_REPO || "monorepo";
+
 /**
  * Board configuration for the monorepo project
  */
@@ -51,9 +55,9 @@ export async function getItemIdForIssue(
     "-f",
     `query=${query}`,
     "-F",
-    "owner=rollercoaster-dev",
+    `owner=${GITHUB_OWNER}`,
     "-F",
-    "repo=monorepo",
+    `repo=${GITHUB_REPO}`,
     "-F",
     `issueNumber=${issueNumber}`,
   ]);
@@ -74,8 +78,13 @@ export async function getItemIdForIssue(
         n.project.id === BOARD_CONFIG.projectId,
     );
     return item?.id ?? null;
-  } catch {
-    console.error("Failed to parse GraphQL response");
+  } catch (error) {
+    console.error(
+      `Failed to parse GraphQL response for issue #${issueNumber}:`,
+      error instanceof Error ? error.message : String(error),
+      "\nRaw response (first 200 chars):",
+      result.stdout.substring(0, 200),
+    );
     return null;
   }
 }

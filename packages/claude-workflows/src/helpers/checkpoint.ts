@@ -5,38 +5,48 @@
  */
 
 import type { PhaseMetadata } from "../types";
+import type { WorkflowPhase, WorkflowStatus } from "claude-knowledge";
 
 // Re-export types from claude-knowledge for convenience
 export type { WorkflowPhase, WorkflowStatus } from "claude-knowledge";
 
-// Types from claude-knowledge
-type WorkflowPhase =
-  | "research"
-  | "implement"
-  | "review"
-  | "finalize"
-  | "planning"
-  | "execute"
-  | "merge"
-  | "cleanup";
-
-type WorkflowStatus = "running" | "paused" | "completed" | "failed";
+// Action result type matching claude-knowledge
 type ActionResult = "success" | "failed" | "pending";
 
 // Lazy import of claude-knowledge to handle when it's not available
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 type ClaudeKnowledgeModule = typeof import("claude-knowledge");
 let checkpointModule: ClaudeKnowledgeModule | null = null;
+let checkpointWarningShown = false;
 
 async function getCheckpoint() {
   if (!checkpointModule) {
     try {
       checkpointModule = await import("claude-knowledge");
-    } catch {
+    } catch (error) {
+      if (!checkpointWarningShown) {
+        console.warn(
+          "[checkpoint] Failed to import claude-knowledge - checkpoint persistence disabled:",
+          error instanceof Error ? error.message : String(error),
+        );
+        checkpointWarningShown = true;
+      }
       return null;
     }
   }
   return checkpointModule.checkpoint;
+}
+
+/**
+ * Log when checkpoint is unavailable (only once per session)
+ */
+function logCheckpointUnavailable(operation: string): void {
+  if (!checkpointWarningShown) {
+    console.warn(
+      `[checkpoint] Checkpoint unavailable - ${operation} will not be persisted`,
+    );
+    checkpointWarningShown = true;
+  }
 }
 
 /**
@@ -49,11 +59,19 @@ export async function createWorkflow(
 ) {
   const checkpoint = await getCheckpoint();
   if (!checkpoint) {
-    console.log("[checkpoint] claude-knowledge not available");
+    logCheckpointUnavailable("workflow creation");
     return null;
   }
 
-  return checkpoint.create(issueNumber, branch, worktree);
+  try {
+    return checkpoint.create(issueNumber, branch, worktree);
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to create workflow for issue #${issueNumber}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return null;
+  }
 }
 
 /**
@@ -72,14 +90,22 @@ export async function transitionPhase(
     return;
   }
 
-  checkpoint.setPhase(workflowId, to);
-  checkpoint.logAction(workflowId, "phase_transition", "success", {
-    from,
-    to,
-    ...metadata,
-  });
-
-  console.log(`[${context}] Phase: ${from} → ${to}`);
+  try {
+    checkpoint.setPhase(workflowId, to);
+    checkpoint.logAction(workflowId, "phase_transition", "success", {
+      from,
+      to,
+      ...metadata,
+    });
+    console.log(`[${context}] Phase: ${from} → ${to}`);
+  } catch (error) {
+    console.error(
+      `[${context}] Failed to persist phase transition ${from} → ${to}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    // Still log the transition even if persistence failed
+    console.log(`[${context}] Phase: ${from} → ${to} (persistence failed)`);
+  }
 }
 
 /**
@@ -92,13 +118,23 @@ export async function logAgentSpawn(
   metadata?: Record<string, unknown>,
 ): Promise<void> {
   const checkpoint = await getCheckpoint();
-  if (!checkpoint) return;
+  if (!checkpoint) {
+    logCheckpointUnavailable("agent spawn logging");
+    return;
+  }
 
-  checkpoint.logAction(workflowId, "spawned_agent", "success", {
-    agent,
-    task,
-    ...metadata,
-  });
+  try {
+    checkpoint.logAction(workflowId, "spawned_agent", "success", {
+      agent,
+      task,
+      ...metadata,
+    });
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to log agent spawn (${agent}):`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 /**
@@ -110,9 +146,19 @@ export async function logCommit(
   message: string,
 ): Promise<void> {
   const checkpoint = await getCheckpoint();
-  if (!checkpoint) return;
+  if (!checkpoint) {
+    logCheckpointUnavailable("commit logging");
+    return;
+  }
 
-  checkpoint.logCommit(workflowId, sha, message);
+  try {
+    checkpoint.logCommit(workflowId, sha, message);
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to log commit (${sha.substring(0, 7)}):`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 /**
@@ -125,9 +171,19 @@ export async function logAction(
   metadata?: Record<string, unknown>,
 ): Promise<void> {
   const checkpoint = await getCheckpoint();
-  if (!checkpoint) return;
+  if (!checkpoint) {
+    logCheckpointUnavailable("action logging");
+    return;
+  }
 
-  checkpoint.logAction(workflowId, action, status, metadata);
+  try {
+    checkpoint.logAction(workflowId, action, status, metadata);
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to log action (${action}):`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 /**
@@ -138,9 +194,19 @@ export async function setWorkflowStatus(
   status: WorkflowStatus,
 ): Promise<void> {
   const checkpoint = await getCheckpoint();
-  if (!checkpoint) return;
+  if (!checkpoint) {
+    logCheckpointUnavailable("status update");
+    return;
+  }
 
-  checkpoint.setStatus(workflowId, status);
+  try {
+    checkpoint.setStatus(workflowId, status);
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to set workflow status (${status}):`,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 /**
@@ -148,9 +214,20 @@ export async function setWorkflowStatus(
  */
 export async function loadWorkflow(workflowId: string) {
   const checkpoint = await getCheckpoint();
-  if (!checkpoint) return null;
+  if (!checkpoint) {
+    logCheckpointUnavailable("workflow loading");
+    return null;
+  }
 
-  return checkpoint.load(workflowId);
+  try {
+    return checkpoint.load(workflowId);
+  } catch (error) {
+    console.error(
+      `[checkpoint] Failed to load workflow (${workflowId}):`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return null;
+  }
 }
 
 /**

@@ -2,7 +2,10 @@
  * Telegram MCP helpers for workflow notifications
  *
  * These helpers wrap the Telegram MCP tools with graceful degradation.
- * When Telegram is unavailable, they fail silently and return a sentinel value.
+ * When Telegram is unavailable (CLI context), they return failure results.
+ *
+ * NOTE: These are placeholder implementations for CLI usage. In actual Claude
+ * execution, the MCP tools are injected directly and these functions are not used.
  */
 
 import type { TelegramResult, TelegramResponse } from "../types";
@@ -10,7 +13,8 @@ import type { TelegramResult, TelegramResponse } from "../types";
 /**
  * Send a notification via Telegram (non-blocking)
  *
- * Falls back gracefully if Telegram MCP is unavailable.
+ * In CLI context, this is a stub that logs to console and returns failure.
+ * In Claude execution context, the actual MCP tool is used instead.
  *
  * @param message - The message to send
  * @param context - Context for logging (e.g., "WORK-ON-ISSUE #123")
@@ -20,17 +24,23 @@ export async function notifyTelegram(
   message: string,
   context: string,
 ): Promise<TelegramResult> {
-  // Note: In actual Claude execution, MCP tools are injected.
-  // For CLI usage, this would need to shell out to the MCP.
-  // This is a placeholder that logs to console.
-  console.log(`[${context}] Telegram: ${message.substring(0, 50)}...`);
-  return { success: true };
+  // In CLI context, Telegram MCP is not available
+  // Log to console and return failure to be honest about what happened
+  const truncated = message.length > 50;
+  console.warn(
+    `[${context}] Telegram notification skipped (MCP not available in CLI): ${message.substring(0, 50)}${truncated ? "..." : ""}`,
+  );
+  return {
+    success: false,
+    error: "Telegram MCP not available in CLI context - notification not sent",
+  };
 }
 
 /**
  * Ask a question via Telegram and wait for response (blocking)
  *
- * Falls back to terminal if Telegram MCP is unavailable.
+ * In CLI context, this is a stub that returns TELEGRAM_UNAVAILABLE.
+ * In Claude execution context, the actual MCP tool is used instead.
  *
  * @param question - The question to ask
  * @param context - Context for logging
@@ -40,19 +50,21 @@ export async function askTelegram(
   question: string,
   context: string,
 ): Promise<TelegramResponse> {
-  // Note: In actual Claude execution, MCP tools are injected.
-  // For CLI usage, this would need to shell out to the MCP.
-  console.log(
-    `[${context}] Telegram question: ${question.substring(0, 50)}...`,
+  // In CLI context, Telegram MCP is not available
+  const truncated = question.length > 50;
+  console.warn(
+    `[${context}] Telegram question skipped (MCP not available): ${question.substring(0, 50)}${truncated ? "..." : ""}`,
   );
   return "TELEGRAM_UNAVAILABLE";
 }
 
 /**
  * Check if Telegram MCP is available
+ *
+ * In CLI context, always returns false.
+ * In Claude execution context, the MCP tools are directly available.
  */
 export function isTelegramAvailable(): boolean {
-  // In CLI context, check if MCP is configured
-  // This is a placeholder
+  // In CLI context, Telegram MCP is not available
   return false;
 }

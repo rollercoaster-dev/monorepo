@@ -5,21 +5,24 @@
  * Arguments are passed as array, not interpolated into a shell string.
  */
 
-/* eslint-disable no-undef */
-// Bun global is available in Bun runtime
-
 import type { ExecResult } from "../types";
 
 /**
  * Execute a command without throwing on non-zero exit
  *
  * Safe from shell injection - uses Bun.spawn with args array.
+ *
+ * @param command - The command to execute
+ * @param args - Arguments to pass to the command
+ * @param options - Options for execution
+ * @param options.cwd - Working directory
  */
 export async function execNoThrow(
   command: string,
   args: string[] = [],
-  options: { cwd?: string; timeout?: number } = {},
+  options: { cwd?: string } = {},
 ): Promise<ExecResult> {
+  // eslint-disable-next-line no-undef
   const proc = Bun.spawn([command, ...args], {
     cwd: options.cwd,
     stdout: "pipe",
@@ -37,11 +40,16 @@ export async function execNoThrow(
  * Execute a command and throw on non-zero exit
  *
  * Safe from shell injection - uses Bun.spawn with args array.
+ *
+ * @param command - The command to execute
+ * @param args - Arguments to pass to the command
+ * @param options - Options for execution
+ * @param options.cwd - Working directory
  */
 export async function runCommand(
   command: string,
   args: string[] = [],
-  options: { cwd?: string; timeout?: number } = {},
+  options: { cwd?: string } = {},
 ): Promise<ExecResult> {
   const result = await execNoThrow(command, args, options);
 
