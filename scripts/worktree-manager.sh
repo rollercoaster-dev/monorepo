@@ -12,6 +12,10 @@ WORKTREE_BASE="$REPO_ROOT/.worktrees"
 STATE_FILE="$WORKTREE_BASE/.state.json"
 CHECKPOINT_VERSION="1.0"
 
+# Claude Knowledge CLI for state management
+CLI_CMD="bun $REPO_ROOT/packages/claude-knowledge/src/cli.ts"
+MILESTONE_ID_FILE="$WORKTREE_BASE/.milestone_id"
+
 # Default timeouts and retry settings
 CI_POLL_TIMEOUT=${CI_POLL_TIMEOUT:-1800}  # 30 minutes
 CI_POLL_INTERVAL=${CI_POLL_INTERVAL:-30}  # 30 seconds base interval
@@ -34,6 +38,62 @@ log_success() { echo -e "${GREEN}[worktree]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[worktree]${NC} $1"; }
 # log_error prints an error message prefixed with "[worktree]" in red.
 log_error() { echo -e "${RED}[worktree]${NC} $1"; }
+
+#------------------------------------------------------------------------------
+# CLI Helper Functions
+
+# cli_call executes a CLI command with error handling and logging
+cli_call() {
+  local output
+  if ! output=$($CLI_CMD "$@" 2>&1); then
+    log_error "CLI command failed: $CLI_CMD $*"
+    log_error "Error: $output"
+    return 1
+  fi
+  echo "$output"
+}
+
+# get_milestone_id retrieves the cached milestone ID from file
+get_milestone_id() {
+  if [[ -f "$MILESTONE_ID_FILE" ]]; then
+    cat "$MILESTONE_ID_FILE"
+  else
+    log_error "No milestone ID found. Run preflight first."
+    exit 1
+  fi
+}
+
+# get_or_create_milestone finds or creates a milestone and caches its ID
+get_or_create_milestone() {
+  local milestone_name=$1
+  local github_number=${2:-""}
+
+  # Try to find existing milestone
+  local result
+  result=$(cli_call milestone find "$milestone_name" 2>/dev/null || echo '{}')
+  local milestone_id
+  milestone_id=$(echo "$result" | jq -r '.milestone.id // empty')
+
+  if [[ -z "$milestone_id" ]]; then
+    # Create new milestone
+    log_info "Creating milestone: $milestone_name"
+    if [[ -n "$github_number" ]]; then
+      result=$(cli_call milestone create "$milestone_name" "$github_number")
+    else
+      result=$(cli_call milestone create "$milestone_name")
+    fi
+    milestone_id=$(echo "$result" | jq -r '.milestone.id')
+  else
+    log_info "Found existing milestone: $milestone_name (ID: $milestone_id)"
+  fi
+
+  # Cache the milestone ID
+  echo "$milestone_id" > "$MILESTONE_ID_FILE"
+  echo "$milestone_id"
+}
+
+#------------------------------------------------------------------------------
+# Prerequisite Checks
 
 # check_prerequisites verifies that required CLI tools (git, gh, jq, bun) are available.
 # Exits with error if any are missing.
