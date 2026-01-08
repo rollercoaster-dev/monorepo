@@ -3,14 +3,25 @@
 # Worktree Manager for /auto-milestone
 # Manages git worktrees for parallel issue development
 #
+# MIGRATION NOTE (v2.0):
+# This script now uses claude-knowledge SQLite for state management.
+# Legacy .worktrees/.state.json files are no longer created or read.
+# State is persisted in ~/.claude/state/checkpoint.db via the CLI.
+#
+# Dependencies:
+# - git, gh, jq, bun (required)
+# - packages/claude-knowledge CLI (for state management)
+#
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKTREE_BASE="$REPO_ROOT/.worktrees"
-STATE_FILE="$WORKTREE_BASE/.state.json"
-CHECKPOINT_VERSION="1.0"
+
+# Claude Knowledge CLI for state management
+CLI_CMD="bun $REPO_ROOT/packages/claude-knowledge/src/cli.ts"
+MILESTONE_ID_FILE="$WORKTREE_BASE/.milestone_id"
 
 # Default timeouts and retry settings
 CI_POLL_TIMEOUT=${CI_POLL_TIMEOUT:-1800}  # 30 minutes
@@ -35,6 +46,62 @@ log_warn() { echo -e "${YELLOW}[worktree]${NC} $1"; }
 # log_error prints an error message prefixed with "[worktree]" in red.
 log_error() { echo -e "${RED}[worktree]${NC} $1"; }
 
+#------------------------------------------------------------------------------
+# CLI Helper Functions
+
+# cli_call executes a CLI command with error handling and logging
+cli_call() {
+  local output
+  if ! output=$($CLI_CMD "$@" 2>&1); then
+    log_error "CLI command failed: $CLI_CMD $*"
+    log_error "Error: $output"
+    return 1
+  fi
+  echo "$output"
+}
+
+# get_milestone_id retrieves the cached milestone ID from file
+get_milestone_id() {
+  if [[ -f "$MILESTONE_ID_FILE" ]]; then
+    cat "$MILESTONE_ID_FILE"
+  else
+    log_error "No milestone ID found. Run preflight first."
+    exit 1
+  fi
+}
+
+# get_or_create_milestone finds or creates a milestone and caches its ID
+get_or_create_milestone() {
+  local milestone_name=$1
+  local github_number=${2:-""}
+
+  # Try to find existing milestone
+  local result
+  result=$(cli_call milestone find "$milestone_name" 2>/dev/null || echo '{}')
+  local milestone_id
+  milestone_id=$(echo "$result" | jq -r '.milestone.id // empty')
+
+  if [[ -z "$milestone_id" ]]; then
+    # Create new milestone
+    log_info "Creating milestone: $milestone_name"
+    if [[ -n "$github_number" ]]; then
+      result=$(cli_call milestone create "$milestone_name" "$github_number")
+    else
+      result=$(cli_call milestone create "$milestone_name")
+    fi
+    milestone_id=$(echo "$result" | jq -r '.milestone.id')
+  else
+    log_info "Found existing milestone: $milestone_name (ID: $milestone_id)"
+  fi
+
+  # Cache the milestone ID
+  echo "$milestone_id" > "$MILESTONE_ID_FILE"
+  echo "$milestone_id"
+}
+
+#------------------------------------------------------------------------------
+# Prerequisite Checks
+
 # check_prerequisites verifies that required CLI tools (git, gh, jq, bun) are available.
 # Exits with error if any are missing.
 check_prerequisites() {
@@ -53,12 +120,10 @@ check_prerequisites() {
   fi
 }
 
-# ensure_base_dir ensures the worktree base directory exists and initializes the state file if missing.
-# If created, writes an initial '{"worktrees":{}}' object to $STATE_FILE.
+# ensure_base_dir ensures the worktree base directory exists
 ensure_base_dir() {
   if [[ ! -d "$WORKTREE_BASE" ]]; then
     mkdir -p "$WORKTREE_BASE"
-    echo '{"worktrees":{}}' > "$STATE_FILE"
     log_info "Created worktree base directory: $WORKTREE_BASE"
   fi
 }
@@ -69,7 +134,7 @@ get_worktree_path() {
   echo "$WORKTREE_BASE/issue-$issue_number"
 }
 
-# update_state updates the persistent state file (.worktrees/.state.json) for the given issue with the provided status, optional branch and PR number, and records the current timestamp.
+# update_state creates or updates a workflow using the CLI
 update_state() {
   local issue_number=$1
   local status=$2
@@ -78,50 +143,112 @@ update_state() {
 
   ensure_base_dir
 
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg issue "$issue_number" \
-     --arg status "$status" \
-     --arg branch "$branch" \
-     --arg pr "$pr_number" \
-     --arg timestamp "$(date -Iseconds)" \
-     '.worktrees[$issue] = {status: $status, branch: $branch, pr: $pr, updated: $timestamp}' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  # Find or create workflow
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  local workflow_id
+  workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+  if [[ -z "$workflow_id" ]]; then
+    # Create new workflow
+    local worktree_path
+    worktree_path=$(get_worktree_path "$issue_number")
+    result=$(cli_call workflow create "$issue_number" "$branch" "$worktree_path")
+    workflow_id=$(echo "$result" | jq -r '.workflow.id')
+  fi
+
+  # Update status
+  cli_call workflow set-status "$workflow_id" "$status" > /dev/null
+
+  # Log PR number if provided (store as metadata)
+  if [[ -n "$pr_number" ]]; then
+    cli_call workflow log-action "$workflow_id" "pr-created" "success" "{\"pr\": \"$pr_number\"}" > /dev/null
+  fi
 }
 
-# remove_from_state removes the worktree entry for the given issue number from the persistent state file.
+# remove_from_state deletes a workflow using the CLI
 remove_from_state() {
   local issue_number=$1
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg issue "$issue_number" 'del(.worktrees[$issue])' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+
+  # Find workflow
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  local workflow_id
+  workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+  # Delete if exists
+  if [[ -n "$workflow_id" ]]; then
+    cli_call workflow delete "$workflow_id" > /dev/null
+  fi
 }
 
-# set_milestone_field sets a top-level field in the state file (for milestone metadata).
+# set_milestone_field sets a milestone field using the CLI
 set_milestone_field() {
   local field=$1
   local value=$2
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg field "$field" --arg value "$value" '.[$field] = $value' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  local milestone_id
+  milestone_id=$(get_milestone_id)
+
+  case "$field" in
+    phase)
+      cli_call milestone set-phase "$milestone_id" "$value" > /dev/null
+      ;;
+    milestone_status|status)
+      cli_call milestone set-status "$milestone_id" "$value" > /dev/null
+      ;;
+    milestone|started|integration_test_status|integration_test_timestamp)
+      # These fields are stored as metadata in milestone
+      # For now, we'll skip updating these via set-milestone-field
+      # They are handled differently (milestone name is set at creation, etc.)
+      log_warn "Field '$field' cannot be updated via set_milestone_field (use CLI directly or it's read-only)"
+      ;;
+    *)
+      log_warn "Unsupported milestone field: $field"
+      ;;
+  esac
 }
 
-# set_milestone_object sets a top-level object field in the state file.
-set_milestone_object() {
-  local field=$1
-  local json_value=$2
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg field "$field" --argjson value "$json_value" '.[$field] = $value' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
-}
-
-# get_milestone_field retrieves a top-level field from the state file.
+# get_milestone_field retrieves a milestone field using the CLI
 get_milestone_field() {
   local field=$1
-  jq -r --arg field "$field" '.[$field] // ""' "$STATE_FILE" 2>/dev/null
+  local milestone_id
+  milestone_id=$(get_milestone_id)
+
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id")
+
+  case "$field" in
+    milestone)
+      echo "$milestone_data" | jq -r '.milestone.name // ""'
+      ;;
+    phase)
+      echo "$milestone_data" | jq -r '.milestone.phase // ""'
+      ;;
+    milestone_status|status)
+      echo "$milestone_data" | jq -r '.milestone.status // ""'
+      ;;
+    started)
+      echo "$milestone_data" | jq -r '.milestone.createdAt // ""'
+      ;;
+    checkpoint_version)
+      # Hardcoded for now - checkpoint version is implicit in CLI
+      echo "2.0"
+      ;;
+    checkpoint_description|checkpoint_timestamp)
+      # These are now stored differently in CLI (via log-action)
+      # For backward compat, return empty
+      echo ""
+      ;;
+    integration_test_status|integration_test_timestamp)
+      # These would need to be stored as milestone metadata or workflow actions
+      # For now return empty (will be handled in integration-test command)
+      echo ""
+      ;;
+    *)
+      log_warn "Unknown milestone field: $field"
+      echo ""
+      ;;
+  esac
 }
 
 #------------------------------------------------------------------------------
@@ -172,7 +299,7 @@ cmd_create() {
   log_info "Installing dependencies in worktree..."
   (cd "$worktree_path" && bun install --silent)
 
-  update_state "$issue_number" "created" "$branch_name"
+  update_state "$issue_number" "running" "$branch_name"
 
   log_success "Created worktree for issue #$issue_number"
   echo "  Path: $worktree_path"
@@ -225,10 +352,14 @@ cmd_list() {
   git -C "$REPO_ROOT" worktree list
   echo ""
 
-  if [[ -f "$STATE_FILE" ]]; then
+  # Show tracked state from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  if [[ "$workflows" != "[]" ]] && [[ $(echo "$workflows" | jq 'length') -gt 0 ]]; then
     echo "Tracked State:"
     echo "─────────────────────────────────────────────────────────────"
-    jq -r '.worktrees | to_entries[] | "Issue #\(.key): \(.value.status) (\(.value.branch // "no branch"))"' "$STATE_FILE" 2>/dev/null || echo "  (none)"
+    echo "$workflows" | jq -r '.[] | "Issue #\(.issueNumber): \(.status) (\(.branch // "no branch"))"' 2>/dev/null || echo "  (none)"
     echo ""
   fi
 }
@@ -243,7 +374,11 @@ cmd_status() {
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
 
-  if [[ ! -f "$STATE_FILE" ]] || [[ $(jq '.worktrees | length' "$STATE_FILE") -eq 0 ]]; then
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  if [[ "$workflows" == "[]" ]] || [[ $(echo "$workflows" | jq 'length') -eq 0 ]]; then
     echo "  No active worktrees"
     echo ""
     return
@@ -253,10 +388,17 @@ cmd_status() {
   printf "  %-8s %-15s %-35s %s\n" "Issue" "Status" "Branch" "PR"
   echo "  ──────── ─────────────── ─────────────────────────────────── ────"
 
-  jq -r '.worktrees | to_entries[] | [.key, .value.status, .value.branch, .value.pr] | @tsv' "$STATE_FILE" | \
-  while IFS=$'\t' read -r issue status branch pr; do
-    pr_display=${pr:-"-"}
+  # Display each workflow
+  echo "$workflows" | jq -r '.[] | [.issueNumber, .status, .branch, ""] | @tsv' | \
+  while IFS=$'\t' read -r issue status branch pr_placeholder; do
+    # Try to get PR number from workflow actions
+    local workflow_data pr_number
+    workflow_data=$(cli_call workflow find "$issue" 2>/dev/null || echo '{}')
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    pr_display=${pr_number:-"-"}
     branch_display=${branch:-"-"}
+
     # Truncate branch if too long
     if [[ ${#branch_display} -gt 35 ]]; then
       branch_display="${branch_display:0:32}..."
@@ -280,43 +422,69 @@ cmd_update_status() {
 
   ensure_base_dir
 
-  local current_branch
-  current_branch=$(jq -r --arg issue "$issue_number" '.worktrees[$issue].branch // ""' "$STATE_FILE")
+  # Get current branch from CLI or worktree
+  local current_branch=""
+  local result
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  current_branch=$(echo "$result" | jq -r '.workflow.branch // ""')
+
+  if [[ -z "$current_branch" ]]; then
+    # Fallback: get from git worktree
+    local worktree_path
+    worktree_path=$(get_worktree_path "$issue_number")
+    if [[ -d "$worktree_path" ]]; then
+      current_branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
+    fi
+  fi
+
   update_state "$issue_number" "$new_status" "$current_branch" "$pr_number"
 
   log_success "Updated issue #$issue_number status to: $new_status"
 }
 
-# cmd_sync syncs the persisted worktree state with the repository's actual git worktrees by removing state entries for missing worktrees and adding any untracked worktrees.
+# cmd_sync syncs CLI workflow state with actual git worktrees
 cmd_sync() {
   log_info "Syncing worktree state with git..."
 
   ensure_base_dir
 
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  # Remove workflows for worktrees that no longer exist
+  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+    local issue_number worktree_path
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+    worktree_path=$(get_worktree_path "$issue_number")
+
+    if [[ ! -d "$worktree_path" ]]; then
+      log_warn "Worktree for issue #$issue_number no longer exists, removing from state"
+      remove_from_state "$issue_number"
+    fi
+  done
+
   # Get list of actual git worktrees
   local actual_worktrees
   actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep ".worktrees/issue-" | sed 's/worktree //')
 
-  # Remove stale entries from state (worktrees that no longer exist)
-  jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null | while read -r issue; do
-    local expected_path
-    expected_path=$(get_worktree_path "$issue")
-    if [[ ! -d "$expected_path" ]]; then
-      log_warn "Worktree for issue #$issue no longer exists, removing from state"
-      remove_from_state "$issue"
-    fi
-  done
-
-  # Add untracked worktrees to state (worktrees that exist but aren't tracked)
+  # Add untracked worktrees to state
   while read -r worktree_path; do
     if [[ -n "$worktree_path" ]]; then
       local issue_number
       issue_number=$(basename "$worktree_path" | sed 's/issue-//')
-      if ! jq -e --arg issue "$issue_number" '.worktrees[$issue]' "$STATE_FILE" &> /dev/null; then
+
+      # Check if workflow exists
+      local result
+      result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+      local workflow_id
+      workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
+
+      if [[ -z "$workflow_id" ]]; then
         log_info "Found untracked worktree for issue #$issue_number, adding to state"
         local branch
         branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
-        update_state "$issue_number" "created" "$branch"
+        update_state "$issue_number" "running" "$branch"
       fi
     fi
   done <<< "$actual_worktrees"
@@ -339,8 +507,12 @@ cmd_cleanup_all() {
 
   ensure_base_dir
 
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
   local worktree_count
-  worktree_count=$(jq '.worktrees | length' "$STATE_FILE" 2>/dev/null || echo "0")
+  worktree_count=$(echo "$workflows" | jq 'length')
 
   if [[ "$worktree_count" -eq 0 ]]; then
     log_info "No worktrees to remove"
@@ -349,7 +521,7 @@ cmd_cleanup_all() {
 
   if [[ "$dry_run_flag" == "--dry-run" ]]; then
     log_info "Dry run - would remove $worktree_count worktree(s):"
-    jq -r '.worktrees | keys[] | "  - Issue #\(.)"' "$STATE_FILE" 2>/dev/null
+    echo "$workflows" | jq -r '.[] | "  - Issue #\(.issueNumber)"'
     exit 0
   fi
 
@@ -369,7 +541,7 @@ cmd_cleanup_all() {
     if ! cmd_remove "$issue"; then
       ((failed_count++)) || true
     fi
-  done < <(jq -r '.worktrees | keys[]' "$STATE_FILE" 2>/dev/null)
+  done < <(echo "$workflows" | jq -r '.[] | .issueNumber')
 
   if [[ $failed_count -gt 0 ]]; then
     log_warn "Cleanup completed with $failed_count failure(s)"
@@ -439,65 +611,71 @@ cmd_checkpoint() {
 
   ensure_base_dir
 
-  local checkpoint_timestamp
-  checkpoint_timestamp=$(date -Iseconds)
+  local milestone_id
+  milestone_id=$(get_milestone_id)
 
-  # Collect current PR statuses
-  local pr_statuses="{}"
-  local pr_list
-  pr_list=$(jq -r '.worktrees | to_entries[] | select(.value.pr != "" and .value.pr != null) | .value.pr' "$STATE_FILE" 2>/dev/null || echo "")
-
-  if [[ -n "$pr_list" ]]; then
-    for pr in $pr_list; do
-      local pr_state
-      pr_state=$(gh pr view "$pr" --json state,mergeable,reviews,statusCheckRollup 2>/dev/null || echo '{}')
-      # Validate JSON before using with --argjson
-      if ! echo "$pr_state" | jq empty 2>/dev/null; then
-        pr_state='{}'
-      fi
-      pr_statuses=$(echo "$pr_statuses" | jq --arg pr "$pr" --argjson state "$pr_state" '.[$pr] = $state')
-    done
+  # Update milestone phase
+  if [[ -n "$phase" ]]; then
+    cli_call milestone set-phase "$milestone_id" "$phase" > /dev/null
   fi
 
-  # Update state with checkpoint info
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg version "$CHECKPOINT_VERSION" \
-     --arg phase "$phase" \
-     --arg description "$description" \
-     --arg timestamp "$checkpoint_timestamp" \
-     --argjson pr_statuses "$pr_statuses" \
-     '. + {
-       checkpoint_version: $version,
-       phase: $phase,
-       checkpoint_description: $description,
-       checkpoint_timestamp: $timestamp,
-       pr_statuses: $pr_statuses
-     }' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  # Log checkpoint action for each active workflow
+  local workflows pr_count
+  workflows=$(cli_call workflow list-active)
+  pr_count=0
+
+  # Process each workflow to log checkpoint action with PR status
+  # Use process substitution to avoid subshell variable scope issue
+  while read -r workflow; do
+    local workflow_id issue_number
+    workflow_id=$(echo "$workflow" | jq -r '.id')
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+
+    # Try to get PR number from recent actions
+    local workflow_data pr_number
+    workflow_data=$(cli_call workflow get "$workflow_id")
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    if [[ -n "$pr_number" ]]; then
+      # Get PR status from GitHub
+      local pr_state
+      pr_state=$(gh pr view "$pr_number" --json state,mergeable,reviews,statusCheckRollup 2>/dev/null || echo '{}')
+
+      # Validate JSON before logging
+      if echo "$pr_state" | jq empty 2>/dev/null; then
+        local metadata
+        metadata=$(jq -n --arg desc "$description" --argjson pr_state "$pr_state" \
+          '{description: $desc, pr_state: $pr_state}')
+        cli_call workflow log-action "$workflow_id" "checkpoint" "success" "$metadata" > /dev/null
+        ((pr_count++)) || true
+      fi
+    fi
+  done < <(echo "$workflows" | jq -c '.[]')
 
   log_success "Checkpoint saved at phase: ${phase:-unspecified}"
-  echo "  Timestamp: $checkpoint_timestamp"
+  echo "  Timestamp: $(date -Iseconds)"
   echo "  Description: $description"
-  echo "  PRs tracked: $(echo "$pr_list" | wc -w | tr -d ' ')"
+  echo "  PRs tracked: $pr_count"
 }
 
 # cmd_resume displays checkpoint info and allows resuming from saved state.
 cmd_resume() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_error "No state file found. Nothing to resume."
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_error "No milestone found. Run preflight first."
     exit 1
   fi
 
-  local checkpoint_version
-  checkpoint_version=$(get_milestone_field "checkpoint_version")
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
 
-  if [[ -z "$checkpoint_version" ]]; then
-    log_warn "No checkpoint found in state file."
-    log_info "Current worktrees:"
-    cmd_status
-    exit 0
+  if [[ "$milestone_data" == "{}" ]]; then
+    log_error "No checkpoint found. Nothing to resume."
+    exit 1
   fi
 
   echo ""
@@ -506,27 +684,30 @@ cmd_resume() {
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
 
-  local milestone phase description timestamp
-  milestone=$(get_milestone_field "milestone")
-  phase=$(get_milestone_field "phase")
-  description=$(get_milestone_field "checkpoint_description")
-  timestamp=$(get_milestone_field "checkpoint_timestamp")
+  local milestone phase status created updated
+  milestone=$(echo "$milestone_data" | jq -r '.milestone.name // "unknown"')
+  phase=$(echo "$milestone_data" | jq -r '.milestone.phase // "unknown"')
+  status=$(echo "$milestone_data" | jq -r '.milestone.status // "unknown"')
+  created=$(echo "$milestone_data" | jq -r '.milestone.createdAt // "unknown"')
+  updated=$(echo "$milestone_data" | jq -r '.milestone.updatedAt // "unknown"')
 
-  printf "  %-18s %s\n" "Milestone:" "${milestone:-unknown}"
-  printf "  %-18s %s\n" "Phase:" "${phase:-unknown}"
-  printf "  %-18s %s\n" "Description:" "${description:-none}"
-  printf "  %-18s %s\n" "Timestamp:" "${timestamp:-unknown}"
-  printf "  %-18s %s\n" "Version:" "$checkpoint_version"
+  printf "  %-18s %s\n" "Milestone:" "$milestone"
+  printf "  %-18s %s\n" "Phase:" "$phase"
+  printf "  %-18s %s\n" "Status:" "$status"
+  printf "  %-18s %s\n" "Created:" "$created"
+  printf "  %-18s %s\n" "Updated:" "$updated"
+  printf "  %-18s %s\n" "Version:" "2.0"
   echo ""
 
   # Show worktree status
   cmd_status
 
-  # Show pending work
-  local completed_count failed_count pending_count
-  completed_count=$(jq '[.worktrees | to_entries[] | select(.value.status == "merged")] | length' "$STATE_FILE")
-  failed_count=$(jq '[.worktrees | to_entries[] | select(.value.status == "failed")] | length' "$STATE_FILE")
-  pending_count=$(jq '[.worktrees | to_entries[] | select(.value.status != "merged" and .value.status != "failed")] | length' "$STATE_FILE")
+  # Show pending work from workflows
+  local workflows completed_count failed_count pending_count
+  workflows=$(echo "$milestone_data" | jq -r '.workflows // []')
+  completed_count=$(echo "$workflows" | jq '[.[] | select(.status == "completed")] | length')
+  failed_count=$(echo "$workflows" | jq '[.[] | select(.status == "failed")] | length')
+  pending_count=$(echo "$workflows" | jq '[.[] | select(.status != "completed" and .status != "failed")] | length')
 
   echo "Summary:"
   printf "  %-18s %d\n" "Completed:" "$completed_count"
@@ -534,13 +715,12 @@ cmd_resume() {
   printf "  %-18s %d\n" "Pending:" "$pending_count"
   echo ""
 
-  log_info "To continue from this checkpoint, resume your workflow at phase: ${phase:-unknown}"
+  log_info "To continue from this checkpoint, resume your workflow at phase: $phase"
 }
 
-# cmd_state_path prints the path to the state file.
+# cmd_state_path prints the path to the SQLite database
 cmd_state_path() {
-  ensure_base_dir
-  echo "$STATE_FILE"
+  echo "$HOME/.claude/state/checkpoint.db"
 }
 
 # cmd_preflight runs lint and type-check on main to establish a baseline of pre-existing issues.
@@ -610,22 +790,13 @@ cmd_preflight() {
   lint_errors=$(echo "$lint_output" | grep -c "error" || echo "0")
   typecheck_errors=$(echo "$typecheck_output" | grep -c "error" || echo "0")
 
-  # Save baseline to state
-  local baseline_json
-  baseline_json=$(jq -n \
-    --arg timestamp "$(date -Iseconds)" \
-    --argjson lint_exit "$lint_exit_code" \
-    --argjson typecheck_exit "$typecheck_exit_code" \
-    --argjson lint_warnings "$lint_warnings" \
-    --argjson lint_errors "$lint_errors" \
-    --argjson typecheck_errors "$typecheck_errors" \
-    '{
-      captured_at: $timestamp,
-      lint: { exit_code: $lint_exit, warnings: $lint_warnings, errors: $lint_errors },
-      typecheck: { exit_code: $typecheck_exit, errors: $typecheck_errors }
-    }')
+  # Save baseline to CLI (create milestone if needed)
+  local milestone_id
+  milestone_id=$(get_or_create_milestone "current")
 
-  set_milestone_object "baseline" "$baseline_json"
+  cli_call baseline save "$milestone_id" \
+    "$lint_exit_code" "$lint_warnings" "$lint_errors" \
+    "$typecheck_exit_code" "$typecheck_errors" > /dev/null
 
   echo ""
   echo "┌─────────────────────────────────────────────────────────────┐"
@@ -831,45 +1002,55 @@ cmd_integration_test() {
 cmd_summary() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_error "No state file found."
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_error "No milestone found. Run preflight first."
     exit 1
   fi
 
+  # Get milestone data from CLI
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id")
+
   local milestone started
-  milestone=$(get_milestone_field "milestone")
-  started=$(get_milestone_field "started")
+  milestone=$(echo "$milestone_data" | jq -r '.milestone.name // "unknown"')
+  started=$(echo "$milestone_data" | jq -r '.milestone.createdAt // "unknown"')
 
   echo ""
   echo "═══════════════════════════════════════════════════════════════"
   echo "                    MILESTONE SUMMARY                          "
   echo "═══════════════════════════════════════════════════════════════"
   echo ""
-  printf "  %-18s %s\n" "Milestone:" "${milestone:-unknown}"
-  printf "  %-18s %s\n" "Started:" "${started:-unknown}"
+  printf "  %-18s %s\n" "Milestone:" "$milestone"
+  printf "  %-18s %s\n" "Started:" "$started"
   printf "  %-18s %s\n" "Completed:" "$(date -Iseconds)"
   echo ""
 
-  # Count by status
-  local total merged failed pr_created other
-  total=$(jq '.worktrees | length' "$STATE_FILE")
-  merged=$(jq '[.worktrees | to_entries[] | select(.value.status == "merged")] | length' "$STATE_FILE")
-  failed=$(jq '[.worktrees | to_entries[] | select(.value.status == "failed")] | length' "$STATE_FILE")
-  pr_created=$(jq '[.worktrees | to_entries[] | select(.value.status == "pr-created")] | length' "$STATE_FILE")
-  other=$((total - merged - failed - pr_created))
+  # Count by status from workflows
+  local workflows
+  workflows=$(echo "$milestone_data" | jq -r '.workflows // []')
+
+  local total completed failed running other
+  total=$(echo "$workflows" | jq 'length')
+  completed=$(echo "$workflows" | jq '[.[] | select(.status == "completed")] | length')
+  failed=$(echo "$workflows" | jq '[.[] | select(.status == "failed")] | length')
+  running=$(echo "$workflows" | jq '[.[] | select(.status == "running")] | length')
+  other=$((total - completed - failed - running))
 
   echo "┌─────────────────────────────────────────────────────────────┐"
   echo "│                      Issues Summary                         │"
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
   printf "  %-20s %d\n" "Total issues:" "$total"
-  printf "  %-20s %d\n" "Merged:" "$merged"
-  printf "  %-20s %d\n" "PRs awaiting merge:" "$pr_created"
+  printf "  %-20s %d\n" "Completed:" "$completed"
+  printf "  %-20s %d\n" "Running:" "$running"
   printf "  %-20s %d\n" "Failed:" "$failed"
   printf "  %-20s %d\n" "Other:" "$other"
   echo ""
 
-  # List merged PRs
+  # List workflows with PRs
   echo "┌─────────────────────────────────────────────────────────────┐"
   echo "│                    PRs Created/Merged                       │"
   echo "└─────────────────────────────────────────────────────────────┘"
@@ -877,18 +1058,29 @@ cmd_summary() {
   printf "  %-8s %-8s %-12s %s\n" "Issue" "PR" "Status" "Branch"
   echo "  ──────── ──────── ──────────── ────────────────────────────────"
 
-  jq -r '.worktrees | to_entries[] | select(.value.pr != "" and .value.pr != null) | [.key, .value.pr, .value.status, .value.branch] | @tsv' "$STATE_FILE" | \
-  while IFS=$'\t' read -r issue pr status branch; do
-    branch_short="${branch:0:30}"
-    [[ ${#branch} -gt 30 ]] && branch_short="${branch_short}..."
-    printf "  #%-7s #%-7s %-12s %s\n" "$issue" "$pr" "$status" "$branch_short"
+  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+    local issue_number status branch pr_number
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+    status=$(echo "$workflow" | jq -r '.status')
+    branch=$(echo "$workflow" | jq -r '.branch // ""')
+
+    # Get PR number from actions
+    local workflow_data
+    workflow_data=$(cli_call workflow get "$(echo "$workflow" | jq -r '.id')")
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    if [[ -n "$pr_number" ]]; then
+      branch_short="${branch:0:30}"
+      [[ ${#branch} -gt 30 ]] && branch_short="${branch_short}..."
+      printf "  #%-7s #%-7s %-12s %s\n" "$issue_number" "$pr_number" "$status" "$branch_short"
+    fi
   done
 
   echo ""
 
   # List failed issues
   local failed_issues
-  failed_issues=$(jq -r '.worktrees | to_entries[] | select(.value.status == "failed") | "#\(.key)"' "$STATE_FILE" | tr '\n' ' ')
+  failed_issues=$(echo "$workflows" | jq -r '.[] | select(.status == "failed") | "#\(.issueNumber)"' | tr '\n' ' ')
   if [[ -n "$failed_issues" ]]; then
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                 Issues Requiring Attention                  │"
@@ -913,76 +1105,71 @@ cmd_summary() {
     echo ""
   fi
 
-  # Baseline comparison (only show if baseline was captured)
-  local has_baseline
-  has_baseline=$(jq 'has("baseline") and .baseline != null' "$STATE_FILE")
+  # Baseline comparison (only show if baseline exists in CLI)
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
 
-  if [[ "$has_baseline" == "true" ]]; then
-    local baseline_lint_errors baseline_typecheck_errors
-    baseline_lint_errors=$(jq '.baseline.lint.errors // 0' "$STATE_FILE")
-    baseline_typecheck_errors=$(jq '.baseline.typecheck.errors // 0' "$STATE_FILE")
-    echo "┌─────────────────────────────────────────────────────────────┐"
-    echo "│                    Baseline Comparison                      │"
-    echo "└─────────────────────────────────────────────────────────────┘"
-    echo ""
-    printf "  %-25s %s\n" "Pre-existing lint errors:" "${baseline_lint_errors:-0}"
-    printf "  %-25s %s\n" "Pre-existing type errors:" "${baseline_typecheck_errors:-0}"
-    echo ""
+  if [[ -n "$milestone_id" ]]; then
+    local milestone_data baseline_data
+    milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
+    baseline_data=$(echo "$milestone_data" | jq '.baseline // null')
+
+    if [[ "$baseline_data" != "null" ]]; then
+      local baseline_lint_errors baseline_typecheck_errors
+      baseline_lint_errors=$(echo "$baseline_data" | jq -r '.lintErrors // 0')
+      baseline_typecheck_errors=$(echo "$baseline_data" | jq -r '.typecheckErrors // 0')
+      echo "┌─────────────────────────────────────────────────────────────┐"
+      echo "│                    Baseline Comparison                      │"
+      echo "└─────────────────────────────────────────────────────────────┘"
+      echo ""
+      printf "  %-25s %s\n" "Pre-existing lint errors:" "${baseline_lint_errors:-0}"
+      printf "  %-25s %s\n" "Pre-existing type errors:" "${baseline_typecheck_errors:-0}"
+      echo ""
+    fi
   fi
 
   echo "═══════════════════════════════════════════════════════════════"
 }
 
-# cmd_validate_state validates and optionally migrates the state file schema.
+# cmd_validate_state validates SQLite state and syncs with git worktrees
 cmd_validate_state() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_info "No state file exists. Creating fresh state."
-    echo '{"worktrees":{}}' > "$STATE_FILE"
+  log_info "Validating SQLite state..."
+
+  # Check if milestone exists
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_warn "No milestone ID found. Run preflight to initialize."
     return 0
   fi
 
-  log_info "Validating state file..."
-
-  # Check if valid JSON
-  if ! jq empty "$STATE_FILE" 2>/dev/null; then
-    log_error "State file is not valid JSON!"
-    log_warn "Creating backup and resetting state..."
-    cp "$STATE_FILE" "$STATE_FILE.backup.$(date +%s)"
-    echo '{"worktrees":{}}' > "$STATE_FILE"
+  # Validate milestone exists in SQLite
+  local milestone_data
+  if ! milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null); then
+    log_error "Milestone ID $milestone_id not found in SQLite!"
+    log_warn "Clearing stale milestone ID file..."
+    rm -f "$MILESTONE_ID_FILE"
     return 1
   fi
 
-  # Check for required fields
-  local has_worktrees
-  has_worktrees=$(jq 'has("worktrees")' "$STATE_FILE")
-
-  if [[ "$has_worktrees" != "true" ]]; then
-    log_warn "State file missing 'worktrees' field. Adding..."
-    local tmp_file
-    tmp_file=$(mktemp)
-    jq '. + {worktrees: {}}' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
-  fi
-
-  # Check and set checkpoint version if missing
-  local version
-  version=$(get_milestone_field "checkpoint_version")
-  if [[ -z "$version" ]]; then
-    log_info "Adding checkpoint version to state file..."
-    set_milestone_field "checkpoint_version" "$CHECKPOINT_VERSION"
-  fi
+  log_success "Milestone validated: $(echo "$milestone_data" | jq -r '.milestone.name')"
 
   # Sync with actual worktrees
   cmd_sync
 
-  log_success "State file validation complete"
+  log_success "State validation complete"
 }
 
 # cmd_help prints the usage message and a list of available commands, status values, and examples for the worktree-manager script.
 cmd_help() {
   cat << 'EOF'
-Worktree Manager for /auto-milestone
+Worktree Manager for /auto-milestone (v2.0)
+
+State Management: SQLite-backed via claude-knowledge CLI
+Database: ~/.claude/state/checkpoint.db
 
 Usage: worktree-manager.sh <command> [arguments]
 
@@ -995,28 +1182,25 @@ Worktree Commands:
                             Update the status of a worktree
   path <issue>              Print the path to a worktree
   rebase <issue>            Rebase a worktree on main
-  sync                      Sync state file with actual git worktrees
+  sync                      Sync SQLite state with actual git worktrees
   cleanup-all [--force] [--dry-run]
                             Remove all worktrees (--force skips confirmation, --dry-run shows what would be removed)
 
 Milestone Commands:
   checkpoint [phase] [desc] Save milestone state for resume after context overflow
   resume                    Display checkpoint info and resume guidance
-  state-path                Print path to state file
+  state-path                Print path to SQLite database
   preflight                 Run lint/type-check baseline on main before work
   ci-status <pr> [--wait]   Check CI status for a PR (--wait blocks until complete)
   integration-test          Run full test suite on main after all merges
   summary                   Generate milestone completion summary report
-  validate-state            Validate and migrate state file schema
+  validate-state            Validate SQLite state and sync with git
 
-Status Values:
-  created       Worktree created, ready for work
-  implementing  /auto-issue running
-  pr-created    PR has been created
-  reviewing     Waiting for/handling reviews
-  ready-merge   Approved and ready to merge
-  merged        PR merged, worktree can be cleaned
-  failed        /auto-issue escalated
+Status Values (CLI):
+  running       Workflow in progress
+  paused        Temporarily paused
+  completed     Successfully finished
+  failed        Encountered errors
 
 Environment Variables:
   CI_POLL_TIMEOUT   Timeout for CI wait in seconds (default: 1800)
@@ -1026,16 +1210,26 @@ Examples:
   # Basic worktree operations
   worktree-manager.sh create 111
   worktree-manager.sh create 111 feat/my-custom-branch
-  worktree-manager.sh update-status 111 pr-created 145
+  worktree-manager.sh update-status 111 running
   worktree-manager.sh remove 111
 
   # Milestone workflow
   worktree-manager.sh preflight                    # Baseline before work
-  worktree-manager.sh checkpoint "executing" "after issue 111"
+  worktree-manager.sh checkpoint "execute" "after issue 111"
   worktree-manager.sh ci-status 145 --wait         # Wait for CI
   worktree-manager.sh integration-test             # Post-merge validation
   worktree-manager.sh summary                      # Final report
   worktree-manager.sh cleanup-all --force          # Cleanup all worktrees
+
+Migration from v1.0 (JSON):
+  Legacy .worktrees/.state.json files are no longer used.
+  State is now stored in SQLite. Run 'preflight' to initialize.
+  No automatic migration of old state - start fresh or manually port data.
+
+Troubleshooting:
+  - "No milestone ID found" → Run 'worktree-manager.sh preflight'
+  - "CLI command failed" → Check claude-knowledge package is installed
+  - Database issues → Check ~/.claude/state/checkpoint.db exists
 EOF
 }
 
