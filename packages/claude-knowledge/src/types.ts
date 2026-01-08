@@ -220,3 +220,63 @@ export interface QueryResult {
   /** Future: relevance score based on confidence and other factors */
   relevanceScore?: number;
 }
+
+// ============================================================================
+// Session Hook Types
+// ============================================================================
+
+/**
+ * Context provided to onSessionStart hook.
+ * Describes the current working environment for knowledge queries.
+ */
+export interface SessionContext {
+  /** Current working directory */
+  workingDir: string;
+  /** Current git branch name */
+  branch?: string;
+  /** Recently modified files (from git status) */
+  modifiedFiles?: string[];
+  /** Issue number parsed from branch name */
+  issueNumber?: number;
+}
+
+/**
+ * Knowledge context returned from onSessionStart hook.
+ * Contains relevant knowledge to inject into the session.
+ */
+export interface KnowledgeContext {
+  /** Relevant learnings from the knowledge graph */
+  learnings: QueryResult[];
+  /** Applicable patterns for the current code areas */
+  patterns: Pattern[];
+  /** Mistakes to avoid for the current files */
+  mistakes: Mistake[];
+  /** Formatted markdown summary for injection into context */
+  summary: string;
+}
+
+/**
+ * Summary of a session provided to onSessionEnd hook.
+ * Used to extract and store learnings from the session.
+ */
+export interface SessionSummary {
+  /** Optional checkpoint workflow ID for linking */
+  workflowId?: string;
+  /** Commits made during the session */
+  commits: Array<{ sha: string; message: string }>;
+  /** High-level actions taken during the session */
+  actions?: string[];
+  /** Files modified during the session */
+  modifiedFiles: string[];
+}
+
+/**
+ * Result from onSessionEnd hook.
+ * Reports what was captured and stored.
+ */
+export interface SessionEndResult {
+  /** Number of learnings stored */
+  learningsStored: number;
+  /** IDs of the stored learnings */
+  learningIds: string[];
+}
