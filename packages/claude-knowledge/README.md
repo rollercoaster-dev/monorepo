@@ -89,7 +89,7 @@ All data is stored in `.claude/execution-state.db` (gitignored by default).
 
 ## Architecture
 
-```
+```text
                            claude-knowledge
                                   │
               ┌───────────────────┴───────────────────┐
@@ -139,7 +139,7 @@ Knowledge is never deleted—only superseded by newer learnings.
 
 ### Workflow Lifecycle
 
-```
+```text
 create() → setPhase() → logAction/logCommit → setStatus("completed")
 ```
 
@@ -245,7 +245,7 @@ await knowledge.storePattern(
 
 #### `storeMistake(mistake: Mistake, learningId?: string)`
 
-Store a mistake and how it was fixed.
+Capture a mistake and how it was fixed.
 
 ```typescript
 await knowledge.storeMistake(
@@ -340,7 +340,7 @@ const patterns = await knowledge.getPatternsForArea("Security");
 
 ### Graph Visualization
 
-```
+```text
 (Learning)──ABOUT──>(CodeArea)<──APPLIES_TO──(Pattern)
     │                                            │
     └──IN_FILE──>(File)<──IN_FILE──(Mistake)     │
@@ -504,4 +504,4 @@ rm .claude/execution-state.db
 ### Finding Work
 
 Issues labeled `pkg:claude-knowledge`:
-https://github.com/rollercoaster-dev/monorepo/labels/pkg%3Aclaude-knowledge
+[View on GitHub](https://github.com/rollercoaster-dev/monorepo/labels/pkg%3Aclaude-knowledge)
