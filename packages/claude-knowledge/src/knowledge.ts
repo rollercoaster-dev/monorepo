@@ -455,6 +455,58 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
 }
 
 /**
+ * Get all mistakes associated with a specific file path.
+ *
+ * Useful for pre-commit checks to warn about past mistakes in files being modified.
+ *
+ * @param filePath - The file path to query mistakes for
+ * @returns Array of Mistake objects (empty if none found)
+ */
+export async function getMistakesForFile(filePath: string): Promise<Mistake[]> {
+  const db = getDatabase();
+
+  const sql = `
+    SELECT m.data
+    FROM entities m
+    JOIN relationships r ON r.from_id = m.id AND r.type = 'IN_FILE'
+    JOIN entities f ON f.id = r.to_id AND f.type = 'File'
+    WHERE m.type = 'Mistake'
+      AND json_extract(f.data, '$.path') = ?
+    ORDER BY m.created_at DESC
+  `;
+
+  const rows = db.query<{ data: string }, [string]>(sql).all(filePath);
+
+  return rows.map((row) => JSON.parse(row.data) as Mistake);
+}
+
+/**
+ * Get all patterns that apply to a specific code area.
+ *
+ * Useful for scaffolding and code generation to apply known patterns.
+ *
+ * @param codeArea - The code area name to query patterns for
+ * @returns Array of Pattern objects (empty if none found)
+ */
+export async function getPatternsForArea(codeArea: string): Promise<Pattern[]> {
+  const db = getDatabase();
+
+  const sql = `
+    SELECT p.data
+    FROM entities p
+    JOIN relationships r ON r.from_id = p.id AND r.type = 'APPLIES_TO'
+    JOIN entities ca ON ca.id = r.to_id AND ca.type = 'CodeArea'
+    WHERE p.type = 'Pattern'
+      AND json_extract(ca.data, '$.name') = ?
+    ORDER BY p.created_at DESC
+  `;
+
+  const rows = db.query<{ data: string }, [string]>(sql).all(codeArea);
+
+  return rows.map((row) => JSON.parse(row.data) as Pattern);
+}
+
+/**
  * Knowledge graph API for storing and querying learnings, patterns, and mistakes.
  */
 export const knowledge = {
@@ -462,4 +514,6 @@ export const knowledge = {
   storePattern,
   storeMistake,
   query,
+  getMistakesForFile,
+  getPatternsForArea,
 };
