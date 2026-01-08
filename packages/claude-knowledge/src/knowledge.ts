@@ -30,10 +30,18 @@ function createOrMergeEntity(
   const now = new Date().toISOString();
 
   const existing = db
-    .query<{ id: string }, [string]>("SELECT id FROM entities WHERE id = ?")
+    .query<
+      { id: string; type: string },
+      [string]
+    >("SELECT id, type FROM entities WHERE id = ?")
     .get(id);
 
   if (existing) {
+    if (existing.type !== type) {
+      throw new Error(
+        `Entity "${id}" already exists with type "${existing.type}", cannot update as "${type}"`,
+      );
+    }
     // Update existing entity
     db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
       JSON.stringify(data),

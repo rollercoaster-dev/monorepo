@@ -231,6 +231,33 @@ describe("knowledge API", () => {
       expect(data.content).toBe("Updated content");
       expect(data.confidence).toBe(0.9);
     });
+
+    test("throws error when entity ID exists with different type", async () => {
+      // Create a CodeArea entity directly
+      const db = getDatabase();
+      db.run(
+        "INSERT INTO entities (id, type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        [
+          "conflict-id",
+          "CodeArea",
+          JSON.stringify({ name: "Test Area" }),
+          new Date().toISOString(),
+          new Date().toISOString(),
+        ],
+      );
+
+      // Try to store a learning with the same ID - should fail
+      await expect(
+        knowledge.store([
+          {
+            id: "conflict-id",
+            content: "This should fail",
+          },
+        ]),
+      ).rejects.toThrow(
+        /already exists with type "CodeArea", cannot update as "Learning"/,
+      );
+    });
   });
 
   describe("storePattern()", () => {
