@@ -32,6 +32,61 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ---
 
+## MCP Integration (Telegram Notifications)
+
+This workflow supports optional Telegram notifications via the `mcp-communicator-telegram` MCP server.
+
+### MCP Tools Used
+
+| Tool                                          | Purpose              | Blocking                 |
+| --------------------------------------------- | -------------------- | ------------------------ |
+| `mcp__mcp-communicator-telegram__notify_user` | One-way notification | No                       |
+| `mcp__mcp-communicator-telegram__ask_user`    | Two-way interaction  | Yes (waits for response) |
+
+### Notification Points
+
+| Phase      | Type        | Trigger                 | Content                |
+| ---------- | ----------- | ----------------------- | ---------------------- |
+| 1→2        | notify_user | Research complete       | Dev plan path          |
+| 2→3        | notify_user | Implementation complete | Commit count           |
+| 3→4        | notify_user | Review complete         | Findings summary       |
+| Escalation | ask_user    | MAX_RETRY exceeded      | Findings + options     |
+| 4          | notify_user | PR created              | PR link, review status |
+
+### Graceful Degradation
+
+If the MCP server is unavailable:
+
+- `notify_user` calls fail silently (logged to console)
+- `ask_user` calls fall back to terminal input
+- Workflow continues without interruption
+
+```typescript
+// Helper: Send notification (non-blocking, fail-safe)
+function notifyTelegram(message: string): void {
+  try {
+    mcp__mcp - communicator - telegram__notify_user({ message });
+  } catch {
+    console.log("[AUTO-ISSUE] (Telegram unavailable - continuing)");
+  }
+}
+
+// Helper: Ask user with fallback (blocking)
+async function askTelegram(question: string): Promise<string> {
+  try {
+    return (await mcp__mcp) - communicator - telegram__ask_user({ question });
+  } catch {
+    console.log(
+      "[AUTO-ISSUE] (Telegram unavailable - waiting for terminal input)",
+    );
+    // Fall back to terminal - workflow will wait for user input in chat
+    return "TELEGRAM_UNAVAILABLE";
+  }
+}
+```
+
+---
+
 ## Checkpoint Integration
 
 This workflow uses `claude-knowledge` checkpoint API to persist state across context compactions.
@@ -274,7 +329,13 @@ update_board_status() {
       devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`
     });
     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement`);
-    ```
+
+    // Telegram notification (non-blocking)
+    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement
+
+Dev plan created at .claude/dev-plans/issue-$ARGUMENTS.md
+Starting implementation...`);
+```
 
 ---
 
@@ -315,7 +376,13 @@ update_board_status() {
       commitCount: $COMMIT_COUNT  // Number of commits from atomic-developer
     });
     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review`);
-    ```
+
+    // Telegram notification (non-blocking)
+    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review
+
+Implementation complete: ${$COMMIT_COUNT} commits
+Starting code review...`);
+```
 
 ---
 
@@ -421,7 +488,14 @@ else:
        retryCount: $RETRY_COUNT
      });
      console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize`);
-     ```
+
+     // Telegram notification (non-blocking)
+     notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize
+
+Review complete: ${$CRITICAL_RESOLVED} critical issues resolved
+Fix commits: ${$FIX_COMMIT_COUNT}
+Creating PR...`);
+```
 
 ---
 
@@ -475,7 +549,16 @@ else:
        branch: branchName
      });
      console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
-     ```
+
+     // Telegram notification (non-blocking)
+     notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] ✅ PR Created!
+
+PR #${PR_NUMBER}: <title>
+https://github.com/rollercoaster-dev/monorepo/pull/${PR_NUMBER}
+
+Commits: ${$TOTAL_COMMITS} implementation + ${$FIX_COMMIT_COUNT} fixes
+Reviews triggered: CodeRabbit, Claude`);
+```
 
 15. **Trigger reviews:**
 
@@ -565,6 +648,61 @@ else:
 2. **Force PR** - Type `force-pr` to create PR with issues flagged
 3. **Abort** - Type `abort` to delete branch and exit
 4. **Reset** - Type `reset` to go back to last good state and retry
+```
+
+### Telegram Escalation (Interactive)
+
+When escalation is triggered, use `ask_user` to get user input via Telegram:
+
+```typescript
+// Build escalation message
+const escalationMessage = `🚨 AUTO-ISSUE ESCALATION
+
+Issue: #$ARGUMENTS - <title>
+Branch: feat/issue-$ARGUMENTS-<desc>
+Retry: ${retryCount}/${MAX_RETRY}
+
+Critical Findings (Unresolved):
+${criticalFindings.map((f) => `• ${f.agent}: ${f.file} - ${f.issue}`).join("\n")}
+
+Options:
+1. 'continue' - Fix manually, then continue
+2. 'force-pr' - Create PR with issues flagged
+3. 'abort' - Delete branch and exit
+4. 'reset' - Go back to last good state`;
+
+// Ask via Telegram (blocking - waits for response)
+const response = await askTelegram(escalationMessage);
+
+// Handle response
+switch (response.toLowerCase().trim()) {
+  case "continue":
+    console.log("[AUTO-ISSUE] User chose: continue after manual fix");
+    // Wait for user to make manual fixes, then re-run review
+    break;
+  case "force-pr":
+    console.log("[AUTO-ISSUE] User chose: force-pr");
+    // Proceed to Phase 4 with issues flagged
+    break;
+  case "abort":
+    console.log("[AUTO-ISSUE] User chose: abort");
+    // Delete branch and exit
+    break;
+  case "reset":
+    console.log("[AUTO-ISSUE] User chose: reset");
+    // Reset to last good commit
+    break;
+  case "TELEGRAM_UNAVAILABLE":
+    console.log(
+      "[AUTO-ISSUE] Telegram unavailable - waiting for terminal input",
+    );
+    // Fall through to terminal-based escalation
+    break;
+  default:
+    console.log(`[AUTO-ISSUE] Unknown response: ${response}`);
+    // Re-prompt
+    break;
+}
 ```
 
 ### Log Escalation to Checkpoint
