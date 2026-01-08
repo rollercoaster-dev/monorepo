@@ -104,13 +104,20 @@ export function calculatePriority(
 ): number {
   let score = learning.learning.confidence || 0.5;
 
-  // Boost for matching issue
-  if (context?.issueNumber === learning.learning.sourceIssue) {
+  // Boost for matching issue (both must be defined)
+  if (
+    context?.issueNumber !== undefined &&
+    learning.learning.sourceIssue !== undefined &&
+    context.issueNumber === learning.learning.sourceIssue
+  ) {
     score += 0.3;
   }
 
-  // Boost for matching file
-  if (context?.modifiedFiles?.includes(learning.learning.filePath || "")) {
+  // Boost for matching file (both must be defined)
+  if (
+    learning.learning.filePath &&
+    context?.modifiedFiles?.includes(learning.learning.filePath)
+  ) {
     score += 0.2;
   }
 
