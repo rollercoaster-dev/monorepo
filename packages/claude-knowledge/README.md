@@ -448,9 +448,77 @@ for (const { issue, wave } of sortedIssues) {
 checkpoint.setMilestonePhase(milestone.id, "execute");
 ```
 
-### Session Hooks (Planned)
+### Session Hooks
 
-Future: Automatic learning capture at session boundaries ([#367](https://github.com/rollercoaster-dev/monorepo/issues/367)).
+Session hooks enable automatic knowledge capture and loading based on git context.
+
+#### onSessionStart
+
+Load relevant knowledge at the start of a Claude Code session:
+
+```typescript
+import { hooks } from "claude-knowledge";
+
+const context = await hooks.onSessionStart({
+  workingDir: process.cwd(),
+  branch: "feat/issue-123-feature", // optional, auto-detected
+  modifiedFiles: ["src/api/users.ts"], // optional, from git status
+  issueNumber: 123, // optional, parsed from branch
+});
+
+console.log(context.summary); // Formatted markdown for injection
+```
+
+The hook parses issue number from branch name, infers code areas from files, queries the knowledge graph, and returns a formatted summary.
+
+#### onSessionEnd
+
+Extract and store learnings at the end of a session:
+
+```typescript
+const result = await hooks.onSessionEnd({
+  workflowId: "workflow-123", // optional
+  commits: [{ sha: "abc123", message: "feat(api): add user endpoint" }],
+  modifiedFiles: ["src/api/users.ts"],
+});
+
+console.log(`Stored ${result.learningsStored} learnings`);
+```
+
+The hook parses conventional commits, creates learnings with lower confidence (0.6), and groups by code area.
+
+#### Claude Code Integration
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run packages/claude-knowledge/src/cli.ts session-start"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run packages/claude-knowledge/src/cli.ts session-end"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ### Context Injection (Planned)
 
@@ -468,12 +536,12 @@ Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/roller
 - [x] Knowledge storage (`knowledge.store()`) - [#365](https://github.com/rollercoaster-dev/monorepo/issues/365)
 - [x] Query API (`knowledge.query()`) - [#366](https://github.com/rollercoaster-dev/monorepo/issues/366)
 - [x] CLI for checkpoint operations
+- [x] Session lifecycle hooks - [#367](https://github.com/rollercoaster-dev/monorepo/issues/367)
 
 ### Planned
 
 | Feature                      | Issue                                                            | Priority |
 | ---------------------------- | ---------------------------------------------------------------- | -------- |
-| Session lifecycle hooks      | [#367](https://github.com/rollercoaster-dev/monorepo/issues/367) | High     |
 | Semantic search (embeddings) | [#379](https://github.com/rollercoaster-dev/monorepo/issues/379) | High     |
 | Context injection            | [#385](https://github.com/rollercoaster-dev/monorepo/issues/385) | High     |
 | CLI for knowledge commands   | [#380](https://github.com/rollercoaster-dev/monorepo/issues/380) | Medium   |

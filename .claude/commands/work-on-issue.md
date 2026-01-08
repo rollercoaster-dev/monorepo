@@ -82,9 +82,32 @@ END:        Mark completed
    - If fresh: delete old workflow, continue to create new
 
 3. **If no existing workflow**:
+   - **Verify not in a worktree for a different issue:**
+     ```bash
+     # Check if we're in a worktree
+     if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+       WORKTREE_ROOT=$(git rev-parse --show-toplevel)
+       if [[ "$WORKTREE_ROOT" == *".worktrees"* ]]; then
+         echo "ERROR: Running inside a worktree. Switch to main repo first."
+         exit 1
+       fi
+     fi
+     ```
    - Create feature branch:
      ```bash
      git checkout -b feat/issue-$ARGUMENTS-{short-description}
+     ```
+   - **CRITICAL: Verify branch checkout succeeded:**
+     ```bash
+     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+     EXPECTED_BRANCH="feat/issue-$ARGUMENTS-{short-description}"
+     if [[ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]]; then
+       echo "ERROR: Branch checkout failed!"
+       echo "Expected: $EXPECTED_BRANCH"
+       echo "Actual: $CURRENT_BRANCH"
+       exit 1
+     fi
+     echo "✓ Verified on branch: $CURRENT_BRANCH"
      ```
    - Create checkpoint:
      ```bash
@@ -288,9 +311,18 @@ Reply "proceed" to approve this commit, or provide feedback.`
     - If Telegram unavailable, wait for terminal input
     - Accept: "proceed", "yes", "go ahead", "approved"
 
-16. Only after approval, commit and log:
+16. Only after approval, **verify branch and commit**:
 
     ```bash
+    # CRITICAL: Verify we're on the feature branch before committing
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [[ "$CURRENT_BRANCH" == "main" ]] || [[ "$CURRENT_BRANCH" == "master" ]]; then
+      echo "ERROR: About to commit to $CURRENT_BRANCH! Aborting."
+      echo "Expected to be on feature branch."
+      exit 1
+    fi
+    echo "✓ Verified on branch: $CURRENT_BRANCH"
+
     git add . && git commit -m "<type>(<scope>): <description>"
     ```
 

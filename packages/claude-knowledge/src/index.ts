@@ -29,4 +29,9 @@ export type {
   FileData,
   QueryContext,
   QueryResult,
+  // Session hook types
+  SessionContext,
+  KnowledgeContext,
+  SessionSummary,
+  SessionEndResult,
 } from "./types";

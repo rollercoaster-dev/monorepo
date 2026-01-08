@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import { checkpoint } from "./checkpoint";
+import { hooks } from "./hooks";
+import { parseModifiedFiles, parseRecentCommits } from "./utils";
 import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
+import { $ } from "bun";
 
 // Valid enum values for validation
 const VALID_MILESTONE_PHASES: MilestonePhase[] = [
@@ -102,6 +105,8 @@ if (args.length === 0) {
   console.error("  workflow delete <id>");
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
+  console.error("  session-start [--branch <name>] [--issue <number>]");
+  console.error("  session-end [--workflow-id <id>]");
   process.exit(1);
 }
 
@@ -447,6 +452,117 @@ try {
       default:
         throw new Error(`Unknown workflow command: ${command}`);
     }
+  } else if (category === "session-start") {
+    // session-start [--branch <name>] [--issue <number>]
+    // Parse optional arguments
+    let branch: string | undefined;
+    let issueNumber: number | undefined;
+
+    // The "command" variable contains the first arg after category
+    const allArgs = command ? [command, ...commandArgs] : commandArgs;
+
+    for (let i = 0; i < allArgs.length; i++) {
+      const arg = allArgs[i];
+      const nextArg = allArgs[i + 1];
+      if (arg === "--branch" && nextArg) {
+        branch = nextArg;
+        i++;
+      } else if (arg === "--issue" && nextArg) {
+        issueNumber = parseIntSafe(nextArg, "issue");
+        i++;
+      }
+    }
+
+    // Get git context
+    const cwd = process.cwd();
+
+    // Get current branch if not provided
+    if (!branch) {
+      try {
+        const result = await $`git branch --show-current`.quiet();
+        branch = result.text().trim();
+      } catch {
+        // Not in a git repo or git not available
+      }
+    }
+
+    // Get modified files from git status
+    let modifiedFiles: string[] = [];
+    try {
+      const result = await $`git status --porcelain`.quiet();
+      modifiedFiles = parseModifiedFiles(result.text());
+    } catch {
+      // Not in a git repo or git not available
+    }
+
+    // Call onSessionStart
+    const context = await hooks.onSessionStart({
+      workingDir: cwd,
+      branch,
+      modifiedFiles,
+      issueNumber,
+    });
+
+    // Output the summary (for injection into context)
+    console.log(context.summary);
+
+    // Exit with appropriate code
+    process.exit(0);
+  } else if (category === "session-end") {
+    // session-end [--workflow-id <id>]
+    let workflowId: string | undefined;
+
+    // Parse optional arguments
+    const allArgs = command ? [command, ...commandArgs] : commandArgs;
+
+    for (let i = 0; i < allArgs.length; i++) {
+      const arg = allArgs[i];
+      const nextArg = allArgs[i + 1];
+      if (arg === "--workflow-id" && nextArg) {
+        workflowId = nextArg;
+        i++;
+      }
+    }
+
+    // Get recent commits
+    let commits: Array<{ sha: string; message: string }> = [];
+    try {
+      const result = await $`git log --oneline -10`.quiet();
+      commits = parseRecentCommits(result.text());
+    } catch {
+      // Not in a git repo or git not available
+    }
+
+    // Get modified files (files changed in recent commits)
+    let modifiedFiles: string[] = [];
+    try {
+      // Try to get files from last 10 commits
+      const result = await $`git diff --name-only HEAD~10..HEAD`.quiet();
+      modifiedFiles = result.text().trim().split("\n").filter(Boolean);
+    } catch {
+      // Fallback: repo may have fewer than 10 commits
+      try {
+        const result = await $`git diff --name-only`.quiet();
+        modifiedFiles = result.text().trim().split("\n").filter(Boolean);
+      } catch {
+        // Not in a git repo or git not available
+      }
+    }
+
+    // Call onSessionEnd
+    const result = await hooks.onSessionEnd({
+      workflowId,
+      commits,
+      modifiedFiles,
+    });
+
+    // Output result
+    console.log(`Learnings stored: ${result.learningsStored}`);
+    if (result.learningIds.length > 0) {
+      console.log(`Learning IDs: ${result.learningIds.join(", ")}`);
+    }
+
+    process.exit(0);
   } else {
     throw new Error(`Unknown category: ${category}`);
   }
