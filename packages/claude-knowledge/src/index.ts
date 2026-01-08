@@ -27,4 +27,6 @@ export type {
   RelationshipType,
   CodeAreaData,
   FileData,
+  QueryContext,
+  QueryResult,
 } from "./types";
