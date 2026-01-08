@@ -299,7 +299,7 @@ cmd_create() {
   log_info "Installing dependencies in worktree..."
   (cd "$worktree_path" && bun install --silent)
 
-  update_state "$issue_number" "created" "$branch_name"
+  update_state "$issue_number" "running" "$branch_name"
 
   log_success "Created worktree for issue #$issue_number"
   echo "  Path: $worktree_path"
@@ -352,10 +352,14 @@ cmd_list() {
   git -C "$REPO_ROOT" worktree list
   echo ""
 
-  if [[ -f "$STATE_FILE" ]]; then
+  # Show tracked state from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  if [[ "$workflows" != "[]" ]] && [[ $(echo "$workflows" | jq 'length') -gt 0 ]]; then
     echo "Tracked State:"
     echo "─────────────────────────────────────────────────────────────"
-    jq -r '.worktrees | to_entries[] | "Issue #\(.key): \(.value.status) (\(.value.branch // "no branch"))"' "$STATE_FILE" 2>/dev/null || echo "  (none)"
+    echo "$workflows" | jq -r '.[] | "Issue #\(.issueNumber): \(.status) (\(.branch // "no branch"))"' 2>/dev/null || echo "  (none)"
     echo ""
   fi
 }
@@ -480,7 +484,7 @@ cmd_sync() {
         log_info "Found untracked worktree for issue #$issue_number, adding to state"
         local branch
         branch=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
-        update_state "$issue_number" "created" "$branch"
+        update_state "$issue_number" "running" "$branch"
       fi
     fi
   done <<< "$actual_worktrees"
@@ -621,7 +625,8 @@ cmd_checkpoint() {
   pr_count=0
 
   # Process each workflow to log checkpoint action with PR status
-  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+  # Use process substitution to avoid subshell variable scope issue
+  while read -r workflow; do
     local workflow_id issue_number
     workflow_id=$(echo "$workflow" | jq -r '.id')
     issue_number=$(echo "$workflow" | jq -r '.issueNumber')
@@ -645,7 +650,7 @@ cmd_checkpoint() {
         ((pr_count++)) || true
       fi
     fi
-  done
+  done < <(echo "$workflows" | jq -c '.[]')
 
   log_success "Checkpoint saved at phase: ${phase:-unspecified}"
   echo "  Timestamp: $(date -Iseconds)"
