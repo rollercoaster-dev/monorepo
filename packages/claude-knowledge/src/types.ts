@@ -184,3 +184,39 @@ export interface Relationship {
   data?: Record<string, unknown>;
   createdAt: string;
 }
+
+// ============================================================================
+// Query API Types
+// ============================================================================
+
+/**
+ * Context for querying the knowledge graph.
+ * All fields are optional - at least one should be provided for meaningful results.
+ */
+export interface QueryContext {
+  /** Query learnings related to a specific code area (1-hop traversal) */
+  codeArea?: string;
+  /** Query learnings related to a specific file path (1-hop traversal) */
+  filePath?: string;
+  /** Search for keywords in learning content */
+  keywords?: string[];
+  /** Filter by source issue number */
+  issueNumber?: number;
+  /** Maximum number of results to return (default: 50) */
+  limit?: number;
+}
+
+/**
+ * Result from a knowledge graph query.
+ * Includes the primary learning and optionally related patterns/mistakes via 2-hop traversal.
+ */
+export interface QueryResult {
+  /** The primary learning result */
+  learning: Learning;
+  /** Patterns that led to this learning (via LED_TO relationship) */
+  relatedPatterns?: Pattern[];
+  /** Mistakes that led to this learning (via LED_TO relationship) */
+  relatedMistakes?: Mistake[];
+  /** Future: relevance score based on confidence and other factors */
+  relevanceScore?: number;
+}
