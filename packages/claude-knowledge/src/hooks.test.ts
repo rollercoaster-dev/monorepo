@@ -3,8 +3,10 @@ import { hooks } from "./hooks";
 import { knowledge } from "./knowledge";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
 import { unlinkSync, existsSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
-const TEST_DB = "/tmp/test-hooks.db";
+const TEST_DB = join(tmpdir(), "test-hooks.db");
 
 describe("hooks", () => {
   beforeEach(() => {

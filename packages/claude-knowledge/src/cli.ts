@@ -536,11 +536,17 @@ try {
     // Get modified files (files changed in recent commits)
     let modifiedFiles: string[] = [];
     try {
-      const result =
-        await $`git diff --name-only HEAD~10..HEAD 2>/dev/null || git diff --name-only`.quiet();
+      // Try to get files from last 10 commits
+      const result = await $`git diff --name-only HEAD~10..HEAD`.quiet();
       modifiedFiles = result.text().trim().split("\n").filter(Boolean);
     } catch {
-      // Not in a git repo or git not available
+      // Fallback: repo may have fewer than 10 commits
+      try {
+        const result = await $`git diff --name-only`.quiet();
+        modifiedFiles = result.text().trim().split("\n").filter(Boolean);
+      } catch {
+        // Not in a git repo or git not available
+      }
     }
 
     // Call onSessionEnd
