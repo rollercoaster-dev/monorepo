@@ -314,6 +314,158 @@ const patterns = await knowledge.getPatternsForArea("Security");
 // Returns: [{ name: "Input Validation Pattern", ... }, ...]
 ```
 
+### Knowledge Formatting
+
+The `formatKnowledgeContext()` function formats knowledge graph results for injection into Claude's context window with intelligent token budget management.
+
+#### Token Budget Management
+
+**Default Budget**: 2000 tokens (~8000 characters)
+
+Token estimation uses a **4:1 character-to-token ratio** (rough heuristic). The formatter enforces a hard budget limit to prevent context overflow while being transparent about what was included.
+
+**Customize the budget:**
+
+```typescript
+import { formatKnowledgeContext } from "claude-knowledge";
+
+const summary = formatKnowledgeContext(learnings, patterns, mistakes, {
+  maxTokens: 3000, // Increase budget
+});
+```
+
+#### Prioritization
+
+Results are automatically prioritized to ensure the most relevant knowledge appears first:
+
+1. **Confidence score** (0.0-1.0) - Base priority
+2. **Context matching** - Boosts for matching issue/file
+   - +0.3 for matching issue number
+   - +0.2 for modified file match
+3. **Recency** - +0.1 for learnings created in last 30 days
+
+Highest priority content is included first when enforcing token budget.
+
+#### Grouping and Organization
+
+- **By code area**: Learnings grouped by semantic area (e.g., "API", "Database")
+- **Groups sorted**: Areas with more learnings appear first
+- **Special sections**:
+  - "Past Mistakes in Current Files" (priority: 1.0) - Highest visibility for relevant errors
+  - "Mistakes to Avoid" (priority: 0.6) - Other mistakes for awareness
+  - "Patterns" (priority: 0.7) - Reusable patterns
+
+#### Output Format
+
+```markdown
+## Relevant Knowledge
+
+Context: Issue #368, Area: claude-knowledge
+Token usage: ~450 / 2000
+
+### Code Area: claude-knowledge
+
+- [#367] Session hooks enable automatic knowledge capture (confidence: 0.95)
+- [#365] Query API supports filtering by code area (confidence: 0.92)
+- Store function uses transactions for atomicity (confidence: 0.88)
+
+### Patterns
+
+- **Atomic Operations**: Use transactions for consistency
+- **Type Safety**: Define clear interfaces for all APIs
+
+### Past Mistakes in Current Files
+
+- `src/formatter.ts`: Token estimation was off by factor of 2 (#365)
+  Fixed: Adjusted 4:1 char-to-token ratio
+
+---
+
+_Showing 3 of 5 sections (token budget: 450/2000)_
+```
+
+#### Configuration Options
+
+```typescript
+interface FormatOptions {
+  /** Maximum token budget (default: 2000) */
+  maxTokens?: number;
+  /** Show file paths in output (default: true) */
+  showFilePaths?: boolean;
+  /** Context for prioritization */
+  context?: {
+    issueNumber?: number;
+    primaryCodeArea?: string;
+    modifiedFiles?: string[];
+  };
+}
+```
+
+#### Usage Example
+
+```typescript
+import { knowledge, formatKnowledgeContext } from "claude-knowledge";
+
+// Query knowledge
+const learnings = await knowledge.query({ codeArea: "API" });
+const patterns = await knowledge.getPatternsForArea("API");
+const mistakes = await knowledge.getMistakesForFile("src/api/handler.ts");
+
+// Format with context
+const summary = formatKnowledgeContext(learnings, patterns, mistakes, {
+  maxTokens: 2000,
+  showFilePaths: true,
+  context: {
+    issueNumber: 123,
+    primaryCodeArea: "API",
+    modifiedFiles: ["src/api/handler.ts"],
+  },
+});
+
+console.log(summary); // Inject into agent prompt
+```
+
+#### Utility Functions
+
+The formatter also exports utility functions for advanced use cases:
+
+```typescript
+import {
+  estimateTokens,
+  groupByCodeArea,
+  sortByRelevance,
+  calculatePriority,
+} from "claude-knowledge";
+
+// Estimate tokens for custom text
+const tokens = estimateTokens("Your text here"); // ~4 chars per token
+
+// Group learnings by code area
+const grouped = groupByCodeArea(learnings); // Map<string, QueryResult[]>
+
+// Sort by priority with context awareness
+const sorted = sortByRelevance(learnings, {
+  issueNumber: 123,
+  modifiedFiles: ["src/file.ts"],
+});
+
+// Calculate priority score for a learning
+const score = calculatePriority(learning, {
+  issueNumber: 123,
+  modifiedFiles: ["src/file.ts"],
+});
+```
+
+#### Troubleshooting
+
+| Issue                    | Cause                       | Solution                               |
+| ------------------------ | --------------------------- | -------------------------------------- |
+| Knowledge not appearing  | Token budget too small      | Increase `maxTokens`                   |
+| Wrong knowledge shown    | Prioritization mismatch     | Pass more context (issue, files, area) |
+| Too much/too little      | Budget not tuned            | Adjust `maxTokens` for your use case   |
+| Missing past mistakes    | File not in modifiedFiles   | Ensure `modifiedFiles` includes path   |
+| Low confidence learnings | Auto-extracted from commits | Manually review and boost confidence   |
+
 ---
 
 ## Data Model
@@ -537,6 +689,7 @@ Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/roller
 - [x] Query API (`knowledge.query()`) - [#366](https://github.com/rollercoaster-dev/monorepo/issues/366)
 - [x] CLI for checkpoint operations
 - [x] Session lifecycle hooks - [#367](https://github.com/rollercoaster-dev/monorepo/issues/367)
+- [x] Knowledge formatting with token budgeting - [#368](https://github.com/rollercoaster-dev/monorepo/issues/368)
 
 ### Planned
 
