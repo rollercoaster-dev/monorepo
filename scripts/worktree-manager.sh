@@ -365,7 +365,11 @@ cmd_status() {
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
 
-  if [[ ! -f "$STATE_FILE" ]] || [[ $(jq '.worktrees | length' "$STATE_FILE") -eq 0 ]]; then
+  # Get active workflows from CLI
+  local workflows
+  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+
+  if [[ "$workflows" == "[]" ]] || [[ $(echo "$workflows" | jq 'length') -eq 0 ]]; then
     echo "  No active worktrees"
     echo ""
     return
@@ -375,10 +379,17 @@ cmd_status() {
   printf "  %-8s %-15s %-35s %s\n" "Issue" "Status" "Branch" "PR"
   echo "  ──────── ─────────────── ─────────────────────────────────── ────"
 
-  jq -r '.worktrees | to_entries[] | [.key, .value.status, .value.branch, .value.pr] | @tsv' "$STATE_FILE" | \
-  while IFS=$'\t' read -r issue status branch pr; do
-    pr_display=${pr:-"-"}
+  # Display each workflow
+  echo "$workflows" | jq -r '.[] | [.issueNumber, .status, .branch, ""] | @tsv' | \
+  while IFS=$'\t' read -r issue status branch pr_placeholder; do
+    # Try to get PR number from workflow actions
+    local workflow_data pr_number
+    workflow_data=$(cli_call workflow find "$issue" 2>/dev/null || echo '{}')
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    pr_display=${pr_number:-"-"}
     branch_display=${branch:-"-"}
+
     # Truncate branch if too long
     if [[ ${#branch_display} -gt 35 ]]; then
       branch_display="${branch_display:0:32}..."
@@ -965,45 +976,55 @@ cmd_integration_test() {
 cmd_summary() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_error "No state file found."
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_error "No milestone found. Run preflight first."
     exit 1
   fi
 
+  # Get milestone data from CLI
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id")
+
   local milestone started
-  milestone=$(get_milestone_field "milestone")
-  started=$(get_milestone_field "started")
+  milestone=$(echo "$milestone_data" | jq -r '.milestone.name // "unknown"')
+  started=$(echo "$milestone_data" | jq -r '.milestone.createdAt // "unknown"')
 
   echo ""
   echo "═══════════════════════════════════════════════════════════════"
   echo "                    MILESTONE SUMMARY                          "
   echo "═══════════════════════════════════════════════════════════════"
   echo ""
-  printf "  %-18s %s\n" "Milestone:" "${milestone:-unknown}"
-  printf "  %-18s %s\n" "Started:" "${started:-unknown}"
+  printf "  %-18s %s\n" "Milestone:" "$milestone"
+  printf "  %-18s %s\n" "Started:" "$started"
   printf "  %-18s %s\n" "Completed:" "$(date -Iseconds)"
   echo ""
 
-  # Count by status
-  local total merged failed pr_created other
-  total=$(jq '.worktrees | length' "$STATE_FILE")
-  merged=$(jq '[.worktrees | to_entries[] | select(.value.status == "merged")] | length' "$STATE_FILE")
-  failed=$(jq '[.worktrees | to_entries[] | select(.value.status == "failed")] | length' "$STATE_FILE")
-  pr_created=$(jq '[.worktrees | to_entries[] | select(.value.status == "pr-created")] | length' "$STATE_FILE")
-  other=$((total - merged - failed - pr_created))
+  # Count by status from workflows
+  local workflows
+  workflows=$(echo "$milestone_data" | jq -r '.workflows // []')
+
+  local total completed failed running other
+  total=$(echo "$workflows" | jq 'length')
+  completed=$(echo "$workflows" | jq '[.[] | select(.status == "completed")] | length')
+  failed=$(echo "$workflows" | jq '[.[] | select(.status == "failed")] | length')
+  running=$(echo "$workflows" | jq '[.[] | select(.status == "running")] | length')
+  other=$((total - completed - failed - running))
 
   echo "┌─────────────────────────────────────────────────────────────┐"
   echo "│                      Issues Summary                         │"
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
   printf "  %-20s %d\n" "Total issues:" "$total"
-  printf "  %-20s %d\n" "Merged:" "$merged"
-  printf "  %-20s %d\n" "PRs awaiting merge:" "$pr_created"
+  printf "  %-20s %d\n" "Completed:" "$completed"
+  printf "  %-20s %d\n" "Running:" "$running"
   printf "  %-20s %d\n" "Failed:" "$failed"
   printf "  %-20s %d\n" "Other:" "$other"
   echo ""
 
-  # List merged PRs
+  # List workflows with PRs
   echo "┌─────────────────────────────────────────────────────────────┐"
   echo "│                    PRs Created/Merged                       │"
   echo "└─────────────────────────────────────────────────────────────┘"
@@ -1011,18 +1032,29 @@ cmd_summary() {
   printf "  %-8s %-8s %-12s %s\n" "Issue" "PR" "Status" "Branch"
   echo "  ──────── ──────── ──────────── ────────────────────────────────"
 
-  jq -r '.worktrees | to_entries[] | select(.value.pr != "" and .value.pr != null) | [.key, .value.pr, .value.status, .value.branch] | @tsv' "$STATE_FILE" | \
-  while IFS=$'\t' read -r issue pr status branch; do
-    branch_short="${branch:0:30}"
-    [[ ${#branch} -gt 30 ]] && branch_short="${branch_short}..."
-    printf "  #%-7s #%-7s %-12s %s\n" "$issue" "$pr" "$status" "$branch_short"
+  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+    local issue_number status branch pr_number
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+    status=$(echo "$workflow" | jq -r '.status')
+    branch=$(echo "$workflow" | jq -r '.branch // ""')
+
+    # Get PR number from actions
+    local workflow_data
+    workflow_data=$(cli_call workflow get "$(echo "$workflow" | jq -r '.id')")
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    if [[ -n "$pr_number" ]]; then
+      branch_short="${branch:0:30}"
+      [[ ${#branch} -gt 30 ]] && branch_short="${branch_short}..."
+      printf "  #%-7s #%-7s %-12s %s\n" "$issue_number" "$pr_number" "$status" "$branch_short"
+    fi
   done
 
   echo ""
 
   # List failed issues
   local failed_issues
-  failed_issues=$(jq -r '.worktrees | to_entries[] | select(.value.status == "failed") | "#\(.key)"' "$STATE_FILE" | tr '\n' ' ')
+  failed_issues=$(echo "$workflows" | jq -r '.[] | select(.status == "failed") | "#\(.issueNumber)"' | tr '\n' ' ')
   if [[ -n "$failed_issues" ]]; then
     echo "┌─────────────────────────────────────────────────────────────┐"
     echo "│                 Issues Requiring Attention                  │"
