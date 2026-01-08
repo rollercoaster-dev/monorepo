@@ -123,9 +123,13 @@ async function onSessionStart(
         }
       }
     }
-  } catch {
-    // If knowledge queries fail, return empty context
-    // This allows session to continue even if knowledge graph is unavailable
+  } catch (error) {
+    // Log the error so failures are visible, but allow session to continue
+    console.error(
+      "[claude-knowledge] Failed to load session knowledge:",
+      error,
+    );
+    // Return empty context to allow session to continue
   }
 
   // Format summary for injection using new formatter
@@ -234,8 +238,12 @@ async function onSessionEnd(
   if (learnings.length > 0) {
     try {
       await knowledge.store(learnings);
-    } catch {
-      // If storage fails, return empty result
+    } catch (error) {
+      // Log storage failure so it's visible
+      console.error(
+        "[claude-knowledge] Failed to store session learnings:",
+        error,
+      );
       return {
         learningsStored: 0,
         learningIds: [],
