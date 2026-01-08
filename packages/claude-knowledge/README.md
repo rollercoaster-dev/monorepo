@@ -1,390 +1,507 @@
 # claude-knowledge
 
-Cross-session learning persistence for Claude Code autonomous workflows.
+Cross-session learning and workflow persistence for Claude Code autonomous workflows.
 
-## Overview
+## Table of Contents
 
-This package provides:
+- [Why This Exists](#why-this-exists)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Checkpoint API](#checkpoint-api)
+- [Knowledge Graph API](#knowledge-graph-api)
+- [Data Model](#data-model)
+- [CLI Reference](#cli-reference)
+- [Integration Points](#integration-points)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
 
-- **Phase 1:** Execution state persistence for workflow recovery after context compaction
-- **Phase 2:** Knowledge graph for cross-session learning (SQLite-based)
+---
 
-## Installation
+## Why This Exists
 
-This is an internal monorepo package. It's automatically available to other packages.
+Claude Code agents face a fundamental challenge: **context compaction erases workflow state**.
 
-## Usage
+When working on complex issues, context windows fill up. Compaction resets the conversation, and without persistence, agents restart from scratch—re-analyzing issues, re-reading files, losing track of commits already made.
 
-### Basic Checkpoint Operations
+`claude-knowledge` solves this with two complementary systems:
+
+| System              | Purpose                 | Lifecycle                         |
+| ------------------- | ----------------------- | --------------------------------- |
+| **Checkpoint**      | Workflow state recovery | Ephemeral (deleted on completion) |
+| **Knowledge Graph** | Cross-session learning  | Persistent (grows over time)      |
+
+### Design Philosophy
+
+- **Local-first**: SQLite database, no external services
+- **Zero-config**: Works out of the box, no setup required
+- **Atomic operations**: Transactions ensure data consistency
+- **Idempotent**: Safe to retry operations
+
+---
+
+## Quick Start
+
+### Checkpoint (Workflow Recovery)
 
 ```typescript
 import { checkpoint } from "claude-knowledge";
 
-// Create a new workflow checkpoint
+// Start a workflow for issue #123
 const workflow = checkpoint.create(123, "feat/issue-123-feature");
 
-// Update phase as work progresses
+// Update as work progresses
 checkpoint.setPhase(workflow.id, "implement");
+checkpoint.logCommit(workflow.id, "abc123", "feat: add initial implementation");
 
-// Log actions for debugging/trace
-checkpoint.logAction(workflow.id, "spawned code-reviewer", "success", {
-  agent: "code-reviewer",
-  findings: 3,
-});
-
-// Log commits for rollback capability
-checkpoint.logCommit(workflow.id, "abc123", "feat(auth): add login endpoint");
-
-// Save full state
-workflow.retryCount = 1;
-checkpoint.save(workflow);
-
-// Load on resume (after compaction)
-const state = checkpoint.load(workflow.id);
+// After compaction - resume where you left off
+const state = checkpoint.findByIssue(123);
 if (state) {
-  console.log(`Resuming from phase: ${state.workflow.phase}`);
-  console.log(`Actions taken: ${state.actions.length}`);
+  console.log(`Resume from phase: ${state.workflow.phase}`);
   console.log(`Commits made: ${state.commits.length}`);
 }
 ```
 
-### Finding Workflows
+### Knowledge Graph (Cross-Session Learning)
 
 ```typescript
-// Find by issue number (returns most recent)
-const state = checkpoint.findByIssue(123);
+import { knowledge } from "claude-knowledge";
 
-// List all active workflows
-const active = checkpoint.listActive();
+// Store what you learned
+await knowledge.store([
+  {
+    id: "learning-zod-validation",
+    content: "Always validate API input with Zod schemas before processing",
+    codeArea: "API Development",
+    filePath: "src/api/handlers.ts",
+    confidence: 0.95,
+  },
+]);
+
+// Query relevant knowledge
+const results = await knowledge.query({ codeArea: "API Development" });
 ```
 
-### Integration with /auto-issue
+### Database Location
+
+All data is stored in `.claude/execution-state.db` (gitignored by default).
+
+---
+
+## Architecture
+
+```
+                           claude-knowledge
+                                  │
+              ┌───────────────────┴───────────────────┐
+              │                                       │
+       ┌──────────────┐                      ┌─────────────────┐
+       │  Checkpoint  │                      │ Knowledge Graph │
+       │   (State)    │                      │   (Learning)    │
+       └──────────────┘                      └─────────────────┘
+              │                                       │
+       ┌──────┴──────┐                    ┌──────────┼──────────┐
+       │             │                    │          │          │
+   Workflows    Milestones           Learnings  Patterns   Mistakes
+       │             │                    │          │          │
+   Actions       Baselines                └────┬─────┴──────────┘
+   Commits                                     │
+                                         Relationships
+                                    (ABOUT, IN_FILE, LED_TO,
+                                     APPLIES_TO, SUPERSEDES)
+```
+
+### Checkpoint System (Ephemeral)
+
+Tracks active workflow state for recovery after context compaction:
+
+- **Workflows**: Issue-level execution state (phase, status, retry count)
+- **Milestones**: Multi-issue coordination for `/auto-milestone`
+- **Actions**: Audit log of agent actions
+- **Commits**: Git commits for potential rollback
+- **Baselines**: Pre-milestone lint/typecheck snapshots
+
+Workflow data is deleted when status becomes `completed` or `failed`.
+
+### Knowledge Graph (Persistent)
+
+Stores learnings that persist across all sessions:
+
+- **Learnings**: Knowledge units captured during work
+- **Patterns**: Recognized reusable patterns
+- **Mistakes**: Errors made and how they were fixed
+- **Relationships**: Graph edges connecting entities
+
+Knowledge is never deleted—only superseded by newer learnings.
+
+---
+
+## Checkpoint API
+
+### Workflow Lifecycle
+
+```
+create() → setPhase() → logAction/logCommit → setStatus("completed")
+```
+
+### Workflow Methods
+
+| Method                                     | Description                         |
+| ------------------------------------------ | ----------------------------------- |
+| `create(issue, branch, worktree?)`         | Create new workflow                 |
+| `load(id)`                                 | Load workflow + actions + commits   |
+| `save(workflow)`                           | Update workflow state               |
+| `findByIssue(issue)`                       | Find most recent workflow for issue |
+| `setPhase(id, phase)`                      | Update workflow phase               |
+| `setStatus(id, status)`                    | Update workflow status              |
+| `logAction(id, action, result, metadata?)` | Log an action                       |
+| `logCommit(id, sha, message)`              | Log a git commit                    |
+| `incrementRetry(id)`                       | Increment retry counter             |
+| `listActive()`                             | List running/paused workflows       |
+| `delete(id)`                               | Delete workflow and related data    |
+
+### Workflow Phases
+
+| Phase       | Description                          |
+| ----------- | ------------------------------------ |
+| `research`  | Fetching issue, analyzing, planning  |
+| `implement` | Writing code, making commits         |
+| `review`    | Running review agents, auto-fix loop |
+| `finalize`  | Creating PR, cleanup                 |
+
+### Workflow Statuses
+
+| Status      | Description                      |
+| ----------- | -------------------------------- |
+| `running`   | Actively being worked on         |
+| `paused`    | Temporarily stopped (can resume) |
+| `completed` | Successfully finished            |
+| `failed`    | Stopped due to errors            |
+
+### Milestone Methods
+
+For `/auto-milestone` parallel workflow coordination:
+
+| Method                                       | Description                           |
+| -------------------------------------------- | ------------------------------------- |
+| `createMilestone(name, ghNumber?)`           | Create milestone                      |
+| `getMilestone(id)`                           | Load milestone + baseline + workflows |
+| `findMilestoneByName(name)`                  | Find milestone by name                |
+| `setMilestonePhase(id, phase)`               | Update milestone phase                |
+| `setMilestoneStatus(id, status)`             | Update milestone status               |
+| `saveBaseline(id, data)`                     | Save lint/typecheck baseline          |
+| `linkWorkflowToMilestone(wfId, msId, wave?)` | Link workflow                         |
+| `listMilestoneWorkflows(msId)`               | List child workflows                  |
+| `listActiveMilestones()`                     | List running/paused milestones        |
+| `deleteMilestone(id)`                        | Delete milestone                      |
+
+### Milestone Phases
+
+| Phase      | Description                            |
+| ---------- | -------------------------------------- |
+| `planning` | Analyzing dependencies, building waves |
+| `execute`  | Running parallel workflows             |
+| `review`   | Reviewing all PRs                      |
+| `merge`    | Merging in dependency order            |
+| `cleanup`  | Removing worktrees, final report       |
+
+---
+
+## Knowledge Graph API
+
+### Storing Knowledge
+
+#### `store(learnings: Learning[])`
+
+Store learnings with automatic entity and relationship creation.
+
+```typescript
+await knowledge.store([
+  {
+    id: "learning-1", // Optional, auto-generated if omitted
+    content: "Use rd-logger for logging", // Required
+    codeArea: "Logging", // Auto-creates CodeArea + ABOUT relationship
+    filePath: "src/api/handler.ts", // Auto-creates File + IN_FILE relationship
+    sourceIssue: 365, // Optional reference
+    confidence: 0.92, // Optional 0.0-1.0
+  },
+]);
+```
+
+#### `storePattern(pattern: Pattern, learningIds?: string[])`
+
+Store a recognized pattern, optionally linking to source learnings.
+
+```typescript
+await knowledge.storePattern(
+  {
+    id: "pattern-validation",
+    name: "Input Validation Pattern",
+    description: "Validate all user input at API boundaries with Zod",
+    codeArea: "Security", // Auto-creates APPLIES_TO relationship
+  },
+  ["learning-1", "learning-2"],
+); // Creates LED_TO relationships
+```
+
+#### `storeMistake(mistake: Mistake, learningId?: string)`
+
+Store a mistake and how it was fixed.
+
+```typescript
+await knowledge.storeMistake(
+  {
+    id: "mistake-sql-injection",
+    description: "Used string concatenation for SQL query",
+    howFixed: "Switched to parameterized queries with bun:sqlite",
+    filePath: "src/db/queries.ts", // Auto-creates IN_FILE relationship
+  },
+  "learning-fix-sql",
+); // Creates LED_TO relationship
+```
+
+### Querying Knowledge
+
+#### `query(context: QueryContext): Promise<QueryResult[]>`
+
+Flexible query with 2-hop traversal for related patterns and mistakes.
+
+```typescript
+// By code area
+const results = await knowledge.query({ codeArea: "Security" });
+
+// By file path
+const results = await knowledge.query({ filePath: "src/db/queries.ts" });
+
+// By keywords (searches content)
+const results = await knowledge.query({ keywords: ["validation", "input"] });
+
+// By source issue
+const results = await knowledge.query({ issueNumber: 123 });
+
+// Combined filters (AND logic)
+const results = await knowledge.query({
+  codeArea: "API Development",
+  issueNumber: 365,
+  limit: 10,
+});
+```
+
+**QueryResult structure:**
+
+```typescript
+interface QueryResult {
+  learning: Learning; // Primary result
+  relatedPatterns?: Pattern[]; // Via 2-hop LED_TO traversal
+  relatedMistakes?: Mistake[]; // Via 2-hop LED_TO traversal
+}
+```
+
+#### `getMistakesForFile(filePath: string): Promise<Mistake[]>`
+
+Get past mistakes in a file (useful for pre-commit warnings).
+
+```typescript
+const mistakes = await knowledge.getMistakesForFile("src/db/queries.ts");
+// Returns: [{ description: "SQL injection", howFixed: "..." }, ...]
+```
+
+#### `getPatternsForArea(codeArea: string): Promise<Pattern[]>`
+
+Get patterns for a code area (useful for scaffolding).
+
+```typescript
+const patterns = await knowledge.getPatternsForArea("Security");
+// Returns: [{ name: "Input Validation Pattern", ... }, ...]
+```
+
+---
+
+## Data Model
+
+### Entity Types
+
+| Type       | Purpose                                 | Key Fields                             |
+| ---------- | --------------------------------------- | -------------------------------------- |
+| `Learning` | Knowledge unit from a session           | `content`, `confidence`, `sourceIssue` |
+| `Pattern`  | Reusable pattern derived from learnings | `name`, `description`, `codeArea`      |
+| `Mistake`  | Error made and how it was fixed         | `description`, `howFixed`, `filePath`  |
+| `CodeArea` | Semantic grouping (auto-created)        | `name`                                 |
+| `File`     | File path reference (auto-created)      | `path`                                 |
+
+### Relationship Types
+
+| Type         | From              | To       | Meaning                       |
+| ------------ | ----------------- | -------- | ----------------------------- |
+| `ABOUT`      | Learning          | CodeArea | Learning relates to this area |
+| `IN_FILE`    | Learning, Mistake | File     | Located in this file          |
+| `LED_TO`     | Pattern, Mistake  | Learning | Derived from / fixed by       |
+| `APPLIES_TO` | Pattern           | CodeArea | Pattern applies to this area  |
+| `SUPERSEDES` | Learning          | Learning | Newer learning replaces older |
+
+### Graph Visualization
+
+```
+(Learning)──ABOUT──>(CodeArea)<──APPLIES_TO──(Pattern)
+    │                                            │
+    └──IN_FILE──>(File)<──IN_FILE──(Mistake)     │
+                                      │          │
+                                      └──LED_TO──┘
+```
+
+---
+
+## CLI Reference
+
+### Running the CLI
+
+```bash
+# From monorepo root
+bun packages/claude-knowledge/src/cli.ts <command>
+```
+
+### Workflow Commands
+
+```bash
+checkpoint workflow create <issue-number> <branch> [worktree]
+checkpoint workflow get <id>
+checkpoint workflow find <issue-number>
+checkpoint workflow set-phase <id> <phase>
+checkpoint workflow set-status <id> <status>
+checkpoint workflow log-action <id> <action> <result> [metadata-json]
+checkpoint workflow log-commit <id> <sha> <message>
+checkpoint workflow list-active
+checkpoint workflow delete <id>
+checkpoint workflow link <workflow-id> <milestone-id> [wave]
+checkpoint workflow list <milestone-id>
+```
+
+### Milestone Commands
+
+```bash
+checkpoint milestone create <name> [github-number]
+checkpoint milestone get <id>
+checkpoint milestone find <name>
+checkpoint milestone set-phase <id> <phase>
+checkpoint milestone set-status <id> <status>
+checkpoint milestone list-active
+checkpoint milestone delete <id>
+```
+
+### Baseline Commands
+
+```bash
+checkpoint baseline save <milestone-id> <lint-exit> <lint-warnings> <lint-errors> <typecheck-exit> <typecheck-errors>
+```
+
+### Knowledge Commands
+
+Coming soon ([#380](https://github.com/rollercoaster-dev/monorepo/issues/380)).
+
+---
+
+## Integration Points
+
+### /auto-issue Workflow
 
 ```typescript
 // At workflow start
-const workflow = checkpoint.create(issueNumber, branchName, worktreePath);
+const existing = checkpoint.findByIssue(issueNumber);
+if (existing?.workflow.status === "running") {
+  // Resume from saved phase
+  const { workflow, actions, commits } = existing;
+}
 
 // At each phase transition
-checkpoint.setPhase(workflow.id, "review");
-checkpoint.logAction(workflow.id, "phase transition", "success", {
-  from: "implement",
-  to: "review",
-});
+checkpoint.setPhase(workflowId, "implement");
+checkpoint.logAction(workflowId, "phase_transition", "success", { from, to });
 
-// On compaction recovery
-const existing = checkpoint.findByIssue(issueNumber);
-if (existing && existing.workflow.status === "running") {
-  // Resume from where we left off
-  const { workflow, actions, commits } = existing;
-  // ... continue from workflow.phase
-}
+// Log commits for rollback capability
+checkpoint.logCommit(workflowId, sha, message);
 
 // On completion
-checkpoint.setStatus(workflow.id, "completed");
+checkpoint.setStatus(workflowId, "completed");
 ```
 
-## Database Location
-
-The SQLite database is stored at `.claude/execution-state.db` (gitignored).
-
-## Phase 2: Knowledge Graph
-
-### Storing Learnings
+### /auto-milestone Workflow
 
 ```typescript
-import { knowledge } from "claude-knowledge";
-import type { Learning } from "claude-knowledge";
+// Create milestone with optional GitHub milestone number
+const milestone = checkpoint.createMilestone("OB3 Phase 1", 22);
 
-// Store learnings from a session
-const learnings: Learning[] = [
-  {
-    id: "learning-1",
-    content: "Always validate API input with Zod schemas",
-    codeArea: "API Development",
-    confidence: 0.95,
-    sourceIssue: 123,
-  },
-  {
-    id: "learning-2",
-    content: "Use rd-logger for structured logging",
-    filePath: "packages/rd-logger/src/index.ts",
-    confidence: 0.9,
-  },
-];
-
-await knowledge.store(learnings);
-```
-
-### Storing Patterns
-
-```typescript
-import type { Pattern } from "claude-knowledge";
-
-// Store a recognized pattern
-const pattern: Pattern = {
-  id: "pattern-validation",
-  name: "Input Validation Pattern",
-  description: "Validate all user input before processing",
-  codeArea: "Security",
-};
-
-// Link to learnings that led to this pattern
-await knowledge.storePattern(pattern, ["learning-1", "learning-3"]);
-```
-
-### Storing Mistakes
-
-```typescript
-import type { Mistake } from "claude-knowledge";
-
-// Store a mistake and how it was fixed
-const mistake: Mistake = {
-  id: "mistake-sql-injection",
-  description: "Used string concatenation for SQL query",
-  howFixed: "Switched to parameterized queries with bun:sqlite",
-  filePath: "src/db/queries.ts",
-};
-
-// Link to the learning that fixed it
-await knowledge.storeMistake(mistake, "learning-4");
-```
-
-### Querying the Knowledge Graph
-
-```typescript
-import { knowledge } from "claude-knowledge";
-import type { QueryContext, QueryResult } from "claude-knowledge";
-
-// Query learnings by code area
-const results = await knowledge.query({
-  codeArea: "API Development",
-  limit: 10,
+// Capture baseline before changes
+checkpoint.saveBaseline(milestone.id, {
+  capturedAt: new Date().toISOString(),
+  lintExitCode: 0,
+  lintWarnings: 5,
+  lintErrors: 0,
+  typecheckExitCode: 0,
+  typecheckErrors: 0,
 });
 
-results.forEach(({ learning, relatedPatterns, relatedMistakes }) => {
-  console.log(`Learning: ${learning.content}`);
-  relatedPatterns?.forEach((p) => console.log(`  Pattern: ${p.name}`));
-  relatedMistakes?.forEach((m) => console.log(`  Mistake: ${m.description}`));
-});
+// Create and link workflows for each issue
+for (const { issue, wave } of sortedIssues) {
+  const workflow = checkpoint.create(issue, branch, worktreePath);
+  checkpoint.linkWorkflowToMilestone(workflow.id, milestone.id, wave);
+}
 
-// Query by file path
-const fileResults = await knowledge.query({
-  filePath: "src/api/users.ts",
-});
-
-// Search by keywords (AND logic)
-const searchResults = await knowledge.query({
-  keywords: ["validation", "security"],
-});
-
-// Filter by source issue
-const issueResults = await knowledge.query({
-  issueNumber: 123,
-});
-
-// Combine multiple filters (AND logic)
-const combinedResults = await knowledge.query({
-  codeArea: "Security",
-  filePath: "src/auth/login.ts",
-  keywords: ["password"],
-  limit: 5,
-});
+// Track progress
+checkpoint.setMilestonePhase(milestone.id, "execute");
 ```
 
-### Convenience Query Methods
+### Session Hooks (Planned)
 
-```typescript
-// Get mistakes for a file (useful for pre-commit checks)
-const mistakes = await knowledge.getMistakesForFile("src/api/handler.ts");
-if (mistakes.length > 0) {
-  console.log("Past mistakes in this file:");
-  mistakes.forEach((m) => console.log(`  - ${m.description}: ${m.howFixed}`));
-}
+Future: Automatic learning capture at session boundaries ([#367](https://github.com/rollercoaster-dev/monorepo/issues/367)).
 
-// Get patterns for a code area (useful for scaffolding)
-const patterns = await knowledge.getPatternsForArea("Security");
-patterns.forEach((p) => console.log(`${p.name}: ${p.description}`));
+### Context Injection (Planned)
+
+Future: Auto-inject relevant knowledge into agent prompts ([#385](https://github.com/rollercoaster-dev/monorepo/issues/385)).
+
+---
+
+## Roadmap
+
+Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/rollercoaster-dev/monorepo/milestone/22)
+
+### Completed
+
+- [x] Checkpoint API (workflows, milestones, baselines)
+- [x] Knowledge storage (`knowledge.store()`) - [#365](https://github.com/rollercoaster-dev/monorepo/issues/365)
+- [x] Query API (`knowledge.query()`) - [#366](https://github.com/rollercoaster-dev/monorepo/issues/366)
+- [x] CLI for checkpoint operations
+
+### Planned
+
+| Feature                      | Issue                                                            | Priority |
+| ---------------------------- | ---------------------------------------------------------------- | -------- |
+| Session lifecycle hooks      | [#367](https://github.com/rollercoaster-dev/monorepo/issues/367) | High     |
+| Semantic search (embeddings) | [#379](https://github.com/rollercoaster-dev/monorepo/issues/379) | High     |
+| Context injection            | [#385](https://github.com/rollercoaster-dev/monorepo/issues/385) | High     |
+| CLI for knowledge commands   | [#380](https://github.com/rollercoaster-dev/monorepo/issues/380) | Medium   |
+| SUPERSEDES relationship      | [#383](https://github.com/rollercoaster-dev/monorepo/issues/383) | Low      |
+| LED_TO semantics cleanup     | [#381](https://github.com/rollercoaster-dev/monorepo/issues/381) | Low      |
+
+---
+
+## Contributing
+
+### Development
+
+```bash
+# Run tests
+bun test packages/claude-knowledge
+
+# Type check
+bun run type-check --filter claude-knowledge
 ```
 
-### Query Traversal
+### Database Reset
 
-The `query()` function performs graph traversal:
-
-- **1-hop traversal**: Finds learnings via `ABOUT` (CodeArea) or `IN_FILE` (File) relationships
-- **2-hop traversal**: Includes related patterns and mistakes via `LED_TO` relationships
-- **Results**: Ordered by recency (newest first), respects limit parameter (default: 50)
-
-### Relationships
-
-The knowledge graph automatically creates and manages relationships:
-
-- **ABOUT**: Learning → CodeArea (auto-created from `codeArea` field)
-- **IN_FILE**: Learning/Mistake → File (auto-created from `filePath` field)
-- **APPLIES_TO**: Pattern → CodeArea
-- **LED_TO**: Pattern → Learning, Mistake → Learning
-
-### Graph Schema
-
-Entities and relationships are stored in SQLite tables:
-
-- `entities`: All graph nodes (Learning, Pattern, Mistake, CodeArea, File)
-- `relationships`: All graph edges with type constraints
-- Indexes optimize traversal and queries
-
-## API Reference
-
-### checkpoint.create(issueNumber, branch, worktree?)
-
-Create a new workflow checkpoint.
-
-### checkpoint.save(workflow)
-
-Save/update workflow state.
-
-### checkpoint.load(workflowId)
-
-Load full checkpoint data (workflow + actions + commits).
-
-### checkpoint.findByIssue(issueNumber)
-
-Find most recent workflow for an issue.
-
-### checkpoint.logAction(workflowId, action, result, metadata?)
-
-Log an action for debugging/trace.
-
-### checkpoint.logCommit(workflowId, sha, message)
-
-Log a commit made during workflow.
-
-### checkpoint.setPhase(workflowId, phase)
-
-Update workflow phase. Valid phases: `research`, `implement`, `review`, `finalize`.
-
-### checkpoint.setStatus(workflowId, status)
-
-Update workflow status. Valid statuses: `running`, `paused`, `completed`, `failed`.
-
-### checkpoint.incrementRetry(workflowId)
-
-Increment and return retry count.
-
-### checkpoint.listActive()
-
-List all non-completed workflows.
-
-### checkpoint.delete(workflowId)
-
-Delete workflow and all associated data.
-
-### knowledge.store(learnings)
-
-Store learnings in the knowledge graph. Auto-creates CodeArea and File entities.
-
-### knowledge.storePattern(pattern, learningIds?)
-
-Store a pattern. Optionally link to learnings that led to the pattern.
-
-### knowledge.storeMistake(mistake, learningId?)
-
-Store a mistake. Optionally link to the learning that fixed it.
-
-### knowledge.query(context)
-
-Query the knowledge graph for learnings. Returns `QueryResult[]` with learnings and related patterns/mistakes.
-
-**Parameters:**
-
-- `context.codeArea?: string` - Filter by code area (1-hop via ABOUT)
-- `context.filePath?: string` - Filter by file path (1-hop via IN_FILE)
-- `context.keywords?: string[]` - Search content (AND logic)
-- `context.issueNumber?: number` - Filter by source issue
-- `context.limit?: number` - Max results (default: 50)
-
-**Returns:** Array of `QueryResult` objects containing:
-
-- `learning: Learning` - The matched learning
-- `relatedPatterns?: Pattern[]` - Patterns linked via LED_TO (2-hop)
-- `relatedMistakes?: Mistake[]` - Mistakes linked via LED_TO (2-hop)
-
-### knowledge.getMistakesForFile(filePath)
-
-Get all mistakes associated with a specific file. Useful for pre-commit checks.
-
-### knowledge.getPatternsForArea(codeArea)
-
-Get all patterns that apply to a specific code area. Useful for scaffolding.
-
-## Types
-
-```typescript
-type WorkflowPhase = "research" | "implement" | "review" | "finalize";
-type WorkflowStatus = "running" | "paused" | "completed" | "failed";
-
-interface Workflow {
-  id: string;
-  issueNumber: number;
-  branch: string;
-  worktree: string | null;
-  phase: WorkflowPhase;
-  status: WorkflowStatus;
-  retryCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CheckpointData {
-  workflow: Workflow;
-  actions: Action[];
-  commits: Commit[];
-}
-
-// Knowledge Graph Types
-interface Learning {
-  id: string;
-  content: string;
-  sourceIssue?: number;
-  codeArea?: string;
-  filePath?: string;
-  confidence?: number; // 0.0-1.0
-  metadata?: Record<string, unknown>;
-}
-
-interface Pattern {
-  id: string;
-  name: string;
-  description: string;
-  codeArea?: string;
-}
-
-interface Mistake {
-  id: string;
-  description: string;
-  howFixed: string;
-  filePath?: string;
-}
-
-type EntityType = "Learning" | "CodeArea" | "File" | "Pattern" | "Mistake";
-type RelationshipType =
-  | "ABOUT"
-  | "IN_FILE"
-  | "LED_TO"
-  | "APPLIES_TO"
-  | "SUPERSEDES";
-
-// Query API Types
-interface QueryContext {
-  codeArea?: string;
-  filePath?: string;
-  keywords?: string[];
-  issueNumber?: number;
-  limit?: number; // default: 50
-}
-
-interface QueryResult {
-  learning: Learning;
-  relatedPatterns?: Pattern[];
-  relatedMistakes?: Mistake[];
-  relevanceScore?: number; // Future enhancement
-}
+```bash
+# Delete the database to start fresh
+rm .claude/execution-state.db
 ```
+
+### Finding Work
+
+Issues labeled `pkg:claude-knowledge`:
+https://github.com/rollercoaster-dev/monorepo/labels/pkg%3Aclaude-knowledge
