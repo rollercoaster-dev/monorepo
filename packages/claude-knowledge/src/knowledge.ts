@@ -1,4 +1,5 @@
 import { getDatabase } from "./db/sqlite";
+import type { Database } from "bun:sqlite";
 import type {
   Learning,
   Pattern,
@@ -7,19 +8,25 @@ import type {
   RelationshipType,
 } from "./types";
 import { randomUUID } from "crypto";
+// Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
 
 /**
  * Create or merge an entity in the knowledge graph.
  * If entity with same ID exists, updates it. Otherwise creates new.
+ *
+ * @param db - Database handle (passed for transaction consistency)
+ * @param type - Entity type
+ * @param id - Entity ID
+ * @param data - Entity data
  * @returns The entity ID (existing or new)
  */
 function createOrMergeEntity(
+  db: Database,
   type: EntityType,
   id: string,
   data: unknown,
 ): string {
-  const db = getDatabase();
   const now = new Date().toISOString();
 
   const existing = db
@@ -48,14 +55,20 @@ function createOrMergeEntity(
 /**
  * Create a relationship between two entities.
  * Idempotent - no-op if relationship already exists.
+ *
+ * @param db - Database handle (passed for transaction consistency)
+ * @param fromId - Source entity ID
+ * @param toId - Target entity ID
+ * @param type - Relationship type
+ * @param data - Optional relationship metadata
  */
 function createRelationship(
+  db: Database,
   fromId: string,
   toId: string,
   type: RelationshipType,
   data?: Record<string, unknown>,
 ): void {
-  const db = getDatabase();
   const now = new Date().toISOString();
 
   const existing = db
@@ -82,6 +95,10 @@ function createRelationship(
  * Creates Learning entities and auto-creates/merges related CodeArea and File entities.
  * Establishes ABOUT and IN_FILE relationships.
  *
+ * @remarks
+ * This function is async to support future async operations (e.g., embedding generation).
+ * Current implementation uses synchronous bun:sqlite operations.
+ *
  * @param learnings - Array of learnings to store
  * @throws Error if storage fails (transaction is rolled back)
  */
@@ -101,7 +118,7 @@ export async function store(learnings: Learning[]): Promise<void> {
       const learningId = learning.id || `learning-${randomUUID()}`;
 
       // Create Learning entity
-      createOrMergeEntity("Learning", learningId, {
+      createOrMergeEntity(db, "Learning", learningId, {
         ...learning,
         id: learningId,
       });
@@ -109,23 +126,24 @@ export async function store(learnings: Learning[]): Promise<void> {
       // Auto-create/merge CodeArea entity if specified
       if (learning.codeArea) {
         const codeAreaId = `codearea-${learning.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-        createOrMergeEntity("CodeArea", codeAreaId, {
+        createOrMergeEntity(db, "CodeArea", codeAreaId, {
           name: learning.codeArea,
         });
 
         // Create ABOUT relationship
-        createRelationship(learningId, codeAreaId, "ABOUT");
+        createRelationship(db, learningId, codeAreaId, "ABOUT");
       }
 
       // Auto-create/merge File entity if specified
       if (learning.filePath) {
+        // Buffer is global in Bun
         const fileId = `file-${Buffer.from(learning.filePath).toString("base64url")}`;
-        createOrMergeEntity("File", fileId, {
+        createOrMergeEntity(db, "File", fileId, {
           path: learning.filePath,
         });
 
         // Create IN_FILE relationship
-        createRelationship(learningId, fileId, "IN_FILE");
+        createRelationship(db, learningId, fileId, "IN_FILE");
       }
     }
 
@@ -144,6 +162,10 @@ export async function store(learnings: Learning[]): Promise<void> {
  * Creates Pattern entity and optionally links to Learning entities.
  * Establishes APPLIES_TO relationship to CodeArea if specified.
  *
+ * @remarks
+ * This function is async to support future async operations (e.g., embedding generation).
+ * Current implementation uses synchronous bun:sqlite operations.
+ *
  * @param pattern - The pattern to store
  * @param learningIds - Optional array of learning IDs this pattern is derived from
  * @throws Error if storage fails or referenced learnings don't exist
@@ -161,7 +183,7 @@ export async function storePattern(
     const patternId = pattern.id || `pattern-${randomUUID()}`;
 
     // Create Pattern entity
-    createOrMergeEntity("Pattern", patternId, {
+    createOrMergeEntity(db, "Pattern", patternId, {
       ...pattern,
       id: patternId,
     });
@@ -169,11 +191,11 @@ export async function storePattern(
     // Link to CodeArea if specified
     if (pattern.codeArea) {
       const codeAreaId = `codearea-${pattern.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-      createOrMergeEntity("CodeArea", codeAreaId, {
+      createOrMergeEntity(db, "CodeArea", codeAreaId, {
         name: pattern.codeArea,
       });
 
-      createRelationship(patternId, codeAreaId, "APPLIES_TO");
+      createRelationship(db, patternId, codeAreaId, "APPLIES_TO");
     }
 
     // Link to related learnings (LED_TO: pattern derived from learnings)
@@ -191,7 +213,7 @@ export async function storePattern(
           throw new Error(`Learning with ID "${learningId}" does not exist`);
         }
 
-        createRelationship(patternId, learningId, "LED_TO");
+        createRelationship(db, patternId, learningId, "LED_TO");
       }
     }
 
@@ -211,6 +233,10 @@ export async function storePattern(
  * Establishes IN_FILE relationship if filePath specified.
  * Establishes LED_TO relationship to the Learning (mistake led to learning).
  *
+ * @remarks
+ * This function is async to support future async operations (e.g., embedding generation).
+ * Current implementation uses synchronous bun:sqlite operations.
+ *
  * @param mistake - The mistake to store
  * @param learningId - Optional ID of the learning that fixed this mistake
  * @throws Error if storage fails or referenced learning doesn't exist
@@ -228,19 +254,20 @@ export async function storeMistake(
     const mistakeId = mistake.id || `mistake-${randomUUID()}`;
 
     // Create Mistake entity
-    createOrMergeEntity("Mistake", mistakeId, {
+    createOrMergeEntity(db, "Mistake", mistakeId, {
       ...mistake,
       id: mistakeId,
     });
 
     // Link to File if specified
     if (mistake.filePath) {
+      // Buffer is global in Bun
       const fileId = `file-${Buffer.from(mistake.filePath).toString("base64url")}`;
-      createOrMergeEntity("File", fileId, {
+      createOrMergeEntity(db, "File", fileId, {
         path: mistake.filePath,
       });
 
-      createRelationship(mistakeId, fileId, "IN_FILE");
+      createRelationship(db, mistakeId, fileId, "IN_FILE");
     }
 
     // Link to learning (LED_TO: mistake led to learning that fixed it)
@@ -256,7 +283,7 @@ export async function storeMistake(
         throw new Error(`Learning with ID "${learningId}" does not exist`);
       }
 
-      createRelationship(mistakeId, learningId, "LED_TO");
+      createRelationship(db, mistakeId, learningId, "LED_TO");
     }
 
     db.run("COMMIT");
