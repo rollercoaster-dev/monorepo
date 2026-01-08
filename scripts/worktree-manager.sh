@@ -177,30 +177,73 @@ remove_from_state() {
   fi
 }
 
-# set_milestone_field sets a top-level field in the state file (for milestone metadata).
+# set_milestone_field sets a milestone field using the CLI
 set_milestone_field() {
   local field=$1
   local value=$2
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg field "$field" --arg value "$value" '.[$field] = $value' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  local milestone_id
+  milestone_id=$(get_milestone_id)
+
+  case "$field" in
+    phase)
+      cli_call milestone set-phase "$milestone_id" "$value" > /dev/null
+      ;;
+    milestone_status|status)
+      cli_call milestone set-status "$milestone_id" "$value" > /dev/null
+      ;;
+    milestone|started|integration_test_status|integration_test_timestamp)
+      # These fields are stored as metadata in milestone
+      # For now, we'll skip updating these via set-milestone-field
+      # They are handled differently (milestone name is set at creation, etc.)
+      log_warn "Field '$field' cannot be updated via set_milestone_field (use CLI directly or it's read-only)"
+      ;;
+    *)
+      log_warn "Unsupported milestone field: $field"
+      ;;
+  esac
 }
 
-# set_milestone_object sets a top-level object field in the state file.
-set_milestone_object() {
-  local field=$1
-  local json_value=$2
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg field "$field" --argjson value "$json_value" '.[$field] = $value' \
-     "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
-}
-
-# get_milestone_field retrieves a top-level field from the state file.
+# get_milestone_field retrieves a milestone field using the CLI
 get_milestone_field() {
   local field=$1
-  jq -r --arg field "$field" '.[$field] // ""' "$STATE_FILE" 2>/dev/null
+  local milestone_id
+  milestone_id=$(get_milestone_id)
+
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id")
+
+  case "$field" in
+    milestone)
+      echo "$milestone_data" | jq -r '.milestone.name // ""'
+      ;;
+    phase)
+      echo "$milestone_data" | jq -r '.milestone.phase // ""'
+      ;;
+    milestone_status|status)
+      echo "$milestone_data" | jq -r '.milestone.status // ""'
+      ;;
+    started)
+      echo "$milestone_data" | jq -r '.milestone.createdAt // ""'
+      ;;
+    checkpoint_version)
+      # Hardcoded for now - checkpoint version is implicit in CLI
+      echo "2.0"
+      ;;
+    checkpoint_description|checkpoint_timestamp)
+      # These are now stored differently in CLI (via log-action)
+      # For backward compat, return empty
+      echo ""
+      ;;
+    integration_test_status|integration_test_timestamp)
+      # These would need to be stored as milestone metadata or workflow actions
+      # For now return empty (will be handled in integration-test command)
+      echo ""
+      ;;
+    *)
+      log_warn "Unknown milestone field: $field"
+      echo ""
+      ;;
+  esac
 }
 
 #------------------------------------------------------------------------------
