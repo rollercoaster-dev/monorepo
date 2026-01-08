@@ -574,65 +574,70 @@ cmd_checkpoint() {
 
   ensure_base_dir
 
-  local checkpoint_timestamp
-  checkpoint_timestamp=$(date -Iseconds)
+  local milestone_id
+  milestone_id=$(get_milestone_id)
 
-  # Collect current PR statuses
-  local pr_statuses="{}"
-  local pr_list
-  pr_list=$(jq -r '.worktrees | to_entries[] | select(.value.pr != "" and .value.pr != null) | .value.pr' "$STATE_FILE" 2>/dev/null || echo "")
-
-  if [[ -n "$pr_list" ]]; then
-    for pr in $pr_list; do
-      local pr_state
-      pr_state=$(gh pr view "$pr" --json state,mergeable,reviews,statusCheckRollup 2>/dev/null || echo '{}')
-      # Validate JSON before using with --argjson
-      if ! echo "$pr_state" | jq empty 2>/dev/null; then
-        pr_state='{}'
-      fi
-      pr_statuses=$(echo "$pr_statuses" | jq --arg pr "$pr" --argjson state "$pr_state" '.[$pr] = $state')
-    done
+  # Update milestone phase
+  if [[ -n "$phase" ]]; then
+    cli_call milestone set-phase "$milestone_id" "$phase" > /dev/null
   fi
 
-  # Update state with checkpoint info
-  local tmp_file
-  tmp_file=$(mktemp)
-  jq --arg version "$CHECKPOINT_VERSION" \
-     --arg phase "$phase" \
-     --arg description "$description" \
-     --arg timestamp "$checkpoint_timestamp" \
-     --argjson pr_statuses "$pr_statuses" \
-     '. + {
-       checkpoint_version: $version,
-       phase: $phase,
-       checkpoint_description: $description,
-       checkpoint_timestamp: $timestamp,
-       pr_statuses: $pr_statuses
-     }' "$STATE_FILE" > "$tmp_file" && mv "$tmp_file" "$STATE_FILE"
+  # Log checkpoint action for each active workflow
+  local workflows pr_count
+  workflows=$(cli_call workflow list-active)
+  pr_count=0
+
+  # Process each workflow to log checkpoint action with PR status
+  echo "$workflows" | jq -c '.[]' | while read -r workflow; do
+    local workflow_id issue_number
+    workflow_id=$(echo "$workflow" | jq -r '.id')
+    issue_number=$(echo "$workflow" | jq -r '.issueNumber')
+
+    # Try to get PR number from recent actions
+    local workflow_data pr_number
+    workflow_data=$(cli_call workflow get "$workflow_id")
+    pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
+
+    if [[ -n "$pr_number" ]]; then
+      # Get PR status from GitHub
+      local pr_state
+      pr_state=$(gh pr view "$pr_number" --json state,mergeable,reviews,statusCheckRollup 2>/dev/null || echo '{}')
+
+      # Validate JSON before logging
+      if echo "$pr_state" | jq empty 2>/dev/null; then
+        local metadata
+        metadata=$(jq -n --arg desc "$description" --argjson pr_state "$pr_state" \
+          '{description: $desc, pr_state: $pr_state}')
+        cli_call workflow log-action "$workflow_id" "checkpoint" "success" "$metadata" > /dev/null
+        ((pr_count++)) || true
+      fi
+    fi
+  done
 
   log_success "Checkpoint saved at phase: ${phase:-unspecified}"
-  echo "  Timestamp: $checkpoint_timestamp"
+  echo "  Timestamp: $(date -Iseconds)"
   echo "  Description: $description"
-  echo "  PRs tracked: $(echo "$pr_list" | wc -w | tr -d ' ')"
+  echo "  PRs tracked: $pr_count"
 }
 
 # cmd_resume displays checkpoint info and allows resuming from saved state.
 cmd_resume() {
   ensure_base_dir
 
-  if [[ ! -f "$STATE_FILE" ]]; then
-    log_error "No state file found. Nothing to resume."
+  local milestone_id
+  milestone_id=$(cat "$MILESTONE_ID_FILE" 2>/dev/null || echo "")
+
+  if [[ -z "$milestone_id" ]]; then
+    log_error "No milestone found. Run preflight first."
     exit 1
   fi
 
-  local checkpoint_version
-  checkpoint_version=$(get_milestone_field "checkpoint_version")
+  local milestone_data
+  milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
 
-  if [[ -z "$checkpoint_version" ]]; then
-    log_warn "No checkpoint found in state file."
-    log_info "Current worktrees:"
-    cmd_status
-    exit 0
+  if [[ "$milestone_data" == "{}" ]]; then
+    log_error "No checkpoint found. Nothing to resume."
+    exit 1
   fi
 
   echo ""
@@ -641,27 +646,30 @@ cmd_resume() {
   echo "└─────────────────────────────────────────────────────────────┘"
   echo ""
 
-  local milestone phase description timestamp
-  milestone=$(get_milestone_field "milestone")
-  phase=$(get_milestone_field "phase")
-  description=$(get_milestone_field "checkpoint_description")
-  timestamp=$(get_milestone_field "checkpoint_timestamp")
+  local milestone phase status created updated
+  milestone=$(echo "$milestone_data" | jq -r '.milestone.name // "unknown"')
+  phase=$(echo "$milestone_data" | jq -r '.milestone.phase // "unknown"')
+  status=$(echo "$milestone_data" | jq -r '.milestone.status // "unknown"')
+  created=$(echo "$milestone_data" | jq -r '.milestone.createdAt // "unknown"')
+  updated=$(echo "$milestone_data" | jq -r '.milestone.updatedAt // "unknown"')
 
-  printf "  %-18s %s\n" "Milestone:" "${milestone:-unknown}"
-  printf "  %-18s %s\n" "Phase:" "${phase:-unknown}"
-  printf "  %-18s %s\n" "Description:" "${description:-none}"
-  printf "  %-18s %s\n" "Timestamp:" "${timestamp:-unknown}"
-  printf "  %-18s %s\n" "Version:" "$checkpoint_version"
+  printf "  %-18s %s\n" "Milestone:" "$milestone"
+  printf "  %-18s %s\n" "Phase:" "$phase"
+  printf "  %-18s %s\n" "Status:" "$status"
+  printf "  %-18s %s\n" "Created:" "$created"
+  printf "  %-18s %s\n" "Updated:" "$updated"
+  printf "  %-18s %s\n" "Version:" "2.0"
   echo ""
 
   # Show worktree status
   cmd_status
 
-  # Show pending work
-  local completed_count failed_count pending_count
-  completed_count=$(jq '[.worktrees | to_entries[] | select(.value.status == "merged")] | length' "$STATE_FILE")
-  failed_count=$(jq '[.worktrees | to_entries[] | select(.value.status == "failed")] | length' "$STATE_FILE")
-  pending_count=$(jq '[.worktrees | to_entries[] | select(.value.status != "merged" and .value.status != "failed")] | length' "$STATE_FILE")
+  # Show pending work from workflows
+  local workflows completed_count failed_count pending_count
+  workflows=$(echo "$milestone_data" | jq -r '.workflows // []')
+  completed_count=$(echo "$workflows" | jq '[.[] | select(.status == "completed")] | length')
+  failed_count=$(echo "$workflows" | jq '[.[] | select(.status == "failed")] | length')
+  pending_count=$(echo "$workflows" | jq '[.[] | select(.status != "completed" and .status != "failed")] | length')
 
   echo "Summary:"
   printf "  %-18s %d\n" "Completed:" "$completed_count"
@@ -669,7 +677,7 @@ cmd_resume() {
   printf "  %-18s %d\n" "Pending:" "$pending_count"
   echo ""
 
-  log_info "To continue from this checkpoint, resume your workflow at phase: ${phase:-unknown}"
+  log_info "To continue from this checkpoint, resume your workflow at phase: $phase"
 }
 
 # cmd_state_path prints the path to the state file.
