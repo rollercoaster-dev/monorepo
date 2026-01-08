@@ -3,6 +3,15 @@
 # Worktree Manager for /auto-milestone
 # Manages git worktrees for parallel issue development
 #
+# MIGRATION NOTE (v2.0):
+# This script now uses claude-knowledge SQLite for state management.
+# Legacy .worktrees/.state.json files are no longer created or read.
+# State is persisted in ~/.claude/state/checkpoint.db via the CLI.
+#
+# Dependencies:
+# - git, gh, jq, bun (required)
+# - packages/claude-knowledge CLI (for state management)
+#
 
 set -euo pipefail
 
@@ -1152,7 +1161,10 @@ cmd_validate_state() {
 # cmd_help prints the usage message and a list of available commands, status values, and examples for the worktree-manager script.
 cmd_help() {
   cat << 'EOF'
-Worktree Manager for /auto-milestone
+Worktree Manager for /auto-milestone (v2.0)
+
+State Management: SQLite-backed via claude-knowledge CLI
+Database: ~/.claude/state/checkpoint.db
 
 Usage: worktree-manager.sh <command> [arguments]
 
@@ -1165,28 +1177,25 @@ Worktree Commands:
                             Update the status of a worktree
   path <issue>              Print the path to a worktree
   rebase <issue>            Rebase a worktree on main
-  sync                      Sync state file with actual git worktrees
+  sync                      Sync SQLite state with actual git worktrees
   cleanup-all [--force] [--dry-run]
                             Remove all worktrees (--force skips confirmation, --dry-run shows what would be removed)
 
 Milestone Commands:
   checkpoint [phase] [desc] Save milestone state for resume after context overflow
   resume                    Display checkpoint info and resume guidance
-  state-path                Print path to state file
+  state-path                Print path to SQLite database
   preflight                 Run lint/type-check baseline on main before work
   ci-status <pr> [--wait]   Check CI status for a PR (--wait blocks until complete)
   integration-test          Run full test suite on main after all merges
   summary                   Generate milestone completion summary report
-  validate-state            Validate and migrate state file schema
+  validate-state            Validate SQLite state and sync with git
 
-Status Values:
-  created       Worktree created, ready for work
-  implementing  /auto-issue running
-  pr-created    PR has been created
-  reviewing     Waiting for/handling reviews
-  ready-merge   Approved and ready to merge
-  merged        PR merged, worktree can be cleaned
-  failed        /auto-issue escalated
+Status Values (CLI):
+  running       Workflow in progress
+  paused        Temporarily paused
+  completed     Successfully finished
+  failed        Encountered errors
 
 Environment Variables:
   CI_POLL_TIMEOUT   Timeout for CI wait in seconds (default: 1800)
@@ -1196,16 +1205,26 @@ Examples:
   # Basic worktree operations
   worktree-manager.sh create 111
   worktree-manager.sh create 111 feat/my-custom-branch
-  worktree-manager.sh update-status 111 pr-created 145
+  worktree-manager.sh update-status 111 running
   worktree-manager.sh remove 111
 
   # Milestone workflow
   worktree-manager.sh preflight                    # Baseline before work
-  worktree-manager.sh checkpoint "executing" "after issue 111"
+  worktree-manager.sh checkpoint "execute" "after issue 111"
   worktree-manager.sh ci-status 145 --wait         # Wait for CI
   worktree-manager.sh integration-test             # Post-merge validation
   worktree-manager.sh summary                      # Final report
   worktree-manager.sh cleanup-all --force          # Cleanup all worktrees
+
+Migration from v1.0 (JSON):
+  Legacy .worktrees/.state.json files are no longer used.
+  State is now stored in SQLite. Run 'preflight' to initialize.
+  No automatic migration of old state - start fresh or manually port data.
+
+Troubleshooting:
+  - "No milestone ID found" → Run 'worktree-manager.sh preflight'
+  - "CLI command failed" → Check claude-knowledge package is installed
+  - Database issues → Check ~/.claude/state/checkpoint.db exists
 EOF
 }
 
