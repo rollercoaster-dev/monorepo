@@ -65,7 +65,8 @@ If the MCP server is unavailable:
 // Helper: Send notification (non-blocking, fail-safe)
 function notifyTelegram(message: string): void {
   try {
-    mcp__mcp - communicator - telegram__notify_user({ message });
+    // prettier-ignore
+    mcp__mcp_communicator_telegram__notify_user({ message });
   } catch {
     console.log("[AUTO-ISSUE] (Telegram unavailable - continuing)");
   }
@@ -74,7 +75,8 @@ function notifyTelegram(message: string): void {
 // Helper: Ask user with fallback (blocking)
 async function askTelegram(question: string): Promise<string> {
   try {
-    return (await mcp__mcp) - communicator - telegram__ask_user({ question });
+    // prettier-ignore
+    return await mcp__mcp_communicator_telegram__ask_user({ question });
   } catch {
     console.log(
       "[AUTO-ISSUE] (Telegram unavailable - waiting for terminal input)",
@@ -84,6 +86,32 @@ async function askTelegram(question: string): Promise<string> {
   }
 }
 ```
+
+### Enabling Telegram MCP
+
+To enable Telegram notifications, configure the MCP server in `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-communicator-telegram": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "-p", "mcp-communicator-telegram", "mcptelegram"],
+      "env": {
+        "TELEGRAM_TOKEN": "<your-bot-token>",
+        "CHAT_ID": "<your-chat-id>"
+      }
+    }
+  }
+}
+```
+
+**Getting your credentials:**
+
+1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
+2. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
+3. Restart Claude Code after configuration
 
 ---
 
@@ -335,7 +363,8 @@ update_board_status() {
 
 Dev plan created at .claude/dev-plans/issue-$ARGUMENTS.md
 Starting implementation...`);
-```
+
+````
 
 ---
 
@@ -355,7 +384,7 @@ Starting implementation...`);
      task: "execute dev plan with atomic commits",
      devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`,
    });
-   ```
+````
 
 8. **On completion, run validation:**
 
@@ -382,6 +411,7 @@ Starting implementation...`);
 
 Implementation complete: ${$COMMIT_COUNT} commits
 Starting code review...`);
+
 ```
 
 ---
@@ -392,39 +422,42 @@ Starting code review...`);
 
 9. **Launch review agents in parallel:**
 
-   ```
-   - pr-review-toolkit:code-reviewer
-   - pr-review-toolkit:pr-test-analyzer
-   - pr-review-toolkit:silent-failure-hunter
-   - openbadges-compliance-reviewer (if badge code detected)
-   ```
+```
 
-   **Log each agent spawn:**
+- pr-review-toolkit:code-reviewer
+- pr-review-toolkit:pr-test-analyzer
+- pr-review-toolkit:silent-failure-hunter
+- openbadges-compliance-reviewer (if badge code detected)
 
-   ```typescript
-   const reviewAgents = [
-     "pr-review-toolkit:code-reviewer",
-     "pr-review-toolkit:pr-test-analyzer",
-     "pr-review-toolkit:silent-failure-hunter",
-   ];
+````
 
-   // Add OB compliance if badge code detected
-   if (hasBadgeCode) {
-     reviewAgents.push("openbadges-compliance-reviewer");
-   }
+**Log each agent spawn:**
 
-   for (const agent of reviewAgents) {
-     checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
-       agent,
-       task: "code review",
-       phase: "review",
-     });
-   }
-   ```
+```typescript
+const reviewAgents = [
+  "pr-review-toolkit:code-reviewer",
+  "pr-review-toolkit:pr-test-analyzer",
+  "pr-review-toolkit:silent-failure-hunter",
+];
 
-   **Badge code detection:** Files matching:
-   - `**/badge*`, `**/credential*`, `**/issuer*`, `**/assertion*`
-   - `**/ob2/**`, `**/ob3/**`, `**/openbadges/**`
+// Add OB compliance if badge code detected
+if (hasBadgeCode) {
+  reviewAgents.push("openbadges-compliance-reviewer");
+}
+
+for (const agent of reviewAgents) {
+  checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
+    agent,
+    task: "code review",
+    phase: "review",
+  });
+}
+````
+
+**Badge code detection:** Files matching:
+
+- `**/badge*`, `**/credential*`, `**/issuer*`, `**/assertion*`
+- `**/ob2/**`, `**/ob3/**`, `**/openbadges/**`
 
 10. **Collect and classify findings:**
 
@@ -495,7 +528,8 @@ else:
 Review complete: ${$CRITICAL_RESOLVED} critical issues resolved
 Fix commits: ${$FIX_COMMIT_COUNT}
 Creating PR...`);
-```
+
+````
 
 ---
 
@@ -558,7 +592,7 @@ https://github.com/rollercoaster-dev/monorepo/pull/${PR_NUMBER}
 
 Commits: ${$TOTAL_COMMITS} implementation + ${$FIX_COMMIT_COUNT} fixes
 Reviews triggered: CodeRabbit, Claude`);
-```
+````
 
 15. **Trigger reviews:**
 
