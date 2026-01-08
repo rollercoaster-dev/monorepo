@@ -6,8 +6,8 @@ Cross-session learning persistence for Claude Code autonomous workflows.
 
 This package provides:
 
-- **Phase 1 (Current):** Execution state persistence for workflow recovery after context compaction
-- **Phase 2 (Future):** Knowledge graph for cross-session learning
+- **Phase 1:** Execution state persistence for workflow recovery after context compaction
+- **Phase 2:** Knowledge graph for cross-session learning (SQLite-based)
 
 ## Installation
 
@@ -87,14 +87,84 @@ checkpoint.setStatus(workflow.id, "completed");
 
 The SQLite database is stored at `.claude/execution-state.db` (gitignored).
 
-## Phase 2 (Not Implemented)
+## Phase 2: Knowledge Graph
 
-The following are placeholders for future work:
+### Storing Learnings
 
-- `knowledge.store()` - Store learnings in Neo4j
-- `knowledge.query()` - Query knowledge graph
-- `hooks.onSessionStart()` - Load relevant knowledge
-- `hooks.onSessionEnd()` - Capture learnings
+```typescript
+import { knowledge } from "claude-knowledge";
+import type { Learning } from "claude-knowledge";
+
+// Store learnings from a session
+const learnings: Learning[] = [
+  {
+    id: "learning-1",
+    content: "Always validate API input with Zod schemas",
+    codeArea: "API Development",
+    confidence: 0.95,
+    sourceIssue: 123,
+  },
+  {
+    id: "learning-2",
+    content: "Use rd-logger for structured logging",
+    filePath: "packages/rd-logger/src/index.ts",
+    confidence: 0.9,
+  },
+];
+
+await knowledge.store(learnings);
+```
+
+### Storing Patterns
+
+```typescript
+import type { Pattern } from "claude-knowledge";
+
+// Store a recognized pattern
+const pattern: Pattern = {
+  id: "pattern-validation",
+  name: "Input Validation Pattern",
+  description: "Validate all user input before processing",
+  codeArea: "Security",
+};
+
+// Link to learnings that led to this pattern
+await knowledge.storePattern(pattern, ["learning-1", "learning-3"]);
+```
+
+### Storing Mistakes
+
+```typescript
+import type { Mistake } from "claude-knowledge";
+
+// Store a mistake and how it was fixed
+const mistake: Mistake = {
+  id: "mistake-sql-injection",
+  description: "Used string concatenation for SQL query",
+  howFixed: "Switched to parameterized queries with bun:sqlite",
+  filePath: "src/db/queries.ts",
+};
+
+// Link to the learning that fixed it
+await knowledge.storeMistake(mistake, "learning-4");
+```
+
+### Relationships
+
+The knowledge graph automatically creates and manages relationships:
+
+- **ABOUT**: Learning → CodeArea (auto-created from `codeArea` field)
+- **IN_FILE**: Learning/Mistake → File (auto-created from `filePath` field)
+- **APPLIES_TO**: Pattern → CodeArea
+- **LED_TO**: Pattern → Learning, Mistake → Learning
+
+### Graph Schema
+
+Entities and relationships are stored in SQLite tables:
+
+- `entities`: All graph nodes (Learning, Pattern, Mistake, CodeArea, File)
+- `relationships`: All graph edges with type constraints
+- Indexes optimize traversal and queries
 
 ## API Reference
 
@@ -142,6 +212,18 @@ List all non-completed workflows.
 
 Delete workflow and all associated data.
 
+### knowledge.store(learnings)
+
+Store learnings in the knowledge graph. Auto-creates CodeArea and File entities.
+
+### knowledge.storePattern(pattern, learningIds?)
+
+Store a pattern. Optionally link to learnings that led to the pattern.
+
+### knowledge.storeMistake(mistake, learningId?)
+
+Store a mistake. Optionally link to the learning that fixed it.
+
 ## Types
 
 ```typescript
@@ -165,4 +247,37 @@ interface CheckpointData {
   actions: Action[];
   commits: Commit[];
 }
+
+// Knowledge Graph Types
+interface Learning {
+  id: string;
+  content: string;
+  sourceIssue?: number;
+  codeArea?: string;
+  filePath?: string;
+  confidence?: number; // 0.0-1.0
+  metadata?: Record<string, unknown>;
+}
+
+interface Pattern {
+  id: string;
+  name: string;
+  description: string;
+  codeArea?: string;
+}
+
+interface Mistake {
+  id: string;
+  description: string;
+  howFixed: string;
+  filePath?: string;
+}
+
+type EntityType = "Learning" | "CodeArea" | "File" | "Pattern" | "Mistake";
+type RelationshipType =
+  | "ABOUT"
+  | "IN_FILE"
+  | "LED_TO"
+  | "APPLIES_TO"
+  | "SUPERSEDES";
 ```
