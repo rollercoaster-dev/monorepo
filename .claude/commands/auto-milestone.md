@@ -742,28 +742,48 @@ Options:
 3. 'continue' - After manual fix`;
 
 // Ask via Telegram (blocking - waits for response)
-const response = await askTelegram(escalationMessage);
+// Loop until we get a valid response
+let handled = false;
+while (!handled) {
+  const response = await askTelegram(escalationMessage);
+  const normalized = response.trim().toLowerCase();
 
-// Handle response
-if (response.startsWith("skip")) {
-  const issueNum = parseInt(response.split(" ")[1]);
-  console.log(`[AUTO-MILESTONE] Skipping issue #${issueNum} and dependents`);
-  // Mark issue and dependents as skipped
-} else if (response.startsWith("force")) {
-  const issueNum = parseInt(response.split(" ")[1]);
-  console.log(`[AUTO-MILESTONE] Force-approving issue #${issueNum}`);
-  // Proceed to merge despite issues
-} else if (response === "continue") {
-  console.log(`[AUTO-MILESTONE] Continuing after manual fix`);
-  // Re-run review
-} else if (response === "TELEGRAM_UNAVAILABLE") {
-  console.log(
-    "[AUTO-MILESTONE] Telegram unavailable - waiting for terminal input",
-  );
-  // Fall through to terminal-based escalation
-} else {
-  console.log(`[AUTO-MILESTONE] Unknown response: ${response}`);
-  // Re-prompt
+  // Handle response with validation
+  if (normalized.startsWith("skip")) {
+    const issueNum = parseInt(response.split(" ")[1], 10);
+    if (Number.isNaN(issueNum)) {
+      console.log(`[AUTO-MILESTONE] Invalid format. Use: skip <issue-number>`);
+      continue; // Re-prompt
+    }
+    console.log(`[AUTO-MILESTONE] Skipping issue #${issueNum} and dependents`);
+    // Mark issue and dependents as skipped
+    handled = true;
+  } else if (normalized.startsWith("force")) {
+    const issueNum = parseInt(response.split(" ")[1], 10);
+    if (Number.isNaN(issueNum)) {
+      console.log(`[AUTO-MILESTONE] Invalid format. Use: force <issue-number>`);
+      continue; // Re-prompt
+    }
+    console.log(`[AUTO-MILESTONE] Force-approving issue #${issueNum}`);
+    // Proceed to merge despite issues
+    handled = true;
+  } else if (normalized === "continue") {
+    console.log(`[AUTO-MILESTONE] Continuing after manual fix`);
+    // Re-run review
+    handled = true;
+  } else if (response === "TELEGRAM_UNAVAILABLE") {
+    console.log(
+      "[AUTO-MILESTONE] Telegram unavailable - waiting for terminal input",
+    );
+    // Fall through to terminal-based escalation
+    handled = true;
+  } else {
+    console.log(`[AUTO-MILESTONE] Unknown response: ${response}`);
+    console.log(
+      `[AUTO-MILESTONE] Valid options: skip <num>, force <num>, continue`,
+    );
+    // Loop continues - will re-prompt
+  }
 }
 ```
 
