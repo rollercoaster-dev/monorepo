@@ -40,16 +40,18 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Group learnings by code area.
+ * Group learnings by code area and sort groups by relevance.
+ * Groups are sorted by number of learnings (most relevant areas first).
  *
  * @param learnings - Query results to group
- * @returns Map of code area to learnings
+ * @returns Map of code area to learnings, sorted by group size
  */
 export function groupByCodeArea(
   learnings: QueryResult[],
 ): Map<string, QueryResult[]> {
   const groups = new Map<string, QueryResult[]>();
 
+  // Group learnings by code area
   for (const result of learnings) {
     const area = result.learning.codeArea || "General";
     const existing = groups.get(area) || [];
@@ -57,7 +59,12 @@ export function groupByCodeArea(
     groups.set(area, existing);
   }
 
-  return groups;
+  // Sort groups by size (most learnings first)
+  const sortedEntries = Array.from(groups.entries()).sort(
+    (a, b) => b[1].length - a[1].length,
+  );
+
+  return new Map(sortedEntries);
 }
 
 /**
@@ -85,12 +92,13 @@ export function sortByRelevance(
 
 /**
  * Calculate priority score for a learning.
+ * Priority is based on confidence, context matching, and recency.
  *
  * @param learning - The query result to score
  * @param context - Optional context for boosts
  * @returns Priority score (higher = more relevant)
  */
-function calculatePriority(
+export function calculatePriority(
   learning: QueryResult,
   context?: FormatOptions["context"],
 ): number {
