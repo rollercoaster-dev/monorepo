@@ -149,6 +149,71 @@ const mistake: Mistake = {
 await knowledge.storeMistake(mistake, "learning-4");
 ```
 
+### Querying the Knowledge Graph
+
+```typescript
+import { knowledge } from "claude-knowledge";
+import type { QueryContext, QueryResult } from "claude-knowledge";
+
+// Query learnings by code area
+const results = await knowledge.query({
+  codeArea: "API Development",
+  limit: 10,
+});
+
+results.forEach(({ learning, relatedPatterns, relatedMistakes }) => {
+  console.log(`Learning: ${learning.content}`);
+  relatedPatterns?.forEach((p) => console.log(`  Pattern: ${p.name}`));
+  relatedMistakes?.forEach((m) => console.log(`  Mistake: ${m.description}`));
+});
+
+// Query by file path
+const fileResults = await knowledge.query({
+  filePath: "src/api/users.ts",
+});
+
+// Search by keywords (AND logic)
+const searchResults = await knowledge.query({
+  keywords: ["validation", "security"],
+});
+
+// Filter by source issue
+const issueResults = await knowledge.query({
+  issueNumber: 123,
+});
+
+// Combine multiple filters (AND logic)
+const combinedResults = await knowledge.query({
+  codeArea: "Security",
+  filePath: "src/auth/login.ts",
+  keywords: ["password"],
+  limit: 5,
+});
+```
+
+### Convenience Query Methods
+
+```typescript
+// Get mistakes for a file (useful for pre-commit checks)
+const mistakes = await knowledge.getMistakesForFile("src/api/handler.ts");
+if (mistakes.length > 0) {
+  console.log("Past mistakes in this file:");
+  mistakes.forEach((m) => console.log(`  - ${m.description}: ${m.howFixed}`));
+}
+
+// Get patterns for a code area (useful for scaffolding)
+const patterns = await knowledge.getPatternsForArea("Security");
+patterns.forEach((p) => console.log(`${p.name}: ${p.description}`));
+```
+
+### Query Traversal
+
+The `query()` function performs graph traversal:
+
+- **1-hop traversal**: Finds learnings via `ABOUT` (CodeArea) or `IN_FILE` (File) relationships
+- **2-hop traversal**: Includes related patterns and mistakes via `LED_TO` relationships
+- **Results**: Ordered by recency (newest first), respects limit parameter (default: 50)
+
 ### Relationships
 
 The knowledge graph automatically creates and manages relationships:
@@ -224,6 +289,32 @@ Store a pattern. Optionally link to learnings that led to the pattern.
 
 Store a mistake. Optionally link to the learning that fixed it.
 
+### knowledge.query(context)
+
+Query the knowledge graph for learnings. Returns `QueryResult[]` with learnings and related patterns/mistakes.
+
+**Parameters:**
+
+- `context.codeArea?: string` - Filter by code area (1-hop via ABOUT)
+- `context.filePath?: string` - Filter by file path (1-hop via IN_FILE)
+- `context.keywords?: string[]` - Search content (AND logic)
+- `context.issueNumber?: number` - Filter by source issue
+- `context.limit?: number` - Max results (default: 50)
+
+**Returns:** Array of `QueryResult` objects containing:
+
+- `learning: Learning` - The matched learning
+- `relatedPatterns?: Pattern[]` - Patterns linked via LED_TO (2-hop)
+- `relatedMistakes?: Mistake[]` - Mistakes linked via LED_TO (2-hop)
+
+### knowledge.getMistakesForFile(filePath)
+
+Get all mistakes associated with a specific file. Useful for pre-commit checks.
+
+### knowledge.getPatternsForArea(codeArea)
+
+Get all patterns that apply to a specific code area. Useful for scaffolding.
+
 ## Types
 
 ```typescript
@@ -280,4 +371,20 @@ type RelationshipType =
   | "LED_TO"
   | "APPLIES_TO"
   | "SUPERSEDES";
+
+// Query API Types
+interface QueryContext {
+  codeArea?: string;
+  filePath?: string;
+  keywords?: string[];
+  issueNumber?: number;
+  limit?: number; // default: 50
+}
+
+interface QueryResult {
+  learning: Learning;
+  relatedPatterns?: Pattern[];
+  relatedMistakes?: Mistake[];
+  relevanceScore?: number; // Future enhancement
+}
 ```
