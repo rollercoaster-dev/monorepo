@@ -136,8 +136,9 @@ export function parseConventionalCommit(message: string): {
   if (!message) return null;
 
   // Pattern: type(scope): description OR type: description
+  // Use \S.* instead of .+ to avoid ReDoS with spaces after colon
   const match = message.match(
-    /^(feat|fix|refactor|test|docs|chore|build|ci|perf|style)(?:\(([^)]+)\))?:\s*(.+)$/i,
+    /^(feat|fix|refactor|test|docs|chore|build|ci|perf|style)(?:\(([^)]+)\))?:\s*(\S.*)$/i,
   );
 
   if (!match || !match[1] || !match[3]) return null;
