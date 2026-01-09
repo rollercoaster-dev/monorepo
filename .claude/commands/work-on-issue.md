@@ -32,14 +32,21 @@ import {
 
 ### Telegram Notification Points
 
-| Gate/Phase | Type     | Content                          |
-| ---------- | -------- | -------------------------------- |
-| START      | notify   | Workflow started, branch created |
-| GATE 1     | ask_user | Issue summary, ask to proceed    |
-| GATE 2     | ask_user | Plan summary, ask to proceed     |
-| GATE 3     | ask_user | Diff summary, ask to approve     |
-| GATE 4     | ask_user | Findings summary, ask to proceed |
-| END        | notify   | PR link                          |
+| Point             | Type     | Content                            |
+| ----------------- | -------- | ---------------------------------- |
+| START             | notify   | Workflow started, branch created   |
+| GATE 1            | ask_user | Issue summary, ask to proceed      |
+| After Gate 1      | notify   | Starting research phase            |
+| Research complete | notify   | Plan created, ready for review     |
+| GATE 2            | ask_user | Plan summary, ask to proceed       |
+| After Gate 2      | notify   | Starting implementation phase      |
+| GATE 3 (each)     | ask_user | Diff summary, ask to approve       |
+| Commit approved   | notify   | Commit N/M complete                |
+| All commits done  | notify   | Implementation complete, reviewing |
+| GATE 4            | ask_user | Findings summary, ask to proceed   |
+| After Gate 4      | notify   | Starting finalization, creating PR |
+| END               | notify   | PR link                            |
+| Permission needed | notify   | Waiting for terminal tool approval |
 
 ---
 
@@ -204,7 +211,20 @@ Reply "proceed" to continue, or provide feedback.`
 
 ```bash
 bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-1-issue-reviewed" success '{"issue": $ARGUMENTS}'
-````
+```
+
+5b. **Notify via Telegram** (non-blocking):
+
+```typescript
+mcp__mcp_communicator_telegram__notify_user({
+  message: `📋 [WORK-ON-ISSUE #$ARGUMENTS] Gate 1 approved
+
+Starting research phase...
+Analyzing codebase and creating development plan.
+
+You'll be notified when the plan is ready for review.`
+});
+```
 
 6. Spawn `issue-researcher` agent to:
    - Analyze codebase
@@ -215,9 +235,22 @@ bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-1-issue-reviewed" su
 
 8. Update phase to research complete:
 
-   ```bash
-   bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "research-complete" success '{"plan": ".claude/dev-plans/issue-$ARGUMENTS.md"}'
-   ```
+```bash
+bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "research-complete" success '{"plan": ".claude/dev-plans/issue-$ARGUMENTS.md"}'
+```
+
+8b. **Notify via Telegram** (non-blocking):
+
+```typescript
+mcp__mcp_communicator_telegram__notify_user({
+  message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Research complete
+
+Development plan created at:
+.claude/dev-plans/issue-$ARGUMENTS.md
+
+Proceeding to Gate 2: Plan Review`
+});
+```
 
 ---
 
@@ -271,6 +304,19 @@ Reply "proceed" to continue, or provide feedback.`
     bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID implement
     ```
 
+11b. **Notify via Telegram** (non-blocking):
+
+    ```typescript
+    mcp__mcp_communicator_telegram__notify_user({
+      message: `🔨 [WORK-ON-ISSUE #$ARGUMENTS] Gate 2 approved
+
+Starting implementation phase...
+${totalCommits} commits planned.
+
+You'll be prompted to approve each commit individually.`
+});
+```
+
 12. For each atomic commit in the plan:
     - Make the changes according to plan
     - Run validation: `bun run type-check && bun run lint`
@@ -306,6 +352,7 @@ Lines: +<added> -<removed>
 
 Reply "proceed" to approve this commit, or provide feedback.`
 });
+
 ````
 
     - If Telegram unavailable, wait for terminal input
@@ -334,6 +381,18 @@ Reply "proceed" to approve this commit, or provide feedback.`
     bun scripts/checkpoint-cli.ts log-commit $WORKFLOW_ID "$SHA" "<type>(<scope>): <description>"
     ```
 
+16b. **Notify via Telegram** (non-blocking):
+
+    ```typescript
+    mcp__mcp_communicator_telegram__notify_user({
+      message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Commit ${commitNumber}/${totalCommits}
+
+${commitMessage}
+
+${remainingCommits > 0 ? `${remainingCommits} commit(s) remaining.` : 'All commits complete!'}`
+    });
+    ```
+
 17. Repeat for each commit in the plan
 
 **Do NOT batch commits. One at a time, one approval at a time.**
@@ -347,6 +406,21 @@ Reply "proceed" to approve this commit, or provide feedback.`
     ```bash
     bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID review
     bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "implementation-complete" success
+    ```
+
+18b. **Notify via Telegram** (non-blocking):
+
+    ```typescript
+    mcp__mcp_communicator_telegram__notify_user({
+      message: `🔍 [WORK-ON-ISSUE #$ARGUMENTS] Implementation complete
+
+All ${totalCommits} commits approved and applied.
+
+Starting code review phase...
+Running validation and review agents.
+
+You'll be notified when review findings are ready.`
+    });
     ```
 
 19. Run full validation:
@@ -417,6 +491,22 @@ Reply "proceed" to create PR, or provide feedback.`
     bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID finalize
     ```
 
+25b. **Notify via Telegram** (non-blocking):
+
+    ```typescript
+    mcp__mcp_communicator_telegram__notify_user({
+      message: `🚀 [WORK-ON-ISSUE #$ARGUMENTS] Gate 4 approved
+
+Starting finalization phase...
+
+- Cleaning up dev-plan file
+- Pushing branch to remote
+- Creating pull request
+
+You'll receive the PR link when complete.`
+});
+```
+
 26. **Clean up dev-plan file:**
 
     ```bash
@@ -468,9 +558,52 @@ Reviews: CodeRabbit + Claude triggered
 
 Next: Wait for CI and reviews.`
 });
+
 ````
 
 31. Report PR URL and next steps in terminal
+
+---
+
+## Permission Wait Notifications
+
+When Claude needs to wait for terminal tool approval (Edit, Write, Bash with file modifications), notify the user via Telegram so they know action is needed:
+
+**Pattern:**
+
+```typescript
+// Before requesting a tool that needs terminal permission
+mcp__mcp_communicator_telegram__notify_user({
+  message: `⏳ [WORK-ON-ISSUE #$ARGUMENTS] Waiting for permission
+
+Tool: ${toolName}
+File: ${filePath || 'N/A'}
+
+Please check your terminal and approve/deny the operation.`
+});
+
+// Then request the tool (Edit, Write, etc.)
+// ...
+
+// After permission granted (tool executed successfully)
+mcp__mcp_communicator_telegram__notify_user({
+  message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Permission granted
+
+${toolName} completed for ${filePath || 'operation'}.
+Continuing workflow...`
+});
+```
+
+**When to notify:**
+
+- File edits that require approval
+- New file creation
+- Bash commands that modify state
+- Git operations (commit, push)
+
+**Why this matters:**
+
+Without these notifications, users may not realize Claude is waiting for terminal input, especially if they're monitoring progress via Telegram only.
 
 ---
 
@@ -565,3 +698,4 @@ bun scripts/checkpoint-cli.ts log-commit <workflowId> <sha> <message>
 # List active workflows
 bun scripts/checkpoint-cli.ts list-active
 ```
+````
