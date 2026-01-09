@@ -112,7 +112,9 @@ if (args.length === 0) {
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
   console.error("  session-start [--branch <name>] [--issue <number>]");
-  console.error("  session-end [--workflow-id <id>]");
+  console.error(
+    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--review-findings <n>] [--files-read <n>]",
+  );
   console.error("  learning analyze <workflow-id> <dev-plan-path>");
   console.error(
     "  learning query [--code-area <area>] [--file <path>] [--issue <number>]",
@@ -530,11 +532,33 @@ try {
     // Output the summary (for injection into context)
     console.log(context.summary);
 
+    // Output session metadata for session-end to consume
+    // This is output as a special marker that can be captured
+    const metadata = (
+      context as typeof context & {
+        _sessionMetadata?: {
+          sessionId: string;
+          learningsInjected: number;
+          startTime: string;
+          issueNumber?: number;
+        };
+      }
+    )._sessionMetadata;
+    if (metadata) {
+      console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
+    }
+
     // Exit with appropriate code
     process.exit(0);
   } else if (category === "session-end") {
-    // session-end [--workflow-id <id>]
+    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>]
     let workflowId: string | undefined;
+    let sessionId: string | undefined;
+    let learningsInjected: number | undefined;
+    let startTime: string | undefined;
+    let compacted: boolean | undefined;
+    let reviewFindings: number | undefined;
+    let filesRead: number | undefined;
 
     // Parse optional arguments
     const allArgs = command ? [command, ...commandArgs] : commandArgs;
@@ -544,6 +568,23 @@ try {
       const nextArg = allArgs[i + 1];
       if (arg === "--workflow-id" && nextArg) {
         workflowId = nextArg;
+        i++;
+      } else if (arg === "--session-id" && nextArg) {
+        sessionId = nextArg;
+        i++;
+      } else if (arg === "--learnings-injected" && nextArg) {
+        learningsInjected = parseIntSafe(nextArg, "learnings-injected");
+        i++;
+      } else if (arg === "--start-time" && nextArg) {
+        startTime = nextArg;
+        i++;
+      } else if (arg === "--compacted") {
+        compacted = true;
+      } else if (arg === "--review-findings" && nextArg) {
+        reviewFindings = parseIntSafe(nextArg, "review-findings");
+        i++;
+      } else if (arg === "--files-read" && nextArg) {
+        filesRead = parseIntSafe(nextArg, "files-read");
         i++;
       }
     }
@@ -586,17 +627,26 @@ try {
       }
     }
 
-    // Call onSessionEnd
+    // Call onSessionEnd with session metadata if provided
     const result = await hooks.onSessionEnd({
       workflowId,
       commits,
       modifiedFiles,
+      sessionId,
+      learningsInjected,
+      startTime,
+      compacted,
+      reviewFindings,
+      filesRead,
     });
 
     // Output result
     console.log(`Learnings stored: ${result.learningsStored}`);
     if (result.learningIds.length > 0) {
       console.log(`Learning IDs: ${result.learningIds.join(", ")}`);
+    }
+    if (sessionId) {
+      console.log(`Session metrics saved for: ${sessionId}`);
     }
 
     process.exit(0);
