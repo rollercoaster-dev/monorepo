@@ -113,6 +113,24 @@ CREATE INDEX IF NOT EXISTS idx_rel_from ON relationships(from_id, type);
 CREATE INDEX IF NOT EXISTS idx_rel_to ON relationships(to_id, type);
 CREATE INDEX IF NOT EXISTS idx_rel_type ON relationships(type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_rel_unique ON relationships(from_id, to_id, type);
+
+-- Context metrics for dogfooding validation
+CREATE TABLE IF NOT EXISTS context_metrics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT UNIQUE NOT NULL,
+  issue_number INTEGER,
+  files_read INTEGER DEFAULT 0,
+  compacted INTEGER DEFAULT 0,
+  duration_minutes INTEGER,
+  review_findings INTEGER DEFAULT 0,
+  learnings_injected INTEGER DEFAULT 0,
+  learnings_captured INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+-- Indexes for context metrics queries
+CREATE INDEX IF NOT EXISTS idx_context_metrics_session ON context_metrics(session_id);
+CREATE INDEX IF NOT EXISTS idx_context_metrics_issue ON context_metrics(issue_number);
 `;
 
 export function getDatabase(dbPath?: string): Database {

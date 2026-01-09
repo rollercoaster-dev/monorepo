@@ -13,6 +13,7 @@ Cross-session learning and workflow persistence for Claude Code autonomous workf
 - [CLI Reference](#cli-reference)
 - [Integration Points](#integration-points)
 - [Workflow Retrospective](#workflow-retrospective)
+- [Dogfooding & Validation](#dogfooding--validation)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 
@@ -979,6 +980,60 @@ This is non-blocking - errors are logged but don't stop the workflow.
 # Skip retrospective if needed
 /auto-issue 123 --skip-retrospective
 ```
+
+---
+
+## Dogfooding & Validation
+
+### Enabled Features
+
+Session hooks are enabled to automatically:
+
+- Load relevant knowledge at session start
+- Extract and store learnings at session end
+- Track context metrics for validation
+
+### Viewing Metrics
+
+```bash
+# View all session metrics
+bun packages/claude-knowledge/src/cli.ts metrics list
+
+# View metrics for a specific issue
+bun packages/claude-knowledge/src/cli.ts metrics list 387
+
+# Aggregate summary
+bun packages/claude-knowledge/src/cli.ts metrics summary
+```
+
+### Bootstrap Data
+
+Mine existing merged PRs to populate initial learnings:
+
+```bash
+bun packages/claude-knowledge/src/cli.ts bootstrap mine-prs 50
+```
+
+### Validation Goals (4-6 weeks)
+
+After daily use, evaluate:
+
+- Did checkpoint recovery save time after compaction?
+- Did stored learnings get queried and used?
+- Were injected learnings relevant and useful?
+- Did knowledge reduce file reads or review findings?
+
+**Worth continuing if:**
+
+- Checkpoint recovery saves time at least 2-3 times
+- Naturally reach for `knowledge.query()` when starting related work
+- Stored learnings are actually relevant when retrieved
+
+**Consider abandoning if:**
+
+- Forget it exists and never use it
+- Learnings stored are never useful later
+- Maintenance burden exceeds value
 
 ---
 

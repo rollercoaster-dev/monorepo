@@ -558,4 +558,159 @@ describe("checkpoint", () => {
       expect(checkpoint.load(w3.id)).not.toBeNull();
     });
   });
+
+  describe("context metrics API", () => {
+    test("saveContextMetrics stores metrics", () => {
+      checkpoint.saveContextMetrics({
+        sessionId: "session-123",
+        issueNumber: 387,
+        filesRead: 15,
+        compacted: false,
+        durationMinutes: 45,
+        reviewFindings: 3,
+        learningsInjected: 5,
+        learningsCaptured: 2,
+        createdAt: new Date().toISOString(),
+      });
+
+      const metrics = checkpoint.getContextMetrics();
+      expect(metrics).toHaveLength(1);
+      expect(metrics[0].sessionId).toBe("session-123");
+      expect(metrics[0].filesRead).toBe(15);
+      expect(metrics[0].compacted).toBe(false);
+      expect(metrics[0].learningsInjected).toBe(5);
+    });
+
+    test("saveContextMetrics upserts by sessionId", () => {
+      const sessionId = "session-upsert-test";
+      const createdAt = new Date().toISOString();
+
+      // Save first metrics
+      checkpoint.saveContextMetrics({
+        sessionId,
+        filesRead: 10,
+        compacted: false,
+        reviewFindings: 0,
+        learningsInjected: 3,
+        learningsCaptured: 1,
+        createdAt,
+      });
+
+      // Upsert with new values
+      checkpoint.saveContextMetrics({
+        sessionId,
+        filesRead: 20,
+        compacted: true,
+        reviewFindings: 5,
+        learningsInjected: 3,
+        learningsCaptured: 4,
+        createdAt,
+      });
+
+      const metrics = checkpoint.getContextMetrics();
+      expect(metrics).toHaveLength(1);
+      expect(metrics[0].filesRead).toBe(20);
+      expect(metrics[0].compacted).toBe(true);
+      expect(metrics[0].learningsCaptured).toBe(4);
+    });
+
+    test("getContextMetrics filters by issueNumber", () => {
+      checkpoint.saveContextMetrics({
+        sessionId: "session-a",
+        issueNumber: 100,
+        filesRead: 5,
+        compacted: false,
+        reviewFindings: 0,
+        learningsInjected: 1,
+        learningsCaptured: 1,
+        createdAt: new Date().toISOString(),
+      });
+
+      checkpoint.saveContextMetrics({
+        sessionId: "session-b",
+        issueNumber: 200,
+        filesRead: 10,
+        compacted: false,
+        reviewFindings: 0,
+        learningsInjected: 2,
+        learningsCaptured: 2,
+        createdAt: new Date().toISOString(),
+      });
+
+      const issue100Metrics = checkpoint.getContextMetrics(100);
+      expect(issue100Metrics).toHaveLength(1);
+      expect(issue100Metrics[0].issueNumber).toBe(100);
+
+      const issue200Metrics = checkpoint.getContextMetrics(200);
+      expect(issue200Metrics).toHaveLength(1);
+      expect(issue200Metrics[0].issueNumber).toBe(200);
+    });
+
+    test("getContextMetrics returns empty array for no matches", () => {
+      const metrics = checkpoint.getContextMetrics(999);
+      expect(metrics).toHaveLength(0);
+    });
+
+    test("getMetricsSummary returns zeros for empty table", () => {
+      const summary = checkpoint.getMetricsSummary();
+
+      expect(summary.totalSessions).toBe(0);
+      expect(summary.compactedSessions).toBe(0);
+      expect(summary.avgFilesRead).toBe(0);
+      expect(summary.avgLearningsInjected).toBe(0);
+      expect(summary.avgLearningsCaptured).toBe(0);
+      expect(summary.totalReviewFindings).toBe(0);
+    });
+
+    test("getMetricsSummary aggregates correctly", () => {
+      // Session 1: 10 files, compacted, 5 findings, 3 injected, 2 captured
+      checkpoint.saveContextMetrics({
+        sessionId: "session-1",
+        filesRead: 10,
+        compacted: true,
+        reviewFindings: 5,
+        learningsInjected: 3,
+        learningsCaptured: 2,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Session 2: 20 files, not compacted, 3 findings, 5 injected, 4 captured
+      checkpoint.saveContextMetrics({
+        sessionId: "session-2",
+        filesRead: 20,
+        compacted: false,
+        reviewFindings: 3,
+        learningsInjected: 5,
+        learningsCaptured: 4,
+        createdAt: new Date().toISOString(),
+      });
+
+      const summary = checkpoint.getMetricsSummary();
+
+      expect(summary.totalSessions).toBe(2);
+      expect(summary.compactedSessions).toBe(1);
+      expect(summary.avgFilesRead).toBe(15); // (10 + 20) / 2
+      expect(summary.avgLearningsInjected).toBe(4); // (3 + 5) / 2
+      expect(summary.avgLearningsCaptured).toBe(3); // (2 + 4) / 2
+      expect(summary.totalReviewFindings).toBe(8); // 5 + 3
+    });
+
+    test("metrics with undefined optional fields", () => {
+      checkpoint.saveContextMetrics({
+        sessionId: "session-minimal",
+        filesRead: 5,
+        compacted: false,
+        reviewFindings: 0,
+        learningsInjected: 0,
+        learningsCaptured: 0,
+        createdAt: new Date().toISOString(),
+        // No issueNumber or durationMinutes
+      });
+
+      const metrics = checkpoint.getContextMetrics();
+      expect(metrics).toHaveLength(1);
+      expect(metrics[0].issueNumber).toBeUndefined();
+      expect(metrics[0].durationMinutes).toBeUndefined();
+    });
+  });
 });

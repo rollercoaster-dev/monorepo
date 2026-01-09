@@ -31,6 +31,10 @@ export {
   calculatePriority,
   type FormatOptions,
 } from "./formatter";
+
+// Phase 4: Dogfooding & Validation
+export { mineMergedPRs } from "./utils";
+
 export type {
   Learning,
   Pattern,
@@ -60,4 +64,6 @@ export type {
   ExtractedPattern,
   ExtractedMistake,
   WorkflowLearning,
+  // Context metrics types (dogfooding)
+  ContextMetrics,
 } from "./types";

@@ -1,8 +1,13 @@
 #!/usr/bin/env bun
 import { checkpoint } from "./checkpoint";
 import { hooks } from "./hooks";
-import { analyzeWorkflow, storeWorkflowLearning, query } from "./knowledge";
-import { parseModifiedFiles, parseRecentCommits } from "./utils";
+import {
+  analyzeWorkflow,
+  storeWorkflowLearning,
+  query,
+  knowledge,
+} from "./knowledge";
+import { parseModifiedFiles, parseRecentCommits, mineMergedPRs } from "./utils";
 import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
 import { $ } from "bun";
 
@@ -107,11 +112,16 @@ if (args.length === 0) {
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
   console.error("  session-start [--branch <name>] [--issue <number>]");
-  console.error("  session-end [--workflow-id <id>]");
+  console.error(
+    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--review-findings <n>] [--files-read <n>]",
+  );
   console.error("  learning analyze <workflow-id> <dev-plan-path>");
   console.error(
     "  learning query [--code-area <area>] [--file <path>] [--issue <number>]",
   );
+  console.error("  metrics list [issue-number]");
+  console.error("  metrics summary");
+  console.error("  bootstrap mine-prs [limit]");
   process.exit(1);
 }
 
@@ -522,11 +532,33 @@ try {
     // Output the summary (for injection into context)
     console.log(context.summary);
 
+    // Output session metadata for session-end to consume
+    // This is output as a special marker that can be captured
+    const metadata = (
+      context as typeof context & {
+        _sessionMetadata?: {
+          sessionId: string;
+          learningsInjected: number;
+          startTime: string;
+          issueNumber?: number;
+        };
+      }
+    )._sessionMetadata;
+    if (metadata) {
+      console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
+    }
+
     // Exit with appropriate code
     process.exit(0);
   } else if (category === "session-end") {
-    // session-end [--workflow-id <id>]
+    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>]
     let workflowId: string | undefined;
+    let sessionId: string | undefined;
+    let learningsInjected: number | undefined;
+    let startTime: string | undefined;
+    let compacted: boolean | undefined;
+    let reviewFindings: number | undefined;
+    let filesRead: number | undefined;
 
     // Parse optional arguments
     const allArgs = command ? [command, ...commandArgs] : commandArgs;
@@ -536,6 +568,23 @@ try {
       const nextArg = allArgs[i + 1];
       if (arg === "--workflow-id" && nextArg) {
         workflowId = nextArg;
+        i++;
+      } else if (arg === "--session-id" && nextArg) {
+        sessionId = nextArg;
+        i++;
+      } else if (arg === "--learnings-injected" && nextArg) {
+        learningsInjected = parseIntSafe(nextArg, "learnings-injected");
+        i++;
+      } else if (arg === "--start-time" && nextArg) {
+        startTime = nextArg;
+        i++;
+      } else if (arg === "--compacted") {
+        compacted = true;
+      } else if (arg === "--review-findings" && nextArg) {
+        reviewFindings = parseIntSafe(nextArg, "review-findings");
+        i++;
+      } else if (arg === "--files-read" && nextArg) {
+        filesRead = parseIntSafe(nextArg, "files-read");
         i++;
       }
     }
@@ -578,17 +627,26 @@ try {
       }
     }
 
-    // Call onSessionEnd
+    // Call onSessionEnd with session metadata if provided
     const result = await hooks.onSessionEnd({
       workflowId,
       commits,
       modifiedFiles,
+      sessionId,
+      learningsInjected,
+      startTime,
+      compacted,
+      reviewFindings,
+      filesRead,
     });
 
     // Output result
     console.log(`Learnings stored: ${result.learningsStored}`);
     if (result.learningIds.length > 0) {
       console.log(`Learning IDs: ${result.learningIds.join(", ")}`);
+    }
+    if (sessionId) {
+      console.log(`Session metrics saved for: ${sessionId}`);
     }
 
     process.exit(0);
@@ -721,6 +779,125 @@ try {
 
       default:
         throw new Error(`Unknown learning command: ${command}`);
+    }
+  } else if (category === "metrics") {
+    switch (command) {
+      case "list": {
+        // metrics list [issue-number]
+        const issueNumber = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "issue-number")
+          : undefined;
+
+        const metrics = checkpoint.getContextMetrics(issueNumber);
+
+        if (metrics.length === 0) {
+          console.log(
+            issueNumber
+              ? `No metrics found for issue #${issueNumber}.`
+              : "No metrics recorded yet.",
+          );
+        } else {
+          console.log(`Found ${metrics.length} session(s):\n`);
+
+          for (const m of metrics) {
+            console.log("---");
+            console.log(`Session: ${m.sessionId}`);
+            if (m.issueNumber) {
+              console.log(`Issue: #${m.issueNumber}`);
+            }
+            console.log(`Files Read: ${m.filesRead}`);
+            console.log(`Compacted: ${m.compacted ? "Yes" : "No"}`);
+            if (m.durationMinutes !== undefined) {
+              console.log(`Duration: ${m.durationMinutes} minutes`);
+            }
+            console.log(`Review Findings: ${m.reviewFindings}`);
+            console.log(`Learnings Injected: ${m.learningsInjected}`);
+            console.log(`Learnings Captured: ${m.learningsCaptured}`);
+            console.log(`Recorded: ${m.createdAt}`);
+            console.log("");
+          }
+        }
+        break;
+      }
+
+      case "summary": {
+        const summary = checkpoint.getMetricsSummary();
+
+        if (summary.totalSessions === 0) {
+          console.log("No metrics recorded yet.");
+        } else {
+          // totalSessions > 0 guaranteed by early return above
+          const compactedPercent = (
+            (summary.compactedSessions / summary.totalSessions) *
+            100
+          ).toFixed(1);
+
+          console.log("Context Metrics Summary");
+          console.log("=======================");
+          console.log(`Total Sessions: ${summary.totalSessions}`);
+          console.log(
+            `Compacted Sessions: ${summary.compactedSessions} (${compactedPercent}%)`,
+          );
+          console.log(`Avg Files Read: ${summary.avgFilesRead}`);
+          console.log(
+            `Avg Learnings Injected: ${summary.avgLearningsInjected}`,
+          );
+          console.log(
+            `Avg Learnings Captured: ${summary.avgLearningsCaptured}`,
+          );
+          console.log(`Total Review Findings: ${summary.totalReviewFindings}`);
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unknown metrics command: ${command}`);
+    }
+  } else if (category === "bootstrap") {
+    switch (command) {
+      case "mine-prs": {
+        // bootstrap mine-prs [limit]
+        const limit = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "limit")
+          : 50;
+
+        console.log(`Mining up to ${limit} merged PRs for learnings...`);
+
+        const learnings = await mineMergedPRs(limit);
+
+        if (learnings.length === 0) {
+          console.log(
+            "No learnings extracted. PRs may not have conventional commit titles or summaries.",
+          );
+        } else {
+          // Store the learnings
+          await knowledge.store(learnings);
+
+          // Group by code area for summary
+          const byArea = new Map<string, number>();
+          let withIssue = 0;
+
+          for (const l of learnings) {
+            const area = l.codeArea || "unknown";
+            byArea.set(area, (byArea.get(area) || 0) + 1);
+            if (l.sourceIssue) withIssue++;
+          }
+
+          console.log(`\nBootstrap Complete`);
+          console.log(`==================`);
+          console.log(`Learnings extracted: ${learnings.length}`);
+          console.log(`Linked to issues: ${withIssue}`);
+          console.log(`\nBy code area:`);
+
+          for (const [area, count] of byArea.entries()) {
+            console.log(`  ${area}: ${count}`);
+          }
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unknown bootstrap command: ${command}`);
     }
   } else {
     throw new Error(`Unknown category: ${category}`);

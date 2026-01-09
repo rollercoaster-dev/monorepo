@@ -253,6 +253,13 @@ export interface KnowledgeContext {
   mistakes: Mistake[];
   /** Formatted markdown summary for injection into context */
   summary: string;
+  /** Session metadata for metrics tracking (populated by onSessionStart) */
+  _sessionMetadata?: {
+    sessionId: string;
+    learningsInjected: number;
+    startTime: string;
+    issueNumber?: number;
+  };
 }
 
 /**
@@ -443,5 +450,35 @@ export interface WorkflowLearning {
   improvements: string[];
 
   /** ISO timestamp when this learning was created */
+  createdAt: string;
+}
+
+// ============================================================================
+// Context Metrics Types (Dogfooding Validation)
+// ============================================================================
+
+/**
+ * Metrics captured during a session to validate knowledge system effectiveness.
+ * Used for dogfooding to determine if the knowledge graph provides genuine value.
+ */
+export interface ContextMetrics {
+  id?: number;
+  /** Unique session identifier (UUID) */
+  sessionId: string;
+  /** GitHub issue number if working on an issue */
+  issueNumber?: number;
+  /** Number of files read during the session */
+  filesRead: number;
+  /** Whether context compaction occurred during the session */
+  compacted: boolean;
+  /** Session duration in minutes */
+  durationMinutes?: number;
+  /** Number of review findings from CodeRabbit/Claude */
+  reviewFindings: number;
+  /** Number of learnings injected at session start */
+  learningsInjected: number;
+  /** Number of learnings captured at session end */
+  learningsCaptured: number;
+  /** ISO timestamp when metrics were recorded */
   createdAt: string;
 }
