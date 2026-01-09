@@ -10,6 +10,7 @@ import { parseConventionalCommit } from "./git-parser";
 import { inferCodeArea } from "./file-analyzer";
 import type { Learning } from "../types";
 import { randomUUID } from "crypto";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /** Confidence level for PR-mined learnings (lower than auto-extracted) */
 const PR_MINED_CONFIDENCE = 0.7;
@@ -30,6 +31,8 @@ interface GitHubPR {
  */
 export async function mineMergedPRs(limit: number = 50): Promise<Learning[]> {
   const learnings: Learning[] = [];
+  let skippedNoConventional = 0;
+  let skippedNoSummary = 0;
 
   // Fetch merged PRs from GitHub
   let prs: GitHubPR[];
@@ -42,11 +45,24 @@ export async function mineMergedPRs(limit: number = 50): Promise<Learning[]> {
     throw new Error(`Failed to fetch merged PRs: ${errorMsg}`);
   }
 
+  logger.debug("Fetched PRs for mining", {
+    count: prs.length,
+    limit,
+    context: "mineMergedPRs",
+  });
+
   for (const pr of prs) {
     // Parse title for conventional commit type/scope
     const parsed = parseConventionalCommit(pr.title);
     if (!parsed) {
       // Skip PRs without conventional commit titles
+      skippedNoConventional++;
+      logger.debug(`Skipped PR #${pr.number}: no conventional commit title`, {
+        prNumber: pr.number,
+        title: pr.title,
+        reason: "no_conventional_commit",
+        context: "mineMergedPRs",
+      });
       continue;
     }
 
@@ -60,6 +76,13 @@ export async function mineMergedPRs(limit: number = 50): Promise<Learning[]> {
     const summary = extractSummary(pr.body);
     if (!summary) {
       // Skip PRs without useful content
+      skippedNoSummary++;
+      logger.debug(`Skipped PR #${pr.number}: no summary found`, {
+        prNumber: pr.number,
+        title: pr.title,
+        reason: "no_summary",
+        context: "mineMergedPRs",
+      });
       continue;
     }
 
@@ -83,6 +106,15 @@ export async function mineMergedPRs(limit: number = 50): Promise<Learning[]> {
       },
     });
   }
+
+  // Log summary of mining results
+  logger.info("PR mining completed", {
+    totalPRs: prs.length,
+    learningsExtracted: learnings.length,
+    skippedNoConventional,
+    skippedNoSummary,
+    context: "mineMergedPRs",
+  });
 
   return learnings;
 }
