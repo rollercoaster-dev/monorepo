@@ -560,12 +560,9 @@ try {
       try {
         const result =
           await $`git log --name-only --pretty=format: -10`.quiet();
-        modifiedFiles = result
-          .text()
-          .trim()
-          .split("\n")
-          .filter(Boolean)
-          .filter((f, i, arr) => arr.indexOf(f) === i); // Deduplicate
+        modifiedFiles = [
+          ...new Set(result.text().trim().split("\n").filter(Boolean)),
+        ]; // O(n) deduplication with Set
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (!errorMsg.includes("not a git repository")) {

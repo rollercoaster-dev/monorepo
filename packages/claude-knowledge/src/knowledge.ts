@@ -241,7 +241,18 @@ export async function storePattern(
 
     db.run("COMMIT");
   } catch (error) {
-    db.run("ROLLBACK");
+    try {
+      db.run("ROLLBACK");
+    } catch (rollbackError) {
+      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
+        originalError: error instanceof Error ? error.message : String(error),
+        rollbackError:
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError),
+        context: "knowledge.storePattern",
+      });
+    }
     throw new Error(
       `Failed to store pattern: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -310,7 +321,18 @@ export async function storeMistake(
 
     db.run("COMMIT");
   } catch (error) {
-    db.run("ROLLBACK");
+    try {
+      db.run("ROLLBACK");
+    } catch (rollbackError) {
+      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
+        originalError: error instanceof Error ? error.message : String(error),
+        rollbackError:
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError),
+        context: "knowledge.storeMistake",
+      });
+    }
     throw new Error(
       `Failed to store mistake: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -447,26 +469,10 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
   // Transform rows to QueryResult, skipping corrupted entries
   const results: QueryResult[] = [];
   for (const row of rows) {
+    // Parse learning data - skip entire row if corrupted
+    let learning: Learning;
     try {
-      const learning = JSON.parse(row.data) as Learning;
-
-      const result: QueryResult = { learning };
-
-      // Parse related patterns (separated by |||)
-      if (row.patterns) {
-        result.relatedPatterns = row.patterns
-          .split("|||")
-          .map((p) => JSON.parse(p) as Pattern);
-      }
-
-      // Parse related mistakes (separated by |||)
-      if (row.mistakes) {
-        result.relatedMistakes = row.mistakes
-          .split("|||")
-          .map((m) => JSON.parse(m) as Mistake);
-      }
-
-      results.push(result);
+      learning = JSON.parse(row.data) as Learning;
     } catch (error) {
       logger.warn("Skipping corrupted learning data", {
         id: row.id,
@@ -475,6 +481,42 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
       });
       continue;
     }
+
+    const result: QueryResult = { learning };
+
+    // Parse related patterns (separated by |||) - granular error handling
+    if (row.patterns) {
+      try {
+        result.relatedPatterns = row.patterns
+          .split("|||")
+          .map((p) => JSON.parse(p) as Pattern);
+      } catch (error) {
+        logger.warn("Skipping corrupted pattern data for learning", {
+          learningId: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.query",
+        });
+        // Continue without patterns - learning is still valid
+      }
+    }
+
+    // Parse related mistakes (separated by |||) - granular error handling
+    if (row.mistakes) {
+      try {
+        result.relatedMistakes = row.mistakes
+          .split("|||")
+          .map((m) => JSON.parse(m) as Mistake);
+      } catch (error) {
+        logger.warn("Skipping corrupted mistake data for learning", {
+          learningId: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.query",
+        });
+        // Continue without mistakes - learning is still valid
+      }
+    }
+
+    results.push(result);
   }
   return results;
 }
