@@ -826,11 +826,20 @@ try {
         if (summary.totalSessions === 0) {
           console.log("No metrics recorded yet.");
         } else {
+          // Calculate percentage with explicit division-by-zero guard
+          const compactedPercent =
+            summary.totalSessions > 0
+              ? (
+                  (summary.compactedSessions / summary.totalSessions) *
+                  100
+                ).toFixed(1)
+              : "0.0";
+
           console.log("Context Metrics Summary");
           console.log("=======================");
           console.log(`Total Sessions: ${summary.totalSessions}`);
           console.log(
-            `Compacted Sessions: ${summary.compactedSessions} (${((summary.compactedSessions / summary.totalSessions) * 100).toFixed(1)}%)`,
+            `Compacted Sessions: ${summary.compactedSessions} (${compactedPercent}%)`,
           );
           console.log(`Avg Files Read: ${summary.avgFilesRead}`);
           console.log(
