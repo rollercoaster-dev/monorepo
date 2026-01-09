@@ -485,7 +485,8 @@ Review complete: ${$CRITICAL_RESOLVED} critical issues resolved
 Fix commits: ${$FIX_COMMIT_COUNT}
 Learning captured: ${patternsExtracted} patterns, ${mistakesExtracted} mistakes
 Creating PR...`);
-```
+
+````
 
 ---
 
@@ -879,4 +880,7 @@ This workflow is successful when:
 - PR created and reviews triggered
 - Board updated to "Blocked" (awaiting review)
 - User informed of PR URL
-````
+
+```
+
+```

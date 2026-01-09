@@ -356,7 +356,7 @@ function extractCodeAreaFromWorkflow(data: CheckpointData): string | undefined {
 
   // Fallback to package name if in monorepo
   const packageMatch = data.workflow.branch.match(
-    /(claude-knowledge|openbadges)/,
+    /(claude-knowledge|openbadges|rd-logger)/,
   );
   if (packageMatch) {
     return packageMatch[1];
