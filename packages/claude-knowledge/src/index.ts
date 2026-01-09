@@ -17,6 +17,9 @@ export type {
 // Phase 2: Knowledge Graph
 export { knowledge } from "./knowledge";
 export { hooks } from "./hooks";
+
+// Phase 3: Workflow Retrospective
+export { analyzeWorkflow, storeWorkflowLearning } from "./retrospective";
 export {
   formatKnowledgeContext,
   formatAsBullets,
@@ -50,4 +53,11 @@ export type {
   ContextFormat,
   ContextInjectionOptions,
   ContextInjectionResult,
+  // Workflow retrospective types
+  Deviation,
+  ReviewFinding,
+  AppliedFix,
+  ExtractedPattern,
+  ExtractedMistake,
+  WorkflowLearning,
 } from "./types";
