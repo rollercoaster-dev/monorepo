@@ -14,11 +14,11 @@
  *   bun packages/claude-knowledge/examples/context-injection-agent.ts
  */
 
-import { createLogger } from "@rollercoaster-dev/rd-logger";
+import { Logger } from "@rollercoaster-dev/rd-logger";
 import { knowledge } from "../src/index";
 import { resetDatabase, closeDatabase } from "../src/db/sqlite";
 
-const logger = createLogger("context-injection-example");
+const logger = new Logger({ context: "context-injection-example" });
 
 // ============================================================================
 // Example Configuration
