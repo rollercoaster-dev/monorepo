@@ -280,3 +280,55 @@ export interface SessionEndResult {
   /** IDs of the stored learnings */
   learningIds: string[];
 }
+
+// ============================================================================
+// Context Injection Types
+// ============================================================================
+
+/**
+ * Output format for context injection.
+ * - markdown: Human-readable, structured with headers (best for Claude)
+ * - bullets: Compact flat list (good for token-constrained agents)
+ * - xml: Structured tags for machine parsing (good for tool agents)
+ */
+export type ContextFormat = "markdown" | "bullets" | "xml";
+
+/**
+ * Options for the formatForContext method.
+ * Controls how knowledge is queried, filtered, and formatted.
+ */
+export interface ContextInjectionOptions {
+  /** Output format (default: "markdown") */
+  format?: ContextFormat;
+  /** Maximum token budget for output (default: 2000) */
+  maxTokens?: number;
+  /** Maximum number of learnings to include (default: 10) */
+  limit?: number;
+  /** Minimum confidence threshold 0.0-1.0 (default: 0.3) */
+  confidenceThreshold?: number;
+  /** Use semantic search instead of keyword matching (default: false) */
+  useSemanticSearch?: boolean;
+  /** Show file paths in output (default: true) */
+  showFilePaths?: boolean;
+  /** Context for prioritization (same as FormatOptions) */
+  context?: {
+    issueNumber?: number;
+    primaryCodeArea?: string;
+    modifiedFiles?: string[];
+  };
+}
+
+/**
+ * Result from formatForContext method.
+ * Contains the formatted output and metadata about what was included.
+ */
+export interface ContextInjectionResult {
+  /** Formatted knowledge content ready for prompt injection */
+  content: string;
+  /** Estimated token count of the content */
+  tokenCount: number;
+  /** Number of learnings included in the result */
+  resultCount: number;
+  /** True if results were filtered by threshold or limit */
+  wasFiltered: boolean;
+}
