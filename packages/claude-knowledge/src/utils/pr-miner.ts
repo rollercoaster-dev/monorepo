@@ -8,6 +8,7 @@
 import { $ } from "bun";
 import { parseConventionalCommit } from "./git-parser";
 import { inferCodeArea } from "./file-analyzer";
+import { formatCommitContent } from "./commit-formatter";
 import type { Learning } from "../types";
 import { randomUUID } from "crypto";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
@@ -94,7 +95,7 @@ export async function mineMergedPRs(limit: number = 50): Promise<Learning[]> {
 
     learnings.push({
       id: learningId,
-      content: formatLearningContent(parsed.type, summary),
+      content: formatCommitContent(parsed.type, summary),
       sourceIssue,
       codeArea,
       confidence: PR_MINED_CONFIDENCE,
@@ -171,25 +172,4 @@ function extractIssueNumber(body: string | null): number | undefined {
   }
 
   return undefined;
-}
-
-/**
- * Format learning content from commit type and summary.
- */
-function formatLearningContent(type: string, summary: string): string {
-  const typeDescriptions: Record<string, string> = {
-    feat: "Added feature",
-    fix: "Fixed issue",
-    refactor: "Refactored",
-    test: "Added tests for",
-    docs: "Documented",
-    chore: "Maintenance",
-    build: "Build configuration",
-    ci: "CI/CD update",
-    perf: "Performance improvement",
-    style: "Code style update",
-  };
-
-  const prefix = typeDescriptions[type] || "Completed";
-  return `${prefix}: ${summary}`;
 }

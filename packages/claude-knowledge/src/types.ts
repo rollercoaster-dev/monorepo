@@ -253,6 +253,13 @@ export interface KnowledgeContext {
   mistakes: Mistake[];
   /** Formatted markdown summary for injection into context */
   summary: string;
+  /** Session metadata for metrics tracking (populated by onSessionStart) */
+  _sessionMetadata?: {
+    sessionId: string;
+    learningsInjected: number;
+    startTime: string;
+    issueNumber?: number;
+  };
 }
 
 /**

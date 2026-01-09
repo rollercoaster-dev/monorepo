@@ -24,6 +24,7 @@ import {
   parseConventionalCommit,
   inferCodeAreasFromFiles,
   inferCodeArea,
+  formatCommitContent,
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
@@ -184,13 +185,6 @@ async function onSessionStart(
       startTime,
       issueNumber,
     },
-  } as KnowledgeContext & {
-    _sessionMetadata: {
-      sessionId: string;
-      learningsInjected: number;
-      startTime: string;
-      issueNumber?: number;
-    };
   };
 }
 
@@ -244,7 +238,7 @@ async function onSessionEnd(
 
       const learning: Learning = {
         id: learningId,
-        content: formatCommitLearning(parsed.type, parsed.description),
+        content: formatCommitContent(parsed.type, parsed.description),
         codeArea: parsed.scope || undefined,
         confidence: AUTO_EXTRACT_CONFIDENCE,
         metadata: {
@@ -369,27 +363,6 @@ async function onSessionEnd(
     learningsStored: learnings.length,
     learningIds,
   };
-}
-
-/**
- * Format a commit into a learning content string.
- */
-function formatCommitLearning(type: string, description: string): string {
-  const typeDescriptions: Record<string, string> = {
-    feat: "Added feature",
-    fix: "Fixed issue",
-    refactor: "Refactored",
-    test: "Added tests for",
-    docs: "Documented",
-    chore: "Maintenance",
-    build: "Build configuration",
-    ci: "CI/CD update",
-    perf: "Performance improvement",
-    style: "Code style update",
-  };
-
-  const prefix = typeDescriptions[type] || "Completed";
-  return `${prefix}: ${description}`;
 }
 
 /**

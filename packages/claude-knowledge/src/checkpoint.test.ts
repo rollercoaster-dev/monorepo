@@ -501,6 +501,62 @@ describe("checkpoint", () => {
     test("deleteMilestone silently succeeds for non-existent milestone (idempotent)", () => {
       expect(() => checkpoint.deleteMilestone("non-existent-id")).not.toThrow();
     });
+
+    test("full milestone workflow integration", () => {
+      // Create milestone
+      const milestone = checkpoint.createMilestone("OB3 Phase 1", 14);
+      expect(milestone.phase).toBe("planning");
+
+      // Save baseline
+      checkpoint.saveBaseline(milestone.id, {
+        capturedAt: new Date().toISOString(),
+        lintExitCode: 0,
+        lintWarnings: 3,
+        lintErrors: 0,
+        typecheckExitCode: 0,
+        typecheckErrors: 1,
+      });
+
+      // Create and link workflows
+      const w1 = checkpoint.create(111, "feat/issue-111", "/path/worktree-111");
+      const w2 = checkpoint.create(112, "feat/issue-112", "/path/worktree-112");
+      const w3 = checkpoint.create(113, "feat/issue-113", "/path/worktree-113");
+
+      checkpoint.linkWorkflowToMilestone(w1.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w2.id, milestone.id, 1);
+      checkpoint.linkWorkflowToMilestone(w3.id, milestone.id, 2);
+
+      // Update milestone phase
+      checkpoint.setMilestonePhase(milestone.id, "execute");
+
+      // Get complete checkpoint data
+      const data = checkpoint.getMilestone(milestone.id);
+
+      expect(data).not.toBeNull();
+      expect(data!.milestone.phase).toBe("execute");
+      expect(data!.milestone.githubMilestoneNumber).toBe(14);
+      expect(data!.baseline).not.toBeNull();
+      expect(data!.baseline!.lintWarnings).toBe(3);
+      expect(data!.workflows).toHaveLength(3);
+
+      // Wave 1 workflows should come first
+      expect(data!.workflows[0].issueNumber).toBe(111);
+      expect(data!.workflows[1].issueNumber).toBe(112);
+      expect(data!.workflows[2].issueNumber).toBe(113);
+
+      // List milestone workflows
+      const workflows = checkpoint.listMilestoneWorkflows(milestone.id);
+      expect(workflows).toHaveLength(3);
+
+      // Delete milestone
+      checkpoint.deleteMilestone(milestone.id);
+      expect(checkpoint.getMilestone(milestone.id)).toBeNull();
+
+      // Workflows should still exist
+      expect(checkpoint.load(w1.id)).not.toBeNull();
+      expect(checkpoint.load(w2.id)).not.toBeNull();
+      expect(checkpoint.load(w3.id)).not.toBeNull();
+    });
   });
 
   describe("context metrics API", () => {
@@ -655,64 +711,6 @@ describe("checkpoint", () => {
       expect(metrics).toHaveLength(1);
       expect(metrics[0].issueNumber).toBeUndefined();
       expect(metrics[0].durationMinutes).toBeUndefined();
-    });
-  });
-
-  describe("milestone API", () => {
-    test("full milestone workflow integration", () => {
-      // Create milestone
-      const milestone = checkpoint.createMilestone("OB3 Phase 1", 14);
-      expect(milestone.phase).toBe("planning");
-
-      // Save baseline
-      checkpoint.saveBaseline(milestone.id, {
-        capturedAt: new Date().toISOString(),
-        lintExitCode: 0,
-        lintWarnings: 3,
-        lintErrors: 0,
-        typecheckExitCode: 0,
-        typecheckErrors: 1,
-      });
-
-      // Create and link workflows
-      const w1 = checkpoint.create(111, "feat/issue-111", "/path/worktree-111");
-      const w2 = checkpoint.create(112, "feat/issue-112", "/path/worktree-112");
-      const w3 = checkpoint.create(113, "feat/issue-113", "/path/worktree-113");
-
-      checkpoint.linkWorkflowToMilestone(w1.id, milestone.id, 1);
-      checkpoint.linkWorkflowToMilestone(w2.id, milestone.id, 1);
-      checkpoint.linkWorkflowToMilestone(w3.id, milestone.id, 2);
-
-      // Update milestone phase
-      checkpoint.setMilestonePhase(milestone.id, "execute");
-
-      // Get complete checkpoint data
-      const data = checkpoint.getMilestone(milestone.id);
-
-      expect(data).not.toBeNull();
-      expect(data!.milestone.phase).toBe("execute");
-      expect(data!.milestone.githubMilestoneNumber).toBe(14);
-      expect(data!.baseline).not.toBeNull();
-      expect(data!.baseline!.lintWarnings).toBe(3);
-      expect(data!.workflows).toHaveLength(3);
-
-      // Wave 1 workflows should come first
-      expect(data!.workflows[0].issueNumber).toBe(111);
-      expect(data!.workflows[1].issueNumber).toBe(112);
-      expect(data!.workflows[2].issueNumber).toBe(113);
-
-      // List milestone workflows
-      const workflows = checkpoint.listMilestoneWorkflows(milestone.id);
-      expect(workflows).toHaveLength(3);
-
-      // Delete milestone
-      checkpoint.deleteMilestone(milestone.id);
-      expect(checkpoint.getMilestone(milestone.id)).toBeNull();
-
-      // Workflows should still exist
-      expect(checkpoint.load(w1.id)).not.toBeNull();
-      expect(checkpoint.load(w2.id)).not.toBeNull();
-      expect(checkpoint.load(w3.id)).not.toBeNull();
     });
   });
 });

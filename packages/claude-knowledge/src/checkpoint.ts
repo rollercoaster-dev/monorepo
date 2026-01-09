@@ -867,6 +867,7 @@ export const checkpoint = {
         FROM context_metrics
         WHERE issue_number = ?
         ORDER BY created_at DESC
+        LIMIT 100
       `,
         )
         .all(issueNumber);
