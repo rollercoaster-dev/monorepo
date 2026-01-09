@@ -765,4 +765,148 @@ describe("knowledge API", () => {
       expect(result2?.relatedMistakes).toHaveLength(1);
     });
   });
+
+  describe("searchSimilar()", () => {
+    beforeEach(async () => {
+      // Store learnings with semantic variety
+      await knowledge.store([
+        {
+          id: "learning-validate-1",
+          content: "Always validate user input to prevent security issues",
+          codeArea: "Security",
+          confidence: 0.95,
+        },
+        {
+          id: "learning-validate-2",
+          content: "Use Zod schemas for input validation in TypeScript",
+          codeArea: "Validation",
+          confidence: 0.9,
+        },
+        {
+          id: "learning-database-1",
+          content: "Use indexes on frequently queried database columns",
+          codeArea: "Database",
+          confidence: 0.85,
+        },
+        {
+          id: "learning-testing-1",
+          content: "Write unit tests before implementing features",
+          codeArea: "Testing",
+          confidence: 0.88,
+        },
+      ]);
+    });
+
+    test("returns results sorted by similarity", async () => {
+      const results = await knowledge.searchSimilar(
+        "input validation security",
+      );
+
+      expect(results.length).toBeGreaterThan(0);
+      // First result should have higher similarity than last
+      if (results.length > 1) {
+        expect(results[0].relevanceScore).toBeGreaterThanOrEqual(
+          results[results.length - 1].relevanceScore!,
+        );
+      }
+    });
+
+    test("includes relevanceScore in results", async () => {
+      const results = await knowledge.searchSimilar("validate input");
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].relevanceScore).toBeDefined();
+      expect(typeof results[0].relevanceScore).toBe("number");
+      expect(results[0].relevanceScore).toBeGreaterThanOrEqual(0);
+      expect(results[0].relevanceScore).toBeLessThanOrEqual(1);
+    });
+
+    test("respects limit parameter", async () => {
+      const results = await knowledge.searchSimilar("learning content", {
+        limit: 2,
+      });
+
+      expect(results.length).toBeLessThanOrEqual(2);
+    });
+
+    test("respects threshold parameter", async () => {
+      const lowThreshold = await knowledge.searchSimilar("validate", {
+        threshold: 0.1,
+      });
+      const highThreshold = await knowledge.searchSimilar("validate", {
+        threshold: 0.9,
+      });
+
+      // Higher threshold should return fewer or equal results
+      expect(lowThreshold.length).toBeGreaterThanOrEqual(highThreshold.length);
+    });
+
+    test("returns empty array for non-matching query", async () => {
+      // Query that has no semantic overlap
+      const results = await knowledge.searchSimilar(
+        "xyzabc123nonexistent random gibberish",
+        { threshold: 0.5 },
+      );
+
+      expect(results).toHaveLength(0);
+    });
+
+    test("returns empty array for empty query", async () => {
+      const results = await knowledge.searchSimilar("");
+
+      expect(results).toHaveLength(0);
+    });
+
+    test("includes related entities when includeRelated is true", async () => {
+      // Add a pattern linked to one of our learnings
+      await knowledge.storePattern(
+        {
+          id: "pattern-validate",
+          name: "Input Validation",
+          description: "Validate all external input",
+          codeArea: "Security",
+        },
+        ["learning-validate-1"],
+      );
+
+      const results = await knowledge.searchSimilar("validate user input", {
+        includeRelated: true,
+      });
+
+      const validationResult = results.find(
+        (r) => r.learning.id === "learning-validate-1",
+      );
+      expect(validationResult?.relatedPatterns).toBeDefined();
+      expect(validationResult?.relatedPatterns?.length).toBeGreaterThan(0);
+    });
+
+    test("does not include related entities by default", async () => {
+      await knowledge.storePattern(
+        {
+          id: "pattern-validate-2",
+          name: "Input Validation 2",
+          description: "Validate input",
+          codeArea: "Security",
+        },
+        ["learning-validate-1"],
+      );
+
+      const results = await knowledge.searchSimilar("validate user input");
+
+      const validationResult = results.find(
+        (r) => r.learning.id === "learning-validate-1",
+      );
+      // relatedPatterns should not be populated when includeRelated is false
+      expect(validationResult?.relatedPatterns).toBeUndefined();
+    });
+
+    test("handles corpus with no embeddings gracefully", async () => {
+      // Reset database to have no learnings
+      resetDatabase(TEST_DB);
+
+      const results = await knowledge.searchSimilar("any query");
+
+      expect(results).toHaveLength(0);
+    });
+  });
 });
