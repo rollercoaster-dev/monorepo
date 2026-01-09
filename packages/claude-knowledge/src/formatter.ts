@@ -156,10 +156,10 @@ function enforceTokenBudget(sections: Section[], maxTokens: number): string[] {
   let currentTokens = 0;
   const included: string[] = [];
 
-  // Sort sections by priority (highest first)
-  sections.sort((a, b) => b.priority - a.priority);
+  // Sort sections by priority (highest first) - clone to avoid mutating input
+  const sortedSections = [...sections].sort((a, b) => b.priority - a.priority);
 
-  for (const section of sections) {
+  for (const section of sortedSections) {
     const tokens = estimateTokens(section.content);
     if (currentTokens + tokens <= maxTokens) {
       included.push(section.content);

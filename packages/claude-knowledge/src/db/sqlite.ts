@@ -151,6 +151,12 @@ export function getDatabase(dbPath?: string): Database {
       db.run(statement);
     }
   } catch (error) {
+    // Close database connection on schema initialization failure
+    if (db) {
+      db.close();
+      db = null;
+      currentDbPath = null;
+    }
     throw new Error(
       `Failed to initialize database schema: ${error instanceof Error ? error.message : String(error)}. ` +
         `The database file may be corrupted. Try deleting "${effectivePath}" and retrying.`,

@@ -481,8 +481,14 @@ try {
       try {
         const result = await $`git branch --show-current`.quiet();
         branch = result.text().trim();
-      } catch {
-        // Not in a git repo or git not available
+      } catch (error) {
+        // Distinguish between "not a git repo" and actual errors
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (!errorMsg.includes("not a git repository")) {
+          console.warn(
+            `Warning: Could not get current branch: ${errorMsg}. Session will continue with limited context.`,
+          );
+        }
       }
     }
 
@@ -491,8 +497,13 @@ try {
     try {
       const result = await $`git status --porcelain`.quiet();
       modifiedFiles = parseModifiedFiles(result.text());
-    } catch {
-      // Not in a git repo or git not available
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (!errorMsg.includes("not a git repository")) {
+        console.warn(
+          `Warning: Could not get modified files: ${errorMsg}. Session will continue without file context.`,
+        );
+      }
     }
 
     // Call onSessionStart
@@ -529,8 +540,13 @@ try {
     try {
       const result = await $`git log --oneline -10`.quiet();
       commits = parseRecentCommits(result.text());
-    } catch {
-      // Not in a git repo or git not available
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (!errorMsg.includes("not a git repository")) {
+        console.warn(
+          `Warning: Could not get recent commits: ${errorMsg}. Learning extraction may be limited.`,
+        );
+      }
     }
 
     // Get modified files (files changed in recent commits)
@@ -540,12 +556,20 @@ try {
       const result = await $`git diff --name-only HEAD~10..HEAD`.quiet();
       modifiedFiles = result.text().trim().split("\n").filter(Boolean);
     } catch {
-      // Fallback: repo may have fewer than 10 commits
+      // Fallback: repo may have fewer than 10 commits - get all commits from root
       try {
-        const result = await $`git diff --name-only`.quiet();
-        modifiedFiles = result.text().trim().split("\n").filter(Boolean);
-      } catch {
-        // Not in a git repo or git not available
+        const result =
+          await $`git log --name-only --pretty=format: -10`.quiet();
+        modifiedFiles = [
+          ...new Set(result.text().trim().split("\n").filter(Boolean)),
+        ]; // O(n) deduplication with Set
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (!errorMsg.includes("not a git repository")) {
+          console.warn(
+            `Warning: Could not get modified files: ${errorMsg}. Learning extraction may be limited.`,
+          );
+        }
       }
     }
 
