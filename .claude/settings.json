@@ -8,6 +8,11 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install-dependencies.sh",
             "description": "Install pnpm dependencies on session startup"
+          },
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-start",
+            "description": "Load relevant knowledge for session context"
           }
         ]
       },
@@ -18,6 +23,23 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install-dependencies.sh",
             "description": "Install pnpm dependencies on session resume"
+          },
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-start",
+            "description": "Load relevant knowledge for session context"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-end",
+            "description": "Extract and store learnings before compaction"
           }
         ]
       }
