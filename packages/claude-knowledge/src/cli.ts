@@ -10,6 +10,24 @@ import {
 import { parseModifiedFiles, parseRecentCommits, mineMergedPRs } from "./utils";
 import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
 import { $ } from "bun";
+import { homedir } from "os";
+import { join } from "path";
+
+/**
+ * Path to the session metadata file.
+ * Used to persist session state between session-start and session-end hooks.
+ */
+const SESSION_METADATA_FILE = join(homedir(), ".claude-knowledge-session.json");
+
+/**
+ * Session metadata structure stored in the temp file.
+ */
+interface SessionMetadataFile {
+  sessionId: string;
+  learningsInjected: number;
+  startTime: string;
+  issueNumber?: number;
+}
 
 // Valid enum values for validation
 const VALID_MILESTONE_PHASES: MilestonePhase[] = [
@@ -546,6 +564,20 @@ try {
     )._sessionMetadata;
     if (metadata) {
       console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
+
+      // Write metadata to temp file for session-end to read
+      // This enables metrics correlation between session-start and session-end hooks
+      try {
+        await Bun.write(
+          SESSION_METADATA_FILE,
+          JSON.stringify(metadata, null, 2),
+        );
+      } catch (error) {
+        // Non-fatal: session-end can still work without the file
+        console.warn(
+          `Warning: Could not write session metadata file: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     // Exit with appropriate code
@@ -586,6 +618,34 @@ try {
       } else if (arg === "--files-read" && nextArg) {
         filesRead = parseIntSafe(nextArg, "files-read");
         i++;
+      }
+    }
+
+    // If no session metadata provided via args, try to read from temp file
+    // This enables automatic correlation with session-start hook
+    if (!sessionId) {
+      try {
+        const file = Bun.file(SESSION_METADATA_FILE);
+        if (await file.exists()) {
+          const content = await file.text();
+          const savedMetadata = JSON.parse(content) as SessionMetadataFile;
+
+          // Use saved metadata for any values not explicitly provided
+          sessionId = savedMetadata.sessionId;
+          learningsInjected =
+            learningsInjected ?? savedMetadata.learningsInjected;
+          startTime = startTime ?? savedMetadata.startTime;
+
+          // Log that we found saved session data
+          console.log(
+            `Found session metadata from session-start: ${sessionId}`,
+          );
+        }
+      } catch (error) {
+        // Non-fatal: continue without session correlation
+        console.warn(
+          `Warning: Could not read session metadata file: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
@@ -647,6 +707,17 @@ try {
     }
     if (sessionId) {
       console.log(`Session metrics saved for: ${sessionId}`);
+
+      // Clean up the session metadata file after successful recording
+      try {
+        const file = Bun.file(SESSION_METADATA_FILE);
+        if (await file.exists()) {
+          const { unlink } = await import("fs/promises");
+          await unlink(SESSION_METADATA_FILE);
+        }
+      } catch {
+        // Non-fatal: file cleanup is best-effort
+      }
     }
 
     process.exit(0);
