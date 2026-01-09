@@ -1,8 +1,13 @@
 #!/usr/bin/env bun
 import { checkpoint } from "./checkpoint";
 import { hooks } from "./hooks";
-import { analyzeWorkflow, storeWorkflowLearning, query } from "./knowledge";
-import { parseModifiedFiles, parseRecentCommits } from "./utils";
+import {
+  analyzeWorkflow,
+  storeWorkflowLearning,
+  query,
+  knowledge,
+} from "./knowledge";
+import { parseModifiedFiles, parseRecentCommits, mineMergedPRs } from "./utils";
 import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
 import { $ } from "bun";
 
@@ -114,6 +119,7 @@ if (args.length === 0) {
   );
   console.error("  metrics list [issue-number]");
   console.error("  metrics summary");
+  console.error("  bootstrap mine-prs [limit]");
   process.exit(1);
 }
 
@@ -790,6 +796,52 @@ try {
 
       default:
         throw new Error(`Unknown metrics command: ${command}`);
+    }
+  } else if (category === "bootstrap") {
+    switch (command) {
+      case "mine-prs": {
+        // bootstrap mine-prs [limit]
+        const limit = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "limit")
+          : 50;
+
+        console.log(`Mining up to ${limit} merged PRs for learnings...`);
+
+        const learnings = await mineMergedPRs(limit);
+
+        if (learnings.length === 0) {
+          console.log(
+            "No learnings extracted. PRs may not have conventional commit titles or summaries.",
+          );
+        } else {
+          // Store the learnings
+          await knowledge.store(learnings);
+
+          // Group by code area for summary
+          const byArea = new Map<string, number>();
+          let withIssue = 0;
+
+          for (const l of learnings) {
+            const area = l.codeArea || "unknown";
+            byArea.set(area, (byArea.get(area) || 0) + 1);
+            if (l.sourceIssue) withIssue++;
+          }
+
+          console.log(`\nBootstrap Complete`);
+          console.log(`==================`);
+          console.log(`Learnings extracted: ${learnings.length}`);
+          console.log(`Linked to issues: ${withIssue}`);
+          console.log(`\nBy code area:`);
+
+          for (const [area, count] of byArea.entries()) {
+            console.log(`  ${area}: ${count}`);
+          }
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unknown bootstrap command: ${command}`);
     }
   } else {
     throw new Error(`Unknown category: ${category}`);
