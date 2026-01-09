@@ -315,7 +315,8 @@ ${totalCommits} commits planned.
 
 You'll be prompted to approve each commit individually.`
 });
-```
+
+````
 
 12. For each atomic commit in the plan:
     - Make the changes according to plan
@@ -390,8 +391,9 @@ Reply "proceed" to approve this commit, or provide feedback.`
 ${commitMessage}
 
 ${remainingCommits > 0 ? `${remainingCommits} commit(s) remaining.` : 'All commits complete!'}`
-    });
-    ```
+});
+
+````
 
 17. Repeat for each commit in the plan
 
@@ -420,8 +422,8 @@ Starting code review phase...
 Running validation and review agents.
 
 You'll be notified when review findings are ready.`
-    });
-    ```
+});
+````
 
 19. Run full validation:
 
@@ -577,9 +579,9 @@ mcp__mcp_communicator_telegram__notify_user({
   message: `⏳ [WORK-ON-ISSUE #$ARGUMENTS] Waiting for permission
 
 Tool: ${toolName}
-File: ${filePath || 'N/A'}
+File: ${filePath || "N/A"}
 
-Please check your terminal and approve/deny the operation.`
+Please check your terminal and approve/deny the operation.`,
 });
 
 // Then request the tool (Edit, Write, etc.)
@@ -589,8 +591,8 @@ Please check your terminal and approve/deny the operation.`
 mcp__mcp_communicator_telegram__notify_user({
   message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Permission granted
 
-${toolName} completed for ${filePath || 'operation'}.
-Continuing workflow...`
+${toolName} completed for ${filePath || "operation"}.
+Continuing workflow...`,
 });
 ```
 
@@ -698,4 +700,7 @@ bun scripts/checkpoint-cli.ts log-commit <workflowId> <sha> <message>
 # List active workflows
 bun scripts/checkpoint-cli.ts list-active
 ```
-````
+
+```
+
+```
