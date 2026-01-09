@@ -19,6 +19,9 @@ export { knowledge } from "./knowledge";
 export { hooks } from "./hooks";
 export {
   formatKnowledgeContext,
+  formatAsBullets,
+  formatAsXml,
+  formatByType,
   estimateTokens,
   groupByCodeArea,
   sortByRelevance,
@@ -42,4 +45,8 @@ export type {
   KnowledgeContext,
   SessionSummary,
   SessionEndResult,
+  // Context injection types
+  ContextFormat,
+  ContextInjectionOptions,
+  ContextInjectionResult,
 } from "./types";
