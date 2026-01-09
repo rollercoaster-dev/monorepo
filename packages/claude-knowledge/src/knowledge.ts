@@ -22,6 +22,11 @@ import {
 } from "./embeddings";
 import { cosineSimilarity } from "./embeddings/similarity";
 import { formatByType, estimateTokens } from "./formatter";
+import type { WorkflowLearning } from "./types";
+import {
+  storeWorkflowLearning as storeWorkflowLearningImpl,
+  analyzeWorkflow as analyzeWorkflowImpl,
+} from "./retrospective";
 
 /**
  * Create or merge an entity in the knowledge graph.
@@ -986,12 +991,47 @@ export async function formatForContext(
 }
 
 /**
+ * Store a WorkflowLearning in the knowledge graph.
+ *
+ * This is a convenience re-export from the retrospective module.
+ * It stores the WorkflowLearning as a Learning entity and extracts
+ * patterns and mistakes as separate entities with relationships.
+ *
+ * @param learning - The WorkflowLearning to store
+ */
+export async function storeWorkflowLearning(
+  learning: WorkflowLearning,
+): Promise<void> {
+  return storeWorkflowLearningImpl(learning);
+}
+
+/**
+ * Analyze a completed workflow and generate a WorkflowLearning object.
+ *
+ * This is a convenience re-export from the retrospective module.
+ * It loads workflow data from the checkpoint system, parses the dev plan,
+ * and compares planned vs actual execution.
+ *
+ * @param workflowId - The workflow ID from the checkpoint system
+ * @param devPlanPath - Path to the dev plan markdown file
+ * @returns WorkflowLearning object with analysis results
+ */
+export async function analyzeWorkflow(
+  workflowId: string,
+  devPlanPath: string,
+): Promise<WorkflowLearning> {
+  return analyzeWorkflowImpl(workflowId, devPlanPath);
+}
+
+/**
  * Knowledge graph API for storing and querying learnings, patterns, and mistakes.
  */
 export const knowledge = {
   store,
   storePattern,
   storeMistake,
+  storeWorkflowLearning,
+  analyzeWorkflow,
   query,
   getMistakesForFile,
   getPatternsForArea,
