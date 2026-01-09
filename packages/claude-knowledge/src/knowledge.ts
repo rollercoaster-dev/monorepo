@@ -871,6 +871,7 @@ export async function formatForContext(
     maxTokens = 2000,
     limit = 10,
     confidenceThreshold = 0.3,
+    similarityThreshold = 0.3,
     useSemanticSearch = false,
     showFilePaths = true,
     context,
@@ -883,9 +884,10 @@ export async function formatForContext(
     if (typeof queryContext === "string") {
       if (useSemanticSearch) {
         // Semantic search for conceptual relevance
+        // Use similarityThreshold for semantic matching, not confidenceThreshold
         queryResults = await searchSimilar(queryContext, {
           limit,
-          threshold: confidenceThreshold,
+          threshold: similarityThreshold,
           includeRelated: true,
         });
       } else {
@@ -903,7 +905,7 @@ export async function formatForContext(
       });
     }
 
-    // Filter by confidence threshold
+    // Filter by learning confidence threshold (separate from similarity threshold)
     const originalCount = queryResults.length;
     const filteredResults = queryResults.filter(
       (result) =>
@@ -925,29 +927,29 @@ export async function formatForContext(
       }
     }
 
-    // Fetch related patterns for code areas (2-hop traversal)
-    const patterns: Pattern[] = [];
-    for (const area of codeAreas) {
-      const areaPatterns = await getPatternsForArea(area);
-      for (const pattern of areaPatterns) {
-        // Dedupe by ID
-        if (!patterns.some((p) => p.id === pattern.id)) {
-          patterns.push(pattern);
-        }
+    // Fetch related patterns for code areas (2-hop traversal) - parallelized
+    const patternsById = new Map<string, Pattern>();
+    const patternsLists = await Promise.all(
+      Array.from(codeAreas).map((area) => getPatternsForArea(area)),
+    );
+    for (const list of patternsLists) {
+      for (const p of list) {
+        patternsById.set(p.id, p);
       }
     }
+    const patterns = Array.from(patternsById.values());
 
-    // Fetch related mistakes for file paths (2-hop traversal)
-    const mistakes: Mistake[] = [];
-    for (const path of filePaths) {
-      const pathMistakes = await getMistakesForFile(path);
-      for (const mistake of pathMistakes) {
-        // Dedupe by ID
-        if (!mistakes.some((m) => m.id === mistake.id)) {
-          mistakes.push(mistake);
-        }
+    // Fetch related mistakes for file paths (2-hop traversal) - parallelized
+    const mistakesById = new Map<string, Mistake>();
+    const mistakesLists = await Promise.all(
+      Array.from(filePaths).map((p) => getMistakesForFile(p)),
+    );
+    for (const list of mistakesLists) {
+      for (const m of list) {
+        mistakesById.set(m.id, m);
       }
     }
+    const mistakes = Array.from(mistakesById.values());
 
     // Format the results
     const content = formatByType(format, filteredResults, patterns, mistakes, {

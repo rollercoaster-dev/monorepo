@@ -294,6 +294,15 @@ export interface SessionEndResult {
 export type ContextFormat = "markdown" | "bullets" | "xml";
 
 /**
+ * Shared context for prioritization, used by both FormatOptions and ContextInjectionOptions.
+ */
+export interface PrioritizationContext {
+  issueNumber?: number;
+  primaryCodeArea?: string;
+  modifiedFiles?: string[];
+}
+
+/**
  * Options for the formatForContext method.
  * Controls how knowledge is queried, filtered, and formatted.
  */
@@ -304,18 +313,16 @@ export interface ContextInjectionOptions {
   maxTokens?: number;
   /** Maximum number of learnings to include (default: 10) */
   limit?: number;
-  /** Minimum confidence threshold 0.0-1.0 (default: 0.3) */
+  /** Minimum learning confidence threshold 0.0-1.0 (default: 0.3) */
   confidenceThreshold?: number;
+  /** Minimum semantic similarity threshold 0.0-1.0 for semantic search (default: 0.3) */
+  similarityThreshold?: number;
   /** Use semantic search instead of keyword matching (default: false) */
   useSemanticSearch?: boolean;
   /** Show file paths in output (default: true) */
   showFilePaths?: boolean;
-  /** Context for prioritization (same as FormatOptions) */
-  context?: {
-    issueNumber?: number;
-    primaryCodeArea?: string;
-    modifiedFiles?: string[];
-  };
+  /** Context for prioritization */
+  context?: PrioritizationContext;
 }
 
 /**

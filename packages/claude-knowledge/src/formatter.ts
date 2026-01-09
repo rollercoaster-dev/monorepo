@@ -164,9 +164,8 @@ function enforceTokenBudget(sections: Section[], maxTokens: number): string[] {
     if (currentTokens + tokens <= maxTokens) {
       included.push(section.content);
       currentTokens += tokens;
-    } else {
-      break; // Budget exhausted
     }
+    // Skip oversized section but continue to try smaller/lower-priority ones
   }
 
   return included;

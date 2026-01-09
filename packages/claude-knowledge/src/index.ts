@@ -46,6 +46,7 @@ export type {
   SessionSummary,
   SessionEndResult,
   // Context injection types
+  PrioritizationContext,
   ContextFormat,
   ContextInjectionOptions,
   ContextInjectionResult,

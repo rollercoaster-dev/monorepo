@@ -987,8 +987,15 @@ describe("knowledge API", () => {
         useSemanticSearch: true,
       });
 
-      expect(result.content).toBeDefined();
-      // Semantic search may return results based on conceptual similarity
+      // Semantic search returns valid result structure
+      expect(typeof result.content).toBe("string");
+      expect(typeof result.tokenCount).toBe("number");
+      expect(typeof result.resultCount).toBe("number");
+      expect(typeof result.wasFiltered).toBe("boolean");
+      // If results found via semantic search, they should contain relevant content
+      if (result.resultCount > 0) {
+        expect(result.content.toLowerCase()).toContain("validate");
+      }
     });
 
     test("filters by confidence threshold", async () => {
@@ -1010,15 +1017,19 @@ describe("knowledge API", () => {
     });
 
     test("sets wasFiltered when results are filtered", async () => {
-      // High threshold should filter some results
+      // High threshold (0.92) should filter results with lower confidence:
+      // - learning-ctx-1: 0.95 (included)
+      // - learning-ctx-2: 0.90 (filtered)
+      // - learning-ctx-4: 0.10 (filtered)
       const result = await knowledge.formatForContext(
         { codeArea: "Security" },
         { confidenceThreshold: 0.92 },
       );
 
-      // Note: wasFiltered is true when confidence filter removes results
-      // This depends on the test data having mixed confidence values
-      expect(typeof result.wasFiltered).toBe("boolean");
+      // wasFiltered should be true since we filtered out results
+      expect(result.wasFiltered).toBe(true);
+      // Should only have 1 result (learning-ctx-1 with 0.95 confidence)
+      expect(result.resultCount).toBe(1);
     });
 
     test("respects limit parameter", async () => {

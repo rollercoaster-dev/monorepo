@@ -14,8 +14,11 @@
  *   bun packages/claude-knowledge/examples/context-injection-agent.ts
  */
 
+import { createLogger } from "@rollercoaster-dev/rd-logger";
 import { knowledge } from "../src/index";
 import { resetDatabase, closeDatabase } from "../src/db/sqlite";
+
+const logger = createLogger("context-injection-example");
 
 // ============================================================================
 // Example Configuration
@@ -29,7 +32,7 @@ const EXAMPLE_TASK = "Review this file for security vulnerabilities";
 // ============================================================================
 
 async function seedExampleData(): Promise<void> {
-  console.log("Seeding example knowledge data...\n");
+  logger.info("Seeding example knowledge data...");
 
   // Store some security-related learnings
   await knowledge.store([
@@ -95,7 +98,7 @@ async function seedExampleData(): Promise<void> {
     "learning-validation-1",
   );
 
-  console.log("Example data seeded successfully.\n");
+  logger.info("Example data seeded successfully");
 }
 
 // ============================================================================
@@ -122,15 +125,13 @@ interface AgentResult {
  * to get relevant knowledge before performing its task.
  */
 async function runSecurityReviewAgent(task: AgentTask): Promise<AgentResult> {
-  console.log("=".repeat(60));
-  console.log("SECURITY REVIEW AGENT");
-  console.log("=".repeat(60));
-  console.log(`File: ${task.filePath}`);
-  console.log(`Task: ${task.taskDescription}`);
-  console.log("");
+  logger.info("SECURITY REVIEW AGENT", {
+    filePath: task.filePath,
+    taskDescription: task.taskDescription,
+  });
 
   // Step 1: Query knowledge with semantic search for security concepts
-  console.log("Step 1: Querying knowledge graph...\n");
+  logger.info("Step 1: Querying knowledge graph...");
 
   const securityKnowledge = await knowledge.formatForContext(
     "security vulnerabilities input validation SQL injection XSS",
@@ -148,7 +149,7 @@ async function runSecurityReviewAgent(task: AgentTask): Promise<AgentResult> {
   );
 
   // Step 2: Also get file-specific knowledge (mistakes in this file)
-  console.log("Step 2: Getting file-specific context...\n");
+  logger.info("Step 2: Getting file-specific context...");
 
   const fileKnowledge = await knowledge.formatForContext(
     { filePath: task.filePath },
@@ -170,7 +171,7 @@ ${fileKnowledge.content}
 `.trim();
 
   // Step 3: Simulate agent prompt construction
-  console.log("Step 3: Constructing agent prompt...\n");
+  logger.info("Step 3: Constructing agent prompt...");
 
   // In real usage, this prompt would be sent to an LLM
   const _agentPrompt = `
@@ -223,9 +224,7 @@ Learnings referenced: ${securityKnowledge.resultCount + fileKnowledge.resultCoun
 // ============================================================================
 
 async function main(): Promise<void> {
-  console.log("\n" + "=".repeat(60));
-  console.log("CONTEXT INJECTION EXAMPLE");
-  console.log("=".repeat(60) + "\n");
+  logger.info("CONTEXT INJECTION EXAMPLE");
 
   // Use a test database
   const TEST_DB = ".claude/example-knowledge.db";
@@ -242,34 +241,31 @@ async function main(): Promise<void> {
     });
 
     // Display results
-    console.log("=".repeat(60));
-    console.log("AGENT RESULT");
-    console.log("=".repeat(60));
-    console.log("");
-    console.log(result.simulatedResponse);
-    console.log("");
+    logger.info("AGENT RESULT", {
+      simulatedResponse: result.simulatedResponse,
+    });
 
     // Show statistics
-    console.log("=".repeat(60));
-    console.log("STATISTICS");
-    console.log("=".repeat(60));
-    console.log(`Total tokens used: ${result.tokenCount}`);
-    console.log(`Learnings referenced: ${result.learningsUsed}`);
-    console.log("");
+    logger.info("STATISTICS", {
+      totalTokensUsed: result.tokenCount,
+      learningsReferenced: result.learningsUsed,
+    });
 
     // Show the raw context that was injected
-    console.log("=".repeat(60));
-    console.log("RAW KNOWLEDGE CONTEXT (what was injected into prompt)");
-    console.log("=".repeat(60));
-    console.log(result.knowledgeContext);
+    logger.info("RAW KNOWLEDGE CONTEXT", {
+      knowledgeContext: result.knowledgeContext,
+    });
   } finally {
     closeDatabase();
   }
 
-  console.log("\n" + "=".repeat(60));
-  console.log("Example complete!");
-  console.log("=".repeat(60) + "\n");
+  logger.info("Example complete!");
 }
 
 // Run the example
-main().catch(console.error);
+main().catch((error) => {
+  logger.error("Example failed", {
+    error: error instanceof Error ? error.message : String(error),
+  });
+  process.exit(1);
+});

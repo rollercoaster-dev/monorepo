@@ -795,9 +795,7 @@ const xml = await knowledge.formatForContext(
 // Output:
 // <knowledge>
 //   <learnings>
-//     <learning id="learning-1" confidence="0.95" codeArea="Security">
-//       Always validate user input
-//     </learning>
+//     <learning id="learning-1" confidence="0.95" codeArea="Security">Always validate user input</learning>
 //   </learnings>
 // </knowledge>
 ```
@@ -809,7 +807,8 @@ interface ContextInjectionOptions {
   format?: "markdown" | "bullets" | "xml"; // Output format (default: "markdown")
   maxTokens?: number; // Token budget (default: 2000)
   limit?: number; // Max learnings (default: 10)
-  confidenceThreshold?: number; // Min confidence 0.0-1.0 (default: 0.3)
+  confidenceThreshold?: number; // Min learning confidence 0.0-1.0 (default: 0.3)
+  similarityThreshold?: number; // Min semantic similarity 0.0-1.0 (default: 0.3)
   useSemanticSearch?: boolean; // Use TF-IDF search (default: false)
   showFilePaths?: boolean; // Include file paths (default: true)
   context?: {
@@ -852,7 +851,7 @@ const sessionContext = await hooks.onSessionStart({
 });
 
 // Get focused knowledge for the task
-const knowledge = await knowledge.formatForContext(
+const knowledgeResult = await knowledge.formatForContext(
   { codeArea: "Authentication", filePath: "src/auth/login.ts" },
   {
     format: "markdown",
@@ -869,7 +868,7 @@ const knowledge = await knowledge.formatForContext(
 const prompt = `
 ## Relevant Knowledge
 
-${knowledge.content}
+${knowledgeResult.content}
 
 ## Your Task
 
