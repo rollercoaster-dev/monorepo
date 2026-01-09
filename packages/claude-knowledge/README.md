@@ -12,6 +12,7 @@ Cross-session learning and workflow persistence for Claude Code autonomous workf
 - [Data Model](#data-model)
 - [CLI Reference](#cli-reference)
 - [Integration Points](#integration-points)
+- [Workflow Retrospective](#workflow-retrospective)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 
@@ -878,6 +879,109 @@ Implement the login feature...
 
 ---
 
+## Workflow Retrospective
+
+After completing a workflow, analyze it against the development plan to capture learnings automatically. This helps prevent "Groundhog Day" where the same mistakes are repeated across sessions.
+
+### Analyzing a Workflow
+
+```typescript
+import { analyzeWorkflow, storeWorkflowLearning } from "claude-knowledge";
+
+// After workflow completes, analyze it
+const learning = await analyzeWorkflow(
+  workflowId,
+  ".claude/dev-plans/issue-123.md",
+);
+
+// Learning contains:
+console.log(learning.plannedCommits); // From dev plan
+console.log(learning.actualCommits); // From checkpoint
+console.log(learning.deviations); // Differences
+console.log(learning.patterns); // Extracted patterns
+console.log(learning.mistakes); // Extracted mistakes
+console.log(learning.improvements); // Suggestions for future
+
+// Store in knowledge graph
+await storeWorkflowLearning(learning);
+```
+
+### WorkflowLearning Structure
+
+```typescript
+interface WorkflowLearning {
+  id: string;
+  issueNumber: number;
+  branch: string;
+  workflowId: string;
+  plannedCommits: string[]; // Parsed from dev plan
+  actualCommits: string[]; // From checkpoint log
+  deviations: Deviation[]; // Plan vs reality differences
+  reviewFindings: ReviewFinding[]; // Issues found by review agents
+  fixesApplied: AppliedFix[]; // Auto-fixes and their outcomes
+  patterns: ExtractedPattern[]; // Recognized good practices
+  mistakes: ExtractedMistake[]; // Errors made and fixes
+  improvements: string[]; // Suggestions for future workflows
+  createdAt: string;
+}
+```
+
+### Deviation Detection
+
+The analyzer compares planned vs actual commits and identifies:
+
+| Deviation Type | Description                                      |
+| -------------- | ------------------------------------------------ |
+| `unplanned`    | Commit not in the dev plan (emergency fix, etc.) |
+| `modified`     | Commit message differs from plan                 |
+| `missing`      | Planned commit not executed                      |
+
+### Pattern Extraction
+
+Patterns are automatically extracted from successful workflows:
+
+- **Clean Implementation**: Few deviations from plan
+- **Effective Fix**: Successful auto-fix that resolved an issue
+- **Quick Resolution**: Issue completed faster than similar past issues
+
+### Improvement Suggestions
+
+Based on workflow analysis, suggestions may include:
+
+- "Consider breaking down complex issues" (many deviations)
+- "Run pre-implementation review" (many critical findings)
+- "Add test coverage" (tests missing for modified code)
+- "Document edge cases" (fixes for undocumented behavior)
+
+### CLI Commands
+
+```bash
+# Analyze a workflow
+bun packages/claude-knowledge/src/cli.ts learning analyze <workflow-id> <dev-plan-path>
+
+# Query learnings
+bun packages/claude-knowledge/src/cli.ts learning query [--code-area <area>] [--file <path>] [--issue <number>]
+```
+
+### Integration with /auto-issue
+
+Retrospective analysis runs automatically as Phase 3.5 (between Review and Finalize):
+
+1. After review agents complete (Phase 3)
+2. Analyze workflow against dev plan
+3. Extract patterns and mistakes
+4. Store in knowledge graph
+5. Continue to PR creation (Phase 4)
+
+This is non-blocking - errors are logged but don't stop the workflow.
+
+```bash
+# Skip retrospective if needed
+/auto-issue 123 --skip-retrospective
+```
+
+---
+
 ## Roadmap
 
 Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/rollercoaster-dev/monorepo/milestone/22)
@@ -892,6 +996,7 @@ Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/roller
 - [x] Knowledge formatting with token budgeting - [#368](https://github.com/rollercoaster-dev/monorepo/issues/368)
 - [x] Semantic search (embeddings) - [#379](https://github.com/rollercoaster-dev/monorepo/issues/379)
 - [x] Context injection API (`knowledge.formatForContext()`) - [#385](https://github.com/rollercoaster-dev/monorepo/issues/385)
+- [x] Workflow retrospective (`analyzeWorkflow()`, `storeWorkflowLearning()`) - [#375](https://github.com/rollercoaster-dev/monorepo/issues/375)
 
 ### Planned
 
