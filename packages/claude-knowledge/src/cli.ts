@@ -112,6 +112,8 @@ if (args.length === 0) {
   console.error(
     "  learning query [--code-area <area>] [--file <path>] [--issue <number>]",
   );
+  console.error("  metrics list [issue-number]");
+  console.error("  metrics summary");
   process.exit(1);
 }
 
@@ -721,6 +723,73 @@ try {
 
       default:
         throw new Error(`Unknown learning command: ${command}`);
+    }
+  } else if (category === "metrics") {
+    switch (command) {
+      case "list": {
+        // metrics list [issue-number]
+        const issueNumber = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "issue-number")
+          : undefined;
+
+        const metrics = checkpoint.getContextMetrics(issueNumber);
+
+        if (metrics.length === 0) {
+          console.log(
+            issueNumber
+              ? `No metrics found for issue #${issueNumber}.`
+              : "No metrics recorded yet.",
+          );
+        } else {
+          console.log(`Found ${metrics.length} session(s):\n`);
+
+          for (const m of metrics) {
+            console.log("---");
+            console.log(`Session: ${m.sessionId}`);
+            if (m.issueNumber) {
+              console.log(`Issue: #${m.issueNumber}`);
+            }
+            console.log(`Files Read: ${m.filesRead}`);
+            console.log(`Compacted: ${m.compacted ? "Yes" : "No"}`);
+            if (m.durationMinutes !== undefined) {
+              console.log(`Duration: ${m.durationMinutes} minutes`);
+            }
+            console.log(`Review Findings: ${m.reviewFindings}`);
+            console.log(`Learnings Injected: ${m.learningsInjected}`);
+            console.log(`Learnings Captured: ${m.learningsCaptured}`);
+            console.log(`Recorded: ${m.createdAt}`);
+            console.log("");
+          }
+        }
+        break;
+      }
+
+      case "summary": {
+        const summary = checkpoint.getMetricsSummary();
+
+        if (summary.totalSessions === 0) {
+          console.log("No metrics recorded yet.");
+        } else {
+          console.log("Context Metrics Summary");
+          console.log("=======================");
+          console.log(`Total Sessions: ${summary.totalSessions}`);
+          console.log(
+            `Compacted Sessions: ${summary.compactedSessions} (${((summary.compactedSessions / summary.totalSessions) * 100).toFixed(1)}%)`,
+          );
+          console.log(`Avg Files Read: ${summary.avgFilesRead}`);
+          console.log(
+            `Avg Learnings Injected: ${summary.avgLearningsInjected}`,
+          );
+          console.log(
+            `Avg Learnings Captured: ${summary.avgLearningsCaptured}`,
+          );
+          console.log(`Total Review Findings: ${summary.totalReviewFindings}`);
+        }
+        break;
+      }
+
+      default:
+        throw new Error(`Unknown metrics command: ${command}`);
     }
   } else {
     throw new Error(`Unknown category: ${category}`);
