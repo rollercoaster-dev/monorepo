@@ -5,7 +5,7 @@
  * Handles grouping, prioritization, and token budget management.
  */
 
-import type { QueryResult, Pattern, Mistake } from "./types";
+import type { QueryResult, Pattern, Mistake, ContextFormat } from "./types";
 
 /**
  * Options for formatting knowledge context.
@@ -164,9 +164,8 @@ function enforceTokenBudget(sections: Section[], maxTokens: number): string[] {
     if (currentTokens + tokens <= maxTokens) {
       included.push(section.content);
       currentTokens += tokens;
-    } else {
-      break; // Budget exhausted
     }
+    // Skip oversized section but continue to try smaller/lower-priority ones
   }
 
   return included;
@@ -350,4 +349,236 @@ export function formatKnowledgeContext(
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Format knowledge as a simple bullet list (compact format).
+ * No headers or grouping - just a flat list optimized for token efficiency.
+ *
+ * @param learnings - Query results to format
+ * @param patterns - Applicable patterns
+ * @param mistakes - Mistakes to avoid
+ * @param options - Formatting options
+ * @returns Formatted bullet list string
+ */
+export function formatAsBullets(
+  learnings: QueryResult[],
+  patterns: Pattern[] = [],
+  mistakes: Mistake[] = [],
+  options: FormatOptions = {},
+): string {
+  const showFilePaths = options.showFilePaths ?? true;
+  const maxTokens = options.maxTokens || 2000;
+  const context = options.context;
+
+  const lines: string[] = [];
+  let currentTokens = 0;
+
+  // Sort learnings by relevance
+  const sortedLearnings = sortByRelevance(learnings, context);
+
+  // Format learnings as bullets
+  for (const result of sortedLearnings) {
+    const { learning } = result;
+    const prefix = learning.sourceIssue ? `[#${learning.sourceIssue}] ` : "";
+    const confidence = learning.confidence
+      ? ` (confidence: ${learning.confidence.toFixed(2)})`
+      : "";
+    const filePath =
+      showFilePaths && learning.filePath ? ` [${learning.filePath}]` : "";
+    const line = `- ${prefix}${learning.content}${confidence}${filePath}`;
+
+    const lineTokens = estimateTokens(line);
+    if (currentTokens + lineTokens > maxTokens) break;
+
+    lines.push(line);
+    currentTokens += lineTokens;
+  }
+
+  // Format patterns as bullets
+  for (const pattern of patterns) {
+    const line = `- Pattern: ${pattern.name} - ${pattern.description}`;
+    const lineTokens = estimateTokens(line);
+    if (currentTokens + lineTokens > maxTokens) break;
+
+    lines.push(line);
+    currentTokens += lineTokens;
+  }
+
+  // Format mistakes as bullets
+  for (const mistake of mistakes) {
+    const location =
+      showFilePaths && mistake.filePath ? `in ${mistake.filePath}: ` : "";
+    const line = `- Mistake ${location}${mistake.description} (Fixed: ${mistake.howFixed})`;
+    const lineTokens = estimateTokens(line);
+    if (currentTokens + lineTokens > maxTokens) break;
+
+    lines.push(line);
+    currentTokens += lineTokens;
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Escape XML special characters in a string.
+ */
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
+ * Format knowledge as XML (structured format for machine parsing).
+ * Provides tagged structure for agents that need to parse the output.
+ *
+ * @param learnings - Query results to format
+ * @param patterns - Applicable patterns
+ * @param mistakes - Mistakes to avoid
+ * @param options - Formatting options
+ * @returns Formatted XML string
+ */
+export function formatAsXml(
+  learnings: QueryResult[],
+  patterns: Pattern[] = [],
+  mistakes: Mistake[] = [],
+  options: FormatOptions = {},
+): string {
+  const showFilePaths = options.showFilePaths ?? true;
+  const maxTokens = options.maxTokens || 2000;
+  const context = options.context;
+
+  const lines: string[] = [];
+  let currentTokens = 0;
+
+  lines.push("<knowledge>");
+  currentTokens += estimateTokens("<knowledge>");
+
+  // Sort learnings by relevance
+  const sortedLearnings = sortByRelevance(learnings, context);
+
+  // Format learnings
+  if (sortedLearnings.length > 0) {
+    lines.push("  <learnings>");
+    currentTokens += estimateTokens("  <learnings>");
+
+    for (const result of sortedLearnings) {
+      const { learning } = result;
+      const attrs: string[] = [`id="${escapeXml(learning.id)}"`];
+
+      if (learning.confidence !== undefined) {
+        attrs.push(`confidence="${learning.confidence.toFixed(2)}"`);
+      }
+      if (learning.codeArea) {
+        attrs.push(`codeArea="${escapeXml(learning.codeArea)}"`);
+      }
+      if (showFilePaths && learning.filePath) {
+        attrs.push(`filePath="${escapeXml(learning.filePath)}"`);
+      }
+      if (learning.sourceIssue !== undefined) {
+        attrs.push(`issue="${learning.sourceIssue}"`);
+      }
+
+      const content = escapeXml(learning.content);
+      const line = `    <learning ${attrs.join(" ")}>${content}</learning>`;
+
+      const lineTokens = estimateTokens(line);
+      if (currentTokens + lineTokens > maxTokens - 50) break; // Reserve space for closing tags
+
+      lines.push(line);
+      currentTokens += lineTokens;
+    }
+
+    lines.push("  </learnings>");
+    currentTokens += estimateTokens("  </learnings>");
+  }
+
+  // Format patterns
+  if (patterns.length > 0) {
+    lines.push("  <patterns>");
+    currentTokens += estimateTokens("  <patterns>");
+
+    for (const pattern of patterns) {
+      const attrs: string[] = [`id="${escapeXml(pattern.id)}"`];
+      if (pattern.codeArea) {
+        attrs.push(`codeArea="${escapeXml(pattern.codeArea)}"`);
+      }
+
+      const name = escapeXml(pattern.name);
+      const desc = escapeXml(pattern.description);
+      const line = `    <pattern ${attrs.join(" ")} name="${name}">${desc}</pattern>`;
+
+      const lineTokens = estimateTokens(line);
+      if (currentTokens + lineTokens > maxTokens - 30) break;
+
+      lines.push(line);
+      currentTokens += lineTokens;
+    }
+
+    lines.push("  </patterns>");
+    currentTokens += estimateTokens("  </patterns>");
+  }
+
+  // Format mistakes
+  if (mistakes.length > 0) {
+    lines.push("  <mistakes>");
+    currentTokens += estimateTokens("  <mistakes>");
+
+    for (const mistake of mistakes) {
+      const attrs: string[] = [`id="${escapeXml(mistake.id)}"`];
+      if (showFilePaths && mistake.filePath) {
+        attrs.push(`filePath="${escapeXml(mistake.filePath)}"`);
+      }
+
+      const desc = escapeXml(mistake.description);
+      const fix = escapeXml(mistake.howFixed);
+      const line = `    <mistake ${attrs.join(" ")} fixed="${fix}">${desc}</mistake>`;
+
+      const lineTokens = estimateTokens(line);
+      if (currentTokens + lineTokens > maxTokens - 20) break;
+
+      lines.push(line);
+      currentTokens += lineTokens;
+    }
+
+    lines.push("  </mistakes>");
+    currentTokens += estimateTokens("  </mistakes>");
+  }
+
+  lines.push("</knowledge>");
+
+  return lines.join("\n");
+}
+
+/**
+ * Format knowledge using the specified format type.
+ * Convenience wrapper that delegates to the appropriate formatter.
+ *
+ * @param format - Output format (markdown, bullets, xml)
+ * @param learnings - Query results to format
+ * @param patterns - Applicable patterns
+ * @param mistakes - Mistakes to avoid
+ * @param options - Formatting options
+ * @returns Formatted string in the requested format
+ */
+export function formatByType(
+  format: ContextFormat,
+  learnings: QueryResult[],
+  patterns: Pattern[] = [],
+  mistakes: Mistake[] = [],
+  options: FormatOptions = {},
+): string {
+  switch (format) {
+    case "bullets":
+      return formatAsBullets(learnings, patterns, mistakes, options);
+    case "xml":
+      return formatAsXml(learnings, patterns, mistakes, options);
+    case "markdown":
+    default:
+      return formatKnowledgeContext(learnings, patterns, mistakes, options);
+  }
 }

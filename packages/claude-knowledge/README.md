@@ -733,9 +733,148 @@ Add to `.claude/settings.json`:
 }
 ```
 
-### Context Injection (Planned)
+### Context Injection
 
-Future: Auto-inject relevant knowledge into agent prompts ([#385](https://github.com/rollercoaster-dev/monorepo/issues/385)).
+The `knowledge.formatForContext()` method provides a high-level API that combines querying, filtering, and formatting in a single call. It's the primary entry point for agents to get context-ready knowledge.
+
+#### Basic Usage
+
+```typescript
+import { knowledge } from "claude-knowledge";
+
+// Query by code area and format as markdown
+const result = await knowledge.formatForContext(
+  { codeArea: "API Development", limit: 5 },
+  { format: "markdown", maxTokens: 1000 },
+);
+
+console.log(result.content); // Formatted string for prompt injection
+console.log(result.tokenCount); // Estimated tokens used
+console.log(result.resultCount); // Number of learnings included
+```
+
+#### Semantic Search
+
+Use string input with `useSemanticSearch` for conceptual matching:
+
+```typescript
+// Find learnings conceptually related to the query
+const result = await knowledge.formatForContext(
+  "How do I validate user input?",
+  {
+    format: "bullets",
+    useSemanticSearch: true,
+    confidenceThreshold: 0.7, // Only high-confidence learnings
+  },
+);
+```
+
+#### Output Formats
+
+| Format     | Use Case                         | Example Output                                    |
+| ---------- | -------------------------------- | ------------------------------------------------- |
+| `markdown` | Human-readable, Claude prompts   | Headers, lists, sections                          |
+| `bullets`  | Compact lists, token-constrained | Flat bullet points                                |
+| `xml`      | Structured parsing, tool agents  | `<knowledge><learning>...</learning></knowledge>` |
+
+```typescript
+// Bullets format (compact)
+const bullets = await knowledge.formatForContext(
+  { codeArea: "Security" },
+  { format: "bullets" },
+);
+// Output:
+// - [#100] Always validate user input (confidence: 0.95) [src/api/users.ts]
+// - Pattern: Input Validation - Validate all external input
+
+// XML format (structured)
+const xml = await knowledge.formatForContext(
+  { codeArea: "Security" },
+  { format: "xml" },
+);
+// Output:
+// <knowledge>
+//   <learnings>
+//     <learning id="learning-1" confidence="0.95" codeArea="Security">Always validate user input</learning>
+//   </learnings>
+// </knowledge>
+```
+
+#### Options Reference
+
+```typescript
+interface ContextInjectionOptions {
+  format?: "markdown" | "bullets" | "xml"; // Output format (default: "markdown")
+  maxTokens?: number; // Token budget (default: 2000)
+  limit?: number; // Max learnings (default: 10)
+  confidenceThreshold?: number; // Min learning confidence 0.0-1.0 (default: 0.3)
+  similarityThreshold?: number; // Min semantic similarity 0.0-1.0 (default: 0.3)
+  useSemanticSearch?: boolean; // Use TF-IDF search (default: false)
+  showFilePaths?: boolean; // Include file paths (default: true)
+  context?: {
+    // Prioritization context
+    issueNumber?: number;
+    primaryCodeArea?: string;
+    modifiedFiles?: string[];
+  };
+}
+```
+
+#### Result Structure
+
+```typescript
+interface ContextInjectionResult {
+  content: string; // Formatted output for injection
+  tokenCount: number; // Estimated token count
+  resultCount: number; // Number of learnings included
+  wasFiltered: boolean; // True if results were filtered by threshold/limit
+}
+```
+
+#### Related Entities
+
+`formatForContext()` automatically includes related patterns and mistakes via 2-hop graph traversal:
+
+- Patterns linked to the code areas in results
+- Mistakes linked to the file paths in results
+
+This provides comprehensive context without separate queries.
+
+#### Agent Integration Example
+
+```typescript
+// In an agent's onSessionStart hook
+const sessionContext = await hooks.onSessionStart({
+  workingDir: process.cwd(),
+  branch: "feat/issue-123-auth",
+  modifiedFiles: ["src/auth/login.ts", "src/auth/register.ts"],
+});
+
+// Get focused knowledge for the task
+const knowledgeResult = await knowledge.formatForContext(
+  { codeArea: "Authentication", filePath: "src/auth/login.ts" },
+  {
+    format: "markdown",
+    maxTokens: 1500,
+    confidenceThreshold: 0.5,
+    context: {
+      issueNumber: 123,
+      modifiedFiles: sessionContext.modifiedFiles,
+    },
+  },
+);
+
+// Inject into agent prompt
+const prompt = `
+## Relevant Knowledge
+
+${knowledgeResult.content}
+
+## Your Task
+
+Implement the login feature...
+`;
+```
 
 ---
 
@@ -752,12 +891,12 @@ Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/roller
 - [x] Session lifecycle hooks - [#367](https://github.com/rollercoaster-dev/monorepo/issues/367)
 - [x] Knowledge formatting with token budgeting - [#368](https://github.com/rollercoaster-dev/monorepo/issues/368)
 - [x] Semantic search (embeddings) - [#379](https://github.com/rollercoaster-dev/monorepo/issues/379)
+- [x] Context injection API (`knowledge.formatForContext()`) - [#385](https://github.com/rollercoaster-dev/monorepo/issues/385)
 
 ### Planned
 
 | Feature                    | Issue                                                            | Priority |
 | -------------------------- | ---------------------------------------------------------------- | -------- |
-| Context injection          | [#385](https://github.com/rollercoaster-dev/monorepo/issues/385) | High     |
 | CLI for knowledge commands | [#380](https://github.com/rollercoaster-dev/monorepo/issues/380) | Medium   |
 | SUPERSEDES relationship    | [#383](https://github.com/rollercoaster-dev/monorepo/issues/383) | Low      |
 | LED_TO semantics cleanup   | [#381](https://github.com/rollercoaster-dev/monorepo/issues/381) | Low      |

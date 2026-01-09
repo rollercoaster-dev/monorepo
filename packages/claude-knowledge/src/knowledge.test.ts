@@ -909,4 +909,249 @@ describe("knowledge API", () => {
       expect(results).toHaveLength(0);
     });
   });
+
+  describe("formatForContext()", () => {
+    beforeEach(async () => {
+      // Seed test data
+      await knowledge.store([
+        {
+          id: "learning-ctx-1",
+          content: "Always validate user input to prevent injection attacks",
+          codeArea: "Security",
+          filePath: "src/api/users.ts",
+          confidence: 0.95,
+          sourceIssue: 100,
+        },
+        {
+          id: "learning-ctx-2",
+          content: "Use parameterized queries for database operations",
+          codeArea: "Security",
+          filePath: "src/db/queries.ts",
+          confidence: 0.9,
+          sourceIssue: 100,
+        },
+        {
+          id: "learning-ctx-3",
+          content: "Index frequently queried columns",
+          codeArea: "Database",
+          confidence: 0.85,
+        },
+        {
+          id: "learning-ctx-4",
+          content: "Low confidence learning for testing filter",
+          codeArea: "Security",
+          confidence: 0.1,
+        },
+      ]);
+
+      // Add pattern linked to security learnings
+      await knowledge.storePattern(
+        {
+          id: "pattern-ctx-validation",
+          name: "Input Validation",
+          description: "Always validate external input",
+          codeArea: "Security",
+        },
+        ["learning-ctx-1"],
+      );
+
+      // Add mistake for file
+      await knowledge.storeMistake(
+        {
+          id: "mistake-ctx-injection",
+          description: "Used string concatenation for SQL",
+          howFixed: "Switched to parameterized queries",
+          filePath: "src/db/queries.ts",
+        },
+        "learning-ctx-2",
+      );
+    });
+
+    test("queries with QueryContext object", async () => {
+      const result = await knowledge.formatForContext({ codeArea: "Security" });
+
+      expect(result.resultCount).toBeGreaterThan(0);
+      expect(result.content).toContain("validate");
+      expect(result.tokenCount).toBeGreaterThan(0);
+    });
+
+    test("queries with string using keywords (default)", async () => {
+      const result = await knowledge.formatForContext("validate");
+
+      expect(result.resultCount).toBeGreaterThan(0);
+      expect(result.content).toContain("validate");
+    });
+
+    test("queries with string using semantic search", async () => {
+      const result = await knowledge.formatForContext("input validation", {
+        useSemanticSearch: true,
+      });
+
+      // Semantic search returns valid result structure
+      expect(typeof result.content).toBe("string");
+      expect(typeof result.tokenCount).toBe("number");
+      expect(typeof result.resultCount).toBe("number");
+      expect(typeof result.wasFiltered).toBe("boolean");
+      // If results found via semantic search, they should contain relevant content
+      if (result.resultCount > 0) {
+        expect(result.content.toLowerCase()).toContain("validate");
+      }
+    });
+
+    test("filters by confidence threshold", async () => {
+      // With default threshold (0.3), should filter out low confidence
+      const defaultResult = await knowledge.formatForContext({
+        codeArea: "Security",
+      });
+
+      // With very low threshold, should include low confidence
+      const lowThresholdResult = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { confidenceThreshold: 0.05 },
+      );
+
+      // Low threshold should include more results
+      expect(lowThresholdResult.resultCount).toBeGreaterThanOrEqual(
+        defaultResult.resultCount,
+      );
+    });
+
+    test("sets wasFiltered when results are filtered", async () => {
+      // High threshold (0.92) should filter results with lower confidence:
+      // - learning-ctx-1: 0.95 (included)
+      // - learning-ctx-2: 0.90 (filtered)
+      // - learning-ctx-4: 0.10 (filtered)
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { confidenceThreshold: 0.92 },
+      );
+
+      // wasFiltered should be true since we filtered out results
+      expect(result.wasFiltered).toBe(true);
+      // Should only have 1 result (learning-ctx-1 with 0.95 confidence)
+      expect(result.resultCount).toBe(1);
+    });
+
+    test("respects limit parameter", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { limit: 1 },
+      );
+
+      expect(result.resultCount).toBeLessThanOrEqual(1);
+    });
+
+    test("formats output as markdown (default)", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "markdown" },
+      );
+
+      // Markdown format has headers
+      expect(result.content).toContain("## Relevant Knowledge");
+    });
+
+    test("formats output as bullets", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "bullets" },
+      );
+
+      // Bullets format starts with "- "
+      expect(result.content).toContain("- ");
+      // Should not have markdown headers
+      expect(result.content).not.toContain("## ");
+    });
+
+    test("formats output as XML", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "xml" },
+      );
+
+      // XML format has tags
+      expect(result.content).toContain("<knowledge>");
+      expect(result.content).toContain("</knowledge>");
+      expect(result.content).toContain("<learning");
+    });
+
+    test("respects maxTokens parameter", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { maxTokens: 500 },
+      );
+
+      // Token count should be within budget
+      expect(result.tokenCount).toBeLessThanOrEqual(500);
+    });
+
+    test("includes related patterns via 2-hop traversal", async () => {
+      const result = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "markdown" },
+      );
+
+      // Should include the pattern
+      expect(result.content).toContain("Input Validation");
+    });
+
+    test("includes related mistakes via 2-hop traversal", async () => {
+      const result = await knowledge.formatForContext(
+        { filePath: "src/db/queries.ts" },
+        { format: "markdown" },
+      );
+
+      // Should include the mistake
+      expect(result.content).toContain("string concatenation");
+    });
+
+    test("respects showFilePaths option", async () => {
+      const withPaths = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "bullets", showFilePaths: true },
+      );
+
+      const withoutPaths = await knowledge.formatForContext(
+        { codeArea: "Security" },
+        { format: "bullets", showFilePaths: false },
+      );
+
+      // With paths should contain file references
+      expect(withPaths.content).toContain("src/");
+      // Without paths should have different content (shorter or no file refs)
+      expect(withoutPaths.content.length).toBeLessThanOrEqual(
+        withPaths.content.length,
+      );
+    });
+
+    test("returns empty result for non-existent code area", async () => {
+      const result = await knowledge.formatForContext({
+        codeArea: "NonExistent",
+      });
+
+      expect(result.resultCount).toBe(0);
+      expect(result.tokenCount).toBeGreaterThanOrEqual(0);
+    });
+
+    test("handles empty query gracefully", async () => {
+      const result = await knowledge.formatForContext({});
+
+      // Should return some results (all learnings)
+      expect(result.resultCount).toBeGreaterThan(0);
+    });
+
+    test("graceful degradation on database error", async () => {
+      // Close database to simulate error
+      closeDatabase();
+
+      // This should not throw, but return result (may be empty or formatted empty state)
+      const result = await knowledge.formatForContext({ codeArea: "Security" });
+
+      // Should return a valid ContextInjectionResult, not throw
+      expect(result.resultCount).toBe(0);
+      expect(result.wasFiltered).toBe(false);
+      expect(typeof result.content).toBe("string");
+      expect(typeof result.tokenCount).toBe("number");
+    });
+  });
 });
