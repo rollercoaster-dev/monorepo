@@ -339,3 +339,109 @@ export interface ContextInjectionResult {
   /** True if results were filtered by threshold or limit */
   wasFiltered: boolean;
 }
+
+// ============================================================================
+// Workflow Retrospective Types
+// ============================================================================
+
+/**
+ * A deviation between what was planned and what actually happened.
+ * Captures the gap between intent and execution during a workflow.
+ */
+export interface Deviation {
+  /** The planned step from the dev plan (e.g., commit message or action) */
+  plannedStep: string;
+  /** What actually happened during execution */
+  actualOutcome: string;
+  /** Why the deviation occurred (manual explanation or inferred) */
+  reason: string;
+}
+
+/**
+ * A review finding from code review agents during the review phase.
+ */
+export interface ReviewFinding {
+  /** The agent that produced this finding (e.g., "code-reviewer", "silent-failure-hunter") */
+  agent: string;
+  /** Severity level of the finding */
+  severity: "critical" | "high" | "medium" | "low";
+  /** Description of what was found */
+  description: string;
+}
+
+/**
+ * A fix applied in response to a review finding.
+ */
+export interface AppliedFix {
+  /** The finding that prompted this fix */
+  finding: string;
+  /** Description of the fix applied */
+  fix: string;
+  /** Whether the fix was successful */
+  success: boolean;
+}
+
+/**
+ * A pattern extracted from a workflow - a successful approach worth reusing.
+ */
+export interface ExtractedPattern {
+  /** Short name for the pattern */
+  name: string;
+  /** Detailed description of the pattern */
+  description: string;
+  /** Code area where this pattern applies */
+  codeArea?: string;
+}
+
+/**
+ * A mistake extracted from a workflow - something to avoid in the future.
+ */
+export interface ExtractedMistake {
+  /** Description of what went wrong */
+  description: string;
+  /** How the mistake was fixed */
+  howFixed: string;
+  /** File path where the mistake occurred */
+  filePath?: string;
+}
+
+/**
+ * Complete learning capture from a workflow execution.
+ * Compares plan vs reality, captures problems and fixes,
+ * and extracts patterns and mistakes for future sessions.
+ */
+export interface WorkflowLearning {
+  /** Unique ID for this learning record */
+  id: string;
+  /** GitHub issue number this workflow addressed */
+  issueNumber: number;
+  /** Git branch name used for the work */
+  branch: string;
+  /** Workflow ID from checkpoint system */
+  workflowId: string;
+
+  // Plan vs Reality
+  /** Commits that were planned in the dev plan */
+  plannedCommits: string[];
+  /** Commits that were actually made */
+  actualCommits: string[];
+  /** Deviations between plan and execution */
+  deviations: Deviation[];
+
+  // Problems encountered
+  /** Findings from review agents */
+  reviewFindings: ReviewFinding[];
+  /** Fixes applied during the workflow */
+  fixesApplied: AppliedFix[];
+
+  // Extracted learnings
+  /** Patterns worth reusing in future workflows */
+  patterns: ExtractedPattern[];
+  /** Mistakes to avoid in future workflows */
+  mistakes: ExtractedMistake[];
+  /** Suggested improvements for the workflow or codebase */
+  improvements: string[];
+
+  /** ISO timestamp when this learning was created */
+  createdAt: string;
+}
