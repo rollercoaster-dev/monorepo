@@ -13,6 +13,7 @@ import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { getDefaultEmbedder, floatArrayToBuffer } from "./embeddings";
 
 /**
  * Create or merge an entity in the knowledge graph.
@@ -22,6 +23,7 @@ import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
  * @param type - Entity type
  * @param id - Entity ID
  * @param data - Entity data
+ * @param embedding - Optional embedding vector for semantic search
  * @returns The entity ID (existing or new)
  */
 function createOrMergeEntity(
@@ -29,6 +31,7 @@ function createOrMergeEntity(
   type: EntityType,
   id: string,
   data: unknown,
+  embedding?: Buffer,
 ): string {
   const now = new Date().toISOString();
 
@@ -45,22 +48,62 @@ function createOrMergeEntity(
         `Entity "${id}" already exists with type "${existing.type}", cannot update as "${type}"`,
       );
     }
-    // Update existing entity
-    db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
-      JSON.stringify(data),
-      now,
-      id,
-    ]);
+    // Update existing entity (including embedding if provided)
+    if (embedding) {
+      db.run(
+        "UPDATE entities SET data = ?, embedding = ?, updated_at = ? WHERE id = ?",
+        [JSON.stringify(data), embedding, now, id],
+      );
+    } else {
+      db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
+        JSON.stringify(data),
+        now,
+        id,
+      ]);
+    }
     return existing.id;
   }
 
-  // Insert new entity
-  db.run(
-    "INSERT INTO entities (id, type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-    [id, type, JSON.stringify(data), now, now],
-  );
+  // Insert new entity (with or without embedding)
+  if (embedding) {
+    db.run(
+      "INSERT INTO entities (id, type, data, embedding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), embedding, now, now],
+    );
+  } else {
+    db.run(
+      "INSERT INTO entities (id, type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), now, now],
+    );
+  }
 
   return id;
+}
+
+/**
+ * Generate an embedding for text content.
+ * Returns undefined if embedding generation fails (non-blocking).
+ *
+ * @param content - The text content to embed
+ * @returns Buffer containing the embedding, or undefined if generation fails
+ */
+async function generateEmbedding(content: string): Promise<Buffer | undefined> {
+  if (!content || content.trim().length === 0) {
+    return undefined;
+  }
+
+  try {
+    const embedder = getDefaultEmbedder();
+    const embedding = await embedder.generate(content);
+    return floatArrayToBuffer(embedding);
+  } catch (error) {
+    logger.warn("Failed to generate embedding, storing entity without it", {
+      error: error instanceof Error ? error.message : String(error),
+      contentLength: content.length,
+      context: "knowledge.generateEmbedding",
+    });
+    return undefined;
+  }
 }
 
 /**
@@ -105,10 +148,7 @@ function createRelationship(
  *
  * Creates Learning entities and auto-creates/merges related CodeArea and File entities.
  * Establishes ABOUT and IN_FILE relationships.
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embeddings for semantic search.
  *
  * @param learnings - Array of learnings to store
  * @throws Error if storage fails (transaction is rolled back)
@@ -120,19 +160,33 @@ export async function store(learnings: Learning[]): Promise<void> {
 
   const db = getDatabase();
 
+  // Generate embeddings before starting transaction (async operations)
+  const embeddings = await Promise.all(
+    learnings.map((learning) => generateEmbedding(learning.content)),
+  );
+
   // Use transaction for batch insert efficiency and atomicity
   db.run("BEGIN TRANSACTION");
 
   try {
-    for (const learning of learnings) {
+    for (let i = 0; i < learnings.length; i++) {
+      const learning = learnings[i];
+      const embedding = embeddings[i];
+
       // Ensure learning has an ID
       const learningId = learning.id || `learning-${randomUUID()}`;
 
-      // Create Learning entity
-      createOrMergeEntity(db, "Learning", learningId, {
-        ...learning,
-        id: learningId,
-      });
+      // Create Learning entity with embedding
+      createOrMergeEntity(
+        db,
+        "Learning",
+        learningId,
+        {
+          ...learning,
+          id: learningId,
+        },
+        embedding,
+      );
 
       // Auto-create/merge CodeArea entity if specified
       if (learning.codeArea) {
@@ -183,10 +237,7 @@ export async function store(learnings: Learning[]): Promise<void> {
  *
  * Creates Pattern entity and optionally links to Learning entities.
  * Establishes APPLIES_TO relationship to CodeArea if specified.
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embedding for semantic search.
  *
  * @param pattern - The pattern to store
  * @param learningIds - Optional array of learning IDs this pattern is derived from
@@ -198,17 +249,29 @@ export async function storePattern(
 ): Promise<void> {
   const db = getDatabase();
 
+  // Generate embedding from pattern name and description
+  const textToEmbed = [pattern.name, pattern.description]
+    .filter(Boolean)
+    .join(" ");
+  const embedding = await generateEmbedding(textToEmbed);
+
   db.run("BEGIN TRANSACTION");
 
   try {
     // Ensure pattern has an ID
     const patternId = pattern.id || `pattern-${randomUUID()}`;
 
-    // Create Pattern entity
-    createOrMergeEntity(db, "Pattern", patternId, {
-      ...pattern,
-      id: patternId,
-    });
+    // Create Pattern entity with embedding
+    createOrMergeEntity(
+      db,
+      "Pattern",
+      patternId,
+      {
+        ...pattern,
+        id: patternId,
+      },
+      embedding,
+    );
 
     // Link to CodeArea if specified
     if (pattern.codeArea) {
@@ -265,10 +328,7 @@ export async function storePattern(
  * Creates Mistake entity and optionally links to Learning that resolved it.
  * Establishes IN_FILE relationship if filePath specified.
  * Establishes LED_TO relationship to the Learning (mistake led to learning).
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embedding for semantic search.
  *
  * @param mistake - The mistake to store
  * @param learningId - Optional ID of the learning that fixed this mistake
@@ -280,17 +340,29 @@ export async function storeMistake(
 ): Promise<void> {
   const db = getDatabase();
 
+  // Generate embedding from mistake description and how it was fixed
+  const textToEmbed = [mistake.description, mistake.howFixed]
+    .filter(Boolean)
+    .join(" ");
+  const embedding = await generateEmbedding(textToEmbed);
+
   db.run("BEGIN TRANSACTION");
 
   try {
     // Ensure mistake has an ID
     const mistakeId = mistake.id || `mistake-${randomUUID()}`;
 
-    // Create Mistake entity
-    createOrMergeEntity(db, "Mistake", mistakeId, {
-      ...mistake,
-      id: mistakeId,
-    });
+    // Create Mistake entity with embedding
+    createOrMergeEntity(
+      db,
+      "Mistake",
+      mistakeId,
+      {
+        ...mistake,
+        id: mistakeId,
+      },
+      embedding,
+    );
 
     // Link to File if specified
     if (mistake.filePath) {
