@@ -3,7 +3,9 @@
 > Design document capturing the vision, research, and decisions for the `claude-knowledge` package.
 >
 > Created: 2026-01-08
+> Updated: 2026-01-09
 > Status: Exploration / Dogfooding
+> Scope: **Single-user, single-project only** (multi-user/multi-project OUT OF SCOPE)
 
 ---
 
@@ -105,7 +107,10 @@ Nothing does exactly "local-first coding knowledge graph + AI agent integration 
 
 ## Team Sync Options
 
-If/when team sync becomes valuable:
+> **OUT OF SCOPE**: Multi-user and multi-project sync is not planned for this implementation.
+> This section is retained for historical context only.
+
+~~If/when team sync becomes valuable:~~
 
 ### Option 1: Git-Based (Simplest)
 
@@ -352,10 +357,10 @@ Same metrics as baseline:
 ### Defer Until Validated
 
 - Schema expansions (PlanExecution, ReviewFinding, etc.)
-- Team sync
-- Codebase indexing
+- ~~Team sync~~ **OUT OF SCOPE**
+- Codebase indexing (see Tree-sitter issue when created)
 - Semantic search with embeddings (#379)
-- Session hooks automation (#367)
+- ~~Session hooks automation (#367)~~ **DONE** - merged
 
 ### If Dogfooding Succeeds
 
@@ -374,14 +379,17 @@ Same metrics as baseline:
 
 ## Related Issues
 
-| Issue | Description                     | Status          |
-| ----- | ------------------------------- | --------------- |
-| #387  | Dogfooding validation goals     | Open            |
-| #379  | Semantic search with embeddings | Open (deferred) |
-| #367  | Session lifecycle hooks         | Open (deferred) |
-| #380  | CLI knowledge commands          | Open (deferred) |
-| #375  | Workflow retrospective          | Open (deferred) |
-| #385  | Context injection for prompts   | Open (deferred) |
+| Issue | Description                     | Status                             |
+| ----- | ------------------------------- | ---------------------------------- |
+| #387  | Dogfooding validation goals     | Open - active                      |
+| #385  | Context injection for prompts   | Open - **CRITICAL** for validation |
+| #368  | Knowledge formatting + session  | **CLOSED** - merged                |
+| #367  | Session lifecycle hooks         | **CLOSED** - merged                |
+| #379  | Semantic search with embeddings | Open (deferred)                    |
+| #380  | CLI knowledge commands          | Open (deferred)                    |
+| #375  | Workflow retrospective          | Open (deferred)                    |
+
+> **Note**: #385 (context injection) is the critical blocker for validating the token/context hypothesis.
 
 ---
 
