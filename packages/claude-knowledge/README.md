@@ -108,6 +108,10 @@ All data is stored in `.claude/execution-state.db` (gitignored by default).
                                          Relationships
                                     (ABOUT, IN_FILE, LED_TO,
                                      APPLIES_TO, SUPERSEDES)
+                                               │
+                                         Embeddings
+                                    (TF-IDF vectors for
+                                     semantic search)
 ```
 
 ### Checkpoint System (Ephemeral)
@@ -313,6 +317,63 @@ Get patterns for a code area (useful for scaffolding).
 const patterns = await knowledge.getPatternsForArea("Security");
 // Returns: [{ name: "Input Validation Pattern", ... }, ...]
 ```
+
+### Semantic Search
+
+#### `searchSimilar(queryText: string, options?): Promise<QueryResult[]>`
+
+Find conceptually related learnings using TF-IDF embeddings. Unlike keyword-based `query()`, semantic search finds learnings that are related in meaning even without exact word matches.
+
+```typescript
+// Find learnings about input validation (matches "validate", "check", "sanitize", etc.)
+const results = await knowledge.searchSimilar("validate user input", {
+  limit: 10, // Max results (default: 10)
+  threshold: 0.3, // Min similarity 0.0-1.0 (default: 0.3)
+  includeRelated: true, // Fetch related patterns/mistakes (default: false)
+});
+
+// Results include similarity scores
+results.forEach((r) => {
+  console.log(`[${r.relevanceScore?.toFixed(2)}] ${r.learning.content}`);
+});
+// Output:
+// [0.85] Always validate user input to prevent injection attacks
+// [0.72] Use Zod schemas for input validation in TypeScript
+// [0.45] Sanitize form data before processing
+```
+
+**When to use `searchSimilar()` vs `query()`:**
+
+| Use Case                            | Function          |
+| ----------------------------------- | ----------------- |
+| Find learnings by code area/file    | `query()`         |
+| Search by exact keywords            | `query()`         |
+| Find conceptually related learnings | `searchSimilar()` |
+| "What do I know about X?"           | `searchSimilar()` |
+
+### Embedding Providers
+
+By default, semantic search uses a zero-dependency **TF-IDF** implementation. For higher-quality embeddings, optional API providers are available:
+
+```typescript
+import { OpenAIEmbedding } from "claude-knowledge/embeddings/api-providers";
+
+// Use OpenAI embeddings (requires API key)
+const embedder = new OpenAIEmbedding(process.env.OPENAI_API_KEY, {
+  model: "text-embedding-3-small", // default
+  dimensions: 256, // default, matches TF-IDF for consistency
+});
+```
+
+**Available providers:**
+
+| Provider  | Status | Quality | Cost             | Dependencies |
+| --------- | ------ | ------- | ---------------- | ------------ |
+| TF-IDF    | ✅     | Good    | Free             | None         |
+| OpenAI    | ✅     | Better  | ~$0.02/1M tokens | fetch        |
+| Anthropic | 🚧     | -       | -                | fetch        |
+
+> Note: API providers are optional and not imported by default. The package remains zero-dependency if you use only TF-IDF.
 
 ### Knowledge Formatting
 
@@ -690,16 +751,16 @@ Track progress: [Milestone 22: Claude Knowledge Graph](https://github.com/roller
 - [x] CLI for checkpoint operations
 - [x] Session lifecycle hooks - [#367](https://github.com/rollercoaster-dev/monorepo/issues/367)
 - [x] Knowledge formatting with token budgeting - [#368](https://github.com/rollercoaster-dev/monorepo/issues/368)
+- [x] Semantic search (embeddings) - [#379](https://github.com/rollercoaster-dev/monorepo/issues/379)
 
 ### Planned
 
-| Feature                      | Issue                                                            | Priority |
-| ---------------------------- | ---------------------------------------------------------------- | -------- |
-| Semantic search (embeddings) | [#379](https://github.com/rollercoaster-dev/monorepo/issues/379) | High     |
-| Context injection            | [#385](https://github.com/rollercoaster-dev/monorepo/issues/385) | High     |
-| CLI for knowledge commands   | [#380](https://github.com/rollercoaster-dev/monorepo/issues/380) | Medium   |
-| SUPERSEDES relationship      | [#383](https://github.com/rollercoaster-dev/monorepo/issues/383) | Low      |
-| LED_TO semantics cleanup     | [#381](https://github.com/rollercoaster-dev/monorepo/issues/381) | Low      |
+| Feature                    | Issue                                                            | Priority |
+| -------------------------- | ---------------------------------------------------------------- | -------- |
+| Context injection          | [#385](https://github.com/rollercoaster-dev/monorepo/issues/385) | High     |
+| CLI for knowledge commands | [#380](https://github.com/rollercoaster-dev/monorepo/issues/380) | Medium   |
+| SUPERSEDES relationship    | [#383](https://github.com/rollercoaster-dev/monorepo/issues/383) | Low      |
+| LED_TO semantics cleanup   | [#381](https://github.com/rollercoaster-dev/monorepo/issues/381) | Low      |
 
 ---
 
