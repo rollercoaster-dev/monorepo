@@ -8,6 +8,8 @@ import type {
   RelationshipType,
   QueryContext,
   QueryResult,
+  ContextInjectionOptions,
+  ContextInjectionResult,
 } from "./types";
 import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
@@ -19,6 +21,7 @@ import {
   bufferToFloatArray,
 } from "./embeddings";
 import { cosineSimilarity } from "./embeddings/similarity";
+import { formatByType, estimateTokens } from "./formatter";
 
 /**
  * Create or merge an entity in the knowledge graph.
@@ -830,6 +833,156 @@ export async function searchSimilar(
   return results;
 }
 
+// ============================================================================
+// Context Injection API
+// ============================================================================
+
+/**
+ * Query and format knowledge for injection into agent prompts.
+ *
+ * This is the primary entry point for agents to get context-ready knowledge.
+ * It combines querying, filtering, and formatting in a single call.
+ *
+ * @param queryContext - Query parameters (QueryContext object or string for search)
+ * @param options - Formatting and filtering options
+ * @returns Formatted content with metadata
+ *
+ * @example
+ * ```typescript
+ * // Query by code area
+ * const result = await knowledge.formatForContext(
+ *   { codeArea: "API Development", limit: 5 },
+ *   { format: "markdown", maxTokens: 1000 }
+ * );
+ *
+ * // Semantic search
+ * const result = await knowledge.formatForContext(
+ *   "How do I validate user input?",
+ *   { format: "bullets", useSemanticSearch: true }
+ * );
+ * ```
+ */
+export async function formatForContext(
+  queryContext: QueryContext | string,
+  options: ContextInjectionOptions = {},
+): Promise<ContextInjectionResult> {
+  const {
+    format = "markdown",
+    maxTokens = 2000,
+    limit = 10,
+    confidenceThreshold = 0.3,
+    useSemanticSearch = false,
+    showFilePaths = true,
+    context,
+  } = options;
+
+  try {
+    let queryResults: QueryResult[] = [];
+
+    // Execute query based on input type
+    if (typeof queryContext === "string") {
+      if (useSemanticSearch) {
+        // Semantic search for conceptual relevance
+        queryResults = await searchSimilar(queryContext, {
+          limit,
+          threshold: confidenceThreshold,
+          includeRelated: true,
+        });
+      } else {
+        // Keyword search
+        queryResults = await query({
+          keywords: [queryContext],
+          limit,
+        });
+      }
+    } else {
+      // Direct query with QueryContext object
+      queryResults = await query({
+        ...queryContext,
+        limit: queryContext.limit ?? limit,
+      });
+    }
+
+    // Filter by confidence threshold
+    const originalCount = queryResults.length;
+    const filteredResults = queryResults.filter(
+      (result) =>
+        result.learning.confidence === undefined ||
+        result.learning.confidence >= confidenceThreshold,
+    );
+    const wasFiltered = filteredResults.length < originalCount;
+
+    // Extract unique code areas and file paths from results
+    const codeAreas = new Set<string>();
+    const filePaths = new Set<string>();
+
+    for (const result of filteredResults) {
+      if (result.learning.codeArea) {
+        codeAreas.add(result.learning.codeArea);
+      }
+      if (result.learning.filePath) {
+        filePaths.add(result.learning.filePath);
+      }
+    }
+
+    // Fetch related patterns for code areas (2-hop traversal)
+    const patterns: Pattern[] = [];
+    for (const area of codeAreas) {
+      const areaPatterns = await getPatternsForArea(area);
+      for (const pattern of areaPatterns) {
+        // Dedupe by ID
+        if (!patterns.some((p) => p.id === pattern.id)) {
+          patterns.push(pattern);
+        }
+      }
+    }
+
+    // Fetch related mistakes for file paths (2-hop traversal)
+    const mistakes: Mistake[] = [];
+    for (const path of filePaths) {
+      const pathMistakes = await getMistakesForFile(path);
+      for (const mistake of pathMistakes) {
+        // Dedupe by ID
+        if (!mistakes.some((m) => m.id === mistake.id)) {
+          mistakes.push(mistake);
+        }
+      }
+    }
+
+    // Format the results
+    const content = formatByType(format, filteredResults, patterns, mistakes, {
+      maxTokens,
+      showFilePaths,
+      context,
+    });
+
+    // Calculate token count
+    const tokenCount = estimateTokens(content);
+
+    return {
+      content,
+      tokenCount,
+      resultCount: filteredResults.length,
+      wasFiltered,
+    };
+  } catch (error) {
+    // Graceful degradation - return empty result on error
+    logger.warn("formatForContext failed, returning empty result", {
+      error: error instanceof Error ? error.message : String(error),
+      queryContext:
+        typeof queryContext === "string" ? queryContext : "QueryContext object",
+      context: "knowledge.formatForContext",
+    });
+
+    return {
+      content: "",
+      tokenCount: 0,
+      resultCount: 0,
+      wasFiltered: false,
+    };
+  }
+}
+
 /**
  * Knowledge graph API for storing and querying learnings, patterns, and mistakes.
  */
@@ -841,4 +994,5 @@ export const knowledge = {
   getMistakesForFile,
   getPatternsForArea,
   searchSimilar,
+  formatForContext,
 };
