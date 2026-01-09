@@ -12,6 +12,7 @@ import type {
 import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /**
  * Create or merge an entity in the knowledge graph.
@@ -159,7 +160,18 @@ export async function store(learnings: Learning[]): Promise<void> {
 
     db.run("COMMIT");
   } catch (error) {
-    db.run("ROLLBACK");
+    try {
+      db.run("ROLLBACK");
+    } catch (rollbackError) {
+      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
+        originalError: error instanceof Error ? error.message : String(error),
+        rollbackError:
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError),
+        context: "knowledge.store",
+      });
+    }
     throw new Error(
       `Failed to store learnings: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -374,8 +386,10 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
   // Add keyword search conditions
   if (keywords && keywords.length > 0) {
     for (const keyword of keywords) {
-      conditions.push(`json_extract(e.data, '$.content') LIKE ?`);
-      params.push(`%${keyword}%`);
+      conditions.push(`json_extract(e.data, '$.content') LIKE ? ESCAPE '\\'`);
+      // Escape SQL LIKE special characters to prevent injection
+      const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
+      params.push(`%${escapedKeyword}%`);
     }
   }
 
@@ -430,28 +444,39 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
 
   const rows = db.query<QueryRow, (string | number)[]>(sql).all(...params);
 
-  // Transform rows to QueryResult
-  return rows.map((row) => {
-    const learning = JSON.parse(row.data) as Learning;
+  // Transform rows to QueryResult, skipping corrupted entries
+  const results: QueryResult[] = [];
+  for (const row of rows) {
+    try {
+      const learning = JSON.parse(row.data) as Learning;
 
-    const result: QueryResult = { learning };
+      const result: QueryResult = { learning };
 
-    // Parse related patterns (separated by |||)
-    if (row.patterns) {
-      result.relatedPatterns = row.patterns
-        .split("|||")
-        .map((p) => JSON.parse(p) as Pattern);
+      // Parse related patterns (separated by |||)
+      if (row.patterns) {
+        result.relatedPatterns = row.patterns
+          .split("|||")
+          .map((p) => JSON.parse(p) as Pattern);
+      }
+
+      // Parse related mistakes (separated by |||)
+      if (row.mistakes) {
+        result.relatedMistakes = row.mistakes
+          .split("|||")
+          .map((m) => JSON.parse(m) as Mistake);
+      }
+
+      results.push(result);
+    } catch (error) {
+      logger.warn("Skipping corrupted learning data", {
+        id: row.id,
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.query",
+      });
+      continue;
     }
-
-    // Parse related mistakes (separated by |||)
-    if (row.mistakes) {
-      result.relatedMistakes = row.mistakes
-        .split("|||")
-        .map((m) => JSON.parse(m) as Mistake);
-    }
-
-    return result;
-  });
+  }
+  return results;
 }
 
 /**
