@@ -9,12 +9,13 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 ## Quick Reference
 
 ```bash
-/auto-issue 123                  # Fully autonomous (default)
-/auto-issue 123 --dry-run        # Research only, show plan, don't implement
-/auto-issue 123 --require-tests  # Fail if tests don't pass
-/auto-issue 123 --force-pr       # Create PR even with unresolved issues
-/auto-issue 123 --abort-on-fail  # Abort if auto-fix fails
-/auto-issue 123 --sequential     # Run review agents sequentially (slower, easier debug)
+/auto-issue 123                    # Fully autonomous (default)
+/auto-issue 123 --dry-run          # Research only, show plan, don't implement
+/auto-issue 123 --require-tests    # Fail if tests don't pass
+/auto-issue 123 --force-pr         # Create PR even with unresolved issues
+/auto-issue 123 --abort-on-fail    # Abort if auto-fix fails
+/auto-issue 123 --sequential       # Run review agents sequentially (slower, easier debug)
+/auto-issue 123 --skip-retrospective # Skip Phase 3.5 (learning capture)
 ```
 
 ---
@@ -79,11 +80,12 @@ See [checkpoint-patterns.md](../shared/checkpoint-patterns.md) for initializatio
 ## Workflow Overview
 
 ```
-PHASE 1: Research    → Fetch issue, create dev plan (NO GATE)
-PHASE 2: Implement   → Execute plan with atomic commits (NO GATE)
-PHASE 3: Review      → Batch review + auto-fix loop
-PHASE 4: Finalize    → Create PR (NO GATE)
-ESCALATION           → Only if auto-fix fails MAX_RETRY times
+PHASE 1: Research      → Fetch issue, create dev plan (NO GATE)
+PHASE 2: Implement     → Execute plan with atomic commits (NO GATE)
+PHASE 3: Review        → Batch review + auto-fix loop
+PHASE 3.5: Retrospective → Capture learnings (NON-BLOCKING)
+PHASE 4: Finalize      → Create PR (NO GATE)
+ESCALATION             → Only if auto-fix fails MAX_RETRY times
 ```
 
 **Key Difference from `/work-on-issue`:** No human gates. The workflow proceeds autonomously unless critical issues cannot be resolved.
@@ -394,27 +396,96 @@ else:
     PROCEED_TO_PHASE_4()
 ```
 
-10b. **Log phase transition (review → finalize):**
+10b. **Log phase transition (review → retrospective):**
 
      ```typescript
-     checkpoint.setPhase(WORKFLOW_ID, "finalize");
+     checkpoint.setPhase(WORKFLOW_ID, "retrospective");
      checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
        from: "review",
-       to: "finalize",
+       to: "retrospective",
        criticalResolved: $CRITICAL_RESOLVED,
        fixCommits: $FIX_COMMIT_COUNT,
        retryCount: $RETRY_COUNT
      });
-     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize`);
+     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → retrospective`);
+     ```
 
-     // Telegram notification (non-blocking)
-     notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → finalize
+---
+
+## Phase 3.5: Retrospective (Autonomous)
+
+After review findings are resolved, analyze the workflow execution to capture learnings.
+
+**Note:** This phase is non-blocking - failures don't prevent PR creation. Skip with `--skip-retrospective` flag.
+
+10c. **Run retrospective analysis:**
+
+    ```typescript
+    import { analyzeWorkflow, storeWorkflowLearning } from "claude-knowledge";
+
+    const devPlanPath = `.claude/dev-plans/issue-$ARGUMENTS.md`;
+
+    try {
+      // Analyze workflow execution vs dev plan
+      const learning = await analyzeWorkflow(WORKFLOW_ID, devPlanPath);
+
+      // Store learning in knowledge graph
+      await storeWorkflowLearning(learning);
+
+      // Log success
+      checkpoint.logAction(WORKFLOW_ID, "retrospective_complete", "success", {
+        deviationCount: learning.deviations.length,
+        patternsExtracted: learning.patterns.length,
+        mistakesExtracted: learning.mistakes.length,
+        learningId: learning.id
+      });
+
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Retrospective complete:`);
+      console.log(`  - Deviations: ${learning.deviations.length}`);
+      console.log(`  - Patterns: ${learning.patterns.length}`);
+      console.log(`  - Mistakes: ${learning.mistakes.length}`);
+    } catch (error) {
+      // Non-blocking - log warning and continue
+      checkpoint.logAction(WORKFLOW_ID, "retrospective_failed", "failed", {
+        error: error.message
+      });
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Warning: Retrospective failed: ${error.message}`);
+      console.log(`[AUTO-ISSUE #$ARGUMENTS] Continuing to finalize phase...`);
+    }
+    ```
+
+10d. **Report captured learnings (if successful):**
+
+    ```
+    WORKFLOW LEARNING CAPTURED
+
+    Deviations from plan: N
+    Patterns extracted: M (reusable approaches)
+    Mistakes captured: P (to avoid in future)
+
+    Improvement suggestions:
+    - <suggestion 1>
+    - <suggestion 2>
+    ```
+
+10e. **Log phase transition (retrospective → finalize):**
+
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "finalize");
+    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
+      from: "retrospective",
+      to: "finalize"
+    });
+    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize`);
+
+    // Telegram notification (non-blocking)
+    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize
 
 Review complete: ${$CRITICAL_RESOLVED} critical issues resolved
 Fix commits: ${$FIX_COMMIT_COUNT}
+Learning captured: ${patternsExtracted} patterns, ${mistakesExtracted} mistakes
 Creating PR...`);
-
-````
+```
 
 ---
 
@@ -477,6 +548,7 @@ https://github.com/rollercoaster-dev/monorepo/pull/${PR_NUMBER}
 
 Commits: ${$TOTAL_COMMITS} implementation + ${$FIX_COMMIT_COUNT} fixes
 Reviews triggered: CodeRabbit, Claude`);
+
 ````
 
 15. **Trigger reviews:**
@@ -807,3 +879,4 @@ This workflow is successful when:
 - PR created and reviews triggered
 - Board updated to "Blocked" (awaiting review)
 - User informed of PR URL
+````
