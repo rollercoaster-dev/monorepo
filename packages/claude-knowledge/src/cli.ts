@@ -14,10 +14,12 @@ import { homedir } from "os";
 import { join } from "path";
 
 /**
- * Path to the session metadata file.
- * Used to persist session state between session-start and session-end hooks.
+ * Directory for session metadata files.
+ * Uses timestamped filenames to handle concurrent sessions.
  */
-const SESSION_METADATA_FILE = join(homedir(), ".claude-knowledge-session.json");
+const SESSION_METADATA_DIR = homedir();
+const SESSION_METADATA_PREFIX = ".claude-knowledge-session-";
+const SESSION_METADATA_SUFFIX = ".json";
 
 /**
  * Session metadata structure stored in the temp file.
@@ -27,6 +29,65 @@ interface SessionMetadataFile {
   learningsInjected: number;
   startTime: string;
   issueNumber?: number;
+}
+
+/**
+ * Validates that an object has the expected SessionMetadataFile structure.
+ */
+function isValidSessionMetadata(obj: unknown): obj is SessionMetadataFile {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof (obj as SessionMetadataFile).sessionId === "string" &&
+    typeof (obj as SessionMetadataFile).learningsInjected === "number" &&
+    typeof (obj as SessionMetadataFile).startTime === "string"
+  );
+}
+
+/**
+ * Generates a session metadata file path with timestamp.
+ */
+function getSessionMetadataPath(timestamp: number = Date.now()): string {
+  return join(
+    SESSION_METADATA_DIR,
+    `${SESSION_METADATA_PREFIX}${timestamp}${SESSION_METADATA_SUFFIX}`,
+  );
+}
+
+/**
+ * Finds the most recent session metadata file.
+ * Returns null if no files found.
+ */
+async function findLatestSessionMetadataFile(): Promise<string | null> {
+  const { readdir } = await import("fs/promises");
+
+  try {
+    const files = await readdir(SESSION_METADATA_DIR);
+    const sessionFiles = files
+      .filter(
+        (f) =>
+          f.startsWith(SESSION_METADATA_PREFIX) &&
+          f.endsWith(SESSION_METADATA_SUFFIX),
+      )
+      .map((f) => ({
+        name: f,
+        timestamp: parseInt(
+          f.slice(
+            SESSION_METADATA_PREFIX.length,
+            -SESSION_METADATA_SUFFIX.length,
+          ),
+          10,
+        ),
+      }))
+      .filter((f) => !isNaN(f.timestamp))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    if (sessionFiles.length === 0) return null;
+
+    return join(SESSION_METADATA_DIR, sessionFiles[0].name);
+  } catch {
+    return null;
+  }
 }
 
 // Valid enum values for validation
@@ -565,13 +626,11 @@ try {
     if (metadata) {
       console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
 
-      // Write metadata to temp file for session-end to read
-      // This enables metrics correlation between session-start and session-end hooks
+      // Write metadata to timestamped temp file for session-end to read
+      // Uses timestamp to handle concurrent sessions
       try {
-        await Bun.write(
-          SESSION_METADATA_FILE,
-          JSON.stringify(metadata, null, 2),
-        );
+        const metadataPath = getSessionMetadataPath();
+        await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
       } catch (error) {
         // Non-fatal: session-end can still work without the file
         console.warn(
@@ -621,31 +680,41 @@ try {
       }
     }
 
+    // Track the metadata file path for cleanup later
+    let metadataFilePath: string | null = null;
+
     // If no session metadata provided via args, try to read from temp file
     // This enables automatic correlation with session-start hook
     if (!sessionId) {
       try {
-        const file = Bun.file(SESSION_METADATA_FILE);
-        if (await file.exists()) {
+        metadataFilePath = await findLatestSessionMetadataFile();
+        if (metadataFilePath) {
+          const file = Bun.file(metadataFilePath);
           const content = await file.text();
-          const savedMetadata = JSON.parse(content) as SessionMetadataFile;
+          const parsed = JSON.parse(content);
 
-          // Use saved metadata for any values not explicitly provided
-          sessionId = savedMetadata.sessionId;
-          learningsInjected =
-            learningsInjected ?? savedMetadata.learningsInjected;
-          startTime = startTime ?? savedMetadata.startTime;
+          // Validate structure before using
+          if (isValidSessionMetadata(parsed)) {
+            sessionId = parsed.sessionId;
+            learningsInjected = learningsInjected ?? parsed.learningsInjected;
+            startTime = startTime ?? parsed.startTime;
 
-          // Log that we found saved session data
-          console.log(
-            `Found session metadata from session-start: ${sessionId}`,
-          );
+            console.log(
+              `Found session metadata from session-start: ${sessionId}`,
+            );
+          } else {
+            console.warn(
+              "Warning: Session metadata file has invalid structure, ignoring",
+            );
+            metadataFilePath = null;
+          }
         }
       } catch (error) {
         // Non-fatal: continue without session correlation
         console.warn(
           `Warning: Could not read session metadata file: ${error instanceof Error ? error.message : String(error)}`,
         );
+        metadataFilePath = null;
       }
     }
 
@@ -709,14 +778,13 @@ try {
       console.log(`Session metrics saved for: ${sessionId}`);
 
       // Clean up the session metadata file after successful recording
-      try {
-        const file = Bun.file(SESSION_METADATA_FILE);
-        if (await file.exists()) {
+      if (metadataFilePath) {
+        try {
           const { unlink } = await import("fs/promises");
-          await unlink(SESSION_METADATA_FILE);
+          await unlink(metadataFilePath);
+        } catch {
+          // Non-fatal: file cleanup is best-effort
         }
-      } catch {
-        // Non-fatal: file cleanup is best-effort
       }
     }
 
