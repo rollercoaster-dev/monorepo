@@ -13,6 +13,12 @@ import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import {
+  getDefaultEmbedder,
+  floatArrayToBuffer,
+  bufferToFloatArray,
+} from "./embeddings";
+import { cosineSimilarity } from "./embeddings/similarity";
 
 /**
  * Create or merge an entity in the knowledge graph.
@@ -22,6 +28,7 @@ import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
  * @param type - Entity type
  * @param id - Entity ID
  * @param data - Entity data
+ * @param embedding - Optional embedding vector for semantic search
  * @returns The entity ID (existing or new)
  */
 function createOrMergeEntity(
@@ -29,6 +36,7 @@ function createOrMergeEntity(
   type: EntityType,
   id: string,
   data: unknown,
+  embedding?: Buffer,
 ): string {
   const now = new Date().toISOString();
 
@@ -45,22 +53,62 @@ function createOrMergeEntity(
         `Entity "${id}" already exists with type "${existing.type}", cannot update as "${type}"`,
       );
     }
-    // Update existing entity
-    db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
-      JSON.stringify(data),
-      now,
-      id,
-    ]);
+    // Update existing entity (including embedding if provided)
+    if (embedding) {
+      db.run(
+        "UPDATE entities SET data = ?, embedding = ?, updated_at = ? WHERE id = ?",
+        [JSON.stringify(data), embedding, now, id],
+      );
+    } else {
+      db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
+        JSON.stringify(data),
+        now,
+        id,
+      ]);
+    }
     return existing.id;
   }
 
-  // Insert new entity
-  db.run(
-    "INSERT INTO entities (id, type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-    [id, type, JSON.stringify(data), now, now],
-  );
+  // Insert new entity (with or without embedding)
+  if (embedding) {
+    db.run(
+      "INSERT INTO entities (id, type, data, embedding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), embedding, now, now],
+    );
+  } else {
+    db.run(
+      "INSERT INTO entities (id, type, data, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), now, now],
+    );
+  }
 
   return id;
+}
+
+/**
+ * Generate an embedding for text content.
+ * Returns undefined if embedding generation fails (non-blocking).
+ *
+ * @param content - The text content to embed
+ * @returns Buffer containing the embedding, or undefined if generation fails
+ */
+async function generateEmbedding(content: string): Promise<Buffer | undefined> {
+  if (!content || content.trim().length === 0) {
+    return undefined;
+  }
+
+  try {
+    const embedder = getDefaultEmbedder();
+    const embedding = await embedder.generate(content);
+    return floatArrayToBuffer(embedding);
+  } catch (error) {
+    logger.warn("Failed to generate embedding, storing entity without it", {
+      error: error instanceof Error ? error.message : String(error),
+      contentLength: content.length,
+      context: "knowledge.generateEmbedding",
+    });
+    return undefined;
+  }
 }
 
 /**
@@ -105,10 +153,7 @@ function createRelationship(
  *
  * Creates Learning entities and auto-creates/merges related CodeArea and File entities.
  * Establishes ABOUT and IN_FILE relationships.
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embeddings for semantic search.
  *
  * @param learnings - Array of learnings to store
  * @throws Error if storage fails (transaction is rolled back)
@@ -120,19 +165,33 @@ export async function store(learnings: Learning[]): Promise<void> {
 
   const db = getDatabase();
 
+  // Generate embeddings before starting transaction (async operations)
+  const embeddings = await Promise.all(
+    learnings.map((learning) => generateEmbedding(learning.content)),
+  );
+
   // Use transaction for batch insert efficiency and atomicity
   db.run("BEGIN TRANSACTION");
 
   try {
-    for (const learning of learnings) {
+    for (let i = 0; i < learnings.length; i++) {
+      const learning = learnings[i];
+      const embedding = embeddings[i];
+
       // Ensure learning has an ID
       const learningId = learning.id || `learning-${randomUUID()}`;
 
-      // Create Learning entity
-      createOrMergeEntity(db, "Learning", learningId, {
-        ...learning,
-        id: learningId,
-      });
+      // Create Learning entity with embedding
+      createOrMergeEntity(
+        db,
+        "Learning",
+        learningId,
+        {
+          ...learning,
+          id: learningId,
+        },
+        embedding,
+      );
 
       // Auto-create/merge CodeArea entity if specified
       if (learning.codeArea) {
@@ -183,10 +242,7 @@ export async function store(learnings: Learning[]): Promise<void> {
  *
  * Creates Pattern entity and optionally links to Learning entities.
  * Establishes APPLIES_TO relationship to CodeArea if specified.
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embedding for semantic search.
  *
  * @param pattern - The pattern to store
  * @param learningIds - Optional array of learning IDs this pattern is derived from
@@ -198,17 +254,29 @@ export async function storePattern(
 ): Promise<void> {
   const db = getDatabase();
 
+  // Generate embedding from pattern name and description
+  const textToEmbed = [pattern.name, pattern.description]
+    .filter(Boolean)
+    .join(" ");
+  const embedding = await generateEmbedding(textToEmbed);
+
   db.run("BEGIN TRANSACTION");
 
   try {
     // Ensure pattern has an ID
     const patternId = pattern.id || `pattern-${randomUUID()}`;
 
-    // Create Pattern entity
-    createOrMergeEntity(db, "Pattern", patternId, {
-      ...pattern,
-      id: patternId,
-    });
+    // Create Pattern entity with embedding
+    createOrMergeEntity(
+      db,
+      "Pattern",
+      patternId,
+      {
+        ...pattern,
+        id: patternId,
+      },
+      embedding,
+    );
 
     // Link to CodeArea if specified
     if (pattern.codeArea) {
@@ -265,10 +333,7 @@ export async function storePattern(
  * Creates Mistake entity and optionally links to Learning that resolved it.
  * Establishes IN_FILE relationship if filePath specified.
  * Establishes LED_TO relationship to the Learning (mistake led to learning).
- *
- * @remarks
- * This function is async to support future async operations (e.g., embedding generation).
- * Current implementation uses synchronous bun:sqlite operations.
+ * Generates embedding for semantic search.
  *
  * @param mistake - The mistake to store
  * @param learningId - Optional ID of the learning that fixed this mistake
@@ -280,17 +345,29 @@ export async function storeMistake(
 ): Promise<void> {
   const db = getDatabase();
 
+  // Generate embedding from mistake description and how it was fixed
+  const textToEmbed = [mistake.description, mistake.howFixed]
+    .filter(Boolean)
+    .join(" ");
+  const embedding = await generateEmbedding(textToEmbed);
+
   db.run("BEGIN TRANSACTION");
 
   try {
     // Ensure mistake has an ID
     const mistakeId = mistake.id || `mistake-${randomUUID()}`;
 
-    // Create Mistake entity
-    createOrMergeEntity(db, "Mistake", mistakeId, {
-      ...mistake,
-      id: mistakeId,
-    });
+    // Create Mistake entity with embedding
+    createOrMergeEntity(
+      db,
+      "Mistake",
+      mistakeId,
+      {
+        ...mistake,
+        id: mistakeId,
+      },
+      embedding,
+    );
 
     // Link to File if specified
     if (mistake.filePath) {
@@ -573,6 +650,186 @@ export async function getPatternsForArea(codeArea: string): Promise<Pattern[]> {
   return rows.map((row) => JSON.parse(row.data) as Pattern);
 }
 
+// ============================================================================
+// Semantic Search API
+// ============================================================================
+
+/**
+ * Options for semantic similarity search.
+ */
+export interface SearchSimilarOptions {
+  /** Maximum number of results to return (default: 10) */
+  limit?: number;
+  /** Minimum similarity threshold 0.0-1.0 (default: 0.3) */
+  threshold?: number;
+  /** Include related patterns and mistakes via 2-hop traversal (default: false) */
+  includeRelated?: boolean;
+}
+
+/**
+ * Row type for semantic search query.
+ */
+interface SearchRow {
+  id: string;
+  data: string;
+  embedding: Buffer | null;
+  created_at: string;
+}
+
+/**
+ * Search for semantically similar learnings using vector similarity.
+ *
+ * Uses TF-IDF embeddings to find learnings that are conceptually related
+ * to the query text, even if they don't share exact keywords.
+ *
+ * @param queryText - The search query text
+ * @param options - Search options (limit, threshold, includeRelated)
+ * @returns Array of QueryResult sorted by similarity (highest first)
+ *
+ * @example
+ * ```typescript
+ * // Find learnings about input validation
+ * const results = await knowledge.searchSimilar("validate user input", {
+ *   limit: 5,
+ *   threshold: 0.4,
+ * });
+ * ```
+ */
+export async function searchSimilar(
+  queryText: string,
+  options: SearchSimilarOptions = {},
+): Promise<QueryResult[]> {
+  const { limit = 10, threshold = 0.3, includeRelated = false } = options;
+
+  const db = getDatabase();
+
+  // Generate query embedding
+  const queryEmbedding = await generateEmbedding(queryText);
+  if (!queryEmbedding) {
+    logger.warn("Failed to generate query embedding, returning empty results", {
+      queryLength: queryText.length,
+      context: "knowledge.searchSimilar",
+    });
+    return [];
+  }
+  const queryVector = bufferToFloatArray(queryEmbedding);
+
+  // Fetch all learnings with embeddings
+  const sql = `
+    SELECT id, data, embedding, created_at
+    FROM entities
+    WHERE type = 'Learning' AND embedding IS NOT NULL
+  `;
+
+  const rows = db.query<SearchRow, []>(sql).all();
+
+  if (rows.length === 0) {
+    logger.info("No learnings with embeddings found", {
+      context: "knowledge.searchSimilar",
+    });
+    return [];
+  }
+
+  // Calculate similarity scores
+  const scored: Array<{ row: SearchRow; similarity: number }> = [];
+
+  for (const row of rows) {
+    if (!row.embedding) continue;
+
+    try {
+      const rowVector = bufferToFloatArray(row.embedding);
+      const similarity = cosineSimilarity(queryVector, rowVector);
+
+      if (similarity >= threshold) {
+        scored.push({ row, similarity });
+      }
+    } catch (error) {
+      logger.warn("Failed to calculate similarity for learning", {
+        id: row.id,
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.searchSimilar",
+      });
+      // Continue with other learnings
+    }
+  }
+
+  // Sort by similarity descending
+  scored.sort((a, b) => b.similarity - a.similarity);
+
+  // Take top N
+  const topResults = scored.slice(0, limit);
+
+  // Build QueryResult array
+  const results: QueryResult[] = [];
+
+  for (const { row, similarity } of topResults) {
+    let learning: Learning;
+    try {
+      learning = JSON.parse(row.data) as Learning;
+    } catch (error) {
+      logger.warn("Skipping corrupted learning data in semantic search", {
+        id: row.id,
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.searchSimilar",
+      });
+      continue;
+    }
+
+    const result: QueryResult = {
+      learning,
+      relevanceScore: similarity,
+    };
+
+    // Optionally fetch related patterns and mistakes
+    if (includeRelated) {
+      try {
+        // Fetch related patterns (2-hop: Pattern --LED_TO--> Learning)
+        const patternSql = `
+          SELECT p.data
+          FROM entities p
+          JOIN relationships r ON r.from_id = p.id AND r.type = 'LED_TO'
+          WHERE p.type = 'Pattern' AND r.to_id = ?
+        `;
+        const patterns = db
+          .query<{ data: string }, [string]>(patternSql)
+          .all(row.id);
+        if (patterns.length > 0) {
+          result.relatedPatterns = patterns.map(
+            (p) => JSON.parse(p.data) as Pattern,
+          );
+        }
+
+        // Fetch related mistakes (2-hop: Mistake --LED_TO--> Learning)
+        const mistakeSql = `
+          SELECT m.data
+          FROM entities m
+          JOIN relationships r ON r.from_id = m.id AND r.type = 'LED_TO'
+          WHERE m.type = 'Mistake' AND r.to_id = ?
+        `;
+        const mistakes = db
+          .query<{ data: string }, [string]>(mistakeSql)
+          .all(row.id);
+        if (mistakes.length > 0) {
+          result.relatedMistakes = mistakes.map(
+            (m) => JSON.parse(m.data) as Mistake,
+          );
+        }
+      } catch (error) {
+        logger.warn("Failed to fetch related entities for learning", {
+          learningId: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.searchSimilar",
+        });
+        // Continue without related entities
+      }
+    }
+
+    results.push(result);
+  }
+
+  return results;
+}
+
 /**
  * Knowledge graph API for storing and querying learnings, patterns, and mistakes.
  */
@@ -583,4 +840,5 @@ export const knowledge = {
   query,
   getMistakesForFile,
   getPatternsForArea,
+  searchSimilar,
 };
