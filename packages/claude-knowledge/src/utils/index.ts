@@ -12,3 +12,5 @@ export {
   inferCodeAreasFromFiles,
   getPrimaryCodeArea,
 } from "./file-analyzer";
+
+export { mineMergedPRs } from "./pr-miner";
