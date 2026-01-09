@@ -70,6 +70,20 @@ function parseCommitsFromDevPlan(devPlanContent: string): string[] {
 }
 
 /**
+ * Validate and normalize severity to valid ReviewFinding severity.
+ */
+const VALID_SEVERITIES = ["critical", "high", "medium", "low"] as const;
+function validateSeverity(value: unknown): ReviewFinding["severity"] {
+  if (
+    typeof value === "string" &&
+    VALID_SEVERITIES.includes(value as (typeof VALID_SEVERITIES)[number])
+  ) {
+    return value as ReviewFinding["severity"];
+  }
+  return "medium";
+}
+
+/**
  * Extract review findings from workflow actions metadata.
  * Looks for actions with names like "review-*" or containing "findings" in metadata.
  */
@@ -95,8 +109,7 @@ function extractReviewFindings(data: CheckpointData): ReviewFinding[] {
         ) {
           findings.push({
             agent: String(metadata.agent || action.action),
-            severity:
-              (finding.severity as ReviewFinding["severity"]) || "medium",
+            severity: validateSeverity(finding.severity),
             description: String(finding.description),
           });
         }
@@ -112,7 +125,7 @@ function extractReviewFindings(data: CheckpointData): ReviewFinding[] {
       const finding = metadata.finding as Record<string, unknown>;
       findings.push({
         agent: String(metadata.agent || action.action),
-        severity: (finding.severity as ReviewFinding["severity"]) || "medium",
+        severity: validateSeverity(finding.severity),
         description: String(finding.description),
       });
     }
@@ -433,8 +446,12 @@ export async function analyzeWorkflow(
   let plannedCommits: string[] = [];
 
   if (existsSync(devPlanPath)) {
-    devPlanContent = readFileSync(devPlanPath, "utf-8");
-    plannedCommits = parseCommitsFromDevPlan(devPlanContent);
+    try {
+      devPlanContent = readFileSync(devPlanPath, "utf-8");
+      plannedCommits = parseCommitsFromDevPlan(devPlanContent);
+    } catch {
+      // File may have been deleted or become inaccessible; continue with empty plan
+    }
   }
 
   // Extract actual commits
