@@ -69,8 +69,10 @@ END:        Mark completed
 
 1. Check for existing workflow:
 
-   ```bash
-   bun scripts/checkpoint-cli.ts find $ARGUMENTS
+   ```typescript
+   import { checkpoint } from "claude-knowledge";
+
+   const existing = checkpoint.findByIssue($ARGUMENTS);
    ```
 
 2. **If existing workflow found** (not null):
@@ -117,8 +119,12 @@ END:        Mark completed
      echo "✓ Verified on branch: $CURRENT_BRANCH"
      ```
    - Create checkpoint:
-     ```bash
-     bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUMENTS-{short-description}"
+     ```typescript
+     const workflow = checkpoint.create(
+       $ARGUMENTS,
+       "feat/issue-$ARGUMENTS-{short-description}",
+     );
+     const WORKFLOW_ID = workflow.id;
      ```
    - Store the workflow ID for subsequent commands
    - **Notify via Telegram** (non-blocking):
@@ -150,8 +156,9 @@ You'll receive Telegram prompts at each gate.`
 
 Extract and store the ID for subsequent commands:
 
-```bash
-WORKFLOW_ID=$(bun scripts/checkpoint-cli.ts create $ARGUMENTS "feat/issue-$ARGUMENTS-desc" | jq -r '.id')
+```typescript
+const workflow = checkpoint.create($ARGUMENTS, "feat/issue-$ARGUMENTS-desc");
+const WORKFLOW_ID = workflow.id;
 ```
 
 ---
@@ -209,8 +216,8 @@ Reply "proceed" to continue, or provide feedback.`
 
 5. Log the gate passage:
 
-```bash
-bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-1-issue-reviewed" success '{"issue": $ARGUMENTS}'
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "gate-1-issue-reviewed", "success", { issue: $ARGUMENTS });
 ```
 
 5b. **Notify via Telegram** (non-blocking):
@@ -235,8 +242,8 @@ You'll be notified when the plan is ready for review.`
 
 8. Update phase to research complete:
 
-```bash
-bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "research-complete" success '{"plan": ".claude/dev-plans/issue-$ARGUMENTS.md"}'
+```typescript
+checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", { plan: ".claude/dev-plans/issue-$ARGUMENTS.md" });
 ```
 
 8b. **Notify via Telegram** (non-blocking):
@@ -299,9 +306,9 @@ Reply "proceed" to continue, or provide feedback.`
 
 11. Log gate passage and transition phase:
 
-    ```bash
-    bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-2-plan-approved" success
-    bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID implement
+    ```typescript
+    checkpoint.logAction(WORKFLOW_ID, "gate-2-plan-approved", "success", {});
+    checkpoint.setPhase(WORKFLOW_ID, "implement");
     ```
 
 11b. **Notify via Telegram** (non-blocking):
@@ -376,10 +383,10 @@ Reply "proceed" to approve this commit, or provide feedback.`
 
     Then log the commit:
 
-    ```bash
-    # Get the commit SHA
-    SHA=$(git rev-parse HEAD)
-    bun scripts/checkpoint-cli.ts log-commit $WORKFLOW_ID "$SHA" "<type>(<scope>): <description>"
+    ```typescript
+    // Get the commit SHA and log it
+    const sha = await $`git rev-parse HEAD`.text().trim();
+    checkpoint.logCommit(WORKFLOW_ID, sha, "<type>(<scope>): <description>");
     ```
 
 16b. **Notify via Telegram** (non-blocking):
@@ -405,9 +412,9 @@ ${remainingCommits > 0 ? `${remainingCommits} commit(s) remaining.` : 'All commi
 
 18. Update phase to review:
 
-    ```bash
-    bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID review
-    bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "implementation-complete" success
+    ```typescript
+    checkpoint.setPhase(WORKFLOW_ID, "review");
+    checkpoint.logAction(WORKFLOW_ID, "implementation-complete", "success", {});
     ```
 
 18b. **Notify via Telegram** (non-blocking):
@@ -440,8 +447,8 @@ You'll be notified when review findings are ready.`
 
 22. Log review completion:
 
-    ```bash
-    bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "review-agents-complete" success '{"findings": <count>}'
+    ```typescript
+    checkpoint.logAction(WORKFLOW_ID, "review-agents-complete", "success", { findings: <count> });
     ```
 
 ---
@@ -488,9 +495,9 @@ Reply "proceed" to create PR, or provide feedback.`
 
 25. Log gate passage and transition to finalize:
 
-    ```bash
-    bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "gate-4-review-approved" success
-    bun scripts/checkpoint-cli.ts set-phase $WORKFLOW_ID finalize
+    ```typescript
+    checkpoint.logAction(WORKFLOW_ID, "gate-4-review-approved", "success", {});
+    checkpoint.setPhase(WORKFLOW_ID, "finalize");
     ```
 
 25b. **Notify via Telegram** (non-blocking):
@@ -519,9 +526,9 @@ You'll receive the PR link when complete.`
 
     Log this commit too:
 
-    ```bash
-    SHA=$(git rev-parse HEAD)
-    bun scripts/checkpoint-cli.ts log-commit $WORKFLOW_ID "$SHA" "chore: clean up dev-plan for issue #$ARGUMENTS"
+    ```typescript
+    const sha = await $`git rev-parse HEAD`.text().trim();
+    checkpoint.logCommit(WORKFLOW_ID, sha, "chore: clean up dev-plan for issue #$ARGUMENTS");
     ```
 
 27. Push branch:
@@ -538,9 +545,9 @@ You'll receive the PR link when complete.`
 
 29. Log completion and mark workflow done:
 
-    ```bash
-    bun scripts/checkpoint-cli.ts log-action $WORKFLOW_ID "pr-created" success '{"pr_url": "<url>"}'
-    bun scripts/checkpoint-cli.ts set-status $WORKFLOW_ID completed
+    ```typescript
+    checkpoint.logAction(WORKFLOW_ID, "pr-created", "success", { pr_url: "<url>" });
+    checkpoint.setStatus(WORKFLOW_ID, "completed");
     ```
 
 30. **Notify via Telegram** (non-blocking):
@@ -670,37 +677,40 @@ If you realize you skipped a gate:
 If context is compacted mid-workflow:
 
 1. The checkpoint system preserves state in `.claude/execution-state.db`
-2. On resume, use `bun scripts/checkpoint-cli.ts find $ARGUMENTS` to restore state
+2. On resume, use `checkpoint.findByIssue($ARGUMENTS)` to restore state
 3. Review the actions and commits arrays to understand progress
 4. Resume from the appropriate gate
 
 ---
 
-## Checkpoint CLI Reference
+## Checkpoint TypeScript API Reference
 
-```bash
-# Create new workflow
-bun scripts/checkpoint-cli.ts create <issue> <branch>
+```typescript
+import { checkpoint } from "claude-knowledge";
 
-# Find existing workflow
-bun scripts/checkpoint-cli.ts find <issue>
+// Create new workflow
+const workflow = checkpoint.create(issueNumber, branchName);
+const WORKFLOW_ID = workflow.id;
 
-# Update phase (research|implement|review|finalize)
-bun scripts/checkpoint-cli.ts set-phase <workflowId> <phase>
+// Find existing workflow
+const existing = checkpoint.findByIssue(issueNumber);
 
-# Update status (running|paused|completed|failed)
-bun scripts/checkpoint-cli.ts set-status <workflowId> <status>
+// List all active workflows
+const active = checkpoint.listActive();
 
-# Log an action
-bun scripts/checkpoint-cli.ts log-action <workflowId> <action> <result> [metadata-json]
+// Update phase (research|implement|review|finalize)
+checkpoint.setPhase(WORKFLOW_ID, "implement");
 
-# Log a commit
-bun scripts/checkpoint-cli.ts log-commit <workflowId> <sha> <message>
+// Update status (running|paused|completed|failed)
+checkpoint.setStatus(WORKFLOW_ID, "completed");
 
-# List active workflows
-bun scripts/checkpoint-cli.ts list-active
-```
+// Log an action
+checkpoint.logAction(WORKFLOW_ID, "action_name", "success", { metadata });
 
-```
+// Log a commit
+const sha = await $`git rev-parse HEAD`.text().trim();
+checkpoint.logCommit(WORKFLOW_ID, sha, "commit message");
 
+// Track retry attempts
+const retryCount = checkpoint.incrementRetry(WORKFLOW_ID);
 ```
