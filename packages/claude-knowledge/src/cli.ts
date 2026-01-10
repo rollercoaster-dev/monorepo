@@ -8,7 +8,12 @@ import {
   knowledge,
 } from "./knowledge";
 import { parseModifiedFiles, parseRecentCommits, mineMergedPRs } from "./utils";
-import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
+import type {
+  MilestonePhase,
+  Workflow,
+  WorkflowPhase,
+  WorkflowStatus,
+} from "./types";
 import { $ } from "bun";
 import { homedir } from "os";
 import { join } from "path";
@@ -23,8 +28,9 @@ const SESSION_METADATA_DIR = join(homedir(), ".claude-knowledge");
 const SESSION_METADATA_PREFIX = "session-";
 const SESSION_METADATA_SUFFIX = ".json";
 
-/** Stale file threshold: 24 hours in milliseconds */
-const STALE_FILE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+/** Stale threshold: 24 hours */
+const STALE_THRESHOLD_HOURS = 24;
+const STALE_THRESHOLD_MS = STALE_THRESHOLD_HOURS * 60 * 60 * 1000;
 
 /**
  * Session metadata structure stored in the temp file.
@@ -110,7 +116,7 @@ async function findLatestSessionMetadataFile(): Promise<string | null> {
 
     // Clean up stale files (older than 24 hours)
     for (const f of sessionFiles) {
-      if (now - f.timestamp > STALE_FILE_THRESHOLD_MS) {
+      if (now - f.timestamp > STALE_THRESHOLD_MS) {
         try {
           await unlink(join(SESSION_METADATA_DIR, f.name));
           logger.debug("Cleaned up stale session metadata file", {
@@ -125,7 +131,7 @@ async function findLatestSessionMetadataFile(): Promise<string | null> {
 
     // Filter to non-stale files and sort by timestamp descending
     const validFiles = sessionFiles
-      .filter((f) => now - f.timestamp <= STALE_FILE_THRESHOLD_MS)
+      .filter((f) => now - f.timestamp <= STALE_THRESHOLD_MS)
       .sort((a, b) => b.timestamp - a.timestamp);
 
     if (validFiles.length === 0) return null;
@@ -209,6 +215,47 @@ function parseJsonSafe(value: string, name: string): Record<string, unknown> {
   }
 }
 
+/**
+ * Outputs prompt for resuming running workflows.
+ * Shows workflow details and asks user to respond with y/n/abandon.
+ * @param workflows - List of active workflows to prompt about
+ */
+function promptWorkflowResume(workflows: Workflow[]): void {
+  const now = Date.now();
+
+  // Filter to recent workflows (updated within 24 hours)
+  const recentWorkflows = workflows.filter((wf) => {
+    const age = now - new Date(wf.updatedAt).getTime();
+    return age <= STALE_THRESHOLD_MS;
+  });
+
+  if (recentWorkflows.length === 0) {
+    return;
+  }
+
+  console.log("\n=== Running Workflow(s) Detected ===\n");
+
+  for (const wf of recentWorkflows) {
+    const age = now - new Date(wf.updatedAt).getTime();
+    const hours = Math.floor(age / (1000 * 60 * 60));
+    const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
+
+    console.log(`Workflow found: Issue #${wf.issueNumber}`);
+    console.log(`  Branch: ${wf.branch}`);
+    console.log(`  Phase: ${wf.phase}`);
+    console.log(`  Status: ${wf.status}`);
+    console.log(
+      `  Last updated: ${hours > 0 ? `${hours}h ` : ""}${minutes}m ago`,
+    );
+    console.log(`  Resume this workflow? [y/n/abandon]\n`);
+  }
+
+  console.log(
+    "Reply with the issue number and action, e.g.: '414 y' to resume, '414 n' to skip, '414 abandon' to mark failed",
+  );
+  console.log("=================================\n");
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 
@@ -236,9 +283,10 @@ if (args.length === 0) {
   console.error("  workflow delete <id>");
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
+  console.error("  workflow cleanup [hours]");
   console.error("  session-start [--branch <name>] [--issue <number>]");
   console.error(
-    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--review-findings <n>] [--files-read <n>]",
+    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",
   );
   console.error("  learning analyze <workflow-id> <dev-plan-path>");
   console.error(
@@ -589,6 +637,16 @@ try {
         break;
       }
 
+      case "cleanup": {
+        // workflow cleanup [hours]
+        const hours = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "hours")
+          : 24;
+        const count = checkpoint.cleanupStaleWorkflows(hours);
+        console.log(JSON.stringify({ cleaned: count, thresholdHours: hours }));
+        break;
+      }
+
       default:
         throw new Error(`Unknown workflow command: ${command}`);
     }
@@ -654,6 +712,34 @@ try {
       issueNumber,
     });
 
+    // Clean up stale workflows before checking for resume
+    try {
+      const cleanedUp = checkpoint.cleanupStaleWorkflows(STALE_THRESHOLD_HOURS);
+      if (cleanedUp > 0) {
+        console.log(`Cleaned up ${cleanedUp} stale workflow(s)`);
+      }
+    } catch (error) {
+      // Non-fatal: continue without cleanup
+      logger.warn("Could not cleanup stale workflows", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "session-start",
+      });
+    }
+
+    // Check for running workflows and prompt for resume
+    try {
+      const activeWorkflows = checkpoint.listActive();
+      if (activeWorkflows.length > 0) {
+        promptWorkflowResume(activeWorkflows);
+      }
+    } catch (error) {
+      // Non-fatal: session continues without resume prompt
+      logger.warn("Could not check for running workflows", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "session-start",
+      });
+    }
+
     // Output the summary (for injection into context)
     console.log(context.summary);
 
@@ -697,7 +783,7 @@ try {
     // Exit with appropriate code
     process.exit(0);
   } else if (category === "session-end") {
-    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>]
+    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
     let workflowId: string | undefined;
     let sessionId: string | undefined;
     let learningsInjected: number | undefined;
@@ -705,6 +791,7 @@ try {
     let compacted: boolean | undefined;
     let reviewFindings: number | undefined;
     let filesRead: number | undefined;
+    let interrupted: boolean | undefined;
 
     // Parse optional arguments
     const allArgs = command ? [command, ...commandArgs] : commandArgs;
@@ -726,6 +813,8 @@ try {
         i++;
       } else if (arg === "--compacted") {
         compacted = true;
+      } else if (arg === "--interrupted") {
+        interrupted = true;
       } else if (arg === "--review-findings" && nextArg) {
         reviewFindings = parseIntSafe(nextArg, "review-findings");
         i++;
@@ -824,6 +913,7 @@ try {
       compacted,
       reviewFindings,
       filesRead,
+      interrupted,
     });
 
     // Output result

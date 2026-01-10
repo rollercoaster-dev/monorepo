@@ -38,8 +38,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-end",
-            "description": "Extract and store learnings before compaction"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-end --interrupted",
+            "description": "Extract and store learnings before compaction (mark as interrupted)"
           }
         ]
       }
