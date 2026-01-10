@@ -41,6 +41,8 @@ export interface ExtendedSessionContext extends SessionContext {
   learningsInjected?: number;
   /** Session start timestamp for duration calculation */
   startTime?: string;
+  /** Number of files read during the session (user-reported) */
+  filesRead?: number;
 }
 
 /** Maximum number of learnings to return at session start */

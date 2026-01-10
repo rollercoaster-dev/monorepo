@@ -12,6 +12,7 @@ import type {
   Baseline,
   MilestoneCheckpointData,
   ContextMetrics,
+  ReviewFindingsSummary,
 } from "./types";
 
 const logger = new Logger();
@@ -918,11 +919,63 @@ export const checkpoint = {
   // ==========================================================================
 
   /**
+   * Calculate workflow duration from action timestamps.
+   * Returns duration in minutes, or null if no actions exist.
+   */
+  calculateWorkflowDuration(workflowId: string): number | null {
+    const db = getDatabase();
+
+    type DurationRow = {
+      start: string | null;
+      end: string | null;
+    };
+
+    const result = db
+      .query<DurationRow, [string]>(
+        `
+        SELECT MIN(created_at) as start, MAX(created_at) as end
+        FROM actions WHERE workflow_id = ?
+      `,
+      )
+      .get(workflowId);
+
+    if (!result || !result.start || !result.end) {
+      return null;
+    }
+
+    const startMs = new Date(result.start).getTime();
+    const endMs = new Date(result.end).getTime();
+    if (isNaN(startMs) || isNaN(endMs)) {
+      return null;
+    }
+    return Math.round((endMs - startMs) / 60000);
+  },
+
+  /**
    * Save context metrics for dogfooding validation.
    * Uses INSERT OR REPLACE to handle updates for the same session.
    */
   saveContextMetrics(metrics: Omit<ContextMetrics, "id">): void {
     const db = getDatabase();
+
+    // Serialize review findings - can be number or ReviewFindingsSummary
+    const reviewFindingsStr =
+      typeof metrics.reviewFindings === "number"
+        ? String(metrics.reviewFindings)
+        : JSON.stringify(metrics.reviewFindings);
+
+    // If duration not provided, try to calculate from workflow actions
+    let durationMinutes = metrics.durationMinutes;
+    if (durationMinutes == null && metrics.issueNumber) {
+      // Try to find workflow by issue number and calculate duration from actions
+      const workflow = checkpoint.findByIssue(metrics.issueNumber);
+      if (workflow) {
+        const calculated = this.calculateWorkflowDuration(workflow.workflow.id);
+        if (calculated !== null) {
+          durationMinutes = calculated;
+        }
+      }
+    }
 
     db.run(
       `
@@ -937,8 +990,8 @@ export const checkpoint = {
         metrics.issueNumber ?? null,
         metrics.filesRead,
         metrics.compacted ? 1 : 0,
-        metrics.durationMinutes ?? null,
-        metrics.reviewFindings,
+        durationMinutes ?? null,
+        reviewFindingsStr,
         metrics.learningsInjected,
         metrics.learningsCaptured,
         metrics.createdAt,
@@ -960,7 +1013,7 @@ export const checkpoint = {
       files_read: number;
       compacted: number;
       duration_minutes: number | null;
-      review_findings: number;
+      review_findings: string; // Changed to string to handle both formats
       learnings_injected: number;
       learnings_captured: number;
       created_at: string;
@@ -997,18 +1050,40 @@ export const checkpoint = {
         .all();
     }
 
-    return rows.map((row) => ({
-      id: row.id,
-      sessionId: row.session_id,
-      issueNumber: row.issue_number ?? undefined,
-      filesRead: row.files_read,
-      compacted: Boolean(row.compacted),
-      durationMinutes: row.duration_minutes ?? undefined,
-      reviewFindings: row.review_findings,
-      learningsInjected: row.learnings_injected,
-      learningsCaptured: row.learnings_captured,
-      createdAt: row.created_at,
-    }));
+    return rows.map((row) => {
+      // Deserialize review findings - handle both legacy integer and JSON
+      let reviewFindings: ReviewFindingsSummary | number;
+      try {
+        // Try to parse as JSON first
+        const parsed = JSON.parse(row.review_findings);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "total" in parsed
+        ) {
+          reviewFindings = parsed as ReviewFindingsSummary;
+        } else {
+          // Legacy integer stored as JSON number
+          reviewFindings = Number(parsed);
+        }
+      } catch {
+        // Not JSON - parse as integer (legacy format)
+        reviewFindings = parseInt(row.review_findings, 10) || 0;
+      }
+
+      return {
+        id: row.id,
+        sessionId: row.session_id,
+        issueNumber: row.issue_number ?? undefined,
+        filesRead: row.files_read,
+        compacted: Boolean(row.compacted),
+        durationMinutes: row.duration_minutes ?? undefined,
+        reviewFindings,
+        learningsInjected: row.learnings_injected,
+        learningsCaptured: row.learnings_captured,
+        createdAt: row.created_at,
+      };
+    });
   },
 
   /**
@@ -1031,7 +1106,6 @@ export const checkpoint = {
       avg_files_read: number;
       avg_learnings_injected: number;
       avg_learnings_captured: number;
-      total_review_findings: number;
     };
 
     const row = db
@@ -1042,8 +1116,7 @@ export const checkpoint = {
         SUM(compacted) as compacted_sessions,
         AVG(files_read) as avg_files_read,
         AVG(learnings_injected) as avg_learnings_injected,
-        AVG(learnings_captured) as avg_learnings_captured,
-        SUM(review_findings) as total_review_findings
+        AVG(learnings_captured) as avg_learnings_captured
       FROM context_metrics
     `,
       )
@@ -1061,6 +1134,35 @@ export const checkpoint = {
       };
     }
 
+    // Calculate total review findings by querying all rows directly
+    // (getContextMetrics limits to 100, but summary should include all)
+    // This handles both legacy integer and structured JSON formats
+    type ReviewFindingsRow = { review_findings: string };
+    const reviewRows = db
+      .query<
+        ReviewFindingsRow,
+        []
+      >(`SELECT review_findings FROM context_metrics`)
+      .all();
+
+    let totalReviewFindings = 0;
+    for (const r of reviewRows) {
+      try {
+        const parsed = JSON.parse(r.review_findings);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "total" in parsed
+        ) {
+          totalReviewFindings += (parsed as ReviewFindingsSummary).total;
+        } else {
+          totalReviewFindings += Number(parsed) || 0;
+        }
+      } catch {
+        totalReviewFindings += parseInt(r.review_findings, 10) || 0;
+      }
+    }
+
     return {
       totalSessions: row.total_sessions,
       compactedSessions: row.compacted_sessions ?? 0,
@@ -1069,7 +1171,7 @@ export const checkpoint = {
         Math.round((row.avg_learnings_injected ?? 0) * 10) / 10,
       avgLearningsCaptured:
         Math.round((row.avg_learnings_captured ?? 0) * 10) / 10,
-      totalReviewFindings: row.total_review_findings ?? 0,
+      totalReviewFindings,
     };
   },
 };

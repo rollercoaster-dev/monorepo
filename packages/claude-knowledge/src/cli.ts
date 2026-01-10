@@ -13,12 +13,108 @@ import type {
   Workflow,
   WorkflowPhase,
   WorkflowStatus,
+  ReviewFindingsSummary,
 } from "./types";
 import { $ } from "bun";
 import { homedir } from "os";
 import { join } from "path";
 import { mkdir, readdir, unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+
+/**
+ * Parse review findings from review agent text output.
+ * Handles multiple agent formats (pr-review-toolkit, openbadges-compliance-reviewer).
+ *
+ * @param text - Raw text output from review agents
+ * @returns ReviewFindingsSummary with counts by severity
+ */
+export function parseReviewFindings(text: string): ReviewFindingsSummary {
+  const summary: ReviewFindingsSummary = {
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+    total: 0,
+  };
+
+  // Split into lines for pattern matching
+  const lines = text.split("\n");
+
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+
+    // code-reviewer patterns: "CRITICAL:" or "confidence: 95" (>= 91 is critical)
+    if (
+      lowerLine.includes("critical") ||
+      (lowerLine.includes("severity") && lowerLine.includes("critical"))
+    ) {
+      summary.critical++;
+    } else if (lowerLine.includes("confidence:")) {
+      const match = line.match(/confidence:\s*(\d+)/i);
+      if (match) {
+        const confidence = parseInt(match[1], 10);
+        if (confidence >= 91) {
+          summary.critical++;
+        } else if (confidence >= 70) {
+          summary.high++;
+        } else if (confidence >= 50) {
+          summary.medium++;
+        } else {
+          summary.low++;
+        }
+      }
+    }
+    // silent-failure-hunter patterns: "Severity: HIGH"
+    else if (
+      lowerLine.includes("severity") &&
+      (lowerLine.includes("high") || lowerLine.includes(":high"))
+    ) {
+      summary.high++;
+    } else if (
+      lowerLine.includes("severity") &&
+      (lowerLine.includes("medium") || lowerLine.includes(":medium"))
+    ) {
+      summary.medium++;
+    } else if (
+      lowerLine.includes("severity") &&
+      (lowerLine.includes("low") || lowerLine.includes(":low"))
+    ) {
+      summary.low++;
+    }
+    // pr-test-analyzer patterns: "Gap rating: 9/10" (>= 8 is high)
+    else if (lowerLine.includes("gap rating:")) {
+      const match = line.match(/gap rating:\s*(\d+)/i);
+      if (match) {
+        const rating = parseInt(match[1], 10);
+        if (rating >= 8) {
+          summary.high++;
+        } else if (rating >= 5) {
+          summary.medium++;
+        } else {
+          summary.low++;
+        }
+      }
+    }
+    // openbadges-compliance-reviewer patterns: "MUST violation"
+    else if (lowerLine.includes("must violation")) {
+      summary.critical++;
+    } else if (lowerLine.includes("should violation")) {
+      summary.high++;
+    } else if (
+      lowerLine.match(/^warning[:\s]/i) ||
+      (lowerLine.includes("warning") &&
+        !lowerLine.includes("no warning") &&
+        !lowerLine.includes("warning-free"))
+    ) {
+      summary.medium++;
+    }
+  }
+
+  summary.total =
+    summary.critical + summary.high + summary.medium + summary.low;
+
+  return summary;
+}
 
 /**
  * Directory for session metadata files.
@@ -1096,7 +1192,11 @@ try {
             if (m.durationMinutes !== undefined) {
               console.log(`Duration: ${m.durationMinutes} minutes`);
             }
-            console.log(`Review Findings: ${m.reviewFindings}`);
+            const reviewFindingsText =
+              typeof m.reviewFindings === "number"
+                ? String(m.reviewFindings)
+                : `critical=${m.reviewFindings.critical}, high=${m.reviewFindings.high}, medium=${m.reviewFindings.medium}, low=${m.reviewFindings.low}, total=${m.reviewFindings.total}`;
+            console.log(`Review Findings: ${reviewFindingsText}`);
             console.log(`Learnings Injected: ${m.learningsInjected}`);
             console.log(`Learnings Captured: ${m.learningsCaptured}`);
             console.log(`Recorded: ${m.createdAt}`);

@@ -122,7 +122,9 @@ CREATE TABLE IF NOT EXISTS context_metrics (
   files_read INTEGER DEFAULT 0,
   compacted INTEGER DEFAULT 0,
   duration_minutes INTEGER,
-  review_findings INTEGER DEFAULT 0,
+  -- review_findings can be INTEGER (legacy) or JSON string (ReviewFindingsSummary)
+  -- JSON format: {"critical": 0, "high": 0, "medium": 0, "low": 0, "total": 0}
+  review_findings TEXT DEFAULT '0',
   learnings_injected INTEGER DEFAULT 0,
   learnings_captured INTEGER DEFAULT 0,
   created_at TEXT NOT NULL

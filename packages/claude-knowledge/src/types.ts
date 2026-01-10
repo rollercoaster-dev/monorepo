@@ -458,6 +458,23 @@ export interface WorkflowLearning {
 // ============================================================================
 
 /**
+ * Breakdown of review findings by severity level.
+ * Enables tracking of review quality over time.
+ */
+export interface ReviewFindingsSummary {
+  /** Critical findings requiring immediate fix */
+  critical: number;
+  /** High-priority findings that should be addressed */
+  high: number;
+  /** Medium-priority findings to consider */
+  medium: number;
+  /** Low-priority findings (style, minor issues) */
+  low: number;
+  /** Total number of findings across all severities */
+  total: number;
+}
+
+/**
  * Metrics captured during a session to validate knowledge system effectiveness.
  * Used for dogfooding to determine if the knowledge graph provides genuine value.
  */
@@ -473,8 +490,11 @@ export interface ContextMetrics {
   compacted: boolean;
   /** Session duration in minutes */
   durationMinutes?: number;
-  /** Number of review findings from CodeRabbit/Claude */
-  reviewFindings: number;
+  /**
+   * Review findings from CodeRabbit/Claude.
+   * Can be a structured breakdown by severity or a legacy integer count.
+   */
+  reviewFindings: ReviewFindingsSummary | number;
   /** Number of learnings injected at session start */
   learningsInjected: number;
   /** Number of learnings captured at session end */
