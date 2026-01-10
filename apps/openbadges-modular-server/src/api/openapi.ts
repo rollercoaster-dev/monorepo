@@ -60,6 +60,11 @@ export const openApiConfig: OpenAPIObject = {
       description:
         "System-level operations like health checks and version information",
     },
+    {
+      name: "Verification",
+      description:
+        "Credential verification operations for validating Open Badges 3.0 credentials",
+    },
   ],
   paths: {
     "/version": {
@@ -1078,6 +1083,57 @@ export const openApiConfig: OpenAPIObject = {
         },
       },
     },
+    "/verify": {
+      post: {
+        tags: ["Verification"],
+        summary: "Verify a credential",
+        description:
+          "Verifies an Open Badges 3.0 credential in JSON-LD or JWT format. Performs complete verification including proof/signature verification, issuer validation, temporal checks, and status checks. This endpoint is intentionally public to allow third parties to verify credentials.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/VerifyCredentialRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description:
+              "Verification completed (check isValid field for result)",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/VerificationResult",
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Invalid request format",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+          "500": {
+            description: "Server error during verification",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -1867,6 +1923,251 @@ export const openApiConfig: OpenAPIObject = {
               type: "string",
               example: "Issuer name is required",
             },
+          },
+        },
+      },
+      VerifyCredentialRequest: {
+        type: "object",
+        required: ["credential"],
+        properties: {
+          credential: {
+            oneOf: [
+              {
+                type: "object",
+                description: "JSON-LD credential object",
+                properties: {
+                  "@context": {
+                    oneOf: [
+                      { type: "string" },
+                      { type: "array", items: { type: "string" } },
+                    ],
+                    description:
+                      "JSON-LD context (must include VC context v1 or v2)",
+                    example: [
+                      "https://www.w3.org/ns/credentials/v2",
+                      "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+                    ],
+                  },
+                  type: {
+                    oneOf: [
+                      { type: "string" },
+                      { type: "array", items: { type: "string" } },
+                    ],
+                    example: ["VerifiableCredential", "OpenBadgeCredential"],
+                  },
+                  issuer: {
+                    oneOf: [
+                      { type: "string", format: "uri" },
+                      {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", format: "uri" },
+                          type: { type: "string" },
+                          name: { type: "string" },
+                        },
+                      },
+                    ],
+                  },
+                  issuanceDate: {
+                    type: "string",
+                    format: "date-time",
+                    description:
+                      "ISO 8601 datetime when the credential was issued",
+                  },
+                  validFrom: {
+                    type: "string",
+                    format: "date-time",
+                    description:
+                      "ISO 8601 datetime when the credential becomes valid",
+                  },
+                  expirationDate: {
+                    type: "string",
+                    format: "date-time",
+                    description:
+                      "ISO 8601 datetime when the credential expires",
+                  },
+                  credentialSubject: {
+                    type: "object",
+                    description: "The subject of the credential",
+                  },
+                  proof: {
+                    type: "object",
+                    description: "Cryptographic proof for the credential",
+                  },
+                },
+              },
+              {
+                type: "string",
+                description:
+                  "JWT credential (compact serialization: header.payload.signature)",
+                example:
+                  "eyJhbGciOiJFZERTQSIsInR5cCI6InZjK2p3dCJ9.eyJpc3MiOiJkaWQ6a2V5Onp...",
+              },
+            ],
+          },
+          options: {
+            type: "object",
+            description: "Optional verification configuration",
+            properties: {
+              skipProofVerification: {
+                type: "boolean",
+                description: "Skip proof/signature verification",
+                default: false,
+              },
+              skipStatusCheck: {
+                type: "boolean",
+                description: "Skip revocation status check",
+                default: false,
+              },
+              skipTemporalValidation: {
+                type: "boolean",
+                description: "Skip issuance/expiration date validation",
+                default: false,
+              },
+              skipIssuerVerification: {
+                type: "boolean",
+                description: "Skip issuer DID resolution and validation",
+                default: false,
+              },
+              clockTolerance: {
+                type: "integer",
+                description: "Clock tolerance in seconds for temporal checks",
+                minimum: 0,
+                example: 60,
+              },
+              allowExpired: {
+                type: "boolean",
+                description:
+                  "Accept expired credentials (for historical verification)",
+                default: false,
+              },
+              allowRevoked: {
+                type: "boolean",
+                description: "Accept revoked credentials (for audit purposes)",
+                default: false,
+              },
+            },
+          },
+        },
+      },
+      VerificationResult: {
+        type: "object",
+        properties: {
+          status: {
+            type: "string",
+            enum: ["valid", "invalid", "indeterminate", "error"],
+            description: "Overall verification status",
+            example: "valid",
+          },
+          isValid: {
+            type: "boolean",
+            description: "Whether the credential is valid",
+            example: true,
+          },
+          checks: {
+            type: "object",
+            description: "Detailed verification checks by category",
+            properties: {
+              proof: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+              status: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+              temporal: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+              issuer: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+              schema: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+              general: {
+                type: "array",
+                items: { $ref: "#/components/schemas/VerificationCheck" },
+              },
+            },
+          },
+          credentialId: {
+            type: "string",
+            format: "uri",
+            description: "ID of the verified credential",
+          },
+          issuer: {
+            type: "string",
+            format: "uri",
+            description: "Issuer of the credential",
+          },
+          proofType: {
+            type: "string",
+            description: "Type of proof used in the credential",
+            example: "DataIntegrityProof",
+          },
+          verificationMethod: {
+            type: "string",
+            format: "uri",
+            description: "Verification method used",
+          },
+          verifiedAt: {
+            type: "string",
+            format: "date-time",
+            description: "Timestamp when verification was performed",
+          },
+          error: {
+            type: "string",
+            description: "Error message if verification failed",
+          },
+          metadata: {
+            type: "object",
+            description: "Additional verification metadata",
+            properties: {
+              durationMs: {
+                type: "number",
+                description: "Verification duration in milliseconds",
+              },
+              verifierVersion: {
+                type: "string",
+                description: "Version of the verifier",
+              },
+              cryptosuite: {
+                type: "string",
+                description: "Cryptosuite used for verification",
+              },
+            },
+          },
+        },
+      },
+      VerificationCheck: {
+        type: "object",
+        properties: {
+          check: {
+            type: "string",
+            description: "Unique identifier for the check type",
+            example: "proof_verification",
+          },
+          description: {
+            type: "string",
+            description: "Human-readable description of the check",
+            example: "Verify cryptographic proof signature",
+          },
+          passed: {
+            type: "boolean",
+            description: "Whether this check passed",
+            example: true,
+          },
+          error: {
+            type: "string",
+            description: "Error message if the check failed",
+          },
+          details: {
+            type: "object",
+            description: "Additional details about the check result",
           },
         },
       },
