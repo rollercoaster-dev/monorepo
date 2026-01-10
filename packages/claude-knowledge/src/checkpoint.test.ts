@@ -180,6 +180,109 @@ describe("checkpoint", () => {
     });
   });
 
+  describe("logActionSafe", () => {
+    test("logs successful action and returns true", () => {
+      const workflow = checkpoint.create(123, "feat/test");
+      const result = checkpoint.logActionSafe(
+        workflow.id,
+        "test_action",
+        "success",
+      );
+
+      expect(result).toBe(true);
+
+      const loaded = checkpoint.load(workflow.id);
+      expect(loaded!.actions).toHaveLength(1);
+      expect(loaded!.actions[0].action).toBe("test_action");
+      expect(loaded!.actions[0].result).toBe("success");
+    });
+
+    test("returns false when workflow doesn't exist", () => {
+      const result = checkpoint.logActionSafe(
+        "invalid-id",
+        "test_action",
+        "success",
+      );
+      expect(result).toBe(false);
+      // Should not throw
+    });
+
+    test("records failure with metadata", () => {
+      const workflow = checkpoint.create(123, "feat/test");
+      checkpoint.logActionSafe(workflow.id, "failing_action", "failed", {
+        error: "Test error",
+        details: "More info",
+      });
+
+      const loaded = checkpoint.load(workflow.id);
+      expect(loaded!.actions[0].result).toBe("failed");
+      expect(loaded!.actions[0].metadata).toMatchObject({
+        error: "Test error",
+        details: "More info",
+      });
+    });
+  });
+
+  describe("cleanupStaleWorkflows", () => {
+    test("does not cleanup recent workflows", () => {
+      checkpoint.create(123, "feat/test-123");
+      const cleaned = checkpoint.cleanupStaleWorkflows(24);
+      expect(cleaned).toBe(0);
+
+      // Workflow should still be running
+      const active = checkpoint.listActive();
+      expect(active).toHaveLength(1);
+    });
+
+    test("marks stale workflows as failed", () => {
+      const db = getDatabase();
+      const workflow = checkpoint.create(123, "feat/test-123");
+
+      // Manually backdate the workflow to 25 hours ago
+      const staleTime = new Date(
+        Date.now() - 25 * 60 * 60 * 1000,
+      ).toISOString();
+      db.run(`UPDATE workflows SET updated_at = ? WHERE id = ?`, [
+        staleTime,
+        workflow.id,
+      ]);
+
+      const cleaned = checkpoint.cleanupStaleWorkflows(24);
+      expect(cleaned).toBe(1);
+
+      // Workflow should now be failed, not running
+      const loaded = checkpoint.load(workflow.id);
+      expect(loaded!.workflow.status).toBe("failed");
+
+      // Should have logged cleanup action
+      const cleanupAction = loaded!.actions.find(
+        (a) => a.action === "workflow_stale_cleanup",
+      );
+      expect(cleanupAction).toBeDefined();
+      expect(cleanupAction!.result).toBe("failed");
+    });
+
+    test("respects custom threshold", () => {
+      const db = getDatabase();
+      const workflow = checkpoint.create(123, "feat/test-123");
+
+      // Set workflow to 2 hours old
+      const twoHoursAgo = new Date(
+        Date.now() - 2 * 60 * 60 * 1000,
+      ).toISOString();
+      db.run(`UPDATE workflows SET updated_at = ? WHERE id = ?`, [
+        twoHoursAgo,
+        workflow.id,
+      ]);
+
+      // 24 hour threshold should not clean up
+      expect(checkpoint.cleanupStaleWorkflows(24)).toBe(0);
+
+      // 1 hour threshold should clean up
+      expect(checkpoint.cleanupStaleWorkflows(1)).toBe(1);
+    });
+  });
+
   describe("error handling", () => {
     test("save throws for non-existent workflow", () => {
       const fakeWorkflow = {
