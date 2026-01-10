@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/rollercoaster-dev/monorepo/actions/workflows/ci.yml/badge.svg)](https://github.com/rollercoaster-dev/monorepo/actions/workflows/ci.yml)
 
-A unified monorepo for the Rollercoaster.dev ecosystem - an Open Badges system with neurodivergent-first design, local-first architecture, and federation capabilities.
+A unified monorepo for the Rollercoaster.dev ecosystem - an Open Badges system with neurodivergent-first design, local-first architecture, and federation capabilities (planned).
 
 ## 🎯 Vision
 
