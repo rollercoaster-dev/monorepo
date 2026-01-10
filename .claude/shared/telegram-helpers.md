@@ -167,7 +167,7 @@ These templates are used by the gated `/work-on-issue` workflow. Use template na
 
 **WOI_GATE_1** (ask):
 
-```
+```text
 🚦 GATE 1: Issue Review
 Issue #N: <title>
 <2-3 line summary>
@@ -177,7 +177,7 @@ Reply "proceed" to continue.
 
 **WOI_GATE_2** (ask):
 
-```
+```text
 🚦 GATE 2: Plan Review
 Issue #N: <title>
 Commits planned: X | Files affected: Y
@@ -186,7 +186,7 @@ Reply "proceed" to continue.
 
 **WOI_GATE_3** (ask):
 
-```
+```text
 🚦 GATE 3: Commit Review (N/M)
 <type>(<scope>): <message>
 Changes: <file list> | Lines: +X -Y
@@ -195,7 +195,7 @@ Reply "proceed" to approve.
 
 **WOI_GATE_4** (ask):
 
-```
+```text
 🚦 GATE 4: Pre-PR Review
 Critical: X | High: Y | Medium: Z
 Reply "proceed" to create PR.
