@@ -185,7 +185,9 @@ export async function handleSessionStart(args: string[]): Promise<void> {
       });
     }
   }
-  // Note: process.exit handled by main CLI entry point
+
+  // Exit with appropriate code
+  process.exit(0);
 }
 
 /**
@@ -333,10 +335,13 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     // Clean up the session metadata file after successful recording
     if (metadataFilePath) {
       try {
+        const { unlink } = await import("fs/promises");
         await unlink(metadataFilePath);
       } catch {
         // Non-fatal: file cleanup is best-effort
       }
     }
   }
+
+  process.exit(0);
 }
