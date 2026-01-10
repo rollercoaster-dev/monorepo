@@ -12,6 +12,7 @@ import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
 import { $ } from "bun";
 import { homedir } from "os";
 import { join } from "path";
+import { mkdir, readdir, unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /**
@@ -49,12 +50,17 @@ function isValidSessionMetadata(obj: unknown): obj is SessionMetadataFile {
 }
 
 /**
- * Generates a session metadata file path with timestamp.
+ * Generates a session metadata file path with timestamp and optional sessionId.
+ * Including sessionId prevents race conditions when multiple sessions run concurrently.
  */
-function getSessionMetadataPath(timestamp: number = Date.now()): string {
+function getSessionMetadataPath(
+  timestamp: number = Date.now(),
+  sessionId?: string,
+): string {
+  const suffix = sessionId ? `-${sessionId}` : "";
   return join(
     SESSION_METADATA_DIR,
-    `${SESSION_METADATA_PREFIX}${timestamp}${SESSION_METADATA_SUFFIX}`,
+    `${SESSION_METADATA_PREFIX}${timestamp}${suffix}${SESSION_METADATA_SUFFIX}`,
   );
 }
 
@@ -62,7 +68,6 @@ function getSessionMetadataPath(timestamp: number = Date.now()): string {
  * Ensures the session metadata directory exists.
  */
 async function ensureMetadataDir(): Promise<void> {
-  const { mkdir } = await import("fs/promises");
   await mkdir(SESSION_METADATA_DIR, { recursive: true });
 }
 
@@ -72,8 +77,6 @@ async function ensureMetadataDir(): Promise<void> {
  * Returns null if no files found.
  */
 async function findLatestSessionMetadataFile(): Promise<string | null> {
-  const { readdir, unlink } = await import("fs/promises");
-
   try {
     await ensureMetadataDir();
     const files = await readdir(SESSION_METADATA_DIR);
@@ -85,16 +88,24 @@ async function findLatestSessionMetadataFile(): Promise<string | null> {
           f.startsWith(SESSION_METADATA_PREFIX) &&
           f.endsWith(SESSION_METADATA_SUFFIX),
       )
-      .map((f) => ({
-        name: f,
-        timestamp: parseInt(
-          f.slice(
-            SESSION_METADATA_PREFIX.length,
-            -SESSION_METADATA_SUFFIX.length,
-          ),
-          10,
-        ),
-      }))
+      .map((f) => {
+        // Extract the part between prefix and suffix: "{timestamp}" or "{timestamp}-{sessionId}"
+        const middle = f.slice(
+          SESSION_METADATA_PREFIX.length,
+          -SESSION_METADATA_SUFFIX.length,
+        );
+        // Split to get timestamp (first part) and sessionId (rest, if any)
+        const dashIndex = middle.indexOf("-");
+        const timestampStr =
+          dashIndex === -1 ? middle : middle.slice(0, dashIndex);
+        const sessionId =
+          dashIndex === -1 ? undefined : middle.slice(dashIndex + 1);
+        return {
+          name: f,
+          timestamp: parseInt(timestampStr, 10),
+          sessionId,
+        };
+      })
       .filter((f) => !isNaN(f.timestamp));
 
     // Clean up stale files (older than 24 hours)
@@ -662,10 +673,17 @@ try {
       console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
 
       // Write metadata to timestamped temp file for session-end to read
-      // Uses timestamp to handle concurrent sessions
+      // Uses timestamp + sessionId to handle concurrent sessions
       try {
+        // Validate metadata structure before writing
+        if (!isValidSessionMetadata(metadata)) {
+          throw new Error("Session metadata has invalid structure");
+        }
         await ensureMetadataDir();
-        const metadataPath = getSessionMetadataPath();
+        const metadataPath = getSessionMetadataPath(
+          Date.now(),
+          metadata.sessionId,
+        );
         await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
       } catch (error) {
         // Non-fatal: session-end can still work without the file
