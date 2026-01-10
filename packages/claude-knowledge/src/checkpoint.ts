@@ -482,7 +482,7 @@ export const checkpoint = {
    * Stale = status is 'running' but updated_at is older than threshold.
    *
    * @param thresholdHours - Hours of inactivity before marking stale (default: 24)
-   * @returns Number of workflows marked stale
+   * @returns Number of workflows successfully cleaned up
    */
   cleanupStaleWorkflows(thresholdHours: number = 24): number {
     const db = getDatabase();
@@ -507,7 +507,8 @@ export const checkpoint = {
       return 0;
     }
 
-    // Mark each as failed
+    // Mark each as failed, track successful cleanups
+    let successCount = 0;
     for (const wf of staleWorkflows) {
       try {
         this.setStatus(wf.id, "failed");
@@ -515,6 +516,7 @@ export const checkpoint = {
           reason: `Workflow inactive for more than ${thresholdHours} hours`,
           lastUpdate: wf.updated_at,
         });
+        successCount++;
 
         logger.info("Marked stale workflow as failed", {
           workflowId: wf.id,
@@ -531,7 +533,7 @@ export const checkpoint = {
       }
     }
 
-    return staleWorkflows.length;
+    return successCount;
   },
 
   /**

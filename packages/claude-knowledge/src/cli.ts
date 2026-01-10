@@ -28,8 +28,9 @@ const SESSION_METADATA_DIR = join(homedir(), ".claude-knowledge");
 const SESSION_METADATA_PREFIX = "session-";
 const SESSION_METADATA_SUFFIX = ".json";
 
-/** Stale file threshold: 24 hours in milliseconds */
-const STALE_FILE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+/** Stale threshold: 24 hours */
+const STALE_THRESHOLD_HOURS = 24;
+const STALE_THRESHOLD_MS = STALE_THRESHOLD_HOURS * 60 * 60 * 1000;
 
 /**
  * Session metadata structure stored in the temp file.
@@ -115,7 +116,7 @@ async function findLatestSessionMetadataFile(): Promise<string | null> {
 
     // Clean up stale files (older than 24 hours)
     for (const f of sessionFiles) {
-      if (now - f.timestamp > STALE_FILE_THRESHOLD_MS) {
+      if (now - f.timestamp > STALE_THRESHOLD_MS) {
         try {
           await unlink(join(SESSION_METADATA_DIR, f.name));
           logger.debug("Cleaned up stale session metadata file", {
@@ -130,7 +131,7 @@ async function findLatestSessionMetadataFile(): Promise<string | null> {
 
     // Filter to non-stale files and sort by timestamp descending
     const validFiles = sessionFiles
-      .filter((f) => now - f.timestamp <= STALE_FILE_THRESHOLD_MS)
+      .filter((f) => now - f.timestamp <= STALE_THRESHOLD_MS)
       .sort((a, b) => b.timestamp - a.timestamp);
 
     if (validFiles.length === 0) return null;
@@ -214,9 +215,6 @@ function parseJsonSafe(value: string, name: string): Record<string, unknown> {
   }
 }
 
-/** Stale workflow threshold: 24 hours in milliseconds */
-const STALE_WORKFLOW_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-
 /**
  * Outputs prompt for resuming running workflows.
  * Shows workflow details and asks user to respond with y/n/abandon.
@@ -228,7 +226,7 @@ function promptWorkflowResume(workflows: Workflow[]): void {
   // Filter to recent workflows (updated within 24 hours)
   const recentWorkflows = workflows.filter((wf) => {
     const age = now - new Date(wf.updatedAt).getTime();
-    return age <= STALE_WORKFLOW_THRESHOLD_MS;
+    return age <= STALE_THRESHOLD_MS;
   });
 
   if (recentWorkflows.length === 0) {
@@ -716,7 +714,7 @@ try {
 
     // Clean up stale workflows before checking for resume
     try {
-      const cleanedUp = checkpoint.cleanupStaleWorkflows(24);
+      const cleanedUp = checkpoint.cleanupStaleWorkflows(STALE_THRESHOLD_HOURS);
       if (cleanedUp > 0) {
         console.log(`Cleaned up ${cleanedUp} stale workflow(s)`);
       }
