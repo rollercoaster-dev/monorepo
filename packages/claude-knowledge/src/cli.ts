@@ -287,7 +287,7 @@ if (args.length === 0) {
   console.error("  workflow list <milestone-id>");
   console.error("  session-start [--branch <name>] [--issue <number>]");
   console.error(
-    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--review-findings <n>] [--files-read <n>]",
+    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",
   );
   console.error("  learning analyze <workflow-id> <dev-plan-path>");
   console.error(
@@ -760,7 +760,7 @@ try {
     // Exit with appropriate code
     process.exit(0);
   } else if (category === "session-end") {
-    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>]
+    // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
     let workflowId: string | undefined;
     let sessionId: string | undefined;
     let learningsInjected: number | undefined;
@@ -768,6 +768,7 @@ try {
     let compacted: boolean | undefined;
     let reviewFindings: number | undefined;
     let filesRead: number | undefined;
+    let interrupted: boolean | undefined;
 
     // Parse optional arguments
     const allArgs = command ? [command, ...commandArgs] : commandArgs;
@@ -789,6 +790,8 @@ try {
         i++;
       } else if (arg === "--compacted") {
         compacted = true;
+      } else if (arg === "--interrupted") {
+        interrupted = true;
       } else if (arg === "--review-findings" && nextArg) {
         reviewFindings = parseIntSafe(nextArg, "review-findings");
         i++;
@@ -887,6 +890,7 @@ try {
       compacted,
       reviewFindings,
       filesRead,
+      interrupted,
     });
 
     // Output result
