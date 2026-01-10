@@ -78,8 +78,7 @@ try {
   } else {
     throw new Error(`Unknown category: ${category}`);
   }
-
-  process.exit(0);
+  // Let process exit naturally after all handlers complete
 } catch (error) {
   console.error(
     `Error: ${error instanceof Error ? error.message : String(error)}`,
