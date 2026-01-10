@@ -164,6 +164,8 @@ create() → setPhase() → logAction/logCommit → setStatus("completed")
 | `incrementRetry(id)`                       | Increment retry counter             |
 | `listActive()`                             | List running/paused workflows       |
 | `delete(id)`                               | Delete workflow and related data    |
+| `logActionSafe(id, action, result, meta?)` | Log action with error handling      |
+| `cleanupStaleWorkflows(thresholdHours?)`   | Mark stale workflows as failed      |
 
 ### Workflow Phases
 
@@ -182,6 +184,51 @@ create() → setPhase() → logAction/logCommit → setStatus("completed")
 | `paused`    | Temporarily stopped (can resume) |
 | `completed` | Successfully finished            |
 | `failed`    | Stopped due to errors            |
+
+### Safe Action Logging
+
+Use `logActionSafe()` for action logging that should never throw, even if the workflow doesn't exist or the database fails:
+
+```typescript
+// Returns boolean instead of throwing
+const success = checkpoint.logActionSafe(workflowId, "compile_code", "failed", {
+  error: "Type error in file.ts",
+});
+
+if (!success) {
+  // Logging failed, but workflow continues
+  console.warn("Could not log action, continuing anyway");
+}
+```
+
+**Behavior:**
+
+- Returns `true` on successful logging
+- Returns `false` on any error (doesn't throw)
+- On failure, attempts to log a `{action}_failed` action for debugging
+- Use for non-critical logging where workflow should continue regardless
+
+### Stale Workflow Cleanup
+
+Workflows can become stale if a session ends unexpectedly. The `cleanupStaleWorkflows()` method marks these as failed:
+
+```typescript
+// Mark workflows inactive for 24+ hours as failed
+const cleaned = checkpoint.cleanupStaleWorkflows(); // Default: 24 hours
+
+// Custom threshold
+const cleaned = checkpoint.cleanupStaleWorkflows(48); // 48 hours
+
+console.log(`Cleaned up ${cleaned} stale workflows`);
+```
+
+**Cleanup behavior:**
+
+- Finds workflows with `status='running'` and `updated_at` older than threshold
+- Sets status to `'failed'`
+- Logs a `workflow_stale_cleanup` action with reason
+- Called automatically on session start (before resume prompt)
+- Can be invoked manually via CLI: `workflow cleanup [hours]`
 
 ### Milestone Methods
 
@@ -588,6 +635,7 @@ checkpoint workflow list-active
 checkpoint workflow delete <id>
 checkpoint workflow link <workflow-id> <milestone-id> [wave]
 checkpoint workflow list <milestone-id>
+checkpoint workflow cleanup [hours]          # Mark stale workflows as failed (default: 24h)
 ```
 
 ### Milestone Commands
@@ -666,6 +714,44 @@ checkpoint.setMilestonePhase(milestone.id, "execute");
 ### Session Hooks
 
 Session hooks enable automatic knowledge capture and loading based on git context.
+
+#### Workflow Resume Detection
+
+When a session starts, the CLI automatically checks for running workflows and prompts to resume:
+
+```text
+=== Running Workflow(s) Detected ===
+
+Issue #414: Improve workflow tracking reliability
+  Branch: feat/issue-414-workflow-tracking-reliability
+  Phase: implement
+  Status: running
+  Last updated: 2 hours ago
+
+Consider resuming with: /work-on-issue 414 --continue
+```
+
+**Behavior:**
+
+- Runs on every `session-start` CLI invocation
+- First cleans up stale workflows (>24h old) automatically
+- Only shows workflows updated within the last 24 hours
+- Suggests the `--continue` flag for resumption
+- Non-blocking: session continues regardless of user action
+
+**Session Interruption Logging:**
+
+When context compaction triggers (`PreCompact` hook), the session is marked as interrupted:
+
+```typescript
+// Logged automatically when PreCompact fires
+checkpoint.logAction(workflowId, "session_interrupted", "pending", {
+  reason: "Session ended before workflow completion",
+  sessionId: "session-abc123",
+});
+```
+
+This enables tracking of how often workflows span multiple sessions.
 
 #### onSessionStart
 
