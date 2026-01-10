@@ -42,3 +42,25 @@ export function safeJsonParse(
     return null;
   }
 }
+
+/**
+ * Safely stringify an object to JSON, handling circular references and BigInts.
+ * Returns null if serialization fails.
+ */
+export function safeJsonStringify(
+  obj: Record<string, unknown> | undefined,
+  context: string,
+): string | null {
+  if (!obj) return null;
+
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    logger.warn("Failed to stringify metadata, treating as null", {
+      module: "claude-knowledge",
+      context,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}

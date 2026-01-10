@@ -31,11 +31,15 @@ export const VALID_STATUSES: WorkflowStatus[] = [
 export const VALID_ACTION_RESULTS = ["success", "failed", "pending"] as const;
 
 /**
- * Parse integer with NaN validation.
+ * Parse integer with strict validation.
+ * Rejects strings with trailing non-numeric characters like "12abc".
  */
 export function parseIntSafe(value: string, name: string): number {
-  const parsed = parseInt(value, 10);
-  if (Number.isNaN(parsed)) {
+  const trimmed = value.trim();
+  // Use Number() for strict parsing - it returns NaN for "12abc"
+  // while parseInt("12abc") would return 12
+  const parsed = Number(trimmed);
+  if (Number.isNaN(parsed) || !Number.isInteger(parsed)) {
     throw new Error(`Invalid ${name}: "${value}" is not a valid integer`);
   }
   return parsed;

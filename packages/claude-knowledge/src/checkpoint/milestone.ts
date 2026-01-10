@@ -175,7 +175,7 @@ function findMilestoneByName(name: string): MilestoneCheckpointData | null {
   const row = db
     .query<{ id: string }, [string]>(
       `
-      SELECT id FROM milestones WHERE name = ? ORDER BY created_at DESC LIMIT 1
+      SELECT id FROM milestones WHERE name = ? ORDER BY created_at DESC, rowid DESC LIMIT 1
     `,
     )
     .get(name);
@@ -224,6 +224,7 @@ function setMilestoneStatus(id: string, status: WorkflowStatus): void {
 
 /**
  * Save baseline snapshot (replaces existing if present)
+ * Uses a transaction to ensure atomicity - if INSERT fails, DELETE is rolled back.
  */
 function saveBaseline(
   milestoneId: string,
@@ -231,7 +232,8 @@ function saveBaseline(
 ): void {
   const db = getDatabase();
 
-  try {
+  // Create a transaction to ensure atomicity
+  const upsertBaseline = db.transaction(() => {
     // Delete existing baseline first (upsert behavior)
     db.run(`DELETE FROM baselines WHERE milestone_id = ?`, [milestoneId]);
 
@@ -252,6 +254,10 @@ function saveBaseline(
         baselineData.typecheckErrors,
       ],
     );
+  });
+
+  try {
+    upsertBaseline();
   } catch (error) {
     if (
       error instanceof Error &&

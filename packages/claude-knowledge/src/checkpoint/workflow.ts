@@ -7,7 +7,12 @@ import type {
   WorkflowPhase,
   WorkflowStatus,
 } from "../types";
-import { generateWorkflowId, now, safeJsonParse } from "./utils";
+import {
+  generateWorkflowId,
+  now,
+  safeJsonParse,
+  safeJsonStringify,
+} from "./utils";
 import { Logger } from "@rollercoaster-dev/rd-logger";
 
 const logger = new Logger();
@@ -200,7 +205,7 @@ function findByIssue(issueNumber: number): CheckpointData | null {
   const row = db
     .query<{ id: string }, [number]>(
       `
-      SELECT id FROM workflows WHERE issue_number = ? ORDER BY created_at DESC LIMIT 1
+      SELECT id FROM workflows WHERE issue_number = ? ORDER BY created_at DESC, rowid DESC LIMIT 1
     `,
     )
     .get(issueNumber);
@@ -231,7 +236,7 @@ function logAction(
         workflowId,
         action,
         result,
-        metadata ? JSON.stringify(metadata) : null,
+        safeJsonStringify(metadata, `logAction:${action}`),
         now(),
       ],
     );
@@ -279,11 +284,14 @@ function logActionSafe(
     });
 
     // Attempt to log the failure itself (if workflow still exists)
+    // Note: Don't include originalMetadata - it may be what caused JSON.stringify to fail
     try {
       const failureMetadata = {
         originalAction: action,
         originalResult: result,
-        originalMetadata: metadata,
+        originalMetadata: metadata
+          ? "[omitted: potentially unserializable]"
+          : null,
         error: error instanceof Error ? error.message : String(error),
       };
       logAction(workflowId, `${action}_failed`, "failed", failureMetadata);
