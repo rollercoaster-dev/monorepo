@@ -28,7 +28,7 @@ describe("checkpoint", () => {
     test("creates a new workflow", () => {
       const workflow = checkpoint.create(123, "feat/test-branch");
 
-      expect(workflow.id).toMatch(/^workflow-123-\d+$/);
+      expect(workflow.id).toMatch(/^workflow-123-\d+-[a-z0-9]+$/);
       expect(workflow.issueNumber).toBe(123);
       expect(workflow.branch).toBe("feat/test-branch");
       expect(workflow.phase).toBe("research");
@@ -344,7 +344,7 @@ describe("checkpoint", () => {
     test("createMilestone creates a new milestone", () => {
       const milestone = checkpoint.createMilestone("OB3 Phase 1");
 
-      expect(milestone.id).toMatch(/^milestone-ob3-phase-1-\d+$/);
+      expect(milestone.id).toMatch(/^milestone-ob3-phase-1-\d+-[a-z0-9]+$/);
       expect(milestone.name).toBe("OB3 Phase 1");
       expect(milestone.githubMilestoneNumber).toBeNull();
       expect(milestone.phase).toBe("planning");
