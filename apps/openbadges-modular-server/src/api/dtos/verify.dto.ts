@@ -44,8 +44,7 @@ const isValidVcContext = (ctx: string): boolean =>
  */
 const contextSchema = z.union([
   z.string().refine(isValidVcContext, {
-    message:
-      "@context must be a W3C Verifiable Credentials context (v1 or v2)",
+    message: "@context must be a W3C Verifiable Credentials context (v1 or v2)",
   }),
   z.array(z.string()).refine(
     (contexts) => {

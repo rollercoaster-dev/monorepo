@@ -253,7 +253,8 @@ describe("Verify Credential Endpoint", () => {
             },
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
 
@@ -267,7 +268,8 @@ describe("Verify Credential Endpoint", () => {
             },
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
       });
@@ -289,7 +291,8 @@ describe("Verify Credential Endpoint", () => {
             credential: "abc+def/ghi=.abc+def/ghi=.abc+def/ghi=",
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           // Note: + and / are standard base64, not base64url
           // Base64url uses - and _ instead
           expect(result.success).toBe(false);
@@ -359,7 +362,8 @@ describe("Verify Credential Endpoint", () => {
             },
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
 
@@ -387,7 +391,8 @@ describe("Verify Credential Endpoint", () => {
             },
           };
 
-          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          const result =
+            VerifyCredentialRequestSchema.safeParse(invalidRequest);
           expect(result.success).toBe(false);
         });
       });

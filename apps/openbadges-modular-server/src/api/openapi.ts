@@ -1971,17 +1971,20 @@ export const openApiConfig: OpenAPIObject = {
                   issuanceDate: {
                     type: "string",
                     format: "date-time",
-                    description: "ISO 8601 datetime when the credential was issued",
+                    description:
+                      "ISO 8601 datetime when the credential was issued",
                   },
                   validFrom: {
                     type: "string",
                     format: "date-time",
-                    description: "ISO 8601 datetime when the credential becomes valid",
+                    description:
+                      "ISO 8601 datetime when the credential becomes valid",
                   },
                   expirationDate: {
                     type: "string",
                     format: "date-time",
-                    description: "ISO 8601 datetime when the credential expires",
+                    description:
+                      "ISO 8601 datetime when the credential expires",
                   },
                   credentialSubject: {
                     type: "object",
