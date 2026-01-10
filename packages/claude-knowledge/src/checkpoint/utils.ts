@@ -2,8 +2,16 @@ import { Logger } from "@rollercoaster-dev/rd-logger";
 
 const logger = new Logger();
 
+/**
+ * Generate a random suffix to ensure uniqueness even when called in rapid succession.
+ * Uses Math.random() which provides sufficient entropy for ID uniqueness.
+ */
+function randomSuffix(): string {
+  return Math.random().toString(36).substring(2, 8);
+}
+
 export function generateWorkflowId(issueNumber: number): string {
-  return `workflow-${issueNumber}-${Date.now()}`;
+  return `workflow-${issueNumber}-${Date.now()}-${randomSuffix()}`;
 }
 
 export function generateMilestoneId(name: string): string {
@@ -11,7 +19,7 @@ export function generateMilestoneId(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return `milestone-${sanitized}-${Date.now()}`;
+  return `milestone-${sanitized}-${Date.now()}-${randomSuffix()}`;
 }
 
 export function now(): string {

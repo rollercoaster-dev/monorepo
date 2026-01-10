@@ -287,9 +287,18 @@ function logActionSafe(
         error: error instanceof Error ? error.message : String(error),
       };
       logAction(workflowId, `${action}_failed`, "failed", failureMetadata);
-    } catch {
+    } catch (nestedError) {
       // Complete failure - can't log at all (workflow likely deleted)
-      // Already logged the error above, nothing more we can do
+      // Log the double failure so it's visible in logs
+      logger.error("Failed to log failure action (double failure)", {
+        workflowId,
+        originalAction: action,
+        nestedError:
+          nestedError instanceof Error
+            ? nestedError.message
+            : String(nestedError),
+        context: "logActionSafe.nestedFailure",
+      });
     }
 
     return false;
