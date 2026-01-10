@@ -12,6 +12,7 @@ import type {
   Baseline,
   MilestoneCheckpointData,
   ContextMetrics,
+  ReviewFindingsSummary,
 } from "./types";
 
 const logger = new Logger();
@@ -924,6 +925,12 @@ export const checkpoint = {
   saveContextMetrics(metrics: Omit<ContextMetrics, "id">): void {
     const db = getDatabase();
 
+    // Serialize review findings - can be number or ReviewFindingsSummary
+    const reviewFindingsStr =
+      typeof metrics.reviewFindings === "number"
+        ? String(metrics.reviewFindings)
+        : JSON.stringify(metrics.reviewFindings);
+
     db.run(
       `
       INSERT OR REPLACE INTO context_metrics (
@@ -938,7 +945,7 @@ export const checkpoint = {
         metrics.filesRead,
         metrics.compacted ? 1 : 0,
         metrics.durationMinutes ?? null,
-        metrics.reviewFindings,
+        reviewFindingsStr,
         metrics.learningsInjected,
         metrics.learningsCaptured,
         metrics.createdAt,
@@ -960,7 +967,7 @@ export const checkpoint = {
       files_read: number;
       compacted: number;
       duration_minutes: number | null;
-      review_findings: number;
+      review_findings: string; // Changed to string to handle both formats
       learnings_injected: number;
       learnings_captured: number;
       created_at: string;
@@ -997,18 +1004,40 @@ export const checkpoint = {
         .all();
     }
 
-    return rows.map((row) => ({
-      id: row.id,
-      sessionId: row.session_id,
-      issueNumber: row.issue_number ?? undefined,
-      filesRead: row.files_read,
-      compacted: Boolean(row.compacted),
-      durationMinutes: row.duration_minutes ?? undefined,
-      reviewFindings: row.review_findings,
-      learningsInjected: row.learnings_injected,
-      learningsCaptured: row.learnings_captured,
-      createdAt: row.created_at,
-    }));
+    return rows.map((row) => {
+      // Deserialize review findings - handle both legacy integer and JSON
+      let reviewFindings: ReviewFindingsSummary | number;
+      try {
+        // Try to parse as JSON first
+        const parsed = JSON.parse(row.review_findings);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "total" in parsed
+        ) {
+          reviewFindings = parsed as ReviewFindingsSummary;
+        } else {
+          // Legacy integer stored as JSON number
+          reviewFindings = Number(parsed);
+        }
+      } catch {
+        // Not JSON - parse as integer (legacy format)
+        reviewFindings = parseInt(row.review_findings, 10) || 0;
+      }
+
+      return {
+        id: row.id,
+        sessionId: row.session_id,
+        issueNumber: row.issue_number ?? undefined,
+        filesRead: row.files_read,
+        compacted: Boolean(row.compacted),
+        durationMinutes: row.duration_minutes ?? undefined,
+        reviewFindings,
+        learningsInjected: row.learnings_injected,
+        learningsCaptured: row.learnings_captured,
+        createdAt: row.created_at,
+      };
+    });
   },
 
   /**
@@ -1031,7 +1060,6 @@ export const checkpoint = {
       avg_files_read: number;
       avg_learnings_injected: number;
       avg_learnings_captured: number;
-      total_review_findings: number;
     };
 
     const row = db
@@ -1042,8 +1070,7 @@ export const checkpoint = {
         SUM(compacted) as compacted_sessions,
         AVG(files_read) as avg_files_read,
         AVG(learnings_injected) as avg_learnings_injected,
-        AVG(learnings_captured) as avg_learnings_captured,
-        SUM(review_findings) as total_review_findings
+        AVG(learnings_captured) as avg_learnings_captured
       FROM context_metrics
     `,
       )
@@ -1061,6 +1088,18 @@ export const checkpoint = {
       };
     }
 
+    // Calculate total review findings by parsing each row
+    // This handles both legacy integer and structured JSON formats
+    const allMetrics = this.getContextMetrics();
+    let totalReviewFindings = 0;
+    for (const metric of allMetrics) {
+      if (typeof metric.reviewFindings === "number") {
+        totalReviewFindings += metric.reviewFindings;
+      } else {
+        totalReviewFindings += metric.reviewFindings.total;
+      }
+    }
+
     return {
       totalSessions: row.total_sessions,
       compactedSessions: row.compacted_sessions ?? 0,
@@ -1069,7 +1108,7 @@ export const checkpoint = {
         Math.round((row.avg_learnings_injected ?? 0) * 10) / 10,
       avgLearningsCaptured:
         Math.round((row.avg_learnings_captured ?? 0) * 10) / 10,
-      totalReviewFindings: row.total_review_findings ?? 0,
+      totalReviewFindings,
     };
   },
 };
