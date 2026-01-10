@@ -363,9 +363,8 @@ describe("Verify Credential Endpoint", () => {
           expect(result.success).toBe(false);
         });
 
-        it("should accept credential with single string @context", () => {
-          // When @context is a single string, we accept any value
-          // (the validator only checks arrays for required VC context)
+        it("should accept credential with single string @context when it is a valid VC context", () => {
+          // Single string @context must also be a valid VC context (v1 or v2)
           const validRequest = {
             credential: {
               "@context": "https://www.w3.org/2018/credentials/v1",
@@ -376,6 +375,20 @@ describe("Verify Credential Endpoint", () => {
 
           const result = VerifyCredentialRequestSchema.safeParse(validRequest);
           expect(result.success).toBe(true);
+        });
+
+        it("should reject credential with single string @context that is not a valid VC context", () => {
+          // Single string @context must be a valid VC context - arbitrary URIs are rejected
+          const invalidRequest = {
+            credential: {
+              "@context": "https://example.com/invalid-context",
+              type: ["VerifiableCredential"],
+              issuer: "did:web:example.com",
+            },
+          };
+
+          const result = VerifyCredentialRequestSchema.safeParse(invalidRequest);
+          expect(result.success).toBe(false);
         });
       });
     });
