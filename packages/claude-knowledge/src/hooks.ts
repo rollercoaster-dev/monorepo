@@ -207,6 +207,8 @@ export interface ExtendedSessionSummary extends SessionSummary {
   reviewFindings?: number;
   /** Number of files read during the session (user-reported) */
   filesRead?: number;
+  /** Whether this session was interrupted (e.g., by compaction) */
+  interrupted?: boolean;
 }
 
 /**
@@ -224,6 +226,33 @@ export interface ExtendedSessionSummary extends SessionSummary {
 async function onSessionEnd(
   session: ExtendedSessionSummary,
 ): Promise<SessionEndResult> {
+  // Log session interruption if this session was interrupted (e.g., by compaction)
+  if (session.interrupted && session.workflowId) {
+    try {
+      checkpoint.logAction(
+        session.workflowId,
+        "session_interrupted",
+        "pending",
+        {
+          reason: "Session ended before workflow completion",
+          sessionId: session.sessionId,
+          compacted: session.compacted,
+        },
+      );
+      logger.info("Logged session interruption", {
+        workflowId: session.workflowId,
+        context: "onSessionEnd",
+      });
+    } catch (error) {
+      // Non-fatal: warn but continue with learning extraction
+      logger.warn("Failed to log session interruption", {
+        error: error instanceof Error ? error.message : String(error),
+        workflowId: session.workflowId,
+        context: "onSessionEnd",
+      });
+    }
+  }
+
   const learnings: Learning[] = [];
   const learningIds: string[] = [];
 
