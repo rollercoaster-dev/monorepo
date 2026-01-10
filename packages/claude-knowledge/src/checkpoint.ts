@@ -966,7 +966,7 @@ export const checkpoint = {
 
     // If duration not provided, try to calculate from workflow actions
     let durationMinutes = metrics.durationMinutes;
-    if (!durationMinutes && metrics.issueNumber) {
+    if (durationMinutes == null && metrics.issueNumber) {
       // Try to find workflow by issue number and calculate duration from actions
       const workflow = checkpoint.findByIssue(metrics.issueNumber);
       if (workflow) {
@@ -1134,15 +1134,32 @@ export const checkpoint = {
       };
     }
 
-    // Calculate total review findings by parsing each row
+    // Calculate total review findings by querying all rows directly
+    // (getContextMetrics limits to 100, but summary should include all)
     // This handles both legacy integer and structured JSON formats
-    const allMetrics = this.getContextMetrics();
+    type ReviewFindingsRow = { review_findings: string };
+    const reviewRows = db
+      .query<
+        ReviewFindingsRow,
+        []
+      >(`SELECT review_findings FROM context_metrics`)
+      .all();
+
     let totalReviewFindings = 0;
-    for (const metric of allMetrics) {
-      if (typeof metric.reviewFindings === "number") {
-        totalReviewFindings += metric.reviewFindings;
-      } else {
-        totalReviewFindings += metric.reviewFindings.total;
+    for (const r of reviewRows) {
+      try {
+        const parsed = JSON.parse(r.review_findings);
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          "total" in parsed
+        ) {
+          totalReviewFindings += (parsed as ReviewFindingsSummary).total;
+        } else {
+          totalReviewFindings += Number(parsed) || 0;
+        }
+      } catch {
+        totalReviewFindings += parseInt(r.review_findings, 10) || 0;
       }
     }
 

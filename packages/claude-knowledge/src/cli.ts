@@ -1192,7 +1192,11 @@ try {
             if (m.durationMinutes !== undefined) {
               console.log(`Duration: ${m.durationMinutes} minutes`);
             }
-            console.log(`Review Findings: ${m.reviewFindings}`);
+            const reviewFindingsText =
+              typeof m.reviewFindings === "number"
+                ? String(m.reviewFindings)
+                : `critical=${m.reviewFindings.critical}, high=${m.reviewFindings.high}, medium=${m.reviewFindings.medium}, low=${m.reviewFindings.low}, total=${m.reviewFindings.total}`;
+            console.log(`Review Findings: ${reviewFindingsText}`);
             console.log(`Learnings Injected: ${m.learningsInjected}`);
             console.log(`Learnings Captured: ${m.learningsCaptured}`);
             console.log(`Recorded: ${m.createdAt}`);
