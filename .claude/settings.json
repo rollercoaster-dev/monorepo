@@ -1,5 +1,16 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if this Bash command is a GitHub write operation (gh issue create, gh issue edit, gh pr create, gh pr edit, gh project item-add, gh project item-edit). If it IS a GitHub write operation, respond with exactly: {\"decision\": \"block\", \"reason\": \"Use the github-master agent for GitHub operations (creating issues, PRs, board management). It handles proper labeling, board organization, and formatting.\"}. If it is NOT a GitHub write operation (like gh issue view, gh pr list, gh api, git commands, or other commands), respond with exactly: {\"decision\": \"approve\"}."
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "startup",
