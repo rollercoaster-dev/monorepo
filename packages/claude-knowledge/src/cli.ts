@@ -285,6 +285,7 @@ if (args.length === 0) {
   console.error("  workflow delete <id>");
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
+  console.error("  workflow cleanup [hours]");
   console.error("  session-start [--branch <name>] [--issue <number>]");
   console.error(
     "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",
@@ -635,6 +636,16 @@ try {
         }
         const workflows = checkpoint.listMilestoneWorkflows(milestoneId);
         console.log(JSON.stringify(workflows, null, 2));
+        break;
+      }
+
+      case "cleanup": {
+        // workflow cleanup [hours]
+        const hours = commandArgs[0]
+          ? parseIntSafe(commandArgs[0], "hours")
+          : 24;
+        const count = checkpoint.cleanupStaleWorkflows(hours);
+        console.log(JSON.stringify({ cleaned: count, thresholdHours: hours }));
         break;
       }
 
