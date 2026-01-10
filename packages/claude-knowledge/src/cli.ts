@@ -8,7 +8,12 @@ import {
   knowledge,
 } from "./knowledge";
 import { parseModifiedFiles, parseRecentCommits, mineMergedPRs } from "./utils";
-import type { MilestonePhase, WorkflowPhase, WorkflowStatus } from "./types";
+import type {
+  MilestonePhase,
+  Workflow,
+  WorkflowPhase,
+  WorkflowStatus,
+} from "./types";
 import { $ } from "bun";
 import { homedir } from "os";
 import { join } from "path";
@@ -207,6 +212,50 @@ function parseJsonSafe(value: string, name: string): Record<string, unknown> {
       `Invalid ${name}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
+
+/** Stale workflow threshold: 24 hours in milliseconds */
+const STALE_WORKFLOW_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Outputs prompt for resuming running workflows.
+ * Shows workflow details and asks user to respond with y/n/abandon.
+ * @param workflows - List of active workflows to prompt about
+ */
+function promptWorkflowResume(workflows: Workflow[]): void {
+  const now = Date.now();
+
+  // Filter to recent workflows (updated within 24 hours)
+  const recentWorkflows = workflows.filter((wf) => {
+    const age = now - new Date(wf.updatedAt).getTime();
+    return age <= STALE_WORKFLOW_THRESHOLD_MS;
+  });
+
+  if (recentWorkflows.length === 0) {
+    return;
+  }
+
+  console.log("\n=== Running Workflow(s) Detected ===\n");
+
+  for (const wf of recentWorkflows) {
+    const age = now - new Date(wf.updatedAt).getTime();
+    const hours = Math.floor(age / (1000 * 60 * 60));
+    const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
+
+    console.log(`Workflow found: Issue #${wf.issueNumber}`);
+    console.log(`  Branch: ${wf.branch}`);
+    console.log(`  Phase: ${wf.phase}`);
+    console.log(`  Status: ${wf.status}`);
+    console.log(
+      `  Last updated: ${hours > 0 ? `${hours}h ` : ""}${minutes}m ago`,
+    );
+    console.log(`  Resume this workflow? [y/n/abandon]\n`);
+  }
+
+  console.log(
+    "Reply with the issue number and action, e.g.: '414 y' to resume, '414 n' to skip, '414 abandon' to mark failed",
+  );
+  console.log("=================================\n");
 }
 
 // Parse command line arguments
@@ -653,6 +702,20 @@ try {
       modifiedFiles,
       issueNumber,
     });
+
+    // Check for running workflows and prompt for resume
+    try {
+      const activeWorkflows = checkpoint.listActive();
+      if (activeWorkflows.length > 0) {
+        promptWorkflowResume(activeWorkflows);
+      }
+    } catch (error) {
+      // Non-fatal: session continues without resume prompt
+      logger.warn("Could not check for running workflows", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "session-start",
+      });
+    }
 
     // Output the summary (for injection into context)
     console.log(context.summary);
