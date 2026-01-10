@@ -127,19 +127,7 @@ END:        Mark completed
      const WORKFLOW_ID = workflow.id;
      ```
    - Store the workflow ID for subsequent commands
-   - **Notify via Telegram** (non-blocking):
-     ```typescript
-     mcp__mcp_communicator_telegram__notify_user({
-       message: `🚀 Starting /work-on-issue #$ARGUMENTS
-     ```
-
-Branch: feat/issue-$ARGUMENTS-<desc>
-Mode: Gated (4 approval gates)
-
-You'll receive Telegram prompts at each gate.`
-});
-
-````
+   - **Notify via Telegram**: `WOI_START` template (branch name, gated mode)
 
 **IMPORTANT**: Store the `WORKFLOW_ID` from the create command output. Example:
 
@@ -152,7 +140,7 @@ You'll receive Telegram prompts at each gate.`
   "status": "running",
   ...
 }
-````
+```
 
 Extract and store the ID for subsequent commands:
 
@@ -185,28 +173,10 @@ const WORKFLOW_ID = workflow.id;
    - Labels and milestone
    - Blockers if any
 
-4. **Ask via Telegram** (with terminal fallback):
-
-   ```typescript
-   const response = await mcp__mcp_communicator_telegram__ask_user({
-     question: `🚦 GATE 1: Issue Review
-   ```
-
-Issue #$ARGUMENTS: <title>
-
-<brief 2-3 line summary of what the issue asks for>
-
-Labels: <labels>
-Milestone: <milestone>
-Blockers: <none or list>
-
-Reply "proceed" to continue, or provide feedback.`
-});
-
-````
-
-- If Telegram unavailable, wait for terminal input
-- Accept: "proceed", "yes", "go ahead", "approved"
+4. **Ask via Telegram** (with terminal fallback): `WOI_GATE_1` template
+   - Include: title, 2-3 line summary, labels, milestone, blockers
+   - Accept: "proceed", "yes", "go ahead", "approved"
+   - If Telegram unavailable, wait for terminal input
 
 **Do NOT continue until you receive explicit approval.**
 
@@ -217,21 +187,12 @@ Reply "proceed" to continue, or provide feedback.`
 5. Log the gate passage:
 
 ```typescript
-checkpoint.logAction(WORKFLOW_ID, "gate-1-issue-reviewed", "success", { issue: $ARGUMENTS });
-```
-
-5b. **Notify via Telegram** (non-blocking):
-
-```typescript
-mcp__mcp_communicator_telegram__notify_user({
-  message: `📋 [WORK-ON-ISSUE #$ARGUMENTS] Gate 1 approved
-
-Starting research phase...
-Analyzing codebase and creating development plan.
-
-You'll be notified when the plan is ready for review.`
+checkpoint.logAction(WORKFLOW_ID, "gate-1-issue-reviewed", "success", {
+  issue: $ARGUMENTS,
 });
 ```
+
+5b. **Notify via Telegram**: `WOI_GATE_1_APPROVED` template
 
 6. Spawn `issue-researcher` agent to:
    - Analyze codebase
@@ -243,21 +204,12 @@ You'll be notified when the plan is ready for review.`
 8. Update phase to research complete:
 
 ```typescript
-checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", { plan: ".claude/dev-plans/issue-$ARGUMENTS.md" });
-```
-
-8b. **Notify via Telegram** (non-blocking):
-
-```typescript
-mcp__mcp_communicator_telegram__notify_user({
-  message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Research complete
-
-Development plan created at:
-.claude/dev-plans/issue-$ARGUMENTS.md
-
-Proceeding to Gate 2: Plan Review`
+checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
+  plan: ".claude/dev-plans/issue-$ARGUMENTS.md",
 });
 ```
+
+8b. **Notify via Telegram**: `WOI_RESEARCH_COMPLETE` template (plan path)
 
 ---
 
@@ -271,32 +223,10 @@ Proceeding to Gate 2: Plan Review`
    - Every commit planned
    - Do NOT summarize
 
-10. **Ask via Telegram** (with terminal fallback):
-
-    ```typescript
-    const response = await mcp__mcp_communicator_telegram__ask_user({
-      question: `🚦 GATE 2: Plan Review
-    ```
-
-Issue #$ARGUMENTS: <title>
-
-Plan created at .claude/dev-plans/issue-$ARGUMENTS.md
-
-Commits planned:
-
-1. <commit 1 summary>
-2. <commit 2 summary>
-   ...
-
-Files affected: <count>
-
-Reply "proceed" to continue, or provide feedback.`
-});
-
-````
-
-    - If Telegram unavailable, wait for terminal input
+10. **Ask via Telegram** (with terminal fallback): `WOI_GATE_2` template
+    - Include: title, commits planned, files affected
     - Accept: "proceed", "yes", "go ahead", "approved"
+    - If Telegram unavailable, wait for terminal input
 
 **Do NOT continue until you receive explicit approval.**
 
@@ -311,19 +241,7 @@ Reply "proceed" to continue, or provide feedback.`
     checkpoint.setPhase(WORKFLOW_ID, "implement");
     ```
 
-11b. **Notify via Telegram** (non-blocking):
-
-    ```typescript
-    mcp__mcp_communicator_telegram__notify_user({
-      message: `🔨 [WORK-ON-ISSUE #$ARGUMENTS] Gate 2 approved
-
-Starting implementation phase...
-${totalCommits} commits planned.
-
-You'll be prompted to approve each commit individually.`
-});
-
-````
+11b. **Notify via Telegram**: `WOI_GATE_2_APPROVED` template (commit count)
 
 12. For each atomic commit in the plan:
     - Make the changes according to plan
@@ -340,31 +258,10 @@ You'll be prompted to approve each commit individually.`
 
 14. Explain what changed and why
 
-15. **Ask via Telegram** (with terminal fallback):
-
-    ```typescript
-    const response = await mcp__mcp_communicator_telegram__ask_user({
-      question: `🚦 GATE 3: Commit Review (${commitNumber}/${totalCommits})
-    ```
-
-Issue #$ARGUMENTS
-
-<type>(<scope>): <commit message>
-
-Changes:
-
-- <file1>: <what changed>
-- <file2>: <what changed>
-
-Lines: +<added> -<removed>
-
-Reply "proceed" to approve this commit, or provide feedback.`
-});
-
-````
-
-    - If Telegram unavailable, wait for terminal input
+15. **Ask via Telegram** (with terminal fallback): `WOI_GATE_3` template
+    - Include: commit N/M, message, file changes, line counts
     - Accept: "proceed", "yes", "go ahead", "approved"
+    - If Telegram unavailable, wait for terminal input
 
 16. Only after approval, **verify branch and commit**:
 
@@ -389,18 +286,7 @@ Reply "proceed" to approve this commit, or provide feedback.`
     checkpoint.logCommit(WORKFLOW_ID, sha, "<type>(<scope>): <description>");
     ```
 
-16b. **Notify via Telegram** (non-blocking):
-
-    ```typescript
-    mcp__mcp_communicator_telegram__notify_user({
-      message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Commit ${commitNumber}/${totalCommits}
-
-${commitMessage}
-
-${remainingCommits > 0 ? `${remainingCommits} commit(s) remaining.` : 'All commits complete!'}`
-});
-
-````
+16b. **Notify via Telegram**: `WOI_COMMIT_APPROVED` template (N/M, remaining)
 
 17. Repeat for each commit in the plan
 
@@ -417,20 +303,7 @@ ${remainingCommits > 0 ? `${remainingCommits} commit(s) remaining.` : 'All commi
     checkpoint.logAction(WORKFLOW_ID, "implementation-complete", "success", {});
     ```
 
-18b. **Notify via Telegram** (non-blocking):
-
-    ```typescript
-    mcp__mcp_communicator_telegram__notify_user({
-      message: `🔍 [WORK-ON-ISSUE #$ARGUMENTS] Implementation complete
-
-All ${totalCommits} commits approved and applied.
-
-Starting code review phase...
-Running validation and review agents.
-
-You'll be notified when review findings are ready.`
-});
-````
+18b. **Notify via Telegram**: `WOI_IMPL_COMPLETE` template (commit count)
 
 19. Run full validation:
 
@@ -462,30 +335,10 @@ You'll be notified when review findings are ready.`
     - **High (should fix)**: Code quality, error handling
     - **Medium (consider)**: Style, documentation
 
-24. **Ask via Telegram** (with terminal fallback):
-
-    ```typescript
-    const response = await mcp__mcp_communicator_telegram__ask_user({
-      question: `🚦 GATE 4: Pre-PR Review
-    ```
-
-Issue #$ARGUMENTS: <title>
-
-Review findings:
-
-- Critical: <count> (must fix before PR)
-- High: <count>
-- Medium: <count>
-
-${criticalCount > 0 ? "⚠️ Critical issues must be resolved first." : "✅ No critical issues."}
-
-Reply "proceed" to create PR, or provide feedback.`
-});
-
-````
-
-    - If Telegram unavailable, wait for terminal input
+24. **Ask via Telegram** (with terminal fallback): `WOI_GATE_4` template
+    - Include: finding counts by severity, warning if critical > 0
     - Accept: "proceed", "yes", "go ahead", "approved"
+    - If Telegram unavailable, wait for terminal input
 
 **Do NOT create PR until Critical issues are resolved and user approves.**
 
@@ -500,21 +353,7 @@ Reply "proceed" to create PR, or provide feedback.`
     checkpoint.setPhase(WORKFLOW_ID, "finalize");
     ```
 
-25b. **Notify via Telegram** (non-blocking):
-
-    ```typescript
-    mcp__mcp_communicator_telegram__notify_user({
-      message: `🚀 [WORK-ON-ISSUE #$ARGUMENTS] Gate 4 approved
-
-Starting finalization phase...
-
-- Cleaning up dev-plan file
-- Pushing branch to remote
-- Creating pull request
-
-You'll receive the PR link when complete.`
-});
-```
+25b. **Notify via Telegram**: `WOI_GATE_4_APPROVED` template
 
 26. **Clean up dev-plan file:**
 
@@ -528,7 +367,11 @@ You'll receive the PR link when complete.`
 
     ```typescript
     const sha = await $`git rev-parse HEAD`.text().trim();
-    checkpoint.logCommit(WORKFLOW_ID, sha, "chore: clean up dev-plan for issue #$ARGUMENTS");
+    checkpoint.logCommit(
+      WORKFLOW_ID,
+      sha,
+      "chore: clean up dev-plan for issue #$ARGUMENTS",
+    );
     ```
 
 27. Push branch:
@@ -546,29 +389,13 @@ You'll receive the PR link when complete.`
 29. Log completion and mark workflow done:
 
     ```typescript
-    checkpoint.logAction(WORKFLOW_ID, "pr-created", "success", { pr_url: "<url>" });
+    checkpoint.logAction(WORKFLOW_ID, "pr-created", "success", {
+      pr_url: "<url>",
+    });
     checkpoint.setStatus(WORKFLOW_ID, "completed");
     ```
 
-30. **Notify via Telegram** (non-blocking):
-
-    ```typescript
-    mcp__mcp_communicator_telegram__notify_user({
-      message: `✅ PR Created!
-    ```
-
-Issue #$ARGUMENTS: <title>
-
-PR #<number>: <pr-title>
-<pr-url>
-
-Commits: <count>
-Reviews: CodeRabbit + Claude triggered
-
-Next: Wait for CI and reviews.`
-});
-
-````
+30. **Notify via Telegram**: `WOI_COMPLETE` template (PR number, URL, commit count)
 
 31. Report PR URL and next steps in terminal
 
@@ -576,43 +403,9 @@ Next: Wait for CI and reviews.`
 
 ## Permission Wait Notifications
 
-When Claude needs to wait for terminal tool approval (Edit, Write, Bash with file modifications), notify the user via Telegram so they know action is needed:
+When Claude needs to wait for terminal tool approval, use `WOI_PERMISSION` template to notify via Telegram. This prevents users from missing terminal prompts when monitoring via Telegram.
 
-**Pattern:**
-
-```typescript
-// Before requesting a tool that needs terminal permission
-mcp__mcp_communicator_telegram__notify_user({
-  message: `⏳ [WORK-ON-ISSUE #$ARGUMENTS] Waiting for permission
-
-Tool: ${toolName}
-File: ${filePath || "N/A"}
-
-Please check your terminal and approve/deny the operation.`,
-});
-
-// Then request the tool (Edit, Write, etc.)
-// ...
-
-// After permission granted (tool executed successfully)
-mcp__mcp_communicator_telegram__notify_user({
-  message: `✅ [WORK-ON-ISSUE #$ARGUMENTS] Permission granted
-
-${toolName} completed for ${filePath || "operation"}.
-Continuing workflow...`,
-});
-```
-
-**When to notify:**
-
-- File edits that require approval
-- New file creation
-- Bash commands that modify state
-- Git operations (commit, push)
-
-**Why this matters:**
-
-Without these notifications, users may not realize Claude is waiting for terminal input, especially if they're monitoring progress via Telegram only.
+**When to notify:** File edits, new file creation, bash commands that modify state, git operations.
 
 ---
 
@@ -683,34 +476,7 @@ If context is compacted mid-workflow:
 
 ---
 
-## Checkpoint TypeScript API Reference
+## API References
 
-```typescript
-import { checkpoint } from "claude-knowledge";
-
-// Create new workflow
-const workflow = checkpoint.create(issueNumber, branchName);
-const WORKFLOW_ID = workflow.id;
-
-// Find existing workflow
-const existing = checkpoint.findByIssue(issueNumber);
-
-// List all active workflows
-const active = checkpoint.listActive();
-
-// Update phase (research|implement|review|finalize)
-checkpoint.setPhase(WORKFLOW_ID, "implement");
-
-// Update status (running|paused|completed|failed)
-checkpoint.setStatus(WORKFLOW_ID, "completed");
-
-// Log an action
-checkpoint.logAction(WORKFLOW_ID, "action_name", "success", { metadata });
-
-// Log a commit
-const sha = await $`git rev-parse HEAD`.text().trim();
-checkpoint.logCommit(WORKFLOW_ID, sha, "commit message");
-
-// Track retry attempts
-const retryCount = checkpoint.incrementRetry(WORKFLOW_ID);
-```
+- **Checkpoint API**: See [checkpoint-patterns.md](../shared/checkpoint-patterns.md)
+- **Telegram API**: See [telegram-helpers.md](../shared/telegram-helpers.md)
