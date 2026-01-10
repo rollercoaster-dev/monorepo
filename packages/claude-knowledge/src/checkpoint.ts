@@ -919,6 +919,36 @@ export const checkpoint = {
   // ==========================================================================
 
   /**
+   * Calculate workflow duration from action timestamps.
+   * Returns duration in minutes, or null if no actions exist.
+   */
+  calculateWorkflowDuration(workflowId: string): number | null {
+    const db = getDatabase();
+
+    type DurationRow = {
+      start: string | null;
+      end: string | null;
+    };
+
+    const result = db
+      .query<DurationRow, [string]>(
+        `
+        SELECT MIN(created_at) as start, MAX(created_at) as end
+        FROM actions WHERE workflow_id = ?
+      `,
+      )
+      .get(workflowId);
+
+    if (!result || !result.start || !result.end) {
+      return null;
+    }
+
+    const startMs = new Date(result.start).getTime();
+    const endMs = new Date(result.end).getTime();
+    return Math.round((endMs - startMs) / 60000);
+  },
+
+  /**
    * Save context metrics for dogfooding validation.
    * Uses INSERT OR REPLACE to handle updates for the same session.
    */
@@ -930,6 +960,19 @@ export const checkpoint = {
       typeof metrics.reviewFindings === "number"
         ? String(metrics.reviewFindings)
         : JSON.stringify(metrics.reviewFindings);
+
+    // If duration not provided, try to calculate from workflow actions
+    let durationMinutes = metrics.durationMinutes;
+    if (!durationMinutes && metrics.issueNumber) {
+      // Try to find workflow by issue number and calculate duration from actions
+      const workflow = checkpoint.findByIssue(metrics.issueNumber);
+      if (workflow) {
+        const calculated = this.calculateWorkflowDuration(workflow.workflow.id);
+        if (calculated !== null) {
+          durationMinutes = calculated;
+        }
+      }
+    }
 
     db.run(
       `
@@ -944,7 +987,7 @@ export const checkpoint = {
         metrics.issueNumber ?? null,
         metrics.filesRead,
         metrics.compacted ? 1 : 0,
-        metrics.durationMinutes ?? null,
+        durationMinutes ?? null,
         reviewFindingsStr,
         metrics.learningsInjected,
         metrics.learningsCaptured,
