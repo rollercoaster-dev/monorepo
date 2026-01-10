@@ -143,6 +143,66 @@ Waiting for approval...`,
 );
 ```
 
+## /work-on-issue Templates
+
+These templates are used by the gated `/work-on-issue` workflow. Use template names when documenting notification points.
+
+| Template                | Type   | When Used                         |
+| ----------------------- | ------ | --------------------------------- |
+| `WOI_START`             | notify | Workflow started, branch created  |
+| `WOI_GATE_1`            | ask    | Issue review gate                 |
+| `WOI_GATE_1_APPROVED`   | notify | Starting research phase           |
+| `WOI_RESEARCH_COMPLETE` | notify | Plan ready for review             |
+| `WOI_GATE_2`            | ask    | Plan review gate                  |
+| `WOI_GATE_2_APPROVED`   | notify | Starting implementation           |
+| `WOI_GATE_3`            | ask    | Commit review gate (repeated)     |
+| `WOI_COMMIT_APPROVED`   | notify | Commit N/M complete               |
+| `WOI_IMPL_COMPLETE`     | notify | All commits done, starting review |
+| `WOI_GATE_4`            | ask    | Pre-PR review gate                |
+| `WOI_GATE_4_APPROVED`   | notify | Creating PR                       |
+| `WOI_COMPLETE`          | notify | PR created with link              |
+| `WOI_PERMISSION`        | notify | Waiting for terminal approval     |
+
+### Template Details
+
+**WOI_GATE_1** (ask):
+
+```text
+🚦 GATE 1: Issue Review
+Issue #N: <title>
+<2-3 line summary>
+Labels: X | Milestone: Y | Blockers: Z
+Reply "proceed" to continue.
+```
+
+**WOI_GATE_2** (ask):
+
+```text
+🚦 GATE 2: Plan Review
+Issue #N: <title>
+Commits planned: X | Files affected: Y
+Reply "proceed" to continue.
+```
+
+**WOI_GATE_3** (ask):
+
+```text
+🚦 GATE 3: Commit Review (N/M)
+<type>(<scope>): <message>
+Changes: <file list> | Lines: +X -Y
+Reply "proceed" to approve.
+```
+
+**WOI_GATE_4** (ask):
+
+```text
+🚦 GATE 4: Pre-PR Review
+Critical: X | High: Y | Medium: Z
+Reply "proceed" to create PR.
+```
+
+---
+
 ## Graceful Degradation
 
 If the MCP server is unavailable:

@@ -10,7 +10,36 @@ The checkpoint system tracks workflow state in SQLite (`.claude/execution-state.
 - Audit trail of actions
 - Cross-session state persistence
 
-## CLI Commands
+## TypeScript API (Preferred)
+
+```typescript
+import { checkpoint } from "claude-knowledge";
+
+// Create workflow
+const workflow = checkpoint.create(issueNumber, branchName);
+const WORKFLOW_ID = workflow.id;
+
+// Find existing workflow
+const existing = checkpoint.findByIssue(issueNumber);
+
+// List all active workflows
+const active = checkpoint.listActive();
+
+// Update state
+checkpoint.setPhase(WORKFLOW_ID, "implement");
+checkpoint.setStatus(WORKFLOW_ID, "running");
+
+// Log actions and commits
+checkpoint.logAction(WORKFLOW_ID, "action_name", "success", { metadata });
+checkpoint.logCommit(WORKFLOW_ID, sha, message);
+
+// Track retry attempts
+const retryCount = checkpoint.incrementRetry(WORKFLOW_ID);
+```
+
+## CLI Commands (Alternative)
+
+For manual debugging or shell scripts. For programmatic use, prefer the TypeScript API above.
 
 ```bash
 # Create workflow
@@ -33,27 +62,6 @@ bun scripts/checkpoint-cli.ts log-commit <workflowId> <sha> <message>
 
 # List active workflows
 bun scripts/checkpoint-cli.ts list-active
-```
-
-## TypeScript API
-
-```typescript
-import { checkpoint } from "claude-knowledge";
-
-// Create workflow
-const workflow = checkpoint.create(issueNumber, branchName);
-const WORKFLOW_ID = workflow.id;
-
-// Find existing
-const existing = checkpoint.findByIssue(issueNumber);
-
-// Update state
-checkpoint.setPhase(WORKFLOW_ID, "implement");
-checkpoint.setStatus(WORKFLOW_ID, "running");
-
-// Log actions
-checkpoint.logAction(WORKFLOW_ID, "action_name", "success", { metadata });
-checkpoint.logCommit(WORKFLOW_ID, sha, message);
 ```
 
 ## Workflow Initialization Pattern
@@ -137,11 +145,14 @@ checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
 
 ## Commit Logging Pattern
 
-After each commit:
+After each git commit, log it to the checkpoint:
 
-```bash
-SHA=$(git rev-parse HEAD)
-bun scripts/checkpoint-cli.ts log-commit $WORKFLOW_ID "$SHA" "<type>(<scope>): <message>"
+```typescript
+// Get the commit SHA after committing
+const sha = await $`git rev-parse HEAD`.text().trim();
+const message = "<type>(<scope>): <description>";
+
+checkpoint.logCommit(WORKFLOW_ID, sha, message);
 ```
 
 ## Gate Passage Logging
