@@ -703,6 +703,20 @@ try {
       issueNumber,
     });
 
+    // Clean up stale workflows before checking for resume
+    try {
+      const cleanedUp = checkpoint.cleanupStaleWorkflows(24);
+      if (cleanedUp > 0) {
+        console.log(`Cleaned up ${cleanedUp} stale workflow(s)`);
+      }
+    } catch (error) {
+      // Non-fatal: continue without cleanup
+      logger.warn("Could not cleanup stale workflows", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "session-start",
+      });
+    }
+
     // Check for running workflows and prompt for resume
     try {
       const activeWorkflows = checkpoint.listActive();

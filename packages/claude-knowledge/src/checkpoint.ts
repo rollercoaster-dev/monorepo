@@ -478,6 +478,63 @@ export const checkpoint = {
   },
 
   /**
+   * Mark stale workflows as failed and log abandonment.
+   * Stale = status is 'running' but updated_at is older than threshold.
+   *
+   * @param thresholdHours - Hours of inactivity before marking stale (default: 24)
+   * @returns Number of workflows marked stale
+   */
+  cleanupStaleWorkflows(thresholdHours: number = 24): number {
+    const db = getDatabase();
+    const thresholdMs = thresholdHours * 60 * 60 * 1000;
+    const cutoffTime = new Date(Date.now() - thresholdMs).toISOString();
+
+    // Find stale workflows
+    const staleWorkflows = db
+      .query<
+        { id: string; issue_number: number; updated_at: string },
+        [string]
+      >(
+        `
+        SELECT id, issue_number, updated_at
+        FROM workflows
+        WHERE status = 'running' AND updated_at < ?
+      `,
+      )
+      .all(cutoffTime);
+
+    if (staleWorkflows.length === 0) {
+      return 0;
+    }
+
+    // Mark each as failed
+    for (const wf of staleWorkflows) {
+      try {
+        this.setStatus(wf.id, "failed");
+        this.logAction(wf.id, "workflow_stale_cleanup", "failed", {
+          reason: `Workflow inactive for more than ${thresholdHours} hours`,
+          lastUpdate: wf.updated_at,
+        });
+
+        logger.info("Marked stale workflow as failed", {
+          workflowId: wf.id,
+          issueNumber: wf.issue_number,
+          lastUpdate: wf.updated_at,
+          context: "cleanupStaleWorkflows",
+        });
+      } catch (error) {
+        logger.warn("Failed to cleanup stale workflow", {
+          workflowId: wf.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "cleanupStaleWorkflows",
+        });
+      }
+    }
+
+    return staleWorkflows.length;
+  },
+
+  /**
    * Create a new milestone checkpoint
    */
   createMilestone(name: string, githubMilestoneNumber?: number): Milestone {
