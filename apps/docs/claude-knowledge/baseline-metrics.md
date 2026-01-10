@@ -53,7 +53,38 @@ All 9 issues from the Claude Knowledge Graph milestone were processed:
 | #385  | review      | 5       | Incomplete      |
 | #387  | review      | 5       | Incomplete      |
 
-**Observation:** 5/9 workflows (56%) show incomplete tracking despite issues being closed. This indicates session interruptions or manual completion outside the workflow.
+**Observation:** 5/9 workflows (56%) show incomplete tracking despite issues being closed.
+
+### 1.2.1 Session Discontinuity Analysis
+
+Investigation of the 5 "incomplete" workflows revealed they all completed successfully (PRs merged). The tracking stopped due to **session boundaries**, not failures:
+
+**Pattern 1: Stopped at "implement" phase (#367, #375, #379)**
+
+| Issue | Last Action    | PR Merged | Gap       |
+| ----- | -------------- | --------- | --------- |
+| #367  | 17:03 (gate-2) | 20:57     | 4 hours   |
+| #375  | 13:26 (gate-2) | 15:04     | 1.5 hours |
+| #379  | 08:10 (gate-2) | 11:04     | 3 hours   |
+
+Session ended after plan approval. Implementation completed in new session without resuming workflow tracking.
+
+**Pattern 2: Stopped at "review" phase (#385, #387)**
+
+| Issue | Last Action             | PR Merged | Gap     |
+| ----- | ----------------------- | --------- | ------- |
+| #385  | 12:30 (review-complete) | 12:54     | 24 min  |
+| #387  | 15:45 (review-complete) | 21:41     | 6 hours |
+
+Session ended during/after review. Final gate approval and PR creation done without logging.
+
+**Root Causes:**
+
+1. Session timeout/context compaction breaks tracking
+2. No automatic workflow resume on session start
+3. Work continues but tracking doesn't
+
+**Implication:** This is a feedback loop gap, not a workflow failure. The checkpoint system exists but isn't being used to resume tracking.
 
 ### 1.3 Action Pipeline Statistics
 
@@ -140,6 +171,69 @@ The following logical code areas are being tracked:
 
 ---
 
+## 4. Context Cost/Benefit Analysis
+
+### 4.0.1 Current Context Cost
+
+| Metric                     | Value                    |
+| -------------------------- | ------------------------ |
+| Total learning content     | 4,149 chars (~1K tokens) |
+| Average learning size      | 45 chars                 |
+| Learnings per injection    | 8-10                     |
+| Injection cost per session | ~450 chars (~100 tokens) |
+
+**Assessment:** Context cost is negligible (~100 tokens per session). However, learnings are shallow (commit message summaries only).
+
+### 4.0.2 The Measurement Problem
+
+We cannot currently measure benefit because:
+
+| Gap                  | Impact                                               |
+| -------------------- | ---------------------------------------------------- |
+| No causal tracking   | Can't prove learning influenced decision             |
+| No relevance scoring | Don't know if injected learnings matched task domain |
+| No quality baseline  | Can't compare with/without injection                 |
+| No token visibility  | Claude Code doesn't expose token usage               |
+
+### 4.0.3 Proposed Cost/Benefit Metrics
+
+**Cost metrics (to add):**
+
+| Metric               | How to Measure                              |
+| -------------------- | ------------------------------------------- |
+| `injection_chars`    | Sum of injected learning content length     |
+| `injection_tokens`   | Estimate: chars / 4                         |
+| `context_percentage` | injection_tokens / estimated_session_tokens |
+
+**Benefit metrics (to add):**
+
+| Metric                  | How to Measure                                       |
+| ----------------------- | ---------------------------------------------------- |
+| `learning_relevance`    | Post-hoc rating: was learning domain-relevant? (0-5) |
+| `learning_used`         | Boolean: did implementation reference this learning? |
+| `review_findings_delta` | Compare to baseline: fewer findings = better?        |
+| `iteration_count`       | How many fix cycles before PR merged?                |
+
+**Experimental approach:**
+
+Run A/B comparison:
+
+- Group A: Issues run WITH learning injection
+- Group B: Issues run WITHOUT learning injection
+- Compare: review findings, iterations, duration, quality rating
+
+### 4.0.4 Current Baseline (No Benefit Data)
+
+| Session  | Injected | Captured | Duration | Findings | Benefit? |
+| -------- | -------- | -------- | -------- | -------- | -------- |
+| 114e2e90 | 10       | 13       | 0 min    | 0        | Unknown  |
+| 33bc7755 | 10       | 13       | 0 min    | 0        | Unknown  |
+| 67de4452 | 8        | 13       | 0 min    | 0        | Unknown  |
+
+**Conclusion:** We're injecting learnings but not measuring if they help. This is the #1 research gap for Phase 2.
+
+---
+
 ## 4. Gap Analysis
 
 ### 4.1 Metrics Not Yet Tracked
@@ -157,12 +251,13 @@ The following logical code areas are being tracked:
 
 **Tracking Completion Rate:** 44% (4/9 complete traces)
 
-Possible causes for incomplete tracking:
+**Confirmed cause:** Session discontinuity (see Section 1.2.1)
 
-1. Session timeout/context overflow
-2. Manual intervention (direct git operations)
-3. Hook failures not triggering updates
-4. Session end not captured
+All 5 "incomplete" workflows completed successfully (PRs merged). Tracking stopped because:
+
+1. Session ended (timeout, context compaction, manual restart)
+2. Work resumed in new session without using checkpoint resume
+3. Checkpoint data exists but isn't automatically loaded on session start
 
 ### 4.3 Coverage Gaps
 
@@ -210,11 +305,11 @@ Possible causes for incomplete tracking:
 
 ### 6.1 Immediate Improvements
 
-1. **Log failed actions** - Currently only successes are recorded; add failure logging to eliminate survivorship bias
-2. **Fix files_read tracking** - Instrument file read operations
-3. **Fix review_findings tracking** - Wire up review agent output
-4. **Add duration tracking** - Use timestamps consistently
-5. **Clean up stale workflows** - Mark abandoned as failed
+1. **Auto-resume workflows on session start** - Check for incomplete workflows and prompt to resume (fixes 56% tracking gap)
+2. **Log failed actions** - Currently only successes are recorded; add failure logging to eliminate survivorship bias
+3. **Fix files_read tracking** - Instrument file read operations
+4. **Fix review_findings tracking** - Wire up review agent output
+5. **Add duration tracking** - Use timestamps consistently
 
 ### 6.2 Baseline Expansion
 
@@ -240,6 +335,7 @@ Use these metrics to compare future system versions:
 | Metric                   | Baseline   | Target       |
 | ------------------------ | ---------- | ------------ |
 | Workflow completion rate | 44%        | > 80%        |
+| Session resume rate      | 0%         | > 90%        |
 | Failed actions logged    | 0 (broken) | All failures |
 | Learnings per issue      | 10.2       | > 10         |
 | Injection relevance      | Unknown    | > 70% useful |
