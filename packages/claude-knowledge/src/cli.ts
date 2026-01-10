@@ -100,7 +100,12 @@ export function parseReviewFindings(text: string): ReviewFindingsSummary {
       summary.critical++;
     } else if (lowerLine.includes("should violation")) {
       summary.high++;
-    } else if (lowerLine.includes("warning")) {
+    } else if (
+      lowerLine.match(/^warning[:\s]/i) ||
+      (lowerLine.includes("warning") &&
+        !lowerLine.includes("no warning") &&
+        !lowerLine.includes("warning-free"))
+    ) {
       summary.medium++;
     }
   }

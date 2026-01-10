@@ -945,6 +945,9 @@ export const checkpoint = {
 
     const startMs = new Date(result.start).getTime();
     const endMs = new Date(result.end).getTime();
+    if (isNaN(startMs) || isNaN(endMs)) {
+      return null;
+    }
     return Math.round((endMs - startMs) / 60000);
   },
 
