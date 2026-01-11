@@ -22,23 +22,31 @@ export async function handleGraphCommands(
   command: string,
   args: string[],
 ): Promise<void> {
+  // Parse --quiet flag for suppressing verbose output (useful for hooks)
+  const quiet = args.includes("--quiet");
+  const filteredArgs = args.filter((arg) => arg !== "--quiet");
+
   if (command === "parse") {
-    // Usage: graph parse <package-path> [package-name]
-    const packagePath = args[0];
-    const packageName = args[1];
+    // Usage: graph parse <package-path> [package-name] [--quiet]
+    const packagePath = filteredArgs[0];
+    const packageName = filteredArgs[1];
     if (!packagePath) {
-      throw new Error("Usage: graph parse <package-path> [package-name]");
+      throw new Error(
+        "Usage: graph parse <package-path> [package-name] [--quiet]",
+      );
     }
 
-    logger.info(`Parsing package: ${packagePath}`);
+    if (!quiet) logger.info(`Parsing package: ${packagePath}`);
     const parseResult = parsePackage(packagePath, packageName);
 
-    logger.info(`Found ${parseResult.entities.length} entities`);
-    logger.info(`Found ${parseResult.relationships.length} relationships`);
-
-    logger.info(`Storing graph data for package: ${parseResult.package}`);
+    if (!quiet) {
+      logger.info(`Found ${parseResult.entities.length} entities`);
+      logger.info(`Found ${parseResult.relationships.length} relationships`);
+      logger.info(`Storing graph data for package: ${parseResult.package}`);
+    }
     const storeResult = storeGraph(parseResult, parseResult.package);
 
+    // Always output final JSON (allows hooks to detect success/failure)
     logger.info(
       JSON.stringify(
         {
@@ -57,7 +65,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "what-calls") {
     // Usage: graph what-calls <name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph what-calls <name>");
     }
@@ -72,7 +80,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "what-depends-on") {
     // Usage: graph what-depends-on <name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph what-depends-on <name>");
     }
@@ -87,7 +95,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "blast-radius") {
     // Usage: graph blast-radius <file>
-    const file = args[0];
+    const file = filteredArgs[0];
     if (!file) {
       throw new Error("Usage: graph blast-radius <file>");
     }
@@ -102,8 +110,8 @@ export async function handleGraphCommands(
     );
   } else if (command === "find") {
     // Usage: graph find <name> [type]
-    const name = args[0];
-    const type = args[1];
+    const name = filteredArgs[0];
+    const type = filteredArgs[1];
     if (!name) {
       throw new Error("Usage: graph find <name> [type]");
     }
@@ -132,7 +140,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "exports") {
     // Usage: graph exports [package]
-    const pkg = args[0];
+    const pkg = filteredArgs[0];
 
     const results = getExports(pkg);
     logger.info(
@@ -149,7 +157,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "summary") {
     // Usage: graph summary [package]
-    const pkg = args[0];
+    const pkg = filteredArgs[0];
 
     const summary = getSummary(pkg);
     logger.info(
@@ -165,7 +173,7 @@ export async function handleGraphCommands(
     );
   } else if (command === "callers") {
     // Usage: graph callers <function-name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph callers <function-name>");
     }
