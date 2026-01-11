@@ -1,12 +1,12 @@
-# PR Creation Workflow Gate
+# PR Creation Workflow
 
 **Applies to:** `gh pr create`, creating pull requests
 
-## STOP - Before Creating a PR
+## Pre-PR Checklist
 
-You MUST complete these finalization steps IN ORDER before running `gh pr create`:
+Complete these finalization steps before running `gh pr create`:
 
-### Checklist (ALL Required)
+### Required Steps
 
 1. [ ] **Implementation complete** - All code changes committed
 2. [ ] **Tests pass** - `bun test` shows all green
@@ -16,15 +16,15 @@ You MUST complete these finalization steps IN ORDER before running `gh pr create
 6. [ ] **Pre-PR review** - Run pr-review-toolkit or equivalent
 7. [ ] **Domain review** (if badge code) - Run openbadges-compliance-reviewer
 
-### Gate Review Requirement
+### Review Findings
 
 Present findings grouped by severity:
 
-- **Critical (must fix)**: Security, bugs, breaking changes
-- **High (should fix)**: Code quality, error handling
-- **Medium (consider)**: Style, documentation
+- **High priority (fix before PR)**: Security, bugs, breaking changes
+- **Medium priority (should fix)**: Code quality, error handling
+- **Low priority (consider)**: Style, documentation
 
-Do NOT create PR until Critical issues are resolved.
+Don't create PR until high priority issues are resolved.
 
 ### Why This Matters
 
@@ -38,12 +38,12 @@ Skipping pre-PR review leads to:
 ### Example
 
 ```bash
-# WRONG - Skip straight to PR
+# Less ideal - Skip straight to PR
 git push && gh pr create
 
-# CORRECT - Follow finalization workflow
+# Better - Follow finalization workflow
 bun test && bun run type-check && bun run lint && bun run build
 # Run pr-review-toolkit
-# Fix critical issues
+# Fix high priority issues
 # THEN gh pr create
 ```
