@@ -714,6 +714,8 @@ switch (response.toLowerCase().trim()) {
 
 ### Log Escalation to Checkpoint
 
+**IMPORTANT**: Send Telegram escalation (askTelegram) BEFORE logging to checkpoint. This ensures the user is notified even if checkpoint logging fails.
+
 When escalation is triggered, log the failure:
 
 ```typescript
