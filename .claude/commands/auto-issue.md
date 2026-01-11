@@ -202,7 +202,8 @@ Mode: Autonomous
 
 Phase transitions will not be announced.
 You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
-```
+
+````
 
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
@@ -218,7 +219,7 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
      task: "analyze codebase and create dev plan",
      issueNumber: $ARGUMENTS,
    });
-   ```
+````
 
 5. **Update board status to "In Progress":**
 
@@ -555,7 +556,7 @@ Creating PR...`);
      });
      console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
 
-     // Telegram notification (non-blocking)
+     // Telegram notification - AI_COMPLETE template (non-blocking)
      notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] ✅ PR Created!
 
 PR #${PR_NUMBER}: <title>
