@@ -1,4 +1,8 @@
-import { analyzeWorkflow, storeWorkflowLearning, query } from "../knowledge";
+import {
+  analyzeWorkflow,
+  storeWorkflowLearning,
+  query,
+} from "../knowledge/index";
 import { parseIntSafe } from "./shared";
 
 /**

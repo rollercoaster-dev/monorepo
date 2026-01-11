@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { knowledge } from "./knowledge";
+import { knowledge } from "./knowledge/index";
 import { closeDatabase, resetDatabase, getDatabase } from "./db/sqlite";
 import type { Learning } from "./types";
 import { unlink, mkdir } from "fs/promises";

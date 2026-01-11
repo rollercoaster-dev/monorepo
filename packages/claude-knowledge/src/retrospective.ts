@@ -13,7 +13,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { checkpoint } from "./checkpoint";
-import { store, storePattern, storeMistake } from "./knowledge";
+import { store, storePattern, storeMistake } from "./knowledge/index";
 import { randomUUID } from "crypto";
 import type {
   WorkflowLearning,

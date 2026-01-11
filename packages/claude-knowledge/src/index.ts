@@ -15,7 +15,7 @@ export type {
 } from "./types";
 
 // Phase 2: Knowledge Graph
-export { knowledge } from "./knowledge";
+export { knowledge } from "./knowledge/index";
 export { hooks } from "./hooks";
 
 // Phase 3: Workflow Retrospective
