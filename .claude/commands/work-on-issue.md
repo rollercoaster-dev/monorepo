@@ -8,26 +8,32 @@ Execute the gated workflow for issue #$ARGUMENTS.
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
+This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
+
+**Claude Code Skills (auto-invoked):**
+
+- `checkpoint-workflow` - Workflow state persistence (find, create, log-action, log-commit)
+- `checkpoint-session` - Session lifecycle and learning extraction
 
 **Documentation patterns (for reference):**
 
 - [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
-- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Workflow state persistence
 - [validation-commands.md](../shared/validation-commands.md) - Type-check, lint, test
 - [conventional-commits.md](../shared/conventional-commits.md) - Commit message format
 
-**Executable helpers (for scripts):**
+**CLI for checkpoint operations:**
 
-```typescript
-import {
-  notifyTelegram,
-  askTelegram,
-  transitionPhase,
-  validateBasic,
-  checkDependencies,
-  gateApprovalPrompt,
-} from "claude-workflows";
+```bash
+# All checkpoint commands use this base path:
+bun run checkpoint <command> [args...]
+
+# Key commands:
+# workflow find <issue>           - Find existing workflow
+# workflow create <issue> <branch> - Create new workflow
+# workflow set-phase <id> <phase> - Update phase
+# workflow set-status <id> <status> - Update status
+# workflow log-action <id> <action> <result> [json] - Log action
+# workflow log-commit <id> <sha> <message> - Log commit
 ```
 
 ### Telegram Notification Points
@@ -69,11 +75,11 @@ END:        Mark completed
 
 1. Check for existing workflow:
 
-   ```typescript
-   import { checkpoint } from "claude-knowledge";
-
-   const existing = checkpoint.findByIssue($ARGUMENTS);
+   ```bash
+   bun run checkpoint workflow find $ARGUMENTS
    ```
+
+   This returns JSON with the workflow state, or `null` if none exists.
 
 2. **If existing workflow found** (not null):
    - Show the workflow state:
@@ -119,14 +125,10 @@ END:        Mark completed
      echo "✓ Verified on branch: $CURRENT_BRANCH"
      ```
    - Create checkpoint:
-     ```typescript
-     const workflow = checkpoint.create(
-       $ARGUMENTS,
-       "feat/issue-$ARGUMENTS-{short-description}",
-     );
-     const WORKFLOW_ID = workflow.id;
+     ```bash
+     bun run checkpoint workflow create $ARGUMENTS "feat/issue-$ARGUMENTS-{short-description}"
      ```
-   - Store the workflow ID for subsequent commands
+   - Store the workflow ID from the JSON output for subsequent commands
    - **Notify via Telegram**: `WOI_START` template (branch name, gated mode)
 
 **IMPORTANT**: Store the `WORKFLOW_ID` from the create command output. Example:
@@ -142,12 +144,7 @@ END:        Mark completed
 }
 ```
 
-Extract and store the ID for subsequent commands:
-
-```typescript
-const workflow = checkpoint.create($ARGUMENTS, "feat/issue-$ARGUMENTS-desc");
-const WORKFLOW_ID = workflow.id;
-```
+Extract the `id` field and store it for subsequent CLI commands.
 
 ---
 
@@ -186,10 +183,8 @@ const WORKFLOW_ID = workflow.id;
 
 5. Log the gate passage:
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "gate-1-issue-reviewed", "success", {
-  issue: $ARGUMENTS,
-});
+```bash
+bun run checkpoint workflow log-action $WORKFLOW_ID "gate-1-issue-reviewed" "success" '{"issue": $ARGUMENTS}'
 ```
 
 5b. **Notify via Telegram**: `WOI_GATE_1_APPROVED` template
@@ -203,10 +198,8 @@ checkpoint.logAction(WORKFLOW_ID, "gate-1-issue-reviewed", "success", {
 
 8. Update phase to research complete:
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
-  plan: ".claude/dev-plans/issue-$ARGUMENTS.md",
-});
+```bash
+bun run checkpoint workflow log-action $WORKFLOW_ID "research-complete" "success" '{"plan": ".claude/dev-plans/issue-$ARGUMENTS.md"}'
 ```
 
 8b. **Notify via Telegram**: `WOI_RESEARCH_COMPLETE` template (plan path)
@@ -236,9 +229,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
 11. Log gate passage and transition phase:
 
-    ```typescript
-    checkpoint.logAction(WORKFLOW_ID, "gate-2-plan-approved", "success", {});
-    checkpoint.setPhase(WORKFLOW_ID, "implement");
+    ```bash
+    bun run checkpoint workflow log-action $WORKFLOW_ID "gate-2-plan-approved" "success"
+    bun run checkpoint workflow set-phase $WORKFLOW_ID "implement"
     ```
 
 11b. **Notify via Telegram**: `WOI_GATE_2_APPROVED` template (commit count)
@@ -280,10 +273,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
     Then log the commit:
 
-    ```typescript
-    // Get the commit SHA and log it
-    const sha = await $`git rev-parse HEAD`.text().trim();
-    checkpoint.logCommit(WORKFLOW_ID, sha, "<type>(<scope>): <description>");
+    ```bash
+    SHA=$(git rev-parse HEAD)
+    bun run checkpoint workflow log-commit $WORKFLOW_ID "$SHA" "<type>(<scope>): <description>"
     ```
 
 16b. **Notify via Telegram**: `WOI_COMMIT_APPROVED` template (N/M, remaining)
@@ -298,9 +290,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
 18. Update phase to review:
 
-    ```typescript
-    checkpoint.setPhase(WORKFLOW_ID, "review");
-    checkpoint.logAction(WORKFLOW_ID, "implementation-complete", "success", {});
+    ```bash
+    bun run checkpoint workflow set-phase $WORKFLOW_ID "review"
+    bun run checkpoint workflow log-action $WORKFLOW_ID "implementation-complete" "success"
     ```
 
 18b. **Notify via Telegram**: `WOI_IMPL_COMPLETE` template (commit count)
@@ -320,8 +312,8 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
 22. Log review completion:
 
-    ```typescript
-    checkpoint.logAction(WORKFLOW_ID, "review-agents-complete", "success", { findings: <count> });
+    ```bash
+    bun run checkpoint workflow log-action $WORKFLOW_ID "review-agents-complete" "success" '{"findings": <count>}'
     ```
 
 ---
@@ -348,9 +340,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
 25. Log gate passage and transition to finalize:
 
-    ```typescript
-    checkpoint.logAction(WORKFLOW_ID, "gate-4-review-approved", "success", {});
-    checkpoint.setPhase(WORKFLOW_ID, "finalize");
+    ```bash
+    bun run checkpoint workflow log-action $WORKFLOW_ID "gate-4-review-approved" "success"
+    bun run checkpoint workflow set-phase $WORKFLOW_ID "finalize"
     ```
 
 25b. **Notify via Telegram**: `WOI_GATE_4_APPROVED` template
@@ -365,13 +357,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
     Log this commit too:
 
-    ```typescript
-    const sha = await $`git rev-parse HEAD`.text().trim();
-    checkpoint.logCommit(
-      WORKFLOW_ID,
-      sha,
-      "chore: clean up dev-plan for issue #$ARGUMENTS",
-    );
+    ```bash
+    SHA=$(git rev-parse HEAD)
+    bun run checkpoint workflow log-commit $WORKFLOW_ID "$SHA" "chore: clean up dev-plan for issue #$ARGUMENTS"
     ```
 
 27. Push branch:
@@ -388,11 +376,9 @@ checkpoint.logAction(WORKFLOW_ID, "research-complete", "success", {
 
 29. Log completion and mark workflow done:
 
-    ```typescript
-    checkpoint.logAction(WORKFLOW_ID, "pr-created", "success", {
-      pr_url: "<url>",
-    });
-    checkpoint.setStatus(WORKFLOW_ID, "completed");
+    ```bash
+    bun run checkpoint workflow log-action $WORKFLOW_ID "pr-created" "success" '{"pr_url": "<url>"}'
+    bun run checkpoint workflow set-status $WORKFLOW_ID "completed"
     ```
 
 30. **Notify via Telegram**: `WOI_COMPLETE` template (PR number, URL, commit count)
@@ -470,8 +456,8 @@ If you realize you skipped a gate:
 If context is compacted mid-workflow:
 
 1. The checkpoint system preserves state in `.claude/execution-state.db`
-2. On resume, use `checkpoint.findByIssue($ARGUMENTS)` to restore state
-3. Review the actions and commits arrays to understand progress
+2. On resume, run `bun run checkpoint workflow find $ARGUMENTS` to restore state
+3. Review the actions and commits arrays in the JSON output to understand progress
 4. Resume from the appropriate gate
 
 ---

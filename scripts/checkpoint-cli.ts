@@ -14,7 +14,7 @@
  *   bun scripts/checkpoint-cli.ts list-active
  */
 
-import { checkpoint } from "../packages/claude-knowledge/src/checkpoint.ts";
+import { checkpoint } from "../packages/claude-knowledge/src/checkpoint/index.ts";
 import type {
   WorkflowPhase,
   WorkflowStatus,
@@ -70,7 +70,7 @@ try {
         console.error(`Error: Invalid issue number '${issue}'`);
         process.exit(1);
       }
-      const result = checkpoint.create(issueNum, branch, worktree || null);
+      const result = checkpoint.create(issueNum, branch, worktree || undefined);
       console.log(JSON.stringify(result));
       break;
     }

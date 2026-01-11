@@ -35,29 +35,34 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
+This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
+
+**Claude Code Skills (auto-invoked):**
+
+- `checkpoint-workflow` - Workflow state persistence (find, create, log-action, log-commit)
+- `checkpoint-session` - Session lifecycle and learning extraction
 
 **Documentation patterns (for reference):**
 
 - [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
-- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Workflow state persistence
 - [board-operations.md](../shared/board-operations.md) - Board status updates
 - [validation-commands.md](../shared/validation-commands.md) - Type-check, lint, test
 - [escalation-patterns.md](../shared/escalation-patterns.md) - Escalation handling
 
-**Executable helpers (for scripts):**
+**CLI for checkpoint operations:**
 
-```typescript
-import {
-  notifyTelegram,
-  askTelegram,
-  transitionPhase,
-  moveIssueToStatus,
-  validateBasic,
-  validateFull,
-  checkDependencies,
-  escalationPrompt,
-} from "claude-workflows";
+```bash
+# All checkpoint commands use this base path:
+bun run checkpoint <command> [args...]
+
+# Key commands:
+# workflow find <issue>           - Find existing workflow
+# workflow create <issue> <branch> - Create new workflow
+# workflow set-phase <id> <phase> - Update phase
+# workflow set-status <id> <status> - Update status
+# workflow log-action <id> <action> <result> [json] - Log action
+# workflow log-commit <id> <sha> <message> - Log commit
+# learning analyze <workflow-id> <dev-plan-path> - Extract learnings
 ```
 
 ### Telegram Notification Points
@@ -73,7 +78,7 @@ import {
 ### Checkpoint Integration
 
 A `WORKFLOW_ID` is established at workflow start and passed to all sub-agents for state tracking.
-See [checkpoint-patterns.md](../shared/checkpoint-patterns.md) for initialization and phase transition patterns.
+See the `checkpoint-workflow` skill for available CLI commands.
 
 ---
 
@@ -117,33 +122,28 @@ See [board-operations.md](../shared/board-operations.md) for:
 
 0b. **Check for existing workflow (resume detection):**
 
-    ```typescript
-    import { checkpoint } from "claude-knowledge";
+    ```bash
+    # Check for existing workflow
+    EXISTING=$(bun run checkpoint workflow find $ARGUMENTS)
 
-    const existing = checkpoint.findByIssue($ARGUMENTS);
-    if (existing && existing.workflow.status === "running") {
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Resuming from phase: ${existing.workflow.phase}`);
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous actions: ${existing.actions.length}`);
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Previous commits: ${existing.commits.length}`);
+    if [ "$EXISTING" != "null" ]; then
+      WORKFLOW_ID=$(echo "$EXISTING" | jq -r '.workflow.id')
+      PHASE=$(echo "$EXISTING" | jq -r '.workflow.phase')
+      STATUS=$(echo "$EXISTING" | jq -r '.workflow.status')
 
-      WORKFLOW_ID = existing.workflow.id;
+      if [ "$STATUS" = "running" ]; then
+        echo "[AUTO-ISSUE #$ARGUMENTS] Resuming from phase: $PHASE"
+        echo "[AUTO-ISSUE #$ARGUMENTS] Workflow ID: $WORKFLOW_ID"
 
-      // Resume based on phase
-      switch (existing.workflow.phase) {
-        case "implement":
-          // Skip to Phase 2
-          goto PHASE_2;
-        case "review":
-          // Skip to Phase 3
-          goto PHASE_3;
-        case "finalize":
-          // Skip to Phase 4
-          goto PHASE_4;
-        default:
-          // Continue from research phase
-          break;
-      }
-    }
+        # Resume based on phase
+        case "$PHASE" in
+          "implement") # Skip to Phase 2 ;;
+          "review") # Skip to Phase 3 ;;
+          "finalize") # Skip to Phase 4 ;;
+          *) # Continue from research ;;
+        esac
+      fi
+    fi
     ```
 
 1. **Fetch issue details:**
@@ -169,25 +169,17 @@ See [board-operations.md](../shared/board-operations.md) for:
 
 3b. **Create workflow checkpoint (if not resuming):**
 
-    ```typescript
-    if (!WORKFLOW_ID) {
-      const branchName = `feat/issue-$ARGUMENTS-{short-description}`;
-      const workflow = checkpoint.create($ARGUMENTS, branchName);
-      WORKFLOW_ID = workflow.id;
+    ```bash
+    if [ -z "$WORKFLOW_ID" ]; then
+      BRANCH_NAME="feat/issue-$ARGUMENTS-{short-description}"
+      RESULT=$(bun run checkpoint workflow create $ARGUMENTS "$BRANCH_NAME")
+      WORKFLOW_ID=$(echo "$RESULT" | jq -r '.id')
 
-      checkpoint.logAction(WORKFLOW_ID, "workflow_started", "success", {
-        issueNumber: $ARGUMENTS,
-        branch: branchName,
-        flags: {
-          dryRun: $DRY_RUN,
-          requireTests: $REQUIRE_TESTS,
-          forcePr: $FORCE_PR,
-          abortOnFail: $ABORT_ON_FAIL
-        }
-      });
+      bun run checkpoint workflow log-action "$WORKFLOW_ID" "workflow_started" "success" \
+        "{\"issueNumber\": $ARGUMENTS, \"branch\": \"$BRANCH_NAME\"}"
 
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Checkpoint created: ${WORKFLOW_ID}`);
-    }
+      echo "[AUTO-ISSUE #$ARGUMENTS] Checkpoint created: $WORKFLOW_ID"
+    fi
     ```
 
 3c. **Telegram notification - AI_START template (non-blocking):**
@@ -213,13 +205,10 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 
    **Log agent spawn:**
 
-   ```typescript
-   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
-     agent: "issue-researcher",
-     task: "analyze codebase and create dev plan",
-     issueNumber: $ARGUMENTS,
-   });
-````
+   ```bash
+   bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
+     '{"agent": "issue-researcher", "task": "analyze codebase and create dev plan"}'
+   ```
 
 5. **Update board status to "In Progress":**
 
@@ -251,22 +240,12 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 
 6b. **Log phase transition (research → implement):**
 
-    ```typescript
-    checkpoint.setPhase(WORKFLOW_ID, "implement");
-    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-      from: "research",
-      to: "implement",
-      devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`
-    });
-    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement`);
-
-    // Telegram notification (non-blocking)
-    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement
-
-Dev plan created at .claude/dev-plans/issue-$ARGUMENTS.md
-Starting implementation...`);
-
-````
+    ```bash
+    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "implement"
+    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+      '{"from": "research", "to": "implement"}'
+    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement"
+    ```
 
 ---
 
@@ -280,13 +259,10 @@ Starting implementation...`);
 
    **Log agent spawn:**
 
-   ```typescript
-   checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
-     agent: "atomic-developer",
-     task: "execute dev plan with atomic commits",
-     devPlanPath: `.claude/dev-plans/issue-$ARGUMENTS.md`,
-   });
-````
+   ```bash
+   bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
+     '{"agent": "atomic-developer", "task": "execute dev plan with atomic commits"}'
+   ```
 
 8. **On completion, run validation:**
 
@@ -299,22 +275,12 @@ Starting implementation...`);
 
 8b. **Log phase transition (implement → review):**
 
-    ```typescript
-    checkpoint.setPhase(WORKFLOW_ID, "review");
-    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-      from: "implement",
-      to: "review",
-      commitCount: $COMMIT_COUNT  // Number of commits from atomic-developer
-    });
-    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review`);
-
-    // Telegram notification (non-blocking)
-    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review
-
-Implementation complete: ${$COMMIT_COUNT} commits
-Starting code review...`);
-
-```
+    ```bash
+    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "review"
+    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+      "{\"from\": \"implement\", \"to\": \"review\", \"commitCount\": $COMMIT_COUNT}"
+    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review"
+    ```
 
 ---
 
@@ -335,26 +301,13 @@ Starting code review...`);
 
 **Log each agent spawn:**
 
-```typescript
-const reviewAgents = [
-  "pr-review-toolkit:code-reviewer",
-  "pr-review-toolkit:pr-test-analyzer",
-  "pr-review-toolkit:silent-failure-hunter",
-];
-
-// Add OB compliance if badge code detected
-if (hasBadgeCode) {
-  reviewAgents.push("openbadges-compliance-reviewer");
-}
-
-for (const agent of reviewAgents) {
-  checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
-    agent,
-    task: "code review",
-    phase: "review",
-  });
-}
-````
+```bash
+for AGENT in "pr-review-toolkit:code-reviewer" "pr-review-toolkit:pr-test-analyzer" \
+             "pr-review-toolkit:silent-failure-hunter"; do
+  bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
+    "{\"agent\": \"$AGENT\", \"task\": \"code review\", \"phase\": \"review\"}"
+done
+```
 
 **Badge code detection:** Files matching:
 
@@ -374,55 +327,47 @@ for (const agent of reviewAgents) {
 
 ### 3c. Auto-Fix Loop
 
-```
-retry_count = 0
-fix_commit_count = 0
+```bash
+RETRY_COUNT=0
+FIX_COMMIT_COUNT=0
 
-while has_critical_findings AND retry_count < MAX_RETRY:
-    for each critical_finding:
-        if fix_commit_count >= MAX_FIX_COMMITS:
-            ESCALATE("Max fix commits reached")
+while [ $HAS_CRITICAL_FINDINGS -eq 1 ] && [ $RETRY_COUNT -lt $MAX_RETRY ]; do
+    for FINDING in $CRITICAL_FINDINGS; do
+        if [ $FIX_COMMIT_COUNT -ge $MAX_FIX_COMMITS ]; then
+            # ESCALATE "Max fix commits reached"
             break
+        fi
 
-        spawn auto-fixer agent with finding
-
+        # Spawn auto-fixer agent with finding
         # Log auto-fixer spawn
-        checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
-          agent: "auto-fixer",
-          task: "fix critical finding",
-          finding: finding.description,
-          file: finding.file,
-          attemptNumber: retry_count + 1
-        })
+        bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
+          "{\"agent\": \"auto-fixer\", \"task\": \"fix critical finding\", \"attemptNumber\": $((RETRY_COUNT + 1))}"
 
-        if fix successful:
-            fix_commit_count++
-        else:
-            log failure
+        if [ $FIX_SUCCESSFUL -eq 1 ]; then
+            FIX_COMMIT_COUNT=$((FIX_COMMIT_COUNT + 1))
+        fi
+    done
 
     # Re-review after fixes
-    run review agents again
-    classify findings
-    retry_count++
+    # run review agents again
+    # classify findings
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+done
 
-if has_critical_findings:
-    ESCALATE_TO_HUMAN()
-else:
-    PROCEED_TO_PHASE_4()
+if [ $HAS_CRITICAL_FINDINGS -eq 1 ]; then
+    # ESCALATE_TO_HUMAN()
+else
+    # PROCEED_TO_PHASE_4()
+fi
 ```
 
 10b. **Log phase transition (review → retrospective):**
 
-     ```typescript
-     checkpoint.setPhase(WORKFLOW_ID, "retrospective");
-     checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-       from: "review",
-       to: "retrospective",
-       criticalResolved: $CRITICAL_RESOLVED,
-       fixCommits: $FIX_COMMIT_COUNT,
-       retryCount: $RETRY_COUNT
-     });
-     console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: review → retrospective`);
+     ```bash
+     bun run checkpoint workflow set-phase "$WORKFLOW_ID" "retrospective"
+     bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+       "{\"from\": \"review\", \"to\": \"retrospective\", \"fixCommits\": $FIX_COMMIT_COUNT}"
+     echo "[AUTO-ISSUE #$ARGUMENTS] Phase: review → retrospective"
      ```
 
 ---
@@ -435,38 +380,19 @@ After review findings are resolved, analyze the workflow execution to capture le
 
 10c. **Run retrospective analysis:**
 
-    ```typescript
-    import { analyzeWorkflow, storeWorkflowLearning } from "claude-knowledge";
+    ```bash
+    DEV_PLAN_PATH=".claude/dev-plans/issue-$ARGUMENTS.md"
 
-    const devPlanPath = `.claude/dev-plans/issue-$ARGUMENTS.md`;
-
-    try {
-      // Analyze workflow execution vs dev plan
-      const learning = await analyzeWorkflow(WORKFLOW_ID, devPlanPath);
-
-      // Store learning in knowledge graph
-      await storeWorkflowLearning(learning);
-
-      // Log success
-      checkpoint.logAction(WORKFLOW_ID, "retrospective_complete", "success", {
-        deviationCount: learning.deviations.length,
-        patternsExtracted: learning.patterns.length,
-        mistakesExtracted: learning.mistakes.length,
-        learningId: learning.id
-      });
-
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Retrospective complete:`);
-      console.log(`  - Deviations: ${learning.deviations.length}`);
-      console.log(`  - Patterns: ${learning.patterns.length}`);
-      console.log(`  - Mistakes: ${learning.mistakes.length}`);
-    } catch (error) {
-      // Non-blocking - log warning and continue
-      checkpoint.logAction(WORKFLOW_ID, "retrospective_failed", "failed", {
-        error: error.message
-      });
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Warning: Retrospective failed: ${error.message}`);
-      console.log(`[AUTO-ISSUE #$ARGUMENTS] Continuing to finalize phase...`);
-    }
+    # Analyze workflow execution vs dev plan
+    if bun run checkpoint learning analyze "$WORKFLOW_ID" "$DEV_PLAN_PATH"; then
+      bun run checkpoint workflow log-action "$WORKFLOW_ID" "retrospective_complete" "success"
+      echo "[AUTO-ISSUE #$ARGUMENTS] Retrospective complete"
+    else
+      # Non-blocking - log warning and continue
+      bun run checkpoint workflow log-action "$WORKFLOW_ID" "retrospective_failed" "failed"
+      echo "[AUTO-ISSUE #$ARGUMENTS] Warning: Retrospective failed"
+      echo "[AUTO-ISSUE #$ARGUMENTS] Continuing to finalize phase..."
+    fi
     ```
 
 10d. **Report captured learnings (if successful):**
@@ -485,23 +411,12 @@ After review findings are resolved, analyze the workflow execution to capture le
 
 10e. **Log phase transition (retrospective → finalize):**
 
-    ```typescript
-    checkpoint.setPhase(WORKFLOW_ID, "finalize");
-    checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-      from: "retrospective",
-      to: "finalize"
-    });
-    console.log(`[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize`);
-
-    // Telegram notification (non-blocking)
-    notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize
-
-Review complete: ${$CRITICAL_RESOLVED} critical issues resolved
-Fix commits: ${$FIX_COMMIT_COUNT}
-Learning captured: ${patternsExtracted} patterns, ${mistakesExtracted} mistakes
-Creating PR...`);
-
-````
+    ```bash
+    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "finalize"
+    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+      '{"from": "retrospective", "to": "finalize"}'
+    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize"
+    ```
 
 ---
 
@@ -546,26 +461,12 @@ Creating PR...`);
 
 14b. **Log workflow completion:**
 
-     ```typescript
-     checkpoint.setStatus(WORKFLOW_ID, "completed");
-     checkpoint.logAction(WORKFLOW_ID, "pr_created", "success", {
-       prNumber: PR_NUMBER,
-       commitCount: $TOTAL_COMMITS,
-       fixCommitCount: $FIX_COMMIT_COUNT,
-       branch: branchName
-     });
-     console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
-
-     // Telegram notification - AI_COMPLETE template (non-blocking)
-     notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] ✅ PR Created!
-
-PR #${PR_NUMBER}: <title>
-https://github.com/rollercoaster-dev/monorepo/pull/${PR_NUMBER}
-
-Commits: ${$TOTAL_COMMITS} implementation + ${$FIX_COMMIT_COUNT} fixes
-Reviews triggered: CodeRabbit, Claude`);
-
-````
+     ```bash
+     bun run checkpoint workflow set-status "$WORKFLOW_ID" "completed"
+     bun run checkpoint workflow log-action "$WORKFLOW_ID" "pr_created" "success" \
+       "{\"prNumber\": $PR_NUMBER, \"commitCount\": $TOTAL_COMMITS, \"fixCommitCount\": $FIX_COMMIT_COUNT}"
+     echo "[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #$PR_NUMBER"
+     ```
 
 15. **Trigger reviews:**
 
@@ -718,16 +619,11 @@ switch (response.toLowerCase().trim()) {
 
 When escalation is triggered, log the failure:
 
-```typescript
-checkpoint.setStatus(WORKFLOW_ID, "failed");
-checkpoint.logAction(WORKFLOW_ID, "escalation", "failed", {
-  reason: "MAX_RETRY exceeded",
-  unresolvedFindings: criticalFindings.length,
-  retryCount: workflow.retryCount,
-  fixAttempts: $FIX_COMMIT_COUNT,
-  trigger: escalationTrigger, // e.g., "max_retry", "build_failed", "test_failed"
-});
-console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: Escalation required`);
+```bash
+bun run checkpoint workflow set-status "$WORKFLOW_ID" "failed"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "escalation" "failed" \
+  "{\"reason\": \"MAX_RETRY exceeded\", \"fixAttempts\": $FIX_COMMIT_COUNT}"
+echo "[AUTO-ISSUE #$ARGUMENTS] Workflow failed: Escalation required"
 ```
 
 ### Escalation Flag Behaviors
@@ -765,13 +661,15 @@ If `/auto-issue` is interrupted (context compaction, timeout, manual stop), the 
 
 At workflow start (step 0b), the orchestrator checks for existing workflows:
 
-```typescript
-import { checkpoint } from "claude-knowledge";
+```bash
+EXISTING=$(bun run checkpoint workflow find $ARGUMENTS)
 
-const existing = checkpoint.findByIssue($ARGUMENTS);
-if (existing && existing.workflow.status === "running") {
-  // Workflow found - can resume
-}
+if [ "$EXISTING" != "null" ]; then
+  STATUS=$(echo "$EXISTING" | jq -r '.workflow.status')
+  if [ "$STATUS" = "running" ]; then
+    # Workflow found - can resume
+  fi
+fi
 ```
 
 ### Resume Based on Phase
@@ -787,21 +685,19 @@ if (existing && existing.workflow.status === "running") {
 
 Before resuming, verify the checkpoint data:
 
-```typescript
-const data = checkpoint.findByIssue($ARGUMENTS);
-if (data) {
-  console.log(`Workflow ${data.workflow.id}:`);
-  console.log(`- Phase: ${data.workflow.phase}`);
-  console.log(`- Status: ${data.workflow.status}`);
-  console.log(`- Retry Count: ${data.workflow.retryCount}`);
-  console.log(`- Actions: ${data.actions.length}`);
-  console.log(`- Commits: ${data.commits.length}`);
+```bash
+DATA=$(bun run checkpoint workflow find $ARGUMENTS)
 
-  // List commits made so far
-  data.commits.forEach((c) => {
-    console.log(`  ${c.sha.slice(0, 7)} ${c.message}`);
-  });
-}
+if [ "$DATA" != "null" ]; then
+  echo "Workflow $(echo $DATA | jq -r '.workflow.id'):"
+  echo "- Phase: $(echo $DATA | jq -r '.workflow.phase')"
+  echo "- Status: $(echo $DATA | jq -r '.workflow.status')"
+  echo "- Actions: $(echo $DATA | jq '.actions | length')"
+  echo "- Commits: $(echo $DATA | jq '.commits | length')"
+
+  # List commits made so far
+  echo "$DATA" | jq -r '.commits[] | "  \(.sha[0:7]) \(.message)"'
+fi
 ```
 
 ### Manual Resume Commands
@@ -809,16 +705,14 @@ if (data) {
 If automatic resume fails, use these commands:
 
 ```bash
-# Check database state
-bun repl
-> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
-> checkpoint.findByIssue(354)
+# Check workflow state
+bun run checkpoint workflow find 354
 
 # List all active workflows
-> checkpoint.listActive()
+bun run checkpoint workflow list-active
 
 # Mark workflow as failed (to start fresh)
-> checkpoint.setStatus("workflow-id", "failed")
+bun run checkpoint workflow set-status "workflow-id" "failed"
 ```
 
 ### Database Location
@@ -875,32 +769,13 @@ If git operations fail due to conflicts:
 
 When a workflow fails due to unrecoverable error:
 
-```typescript
-// Log the error
-checkpoint.setStatus(WORKFLOW_ID, "failed");
-checkpoint.logAction(WORKFLOW_ID, "fatal_error", "failed", {
-  phase: currentPhase,
-  error: error.message,
-  commitCount: totalCommits,
-});
+```bash
+# Log the error
+bun run checkpoint workflow set-status "$WORKFLOW_ID" "failed"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "fatal_error" "failed" \
+  "{\"phase\": \"$CURRENT_PHASE\", \"error\": \"$ERROR_MESSAGE\"}"
 
-// Notify user - AI_ERROR template (non-blocking)
-notifyTelegram(
-  `❌ [AUTO-ISSUE #$ARGUMENTS] Failed
-
-Phase: ${currentPhase}
-Error: ${error.message}
-
-Current state:
-- Branch: ${branchName}
-- Commits made: ${totalCommits}
-- Last action: ${lastAction}
-
-Check terminal for details.`,
-  "AUTO-ISSUE",
-);
-
-console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: ${error.message}`);
+echo "[AUTO-ISSUE #$ARGUMENTS] Workflow failed: $ERROR_MESSAGE"
 ```
 
 **When to use**: Issue not found, branch creation failure, git conflicts, all agents fail, validation failure on finalize.

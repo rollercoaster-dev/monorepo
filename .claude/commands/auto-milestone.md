@@ -42,26 +42,32 @@ tmux attach -t milestone
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
+This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
+
+**Claude Code Skills (auto-invoked):**
+
+- `checkpoint-workflow` - Workflow state persistence (find, create, log-action, log-commit)
+- `checkpoint-session` - Session lifecycle and learning extraction
 
 **Documentation patterns (for reference):**
 
 - [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
-- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Milestone state persistence
 - [dependency-checking.md](../shared/dependency-checking.md) - Issue dependency detection
 - [escalation-patterns.md](../shared/escalation-patterns.md) - Escalation handling
 
-**Executable helpers (for scripts):**
+**CLI for checkpoint operations:**
 
-```typescript
-import {
-  notifyTelegram,
-  askTelegram,
-  transitionPhase,
-  checkDependencies,
-  extractDependencies,
-  escalationPrompt,
-} from "claude-workflows";
+```bash
+# All checkpoint commands use this base path:
+bun run checkpoint <command> [args...]
+
+# Key commands:
+# milestone create <name> [github-number] - Create milestone checkpoint
+# milestone find <name>                   - Find existing milestone
+# milestone set-phase <id> <phase>        - Update phase
+# milestone set-status <id> <status>      - Update status
+# workflow find <issue>                   - Find issue workflow
+# workflow log-action <id> <action> <result> [json] - Log action
 ```
 
 ### Telegram Notification Points
@@ -143,60 +149,41 @@ fi
 
 Check for existing milestone checkpoint and create if needed:
 
-```typescript
-import { checkpoint } from "claude-knowledge";
+```bash
+# Check for existing milestone workflow
+MILESTONE_ID=$(echo "$MILESTONE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+EXISTING=$(bun run checkpoint milestone find "$MILESTONE_ID" 2>/dev/null)
 
-// Check for existing milestone workflow
-const milestoneId = `milestone-${MILESTONE_NAME.replace(/\s+/g, '-').toLowerCase()}`;
-const existing = checkpoint.load(milestoneId);
+if [ "$EXISTING" != "null" ] && [ -n "$EXISTING" ]; then
+  WORKFLOW_ID=$(echo "$EXISTING" | jq -r '.id')
+  PHASE=$(echo "$EXISTING" | jq -r '.phase')
+  STATUS=$(echo "$EXISTING" | jq -r '.status')
 
-let WORKFLOW_ID: string;
+  if [ "$STATUS" = "running" ]; then
+    echo "[AUTO-MILESTONE] Resuming milestone: $MILESTONE_NAME"
+    echo "[AUTO-MILESTONE] Phase: $PHASE"
+    echo "[AUTO-MILESTONE] Workflow ID: $WORKFLOW_ID"
 
-if (existing && existing.workflow.status === "running") {
-  console.log(`[AUTO-MILESTONE] Resuming milestone: ${MILESTONE_NAME}`);
-  console.log(`[AUTO-MILESTONE] Phase: ${existing.workflow.phase}`);
-  console.log(`[AUTO-MILESTONE] Actions: ${existing.actions.length}`);
-  console.log(`[AUTO-MILESTONE] Started: ${existing.workflow.createdAt}`);
+    # Resume based on phase
+    case "$PHASE" in
+      "execute") # Skip to Phase 2 ;;
+      "review") # Skip to Phase 3 ;;
+      "merge") # Skip to Phase 4 ;;
+      "cleanup") # Skip to Phase 5 ;;
+      *) # Continue from planning ;;
+    esac
+  fi
+else
+  # Create new milestone checkpoint
+  RESULT=$(bun run checkpoint milestone create "$MILESTONE_NAME")
+  WORKFLOW_ID=$(echo "$RESULT" | jq -r '.id')
 
-  WORKFLOW_ID = existing.workflow.id;
+  # Store milestone name in metadata
+  bun run checkpoint workflow log-action "$WORKFLOW_ID" "milestone_started" "success" \
+    "{\"milestoneName\": \"$MILESTONE_NAME\", \"phase\": \"planning\"}"
 
-  // Resume based on phase
-  switch (existing.workflow.phase) {
-    case "execute":
-      // Skip to Phase 2
-      goto PHASE_2;
-    case "review":
-      // Skip to Phase 3
-      goto PHASE_3;
-    case "merge":
-      // Skip to Phase 4
-      goto PHASE_4;
-    case "cleanup":
-      // Skip to Phase 5
-      goto PHASE_5;
-    default:
-      // Continue from planning phase
-      break;
-  }
-} else {
-  // Create new milestone checkpoint
-  // Note: Use milestone name as "issue number" for milestone-level workflow
-  const workflow = checkpoint.create(
-    0, // No specific issue for milestone-level workflow
-    "main", // Milestone operates on main branch
-    null // No single worktree (manages multiple)
-  );
-
-  // Store milestone name in metadata
-  checkpoint.logAction(workflow.id, "milestone_started", "success", {
-    milestoneName: MILESTONE_NAME,
-    phase: "planning"
-  });
-
-  WORKFLOW_ID = workflow.id;
-
-  console.log(`[AUTO-MILESTONE] Checkpoint created: ${WORKFLOW_ID}`);
-}
+  echo "[AUTO-MILESTONE] Checkpoint created: $WORKFLOW_ID"
+fi
 ```
 
 ### 1.2 Spawn Milestone Planner Agent
@@ -226,26 +213,19 @@ If dependencies are not explicitly mapped, set needs_review and propose a plan.
 
 **After planner completes:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "planning_complete", "success", {
-  planningStatus: planResult.planning_status,
-  freeIssues: planResult.free_issues,
-  totalIssues: planResult.total_issues,
-  executionWaves: planResult.execution_waves.length,
-  needsReview: planResult.planning_status === "needs_review",
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "planning_complete" "success" \
+  "{\"planningStatus\": \"$PLANNING_STATUS\", \"freeIssues\": $FREE_ISSUE_COUNT, \"totalIssues\": $TOTAL_ISSUES}"
 ```
 
 ### 1.3 Planning Gate
 
 **If planning_status == "needs_review":**
 
-```typescript
-checkpoint.setStatus(WORKFLOW_ID, "paused");
-checkpoint.logAction(WORKFLOW_ID, "planning_gate", "pending", {
-  reason: "dependency mapping required",
-  unmappedIssues: unmappedIssues,
-});
+```bash
+bun run checkpoint milestone set-status "$WORKFLOW_ID" "paused"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "planning_gate" "pending" \
+  '{"reason": "dependency mapping required"}'
 ```
 
 ```text
@@ -261,22 +241,11 @@ Wait for user input:
 
 **After user approves:**
 
-```typescript
-checkpoint.setStatus(WORKFLOW_ID, "running");
-checkpoint.logAction(WORKFLOW_ID, "planning_gate", "success", {
-  userDecision: "approved",
-  approvedPlan: approvedPlan,
-});
-
-// Telegram notification - milestone starting
-notifyTelegram(`🚀 [AUTO-MILESTONE] Started: ${MILESTONE_NAME}
-
-Total issues: ${planResult.total_issues}
-Execution waves: ${planResult.execution_waves.length}
-Free issues: ${planResult.free_issues.length} (${planResult.free_issues.join(", ")})
-Parallel workers: ${PARALLEL}
-
-Starting Phase 2: Parallel Execution...`);
+```bash
+bun run checkpoint milestone set-status "$WORKFLOW_ID" "running"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "planning_gate" "success" \
+  '{"userDecision": "approved"}'
+echo "[AUTO-MILESTONE] Planning approved, starting Phase 2: Parallel Execution"
 ```
 
 **Example output when stopping:**
@@ -327,20 +296,15 @@ done
 
 **After creating worktrees:**
 
-```typescript
-checkpoint.setPhase(WORKFLOW_ID, "execute");
+```bash
+bun run checkpoint milestone set-phase "$WORKFLOW_ID" "execute"
 
-for (const issue of FREE_ISSUES.slice(0, PARALLEL)) {
-  const worktreePath = `$WORKTREE_BASE/issue-${issue}`;
+for ISSUE in $FREE_ISSUES; do
+  bun run checkpoint workflow log-action "$WORKFLOW_ID" "worktree_created" "success" \
+    "{\"issueNumber\": $ISSUE, \"wave\": $CURRENT_WAVE}"
+done
 
-  checkpoint.logAction(WORKFLOW_ID, "worktree_created", "success", {
-    issueNumber: issue,
-    worktreePath: worktreePath,
-    wave: currentWave,
-  });
-}
-
-console.log(`[AUTO-MILESTONE] Phase: planning → execute`);
+echo "[AUTO-MILESTONE] Phase: planning → execute"
 ```
 
 ### 2.2 Spawn Parallel /auto-issue Subagents
@@ -392,38 +356,19 @@ Important:
 
 **When spawning each subagent:**
 
-```typescript
-// Each /auto-issue creates its own checkpoint with worktree path
-// The milestone tracks the relationship via metadata
-
-checkpoint.logAction(WORKFLOW_ID, "spawned_child_workflow", "success", {
-  issueNumber: issue,
-  worktreePath: worktreePath,
-  childWorkflowType: "auto-issue",
-  wave: currentWave,
-});
+```bash
+# Each /auto-issue creates its own checkpoint with worktree path
+# The milestone tracks the relationship via metadata
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_child_workflow" "success" \
+  "{\"issueNumber\": $ISSUE, \"childWorkflowType\": \"auto-issue\", \"wave\": $CURRENT_WAVE}"
 ```
 
 **After each subagent completes:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "child_workflow_complete", "success", {
-  issueNumber: issue,
-  status: result.status,
-  prNumber: result.pr_number,
-  branch: result.branch,
-  error: result.error || null,
-});
-
-// Telegram notification - issue complete
-const statusEmoji = result.status === "success" ? "✅" : "❌";
-notifyTelegram(`${statusEmoji} [AUTO-MILESTONE] Issue Complete
-
-Issue: #${issue} - ${issueTitle}
-PR: ${result.pr_number ? `#${result.pr_number} https://github.com/rollercoaster-dev/monorepo/pull/${result.pr_number}` : "N/A"}
-Status: ${result.status.toUpperCase()}
-Wave: ${currentWave}/${totalWaves}
-${result.error ? `Error: ${result.error}` : ""}`);
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "child_workflow_complete" "success" \
+  "{\"issueNumber\": $ISSUE, \"status\": \"$STATUS\", \"prNumber\": $PR_NUMBER}"
+echo "[AUTO-MILESTONE] Issue #$ISSUE complete: $STATUS (PR #$PR_NUMBER)"
 ```
 
 ### 2.3 Track Progress & Checkpointing
@@ -472,21 +417,15 @@ If a subagent returns `status: "failed"`:
 
 **When a subagent fails:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "child_workflow_failed", "failed", {
-  issueNumber: failedIssue,
-  error: result.error,
-  dependentIssues: identifyDependents(failedIssue),
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "child_workflow_failed" "failed" \
+  "{\"issueNumber\": $FAILED_ISSUE, \"error\": \"$ERROR_MESSAGE\"}"
 
-// Log each skipped dependent issue
-for (const dependentIssue of identifyDependents(failedIssue)) {
-  checkpoint.logAction(WORKFLOW_ID, "issue_skipped", "success", {
-    issueNumber: dependentIssue,
-    reason: "blocked_by_failure",
-    blockedBy: failedIssue,
-  });
-}
+# Log each skipped dependent issue
+for DEP_ISSUE in $DEPENDENT_ISSUES; do
+  bun run checkpoint workflow log-action "$WORKFLOW_ID" "issue_skipped" "success" \
+    "{\"issueNumber\": $DEP_ISSUE, \"reason\": \"blocked_by_failure\", \"blockedBy\": $FAILED_ISSUE}"
+done
 ```
 
 ```
@@ -503,15 +442,11 @@ Issue #111 failed: "Type error in key generation"
 
 **Transition to review phase:**
 
-```typescript
-checkpoint.setPhase(WORKFLOW_ID, "review");
-checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-  from: "execute",
-  to: "review",
-  completedIssues: completedIssues.length,
-  totalPRs: PRS.length,
-});
-console.log(`[AUTO-MILESTONE] Phase: execute → review`);
+```bash
+bun run checkpoint milestone set-phase "$WORKFLOW_ID" "review"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+  "{\"from\": \"execute\", \"to\": \"review\", \"completedIssues\": $COMPLETED_COUNT}"
+echo "[AUTO-MILESTONE] Phase: execute → review"
 ```
 
 ### 3.1 Collect All PRs
@@ -528,12 +463,9 @@ Use the CI status helper for efficient polling with exponential backoff:
 
 **For each PR waiting on CI:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "ci_wait_started", "pending", {
-  prNumber: pr,
-  issueNumber: issue,
-  timeout: CI_POLL_TIMEOUT,
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "ci_wait_started" "pending" \
+  "{\"prNumber\": $PR, \"issueNumber\": $ISSUE}"
 ```
 
 ```bash
@@ -551,19 +483,14 @@ done
 
 **After CI completes:**
 
-```typescript
-checkpoint.logAction(
-  WORKFLOW_ID,
-  "ci_complete",
-  ciPassed ? "success" : "failed",
-  {
-    prNumber: pr,
-    issueNumber: issue,
-    duration: elapsedSeconds,
-    checksTotal: totalChecks,
-    checksFailed: failedChecks,
-  },
-);
+```bash
+if [ $CI_PASSED -eq 1 ]; then
+  RESULT="success"
+else
+  RESULT="failed"
+fi
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "ci_complete" "$RESULT" \
+  "{\"prNumber\": $PR, \"issueNumber\": $ISSUE}"
 ```
 
 The `ci-status --wait` command:
@@ -599,14 +526,9 @@ For each PR, classify findings (same as /auto-issue):
 
 **After classifying findings:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "review_findings", "success", {
-  prNumber: pr,
-  issueNumber: issue,
-  criticalCount: criticalFindings.length,
-  nonCriticalCount: nonCriticalFindings.length,
-  sources: findingsSources, // ["CodeRabbit", "Claude", "CI"]
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "review_findings" "success" \
+  "{\"prNumber\": $PR, \"criticalCount\": $CRITICAL_COUNT, \"nonCriticalCount\": $NON_CRITICAL_COUNT}"
 ```
 
 ### 3.4 Dispatch Review Fixes
@@ -731,15 +653,11 @@ while (!handled) {
 
 **Transition to merge phase:**
 
-```typescript
-checkpoint.setPhase(WORKFLOW_ID, "merge");
-checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-  from: "review",
-  to: "merge",
-  readyToMerge: readyPRs.length,
-  mergeOrder: determinedMergeOrder,
-});
-console.log(`[AUTO-MILESTONE] Phase: review → merge`);
+```bash
+bun run checkpoint milestone set-phase "$WORKFLOW_ID" "merge"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+  "{\"from\": \"review\", \"to\": \"merge\", \"readyToMerge\": $READY_COUNT}"
+echo "[AUTO-MILESTONE] Phase: review → merge"
 ```
 
 ### 4.1 Determine Merge Order
@@ -777,13 +695,9 @@ bun run type-check && bun run lint && bun test && bun run build
 
 **Before merging:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "merge_started", "pending", {
-  prNumber: PR,
-  issueNumber: issue,
-  mergePosition: currentMergeIndex,
-  totalToMerge: totalMergeCount,
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "merge_started" "pending" \
+  "{\"prNumber\": $PR, \"issueNumber\": $ISSUE, \"mergePosition\": $CURRENT_INDEX}"
 ```
 
 ```bash
@@ -792,14 +706,9 @@ gh pr merge "$PR" --squash --delete-branch
 
 **After merging:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "merge_complete", "success", {
-  prNumber: PR,
-  issueNumber: issue,
-  mergedAt: $(date - Iseconds),
-  mergePosition: currentMergeIndex,
-  totalToMerge: totalMergeCount,
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "merge_complete" "success" \
+  "{\"prNumber\": $PR, \"issueNumber\": $ISSUE, \"mergePosition\": $CURRENT_INDEX}"
 ```
 
 ### 4.4 Handle Post-Merge Conflicts
@@ -820,23 +729,16 @@ done
 
 **When conflict detected:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "merge_conflict", "failed", {
-  prNumber: remaining_pr,
-  issueNumber: remaining_issue,
-  conflictAfterMerge: merged_pr,
-  conflictingFiles: conflictFiles,
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "merge_conflict" "failed" \
+  "{\"prNumber\": $REMAINING_PR, \"conflictAfterMerge\": $MERGED_PR}"
 ```
 
 **After conflict resolution:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "conflict_resolved", "success", {
-  prNumber: remaining_pr,
-  issueNumber: remaining_issue,
-  resolutionMethod: "auto" | "manual",
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "conflict_resolved" "success" \
+  "{\"prNumber\": $REMAINING_PR, \"resolutionMethod\": \"$RESOLUTION_METHOD\"}"
 ```
 
 If rebase fails (conflicts):
@@ -897,16 +799,11 @@ The integration test status is recorded in state for the final summary.
 
 **Transition to cleanup phase:**
 
-```typescript
-checkpoint.setPhase(WORKFLOW_ID, "cleanup");
-checkpoint.logAction(WORKFLOW_ID, "phase_transition", "success", {
-  from: "merge",
-  to: "cleanup",
-  mergedCount: mergedPRs.length,
-  failedCount: failedIssues.length,
-  skippedCount: skippedIssues.length,
-});
-console.log(`[AUTO-MILESTONE] Phase: merge → cleanup`);
+```bash
+bun run checkpoint milestone set-phase "$WORKFLOW_ID" "cleanup"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
+  "{\"from\": \"merge\", \"to\": \"cleanup\", \"mergedCount\": $MERGED_COUNT}"
+echo "[AUTO-MILESTONE] Phase: merge → cleanup"
 ```
 
 ### 5.1 Cleanup Worktrees
@@ -934,11 +831,9 @@ For a dry-run to see what would be removed:
 
 **After cleanup completes:**
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "worktrees_cleaned", "success", {
-  removedCount: removedWorktrees.length,
-  removedIssues: removedWorktrees,
-});
+```bash
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "worktrees_cleaned" "success" \
+  "{\"removedCount\": $REMOVED_COUNT}"
 ```
 
 ### 5.2 Generate Summary Report
@@ -960,32 +855,11 @@ This generates a report including:
 
 **After generating summary:**
 
-```typescript
-checkpoint.setStatus(WORKFLOW_ID, "completed");
-checkpoint.logAction(WORKFLOW_ID, "milestone_complete", "success", {
-  milestoneName: MILESTONE_NAME,
-  duration: calculateDuration(workflow.createdAt, new Date().toISOString()),
-  mergedCount: mergedPRs.length,
-  failedCount: failedIssues.length,
-  skippedCount: skippedIssues.length,
-  totalPRs: allPRs.length,
-  integrationTestsPassed: integrationTestsPassed,
-});
-
-console.log(`[AUTO-MILESTONE] Milestone completed: ${WORKFLOW_ID}`);
-
-// Telegram notification - milestone complete
-const testEmoji = integrationTestsPassed ? "✅" : "❌";
-notifyTelegram(`🎉 [AUTO-MILESTONE] Complete: ${MILESTONE_NAME}
-
-Duration: ${calculateDuration(workflow.createdAt, new Date().toISOString())}
-Merged: ${mergedPRs.length} PRs
-Failed: ${failedIssues.length}
-Skipped: ${skippedIssues.length}
-
-Integration Tests: ${testEmoji} ${integrationTestsPassed ? "PASS" : "FAIL"}
-
-${failedIssues.length > 0 ? `⚠️ Issues requiring attention:\n${failedIssues.map((i) => `• #${i}`).join("\n")}` : "✨ All issues completed successfully!"}`);
+```bash
+bun run checkpoint milestone set-status "$WORKFLOW_ID" "completed"
+bun run checkpoint workflow log-action "$WORKFLOW_ID" "milestone_complete" "success" \
+  "{\"milestoneName\": \"$MILESTONE_NAME\", \"mergedCount\": $MERGED_COUNT, \"failedCount\": $FAILED_COUNT}"
+echo "[AUTO-MILESTONE] Milestone completed: $WORKFLOW_ID"
 ```
 
 ### 5.3 Example Final Report
@@ -1198,15 +1072,16 @@ If `/auto-milestone` is interrupted (context compaction, timeout, manual stop), 
 
 At workflow start (step 1.1b), the orchestrator checks for existing milestone workflows:
 
-```typescript
-import { checkpoint } from "claude-knowledge";
+```bash
+MILESTONE_ID=$(echo "$MILESTONE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+EXISTING=$(bun run checkpoint milestone find "$MILESTONE_ID" 2>/dev/null)
 
-const milestoneId = `milestone-${MILESTONE_NAME.replace(/\s+/g, "-").toLowerCase()}`;
-const existing = checkpoint.load(milestoneId);
-
-if (existing && existing.workflow.status === "running") {
-  // Milestone found - can resume
-}
+if [ "$EXISTING" != "null" ] && [ -n "$EXISTING" ]; then
+  STATUS=$(echo "$EXISTING" | jq -r '.status')
+  if [ "$STATUS" = "running" ]; then
+    # Milestone found - can resume
+  fi
+fi
 ```
 
 ### Resume Based on Phase
@@ -1223,51 +1098,33 @@ if (existing && existing.workflow.status === "running") {
 
 When resuming, check the status of all child `/auto-issue` workflows:
 
-```typescript
-const childWorkflows = existing.actions
-  .filter((a) => a.action === "spawned_child_workflow")
-  .map((a) => a.metadata.issueNumber);
-
-for (const issue of childWorkflows) {
-  const childCheckpoint = checkpoint.findByIssue(issue);
-
-  if (childCheckpoint) {
-    console.log(
-      `Issue #${issue}: ${childCheckpoint.workflow.phase} - ${childCheckpoint.workflow.status}`,
-    );
-  } else {
-    console.log(
-      `Issue #${issue}: No checkpoint found (not started or cleaned up)`,
-    );
-  }
-}
+```bash
+# List child issues from actions in the milestone
+# For each issue, check its workflow status
+for ISSUE in $CHILD_ISSUES; do
+  CHILD=$(bun run checkpoint workflow find $ISSUE 2>/dev/null)
+  if [ "$CHILD" != "null" ] && [ -n "$CHILD" ]; then
+    PHASE=$(echo "$CHILD" | jq -r '.workflow.phase')
+    STATUS=$(echo "$CHILD" | jq -r '.workflow.status')
+    echo "Issue #$ISSUE: $PHASE - $STATUS"
+  else
+    echo "Issue #$ISSUE: No checkpoint found"
+  fi
+done
 ```
 
 ### Verify Checkpoint State
 
 Before resuming, verify the checkpoint data:
 
-```typescript
-const data = checkpoint.load(milestoneId);
-if (data) {
-  console.log(`Milestone ${data.workflow.id}:`);
-  console.log(`- Phase: ${data.workflow.phase}`);
-  console.log(`- Status: ${data.workflow.status}`);
-  console.log(`- Actions: ${data.actions.length}`);
-  console.log(`- Started: ${data.workflow.createdAt}`);
+```bash
+DATA=$(bun run checkpoint milestone find "$MILESTONE_ID")
 
-  // List key actions
-  const keyActions = data.actions.filter(
-    (a) =>
-      a.action.includes("phase_transition") ||
-      a.action.includes("child_workflow") ||
-      a.action.includes("merge"),
-  );
-
-  keyActions.forEach((a) => {
-    console.log(`  [${a.createdAt}] ${a.action}: ${a.result}`);
-  });
-}
+if [ "$DATA" != "null" ] && [ -n "$DATA" ]; then
+  echo "Milestone $(echo $DATA | jq -r '.id'):"
+  echo "- Phase: $(echo $DATA | jq -r '.phase')"
+  echo "- Status: $(echo $DATA | jq -r '.status')"
+fi
 ```
 
 ### Manual Resume Commands
@@ -1275,18 +1132,14 @@ if (data) {
 If automatic resume fails, use these commands:
 
 ```bash
-# Check database state
-bun repl
-> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
-> checkpoint.listActive()
+# Check milestone state
+bun run checkpoint milestone find "ob3-phase-1"
 
-# List all milestone workflows (filter by metadata)
-> // Milestone workflows have issueNumber: 0
-> const workflows = checkpoint.listActive().filter(w => w.issueNumber === 0)
-> workflows
+# List all active milestones
+bun run checkpoint milestone list-active
 
-# Mark milestone workflow as failed (to start fresh)
-> checkpoint.setStatus("workflow-id", "failed")
+# Mark milestone as failed (to start fresh)
+bun run checkpoint milestone set-status "milestone-id" "failed"
 ```
 
 ### Coordinating with worktree-manager.sh
@@ -1308,19 +1161,17 @@ The `/auto-milestone` workflow uses both checkpoint API and `worktree-manager.sh
 **Example:**
 
 ```bash
-# Check checkpoint state
-bun repl
-> import { checkpoint } from "./packages/claude-knowledge/src/checkpoint.ts"
-> const milestone = checkpoint.load("milestone-ob3-phase-1")
-> milestone.workflow.phase  // "review"
+# Check milestone checkpoint state
+bun run checkpoint milestone find "ob3-phase-1"
+# Shows: phase "review", status "running"
 
 # Check worktree state
 ./scripts/worktree-manager.sh status
 # Shows: issue-111 (reviewing, PR #145), issue-116 (reviewing, PR #146)
 
 # Check child workflow state
-> checkpoint.findByIssue(111)
-# Shows: phase "review", 2 critical findings
+bun run checkpoint workflow find 111
+# Shows: phase "review", status "running"
 
 # Resume decision: Continue review handling at Phase 3
 ```
