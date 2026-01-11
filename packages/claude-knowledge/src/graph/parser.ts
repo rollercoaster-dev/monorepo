@@ -11,28 +11,34 @@ import { readdirSync, statSync } from "fs";
 import { join, relative, dirname } from "path";
 import type { Entity, Relationship, ParseResult, ParseStats } from "./types";
 
-/** Current package name for ID generation */
-let currentPackageName = "";
-
 /**
  * Generate a globally unique ID for an entity.
  * Format: `{package}:{filePath}:{type}:{name}`
+ *
+ * @param packageName - Package name for ID prefix
+ * @param filePath - File path relative to package root
+ * @param name - Entity name
+ * @param type - Entity type (function, class, etc.)
  */
 export function makeEntityId(
+  packageName: string,
   filePath: string,
   name: string,
   type: string,
 ): string {
   const cleanPath = filePath.replace(/\\/g, "/");
-  return `${currentPackageName}:${cleanPath}:${type}:${name}`;
+  return `${packageName}:${cleanPath}:${type}:${name}`;
 }
 
 /**
  * Generate a file entity ID.
  * Format: `{package}:file:{filePath}`
+ *
+ * @param packageName - Package name for ID prefix
+ * @param filePath - File path relative to package root
  */
-export function makeFileId(filePath: string): string {
-  return `${currentPackageName}:file:${filePath.replace(/\\/g, "/")}`;
+export function makeFileId(packageName: string, filePath: string): string {
+  return `${packageName}:file:${filePath.replace(/\\/g, "/")}`;
 }
 
 /**
@@ -52,14 +58,40 @@ export function derivePackageName(packagePath: string): string {
 
 /**
  * Find all TypeScript files recursively, excluding test files.
+ * Handles filesystem errors gracefully by logging and continuing.
+ *
+ * @param dir - Directory to search
+ * @returns Array of TypeScript file paths
  */
 export function findTsFiles(dir: string): string[] {
   const files: string[] = [];
+  const errors: Array<{ path: string; error: string }> = [];
 
   function walk(currentDir: string) {
-    for (const entry of readdirSync(currentDir)) {
+    let entries: string[];
+    try {
+      entries = readdirSync(currentDir);
+    } catch (error) {
+      errors.push({
+        path: currentDir,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return; // Skip this directory, continue with others
+    }
+
+    for (const entry of entries) {
       const path = join(currentDir, entry);
-      const stat = statSync(path);
+
+      let stat;
+      try {
+        stat = statSync(path);
+      } catch (error) {
+        errors.push({
+          path,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        continue; // Skip this file, continue with others
+      }
 
       if (stat.isDirectory()) {
         // Skip test directories
@@ -79,22 +111,36 @@ export function findTsFiles(dir: string): string[] {
   }
 
   walk(dir);
+
+  // Log errors if any occurred (for debugging)
+  if (errors.length > 0) {
+    console.warn(
+      `[graph-parser] ${errors.length} file system error(s) during scan:`,
+      errors.slice(0, 5).map((e) => `${e.path}: ${e.error}`),
+    );
+  }
+
   return files;
 }
 
 /**
  * Extract entities from a source file.
+ *
+ * @param sourceFile - ts-morph SourceFile to extract from
+ * @param basePath - Base path for relative file paths
+ * @param packageName - Package name for entity IDs
  */
 export function extractEntities(
   sourceFile: SourceFile,
   basePath: string,
+  packageName: string,
 ): Entity[] {
   const entities: Entity[] = [];
   const filePath = relative(basePath, sourceFile.getFilePath());
 
   // Add file as an entity
   entities.push({
-    id: makeFileId(filePath),
+    id: makeFileId(packageName, filePath),
     type: "file",
     name: filePath,
     filePath,
@@ -107,7 +153,7 @@ export function extractEntities(
     const name = fn.getName();
     if (name) {
       entities.push({
-        id: makeEntityId(filePath, name, "function"),
+        id: makeEntityId(packageName, filePath, name, "function"),
         type: "function",
         name,
         filePath,
@@ -122,7 +168,7 @@ export function extractEntities(
     const name = cls.getName();
     if (name) {
       entities.push({
-        id: makeEntityId(filePath, name, "class"),
+        id: makeEntityId(packageName, filePath, name, "class"),
         type: "class",
         name,
         filePath,
@@ -134,7 +180,12 @@ export function extractEntities(
       cls.getMethods().forEach((method) => {
         const methodName = method.getName();
         entities.push({
-          id: makeEntityId(filePath, `${name}.${methodName}`, "function"),
+          id: makeEntityId(
+            packageName,
+            filePath,
+            `${name}.${methodName}`,
+            "function",
+          ),
           type: "function",
           name: `${name}.${methodName}`,
           filePath,
@@ -149,7 +200,7 @@ export function extractEntities(
   sourceFile.getTypeAliases().forEach((typeAlias) => {
     const name = typeAlias.getName();
     entities.push({
-      id: makeEntityId(filePath, name, "type"),
+      id: makeEntityId(packageName, filePath, name, "type"),
       type: "type",
       name,
       filePath,
@@ -162,7 +213,7 @@ export function extractEntities(
   sourceFile.getInterfaces().forEach((iface) => {
     const name = iface.getName();
     entities.push({
-      id: makeEntityId(filePath, name, "interface"),
+      id: makeEntityId(packageName, filePath, name, "interface"),
       type: "interface",
       name,
       filePath,
@@ -178,7 +229,12 @@ export function extractEntities(
     const isArrowFn = initializer?.getKind() === SyntaxKind.ArrowFunction;
 
     entities.push({
-      id: makeEntityId(filePath, name, isArrowFn ? "function" : "variable"),
+      id: makeEntityId(
+        packageName,
+        filePath,
+        name,
+        isArrowFn ? "function" : "variable",
+      ),
       type: isArrowFn ? "function" : "variable",
       name,
       filePath,
@@ -192,14 +248,19 @@ export function extractEntities(
 
 /**
  * Extract relationships from a source file.
+ *
+ * @param sourceFile - ts-morph SourceFile to extract from
+ * @param basePath - Base path for relative file paths
+ * @param packageName - Package name for entity IDs
  */
 export function extractRelationships(
   sourceFile: SourceFile,
   basePath: string,
+  packageName: string,
 ): Relationship[] {
   const relationships: Relationship[] = [];
   const filePath = relative(basePath, sourceFile.getFilePath());
-  const fileId = makeFileId(filePath);
+  const fileId = makeFileId(packageName, filePath);
 
   // Import relationships
   sourceFile.getImportDeclarations().forEach((imp) => {
@@ -242,18 +303,45 @@ export function extractRelationships(
           /\\/g,
           "/",
         );
+        // Note: Named import resolution uses first possibility as "best guess"
+        // This may create orphan references if the entity type doesn't match
         const possibleIds = [
-          makeEntityId(`${resolvedPath}.ts`, importedName, "function"),
-          makeEntityId(`${resolvedPath}.ts`, importedName, "class"),
-          makeEntityId(`${resolvedPath}.ts`, importedName, "type"),
-          makeEntityId(`${resolvedPath}.ts`, importedName, "interface"),
-          makeEntityId(`${resolvedPath}/index.ts`, importedName, "function"),
-          makeEntityId(`${resolvedPath}/index.ts`, importedName, "class"),
+          makeEntityId(
+            packageName,
+            `${resolvedPath}.ts`,
+            importedName,
+            "function",
+          ),
+          makeEntityId(
+            packageName,
+            `${resolvedPath}.ts`,
+            importedName,
+            "class",
+          ),
+          makeEntityId(packageName, `${resolvedPath}.ts`, importedName, "type"),
+          makeEntityId(
+            packageName,
+            `${resolvedPath}.ts`,
+            importedName,
+            "interface",
+          ),
+          makeEntityId(
+            packageName,
+            `${resolvedPath}/index.ts`,
+            importedName,
+            "function",
+          ),
+          makeEntityId(
+            packageName,
+            `${resolvedPath}/index.ts`,
+            importedName,
+            "class",
+          ),
         ];
 
         relationships.push({
           from: fileId,
-          to: possibleIds[0], // Best guess
+          to: possibleIds[0], // Best guess - may not resolve
           type: "imports",
         });
       }
@@ -265,9 +353,9 @@ export function extractRelationships(
     exp.getNamedExports().forEach((named) => {
       const exportedName = named.getName();
       const possibleIds = [
-        makeEntityId(filePath, exportedName, "function"),
-        makeEntityId(filePath, exportedName, "class"),
-        makeEntityId(filePath, exportedName, "type"),
+        makeEntityId(packageName, filePath, exportedName, "function"),
+        makeEntityId(packageName, filePath, exportedName, "class"),
+        makeEntityId(packageName, filePath, exportedName, "type"),
       ];
 
       relationships.push({
@@ -299,7 +387,7 @@ export function extractRelationships(
       if (containingFn.isKind(SyntaxKind.FunctionDeclaration)) {
         const fnName = containingFn.getName();
         if (fnName) {
-          fromId = makeEntityId(filePath, fnName, "function");
+          fromId = makeEntityId(packageName, filePath, fnName, "function");
         }
       } else if (containingFn.isKind(SyntaxKind.MethodDeclaration)) {
         const methodName = containingFn.getName();
@@ -309,6 +397,7 @@ export function extractRelationships(
         const className = parentClass?.getName();
         if (className && methodName) {
           fromId = makeEntityId(
+            packageName,
             filePath,
             `${className}.${methodName}`,
             "function",
@@ -325,8 +414,8 @@ export function extractRelationships(
     } else {
       // Direct function call - could be local or imported
       const possibleIds = [
-        makeEntityId(filePath, calledName, "function"),
-        makeEntityId(filePath, calledName, "class"),
+        makeEntityId(packageName, filePath, calledName, "function"),
+        makeEntityId(packageName, filePath, calledName, "class"),
       ];
       toId = possibleIds[0];
     }
@@ -346,7 +435,7 @@ export function extractRelationships(
     if (className && extendsClause) {
       const baseClassName = extendsClause.getText();
       relationships.push({
-        from: makeEntityId(filePath, className, "class"),
+        from: makeEntityId(packageName, filePath, className, "class"),
         to: `class:${baseClassName}`,
         type: "extends",
       });
@@ -357,7 +446,7 @@ export function extractRelationships(
       const interfaceName = impl.getText();
       if (className) {
         relationships.push({
-          from: makeEntityId(filePath, className, "class"),
+          from: makeEntityId(packageName, filePath, className, "class"),
           to: `interface:${interfaceName}`,
           type: "implements",
         });
@@ -379,19 +468,37 @@ export function parsePackage(
   packagePath: string,
   packageName?: string,
 ): ParseResult {
-  // Set current package name for ID generation
-  currentPackageName = packageName || derivePackageName(packagePath);
+  // Derive package name once and pass explicitly (no global state)
+  const pkgName = packageName || derivePackageName(packagePath);
 
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
   });
 
   const tsFiles = findTsFiles(packagePath);
+  const parseErrors: Array<{ file: string; error: string }> = [];
+  let filesSkipped = 0;
 
-  // Add all files to the project
+  // Add all files to the project with error handling
   tsFiles.forEach((file) => {
-    project.addSourceFileAtPath(file);
+    try {
+      project.addSourceFileAtPath(file);
+    } catch (error) {
+      parseErrors.push({
+        file,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      filesSkipped++;
+    }
   });
+
+  // Log parse errors if any
+  if (parseErrors.length > 0) {
+    console.warn(
+      `[graph-parser] ${parseErrors.length} file(s) failed to parse:`,
+      parseErrors.slice(0, 5).map((e) => `${e.file}: ${e.error}`),
+    );
+  }
 
   const allEntities: Entity[] = [];
   const allRelationships: Relationship[] = [];
@@ -399,7 +506,7 @@ export function parsePackage(
 
   // First pass: extract all entities
   project.getSourceFiles().forEach((sourceFile) => {
-    const entities = extractEntities(sourceFile, packagePath);
+    const entities = extractEntities(sourceFile, packagePath, pkgName);
     entities.forEach((e) => {
       allEntities.push(e);
       entityMap.set(e.id, e);
@@ -408,7 +515,11 @@ export function parsePackage(
 
   // Second pass: extract relationships
   project.getSourceFiles().forEach((sourceFile) => {
-    const relationships = extractRelationships(sourceFile, packagePath);
+    const relationships = extractRelationships(
+      sourceFile,
+      packagePath,
+      pkgName,
+    );
     allRelationships.push(...relationships);
   });
 
@@ -425,13 +536,13 @@ export function parsePackage(
 
   const stats: ParseStats = {
     filesScanned: tsFiles.length,
-    filesSkipped: 0,
+    filesSkipped,
     entitiesByType,
     relationshipsByType,
   };
 
   return {
-    package: currentPackageName,
+    package: pkgName,
     entities: allEntities,
     relationships: allRelationships,
     stats,

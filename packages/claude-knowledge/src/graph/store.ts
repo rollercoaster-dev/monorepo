@@ -8,6 +8,12 @@
 import { getDatabase } from "../db/sqlite";
 import type { ParseResult, StoreResult } from "./types";
 
+/** Error information for failed insert operations */
+interface InsertError {
+  id: string;
+  error: string;
+}
+
 /**
  * Store parsed graph data in SQLite.
  * Uses a transaction for atomic writes - all or nothing.
@@ -21,6 +27,10 @@ export function storeGraph(
   packageName: string,
 ): StoreResult {
   const db = getDatabase();
+
+  // Track failures for reporting
+  const entityErrors: InsertError[] = [];
+  const relErrors: InsertError[] = [];
 
   // Use transaction for atomic writes - all or nothing
   const storeTransaction = db.transaction(() => {
@@ -67,8 +77,11 @@ export function storeGraph(
           packageName,
         );
         entitiesCount++;
-      } catch {
-        // Skip entity on error (e.g., constraint violation)
+      } catch (error) {
+        entityErrors.push({
+          id: entity.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -81,18 +94,39 @@ export function storeGraph(
     let relsCount = 0;
     for (const rel of data.relationships) {
       try {
-        insertRel.run(rel.from, rel.to, rel.type);
-        relsCount++;
-      } catch {
-        // Skip relationship on error
+        const result = insertRel.run(rel.from, rel.to, rel.type);
+        // Only count if row was actually inserted (not ignored as duplicate)
+        if (result.changes > 0) {
+          relsCount++;
+        }
+      } catch (error) {
+        relErrors.push({
+          id: `${rel.from} -> ${rel.to}`,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
     return { entitiesCount, relsCount };
   });
 
-  // Execute the transaction
-  storeTransaction();
+  // Execute the transaction and capture return value
+  const { entitiesCount: insertedEntities, relsCount: insertedRels } =
+    storeTransaction();
+
+  // Log errors if any occurred (for debugging)
+  if (entityErrors.length > 0) {
+    console.warn(
+      `[graph-store] ${entityErrors.length} entity insert error(s):`,
+      entityErrors.slice(0, 5).map((e) => `${e.id}: ${e.error}`),
+    );
+  }
+  if (relErrors.length > 0) {
+    console.warn(
+      `[graph-store] ${relErrors.length} relationship insert error(s):`,
+      relErrors.slice(0, 5).map((e) => `${e.id}: ${e.error}`),
+    );
+  }
 
   // Verify storage (outside transaction - read-only)
   const entityCount = db
@@ -104,8 +138,23 @@ export function storeGraph(
     )
     .get(packageName) as { count: number };
 
+  // Log if verification differs from transaction counts (should rarely happen)
+  if (entityCount.count !== insertedEntities) {
+    console.warn(
+      `[graph-store] Entity count mismatch: inserted ${insertedEntities}, verified ${entityCount.count}`,
+    );
+  }
+  if (relCount.count !== insertedRels) {
+    console.warn(
+      `[graph-store] Relationship count mismatch: inserted ${insertedRels}, verified ${relCount.count}`,
+    );
+  }
+
+  // Success is based on whether we had critical failures
+  const hasFailures = entityErrors.length > 0 || relErrors.length > 0;
+
   return {
-    success: true,
+    success: !hasFailures,
     package: packageName,
     entitiesStored: entityCount.count,
     relationshipsStored: relCount.count,

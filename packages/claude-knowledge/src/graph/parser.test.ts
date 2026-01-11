@@ -120,36 +120,39 @@ export const greeter = (name: string) => {
 
   describe("makeEntityId", () => {
     it("generates correct entity ID format", () => {
-      // Note: Uses global currentPackageName which is set by parsePackage
-      const id = makeEntityId("src/index.ts", "myFunction", "function");
-      expect(id).toContain("src/index.ts");
-      expect(id).toContain("function");
-      expect(id).toContain("myFunction");
+      const id = makeEntityId(
+        "test-pkg",
+        "src/index.ts",
+        "myFunction",
+        "function",
+      );
+      expect(id).toBe("test-pkg:src/index.ts:function:myFunction");
     });
   });
 
   describe("makeFileId", () => {
     it("generates correct file ID format", () => {
-      const id = makeFileId("src/utils/helper.ts");
-      expect(id).toContain("file:");
-      expect(id).toContain("src/utils/helper.ts");
+      const id = makeFileId("test-pkg", "src/utils/helper.ts");
+      expect(id).toBe("test-pkg:file:src/utils/helper.ts");
     });
 
     it("normalizes Windows paths", () => {
-      const id = makeFileId("src\\utils\\helper.ts");
+      const id = makeFileId("test-pkg", "src\\utils\\helper.ts");
       expect(id).toContain("src/utils/helper.ts");
       expect(id).not.toContain("\\");
     });
   });
 
   describe("extractEntities", () => {
+    const TEST_PKG = "test-fixtures";
+
     it("extracts functions", () => {
       const project = new Project({ skipAddingFilesFromTsConfig: true });
       const sourceFile = project.addSourceFileAtPath(
         join(FIXTURES_DIR, "simple.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const functions = entities.filter((e) => e.type === "function");
       expect(functions.length).toBeGreaterThanOrEqual(2); // greet, privateHelper
@@ -169,7 +172,7 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "simple.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const version = entities.find((e) => e.name === "VERSION");
       expect(version).toBeDefined();
@@ -183,7 +186,7 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const classes = entities.filter((e) => e.type === "class");
       expect(classes.length).toBe(2); // HelloGreeter, FormalGreeter
@@ -205,7 +208,7 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const interfaces = entities.filter((e) => e.type === "interface");
       expect(interfaces.length).toBe(1);
@@ -219,7 +222,7 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "types.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const types = entities.filter((e) => e.type === "type");
       expect(types.length).toBe(2); // UserId, UserWithRole
@@ -235,7 +238,7 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "simple.ts"),
       );
 
-      const entities = extractEntities(sourceFile, FIXTURES_DIR);
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
 
       const fileEntity = entities.find((e) => e.type === "file");
       expect(fileEntity).toBeDefined();
@@ -244,6 +247,8 @@ export const greeter = (name: string) => {
   });
 
   describe("extractRelationships", () => {
+    const TEST_PKG = "test-fixtures";
+
     it("extracts import relationships", () => {
       const project = new Project({ skipAddingFilesFromTsConfig: true });
       project.addSourceFileAtPath(join(FIXTURES_DIR, "simple.ts"));
@@ -251,7 +256,11 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "calls.ts"),
       );
 
-      const relationships = extractRelationships(sourceFile, FIXTURES_DIR);
+      const relationships = extractRelationships(
+        sourceFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
 
       const imports = relationships.filter((r) => r.type === "imports");
       expect(imports.length).toBeGreaterThanOrEqual(1);
@@ -264,7 +273,11 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "calls.ts"),
       );
 
-      const relationships = extractRelationships(sourceFile, FIXTURES_DIR);
+      const relationships = extractRelationships(
+        sourceFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
 
       const calls = relationships.filter((r) => r.type === "calls");
       expect(calls.length).toBeGreaterThanOrEqual(2); // greet called twice
@@ -276,7 +289,11 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
-      const relationships = extractRelationships(sourceFile, FIXTURES_DIR);
+      const relationships = extractRelationships(
+        sourceFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
 
       const extends_ = relationships.filter((r) => r.type === "extends");
       expect(extends_.length).toBe(1);
@@ -289,7 +306,11 @@ export const greeter = (name: string) => {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
-      const relationships = extractRelationships(sourceFile, FIXTURES_DIR);
+      const relationships = extractRelationships(
+        sourceFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
 
       const implements_ = relationships.filter((r) => r.type === "implements");
       expect(implements_.length).toBe(1);

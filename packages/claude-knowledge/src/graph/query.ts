@@ -24,18 +24,24 @@ import type {
 export function whatCalls(name: string): QueryResult[] {
   const db = getDatabase();
 
-  return db
-    .query<QueryResult, [string]>(
-      `
-      SELECT DISTINCT caller.name, caller.file_path, caller.line_number, caller.type
-      FROM graph_relationships gr
-      JOIN graph_entities caller ON gr.from_entity = caller.id
-      JOIN graph_entities target ON gr.to_entity = target.id
-      WHERE target.name LIKE ? AND gr.type = 'calls'
-      ORDER BY caller.file_path, caller.line_number
-    `,
-    )
-    .all(`%${name}%`);
+  try {
+    return db
+      .query<QueryResult, [string]>(
+        `
+        SELECT DISTINCT caller.name, caller.file_path, caller.line_number, caller.type
+        FROM graph_relationships gr
+        JOIN graph_entities caller ON gr.from_entity = caller.id
+        JOIN graph_entities target ON gr.to_entity = target.id
+        WHERE target.name LIKE ? AND gr.type = 'calls'
+        ORDER BY caller.file_path, caller.line_number
+      `,
+      )
+      .all(`%${name}%`);
+  } catch (error) {
+    throw new Error(
+      `[graph-query] whatCalls("${name}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -47,19 +53,25 @@ export function whatCalls(name: string): QueryResult[] {
 export function whatDependsOn(name: string): DependencyResult[] {
   const db = getDatabase();
 
-  return db
-    .query<DependencyResult, [string]>(
-      `
-      SELECT DISTINCT dependent.name, dependent.file_path, gr.type as relationship_type
-      FROM graph_relationships gr
-      JOIN graph_entities dependent ON gr.from_entity = dependent.id
-      JOIN graph_entities target ON gr.to_entity = target.id
-      WHERE target.name LIKE ?
-        AND gr.type IN ('imports', 'extends', 'implements', 'calls')
-      ORDER BY gr.type, dependent.file_path
-    `,
-    )
-    .all(`%${name}%`);
+  try {
+    return db
+      .query<DependencyResult, [string]>(
+        `
+        SELECT DISTINCT dependent.name, dependent.file_path, gr.type as relationship_type
+        FROM graph_relationships gr
+        JOIN graph_entities dependent ON gr.from_entity = dependent.id
+        JOIN graph_entities target ON gr.to_entity = target.id
+        WHERE target.name LIKE ?
+          AND gr.type IN ('imports', 'extends', 'implements', 'calls')
+        ORDER BY gr.type, dependent.file_path
+      `,
+      )
+      .all(`%${name}%`);
+  } catch (error) {
+    throw new Error(
+      `[graph-query] whatDependsOn("${name}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -76,31 +88,37 @@ export function blastRadius(
 ): BlastRadiusResult[] {
   const db = getDatabase();
 
-  return db
-    .query<BlastRadiusResult, [string, number]>(
-      `
-      WITH RECURSIVE dependents AS (
-        -- Start with entities in the target file
-        SELECT id, name, file_path, type, 0 as depth
-        FROM graph_entities
-        WHERE file_path LIKE ?
+  try {
+    return db
+      .query<BlastRadiusResult, [string, number]>(
+        `
+        WITH RECURSIVE dependents AS (
+          -- Start with entities in the target file
+          SELECT id, name, file_path, type, 0 as depth
+          FROM graph_entities
+          WHERE file_path LIKE ?
 
-        UNION
+          UNION
 
-        -- Find things that depend on those (transitively)
-        SELECT ge.id, ge.name, ge.file_path, ge.type, d.depth + 1
-        FROM graph_entities ge
-        JOIN graph_relationships gr ON gr.from_entity = ge.id
-        JOIN dependents d ON gr.to_entity = d.id
-        WHERE d.depth < ?
-          AND gr.type IN ('imports', 'calls', 'extends', 'implements')
+          -- Find things that depend on those (transitively)
+          SELECT ge.id, ge.name, ge.file_path, ge.type, d.depth + 1
+          FROM graph_entities ge
+          JOIN graph_relationships gr ON gr.from_entity = ge.id
+          JOIN dependents d ON gr.to_entity = d.id
+          WHERE d.depth < ?
+            AND gr.type IN ('imports', 'calls', 'extends', 'implements')
+        )
+        SELECT DISTINCT name, file_path, type, depth
+        FROM dependents
+        ORDER BY depth, file_path
+      `,
       )
-      SELECT DISTINCT name, file_path, type, depth
-      FROM dependents
-      ORDER BY depth, file_path
-    `,
-    )
-    .all(`%${file}%`, maxDepth);
+      .all(`%${file}%`, maxDepth);
+  } catch (error) {
+    throw new Error(
+      `[graph-query] blastRadius("${file}", ${maxDepth}) failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -118,43 +136,49 @@ export function findEntities(
 ): (Entity & { id: string })[] {
   const db = getDatabase();
 
-  let query = `
-    SELECT id, name, type, file_path as filePath, line_number as lineNumber, exported
-    FROM graph_entities
-    WHERE name LIKE ?
-  `;
-  const params: (string | number)[] = [`%${name}%`];
+  try {
+    let query = `
+      SELECT id, name, type, file_path as filePath, line_number as lineNumber, exported
+      FROM graph_entities
+      WHERE name LIKE ?
+    `;
+    const params: (string | number)[] = [`%${name}%`];
 
-  if (type) {
-    query += ` AND type = ?`;
-    params.push(type);
+    if (type) {
+      query += ` AND type = ?`;
+      params.push(type);
+    }
+
+    query += ` ORDER BY file_path, line_number LIMIT ?`;
+    params.push(limit);
+
+    const results = db
+      .query<
+        {
+          id: string;
+          name: string;
+          type: string;
+          filePath: string;
+          lineNumber: number;
+          exported: number;
+        },
+        (string | number)[]
+      >(query)
+      .all(...params);
+
+    return results.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type as Entity["type"],
+      filePath: r.filePath,
+      lineNumber: r.lineNumber,
+      exported: r.exported === 1,
+    }));
+  } catch (error) {
+    throw new Error(
+      `[graph-query] findEntities("${name}", "${type || "any"}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
-
-  query += ` ORDER BY file_path, line_number LIMIT ?`;
-  params.push(limit);
-
-  const results = db
-    .query<
-      {
-        id: string;
-        name: string;
-        type: string;
-        filePath: string;
-        lineNumber: number;
-        exported: number;
-      },
-      (string | number)[]
-    >(query)
-    .all(...params);
-
-  return results.map((r) => ({
-    id: r.id,
-    name: r.name,
-    type: r.type as Entity["type"],
-    filePath: r.filePath,
-    lineNumber: r.lineNumber,
-    exported: r.exported === 1,
-  }));
 }
 
 /**
@@ -167,34 +191,40 @@ export function getExports(packageName?: string): (Entity & { id: string })[] {
   const db = getDatabase();
   const pkg = packageName || "%";
 
-  const results = db
-    .query<
-      {
-        id: string;
-        name: string;
-        type: string;
-        filePath: string;
-        lineNumber: number;
-      },
-      [string]
-    >(
-      `
-      SELECT id, name, type, file_path as filePath, line_number as lineNumber
-      FROM graph_entities
-      WHERE exported = 1 AND package LIKE ?
-      ORDER BY type, name
-    `,
-    )
-    .all(pkg);
+  try {
+    const results = db
+      .query<
+        {
+          id: string;
+          name: string;
+          type: string;
+          filePath: string;
+          lineNumber: number;
+        },
+        [string]
+      >(
+        `
+        SELECT id, name, type, file_path as filePath, line_number as lineNumber
+        FROM graph_entities
+        WHERE exported = 1 AND package LIKE ?
+        ORDER BY type, name
+      `,
+      )
+      .all(pkg);
 
-  return results.map((r) => ({
-    id: r.id,
-    name: r.name,
-    type: r.type as Entity["type"],
-    filePath: r.filePath,
-    lineNumber: r.lineNumber,
-    exported: true,
-  }));
+    return results.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type as Entity["type"],
+      filePath: r.filePath,
+      lineNumber: r.lineNumber,
+      exported: true,
+    }));
+  } catch (error) {
+    throw new Error(
+      `[graph-query] getExports("${packageName || "*"}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -206,18 +236,24 @@ export function getExports(packageName?: string): (Entity & { id: string })[] {
 export function getCallers(functionName: string): QueryResult[] {
   const db = getDatabase();
 
-  return db
-    .query<QueryResult, [string]>(
-      `
-      SELECT caller.name, caller.file_path, caller.line_number, caller.type
-      FROM graph_relationships gr
-      JOIN graph_entities caller ON gr.from_entity = caller.id
-      JOIN graph_entities target ON gr.to_entity = target.id
-      WHERE target.name = ? AND target.type = 'function' AND gr.type = 'calls'
-      ORDER BY caller.file_path
-    `,
-    )
-    .all(functionName);
+  try {
+    return db
+      .query<QueryResult, [string]>(
+        `
+        SELECT caller.name, caller.file_path, caller.line_number, caller.type
+        FROM graph_relationships gr
+        JOIN graph_entities caller ON gr.from_entity = caller.id
+        JOIN graph_entities target ON gr.to_entity = target.id
+        WHERE target.name = ? AND target.type = 'function' AND gr.type = 'calls'
+        ORDER BY caller.file_path
+      `,
+      )
+      .all(functionName);
+  } catch (error) {
+    throw new Error(
+      `[graph-query] getCallers("${functionName}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -230,56 +266,62 @@ export function getSummary(packageName?: string): GraphSummary {
   const db = getDatabase();
   const pkg = packageName || "%";
 
-  const entityCounts = db
-    .query<{ type: string; count: number }, [string]>(
-      `
-      SELECT type, COUNT(*) as count
-      FROM graph_entities
-      WHERE package LIKE ?
-      GROUP BY type
-    `,
-    )
-    .all(pkg);
+  try {
+    const entityCounts = db
+      .query<{ type: string; count: number }, [string]>(
+        `
+        SELECT type, COUNT(*) as count
+        FROM graph_entities
+        WHERE package LIKE ?
+        GROUP BY type
+      `,
+      )
+      .all(pkg);
 
-  const relationshipCounts = db
-    .query<{ type: string; count: number }, [string]>(
-      `
-      SELECT type, COUNT(*) as count
-      FROM graph_relationships
-      WHERE from_entity IN (SELECT id FROM graph_entities WHERE package LIKE ?)
-      GROUP BY type
-    `,
-    )
-    .all(pkg);
+    const relationshipCounts = db
+      .query<{ type: string; count: number }, [string]>(
+        `
+        SELECT type, COUNT(*) as count
+        FROM graph_relationships
+        WHERE from_entity IN (SELECT id FROM graph_entities WHERE package LIKE ?)
+        GROUP BY type
+      `,
+      )
+      .all(pkg);
 
-  const totalEntities = entityCounts.reduce((sum, e) => sum + e.count, 0);
-  const totalRelationships = relationshipCounts.reduce(
-    (sum, r) => sum + r.count,
-    0,
-  );
+    const totalEntities = entityCounts.reduce((sum, e) => sum + e.count, 0);
+    const totalRelationships = relationshipCounts.reduce(
+      (sum, r) => sum + r.count,
+      0,
+    );
 
-  const packages = db
-    .query<{ package: string; count: number }, []>(
-      `
-      SELECT package, COUNT(*) as count
-      FROM graph_entities
-      GROUP BY package
-    `,
-    )
-    .all();
+    const packages = db
+      .query<{ package: string; count: number }, []>(
+        `
+        SELECT package, COUNT(*) as count
+        FROM graph_entities
+        GROUP BY package
+      `,
+      )
+      .all();
 
-  return {
-    totalEntities,
-    totalRelationships,
-    entitiesByType: Object.fromEntries(
-      entityCounts.map((e) => [e.type, e.count]),
-    ),
-    relationshipsByType: Object.fromEntries(
-      relationshipCounts.map((r) => [r.type, r.count]),
-    ),
-    packages: packages.map((p) => ({
-      name: p.package,
-      entityCount: p.count,
-    })),
-  };
+    return {
+      totalEntities,
+      totalRelationships,
+      entitiesByType: Object.fromEntries(
+        entityCounts.map((e) => [e.type, e.count]),
+      ),
+      relationshipsByType: Object.fromEntries(
+        relationshipCounts.map((r) => [r.type, r.count]),
+      ),
+      packages: packages.map((p) => ({
+        name: p.package,
+        entityCount: p.count,
+      })),
+    };
+  } catch (error) {
+    throw new Error(
+      `[graph-query] getSummary("${packageName || "*"}") failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
