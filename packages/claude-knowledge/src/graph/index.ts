@@ -29,12 +29,15 @@ export * from "./types";
 // Parser
 export { parsePackage } from "./parser";
 
-// Storage and query will be added in subsequent commits
-// export { storeGraph, clearPackage } from './store';
+// Storage
+export { storeGraph, clearPackage } from "./store";
+
+// Query will be added in subsequent commits
 // export { whatCalls, whatDependsOn, blastRadius, findEntities, getExports, getCallers, getSummary } from './query';
 
 // Import for graph object
 import { parsePackage } from "./parser";
+import { storeGraph, clearPackage } from "./store";
 
 /**
  * Unified graph API object.
@@ -45,8 +48,8 @@ export const graph = {
   parsePackage,
 
   // Storage (Step 3)
-  // storeGraph: ...,
-  // clearPackage: ...,
+  storeGraph,
+  clearPackage,
 
   // Queries (Step 4)
   // whatCalls: ...,
