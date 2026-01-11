@@ -203,6 +203,83 @@ Reply "proceed" to create PR.
 
 ---
 
+## /auto-issue Templates
+
+These templates are used by the autonomous `/auto-issue` workflow. Unlike `/work-on-issue`, this workflow has minimal notifications - only essential state changes.
+
+| Template        | Type   | When Used                             |
+| --------------- | ------ | ------------------------------------- |
+| `AI_START`      | notify | Workflow started                      |
+| `AI_ESCALATION` | ask    | MAX_RETRY exceeded, needs user choice |
+| `AI_COMPLETE`   | notify | PR created successfully               |
+| `AI_ERROR`      | notify | Fatal workflow failure                |
+
+### Template Details
+
+**AI_START** (notify):
+
+```text
+🚀 [AUTO-ISSUE #N] Started
+Issue: #N
+Branch: feat/issue-N-description
+Mode: Autonomous
+
+Phase transitions will not be announced.
+You will be notified on escalation, completion, or error.
+```
+
+**AI_ESCALATION** (ask):
+
+```text
+🚨 [AUTO-ISSUE #N] ESCALATION
+
+Issue: #N - <title>
+Branch: feat/issue-N-description
+Retry: X/3
+
+Critical Findings (Unresolved):
+• <agent>: <file> - <issue>
+• <agent>: <file> - <issue>
+
+Options:
+1. 'continue' - Fix manually, then continue
+2. 'force-pr' - Create PR with issues flagged
+3. 'abort' - Delete branch and exit
+4. 'reset' - Go back to last good state
+
+Reply with your choice.
+```
+
+**AI_COMPLETE** (notify):
+
+```text
+✅ [AUTO-ISSUE #N] PR Created!
+
+PR #M: <type>(<scope>): <description>
+https://github.com/rollercoaster-dev/monorepo/pull/M
+
+Commits: X implementation + Y fixes
+Reviews triggered: CodeRabbit, Claude
+```
+
+**AI_ERROR** (notify):
+
+```text
+❌ [AUTO-ISSUE #N] Failed
+
+Phase: <phase>
+Error: <error message>
+
+Current state:
+- Branch: feat/issue-N-description
+- Commits made: X
+- Last action: <action>
+
+Check terminal for details.
+```
+
+---
+
 ## Graceful Degradation
 
 If the MCP server is unavailable:
