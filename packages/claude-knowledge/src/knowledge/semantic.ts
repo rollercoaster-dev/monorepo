@@ -32,8 +32,9 @@ interface SearchRow {
 /**
  * Search for semantically similar learnings using vector similarity.
  *
- * Uses TF-IDF embeddings to find learnings that are conceptually related
- * to the query text, even if they don't share exact keywords.
+ * Uses the default embedder to generate vector embeddings and find learnings
+ * that are conceptually related to the query text, even if they don't share
+ * exact keywords. Similarity is computed using cosine similarity.
  *
  * @param queryText - The search query text
  * @param options - Search options (limit, threshold, includeRelated)

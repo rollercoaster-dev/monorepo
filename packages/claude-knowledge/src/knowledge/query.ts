@@ -28,9 +28,10 @@ interface QueryRow {
  * - keywords: Content search across learning content
  * - issueNumber: Filter by source issue number
  *
+ * If no filters are provided, returns the most recent learnings (up to limit).
  * Results include related patterns and mistakes via 2-hop traversal (LED_TO).
  *
- * @param context - Query filters (at least one should be provided)
+ * @param context - Query filters and options (filters are optional)
  * @returns Array of QueryResult with learnings and related entities
  */
 export async function query(context: QueryContext): Promise<QueryResult[]> {
