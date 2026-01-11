@@ -679,7 +679,7 @@ Options:
 4. 'reset' - Go back to last good state`;
 
 // Ask via Telegram (blocking - waits for response)
-const response = await askTelegram(escalationMessage);
+const response = await askTelegram(escalationMessage, "AUTO-ISSUE");
 
 // Handle response
 switch (response.toLowerCase().trim()) {
