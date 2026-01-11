@@ -190,6 +190,20 @@ See [board-operations.md](../shared/board-operations.md) for:
     }
     ```
 
+3c. **Telegram notification - AI_START template (non-blocking):**
+
+    ```typescript
+    // Notify user of workflow start
+    notifyTelegram(`🚀 [AUTO-ISSUE #$ARGUMENTS] Started
+
+Issue: #$ARGUMENTS
+Branch: ${branchName}
+Mode: Autonomous
+
+Phase transitions will not be announced.
+You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
+```
+
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
    - Check dependencies
