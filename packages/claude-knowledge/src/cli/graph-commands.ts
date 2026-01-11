@@ -17,6 +17,36 @@ import {
   getCallers,
   getSummary,
 } from "../graph";
+import { metrics } from "../checkpoint/metrics";
+
+/**
+ * Log a graph query for metrics tracking.
+ * Wrapped in try/catch to ensure logging failures don't break queries.
+ */
+function logQuery(
+  queryType: string,
+  queryParams: string,
+  resultCount: number,
+  durationMs: number,
+): void {
+  try {
+    const sessionId = process.env.CLAUDE_SESSION_ID;
+    if (!sessionId) {
+      // Not running in a Claude session - skip logging
+      return;
+    }
+    metrics.logGraphQuery({
+      sessionId,
+      workflowId: process.env.WORKFLOW_ID,
+      queryType,
+      queryParams,
+      resultCount,
+      durationMs,
+    });
+  } catch {
+    // Silently ignore logging failures - don't break the query
+  }
+}
 
 export async function handleGraphCommands(
   command: string,
@@ -71,7 +101,16 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph what-calls <name>");
     }
 
+    const startTime = performance.now();
     const results = whatCalls(name);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery(
+      "what-calls",
+      JSON.stringify({ name }),
+      results.length,
+      durationMs,
+    );
+
     process.stdout.write(
       JSON.stringify(
         { query: "what-calls", name, results, count: results.length },
@@ -86,7 +125,16 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph what-depends-on <name>");
     }
 
+    const startTime = performance.now();
     const results = whatDependsOn(name);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery(
+      "what-depends-on",
+      JSON.stringify({ name }),
+      results.length,
+      durationMs,
+    );
+
     process.stdout.write(
       JSON.stringify(
         { query: "what-depends-on", name, results, count: results.length },
@@ -101,7 +149,16 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph blast-radius <file>");
     }
 
+    const startTime = performance.now();
     const results = blastRadius(file);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery(
+      "blast-radius",
+      JSON.stringify({ file }),
+      results.length,
+      durationMs,
+    );
+
     process.stdout.write(
       JSON.stringify(
         { query: "blast-radius", file, results, count: results.length },
@@ -131,7 +188,16 @@ export async function handleGraphCommands(
       );
     }
 
+    const startTime = performance.now();
     const results = findEntities(name, type);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery(
+      "find",
+      JSON.stringify({ name, type }),
+      results.length,
+      durationMs,
+    );
+
     process.stdout.write(
       JSON.stringify(
         { query: "find", name, type, results, count: results.length },
@@ -143,7 +209,16 @@ export async function handleGraphCommands(
     // Usage: graph exports [package]
     const pkg = filteredArgs[0];
 
+    const startTime = performance.now();
     const results = getExports(pkg);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery(
+      "exports",
+      JSON.stringify({ package: pkg || "all" }),
+      results.length,
+      durationMs,
+    );
+
     process.stdout.write(
       JSON.stringify(
         {
@@ -179,7 +254,11 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph callers <function-name>");
     }
 
+    const startTime = performance.now();
     const results = getCallers(name);
+    const durationMs = Math.round(performance.now() - startTime);
+    logQuery("callers", JSON.stringify({ name }), results.length, durationMs);
+
     process.stdout.write(
       JSON.stringify(
         { query: "callers", name, results, count: results.length },
