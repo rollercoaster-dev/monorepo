@@ -33,7 +33,7 @@ Each package has its own `CLAUDE.md` with package-specific context.
 
 ## Conventions
 
-- **Testing**: Bun test runner, tests colocated (`*.test.ts`)
+- **Testing**: Bun test runner, tests colocated (`*.test.ts`). Use `bun run test:unit` from root.
 - **Commits**: Conventional commits (`feat`, `fix`, `chore`, etc.)
 - **Versioning**: Changesets for version management (`bunx changeset`)
 
@@ -45,6 +45,7 @@ Keep solutions simple and focused. Only make changes that are directly requested
 - Don't add error handling for scenarios that can't happen
 - Don't create abstractions for one-time operations
 - Reuse existing patterns; the right complexity is the minimum needed
+- For `/work-on-issue` workflow, follow all gates exactly and pause at each one
 
 ## File Modification
 

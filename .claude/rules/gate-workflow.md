@@ -2,7 +2,9 @@
 
 **Applies to:** `/work-on-issue`, orchestrated workflows
 
-## Gate Guidelines
+## Gate Requirements
+
+Gates are checkpoints that require explicit user approval. These are not suggestions - workflows cannot proceed past a gate without approval.
 
 ### Guideline 1: Gates Require Explicit Approval
 

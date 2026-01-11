@@ -2,6 +2,8 @@
 
 Package-specific context for Claude Code when working in `packages/rd-logger/`.
 
+**npm**: `@rollercoaster-dev/rd-logger`
+
 ## Purpose
 
 Neurodivergent-friendly structured logging library with colored output, icons, and request context propagation.

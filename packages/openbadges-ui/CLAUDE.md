@@ -2,6 +2,8 @@
 
 Package-specific context for Claude Code when working in `packages/openbadges-ui/`.
 
+**npm**: `openbadges-ui`
+
 ## Purpose
 
 Vue 3 component library for Open Badges with accessibility-first design and neurodivergent-friendly themes.

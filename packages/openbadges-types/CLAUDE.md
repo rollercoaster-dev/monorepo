@@ -2,6 +2,8 @@
 
 Package-specific context for Claude Code when working in `packages/openbadges-types/`.
 
+**npm**: `openbadges-types`
+
 ## Purpose
 
 TypeScript type definitions for Open Badges 2.0 and 3.0 specifications with runtime validation.

@@ -38,7 +38,7 @@ This is not "unsupervised" - you can intervene anytime by typing in the chat.
 
 ### High Priority vs Standard
 
-Findings are classified based on review agent output:
+Findings are classified based on review agent output. Note: Agent outputs use their original terminology (e.g., "CRITICAL", "Severity") - the table below shows how to map these to priority classification:
 
 | Agent                  | High Priority                        | Standard                       |
 | ---------------------- | ------------------------------------ | ------------------------------ |

@@ -140,6 +140,17 @@ cp .env.example .env
 
 - Check `packages/[package-name]/.env.example` for package-specific configuration
 
+## Testing
+
+- **Framework**: Bun test runner (native Bun testing)
+- **Location**: Tests are colocated with source files (`*.test.ts`)
+- **Run all tests**: Use `bun run test:unit` from monorepo root
+- **Run package tests**: Use `bun --filter <package> test`
+- **Exception**: openbadges-ui uses Vitest (`bun run test`) because Bun doesn't support `.vue` files
+
+> **Important**: Avoid `bun test --filter X` from the root - use `bun run test:unit` instead.
+> See [E2E Testing Guide](../apps/openbadges-modular-server/docs/e2e-testing-guide.md) for troubleshooting.
+
 ## Related Resources
 
 - [Rollercoaster.dev](https://rollercoaster.dev)
