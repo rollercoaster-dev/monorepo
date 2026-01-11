@@ -190,6 +190,21 @@ See [board-operations.md](../shared/board-operations.md) for:
     }
     ```
 
+3c. **Telegram notification - AI_START template (non-blocking):**
+
+    ```typescript
+    // Notify user of workflow start
+    notifyTelegram(`🚀 [AUTO-ISSUE #$ARGUMENTS] Started
+
+Issue: #$ARGUMENTS
+Branch: ${branchName}
+Mode: Autonomous
+
+Phase transitions will not be announced.
+You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
+
+````
+
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
    - Check dependencies
@@ -204,7 +219,7 @@ See [board-operations.md](../shared/board-operations.md) for:
      task: "analyze codebase and create dev plan",
      issueNumber: $ARGUMENTS,
    });
-   ```
+````
 
 5. **Update board status to "In Progress":**
 
@@ -541,7 +556,7 @@ Creating PR...`);
      });
      console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #${PR_NUMBER}`);
 
-     // Telegram notification (non-blocking)
+     // Telegram notification - AI_COMPLETE template (non-blocking)
      notifyTelegram(`[AUTO-ISSUE #$ARGUMENTS] ✅ PR Created!
 
 PR #${PR_NUMBER}: <title>
@@ -642,12 +657,12 @@ Reviews triggered: CodeRabbit, Claude`);
 4. **Reset** - Type `reset` to go back to last good state and retry
 ```
 
-### Telegram Escalation (Interactive)
+### Telegram Escalation (Interactive) - AI_ESCALATION template
 
 When escalation is triggered, use `ask_user` to get user input via Telegram:
 
 ```typescript
-// Build escalation message
+// Build escalation message - AI_ESCALATION template
 const escalationMessage = `🚨 AUTO-ISSUE ESCALATION
 
 Issue: #$ARGUMENTS - <title>
@@ -664,7 +679,7 @@ Options:
 4. 'reset' - Go back to last good state`;
 
 // Ask via Telegram (blocking - waits for response)
-const response = await askTelegram(escalationMessage);
+const response = await askTelegram(escalationMessage, "AUTO-ISSUE");
 
 // Handle response
 switch (response.toLowerCase().trim()) {
@@ -698,6 +713,8 @@ switch (response.toLowerCase().trim()) {
 ```
 
 ### Log Escalation to Checkpoint
+
+**IMPORTANT**: Send Telegram escalation (askTelegram) BEFORE logging to checkpoint. This ensures the user is notified even if checkpoint logging fails.
 
 When escalation is triggered, log the failure:
 
@@ -853,6 +870,40 @@ If git operations fail due to conflicts:
 2. Report conflict details
 3. Wait for user guidance
 4. Do not auto-resolve
+
+### Fatal Error Notification
+
+When a workflow fails due to unrecoverable error:
+
+```typescript
+// Log the error
+checkpoint.setStatus(WORKFLOW_ID, "failed");
+checkpoint.logAction(WORKFLOW_ID, "fatal_error", "failed", {
+  phase: currentPhase,
+  error: error.message,
+  commitCount: totalCommits,
+});
+
+// Notify user - AI_ERROR template (non-blocking)
+notifyTelegram(
+  `❌ [AUTO-ISSUE #$ARGUMENTS] Failed
+
+Phase: ${currentPhase}
+Error: ${error.message}
+
+Current state:
+- Branch: ${branchName}
+- Commits made: ${totalCommits}
+- Last action: ${lastAction}
+
+Check terminal for details.`,
+  "AUTO-ISSUE",
+);
+
+console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: ${error.message}`);
+```
+
+**When to use**: Issue not found, branch creation failure, git conflicts, all agents fail, validation failure on finalize.
 
 ---
 
