@@ -16,7 +16,7 @@ import type {
   Mistake,
   ContextMetrics,
 } from "./types";
-import { knowledge } from "./knowledge";
+import { knowledge } from "./knowledge/index";
 import { checkpoint } from "./checkpoint";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
