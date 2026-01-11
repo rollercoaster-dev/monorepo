@@ -13,7 +13,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { checkpoint } from "./checkpoint";
-import { store, storePattern, storeMistake } from "./knowledge/index";
+import { store, storePattern, storeMistake } from "./knowledge/store";
 import { randomUUID } from "crypto";
 import type {
   WorkflowLearning,
@@ -307,7 +307,7 @@ function extractPatterns(
  * - Large deviations from plan
  */
 function extractMistakes(
-  data: CheckpointData,
+  _data: CheckpointData,
   findings: ReviewFinding[],
   fixes: AppliedFix[],
 ): ExtractedMistake[] {
