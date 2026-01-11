@@ -8,6 +8,7 @@ import { handleSessionStart, handleSessionEnd } from "./session-commands";
 import { handleLearningCommands } from "./learning-commands";
 import { handleMetricsCommands } from "./metrics-commands";
 import { handleBootstrapCommands } from "./bootstrap-commands";
+import { handleGraphCommands } from "./graph-commands";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -48,6 +49,13 @@ if (args.length === 0) {
   console.error("  metrics list [issue-number]");
   console.error("  metrics summary");
   console.error("  bootstrap mine-prs [limit]");
+  console.error("  graph what-calls <name>");
+  console.error("  graph what-depends-on <name>");
+  console.error("  graph blast-radius <file>");
+  console.error("  graph find <name> [type]");
+  console.error("  graph exports [package]");
+  console.error("  graph callers <function>");
+  console.error("  graph summary [package]");
   process.exit(1);
 }
 
@@ -75,6 +83,8 @@ try {
     await handleMetricsCommands(command, commandArgs);
   } else if (category === "bootstrap") {
     await handleBootstrapCommands(command, commandArgs);
+  } else if (category === "graph") {
+    await handleGraphCommands(command, commandArgs);
   } else {
     throw new Error(`Unknown category: ${category}`);
   }
