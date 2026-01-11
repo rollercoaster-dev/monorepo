@@ -49,6 +49,7 @@ if (args.length === 0) {
   console.error("  metrics list [issue-number]");
   console.error("  metrics summary");
   console.error("  bootstrap mine-prs [limit]");
+  console.error("  graph parse <package-path> [package-name]");
   console.error("  graph what-calls <name>");
   console.error("  graph what-depends-on <name>");
   console.error("  graph blast-radius <file>");
