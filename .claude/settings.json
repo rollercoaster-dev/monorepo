@@ -37,7 +37,7 @@
           {
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
-            "description": "Refresh code graph on session start"
+            "description": "Refresh code graph on session resume"
           }
         ]
       }

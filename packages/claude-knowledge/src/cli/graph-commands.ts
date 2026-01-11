@@ -47,7 +47,8 @@ export async function handleGraphCommands(
     const storeResult = storeGraph(parseResult, parseResult.package);
 
     // Always output final JSON (allows hooks to detect success/failure)
-    logger.info(
+    // Use stdout.write to avoid logger formatting that would corrupt JSON
+    process.stdout.write(
       JSON.stringify(
         {
           command: "parse",
@@ -61,7 +62,7 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "what-calls") {
     // Usage: graph what-calls <name>
@@ -71,12 +72,12 @@ export async function handleGraphCommands(
     }
 
     const results = whatCalls(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "what-calls", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "what-depends-on") {
     // Usage: graph what-depends-on <name>
@@ -86,12 +87,12 @@ export async function handleGraphCommands(
     }
 
     const results = whatDependsOn(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "what-depends-on", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "blast-radius") {
     // Usage: graph blast-radius <file>
@@ -101,12 +102,12 @@ export async function handleGraphCommands(
     }
 
     const results = blastRadius(file);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "blast-radius", file, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "find") {
     // Usage: graph find <name> [type]
@@ -131,19 +132,19 @@ export async function handleGraphCommands(
     }
 
     const results = findEntities(name, type);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "find", name, type, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "exports") {
     // Usage: graph exports [package]
     const pkg = filteredArgs[0];
 
     const results = getExports(pkg);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         {
           query: "exports",
@@ -153,14 +154,14 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "summary") {
     // Usage: graph summary [package]
     const pkg = filteredArgs[0];
 
     const summary = getSummary(pkg);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         {
           query: "summary",
@@ -169,7 +170,7 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "callers") {
     // Usage: graph callers <function-name>
@@ -179,12 +180,12 @@ export async function handleGraphCommands(
     }
 
     const results = getCallers(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "callers", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else {
     throw new Error(

@@ -32,7 +32,7 @@ bun run checkpoint graph <command> [args...]
 Parse a package directory and store the graph data:
 
 ```bash
-bun run checkpoint graph parse <package-path> [package-name]
+bun run checkpoint graph parse <package-path> [package-name] [--quiet]
 ```
 
 Example:
@@ -177,7 +177,9 @@ bun run checkpoint graph find Credential
 
 ## Output Format
 
-All commands return JSON with:
+### Query Commands
+
+Most commands (`what-calls`, `what-depends-on`, `blast-radius`, `find`, `exports`, `callers`) return JSON with:
 
 - `query`: The command type
 - `results`: Array of matching entities/relationships
@@ -191,3 +193,25 @@ Entity objects include:
 - `package`: Package containing the entity
 - `file`: File path
 - `line`: Line number (where applicable)
+
+### Parse Command
+
+The `parse` command returns a different schema:
+
+- `command`: "parse"
+- `packagePath`: Path that was parsed
+- `packageName`: Resolved package name
+- `files`: Number of files parsed
+- `entities`: Number of entities found
+- `relationships`: Number of relationships found
+- `stored`: Object with `entities` and `relationships` counts stored to database
+
+### Summary Command
+
+The `summary` command returns statistics without a `results` array:
+
+- `query`: "summary"
+- `package`: Package name or "all"
+- `totalEntities`: Total entity count
+- `totalRelationships`: Total relationship count
+- `byType`: Breakdown of entities by type
