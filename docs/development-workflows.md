@@ -14,7 +14,7 @@ This document details the development workflows available in the monorepo.
 
 Use for complex architectural changes or learning/teaching scenarios.
 
-```
+```text
 GATE 1: Issue Review → Fetch issue, check blockers
 GATE 2: Feature Dev  → 7-phase workflow with plan review
 GATE 3: Pre-PR Review → pr-review-toolkit + openbadges-compliance
@@ -34,7 +34,7 @@ At each gate:
 
 Use for simple features with clear requirements.
 
-```
+```text
 Phase 1: Research    → Fetch issue, create plan (NO GATE)
 Phase 2: Implement   → atomic-developer executes plan (NO GATE)
 Phase 3: Review      → pr-review-toolkit + auto-fix loop
@@ -46,7 +46,7 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 
 Use for batch processing entire milestones with dependency awareness.
 
-```
+```text
 Phase 1: Plan        → Analyze dependencies, identify free issues
    GATE: If dependencies unclear → STOP for approval
 Phase 2: Execute     → Spawn parallel /auto-issue in worktrees (default: 3)
@@ -69,7 +69,7 @@ Run in tmux for SSH observability: `tmux new -s milestone && claude`
 
 ## Review Pipeline
 
-```
+```text
 LOCAL (pre-PR)                    CI (post-PR)
 ────────────────────────          ─────────────────
 pr-review-toolkit:code-reviewer   CodeRabbit

@@ -55,7 +55,7 @@ Each package has its own `CLAUDE.md` with package-specific patterns.
 
 ## Directory Structure
 
-```
+```text
 monorepo/
 ├── apps/
 │   ├── openbadges-modular-server/  # OB 2.0/3.0 API (Bun/Hono)

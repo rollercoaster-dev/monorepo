@@ -18,7 +18,7 @@ bun --filter <pkg> <cmd>   # Run command in specific package
 
 ## Project Structure
 
-```
+```text
 apps/
   openbadges-modular-server/  # OB 2.0/3.0 API server (Bun/Hono)
   openbadges-system/          # Vue 3 + Bun/Hono full-stack app

@@ -20,11 +20,11 @@ Complete these finalization steps before running `gh pr create`:
 
 Present findings grouped by severity:
 
-- **High priority (fix before PR)**: Security, bugs, breaking changes
+- **High-priority (fix before PR)**: Security, bugs, breaking changes
 - **Medium priority (should fix)**: Code quality, error handling
 - **Low priority (consider)**: Style, documentation
 
-Don't create PR until high priority issues are resolved.
+Don't create PR until high-priority issues are resolved.
 
 ### Why This Matters
 
