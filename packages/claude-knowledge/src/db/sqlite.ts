@@ -148,12 +148,15 @@ CREATE TABLE IF NOT EXISTS graph_entities (
 );
 
 -- Code graph relationships (calls, imports, exports, extends)
+-- Note: Only from_entity has FK constraint because to_entity can reference external
+-- modules (e.g., "external:fs") that don't exist in graph_entities
 CREATE TABLE IF NOT EXISTS graph_relationships (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   from_entity TEXT NOT NULL,
   to_entity TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('calls', 'imports', 'exports', 'extends', 'implements', 'defines')),
-  metadata TEXT
+  metadata TEXT,
+  FOREIGN KEY (from_entity) REFERENCES graph_entities(id) ON DELETE CASCADE
 );
 
 -- Indexes for code graph queries
@@ -164,6 +167,8 @@ CREATE INDEX IF NOT EXISTS idx_graph_entities_package ON graph_entities(package)
 CREATE INDEX IF NOT EXISTS idx_graph_rel_from ON graph_relationships(from_entity);
 CREATE INDEX IF NOT EXISTS idx_graph_rel_to ON graph_relationships(to_entity);
 CREATE INDEX IF NOT EXISTS idx_graph_rel_type ON graph_relationships(type);
+-- Prevent duplicate relationships
+CREATE UNIQUE INDEX IF NOT EXISTS idx_graph_rel_unique ON graph_relationships(from_entity, to_entity, type);
 `;
 
 export function getDatabase(dbPath?: string): Database {

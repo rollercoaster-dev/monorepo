@@ -41,64 +41,85 @@ function storeGraph(data: GraphData, packageName: string): void {
 
   logger.info(`Storing graph for package: ${packageName}`);
 
-  // Clear existing data for this package
-  const deleteRelStmt = db.prepare(`
-    DELETE FROM graph_relationships WHERE from_entity IN
-    (SELECT id FROM graph_entities WHERE package = ?)
-  `);
-  const deleteEntStmt = db.prepare(`
-    DELETE FROM graph_entities WHERE package = ?
-  `);
+  // Use transaction for atomic writes - all or nothing
+  const storeTransaction = db.transaction(() => {
+    // Clear existing data for this package
+    // Delete relationships where this package's entities are the source
+    db.prepare(
+      `
+      DELETE FROM graph_relationships WHERE from_entity IN
+      (SELECT id FROM graph_entities WHERE package = ?)
+    `,
+    ).run(packageName);
 
-  deleteRelStmt.run(packageName);
-  deleteEntStmt.run(packageName);
-  logger.info(`  Cleared existing data for package: ${packageName}`);
+    // Delete relationships where this package's entities are the target
+    db.prepare(
+      `
+      DELETE FROM graph_relationships WHERE to_entity IN
+      (SELECT id FROM graph_entities WHERE package = ?)
+    `,
+    ).run(packageName);
 
-  // Insert entities
-  const insertEntity = db.prepare(`
-    INSERT OR REPLACE INTO graph_entities (id, type, name, file_path, line_number, exported, package)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
+    // Delete entities for this package
+    db.prepare(
+      `
+      DELETE FROM graph_entities WHERE package = ?
+    `,
+    ).run(packageName);
 
-  let entitiesInserted = 0;
-  for (const entity of data.entities) {
-    try {
-      insertEntity.run(
-        entity.id,
-        entity.type,
-        entity.name,
-        entity.filePath,
-        entity.lineNumber,
-        entity.exported ? 1 : 0,
-        packageName,
-      );
-      entitiesInserted++;
-    } catch (error) {
-      logger.warn(`  Failed to insert entity ${entity.id}: ${error}`);
+    logger.info(`  Cleared existing data for package: ${packageName}`);
+
+    // Insert entities
+    const insertEntity = db.prepare(`
+      INSERT OR REPLACE INTO graph_entities (id, type, name, file_path, line_number, exported, package)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    let entitiesCount = 0;
+    for (const entity of data.entities) {
+      try {
+        insertEntity.run(
+          entity.id,
+          entity.type,
+          entity.name,
+          entity.filePath,
+          entity.lineNumber,
+          entity.exported ? 1 : 0,
+          packageName,
+        );
+        entitiesCount++;
+      } catch (error) {
+        logger.warn(`  Failed to insert entity ${entity.id}: ${error}`);
+      }
     }
-  }
-  logger.info(`  Inserted ${entitiesInserted} entities`);
+    logger.info(`  Inserted ${entitiesCount} entities`);
 
-  // Insert relationships
-  const insertRel = db.prepare(`
-    INSERT INTO graph_relationships (from_entity, to_entity, type)
-    VALUES (?, ?, ?)
-  `);
+    // Insert relationships (OR IGNORE to skip duplicates from unique index)
+    const insertRel = db.prepare(`
+      INSERT OR IGNORE INTO graph_relationships (from_entity, to_entity, type)
+      VALUES (?, ?, ?)
+    `);
 
-  let relationshipsInserted = 0;
-  for (const rel of data.relationships) {
-    try {
-      insertRel.run(rel.from, rel.to, rel.type);
-      relationshipsInserted++;
-    } catch (error) {
-      logger.warn(
-        `  Failed to insert relationship ${rel.from} -> ${rel.to}: ${error}`,
-      );
+    let relsCount = 0;
+    for (const rel of data.relationships) {
+      try {
+        insertRel.run(rel.from, rel.to, rel.type);
+        relsCount++;
+      } catch (error) {
+        logger.warn(
+          `  Failed to insert relationship ${rel.from} -> ${rel.to}: ${error}`,
+        );
+      }
     }
-  }
-  logger.info(`  Inserted ${relationshipsInserted} relationships`);
+    logger.info(`  Inserted ${relsCount} relationships`);
 
-  // Verify storage
+    return { entitiesCount, relsCount };
+  });
+
+  // Execute the transaction
+  const result = storeTransaction();
+
+  // Verify storage (outside transaction - read-only)
   const entityCount = db
     .query(`SELECT COUNT(*) as count FROM graph_entities WHERE package = ?`)
     .get(packageName) as { count: number };
@@ -112,6 +133,9 @@ function storeGraph(data: GraphData, packageName: string): void {
   logger.info(`Package: ${packageName}`);
   logger.info(`Entities in DB: ${entityCount.count}`);
   logger.info(`Relationships in DB: ${relCount.count}`);
+  logger.debug(
+    `Transaction: ${result.entitiesCount} entities, ${result.relsCount} relationships`,
+  );
 
   // Output summary as JSON (program output)
   process.stdout.write(

@@ -11,9 +11,47 @@
  */
 
 import { getDatabase } from "../../src/db/sqlite";
-import { execSync } from "child_process";
-import { readFileSync, statSync } from "fs";
+import { execFileSync } from "child_process";
+import { readFileSync, statSync, readdirSync } from "fs";
+import { join } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+
+// Safe execution helper - prevents command injection by using execFileSync with args array
+function safeExecLines(cmd: string, args: string[]): string[] {
+  try {
+    const out = execFileSync(cmd, args, { encoding: "utf-8" });
+    return out.split("\n").filter(Boolean);
+  } catch {
+    // grep exits 1 on "no matches", find may fail on missing dirs
+    return [];
+  }
+}
+
+// Escape regex special characters for grep patterns
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Recursively find .ts files (safer than shell find command)
+function findTsFiles(dir: string): string[] {
+  const files: string[] = [];
+  try {
+    const entries = readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== "node_modules" && entry.name !== ".git") {
+          files.push(...findTsFiles(fullPath));
+        }
+      } else if (entry.name.endsWith(".ts") && !entry.name.endsWith(".d.ts")) {
+        files.push(fullPath);
+      }
+    }
+  } catch {
+    // Directory doesn't exist or not readable
+  }
+  return files;
+}
 
 interface BenchmarkResult {
   name: string;
@@ -105,7 +143,19 @@ function runGraphQuery(
   throw new Error(`Unknown query: ${query}`);
 }
 
-// Run grep-based equivalent
+// Calculate total bytes of .ts files in a directory
+function calculateBytesRead(packagePath: string): number {
+  const allFiles = findTsFiles(packagePath);
+  return allFiles.reduce((sum, file) => {
+    try {
+      return sum + statSync(file).size;
+    } catch {
+      return sum;
+    }
+  }, 0);
+}
+
+// Run grep-based equivalent (safe implementation using execFileSync)
 function runGrepQuery(
   query: string,
   args: string[],
@@ -114,75 +164,34 @@ function runGrepQuery(
   if (query === "what-depends-on") {
     const name = args[0];
     const { result, timeMs } = timeExecution(() => {
-      try {
-        // grep for import statements that reference the name
-        const grepResult = execSync(
-          `grep -r "import.*${name}" "${packagePath}" --include="*.ts" 2>/dev/null || true`,
-          { encoding: "utf-8" },
-        );
-        return grepResult.split("\n").filter(Boolean);
-      } catch {
-        return [];
-      }
+      // grep for import statements that reference the name
+      // Using execFileSync with args array prevents command injection
+      return safeExecLines("grep", [
+        "-r",
+        "-E",
+        `import.*${escapeRegex(name)}`,
+        packagePath,
+        "--include=*.ts",
+      ]);
     });
 
-    // Estimate bytes read (grep reads all matching files)
-    let bytesRead = 0;
-    try {
-      const allFiles = execSync(
-        `find "${packagePath}" -name "*.ts" 2>/dev/null || true`,
-        { encoding: "utf-8" },
-      )
-        .split("\n")
-        .filter(Boolean);
-      bytesRead = allFiles.reduce((sum, file) => {
-        try {
-          return sum + statSync(file).size;
-        } catch {
-          return sum;
-        }
-      }, 0);
-    } catch {
-      // ignore
-    }
-
+    const bytesRead = calculateBytesRead(packagePath);
     return { results: result, timeMs, bytesRead };
   }
 
   if (query === "find") {
     const name = args[0];
     const { result, timeMs } = timeExecution(() => {
-      try {
-        // grep for the name (function, class, etc.)
-        const grepResult = execSync(
-          `grep -rn "${name}" "${packagePath}" --include="*.ts" 2>/dev/null || true`,
-          { encoding: "utf-8" },
-        );
-        return grepResult.split("\n").filter(Boolean);
-      } catch {
-        return [];
-      }
+      // grep for the name (function, class, etc.)
+      return safeExecLines("grep", [
+        "-rn",
+        escapeRegex(name),
+        packagePath,
+        "--include=*.ts",
+      ]);
     });
 
-    let bytesRead = 0;
-    try {
-      const allFiles = execSync(
-        `find "${packagePath}" -name "*.ts" 2>/dev/null || true`,
-        { encoding: "utf-8" },
-      )
-        .split("\n")
-        .filter(Boolean);
-      bytesRead = allFiles.reduce((sum, file) => {
-        try {
-          return sum + statSync(file).size;
-        } catch {
-          return sum;
-        }
-      }, 0);
-    } catch {
-      // ignore
-    }
-
+    const bytesRead = calculateBytesRead(packagePath);
     return { results: result, timeMs, bytesRead };
   }
 
@@ -195,52 +204,30 @@ function runGrepQuery(
       // 3. For each export, grep for imports
       // This is a simplified simulation - real blast radius is much harder with grep
 
-      try {
-        // Find files that import from this file
-        const grepResult = execSync(
-          `grep -rln "from.*${file}" "${packagePath}" --include="*.ts" 2>/dev/null || true`,
-          { encoding: "utf-8" },
-        );
-        const importingFiles = grepResult.split("\n").filter(Boolean);
+      // Find files that import from this file
+      const importingFiles = safeExecLines("grep", [
+        "-rln",
+        "-E",
+        `from.*${escapeRegex(file)}`,
+        packagePath,
+        "--include=*.ts",
+      ]);
 
-        // For each importing file, we'd need to read it to understand what's imported
-        // This is where the complexity explodes
-        const results: string[] = [];
-        for (const importFile of importingFiles) {
-          try {
-            const content = readFileSync(importFile, "utf-8");
-            results.push(`${importFile}: ${content.length} bytes`);
-          } catch {
-            // ignore
-          }
+      // For each importing file, we'd need to read it to understand what's imported
+      // This is where the complexity explodes
+      const results: string[] = [];
+      for (const importFile of importingFiles) {
+        try {
+          const content = readFileSync(importFile, "utf-8");
+          results.push(`${importFile}: ${content.length} bytes`);
+        } catch {
+          // ignore
         }
-        return results;
-      } catch {
-        return [];
       }
+      return results;
     });
 
-    // Estimate bytes read - for blast radius, we need to read many files
-    let bytesRead = 0;
-    try {
-      const allFiles = execSync(
-        `find "${packagePath}" -name "*.ts" 2>/dev/null || true`,
-        { encoding: "utf-8" },
-      )
-        .split("\n")
-        .filter(Boolean);
-      // Assume we read all files at least once for blast radius analysis
-      bytesRead = allFiles.reduce((sum, file) => {
-        try {
-          return sum + statSync(file).size;
-        } catch {
-          return sum;
-        }
-      }, 0);
-    } catch {
-      // ignore
-    }
-
+    const bytesRead = calculateBytesRead(packagePath);
     return { results: result, timeMs, bytesRead };
   }
 

@@ -31,6 +31,7 @@ interface Relationship {
 }
 
 interface ParseResult {
+  package: string;
   entities: Entity[];
   relationships: Relationship[];
   stats: {
@@ -41,15 +42,30 @@ interface ParseResult {
   };
 }
 
-// Generate a unique ID for an entity
+// Package name for globally unique IDs (set from command line or derived from path)
+let packageName: string = "";
+
+// Generate a globally unique ID for an entity (includes package prefix)
 function makeEntityId(filePath: string, name: string, type: string): string {
   const cleanPath = filePath.replace(/\\/g, "/");
-  return `${cleanPath}:${type}:${name}`;
+  return `${packageName}:${cleanPath}:${type}:${name}`;
 }
 
-// Generate a file entity ID
+// Generate a file entity ID (includes package prefix)
 function makeFileId(filePath: string): string {
-  return `file:${filePath.replace(/\\/g, "/")}`;
+  return `${packageName}:file:${filePath.replace(/\\/g, "/")}`;
+}
+
+// Derive package name from path (e.g., "packages/rd-logger/src" -> "rd-logger")
+function derivePackageName(packagePath: string): string {
+  const parts = packagePath.replace(/\\/g, "/").split("/");
+  // Look for "packages/X" pattern
+  const packagesIdx = parts.indexOf("packages");
+  if (packagesIdx !== -1 && parts.length > packagesIdx + 1) {
+    return parts[packagesIdx + 1];
+  }
+  // Fallback: use the directory name
+  return parts.filter(Boolean).pop() || "unknown";
 }
 
 // Find all .ts files recursively, excluding test files
@@ -411,6 +427,7 @@ function parsePackage(packagePath: string): ParseResult {
   });
 
   return {
+    package: packageName,
     entities: allEntities,
     relationships: allRelationships,
     stats: {
@@ -424,7 +441,9 @@ function parsePackage(packagePath: string): ParseResult {
 
 // Main
 const packagePath = process.argv[2] || "packages/rd-logger/src";
-logger.info(`Parsing package: ${packagePath}`);
+// Package name can be provided as second arg, or derived from path
+packageName = process.argv[3] || derivePackageName(packagePath);
+logger.info(`Parsing package: ${packagePath} (name: ${packageName})`);
 
 const result = parsePackage(packagePath);
 

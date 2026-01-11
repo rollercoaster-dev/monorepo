@@ -28,14 +28,16 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph what-calls <name>");
     }
 
+    // JOIN to target entity by name instead of LIKE on ID (more precise, uses indexes)
     const results = db
       .query<QueryResult, [string]>(
         `
-      SELECT DISTINCT ge.name, ge.file_path, ge.line_number, ge.type
+      SELECT DISTINCT caller.name, caller.file_path, caller.line_number, caller.type
       FROM graph_relationships gr
-      JOIN graph_entities ge ON gr.from_entity = ge.id
-      WHERE gr.to_entity LIKE ? AND gr.type = 'calls'
-      ORDER BY ge.file_path, ge.line_number
+      JOIN graph_entities caller ON gr.from_entity = caller.id
+      JOIN graph_entities target ON gr.to_entity = target.id
+      WHERE target.name LIKE ? AND gr.type = 'calls'
+      ORDER BY caller.file_path, caller.line_number
     `,
       )
       .all(`%${name}%`);
@@ -55,15 +57,17 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph what-depends-on <name>");
     }
 
+    // JOIN to target entity by name instead of LIKE on ID (more precise, uses indexes)
     const results = db
       .query<QueryResult & { relationship_type: string }, [string]>(
         `
-      SELECT DISTINCT ge.name, ge.file_path, gr.type as relationship_type
+      SELECT DISTINCT dependent.name, dependent.file_path, gr.type as relationship_type
       FROM graph_relationships gr
-      JOIN graph_entities ge ON gr.from_entity = ge.id
-      WHERE gr.to_entity LIKE ?
+      JOIN graph_entities dependent ON gr.from_entity = dependent.id
+      JOIN graph_entities target ON gr.to_entity = target.id
+      WHERE target.name LIKE ?
         AND gr.type IN ('imports', 'extends', 'implements', 'calls')
-      ORDER BY gr.type, ge.file_path
+      ORDER BY gr.type, dependent.file_path
     `,
       )
       .all(`%${name}%`);
@@ -247,17 +251,19 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph callers <function-name>");
     }
 
+    // JOIN to target entity by name and type instead of LIKE on ID
     const results = db
       .query<QueryResult, [string]>(
         `
-      SELECT ge.name, ge.file_path, ge.line_number, ge.type
+      SELECT caller.name, caller.file_path, caller.line_number, caller.type
       FROM graph_relationships gr
-      JOIN graph_entities ge ON gr.from_entity = ge.id
-      WHERE gr.to_entity LIKE ? AND gr.type = 'calls'
-      ORDER BY ge.file_path
+      JOIN graph_entities caller ON gr.from_entity = caller.id
+      JOIN graph_entities target ON gr.to_entity = target.id
+      WHERE target.name = ? AND target.type = 'function' AND gr.type = 'calls'
+      ORDER BY caller.file_path
     `,
       )
-      .all(`%:function:${name}`);
+      .all(name);
 
     logger.info(
       JSON.stringify(
