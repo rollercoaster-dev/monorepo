@@ -3,20 +3,30 @@
  * Part of Issue #394: ts-morph static analysis for codebase structure (Tier 1).
  */
 
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { storeGraph, clearPackage } from "./store";
-import { getDatabase, resetDatabase } from "../db/sqlite";
+import { getDatabase, resetDatabase, closeDatabase } from "../db/sqlite";
 import type { ParseResult } from "./types";
+import { unlink, mkdir } from "fs/promises";
+import { existsSync } from "fs";
+
+const TEST_DB = ".claude/test-graph-store.db";
 
 describe("store", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset database before each test
-    resetDatabase();
+    if (!existsSync(".claude")) await mkdir(".claude", { recursive: true });
+    resetDatabase(TEST_DB);
   });
 
-  afterAll(() => {
+  afterEach(async () => {
     // Clean up
-    resetDatabase();
+    closeDatabase();
+    try {
+      await unlink(TEST_DB);
+    } catch {
+      /* ignore */
+    }
   });
 
   const createTestParseResult = (

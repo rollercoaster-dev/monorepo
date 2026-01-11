@@ -3,7 +3,7 @@
  * Part of Issue #394: ts-morph static analysis for codebase structure (Tier 1).
  */
 
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import {
   whatCalls,
   whatDependsOn,
@@ -14,13 +14,18 @@ import {
   getSummary,
 } from "./query";
 import { storeGraph } from "./store";
-import { resetDatabase } from "../db/sqlite";
+import { resetDatabase, closeDatabase } from "../db/sqlite";
 import type { ParseResult } from "./types";
+import { unlink, mkdir } from "fs/promises";
+import { existsSync } from "fs";
+
+const TEST_DB = ".claude/test-graph-query.db";
 
 describe("query", () => {
   // Set up test data before each test
-  beforeEach(() => {
-    resetDatabase();
+  beforeEach(async () => {
+    if (!existsSync(".claude")) await mkdir(".claude", { recursive: true });
+    resetDatabase(TEST_DB);
 
     // Create a test graph with known relationships
     const testData: ParseResult = {
@@ -164,8 +169,13 @@ describe("query", () => {
     storeGraph(testData, "test-pkg");
   });
 
-  afterAll(() => {
-    resetDatabase();
+  afterEach(async () => {
+    closeDatabase();
+    try {
+      await unlink(TEST_DB);
+    } catch {
+      /* ignore */
+    }
   });
 
   describe("whatCalls", () => {
