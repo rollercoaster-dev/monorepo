@@ -4,7 +4,7 @@
 
 ## Atomic Commits
 
-Each commit must be:
+Each commit should be:
 
 - Self-contained (works on its own)
 - Single purpose (one logical change)
@@ -31,7 +31,7 @@ Scopes: rd-logger, openbadges-types, openbadges-ui, openbadges-server, openbadge
 2. Run related tests: `bun test <test-file>`
 3. Review changes: `git diff --staged`
 
-## Do NOT Commit
+## Avoid Committing
 
 - Files with secrets (.env, credentials)
 - Debug code (console.log statements)
