@@ -8,12 +8,16 @@ Execute the gated workflow for issue #$ARGUMENTS.
 
 ## Shared References
 
-This workflow uses patterns from [shared/](../shared/) and executable helpers from `claude-workflows`:
+This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
+
+**Claude Code Skills (auto-invoked):**
+
+- `checkpoint-workflow` - Workflow state persistence (find, create, log-action, log-commit)
+- `checkpoint-session` - Session lifecycle and learning extraction
 
 **Documentation patterns (for reference):**
 
 - [telegram-helpers.md](../shared/telegram-helpers.md) - Telegram MCP integration
-- [checkpoint-patterns.md](../shared/checkpoint-patterns.md) - Workflow state persistence
 - [validation-commands.md](../shared/validation-commands.md) - Type-check, lint, test
 - [conventional-commits.md](../shared/conventional-commits.md) - Commit message format
 
