@@ -22,13 +22,28 @@ export const STALE_THRESHOLD_MS = STALE_THRESHOLD_HOURS * 60 * 60 * 1000;
 export function isValidSessionMetadata(
   obj: unknown,
 ): obj is SessionMetadataFile {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    typeof (obj as SessionMetadataFile).sessionId === "string" &&
-    typeof (obj as SessionMetadataFile).learningsInjected === "number" &&
-    typeof (obj as SessionMetadataFile).startTime === "string"
-  );
+  if (
+    typeof obj !== "object" ||
+    obj === null ||
+    typeof (obj as SessionMetadataFile).sessionId !== "string" ||
+    typeof (obj as SessionMetadataFile).learningsInjected !== "number" ||
+    typeof (obj as SessionMetadataFile).startTime !== "string"
+  ) {
+    return false;
+  }
+
+  // Validate optional issueNumber if present
+  const metadata = obj as SessionMetadataFile;
+  if (
+    metadata.issueNumber !== undefined &&
+    (typeof metadata.issueNumber !== "number" ||
+      !Number.isInteger(metadata.issueNumber) ||
+      metadata.issueNumber <= 0)
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -57,8 +72,13 @@ export async function ensureMetadataDir(): Promise<void> {
  * Finds the most recent session metadata file.
  * Also cleans up stale files older than 24 hours.
  * Returns null if no files found.
+ *
+ * @param sessionId - Optional sessionId to match. If provided, only returns files
+ *                    for that specific session, preventing cross-session correlation.
  */
-export async function findLatestSessionMetadataFile(): Promise<string | null> {
+export async function findLatestSessionMetadataFile(
+  sessionId?: string,
+): Promise<string | null> {
   try {
     await ensureMetadataDir();
     const files = await readdir(SESSION_METADATA_DIR);
@@ -105,9 +125,10 @@ export async function findLatestSessionMetadataFile(): Promise<string | null> {
       }
     }
 
-    // Filter to non-stale files and sort by timestamp descending
+    // Filter to non-stale files and optionally by sessionId
     const validFiles = sessionFiles
       .filter((f) => now - f.timestamp <= STALE_THRESHOLD_MS)
+      .filter((f) => (sessionId ? f.sessionId === sessionId : true))
       .sort((a, b) => b.timestamp - a.timestamp);
 
     if (validFiles.length === 0) return null;

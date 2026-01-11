@@ -334,8 +334,13 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     if (metadataFilePath) {
       try {
         await unlink(metadataFilePath);
-      } catch {
+      } catch (error) {
         // Non-fatal: file cleanup is best-effort
+        logger.debug("Could not clean up session metadata file", {
+          file: metadataFilePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: "session-end",
+        });
       }
     }
   }

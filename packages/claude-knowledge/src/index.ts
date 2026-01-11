@@ -1,5 +1,5 @@
 // Phase 1: Execution State
-export { checkpoint } from "./checkpoint";
+export { checkpoint } from "./checkpoint/index";
 export { getDatabase, closeDatabase, resetDatabase } from "./db/sqlite";
 export type {
   Workflow,
