@@ -209,7 +209,21 @@ export async function getMistakesForFile(filePath: string): Promise<Mistake[]> {
 
   const rows = db.query<{ data: string }, [string]>(sql).all(filePath);
 
-  return rows.map((row) => JSON.parse(row.data) as Mistake);
+  // Transform rows to Mistake objects, skipping corrupted entries
+  const mistakes: Mistake[] = [];
+  for (const row of rows) {
+    try {
+      mistakes.push(JSON.parse(row.data) as Mistake);
+    } catch (error) {
+      logger.warn("Skipping corrupted mistake data", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.getMistakesForFile",
+        filePath,
+      });
+      // Continue with other rows - don't let one corrupted row break everything
+    }
+  }
+  return mistakes;
 }
 
 /**
@@ -235,5 +249,19 @@ export async function getPatternsForArea(codeArea: string): Promise<Pattern[]> {
 
   const rows = db.query<{ data: string }, [string]>(sql).all(codeArea);
 
-  return rows.map((row) => JSON.parse(row.data) as Pattern);
+  // Transform rows to Pattern objects, skipping corrupted entries
+  const patterns: Pattern[] = [];
+  for (const row of rows) {
+    try {
+      patterns.push(JSON.parse(row.data) as Pattern);
+    } catch (error) {
+      logger.warn("Skipping corrupted pattern data", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.getPatternsForArea",
+        codeArea,
+      });
+      // Continue with other rows - don't let one corrupted row break everything
+    }
+  }
+  return patterns;
 }
