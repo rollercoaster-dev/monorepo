@@ -18,6 +18,23 @@ export type {
 export { knowledge } from "./knowledge/index";
 export { hooks } from "./hooks";
 
+// Phase 2b: Code Graph (Tier 1 Static Analysis)
+export { graph } from "./graph/index";
+// Graph types exported with 'Graph' prefix to avoid conflicts with knowledge types
+export type {
+  Entity as GraphEntity,
+  Relationship as GraphRelationship,
+  EntityType as GraphEntityType,
+  RelationshipType as GraphRelationshipType,
+  ParseResult,
+  ParseStats,
+  StoreResult,
+  QueryResult as GraphQueryResult,
+  DependencyResult,
+  BlastRadiusResult,
+  GraphSummary,
+} from "./graph/types";
+
 // Phase 3: Workflow Retrospective
 export { analyzeWorkflow, storeWorkflowLearning } from "./retrospective";
 export {
