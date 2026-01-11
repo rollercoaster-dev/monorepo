@@ -133,6 +133,37 @@ CREATE TABLE IF NOT EXISTS context_metrics (
 -- Indexes for context metrics queries
 CREATE INDEX IF NOT EXISTS idx_context_metrics_session ON context_metrics(session_id);
 CREATE INDEX IF NOT EXISTS idx_context_metrics_issue ON context_metrics(issue_number);
+
+-- Code graph entities (functions, classes, files, types)
+-- Part of Issue #431 Experiment 3: Code Graph Prototype
+CREATE TABLE IF NOT EXISTS graph_entities (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK (type IN ('function', 'class', 'type', 'interface', 'variable', 'file')),
+  name TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  line_number INTEGER,
+  exported INTEGER DEFAULT 0,
+  package TEXT,
+  metadata TEXT
+);
+
+-- Code graph relationships (calls, imports, exports, extends)
+CREATE TABLE IF NOT EXISTS graph_relationships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_entity TEXT NOT NULL,
+  to_entity TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('calls', 'imports', 'exports', 'extends', 'implements', 'defines')),
+  metadata TEXT
+);
+
+-- Indexes for code graph queries
+CREATE INDEX IF NOT EXISTS idx_graph_entities_name ON graph_entities(name);
+CREATE INDEX IF NOT EXISTS idx_graph_entities_file ON graph_entities(file_path);
+CREATE INDEX IF NOT EXISTS idx_graph_entities_type ON graph_entities(type);
+CREATE INDEX IF NOT EXISTS idx_graph_entities_package ON graph_entities(package);
+CREATE INDEX IF NOT EXISTS idx_graph_rel_from ON graph_relationships(from_entity);
+CREATE INDEX IF NOT EXISTS idx_graph_rel_to ON graph_relationships(to_entity);
+CREATE INDEX IF NOT EXISTS idx_graph_rel_type ON graph_relationships(type);
 `;
 
 export function getDatabase(dbPath?: string): Database {

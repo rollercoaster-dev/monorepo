@@ -13,7 +13,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@rollercoaster-dev/rd-logger": "workspace:*"
+    "@rollercoaster-dev/rd-logger": "workspace:*",
+    "tree-sitter-wasms": "0.1.13",
+    "ts-morph": "27.0.2",
+    "web-tree-sitter": "0.26.3"
   },
   "devDependencies": {
     "@rollercoaster-dev/shared-config": "workspace:*"

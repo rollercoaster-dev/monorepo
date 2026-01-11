@@ -1,0 +1,155 @@
+#!/usr/bin/env bun
+/**
+ * Store parsed graph data in SQLite.
+ * Part of Issue #431 Experiment 3: Code Graph Prototype.
+ *
+ * Usage: bun parse-package.ts packages/rd-logger/src | bun store-graph.ts rd-logger
+ *        Or: bun store-graph.ts rd-logger < graph.json
+ */
+
+import { getDatabase } from "../../src/db/sqlite";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+
+interface Entity {
+  id: string;
+  type: "function" | "class" | "type" | "interface" | "variable" | "file";
+  name: string;
+  filePath: string;
+  lineNumber: number;
+  exported: boolean;
+}
+
+interface Relationship {
+  from: string;
+  to: string;
+  type: "calls" | "imports" | "exports" | "extends" | "implements" | "defines";
+}
+
+interface GraphData {
+  entities: Entity[];
+  relationships: Relationship[];
+  stats?: {
+    filesScanned: number;
+    filesSkipped: number;
+    entitiesByType: Record<string, number>;
+    relationshipsByType: Record<string, number>;
+  };
+}
+
+function storeGraph(data: GraphData, packageName: string): void {
+  const db = getDatabase();
+
+  logger.info(`Storing graph for package: ${packageName}`);
+
+  // Clear existing data for this package
+  const deleteRelStmt = db.prepare(`
+    DELETE FROM graph_relationships WHERE from_entity IN
+    (SELECT id FROM graph_entities WHERE package = ?)
+  `);
+  const deleteEntStmt = db.prepare(`
+    DELETE FROM graph_entities WHERE package = ?
+  `);
+
+  deleteRelStmt.run(packageName);
+  deleteEntStmt.run(packageName);
+  logger.info(`  Cleared existing data for package: ${packageName}`);
+
+  // Insert entities
+  const insertEntity = db.prepare(`
+    INSERT OR REPLACE INTO graph_entities (id, type, name, file_path, line_number, exported, package)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  let entitiesInserted = 0;
+  for (const entity of data.entities) {
+    try {
+      insertEntity.run(
+        entity.id,
+        entity.type,
+        entity.name,
+        entity.filePath,
+        entity.lineNumber,
+        entity.exported ? 1 : 0,
+        packageName,
+      );
+      entitiesInserted++;
+    } catch (error) {
+      logger.warn(`  Failed to insert entity ${entity.id}: ${error}`);
+    }
+  }
+  logger.info(`  Inserted ${entitiesInserted} entities`);
+
+  // Insert relationships
+  const insertRel = db.prepare(`
+    INSERT INTO graph_relationships (from_entity, to_entity, type)
+    VALUES (?, ?, ?)
+  `);
+
+  let relationshipsInserted = 0;
+  for (const rel of data.relationships) {
+    try {
+      insertRel.run(rel.from, rel.to, rel.type);
+      relationshipsInserted++;
+    } catch (error) {
+      logger.warn(
+        `  Failed to insert relationship ${rel.from} -> ${rel.to}: ${error}`,
+      );
+    }
+  }
+  logger.info(`  Inserted ${relationshipsInserted} relationships`);
+
+  // Verify storage
+  const entityCount = db
+    .query(`SELECT COUNT(*) as count FROM graph_entities WHERE package = ?`)
+    .get(packageName) as { count: number };
+  const relCount = db
+    .query(
+      `SELECT COUNT(*) as count FROM graph_relationships WHERE from_entity IN (SELECT id FROM graph_entities WHERE package = ?)`,
+    )
+    .get(packageName) as { count: number };
+
+  logger.info("=== Storage Complete ===");
+  logger.info(`Package: ${packageName}`);
+  logger.info(`Entities in DB: ${entityCount.count}`);
+  logger.info(`Relationships in DB: ${relCount.count}`);
+
+  // Output summary as JSON (program output)
+  process.stdout.write(
+    JSON.stringify(
+      {
+        success: true,
+        package: packageName,
+        entitiesStored: entityCount.count,
+        relationshipsStored: relCount.count,
+      },
+      null,
+      2,
+    ) + "\n",
+  );
+}
+
+// Main
+const packageName = process.argv[2];
+if (!packageName) {
+  logger.info("Usage: bun store-graph.ts <package-name>");
+  logger.info("Reads graph JSON from stdin and stores in SQLite.");
+  logger.info(
+    "Example: bun parse-package.ts packages/rd-logger/src | bun store-graph.ts rd-logger",
+  );
+  process.exit(1);
+}
+
+// Read from stdin
+const input = await Bun.stdin.text();
+if (!input.trim()) {
+  logger.error("No input received. Pipe graph JSON to stdin.");
+  process.exit(1);
+}
+
+try {
+  const data: GraphData = JSON.parse(input);
+  storeGraph(data, packageName);
+} catch (error) {
+  logger.error(`Error parsing input JSON: ${error}`);
+  process.exit(1);
+}
