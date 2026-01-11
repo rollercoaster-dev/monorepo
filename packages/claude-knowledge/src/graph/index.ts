@@ -32,31 +32,48 @@ export { parsePackage } from "./parser";
 // Storage
 export { storeGraph, clearPackage } from "./store";
 
-// Query will be added in subsequent commits
-// export { whatCalls, whatDependsOn, blastRadius, findEntities, getExports, getCallers, getSummary } from './query';
+// Query
+export {
+  whatCalls,
+  whatDependsOn,
+  blastRadius,
+  findEntities,
+  getExports,
+  getCallers,
+  getSummary,
+} from "./query";
 
 // Import for graph object
 import { parsePackage } from "./parser";
 import { storeGraph, clearPackage } from "./store";
+import {
+  whatCalls,
+  whatDependsOn,
+  blastRadius,
+  findEntities,
+  getExports,
+  getCallers,
+  getSummary,
+} from "./query";
 
 /**
  * Unified graph API object.
  * Methods will be added as parser, store, and query modules are implemented.
  */
 export const graph = {
-  // Parser (Step 2)
+  // Parser
   parsePackage,
 
-  // Storage (Step 3)
+  // Storage
   storeGraph,
   clearPackage,
 
-  // Queries (Step 4)
-  // whatCalls: ...,
-  // whatDependsOn: ...,
-  // blastRadius: ...,
-  // findEntities: ...,
-  // getExports: ...,
-  // getCallers: ...,
-  // getSummary: ...,
+  // Queries
+  whatCalls,
+  whatDependsOn,
+  blastRadius,
+  findEntities,
+  getExports,
+  getCallers,
+  getSummary,
 };
