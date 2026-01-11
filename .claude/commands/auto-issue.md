@@ -657,12 +657,12 @@ Reviews triggered: CodeRabbit, Claude`);
 4. **Reset** - Type `reset` to go back to last good state and retry
 ```
 
-### Telegram Escalation (Interactive)
+### Telegram Escalation (Interactive) - AI_ESCALATION template
 
 When escalation is triggered, use `ask_user` to get user input via Telegram:
 
 ```typescript
-// Build escalation message
+// Build escalation message - AI_ESCALATION template
 const escalationMessage = `🚨 AUTO-ISSUE ESCALATION
 
 Issue: #$ARGUMENTS - <title>
