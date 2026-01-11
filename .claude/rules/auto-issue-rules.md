@@ -4,11 +4,11 @@
 
 ---
 
-## Permission Scope (CRITICAL)
+## Permission Scope
 
-The following permissions exist **ONLY for `/auto-issue` workflow**. Do NOT use them outside of `/auto-issue`:
+The following permissions exist **only for `/auto-issue` workflow**. Don't use them outside of `/auto-issue`:
 
-| Permission               | Allowed During | NOT Allowed During              |
+| Permission               | Allowed During | Not Allowed During              |
 | ------------------------ | -------------- | ------------------------------- |
 | `Edit` (without asking)  | `/auto-issue`  | Normal conversation             |
 | `Write` (without asking) | `/auto-issue`  | Normal conversation             |
@@ -16,7 +16,7 @@ The following permissions exist **ONLY for `/auto-issue` workflow**. Do NOT use 
 | `git push`               | `/auto-issue`  | Normal conversation (ask first) |
 | `gh pr create`           | `/auto-issue`  | Normal conversation (ask first) |
 
-**Outside of `/auto-issue`:** Always ask the user before using Edit, Write, git commit, git push, or gh pr create.
+**Outside of `/auto-issue`:** Ask the user before using Edit, Write, git commit, git push, or gh pr create.
 
 **During `/auto-issue`:** These permissions are pre-approved for autonomous operation.
 
@@ -27,20 +27,20 @@ The following permissions exist **ONLY for `/auto-issue` workflow**. Do NOT use 
 The `/auto-issue` workflow operates without human gates:
 
 - **No approval required** between phases
-- **Auto-fix attempts** for critical findings
+- **Auto-fix attempts** for high-priority findings
 - **Escalation only** when auto-fix fails repeatedly
 
-This is NOT "unsupervised" - you can intervene anytime by typing in the chat.
+This is not "unsupervised" - you can intervene anytime by typing in the chat.
 
 ---
 
 ## Classification Criteria
 
-### Critical vs Non-Critical
+### High Priority vs Standard
 
-Findings are classified based on review agent output:
+Findings are classified based on review agent output. Note: Agent outputs use their original terminology (e.g., "CRITICAL", "Severity") - the table below shows how to map these to priority classification:
 
-| Agent                  | CRITICAL                             | NON-CRITICAL                   |
+| Agent                  | High Priority                        | Standard                       |
 | ---------------------- | ------------------------------------ | ------------------------------ |
 | code-reviewer          | Confidence >= 91 OR label="Critical" | Confidence < 91                |
 | silent-failure-hunter  | Severity="CRITICAL"                  | Severity="HIGH"/"MEDIUM"/"LOW" |
@@ -49,9 +49,9 @@ Findings are classified based on review agent output:
 
 ### Classification Rules
 
-1. **Security issues are ALWAYS critical** regardless of confidence score
-2. **Breaking changes are ALWAYS critical**
-3. **If uncertain, classify as critical** (safer to over-fix than under-fix)
+1. **Security issues are high priority** regardless of confidence score
+2. **Breaking changes are high priority**
+3. **When uncertain, classify as high priority** (safer to over-fix than under-fix)
 4. **Conflicting classifications**: Use the stricter one
 
 ---
@@ -118,7 +118,7 @@ A finding is unresolved if:
 
 ### Escalation Report Requirements
 
-An escalation report MUST include:
+An escalation report should include:
 
 1. Issue number and title
 2. Branch name
@@ -133,7 +133,7 @@ An escalation report MUST include:
 
 ### User Intervention Commands
 
-The user can type these at ANY time:
+The user can type these at any time:
 
 | Command          | Effect                     |
 | ---------------- | -------------------------- |
@@ -186,13 +186,13 @@ This ensures user can always take control.
 
 ## Safety Rules
 
-### Do NOT Autonomously
+### Avoid Autonomous Actions For
 
-1. **Force push** - Ever
+1. **Force push** - Don't do this autonomously
 2. **Delete branches** other than the feature branch
 3. **Modify main/master** - Only work on feature branch
-4. **Skip all reviews** - At least one review must complete
-5. **Ignore security findings** - These are always critical
+4. **Skip all reviews** - At least one review should complete
+5. **Ignore security findings** - These are high priority
 
 ### Rollback on Failure
 

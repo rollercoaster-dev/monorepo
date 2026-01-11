@@ -4,13 +4,13 @@
 
 ## Default: Ask First
 
-Before modifying ANY file, ask yourself:
+Before modifying files, consider:
 
 1. Did the user explicitly request this change?
 2. Am I in an approved workflow that permits this?
 3. Has the relevant gate been passed?
 
-If NO to any: ASK before proceeding.
+If no to any: Ask before proceeding.
 
 ## Explicit Permission Patterns
 
@@ -23,7 +23,7 @@ These phrases grant file modification permission:
 - "create the file"
 - "proceed" (within gated workflow)
 
-These do NOT grant permission:
+These don't grant permission:
 
 - "what do you think?"
 - "how would you..."
@@ -38,7 +38,7 @@ These do NOT grant permission:
 - Analyzing code
 - Providing recommendations
 
-## Dangerous Operations (Require Explicit Permission)
+## Operations Requiring Permission
 
 - Creating new files (Write tool)
 - Editing existing files (Edit tool)

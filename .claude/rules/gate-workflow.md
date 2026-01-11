@@ -2,39 +2,41 @@
 
 **Applies to:** `/work-on-issue`, orchestrated workflows
 
-## HARD RULES - Non-Negotiable
+## Gate Requirements
 
-### Rule 1: STOP Means STOP
+Gates are checkpoints that require explicit user approval. These are not suggestions - workflows cannot proceed past a gate without approval.
 
-When a workflow says "STOP and wait" or "GATE":
+### Guideline 1: Gates Require Explicit Approval
 
-- Literally stop executing
+When a workflow indicates a gate checkpoint:
+
+- Pause execution
 - Show the required information
 - Wait for explicit user approval
 - "proceed", "yes", "go", "approved" are valid approvals
-- Silence is NOT approval
-- "okay" or "looks good" without "proceed" is NOT approval
+- Silence is not approval
+- "okay" or "looks good" without "proceed" is not approval
 
-### Rule 2: One Gate at a Time
+### Guideline 2: One Gate at a Time
 
-- Do not batch multiple gates
-- Do not preview future gates
-- Do not assume approval for subsequent gates
+- Don't batch multiple gates
+- Don't preview future gates
+- Don't assume approval for subsequent gates
 - Complete current gate fully before mentioning next
 
-### Rule 3: Show, Don't Summarize
+### Guideline 3: Show Complete Information
 
 At gates, show:
 
-- The FULL issue content (verbatim)
-- The FULL plan content (every line)
-- The FULL diff for review
+- The full issue content (verbatim)
+- The full plan content (every line)
+- The full diff for review
 
-Never say "Here's a summary" at a gate.
+Avoid summarizing at gates - show the complete content.
 
-### Rule 4: No File Changes Without Gate Approval
+### Guideline 4: File Changes After Gate Approval
 
-Before any file modification during gated workflow:
+Before file modifications during gated workflow:
 
 - [ ] Gate 1 (Issue Review) passed
 - [ ] Gate 2 (Plan Review) passed
@@ -44,7 +46,7 @@ Before any file modification during gated workflow:
 
 If you realize you've skipped a gate:
 
-1. STOP immediately
+1. Pause immediately
 2. Acknowledge the skip
 3. Return to the missed gate
-4. Do not continue until gate is passed
+4. Don't continue until gate is passed
