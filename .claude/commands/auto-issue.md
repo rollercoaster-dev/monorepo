@@ -869,6 +869,40 @@ If git operations fail due to conflicts:
 3. Wait for user guidance
 4. Do not auto-resolve
 
+### Fatal Error Notification
+
+When a workflow fails due to unrecoverable error:
+
+```typescript
+// Log the error
+checkpoint.setStatus(WORKFLOW_ID, "failed");
+checkpoint.logAction(WORKFLOW_ID, "fatal_error", "failed", {
+  phase: currentPhase,
+  error: error.message,
+  commitCount: totalCommits,
+});
+
+// Notify user - AI_ERROR template (non-blocking)
+notifyTelegram(
+  `❌ [AUTO-ISSUE #$ARGUMENTS] Failed
+
+Phase: ${currentPhase}
+Error: ${error.message}
+
+Current state:
+- Branch: ${branchName}
+- Commits made: ${totalCommits}
+- Last action: ${lastAction}
+
+Check terminal for details.`,
+  "AUTO-ISSUE",
+);
+
+console.log(`[AUTO-ISSUE #$ARGUMENTS] Workflow failed: ${error.message}`);
+```
+
+**When to use**: Issue not found, branch creation failure, git conflicts, all agents fail, validation failure on finalize.
+
 ---
 
 ## Agents Used
