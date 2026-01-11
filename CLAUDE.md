@@ -37,6 +37,15 @@ Each package has its own `CLAUDE.md` with package-specific context.
 - **Commits**: Conventional commits (`feat`, `fix`, `chore`, etc.)
 - **Versioning**: Changesets for version management (`bunx changeset`)
 
+## Implementation Philosophy
+
+Keep solutions simple and focused. Only make changes that are directly requested.
+
+- Don't add features or refactor code beyond what was asked
+- Don't add error handling for scenarios that can't happen
+- Don't create abstractions for one-time operations
+- Reuse existing patterns; the right complexity is the minimum needed
+
 ## File Modification
 
 Before modifying files, consider:
