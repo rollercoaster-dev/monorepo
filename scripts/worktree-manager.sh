@@ -77,7 +77,7 @@ get_or_create_milestone() {
 
   # Try to find existing milestone
   local result
-  result=$(cli_call milestone find "$milestone_name" 2>/dev/null || echo '{}')
+  result=$(cli_call milestone find "$milestone_name" 2>/dev/null) || result='{}'
   local milestone_id
   milestone_id=$(echo "$result" | jq -r '.milestone.id // empty')
 
@@ -145,7 +145,7 @@ update_state() {
 
   # Find or create workflow
   local result
-  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null) || result='{}'
   local workflow_id
   workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
 
@@ -172,7 +172,7 @@ remove_from_state() {
 
   # Find workflow
   local result
-  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null) || result='{}'
   local workflow_id
   workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
 
@@ -354,7 +354,7 @@ cmd_list() {
 
   # Show tracked state from CLI
   local workflows
-  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+  workflows=$(cli_call workflow list-active 2>/dev/null) || workflows='[]'
 
   if [[ "$workflows" != "[]" ]] && [[ $(echo "$workflows" | jq 'length') -gt 0 ]]; then
     echo "Tracked State:"
@@ -376,7 +376,7 @@ cmd_status() {
 
   # Get active workflows from CLI
   local workflows
-  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+  workflows=$(cli_call workflow list-active 2>/dev/null) || workflows='[]'
 
   if [[ "$workflows" == "[]" ]] || [[ $(echo "$workflows" | jq 'length') -eq 0 ]]; then
     echo "  No active worktrees"
@@ -393,7 +393,7 @@ cmd_status() {
   while IFS=$'\t' read -r issue status branch pr_placeholder; do
     # Try to get PR number from workflow actions
     local workflow_data pr_number
-    workflow_data=$(cli_call workflow find "$issue" 2>/dev/null || echo '{}')
+    workflow_data=$(cli_call workflow find "$issue" 2>/dev/null) || workflow_data='{}'
     pr_number=$(echo "$workflow_data" | jq -r '.actions[]? | select(.action == "pr-created") | .metadata.pr // empty' | head -1)
 
     pr_display=${pr_number:-"-"}
@@ -425,7 +425,7 @@ cmd_update_status() {
   # Get current branch from CLI or worktree
   local current_branch=""
   local result
-  result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+  result=$(cli_call workflow find "$issue_number" 2>/dev/null) || result='{}'
   current_branch=$(echo "$result" | jq -r '.workflow.branch // ""')
 
   if [[ -z "$current_branch" ]]; then
@@ -450,7 +450,7 @@ cmd_sync() {
 
   # Get active workflows from CLI
   local workflows
-  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+  workflows=$(cli_call workflow list-active 2>/dev/null) || workflows='[]'
 
   # Remove workflows for worktrees that no longer exist
   echo "$workflows" | jq -c '.[]' | while read -r workflow; do
@@ -476,7 +476,7 @@ cmd_sync() {
 
       # Check if workflow exists
       local result
-      result=$(cli_call workflow find "$issue_number" 2>/dev/null || echo '{}')
+      result=$(cli_call workflow find "$issue_number" 2>/dev/null) || result='{}'
       local workflow_id
       workflow_id=$(echo "$result" | jq -r '.workflow.id // empty')
 
@@ -509,7 +509,7 @@ cmd_cleanup_all() {
 
   # Get active workflows from CLI
   local workflows
-  workflows=$(cli_call workflow list-active 2>/dev/null || echo '[]')
+  workflows=$(cli_call workflow list-active 2>/dev/null) || workflows='[]'
 
   local worktree_count
   worktree_count=$(echo "$workflows" | jq 'length')
@@ -671,7 +671,7 @@ cmd_resume() {
   fi
 
   local milestone_data
-  milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
+  milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null) || milestone_data='{}'
 
   if [[ "$milestone_data" == "{}" ]]; then
     log_error "No checkpoint found. Nothing to resume."
@@ -1111,7 +1111,7 @@ cmd_summary() {
 
   if [[ -n "$milestone_id" ]]; then
     local milestone_data baseline_data
-    milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null || echo '{}')
+    milestone_data=$(cli_call milestone get "$milestone_id" 2>/dev/null) || milestone_data='{}'
     baseline_data=$(echo "$milestone_data" | jq '.baseline // null')
 
     if [[ "$baseline_data" != "null" ]]; then
