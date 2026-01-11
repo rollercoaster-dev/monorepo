@@ -22,24 +22,33 @@ export async function handleGraphCommands(
   command: string,
   args: string[],
 ): Promise<void> {
+  // Parse --quiet flag for suppressing verbose output (useful for hooks)
+  const quiet = args.includes("--quiet");
+  const filteredArgs = args.filter((arg) => arg !== "--quiet");
+
   if (command === "parse") {
-    // Usage: graph parse <package-path> [package-name]
-    const packagePath = args[0];
-    const packageName = args[1];
+    // Usage: graph parse <package-path> [package-name] [--quiet]
+    const packagePath = filteredArgs[0];
+    const packageName = filteredArgs[1];
     if (!packagePath) {
-      throw new Error("Usage: graph parse <package-path> [package-name]");
+      throw new Error(
+        "Usage: graph parse <package-path> [package-name] [--quiet]",
+      );
     }
 
-    logger.info(`Parsing package: ${packagePath}`);
+    if (!quiet) logger.info(`Parsing package: ${packagePath}`);
     const parseResult = parsePackage(packagePath, packageName);
 
-    logger.info(`Found ${parseResult.entities.length} entities`);
-    logger.info(`Found ${parseResult.relationships.length} relationships`);
-
-    logger.info(`Storing graph data for package: ${parseResult.package}`);
+    if (!quiet) {
+      logger.info(`Found ${parseResult.entities.length} entities`);
+      logger.info(`Found ${parseResult.relationships.length} relationships`);
+      logger.info(`Storing graph data for package: ${parseResult.package}`);
+    }
     const storeResult = storeGraph(parseResult, parseResult.package);
 
-    logger.info(
+    // Always output final JSON (allows hooks to detect success/failure)
+    // Use stdout.write to avoid logger formatting that would corrupt JSON
+    process.stdout.write(
       JSON.stringify(
         {
           command: "parse",
@@ -53,57 +62,57 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "what-calls") {
     // Usage: graph what-calls <name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph what-calls <name>");
     }
 
     const results = whatCalls(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "what-calls", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "what-depends-on") {
     // Usage: graph what-depends-on <name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph what-depends-on <name>");
     }
 
     const results = whatDependsOn(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "what-depends-on", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "blast-radius") {
     // Usage: graph blast-radius <file>
-    const file = args[0];
+    const file = filteredArgs[0];
     if (!file) {
       throw new Error("Usage: graph blast-radius <file>");
     }
 
     const results = blastRadius(file);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "blast-radius", file, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "find") {
     // Usage: graph find <name> [type]
-    const name = args[0];
-    const type = args[1];
+    const name = filteredArgs[0];
+    const type = filteredArgs[1];
     if (!name) {
       throw new Error("Usage: graph find <name> [type]");
     }
@@ -123,19 +132,19 @@ export async function handleGraphCommands(
     }
 
     const results = findEntities(name, type);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "find", name, type, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "exports") {
     // Usage: graph exports [package]
-    const pkg = args[0];
+    const pkg = filteredArgs[0];
 
     const results = getExports(pkg);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         {
           query: "exports",
@@ -145,14 +154,14 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "summary") {
     // Usage: graph summary [package]
-    const pkg = args[0];
+    const pkg = filteredArgs[0];
 
     const summary = getSummary(pkg);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         {
           query: "summary",
@@ -161,22 +170,22 @@ export async function handleGraphCommands(
         },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else if (command === "callers") {
     // Usage: graph callers <function-name>
-    const name = args[0];
+    const name = filteredArgs[0];
     if (!name) {
       throw new Error("Usage: graph callers <function-name>");
     }
 
     const results = getCallers(name);
-    logger.info(
+    process.stdout.write(
       JSON.stringify(
         { query: "callers", name, results, count: results.length },
         null,
         2,
-      ),
+      ) + "\n",
     );
   } else {
     throw new Error(
