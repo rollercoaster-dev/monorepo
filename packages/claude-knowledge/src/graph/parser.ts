@@ -9,6 +9,7 @@ import { Project, SyntaxKind } from "ts-morph";
 import type { SourceFile, Node } from "ts-morph";
 import { readdirSync, statSync } from "fs";
 import { join, relative, dirname } from "path";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import type { Entity, Relationship, ParseResult, ParseStats } from "./types";
 
 /**
@@ -114,10 +115,9 @@ export function findTsFiles(dir: string): string[] {
 
   // Log errors if any occurred (for debugging)
   if (errors.length > 0) {
-    console.warn(
-      `[graph-parser] ${errors.length} file system error(s) during scan:`,
-      errors.slice(0, 5).map((e) => `${e.path}: ${e.error}`),
-    );
+    logger.warn(`${errors.length} file system error(s) during scan`, {
+      errors: errors.slice(0, 5),
+    });
   }
 
   return files;
@@ -303,8 +303,8 @@ export function extractRelationships(
           /\\/g,
           "/",
         );
-        // Note: Named import resolution uses first possibility as "best guess"
-        // This may create orphan references if the entity type doesn't match
+        // TODO: #394 Phase 2 - Improve named import resolution to check actual entity types
+        // Currently uses "best guess" which may create orphan references
         const possibleIds = [
           makeEntityId(
             packageName,
@@ -403,6 +403,15 @@ export function extractRelationships(
             "function",
           );
         }
+      } else if (containingFn.isKind(SyntaxKind.ArrowFunction)) {
+        // Get name from parent variable declaration
+        const varDecl = containingFn.getParentIfKind(
+          SyntaxKind.VariableDeclaration,
+        );
+        const varName = varDecl?.getName();
+        if (varName) {
+          fromId = makeEntityId(packageName, filePath, varName, "function");
+        }
       }
     }
 
@@ -494,23 +503,18 @@ export function parsePackage(
 
   // Log parse errors if any
   if (parseErrors.length > 0) {
-    console.warn(
-      `[graph-parser] ${parseErrors.length} file(s) failed to parse:`,
-      parseErrors.slice(0, 5).map((e) => `${e.file}: ${e.error}`),
-    );
+    logger.warn(`${parseErrors.length} file(s) failed to parse`, {
+      errors: parseErrors.slice(0, 5),
+    });
   }
 
   const allEntities: Entity[] = [];
   const allRelationships: Relationship[] = [];
-  const entityMap = new Map<string, Entity>();
 
   // First pass: extract all entities
   project.getSourceFiles().forEach((sourceFile) => {
     const entities = extractEntities(sourceFile, packagePath, pkgName);
-    entities.forEach((e) => {
-      allEntities.push(e);
-      entityMap.set(e.id, e);
-    });
+    allEntities.push(...entities);
   });
 
   // Second pass: extract relationships

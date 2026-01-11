@@ -6,6 +6,7 @@
  */
 
 import { getDatabase } from "../db/sqlite";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import type { ParseResult, StoreResult } from "./types";
 
 /** Error information for failed insert operations */
@@ -116,16 +117,14 @@ export function storeGraph(
 
   // Log errors if any occurred (for debugging)
   if (entityErrors.length > 0) {
-    console.warn(
-      `[graph-store] ${entityErrors.length} entity insert error(s):`,
-      entityErrors.slice(0, 5).map((e) => `${e.id}: ${e.error}`),
-    );
+    logger.warn(`${entityErrors.length} entity insert error(s)`, {
+      errors: entityErrors.slice(0, 5),
+    });
   }
   if (relErrors.length > 0) {
-    console.warn(
-      `[graph-store] ${relErrors.length} relationship insert error(s):`,
-      relErrors.slice(0, 5).map((e) => `${e.id}: ${e.error}`),
-    );
+    logger.warn(`${relErrors.length} relationship insert error(s)`, {
+      errors: relErrors.slice(0, 5),
+    });
   }
 
   // Verify storage (outside transaction - read-only)
@@ -140,14 +139,16 @@ export function storeGraph(
 
   // Log if verification differs from transaction counts (should rarely happen)
   if (entityCount.count !== insertedEntities) {
-    console.warn(
-      `[graph-store] Entity count mismatch: inserted ${insertedEntities}, verified ${entityCount.count}`,
-    );
+    logger.warn("Entity count mismatch", {
+      inserted: insertedEntities,
+      verified: entityCount.count,
+    });
   }
   if (relCount.count !== insertedRels) {
-    console.warn(
-      `[graph-store] Relationship count mismatch: inserted ${insertedRels}, verified ${relCount.count}`,
-    );
+    logger.warn("Relationship count mismatch", {
+      inserted: insertedRels,
+      verified: relCount.count,
+    });
   }
 
   // Success is based on whether we had critical failures

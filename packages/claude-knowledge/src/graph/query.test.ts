@@ -231,8 +231,11 @@ describe("query", () => {
       const shallow = blastRadius("src/utils.ts", 1);
       const deep = blastRadius("src/utils.ts", 5);
 
-      // Deep search should find same or more results
+      // Verify depth limiting works - shallow should have results bounded by depth
+      expect(shallow.length).toBeGreaterThan(0);
       expect(deep.length).toBeGreaterThanOrEqual(shallow.length);
+      // Verify that shallow results are bounded by depth limit
+      expect(shallow.every((r) => r.depth <= 1)).toBe(true);
     });
 
     it("includes depth information", () => {

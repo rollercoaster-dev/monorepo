@@ -296,14 +296,15 @@ export function getSummary(packageName?: string): GraphSummary {
     );
 
     const packages = db
-      .query<{ package: string; count: number }, []>(
+      .query<{ package: string; count: number }, [string]>(
         `
         SELECT package, COUNT(*) as count
         FROM graph_entities
+        WHERE package LIKE ?
         GROUP BY package
       `,
       )
-      .all();
+      .all(pkg);
 
     return {
       totalEntities,

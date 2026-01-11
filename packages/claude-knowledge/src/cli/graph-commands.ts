@@ -108,6 +108,20 @@ export async function handleGraphCommands(
       throw new Error("Usage: graph find <name> [type]");
     }
 
+    const validTypes = [
+      "function",
+      "class",
+      "type",
+      "interface",
+      "variable",
+      "file",
+    ];
+    if (type && !validTypes.includes(type)) {
+      throw new Error(
+        `Invalid type "${type}". Valid types: ${validTypes.join(", ")}`,
+      );
+    }
+
     const results = findEntities(name, type);
     logger.info(
       JSON.stringify(
