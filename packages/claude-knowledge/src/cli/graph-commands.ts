@@ -7,6 +7,8 @@
 
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
+  parsePackage,
+  storeGraph,
   whatCalls,
   whatDependsOn,
   blastRadius,
@@ -20,7 +22,40 @@ export async function handleGraphCommands(
   command: string,
   args: string[],
 ): Promise<void> {
-  if (command === "what-calls") {
+  if (command === "parse") {
+    // Usage: graph parse <package-path> [package-name]
+    const packagePath = args[0];
+    const packageName = args[1];
+    if (!packagePath) {
+      throw new Error("Usage: graph parse <package-path> [package-name]");
+    }
+
+    logger.info(`Parsing package: ${packagePath}`);
+    const parseResult = parsePackage(packagePath, packageName);
+
+    logger.info(`Found ${parseResult.entities.length} entities`);
+    logger.info(`Found ${parseResult.relationships.length} relationships`);
+
+    logger.info(`Storing graph data for package: ${parseResult.package}`);
+    const storeResult = storeGraph(parseResult, parseResult.package);
+
+    logger.info(
+      JSON.stringify(
+        {
+          command: "parse",
+          packagePath,
+          packageName: parseResult.package,
+          ...parseResult.stats,
+          stored: {
+            entities: storeResult.entitiesStored,
+            relationships: storeResult.relationshipsStored,
+          },
+        },
+        null,
+        2,
+      ),
+    );
+  } else if (command === "what-calls") {
     // Usage: graph what-calls <name>
     const name = args[0];
     if (!name) {
@@ -133,6 +168,7 @@ export async function handleGraphCommands(
     throw new Error(
       `Unknown graph command: ${command}\n` +
         `Available commands:\n` +
+        `  parse <path> [name]    - Parse a package and store graph data\n` +
         `  what-calls <name>      - Find what calls the specified function\n` +
         `  what-depends-on <name> - Find dependencies on an entity\n` +
         `  blast-radius <file>    - Find entities affected by changes to a file\n` +
