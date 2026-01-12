@@ -321,9 +321,20 @@ export async function queryTopics(
   sql += ` ORDER BY created_at DESC LIMIT ?`;
   params.push(limit);
 
-  const rows = db
-    .query<{ data: string; created_at: string }, (string | number)[]>(sql)
-    .all(...params);
+  let rows: Array<{ data: string; created_at: string }>;
+  try {
+    rows = db
+      .query<{ data: string; created_at: string }, (string | number)[]>(sql)
+      .all(...params);
+  } catch (error) {
+    logger.error("Database query failed in queryTopics", {
+      error: error instanceof Error ? error.message : String(error),
+      keywords,
+      limit,
+      context: "knowledge.queryTopics",
+    });
+    return [];
+  }
 
   // Transform rows to Topic objects, skipping corrupted entries
   const topics: Topic[] = [];

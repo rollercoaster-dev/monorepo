@@ -287,6 +287,18 @@ export async function storeTopic(topic: Topic): Promise<void> {
     .join(" ");
   const embedding = await generateEmbedding(textToEmbed);
 
+  // Warn if embedding generation failed - topic won't be searchable
+  if (!embedding) {
+    logger.warn(
+      "Topic will be stored without embedding - semantic search will not find it",
+      {
+        topicId: topic.id,
+        contentLength: textToEmbed.length,
+        context: "knowledge.storeTopic",
+      },
+    );
+  }
+
   withTransaction(
     db,
     () => {

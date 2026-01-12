@@ -211,6 +211,12 @@ function prepareKnowledge(
 function getRelativeTime(timestamp: string): string {
   const now = Date.now();
   const then = new Date(timestamp).getTime();
+
+  // Handle invalid timestamps
+  if (isNaN(then)) {
+    return "unknown time";
+  }
+
   const diffMs = now - then;
 
   const minutes = Math.floor(diffMs / (1000 * 60));

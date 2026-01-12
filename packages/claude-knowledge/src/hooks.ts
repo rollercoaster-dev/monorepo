@@ -481,21 +481,33 @@ async function onSessionEnd(
     }
   }
 
-  // Store extracted topics
+  // Store extracted topics (handle each independently for partial success)
   if (topics.length > 0) {
-    try {
-      for (const topic of topics) {
+    let storedCount = 0;
+    const failures: Array<{ topicId: string; error: string }> = [];
+
+    for (const topic of topics) {
+      try {
         await knowledge.storeTopic(topic);
+        storedCount++;
+      } catch (error) {
+        failures.push({
+          topicId: topic.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
-      logger.debug("Session topics stored", {
-        topicsCount: topics.length,
+    }
+
+    if (failures.length > 0) {
+      logger.warn("Some session topics failed to store", {
+        storedCount,
+        failedCount: failures.length,
+        failures,
         context: "onSessionEnd",
       });
-    } catch (error) {
-      // Log but don't fail - topics are supplementary
-      logger.warn("Failed to store session topics", {
-        error: error instanceof Error ? error.message : String(error),
-        topicsCount: topics.length,
+    } else {
+      logger.debug("Session topics stored", {
+        topicsCount: storedCount,
         context: "onSessionEnd",
       });
     }
