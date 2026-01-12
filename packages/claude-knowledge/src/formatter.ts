@@ -218,14 +218,17 @@ function getRelativeTime(timestamp: string): string {
   }
 
   const diffMs = now - then;
+  const future = diffMs < 0;
+  const absMs = Math.abs(diffMs);
 
-  const minutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const minutes = Math.floor(absMs / (1000 * 60));
+  const hours = Math.floor(absMs / (1000 * 60 * 60));
+  const days = Math.floor(absMs / (1000 * 60 * 60 * 24));
 
-  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  if (minutes > 0) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+  const suffix = future ? "from now" : "ago";
+  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ${suffix}`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ${suffix}`;
+  if (minutes > 0) return `${minutes} min${minutes > 1 ? "s" : ""} ${suffix}`;
   return "just now";
 }
 

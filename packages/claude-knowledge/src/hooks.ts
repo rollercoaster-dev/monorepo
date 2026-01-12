@@ -194,7 +194,7 @@ async function onSessionStart(
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
   const learningsInjected =
-    learnings.length + patterns.length + mistakes.length;
+    learnings.length + patterns.length + mistakes.length + topics.length;
   const startTime = new Date().toISOString();
 
   // Log session start with metrics
@@ -443,8 +443,13 @@ async function onSessionEnd(
   }
 
   // Create topics for scopes with >= 2 commits (lowered threshold for MVP)
+  // Sort by commit count and cap to MAX_TOPICS to control DB growth
   const TOPIC_THRESHOLD = 2;
-  for (const [scope, data] of scopeCounts) {
+  const sortedScopes = [...scopeCounts.entries()].sort(
+    (a, b) => b[1].count - a[1].count,
+  );
+
+  for (const [scope, data] of sortedScopes.slice(0, MAX_TOPICS)) {
     if (data.count >= TOPIC_THRESHOLD) {
       const topicId = `topic-${randomUUID()}`;
       const topic: Topic = {

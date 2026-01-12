@@ -281,6 +281,9 @@ export async function storeMistake(
 export async function storeTopic(topic: Topic): Promise<void> {
   const db = getDatabase();
 
+  // Normalize topicId at the start for consistent logging and storage
+  const topicId = topic.id || `topic-${randomUUID()}`;
+
   // Generate embedding from topic content and keywords
   const textToEmbed = [topic.content, ...topic.keywords]
     .filter(Boolean)
@@ -292,7 +295,7 @@ export async function storeTopic(topic: Topic): Promise<void> {
     logger.warn(
       "Topic will be stored without embedding - semantic search will not find it",
       {
-        topicId: topic.id,
+        topicId,
         contentLength: textToEmbed.length,
         context: "knowledge.storeTopic",
       },
@@ -302,9 +305,6 @@ export async function storeTopic(topic: Topic): Promise<void> {
   withTransaction(
     db,
     () => {
-      // Ensure topic has an ID
-      const topicId = topic.id || `topic-${randomUUID()}`;
-
       // Create Topic entity with embedding
       createOrMergeEntity(
         db,
