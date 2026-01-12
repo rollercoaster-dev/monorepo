@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_milestone_workflows_milestone ON milestone_workfl
 -- Knowledge graph entities
 CREATE TABLE IF NOT EXISTS entities (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake')),
+  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic')),
   data JSON NOT NULL,
   embedding BLOB,
   created_at TEXT NOT NULL,
