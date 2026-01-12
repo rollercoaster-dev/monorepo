@@ -172,6 +172,31 @@ function enforceTokenBudget(sections: Section[], maxTokens: number): string[] {
 }
 
 /**
+ * Prepare knowledge data for formatting.
+ * Handles sorting and option extraction shared across all format functions.
+ *
+ * @param learnings - Query results to format
+ * @param options - Formatting options
+ * @returns Prepared data with sorted learnings and extracted options
+ */
+function prepareKnowledge(
+  learnings: QueryResult[],
+  options: FormatOptions = {},
+): {
+  sortedLearnings: QueryResult[];
+  maxTokens: number;
+  showFilePaths: boolean;
+  context: FormatOptions["context"];
+} {
+  const maxTokens = options.maxTokens || 2000;
+  const showFilePaths = options.showFilePaths ?? true;
+  const context = options.context;
+  const sortedLearnings = sortByRelevance(learnings, context);
+
+  return { sortedLearnings, maxTokens, showFilePaths, context };
+}
+
+/**
  * Format knowledge context for injection into Claude's context window.
  * Handles grouping, prioritization, and token budget management.
  *
@@ -187,10 +212,9 @@ export function formatKnowledgeContext(
   mistakes: Mistake[] = [],
   options: FormatOptions = {},
 ): string {
-  // Default options
-  const maxTokens = options.maxTokens || 2000;
-  const showFilePaths = options.showFilePaths ?? true;
-  const context = options.context;
+  // Prepare knowledge with shared initialization logic
+  const { sortedLearnings, maxTokens, showFilePaths, context } =
+    prepareKnowledge(learnings, options);
 
   const lines: string[] = [];
   const sections: Section[] = [];
@@ -218,8 +242,7 @@ export function formatKnowledgeContext(
     return lines.join("\n");
   }
 
-  // Group and sort learnings
-  const sortedLearnings = sortByRelevance(learnings, context);
+  // Group sorted learnings by code area
   const grouped = groupByCodeArea(sortedLearnings);
 
   // Build sections for each code area
@@ -367,15 +390,14 @@ export function formatAsBullets(
   mistakes: Mistake[] = [],
   options: FormatOptions = {},
 ): string {
-  const showFilePaths = options.showFilePaths ?? true;
-  const maxTokens = options.maxTokens || 2000;
-  const context = options.context;
+  // Prepare knowledge with shared initialization logic
+  const { sortedLearnings, maxTokens, showFilePaths } = prepareKnowledge(
+    learnings,
+    options,
+  );
 
   const lines: string[] = [];
   let currentTokens = 0;
-
-  // Sort learnings by relevance
-  const sortedLearnings = sortByRelevance(learnings, context);
 
   // Format learnings as bullets
   for (const result of sortedLearnings) {
@@ -448,18 +470,17 @@ export function formatAsXml(
   mistakes: Mistake[] = [],
   options: FormatOptions = {},
 ): string {
-  const showFilePaths = options.showFilePaths ?? true;
-  const maxTokens = options.maxTokens || 2000;
-  const context = options.context;
+  // Prepare knowledge with shared initialization logic
+  const { sortedLearnings, maxTokens, showFilePaths } = prepareKnowledge(
+    learnings,
+    options,
+  );
 
   const lines: string[] = [];
   let currentTokens = 0;
 
   lines.push("<knowledge>");
   currentTokens += estimateTokens("<knowledge>");
-
-  // Sort learnings by relevance
-  const sortedLearnings = sortByRelevance(learnings, context);
 
   // Format learnings
   if (sortedLearnings.length > 0) {

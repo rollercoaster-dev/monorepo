@@ -35,29 +35,8 @@ export function storeGraph(
 
   // Use transaction for atomic writes - all or nothing
   const storeTransaction = db.transaction(() => {
-    // Clear existing data for this package
-    // Delete relationships where this package's entities are the source
-    db.prepare(
-      `
-      DELETE FROM graph_relationships WHERE from_entity IN
-      (SELECT id FROM graph_entities WHERE package = ?)
-    `,
-    ).run(packageName);
-
-    // Delete relationships where this package's entities are the target
-    db.prepare(
-      `
-      DELETE FROM graph_relationships WHERE to_entity IN
-      (SELECT id FROM graph_entities WHERE package = ?)
-    `,
-    ).run(packageName);
-
-    // Delete entities for this package
-    db.prepare(
-      `
-      DELETE FROM graph_entities WHERE package = ?
-    `,
-    ).run(packageName);
+    // Clear existing data for this package (inside transaction for atomicity)
+    clearPackageInternal(db, packageName);
 
     // Insert entities
     const insertEntity = db.prepare(`
@@ -163,6 +142,41 @@ export function storeGraph(
 }
 
 /**
+ * Internal helper to clear package data within an existing transaction.
+ * Used by storeGraph() for atomic clear+insert operations.
+ *
+ * @param db - Database instance (from within transaction)
+ * @param packageName - Package name to clear
+ */
+function clearPackageInternal(
+  db: ReturnType<typeof getDatabase>,
+  packageName: string,
+): void {
+  // Delete relationships where this package's entities are the source
+  db.prepare(
+    `
+    DELETE FROM graph_relationships WHERE from_entity IN
+    (SELECT id FROM graph_entities WHERE package = ?)
+  `,
+  ).run(packageName);
+
+  // Delete relationships where this package's entities are the target
+  db.prepare(
+    `
+    DELETE FROM graph_relationships WHERE to_entity IN
+    (SELECT id FROM graph_entities WHERE package = ?)
+  `,
+  ).run(packageName);
+
+  // Delete entities for this package
+  db.prepare(
+    `
+    DELETE FROM graph_entities WHERE package = ?
+  `,
+  ).run(packageName);
+}
+
+/**
  * Clear all graph data for a specific package.
  *
  * @param packageName - Package name to clear
@@ -171,28 +185,7 @@ export function clearPackage(packageName: string): void {
   const db = getDatabase();
 
   const clearTransaction = db.transaction(() => {
-    // Delete relationships where this package's entities are the source
-    db.prepare(
-      `
-      DELETE FROM graph_relationships WHERE from_entity IN
-      (SELECT id FROM graph_entities WHERE package = ?)
-    `,
-    ).run(packageName);
-
-    // Delete relationships where this package's entities are the target
-    db.prepare(
-      `
-      DELETE FROM graph_relationships WHERE to_entity IN
-      (SELECT id FROM graph_entities WHERE package = ?)
-    `,
-    ).run(packageName);
-
-    // Delete entities for this package
-    db.prepare(
-      `
-      DELETE FROM graph_entities WHERE package = ?
-    `,
-    ).run(packageName);
+    clearPackageInternal(db, packageName);
   });
 
   clearTransaction();

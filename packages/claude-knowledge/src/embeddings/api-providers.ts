@@ -94,30 +94,6 @@ export class OpenAIEmbedding implements EmbeddingProvider {
 }
 
 /**
- * Anthropic embedding provider (placeholder).
- *
- * Anthropic's embeddings API is not yet publicly available.
- * This class is included for future compatibility and to demonstrate
- * the pluggable provider architecture.
- *
- * @throws Error when attempting to generate embeddings
- */
-export class AnthropicEmbedding implements EmbeddingProvider {
-  readonly dimensions = 256;
-
-  constructor(_apiKey?: string) {
-    // API key stored for future use when API becomes available
-  }
-
-  async generate(_text: string): Promise<Float32Array> {
-    throw new Error(
-      "Anthropic embeddings API is not yet publicly available. " +
-        "Please use TfIdfEmbedding or OpenAIEmbedding instead.",
-    );
-  }
-}
-
-/**
  * Factory function to create an embedding provider by type.
  *
  * @param type - Provider type ('tfidf', 'openai', 'anthropic')
@@ -161,7 +137,10 @@ export async function createEmbeddingProvider(
       });
     }
     case "anthropic": {
-      return new AnthropicEmbedding(config?.apiKey);
+      throw new Error(
+        "Anthropic embeddings API is not yet publicly available. " +
+          "Please use 'tfidf' or 'openai' instead.",
+      );
     }
     default:
       throw new Error(`Unknown embedding provider type: ${type}`);
