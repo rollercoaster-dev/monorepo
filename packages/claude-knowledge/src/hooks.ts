@@ -176,14 +176,20 @@ async function onSessionStart(
   }
 
   // Format summary for injection using new formatter
-  const summary = formatKnowledgeContext(learnings, patterns, mistakes, {
-    maxTokens: 2000,
-    context: {
-      issueNumber,
-      primaryCodeArea,
-      modifiedFiles: context.modifiedFiles,
+  const summary = formatKnowledgeContext(
+    learnings,
+    patterns,
+    mistakes,
+    topics,
+    {
+      maxTokens: 2000,
+      context: {
+        issueNumber,
+        primaryCodeArea,
+        modifiedFiles: context.modifiedFiles,
+      },
     },
-  });
+  );
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();

@@ -5,7 +5,13 @@
  * Handles grouping, prioritization, and token budget management.
  */
 
-import type { QueryResult, Pattern, Mistake, ContextFormat } from "./types";
+import type {
+  QueryResult,
+  Pattern,
+  Mistake,
+  Topic,
+  ContextFormat,
+} from "./types";
 
 /**
  * Options for formatting knowledge context.
@@ -197,12 +203,34 @@ function prepareKnowledge(
 }
 
 /**
+ * Get a human-readable relative time string from an ISO timestamp.
+ *
+ * @param timestamp - ISO timestamp string
+ * @returns Relative time string (e.g., "2 days ago", "1 hour ago")
+ */
+function getRelativeTime(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime();
+  const diffMs = now - then;
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (minutes > 0) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+  return "just now";
+}
+
+/**
  * Format knowledge context for injection into Claude's context window.
  * Handles grouping, prioritization, and token budget management.
  *
  * @param learnings - Query results to format
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
+ * @param topics - Conversation topics from previous sessions
  * @param options - Formatting options
  * @returns Formatted markdown string
  */
@@ -210,6 +238,7 @@ export function formatKnowledgeContext(
   learnings: QueryResult[],
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
+  topics: Topic[] = [],
   options: FormatOptions = {},
 ): string {
   // Prepare knowledge with shared initialization logic
@@ -235,7 +264,8 @@ export function formatKnowledgeContext(
   if (
     learnings.length === 0 &&
     patterns.length === 0 &&
-    mistakes.length === 0
+    mistakes.length === 0 &&
+    topics.length === 0
   ) {
     lines.push("*No relevant knowledge found for this context.*");
     lines.push("");
@@ -288,6 +318,24 @@ export function formatKnowledgeContext(
       type: "patterns",
       content: patternLines.join("\n"),
       priority: 0.7, // Medium-high priority
+    });
+  }
+
+  // Build topics section (conversation memory)
+  if (topics.length > 0) {
+    const topicLines: string[] = [];
+    topicLines.push("### Recent Conversation Topics");
+    for (const topic of topics) {
+      const keywords = topic.keywords.slice(0, 3).join(", ");
+      const age = getRelativeTime(topic.timestamp);
+      topicLines.push(`- **[${keywords}]** ${topic.content} (${age})`);
+    }
+    topicLines.push("");
+
+    sections.push({
+      type: "topics",
+      content: topicLines.join("\n"),
+      priority: 0.75, // Slightly higher than patterns
     });
   }
 
@@ -381,6 +429,7 @@ export function formatKnowledgeContext(
  * @param learnings - Query results to format
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
+ * @param topics - Conversation topics from previous sessions
  * @param options - Formatting options
  * @returns Formatted bullet list string
  */
@@ -388,6 +437,7 @@ export function formatAsBullets(
   learnings: QueryResult[],
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
+  topics: Topic[] = [],
   options: FormatOptions = {},
 ): string {
   // Prepare knowledge with shared initialization logic
@@ -439,6 +489,17 @@ export function formatAsBullets(
     currentTokens += lineTokens;
   }
 
+  // Format topics as bullets
+  for (const topic of topics) {
+    const keywords = topic.keywords.slice(0, 3).join(", ");
+    const line = `- Topic [${keywords}]: ${topic.content}`;
+    const lineTokens = estimateTokens(line);
+    if (currentTokens + lineTokens > maxTokens) break;
+
+    lines.push(line);
+    currentTokens += lineTokens;
+  }
+
   return lines.join("\n");
 }
 
@@ -461,6 +522,7 @@ function escapeXml(text: string): string {
  * @param learnings - Query results to format
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
+ * @param topics - Conversation topics from previous sessions
  * @param options - Formatting options
  * @returns Formatted XML string
  */
@@ -468,6 +530,7 @@ export function formatAsXml(
   learnings: QueryResult[],
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
+  topics: Topic[] = [],
   options: FormatOptions = {},
 ): string {
   // Prepare knowledge with shared initialization logic
@@ -570,6 +633,35 @@ export function formatAsXml(
     currentTokens += estimateTokens("  </mistakes>");
   }
 
+  // Format topics
+  if (topics.length > 0) {
+    lines.push("  <topics>");
+    currentTokens += estimateTokens("  <topics>");
+
+    for (const topic of topics) {
+      const attrs: string[] = [`id="${escapeXml(topic.id)}"`];
+      if (topic.sourceSession) {
+        attrs.push(`session="${escapeXml(topic.sourceSession)}"`);
+      }
+      if (topic.confidence !== undefined) {
+        attrs.push(`confidence="${topic.confidence.toFixed(2)}"`);
+      }
+
+      const keywords = topic.keywords.map(escapeXml).join(",");
+      const content = escapeXml(topic.content);
+      const line = `    <topic ${attrs.join(" ")} keywords="${keywords}">${content}</topic>`;
+
+      const lineTokens = estimateTokens(line);
+      if (currentTokens + lineTokens > maxTokens - 20) break;
+
+      lines.push(line);
+      currentTokens += lineTokens;
+    }
+
+    lines.push("  </topics>");
+    currentTokens += estimateTokens("  </topics>");
+  }
+
   lines.push("</knowledge>");
 
   return lines.join("\n");
@@ -583,6 +675,7 @@ export function formatAsXml(
  * @param learnings - Query results to format
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
+ * @param topics - Conversation topics from previous sessions
  * @param options - Formatting options
  * @returns Formatted string in the requested format
  */
@@ -591,15 +684,22 @@ export function formatByType(
   learnings: QueryResult[],
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
+  topics: Topic[] = [],
   options: FormatOptions = {},
 ): string {
   switch (format) {
     case "bullets":
-      return formatAsBullets(learnings, patterns, mistakes, options);
+      return formatAsBullets(learnings, patterns, mistakes, topics, options);
     case "xml":
-      return formatAsXml(learnings, patterns, mistakes, options);
+      return formatAsXml(learnings, patterns, mistakes, topics, options);
     case "markdown":
     default:
-      return formatKnowledgeContext(learnings, patterns, mistakes, options);
+      return formatKnowledgeContext(
+        learnings,
+        patterns,
+        mistakes,
+        topics,
+        options,
+      );
   }
 }
