@@ -14,6 +14,7 @@ import type {
   QueryResult,
   Pattern,
   Mistake,
+  Topic,
   ContextMetrics,
 } from "./types";
 import { knowledge } from "./knowledge/index";
@@ -54,6 +55,9 @@ const MAX_PATTERNS_PER_AREA = 5;
 /** Maximum number of mistakes to return per file */
 const MAX_MISTAKES_PER_FILE = 3;
 
+/** Maximum number of topics to return at session start */
+const MAX_TOPICS = 5;
+
 /**
  * Load relevant knowledge for the current session context.
  *
@@ -66,6 +70,7 @@ async function onSessionStart(
   const learnings: QueryResult[] = [];
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];
+  const topics: Topic[] = [];
 
   // Parse issue number from branch if not provided
   const issueNumber =
@@ -142,6 +147,25 @@ async function onSessionStart(
         }
       }
     }
+
+    // Get relevant conversation topics using semantic search
+    const topicKeywords = [...codeAreas, context.branch].filter(
+      (k): k is string => Boolean(k),
+    );
+
+    if (topicKeywords.length > 0) {
+      const topicResults = await knowledge.queryTopics({
+        keywords: topicKeywords,
+        limit: MAX_TOPICS,
+      });
+      topics.push(...topicResults);
+    } else {
+      // If no keywords, get most recent topics
+      const recentTopics = await knowledge.queryTopics({
+        limit: MAX_TOPICS,
+      });
+      topics.push(...recentTopics);
+    }
   } catch (error) {
     // Log the error so failures are visible, but allow session to continue
     logger.error("Failed to load session knowledge", {
@@ -179,6 +203,7 @@ async function onSessionStart(
     learnings,
     patterns,
     mistakes,
+    topics,
     summary,
     // Include session metadata in result for CLI to capture
     _sessionMetadata: {
