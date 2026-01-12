@@ -135,9 +135,12 @@ CREATE INDEX IF NOT EXISTS idx_context_metrics_session ON context_metrics(sessio
 CREATE INDEX IF NOT EXISTS idx_context_metrics_issue ON context_metrics(issue_number);
 
 -- Graph query metrics for tracking code graph usage patterns
+-- source: "cli" | "agent:{name}" | "skill:{name}" | "hook:{name}" | "unknown"
+-- session_id: Optional, populated when CLAUDE_SESSION_ID env var is set
 CREATE TABLE IF NOT EXISTS graph_queries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'unknown',
+  session_id TEXT,
   workflow_id TEXT,
   query_type TEXT NOT NULL,
   query_params TEXT,
@@ -147,6 +150,7 @@ CREATE TABLE IF NOT EXISTS graph_queries (
 );
 
 -- Indexes for graph query metrics
+CREATE INDEX IF NOT EXISTS idx_graph_queries_source ON graph_queries(source);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_session ON graph_queries(session_id);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_workflow ON graph_queries(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_type ON graph_queries(query_type);
@@ -235,6 +239,34 @@ function runMigrations(database: Database): void {
       database.run("ROLLBACK");
       throw new Error(
         `Migration failed (add Topic to entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // Migration 2: Add 'source' column to graph_queries table
+  // Check if source column exists by checking column info
+  const graphQueriesColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(graph_queries)")
+    .all();
+
+  const hasSourceColumn = graphQueriesColumns.some(
+    (col) => col.name === "source",
+  );
+
+  if (!hasSourceColumn) {
+    try {
+      // Add source column with default value 'unknown'
+      database.run(
+        "ALTER TABLE graph_queries ADD COLUMN source TEXT NOT NULL DEFAULT 'unknown'",
+      );
+
+      // Create index for source column
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_graph_queries_source ON graph_queries(source)",
+      );
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add source to graph_queries): ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
