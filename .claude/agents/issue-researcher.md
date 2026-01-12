@@ -17,13 +17,31 @@ This agent uses patterns from [shared/](../shared/):
 
 ## Code Graph (Recommended)
 
-Use the `graph-query` skill to understand codebase structure efficiently:
+Use the `graph-query` skill to understand codebase structure efficiently.
+
+### Graph Readiness Check
+
+Before running queries, ensure the graph is populated:
 
 ```bash
-# Find what calls a function (impact analysis)
+# Check if graph has data
+bun run checkpoint graph summary
+
+# If empty, parse relevant packages first
+bun run checkpoint graph parse packages/openbadges-types
+bun run checkpoint graph parse apps/openbadges-modular-server
+```
+
+### Query Commands
+
+```bash
+# Find what calls a function (full call tree)
 bun run checkpoint graph what-calls <function-name>
 
-# Find what depends on a module/type (dependency mapping)
+# Find direct callers only (simpler output)
+bun run checkpoint graph callers <function-name>
+
+# Find what depends on a module/type/interface
 bun run checkpoint graph what-depends-on <name>
 
 # Assess blast radius before changes
@@ -34,6 +52,9 @@ bun run checkpoint graph find <name> [type]
 
 # Get package exports overview
 bun run checkpoint graph exports [package-name]
+
+# Get codebase statistics (useful for scope estimation)
+bun run checkpoint graph summary [package-name]
 ```
 
 **When to use graph queries:**
@@ -42,6 +63,7 @@ bun run checkpoint graph exports [package-name]
 - Finding all usages of a type/class/interface
 - Assessing impact of file changes
 - Exploring unfamiliar packages
+- Estimating scope with codebase statistics
 
 ## Purpose
 
@@ -144,19 +166,34 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
    - Search for keywords from the issue
    - Find relevant files and directories
    - Understand the existing code structure
-   - Use `graph find <name>` to locate entities
+   - Use graph to locate entities:
+     ```bash
+     bun run checkpoint graph find <name> [type]
+     ```
 
 2. **Map dependencies (use graph queries):**
-   - `graph what-calls <function>` - What calls the code we're changing?
-   - `graph what-depends-on <type>` - What depends on this type/module?
-   - `graph blast-radius <file>` - What's affected if we change this file?
-   - Any shared utilities or types?
+
+   ```bash
+   # What calls the code we're changing?
+   bun run checkpoint graph what-calls <function>
+
+   # What depends on this type/module?
+   bun run checkpoint graph what-depends-on <type>
+
+   # What's affected if we change this file?
+   bun run checkpoint graph blast-radius <file>
+   ```
+
+   - Also identify any shared utilities or types
 
 3. **Review existing patterns:**
    - How are similar features implemented?
    - What conventions does the codebase follow?
    - Any relevant tests to reference?
-   - Use `graph exports <package>` to see public API
+   - Check public API surface:
+     ```bash
+     bun run checkpoint graph exports <package>
+     ```
 
 4. **Check for related code:**
    - Similar implementations
@@ -165,21 +202,32 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
 
 ### Phase 3: Estimate Scope
 
-1. **Count affected files:**
+1. **Get codebase context (use graph):**
+
+   ```bash
+   # Get stats for affected package(s)
+   bun run checkpoint graph summary <package-name>
+
+   # Check blast radius of key files to modify
+   bun run checkpoint graph blast-radius <main-file>
+   ```
+
+2. **Count affected files:**
    - New files to create
    - Existing files to modify
    - Test files needed
+   - Files in blast radius (from graph query)
 
-2. **Estimate lines of code:**
+3. **Estimate lines of code:**
    - Implementation code
    - Test code
    - Documentation
 
-3. **Assess complexity:**
-   - TRIVIAL: < 50 lines, 1-2 files
+4. **Assess complexity:**
+   - TRIVIAL: < 50 lines, 1-2 files, minimal blast radius
    - SMALL: 50-200 lines, 2-5 files
    - MEDIUM: 200-500 lines, 5-10 files
-   - LARGE: > 500 lines (should be split)
+   - LARGE: > 500 lines or wide blast radius (should be split)
 
 ### Phase 4: Create Development Plan
 
