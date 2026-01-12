@@ -3,10 +3,31 @@
  *
  * This module provides a pluggable embedding interface with a default TF-IDF
  * implementation that requires zero external dependencies.
+ *
+ * When OPENAI_API_KEY is set, neural embeddings are used automatically for
+ * better semantic matching. Falls back to TF-IDF when no API key is available.
  */
 
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+
+/**
+ * Supported embedding provider types.
+ */
+export type EmbeddingProviderType = "tfidf" | "openai";
+
+/**
+ * Configuration for embedding provider selection.
+ */
+export interface EmbeddingConfig {
+  /** Provider type to use ('tfidf' | 'openai'). Auto-detected if not specified. */
+  providerType?: EmbeddingProviderType;
+  /** OpenAI API key (required for 'openai' provider) */
+  apiKey?: string;
+  /** Output dimensions (default: 256) */
+  dimensions?: number;
+}
 
 /**
  * Interface for embedding providers.
@@ -231,23 +252,158 @@ export function bufferToFloatArray(buf: Buffer): Float32Array {
 }
 
 // Default singleton instance for convenience
-let defaultEmbedder: TfIdfEmbedding | null = null;
+let defaultEmbedder: EmbeddingProvider | null = null;
+let currentProviderType: EmbeddingProviderType | null = null;
+let providerLoggedOnce = false;
 
 /**
- * Get the default TF-IDF embedding provider.
- * Uses a singleton to maintain corpus statistics across calls.
+ * Detect the best available embedding provider based on environment.
+ *
+ * @returns The provider type to use and any auto-detected configuration
  */
-export function getDefaultEmbedder(): TfIdfEmbedding {
-  if (!defaultEmbedder) {
-    defaultEmbedder = new TfIdfEmbedding();
+function detectProvider(): { type: EmbeddingProviderType; apiKey?: string } {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (apiKey && apiKey.trim().length > 0) {
+    return { type: "openai", apiKey };
   }
+
+  return { type: "tfidf" };
+}
+
+/**
+ * Get the default embedding provider.
+ *
+ * Provider selection:
+ * 1. If config.providerType is specified, use that provider
+ * 2. If OPENAI_API_KEY env var is set, use OpenAI neural embeddings
+ * 3. Otherwise, fall back to TF-IDF (zero dependencies)
+ *
+ * Uses a singleton to maintain state across calls. The singleton is
+ * re-created if the provider type changes.
+ *
+ * @param config - Optional configuration to override auto-detection
+ * @returns An embedding provider instance
+ */
+export async function getDefaultEmbedder(
+  config?: EmbeddingConfig,
+): Promise<EmbeddingProvider> {
+  // Determine provider type
+  const detected = detectProvider();
+  const requestedType = config?.providerType ?? detected.type;
+  const apiKey = config?.apiKey ?? detected.apiKey;
+  const dimensions = config?.dimensions ?? 256;
+
+  // Check if we need to create a new provider
+  const needsNewProvider =
+    !defaultEmbedder || currentProviderType !== requestedType;
+
+  if (needsNewProvider) {
+    if (requestedType === "openai") {
+      if (!apiKey) {
+        logger.warn(
+          "OpenAI provider requested but no API key available, falling back to TF-IDF",
+        );
+        defaultEmbedder = new TfIdfEmbedding({ dimensions });
+        currentProviderType = "tfidf";
+      } else {
+        // Dynamically import to avoid loading when not needed
+        const { OpenAIEmbedding } = await import("./api-providers");
+        defaultEmbedder = new OpenAIEmbedding(apiKey, { dimensions });
+        currentProviderType = "openai";
+      }
+    } else {
+      defaultEmbedder = new TfIdfEmbedding({ dimensions });
+      currentProviderType = "tfidf";
+    }
+
+    // Log provider selection once
+    if (!providerLoggedOnce) {
+      logger.info(`Embedding provider initialized: ${currentProviderType}`, {
+        dimensions,
+        autoDetected: !config?.providerType,
+      });
+      providerLoggedOnce = true;
+    }
+  }
+
+  // At this point defaultEmbedder is guaranteed to be set
+  return defaultEmbedder!;
+}
+
+/**
+ * Get the default embedding provider synchronously.
+ *
+ * This is a synchronous wrapper that only works if the provider has already
+ * been initialized, or if using TF-IDF (which doesn't require async import).
+ *
+ * For first-time initialization with OpenAI provider, use getDefaultEmbedder() instead.
+ *
+ * @returns An embedding provider instance
+ * @throws If OpenAI provider is needed but not yet initialized
+ */
+export function getDefaultEmbedderSync(): EmbeddingProvider {
+  if (defaultEmbedder) {
+    return defaultEmbedder;
+  }
+
+  // Check if we should use OpenAI
+  const detected = detectProvider();
+  if (detected.type === "openai") {
+    throw new Error(
+      "OpenAI provider requires async initialization. Use getDefaultEmbedder() instead.",
+    );
+  }
+
+  // Safe to create TF-IDF synchronously
+  defaultEmbedder = new TfIdfEmbedding();
+  currentProviderType = "tfidf";
+
+  if (!providerLoggedOnce) {
+    logger.info("Embedding provider initialized: tfidf", {
+      dimensions: 256,
+      autoDetected: true,
+    });
+    providerLoggedOnce = true;
+  }
+
   return defaultEmbedder;
 }
 
 /**
+ * Set the default embedding provider explicitly.
+ *
+ * Use this to override auto-detection or inject a custom provider.
+ *
+ * @param provider - The provider to use as default
+ * @param type - The provider type (for logging and tracking)
+ */
+export function setDefaultProvider(
+  provider: EmbeddingProvider,
+  type: EmbeddingProviderType,
+): void {
+  defaultEmbedder = provider;
+  currentProviderType = type;
+  logger.info(`Embedding provider set explicitly: ${type}`, {
+    dimensions: provider.dimensions,
+  });
+}
+
+/**
+ * Get the current provider type.
+ *
+ * @returns The current provider type, or null if not yet initialized
+ */
+export function getCurrentProviderType(): EmbeddingProviderType | null {
+  return currentProviderType;
+}
+
+/**
  * Reset the default embedder.
- * Useful for testing to start with fresh corpus statistics.
+ * Useful for testing to start with fresh state.
  */
 export function resetDefaultEmbedder(): void {
   defaultEmbedder = null;
+  currentProviderType = null;
+  providerLoggedOnce = false;
 }

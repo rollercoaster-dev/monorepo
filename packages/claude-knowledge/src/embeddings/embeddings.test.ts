@@ -165,16 +165,16 @@ describe("Default Embedder Singleton", () => {
     resetDefaultEmbedder();
   });
 
-  test("getDefaultEmbedder returns consistent instance", () => {
-    const e1 = getDefaultEmbedder();
-    const e2 = getDefaultEmbedder();
+  test("getDefaultEmbedder returns consistent instance", async () => {
+    const e1 = await getDefaultEmbedder();
+    const e2 = await getDefaultEmbedder();
     expect(e1).toBe(e2);
   });
 
-  test("resetDefaultEmbedder creates new instance", () => {
-    const e1 = getDefaultEmbedder();
+  test("resetDefaultEmbedder creates new instance", async () => {
+    const e1 = await getDefaultEmbedder();
     resetDefaultEmbedder();
-    const e2 = getDefaultEmbedder();
+    const e2 = await getDefaultEmbedder();
     expect(e1).not.toBe(e2);
   });
 });

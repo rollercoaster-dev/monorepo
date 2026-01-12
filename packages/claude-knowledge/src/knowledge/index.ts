@@ -3,9 +3,9 @@
  *
  * This module provides a unified interface to the knowledge graph database,
  * with operations split across focused modules:
- * - store: Store operations (store, storePattern, storeMistake, storeWorkflowLearning)
- * - query: Query operations (query, getMistakesForFile, getPatternsForArea)
- * - semantic: Semantic search (searchSimilar)
+ * - store: Store operations (store, storePattern, storeMistake, storeTopic, storeWorkflowLearning)
+ * - query: Query operations (query, getMistakesForFile, getPatternsForArea, queryTopics)
+ * - semantic: Semantic search (searchSimilar, searchSimilarTopics)
  * - context: Context injection (formatForContext)
  */
 
@@ -25,7 +25,12 @@ export {
 } from "./query";
 
 // Re-export semantic search
-export { searchSimilar, type SearchSimilarOptions } from "./semantic";
+export {
+  searchSimilar,
+  searchSimilarTopics,
+  type SearchSimilarOptions,
+  type TopicSearchResult,
+} from "./semantic";
 
 // Re-export context injection
 export { formatForContext } from "./context";
@@ -39,7 +44,7 @@ import {
   getPatternsForArea,
   queryTopics,
 } from "./query";
-import { searchSimilar } from "./semantic";
+import { searchSimilar, searchSimilarTopics } from "./semantic";
 import { formatForContext } from "./context";
 
 /**
@@ -65,6 +70,7 @@ export const knowledge = {
 
   // Semantic search
   searchSimilar,
+  searchSimilarTopics,
 
   // Context injection
   formatForContext,
