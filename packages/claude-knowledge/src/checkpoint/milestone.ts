@@ -11,6 +11,58 @@ import type {
 import { generateMilestoneId, now } from "./utils";
 
 /**
+ * Map database row to Workflow object (same as in workflow.ts).
+ * Centralizes the conversion from snake_case DB columns to camelCase properties.
+ */
+function mapRowToWorkflow(row: {
+  id: string;
+  issue_number: number;
+  branch: string;
+  worktree: string | null;
+  phase: WorkflowPhase;
+  status: WorkflowStatus;
+  retry_count: number;
+  created_at: string;
+  updated_at: string;
+}): Workflow {
+  return {
+    id: row.id,
+    issueNumber: row.issue_number,
+    branch: row.branch,
+    worktree: row.worktree,
+    phase: row.phase,
+    status: row.status,
+    retryCount: row.retry_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Map database row to Milestone object.
+ * Centralizes the conversion from snake_case DB columns to camelCase properties.
+ */
+function mapRowToMilestone(row: {
+  id: string;
+  name: string;
+  github_milestone_number: number | null;
+  phase: MilestonePhase;
+  status: WorkflowStatus;
+  created_at: string;
+  updated_at: string;
+}): Milestone {
+  return {
+    id: row.id,
+    name: row.name,
+    githubMilestoneNumber: row.github_milestone_number,
+    phase: row.phase,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
  * Create a new milestone checkpoint
  */
 function createMilestone(
@@ -78,15 +130,7 @@ function getMilestone(id: string): MilestoneCheckpointData | null {
 
   if (!milestoneRow) return null;
 
-  const milestone: Milestone = {
-    id: milestoneRow.id,
-    name: milestoneRow.name,
-    githubMilestoneNumber: milestoneRow.github_milestone_number,
-    phase: milestoneRow.phase,
-    status: milestoneRow.status,
-    createdAt: milestoneRow.created_at,
-    updatedAt: milestoneRow.updated_at,
-  };
+  const milestone = mapRowToMilestone(milestoneRow);
 
   // Load baseline if exists
   const baselineRow = db
@@ -151,17 +195,7 @@ function getMilestone(id: string): MilestoneCheckpointData | null {
     )
     .all(id);
 
-  const workflows: Workflow[] = workflowRows.map((row) => ({
-    id: row.id,
-    issueNumber: row.issue_number,
-    branch: row.branch,
-    worktree: row.worktree,
-    phase: row.phase,
-    status: row.status,
-    retryCount: row.retry_count,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  const workflows = workflowRows.map(mapRowToWorkflow);
 
   return { milestone, baseline, workflows };
 }
@@ -298,15 +332,7 @@ function listActiveMilestones(): Milestone[] {
     )
     .all();
 
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    githubMilestoneNumber: row.github_milestone_number,
-    phase: row.phase,
-    status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return rows.map(mapRowToMilestone);
 }
 
 /**

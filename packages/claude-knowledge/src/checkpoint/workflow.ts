@@ -18,6 +18,34 @@ import { Logger } from "@rollercoaster-dev/rd-logger";
 const logger = new Logger();
 
 /**
+ * Map database row to Workflow object.
+ * Centralizes the conversion from snake_case DB columns to camelCase properties.
+ */
+function mapRowToWorkflow(row: {
+  id: string;
+  issue_number: number;
+  branch: string;
+  worktree: string | null;
+  phase: WorkflowPhase;
+  status: WorkflowStatus;
+  retry_count: number;
+  created_at: string;
+  updated_at: string;
+}): Workflow {
+  return {
+    id: row.id,
+    issueNumber: row.issue_number,
+    branch: row.branch,
+    worktree: row.worktree,
+    phase: row.phase,
+    status: row.status,
+    retryCount: row.retry_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
  * Create a new workflow checkpoint
  */
 function create(
@@ -125,17 +153,7 @@ function load(workflowId: string): CheckpointData | null {
 
   if (!workflowRow) return null;
 
-  const workflow: Workflow = {
-    id: workflowRow.id,
-    issueNumber: workflowRow.issue_number,
-    branch: workflowRow.branch,
-    worktree: workflowRow.worktree,
-    phase: workflowRow.phase,
-    status: workflowRow.status,
-    retryCount: workflowRow.retry_count,
-    createdAt: workflowRow.created_at,
-    updatedAt: workflowRow.updated_at,
-  };
+  const workflow = mapRowToWorkflow(workflowRow);
 
   const actionRows = db
     .query<
@@ -433,17 +451,7 @@ function listActive(): Workflow[] {
     )
     .all();
 
-  return rows.map((row) => ({
-    id: row.id,
-    issueNumber: row.issue_number,
-    branch: row.branch,
-    worktree: row.worktree,
-    phase: row.phase,
-    status: row.status,
-    retryCount: row.retry_count,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return rows.map(mapRowToWorkflow);
 }
 
 /**
@@ -576,17 +584,7 @@ function listMilestoneWorkflows(milestoneId: string): Workflow[] {
     )
     .all(milestoneId);
 
-  return rows.map((row) => ({
-    id: row.id,
-    issueNumber: row.issue_number,
-    branch: row.branch,
-    worktree: row.worktree,
-    phase: row.phase,
-    status: row.status,
-    retryCount: row.retry_count,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return rows.map(mapRowToWorkflow);
 }
 
 export const workflow = {
