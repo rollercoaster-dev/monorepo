@@ -302,16 +302,19 @@ export async function queryTopics(
     WHERE type = 'Topic'
   `;
 
-  // Add keyword search conditions
+  // Add keyword search conditions (OR logic - match ANY keyword)
   if (keywords && keywords.length > 0) {
+    const keywordConditions: string[] = [];
     for (const keyword of keywords) {
       // Search in both content and keywords array
       const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
-      conditions.push(
+      keywordConditions.push(
         `(json_extract(data, '$.content') LIKE ? ESCAPE '\\' OR data LIKE ? ESCAPE '\\')`,
       );
       params.push(`%${escapedKeyword}%`, `%${escapedKeyword}%`);
     }
+    // Use OR to match topics with ANY of the keywords
+    conditions.push(`(${keywordConditions.join(" OR ")})`);
   }
 
   if (conditions.length > 0) {
