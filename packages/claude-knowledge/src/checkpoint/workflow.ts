@@ -300,33 +300,6 @@ function logActionSafe(
       error: error instanceof Error ? error.message : String(error),
       context: "logActionSafe",
     });
-
-    // Attempt to log the failure itself (if workflow still exists)
-    // Note: Don't include originalMetadata - it may be what caused JSON.stringify to fail
-    try {
-      const failureMetadata = {
-        originalAction: action,
-        originalResult: result,
-        originalMetadata: metadata
-          ? "[omitted: potentially unserializable]"
-          : null,
-        error: error instanceof Error ? error.message : String(error),
-      };
-      logAction(workflowId, `${action}_failed`, "failed", failureMetadata);
-    } catch (nestedError) {
-      // Complete failure - can't log at all (workflow likely deleted)
-      // Log the double failure so it's visible in logs
-      logger.error("Failed to log failure action (double failure)", {
-        workflowId,
-        originalAction: action,
-        nestedError:
-          nestedError instanceof Error
-            ? nestedError.message
-            : String(nestedError),
-        context: "logActionSafe.nestedFailure",
-      });
-    }
-
     return false;
   }
 }
