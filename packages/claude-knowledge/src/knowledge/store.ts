@@ -1,5 +1,5 @@
 import { getDatabase } from "../db/sqlite";
-import type { Learning, Pattern, Mistake, WorkflowLearning } from "../types";
+import type { Learning, Pattern, Mistake } from "../types";
 import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
@@ -9,10 +9,6 @@ import {
   generateEmbedding,
   createRelationship,
 } from "./helpers";
-import {
-  storeWorkflowLearning as storeWorkflowLearningImpl,
-  analyzeWorkflow as analyzeWorkflowImpl,
-} from "../retrospective";
 import type { Database } from "bun:sqlite";
 
 /**
@@ -271,37 +267,4 @@ export async function storeMistake(
     },
     "knowledge.storeMistake",
   );
-}
-
-/**
- * Store a WorkflowLearning in the knowledge graph.
- *
- * This is a convenience re-export from the retrospective module.
- * It stores the WorkflowLearning as a Learning entity and extracts
- * patterns and mistakes as separate entities with relationships.
- *
- * @param learning - The WorkflowLearning to store
- */
-export async function storeWorkflowLearning(
-  learning: WorkflowLearning,
-): Promise<void> {
-  return storeWorkflowLearningImpl(learning);
-}
-
-/**
- * Analyze a completed workflow and generate a WorkflowLearning object.
- *
- * This is a convenience re-export from the retrospective module.
- * It loads workflow data from the checkpoint system, parses the dev plan,
- * and compares planned vs actual execution.
- *
- * @param workflowId - The workflow ID from the checkpoint system
- * @param devPlanPath - Path to the dev plan markdown file
- * @returns WorkflowLearning object with analysis results
- */
-export async function analyzeWorkflow(
-  workflowId: string,
-  devPlanPath: string,
-): Promise<WorkflowLearning> {
-  return analyzeWorkflowImpl(workflowId, devPlanPath);
 }

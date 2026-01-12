@@ -10,13 +10,10 @@
  */
 
 // Re-export all store operations
-export {
-  store,
-  storePattern,
-  storeMistake,
-  storeWorkflowLearning,
-  analyzeWorkflow,
-} from "./store";
+export { store, storePattern, storeMistake } from "./store";
+
+// Re-export retrospective functions directly (not through store)
+export { storeWorkflowLearning, analyzeWorkflow } from "../retrospective";
 
 // Re-export all query operations
 export { query, getMistakesForFile, getPatternsForArea } from "./query";
@@ -28,13 +25,8 @@ export { searchSimilar, type SearchSimilarOptions } from "./semantic";
 export { formatForContext } from "./context";
 
 // Import for unified knowledge object
-import {
-  store,
-  storePattern,
-  storeMistake,
-  storeWorkflowLearning,
-  analyzeWorkflow,
-} from "./store";
+import { store, storePattern, storeMistake } from "./store";
+import { storeWorkflowLearning, analyzeWorkflow } from "../retrospective";
 import { query, getMistakesForFile, getPatternsForArea } from "./query";
 import { searchSimilar } from "./semantic";
 import { formatForContext } from "./context";
