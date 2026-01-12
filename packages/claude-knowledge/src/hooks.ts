@@ -225,6 +225,78 @@ async function onSessionStart(
 const AUTO_EXTRACT_CONFIDENCE = 0.6;
 
 /**
+ * Extract keywords from commit messages for topic tagging.
+ * Filters out common words and returns unique significant words.
+ */
+function extractKeywordsFromMessages(messages: string[]): string[] {
+  const stopWords = new Set([
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "shall",
+    "can",
+    "need",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "add",
+    "update",
+    "fix",
+    "remove",
+    "change",
+    "make",
+    "use",
+    "new",
+    "into",
+  ]);
+
+  const words = messages
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+
+  // Return unique words, max 5
+  return [...new Set(words)].slice(0, 5);
+}
+
+/**
  * Extended session summary with optional metrics tracking data.
  */
 export interface ExtendedSessionSummary extends SessionSummary {
@@ -353,6 +425,44 @@ async function onSessionEnd(
     }
   }
 
+  // Extract conversation topics from commits (group by scope)
+  const topics: Topic[] = [];
+  const scopeCounts = new Map<string, { count: number; messages: string[] }>();
+
+  for (const commit of session.commits) {
+    const parsed = parseConventionalCommit(commit.message);
+    if (parsed?.scope) {
+      const existing = scopeCounts.get(parsed.scope) || {
+        count: 0,
+        messages: [],
+      };
+      existing.count++;
+      existing.messages.push(parsed.description);
+      scopeCounts.set(parsed.scope, existing);
+    }
+  }
+
+  // Create topics for scopes with >= 2 commits (lowered threshold for MVP)
+  const TOPIC_THRESHOLD = 2;
+  for (const [scope, data] of scopeCounts) {
+    if (data.count >= TOPIC_THRESHOLD) {
+      const topicId = `topic-${randomUUID()}`;
+      const topic: Topic = {
+        id: topicId,
+        content: `Worked on ${scope}: ${data.messages.slice(0, 2).join("; ")}`,
+        keywords: [scope, ...extractKeywordsFromMessages(data.messages)],
+        sourceSession: session.sessionId,
+        confidence: AUTO_EXTRACT_CONFIDENCE,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          source: "auto-extracted",
+          commitCount: data.count,
+        },
+      };
+      topics.push(topic);
+    }
+  }
+
   // Store all extracted learnings
   if (learnings.length > 0) {
     try {
@@ -368,6 +478,26 @@ async function onSessionEnd(
         learningsStored: 0,
         learningIds: [],
       };
+    }
+  }
+
+  // Store extracted topics
+  if (topics.length > 0) {
+    try {
+      for (const topic of topics) {
+        await knowledge.storeTopic(topic);
+      }
+      logger.debug("Session topics stored", {
+        topicsCount: topics.length,
+        context: "onSessionEnd",
+      });
+    } catch (error) {
+      // Log but don't fail - topics are supplementary
+      logger.warn("Failed to store session topics", {
+        error: error instanceof Error ? error.message : String(error),
+        topicsCount: topics.length,
+        context: "onSessionEnd",
+      });
     }
   }
 
