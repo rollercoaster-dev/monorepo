@@ -402,27 +402,63 @@ results.forEach((r) => {
 
 ### Embedding Providers
 
-By default, semantic search uses a zero-dependency **TF-IDF** implementation. For higher-quality embeddings, optional API providers are available:
+Semantic search supports multiple embedding providers with **automatic provider selection**:
+
+1. If `OPENAI_API_KEY` environment variable is set → **OpenAI neural embeddings** (better quality)
+2. Otherwise → **TF-IDF** (zero dependencies, works offline)
+
+This enables conceptual matching like "auth validation" → "credential verification" without code changes.
+
+#### Automatic Provider Selection
+
+```typescript
+import { getDefaultEmbedder } from "claude-knowledge/embeddings";
+
+// Automatically selects provider based on OPENAI_API_KEY
+const embedder = await getDefaultEmbedder();
+// Returns OpenAIEmbedding if API key is set, TfIdfEmbedding otherwise
+```
+
+#### Manual Configuration
 
 ```typescript
 import { OpenAIEmbedding } from "claude-knowledge/embeddings/api-providers";
+import { setDefaultProvider } from "claude-knowledge/embeddings";
 
-// Use OpenAI embeddings (requires API key)
+// Explicitly use OpenAI
 const embedder = new OpenAIEmbedding(process.env.OPENAI_API_KEY, {
   model: "text-embedding-3-small", // default
   dimensions: 256, // default, matches TF-IDF for consistency
 });
+setDefaultProvider(embedder, "openai");
+```
+
+#### Cost Tracking
+
+OpenAI embeddings include usage tracking:
+
+```typescript
+import { OpenAIEmbedding } from "claude-knowledge/embeddings/api-providers";
+
+// After generating embeddings
+const metrics = OpenAIEmbedding.getUsageMetrics();
+console.log(`Tokens: ${metrics.totalTokens}`);
+console.log(`Requests: ${metrics.requestCount}`);
+console.log(`Cost: $${metrics.estimatedCostUsd.toFixed(6)}`);
+
+// Reset for new session
+OpenAIEmbedding.resetUsageMetrics();
 ```
 
 **Available providers:**
 
-| Provider  | Status | Quality | Cost             | Dependencies |
-| --------- | ------ | ------- | ---------------- | ------------ |
-| TF-IDF    | ✅     | Good    | Free             | None         |
-| OpenAI    | ✅     | Better  | ~$0.02/1M tokens | fetch        |
-| Anthropic | 🚧     | -       | -                | fetch        |
+| Provider  | Status | Quality   | Cost             | When Used                  |
+| --------- | ------ | --------- | ---------------- | -------------------------- |
+| OpenAI    | ✅     | Excellent | ~$0.02/1M tokens | Auto: `OPENAI_API_KEY` set |
+| TF-IDF    | ✅     | Good      | Free             | Auto: No API key           |
+| Anthropic | 🚧     | -         | -                | Not yet available          |
 
-> Note: API providers are optional and not imported by default. The package remains zero-dependency if you use only TF-IDF.
+> **Cost analysis**: At ~$0.02 per million tokens, typical usage (1000 embeddings/month) costs ~$0.02/month total. Essentially free for most use cases.
 
 ### Knowledge Formatting
 
