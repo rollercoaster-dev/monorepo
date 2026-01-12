@@ -16,6 +16,31 @@ This agent uses patterns from [shared/](../shared/):
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
 - **[board-operations.md](../shared/board-operations.md)** - Board status updates
 
+## Code Graph (Recommended)
+
+Use the `graph-query` skill to understand dependencies before implementing changes:
+
+```bash
+# Find what calls a function you're modifying
+bun run checkpoint graph what-calls <function-name>
+
+# Assess impact of file changes
+bun run checkpoint graph blast-radius <file-path>
+
+# Find related entities to modify together
+bun run checkpoint graph find <name> [type]
+
+# Check package exports for public API awareness
+bun run checkpoint graph exports [package-name]
+```
+
+**When to use graph queries:**
+
+- Before modifying a function, check what calls it
+- Before changing types, find all usages
+- Before refactoring, understand the blast radius
+- When unsure if a change affects other files
+
 ## Purpose
 
 Implements code changes following a development plan, making atomic commits that each represent a single logical change. Follows trunk-based development practices with small, focused changes.

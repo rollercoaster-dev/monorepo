@@ -15,6 +15,34 @@ This agent uses patterns from [shared/](../shared/):
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
 
+## Code Graph (Recommended)
+
+Use the `graph-query` skill to understand codebase structure efficiently:
+
+```bash
+# Find what calls a function (impact analysis)
+bun run checkpoint graph what-calls <function-name>
+
+# Find what depends on a module/type (dependency mapping)
+bun run checkpoint graph what-depends-on <name>
+
+# Assess blast radius before changes
+bun run checkpoint graph blast-radius <file-path>
+
+# Search for entities by name
+bun run checkpoint graph find <name> [type]
+
+# Get package exports overview
+bun run checkpoint graph exports [package-name]
+```
+
+**When to use graph queries:**
+
+- Understanding call hierarchies before modifying functions
+- Finding all usages of a type/class/interface
+- Assessing impact of file changes
+- Exploring unfamiliar packages
+
 ## Purpose
 
 Fetches a GitHub issue, analyzes the codebase to understand the context, and creates a detailed development plan with atomic commits suitable for a single focused PR (~500 lines max).
@@ -116,16 +144,19 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
    - Search for keywords from the issue
    - Find relevant files and directories
    - Understand the existing code structure
+   - Use `graph find <name>` to locate entities
 
-2. **Map dependencies:**
-   - What imports the affected code?
-   - What does the affected code import?
+2. **Map dependencies (use graph queries):**
+   - `graph what-calls <function>` - What calls the code we're changing?
+   - `graph what-depends-on <type>` - What depends on this type/module?
+   - `graph blast-radius <file>` - What's affected if we change this file?
    - Any shared utilities or types?
 
 3. **Review existing patterns:**
    - How are similar features implemented?
    - What conventions does the codebase follow?
    - Any relevant tests to reference?
+   - Use `graph exports <package>` to see public API
 
 4. **Check for related code:**
    - Similar implementations

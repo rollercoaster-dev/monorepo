@@ -41,6 +41,7 @@ This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
 
 - `checkpoint-workflow` - Workflow state persistence (find, create, log-action, log-commit)
 - `checkpoint-session` - Session lifecycle and learning extraction
+- `graph-query` - Code graph queries (what-calls, blast-radius, find, exports) for understanding codebase structure
 
 **Documentation patterns (for reference):**
 

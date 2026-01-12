@@ -83,4 +83,5 @@ export type {
   WorkflowLearning,
   // Context metrics types (dogfooding)
   ContextMetrics,
+  GraphQueryMetrics,
 } from "./types";

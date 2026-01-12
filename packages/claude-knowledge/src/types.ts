@@ -502,3 +502,25 @@ export interface ContextMetrics {
   /** ISO timestamp when metrics were recorded */
   createdAt: string;
 }
+
+/**
+ * Metrics for a single graph query execution.
+ * Used to track code graph usage patterns and measure effectiveness.
+ */
+export interface GraphQueryMetrics {
+  id?: number;
+  /** Session identifier (from CLAUDE_SESSION_ID env var) */
+  sessionId: string;
+  /** Associated workflow ID if running within a workflow */
+  workflowId?: string;
+  /** Type of graph query (what-calls, blast-radius, find, etc.) */
+  queryType: string;
+  /** JSON-serialized query parameters */
+  queryParams: string;
+  /** Number of results returned by the query */
+  resultCount: number;
+  /** Query execution time in milliseconds */
+  durationMs: number;
+  /** ISO timestamp when the query was executed */
+  createdAt: string;
+}

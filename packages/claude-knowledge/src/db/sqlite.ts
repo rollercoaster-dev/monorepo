@@ -134,6 +134,23 @@ CREATE TABLE IF NOT EXISTS context_metrics (
 CREATE INDEX IF NOT EXISTS idx_context_metrics_session ON context_metrics(session_id);
 CREATE INDEX IF NOT EXISTS idx_context_metrics_issue ON context_metrics(issue_number);
 
+-- Graph query metrics for tracking code graph usage patterns
+CREATE TABLE IF NOT EXISTS graph_queries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  workflow_id TEXT,
+  query_type TEXT NOT NULL,
+  query_params TEXT,
+  result_count INTEGER NOT NULL DEFAULT 0,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+-- Indexes for graph query metrics
+CREATE INDEX IF NOT EXISTS idx_graph_queries_session ON graph_queries(session_id);
+CREATE INDEX IF NOT EXISTS idx_graph_queries_workflow ON graph_queries(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_graph_queries_type ON graph_queries(query_type);
+
 -- Code graph entities (functions, classes, files, types)
 -- Part of Issue #431 Experiment 3: Code Graph Prototype
 CREATE TABLE IF NOT EXISTS graph_entities (

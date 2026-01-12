@@ -15,6 +15,28 @@ This agent uses patterns from [shared/](../shared/):
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Fix commit format
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Fix attempt logging
 
+## Code Graph (Recommended)
+
+Use the `graph-query` skill to understand fix impact before applying changes:
+
+```bash
+# Assess blast radius before fixing a file
+bun run checkpoint graph blast-radius <file-path>
+
+# Find what calls the function being fixed
+bun run checkpoint graph what-calls <function-name>
+
+# Check if fix affects exported public API
+bun run checkpoint graph exports [package-name]
+```
+
+**When to use graph queries:**
+
+- Before fixing, check blast radius to understand scope
+- When fix might affect callers, identify them first
+- For type changes, find all dependent code
+- To verify fix doesn't break downstream consumers
+
 ## Purpose
 
 Applies fixes for critical findings identified by review agents during the `/auto-issue` workflow. Focuses on minimal, targeted fixes that address the specific issue without over-engineering or refactoring unrelated code.

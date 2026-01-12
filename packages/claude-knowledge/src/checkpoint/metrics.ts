@@ -1,5 +1,9 @@
 import { getDatabase } from "../db/sqlite";
-import type { ContextMetrics, ReviewFindingsSummary } from "../types";
+import type {
+  ContextMetrics,
+  GraphQueryMetrics,
+  ReviewFindingsSummary,
+} from "../types";
 import { workflow } from "./workflow";
 
 /**
@@ -248,9 +252,173 @@ function getMetricsSummary(): {
   };
 }
 
+// ============================================================================
+// Graph Query Metrics Functions
+// ============================================================================
+
+/**
+ * Log a graph query execution for baseline metrics tracking.
+ * Called automatically by instrumented graph CLI commands.
+ */
+function logGraphQuery(params: {
+  sessionId: string;
+  workflowId?: string;
+  queryType: string;
+  queryParams: string;
+  resultCount: number;
+  durationMs: number;
+}): void {
+  const db = getDatabase();
+
+  db.run(
+    `
+    INSERT INTO graph_queries (
+      session_id, workflow_id, query_type, query_params,
+      result_count, duration_ms, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      params.sessionId,
+      params.workflowId ?? null,
+      params.queryType,
+      params.queryParams,
+      params.resultCount,
+      params.durationMs,
+      new Date().toISOString(),
+    ],
+  );
+}
+
+/**
+ * Get graph query metrics with optional filtering.
+ * Returns most recent first, limited to 100 results.
+ */
+function getGraphQueries(filters?: {
+  sessionId?: string;
+  workflowId?: string;
+  queryType?: string;
+}): GraphQueryMetrics[] {
+  const db = getDatabase();
+
+  type QueryRow = {
+    id: number;
+    session_id: string;
+    workflow_id: string | null;
+    query_type: string;
+    query_params: string | null;
+    result_count: number;
+    duration_ms: number;
+    created_at: string;
+  };
+
+  // Build query with optional filters
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (filters?.sessionId) {
+    conditions.push("session_id = ?");
+    params.push(filters.sessionId);
+  }
+  if (filters?.workflowId) {
+    conditions.push("workflow_id = ?");
+    params.push(filters.workflowId);
+  }
+  if (filters?.queryType) {
+    conditions.push("query_type = ?");
+    params.push(filters.queryType);
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const rows = db
+    .query<QueryRow, (string | number)[]>(
+      `
+      SELECT id, session_id, workflow_id, query_type, query_params,
+             result_count, duration_ms, created_at
+      FROM graph_queries
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT 100
+    `,
+    )
+    .all(...params);
+
+  return rows.map((row) => ({
+    id: row.id,
+    sessionId: row.session_id,
+    workflowId: row.workflow_id ?? undefined,
+    queryType: row.query_type,
+    queryParams: row.query_params ?? "",
+    resultCount: row.result_count,
+    durationMs: row.duration_ms,
+    createdAt: row.created_at,
+  }));
+}
+
+/**
+ * Get aggregated summary of graph query usage.
+ * Useful for baseline analysis and measuring graph effectiveness.
+ */
+function getGraphQuerySummary(): {
+  totalQueries: number;
+  queriesByType: Record<string, number>;
+  avgResultCount: number;
+  avgDurationMs: number;
+} {
+  const db = getDatabase();
+
+  // Get totals and averages
+  type SummaryRow = {
+    total_queries: number;
+    avg_result_count: number;
+    avg_duration_ms: number;
+  };
+
+  const summary = db
+    .query<SummaryRow, []>(
+      `
+      SELECT
+        COUNT(*) as total_queries,
+        AVG(result_count) as avg_result_count,
+        AVG(duration_ms) as avg_duration_ms
+      FROM graph_queries
+    `,
+    )
+    .get();
+
+  // Get counts by query type
+  type TypeCountRow = { query_type: string; count: number };
+  const typeCounts = db
+    .query<TypeCountRow, []>(
+      `
+      SELECT query_type, COUNT(*) as count
+      FROM graph_queries
+      GROUP BY query_type
+      ORDER BY count DESC
+    `,
+    )
+    .all();
+
+  const queriesByType: Record<string, number> = {};
+  for (const row of typeCounts) {
+    queriesByType[row.query_type] = row.count;
+  }
+
+  return {
+    totalQueries: summary?.total_queries ?? 0,
+    queriesByType,
+    avgResultCount: Math.round((summary?.avg_result_count ?? 0) * 10) / 10,
+    avgDurationMs: Math.round((summary?.avg_duration_ms ?? 0) * 10) / 10,
+  };
+}
+
 export const metrics = {
   saveContextMetrics,
   getContextMetrics,
   getMetricsSummary,
   calculateWorkflowDuration,
+  logGraphQuery,
+  getGraphQueries,
+  getGraphQuerySummary,
 };
