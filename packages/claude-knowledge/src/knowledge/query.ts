@@ -3,6 +3,7 @@ import type {
   Learning,
   Pattern,
   Mistake,
+  Topic,
   QueryContext,
   QueryResult,
 } from "../types";
@@ -265,4 +266,76 @@ export async function getPatternsForArea(codeArea: string): Promise<Pattern[]> {
     }
   }
   return patterns;
+}
+
+/**
+ * Query context for topic retrieval.
+ */
+export interface TopicQueryContext {
+  /** Keywords to search for in topic content and keywords */
+  keywords?: string[];
+  /** Maximum number of topics to return (default: 10) */
+  limit?: number;
+}
+
+/**
+ * Query the knowledge graph for conversation topics.
+ *
+ * Retrieves topics matching the provided keywords, sorted by recency.
+ * If no keywords provided, returns the most recent topics.
+ *
+ * @param context - Query filters and options
+ * @returns Array of Topic objects
+ */
+export async function queryTopics(
+  context: TopicQueryContext = {},
+): Promise<Topic[]> {
+  const db = getDatabase();
+  const { keywords, limit = 10 } = context;
+
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+
+  let sql = `
+    SELECT data, created_at
+    FROM entities
+    WHERE type = 'Topic'
+  `;
+
+  // Add keyword search conditions
+  if (keywords && keywords.length > 0) {
+    for (const keyword of keywords) {
+      // Search in both content and keywords array
+      const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
+      conditions.push(
+        `(json_extract(data, '$.content') LIKE ? ESCAPE '\\' OR data LIKE ? ESCAPE '\\')`,
+      );
+      params.push(`%${escapedKeyword}%`, `%${escapedKeyword}%`);
+    }
+  }
+
+  if (conditions.length > 0) {
+    sql += ` AND ${conditions.join(" AND ")}`;
+  }
+
+  sql += ` ORDER BY created_at DESC LIMIT ?`;
+  params.push(limit);
+
+  const rows = db
+    .query<{ data: string; created_at: string }, (string | number)[]>(sql)
+    .all(...params);
+
+  // Transform rows to Topic objects, skipping corrupted entries
+  const topics: Topic[] = [];
+  for (const row of rows) {
+    try {
+      topics.push(JSON.parse(row.data) as Topic);
+    } catch (error) {
+      logger.warn("Skipping corrupted topic data", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "knowledge.queryTopics",
+      });
+    }
+  }
+  return topics;
 }

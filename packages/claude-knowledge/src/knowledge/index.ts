@@ -10,13 +10,19 @@
  */
 
 // Re-export all store operations
-export { store, storePattern, storeMistake } from "./store";
+export { store, storePattern, storeMistake, storeTopic } from "./store";
 
 // Re-export retrospective functions directly (not through store)
 export { storeWorkflowLearning, analyzeWorkflow } from "../retrospective";
 
 // Re-export all query operations
-export { query, getMistakesForFile, getPatternsForArea } from "./query";
+export {
+  query,
+  getMistakesForFile,
+  getPatternsForArea,
+  queryTopics,
+  type TopicQueryContext,
+} from "./query";
 
 // Re-export semantic search
 export { searchSimilar, type SearchSimilarOptions } from "./semantic";
@@ -25,9 +31,14 @@ export { searchSimilar, type SearchSimilarOptions } from "./semantic";
 export { formatForContext } from "./context";
 
 // Import for unified knowledge object
-import { store, storePattern, storeMistake } from "./store";
+import { store, storePattern, storeMistake, storeTopic } from "./store";
 import { storeWorkflowLearning, analyzeWorkflow } from "../retrospective";
-import { query, getMistakesForFile, getPatternsForArea } from "./query";
+import {
+  query,
+  getMistakesForFile,
+  getPatternsForArea,
+  queryTopics,
+} from "./query";
 import { searchSimilar } from "./semantic";
 import { formatForContext } from "./context";
 
@@ -42,6 +53,7 @@ export const knowledge = {
   store,
   storePattern,
   storeMistake,
+  storeTopic,
   storeWorkflowLearning,
   analyzeWorkflow,
 
@@ -49,6 +61,7 @@ export const knowledge = {
   query,
   getMistakesForFile,
   getPatternsForArea,
+  queryTopics,
 
   // Semantic search
   searchSimilar,

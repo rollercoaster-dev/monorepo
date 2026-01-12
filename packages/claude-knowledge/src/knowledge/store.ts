@@ -1,5 +1,5 @@
 import { getDatabase } from "../db/sqlite";
-import type { Learning, Pattern, Mistake } from "../types";
+import type { Learning, Pattern, Mistake, Topic } from "../types";
 import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import { Buffer } from "buffer";
@@ -266,5 +266,45 @@ export async function storeMistake(
       }
     },
     "knowledge.storeMistake",
+  );
+}
+
+/**
+ * Store a topic in the knowledge graph.
+ *
+ * Creates Topic entity with embedding for semantic search.
+ * Topics persist conversation themes across sessions.
+ *
+ * @param topic - The topic to store
+ * @throws Error if storage fails
+ */
+export async function storeTopic(topic: Topic): Promise<void> {
+  const db = getDatabase();
+
+  // Generate embedding from topic content and keywords
+  const textToEmbed = [topic.content, ...topic.keywords]
+    .filter(Boolean)
+    .join(" ");
+  const embedding = await generateEmbedding(textToEmbed);
+
+  withTransaction(
+    db,
+    () => {
+      // Ensure topic has an ID
+      const topicId = topic.id || `topic-${randomUUID()}`;
+
+      // Create Topic entity with embedding
+      createOrMergeEntity(
+        db,
+        "Topic",
+        topicId,
+        {
+          ...topic,
+          id: topicId,
+        },
+        embedding,
+      );
+    },
+    "knowledge.storeTopic",
   );
 }
