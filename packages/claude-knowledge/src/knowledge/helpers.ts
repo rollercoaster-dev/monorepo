@@ -85,7 +85,7 @@ export async function generateEmbedding(
   }
 
   try {
-    const embedder = getDefaultEmbedder();
+    const embedder = await getDefaultEmbedder();
     const embedding = await embedder.generate(content);
     return floatArrayToBuffer(embedding);
   } catch (error) {
