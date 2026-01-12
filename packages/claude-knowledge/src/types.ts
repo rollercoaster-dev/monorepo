@@ -121,6 +121,20 @@ export interface Mistake {
 }
 
 /**
+ * A conversation topic that persists across sessions.
+ * Topics capture key themes and conclusions from conversations.
+ */
+export interface Topic {
+  id: string;
+  content: string;
+  keywords: string[];
+  sourceSession?: string;
+  confidence?: number;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
  * Entity types in the knowledge graph.
  */
 export type EntityType =
@@ -128,7 +142,8 @@ export type EntityType =
   | "CodeArea"
   | "File"
   | "Pattern"
-  | "Mistake";
+  | "Mistake"
+  | "Topic";
 
 /**
  * Relationship types in the knowledge graph.
@@ -167,7 +182,7 @@ export interface FileData {
 export interface Entity {
   id: string;
   type: EntityType;
-  data: Learning | Pattern | Mistake | CodeAreaData | FileData;
+  data: Learning | Pattern | Mistake | CodeAreaData | FileData | Topic;
   embedding?: Uint8Array;
   createdAt: string;
   updatedAt: string;
@@ -251,6 +266,8 @@ export interface KnowledgeContext {
   patterns: Pattern[];
   /** Mistakes to avoid for the current files */
   mistakes: Mistake[];
+  /** Conversation topics from previous sessions */
+  topics?: Topic[];
   /** Formatted markdown summary for injection into context */
   summary: string;
   /** Session metadata for metrics tracking (populated by onSessionStart) */
