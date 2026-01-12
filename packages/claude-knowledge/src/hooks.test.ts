@@ -239,6 +239,98 @@ describe("hooks", () => {
       // Should be limited to MAX_LEARNINGS (10)
       expect(result.learnings.length).toBeLessThanOrEqual(10);
     });
+
+    it("should query and return relevant topics", async () => {
+      // Store topics with keywords that match code area "Authentication"
+      await knowledge.storeTopic({
+        id: "topic-auth-1",
+        content: "Worked on authentication: OAuth integration",
+        keywords: ["Authentication", "oauth"],
+        timestamp: new Date().toISOString(),
+        confidence: 0.8,
+      });
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        modifiedFiles: ["src/auth/login.ts"], // Will infer Authentication code area
+      });
+
+      expect(result.topics).toBeDefined();
+      expect(result.topics!.length).toBeGreaterThan(0);
+      expect(result.topics![0].content).toContain("OAuth");
+    });
+
+    it("should include topics in formatted summary", async () => {
+      await knowledge.storeTopic({
+        id: "topic-db-1",
+        content: "Database schema discussion: normalized tables",
+        keywords: ["Database", "schema"],
+        timestamp: new Date().toISOString(),
+      });
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        modifiedFiles: ["src/db/schema.ts"],
+      });
+
+      expect(result.summary).toContain("Recent Conversation Topics");
+      expect(result.summary).toContain("normalized tables");
+    });
+
+    it("should respect MAX_TOPICS limit", async () => {
+      // Store more topics than the limit (MAX_TOPICS = 5)
+      const topics = Array.from({ length: 10 }, (_, i) => ({
+        id: `topic-${i}`,
+        content: `Topic ${i} about testing`,
+        keywords: ["Testing"],
+        timestamp: new Date(Date.now() - i * 1000).toISOString(),
+      }));
+
+      for (const topic of topics) {
+        await knowledge.storeTopic(topic);
+      }
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        modifiedFiles: ["src/__tests__/example.test.ts"], // Will infer "Testing" code area
+      });
+
+      expect(result.topics!.length).toBeLessThanOrEqual(5);
+    });
+
+    it("should query topics using code areas as keywords", async () => {
+      await knowledge.storeTopic({
+        id: "topic-api-1",
+        content: "API design patterns discussion",
+        keywords: ["API", "patterns"],
+        timestamp: new Date().toISOString(),
+      });
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        modifiedFiles: ["src/api/routes.ts"], // Will infer "API" code area
+      });
+
+      // Should find topic via code area "API" keyword match
+      expect(result.topics!.length).toBeGreaterThan(0);
+    });
+
+    it("should return recent topics when no keywords match", async () => {
+      await knowledge.storeTopic({
+        id: "topic-recent-1",
+        content: "Recent unrelated topic",
+        keywords: ["unrelated"],
+        timestamp: new Date().toISOString(),
+      });
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        // No branch or modified files to generate keywords
+      });
+
+      // Should return recent topics as fallback
+      expect(result.topics!.length).toBeGreaterThan(0);
+    });
   });
 
   describe("onSessionEnd", () => {
@@ -357,6 +449,89 @@ describe("hooks", () => {
 
       expect(result.learningsStored).toBe(0);
       expect(result.learningIds).toEqual([]);
+    });
+
+    it("should extract topics from commits with same scope", async () => {
+      // Create 2+ commits with the same scope (threshold for topic creation)
+      await hooks.onSessionEnd({
+        commits: [
+          { sha: "abc123", message: "feat(auth): add login" },
+          { sha: "def456", message: "feat(auth): add logout" },
+        ],
+        modifiedFiles: [],
+      });
+
+      // Should create a topic for "auth" scope
+      const topics = await knowledge.queryTopics({ keywords: ["auth"] });
+      expect(topics.length).toBe(1);
+      expect(topics[0].content).toContain("auth");
+      expect(topics[0].keywords).toContain("auth");
+    });
+
+    it("should not create topic for single commit per scope", async () => {
+      await hooks.onSessionEnd({
+        commits: [
+          { sha: "abc123", message: "feat(api): single commit" },
+          { sha: "def456", message: "feat(db): different scope" },
+        ],
+        modifiedFiles: [],
+      });
+
+      // Neither scope has >= 2 commits, so no topics
+      const apiTopics = await knowledge.queryTopics({ keywords: ["api"] });
+      const dbTopics = await knowledge.queryTopics({ keywords: ["db"] });
+
+      // Both should be empty - single commits don't create topics
+      expect(apiTopics.length).toBe(0);
+      expect(dbTopics.length).toBe(0);
+    });
+
+    it("should extract keywords from commit messages for topics", async () => {
+      await hooks.onSessionEnd({
+        commits: [
+          {
+            sha: "abc123",
+            message: "feat(database): optimize query performance",
+          },
+          { sha: "def456", message: "feat(database): add caching layer" },
+        ],
+        modifiedFiles: [],
+      });
+
+      const topics = await knowledge.queryTopics({ keywords: ["database"] });
+      expect(topics.length).toBe(1);
+      // Keywords should include significant words from descriptions
+      expect(topics[0].keywords).toContain("database");
+    });
+
+    it("should set auto-extract confidence on topics", async () => {
+      await hooks.onSessionEnd({
+        commits: [
+          { sha: "abc123", message: "feat(testing): add unit tests" },
+          { sha: "def456", message: "feat(testing): add integration tests" },
+        ],
+        modifiedFiles: [],
+      });
+
+      const topics = await knowledge.queryTopics({ keywords: ["testing"] });
+      expect(topics.length).toBe(1);
+      expect(topics[0].confidence).toBeLessThan(1);
+      expect(topics[0].confidence).toBeGreaterThan(0);
+    });
+
+    it("should include session ID in extracted topics", async () => {
+      await hooks.onSessionEnd({
+        sessionId: "test-session-123",
+        commits: [
+          { sha: "abc123", message: "feat(api): endpoint 1" },
+          { sha: "def456", message: "feat(api): endpoint 2" },
+        ],
+        modifiedFiles: [],
+      });
+
+      const topics = await knowledge.queryTopics({ keywords: ["api"] });
+      expect(topics.length).toBe(1);
+      expect(topics[0].sourceSession).toBe("test-session-123");
     });
   });
 });
