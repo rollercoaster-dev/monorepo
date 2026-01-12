@@ -17,7 +17,7 @@ import type {
   Topic,
   ContextMetrics,
 } from "./types";
-import { knowledge } from "./knowledge/index";
+import { knowledge, searchSimilarTopics } from "./knowledge/index";
 import { checkpoint } from "./checkpoint";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
@@ -149,18 +149,22 @@ async function onSessionStart(
     }
 
     // Get relevant conversation topics using semantic search
+    // Build query text from code areas and branch name for conceptual matching
     const topicKeywords = [...codeAreas, context.branch].filter(
       (k): k is string => Boolean(k),
     );
 
     if (topicKeywords.length > 0) {
-      const topicResults = await knowledge.queryTopics({
-        keywords: topicKeywords,
+      // Use semantic search for conceptual matching
+      // This enables "auth validation" to match "credential verification"
+      const queryText = topicKeywords.join(" ");
+      const topicResults = await searchSimilarTopics(queryText, {
         limit: MAX_TOPICS,
+        threshold: 0.3,
       });
-      topics.push(...topicResults);
+      topics.push(...topicResults.map((r) => r.topic));
     } else {
-      // If no keywords, get most recent topics
+      // If no keywords, get most recent topics (fallback to keyword query)
       const recentTopics = await knowledge.queryTopics({
         limit: MAX_TOPICS,
       });
