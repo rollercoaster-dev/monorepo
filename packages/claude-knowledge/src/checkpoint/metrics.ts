@@ -257,11 +257,35 @@ function getMetricsSummary(): {
 // ============================================================================
 
 /**
+ * Determine the source of a graph query from environment variables.
+ * Returns a string indicating where the query originated.
+ *
+ * Priority order:
+ * 1. CLAUDE_AGENT_NAME → "agent:{name}"
+ * 2. CLAUDE_SKILL_NAME → "skill:{name}"
+ * 3. GIT_HOOK_NAME → "hook:{name}"
+ * 4. Default → "cli"
+ */
+function determineQuerySource(): string {
+  if (process.env.CLAUDE_AGENT_NAME) {
+    return `agent:${process.env.CLAUDE_AGENT_NAME}`;
+  }
+  if (process.env.CLAUDE_SKILL_NAME) {
+    return `skill:${process.env.CLAUDE_SKILL_NAME}`;
+  }
+  if (process.env.GIT_HOOK_NAME) {
+    return `hook:${process.env.GIT_HOOK_NAME}`;
+  }
+  return "cli";
+}
+
+/**
  * Log a graph query execution for baseline metrics tracking.
  * Called automatically by instrumented graph CLI commands.
  */
 function logGraphQuery(params: {
-  sessionId: string;
+  source: string;
+  sessionId?: string;
   workflowId?: string;
   queryType: string;
   queryParams: string;
@@ -273,12 +297,13 @@ function logGraphQuery(params: {
   db.run(
     `
     INSERT INTO graph_queries (
-      session_id, workflow_id, query_type, query_params,
+      source, session_id, workflow_id, query_type, query_params,
       result_count, duration_ms, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
-      params.sessionId,
+      params.source,
+      params.sessionId ?? null,
       params.workflowId ?? null,
       params.queryType,
       params.queryParams,
@@ -297,12 +322,14 @@ function getGraphQueries(filters?: {
   sessionId?: string;
   workflowId?: string;
   queryType?: string;
+  source?: string;
 }): GraphQueryMetrics[] {
   const db = getDatabase();
 
   type QueryRow = {
     id: number;
-    session_id: string;
+    source: string;
+    session_id: string | null;
     workflow_id: string | null;
     query_type: string;
     query_params: string | null;
@@ -327,6 +354,10 @@ function getGraphQueries(filters?: {
     conditions.push("query_type = ?");
     params.push(filters.queryType);
   }
+  if (filters?.source) {
+    conditions.push("source = ?");
+    params.push(filters.source);
+  }
 
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -334,7 +365,7 @@ function getGraphQueries(filters?: {
   const rows = db
     .query<QueryRow, (string | number)[]>(
       `
-      SELECT id, session_id, workflow_id, query_type, query_params,
+      SELECT id, source, session_id, workflow_id, query_type, query_params,
              result_count, duration_ms, created_at
       FROM graph_queries
       ${whereClause}
@@ -346,7 +377,8 @@ function getGraphQueries(filters?: {
 
   return rows.map((row) => ({
     id: row.id,
-    sessionId: row.session_id,
+    source: row.source,
+    sessionId: row.session_id ?? undefined,
     workflowId: row.workflow_id ?? undefined,
     queryType: row.query_type,
     queryParams: row.query_params ?? "",
@@ -363,6 +395,7 @@ function getGraphQueries(filters?: {
 function getGraphQuerySummary(): {
   totalQueries: number;
   queriesByType: Record<string, number>;
+  queriesBySource: Record<string, number>;
   avgResultCount: number;
   avgDurationMs: number;
 } {
@@ -405,9 +438,28 @@ function getGraphQuerySummary(): {
     queriesByType[row.query_type] = row.count;
   }
 
+  // Get counts by source
+  type SourceCountRow = { source: string; count: number };
+  const sourceCounts = db
+    .query<SourceCountRow, []>(
+      `
+      SELECT source, COUNT(*) as count
+      FROM graph_queries
+      GROUP BY source
+      ORDER BY count DESC
+    `,
+    )
+    .all();
+
+  const queriesBySource: Record<string, number> = {};
+  for (const row of sourceCounts) {
+    queriesBySource[row.source] = row.count;
+  }
+
   return {
     totalQueries: summary?.total_queries ?? 0,
     queriesByType,
+    queriesBySource,
     avgResultCount: Math.round((summary?.avg_result_count ?? 0) * 10) / 10,
     avgDurationMs: Math.round((summary?.avg_duration_ms ?? 0) * 10) / 10,
   };
@@ -421,4 +473,5 @@ export const metrics = {
   logGraphQuery,
   getGraphQueries,
   getGraphQuerySummary,
+  determineQuerySource,
 };

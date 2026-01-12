@@ -30,13 +30,9 @@ function logQuery(
   durationMs: number,
 ): void {
   try {
-    const sessionId = process.env.CLAUDE_SESSION_ID;
-    if (!sessionId) {
-      // Not running in a Claude session - skip logging
-      return;
-    }
     metrics.logGraphQuery({
-      sessionId,
+      source: metrics.determineQuerySource(),
+      sessionId: process.env.CLAUDE_SESSION_ID,
       workflowId: process.env.WORKFLOW_ID,
       queryType,
       queryParams,
