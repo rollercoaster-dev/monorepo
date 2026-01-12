@@ -14,7 +14,23 @@
  * ```
  */
 
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import type { EmbeddingProvider } from "./index";
+
+/**
+ * Usage metrics for tracking API costs.
+ */
+export interface EmbeddingUsageMetrics {
+  /** Total tokens processed */
+  totalTokens: number;
+  /** Total number of requests made */
+  requestCount: number;
+  /** Estimated cost in USD (based on text-embedding-3-small pricing) */
+  estimatedCostUsd: number;
+}
+
+/** Cost per 1M tokens for text-embedding-3-small */
+const OPENAI_COST_PER_1M_TOKENS = 0.02;
 
 /**
  * OpenAI embedding provider using the embeddings API.
@@ -28,6 +44,31 @@ export class OpenAIEmbedding implements EmbeddingProvider {
   private apiKey: string;
   private model: string;
   private _dimensions: number;
+
+  /** Cumulative usage metrics across all instances */
+  private static usageMetrics: EmbeddingUsageMetrics = {
+    totalTokens: 0,
+    requestCount: 0,
+    estimatedCostUsd: 0,
+  };
+
+  /**
+   * Get cumulative usage metrics for all OpenAI embedding requests.
+   */
+  static getUsageMetrics(): EmbeddingUsageMetrics {
+    return { ...OpenAIEmbedding.usageMetrics };
+  }
+
+  /**
+   * Reset usage metrics to zero.
+   */
+  static resetUsageMetrics(): void {
+    OpenAIEmbedding.usageMetrics = {
+      totalTokens: 0,
+      requestCount: 0,
+      estimatedCostUsd: 0,
+    };
+  }
 
   /**
    * Create an OpenAI embedding provider.
@@ -75,18 +116,54 @@ export class OpenAIEmbedding implements EmbeddingProvider {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(
-        `OpenAI embeddings API error: ${response.status} - ${error}`,
-      );
+      const errorText = await response.text();
+      const status = response.status;
+
+      // Provide specific error messages for common error codes
+      if (status === 401) {
+        throw new Error(
+          "OpenAI API authentication failed: Invalid API key. Please check your OPENAI_API_KEY.",
+        );
+      }
+      if (status === 429) {
+        throw new Error(
+          "OpenAI API rate limit exceeded. Please wait and try again.",
+        );
+      }
+      if (status === 500 || status === 502 || status === 503) {
+        throw new Error(
+          `OpenAI API service error (${status}). Please try again later.`,
+        );
+      }
+
+      throw new Error(`OpenAI embeddings API error: ${status} - ${errorText}`);
     }
 
     const data = (await response.json()) as {
       data: Array<{ embedding: number[] }>;
+      usage?: { prompt_tokens: number; total_tokens: number };
     };
 
     if (!data.data?.[0]?.embedding) {
       throw new Error("Invalid response from OpenAI embeddings API");
+    }
+
+    // Track usage metrics
+    if (data.usage) {
+      const tokens = data.usage.total_tokens;
+      const cost = (tokens / 1_000_000) * OPENAI_COST_PER_1M_TOKENS;
+
+      OpenAIEmbedding.usageMetrics.totalTokens += tokens;
+      OpenAIEmbedding.usageMetrics.requestCount += 1;
+      OpenAIEmbedding.usageMetrics.estimatedCostUsd += cost;
+
+      logger.debug("OpenAI embedding generated", {
+        tokens,
+        costUsd: cost.toFixed(6),
+        cumulativeTokens: OpenAIEmbedding.usageMetrics.totalTokens,
+        cumulativeCostUsd:
+          OpenAIEmbedding.usageMetrics.estimatedCostUsd.toFixed(6),
+      });
     }
 
     return new Float32Array(data.data[0].embedding);
