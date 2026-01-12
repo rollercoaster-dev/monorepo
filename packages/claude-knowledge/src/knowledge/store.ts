@@ -13,6 +13,45 @@ import {
   storeWorkflowLearning as storeWorkflowLearningImpl,
   analyzeWorkflow as analyzeWorkflowImpl,
 } from "../retrospective";
+import type { Database } from "bun:sqlite";
+
+/**
+ * Execute a database operation within a transaction.
+ * Handles BEGIN, COMMIT, and ROLLBACK automatically.
+ *
+ * @param db - The database connection
+ * @param operation - Function to execute within the transaction
+ * @param context - Context string for error logging
+ * @throws Error if the operation or rollback fails
+ */
+function withTransaction(
+  db: Database,
+  operation: () => void,
+  context: string,
+): void {
+  db.run("BEGIN TRANSACTION");
+
+  try {
+    operation();
+    db.run("COMMIT");
+  } catch (error) {
+    try {
+      db.run("ROLLBACK");
+    } catch (rollbackError) {
+      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
+        originalError: error instanceof Error ? error.message : String(error),
+        rollbackError:
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError),
+        context,
+      });
+    }
+    throw new Error(
+      `Failed in ${context}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
 
 /**
  * Store learnings in the knowledge graph.
@@ -37,70 +76,54 @@ export async function store(learnings: Learning[]): Promise<void> {
   );
 
   // Use transaction for batch insert efficiency and atomicity
-  db.run("BEGIN TRANSACTION");
+  withTransaction(
+    db,
+    () => {
+      for (let i = 0; i < learnings.length; i++) {
+        const learning = learnings[i];
+        const embedding = embeddings[i];
 
-  try {
-    for (let i = 0; i < learnings.length; i++) {
-      const learning = learnings[i];
-      const embedding = embeddings[i];
+        // Ensure learning has an ID
+        const learningId = learning.id || `learning-${randomUUID()}`;
 
-      // Ensure learning has an ID
-      const learningId = learning.id || `learning-${randomUUID()}`;
+        // Create Learning entity with embedding
+        createOrMergeEntity(
+          db,
+          "Learning",
+          learningId,
+          {
+            ...learning,
+            id: learningId,
+          },
+          embedding,
+        );
 
-      // Create Learning entity with embedding
-      createOrMergeEntity(
-        db,
-        "Learning",
-        learningId,
-        {
-          ...learning,
-          id: learningId,
-        },
-        embedding,
-      );
+        // Auto-create/merge CodeArea entity if specified
+        if (learning.codeArea) {
+          const codeAreaId = `codearea-${learning.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
+          createOrMergeEntity(db, "CodeArea", codeAreaId, {
+            name: learning.codeArea,
+          });
 
-      // Auto-create/merge CodeArea entity if specified
-      if (learning.codeArea) {
-        const codeAreaId = `codearea-${learning.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-        createOrMergeEntity(db, "CodeArea", codeAreaId, {
-          name: learning.codeArea,
-        });
+          // Create ABOUT relationship
+          createRelationship(db, learningId, codeAreaId, "ABOUT");
+        }
 
-        // Create ABOUT relationship
-        createRelationship(db, learningId, codeAreaId, "ABOUT");
+        // Auto-create/merge File entity if specified
+        if (learning.filePath) {
+          // Buffer is global in Bun
+          const fileId = `file-${Buffer.from(learning.filePath).toString("base64url")}`;
+          createOrMergeEntity(db, "File", fileId, {
+            path: learning.filePath,
+          });
+
+          // Create IN_FILE relationship
+          createRelationship(db, learningId, fileId, "IN_FILE");
+        }
       }
-
-      // Auto-create/merge File entity if specified
-      if (learning.filePath) {
-        // Buffer is global in Bun
-        const fileId = `file-${Buffer.from(learning.filePath).toString("base64url")}`;
-        createOrMergeEntity(db, "File", fileId, {
-          path: learning.filePath,
-        });
-
-        // Create IN_FILE relationship
-        createRelationship(db, learningId, fileId, "IN_FILE");
-      }
-    }
-
-    db.run("COMMIT");
-  } catch (error) {
-    try {
-      db.run("ROLLBACK");
-    } catch (rollbackError) {
-      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
-        originalError: error instanceof Error ? error.message : String(error),
-        rollbackError:
-          rollbackError instanceof Error
-            ? rollbackError.message
-            : String(rollbackError),
-        context: "knowledge.store",
-      });
-    }
-    throw new Error(
-      `Failed to store learnings: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+    },
+    "knowledge.store",
+  );
 }
 
 /**
@@ -126,71 +149,55 @@ export async function storePattern(
     .join(" ");
   const embedding = await generateEmbedding(textToEmbed);
 
-  db.run("BEGIN TRANSACTION");
+  withTransaction(
+    db,
+    () => {
+      // Ensure pattern has an ID
+      const patternId = pattern.id || `pattern-${randomUUID()}`;
 
-  try {
-    // Ensure pattern has an ID
-    const patternId = pattern.id || `pattern-${randomUUID()}`;
+      // Create Pattern entity with embedding
+      createOrMergeEntity(
+        db,
+        "Pattern",
+        patternId,
+        {
+          ...pattern,
+          id: patternId,
+        },
+        embedding,
+      );
 
-    // Create Pattern entity with embedding
-    createOrMergeEntity(
-      db,
-      "Pattern",
-      patternId,
-      {
-        ...pattern,
-        id: patternId,
-      },
-      embedding,
-    );
+      // Link to CodeArea if specified
+      if (pattern.codeArea) {
+        const codeAreaId = `codearea-${pattern.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
+        createOrMergeEntity(db, "CodeArea", codeAreaId, {
+          name: pattern.codeArea,
+        });
 
-    // Link to CodeArea if specified
-    if (pattern.codeArea) {
-      const codeAreaId = `codearea-${pattern.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-      createOrMergeEntity(db, "CodeArea", codeAreaId, {
-        name: pattern.codeArea,
-      });
-
-      createRelationship(db, patternId, codeAreaId, "APPLIES_TO");
-    }
-
-    // Link to related learnings (LED_TO: pattern derived from learnings)
-    if (learningIds && learningIds.length > 0) {
-      for (const learningId of learningIds) {
-        // Verify learning exists
-        const exists = db
-          .query<
-            { id: string },
-            [string]
-          >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
-          .get(learningId);
-
-        if (!exists) {
-          throw new Error(`Learning with ID "${learningId}" does not exist`);
-        }
-
-        createRelationship(db, patternId, learningId, "LED_TO");
+        createRelationship(db, patternId, codeAreaId, "APPLIES_TO");
       }
-    }
 
-    db.run("COMMIT");
-  } catch (error) {
-    try {
-      db.run("ROLLBACK");
-    } catch (rollbackError) {
-      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
-        originalError: error instanceof Error ? error.message : String(error),
-        rollbackError:
-          rollbackError instanceof Error
-            ? rollbackError.message
-            : String(rollbackError),
-        context: "knowledge.storePattern",
-      });
-    }
-    throw new Error(
-      `Failed to store pattern: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+      // Link to related learnings (LED_TO: pattern derived from learnings)
+      if (learningIds && learningIds.length > 0) {
+        for (const learningId of learningIds) {
+          // Verify learning exists
+          const exists = db
+            .query<
+              { id: string },
+              [string]
+            >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
+            .get(learningId);
+
+          if (!exists) {
+            throw new Error(`Learning with ID "${learningId}" does not exist`);
+          }
+
+          createRelationship(db, patternId, learningId, "LED_TO");
+        }
+      }
+    },
+    "knowledge.storePattern",
+  );
 }
 
 /**
@@ -217,69 +224,53 @@ export async function storeMistake(
     .join(" ");
   const embedding = await generateEmbedding(textToEmbed);
 
-  db.run("BEGIN TRANSACTION");
+  withTransaction(
+    db,
+    () => {
+      // Ensure mistake has an ID
+      const mistakeId = mistake.id || `mistake-${randomUUID()}`;
 
-  try {
-    // Ensure mistake has an ID
-    const mistakeId = mistake.id || `mistake-${randomUUID()}`;
+      // Create Mistake entity with embedding
+      createOrMergeEntity(
+        db,
+        "Mistake",
+        mistakeId,
+        {
+          ...mistake,
+          id: mistakeId,
+        },
+        embedding,
+      );
 
-    // Create Mistake entity with embedding
-    createOrMergeEntity(
-      db,
-      "Mistake",
-      mistakeId,
-      {
-        ...mistake,
-        id: mistakeId,
-      },
-      embedding,
-    );
+      // Link to File if specified
+      if (mistake.filePath) {
+        // Buffer is global in Bun
+        const fileId = `file-${Buffer.from(mistake.filePath).toString("base64url")}`;
+        createOrMergeEntity(db, "File", fileId, {
+          path: mistake.filePath,
+        });
 
-    // Link to File if specified
-    if (mistake.filePath) {
-      // Buffer is global in Bun
-      const fileId = `file-${Buffer.from(mistake.filePath).toString("base64url")}`;
-      createOrMergeEntity(db, "File", fileId, {
-        path: mistake.filePath,
-      });
-
-      createRelationship(db, mistakeId, fileId, "IN_FILE");
-    }
-
-    // Link to learning (LED_TO: mistake led to learning that fixed it)
-    if (learningId) {
-      const exists = db
-        .query<
-          { id: string },
-          [string]
-        >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
-        .get(learningId);
-
-      if (!exists) {
-        throw new Error(`Learning with ID "${learningId}" does not exist`);
+        createRelationship(db, mistakeId, fileId, "IN_FILE");
       }
 
-      createRelationship(db, mistakeId, learningId, "LED_TO");
-    }
+      // Link to learning (LED_TO: mistake led to learning that fixed it)
+      if (learningId) {
+        const exists = db
+          .query<
+            { id: string },
+            [string]
+          >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
+          .get(learningId);
 
-    db.run("COMMIT");
-  } catch (error) {
-    try {
-      db.run("ROLLBACK");
-    } catch (rollbackError) {
-      logger.error("CRITICAL: ROLLBACK failed after transaction error", {
-        originalError: error instanceof Error ? error.message : String(error),
-        rollbackError:
-          rollbackError instanceof Error
-            ? rollbackError.message
-            : String(rollbackError),
-        context: "knowledge.storeMistake",
-      });
-    }
-    throw new Error(
-      `Failed to store mistake: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+        if (!exists) {
+          throw new Error(`Learning with ID "${learningId}" does not exist`);
+        }
+
+        createRelationship(db, mistakeId, learningId, "LED_TO");
+      }
+    },
+    "knowledge.storeMistake",
+  );
 }
 
 /**
