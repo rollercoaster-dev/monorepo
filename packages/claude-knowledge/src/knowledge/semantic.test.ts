@@ -5,7 +5,7 @@ import { resetDatabase, closeDatabase } from "../db/sqlite";
 import { resetDefaultEmbedder } from "../embeddings";
 import type { Topic } from "../types";
 import { existsSync } from "fs";
-import { mkdir } from "fs/promises";
+import { mkdir, unlink } from "fs/promises";
 
 const TEST_DB = ".claude/test-semantic.db";
 
@@ -15,6 +15,10 @@ describe("searchSimilarTopics", () => {
     resetDefaultEmbedder();
     // Ensure .claude directory exists
     if (!existsSync(".claude")) await mkdir(".claude", { recursive: true });
+    // Delete existing test database to ensure clean state
+    if (existsSync(TEST_DB)) {
+      await unlink(TEST_DB);
+    }
     // Initialize fresh test database
     resetDatabase(TEST_DB);
   });
