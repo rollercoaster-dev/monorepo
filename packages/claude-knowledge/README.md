@@ -425,8 +425,12 @@ const embedder = await getDefaultEmbedder();
 import { OpenAIEmbedding } from "claude-knowledge/embeddings/api-providers";
 import { setDefaultProvider } from "claude-knowledge/embeddings";
 
-// Explicitly use OpenAI
-const embedder = new OpenAIEmbedding(process.env.OPENAI_API_KEY, {
+// Explicitly use OpenAI (requires API key)
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  throw new Error("OPENAI_API_KEY environment variable is required");
+}
+const embedder = new OpenAIEmbedding(apiKey, {
   model: "text-embedding-3-small", // default
   dimensions: 256, // default, matches TF-IDF for consistency
 });
