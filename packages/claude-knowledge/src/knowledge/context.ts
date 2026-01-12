@@ -126,12 +126,19 @@ export async function formatForContext(
     }
     const mistakes = Array.from(mistakesById.values());
 
-    // Format the results
-    const content = formatByType(format, filteredResults, patterns, mistakes, {
-      maxTokens,
-      showFilePaths,
-      context,
-    });
+    // Format the results (no topics in query context - use empty array)
+    const content = formatByType(
+      format,
+      filteredResults,
+      patterns,
+      mistakes,
+      [],
+      {
+        maxTokens,
+        showFilePaths,
+        context,
+      },
+    );
 
     // Calculate token count
     const tokenCount = estimateTokens(content);

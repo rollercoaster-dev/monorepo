@@ -14,6 +14,7 @@ import type {
   QueryResult,
   Pattern,
   Mistake,
+  Topic,
   ContextMetrics,
 } from "./types";
 import { knowledge } from "./knowledge/index";
@@ -54,6 +55,9 @@ const MAX_PATTERNS_PER_AREA = 5;
 /** Maximum number of mistakes to return per file */
 const MAX_MISTAKES_PER_FILE = 3;
 
+/** Maximum number of topics to return at session start */
+const MAX_TOPICS = 5;
+
 /**
  * Load relevant knowledge for the current session context.
  *
@@ -66,6 +70,7 @@ async function onSessionStart(
   const learnings: QueryResult[] = [];
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];
+  const topics: Topic[] = [];
 
   // Parse issue number from branch if not provided
   const issueNumber =
@@ -142,6 +147,25 @@ async function onSessionStart(
         }
       }
     }
+
+    // Get relevant conversation topics using semantic search
+    const topicKeywords = [...codeAreas, context.branch].filter(
+      (k): k is string => Boolean(k),
+    );
+
+    if (topicKeywords.length > 0) {
+      const topicResults = await knowledge.queryTopics({
+        keywords: topicKeywords,
+        limit: MAX_TOPICS,
+      });
+      topics.push(...topicResults);
+    } else {
+      // If no keywords, get most recent topics
+      const recentTopics = await knowledge.queryTopics({
+        limit: MAX_TOPICS,
+      });
+      topics.push(...recentTopics);
+    }
   } catch (error) {
     // Log the error so failures are visible, but allow session to continue
     logger.error("Failed to load session knowledge", {
@@ -152,19 +176,25 @@ async function onSessionStart(
   }
 
   // Format summary for injection using new formatter
-  const summary = formatKnowledgeContext(learnings, patterns, mistakes, {
-    maxTokens: 2000,
-    context: {
-      issueNumber,
-      primaryCodeArea,
-      modifiedFiles: context.modifiedFiles,
+  const summary = formatKnowledgeContext(
+    learnings,
+    patterns,
+    mistakes,
+    topics,
+    {
+      maxTokens: 2000,
+      context: {
+        issueNumber,
+        primaryCodeArea,
+        modifiedFiles: context.modifiedFiles,
+      },
     },
-  });
+  );
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
   const learningsInjected =
-    learnings.length + patterns.length + mistakes.length;
+    learnings.length + patterns.length + mistakes.length + topics.length;
   const startTime = new Date().toISOString();
 
   // Log session start with metrics
@@ -179,6 +209,7 @@ async function onSessionStart(
     learnings,
     patterns,
     mistakes,
+    topics,
     summary,
     // Include session metadata in result for CLI to capture
     _sessionMetadata: {
@@ -192,6 +223,78 @@ async function onSessionStart(
 
 /** Confidence level for auto-extracted learnings (lower than manual) */
 const AUTO_EXTRACT_CONFIDENCE = 0.6;
+
+/**
+ * Extract keywords from commit messages for topic tagging.
+ * Filters out common words and returns unique significant words.
+ */
+function extractKeywordsFromMessages(messages: string[]): string[] {
+  const stopWords = new Set([
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "shall",
+    "can",
+    "need",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+    "add",
+    "update",
+    "fix",
+    "remove",
+    "change",
+    "make",
+    "use",
+    "new",
+    "into",
+  ]);
+
+  const words = messages
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+
+  // Return unique words, max 5
+  return [...new Set(words)].slice(0, 5);
+}
 
 /**
  * Extended session summary with optional metrics tracking data.
@@ -322,6 +425,49 @@ async function onSessionEnd(
     }
   }
 
+  // Extract conversation topics from commits (group by scope)
+  const topics: Topic[] = [];
+  const scopeCounts = new Map<string, { count: number; messages: string[] }>();
+
+  for (const commit of session.commits) {
+    const parsed = parseConventionalCommit(commit.message);
+    if (parsed?.scope) {
+      const existing = scopeCounts.get(parsed.scope) || {
+        count: 0,
+        messages: [],
+      };
+      existing.count++;
+      existing.messages.push(parsed.description);
+      scopeCounts.set(parsed.scope, existing);
+    }
+  }
+
+  // Create topics for scopes with >= 2 commits (lowered threshold for MVP)
+  // Sort by commit count and cap to MAX_TOPICS to control DB growth
+  const TOPIC_THRESHOLD = 2;
+  const sortedScopes = [...scopeCounts.entries()].sort(
+    (a, b) => b[1].count - a[1].count,
+  );
+
+  for (const [scope, data] of sortedScopes.slice(0, MAX_TOPICS)) {
+    if (data.count >= TOPIC_THRESHOLD) {
+      const topicId = `topic-${randomUUID()}`;
+      const topic: Topic = {
+        id: topicId,
+        content: `Worked on ${scope}: ${data.messages.slice(0, 2).join("; ")}`,
+        keywords: [scope, ...extractKeywordsFromMessages(data.messages)],
+        sourceSession: session.sessionId,
+        confidence: AUTO_EXTRACT_CONFIDENCE,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          source: "auto-extracted",
+          commitCount: data.count,
+        },
+      };
+      topics.push(topic);
+    }
+  }
+
   // Store all extracted learnings
   if (learnings.length > 0) {
     try {
@@ -337,6 +483,38 @@ async function onSessionEnd(
         learningsStored: 0,
         learningIds: [],
       };
+    }
+  }
+
+  // Store extracted topics (handle each independently for partial success)
+  if (topics.length > 0) {
+    let storedCount = 0;
+    const failures: Array<{ topicId: string; error: string }> = [];
+
+    for (const topic of topics) {
+      try {
+        await knowledge.storeTopic(topic);
+        storedCount++;
+      } catch (error) {
+        failures.push({
+          topicId: topic.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    if (failures.length > 0) {
+      logger.warn("Some session topics failed to store", {
+        storedCount,
+        failedCount: failures.length,
+        failures,
+        context: "onSessionEnd",
+      });
+    } else {
+      logger.debug("Session topics stored", {
+        topicsCount: storedCount,
+        context: "onSessionEnd",
+      });
     }
   }
 

@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_milestone_workflows_milestone ON milestone_workfl
 -- Knowledge graph entities
 CREATE TABLE IF NOT EXISTS entities (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake')),
+  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic')),
   data JSON NOT NULL,
   embedding BLOB,
   created_at TEXT NOT NULL,
@@ -188,6 +188,58 @@ CREATE INDEX IF NOT EXISTS idx_graph_rel_type ON graph_relationships(type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_graph_rel_unique ON graph_relationships(from_entity, to_entity, type);
 `;
 
+/**
+ * Run database migrations for schema changes that can't be handled by CREATE TABLE IF NOT EXISTS.
+ * SQLite doesn't support ALTER TABLE to modify CHECK constraints, so we need to recreate tables.
+ */
+function runMigrations(database: Database): void {
+  // Migration 1: Add 'Topic' to entities type CHECK constraint
+  // Check if the constraint already includes 'Topic' by querying the schema
+  const schemaRow = database
+    .query<
+      { sql: string },
+      []
+    >("SELECT sql FROM sqlite_master WHERE type='table' AND name='entities'")
+    .get();
+
+  if (schemaRow && !schemaRow.sql.includes("'Topic'")) {
+    // Need to recreate the table with the new constraint
+    database.run("BEGIN TRANSACTION");
+    try {
+      // Create new table with updated constraint
+      database.run(`
+        CREATE TABLE entities_new (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic')),
+          data JSON NOT NULL,
+          embedding BLOB,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
+
+      // Copy existing data
+      database.run("INSERT INTO entities_new SELECT * FROM entities");
+
+      // Drop old table and rename new one
+      database.run("DROP TABLE entities");
+      database.run("ALTER TABLE entities_new RENAME TO entities");
+
+      // Recreate indexes
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_entity_type ON entities(type)",
+      );
+
+      database.run("COMMIT");
+    } catch (error) {
+      database.run("ROLLBACK");
+      throw new Error(
+        `Migration failed (add Topic to entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
+
 export function getDatabase(dbPath?: string): Database {
   // If database already initialized, return it
   // This allows checkpoint module to work with whatever db was initialized
@@ -232,6 +284,22 @@ export function getDatabase(dbPath?: string): Database {
     }
     throw new Error(
       `Failed to initialize database schema: ${error instanceof Error ? error.message : String(error)}. ` +
+        `The database file may be corrupted. Try deleting "${effectivePath}" and retrying.`,
+    );
+  }
+
+  // Run migrations for schema changes that can't be handled by CREATE TABLE IF NOT EXISTS
+  try {
+    runMigrations(db);
+  } catch (error) {
+    // Close database connection on migration failure
+    if (db) {
+      db.close();
+      db = null;
+      currentDbPath = null;
+    }
+    throw new Error(
+      `Failed to run database migrations: ${error instanceof Error ? error.message : String(error)}. ` +
         `The database file may be corrupted. Try deleting "${effectivePath}" and retrying.`,
     );
   }
