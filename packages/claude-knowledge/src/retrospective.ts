@@ -15,6 +15,7 @@ import { readFileSync, existsSync } from "fs";
 import { checkpoint } from "./checkpoint";
 import { store, storePattern, storeMistake } from "./knowledge/store";
 import { randomUUID } from "crypto";
+import { inferCodeArea, getPackageName } from "./utils/file-analyzer";
 import type {
   WorkflowLearning,
   Deviation,
@@ -280,19 +281,30 @@ function extractPatterns(
   // Pattern: Successful fix approach
   const successfulFixes = fixes.filter((f) => f.success);
   for (const fix of successfulFixes) {
+    // Extract code area from branch name or commit file paths
+    const codeArea =
+      getPackageName(data.workflow.branch) ||
+      (data.commits.length > 0
+        ? inferCodeArea(data.workflow.branch)
+        : undefined);
+
     patterns.push({
       name: `Fix: ${fix.finding.substring(0, 30)}`,
       description: `When encountering "${fix.finding}", apply: ${fix.fix}`,
-      codeArea: extractCodeAreaFromWorkflow(data),
+      codeArea,
     });
   }
 
   // Pattern: Clean implementation (few deviations)
   if (deviations.length <= 1 && data.commits.length > 0) {
+    const codeArea =
+      getPackageName(data.workflow.branch) ||
+      inferCodeArea(data.workflow.branch);
+
     patterns.push({
       name: "Clean Implementation",
       description: `Issue #${data.workflow.issueNumber} implemented with minimal deviations. Commits followed plan closely.`,
-      codeArea: extractCodeAreaFromWorkflow(data),
+      codeArea,
     });
   }
 
@@ -322,10 +334,16 @@ function extractMistakes(
         .includes(finding.description.toLowerCase().substring(0, 20)),
     );
 
+    // Look for common file path patterns in the finding description
+    const fileMatch = finding.description.match(
+      /(?:in|at|file:?)\s+[`"]?([a-zA-Z0-9_\-/.]+\.[a-zA-Z]+)[`"]?/i,
+    );
+    const filePath = fileMatch?.[1];
+
     mistakes.push({
       description: `Critical: ${finding.description}`,
       howFixed: relatedFix?.fix || "Unknown - may require manual review",
-      filePath: extractFilePathFromFinding(finding),
+      filePath,
     });
   }
 
@@ -339,43 +357,6 @@ function extractMistakes(
   }
 
   return mistakes;
-}
-
-/**
- * Extract code area from workflow data (branch name or issue context).
- */
-function extractCodeAreaFromWorkflow(data: CheckpointData): string | undefined {
-  // Try to extract from branch name
-  // e.g., feat/issue-375-workflow-retrospective -> "workflow-retrospective"
-  const branchMatch = data.workflow.branch.match(
-    /(?:feat|fix|refactor)\/issue-\d+-(.+)/,
-  );
-  if (branchMatch) {
-    return branchMatch[1].replace(/-/g, " ");
-  }
-
-  // Fallback to package name if in monorepo
-  const packageMatch = data.workflow.branch.match(
-    /(claude-knowledge|openbadges|rd-logger)/,
-  );
-  if (packageMatch) {
-    return packageMatch[1];
-  }
-
-  return undefined;
-}
-
-/**
- * Extract file path from a review finding description if mentioned.
- */
-function extractFilePathFromFinding(
-  finding: ReviewFinding,
-): string | undefined {
-  // Look for common file path patterns
-  const fileMatch = finding.description.match(
-    /(?:in|at|file:?)\s+[`"]?([a-zA-Z0-9_\-/.]+\.[a-zA-Z]+)[`"]?/i,
-  );
-  return fileMatch?.[1];
 }
 
 /**
@@ -566,15 +547,19 @@ export async function storeWorkflowLearning(
  * Extract code area from branch name.
  */
 function extractCodeAreaFromBranch(branch: string): string | undefined {
+  // Try to get package name first
+  const packageName = getPackageName(branch);
+  if (packageName) {
+    return packageName;
+  }
+
   // e.g., feat/issue-375-workflow-retrospective -> "workflow retrospective"
   const match = branch.match(/(?:feat|fix|refactor)\/issue-\d+-(.+)/);
   if (match) {
     return match[1].replace(/-/g, " ");
   }
 
-  // Try package name
-  const packageMatch = branch.match(/(claude-knowledge|openbadges|rd-logger)/);
-  return packageMatch?.[1];
+  return undefined;
 }
 
 /**
