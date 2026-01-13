@@ -265,10 +265,14 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
      '{"agent": "atomic-developer", "task": "execute dev plan with atomic commits"}'
    ```
 
-8. **On completion, run validation:**
+8. **On completion, run validation (as separate commands):**
 
    ```bash
-   bun run type-check && bun run lint
+   bun run type-check
+   ```
+
+   ```bash
+   bun run lint
    ```
 
    - If validation fails: Attempt to fix inline, then continue
@@ -423,10 +427,22 @@ After review findings are resolved, analyze the workflow execution to capture le
 
 ## Phase 4: Finalize (Autonomous)
 
-11. **Run final validation:**
+11. **Run final validation (as separate commands):**
 
     ```bash
-    bun test && bun run type-check && bun run lint && bun run build
+    bun test
+    ```
+
+    ```bash
+    bun run type-check
+    ```
+
+    ```bash
+    bun run lint
+    ```
+
+    ```bash
+    bun run build
     ```
 
     - If `--require-tests` and tests fail: ESCALATE
