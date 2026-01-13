@@ -21,7 +21,7 @@ export type EmbeddingProviderType = "tfidf" | "openai" | "openrouter";
  * Configuration for embedding provider selection.
  */
 export interface EmbeddingConfig {
-  /** Provider type to use ('tfidf' | 'openai'). Auto-detected if not specified. */
+  /** Provider type to use ('tfidf' | 'openai' | 'openrouter'). Auto-detected if not specified. */
   providerType?: EmbeddingProviderType;
   /** OpenAI API key (required for 'openai' provider) */
   apiKey?: string;
@@ -286,10 +286,11 @@ function detectProvider(): { type: EmbeddingProviderType; apiKey?: string } {
 /**
  * Get the default embedding provider.
  *
- * Provider selection:
+ * Provider selection (auto-detection priority):
  * 1. If config.providerType is specified, use that provider
- * 2. If OPENAI_API_KEY env var is set, use OpenAI neural embeddings
- * 3. Otherwise, fall back to TF-IDF (zero dependencies)
+ * 2. If OPENROUTER_API_KEY env var is set, use OpenRouter (unified API)
+ * 3. If OPENAI_API_KEY env var is set, use OpenAI neural embeddings
+ * 4. Otherwise, fall back to TF-IDF (zero dependencies)
  *
  * Uses a singleton to maintain state across calls. The singleton is
  * re-created if the provider type changes.
