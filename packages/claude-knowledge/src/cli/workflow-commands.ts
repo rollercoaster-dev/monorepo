@@ -218,12 +218,26 @@ export async function handleWorkflowCommands(
   } else if (command === "verify-not-worktree") {
     // workflow verify-not-worktree
     // Verifies we're not inside a git worktree. Exits 1 if we are.
-    const result = Bun.spawnSync(["git", "rev-parse", "--show-toplevel"]);
+    // Use --show-superproject-working-tree which returns non-empty when in a worktree
+    const result = Bun.spawnSync([
+      "git",
+      "rev-parse",
+      "--show-superproject-working-tree",
+    ]);
     if (!result.success) {
-      throw new Error("Failed to get repo root: not a git repository?");
+      throw new Error("Failed to check worktree status: not a git repository?");
     }
-    const repoRoot = result.stdout.toString().trim();
-    if (repoRoot.includes(".worktrees")) {
+    const superproject = result.stdout.toString().trim();
+    // If superproject is non-empty, we're inside a worktree
+    if (superproject !== "") {
+      const toplevelResult = Bun.spawnSync([
+        "git",
+        "rev-parse",
+        "--show-toplevel",
+      ]);
+      const repoRoot = toplevelResult.success
+        ? toplevelResult.stdout.toString().trim()
+        : "unknown";
       console.error(
         JSON.stringify({
           success: false,
@@ -234,6 +248,14 @@ export async function handleWorkflowCommands(
       );
       process.exit(1);
     }
+    const toplevelResult = Bun.spawnSync([
+      "git",
+      "rev-parse",
+      "--show-toplevel",
+    ]);
+    const repoRoot = toplevelResult.success
+      ? toplevelResult.stdout.toString().trim()
+      : process.cwd();
     console.log(JSON.stringify({ success: true, repoRoot }));
   } else {
     throw new Error(`Unknown workflow command: ${command}`);

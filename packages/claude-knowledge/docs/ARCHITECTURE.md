@@ -446,7 +446,7 @@ graph find <name>
         "hooks": [
           {
             "type": "command",
-            "command": "bun run packages/claude-knowledge/src/cli.ts session-start"
+            "command": "bun run packages/claude-knowledge/src/cli/index.ts session-start"
           }
         ]
       }
@@ -457,7 +457,7 @@ graph find <name>
         "hooks": [
           {
             "type": "command",
-            "command": "bun run packages/claude-knowledge/src/cli.ts session-end"
+            "command": "bun run packages/claude-knowledge/src/cli/index.ts session-end"
           }
         ]
       }

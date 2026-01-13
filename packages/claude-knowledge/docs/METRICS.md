@@ -60,14 +60,16 @@ await hooks.onSessionEnd({
 // Records: learnings_captured, duration, compacted=true
 ```
 
-### Manual Annotation
+### Manual Review
 
-Some metrics require manual input:
+After workflow completion, review metrics with:
 
 ```bash
-# After workflow completion
-bun run checkpoint metrics annotate <session-id> --useful true
-bun run checkpoint metrics annotate <session-id> --note "Knowledge helped avoid auth bug"
+# List all session metrics
+bun run checkpoint metrics list
+
+# Get summary statistics
+bun run checkpoint metrics summary
 ```
 
 ### Baseline Period
