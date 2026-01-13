@@ -526,8 +526,10 @@ export interface ContextMetrics {
  */
 export interface GraphQueryMetrics {
   id?: number;
-  /** Session identifier (from CLAUDE_SESSION_ID env var) */
-  sessionId: string;
+  /** Optional session identifier (from CLAUDE_SESSION_ID env var) */
+  sessionId?: string;
+  /** Query origin: "cli" | "agent:{name}" | "skill:{name}" | "hook:{name}" | "unknown" */
+  source: string;
   /** Associated workflow ID if running within a workflow */
   workflowId?: string;
   /** Type of graph query (what-calls, blast-radius, find, etc.) */
