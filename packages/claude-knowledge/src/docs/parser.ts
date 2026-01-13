@@ -7,6 +7,8 @@
  * - Token-aware: Chunks based on 512 token limit with 50 token overlap
  */
 
+import { marked } from "marked";
+
 /**
  * Token limits for chunking strategy.
  * - MAX_SECTION_TOKENS: Maximum size for a single section (512 tokens ≈ 2048 chars)
@@ -63,4 +65,96 @@ export function slugify(text: string): string {
  */
 export function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
+}
+
+/**
+ * Parse markdown content into hierarchical sections.
+ * Uses marked.lexer() to extract heading and content tokens,
+ * then builds a hierarchy using a stack-based approach.
+ *
+ * @param markdown - Raw markdown content to parse
+ * @returns Array of parsed sections with hierarchy preserved
+ */
+export function parseMarkdown(markdown: string): ParsedSection[] {
+  const tokens = marked.lexer(markdown);
+  const sections: ParsedSection[] = [];
+  const stack: Array<{ level: number; anchor: string }> = [];
+
+  let currentHeading = "";
+  let currentLevel = 0;
+  let currentAnchor = "";
+  let currentContent: string[] = [];
+
+  for (const token of tokens) {
+    if (token.type === "heading") {
+      // Save previous section if it exists
+      if (currentHeading) {
+        const content = currentContent.join("\n").trim();
+        const parentAnchor =
+          stack.length > 0 ? stack[stack.length - 1].anchor : undefined;
+
+        sections.push({
+          heading: currentHeading,
+          content,
+          level: currentLevel,
+          anchor: currentAnchor,
+          parentAnchor,
+        });
+      }
+
+      // Start new section
+      currentHeading = token.text;
+      currentLevel = token.depth;
+      currentAnchor = slugify(token.text);
+      currentContent = [];
+
+      // Update stack for hierarchy tracking
+      // Pop all items at same or deeper level
+      while (
+        stack.length > 0 &&
+        stack[stack.length - 1].level >= currentLevel
+      ) {
+        stack.pop();
+      }
+
+      // Push current section to stack
+      stack.push({ level: currentLevel, anchor: currentAnchor });
+    } else {
+      // Accumulate content for current section
+      if (token.type === "paragraph") {
+        currentContent.push(token.text);
+      } else if (token.type === "list") {
+        // Handle list items
+        const listItems = token.items.map(
+          (item: { text: string }) => `- ${item.text}`,
+        );
+        currentContent.push(listItems.join("\n"));
+      } else if (token.type === "code") {
+        currentContent.push(`\`\`\`${token.lang || ""}\n${token.text}\n\`\`\``);
+      } else if (token.type === "blockquote") {
+        currentContent.push(`> ${token.text}`);
+      } else if (token.type === "html") {
+        currentContent.push(token.text);
+      } else if (token.type === "text") {
+        currentContent.push(token.text);
+      }
+    }
+  }
+
+  // Save final section
+  if (currentHeading) {
+    const content = currentContent.join("\n").trim();
+    const parentAnchor =
+      stack.length > 1 ? stack[stack.length - 2].anchor : undefined;
+
+    sections.push({
+      heading: currentHeading,
+      content,
+      level: currentLevel,
+      anchor: currentAnchor,
+      parentAnchor,
+    });
+  }
+
+  return sections;
 }
