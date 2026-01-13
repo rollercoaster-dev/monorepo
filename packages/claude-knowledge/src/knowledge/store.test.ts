@@ -13,7 +13,7 @@ import {
   countEntities,
 } from "../__tests__/helpers";
 
-const TEST_DB = ".claude/test-knowledge.db";
+const TEST_DB = ".claude/test-knowledge-store.db";
 
 describe("knowledge storage operations", () => {
   beforeEach(async () => {

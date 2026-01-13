@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "bun:test";
 import { hooks } from "./hooks";
 import { knowledge } from "./knowledge";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
+import { resetDefaultEmbedder } from "./embeddings";
 import { unlinkSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -10,6 +11,8 @@ const TEST_DB = join(tmpdir(), "test-hooks.db");
 
 describe("hooks", () => {
   beforeEach(() => {
+    // Reset embedder to ensure clean state (other tests may reset it)
+    resetDefaultEmbedder();
     // Clean up and reset test database
     if (existsSync(TEST_DB)) {
       unlinkSync(TEST_DB);
@@ -20,6 +23,8 @@ describe("hooks", () => {
   afterEach(() => {
     // Close database after each test
     closeDatabase();
+    // Reset embedder to clean up
+    resetDefaultEmbedder();
     // Clean up test database file
     if (existsSync(TEST_DB)) {
       unlinkSync(TEST_DB);

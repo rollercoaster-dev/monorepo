@@ -407,6 +407,10 @@ describe("knowledge API", () => {
       expect(result.wasFiltered).toBe(false);
       expect(typeof result.content).toBe("string");
       expect(typeof result.tokenCount).toBe("number");
+
+      // Reset back to test database to avoid polluting other tests
+      closeDatabase();
+      resetDatabase(TEST_DB);
     });
   });
 });

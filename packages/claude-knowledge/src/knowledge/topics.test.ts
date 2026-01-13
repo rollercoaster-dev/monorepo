@@ -5,7 +5,7 @@ import { unlink, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { getEntity, getEntitiesByType } from "../__tests__/helpers";
 
-const TEST_DB = ".claude/test-knowledge.db";
+const TEST_DB = ".claude/test-knowledge-topics.db";
 
 describe("knowledge topics", () => {
   beforeEach(async () => {

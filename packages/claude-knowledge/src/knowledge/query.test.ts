@@ -4,7 +4,7 @@ import { closeDatabase, resetDatabase } from "../db/sqlite";
 import { unlink, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 
-const TEST_DB = ".claude/test-knowledge.db";
+const TEST_DB = ".claude/test-knowledge-query.db";
 
 describe("knowledge query operations", () => {
   beforeEach(async () => {

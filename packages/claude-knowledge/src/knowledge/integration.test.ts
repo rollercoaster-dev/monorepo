@@ -4,7 +4,7 @@ import { closeDatabase, resetDatabase, getDatabase } from "../db/sqlite";
 import { unlink, mkdir } from "fs/promises";
 import { existsSync } from "fs";
 
-const TEST_DB = ".claude/test-knowledge.db";
+const TEST_DB = ".claude/test-knowledge-integration.db";
 const db = () => getDatabase();
 
 describe("knowledge integration tests", () => {
