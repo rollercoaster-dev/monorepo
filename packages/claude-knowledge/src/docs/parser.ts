@@ -68,16 +68,94 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Parse markdown content into hierarchical sections.
+ * Split an oversized section into smaller chunks with overlap.
+ * Used when a section exceeds MAX_SECTION_TOKENS.
+ *
+ * @param section - Section to chunk
+ * @returns Array of chunked sections (or single section if no split needed)
+ */
+function chunkSection(section: ParsedSection): ParsedSection[] {
+  const tokens = estimateTokens(section.content);
+
+  // If section fits within limit, return as-is
+  if (tokens <= MAX_SECTION_TOKENS) {
+    return [section];
+  }
+
+  // Split content into chunks
+  const chunks: ParsedSection[] = [];
+  const lines = section.content.split("\n");
+  let currentChunk: string[] = [];
+  let currentTokens = 0;
+  let chunkIndex = 0;
+
+  for (const line of lines) {
+    const lineTokens = estimateTokens(line);
+
+    // If adding this line exceeds limit, save current chunk and start new one
+    if (
+      currentTokens + lineTokens > MAX_SECTION_TOKENS &&
+      currentChunk.length > 0
+    ) {
+      chunks.push({
+        ...section,
+        content: currentChunk.join("\n"),
+        isChunk: true,
+        chunkIndex,
+        anchor: `${section.anchor}-chunk-${chunkIndex}`,
+      });
+
+      // Start new chunk with overlap (last OVERLAP_TOKENS worth of lines)
+      const overlapChars = OVERLAP_TOKENS * 4; // ~50 tokens worth
+      let overlapContent = "";
+      let overlapSize = 0;
+
+      // Take lines from end of current chunk until we have enough overlap
+      for (let i = currentChunk.length - 1; i >= 0; i--) {
+        const candidate = currentChunk[i];
+        if (overlapSize + candidate.length <= overlapChars) {
+          overlapContent = candidate + "\n" + overlapContent;
+          overlapSize += candidate.length;
+        } else {
+          break;
+        }
+      }
+
+      currentChunk = overlapContent ? [overlapContent.trim()] : [];
+      currentTokens = estimateTokens(overlapContent);
+      chunkIndex++;
+    }
+
+    currentChunk.push(line);
+    currentTokens += lineTokens;
+  }
+
+  // Save final chunk
+  if (currentChunk.length > 0) {
+    chunks.push({
+      ...section,
+      content: currentChunk.join("\n"),
+      isChunk: true,
+      chunkIndex,
+      anchor: `${section.anchor}-chunk-${chunkIndex}`,
+    });
+  }
+
+  return chunks;
+}
+
+/**
+ * Parse markdown content into hierarchical sections with hybrid chunking.
  * Uses marked.lexer() to extract heading and content tokens,
  * then builds a hierarchy using a stack-based approach.
+ * Oversized sections are automatically chunked with overlap.
  *
  * @param markdown - Raw markdown content to parse
- * @returns Array of parsed sections with hierarchy preserved
+ * @returns Array of parsed sections with hierarchy preserved and chunks applied
  */
 export function parseMarkdown(markdown: string): ParsedSection[] {
   const tokens = marked.lexer(markdown);
-  const sections: ParsedSection[] = [];
+  const rawSections: ParsedSection[] = [];
   const stack: Array<{ level: number; anchor: string }> = [];
 
   let currentHeading = "";
@@ -93,7 +171,7 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
         const parentAnchor =
           stack.length > 0 ? stack[stack.length - 1].anchor : undefined;
 
-        sections.push({
+        rawSections.push({
           heading: currentHeading,
           content,
           level: currentLevel,
@@ -147,7 +225,7 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
     const parentAnchor =
       stack.length > 1 ? stack[stack.length - 2].anchor : undefined;
 
-    sections.push({
+    rawSections.push({
       heading: currentHeading,
       content,
       level: currentLevel,
@@ -156,5 +234,12 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
     });
   }
 
-  return sections;
+  // Apply hybrid chunking: split oversized sections
+  const chunkedSections: ParsedSection[] = [];
+  for (const section of rawSections) {
+    const chunks = chunkSection(section);
+    chunkedSections.push(...chunks);
+  }
+
+  return chunkedSections;
 }
