@@ -8,6 +8,7 @@
  */
 
 import { marked } from "marked";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /**
  * Token limits for chunking strategy.
@@ -189,9 +190,31 @@ function chunkSection(section: ParsedSection): ParsedSection[] {
  * @returns Array of parsed sections with hierarchy preserved and chunks applied
  */
 export function parseMarkdown(markdown: string): ParsedSection[] {
-  const tokens = marked.lexer(markdown);
+  // Input validation
+  if (typeof markdown !== "string") {
+    throw new TypeError(
+      `parseMarkdown expects a string, received ${typeof markdown}`,
+    );
+  }
+
+  // Parse markdown tokens with error handling
+  let tokens;
+  try {
+    tokens = marked.lexer(markdown);
+  } catch (error) {
+    logger.error("Failed to parse markdown", {
+      error: error instanceof Error ? error.message : String(error),
+      markdownLength: markdown.length,
+      markdownPreview: markdown.substring(0, 200),
+    });
+    throw new Error(
+      `Markdown parsing failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+
   const rawSections: ParsedSection[] = [];
   const stack: Array<{ level: number; anchor: string }> = [];
+  const usedAnchors = new Map<string, number>();
 
   let currentHeading = "";
   let currentLevel = 0;
@@ -225,7 +248,13 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
       // Start new section - capture parent NOW from updated stack
       currentHeading = token.text;
       currentLevel = newLevel;
-      currentAnchor = slugify(token.text);
+
+      // Generate unique anchor (handle duplicate headings like GitHub does)
+      const baseAnchor = slugify(token.text);
+      const count = usedAnchors.get(baseAnchor) || 0;
+      usedAnchors.set(baseAnchor, count + 1);
+      currentAnchor = count === 0 ? baseAnchor : `${baseAnchor}-${count}`;
+
       currentParentAnchor =
         stack.length > 0 ? stack[stack.length - 1].anchor : undefined;
       currentContent = [];
@@ -234,15 +263,28 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
       if (token.type === "paragraph") {
         currentContent.push(token.text);
       } else if (token.type === "list") {
-        // Handle list items
+        // Handle list items (preserves ordered vs unordered)
         const listItems = token.items.map(
-          (item: { text: string }) => `- ${item.text}`,
+          (item: { text: string }, index: number) =>
+            token.ordered ? `${index + 1}. ${item.text}` : `- ${item.text}`,
         );
         currentContent.push(listItems.join("\n"));
       } else if (token.type === "code") {
         currentContent.push(`\`\`\`${token.lang || ""}\n${token.text}\n\`\`\``);
       } else if (token.type === "blockquote") {
         currentContent.push(`> ${token.text}`);
+      } else if (token.type === "table") {
+        // Reconstruct markdown table from tokens
+        const header = token.header
+          .map((cell: { text: string }) => cell.text)
+          .join(" | ");
+        const separator = token.header.map(() => "---").join(" | ");
+        const rows = token.rows
+          .map((row: Array<{ text: string }>) =>
+            row.map((cell) => cell.text).join(" | "),
+          )
+          .join("\n| ");
+        currentContent.push(`| ${header} |\n| ${separator} |\n| ${rows} |`);
       } else if (token.type === "html") {
         currentContent.push(token.text);
       } else if (token.type === "text") {

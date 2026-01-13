@@ -151,4 +151,67 @@ describe("parseMarkdown", () => {
     const sections = parseMarkdown(md);
     expect(sections).toHaveLength(0);
   });
+
+  test("generates unique anchors for duplicate headings", () => {
+    const md = `## Examples\n\nFirst examples.\n\n## Examples\n\nSecond examples.\n\n## Examples\n\nThird examples.`;
+    const sections = parseMarkdown(md);
+
+    expect(sections).toHaveLength(3);
+    expect(sections[0].anchor).toBe("examples");
+    expect(sections[1].anchor).toBe("examples-1");
+    expect(sections[2].anchor).toBe("examples-2");
+  });
+
+  test("handles tables", () => {
+    const md = `# Table Section\n\n| Column A | Column B |\n|---|---|\n| Cell 1 | Cell 2 |\n| Cell 3 | Cell 4 |`;
+    const sections = parseMarkdown(md);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0].content).toContain("Column A");
+    expect(sections[0].content).toContain("Column B");
+    expect(sections[0].content).toContain("Cell 1");
+    expect(sections[0].content).toContain("|");
+  });
+
+  test("preserves ordered list numbering", () => {
+    const md = `# Steps\n\n1. First step\n2. Second step\n3. Third step`;
+    const sections = parseMarkdown(md);
+
+    expect(sections).toHaveLength(1);
+    expect(sections[0].content).toContain("1.");
+    expect(sections[0].content).toContain("2.");
+    expect(sections[0].content).toContain("3.");
+  });
+
+  test("correctly handles hierarchy when going back up and down levels", () => {
+    const md = `# Main\n\nMain content.\n\n## Section A\n\nA content.\n\n### Subsection\n\nSub content.\n\n## Section B\n\nB content.\n\n### Another\n\nAnother content.`;
+    const sections = parseMarkdown(md);
+
+    expect(sections).toHaveLength(5);
+    expect(sections[0].heading).toBe("Main");
+    expect(sections[0].parentAnchor).toBeUndefined();
+
+    expect(sections[1].heading).toBe("Section A");
+    expect(sections[1].parentAnchor).toBe("main");
+
+    expect(sections[2].heading).toBe("Subsection");
+    expect(sections[2].parentAnchor).toBe("section-a");
+
+    // Section B should have "main" as parent, not "subsection"
+    expect(sections[3].heading).toBe("Section B");
+    expect(sections[3].parentAnchor).toBe("main");
+
+    // Another should have "section-b" as parent
+    expect(sections[4].heading).toBe("Another");
+    expect(sections[4].parentAnchor).toBe("section-b");
+  });
+
+  test("throws on non-string input", () => {
+    // @ts-expect-error Testing runtime validation
+    expect(() => parseMarkdown(null)).toThrow(TypeError);
+    // @ts-expect-error Testing runtime validation
+    expect(() => parseMarkdown(undefined)).toThrow(TypeError);
+    // @ts-expect-error Testing runtime validation
+    expect(() => parseMarkdown(123)).toThrow(TypeError);
+  });
 });
