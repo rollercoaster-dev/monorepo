@@ -135,6 +135,32 @@ export interface Topic {
 }
 
 /**
+ * A section of a markdown document (heading + content).
+ * DocSections enable hierarchical documentation indexing.
+ */
+export interface DocSection {
+  id: string;
+  filePath: string;
+  heading: string;
+  content: string;
+  level: number; // Heading level (1-6)
+  parentId?: string; // Parent section ID for hierarchy
+  anchor?: string; // URL anchor for deep linking
+}
+
+/**
+ * JSDoc/TSDoc extracted from code.
+ * CodeDocs link inline documentation to code entities.
+ */
+export interface CodeDoc {
+  id: string;
+  entityId: string; // The code entity this documents
+  content: string; // Raw JSDoc/TSDoc content
+  description?: string; // Parsed description
+  tags?: Record<string, string>; // Parsed tags (@param, @returns, etc.)
+}
+
+/**
  * Entity types in the knowledge graph.
  */
 export type EntityType =
@@ -143,7 +169,9 @@ export type EntityType =
   | "File"
   | "Pattern"
   | "Mistake"
-  | "Topic";
+  | "Topic"
+  | "DocSection"
+  | "CodeDoc";
 
 /**
  * Relationship types in the knowledge graph.
@@ -152,13 +180,21 @@ export type EntityType =
  * - LED_TO: Pattern/Mistake → Learning (derived from / fixed by)
  * - APPLIES_TO: Pattern → CodeArea (pattern applies to area)
  * - SUPERSEDES: Learning → Learning (for updates)
+ * - CHILD_OF: DocSection → DocSection (hierarchical parent-child)
+ * - DOCUMENTS: CodeDoc → Entity (links docs to code entities)
+ * - IN_DOC: DocSection → File (links section to parent file)
+ * - REFERENCES: DocSection → DocSection/File (cross-document links)
  */
 export type RelationshipType =
   | "ABOUT"
   | "IN_FILE"
   | "LED_TO"
   | "APPLIES_TO"
-  | "SUPERSEDES";
+  | "SUPERSEDES"
+  | "CHILD_OF"
+  | "DOCUMENTS"
+  | "IN_DOC"
+  | "REFERENCES";
 
 /**
  * Data for a CodeArea entity.
@@ -182,7 +218,15 @@ export interface FileData {
 export interface Entity {
   id: string;
   type: EntityType;
-  data: Learning | Pattern | Mistake | CodeAreaData | FileData | Topic;
+  data:
+    | Learning
+    | Pattern
+    | Mistake
+    | CodeAreaData
+    | FileData
+    | Topic
+    | DocSection
+    | CodeDoc;
   embedding?: Uint8Array;
   createdAt: string;
   updatedAt: string;
