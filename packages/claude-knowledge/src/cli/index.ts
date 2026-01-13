@@ -38,6 +38,9 @@ if (args.length === 0) {
   console.error("  workflow link <workflow-id> <milestone-id> [wave]");
   console.error("  workflow list <milestone-id>");
   console.error("  workflow cleanup [hours]");
+  console.error("  workflow verify-branch <expected-branch>");
+  console.error("  workflow verify-not-main");
+  console.error("  workflow verify-not-worktree");
   console.error("  session-start [--branch <name>] [--issue <number>]");
   console.error(
     "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",

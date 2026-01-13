@@ -1,15 +1,20 @@
 /**
  * Optional API-based embedding providers.
  *
- * These providers use external APIs (OpenAI, Anthropic) for higher-quality
+ * These providers use external APIs (OpenAI, OpenRouter) for higher-quality
  * embeddings. They are optional and not loaded by default to maintain the
  * zero-dependency philosophy of the package.
  *
  * Usage:
  * ```typescript
- * import { OpenAIEmbedding } from "claude-knowledge/embeddings/api-providers";
+ * import { OpenAIEmbedding, OpenRouterEmbedding } from "claude-knowledge/embeddings/api-providers";
  *
+ * // Direct OpenAI
  * const embedder = new OpenAIEmbedding(process.env.OPENAI_API_KEY);
+ *
+ * // Via OpenRouter (access to multiple providers)
+ * const embedder = new OpenRouterEmbedding(process.env.OPENROUTER_API_KEY);
+ *
  * const embedding = await embedder.generate("some text");
  * ```
  */
@@ -170,10 +175,160 @@ export class OpenAIEmbedding implements EmbeddingProvider {
   }
 }
 
+/** Cost per 1M tokens for OpenRouter (varies by model, using text-embedding-3-small as baseline) */
+const OPENROUTER_COST_PER_1M_TOKENS = 0.02;
+
+/**
+ * OpenRouter embedding provider using the embeddings API.
+ *
+ * OpenRouter provides access to multiple embedding models through a unified API.
+ * Uses the OpenAI text-embedding-3-small model by default via OpenRouter.
+ *
+ * @see https://openrouter.ai/docs/api/reference/embeddings
+ */
+export class OpenRouterEmbedding implements EmbeddingProvider {
+  private apiKey: string;
+  private model: string;
+  private _dimensions: number;
+
+  /** Cumulative usage metrics across all instances */
+  private static usageMetrics: EmbeddingUsageMetrics = {
+    totalTokens: 0,
+    requestCount: 0,
+    estimatedCostUsd: 0,
+  };
+
+  /**
+   * Get cumulative usage metrics for all OpenRouter embedding requests.
+   */
+  static getUsageMetrics(): EmbeddingUsageMetrics {
+    return { ...OpenRouterEmbedding.usageMetrics };
+  }
+
+  /**
+   * Reset usage metrics to zero.
+   */
+  static resetUsageMetrics(): void {
+    OpenRouterEmbedding.usageMetrics = {
+      totalTokens: 0,
+      requestCount: 0,
+      estimatedCostUsd: 0,
+    };
+  }
+
+  /**
+   * Create an OpenRouter embedding provider.
+   *
+   * @param apiKey - OpenRouter API key
+   * @param options - Optional configuration
+   */
+  constructor(
+    apiKey: string,
+    options?: {
+      /** Model to use (default: "openai/text-embedding-3-small") */
+      model?: string;
+      /** Output dimensions (default: 256 for consistency with TF-IDF) */
+      dimensions?: number;
+    },
+  ) {
+    if (!apiKey) {
+      throw new Error("OpenRouter API key is required");
+    }
+    this.apiKey = apiKey;
+    this.model = options?.model ?? "openai/text-embedding-3-small";
+    this._dimensions = options?.dimensions ?? 256;
+  }
+
+  get dimensions(): number {
+    return this._dimensions;
+  }
+
+  async generate(text: string): Promise<Float32Array> {
+    if (!text || text.trim().length === 0) {
+      return new Float32Array(this._dimensions);
+    }
+
+    const response = await fetch("https://openrouter.ai/api/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "HTTP-Referer": "https://rollercoaster.dev",
+        "X-Title": "claude-knowledge",
+      },
+      body: JSON.stringify({
+        input: text,
+        model: this.model,
+        dimensions: this._dimensions,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      const status = response.status;
+
+      if (status === 401) {
+        throw new Error(
+          "OpenRouter API authentication failed: Invalid API key. Please check your OPENROUTER_API_KEY.",
+        );
+      }
+      if (status === 402) {
+        throw new Error(
+          "OpenRouter API payment required: Insufficient credits. Add credits at https://openrouter.ai/credits",
+        );
+      }
+      if (status === 429) {
+        throw new Error(
+          "OpenRouter API rate limit exceeded. Please wait and try again.",
+        );
+      }
+      if (status === 500 || status === 502 || status === 503) {
+        throw new Error(
+          `OpenRouter API service error (${status}). Please try again later.`,
+        );
+      }
+
+      throw new Error(
+        `OpenRouter embeddings API error: ${status} - ${errorText}`,
+      );
+    }
+
+    const data = (await response.json()) as {
+      data: Array<{ embedding: number[] }>;
+      usage?: { prompt_tokens: number; total_tokens: number };
+    };
+
+    if (!data.data?.[0]?.embedding) {
+      throw new Error("Invalid response from OpenRouter embeddings API");
+    }
+
+    // Track usage metrics
+    if (data.usage) {
+      const tokens = data.usage.total_tokens;
+      const cost = (tokens / 1_000_000) * OPENROUTER_COST_PER_1M_TOKENS;
+
+      OpenRouterEmbedding.usageMetrics.totalTokens += tokens;
+      OpenRouterEmbedding.usageMetrics.requestCount += 1;
+      OpenRouterEmbedding.usageMetrics.estimatedCostUsd += cost;
+
+      logger.debug("OpenRouter embedding generated", {
+        model: this.model,
+        tokens,
+        costUsd: cost.toFixed(6),
+        cumulativeTokens: OpenRouterEmbedding.usageMetrics.totalTokens,
+        cumulativeCostUsd:
+          OpenRouterEmbedding.usageMetrics.estimatedCostUsd.toFixed(6),
+      });
+    }
+
+    return new Float32Array(data.data[0].embedding);
+  }
+}
+
 /**
  * Factory function to create an embedding provider by type.
  *
- * @param type - Provider type ('tfidf', 'openai', 'anthropic')
+ * @param type - Provider type ('tfidf', 'openai', 'openrouter')
  * @param config - Provider-specific configuration
  * @returns An EmbeddingProvider instance
  *
@@ -182,14 +337,19 @@ export class OpenAIEmbedding implements EmbeddingProvider {
  * // Use default TF-IDF (no API key needed)
  * const tfidf = await createEmbeddingProvider('tfidf');
  *
- * // Use OpenAI (requires API key)
+ * // Use OpenAI directly
  * const openai = await createEmbeddingProvider('openai', {
  *   apiKey: process.env.OPENAI_API_KEY,
+ * });
+ *
+ * // Use OpenRouter (access to multiple providers)
+ * const openrouter = await createEmbeddingProvider('openrouter', {
+ *   apiKey: process.env.OPENROUTER_API_KEY,
  * });
  * ```
  */
 export async function createEmbeddingProvider(
-  type: "tfidf" | "openai" | "anthropic",
+  type: "tfidf" | "openai" | "openrouter",
   config?: {
     apiKey?: string;
     model?: string;
@@ -213,11 +373,14 @@ export async function createEmbeddingProvider(
         dimensions: config.dimensions,
       });
     }
-    case "anthropic": {
-      throw new Error(
-        "Anthropic embeddings API is not yet publicly available. " +
-          "Please use 'tfidf' or 'openai' instead.",
-      );
+    case "openrouter": {
+      if (!config?.apiKey) {
+        throw new Error("OpenRouter provider requires an API key");
+      }
+      return new OpenRouterEmbedding(config.apiKey, {
+        model: config.model,
+        dimensions: config.dimensions,
+      });
     }
     default:
       throw new Error(`Unknown embedding provider type: ${type}`);
