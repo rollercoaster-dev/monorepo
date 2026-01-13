@@ -88,7 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_milestone_workflows_milestone ON milestone_workfl
 -- Knowledge graph entities
 CREATE TABLE IF NOT EXISTS entities (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic')),
+  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic', 'DocSection', 'CodeDoc')),
   data JSON NOT NULL,
   embedding BLOB,
   created_at TEXT NOT NULL,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS relationships (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   from_id TEXT NOT NULL,
   to_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES')),
+  type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES', 'CHILD_OF', 'DOCUMENTS', 'IN_DOC', 'REFERENCES')),
   data JSON,
   created_at TEXT NOT NULL,
   FOREIGN KEY (from_id) REFERENCES entities(id) ON DELETE CASCADE,
@@ -267,6 +267,82 @@ function runMigrations(database: Database): void {
     } catch (error) {
       throw new Error(
         `Migration failed (add source to graph_queries): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // Migration 3: Add 'DocSection' and 'CodeDoc' to entities type CHECK constraint
+  if (schemaRow && !schemaRow.sql.includes("'DocSection'")) {
+    database.run("BEGIN TRANSACTION");
+    try {
+      database.run(`
+        CREATE TABLE entities_new (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic', 'DocSection', 'CodeDoc')),
+          data JSON NOT NULL,
+          embedding BLOB,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
+      database.run("INSERT INTO entities_new SELECT * FROM entities");
+      database.run("DROP TABLE entities");
+      database.run("ALTER TABLE entities_new RENAME TO entities");
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_entity_type ON entities(type)",
+      );
+      database.run("COMMIT");
+    } catch (error) {
+      database.run("ROLLBACK");
+      throw new Error(
+        `Migration failed (add DocSection/CodeDoc to entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // Migration 4: Add 'CHILD_OF', 'DOCUMENTS', 'IN_DOC', 'REFERENCES' to relationships type CHECK constraint
+  const relSchemaRow = database
+    .query<
+      { sql: string },
+      []
+    >("SELECT sql FROM sqlite_master WHERE type='table' AND name='relationships'")
+    .get();
+
+  if (relSchemaRow && !relSchemaRow.sql.includes("'CHILD_OF'")) {
+    database.run("BEGIN TRANSACTION");
+    try {
+      database.run(`
+        CREATE TABLE relationships_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          from_id TEXT NOT NULL,
+          to_id TEXT NOT NULL,
+          type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES', 'CHILD_OF', 'DOCUMENTS', 'IN_DOC', 'REFERENCES')),
+          data JSON,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (from_id) REFERENCES entities(id) ON DELETE CASCADE,
+          FOREIGN KEY (to_id) REFERENCES entities(id) ON DELETE CASCADE
+        )
+      `);
+      database.run("INSERT INTO relationships_new SELECT * FROM relationships");
+      database.run("DROP TABLE relationships");
+      database.run("ALTER TABLE relationships_new RENAME TO relationships");
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_rel_from ON relationships(from_id, type)",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_rel_to ON relationships(to_id, type)",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_rel_type ON relationships(type)",
+      );
+      database.run(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_rel_unique ON relationships(from_id, to_id, type)",
+      );
+      database.run("COMMIT");
+    } catch (error) {
+      database.run("ROLLBACK");
+      throw new Error(
+        `Migration failed (add doc relationship types): ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
