@@ -206,7 +206,7 @@ describe("knowledge query operations", () => {
         desc: "non-existent file path",
       },
       {
-        filter: { keywords: ["xyznonexistent123"] },
+        filter: { keywords: ["xyznonexistent123"] as string[] },
         desc: "non-matching keywords",
       },
     ])("returns empty results for $desc", async ({ filter }) => {
