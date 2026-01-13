@@ -15,7 +15,7 @@ import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 /**
  * Supported embedding provider types.
  */
-export type EmbeddingProviderType = "tfidf" | "openai";
+export type EmbeddingProviderType = "tfidf" | "openai" | "openrouter";
 
 /**
  * Configuration for embedding provider selection.
@@ -259,15 +259,27 @@ let providerLoggedOnce = false;
 /**
  * Detect the best available embedding provider based on environment.
  *
+ * Priority order:
+ * 1. OPENROUTER_API_KEY - OpenRouter (unified access to multiple models)
+ * 2. OPENAI_API_KEY - Direct OpenAI
+ * 3. TF-IDF - Local fallback (zero dependencies)
+ *
  * @returns The provider type to use and any auto-detected configuration
  */
 function detectProvider(): { type: EmbeddingProviderType; apiKey?: string } {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (apiKey && apiKey.trim().length > 0) {
-    return { type: "openai", apiKey };
+  // Check OpenRouter first (preferred - unified API)
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+  if (openrouterKey && openrouterKey.trim().length > 0) {
+    return { type: "openrouter", apiKey: openrouterKey };
   }
 
+  // Check OpenAI direct
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey && openaiKey.trim().length > 0) {
+    return { type: "openai", apiKey: openaiKey };
+  }
+
+  // Fallback to TF-IDF
   return { type: "tfidf" };
 }
 
@@ -299,7 +311,20 @@ export async function getDefaultEmbedder(
     !defaultEmbedder || currentProviderType !== requestedType;
 
   if (needsNewProvider) {
-    if (requestedType === "openai") {
+    if (requestedType === "openrouter") {
+      if (!apiKey) {
+        logger.warn(
+          "OpenRouter provider requested but no API key available, falling back to TF-IDF",
+        );
+        defaultEmbedder = new TfIdfEmbedding({ dimensions });
+        currentProviderType = "tfidf";
+      } else {
+        // Dynamically import to avoid loading when not needed
+        const { OpenRouterEmbedding } = await import("./api-providers");
+        defaultEmbedder = new OpenRouterEmbedding(apiKey, { dimensions });
+        currentProviderType = "openrouter";
+      }
+    } else if (requestedType === "openai") {
       if (!apiKey) {
         logger.warn(
           "OpenAI provider requested but no API key available, falling back to TF-IDF",
@@ -337,21 +362,21 @@ export async function getDefaultEmbedder(
  * This is a synchronous wrapper that only works if the provider has already
  * been initialized, or if using TF-IDF (which doesn't require async import).
  *
- * For first-time initialization with OpenAI provider, use getDefaultEmbedder() instead.
+ * For first-time initialization with OpenAI/OpenRouter provider, use getDefaultEmbedder() instead.
  *
  * @returns An embedding provider instance
- * @throws If OpenAI provider is needed but not yet initialized
+ * @throws If OpenAI/OpenRouter provider is needed but not yet initialized
  */
 export function getDefaultEmbedderSync(): EmbeddingProvider {
   if (defaultEmbedder) {
     return defaultEmbedder;
   }
 
-  // Check if we should use OpenAI
+  // Check if we should use an API provider
   const detected = detectProvider();
-  if (detected.type === "openai") {
+  if (detected.type === "openai" || detected.type === "openrouter") {
     throw new Error(
-      "OpenAI provider requires async initialization. Use getDefaultEmbedder() instead.",
+      `${detected.type} provider requires async initialization. Use getDefaultEmbedder() instead.`,
     );
   }
 
