@@ -30,21 +30,20 @@ function logQuery(
   durationMs: number,
 ): void {
   try {
-    const sessionId = process.env.CLAUDE_SESSION_ID;
-    if (!sessionId) {
-      // Not running in a Claude session - skip logging
-      return;
-    }
     metrics.logGraphQuery({
-      sessionId,
+      source: metrics.determineQuerySource(),
+      sessionId: process.env.CLAUDE_SESSION_ID,
       workflowId: process.env.WORKFLOW_ID,
       queryType,
       queryParams,
       resultCount,
       durationMs,
     });
-  } catch {
-    // Silently ignore logging failures - don't break the query
+  } catch (error) {
+    // Log warning but don't break the query - metrics are non-critical
+    logger.warn(
+      `Failed to log graph query metrics: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
