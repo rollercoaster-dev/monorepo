@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "workspace:*",
+    "marked": "17.0.1",
     "tree-sitter-wasms": "0.1.13",
     "ts-morph": "27.0.2",
     "web-tree-sitter": "0.26.3"
