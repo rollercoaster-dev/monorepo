@@ -107,24 +107,36 @@ export class OpenAIEmbedding implements EmbeddingProvider {
       return new Float32Array(this._dimensions);
     }
 
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        input: text,
-        model: this.model,
-        dimensions: this._dimensions,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("https://api.openai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          input: text,
+          model: this.model,
+          dimensions: this._dimensions,
+        }),
+      });
+    } catch (error) {
+      // Network errors (DNS, connection refused, timeout, etc.)
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`OpenAI API network error: ${message}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
       const status = response.status;
 
       // Provide specific error messages for common error codes
+      if (status === 400) {
+        throw new Error(
+          `OpenAI API bad request: ${errorText}. Check your input parameters.`,
+        );
+      }
       if (status === 401) {
         throw new Error(
           "OpenAI API authentication failed: Invalid API key. Please check your OPENAI_API_KEY.",
@@ -144,10 +156,17 @@ export class OpenAIEmbedding implements EmbeddingProvider {
       throw new Error(`OpenAI embeddings API error: ${status} - ${errorText}`);
     }
 
-    const data = (await response.json()) as {
+    let data: {
       data: Array<{ embedding: number[] }>;
       usage?: { prompt_tokens: number; total_tokens: number };
     };
+    try {
+      data = (await response.json()) as typeof data;
+    } catch {
+      throw new Error(
+        "Failed to parse OpenAI API response: Invalid JSON received",
+      );
+    }
 
     if (!data.data?.[0]?.embedding) {
       throw new Error("Invalid response from OpenAI embeddings API");
@@ -248,25 +267,37 @@ export class OpenRouterEmbedding implements EmbeddingProvider {
       return new Float32Array(this._dimensions);
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "HTTP-Referer": "https://rollercoaster.dev",
-        "X-Title": "claude-knowledge",
-      },
-      body: JSON.stringify({
-        input: text,
-        model: this.model,
-        dimensions: this._dimensions,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch("https://openrouter.ai/api/v1/embeddings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+          "HTTP-Referer": "https://rollercoaster.dev",
+          "X-Title": "claude-knowledge",
+        },
+        body: JSON.stringify({
+          input: text,
+          model: this.model,
+          dimensions: this._dimensions,
+        }),
+      });
+    } catch (error) {
+      // Network errors (DNS, connection refused, timeout, etc.)
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`OpenRouter API network error: ${message}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
       const status = response.status;
 
+      if (status === 400) {
+        throw new Error(
+          `OpenRouter API bad request: ${errorText}. Check your input parameters.`,
+        );
+      }
       if (status === 401) {
         throw new Error(
           "OpenRouter API authentication failed: Invalid API key. Please check your OPENROUTER_API_KEY.",
@@ -293,10 +324,17 @@ export class OpenRouterEmbedding implements EmbeddingProvider {
       );
     }
 
-    const data = (await response.json()) as {
+    let data: {
       data: Array<{ embedding: number[] }>;
       usage?: { prompt_tokens: number; total_tokens: number };
     };
+    try {
+      data = (await response.json()) as typeof data;
+    } catch {
+      throw new Error(
+        "Failed to parse OpenRouter API response: Invalid JSON received",
+      );
+    }
 
     if (!data.data?.[0]?.embedding) {
       throw new Error("Invalid response from OpenRouter embeddings API");
