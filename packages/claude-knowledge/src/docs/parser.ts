@@ -85,6 +85,41 @@ function chunkSection(section: ParsedSection): ParsedSection[] {
   // Split content into chunks
   const chunks: ParsedSection[] = [];
   const lines = section.content.split("\n");
+
+  // If there's only one line and it's too long, split by character chunks
+  if (lines.length === 1 && estimateTokens(lines[0]) > MAX_SECTION_TOKENS) {
+    const chunkSize = MAX_SECTION_TOKENS * 4; // ~512 tokens worth of chars
+    const overlapSize = OVERLAP_TOKENS * 4; // ~50 tokens worth of chars
+    const text = lines[0];
+    let start = 0;
+    let chunkIndex = 0;
+
+    while (start < text.length) {
+      const end = Math.min(start + chunkSize, text.length);
+      const chunkText = text.substring(start, end);
+
+      chunks.push({
+        ...section,
+        content: chunkText,
+        isChunk: true,
+        chunkIndex,
+        anchor: `${section.anchor}-chunk-${chunkIndex}`,
+      });
+
+      chunkIndex++;
+
+      // If we've reached the end, stop
+      if (end >= text.length) break;
+
+      // Move forward with overlap (ensure we always make progress)
+      const nextStart = end - overlapSize;
+      start = Math.max(nextStart, start + 1);
+    }
+
+    return chunks;
+  }
+
+  // Multi-line content: chunk by lines
   let currentChunk: string[] = [];
   let currentTokens = 0;
   let chunkIndex = 0;
@@ -161,42 +196,39 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
   let currentHeading = "";
   let currentLevel = 0;
   let currentAnchor = "";
+  let currentParentAnchor: string | undefined = undefined;
   let currentContent: string[] = [];
 
   for (const token of tokens) {
     if (token.type === "heading") {
+      const newLevel = token.depth;
+
       // Save previous section if it exists
       if (currentHeading) {
-        const content = currentContent.join("\n").trim();
-        const parentAnchor =
-          stack.length > 0 ? stack[stack.length - 1].anchor : undefined;
-
         rawSections.push({
           heading: currentHeading,
-          content,
+          content: currentContent.join("\n").trim(),
           level: currentLevel,
           anchor: currentAnchor,
-          parentAnchor,
+          parentAnchor: currentParentAnchor,
         });
+
+        // Push saved section to stack (could be parent of future deeper sections)
+        stack.push({ level: currentLevel, anchor: currentAnchor });
       }
 
-      // Start new section
-      currentHeading = token.text;
-      currentLevel = token.depth;
-      currentAnchor = slugify(token.text);
-      currentContent = [];
-
-      // Update stack for hierarchy tracking
-      // Pop all items at same or deeper level
-      while (
-        stack.length > 0 &&
-        stack[stack.length - 1].level >= currentLevel
-      ) {
+      // Update stack for NEW section: pop items at same or deeper level
+      while (stack.length > 0 && stack[stack.length - 1].level >= newLevel) {
         stack.pop();
       }
 
-      // Push current section to stack
-      stack.push({ level: currentLevel, anchor: currentAnchor });
+      // Start new section - capture parent NOW from updated stack
+      currentHeading = token.text;
+      currentLevel = newLevel;
+      currentAnchor = slugify(token.text);
+      currentParentAnchor =
+        stack.length > 0 ? stack[stack.length - 1].anchor : undefined;
+      currentContent = [];
     } else {
       // Accumulate content for current section
       if (token.type === "paragraph") {
@@ -221,16 +253,12 @@ export function parseMarkdown(markdown: string): ParsedSection[] {
 
   // Save final section
   if (currentHeading) {
-    const content = currentContent.join("\n").trim();
-    const parentAnchor =
-      stack.length > 1 ? stack[stack.length - 2].anchor : undefined;
-
     rawSections.push({
       heading: currentHeading,
-      content,
+      content: currentContent.join("\n").trim(),
       level: currentLevel,
       anchor: currentAnchor,
-      parentAnchor,
+      parentAnchor: currentParentAnchor,
     });
   }
 
