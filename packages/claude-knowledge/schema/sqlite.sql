@@ -39,9 +39,18 @@ CREATE INDEX IF NOT EXISTS idx_actions_workflow ON actions(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_commits_workflow ON commits(workflow_id);
 
 -- Knowledge graph entities
+-- Entity types:
+--   Learning: A learning captured during a workflow session
+--   CodeArea: A logical area of the codebase
+--   File: A file in the codebase
+--   Pattern: A recognized pattern derived from learnings
+--   Mistake: A mistake made during development and how it was fixed
+--   Topic: A conversation topic that persists across sessions
+--   DocSection: A section of a markdown document (heading + content)
+--   CodeDoc: JSDoc/TSDoc extracted from code
 CREATE TABLE IF NOT EXISTS entities (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake')),
+  type TEXT NOT NULL CHECK (type IN ('Learning', 'CodeArea', 'File', 'Pattern', 'Mistake', 'Topic', 'DocSection', 'CodeDoc')),
   data JSON NOT NULL,
   embedding BLOB,
   created_at TEXT NOT NULL,
@@ -49,11 +58,21 @@ CREATE TABLE IF NOT EXISTS entities (
 );
 
 -- Relationships between entities
+-- Relationship types:
+--   ABOUT: Learning → CodeArea (learning relates to a code area)
+--   IN_FILE: Learning/Mistake → File (located in a file)
+--   LED_TO: Pattern/Mistake → Learning (derived from / fixed by)
+--   APPLIES_TO: Pattern → CodeArea (pattern applies to area)
+--   SUPERSEDES: Learning → Learning (for updates)
+--   CHILD_OF: DocSection → DocSection (hierarchical parent-child)
+--   DOCUMENTS: CodeDoc → Entity (links docs to code entities)
+--   IN_DOC: DocSection → File (links section to parent file)
+--   REFERENCES: DocSection → DocSection/File (cross-document links)
 CREATE TABLE IF NOT EXISTS relationships (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   from_id TEXT NOT NULL,
   to_id TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES')),
+  type TEXT NOT NULL CHECK (type IN ('ABOUT', 'IN_FILE', 'LED_TO', 'APPLIES_TO', 'SUPERSEDES', 'CHILD_OF', 'DOCUMENTS', 'IN_DOC', 'REFERENCES')),
   data JSON,
   created_at TEXT NOT NULL,
   FOREIGN KEY (from_id) REFERENCES entities(id) ON DELETE CASCADE,
