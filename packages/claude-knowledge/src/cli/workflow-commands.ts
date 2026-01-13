@@ -168,6 +168,95 @@ export async function handleWorkflowCommands(
     const hours = args[0] ? parseIntSafe(args[0], "hours") : 24;
     const count = checkpoint.cleanupStaleWorkflows(hours);
     console.log(JSON.stringify({ cleaned: count, thresholdHours: hours }));
+  } else if (command === "verify-branch") {
+    // workflow verify-branch <expected-branch>
+    // Verifies current git branch matches expected. Exits 1 if mismatch.
+    if (args.length < 1) {
+      throw new Error("Usage: workflow verify-branch <expected-branch>");
+    }
+    const expected = args[0];
+    if (!expected) {
+      throw new Error("Expected branch name is required");
+    }
+    const result = Bun.spawnSync(["git", "rev-parse", "--abbrev-ref", "HEAD"]);
+    if (!result.success) {
+      throw new Error("Failed to get current branch: not a git repository?");
+    }
+    const current = result.stdout.toString().trim();
+    if (current !== expected) {
+      console.error(
+        JSON.stringify({
+          success: false,
+          error: "Branch mismatch",
+          expected,
+          actual: current,
+        }),
+      );
+      process.exit(1);
+    }
+    console.log(JSON.stringify({ success: true, branch: current }));
+  } else if (command === "verify-not-main") {
+    // workflow verify-not-main
+    // Verifies we're NOT on main or master. Exits 1 if we are.
+    const result = Bun.spawnSync(["git", "rev-parse", "--abbrev-ref", "HEAD"]);
+    if (!result.success) {
+      throw new Error("Failed to get current branch: not a git repository?");
+    }
+    const current = result.stdout.toString().trim();
+    if (current === "main" || current === "master") {
+      console.error(
+        JSON.stringify({
+          success: false,
+          error: "On protected branch",
+          branch: current,
+          message: "Cannot perform this operation on main/master",
+        }),
+      );
+      process.exit(1);
+    }
+    console.log(JSON.stringify({ success: true, branch: current }));
+  } else if (command === "verify-not-worktree") {
+    // workflow verify-not-worktree
+    // Verifies we're not inside a git worktree. Exits 1 if we are.
+    // Use --show-superproject-working-tree which returns non-empty when in a worktree
+    const result = Bun.spawnSync([
+      "git",
+      "rev-parse",
+      "--show-superproject-working-tree",
+    ]);
+    if (!result.success) {
+      throw new Error("Failed to check worktree status: not a git repository?");
+    }
+    const superproject = result.stdout.toString().trim();
+    // If superproject is non-empty, we're inside a worktree
+    if (superproject !== "") {
+      const toplevelResult = Bun.spawnSync([
+        "git",
+        "rev-parse",
+        "--show-toplevel",
+      ]);
+      const repoRoot = toplevelResult.success
+        ? toplevelResult.stdout.toString().trim()
+        : "unknown";
+      console.error(
+        JSON.stringify({
+          success: false,
+          error: "Inside worktree",
+          path: repoRoot,
+          message: "Switch to main repository first",
+        }),
+      );
+      process.exit(1);
+    }
+    const toplevelResult = Bun.spawnSync([
+      "git",
+      "rev-parse",
+      "--show-toplevel",
+    ]);
+    const repoRoot = toplevelResult.success
+      ? toplevelResult.stdout.toString().trim()
+      : process.cwd();
+    console.log(JSON.stringify({ success: true, repoRoot }));
   } else {
     throw new Error(`Unknown workflow command: ${command}`);
   }

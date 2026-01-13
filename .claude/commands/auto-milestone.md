@@ -337,7 +337,7 @@ Steps:
 2. Fetch issue #$ISSUE details
 3. Create development plan
 4. Implement with atomic commits (use atomic-developer workflow)
-5. Run validation: bun run type-check && bun run lint && bun test
+5. Run validation (as separate commands): bun run type-check, bun run lint, bun test
 6. Push branch and create PR
 7. Return result JSON:
    {
@@ -686,9 +686,12 @@ gh pr checks "$PR" --required
 # 2. Check review approval
 gh pr view "$PR" --json reviewDecision
 
-# 3. Run local validation in worktree
+# 3. Run local validation in worktree (as separate commands)
 cd "$WORKTREE_PATH"
-bun run type-check && bun run lint && bun test && bun run build
+bun run type-check
+bun run lint
+bun test
+bun run build
 ```
 
 ### 4.3 Merge PR

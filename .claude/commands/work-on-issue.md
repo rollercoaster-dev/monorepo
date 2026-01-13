@@ -35,6 +35,9 @@ bun run checkpoint <command> [args...]
 # workflow set-status <id> <status> - Update status
 # workflow log-action <id> <action> <result> [json] - Log action
 # workflow log-commit <id> <sha> <message> - Log commit
+# workflow verify-branch <expected> - Verify current branch matches expected
+# workflow verify-not-main        - Verify not on main/master
+# workflow verify-not-worktree    - Verify not in a worktree
 ```
 
 ### Telegram Notification Points
@@ -98,32 +101,17 @@ END:        Mark completed
    - If fresh: delete old workflow, continue to create new
 
 3. **If no existing workflow**:
-   - **Verify not in a worktree for a different issue:**
+   - **Verify not in a worktree:**
      ```bash
-     # Check if we're in a worktree
-     if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-       WORKTREE_ROOT=$(git rev-parse --show-toplevel)
-       if [[ "$WORKTREE_ROOT" == *".worktrees"* ]]; then
-         echo "ERROR: Running inside a worktree. Switch to main repo first."
-         exit 1
-       fi
-     fi
+     bun run checkpoint workflow verify-not-worktree
      ```
    - Create feature branch:
      ```bash
      git checkout -b feat/issue-$ARGUMENTS-{short-description}
      ```
-   - **CRITICAL: Verify branch checkout succeeded:**
+   - **Verify branch checkout succeeded:**
      ```bash
-     CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-     EXPECTED_BRANCH="feat/issue-$ARGUMENTS-{short-description}"
-     if [[ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]]; then
-       echo "ERROR: Branch checkout failed!"
-       echo "Expected: $EXPECTED_BRANCH"
-       echo "Actual: $CURRENT_BRANCH"
-       exit 1
-     fi
-     echo "✓ Verified on branch: $CURRENT_BRANCH"
+     bun run checkpoint workflow verify-branch feat/issue-$ARGUMENTS-{short-description}
      ```
    - Create checkpoint:
      ```bash
@@ -239,7 +227,13 @@ bun run checkpoint workflow log-action $WORKFLOW_ID "research-complete" "success
 
 12. For each atomic commit in the plan:
     - Make the changes according to plan
-    - Run validation: `bun run type-check && bun run lint`
+    - Run validation (as separate commands):
+      ```bash
+      bun run type-check
+      ```
+      ```bash
+      bun run lint
+      ```
     - Prepare the diff
 
 ---
@@ -260,23 +254,21 @@ bun run checkpoint workflow log-action $WORKFLOW_ID "research-complete" "success
 16. Only after approval, **verify branch and commit**:
 
     ```bash
-    # CRITICAL: Verify we're on the feature branch before committing
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [[ "$CURRENT_BRANCH" == "main" ]] || [[ "$CURRENT_BRANCH" == "master" ]]; then
-      echo "ERROR: About to commit to $CURRENT_BRANCH! Aborting."
-      echo "Expected to be on feature branch."
-      exit 1
-    fi
-    echo "✓ Verified on branch: $CURRENT_BRANCH"
-
-    git add . && git commit -m "<type>(<scope>): <description>"
+    bun run checkpoint workflow verify-not-main
     ```
 
-    Then log the commit:
+    Then stage, commit, and log:
 
     ```bash
-    SHA=$(git rev-parse HEAD)
-    bun run checkpoint workflow log-commit $WORKFLOW_ID "$SHA" "<type>(<scope>): <description>"
+    git add .
+    ```
+
+    ```bash
+    git commit -m "<type>(<scope>): <description>"
+    ```
+
+    ```bash
+    bun run checkpoint workflow log-commit $WORKFLOW_ID "<sha-from-commit>" "<type>(<scope>): <description>"
     ```
 
 16b. **Notify via Telegram**: `WOI_COMMIT_APPROVED` template (N/M, remaining)
@@ -298,10 +290,22 @@ bun run checkpoint workflow log-action $WORKFLOW_ID "research-complete" "success
 
 18b. **Notify via Telegram**: `WOI_IMPL_COMPLETE` template (commit count)
 
-19. Run full validation:
+19. Run full validation (as separate commands):
 
     ```bash
-    bun test && bun run type-check && bun run lint && bun run build
+    bun test
+    ```
+
+    ```bash
+    bun run type-check
+    ```
+
+    ```bash
+    bun run lint
+    ```
+
+    ```bash
+    bun run build
     ```
 
 20. Run pr-review-toolkit agents:
