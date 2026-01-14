@@ -3,6 +3,7 @@ export {
   parseModifiedFiles,
   parseRecentCommits,
   parseConventionalCommit,
+  extractBranchKeywords,
   type ParsedCommit,
 } from "./git-parser";
 
