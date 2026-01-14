@@ -74,7 +74,7 @@ export function hashContent(content: string): string {
 export function extractCodeReferences(content: string, db: Database): string[] {
   const codeRefRegex = /`([a-zA-Z_][a-zA-Z0-9_]*(?:\(\))?)`/g;
   const matches = [...content.matchAll(codeRefRegex)];
-  const linkedEntityIds: string[] = [];
+  const linkedEntityIds = new Set<string>();
 
   for (const match of matches) {
     const codeName = match[1].replace(/\(\)$/, ""); // Strip () for function names
@@ -88,11 +88,11 @@ export function extractCodeReferences(content: string, db: Database): string[] {
       .get(codeName);
 
     if (entity) {
-      linkedEntityIds.push(entity.id);
+      linkedEntityIds.add(entity.id);
     }
   }
 
-  return linkedEntityIds;
+  return [...linkedEntityIds];
 }
 
 /**
@@ -232,10 +232,19 @@ export async function indexDocument(
       // Create IN_DOC relationship (DocSection → File)
       createRelationship(db, sectionId, fileEntityId, "IN_DOC");
 
-      // Create CHILD_OF relationship if parent exists
+      // Create CHILD_OF relationship if parent exists and was indexed
       if (section.parentAnchor) {
         const parentId = `doc-${Buffer.from(filePath).toString("base64url")}-${section.parentAnchor}`;
-        createRelationship(db, sectionId, parentId, "CHILD_OF");
+        // Only create relationship if parent was indexed (may have been filtered by minContentLength)
+        const parentExists = db
+          .query<
+            { id: string },
+            [string]
+          >("SELECT id FROM entities WHERE id = ? AND type = 'DocSection'")
+          .get(parentId);
+        if (parentExists) {
+          createRelationship(db, sectionId, parentId, "CHILD_OF");
+        }
       }
 
       // Extract and link code references
@@ -263,6 +272,13 @@ export async function indexDocument(
         if (targetExists) {
           createRelationship(db, sectionId, targetFileId, "REFERENCES");
           crossRefsCreated++;
+        } else {
+          logger.debug("Cross-doc link target not indexed yet", {
+            source: filePath,
+            target: targetPath,
+            suggestion:
+              "Re-index to create relationship after target is indexed",
+          });
         }
       }
     }
@@ -297,6 +313,12 @@ export async function indexDocument(
     };
   } catch (error) {
     db.run("ROLLBACK");
+    // Clean up doc_index to force re-index on retry (avoid stale hash)
+    try {
+      db.run("DELETE FROM doc_index WHERE file_path = ?", [filePath]);
+    } catch {
+      // Ignore cleanup errors - the main error is more important
+    }
     logger.error("Failed to index document", {
       filePath,
       error: error instanceof Error ? error.message : String(error),
