@@ -4,6 +4,7 @@ import {
   parseModifiedFiles,
   parseRecentCommits,
   parseConventionalCommit,
+  extractBranchKeywords,
 } from "./git-parser";
 
 describe("git-parser", () => {
@@ -197,6 +198,70 @@ describe("git-parser", () => {
     it("should be case insensitive for type", () => {
       const result = parseConventionalCommit("FEAT(scope): uppercase type");
       expect(result?.type).toBe("feat");
+    });
+  });
+
+  describe("extractBranchKeywords", () => {
+    it("should extract keywords from standard branch names", () => {
+      expect(extractBranchKeywords("feat/issue-476-session-context")).toEqual([
+        "session",
+        "context",
+      ]);
+      expect(extractBranchKeywords("fix/issue-123-null-check")).toEqual([
+        "null",
+        "check",
+      ]);
+    });
+
+    it("should filter common prefixes", () => {
+      // All of these are filtered out
+      expect(extractBranchKeywords("feat/issue-123")).toEqual([]);
+      expect(extractBranchKeywords("fix/bugfix-hotfix")).toEqual([]);
+      expect(extractBranchKeywords("chore/refactor-test")).toEqual([]);
+    });
+
+    it("should filter issue numbers", () => {
+      expect(extractBranchKeywords("feat/476-doc-search")).toEqual([
+        "doc",
+        "search",
+      ]);
+      expect(extractBranchKeywords("fix/999-handle-error")).toEqual([
+        "handle",
+        "error",
+      ]);
+    });
+
+    it("should filter short parts (2 chars or less)", () => {
+      expect(extractBranchKeywords("feat/a-b-c-doc-api")).toEqual([
+        "doc",
+        "api",
+      ]);
+    });
+
+    it("should handle empty or undefined input", () => {
+      expect(extractBranchKeywords(undefined)).toEqual([]);
+      expect(extractBranchKeywords("")).toEqual([]);
+    });
+
+    it("should lowercase keywords", () => {
+      expect(extractBranchKeywords("FEAT/ISSUE-123-SESSION-CONTEXT")).toEqual([
+        "session",
+        "context",
+      ]);
+    });
+
+    it("should handle branches without issue numbers", () => {
+      expect(extractBranchKeywords("feature/add-authentication")).toEqual([
+        "add",
+        "authentication",
+      ]);
+      expect(extractBranchKeywords("main")).toEqual(["main"]);
+    });
+
+    it("should handle complex branch names", () => {
+      expect(
+        extractBranchKeywords("feat/issue-476-session-doc-injection-context"),
+      ).toEqual(["session", "doc", "injection", "context"]);
     });
   });
 });
