@@ -126,13 +126,14 @@ export async function formatForContext(
     }
     const mistakes = Array.from(mistakesById.values());
 
-    // Format the results (no topics in query context - use empty array)
+    // Format the results (no topics or docs in query context - use empty arrays)
     const content = formatByType(
       format,
       filteredResults,
       patterns,
       mistakes,
-      [],
+      [], // topics
+      [], // docs
       {
         maxTokens,
         showFilePaths,

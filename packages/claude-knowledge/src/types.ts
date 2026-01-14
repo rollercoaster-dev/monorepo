@@ -327,6 +327,8 @@ export interface KnowledgeContext {
   mistakes: Mistake[];
   /** Conversation topics from previous sessions */
   topics?: Topic[];
+  /** Relevant documentation from indexed docs */
+  docs?: DocSearchResult[];
   /** Formatted markdown summary for injection into context */
   summary: string;
   /** Session metadata for metrics tracking (populated by onSessionStart) */
