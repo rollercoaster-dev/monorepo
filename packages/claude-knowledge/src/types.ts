@@ -338,6 +338,14 @@ export interface KnowledgeContext {
     startTime: string;
     issueNumber?: number;
   };
+  /** Active workflow state from checkpoint DB (populated by onSessionStart) */
+  _workflowState?: {
+    issueNumber: number;
+    branch: string;
+    phase: WorkflowPhase;
+    status: WorkflowStatus;
+    recentActions: Action[];
+  };
 }
 
 /**

@@ -31,7 +31,7 @@ import {
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
-import { formatKnowledgeContext } from "./formatter";
+import { formatKnowledgeContext, formatWorkflowState } from "./formatter";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -212,8 +212,49 @@ async function onSessionStart(
     // Return empty context to allow session to continue
   }
 
+  // Query workflow state from checkpoint DB if available
+  let workflowState: KnowledgeContext["_workflowState"];
+  try {
+    let checkpointData = null;
+
+    // Try by issue number first (most specific)
+    if (issueNumber) {
+      checkpointData = checkpoint.findByIssue(issueNumber);
+    }
+
+    // Fall back to any active workflow
+    if (!checkpointData) {
+      const active = checkpoint.listActive();
+      if (active.length > 0) {
+        // Get full data for most recent active workflow
+        checkpointData = checkpoint.load(active[0].id);
+      }
+    }
+
+    if (checkpointData) {
+      workflowState = {
+        issueNumber: checkpointData.workflow.issueNumber,
+        branch: checkpointData.workflow.branch,
+        phase: checkpointData.workflow.phase,
+        status: checkpointData.workflow.status,
+        recentActions: checkpointData.actions.slice(-5),
+      };
+      logger.debug("Loaded workflow state", {
+        workflowId: checkpointData.workflow.id,
+        phase: checkpointData.workflow.phase,
+        context: "onSessionStart",
+      });
+    }
+  } catch (error) {
+    // Non-fatal: workflow state is optional enhancement
+    logger.warn("Failed to load workflow state", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionStart",
+    });
+  }
+
   // Format summary for injection using new formatter
-  const summary = formatKnowledgeContext(
+  const knowledgeSummary = formatKnowledgeContext(
     learnings,
     patterns,
     mistakes,
@@ -228,6 +269,12 @@ async function onSessionStart(
       },
     },
   );
+
+  // Prepend workflow state to summary if available
+  const workflowSection = formatWorkflowState(workflowState);
+  const summary = workflowSection
+    ? `${workflowSection}\n${knowledgeSummary}`
+    : knowledgeSummary;
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
@@ -262,6 +309,8 @@ async function onSessionStart(
       startTime,
       issueNumber,
     },
+    // Include workflow state if available
+    _workflowState: workflowState,
   };
 }
 
