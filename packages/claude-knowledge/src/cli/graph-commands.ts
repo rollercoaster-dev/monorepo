@@ -9,6 +9,7 @@ import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parsePackage,
   storeGraph,
+  storeCodeDocs,
   whatCalls,
   whatDependsOn,
   blastRadius,
@@ -75,6 +76,10 @@ export async function handleGraphCommands(
     }
     const storeResult = storeGraph(parseResult, parseResult.package);
 
+    // Create CodeDoc entities with embeddings for semantic search
+    // This enables "what does this function do?" queries
+    const codeDocResult = await storeCodeDocs(parseResult);
+
     // Always output final JSON (allows hooks to detect success/failure)
     // Use stdout.write to avoid logger formatting that would corrupt JSON
     process.stdout.write(
@@ -87,6 +92,7 @@ export async function handleGraphCommands(
           stored: {
             entities: storeResult.entitiesStored,
             relationships: storeResult.relationshipsStored,
+            codeDocs: codeDocResult.codeDocsCreated,
           },
         },
         null,

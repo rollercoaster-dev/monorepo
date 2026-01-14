@@ -30,7 +30,7 @@ export * from "./types";
 export { parsePackage } from "./parser";
 
 // Storage
-export { storeGraph, clearPackage } from "./store";
+export { storeGraph, storeCodeDocs, clearPackage } from "./store";
 
 // Query
 export {
@@ -45,7 +45,7 @@ export {
 
 // Import for graph object
 import { parsePackage } from "./parser";
-import { storeGraph, clearPackage } from "./store";
+import { storeGraph, storeCodeDocs, clearPackage } from "./store";
 import {
   whatCalls,
   whatDependsOn,
@@ -66,6 +66,7 @@ export const graph = {
 
   // Storage
   storeGraph,
+  storeCodeDocs,
   clearPackage,
 
   // Queries
