@@ -189,19 +189,63 @@ export async function fetchIssueMetadata(
     return cached;
   }
 
+  // Validate issue number is a safe positive integer
+  if (
+    !Number.isInteger(issueNumber) ||
+    issueNumber <= 0 ||
+    issueNumber > Number.MAX_SAFE_INTEGER
+  ) {
+    return null;
+  }
+
   // Fetch from GitHub
   try {
     const { $ } = await import("bun");
     const result =
       await $`gh issue view ${issueNumber} --json title,labels`.quiet();
-    const data = JSON.parse(result.text()) as {
+
+    // Parse and validate JSON structure
+    let data: unknown;
+    try {
+      data = JSON.parse(result.text());
+    } catch {
+      // JSON parse failed - log and return null
+      const { defaultLogger: logger } =
+        await import("@rollercoaster-dev/rd-logger");
+      logger.debug("Failed to parse gh CLI JSON output", {
+        issueNumber,
+        context: "fetchIssueMetadata",
+      });
+      return null;
+    }
+
+    // Validate structure before using
+    if (
+      typeof data !== "object" ||
+      data === null ||
+      typeof (data as Record<string, unknown>).title !== "string"
+    ) {
+      const { defaultLogger: logger } =
+        await import("@rollercoaster-dev/rd-logger");
+      logger.debug("gh CLI returned unexpected JSON structure", {
+        issueNumber,
+        context: "fetchIssueMetadata",
+      });
+      return null;
+    }
+
+    const typedData = data as {
       title: string;
-      labels: Array<{ name: string }>;
+      labels?: Array<{ name?: string }>;
     };
 
     const metadata: IssueMetadata = {
-      title: data.title,
-      labels: data.labels.map((l) => l.name),
+      title: typedData.title,
+      labels: Array.isArray(typedData.labels)
+        ? typedData.labels
+            .filter((l) => typeof l?.name === "string")
+            .map((l) => l.name!)
+        : [],
     };
 
     // Cache the result
@@ -209,7 +253,15 @@ export async function fetchIssueMetadata(
 
     return metadata;
   } catch (error) {
-    // Return null on error (graceful fallback)
+    // Log the failure - this is an enhancement, not critical
+    const { defaultLogger: logger } =
+      await import("@rollercoaster-dev/rd-logger");
+    logger.debug("Failed to fetch issue metadata from gh CLI", {
+      issueNumber,
+      error: error instanceof Error ? error.message : String(error),
+      context: "fetchIssueMetadata",
+      hint: "Ensure gh CLI is installed and authenticated (gh auth login)",
+    });
     return null;
   }
 }

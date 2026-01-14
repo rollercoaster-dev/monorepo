@@ -98,12 +98,16 @@ async function onSessionStart(
     try {
       issueMetadata = await fetchIssueMetadata(issueNumber);
     } catch (error) {
-      // Log but don't fail - this is an enhancement, not critical
-      logger.debug("Failed to fetch issue metadata", {
-        issueNumber,
-        error: error instanceof Error ? error.message : String(error),
-        context: "onSessionStart",
-      });
+      // Log at info level - this affects doc search quality even if not critical
+      logger.info(
+        "Issue metadata unavailable, doc search will use fallback terms",
+        {
+          issueNumber,
+          error: error instanceof Error ? error.message : String(error),
+          context: "onSessionStart",
+          hint: "Ensure gh CLI is installed and authenticated for enhanced doc search",
+        },
+      );
     }
   }
 
