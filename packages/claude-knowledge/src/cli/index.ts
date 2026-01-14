@@ -9,6 +9,7 @@ import { handleLearningCommands } from "./learning-commands";
 import { handleMetricsCommands } from "./metrics-commands";
 import { handleBootstrapCommands } from "./bootstrap-commands";
 import { handleGraphCommands } from "./graph-commands";
+import { handleDocsCommands } from "./docs-commands";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -60,6 +61,9 @@ if (args.length === 0) {
   console.error("  graph exports [package]");
   console.error("  graph callers <function>");
   console.error("  graph summary [package]");
+  console.error("  docs index <file-or-directory> [--force]");
+  console.error("  docs status <file>");
+  console.error("  docs clean");
   process.exit(1);
 }
 
@@ -89,6 +93,8 @@ try {
     await handleBootstrapCommands(command, commandArgs);
   } else if (category === "graph") {
     await handleGraphCommands(command, commandArgs);
+  } else if (category === "docs") {
+    await handleDocsCommands(command, commandArgs);
   } else {
     throw new Error(`Unknown category: ${category}`);
   }
