@@ -6,7 +6,7 @@
  */
 
 import { Project, SyntaxKind } from "ts-morph";
-import type { SourceFile, Node } from "ts-morph";
+import type { SourceFile, Node, JSDoc } from "ts-morph";
 import { readdirSync, statSync } from "fs";
 import { join, relative, dirname } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
@@ -464,6 +464,41 @@ export function extractRelationships(
   });
 
   return relationships;
+}
+
+/**
+ * Extract JSDoc content from a declaration node.
+ * Returns null if no JSDoc exists or content is empty.
+ *
+ * @param node - ts-morph declaration node with JSDoc
+ * @returns Formatted JSDoc content or null
+ */
+export function extractJsDocContent(node: {
+  getJsDocs(): JSDoc[];
+}): string | null {
+  const jsDocs = node.getJsDocs();
+  if (jsDocs.length === 0) {
+    return null;
+  }
+
+  // Use first JSDoc block (standard pattern)
+  const jsDoc = jsDocs[0];
+  const description = jsDoc.getDescription().trim();
+  const tags = jsDoc.getTags();
+
+  // Skip empty JSDoc
+  if (!description && tags.length === 0) {
+    return null;
+  }
+
+  // Format: description + tags
+  const tagLines = tags.map((tag) => {
+    const tagName = tag.getTagName();
+    const comment = tag.getCommentText() || "";
+    return `@${tagName} ${comment}`.trim();
+  });
+
+  return [description, ...tagLines].filter(Boolean).join("\n");
 }
 
 /**
