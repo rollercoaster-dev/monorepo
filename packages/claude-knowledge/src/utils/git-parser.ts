@@ -271,13 +271,29 @@ export function extractIssueSearchTerms(
     "its",
   ]);
 
+  // Common commit type prefixes to filter out
+  const commitTypes = new Set([
+    "feat",
+    "fix",
+    "docs",
+    "style",
+    "refactor",
+    "test",
+    "chore",
+    "perf",
+    "build",
+  ]);
+
   // Extract words from issue title
   if (issueMetadata?.title) {
     const titleWords = issueMetadata.title
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, " ")
       .split(/\s+/)
-      .filter((word) => word.length > 2 && !stopWords.has(word));
+      .filter(
+        (word) =>
+          word.length > 2 && !stopWords.has(word) && !commitTypes.has(word),
+      );
     terms.push(...titleWords);
   }
 
@@ -300,7 +316,7 @@ export function extractIssueSearchTerms(
     );
     const branchWords = cleanBranch
       .replace(/issue-\d+/i, "")
-      .replace(/[^a-z0-9\s-]/g, " ")
+      .replace(/[^a-z0-9\s]/g, " ") // Convert dashes and other chars to spaces
       .toLowerCase()
       .split(/\s+/)
       .filter((word) => word.length > 2 && !stopWords.has(word));

@@ -4,6 +4,8 @@ import {
   parseModifiedFiles,
   parseRecentCommits,
   parseConventionalCommit,
+  extractIssueSearchTerms,
+  clearIssueMetadataCache,
 } from "./git-parser";
 
 describe("git-parser", () => {
@@ -197,6 +199,159 @@ describe("git-parser", () => {
     it("should be case insensitive for type", () => {
       const result = parseConventionalCommit("FEAT(scope): uppercase type");
       expect(result?.type).toBe("feat");
+    });
+  });
+
+  describe("extractIssueSearchTerms", () => {
+    it("should extract words from issue title", () => {
+      const metadata = {
+        title: "feat: bootstrap documentation index",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("bootstrap");
+      expect(terms).toContain("documentation");
+      expect(terms).toContain("index");
+      expect(terms).not.toContain("feat"); // Removed by stopwords logic
+    });
+
+    it("should filter out stopwords", () => {
+      const metadata = {
+        title: "add the new feature for the user",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("add");
+      expect(terms).toContain("feature");
+      expect(terms).toContain("user");
+      expect(terms).not.toContain("the");
+      expect(terms).not.toContain("for");
+    });
+
+    it("should extract package names from pkg: labels", () => {
+      const metadata = {
+        title: "enhance session hooks",
+        labels: ["pkg:claude-knowledge", "type:enhancement"],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("enhance");
+      expect(terms).toContain("session");
+      expect(terms).toContain("hooks");
+      expect(terms).toContain("claude-knowledge");
+      expect(terms).not.toContain("pkg:claude-knowledge"); // Package name extracted
+    });
+
+    it("should extract keywords from branch name", () => {
+      const metadata = null;
+      const branch = "feat/issue-123-api-endpoints";
+      const terms = extractIssueSearchTerms(metadata, branch);
+
+      expect(terms).toContain("api");
+      expect(terms).toContain("endpoints");
+      expect(terms).not.toContain("feat");
+      expect(terms).not.toContain("issue");
+      expect(terms).not.toContain("123");
+    });
+
+    it("should combine all sources", () => {
+      const metadata = {
+        title: "feat: add documentation search",
+        labels: ["pkg:claude-knowledge"],
+      };
+      const branch = "feat/issue-476-doc-search-enhancement";
+      const terms = extractIssueSearchTerms(metadata, branch);
+
+      // From title
+      expect(terms).toContain("documentation");
+      expect(terms).toContain("search");
+      // From label
+      expect(terms).toContain("claude-knowledge");
+      // From branch
+      expect(terms).toContain("doc");
+      expect(terms).toContain("enhancement");
+    });
+
+    it("should deduplicate terms", () => {
+      const metadata = {
+        title: "search search search feature",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      const searchCount = terms.filter((t) => t === "search").length;
+      expect(searchCount).toBe(1);
+    });
+
+    it("should handle null issue metadata", () => {
+      const branch = "feat/issue-100-test";
+      const terms = extractIssueSearchTerms(null, branch);
+
+      expect(terms).toContain("test");
+      expect(terms.length).toBeGreaterThan(0);
+    });
+
+    it("should handle null branch", () => {
+      const metadata = {
+        title: "add new feature",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("add");
+      expect(terms).toContain("feature");
+    });
+
+    it("should handle both null", () => {
+      const terms = extractIssueSearchTerms(null, null);
+      expect(terms).toEqual([]);
+    });
+
+    it("should filter out empty strings", () => {
+      const metadata = {
+        title: "   ",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toEqual([]);
+    });
+
+    it("should handle special characters in title", () => {
+      const metadata = {
+        title: "fix: API/endpoint (v2.0) - [urgent]",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("api");
+      expect(terms).toContain("endpoint");
+      expect(terms).toContain("urgent");
+      expect(terms).not.toContain("(");
+      expect(terms).not.toContain(")");
+    });
+
+    it("should filter out short words (< 3 chars)", () => {
+      const metadata = {
+        title: "add UI to app",
+        labels: [],
+      };
+      const terms = extractIssueSearchTerms(metadata, null);
+
+      expect(terms).toContain("add");
+      expect(terms).toContain("app");
+      expect(terms).not.toContain("ui"); // Too short
+      expect(terms).not.toContain("to"); // Stopword
+    });
+  });
+
+  describe("clearIssueMetadataCache", () => {
+    it("should clear the cache", () => {
+      // This is mainly for test cleanup
+      // Just verify it doesn't throw
+      expect(() => clearIssueMetadataCache()).not.toThrow();
     });
   });
 });
