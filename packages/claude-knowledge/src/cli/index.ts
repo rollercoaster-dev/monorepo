@@ -64,6 +64,8 @@ if (args.length === 0) {
   console.error("  docs index <file-or-directory> [--force]");
   console.error("  docs status <file>");
   console.error("  docs clean");
+  console.error("  docs search <query>");
+  console.error("  docs for-code <entity-id>");
   process.exit(1);
 }
 
