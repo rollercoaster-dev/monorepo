@@ -190,6 +190,16 @@ CREATE INDEX IF NOT EXISTS idx_graph_rel_to ON graph_relationships(to_entity);
 CREATE INDEX IF NOT EXISTS idx_graph_rel_type ON graph_relationships(type);
 -- Prevent duplicate relationships
 CREATE UNIQUE INDEX IF NOT EXISTS idx_graph_rel_unique ON graph_relationships(from_entity, to_entity, type);
+
+-- Document indexing state for incremental updates
+CREATE TABLE IF NOT EXISTS doc_index (
+  file_path TEXT PRIMARY KEY,
+  content_hash TEXT NOT NULL,
+  indexed_at TEXT NOT NULL
+);
+
+-- Indexes for document indexing lookups
+CREATE INDEX IF NOT EXISTS idx_doc_index_hash ON doc_index(content_hash);
 `;
 
 /**
