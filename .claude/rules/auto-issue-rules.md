@@ -180,7 +180,7 @@ This ensures user can always take control.
 
 - Run full validation before PR
 - Include non-critical findings in PR body
-- Trigger both CodeRabbit and Claude reviews
+- CodeRabbit auto-triggers; only tag reviewers for large PRs (>500 lines) or many post-PR fixes
 
 ---
 

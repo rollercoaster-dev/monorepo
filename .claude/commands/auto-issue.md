@@ -33,6 +33,18 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ---
 
+## Bash Command Convention
+
+**IMPORTANT:** All bash commands must be run individually:
+
+- **No `&&` chaining** - Run each command separately
+- **No shell variables** - Use literal values or `<placeholder>` syntax
+- **One command per Bash tool call** - Don't combine sequential operations
+
+This ensures reliable execution and clear error attribution.
+
+---
+
 ## Shared References
 
 This workflow uses patterns from [shared/](../shared/) and Claude Code skills:
@@ -304,14 +316,18 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 
 ````
 
-**Log each agent spawn:**
+**Log each agent spawn (run separately for each agent):**
 
 ```bash
-for AGENT in "pr-review-toolkit:code-reviewer" "pr-review-toolkit:pr-test-analyzer" \
-             "pr-review-toolkit:silent-failure-hunter"; do
-  bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
-    "{\"agent\": \"$AGENT\", \"task\": \"code review\", \"phase\": \"review\"}"
-done
+bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:code-reviewer", "task": "code review", "phase": "review"}'
+```
+
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:pr-test-analyzer", "task": "code review", "phase": "review"}'
+```
+
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:silent-failure-hunter", "task": "code review", "phase": "review"}'
 ```
 
 **Badge code detection:** Files matching:
@@ -453,7 +469,13 @@ After review findings are resolved, analyze the workflow execution to capture le
 
     ```bash
     rm .claude/dev-plans/issue-$ARGUMENTS.md
+    ```
+
+    ```bash
     git add .claude/dev-plans/
+    ```
+
+    ```bash
     git commit -m "chore: clean up dev-plan for issue #$ARGUMENTS"
     ```
 
@@ -485,7 +507,14 @@ After review findings are resolved, analyze the workflow execution to capture le
      echo "[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #$PR_NUMBER"
      ```
 
-15. **Trigger reviews:**
+15. **Trigger reviews (conditional):**
+
+    CodeRabbit triggers automatically on PR creation. Only manually trigger reviews when:
+    - The PR is large (>500 lines changed)
+    - Multiple fix commits were made after initial implementation
+    - Complex architectural changes that need deeper review
+
+    For standard PRs, skip this step. For larger/complex PRs:
 
     ```
     @coderabbitai full review
@@ -518,7 +547,7 @@ After review findings are resolved, analyze the workflow execution to capture le
     Commits: N implementation + M fixes
     PR: https://github.com/.../pull/XXX
 
-    Reviews triggered. Check PR for CodeRabbit/Claude feedback.
+    CodeRabbit will review automatically. Check PR for feedback.
     ```
 
 ---
