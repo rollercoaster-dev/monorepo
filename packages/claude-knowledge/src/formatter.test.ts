@@ -9,9 +9,10 @@ import {
   sortByRelevance,
   calculatePriority,
   formatKnowledgeContext,
+  formatWorkflowState,
   type FormatOptions,
 } from "./formatter";
-import type { QueryResult, Pattern, Mistake } from "./types";
+import type { QueryResult, Pattern, Mistake, KnowledgeContext } from "./types";
 
 describe("estimateTokens", () => {
   test("estimates tokens for empty string", () => {
@@ -486,5 +487,105 @@ describe("formatKnowledgeContext", () => {
     expect(output).toContain("### Past Mistakes in Current Files");
     expect(output).toContain("`src/file.ts`");
     expect(output).toMatch(/Token usage: ~\d+ \/ 3000/);
+  });
+});
+
+describe("formatWorkflowState", () => {
+  test("returns empty string when workflow state is undefined", () => {
+    const output = formatWorkflowState(undefined);
+    expect(output).toBe("");
+  });
+
+  test("formats workflow state with all fields", () => {
+    const workflowState: KnowledgeContext["_workflowState"] = {
+      issueNumber: 123,
+      branch: "feat/issue-123-test-feature",
+      phase: "implement",
+      status: "running",
+      recentActions: [
+        {
+          workflowId: "workflow-123",
+          action: "phase_transition",
+          result: "success",
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          workflowId: "workflow-123",
+          action: "spawned_agent",
+          result: "success",
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const output = formatWorkflowState(workflowState);
+
+    expect(output).toContain("## Active Workflow");
+    expect(output).toContain("**Issue:** #123");
+    expect(output).toContain("**Branch:** `feat/issue-123-test-feature`");
+    expect(output).toContain("**Phase:** implement");
+    expect(output).toContain("**Status:** running");
+    expect(output).toContain("✓ phase_transition");
+    expect(output).toContain("✓ spawned_agent");
+  });
+
+  test("formats failed actions with X mark", () => {
+    const workflowState: KnowledgeContext["_workflowState"] = {
+      issueNumber: 456,
+      branch: "feat/issue-456-test",
+      phase: "review",
+      status: "running",
+      recentActions: [
+        {
+          workflowId: "workflow-456",
+          action: "auto_fix",
+          result: "failed",
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const output = formatWorkflowState(workflowState);
+
+    expect(output).toContain("✗ auto_fix");
+  });
+
+  test("formats pending actions with ellipsis", () => {
+    const workflowState: KnowledgeContext["_workflowState"] = {
+      issueNumber: 789,
+      branch: "feat/issue-789-test",
+      phase: "implement",
+      status: "running",
+      recentActions: [
+        {
+          workflowId: "workflow-789",
+          action: "executing",
+          result: "pending",
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const output = formatWorkflowState(workflowState);
+
+    expect(output).toContain("… executing");
+  });
+
+  test("shows 'none' when no recent actions", () => {
+    const workflowState: KnowledgeContext["_workflowState"] = {
+      issueNumber: 111,
+      branch: "feat/issue-111-test",
+      phase: "research",
+      status: "running",
+      recentActions: [],
+    };
+
+    const output = formatWorkflowState(workflowState);
+
+    expect(output).toContain("**Recent:** none");
   });
 });

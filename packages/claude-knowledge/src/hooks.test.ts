@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach } from "bun:test";
 import { hooks } from "./hooks";
 import { knowledge } from "./knowledge";
+import { checkpoint } from "./checkpoint";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
 import { resetDefaultEmbedder } from "./embeddings";
 import { unlinkSync, existsSync } from "fs";
@@ -335,6 +336,99 @@ describe("hooks", () => {
 
       // Should return recent topics as fallback
       expect(result.topics!.length).toBeGreaterThan(0);
+    });
+
+    it("should include workflow state when workflow exists for issue", async () => {
+      // Create a workflow for issue 123
+      const workflow = checkpoint.create(123, "feat/issue-123-test");
+
+      // Log some actions to the workflow
+      checkpoint.logAction(workflow.id, "phase_transition", "success", {
+        from: "research",
+        to: "implement",
+      });
+      checkpoint.logAction(workflow.id, "spawned_agent", "success", {
+        agent: "atomic-developer",
+      });
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        branch: "feat/issue-123-test",
+        issueNumber: 123,
+      });
+
+      expect(result._workflowState).toBeDefined();
+      expect(result._workflowState!.issueNumber).toBe(123);
+      expect(result._workflowState!.branch).toBe("feat/issue-123-test");
+      expect(result._workflowState!.phase).toBe("research"); // Initial phase
+      expect(result._workflowState!.status).toBe("running");
+      expect(result._workflowState!.recentActions.length).toBeGreaterThan(0);
+    });
+
+    it("should include workflow state in summary when workflow exists", async () => {
+      // Create a workflow for issue 456
+      checkpoint.create(456, "feat/issue-456-feature");
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        branch: "feat/issue-456-feature",
+        issueNumber: 456,
+      });
+
+      // Summary should include workflow section
+      expect(result.summary).toContain("## Active Workflow");
+      expect(result.summary).toContain("Issue:** #456");
+      expect(result.summary).toContain("feat/issue-456-feature");
+      expect(result.summary).toContain("Phase:**");
+    });
+
+    it("should fall back to active workflow when issue number not provided", async () => {
+      // Create an active workflow
+      checkpoint.create(789, "feat/issue-789-active");
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        // No branch or issue number provided
+      });
+
+      // Should find the active workflow
+      expect(result._workflowState).toBeDefined();
+      expect(result._workflowState!.issueNumber).toBe(789);
+    });
+
+    it("should not include workflow state when no workflows exist", async () => {
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        branch: "feat/issue-999-nonexistent",
+        issueNumber: 999,
+      });
+
+      expect(result._workflowState).toBeUndefined();
+      // Summary should not contain workflow section
+      expect(result.summary).not.toContain("## Active Workflow");
+    });
+
+    it("should include recent actions in workflow state (max 5)", async () => {
+      // Create a workflow with many actions
+      const workflow = checkpoint.create(111, "feat/issue-111-many-actions");
+
+      // Log 7 actions
+      for (let i = 0; i < 7; i++) {
+        checkpoint.logAction(workflow.id, `action_${i}`, "success", {
+          index: i,
+        });
+      }
+
+      const result = await hooks.onSessionStart({
+        workingDir: "/test/project",
+        issueNumber: 111,
+      });
+
+      expect(result._workflowState).toBeDefined();
+      // Should only include last 5 actions
+      expect(result._workflowState!.recentActions.length).toBeLessThanOrEqual(
+        5,
+      );
     });
   });
 

@@ -14,6 +14,8 @@ import type {
   DocSearchResult,
   DocSection,
   CodeDoc,
+  KnowledgeContext,
+  Action,
 } from "./types";
 
 /**
@@ -233,6 +235,50 @@ function getRelativeTime(timestamp: string): string {
   if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ${suffix}`;
   if (minutes > 0) return `${minutes} min${minutes > 1 ? "s" : ""} ${suffix}`;
   return "just now";
+}
+
+/**
+ * Format recent actions for workflow state display.
+ *
+ * @param actions - Array of recent actions to format
+ * @returns Formatted string of action summaries
+ */
+function formatRecentActions(actions: Action[]): string {
+  if (actions.length === 0) return "none";
+
+  return actions
+    .map((a) => {
+      const result =
+        a.result === "success" ? "✓" : a.result === "failed" ? "✗" : "…";
+      return `${result} ${a.action}`;
+    })
+    .join(", ");
+}
+
+/**
+ * Format workflow state for injection at the top of context.
+ *
+ * @param workflowState - Active workflow state from checkpoint DB
+ * @returns Formatted markdown section for workflow state
+ */
+export function formatWorkflowState(
+  workflowState: KnowledgeContext["_workflowState"],
+): string {
+  if (!workflowState) return "";
+
+  const lines: string[] = [];
+  lines.push("## Active Workflow");
+  lines.push("");
+  lines.push(`- **Issue:** #${workflowState.issueNumber}`);
+  lines.push(`- **Branch:** \`${workflowState.branch}\``);
+  lines.push(`- **Phase:** ${workflowState.phase}`);
+  lines.push(`- **Status:** ${workflowState.status}`);
+  lines.push(
+    `- **Recent:** ${formatRecentActions(workflowState.recentActions)}`,
+  );
+  lines.push("");
+
+  return lines.join("\n");
 }
 
 /**
