@@ -729,9 +729,12 @@ export function formatAsXml(
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
  * @param topics - Conversation topics from previous sessions
- * @param docs - Relevant documentation from indexed docs
+ * @param docs - Relevant documentation from indexed docs (only included in markdown format)
  * @param options - Formatting options
  * @returns Formatted string in the requested format
+ *
+ * @note The `docs` parameter is only supported in the markdown format.
+ * Bullets and XML formats do not include documentation sections.
  */
 export function formatByType(
   format: ContextFormat,
