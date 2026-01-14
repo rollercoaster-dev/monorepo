@@ -141,3 +141,75 @@ export async function searchDocs(
 
   return results;
 }
+
+/**
+ * Get documentation for a specific code entity.
+ * Uses DOCUMENTS relationships created during indexing.
+ *
+ * @param entityId - Code entity ID (format: package:filePath:type:name)
+ * @returns Array of doc sections that document this entity
+ */
+export function getDocsForCode(entityId: string): DocSearchResult[] {
+  const db = getDatabase();
+
+  // Find DocSections and CodeDocs that document this entity
+  const sql = `
+    SELECT e.id, e.type, e.data
+    FROM entities e
+    JOIN relationships r ON r.from_id = e.id
+    WHERE r.to_id = ? AND r.type = 'DOCUMENTS'
+      AND e.type IN ('DocSection', 'CodeDoc')
+  `;
+
+  const rows = db
+    .query<{ id: string; type: string; data: string }, [string]>(sql)
+    .all(entityId);
+
+  return rows.map((row) => {
+    const section = JSON.parse(row.data) as DocSection | CodeDoc;
+    const entityType = row.type as "DocSection" | "CodeDoc";
+
+    let location: string;
+    if (entityType === "DocSection") {
+      const docSection = section as DocSection;
+      location = `${docSection.filePath}${docSection.anchor ? "#" + docSection.anchor : ""}`;
+    } else {
+      const codeDoc = section as CodeDoc;
+      const parts = codeDoc.entityId.split(":");
+      const filePath = parts.length > 1 ? parts[1] : "unknown";
+      location = filePath;
+    }
+
+    return {
+      section,
+      similarity: 1.0, // Direct link, not semantic match
+      location,
+      entityType,
+    };
+  });
+}
+
+/**
+ * Get code entities documented by a doc section.
+ * Reverse lookup of DOCUMENTS relationship.
+ *
+ * @param sectionId - DocSection or CodeDoc ID
+ * @returns Array of code entity metadata
+ */
+export function getCodeForDoc(
+  sectionId: string,
+): Array<{ id: string; name: string; type: string }> {
+  const db = getDatabase();
+
+  // Find code entities that this doc documents
+  const sql = `
+    SELECT ge.id, ge.name, ge.type
+    FROM graph_entities ge
+    JOIN relationships r ON r.to_id = ge.id
+    WHERE r.from_id = ? AND r.type = 'DOCUMENTS'
+  `;
+
+  return db
+    .query<{ id: string; name: string; type: string }, [string]>(sql)
+    .all(sectionId);
+}
