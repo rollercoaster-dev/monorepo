@@ -77,7 +77,7 @@ The script automatically skips:
 
 ### Output Example
 
-```
+```text
 🟢  INFO  Starting documentation bootstrap...
 🟢  INFO  [Priority 1] Indexing root context files...
 🟢  INFO  Indexed: CLAUDE.md (9 sections)
@@ -95,7 +95,7 @@ The script automatically skips:
 
 ### Incremental Re-index Example
 
-```
+```text
 🟢  INFO  Starting documentation bootstrap...
 🟢  INFO  [Priority 1] Indexing root context files...
 🟢  INFO  Skipped (unchanged): CLAUDE.md
@@ -135,7 +135,7 @@ bun run checkpoint docs search "development workflow gates"
 
 ### Search Results Format
 
-```
+```text
 ## Section Heading
    Location: /path/to/file.md#anchor
    Similarity: 72.8%

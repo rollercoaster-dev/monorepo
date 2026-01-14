@@ -16,20 +16,19 @@ import { indexDocument, indexDirectory } from "../src/docs";
 
 const monorepoRoot = resolve(import.meta.dir, "../../..");
 
-// Skip patterns
-const SKIP_PATTERNS = [
-  "**/node_modules/**",
-  "**/.bun-cache/**",
-  ".changeset/README.md",
-  ".claude/dev-plans/**",
+// Skip patterns (pre-compiled for efficiency)
+const SKIP_GLOBS = [
+  new Glob("**/node_modules/**"),
+  new Glob("**/.bun-cache/**"),
+  new Glob(".changeset/README.md"),
+  new Glob(".claude/dev-plans/**"),
 ];
 
 /**
  * Check if a path matches any skip pattern.
  */
 function shouldSkip(path: string): boolean {
-  for (const pattern of SKIP_PATTERNS) {
-    const glob = new Glob(pattern);
+  for (const glob of SKIP_GLOBS) {
     if (glob.match(path)) {
       return true;
     }
@@ -39,24 +38,25 @@ function shouldSkip(path: string): boolean {
 
 /**
  * Index a single document with error handling.
+ * Returns indexed: true only when file was actually re-indexed (not skipped).
  */
 async function indexSingleDoc(
   filePath: string,
   label: string,
-): Promise<{ success: boolean; sections: number }> {
+): Promise<{ success: boolean; indexed: boolean; sections: number }> {
   try {
     const result = await indexDocument(filePath);
     if (result.status === "unchanged") {
       logger.info(`Skipped (unchanged): ${label}`);
-      return { success: true, sections: 0 };
+      return { success: true, indexed: false, sections: 0 };
     }
     logger.info(`Indexed: ${label} (${result.sectionsIndexed} sections)`);
-    return { success: true, sections: result.sectionsIndexed };
+    return { success: true, indexed: true, sections: result.sectionsIndexed };
   } catch (error) {
     logger.error(`Failed: ${label}`, {
       error: error instanceof Error ? error.message : String(error),
     });
-    return { success: false, sections: 0 };
+    return { success: false, indexed: false, sections: 0 };
   }
 }
 
@@ -77,18 +77,18 @@ async function bootstrap(): Promise<number> {
   const readmeMd = resolve(monorepoRoot, "README.md");
 
   const claudeResult = await indexSingleDoc(claudeMd, "CLAUDE.md");
-  if (claudeResult.success) {
+  if (claudeResult.indexed) {
     totalFiles++;
     totalSections += claudeResult.sections;
-  } else {
+  } else if (!claudeResult.success) {
     totalFailed++;
   }
 
   const readmeResult = await indexSingleDoc(readmeMd, "README.md");
-  if (readmeResult.success) {
+  if (readmeResult.indexed) {
     totalFiles++;
     totalSections += readmeResult.sections;
-  } else {
+  } else if (!readmeResult.success) {
     totalFailed++;
   }
 
@@ -122,10 +122,10 @@ async function bootstrap(): Promise<number> {
       filePath,
       `packages/${packageName}/CLAUDE.md`,
     );
-    if (result.success) {
+    if (result.indexed) {
       totalFiles++;
       totalSections += result.sections;
-    } else {
+    } else if (!result.success) {
       totalFailed++;
     }
   }
