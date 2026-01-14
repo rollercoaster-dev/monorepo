@@ -163,10 +163,22 @@ const issueMetadataCache = new Map<number, IssueMetadata>();
 
 /**
  * Fetch issue metadata from GitHub using gh CLI.
- * Returns cached result if available (no TTL - CLI sessions are short).
+ *
+ * Uses in-memory cache to avoid repeated API calls within the same session.
+ * No TTL needed as CLI sessions are short-lived (minutes, not hours).
+ * Requires gh CLI to be installed and authenticated.
  *
  * @param issueNumber - GitHub issue number
- * @returns Issue metadata or null on error
+ * @returns Issue metadata (title, labels) or null on error (graceful fallback)
+ *
+ * @example
+ * ```typescript
+ * const metadata = await fetchIssueMetadata(476);
+ * if (metadata) {
+ *   console.log(metadata.title);
+ *   console.log(metadata.labels);
+ * }
+ * ```
  */
 export async function fetchIssueMetadata(
   issueNumber: number,
@@ -210,12 +222,27 @@ export function clearIssueMetadataCache(): void {
 }
 
 /**
- * Extract search terms from issue metadata and branch name.
- * Filters out stopwords and common prefixes.
+ * Extract search terms from issue metadata and branch name for documentation search.
  *
- * @param issueMetadata - Issue metadata from GitHub
- * @param branch - Git branch name
- * @returns Array of search terms, deduplicated
+ * Processes multiple sources to build a comprehensive list of search keywords:
+ * - **Issue title**: Significant words (filtered for stopwords and commit types)
+ * - **Labels**: Package names from `pkg:*` labels (e.g., `pkg:claude-knowledge`)
+ * - **Branch name**: Keywords after removing type prefixes and issue numbers
+ *
+ * Terms are deduplicated and filtered to ensure quality search results.
+ *
+ * @param issueMetadata - Issue metadata from GitHub (or null if unavailable)
+ * @param branch - Git branch name (or null if unavailable)
+ * @returns Array of unique search terms (lowercase, >2 chars, no stopwords)
+ *
+ * @example
+ * ```typescript
+ * const terms = extractIssueSearchTerms(
+ *   { title: "feat: add documentation search", labels: ["pkg:claude-knowledge"] },
+ *   "feat/issue-476-doc-search"
+ * );
+ * // Returns: ["add", "documentation", "search", "claude-knowledge", "doc"]
+ * ```
  */
 export function extractIssueSearchTerms(
   issueMetadata: IssueMetadata | null,

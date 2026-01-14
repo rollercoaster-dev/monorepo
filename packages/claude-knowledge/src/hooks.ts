@@ -65,8 +65,18 @@ const MAX_TOPICS = 5;
 /**
  * Load relevant knowledge for the current session context.
  *
+ * Fetches issue metadata (title, labels) when issue number is available
+ * and uses it to enhance documentation search at workflow start. Search terms
+ * are extracted from multiple sources:
+ * - Issue title and labels (via gh CLI)
+ * - Branch name keywords
+ * - Modified file basenames and code areas
+ *
+ * Issue metadata is cached in-memory for the session to avoid repeated API calls.
+ * Falls back gracefully if gh CLI is unavailable or issue fetch fails.
+ *
  * @param context - Session context with working directory, branch, and modified files
- * @returns Knowledge context with relevant learnings, patterns, mistakes, and summary
+ * @returns Knowledge context with relevant learnings, patterns, mistakes, docs, and summary
  */
 async function onSessionStart(
   context: SessionContext,
