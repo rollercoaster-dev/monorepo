@@ -3,7 +3,11 @@ export {
   parseModifiedFiles,
   parseRecentCommits,
   parseConventionalCommit,
+  fetchIssueMetadata,
+  clearIssueMetadataCache,
+  extractIssueSearchTerms,
   type ParsedCommit,
+  type IssueMetadata,
 } from "./git-parser";
 
 export {

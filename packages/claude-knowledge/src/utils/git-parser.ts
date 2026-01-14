@@ -149,3 +149,164 @@ export function parseConventionalCommit(message: string): {
     description: match[3],
   };
 }
+
+/**
+ * Issue metadata fetched from GitHub.
+ */
+export interface IssueMetadata {
+  title: string;
+  labels: string[];
+}
+
+// In-memory cache for issue metadata (session-scoped)
+const issueMetadataCache = new Map<number, IssueMetadata>();
+
+/**
+ * Fetch issue metadata from GitHub using gh CLI.
+ * Returns cached result if available (no TTL - CLI sessions are short).
+ *
+ * @param issueNumber - GitHub issue number
+ * @returns Issue metadata or null on error
+ */
+export async function fetchIssueMetadata(
+  issueNumber: number,
+): Promise<IssueMetadata | null> {
+  // Check cache first
+  const cached = issueMetadataCache.get(issueNumber);
+  if (cached) {
+    return cached;
+  }
+
+  // Fetch from GitHub
+  try {
+    const { $ } = await import("bun");
+    const result =
+      await $`gh issue view ${issueNumber} --json title,labels`.quiet();
+    const data = JSON.parse(result.text()) as {
+      title: string;
+      labels: Array<{ name: string }>;
+    };
+
+    const metadata: IssueMetadata = {
+      title: data.title,
+      labels: data.labels.map((l) => l.name),
+    };
+
+    // Cache the result
+    issueMetadataCache.set(issueNumber, metadata);
+
+    return metadata;
+  } catch (error) {
+    // Return null on error (graceful fallback)
+    return null;
+  }
+}
+
+/**
+ * Clear the issue metadata cache (for testing).
+ */
+export function clearIssueMetadataCache(): void {
+  issueMetadataCache.clear();
+}
+
+/**
+ * Extract search terms from issue metadata and branch name.
+ * Filters out stopwords and common prefixes.
+ *
+ * @param issueMetadata - Issue metadata from GitHub
+ * @param branch - Git branch name
+ * @returns Array of search terms, deduplicated
+ */
+export function extractIssueSearchTerms(
+  issueMetadata: IssueMetadata | null,
+  branch: string | null,
+): string[] {
+  const terms: string[] = [];
+
+  // Common stopwords to filter out
+  const stopWords = new Set([
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "must",
+    "shall",
+    "can",
+    "need",
+    "this",
+    "that",
+    "these",
+    "those",
+    "it",
+    "its",
+  ]);
+
+  // Extract words from issue title
+  if (issueMetadata?.title) {
+    const titleWords = issueMetadata.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !stopWords.has(word));
+    terms.push(...titleWords);
+  }
+
+  // Extract package names from labels (e.g., pkg:claude-knowledge)
+  if (issueMetadata?.labels) {
+    for (const label of issueMetadata.labels) {
+      const pkgMatch = label.match(/^pkg:(.+)$/);
+      if (pkgMatch && pkgMatch[1]) {
+        terms.push(pkgMatch[1]);
+      }
+    }
+  }
+
+  // Extract keywords from branch name
+  if (branch) {
+    // Remove type prefix and issue number
+    const cleanBranch = branch.replace(
+      /^(?:feat|fix|feature|bugfix|hotfix|chore)\//,
+      "",
+    );
+    const branchWords = cleanBranch
+      .replace(/issue-\d+/i, "")
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !stopWords.has(word));
+    terms.push(...branchWords);
+  }
+
+  // Deduplicate and filter empty strings
+  return [...new Set(terms)].filter((term) => term.length > 0);
+}
