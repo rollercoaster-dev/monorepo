@@ -97,6 +97,74 @@ export const greeter = (name: string) => {
 };
 `,
     );
+
+    writeFileSync(
+      join(FIXTURES_DIR, "documented.ts"),
+      `
+/**
+ * Greets a user by name.
+ *
+ * @param name - The name of the user to greet
+ * @returns A greeting message
+ */
+export function greetUser(name: string): string {
+  return \`Hello, \${name}!\`;
+}
+
+/**
+ * User management service.
+ * Handles user CRUD operations.
+ */
+export class UserService {
+  /**
+   * Finds a user by their unique ID.
+   *
+   * @param _id - The user ID to search for
+   * @returns The user object or null if not found
+   * @throws {Error} If the database connection fails
+   */
+  findById(_id: string): User | null {
+    return null;
+  }
+
+  // Method without JSDoc
+  deleteAll(): void {}
+}
+
+/**
+ * Configuration options for the application.
+ */
+export interface AppConfig {
+  port: number;
+  host: string;
+}
+
+/**
+ * Unique identifier for a user.
+ */
+export type UserId = string;
+
+/**
+ * User entity type.
+ */
+export type User = {
+  id: UserId;
+  name: string;
+};
+
+// Function without JSDoc (should not have jsDocContent)
+export function helperFunction(): number {
+  return 42;
+}
+
+/**
+ * @deprecated Use greetUser instead
+ */
+export function oldGreet(): string {
+  return "Hi";
+}
+`,
+    );
   });
 
   afterAll(() => {
@@ -341,6 +409,121 @@ export const greeter = (name: string) => {
 
       // Path contains packages/claude-knowledge, so derives claude-knowledge
       expect(result.package).toBe("claude-knowledge");
+    });
+  });
+
+  describe("JSDoc extraction", () => {
+    const TEST_PKG = "test-fixtures";
+
+    it("extracts JSDoc from functions with description and tags", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const greetUser = entities.find((e) => e.name === "greetUser");
+
+      expect(greetUser).toBeDefined();
+      expect(greetUser?.jsDocContent).toBeDefined();
+      expect(greetUser?.jsDocContent).toContain("Greets a user by name");
+      expect(greetUser?.jsDocContent).toContain("@param");
+      expect(greetUser?.jsDocContent).toContain("@returns");
+    });
+
+    it("extracts JSDoc from classes", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const userService = entities.find((e) => e.name === "UserService");
+
+      expect(userService).toBeDefined();
+      expect(userService?.jsDocContent).toBeDefined();
+      expect(userService?.jsDocContent).toContain("User management service");
+    });
+
+    it("extracts JSDoc from class methods", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const findById = entities.find((e) => e.name === "UserService.findById");
+
+      expect(findById).toBeDefined();
+      expect(findById?.jsDocContent).toContain("Finds a user");
+      expect(findById?.jsDocContent).toContain("@throws");
+    });
+
+    it("extracts JSDoc from interfaces", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const appConfig = entities.find((e) => e.name === "AppConfig");
+
+      expect(appConfig).toBeDefined();
+      expect(appConfig?.jsDocContent).toContain("Configuration options");
+    });
+
+    it("extracts JSDoc from type aliases", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const userId = entities.find((e) => e.name === "UserId");
+
+      expect(userId).toBeDefined();
+      expect(userId?.jsDocContent).toContain("Unique identifier");
+    });
+
+    it("does not add jsDocContent for entities without JSDoc", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const helperFn = entities.find((e) => e.name === "helperFunction");
+
+      expect(helperFn).toBeDefined();
+      expect(helperFn?.jsDocContent).toBeUndefined();
+    });
+
+    it("does not add jsDocContent for methods without JSDoc", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const deleteAll = entities.find(
+        (e) => e.name === "UserService.deleteAll",
+      );
+
+      expect(deleteAll).toBeDefined();
+      expect(deleteAll?.jsDocContent).toBeUndefined();
+    });
+
+    it("handles JSDoc with only tags (no description)", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const sourceFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "documented.ts"),
+      );
+
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const oldGreet = entities.find((e) => e.name === "oldGreet");
+
+      expect(oldGreet).toBeDefined();
+      expect(oldGreet?.jsDocContent).toContain("@deprecated");
     });
   });
 });

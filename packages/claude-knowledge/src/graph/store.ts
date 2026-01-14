@@ -7,7 +7,13 @@
 
 import { getDatabase } from "../db/sqlite";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
-import type { ParseResult, StoreResult } from "./types";
+import {
+  createOrMergeEntity,
+  createRelationship,
+  generateEmbedding,
+} from "../knowledge/helpers";
+import type { CodeDoc } from "../types";
+import type { ParseResult, StoreResult, Entity } from "./types";
 
 /** Error information for failed insert operations */
 interface InsertError {
@@ -189,4 +195,118 @@ export function clearPackage(packageName: string): void {
   });
 
   clearTransaction();
+}
+
+/** Result from storing CodeDoc entities */
+export interface CodeDocStoreResult {
+  /** Number of CodeDoc entities created */
+  codeDocsCreated: number;
+  /** Number of DOCUMENTS relationships created */
+  relationshipsCreated: number;
+}
+
+/**
+ * Create CodeDoc entities from parsed code entities with JSDoc content.
+ * Generates embeddings for semantic search and creates DOCUMENTS relationships.
+ *
+ * This should be called after storeGraph() to create searchable documentation
+ * entities linked to code entities.
+ *
+ * @param data - ParseResult from parsePackage() containing entities with jsDocContent
+ * @returns CodeDocStoreResult with counts
+ */
+export async function storeCodeDocs(
+  data: ParseResult,
+): Promise<CodeDocStoreResult> {
+  const db = getDatabase();
+
+  // Filter entities that have JSDoc content
+  const entitiesWithJsDoc = data.entities.filter(
+    (e): e is Entity & { jsDocContent: string } =>
+      e.jsDocContent !== undefined && e.jsDocContent.length > 0,
+  );
+
+  if (entitiesWithJsDoc.length === 0) {
+    return { codeDocsCreated: 0, relationshipsCreated: 0 };
+  }
+
+  logger.debug(
+    `Creating CodeDoc entities for ${entitiesWithJsDoc.length} code entities`,
+  );
+
+  // Generate embeddings in parallel for all JSDoc content
+  const embeddings = await Promise.all(
+    entitiesWithJsDoc.map((e) => generateEmbedding(e.jsDocContent)),
+  );
+
+  let codeDocsCreated = 0;
+  let relationshipsCreated = 0;
+
+  // Use transaction for atomicity
+  db.run("BEGIN TRANSACTION");
+
+  try {
+    for (let i = 0; i < entitiesWithJsDoc.length; i++) {
+      const entity = entitiesWithJsDoc[i];
+      const embedding = embeddings[i];
+
+      // Create CodeDoc entity ID
+      const codeDocId = `codedoc-${entity.id}`;
+
+      // Parse description and tags from jsDocContent
+      const lines = entity.jsDocContent.split("\n");
+      const tagLines = lines.filter((l) => l.trim().startsWith("@"));
+      const descriptionLines = lines.filter((l) => !l.trim().startsWith("@"));
+
+      const tags: Record<string, string> = {};
+      for (const tagLine of tagLines) {
+        // Parse @tagName value - avoid regex backtracking by using indexOf
+        const trimmed = tagLine.trim();
+        if (!trimmed.startsWith("@")) continue;
+
+        const withoutAt = trimmed.slice(1);
+        const spaceIdx = withoutAt.search(/\s/);
+
+        if (spaceIdx === -1) {
+          // Tag with no value, e.g., "@deprecated"
+          tags[withoutAt] = "";
+        } else {
+          const tagName = withoutAt.slice(0, spaceIdx);
+          const tagValue = withoutAt.slice(spaceIdx + 1).trim();
+          tags[tagName] = tagValue;
+        }
+      }
+
+      const codeDocData: CodeDoc = {
+        id: codeDocId,
+        entityId: entity.id,
+        content: entity.jsDocContent,
+        description: descriptionLines.join("\n").trim() || undefined,
+        tags: Object.keys(tags).length > 0 ? tags : undefined,
+      };
+
+      // Create CodeDoc entity with embedding
+      createOrMergeEntity(db, "CodeDoc", codeDocId, codeDocData, embedding);
+      codeDocsCreated++;
+
+      // Create DOCUMENTS relationship (CodeDoc -> code entity)
+      // Note: The relationship points from the doc TO the code entity
+      createRelationship(db, codeDocId, entity.id, "DOCUMENTS");
+      relationshipsCreated++;
+    }
+
+    db.run("COMMIT");
+
+    logger.info(`Created ${codeDocsCreated} CodeDoc entities with embeddings`, {
+      relationshipsCreated,
+    });
+
+    return { codeDocsCreated, relationshipsCreated };
+  } catch (error) {
+    db.run("ROLLBACK");
+    logger.error("Failed to store CodeDoc entities", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }

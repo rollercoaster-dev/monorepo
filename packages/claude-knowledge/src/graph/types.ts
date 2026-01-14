@@ -44,6 +44,8 @@ export interface Entity {
   package?: string;
   /** Optional metadata JSON */
   metadata?: string;
+  /** JSDoc content if present */
+  jsDocContent?: string;
 }
 
 /**
