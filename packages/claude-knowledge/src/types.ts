@@ -161,6 +161,21 @@ export interface CodeDoc {
 }
 
 /**
+ * Result from documentation search.
+ * Includes the matching section and similarity score.
+ */
+export interface DocSearchResult {
+  /** The matching documentation section or code doc */
+  section: DocSection | CodeDoc;
+  /** Similarity score (0.0 - 1.0) */
+  similarity: number;
+  /** File path for quick reference */
+  location: string;
+  /** Entity type for type discrimination */
+  entityType: "DocSection" | "CodeDoc";
+}
+
+/**
  * Entity types in the knowledge graph.
  */
 export type EntityType =
@@ -312,6 +327,8 @@ export interface KnowledgeContext {
   mistakes: Mistake[];
   /** Conversation topics from previous sessions */
   topics?: Topic[];
+  /** Relevant documentation from indexed docs */
+  docs?: DocSearchResult[];
   /** Formatted markdown summary for injection into context */
   summary: string;
   /** Session metadata for metrics tracking (populated by onSessionStart) */

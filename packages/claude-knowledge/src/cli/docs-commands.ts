@@ -10,7 +10,13 @@
 import { statSync } from "fs";
 import { Buffer } from "buffer";
 import { getDatabase } from "../db/sqlite";
-import { indexDocument, indexDirectory } from "../docs";
+import {
+  indexDocument,
+  indexDirectory,
+  searchDocs,
+  getDocsForCode,
+} from "../docs";
+import type { DocSection, CodeDoc } from "../types";
 
 /**
  * Handle docs CLI commands.
@@ -33,9 +39,13 @@ export async function handleDocsCommands(
     await handleStatusCommand(args);
   } else if (command === "clean") {
     await handleCleanCommand();
+  } else if (command === "search") {
+    await handleSearchCommand(args);
+  } else if (command === "for-code") {
+    await handleForCodeCommand(args);
   } else {
     throw new Error(
-      `Unknown docs command: ${command}. Available: index, status, clean`,
+      `Unknown docs command: ${command}. Available: index, status, clean, search, for-code`,
     );
   }
 }
@@ -221,4 +231,92 @@ async function handleCleanCommand(): Promise<void> {
   console.log(`  DocSection entities removed: ${sectionsToDelete.length}`);
   // eslint-disable-next-line no-console
   console.log(`  Index entries removed: ${indexEntriesToDelete.length}`);
+}
+
+/**
+ * Handle the `docs search` command.
+ * Semantic search over indexed documentation.
+ */
+async function handleSearchCommand(args: string[]): Promise<void> {
+  const query = args.join(" ");
+  if (!query) {
+    throw new Error("Usage: docs search <query>");
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`Searching documentation for: "${query}"\n`);
+
+  const results = await searchDocs(query, { limit: 5 });
+
+  if (results.length === 0) {
+    // eslint-disable-next-line no-console
+    console.log("No matching documentation found.");
+    return;
+  }
+
+  for (const result of results) {
+    const { section, similarity, location, entityType } = result;
+
+    const heading =
+      entityType === "DocSection"
+        ? (section as DocSection).heading || "(No heading)"
+        : `CodeDoc: ${(section as CodeDoc).entityId}`;
+
+    // eslint-disable-next-line no-console
+    console.log(`\n## ${heading}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Location: ${location}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Similarity: ${(similarity * 100).toFixed(1)}%`);
+
+    // Show preview
+    const content =
+      entityType === "DocSection"
+        ? (section as DocSection).content
+        : (section as CodeDoc).description || (section as CodeDoc).content;
+    const preview = content.slice(0, 200);
+    // eslint-disable-next-line no-console
+    console.log(`   ${preview}${content.length > 200 ? "..." : ""}`);
+  }
+}
+
+/**
+ * Handle the `docs for-code` command.
+ * Find documentation linked to a specific code entity.
+ */
+async function handleForCodeCommand(args: string[]): Promise<void> {
+  if (args.length === 0) {
+    throw new Error("Usage: docs for-code <entity-id>");
+  }
+
+  const entityId = args[0];
+  // eslint-disable-next-line no-console
+  console.log(`Finding documentation for entity: ${entityId}\n`);
+
+  const docs = getDocsForCode(entityId);
+
+  if (docs.length === 0) {
+    // eslint-disable-next-line no-console
+    console.log("No documentation linked to this entity.");
+    return;
+  }
+
+  for (const doc of docs) {
+    const { section, location, entityType } = doc;
+
+    const heading =
+      entityType === "DocSection"
+        ? (section as DocSection).heading || "(No heading)"
+        : "JSDoc";
+
+    // eslint-disable-next-line no-console
+    console.log(`\n## ${heading}`);
+    // eslint-disable-next-line no-console
+    console.log(`   Location: ${location}`);
+
+    if (entityType === "CodeDoc") {
+      // eslint-disable-next-line no-console
+      console.log(`\n${(section as CodeDoc).content}`);
+    }
+  }
 }

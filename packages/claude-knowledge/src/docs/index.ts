@@ -15,3 +15,6 @@ export {
   extractCrossDocLinks,
 } from "./store";
 export type { IndexOptions, IndexResult, DirectoryIndexResult } from "./store";
+
+export { searchDocs, getDocsForCode, getCodeForDoc } from "./search";
+export type { SearchOptions } from "./search";

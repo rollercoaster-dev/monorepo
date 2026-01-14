@@ -11,6 +11,9 @@ import type {
   Mistake,
   Topic,
   ContextFormat,
+  DocSearchResult,
+  DocSection,
+  CodeDoc,
 } from "./types";
 
 /**
@@ -240,6 +243,7 @@ function getRelativeTime(timestamp: string): string {
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
  * @param topics - Conversation topics from previous sessions
+ * @param docs - Relevant documentation from indexed docs
  * @param options - Formatting options
  * @returns Formatted markdown string
  */
@@ -248,6 +252,7 @@ export function formatKnowledgeContext(
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
   topics: Topic[] = [],
+  docs: DocSearchResult[] = [],
   options: FormatOptions = {},
 ): string {
   // Prepare knowledge with shared initialization logic
@@ -274,7 +279,8 @@ export function formatKnowledgeContext(
     learnings.length === 0 &&
     patterns.length === 0 &&
     mistakes.length === 0 &&
-    topics.length === 0
+    topics.length === 0 &&
+    docs.length === 0
   ) {
     lines.push("*No relevant knowledge found for this context.*");
     lines.push("");
@@ -345,6 +351,44 @@ export function formatKnowledgeContext(
       type: "topics",
       content: topicLines.join("\n"),
       priority: 0.75, // Slightly higher than patterns
+    });
+  }
+
+  // Build docs section (relevant documentation)
+  if (docs.length > 0) {
+    const docLines: string[] = [];
+    docLines.push("### Relevant Documentation");
+
+    for (const doc of docs) {
+      const { section, location, entityType, similarity } = doc;
+
+      if (entityType === "DocSection") {
+        const docSection = section as DocSection;
+        docLines.push(
+          `- **${docSection.heading || "Documentation"}** (${(similarity * 100).toFixed(0)}% match)`,
+        );
+        docLines.push(`  *Location: ${location}*`);
+        // Show first 200 chars as preview
+        const preview = docSection.content.slice(0, 200);
+        docLines.push(
+          `  ${preview}${docSection.content.length > 200 ? "..." : ""}`,
+        );
+      } else {
+        const codeDoc = section as CodeDoc;
+        const name = codeDoc.entityId.split(":").pop() || "unknown";
+        docLines.push(
+          `- **JSDoc: ${name}** (${(similarity * 100).toFixed(0)}% match)`,
+        );
+        docLines.push(`  *Location: ${location}*`);
+        docLines.push(`  ${codeDoc.description || codeDoc.content}`);
+      }
+    }
+    docLines.push("");
+
+    sections.push({
+      type: "docs",
+      content: docLines.join("\n"),
+      priority: 0.65, // Medium priority
     });
   }
 
@@ -685,8 +729,12 @@ export function formatAsXml(
  * @param patterns - Applicable patterns
  * @param mistakes - Mistakes to avoid
  * @param topics - Conversation topics from previous sessions
+ * @param docs - Relevant documentation from indexed docs (only included in markdown format)
  * @param options - Formatting options
  * @returns Formatted string in the requested format
+ *
+ * @note The `docs` parameter is only supported in the markdown format.
+ * Bullets and XML formats do not include documentation sections.
  */
 export function formatByType(
   format: ContextFormat,
@@ -694,6 +742,7 @@ export function formatByType(
   patterns: Pattern[] = [],
   mistakes: Mistake[] = [],
   topics: Topic[] = [],
+  docs: DocSearchResult[] = [],
   options: FormatOptions = {},
 ): string {
   switch (format) {
@@ -708,6 +757,7 @@ export function formatByType(
         patterns,
         mistakes,
         topics,
+        docs,
         options,
       );
   }

@@ -16,8 +16,10 @@ import type {
   Mistake,
   Topic,
   ContextMetrics,
+  DocSearchResult,
 } from "./types";
 import { knowledge, searchSimilarTopics } from "./knowledge/index";
+import { searchDocs } from "./docs/search";
 import { checkpoint } from "./checkpoint";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
@@ -71,6 +73,7 @@ async function onSessionStart(
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];
   const topics: Topic[] = [];
+  const docs: DocSearchResult[] = [];
 
   // Parse issue number from branch if not provided
   const issueNumber =
@@ -170,6 +173,36 @@ async function onSessionStart(
       });
       topics.push(...recentTopics);
     }
+
+    // Search for relevant documentation based on code areas and files
+    if (context.modifiedFiles && context.modifiedFiles.length > 0) {
+      // Build search query from code areas and file basenames
+      const fileBasenames = context.modifiedFiles.map((f) => {
+        const parts = f.split("/");
+        const filename = parts[parts.length - 1];
+        return filename.replace(/\.[^.]+$/, ""); // Remove extension
+      });
+
+      const searchTerms = [...codeAreas, ...fileBasenames]
+        .filter((term) => term && term.length > 0)
+        .join(" ");
+
+      if (searchTerms.length > 0) {
+        try {
+          const docResults = await searchDocs(searchTerms, {
+            limit: 5,
+            threshold: 0.4,
+          });
+          docs.push(...docResults);
+        } catch (error) {
+          // Log but don't fail the session
+          logger.warn("Failed to search documentation", {
+            error: error instanceof Error ? error.message : String(error),
+            context: "onSessionStart",
+          });
+        }
+      }
+    }
   } catch (error) {
     // Log the error so failures are visible, but allow session to continue
     logger.error("Failed to load session knowledge", {
@@ -185,6 +218,7 @@ async function onSessionStart(
     patterns,
     mistakes,
     topics,
+    docs,
     {
       maxTokens: 2000,
       context: {
@@ -198,7 +232,11 @@ async function onSessionStart(
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
   const learningsInjected =
-    learnings.length + patterns.length + mistakes.length + topics.length;
+    learnings.length +
+    patterns.length +
+    mistakes.length +
+    topics.length +
+    docs.length;
   const startTime = new Date().toISOString();
 
   // Log session start with metrics
@@ -206,6 +244,7 @@ async function onSessionStart(
     sessionId,
     learningsInjected,
     issueNumber,
+    docsFound: docs.length,
     context: "onSessionStart",
   });
 
@@ -214,6 +253,7 @@ async function onSessionStart(
     patterns,
     mistakes,
     topics,
+    docs,
     summary,
     // Include session metadata in result for CLI to capture
     _sessionMetadata: {
