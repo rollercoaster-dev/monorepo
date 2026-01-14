@@ -152,14 +152,21 @@ export function extractEntities(
   sourceFile.getFunctions().forEach((fn) => {
     const name = fn.getName();
     if (name) {
-      entities.push({
+      const entity: Entity = {
         id: makeEntityId(packageName, filePath, name, "function"),
         type: "function",
         name,
         filePath,
         lineNumber: fn.getStartLineNumber(),
         exported: fn.isExported(),
-      });
+      };
+
+      const jsDocContent = extractJsDocContent(fn);
+      if (jsDocContent) {
+        entity.jsDocContent = jsDocContent;
+      }
+
+      entities.push(entity);
     }
   });
 
@@ -167,19 +174,26 @@ export function extractEntities(
   sourceFile.getClasses().forEach((cls) => {
     const name = cls.getName();
     if (name) {
-      entities.push({
+      const classEntity: Entity = {
         id: makeEntityId(packageName, filePath, name, "class"),
         type: "class",
         name,
         filePath,
         lineNumber: cls.getStartLineNumber(),
         exported: cls.isExported(),
-      });
+      };
+
+      const classJsDocContent = extractJsDocContent(cls);
+      if (classJsDocContent) {
+        classEntity.jsDocContent = classJsDocContent;
+      }
+
+      entities.push(classEntity);
 
       // Class methods as separate entities
       cls.getMethods().forEach((method) => {
         const methodName = method.getName();
-        entities.push({
+        const methodEntity: Entity = {
           id: makeEntityId(
             packageName,
             filePath,
@@ -191,7 +205,14 @@ export function extractEntities(
           filePath,
           lineNumber: method.getStartLineNumber(),
           exported: cls.isExported(),
-        });
+        };
+
+        const methodJsDocContent = extractJsDocContent(method);
+        if (methodJsDocContent) {
+          methodEntity.jsDocContent = methodJsDocContent;
+        }
+
+        entities.push(methodEntity);
       });
     }
   });
@@ -199,27 +220,41 @@ export function extractEntities(
   // Type aliases
   sourceFile.getTypeAliases().forEach((typeAlias) => {
     const name = typeAlias.getName();
-    entities.push({
+    const entity: Entity = {
       id: makeEntityId(packageName, filePath, name, "type"),
       type: "type",
       name,
       filePath,
       lineNumber: typeAlias.getStartLineNumber(),
       exported: typeAlias.isExported(),
-    });
+    };
+
+    const jsDocContent = extractJsDocContent(typeAlias);
+    if (jsDocContent) {
+      entity.jsDocContent = jsDocContent;
+    }
+
+    entities.push(entity);
   });
 
   // Interfaces
   sourceFile.getInterfaces().forEach((iface) => {
     const name = iface.getName();
-    entities.push({
+    const entity: Entity = {
       id: makeEntityId(packageName, filePath, name, "interface"),
       type: "interface",
       name,
       filePath,
       lineNumber: iface.getStartLineNumber(),
       exported: iface.isExported(),
-    });
+    };
+
+    const jsDocContent = extractJsDocContent(iface);
+    if (jsDocContent) {
+      entity.jsDocContent = jsDocContent;
+    }
+
+    entities.push(entity);
   });
 
   // Variable declarations (especially arrow functions)
