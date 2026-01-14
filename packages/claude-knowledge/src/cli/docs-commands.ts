@@ -81,7 +81,16 @@ async function handleIndexCommand(args: string[]): Promise<void> {
     // eslint-disable-next-line no-console
     console.log(`  Files skipped: ${result.filesSkipped}`);
     // eslint-disable-next-line no-console
+    console.log(`  Files failed: ${result.filesFailed}`);
+    // eslint-disable-next-line no-console
     console.log(`  Total sections: ${result.totalSections}`);
+
+    if (result.failures.length > 0) {
+      console.error(`\nFailed files:`);
+      for (const failure of result.failures) {
+        console.error(`  ${failure.path}: ${failure.error}`);
+      }
+    }
   } else {
     const result = await indexDocument(path, { force });
     // eslint-disable-next-line no-console
@@ -157,41 +166,59 @@ async function handleCleanCommand(): Promise<void> {
     >("SELECT id, data FROM entities WHERE type = 'DocSection'")
     .all();
 
-  let removedCount = 0;
-
+  // Collect IDs to delete (check file existence first, outside transaction)
+  const sectionsToDelete: string[] = [];
   for (const section of docSections) {
-    const data = JSON.parse(section.data) as { filePath: string };
-    const file = Bun.file(data.filePath);
-    const exists = await file.exists();
-
-    if (!exists) {
-      // Remove entity (relationships will cascade delete due to FK constraint)
-      db.run("DELETE FROM entities WHERE id = ?", [section.id]);
-      removedCount++;
+    try {
+      const data = JSON.parse(section.data) as { filePath: string };
+      if (typeof data.filePath !== "string") {
+        sectionsToDelete.push(section.id);
+        continue;
+      }
+      const file = Bun.file(data.filePath);
+      const exists = await file.exists();
+      if (!exists) {
+        sectionsToDelete.push(section.id);
+      }
+    } catch {
+      // Corrupted data, mark for deletion
+      sectionsToDelete.push(section.id);
     }
   }
 
-  // Also clean up doc_index entries for files that no longer exist
+  // Also collect doc_index entries for files that no longer exist
   const indexEntries = db
     .query<{ file_path: string }, []>("SELECT file_path FROM doc_index")
     .all();
 
-  let indexEntriesRemoved = 0;
-
+  const indexEntriesToDelete: string[] = [];
   for (const entry of indexEntries) {
     const file = Bun.file(entry.file_path);
     const exists = await file.exists();
-
     if (!exists) {
-      db.run("DELETE FROM doc_index WHERE file_path = ?", [entry.file_path]);
-      indexEntriesRemoved++;
+      indexEntriesToDelete.push(entry.file_path);
     }
+  }
+
+  // Perform deletions within a transaction for atomicity
+  db.run("BEGIN TRANSACTION");
+  try {
+    for (const sectionId of sectionsToDelete) {
+      db.run("DELETE FROM entities WHERE id = ?", [sectionId]);
+    }
+    for (const filePath of indexEntriesToDelete) {
+      db.run("DELETE FROM doc_index WHERE file_path = ?", [filePath]);
+    }
+    db.run("COMMIT");
+  } catch (error) {
+    db.run("ROLLBACK");
+    throw error;
   }
 
   // eslint-disable-next-line no-console
   console.log(`Cleaned orphaned documentation:`);
   // eslint-disable-next-line no-console
-  console.log(`  DocSection entities removed: ${removedCount}`);
+  console.log(`  DocSection entities removed: ${sectionsToDelete.length}`);
   // eslint-disable-next-line no-console
-  console.log(`  Index entries removed: ${indexEntriesRemoved}`);
+  console.log(`  Index entries removed: ${indexEntriesToDelete.length}`);
 }

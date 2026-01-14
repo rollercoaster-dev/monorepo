@@ -48,7 +48,9 @@ export interface IndexResult {
 export interface DirectoryIndexResult {
   filesIndexed: number;
   filesSkipped: number;
+  filesFailed: number;
   totalSections: number;
+  failures: Array<{ path: string; error: string }>;
 }
 
 /**
@@ -190,25 +192,25 @@ export async function indexDocument(
       path: filePath,
     } satisfies FileData);
 
-    // Generate embeddings for all sections in parallel
-    const embeddings = await Promise.all(
-      sections
-        .filter((s) => s.content.length >= minContentLength)
-        .map((s) => generateEmbedding(`${s.heading}\n\n${s.content}`)),
+    // Filter sections that meet minimum content length
+    const filteredSections = sections.filter(
+      (s) => s.content.length >= minContentLength,
     );
 
-    // Process each section
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
+    // Generate embeddings for all filtered sections in parallel
+    const embeddings = await Promise.all(
+      filteredSections.map((s) =>
+        generateEmbedding(`${s.heading}\n\n${s.content}`),
+      ),
+    );
 
-      // Skip sections that are too small
-      if (section.content.length < minContentLength) {
-        continue;
-      }
+    // Process each filtered section with matching embedding
+    for (let i = 0; i < filteredSections.length; i++) {
+      const section = filteredSections[i];
+      const embedding = embeddings[i];
 
       // Create DocSection entity
       const sectionId = `doc-${Buffer.from(filePath).toString("base64url")}-${section.anchor}`;
-      const embedding = embeddings[i];
 
       createOrMergeEntity(
         db,
@@ -328,6 +330,7 @@ export async function indexDirectory(
   let filesIndexed = 0;
   let filesSkipped = 0;
   let totalSections = 0;
+  const failures: Array<{ path: string; error: string }> = [];
 
   for (const filePath of files) {
     try {
@@ -340,17 +343,21 @@ export async function indexDirectory(
         totalSections += result.sectionsIndexed;
       }
     } catch (error) {
-      logger.warn("Failed to index file in directory", {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to index file in directory", {
         filePath,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
       });
-      // Continue with other files
+      failures.push({ path: filePath, error: errorMessage });
     }
   }
 
   return {
     filesIndexed,
     filesSkipped,
+    filesFailed: failures.length,
     totalSections,
+    failures,
   };
 }

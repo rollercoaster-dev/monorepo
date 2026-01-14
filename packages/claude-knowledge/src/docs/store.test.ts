@@ -180,7 +180,9 @@ This is a subsection with more content that also exceeds the minimum length requ
 
     expect(result.filesIndexed).toBe(3);
     expect(result.filesSkipped).toBe(0);
+    expect(result.filesFailed).toBe(0);
     expect(result.totalSections).toBeGreaterThan(0);
+    expect(result.failures).toEqual([]);
   });
 
   test("indexDirectory skips unchanged files on second run", async () => {
@@ -195,11 +197,13 @@ This is a subsection with more content that also exceeds the minimum length requ
     const result1 = await indexDirectory(docsDir);
     expect(result1.filesIndexed).toBe(1);
     expect(result1.filesSkipped).toBe(0);
+    expect(result1.filesFailed).toBe(0);
 
     // Second index (no changes)
     const result2 = await indexDirectory(docsDir);
     expect(result2.filesIndexed).toBe(0);
     expect(result2.filesSkipped).toBe(1);
+    expect(result2.filesFailed).toBe(0);
   });
 
   test("indexDocument creates CHILD_OF relationships for hierarchy", async () => {
