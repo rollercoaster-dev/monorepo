@@ -256,3 +256,45 @@ Always preserve the ability to recover:
 | Fix attempts  | Manual                     | Automatic (up to MAX_RETRY) |
 | PR creation   | After Gate 4 approval      | After review pass or force  |
 | Board updates | At gates                   | Autonomous                  |
+
+---
+
+## Plan Validation Rules
+
+### Issue-Researcher Must Match Issue Spec
+
+The `issue-researcher` agent creates dev plans. These plans **MUST** implement what the issue asks for, not a simplified version.
+
+**Before finalizing a dev plan, verify:**
+
+1. **Implementation matches spec**: If the issue shows example code or specific approach, the plan must follow it
+2. **No silent simplifications**: If simplifying the approach, explicitly document WHY and get user approval
+3. **All requirements addressed**: Every requirement in the issue body must have a corresponding plan item
+
+### Common Deviation Patterns to Avoid
+
+| Issue Says                            | Plan Should NOT Do               |
+| ------------------------------------- | -------------------------------- |
+| "Create entity X with relationship Y" | Store data in a field instead    |
+| "Generate embeddings for search"      | Skip embeddings "for simplicity" |
+| "Follow pattern from file X"          | Invent a different pattern       |
+| "Per RFC section Y"                   | Ignore the RFC details           |
+
+### Validation Checklist for issue-researcher
+
+Before creating the dev plan, the issue-researcher MUST:
+
+1. [ ] Quote the key requirements from the issue body
+2. [ ] Show how each requirement maps to a plan item
+3. [ ] Flag any deviations with explicit justification
+4. [ ] If simplifying: state what's being deferred and why
+
+### What Happens on Deviation
+
+If a PR review (CodeRabbit, human, or agent) identifies a plan-spec deviation:
+
+1. **Classify as HIGH PRIORITY** regardless of confidence score
+2. **Require fix before PR merge**
+3. **Log as "plan-deviation" in workflow actions**
+
+This prevents "the plan was wrong" from being an excuse for incomplete implementations.
