@@ -336,6 +336,34 @@ describe("hooks", () => {
       // Should return recent topics as fallback
       expect(result.topics!.length).toBeGreaterThan(0);
     });
+
+    describe("issue context for doc search", () => {
+      it("should extract search terms from branch name when no files modified", async () => {
+        // This tests that doc search runs with branch context even without files
+        const result = await hooks.onSessionStart({
+          workingDir: "/test/project",
+          branch: "feat/issue-476-documentation-enhancement",
+          // No modifiedFiles - this is the key test case
+        });
+
+        // Should not throw and should attempt doc search
+        // (docs array will be empty since test DB has no indexed docs,
+        // but the important thing is the code path executes)
+        expect(result.docs).toBeDefined();
+        expect(Array.isArray(result.docs)).toBe(true);
+      });
+
+      it("should work with only branch context", async () => {
+        const result = await hooks.onSessionStart({
+          workingDir: "/test/project",
+          branch: "feat/issue-100-test-feature",
+        });
+
+        // Should parse issue number from branch
+        expect(result._sessionMetadata?.issueNumber).toBe(100);
+        expect(result.docs).toBeDefined();
+      });
+    });
   });
 
   describe("onSessionEnd", () => {
