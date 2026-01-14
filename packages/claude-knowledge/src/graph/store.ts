@@ -260,10 +260,20 @@ export async function storeCodeDocs(
 
       const tags: Record<string, string> = {};
       for (const tagLine of tagLines) {
-        const match = tagLine.match(/^@(\w+)\s*(.*)$/);
-        if (match) {
-          const [, tagName, tagValue] = match;
-          tags[tagName] = tagValue.trim();
+        // Parse @tagName value - avoid regex backtracking by using indexOf
+        const trimmed = tagLine.trim();
+        if (!trimmed.startsWith("@")) continue;
+
+        const withoutAt = trimmed.slice(1);
+        const spaceIdx = withoutAt.search(/\s/);
+
+        if (spaceIdx === -1) {
+          // Tag with no value, e.g., "@deprecated"
+          tags[withoutAt] = "";
+        } else {
+          const tagName = withoutAt.slice(0, spaceIdx);
+          const tagValue = withoutAt.slice(spaceIdx + 1).trim();
+          tags[tagName] = tagValue;
         }
       }
 
