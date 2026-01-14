@@ -28,6 +28,8 @@ import {
   inferCodeAreasFromFiles,
   inferCodeArea,
   formatCommitContent,
+  fetchIssueMetadata,
+  extractIssueSearchTerms,
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
@@ -79,6 +81,21 @@ async function onSessionStart(
   const issueNumber =
     context.issueNumber ??
     (context.branch ? parseIssueNumber(context.branch) : undefined);
+
+  // Fetch issue metadata if available
+  let issueMetadata: { title: string; labels: string[] } | null = null;
+  if (issueNumber) {
+    try {
+      issueMetadata = await fetchIssueMetadata(issueNumber);
+    } catch (error) {
+      // Log but don't fail - this is an enhancement, not critical
+      logger.debug("Failed to fetch issue metadata", {
+        issueNumber,
+        error: error instanceof Error ? error.message : String(error),
+        context: "onSessionStart",
+      });
+    }
+  }
 
   // Infer code areas from modified files
   const codeAreas = context.modifiedFiles
@@ -174,33 +191,47 @@ async function onSessionStart(
       topics.push(...recentTopics);
     }
 
-    // Search for relevant documentation based on code areas and files
+    // Search for relevant documentation
+    const docSearchTerms: string[] = [];
+
+    // Add issue context terms if available
+    if (issueMetadata || context.branch) {
+      const issueTerms = extractIssueSearchTerms(
+        issueMetadata,
+        context.branch ?? null,
+      );
+      docSearchTerms.push(...issueTerms);
+    }
+
+    // Add existing file-based terms
     if (context.modifiedFiles && context.modifiedFiles.length > 0) {
-      // Build search query from code areas and file basenames
       const fileBasenames = context.modifiedFiles.map((f) => {
         const parts = f.split("/");
         const filename = parts[parts.length - 1];
         return filename.replace(/\.[^.]+$/, ""); // Remove extension
       });
+      docSearchTerms.push(...codeAreas, ...fileBasenames);
+    }
 
-      const searchTerms = [...codeAreas, ...fileBasenames]
-        .filter((term) => term && term.length > 0)
-        .join(" ");
+    // Search docs if we have any terms
+    const uniqueTerms = [...new Set(docSearchTerms)].filter(
+      (term) => term && term.length > 0,
+    );
 
-      if (searchTerms.length > 0) {
-        try {
-          const docResults = await searchDocs(searchTerms, {
-            limit: 5,
-            threshold: 0.4,
-          });
-          docs.push(...docResults);
-        } catch (error) {
-          // Log but don't fail the session
-          logger.warn("Failed to search documentation", {
-            error: error instanceof Error ? error.message : String(error),
-            context: "onSessionStart",
-          });
-        }
+    if (uniqueTerms.length > 0) {
+      try {
+        const searchQuery = uniqueTerms.join(" ");
+        const docResults = await searchDocs(searchQuery, {
+          limit: 5,
+          threshold: 0.4,
+        });
+        docs.push(...docResults);
+      } catch (error) {
+        // Log but don't fail the session
+        logger.warn("Failed to search documentation", {
+          error: error instanceof Error ? error.message : String(error),
+          context: "onSessionStart",
+        });
       }
     }
   } catch (error) {
@@ -244,6 +275,7 @@ async function onSessionStart(
     sessionId,
     learningsInjected,
     issueNumber,
+    issueMetadataFetched: issueMetadata !== null,
     docsFound: docs.length,
     context: "onSessionStart",
   });
