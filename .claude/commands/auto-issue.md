@@ -35,21 +35,34 @@ Execute fully autonomous issue-to-PR workflow for the specified issue.
 
 ## Bash Command Convention
 
-**IMPORTANT:** All bash commands must be run individually:
+**CRITICAL:** Each bash command must be a **separate Bash tool call**:
 
-- **No `&&` chaining** - Run each command separately
-- **No shell variables** - Use literal values, never `$VAR` syntax
-- **One command per Bash tool call** - Don't combine sequential operations
+- **One command per tool call** - Never combine commands with `&&`, `;`, or `|`
+- **No shell variables** - Never use `$VAR` syntax; use literal values
+- **No env var prefixes** - Don't use `VAR=value command`; env vars are set by the system
 - **Substitute placeholders** - Replace `<placeholder>` with actual values before execution
 
-This ensures reliable execution and clear error attribution.
+### Why This Matters
+
+Each unique command string triggers a permission check. Combining commands or using variables creates unique strings that require new permission prompts:
+
+```bash
+# BAD - triggers new permission each time, interrupts flow
+bun run type-check && bun run lint
+DB_TYPE=sqlite bun test
+
+# GOOD - each command approved once, reused throughout session
+bun run type-check
+bun run lint
+bun test
+```
 
 ### Command Execution Guidelines
 
-The bash examples in this document use `<placeholder>` syntax (e.g., `<issue-number>`, `<workflow-id>`).
-When executing commands, **always substitute placeholders with actual values**:
+The bash examples use `<placeholder>` syntax (e.g., `<issue-number>`, `<workflow-id>`).
+**Always substitute placeholders with actual literal values**:
 
-```
+```bash
 # Documentation shows:
 gh issue view <issue-number> --json number,title,body
 
@@ -57,8 +70,8 @@ gh issue view <issue-number> --json number,title,body
 gh issue view 482 --json number,title,body
 ```
 
-**Never execute shell variables** - If you see `$ARGUMENTS` or `$WORKFLOW_ID` in examples,
-these are reference patterns. Use the actual values you have in context.
+**Never execute shell variables** - If you see `$ARGUMENTS` or `$WORKFLOW_ID` anywhere,
+these are legacy reference patterns. Always use actual literal values.
 
 ---
 
