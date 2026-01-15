@@ -185,6 +185,86 @@ export async function handleKnowledgeCommands(
     if (filePath) {
       console.log(`File: ${filePath}`);
     }
+  } else if (command === "query") {
+    // knowledge query [--code-area <area>] [--file <path>] [--text <keyword>] [--issue <n>] [--limit <n>]
+    let codeArea: string | undefined;
+    let filePath: string | undefined;
+    const keywords: string[] = [];
+    let issueNumber: number | undefined;
+    let limit: number | undefined;
+
+    // Parse optional arguments
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      const nextArg = args[i + 1];
+      if (arg === "--code-area" && nextArg) {
+        codeArea = nextArg;
+        i++;
+      } else if (arg === "--file" && nextArg) {
+        filePath = nextArg;
+        i++;
+      } else if (arg === "--text" && nextArg) {
+        keywords.push(nextArg);
+        i++;
+      } else if (arg === "--issue" && nextArg) {
+        issueNumber = parseIntSafe(nextArg, "issue");
+        i++;
+      } else if (arg === "--limit" && nextArg) {
+        limit = parseIntSafe(nextArg, "limit");
+        i++;
+      }
+    }
+
+    // Query the knowledge graph
+    const results = await knowledge.query({
+      codeArea,
+      filePath,
+      keywords: keywords.length > 0 ? keywords : undefined,
+      issueNumber,
+      limit,
+    });
+
+    if (results.length === 0) {
+      console.log("No learnings found matching the criteria.");
+    } else {
+      console.log(`Found ${results.length} learning(s):\n`);
+
+      for (const result of results) {
+        console.log("---");
+        console.log(`ID: ${result.learning.id}`);
+        console.log(`Content: ${result.learning.content}`);
+        if (result.learning.sourceIssue) {
+          console.log(`Source Issue: #${result.learning.sourceIssue}`);
+        }
+        if (result.learning.codeArea) {
+          console.log(`Code Area: ${result.learning.codeArea}`);
+        }
+        if (result.learning.filePath) {
+          console.log(`File: ${result.learning.filePath}`);
+        }
+        if (result.learning.confidence !== undefined) {
+          console.log(
+            `Confidence: ${(result.learning.confidence * 100).toFixed(0)}%`,
+          );
+        }
+
+        if (result.relatedPatterns && result.relatedPatterns.length > 0) {
+          console.log("Related Patterns:");
+          for (const p of result.relatedPatterns) {
+            console.log(`  - ${p.name}: ${p.description}`);
+          }
+        }
+
+        if (result.relatedMistakes && result.relatedMistakes.length > 0) {
+          console.log("Related Mistakes:");
+          for (const m of result.relatedMistakes) {
+            console.log(`  - ${m.description}`);
+            console.log(`    Fix: ${m.howFixed}`);
+          }
+        }
+        console.log("");
+      }
+    }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
   }
