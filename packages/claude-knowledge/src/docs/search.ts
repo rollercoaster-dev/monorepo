@@ -27,6 +27,8 @@ export interface SearchOptions {
   docsOnly?: boolean;
   /** Include only CodeDocs (default: false) */
   codeDocsOnly?: boolean;
+  /** Filter by source types (e.g., ["ob3", "ob2"]) */
+  sourceTypes?: string[];
 }
 
 /**
@@ -47,6 +49,7 @@ export async function searchDocs(
     filePaths,
     docsOnly = false,
     codeDocsOnly = false,
+    sourceTypes,
   } = options;
 
   const db = getDatabase();
@@ -82,6 +85,12 @@ export async function searchDocs(
   if (filePaths && filePaths.length > 0) {
     sql += ` AND json_extract(data, '$.filePath') IN (${filePaths.map(() => "?").join(",")})`;
     params.push(...filePaths);
+  }
+
+  // Add source type filter if specified
+  if (sourceTypes && sourceTypes.length > 0) {
+    sql += ` AND json_extract(data, '$.sourceType') IN (${sourceTypes.map(() => "?").join(",")})`;
+    params.push(...sourceTypes);
   }
 
   const rows = db
@@ -131,11 +140,22 @@ export async function searchDocs(
       location = filePath;
     }
 
+    // Extract source attribution for DocSections
+    let source: "local" | "external" | undefined;
+    let sourceType: string | undefined;
+    if (entityType === "DocSection") {
+      const docSection = section as DocSection;
+      source = docSection.source;
+      sourceType = docSection.sourceType;
+    }
+
     results.push({
       section,
       similarity,
       location,
       entityType,
+      source,
+      sourceType,
     });
   }
 
@@ -180,11 +200,22 @@ export function getDocsForCode(entityId: string): DocSearchResult[] {
       location = filePath;
     }
 
+    // Extract source attribution for DocSections
+    let source: "local" | "external" | undefined;
+    let sourceType: string | undefined;
+    if (entityType === "DocSection") {
+      const docSection = section as DocSection;
+      source = docSection.source;
+      sourceType = docSection.sourceType;
+    }
+
     return {
       section,
       similarity: 1.0, // Direct link, not semantic match
       location,
       entityType,
+      source,
+      sourceType,
     };
   });
 }

@@ -262,19 +262,38 @@ async function handleSearchCommand(args: string[]): Promise<void> {
   }
 
   for (const result of results) {
-    const { section, similarity, location, entityType } = result;
+    const { section, similarity, location, entityType, source, sourceType } =
+      result;
 
     const heading =
       entityType === "DocSection"
         ? (section as DocSection).heading || "(No heading)"
         : `CodeDoc: ${(section as CodeDoc).entityId}`;
 
+    // Add source prefix for external docs
+    let prefix = "";
+    if (source === "external" && sourceType) {
+      prefix = `[${sourceType.toUpperCase()} Spec] `;
+    } else if (source === "local") {
+      prefix = "[Local Docs] ";
+    }
+
     // eslint-disable-next-line no-console
-    console.log(`\n## ${heading}`);
+    console.log(`\n## ${prefix}${heading}`);
     // eslint-disable-next-line no-console
     console.log(`   Location: ${location}`);
     // eslint-disable-next-line no-console
     console.log(`   Similarity: ${(similarity * 100).toFixed(1)}%`);
+
+    // Show source URL for external docs
+    if (
+      source === "external" &&
+      entityType === "DocSection" &&
+      (section as DocSection).sourceUrl
+    ) {
+      // eslint-disable-next-line no-console
+      console.log(`   Source: ${(section as DocSection).sourceUrl}`);
+    }
 
     // Show preview
     const content =
