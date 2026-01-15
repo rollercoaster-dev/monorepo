@@ -6,12 +6,15 @@
  */
 
 import type { AssertionRepository } from "../../domains/assertion/assertion.repository";
+import type { BadgeClassRepository } from "../../domains/badgeClass/badgeClass.repository";
+import type { IssuerRepository } from "../../domains/issuer/issuer.repository";
 import type { BakingService } from "../../services/baking/types";
 import type { BakeRequestDto, BakeResponseDto } from "../dtos";
 import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
 import { logger } from "../../utils/logging/logger.service";
 import type { OB2, OB3 } from "openbadges-types";
 import { toIRI } from "../../utils/types/iri-utils";
+import { BadgeVersion } from "../../utils/version/badge-version";
 
 /**
  * Controller for credential-specific operations
@@ -20,10 +23,14 @@ export class CredentialsController {
   /**
    * Constructor
    * @param assertionRepository The assertion repository for fetching credentials
+   * @param badgeClassRepository The badge class repository for fetching badge classes
+   * @param issuerRepository The issuer repository for fetching issuers
    * @param bakingService The baking service for embedding credentials
    */
   constructor(
     private assertionRepository: AssertionRepository,
+    private badgeClassRepository: BadgeClassRepository,
+    private issuerRepository: IssuerRepository,
     private bakingService: BakingService,
   ) {}
 
@@ -80,11 +87,65 @@ export class CredentialsController {
         throw new BadRequestError("Image data is empty");
       }
 
-      // Convert assertion to credential format (OB2 or OB3)
-      // The assertion entity has toJsonLd method which returns the credential
-      const credential = assertion.toJsonLd() as
-        | OB2.Assertion
-        | OB3.VerifiableCredential;
+      // Fetch the badge class to get issuer IRI
+      logger.debug("Fetching badge class for baking", {
+        badgeClassIri: assertion.badgeClass,
+      });
+      const badgeClass = await this.badgeClassRepository.findById(
+        assertion.badgeClass,
+      );
+
+      if (!badgeClass) {
+        logger.error("Badge class not found for credential", {
+          credentialId,
+          badgeClassIri: assertion.badgeClass,
+        });
+        throw new BadRequestError(
+          "Badge class not found for this credential",
+        );
+      }
+
+      // Fetch the issuer entity (or use embedded issuer if already an object)
+      let issuer;
+      if (typeof badgeClass.issuer === "string") {
+        logger.debug("Fetching issuer for baking", {
+          issuerIri: badgeClass.issuer,
+        });
+        issuer = await this.issuerRepository.findById(badgeClass.issuer);
+
+        if (!issuer) {
+          logger.error("Issuer not found for badge class", {
+            credentialId,
+            badgeClassId: badgeClass.id,
+            issuerIri: badgeClass.issuer,
+          });
+          throw new BadRequestError("Issuer not found for this badge class");
+        }
+      } else {
+        // Issuer is already embedded in badgeClass
+        // Convert OB3.Issuer to Issuer entity for consistency
+        logger.debug("Using embedded issuer from badge class", {
+          issuerId: badgeClass.issuer.id,
+        });
+        // Import Issuer entity to create from embedded data
+        const { Issuer } = await import("../../domains/issuer/issuer.entity");
+        issuer = Issuer.create({
+          id: badgeClass.issuer.id,
+          name: badgeClass.issuer.name,
+          url: badgeClass.issuer.url,
+          email: badgeClass.issuer.email,
+          description: badgeClass.issuer.description,
+          image: badgeClass.issuer.image,
+        });
+      }
+
+      // Convert assertion to credential format (OB3 with embedded issuer)
+      // Pass badgeClass and issuer to ensure complete credential embedding
+      const credential = assertion.toJsonLd(
+        BadgeVersion.V3,
+        badgeClass,
+        issuer,
+      ) as OB2.Assertion | OB3.VerifiableCredential;
 
       // Call baking service to embed credential
       logger.debug("Baking credential into image", {

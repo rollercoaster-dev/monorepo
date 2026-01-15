@@ -1853,8 +1853,13 @@ export async function createApiRouter(
   // Create credentials controller for baking operations
   const assertionRepository =
     await RepositoryFactory.createAssertionRepository();
+  const badgeClassRepository =
+    await RepositoryFactory.createBadgeClassRepository();
+  const issuerRepository = await RepositoryFactory.createIssuerRepository();
   const credentialsController = new CredentialsController(
     assertionRepository,
+    badgeClassRepository,
+    issuerRepository,
     bakingService,
   );
 
