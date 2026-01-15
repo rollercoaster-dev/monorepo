@@ -59,6 +59,7 @@ Returns the JSON Web Key Set (JWKS) containing the server's public keys for cred
 **Authentication**: None required (public endpoint)
 
 **Response Headers**:
+
 - `Content-Type: application/json`
 - `Cache-Control: public, max-age=3600`
 
@@ -79,6 +80,7 @@ Returns the JSON Web Key Set (JWKS) containing the server's public keys for cred
 ```
 
 **Use Cases**:
+
 - Verifying signed credentials (JWS/JWT)
 - Establishing trust in issuer identity
 - Integration with OAuth 2.0 / OpenID Connect flows
@@ -92,6 +94,7 @@ Returns the DID:web document for the issuer, providing decentralized identity in
 **Authentication**: None required (public endpoint)
 
 **Response Headers**:
+
 - `Content-Type: application/did+json`
 - `Cache-Control: public, max-age=3600`
 
@@ -118,13 +121,12 @@ Returns the DID:web document for the issuer, providing decentralized identity in
       }
     }
   ],
-  "assertionMethod": [
-    "did:web:example.org#default"
-  ]
+  "assertionMethod": ["did:web:example.org#default"]
 }
 ```
 
 **Use Cases**:
+
 - Decentralized issuer identity verification
 - Integration with W3C Verifiable Credentials ecosystem
 - Cross-platform credential verification
@@ -206,6 +208,7 @@ Embeds credential data into a PNG or SVG image using metadata standards. The cre
 **Authentication**: Required (API key or Bearer token)
 
 **URL Parameters**:
+
 - `id` - Credential ID (UUID or IRI)
 
 **Request Body**:
@@ -217,10 +220,10 @@ Embeds credential data into a PNG or SVG image using metadata standards. The cre
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `format` | string | Yes | Image format: `"png"` or `"svg"` |
-| `image` | string | Yes | Base64-encoded source image data |
+| Field    | Type   | Required | Description                      |
+| -------- | ------ | -------- | -------------------------------- |
+| `format` | string | Yes      | Image format: `"png"` or `"svg"` |
+| `image`  | string | Yes      | Base64-encoded source image data |
 
 **Response Format** (200 OK):
 
@@ -231,11 +234,13 @@ Embeds credential data into a PNG or SVG image using metadata standards. The cre
 ```
 
 **Error Responses**:
+
 - `400 Bad Request` - Invalid format or malformed base64 image data
 - `401 Unauthorized` - Missing or invalid authentication
 - `404 Not Found` - Credential ID does not exist
 
 **Baking Process**:
+
 - **PNG**: Credential URL embedded in iTXt chunk with keyword "openbadges"
 - **SVG**: Credential URL embedded in `<metadata>` element with `openbadges` attribute
 
@@ -252,6 +257,7 @@ curl -X POST https://example.org/v3/credentials/abc123/bake \
 ```
 
 **Use Cases**:
+
 - Social media sharing of verifiable badges
 - Email signatures with embedded credentials
 - Portfolio display with verification capability
@@ -271,6 +277,7 @@ Verifies a credential in JSON-LD or JWT format. Validates the credential structu
 **Request Body**:
 
 Option 1 - JSON-LD Credential:
+
 ```json
 {
   "@context": ["https://www.w3.org/2018/credentials/v1"],
@@ -283,6 +290,7 @@ Option 1 - JSON-LD Credential:
 ```
 
 Option 2 - JWT String:
+
 ```json
 {
   "credential": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -313,6 +321,7 @@ Option 2 - JWT String:
 | `details` | object | Additional verification information |
 
 **Error Responses**:
+
 - `400 Bad Request` - Malformed credential or invalid format
 
 **Example Request**:
@@ -324,6 +333,7 @@ curl -X POST https://example.org/v3/verify \
 ```
 
 **Use Cases**:
+
 - Employer verification of job applicant badges
 - University verification of incoming student credentials
 - Self-service verification by credential holders
@@ -345,10 +355,10 @@ Extracts and verifies a credential from a baked image (PNG or SVG). Combines ext
 }
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `format` | string | Yes | Image format: `"png"` or `"svg"` |
-| `image` | string | Yes | Base64-encoded baked image data |
+| Field    | Type   | Required | Description                      |
+| -------- | ------ | -------- | -------------------------------- |
+| `format` | string | Yes      | Image format: `"png"` or `"svg"` |
+| `image`  | string | Yes      | Base64-encoded baked image data  |
 
 **Response Format** (200 OK):
 
@@ -371,11 +381,13 @@ Extracts and verifies a credential from a baked image (PNG or SVG). Combines ext
 ```
 
 **Extraction Process**:
+
 - **PNG**: Reads credential URL from iTXt chunk with keyword "openbadges"
 - **SVG**: Reads credential URL from `<metadata>` element with `openbadges` attribute
 - After extraction, fetches and verifies the credential using the same process as POST /v3/verify
 
 **Error Responses**:
+
 - `400 Bad Request` - Invalid format, malformed base64, or no embedded credential found
 - `404 Not Found` - Embedded credential URL returns 404
 
@@ -391,6 +403,7 @@ curl -X POST https://example.org/v3/verify/baked \
 ```
 
 **Use Cases**:
+
 - Verification of badge images shared on social media
 - Portfolio verification from downloaded badge images
 - Automated verification in applicant tracking systems
