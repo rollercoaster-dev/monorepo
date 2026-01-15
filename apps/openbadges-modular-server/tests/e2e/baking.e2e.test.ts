@@ -232,4 +232,109 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.sourceFormat).toBe("png");
     });
   });
+
+  describe("SVG Baking Flow", () => {
+    it("should bake credential into SVG and verify", async () => {
+      // Step 1: Create test issuer
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+      logger.info("Created test issuer", { issuerId });
+
+      // Step 2: Create test badge class
+      const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
+        issuerId,
+      );
+      logger.info("Created test badge class", { badgeClassId });
+
+      // Step 3: Create test credential
+      const { id: credentialId } = await TestDataHelper.createAssertion(
+        badgeClassId,
+      );
+      logger.info("Created test credential", { credentialId });
+
+      // Step 4: Load SVG fixture and encode to base64
+      const svgPath = join(process.cwd(), "tests/fixtures/test-badge.svg");
+      const svgBuffer = readFileSync(svgPath);
+      const svgBase64 = svgBuffer.toString("base64");
+      logger.info("Loaded SVG fixture", {
+        path: svgPath,
+        size: svgBuffer.length,
+      });
+
+      // Step 5: Bake credential into SVG
+      const bakeResponse = await fetch(
+        `${CREDENTIALS_ENDPOINT}/${credentialId}/bake`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+          },
+          body: JSON.stringify({
+            format: "svg",
+            image: svgBase64,
+          }),
+        },
+      );
+
+      logger.debug("Bake SVG response", {
+        status: bakeResponse.status,
+        statusText: bakeResponse.statusText,
+      });
+
+      // Verify bake response
+      expect(bakeResponse.status).toBe(200);
+      const bakeResult = (await bakeResponse.json()) as {
+        data: string;
+        mimeType: string;
+        size: number;
+        format: string;
+      };
+
+      expect(bakeResult.data).toBeDefined();
+      expect(bakeResult.mimeType).toBe("image/svg+xml");
+      expect(bakeResult.format).toBe("svg");
+      expect(bakeResult.size).toBeGreaterThan(0);
+
+      logger.info("Baked credential into SVG", {
+        originalSize: svgBuffer.length,
+        bakedSize: bakeResult.size,
+      });
+
+      // Step 6: Verify baked SVG
+      const verifyResponse = await fetch(VERIFY_BAKED_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: bakeResult.data,
+        }),
+      });
+
+      logger.debug("Verify baked SVG response", {
+        status: verifyResponse.status,
+        statusText: verifyResponse.statusText,
+      });
+
+      // Verify extraction and verification
+      expect(verifyResponse.status).toBe(200);
+      const verifyResult = (await verifyResponse.json()) as {
+        isValid: boolean;
+        status: string;
+        metadata?: {
+          extractionAttempted?: boolean;
+          extractionSucceeded?: boolean;
+          sourceFormat?: string;
+        };
+      };
+
+      logger.info("Verification result", { verifyResult });
+
+      expect(verifyResult.isValid).toBe(true);
+      expect(verifyResult.status).toBe("valid");
+      expect(verifyResult.metadata?.extractionAttempted).toBe(true);
+      expect(verifyResult.metadata?.extractionSucceeded).toBe(true);
+      expect(verifyResult.metadata?.sourceFormat).toBe("svg");
+    });
+  });
 });
