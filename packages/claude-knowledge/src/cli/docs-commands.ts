@@ -16,6 +16,11 @@ import {
   searchDocs,
   getDocsForCode,
 } from "../docs";
+import {
+  indexExternalDoc,
+  getSpecDefinition,
+  SPEC_DEFINITIONS,
+} from "../docs/external";
 import type { DocSection, CodeDoc } from "../types";
 
 /**
@@ -43,9 +48,11 @@ export async function handleDocsCommands(
     await handleSearchCommand(args);
   } else if (command === "for-code") {
     await handleForCodeCommand(args);
+  } else if (command === "index-external") {
+    await handleIndexExternalCommand(args);
   } else {
     throw new Error(
-      `Unknown docs command: ${command}. Available: index, status, clean, search, for-code`,
+      `Unknown docs command: ${command}. Available: index, status, clean, search, for-code, index-external`,
     );
   }
 }
@@ -317,6 +324,60 @@ async function handleForCodeCommand(args: string[]): Promise<void> {
     if (entityType === "CodeDoc") {
       // eslint-disable-next-line no-console
       console.log(`\n${(section as CodeDoc).content}`);
+    }
+  }
+}
+
+/**
+ * Handle the `docs index-external` command.
+ * Index external specification documentation (OB2, OB3, VC, etc.).
+ */
+async function handleIndexExternalCommand(args: string[]): Promise<void> {
+  const flags = args.filter((arg) => arg.startsWith("--"));
+  const positionals = args.filter((arg) => !arg.startsWith("--"));
+
+  const indexAll = flags.includes("--all");
+
+  if (!indexAll && positionals.length === 0) {
+    // eslint-disable-next-line no-console
+    console.log("Usage: docs index-external <spec-name> | --all");
+    // eslint-disable-next-line no-console
+    console.log("\nAvailable specs:");
+    for (const [name, spec] of Object.entries(SPEC_DEFINITIONS)) {
+      // eslint-disable-next-line no-console
+      console.log(
+        `  ${name}: ${spec.url}${spec.specVersion ? ` (v${spec.specVersion})` : ""}`,
+      );
+    }
+    return;
+  }
+
+  const specsToIndex = indexAll ? Object.keys(SPEC_DEFINITIONS) : positionals;
+
+  for (const specName of specsToIndex) {
+    const spec = getSpecDefinition(specName);
+    if (!spec) {
+      console.error(`Unknown spec: ${specName}`);
+      continue;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(`\nIndexing external doc: ${specName}`);
+    // eslint-disable-next-line no-console
+    console.log(`  URL: ${spec.url}`);
+    // eslint-disable-next-line no-console
+    console.log(`  Version: ${spec.specVersion ?? "unspecified"}`);
+
+    try {
+      const result = await indexExternalDoc(spec);
+      // eslint-disable-next-line no-console
+      console.log(`  Status: ${result.status}`);
+      // eslint-disable-next-line no-console
+      console.log(`  Sections indexed: ${result.sectionsIndexed}`);
+    } catch (error) {
+      console.error(
+        `  Failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }
