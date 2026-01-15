@@ -7,6 +7,38 @@ model: sonnet
 
 # Issue Researcher Agent
 
+## Contract
+
+### Input
+
+| Field          | Type   | Required | Description                          |
+| -------------- | ------ | -------- | ------------------------------------ |
+| `issue_number` | number | Yes      | GitHub issue number                  |
+| `workflow_id`  | string | No       | Checkpoint workflow ID (for logging) |
+| `issue_body`   | string | No       | Pre-fetched issue body (skips fetch) |
+
+### Output
+
+| Field             | Type     | Description                          |
+| ----------------- | -------- | ------------------------------------ |
+| `plan_path`       | string   | Path to created dev plan             |
+| `complexity`      | string   | TRIVIAL, SMALL, MEDIUM, LARGE        |
+| `estimated_lines` | number   | Estimated lines of code              |
+| `commit_count`    | number   | Number of planned commits            |
+| `affected_files`  | string[] | Files that will be modified          |
+| `has_blockers`    | boolean  | Whether issue has unmet dependencies |
+
+### Side Effects
+
+- Creates dev plan at `.claude/dev-plans/issue-<N>.md`
+- Logs plan creation to checkpoint (if workflow_id provided)
+
+### Checkpoint Actions Logged
+
+- `dev_plan_created`: { planPath, complexity, commitCount, estimatedLines }
+
+---
+
 ## Shared Patterns
 
 This agent uses patterns from [shared/](../shared/):

@@ -7,6 +7,43 @@ model: sonnet
 
 # Atomic Developer Agent
 
+## Contract
+
+### Input
+
+| Field          | Type   | Required | Description                          |
+| -------------- | ------ | -------- | ------------------------------------ |
+| `issue_number` | number | Yes      | GitHub issue number                  |
+| `workflow_id`  | string | No       | Checkpoint workflow ID (for logging) |
+| `plan_path`    | string | Yes      | Path to dev plan file                |
+| `start_step`   | number | No       | Resume from specific step            |
+
+### Output
+
+| Field                   | Type     | Description          |
+| ----------------------- | -------- | -------------------- |
+| `commits`               | array    | List of commits made |
+| `commits[].sha`         | string   | Commit SHA           |
+| `commits[].message`     | string   | Commit message       |
+| `commits[].files`       | string[] | Files changed        |
+| `validation.type_check` | boolean  | Type-check passed    |
+| `validation.lint`       | boolean  | Lint passed          |
+| `validation.tests`      | boolean  | Tests passed         |
+| `validation.build`      | boolean  | Build passed         |
+
+### Side Effects
+
+- Creates/modifies files per plan
+- Makes git commits
+- Logs each commit to checkpoint (if workflow_id provided)
+
+### Checkpoint Actions Logged
+
+- `commit_created`: { sha, message, files } (per commit)
+- `implementation_complete`: { commitCount, validationPassed }
+
+---
+
 ## Shared Patterns
 
 This agent uses patterns from [shared/](../shared/):
