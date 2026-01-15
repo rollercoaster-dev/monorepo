@@ -1,5 +1,7 @@
 # Conventional Commits
 
+> **Architecture:** Used by all agents for commit formatting. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared commit message format for all workflows and agents.
 
 ## Format

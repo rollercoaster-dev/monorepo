@@ -1,5 +1,7 @@
 # Telegram MCP Helpers
 
+> **Architecture:** Used by setup-agent and finalize-agent for notifications. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared notification patterns for workflow commands.
 
 ## MCP Tools
