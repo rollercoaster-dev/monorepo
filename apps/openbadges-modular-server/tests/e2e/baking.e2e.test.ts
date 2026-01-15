@@ -217,11 +217,16 @@ describe("Baking API - E2E", () => {
         statusText: verifyResponse.statusText,
       });
 
-      // Verify extraction succeeded (full verification requires embedded issuer data)
+      // Verify extraction and validation succeeded
       expect(verifyResponse.status).toBe(200);
       const verifyResult = (await verifyResponse.json()) as {
         isValid: boolean;
         status: string;
+        credential?: {
+          id: string;
+          issuer?: unknown;
+          [key: string]: unknown;
+        };
         error?: string;
         metadata?: {
           extractionAttempted?: boolean;
@@ -237,11 +242,24 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.extractionSucceeded).toBe(true);
       expect(verifyResult.metadata?.sourceFormat).toBe("png");
 
-      // Note: Full verification (isValid: true) requires the credential to have
-      // embedded issuer data. The current serialization doesn't include this,
-      // so we verify extraction success rather than full credential validity.
-      // This is a known limitation that should be addressed in a follow-up issue.
-      expect(verifyResult.status).toBeDefined();
+      // Verify embedded issuer data is present in the extracted credential
+      expect(verifyResult.credential).toBeDefined();
+      expect(verifyResult.credential?.issuer).toBeDefined();
+      expect(typeof verifyResult.credential?.issuer).toBe("object");
+
+      // Verify issuer has required OB3 fields
+      const issuer = verifyResult.credential?.issuer as {
+        id?: string;
+        name?: string;
+        url?: string;
+      };
+      expect(issuer.id).toBeDefined();
+      expect(issuer.name).toBeDefined();
+      expect(issuer.url).toBeDefined();
+
+      // Verify full credential verification succeeds with embedded issuer
+      expect(verifyResult.isValid).toBe(true);
+      expect(verifyResult.status).toBe("valid");
     });
   });
 
@@ -334,11 +352,16 @@ describe("Baking API - E2E", () => {
         statusText: verifyResponse.statusText,
       });
 
-      // Verify extraction succeeded (full verification requires embedded issuer data)
+      // Verify extraction and validation succeeded
       expect(verifyResponse.status).toBe(200);
       const verifyResult = (await verifyResponse.json()) as {
         isValid: boolean;
         status: string;
+        credential?: {
+          id: string;
+          issuer?: unknown;
+          [key: string]: unknown;
+        };
         error?: string;
         metadata?: {
           extractionAttempted?: boolean;
@@ -354,8 +377,24 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.extractionSucceeded).toBe(true);
       expect(verifyResult.metadata?.sourceFormat).toBe("svg");
 
-      // Note: Full verification requires embedded issuer data (see PNG test comments)
-      expect(verifyResult.status).toBeDefined();
+      // Verify embedded issuer data is present in the extracted credential
+      expect(verifyResult.credential).toBeDefined();
+      expect(verifyResult.credential?.issuer).toBeDefined();
+      expect(typeof verifyResult.credential?.issuer).toBe("object");
+
+      // Verify issuer has required OB3 fields
+      const issuer = verifyResult.credential?.issuer as {
+        id?: string;
+        name?: string;
+        url?: string;
+      };
+      expect(issuer.id).toBeDefined();
+      expect(issuer.name).toBeDefined();
+      expect(issuer.url).toBeDefined();
+
+      // Verify full credential verification succeeds with embedded issuer
+      expect(verifyResult.isValid).toBe(true);
+      expect(verifyResult.status).toBe("valid");
     });
   });
 
