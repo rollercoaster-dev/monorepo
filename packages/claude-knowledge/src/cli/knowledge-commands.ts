@@ -403,7 +403,7 @@ export async function handleKnowledgeCommands(
       // Find max widths for table formatting
       const maxNameWidth = Math.max(
         "Code Area".length,
-        ...areas.map((a) => a.name.length),
+        ...areas.map((a) => (a.name ?? "").length),
       );
 
       // Print header
@@ -412,8 +412,9 @@ export async function handleKnowledgeCommands(
 
       // Print rows
       for (const area of areas) {
+        const name = area.name ?? "(unnamed)";
         console.log(
-          `${area.name.padEnd(maxNameWidth)} | ${String(area.learnings).padStart(9)} | ${String(area.patterns).padStart(8)}`,
+          `${name.padEnd(maxNameWidth)} | ${String(area.learnings).padStart(9)} | ${String(area.patterns).padStart(8)}`,
         );
       }
     }
@@ -453,7 +454,7 @@ export async function handleKnowledgeCommands(
       // Find max widths for table formatting
       const maxPathWidth = Math.max(
         "File Path".length,
-        ...files.map((f) => f.path.length),
+        ...files.map((f) => (f.path ?? "").length),
       );
 
       // Print header
@@ -462,8 +463,9 @@ export async function handleKnowledgeCommands(
 
       // Print rows
       for (const file of files) {
+        const path = file.path ?? "(unknown)";
         console.log(
-          `${file.path.padEnd(maxPathWidth)} | ${String(file.learnings).padStart(9)} | ${String(file.mistakes).padStart(8)}`,
+          `${path.padEnd(maxPathWidth)} | ${String(file.learnings).padStart(9)} | ${String(file.mistakes).padStart(8)}`,
         );
       }
     }
@@ -593,7 +595,7 @@ export async function handleKnowledgeCommands(
     if (topAreas.length > 0) {
       console.log("\nMost Active Code Areas:");
       for (const area of topAreas) {
-        console.log(`  ${area.name}: ${area.total} references`);
+        console.log(`  ${area.name ?? "(unnamed)"}: ${area.total} references`);
       }
     }
 
@@ -601,7 +603,7 @@ export async function handleKnowledgeCommands(
     if (topFiles.length > 0) {
       console.log("\nMost Referenced Files:");
       for (const file of topFiles) {
-        console.log(`  ${file.path}: ${file.total} references`);
+        console.log(`  ${file.path ?? "(unknown)"}: ${file.total} references`);
       }
     }
   } else {
