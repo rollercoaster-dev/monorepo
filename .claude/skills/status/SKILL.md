@@ -60,6 +60,17 @@ The command displays:
 3. **Open PRs** - Pull requests with review status (PENDING, APPROVED, CHANGES_REQUESTED)
 4. **Open Issues** - Grouped by milestone, sorted alphabetically
 
+## Instructions
+
+1. Run `bun run checkpoint status` using the Bash tool
+2. **Format the output as markdown** and display it to the user
+3. Add a brief summary at the end highlighting:
+   - What was recently done
+   - What's currently in progress
+   - Suggested next steps
+
+**Important:** The Bash output is not visible to the user. You MUST format and print the results in your response.
+
 ## Integration
 
 This skill uses `bun run checkpoint status` which queries:
