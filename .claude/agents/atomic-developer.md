@@ -1,7 +1,7 @@
 ---
 name: atomic-developer
 description: Implements code changes following a development plan with atomic commits. Each commit is self-contained and the PR focuses on a single change. Use after issue-researcher creates a plan.
-tools: Bash, Read, Write, Edit, Glob, Grep
+tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 model: sonnet
 ---
 
