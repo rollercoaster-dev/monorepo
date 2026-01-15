@@ -56,8 +56,12 @@ import {
   validateRelatedAchievementMiddleware,
   validateEndorsementCredentialMiddleware,
   validateVerifyCredentialMiddleware,
+  validateVerifyBakedImageMiddleware,
 } from "../utils/validation/validation-middleware";
-import type { VerifyCredentialRequestDto } from "./dtos";
+import type {
+  VerifyCredentialRequestDto,
+  VerifyBakedImageRequestDto,
+} from "./dtos";
 import { VerificationController } from "./controllers/verification.controller";
 import type { BackpackController } from "../domains/backpack/backpack.controller";
 import type { UserController } from "../domains/user/user.controller";
@@ -1564,6 +1568,29 @@ export function createVersionedRouter(
         });
       }
     });
+
+    // POST /v3/verify/baked - Verify a baked image credential
+    // This endpoint extracts a credential from a baked image (PNG or SVG) and verifies it
+    // NOTE: Intentionally unauthenticated - follows same security model as POST /v3/verify
+    // Rate limiting should be applied at the infrastructure level (reverse proxy/CDN).
+    router.post(
+      "/verify/baked",
+      validateVerifyBakedImageMiddleware(),
+      async (c) => {
+        try {
+          const body = getValidatedBody<VerifyBakedImageRequestDto>(c);
+          const result = await verificationController.verifyBakedImage(body);
+
+          // Return appropriate status code based on verification result
+          // 200 OK for all responses - the isValid field indicates actual validity
+          return c.json(result);
+        } catch (error) {
+          return sendApiError(c, error, {
+            endpoint: "POST /verify/baked",
+          });
+        }
+      },
+    );
   }
 
   return router;

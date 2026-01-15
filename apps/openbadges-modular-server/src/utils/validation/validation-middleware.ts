@@ -28,7 +28,10 @@ import {
   UpdateCredentialStatusSchema,
   BatchUpdateCredentialStatusSchema,
 } from "../../api/validation/assertion.schemas";
-import { VerifyCredentialRequestSchema } from "../../api/dtos/verify.dto";
+import {
+  VerifyCredentialRequestSchema,
+  VerifyBakedImageRequestSchema,
+} from "../../api/dtos/verify.dto";
 
 // Define the variables that will be set in the context by validation middleware
 export type ValidationVariables = {
@@ -607,6 +610,49 @@ export function validateVerifyCredentialMiddleware(): MiddlewareHandler<{
 
       // Validate with Zod schema
       const result = VerifyCredentialRequestSchema.safeParse(body);
+      if (!result.success) {
+        return c.json(
+          {
+            success: false,
+            error: "Validation error",
+            details: formatZodErrors(result),
+          },
+          400,
+        );
+      }
+
+      // Store the validated body in context for route handlers to use
+      c.set("validatedBody", result.data);
+
+      await next();
+    } catch (_error) {
+      return c.json(
+        {
+          success: false,
+          error: "Invalid request body",
+          details: { general: ["Request body must be valid JSON"] },
+        },
+        400,
+      );
+    }
+  });
+}
+
+/**
+ * Middleware for validating verify baked image requests
+ * @returns A Hono middleware handler
+ */
+export function validateVerifyBakedImageMiddleware(): MiddlewareHandler<{
+  Variables: ValidationVariables;
+}> {
+  return createMiddleware<{
+    Variables: ValidationVariables;
+  }>(async (c, next) => {
+    try {
+      const body = await c.req.json();
+
+      // Validate with Zod schema
+      const result = VerifyBakedImageRequestSchema.safeParse(body);
       if (!result.success) {
         return c.json(
           {
