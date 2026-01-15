@@ -10,6 +10,7 @@ import { handleMetricsCommands } from "./metrics-commands";
 import { handleBootstrapCommands } from "./bootstrap-commands";
 import { handleGraphCommands } from "./graph-commands";
 import { handleDocsCommands } from "./docs-commands";
+import { handleKnowledgeCommands } from "./knowledge-commands";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -66,6 +67,24 @@ if (args.length === 0) {
   console.error("  docs clean");
   console.error("  docs search <query>");
   console.error("  docs for-code <entity-id>");
+  console.error(
+    "  knowledge store-learning <content> [--code-area <area>] [--file <path>] [--confidence <n>]",
+  );
+  console.error(
+    "  knowledge store-pattern <name> <description> [--code-area <area>]",
+  );
+  console.error(
+    "  knowledge store-mistake <description> <how-fixed> [--file <path>]",
+  );
+  console.error(
+    "  knowledge query [--code-area <area>] [--file <path>] [--text <keyword>] [--issue <n>] [--limit <n>]",
+  );
+  console.error(
+    "  knowledge search <query-text> [--limit <n>] [--threshold <n>] [--include-related]",
+  );
+  console.error("  knowledge list-areas");
+  console.error("  knowledge list-files");
+  console.error("  knowledge stats");
   process.exit(1);
 }
 
@@ -97,6 +116,8 @@ try {
     await handleGraphCommands(command, commandArgs);
   } else if (category === "docs") {
     await handleDocsCommands(command, commandArgs);
+  } else if (category === "knowledge") {
+    await handleKnowledgeCommands(command, commandArgs);
   } else {
     throw new Error(`Unknown category: ${category}`);
   }
