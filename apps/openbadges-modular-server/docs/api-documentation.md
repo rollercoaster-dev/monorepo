@@ -256,6 +256,145 @@ curl -X POST https://example.org/v3/credentials/abc123/bake \
 - Email signatures with embedded credentials
 - Portfolio display with verification capability
 
+#### Verification Endpoints
+
+Public endpoints for verifying credentials in various formats. These endpoints are intentionally unauthenticated to support verification by third parties (employers, institutions, etc.).
+
+##### POST /v3/verify
+
+Verifies a credential in JSON-LD or JWT format. Validates the credential structure, signature, and issuer trust chain.
+
+**Authentication**: None required (public endpoint)
+
+**Note**: This endpoint is intentionally unauthenticated to enable verification by employers, educational institutions, or any party that receives a credential. Rate limiting should be applied at the infrastructure level (reverse proxy, CDN, or API gateway).
+
+**Request Body**:
+
+Option 1 - JSON-LD Credential:
+```json
+{
+  "@context": ["https://www.w3.org/2018/credentials/v1"],
+  "type": ["VerifiableCredential", "OpenBadgeCredential"],
+  "id": "https://example.org/credentials/abc123",
+  "issuer": {...},
+  "credentialSubject": {...},
+  "proof": {...}
+}
+```
+
+Option 2 - JWT String:
+```json
+{
+  "credential": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response Format** (200 OK):
+
+```json
+{
+  "isValid": true,
+  "hasValidSignature": true,
+  "details": {
+    "issuer": "https://example.org/issuers/issuer123",
+    "issuedOn": "2024-01-15T00:00:00Z",
+    "expirationDate": "2025-01-15T00:00:00Z",
+    "recipient": "recipient@example.org",
+    "revoked": false
+  }
+}
+```
+
+**Response Fields**:
+| Field | Type | Description |
+|-------|------|-------------|
+| `isValid` | boolean | Overall validity (structure, signature, not revoked) |
+| `hasValidSignature` | boolean | Cryptographic signature verification result |
+| `details` | object | Additional verification information |
+
+**Error Responses**:
+- `400 Bad Request` - Malformed credential or invalid format
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/verify \
+  -H "Content-Type: application/json" \
+  -d @credential.json
+```
+
+**Use Cases**:
+- Employer verification of job applicant badges
+- University verification of incoming student credentials
+- Self-service verification by credential holders
+
+##### POST /v3/verify/baked
+
+Extracts and verifies a credential from a baked image (PNG or SVG). Combines extraction and verification in a single operation.
+
+**Authentication**: None required (public endpoint)
+
+**Note**: This endpoint follows the same public access model as POST /v3/verify. Rate limiting should be applied at the infrastructure level.
+
+**Request Body**:
+
+```json
+{
+  "format": "png",
+  "image": "base64-encoded-baked-image-data"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `format` | string | Yes | Image format: `"png"` or `"svg"` |
+| `image` | string | Yes | Base64-encoded baked image data |
+
+**Response Format** (200 OK):
+
+```json
+{
+  "isValid": true,
+  "hasValidSignature": true,
+  "details": {
+    "issuer": "https://example.org/issuers/issuer123",
+    "issuedOn": "2024-01-15T00:00:00Z",
+    "recipient": "recipient@example.org",
+    "revoked": false,
+    "extractionMetadata": {
+      "credentialUrl": "https://example.org/credentials/abc123",
+      "extractedFrom": "png",
+      "extractionMethod": "iTXt chunk"
+    }
+  }
+}
+```
+
+**Extraction Process**:
+- **PNG**: Reads credential URL from iTXt chunk with keyword "openbadges"
+- **SVG**: Reads credential URL from `<metadata>` element with `openbadges` attribute
+- After extraction, fetches and verifies the credential using the same process as POST /v3/verify
+
+**Error Responses**:
+- `400 Bad Request` - Invalid format, malformed base64, or no embedded credential found
+- `404 Not Found` - Embedded credential URL returns 404
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/verify/baked \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "png",
+    "image": "iVBORw0KGgoAAAANSUhEUgAAAA..."
+  }'
+```
+
+**Use Cases**:
+- Verification of badge images shared on social media
+- Portfolio verification from downloaded badge images
+- Automated verification in applicant tracking systems
+
 #### Legacy Endpoints (Deprecated)
 
 ⚠️ **DEPRECATED**: The following endpoints are deprecated and will be removed in a future version. Please use the v3.0 compliant endpoints above.
