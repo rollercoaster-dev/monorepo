@@ -249,7 +249,8 @@ export class VerificationController {
                 check: "extraction",
                 description: "Extract credential from baked image",
                 passed: false,
-                error: "Unsupported image format - unable to extract credential",
+                error:
+                  "Unsupported image format - unable to extract credential",
               },
             ],
           },
