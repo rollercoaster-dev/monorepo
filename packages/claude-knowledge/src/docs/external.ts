@@ -388,7 +388,11 @@ export async function indexExternalDoc(
       path: markdownPath,
     } satisfies FileData);
 
-    // Index sections with embeddings
+    // Index sections with embeddings in batches to avoid database locks
+    const BATCH_SIZE = 50;
+    let batchCount = 0;
+    db.run("BEGIN IMMEDIATE");
+
     for (const section of sections) {
       const sectionId = `doc-${Buffer.from(markdownPath).toString("base64url")}-${section.anchor}`;
 
@@ -440,7 +444,18 @@ export async function indexExternalDoc(
           createRelationship(db, sectionId, parentId, "CHILD_OF");
         }
       }
+
+      // Commit batch to avoid long-running transactions and database locks
+      batchCount++;
+      if (batchCount % BATCH_SIZE === 0) {
+        db.run("COMMIT");
+        db.run("BEGIN IMMEDIATE");
+        logger.info(`Indexed ${batchCount}/${sections.length} sections...`);
+      }
     }
+
+    // Final commit for remaining sections
+    db.run("COMMIT");
 
     // Update index
     if (existingIndex) {
