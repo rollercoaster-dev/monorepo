@@ -4,6 +4,8 @@ Analysis of 70 issues in the "Next" column to identify priorities and clusters.
 
 **Analysis Date:** 2026-01-15
 
+**Note:** This is a point-in-time analysis. Some issues listed below may have been completed since this analysis. For current status, check the [ROADMAP.md](./ROADMAP.md) milestone overview or GitHub directly.
+
 ---
 
 ## Theme Summary

@@ -10,13 +10,13 @@ Quick assessment of each package's current state, quality, and gaps.
 
 | Package                   | Purpose                    | Tests       | Types     | Docs                | Status          |
 | ------------------------- | -------------------------- | ----------- | --------- | ------------------- | --------------- |
-| openbadges-types          | OB2/OB3 TypeScript types   | ✓ 15 files  | ✓ strict  | ✓ CLAUDE.md, README | Mature          |
+| openbadges-types          | OB2/OB3 TypeScript types   | ✓ 14 files  | ✓ strict  | ✓ CLAUDE.md, README | Mature          |
 | openbadges-ui             | Vue 3 component library    | ✓ exists    | ✓ vue-tsc | ✓ CLAUDE.md, README | Functional      |
 | openbadges-modular-server | OB API server              | ✓ extensive | ✓ tsc     | ✓ CLAUDE.md, README | Mature          |
 | openbadges-system         | Full-stack Vue+Hono app    | ✓ exists    | ✓ vue-tsc | ✓ CLAUDE.md, README | Functional      |
 | rd-logger                 | Structured logging         | ✓ exists    | ✓ strict  | ✓ CLAUDE.md, README | Published (npm) |
-| claude-knowledge          | Knowledge graph for Claude | ✓ 5+ files  | ✓ strict  | ✗ no CLAUDE.md      | Active dev      |
-| claude-workflows          | Workflow automation        | ✗ none      | ✓ strict  | ✗ no docs           | Early stage     |
+| claude-knowledge          | Knowledge graph for Claude | ✓ 21 files  | ✓ strict  | ✗ no CLAUDE.md      | Active dev      |
+| claude-workflows          | Workflow automation        | ✓ 1 file    | ✓ strict  | ✗ no docs           | Early stage     |
 | shared-config             | ESLint/TS/Prettier configs | ✗ none      | N/A       | ✓ CLAUDE.md, README | Stable          |
 
 ---
@@ -29,7 +29,7 @@ Quick assessment of each package's current state, quality, and gaps.
 
 **Quality:**
 
-- Tests: ✓ 15 test files covering type guards, validation, spec compliance
+- Tests: ✓ 14 test files covering type guards, validation, spec compliance
 - Types: ✓ Strict TypeScript
 - Docs: ✓ Comprehensive README (620 lines), CLAUDE.md
 
@@ -127,7 +127,7 @@ Quick assessment of each package's current state, quality, and gaps.
 
 **Quality:**
 
-- Tests: ✓ 5+ test files (checkpoint, formatter, hooks, knowledge, retrospective)
+- Tests: ✓ 21 test files covering checkpoint, hooks, knowledge graph, docs, learning
 - Types: ✓ Strict TypeScript
 - Docs: ✓ README (119 lines), ✗ no CLAUDE.md
 
@@ -147,7 +147,7 @@ Quick assessment of each package's current state, quality, and gaps.
 
 **Quality:**
 
-- Tests: ✗ No tests
+- Tests: ✓ 1 test file (minimal coverage)
 - Types: ✓ Strict TypeScript
 - Docs: ✗ No README or CLAUDE.md
 
@@ -155,7 +155,7 @@ Quick assessment of each package's current state, quality, and gaps.
 
 **Gaps:**
 
-- Needs tests
+- Needs more test coverage (only 1 file currently)
 - Needs documentation
 - Tightly coupled to Claude Code patterns
 
@@ -193,7 +193,7 @@ Quick assessment of each package's current state, quality, and gaps.
 1. **OB3 migration incomplete** - OB2 is done, OB3 scattered across many issues
 2. **Claude tooling underdocumented** - claude-knowledge and claude-workflows lack CLAUDE.md
 3. **Integration gaps** - rd-logger not integrated in apps
-4. **Test coverage varies** - claude-workflows has no tests
+4. **Test coverage varies** - claude-workflows has minimal tests
 
 ### Themes Emerging
 
