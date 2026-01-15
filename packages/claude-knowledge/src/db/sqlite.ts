@@ -200,6 +200,18 @@ CREATE TABLE IF NOT EXISTS doc_index (
 
 -- Indexes for document indexing lookups
 CREATE INDEX IF NOT EXISTS idx_doc_index_hash ON doc_index(content_hash);
+
+-- External documentation cache (for fetched specs like OB2, OB3, VC)
+CREATE TABLE IF NOT EXISTS external_docs (
+  url TEXT PRIMARY KEY,
+  cached_path TEXT NOT NULL,
+  fetched_at TEXT NOT NULL,
+  spec_version TEXT,
+  source_type TEXT NOT NULL
+);
+
+-- Indexes for external docs lookups
+CREATE INDEX IF NOT EXISTS idx_external_docs_source_type ON external_docs(source_type);
 `;
 
 /**
