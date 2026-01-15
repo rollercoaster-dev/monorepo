@@ -1,0 +1,4 @@
+[test]
+# Increase timeout for tests that make embedding API calls
+# Default is 5000ms, increased to 30000ms (30 seconds)
+timeout = 30000
