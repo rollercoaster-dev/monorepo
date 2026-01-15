@@ -1,6 +1,6 @@
-# /auto-issue $ARGUMENTS
+# /auto-issue <issue-number>
 
-Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
+Execute fully autonomous issue-to-PR workflow for the specified issue.
 
 **Mode:** Autonomous - no gates, auto-fix enabled, escalation only on MAX_RETRY exceeded
 
@@ -35,13 +35,43 @@ Execute fully autonomous issue-to-PR workflow for issue #$ARGUMENTS.
 
 ## Bash Command Convention
 
-**IMPORTANT:** All bash commands must be run individually:
+**CRITICAL:** Each bash command must be a **separate Bash tool call**:
 
-- **No `&&` chaining** - Run each command separately
-- **No shell variables** - Use literal values or `<placeholder>` syntax
-- **One command per Bash tool call** - Don't combine sequential operations
+- **One command per tool call** - Never combine commands with `&&`, `;`, or `|`
+- **No shell variables** - Never use `$VAR` syntax; use literal values
+- **No env var prefixes** - Don't use `VAR=value command`; env vars are set by the system
+- **Substitute placeholders** - Replace `<placeholder>` with actual values before execution
 
-This ensures reliable execution and clear error attribution.
+### Why This Matters
+
+Each unique command string triggers a permission check. Combining commands or using variables creates unique strings that require new permission prompts:
+
+```bash
+# BAD - triggers new permission each time, interrupts flow
+bun run type-check && bun run lint
+DB_TYPE=sqlite bun test
+
+# GOOD - each command approved once, reused throughout session
+bun run type-check
+bun run lint
+bun test
+```
+
+### Command Execution Guidelines
+
+The bash examples use `<placeholder>` syntax (e.g., `<issue-number>`, `<workflow-id>`).
+**Always substitute placeholders with actual literal values**:
+
+```bash
+# Documentation shows:
+gh issue view <issue-number> --json number,title,body
+
+# You execute (with actual value):
+gh issue view 482 --json number,title,body
+```
+
+**Never execute shell variables** - If you see `$ARGUMENTS` or `$WORKFLOW_ID` anywhere,
+these are legacy reference patterns. Always use actual literal values.
 
 ---
 
@@ -124,128 +154,81 @@ See [board-operations.md](../shared/board-operations.md) for:
 
 0. **Validate input:**
 
-   ```bash
-   # Ensure $ARGUMENTS is a valid issue number
-   if ! [[ "$ARGUMENTS" =~ ^[0-9]+$ ]]; then
-     echo "[AUTO-ISSUE] ERROR: Invalid issue number: $ARGUMENTS"
-     echo "[AUTO-ISSUE] Usage: /auto-issue <issue-number>"
-     exit 1
-   fi
-   ```
+   Verify the issue number is valid before proceeding. If invalid, report error and exit.
 
 0b. **Check for existing workflow (resume detection):**
 
     ```bash
-    # Check for existing workflow
-    EXISTING=$(bun run checkpoint workflow find $ARGUMENTS)
-
-    if [ "$EXISTING" != "null" ]; then
-      WORKFLOW_ID=$(echo "$EXISTING" | jq -r '.workflow.id')
-      PHASE=$(echo "$EXISTING" | jq -r '.workflow.phase')
-      STATUS=$(echo "$EXISTING" | jq -r '.workflow.status')
-
-      if [ "$STATUS" = "running" ]; then
-        echo "[AUTO-ISSUE #$ARGUMENTS] Resuming from phase: $PHASE"
-        echo "[AUTO-ISSUE #$ARGUMENTS] Workflow ID: $WORKFLOW_ID"
-
-        # Resume based on phase
-        case "$PHASE" in
-          "implement") # Skip to Phase 2 ;;
-          "review") # Skip to Phase 3 ;;
-          "finalize") # Skip to Phase 4 ;;
-          *) # Continue from research ;;
-        esac
-      fi
-    fi
+    bun run checkpoint workflow find <issue-number>
     ```
+
+    If a running workflow exists, resume from the recorded phase:
+    - `implement` → Skip to Phase 2
+    - `review` → Skip to Phase 3
+    - `finalize` → Skip to Phase 4
+    - Otherwise → Continue from research
 
 1. **Fetch issue details:**
 
    ```bash
-   gh issue view $ARGUMENTS --json number,title,body,labels,milestone,assignees
+   gh issue view <issue-number> --json number,title,body,labels,milestone,assignees
    ```
 
 2. **Check for blockers:**
 
    ```bash
-   gh issue view $ARGUMENTS --json body | grep -iE "blocked by|depends on"
+   gh issue view <issue-number> --json body
    ```
 
+   Search the body for "blocked by" or "depends on" patterns.
    - If blockers found: **WARN but continue** (unlike /work-on-issue which stops)
    - Log: "Warning: Issue has blockers - proceeding anyway"
 
 3. **Create feature branch:**
 
    ```bash
-   git checkout -b feat/issue-$ARGUMENTS-{short-description}
+   git checkout -b feat/issue-<issue-number>-<short-description>
    ```
 
 3b. **Create workflow checkpoint (if not resuming):**
 
     ```bash
-    if [ -z "$WORKFLOW_ID" ]; then
-      BRANCH_NAME="feat/issue-$ARGUMENTS-{short-description}"
-      RESULT=$(bun run checkpoint workflow create $ARGUMENTS "$BRANCH_NAME")
-      WORKFLOW_ID=$(echo "$RESULT" | jq -r '.id')
+    bun run checkpoint workflow create <issue-number> "feat/issue-<issue-number>-<short-description>"
+    ```
 
-      bun run checkpoint workflow log-action "$WORKFLOW_ID" "workflow_started" "success" \
-        "{\"issueNumber\": $ARGUMENTS, \"branch\": \"$BRANCH_NAME\"}"
+    Then log the workflow start:
 
-      echo "[AUTO-ISSUE #$ARGUMENTS] Checkpoint created: $WORKFLOW_ID"
-    fi
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "workflow_started" "success" '{"issueNumber": <issue-number>, "branch": "feat/issue-<issue-number>-<short-description>"}'
     ```
 
 3c. **Telegram notification - AI_START template (non-blocking):**
 
-    ```typescript
-    // Notify user of workflow start
-    notifyTelegram(`🚀 [AUTO-ISSUE #$ARGUMENTS] Started
-
-Issue: #$ARGUMENTS
-Branch: ${branchName}
-Mode: Autonomous
-
-Phase transitions will not be announced.
-You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
-
-````
+    Use the `mcp__mcp-communicator-telegram__notify_user` tool to notify the user that the workflow has started.
+    Include: issue number, branch name, and that phase transitions won't be announced.
 
 4. **Spawn `issue-researcher` agent:**
    - Analyze codebase
    - Check dependencies
-   - Create dev plan at `.claude/dev-plans/issue-$ARGUMENTS.md`
-   - Pass `WORKFLOW_ID` for checkpoint integration
+   - Create dev plan at `.claude/dev-plans/issue-<issue-number>.md`
+   - Pass workflow ID for checkpoint integration
 
    **Log agent spawn:**
 
    ```bash
-   bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
-     '{"agent": "issue-researcher", "task": "analyze codebase and create dev plan"}'
+   bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "issue-researcher", "task": "analyze codebase and create dev plan"}'
    ```
 
 5. **Update board status to "In Progress":**
 
+   First, get the issue node ID:
+
    ```bash
-   # Try to add issue to project (silently fails if already present)
-   ISSUE_NODE_ID=$(gh issue view $ARGUMENTS --json id -q .id)
-   gh api graphql -f query='
-     mutation($projectId: ID!, $contentId: ID!) {
-       addProjectV2ItemById(input: {
-         projectId: $projectId
-         contentId: $contentId
-       }) { item { id } }
-     }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="$ISSUE_NODE_ID" 2>/dev/null || true
-
-   # Get item ID and update status using helper functions
-   ITEM_ID=$(get_item_id_for_issue "$ARGUMENTS")
-
-   if [ -n "$ITEM_ID" ]; then
-     update_board_status "$ITEM_ID" "3e320f16" "In Progress"
-   else
-     echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
-     echo "[AUTO-ISSUE #$ARGUMENTS] Continuing without board update..."
-   fi
+   gh issue view <issue-number> --json id -q .id
    ```
+
+   Then add to project board (use the board-manager skill or GraphQL API).
+   Update status to "In Progress" (status ID: `3e320f16`).
 
    **If board update fails:** Log warning but continue - board updates are not critical to implementation.
 
@@ -254,10 +237,11 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 6b. **Log phase transition (research → implement):**
 
     ```bash
-    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "implement"
-    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
-      '{"from": "research", "to": "implement"}'
-    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: research → implement"
+    bun run checkpoint workflow set-phase "<workflow-id>" "implement"
+    ```
+
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "phase_transition" "success" '{"from": "research", "to": "implement"}'
     ```
 
 ---
@@ -273,8 +257,7 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
    **Log agent spawn:**
 
    ```bash
-   bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
-     '{"agent": "atomic-developer", "task": "execute dev plan with atomic commits"}'
+   bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "atomic-developer", "task": "execute dev plan with atomic commits"}'
    ```
 
 8. **On completion, run validation (as separate commands):**
@@ -293,10 +276,11 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 8b. **Log phase transition (implement → review):**
 
     ```bash
-    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "review"
-    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
-      "{\"from\": \"implement\", \"to\": \"review\", \"commitCount\": $COMMIT_COUNT}"
-    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: implement → review"
+    bun run checkpoint workflow set-phase "<workflow-id>" "review"
+    ```
+
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "phase_transition" "success" '{"from": "implement", "to": "review", "commitCount": <commit-count>}'
     ```
 
 ---
@@ -314,20 +298,14 @@ You will be notified on escalation, completion, or error.`, "AUTO-ISSUE");
 - pr-review-toolkit:silent-failure-hunter
 - openbadges-compliance-reviewer (if badge code detected)
 
-````
+```
 
 **Log each agent spawn (run separately for each agent):**
 
-```bash
-bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:code-reviewer", "task": "code review", "phase": "review"}'
-```
+For each review agent, log the spawn action with the actual workflow ID:
 
 ```bash
-bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:pr-test-analyzer", "task": "code review", "phase": "review"}'
-```
-
-```bash
-bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "pr-review-toolkit:silent-failure-hunter", "task": "code review", "phase": "review"}'
+bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "<agent-name>", "task": "code review", "phase": "review"}'
 ```
 
 **Badge code detection:** Files matching:
@@ -348,47 +326,29 @@ bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success"
 
 ### 3c. Auto-Fix Loop
 
-```bash
-RETRY_COUNT=0
-FIX_COMMIT_COUNT=0
+**Loop Logic (reference pattern - do not execute as bash):**
 
-while [ $HAS_CRITICAL_FINDINGS -eq 1 ] && [ $RETRY_COUNT -lt $MAX_RETRY ]; do
-    for FINDING in $CRITICAL_FINDINGS; do
-        if [ $FIX_COMMIT_COUNT -ge $MAX_FIX_COMMITS ]; then
-            # ESCALATE "Max fix commits reached"
-            break
-        fi
+1. For each critical finding (up to MAX_RETRY=3 attempts per finding):
+   - Spawn `auto-fixer` agent with the finding details
+   - Log the attempt:
+     ```bash
+     bun run checkpoint workflow log-action "<workflow-id>" "spawned_agent" "success" '{"agent": "auto-fixer", "task": "fix critical finding", "attemptNumber": <attempt>}'
+     ```
+   - If fix successful, increment fix commit count
+   - If fix failed after MAX_RETRY, add to unresolved list
 
-        # Spawn auto-fixer agent with finding
-        # Log auto-fixer spawn
-        bun run checkpoint workflow log-action "$WORKFLOW_ID" "spawned_agent" "success" \
-          "{\"agent\": \"auto-fixer\", \"task\": \"fix critical finding\", \"attemptNumber\": $((RETRY_COUNT + 1))}"
-
-        if [ $FIX_SUCCESSFUL -eq 1 ]; then
-            FIX_COMMIT_COUNT=$((FIX_COMMIT_COUNT + 1))
-        fi
-    done
-
-    # Re-review after fixes
-    # run review agents again
-    # classify findings
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-done
-
-if [ $HAS_CRITICAL_FINDINGS -eq 1 ]; then
-    # ESCALATE_TO_HUMAN()
-else
-    # PROCEED_TO_PHASE_4()
-fi
-```
+2. After processing all findings:
+   - If unresolved findings remain → ESCALATE
+   - Otherwise → PROCEED to Phase 4
 
 10b. **Log phase transition (review → retrospective):**
 
      ```bash
-     bun run checkpoint workflow set-phase "$WORKFLOW_ID" "retrospective"
-     bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
-       "{\"from\": \"review\", \"to\": \"retrospective\", \"fixCommits\": $FIX_COMMIT_COUNT}"
-     echo "[AUTO-ISSUE #$ARGUMENTS] Phase: review → retrospective"
+     bun run checkpoint workflow set-phase "<workflow-id>" "retrospective"
+     ```
+
+     ```bash
+     bun run checkpoint workflow log-action "<workflow-id>" "phase_transition" "success" '{"from": "review", "to": "retrospective", "fixCommits": <fix-count>}'
      ```
 
 ---
@@ -402,18 +362,17 @@ After review findings are resolved, analyze the workflow execution to capture le
 10c. **Run retrospective analysis:**
 
     ```bash
-    DEV_PLAN_PATH=".claude/dev-plans/issue-$ARGUMENTS.md"
+    bun run checkpoint learning analyze "<workflow-id>" ".claude/dev-plans/issue-<issue-number>.md"
+    ```
 
-    # Analyze workflow execution vs dev plan
-    if bun run checkpoint learning analyze "$WORKFLOW_ID" "$DEV_PLAN_PATH"; then
-      bun run checkpoint workflow log-action "$WORKFLOW_ID" "retrospective_complete" "success"
-      echo "[AUTO-ISSUE #$ARGUMENTS] Retrospective complete"
-    else
-      # Non-blocking - log warning and continue
-      bun run checkpoint workflow log-action "$WORKFLOW_ID" "retrospective_failed" "failed"
-      echo "[AUTO-ISSUE #$ARGUMENTS] Warning: Retrospective failed"
-      echo "[AUTO-ISSUE #$ARGUMENTS] Continuing to finalize phase..."
-    fi
+    On success:
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "retrospective_complete" "success"
+    ```
+
+    On failure (non-blocking - continue anyway):
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "retrospective_failed" "failed"
     ```
 
 10d. **Report captured learnings (if successful):**
@@ -433,10 +392,11 @@ After review findings are resolved, analyze the workflow execution to capture le
 10e. **Log phase transition (retrospective → finalize):**
 
     ```bash
-    bun run checkpoint workflow set-phase "$WORKFLOW_ID" "finalize"
-    bun run checkpoint workflow log-action "$WORKFLOW_ID" "phase_transition" "success" \
-      '{"from": "retrospective", "to": "finalize"}'
-    echo "[AUTO-ISSUE #$ARGUMENTS] Phase: retrospective → finalize"
+    bun run checkpoint workflow set-phase "<workflow-id>" "finalize"
+    ```
+
+    ```bash
+    bun run checkpoint workflow log-action "<workflow-id>" "phase_transition" "success" '{"from": "retrospective", "to": "finalize"}'
     ```
 
 ---
@@ -465,49 +425,37 @@ After review findings are resolved, analyze the workflow execution to capture le
     - If build fails: ESCALATE
     - Otherwise: Proceed
 
-12. **Clean up dev-plan file:**
-
-    ```bash
-    rm .claude/dev-plans/issue-$ARGUMENTS.md
-    ```
-
-    ```bash
-    git add .claude/dev-plans/
-    ```
-
-    ```bash
-    git commit -m "chore: clean up dev-plan for issue #$ARGUMENTS"
-    ```
-
-13. **Push branch:**
+12. **Push branch:**
 
     ```bash
     git push -u origin HEAD
     ```
 
-14. **Create PR:**
+13. **Create PR:**
+
+    Use `gh pr create` with a conventional commit title and body. Example:
 
     ```bash
-    gh pr create --title "<type>(<scope>): <description> (#$ARGUMENTS)" --body "..."
-    PR_NUMBER=$(gh pr view --json number -q .number)
+    gh pr create --title "<type>(<scope>): <description> (#<issue-number>)" --body "..."
     ```
 
     PR body includes:
     - Summary from dev plan
     - Non-critical findings (for reviewer awareness)
     - Auto-fix log (if any fixes were applied)
-    - Footer: `Closes #$ARGUMENTS`
+    - Footer: `Closes #<issue-number>`
 
-14b. **Log workflow completion:**
+13b. **Log workflow completion:**
 
      ```bash
-     bun run checkpoint workflow set-status "$WORKFLOW_ID" "completed"
-     bun run checkpoint workflow log-action "$WORKFLOW_ID" "pr_created" "success" \
-       "{\"prNumber\": $PR_NUMBER, \"commitCount\": $TOTAL_COMMITS, \"fixCommitCount\": $FIX_COMMIT_COUNT}"
-     echo "[AUTO-ISSUE #$ARGUMENTS] Workflow completed: PR #$PR_NUMBER"
+     bun run checkpoint workflow set-status "<workflow-id>" "completed"
      ```
 
-15. **Trigger reviews (conditional):**
+     ```bash
+     bun run checkpoint workflow log-action "<workflow-id>" "pr_created" "success" '{"prNumber": <pr-number>, "commitCount": <total-commits>, "fixCommitCount": <fix-count>}'
+     ```
+
+14. **Trigger reviews (conditional):**
 
     CodeRabbit triggers automatically on PR creation. Only manually trigger reviews when:
     - The PR is large (>500 lines changed)
@@ -521,34 +469,22 @@ After review findings are resolved, analyze the workflow execution to capture le
     @claude review
     ```
 
-16. **Update board status to "Blocked" (awaiting review):**
+15. **Update board status to "Blocked" (awaiting review):**
 
-    ```bash
-    # Get item ID and update status using helper functions
-    ITEM_ID=$(get_item_id_for_issue "$ARGUMENTS")
-
-    if [ -n "$ITEM_ID" ]; then
-      update_board_status "$ITEM_ID" "51c2af7b" "Blocked (awaiting review)"
-    else
-      echo "[AUTO-ISSUE #$ARGUMENTS] WARNING: Issue not found on project board"
-      echo "[AUTO-ISSUE #$ARGUMENTS] PR created but board not updated"
-    fi
-    ```
+    Update the issue's board status to "Blocked" (status ID: `51c2af7b`).
+    Use the board-manager skill or GraphQL API.
 
     **If board update fails:** Log warning but continue - PR creation is the critical step.
 
-17. **Report completion:**
+16. **Report completion:**
 
-    ```
-    AUTO-ISSUE COMPLETE
+    Report the workflow completion with:
+    - Issue number
+    - Branch name
+    - Commit counts (implementation + fixes)
+    - PR URL
 
-    Issue: #$ARGUMENTS
-    Branch: feat/issue-$ARGUMENTS-<desc>
-    Commits: N implementation + M fixes
-    PR: https://github.com/.../pull/XXX
-
-    CodeRabbit will review automatically. Check PR for feedback.
-    ```
+    Notify via Telegram using `mcp__mcp-communicator-telegram__notify_user`.
 
 ---
 
@@ -568,8 +504,8 @@ After review findings are resolved, analyze the workflow execution to capture le
 ```markdown
 ## AUTO-ISSUE ESCALATION REQUIRED
 
-**Issue:** #$ARGUMENTS - <title>
-**Branch:** feat/issue-$ARGUMENTS-<desc>
+**Issue:** #<issue-number> - <title>
+**Branch:** feat/issue-<issue-number>-<desc>
 **Retry Count:** 3/3
 
 ### Critical Findings (Unresolved)
@@ -606,70 +542,36 @@ After review findings are resolved, analyze the workflow execution to capture le
 
 ### Telegram Escalation (Interactive) - AI_ESCALATION template
 
-When escalation is triggered, use `ask_user` to get user input via Telegram:
+When escalation is triggered, use `mcp__mcp-communicator-telegram__ask_user` to get user input.
 
-```typescript
-// Build escalation message - AI_ESCALATION template
-const escalationMessage = `🚨 AUTO-ISSUE ESCALATION
+Message format:
 
-Issue: #$ARGUMENTS - <title>
-Branch: feat/issue-$ARGUMENTS-<desc>
-Retry: ${retryCount}/${MAX_RETRY}
+- Issue number and title
+- Branch name
+- Retry count
+- List of unresolved critical findings
+- Options: continue, force-pr, abort, reset
 
-Critical Findings (Unresolved):
-${criticalFindings.map((f) => `• ${f.agent}: ${f.file} - ${f.issue}`).join("\n")}
+Handle response:
 
-Options:
-1. 'continue' - Fix manually, then continue
-2. 'force-pr' - Create PR with issues flagged
-3. 'abort' - Delete branch and exit
-4. 'reset' - Go back to last good state`;
-
-// Ask via Telegram (blocking - waits for response)
-const response = await askTelegram(escalationMessage, "AUTO-ISSUE");
-
-// Handle response
-switch (response.toLowerCase().trim()) {
-  case "continue":
-    console.log("[AUTO-ISSUE] User chose: continue after manual fix");
-    // Wait for user to make manual fixes, then re-run review
-    break;
-  case "force-pr":
-    console.log("[AUTO-ISSUE] User chose: force-pr");
-    // Proceed to Phase 4 with issues flagged
-    break;
-  case "abort":
-    console.log("[AUTO-ISSUE] User chose: abort");
-    // Delete branch and exit
-    break;
-  case "reset":
-    console.log("[AUTO-ISSUE] User chose: reset");
-    // Reset to last good commit
-    break;
-  case "TELEGRAM_UNAVAILABLE":
-    console.log(
-      "[AUTO-ISSUE] Telegram unavailable - waiting for terminal input",
-    );
-    // Fall through to terminal-based escalation
-    break;
-  default:
-    console.log(`[AUTO-ISSUE] Unknown response: ${response}`);
-    // Re-prompt
-    break;
-}
-```
+- `continue` → Wait for manual fix, then re-run review
+- `force-pr` → Proceed to Phase 4 with issues flagged
+- `abort` → Delete branch and exit
+- `reset` → Reset to last good commit
+- `TELEGRAM_UNAVAILABLE` → Fall back to terminal input
 
 ### Log Escalation to Checkpoint
 
-**IMPORTANT**: Send Telegram escalation (askTelegram) BEFORE logging to checkpoint. This ensures the user is notified even if checkpoint logging fails.
+**IMPORTANT**: Send Telegram escalation BEFORE logging to checkpoint. This ensures the user is notified even if checkpoint logging fails.
 
 When escalation is triggered, log the failure:
 
 ```bash
-bun run checkpoint workflow set-status "$WORKFLOW_ID" "failed"
-bun run checkpoint workflow log-action "$WORKFLOW_ID" "escalation" "failed" \
-  "{\"reason\": \"MAX_RETRY exceeded\", \"fixAttempts\": $FIX_COMMIT_COUNT}"
-echo "[AUTO-ISSUE #$ARGUMENTS] Workflow failed: Escalation required"
+bun run checkpoint workflow set-status "<workflow-id>" "failed"
+```
+
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "escalation" "failed" '{"reason": "MAX_RETRY exceeded", "fixAttempts": <fix-count>}'
 ```
 
 ### Escalation Flag Behaviors
@@ -705,18 +607,13 @@ If `/auto-issue` is interrupted (context compaction, timeout, manual stop), the 
 
 ### Detect Existing Workflow
 
-At workflow start (step 0b), the orchestrator checks for existing workflows:
+At workflow start (step 0b), check for existing workflows:
 
 ```bash
-EXISTING=$(bun run checkpoint workflow find $ARGUMENTS)
-
-if [ "$EXISTING" != "null" ]; then
-  STATUS=$(echo "$EXISTING" | jq -r '.workflow.status')
-  if [ "$STATUS" = "running" ]; then
-    # Workflow found - can resume
-  fi
-fi
+bun run checkpoint workflow find <issue-number>
 ```
+
+If the result is not null and status is "running", the workflow can be resumed.
 
 ### Resume Based on Phase
 
@@ -732,19 +629,10 @@ fi
 Before resuming, verify the checkpoint data:
 
 ```bash
-DATA=$(bun run checkpoint workflow find $ARGUMENTS)
-
-if [ "$DATA" != "null" ]; then
-  echo "Workflow $(echo $DATA | jq -r '.workflow.id'):"
-  echo "- Phase: $(echo $DATA | jq -r '.workflow.phase')"
-  echo "- Status: $(echo $DATA | jq -r '.workflow.status')"
-  echo "- Actions: $(echo $DATA | jq '.actions | length')"
-  echo "- Commits: $(echo $DATA | jq '.commits | length')"
-
-  # List commits made so far
-  echo "$DATA" | jq -r '.commits[] | "  \(.sha[0:7]) \(.message)"'
-fi
+bun run checkpoint workflow find <issue-number>
 ```
+
+The output includes workflow ID, phase, status, action count, and commit history.
 
 ### Manual Resume Commands
 
@@ -784,15 +672,11 @@ Checkpoint data is stored in `.claude/execution-state.db` (SQLite, gitignored).
 
 ### Issue Not Found
 
-```
-Error: Issue #$ARGUMENTS not found. Aborting.
-```
+Report error and abort if the specified issue number doesn't exist.
 
 ### Branch Already Exists
 
-```
-Warning: Branch feat/issue-$ARGUMENTS-* exists. Checking out existing branch.
-```
+If a branch for this issue already exists, check it out instead of creating a new one.
 
 ### Agent Failure
 
@@ -816,12 +700,11 @@ If git operations fail due to conflicts:
 When a workflow fails due to unrecoverable error:
 
 ```bash
-# Log the error
-bun run checkpoint workflow set-status "$WORKFLOW_ID" "failed"
-bun run checkpoint workflow log-action "$WORKFLOW_ID" "fatal_error" "failed" \
-  "{\"phase\": \"$CURRENT_PHASE\", \"error\": \"$ERROR_MESSAGE\"}"
+bun run checkpoint workflow set-status "<workflow-id>" "failed"
+```
 
-echo "[AUTO-ISSUE #$ARGUMENTS] Workflow failed: $ERROR_MESSAGE"
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "fatal_error" "failed" '{"phase": "<phase>", "error": "<error-message>"}'
 ```
 
 **When to use**: Issue not found, branch creation failure, git conflicts, all agents fail, validation failure on finalize.
