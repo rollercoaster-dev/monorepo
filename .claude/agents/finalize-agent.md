@@ -107,26 +107,6 @@ bun run build
 
 ### Step 3: Clean Up Dev Plan
 
-If dev plan exists at `.claude/dev-plans/issue-<issue_number>.md`:
-
-```bash
-rm .claude/dev-plans/issue-<issue_number>.md
-```
-
-```bash
-git add .claude/dev-plans/
-```
-
-```bash
-git commit -m "chore: clean up dev plan for issue #<issue_number>"
-```
-
-Log the cleanup commit:
-
-```bash
-git rev-parse HEAD
-```
-
 ```bash
 bun run checkpoint workflow log-commit "<workflow_id>" "<sha>" "chore: clean up dev plan for issue #<issue_number>"
 ```
@@ -285,7 +265,6 @@ Status: Awaiting review
 | PR creation fails              | Return error (critical)   |
 | Board update fails             | Warn, continue            |
 | Notification fails             | Warn, continue            |
-| Dev plan not found             | Skip cleanup, continue    |
 
 ## Example
 
