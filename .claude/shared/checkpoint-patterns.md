@@ -1,5 +1,7 @@
 # Checkpoint Patterns
 
+> **Architecture:** Used by agents for self-checkpointing. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared patterns for workflow state persistence using `claude-knowledge` checkpoint API.
 
 ## Overview

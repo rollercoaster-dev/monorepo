@@ -1,5 +1,7 @@
 # Board Operations
 
+> **Architecture:** Used by setup-agent and finalize-agent for board updates. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared GitHub Project board operations for workflow commands and skills.
 
 ## Project Board Configuration
