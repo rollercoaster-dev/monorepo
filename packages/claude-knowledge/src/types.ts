@@ -146,6 +146,14 @@ export interface DocSection {
   level: number; // Heading level (1-6)
   parentId?: string; // Parent section ID for hierarchy
   anchor?: string; // URL anchor for deep linking
+  /** Document origin: "local" for project docs, "external" for fetched specs */
+  source?: "local" | "external";
+  /** Original URL for external docs (only populated when source="external") */
+  sourceUrl?: string;
+  /** Type identifier for external docs (e.g., "ob3", "ob2", "vc") */
+  sourceType?: string;
+  /** Spec version for external docs (e.g., "3.0", "2.0") */
+  specVersion?: string;
 }
 
 /**
@@ -173,6 +181,10 @@ export interface DocSearchResult {
   location: string;
   /** Entity type for type discrimination */
   entityType: "DocSection" | "CodeDoc";
+  /** Document source for attribution (from DocSection.source) */
+  source?: "local" | "external";
+  /** Source type for external docs (e.g., "ob3", "ob2") */
+  sourceType?: string;
 }
 
 /**
