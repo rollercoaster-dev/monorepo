@@ -757,14 +757,14 @@ Remove from workflows:
 
 ### Don't: CLI Commands in Workflows
 
-````markdown
+```markdown
 # BAD - workflow has CLI commands
 
 3b. Create workflow checkpoint:
 `bash
     bun run checkpoint workflow create 485 "feat/issue-485"
     `
-````
+```
 
 ```markdown
 # GOOD - workflow spawns agent
