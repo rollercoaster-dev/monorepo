@@ -104,13 +104,17 @@ Each finding gets its own fix attempt:
 
 ### 4. Validate Before Commit
 
-Every fix must pass validation before committing:
+Every fix must pass validation before committing. Run each command separately:
 
 ```bash
-bun run type-check && bun run lint
+bun run type-check
 ```
 
-If validation fails, rollback and report failure.
+```bash
+bun run lint
+```
+
+If either fails, rollback and report failure.
 
 ## Workflow
 
@@ -136,17 +140,11 @@ If validation fails, rollback and report failure.
 
 0. **Log fix attempt to checkpoint:**
 
-   ```typescript
-   import { checkpoint } from "claude-knowledge";
-
-   checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "pending", {
-     findingAgent: finding.agent,
-     file: finding.file,
-     line: finding.line,
-     description: finding.description,
-     attemptNumber: context.attemptNumber,
-   });
+   ```bash
+   bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "pending" '{"findingAgent": "<agent>", "file": "<file>", "line": <line>, "description": "<desc>", "attemptNumber": <n>}'
    ```
+
+   Replace placeholders with actual literal values.
 
 1. **Make the edit:**
    - Use Edit tool for surgical changes
@@ -165,42 +163,52 @@ If validation fails, rollback and report failure.
 
 ### Step 3: Validate
 
-1. **Run validation and capture output:**
+Run validation commands **separately** (one command per Bash tool call):
 
-   ```bash
-   validationError=$(bun run type-check 2>&1) && \
-   validationError=$(bun run lint 2>&1)
-   validationPassed=$?
-   ```
+```bash
+bun run type-check
+```
 
-2. **Check result:**
-   - If `validationPassed` is 0: Proceed to commit
-   - If non-zero: Rollback and report failure (use `validationError` for details)
+```bash
+bun run lint
+```
+
+- If both pass (exit code 0): Proceed to commit
+- If either fails: Rollback and report failure
+
+**IMPORTANT:** Do not combine with `&&` or capture output into shell variables.
 
 ### Step 4: Commit or Rollback
 
 **On Success:**
 
+Stage and commit (separate commands):
+
 ```bash
 git add <file>
+```
+
+```bash
 git commit -m "fix(<scope>): address review - <description>"
-COMMIT_SHA=$(git rev-parse HEAD)
 ```
 
-Log success to checkpoint:
+Get the commit SHA (separate command):
 
-```typescript
-checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "success", {
-  file: finding.file,
-  commitSha: COMMIT_SHA,
-});
-
-checkpoint.logCommit(
-  WORKFLOW_ID,
-  COMMIT_SHA,
-  `fix(<scope>): address review - <description>`,
-);
+```bash
+git rev-parse HEAD
 ```
+
+Log success to checkpoint using the literal SHA from above:
+
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "success" '{"file": "<file>", "commitSha": "<sha-from-above>"}'
+```
+
+```bash
+bun run checkpoint workflow log-commit "<workflow-id>" "<sha-from-above>" "fix(<scope>): address review - <description>"
+```
+
+**IMPORTANT:** Never use `$COMMIT_SHA` or combine commands with `&&`. Each is a separate Bash tool call with literal values.
 
 Commit message format:
 
@@ -210,20 +218,16 @@ Commit message format:
 
 **On Failure:**
 
+Rollback the change:
+
 ```bash
 git checkout -- <file>
 ```
 
-Log failure and increment retry count:
+Log failure to checkpoint:
 
-```typescript
-const newRetryCount = checkpoint.incrementRetry(WORKFLOW_ID);
-checkpoint.logAction(WORKFLOW_ID, "auto_fix_attempt", "failed", {
-  file: finding.file,
-  reason: "validation_failed",
-  errorOutput: validationError,
-  retryCount: newRetryCount,
-});
+```bash
+bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "failed" '{"file": "<file>", "reason": "validation_failed", "attemptNumber": <n>}'
 ```
 
 Report the failure with details.
