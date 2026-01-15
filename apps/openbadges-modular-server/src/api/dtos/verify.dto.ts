@@ -177,7 +177,49 @@ export type VerifyCredentialRequestDto = z.infer<
 >;
 
 /**
+ * Schema for verify baked image request body
+ * Accepts base64-encoded image data with optional verification options
+ */
+export const VerifyBakedImageRequestSchema = z.object({
+  /**
+   * Base64-encoded image data (PNG or SVG)
+   * Can include data URI prefix (e.g., "data:image/png;base64,...")
+   * or be raw base64 string
+   */
+  image: z
+    .string()
+    .min(100, "Image data too small - minimum 100 characters")
+    .max(10 * 1024 * 1024, "Image data too large - maximum 10MB")
+    .refine(
+      (val) => {
+        // Strip data URI prefix if present
+        const base64Data = val.includes(",") ? val.split(",")[1] : val;
+        // Validate base64 format
+        return /^[A-Za-z0-9+/]*={0,2}$/.test(base64Data || "");
+      },
+      { message: "Invalid base64 encoding" },
+    ),
+
+  /**
+   * Optional verification options to customize the verification process
+   */
+  options: VerificationOptionsSchema.optional(),
+});
+
+/**
+ * Type definitions for baked image verification
+ */
+export type VerifyBakedImageRequestDto = z.infer<
+  typeof VerifyBakedImageRequestSchema
+>;
+
+/**
  * Response type for verification result
  * Re-exports the VerificationResult type from the verification service
  */
 export type { VerificationResult } from "../../services/verification/types.js";
+
+/**
+ * Re-export UnbakeResult from baking service for API responses
+ */
+export type { UnbakeResult } from "../../services/baking/types.js";
