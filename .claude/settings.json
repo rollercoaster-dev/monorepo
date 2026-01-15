@@ -60,8 +60,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '💡 Consider using /graph-query for code relationships or /docs-search for documentation before raw text search.'",
-            "description": "Nudge to use knowledge graph before grep/glob"
+            "command": "echo '⚠️  STOP: Try graph first!\n   bun run g:calls <fn>   → Who calls this?\n   bun run g:deps <type>  → Who uses this?\n   bun run g:blast <file> → Impact of change?\n   bun run d:search \"...\" → Find docs\n   Grep is LAST RESORT.'",
+            "description": "Nudge to use graph/docs before grep/glob"
           }
         ]
       }
