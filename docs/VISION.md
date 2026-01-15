@@ -151,7 +151,7 @@ Features should work for individuals, not just organizations.
 - **Centralized Platform**: We're not hosting everyone's badges
 - **AI Badge Generation**: We're not auto-generating credentials
 
-We're building infrastructure and tools. Users own their data and run their own systems if they want.
+We're building infrastructure and tools. Users own their data and can run their own systems if they choose.
 
 ---
 

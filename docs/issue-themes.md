@@ -54,7 +54,7 @@ Analysis of 70 issues in the "Next" column to identify priorities and clusters.
 
 ### Key Insight
 
-OB3 work touches all three main packages (server, UI, system). Should be done in order:
+OB3 work touches all three main packages (server, UI, system). It should be done in order:
 
 1. Types (already done in openbadges-types)
 2. Server (#147-152)
@@ -181,7 +181,7 @@ UI work should wait until OB3 UI fixes (#153-158) are done. New components shoul
 
 ### Key Insight
 
-Follows the existing multi-database pattern. Can be done after OB3 migration settles.
+This follows the existing multi-database pattern. It can be done after OB3 migration settles.
 
 ---
 
@@ -226,7 +226,7 @@ These are larger features that depend on OB3 migration and auth being stable. Lo
 
 ## Dependency Graph
 
-```
+```text
 openbadges-types (DONE - OB3 types exist)
          │
          ├──► OB3 Server (#147-152)
