@@ -1,5 +1,7 @@
 # Validation Commands
 
+> **Architecture:** Used by agents for pre-commit validation. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared validation patterns for workflow commands and agents.
 
 ## Quick Reference
@@ -164,9 +166,9 @@ bun run build 2>&1 | tail -100
 
 ### Agents
 
-| Agent            | Validation Level    |
-| ---------------- | ------------------- |
-| atomic-developer | Basic (each commit) |
-| auto-fixer       | Basic (after fix)   |
-| pr-creator       | Full (pre-PR)       |
-| review-handler   | Full (after fixes)  |
+| Agent               | Validation Level    |
+| ------------------- | ------------------- |
+| atomic-developer    | Basic (each commit) |
+| auto-fixer          | Basic (after fix)   |
+| finalize-agent      | Full (pre-PR)       |
+| review-orchestrator | Full (after fixes)  |

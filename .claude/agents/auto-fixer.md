@@ -7,6 +7,42 @@ model: sonnet
 
 # Auto-Fixer Agent
 
+## Contract
+
+### Input
+
+| Field             | Type   | Required | Description                          |
+| ----------------- | ------ | -------- | ------------------------------------ |
+| `finding`         | object | Yes      | The finding to fix                   |
+| `finding.agent`   | string | Yes      | Which agent found this               |
+| `finding.file`    | string | Yes      | File path                            |
+| `finding.line`    | number | Yes      | Line number                          |
+| `finding.message` | string | Yes      | Finding description                  |
+| `workflow_id`     | string | No       | Checkpoint workflow ID (for logging) |
+| `attempt_number`  | number | No       | Which attempt this is (1-3)          |
+
+### Output
+
+| Field                   | Type    | Description                 |
+| ----------------------- | ------- | --------------------------- |
+| `fixed`                 | boolean | Whether fix was successful  |
+| `commit_sha`            | string  | Commit SHA if fixed         |
+| `error`                 | string  | Error message if failed     |
+| `validation.type_check` | boolean | Type-check passed after fix |
+| `validation.lint`       | boolean | Lint passed after fix       |
+
+### Side Effects
+
+- Modifies file to apply fix
+- Creates git commit if fix succeeds
+- Logs fix attempt to checkpoint (if workflow_id provided)
+
+### Checkpoint Actions Logged
+
+- `fix_attempted`: { file, line, attempt, result, commitSha? }
+
+---
+
 ## Shared Patterns
 
 This agent uses patterns from [shared/](../shared/):
