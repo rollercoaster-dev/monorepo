@@ -282,13 +282,18 @@ export function convertHtmlToMarkdown(html: string): string {
   // Convert line breaks
   markdown = markdown.replace(/<br\s*\/?>/gi, "\n");
 
-  // STEP 4: Remove ALL remaining HTML tags
-  markdown = markdown.replace(/<[^>]+>/g, "");
+  // STEP 4: Remove ALL remaining HTML tags and sanitize angle brackets
+  // First pass: remove complete tags like <div>, <span class="foo">, etc.
+  // Second pass: replace any remaining angle brackets with safe alternatives
+  // This handles malformed tags where < has no matching > (e.g., "<script" without ">")
+  let previousMarkdown = "";
+  while (previousMarkdown !== markdown) {
+    previousMarkdown = markdown;
+    markdown = markdown.replace(/<[^>]+>/g, "");
+  }
 
-  // STEP 5: Final safety check - remove any angle brackets that might have
-  // survived through edge cases. Since this is markdown for text search,
-  // we don't need to preserve any remaining HTML-like content.
-  // Replace < and > with safe alternatives to prevent any injection
+  // Final safety: Replace ANY remaining angle brackets with safe alternatives
+  // This is defense-in-depth for edge cases the regex couldn't catch
   markdown = markdown.replace(/</g, "[");
   markdown = markdown.replace(/>/g, "]");
 
