@@ -2,6 +2,7 @@ import { knowledge } from "../knowledge/index";
 import type { Learning, Pattern, Mistake } from "../types";
 import { parseIntSafe } from "./shared/validation";
 import { randomUUID } from "crypto";
+import { getDatabase } from "../db/sqlite";
 
 /**
  * Handle knowledge commands.
@@ -364,6 +365,106 @@ export async function handleKnowledgeCommands(
           }
         }
         console.log("");
+      }
+    }
+  } else if (command === "list-areas") {
+    // knowledge list-areas
+    const db = getDatabase();
+
+    // Query for all CodeArea entities with counts of related learnings and patterns
+    const sql = `
+      SELECT
+        e.id,
+        json_extract(e.data, '$.name') as name,
+        COUNT(DISTINCT CASE WHEN r1.from_id LIKE 'learning-%' THEN r1.from_id END) as learnings,
+        COUNT(DISTINCT CASE WHEN r2.from_id LIKE 'pattern-%' THEN r2.from_id END) as patterns
+      FROM entities e
+      LEFT JOIN relationships r1 ON r1.to_id = e.id AND r1.type = 'ABOUT'
+      LEFT JOIN relationships r2 ON r2.to_id = e.id AND r2.type = 'APPLIES_TO'
+      WHERE e.type = 'CodeArea'
+      GROUP BY e.id, name
+      ORDER BY learnings DESC, patterns DESC
+    `;
+
+    interface AreaRow {
+      id: string;
+      name: string;
+      learnings: number;
+      patterns: number;
+    }
+
+    const areas = db.query<AreaRow, []>(sql).all();
+
+    if (areas.length === 0) {
+      console.log("No code areas found.");
+    } else {
+      console.log(`Found ${areas.length} code area(s):\n`);
+
+      // Find max widths for table formatting
+      const maxNameWidth = Math.max(
+        "Code Area".length,
+        ...areas.map((a) => a.name.length),
+      );
+
+      // Print header
+      console.log(`${"Code Area".padEnd(maxNameWidth)} | Learnings | Patterns`);
+      console.log(`${"-".repeat(maxNameWidth)}-+-----------+----------`);
+
+      // Print rows
+      for (const area of areas) {
+        console.log(
+          `${area.name.padEnd(maxNameWidth)} | ${String(area.learnings).padStart(9)} | ${String(area.patterns).padStart(8)}`,
+        );
+      }
+    }
+  } else if (command === "list-files") {
+    // knowledge list-files
+    const db = getDatabase();
+
+    // Query for all File entities with counts of related learnings and mistakes
+    const sql = `
+      SELECT
+        e.id,
+        json_extract(e.data, '$.path') as path,
+        COUNT(DISTINCT CASE WHEN r1.from_id LIKE 'learning-%' THEN r1.from_id END) as learnings,
+        COUNT(DISTINCT CASE WHEN r2.from_id LIKE 'mistake-%' THEN r2.from_id END) as mistakes
+      FROM entities e
+      LEFT JOIN relationships r1 ON r1.to_id = e.id AND r1.type = 'IN_FILE'
+      LEFT JOIN relationships r2 ON r2.to_id = e.id AND r2.type = 'IN_FILE'
+      WHERE e.type = 'File'
+      GROUP BY e.id, path
+      ORDER BY learnings DESC, mistakes DESC
+    `;
+
+    interface FileRow {
+      id: string;
+      path: string;
+      learnings: number;
+      mistakes: number;
+    }
+
+    const files = db.query<FileRow, []>(sql).all();
+
+    if (files.length === 0) {
+      console.log("No files found.");
+    } else {
+      console.log(`Found ${files.length} file(s):\n`);
+
+      // Find max widths for table formatting
+      const maxPathWidth = Math.max(
+        "File Path".length,
+        ...files.map((f) => f.path.length),
+      );
+
+      // Print header
+      console.log(`${"File Path".padEnd(maxPathWidth)} | Learnings | Mistakes`);
+      console.log(`${"-".repeat(maxPathWidth)}-+-----------+----------`);
+
+      // Print rows
+      for (const file of files) {
+        console.log(
+          `${file.path.padEnd(maxPathWidth)} | ${String(file.learnings).padStart(9)} | ${String(file.mistakes).padStart(8)}`,
+        );
       }
     }
   } else {
