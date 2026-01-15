@@ -280,7 +280,7 @@ For each step in the development plan:
 5. **Format changed files:**
 
    ```bash
-   bunx prettier --write <changed-files>
+   bun run format
    ```
 
    Verify formatting passes:

@@ -91,7 +91,7 @@
       "Bash(bun dev:*)",
       "Bash(bun run:*)",
       "Bash(bun scripts/checkpoint-cli.ts:*)",
-      "Bash(bun packages/claude-knowledge/src/cli.ts:*)",
+      "Bash(bun packages/claude-knowledge/src/cli/index.ts:*)",
       "Bash(bun packages/claude-workflows/src/cli.ts:*)",
       "Bash(./scripts/worktree-manager.sh:*)",
       "Bash(git checkout:*)",
