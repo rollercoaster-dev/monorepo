@@ -22,6 +22,7 @@ import {
   SPEC_DEFINITIONS,
 } from "../docs/external";
 import type { DocSection, CodeDoc } from "../types";
+import { recordDocsSearch } from "../session";
 
 /**
  * Handle docs CLI commands.
@@ -254,6 +255,13 @@ async function handleSearchCommand(args: string[]): Promise<void> {
   console.log(`Searching documentation for: "${query}"\n`);
 
   const results = await searchDocs(query, { limit: 5 });
+
+  // Record search to session state (for PreToolUse hook to verify docs-first pattern)
+  try {
+    recordDocsSearch(query, results.length);
+  } catch {
+    // Non-critical, don't fail the search
+  }
 
   if (results.length === 0) {
     // eslint-disable-next-line no-console

@@ -8,6 +8,23 @@ allowed-tools: Bash
 
 Index and semantically search project documentation using embeddings and vector similarity.
 
+## Quick Reference (Copy-Paste)
+
+```bash
+# Shortcut (preferred)
+bun run d:search "how to create a badge"
+bun run d:search "workflow patterns"
+bun run d:search "authentication"
+
+# Long form (equivalent)
+bun run checkpoint docs search "<query>"
+bun run checkpoint docs for-code <entity-name>
+```
+
+**Use docs search instead of grepping markdown files. Semantic > literal.**
+
+---
+
 ## When to Use
 
 - Finding documentation relevant to a feature or code area

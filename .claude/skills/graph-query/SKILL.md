@@ -8,6 +8,28 @@ allowed-tools: Bash
 
 Query the code graph built from ts-morph static analysis to understand codebase structure and relationships.
 
+## Quick Reference (Copy-Paste)
+
+```bash
+# Shortcuts (preferred)
+bun run g:calls <function>    # Who calls this?
+bun run g:deps <type>         # Who uses this type?
+bun run g:blast <file>        # Impact of change?
+bun run g:find <name>         # Where is this?
+bun run g:summary             # Stats for codebase
+
+# Long form (equivalent)
+bun run checkpoint graph what-calls <function>
+bun run checkpoint graph what-depends-on <type>
+bun run checkpoint graph blast-radius <file>
+bun run checkpoint graph find <name>
+bun run checkpoint graph exports <package>
+```
+
+**Use graph instead of Grep chains. 1 query = 10 greps worth of info.**
+
+---
+
 ## When to Use
 
 - Finding what calls a specific function

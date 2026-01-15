@@ -43,25 +43,30 @@ model: sonnet
 
 This agent uses patterns from [shared/](../shared/):
 
+- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[dependency-checking.md](../shared/dependency-checking.md)** - Blocker detection and handling
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
 
-## Code Graph (Recommended)
+## Tool Selection (MANDATORY)
 
-Use the `graph-query` skill to understand codebase structure efficiently.
+**ALWAYS use graph/docs BEFORE Grep.** See [tool-selection.md](../shared/tool-selection.md).
 
-**When to use graph queries:**
+```
+┌─────────────────────────────────────────────────────────┐
+│  STOP: Before using Grep, try these first:             │
+│                                                         │
+│  graph what-calls <fn>      → Find all callers         │
+│  graph what-depends-on <t>  → Find all usages          │
+│  graph blast-radius <file>  → Impact analysis          │
+│  graph find <name>          → Locate entity            │
+│  docs search "<query>"      → Find documentation       │
+│                                                         │
+│  Grep is LAST RESORT for literal text search only.     │
+└─────────────────────────────────────────────────────────┘
+```
 
-- Understanding call hierarchies before modifying functions
-- Finding all usages of a type/class/interface
-- Assessing impact of file changes
-- Exploring unfamiliar packages
-- Estimating scope with codebase statistics
-
-**Important**: Before running queries, ensure the graph is populated for relevant packages. Use the graph summary command to check readiness and parse commands to populate the graph as needed.
-
-See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
+**Why:** 1 graph query = 1 tool call. Grep chains = 5-15 tool calls. Graph is 10x more efficient.
 
 ## Purpose
 

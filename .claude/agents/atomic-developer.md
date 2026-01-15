@@ -48,23 +48,27 @@ model: sonnet
 
 This agent uses patterns from [shared/](../shared/):
 
+- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
 - **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint commands
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
 - **[board-operations.md](../shared/board-operations.md)** - Board status updates
 
-## Code Graph (Recommended)
+## Tool Selection (MANDATORY)
 
-Use the `graph-query` skill to understand dependencies before implementing changes.
+**ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../shared/tool-selection.md).
 
-**When to use graph queries:**
-
-- Before modifying a function, check what calls it
-- Before changing types, find all usages
-- Before refactoring, understand the blast radius
-- When unsure if a change affects other files
-
-See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
+```
+┌─────────────────────────────────────────────────────────┐
+│  Before modifying code, check impact with graph:        │
+│                                                         │
+│  graph what-calls <fn>      → Who calls this?          │
+│  graph what-depends-on <t>  → Who uses this type?      │
+│  graph blast-radius <file>  → What breaks if I change? │
+│                                                         │
+│  1 query vs 10 greps. Use the graph.                   │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Purpose
 

@@ -57,16 +57,26 @@ Before modifying files, consider:
 
 Safe operations (always allowed): reading files, searching, running tests, analyzing code.
 
-## Search Priority
+## Search Priority (MANDATORY)
 
-When exploring the codebase, use these tools in order:
+**ALWAYS try graph/docs BEFORE Grep.** 1 graph query = 10 greps worth of context.
 
-1. **`/graph-query`** - Code relationships (callers, dependencies, blast radius)
-2. **`/docs-search`** - Project documentation and patterns
-3. **`/knowledge-query`** - Past learnings, mistakes, patterns
-4. **Grep/Glob** - Last resort for raw text search
+| Question          | Shortcut                 | Long Form                          |
+| ----------------- | ------------------------ | ---------------------------------- |
+| Who calls X?      | `bun run g:calls <fn>`   | `checkpoint graph what-calls`      |
+| Who uses type X?  | `bun run g:deps <type>`  | `checkpoint graph what-depends-on` |
+| Impact of change? | `bun run g:blast <file>` | `checkpoint graph blast-radius`    |
+| Where is X?       | `bun run g:find <name>`  | `checkpoint graph find`            |
+| How does X work?  | `bun run d:search "<q>"` | `checkpoint docs search`           |
 
-The code graph and documentation index are refreshed on session start. Using them first provides better context than raw text search.
+**Priority order:**
+
+1. **Graph queries** - Code relationships (callers, dependencies, blast radius)
+2. **Docs search** - Project documentation and patterns
+3. **Knowledge query** - Past learnings, mistakes, patterns
+4. **Grep/Glob** - LAST RESORT for literal text search only
+
+The code graph is populated on session start. Using it first saves 10x tool calls.
 
 ## Workflows
 
