@@ -34,6 +34,18 @@ interface HookOutput {
 }
 
 /**
+ * Create a hook output response.
+ */
+function createOutput(decision: "allow" | "deny", reason?: string): HookOutput {
+  return {
+    hookSpecificOutput: {
+      permissionDecision: decision,
+      ...(reason && { permissionDecisionReason: reason }),
+    },
+  };
+}
+
+/**
  * Check if this Grep/Glob call should be blocked.
  *
  * Blocking criteria:
@@ -76,16 +88,16 @@ function shouldBlock(
   ];
 
   if (pattern) {
-    for (const cfg of configPatterns) {
-      // Simple glob matching for common patterns
+    const isConfigPattern = configPatterns.some((cfg) => {
+      // IMPORTANT: Escape dots FIRST, then replace asterisks with .*
+      // Wrong order would escape the dot in .* causing broken regex
       const regex = new RegExp(
-        "^" + cfg.replace(/\*/g, ".*").replace(/\./g, "\\.") + "$",
+        "^" + cfg.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$",
         "i",
       );
-      if (regex.test(pattern)) {
-        return false;
-      }
-    }
+      return regex.test(pattern);
+    });
+    if (isConfigPattern) return false;
   }
 
   // Block by default if no graph/docs queries made
@@ -133,74 +145,48 @@ ${getUsageSummary()}
 `.trim();
 }
 
-async function main() {
-  // Read hook input from stdin
+/**
+ * Output result and exit.
+ */
+function output(result: HookOutput): void {
+  console.log(JSON.stringify(result));
+}
+
+async function main(): Promise<void> {
   const input = await Bun.stdin.text();
 
   let hookInput: HookInput;
   try {
     hookInput = JSON.parse(input) as HookInput;
   } catch {
-    // Invalid input, allow by default (fail open)
-    console.log(
-      JSON.stringify({
-        hookSpecificOutput: {
-          permissionDecision: "allow",
-          permissionDecisionReason: "Could not parse hook input",
-        },
-      }),
-    );
+    output(createOutput("allow", "Could not parse hook input"));
     return;
   }
 
   const { tool_name, tool_input } = hookInput;
 
-  // Check if this call should be blocked
   if (shouldBlock(tool_name, tool_input)) {
-    // Record the block for metrics
     try {
       recordGrepBlocked();
     } catch {
-      // Non-critical
+      // Non-critical - metrics only
     }
-
-    const output: HookOutput = {
-      hookSpecificOutput: {
-        permissionDecision: "deny",
-        permissionDecisionReason: generateDenyMessage(tool_name, tool_input),
-      },
-    };
-
-    console.log(JSON.stringify(output));
+    output(createOutput("deny", generateDenyMessage(tool_name, tool_input)));
     return;
   }
 
-  // Allow the call
   try {
     recordGrepAllowed();
   } catch {
-    // Non-critical
+    // Non-critical - metrics only
   }
-
-  const output: HookOutput = {
-    hookSpecificOutput: {
-      permissionDecision: "allow",
-    },
-  };
-
-  console.log(JSON.stringify(output));
+  output(createOutput("allow"));
 }
 
 main().catch((error) => {
-  // On any error, fail open (allow the call)
   console.error("PreToolUse hook error:", error);
   console.log(
-    JSON.stringify({
-      hookSpecificOutput: {
-        permissionDecision: "allow",
-        permissionDecisionReason: "Hook error, allowing by default",
-      },
-    }),
+    JSON.stringify(createOutput("allow", "Hook error, allowing by default")),
   );
   process.exit(0);
 });

@@ -18,7 +18,7 @@ import {
   writeFileSync,
   unlinkSync,
 } from "fs";
-import { join, dirname } from "path";
+import { join } from "path";
 import { tmpdir } from "os";
 
 /** Represents the state of tool usage for a single session */
@@ -61,12 +61,16 @@ function getStateFilePath(): string | null {
   const sessionId = process.env.CLAUDE_SESSION_ID;
   if (!sessionId) return null;
 
+  // Sanitize session ID to prevent path traversal attacks
+  // Only allow alphanumeric, underscore, and hyphen characters
+  const sanitizedId = sessionId.replace(/[^a-zA-Z0-9_-]/g, "_");
+
   // Ensure state directory exists
   if (!existsSync(STATE_DIR)) {
     mkdirSync(STATE_DIR, { recursive: true });
   }
 
-  return join(STATE_DIR, `${sessionId}.json`);
+  return join(STATE_DIR, `${sanitizedId}.json`);
 }
 
 /**
@@ -96,12 +100,7 @@ export function saveState(state: SessionState): void {
   const statePath = getStateFilePath();
   if (!statePath) return;
 
-  // Ensure directory exists
-  const dir = dirname(statePath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-
+  // Directory is created by getStateFilePath()
   writeFileSync(statePath, JSON.stringify(state, null, 2));
 }
 
@@ -201,9 +200,7 @@ export function hasDocsBeenSearched(): boolean {
  * Check if any knowledge tools have been used in this session.
  */
 export function hasKnowledgeToolsBeenUsed(): boolean {
-  const state = loadState();
-  if (!state) return false;
-  return state.graphQueries.length > 0 || state.docsSearches.length > 0;
+  return hasGraphBeenQueried() || hasDocsBeenSearched();
 }
 
 /**
@@ -288,28 +285,22 @@ export async function handleStateCommands(
       break;
     }
 
-    case "has-graph": {
-      const hasGraph = hasGraphBeenQueried();
-      // eslint-disable-next-line no-console
-      console.log(hasGraph ? "true" : "false");
-      // Exit with code 0 if true, 1 if false (useful for shell conditionals)
-      process.exit(hasGraph ? 0 : 1);
-      break; // unreachable but satisfies linter
-    }
-
-    case "has-docs": {
-      const hasDocs = hasDocsBeenSearched();
-      // eslint-disable-next-line no-console
-      console.log(hasDocs ? "true" : "false");
-      process.exit(hasDocs ? 0 : 1);
-      break; // unreachable but satisfies linter
-    }
-
+    case "has-graph":
+    case "has-docs":
     case "has-knowledge": {
-      const hasKnowledge = hasKnowledgeToolsBeenUsed();
+      let checkFn: () => boolean;
+      if (command === "has-graph") {
+        checkFn = hasGraphBeenQueried;
+      } else if (command === "has-docs") {
+        checkFn = hasDocsBeenSearched;
+      } else {
+        checkFn = hasKnowledgeToolsBeenUsed;
+      }
+      const result = checkFn();
       // eslint-disable-next-line no-console
-      console.log(hasKnowledge ? "true" : "false");
-      process.exit(hasKnowledge ? 0 : 1);
+      console.log(result ? "true" : "false");
+      // Exit with code 0 if true, 1 if false (useful for shell conditionals)
+      process.exit(result ? 0 : 1);
       break; // unreachable but satisfies linter
     }
 
