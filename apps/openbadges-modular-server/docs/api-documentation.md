@@ -197,6 +197,64 @@ The following endpoints use the Open Badges 3.0 compliant naming convention, whe
 - `POST /v3/credentials/:id/revoke` - Revoke a credential
 - `GET /v3/credentials/:id/verify` - Verify a credential
 - `POST /v3/credentials/:id/sign` - Sign a credential
+- `POST /v3/credentials/:id/bake` - Bake credential into image
+
+##### POST /v3/credentials/:id/bake
+
+Embeds credential data into a PNG or SVG image using metadata standards. The credential URL is embedded in the image file, allowing the badge to be shared as a portable image while maintaining verifiability.
+
+**Authentication**: Required (API key or Bearer token)
+
+**URL Parameters**:
+- `id` - Credential ID (UUID or IRI)
+
+**Request Body**:
+
+```json
+{
+  "format": "png",
+  "image": "base64-encoded-image-data"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `format` | string | Yes | Image format: `"png"` or `"svg"` |
+| `image` | string | Yes | Base64-encoded source image data |
+
+**Response Format** (200 OK):
+
+```json
+{
+  "bakedImage": "base64-encoded-baked-image-data"
+}
+```
+
+**Error Responses**:
+- `400 Bad Request` - Invalid format or malformed base64 image data
+- `401 Unauthorized` - Missing or invalid authentication
+- `404 Not Found` - Credential ID does not exist
+
+**Baking Process**:
+- **PNG**: Credential URL embedded in iTXt chunk with keyword "openbadges"
+- **SVG**: Credential URL embedded in `<metadata>` element with `openbadges` attribute
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/credentials/abc123/bake \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "png",
+    "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  }'
+```
+
+**Use Cases**:
+- Social media sharing of verifiable badges
+- Email signatures with embedded credentials
+- Portfolio display with verification capability
 
 #### Legacy Endpoints (Deprecated)
 
