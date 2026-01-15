@@ -265,6 +265,107 @@ export async function handleKnowledgeCommands(
         console.log("");
       }
     }
+  } else if (command === "search") {
+    // knowledge search <query-text> [--limit <n>] [--threshold <n>] [--include-related]
+    if (args.length === 0) {
+      throw new Error(
+        "Usage: knowledge search <query-text> [--limit <n>] [--threshold <n>] [--include-related]",
+      );
+    }
+
+    let queryText = "";
+    let limit: number | undefined;
+    let threshold: number | undefined;
+    let includeRelated = false;
+
+    // Parse arguments
+    let i = 0;
+    while (i < args.length) {
+      const arg = args[i];
+      const nextArg = args[i + 1];
+
+      if (arg === "--limit" && nextArg) {
+        limit = parseIntSafe(nextArg, "limit");
+        i += 2;
+      } else if (arg === "--threshold" && nextArg) {
+        const thresholdValue = parseIntSafe(nextArg, "threshold");
+        if (thresholdValue < 0 || thresholdValue > 100) {
+          throw new Error("Threshold must be between 0 and 100");
+        }
+        threshold = thresholdValue / 100; // Convert to 0.0-1.0
+        i += 2;
+      } else if (arg === "--include-related") {
+        includeRelated = true;
+        i++;
+      } else {
+        // Accumulate query text from positional args
+        queryText += (queryText ? " " : "") + arg;
+        i++;
+      }
+    }
+
+    if (!queryText) {
+      throw new Error("Query text is required");
+    }
+
+    // Search for similar learnings
+    const results = await knowledge.searchSimilar(queryText, {
+      limit,
+      threshold,
+      includeRelated,
+    });
+
+    if (results.length === 0) {
+      console.log(
+        "No similar learnings found. Try lowering the --threshold value.",
+      );
+    } else {
+      console.log(`Found ${results.length} similar learning(s):\n`);
+
+      for (const result of results) {
+        console.log("---");
+        // Show relevance score if available
+        if (result.relevanceScore !== undefined) {
+          console.log(
+            `Relevance: ${(result.relevanceScore * 100).toFixed(0)}%`,
+          );
+        }
+        console.log(`ID: ${result.learning.id}`);
+        console.log(`Content: ${result.learning.content}`);
+        if (result.learning.sourceIssue) {
+          console.log(`Source Issue: #${result.learning.sourceIssue}`);
+        }
+        if (result.learning.codeArea) {
+          console.log(`Code Area: ${result.learning.codeArea}`);
+        }
+        if (result.learning.filePath) {
+          console.log(`File: ${result.learning.filePath}`);
+        }
+        if (result.learning.confidence !== undefined) {
+          console.log(
+            `Confidence: ${(result.learning.confidence * 100).toFixed(0)}%`,
+          );
+        }
+
+        if (includeRelated) {
+          if (result.relatedPatterns && result.relatedPatterns.length > 0) {
+            console.log("Related Patterns:");
+            for (const p of result.relatedPatterns) {
+              console.log(`  - ${p.name}: ${p.description}`);
+            }
+          }
+
+          if (result.relatedMistakes && result.relatedMistakes.length > 0) {
+            console.log("Related Mistakes:");
+            for (const m of result.relatedMistakes) {
+              console.log(`  - ${m.description}`);
+              console.log(`    Fix: ${m.howFixed}`);
+            }
+          }
+        }
+        console.log("");
+      }
+    }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
   }
