@@ -60,8 +60,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '⚠️  STOP: Try graph first!\n   bun run g:calls <fn>   → Who calls this?\n   bun run g:deps <type>  → Who uses this?\n   bun run g:blast <file> → Impact of change?\n   bun run d:search \"...\" → Find docs\n   Grep is LAST RESORT.'",
-            "description": "Nudge to use graph/docs before grep/glob"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-gate.ts",
+            "description": "Enforce graph-first pattern: block Grep/Glob until graph queries made"
           }
         ]
       }
