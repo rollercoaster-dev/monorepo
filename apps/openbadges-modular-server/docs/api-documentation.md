@@ -46,6 +46,89 @@ See the [OB3 Roadmap](./ob3-roadmap.md) for detailed implementation progress.
 
 ## API Endpoints
 
+### Well-Known Endpoints
+
+These public endpoints provide cryptographic key distribution and decentralized identity information according to standard specifications.
+
+#### GET /.well-known/jwks.json
+
+Returns the JSON Web Key Set (JWKS) containing the server's public keys for credential verification.
+
+**Specification**: [RFC 7517 - JSON Web Key (JWK)](https://tools.ietf.org/html/rfc7517)
+
+**Authentication**: None required (public endpoint)
+
+**Response Headers**:
+- `Content-Type: application/json`
+- `Cache-Control: public, max-age=3600`
+
+**Response Format** (200 OK):
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "use": "sig",
+      "kid": "default",
+      "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx...",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+**Use Cases**:
+- Verifying signed credentials (JWS/JWT)
+- Establishing trust in issuer identity
+- Integration with OAuth 2.0 / OpenID Connect flows
+
+#### GET /.well-known/did.json
+
+Returns the DID:web document for the issuer, providing decentralized identity information and verification methods.
+
+**Specification**: [W3C Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/) with [DID:web Method](https://w3c-ccg.github.io/did-method-web/)
+
+**Authentication**: None required (public endpoint)
+
+**Response Headers**:
+- `Content-Type: application/did+json`
+- `Cache-Control: public, max-age=3600`
+
+**Response Format** (200 OK):
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:example.org",
+  "verificationMethod": [
+    {
+      "id": "did:web:example.org#default",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:example.org",
+      "publicKeyJwk": {
+        "kty": "RSA",
+        "use": "sig",
+        "kid": "default",
+        "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx...",
+        "e": "AQAB"
+      }
+    }
+  ],
+  "assertionMethod": [
+    "did:web:example.org#default"
+  ]
+}
+```
+
+**Use Cases**:
+- Decentralized issuer identity verification
+- Integration with W3C Verifiable Credentials ecosystem
+- Cross-platform credential verification
+
 ### Version 2.0 Endpoints (Open Badges 2.0)
 
 All endpoints under the `/v2/` path return responses formatted according to the Open Badges 2.0 specification.
