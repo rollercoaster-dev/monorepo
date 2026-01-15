@@ -1,5 +1,5 @@
 import { knowledge } from "../knowledge/index";
-import type { Learning } from "../types";
+import type { Learning, Pattern, Mistake } from "../types";
 import { parseIntSafe } from "./shared/validation";
 import { randomUUID } from "crypto";
 
@@ -76,6 +76,114 @@ export async function handleKnowledgeCommands(
     }
     if (confidence !== undefined) {
       console.log(`Confidence: ${(confidence * 100).toFixed(0)}%`);
+    }
+  } else if (command === "store-pattern") {
+    // knowledge store-pattern <name> <description> [--code-area <area>]
+    if (args.length < 2) {
+      throw new Error(
+        "Usage: knowledge store-pattern <name> <description> [--code-area <area>]",
+      );
+    }
+
+    let name = "";
+    let description = "";
+    let codeArea: string | undefined;
+
+    // Parse arguments
+    let i = 0;
+    const positionalArgs: string[] = [];
+    while (i < args.length) {
+      const arg = args[i];
+
+      if (arg === "--code-area" && args[i + 1]) {
+        codeArea = args[i + 1];
+        i += 2;
+      } else {
+        positionalArgs.push(arg);
+        i++;
+      }
+    }
+
+    // First positional is name, rest is description
+    if (positionalArgs.length < 2) {
+      throw new Error("Both <name> and <description> are required");
+    }
+
+    name = positionalArgs[0];
+    description = positionalArgs.slice(1).join(" ");
+
+    // Create pattern
+    const patternId = `pattern-${randomUUID()}`;
+    const pattern: Pattern = {
+      id: patternId,
+      name,
+      description,
+      codeArea,
+    };
+
+    // Store the pattern
+    await knowledge.storePattern(pattern);
+
+    console.log("Pattern stored successfully");
+    console.log(`ID: ${patternId}`);
+    console.log(`Name: ${name}`);
+    console.log(`Description: ${description}`);
+    if (codeArea) {
+      console.log(`Code Area: ${codeArea}`);
+    }
+  } else if (command === "store-mistake") {
+    // knowledge store-mistake <description> <how-fixed> [--file <path>]
+    if (args.length < 2) {
+      throw new Error(
+        "Usage: knowledge store-mistake <description> <how-fixed> [--file <path>]",
+      );
+    }
+
+    let description = "";
+    let howFixed = "";
+    let filePath: string | undefined;
+
+    // Parse arguments
+    let i = 0;
+    const positionalArgs: string[] = [];
+    while (i < args.length) {
+      const arg = args[i];
+
+      if (arg === "--file" && args[i + 1]) {
+        filePath = args[i + 1];
+        i += 2;
+      } else {
+        positionalArgs.push(arg);
+        i++;
+      }
+    }
+
+    // First positional is description, rest is how-fixed
+    if (positionalArgs.length < 2) {
+      throw new Error("Both <description> and <how-fixed> are required");
+    }
+
+    description = positionalArgs[0];
+    howFixed = positionalArgs.slice(1).join(" ");
+
+    // Create mistake
+    const mistakeId = `mistake-${randomUUID()}`;
+    const mistake: Mistake = {
+      id: mistakeId,
+      description,
+      howFixed,
+      filePath,
+    };
+
+    // Store the mistake
+    await knowledge.storeMistake(mistake);
+
+    console.log("Mistake stored successfully");
+    console.log(`ID: ${mistakeId}`);
+    console.log(`Description: ${description}`);
+    console.log(`How Fixed: ${howFixed}`);
+    if (filePath) {
+      console.log(`File: ${filePath}`);
     }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
