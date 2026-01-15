@@ -8,6 +8,7 @@
 import type { AssertionRepository } from "../../domains/assertion/assertion.repository";
 import type { BadgeClassRepository } from "../../domains/badgeClass/badgeClass.repository";
 import type { IssuerRepository } from "../../domains/issuer/issuer.repository";
+import type { Issuer } from "../../domains/issuer/issuer.entity";
 import type { BakingService } from "../../services/baking/types";
 import type { BakeRequestDto, BakeResponseDto } from "../dtos";
 import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
@@ -106,7 +107,7 @@ export class CredentialsController {
       }
 
       // Fetch the issuer entity (or use embedded issuer if already an object)
-      let issuer;
+      let issuer: Issuer | undefined;
       if (typeof badgeClass.issuer === "string") {
         logger.debug("Fetching issuer for baking", {
           issuerIri: badgeClass.issuer,
@@ -139,10 +140,21 @@ export class CredentialsController {
         });
       }
 
-      // Convert assertion to credential format (OB3 with embedded issuer)
+      // Detect version from assertion type:
+      // - OB3: type includes 'VerifiableCredential' or 'OpenBadgeCredential'
+      // - OB2: type is 'Assertion' or doesn't include OB3 types
+      const isOB3 = Array.isArray(assertion.type)
+        ? assertion.type.some(
+            (t) =>
+              t === "VerifiableCredential" || t === "OpenBadgeCredential",
+          )
+        : false;
+      const version = isOB3 ? BadgeVersion.V3 : BadgeVersion.V2;
+
+      // Convert assertion to credential format with appropriate version
       // Pass badgeClass and issuer to ensure complete credential embedding
       const credential = assertion.toJsonLd(
-        BadgeVersion.V3,
+        version,
         badgeClass,
         issuer,
       ) as OB2.Assertion | OB3.VerifiableCredential;
