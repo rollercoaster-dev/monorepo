@@ -337,4 +337,125 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.sourceFormat).toBe("svg");
     });
   });
+
+  describe("Tamper Detection", () => {
+    it("should detect tampered baked image", async () => {
+      // Step 1: Create test issuer
+      const { id: issuerId } = await TestDataHelper.createIssuer();
+      logger.info("Created test issuer", { issuerId });
+
+      // Step 2: Create test badge class
+      const { id: badgeClassId } = await TestDataHelper.createBadgeClass(
+        issuerId,
+      );
+      logger.info("Created test badge class", { badgeClassId });
+
+      // Step 3: Create test credential
+      const { id: credentialId } = await TestDataHelper.createAssertion(
+        badgeClassId,
+      );
+      logger.info("Created test credential", { credentialId });
+
+      // Step 4: Load PNG fixture and bake credential
+      const pngPath = join(process.cwd(), "tests/fixtures/test-badge.png");
+      const pngBuffer = readFileSync(pngPath);
+      const pngBase64 = pngBuffer.toString("base64");
+
+      const bakeResponse = await fetch(
+        `${CREDENTIALS_ENDPOINT}/${credentialId}/bake`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+          },
+          body: JSON.stringify({
+            format: "png",
+            image: pngBase64,
+          }),
+        },
+      );
+
+      expect(bakeResponse.status).toBe(200);
+      const bakeResult = (await bakeResponse.json()) as {
+        data: string;
+        mimeType: string;
+        size: number;
+        format: string;
+      };
+
+      logger.info("Baked credential into PNG for tamper test");
+
+      // Step 5: Tamper with the baked image data
+      // Decode base64 to buffer
+      const bakedBuffer = Buffer.from(bakeResult.data, "base64");
+
+      // Modify a few bytes in the middle of the image buffer to corrupt embedded data
+      // This simulates tampering with the baked image
+      const tamperPosition = Math.floor(bakedBuffer.length / 2);
+      bakedBuffer[tamperPosition] = bakedBuffer[tamperPosition] ^ 0xff; // Flip all bits
+      bakedBuffer[tamperPosition + 1] = bakedBuffer[tamperPosition + 1] ^ 0xff;
+      bakedBuffer[tamperPosition + 2] = bakedBuffer[tamperPosition + 2] ^ 0xff;
+
+      // Re-encode to base64
+      const tamperedBase64 = bakedBuffer.toString("base64");
+
+      logger.info("Tampered with baked image data", {
+        originalSize: bakeResult.data.length,
+        tamperedSize: tamperedBase64.length,
+        tamperPosition,
+      });
+
+      // Step 6: Attempt to verify tampered image
+      const verifyResponse = await fetch(VERIFY_BAKED_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: tamperedBase64,
+        }),
+      });
+
+      logger.debug("Verify tampered image response", {
+        status: verifyResponse.status,
+        statusText: verifyResponse.statusText,
+      });
+
+      // Step 7: Verify that verification fails
+      expect(verifyResponse.status).toBe(200); // Endpoint always returns 200
+      const verifyResult = (await verifyResponse.json()) as {
+        isValid: boolean;
+        status: string;
+        checks?: {
+          general?: Array<{
+            check: string;
+            passed: boolean;
+            error?: string;
+          }>;
+        };
+        metadata?: {
+          extractionAttempted?: boolean;
+          extractionSucceeded?: boolean;
+        };
+      };
+
+      logger.info("Tampered verification result", { verifyResult });
+
+      // Verification should fail for tampered image
+      expect(verifyResult.isValid).toBe(false);
+      expect(verifyResult.status).toBe("invalid");
+      expect(verifyResult.metadata?.extractionAttempted).toBe(true);
+      expect(verifyResult.metadata?.extractionSucceeded).toBe(false);
+
+      // Should have an extraction error in the checks
+      const generalChecks = verifyResult.checks?.general || [];
+      const extractionCheck = generalChecks.find(
+        (check) => check.check === "extraction",
+      );
+      expect(extractionCheck).toBeDefined();
+      expect(extractionCheck?.passed).toBe(false);
+      expect(extractionCheck?.error).toBeDefined();
+    });
+  });
 });
