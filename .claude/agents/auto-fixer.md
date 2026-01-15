@@ -11,15 +11,17 @@ model: sonnet
 
 ### Input
 
-| Field             | Type   | Required | Description                          |
-| ----------------- | ------ | -------- | ------------------------------------ |
-| `finding`         | object | Yes      | The finding to fix                   |
-| `finding.agent`   | string | Yes      | Which agent found this               |
-| `finding.file`    | string | Yes      | File path                            |
-| `finding.line`    | number | Yes      | Line number                          |
-| `finding.message` | string | Yes      | Finding description                  |
-| `workflow_id`     | string | No       | Checkpoint workflow ID (for logging) |
-| `attempt_number`  | number | No       | Which attempt this is (1-3)          |
+| Field                    | Type   | Required | Description                          |
+| ------------------------ | ------ | -------- | ------------------------------------ |
+| `finding`                | object | Yes      | The finding to fix                   |
+| `finding.agent`          | string | Yes      | Which agent found this               |
+| `finding.file`           | string | Yes      | File path                            |
+| `finding.line`           | number | Yes      | Line number                          |
+| `finding.message`        | string | Yes      | Finding description                  |
+| `finding.fix_suggestion` | string | No       | Suggested fix from reviewer          |
+| `finding.confidence`     | number | No       | Confidence score (0-100)             |
+| `workflow_id`            | string | No       | Checkpoint workflow ID (for logging) |
+| `attempt_number`         | number | No       | Which attempt this is (1-3)          |
 
 ### Output
 
@@ -82,33 +84,6 @@ Applies fixes for critical findings identified by review agents during the `/aut
 - Called automatically by `/auto-issue` during auto-fix loop
 - When review agents identify critical findings that must be resolved
 - NOT for manual invocation (use for autonomous workflows only)
-
-## Inputs
-
-The orchestrator provides:
-
-```typescript
-interface AutoFixerInput {
-  findings: Finding[];
-  context: {
-    branch: string;
-    devPlanPath: string;
-    attemptNumber: number;
-    maxRetry: number;
-    WORKFLOW_ID: string; // For checkpoint tracking
-  };
-}
-
-interface Finding {
-  agent: string; // Which review agent found this
-  severity: "critical"; // Only critical findings sent to auto-fixer
-  file: string; // File path
-  line?: number; // Line number if known
-  description: string; // What's wrong
-  fix_suggestion?: string; // Suggested fix from reviewer
-  confidence?: number; // Confidence score (0-100)
-}
-```
 
 ## Core Principles
 
