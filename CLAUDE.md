@@ -61,15 +61,16 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 
 **ALWAYS try graph/docs BEFORE Grep.** 1 graph query = 10 greps worth of context.
 
-| Question | Shortcut | Long Form |
-|----------|----------|-----------|
-| Who calls X? | `bun run g:calls <fn>` | `checkpoint graph what-calls` |
-| Who uses type X? | `bun run g:deps <type>` | `checkpoint graph what-depends-on` |
-| Impact of change? | `bun run g:blast <file>` | `checkpoint graph blast-radius` |
-| Where is X? | `bun run g:find <name>` | `checkpoint graph find` |
-| How does X work? | `bun run d:search "<q>"` | `checkpoint docs search` |
+| Question          | Shortcut                 | Long Form                          |
+| ----------------- | ------------------------ | ---------------------------------- |
+| Who calls X?      | `bun run g:calls <fn>`   | `checkpoint graph what-calls`      |
+| Who uses type X?  | `bun run g:deps <type>`  | `checkpoint graph what-depends-on` |
+| Impact of change? | `bun run g:blast <file>` | `checkpoint graph blast-radius`    |
+| Where is X?       | `bun run g:find <name>`  | `checkpoint graph find`            |
+| How does X work?  | `bun run d:search "<q>"` | `checkpoint docs search`           |
 
 **Priority order:**
+
 1. **Graph queries** - Code relationships (callers, dependencies, blast radius)
 2. **Docs search** - Project documentation and patterns
 3. **Knowledge query** - Past learnings, mistakes, patterns

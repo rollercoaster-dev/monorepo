@@ -25,12 +25,12 @@ Need to find text in files?
 
 ## Why This Order Matters
 
-| Approach | Tool Calls | Tokens | Accuracy |
-|----------|------------|--------|----------|
-| Graph query | 1 | ~500 | High (AST-based) |
-| Docs search | 1 | ~500 | High (semantic) |
-| Grep + Read | 3-10 | 2000-8000 | Medium (text match) |
-| Glob + Grep + Read | 5-15 | 3000-12000 | Low (guessing) |
+| Approach           | Tool Calls | Tokens     | Accuracy            |
+| ------------------ | ---------- | ---------- | ------------------- |
+| Graph query        | 1          | ~500       | High (AST-based)    |
+| Docs search        | 1          | ~500       | High (semantic)     |
+| Grep + Read        | 3-10       | 2000-8000  | Medium (text match) |
+| Glob + Grep + Read | 5-15       | 3000-12000 | Low (guessing)      |
 
 **Graph/Docs = 10x more efficient than Grep chains**
 
@@ -55,6 +55,7 @@ bun run d:search "<question>" # Semantic search docs
 ```
 
 **Long form** (equivalent):
+
 ```bash
 bun run checkpoint graph what-calls <function>
 bun run checkpoint graph what-depends-on <type>
@@ -85,5 +86,6 @@ bun run g:calls functionName
 ## Validation Checkpoint
 
 Before making >3 search-related tool calls, STOP and ask:
+
 - "Should I have used a graph query instead?"
 - "Is there a docs search that would answer this?"
