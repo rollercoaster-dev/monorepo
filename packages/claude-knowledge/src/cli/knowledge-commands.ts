@@ -467,6 +467,143 @@ export async function handleKnowledgeCommands(
         );
       }
     }
+  } else if (command === "stats") {
+    // knowledge stats
+    const db = getDatabase();
+
+    // Entity counts by type
+    const entityCountsSql = `
+      SELECT type, COUNT(*) as count
+      FROM entities
+      WHERE type IN ('Learning', 'Pattern', 'Mistake', 'CodeArea', 'File', 'Topic')
+      GROUP BY type
+      ORDER BY count DESC
+    `;
+
+    interface EntityCountRow {
+      type: string;
+      count: number;
+    }
+
+    const entityCounts = db.query<EntityCountRow, []>(entityCountsSql).all();
+
+    // Relationship counts by type
+    const relationshipCountsSql = `
+      SELECT type, COUNT(*) as count
+      FROM relationships
+      GROUP BY type
+      ORDER BY count DESC
+    `;
+
+    interface RelationshipCountRow {
+      type: string;
+      count: number;
+    }
+
+    const relationshipCounts = db
+      .query<RelationshipCountRow, []>(relationshipCountsSql)
+      .all();
+
+    // Date range
+    const dateRangeSql = `
+      SELECT
+        MIN(created_at) as oldest,
+        MAX(created_at) as newest
+      FROM entities
+    `;
+
+    interface DateRangeRow {
+      oldest: string | null;
+      newest: string | null;
+    }
+
+    const dateRange = db.query<DateRangeRow, []>(dateRangeSql).get();
+
+    // Most active code areas
+    const topAreasSql = `
+      SELECT
+        json_extract(e.data, '$.name') as name,
+        COUNT(DISTINCT r1.from_id) as total
+      FROM entities e
+      LEFT JOIN relationships r1 ON r1.to_id = e.id AND r1.type IN ('ABOUT', 'APPLIES_TO')
+      WHERE e.type = 'CodeArea'
+      GROUP BY name
+      ORDER BY total DESC
+      LIMIT 5
+    `;
+
+    interface TopAreaRow {
+      name: string;
+      total: number;
+    }
+
+    const topAreas = db.query<TopAreaRow, []>(topAreasSql).all();
+
+    // Most referenced files
+    const topFilesSql = `
+      SELECT
+        json_extract(e.data, '$.path') as path,
+        COUNT(DISTINCT r1.from_id) as total
+      FROM entities e
+      LEFT JOIN relationships r1 ON r1.to_id = e.id AND r1.type = 'IN_FILE'
+      WHERE e.type = 'File'
+      GROUP BY path
+      ORDER BY total DESC
+      LIMIT 5
+    `;
+
+    interface TopFileRow {
+      path: string;
+      total: number;
+    }
+
+    const topFiles = db.query<TopFileRow, []>(topFilesSql).all();
+
+    // Print stats
+    console.log("Knowledge Graph Statistics");
+    console.log("==========================\n");
+
+    // Entity counts
+    console.log("Entities:");
+    const totalEntities = entityCounts.reduce((sum, row) => sum + row.count, 0);
+    console.log(`  Total: ${totalEntities}`);
+    for (const row of entityCounts) {
+      console.log(`  ${row.type}: ${row.count}`);
+    }
+
+    // Relationship counts
+    console.log("\nRelationships:");
+    const totalRelationships = relationshipCounts.reduce(
+      (sum, row) => sum + row.count,
+      0,
+    );
+    console.log(`  Total: ${totalRelationships}`);
+    for (const row of relationshipCounts) {
+      console.log(`  ${row.type}: ${row.count}`);
+    }
+
+    // Date range
+    if (dateRange && dateRange.oldest && dateRange.newest) {
+      console.log("\nDate Range:");
+      console.log(`  Oldest: ${dateRange.oldest}`);
+      console.log(`  Newest: ${dateRange.newest}`);
+    }
+
+    // Top areas
+    if (topAreas.length > 0) {
+      console.log("\nMost Active Code Areas:");
+      for (const area of topAreas) {
+        console.log(`  ${area.name}: ${area.total} references`);
+      }
+    }
+
+    // Top files
+    if (topFiles.length > 0) {
+      console.log("\nMost Referenced Files:");
+      for (const file of topFiles) {
+        console.log(`  ${file.path}: ${file.total} references`);
+      }
+    }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
   }
