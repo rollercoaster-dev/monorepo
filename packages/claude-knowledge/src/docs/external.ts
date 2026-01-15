@@ -36,7 +36,7 @@ export interface ExternalDocSpec {
  */
 export const SPEC_DEFINITIONS: Record<string, ExternalDocSpec> = {
   ob3: {
-    url: "https://1edtech.github.io/openbadges-specification/ob_v3p0.html",
+    url: "https://www.imsglobal.org/spec/ob/v3p0/",
     sourceType: "ob3",
     specVersion: "3.0",
   },
@@ -132,7 +132,7 @@ export async function fetchExternalDoc(spec: ExternalDocSpec): Promise<string> {
   } else {
     db.run(
       "INSERT INTO external_docs (url, cached_path, fetched_at, spec_version, source_type) VALUES (?, ?, ?, ?, ?)",
-      [cachedPath, cachedPath, now, spec.specVersion ?? null, spec.sourceType],
+      [spec.url, cachedPath, now, spec.specVersion ?? null, spec.sourceType],
     );
   }
 
@@ -428,9 +428,17 @@ export async function indexExternalDoc(
       // Link section to file
       createRelationship(db, sectionId, fileEntityId, "IN_DOC");
 
-      // Link to parent section if exists
+      // Link to parent section if it exists in the database
       if (parentId) {
-        createRelationship(db, sectionId, parentId, "CHILD_OF");
+        const parentExists = db
+          .query<
+            { id: string },
+            [string]
+          >("SELECT id FROM entities WHERE id = ?")
+          .get(parentId);
+        if (parentExists) {
+          createRelationship(db, sectionId, parentId, "CHILD_OF");
+        }
       }
     }
 
