@@ -113,6 +113,9 @@
       "Bash(rm -f .claude/dev-plans/:*)",
       "Bash(rm .claude/dev-plans/:*)",
       "Skill(board-manager)",
+      "Skill(graph-query)",
+      "Skill(docs-search)",
+      "Skill(knowledge-query)",
       "Edit",
       "Write"
     ],
