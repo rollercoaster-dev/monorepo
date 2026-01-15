@@ -412,27 +412,13 @@ After review findings are resolved, analyze the workflow execution to capture le
     - If build fails: ESCALATE
     - Otherwise: Proceed
 
-12. **Clean up dev-plan file:**
-
-    ```bash
-    rm .claude/dev-plans/issue-<issue-number>.md
-    ```
-
-    ```bash
-    git add .claude/dev-plans/
-    ```
-
-    ```bash
-    git commit -m "chore: clean up dev-plan for issue #<issue-number>"
-    ```
-
-13. **Push branch:**
+12. **Push branch:**
 
     ```bash
     git push -u origin HEAD
     ```
 
-14. **Create PR:**
+13. **Create PR:**
 
     Use `gh pr create` with a conventional commit title and body. Example:
 
@@ -446,7 +432,7 @@ After review findings are resolved, analyze the workflow execution to capture le
     - Auto-fix log (if any fixes were applied)
     - Footer: `Closes #<issue-number>`
 
-14b. **Log workflow completion:**
+13b. **Log workflow completion:**
 
      ```bash
      bun run checkpoint workflow set-status "<workflow-id>" "completed"
@@ -456,7 +442,7 @@ After review findings are resolved, analyze the workflow execution to capture le
      bun run checkpoint workflow log-action "<workflow-id>" "pr_created" "success" '{"prNumber": <pr-number>, "commitCount": <total-commits>, "fixCommitCount": <fix-count>}'
      ```
 
-15. **Trigger reviews (conditional):**
+14. **Trigger reviews (conditional):**
 
     CodeRabbit triggers automatically on PR creation. Only manually trigger reviews when:
     - The PR is large (>500 lines changed)
@@ -470,14 +456,14 @@ After review findings are resolved, analyze the workflow execution to capture le
     @claude review
     ```
 
-16. **Update board status to "Blocked" (awaiting review):**
+15. **Update board status to "Blocked" (awaiting review):**
 
     Update the issue's board status to "Blocked" (status ID: `51c2af7b`).
     Use the board-manager skill or GraphQL API.
 
     **If board update fails:** Log warning but continue - PR creation is the critical step.
 
-17. **Report completion:**
+16. **Report completion:**
 
     Report the workflow completion with:
     - Issue number
