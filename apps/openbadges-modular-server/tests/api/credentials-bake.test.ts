@@ -269,6 +269,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // Mock baking service to throw an error (e.g., malformed image)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
@@ -331,6 +337,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         mockAssertion,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
         new Error("Baking service internal error"),
       );
@@ -382,6 +394,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         mockAssertion,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
       // Act
@@ -421,6 +439,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 

@@ -202,9 +202,10 @@ export class VerificationController {
       const credential = unbakeResult.credential as Record<string, unknown>;
       const verificationResult = await verify(credential, verificationOptions);
 
-      // Add extraction metadata to the result
+      // Add extraction metadata and the credential to the result
       const enhancedResult: VerificationResult = {
         ...verificationResult,
+        credential,
         metadata: {
           ...verificationResult.metadata,
           extractionAttempted: true,
