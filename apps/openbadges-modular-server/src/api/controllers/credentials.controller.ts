@@ -93,9 +93,13 @@ export class CredentialsController {
         imageSize: imageBuffer.length,
       });
 
-      const bakedResult = await this.bakingService.bake(imageBuffer, credential, {
-        format: data.format,
-      });
+      const bakedResult = await this.bakingService.bake(
+        imageBuffer,
+        credential,
+        {
+          format: data.format,
+        },
+      );
 
       // Encode baked image to base64
       const base64Data = bakedResult.data.toString("base64");

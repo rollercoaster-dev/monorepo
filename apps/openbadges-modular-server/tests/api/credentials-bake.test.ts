@@ -6,14 +6,20 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 import type { Shared, OB3 } from "openbadges-types";
 import { CredentialsController } from "../../src/api/controllers/credentials.controller";
 import type { AssertionRepository } from "../../src/domains/assertion/assertion.repository";
-import type { BakingService, BakedImage } from "../../src/services/baking/types";
+import type {
+  BakingService,
+  BakedImage,
+} from "../../src/services/baking/types";
 import type { BakeRequestDto } from "../../src/api/dtos";
 import { Assertion } from "../../src/domains/assertion/assertion.entity";
 import { BadRequestError } from "../../src/infrastructure/errors/bad-request.error";
 
 // Sample test fixtures
-const SAMPLE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="; // 1x1 red pixel PNG
-const SAMPLE_SVG_BASE64 = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>').toString("base64");
+const SAMPLE_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="; // 1x1 red pixel PNG
+const SAMPLE_SVG_BASE64 = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>',
+).toString("base64");
 
 const SAMPLE_CREDENTIAL_ID = "urn:uuid:test-credential-123" as Shared.IRI;
 
@@ -84,7 +90,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -99,7 +107,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       expect(result!.format).toBe("png");
       expect(result!.mimeType).toBe("image/png");
       expect(result!.size).toBe(1024);
-      expect(result!.data).toBe(Buffer.from("baked-png-data").toString("base64"));
+      expect(result!.data).toBe(
+        Buffer.from("baked-png-data").toString("base64"),
+      );
       expect(mockBakingService.bake).toHaveBeenCalledTimes(1);
     });
 
@@ -119,7 +129,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -134,7 +146,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       expect(result!.format).toBe("svg");
       expect(result!.mimeType).toBe("image/svg+xml");
       expect(result!.size).toBe(2048);
-      expect(result!.data).toBe(Buffer.from("baked-svg-data").toString("base64"));
+      expect(result!.data).toBe(
+        Buffer.from("baked-svg-data").toString("base64"),
+      );
       expect(mockBakingService.bake).toHaveBeenCalledTimes(1);
     });
   });
@@ -147,7 +161,8 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         image: SAMPLE_PNG_BASE64,
       };
 
-      const validCredentialId = "urn:uuid:non-existent-credential" as Shared.IRI;
+      const validCredentialId =
+        "urn:uuid:non-existent-credential" as Shared.IRI;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockAssertionRepository.findById as any).mockResolvedValue(null);
 
@@ -173,7 +188,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
 
       // Act & Assert
       await expect(
@@ -190,11 +207,15 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // Mock baking service to throw an error (e.g., malformed image)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
-        new Error("Unsupported image format: unable to detect PNG or SVG format"),
+        new Error(
+          "Unsupported image format: unable to detect PNG or SVG format",
+        ),
       );
 
       // Act & Assert
@@ -211,7 +232,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
 
       // Act & Assert
       await expect(
@@ -245,7 +268,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
         new Error("Baking service internal error"),
@@ -294,7 +319,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -332,7 +359,9 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mockAssertionRepository.findById as any).mockResolvedValue(mockAssertion);
+      (mockAssertionRepository.findById as any).mockResolvedValue(
+        mockAssertion,
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -345,7 +374,8 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       // Assert - Verify baking service was called with correct arguments
       expect(mockBakingService.bake).toHaveBeenCalledTimes(1);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const [imageBuffer, credential, options] = (mockBakingService.bake as any).mock.calls[0];
+      const [imageBuffer, credential, options] = (mockBakingService.bake as any)
+        .mock.calls[0];
       expect(Buffer.isBuffer(imageBuffer)).toBe(true);
       expect(credential).toBeDefined();
       expect(options.format).toBe("png");
