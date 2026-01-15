@@ -1,7 +1,7 @@
 ---
 name: auto-fixer
 description: Applies fixes for critical findings from review agents. Called by auto-issue orchestrator during auto-fix loop. Makes minimal, targeted fixes and validates before committing.
-tools: Bash, Read, Write, Edit, Glob, Grep
+tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 model: sonnet
 ---
 

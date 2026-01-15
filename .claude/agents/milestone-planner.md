@@ -1,7 +1,7 @@
 ---
 name: milestone-planner
 description: Analyzes a GitHub milestone, builds dependency graph, identifies parallelizable issues, and validates planning. Use when starting /auto-milestone to understand issue dependencies and determine execution order.
-tools: Bash, Read, Glob, Grep
+tools: Bash, Read, Glob, Grep, Skill
 model: sonnet
 ---
 

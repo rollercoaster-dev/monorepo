@@ -1,7 +1,7 @@
 ---
 name: issue-researcher
 description: Fetches a GitHub issue, researches the codebase, and creates a detailed development plan with atomic commits. Use this at the start of any issue to plan the implementation.
-tools: Bash, Read, Glob, Grep, WebFetch, Write
+tools: Bash, Read, Glob, Grep, WebFetch, Write, Skill
 model: sonnet
 ---
 
