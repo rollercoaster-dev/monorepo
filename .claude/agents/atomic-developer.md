@@ -277,7 +277,19 @@ For each step in the development plan:
    bun test <specific-test-file>
    ```
 
-5. **Stage and commit:**
+5. **Format changed files:**
+
+   ```bash
+   bunx prettier --write <changed-files>
+   ```
+
+   Verify formatting passes:
+
+   ```bash
+   bun run lint
+   ```
+
+6. **Stage and commit:**
 
    ```bash
    git add <specific-files>
@@ -301,7 +313,7 @@ For each step in the development plan:
    **IMPORTANT:** Never combine these into one command with `&&` or shell variables.
    Each command is a separate Bash tool call. Use the actual SHA value, not `$COMMIT_SHA`.
 
-6. **Report progress:**
+7. **Report progress:**
    - Confirm commit made
    - Show files changed
    - Note any deviations from plan
