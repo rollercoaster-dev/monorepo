@@ -145,14 +145,29 @@ checkpoint.logAction(WORKFLOW_ID, "spawned_agent", "success", {
 
 ## Commit Logging Pattern
 
-After each git commit, log it to the checkpoint:
+After each git commit, log it to the checkpoint.
+
+**For Claude Code (Bash tool calls):**
+
+First, get the SHA (separate command):
+
+```bash
+git rev-parse HEAD
+```
+
+Then log to checkpoint using the literal SHA from the output:
+
+```bash
+bun run checkpoint workflow log-commit "<workflow-id>" "<sha>" "<type>(<scope>): <description>"
+```
+
+**IMPORTANT:** Never combine these with `&&` or use shell variables like `$COMMIT_SHA`. Each is a separate Bash tool call.
+
+**For TypeScript code:**
 
 ```typescript
-// Get the commit SHA after committing
 const sha = await $`git rev-parse HEAD`.text().trim();
-const message = "<type>(<scope>): <description>";
-
-checkpoint.logCommit(WORKFLOW_ID, sha, message);
+checkpoint.logCommit(workflowId, sha, message);
 ```
 
 ## Gate Passage Logging

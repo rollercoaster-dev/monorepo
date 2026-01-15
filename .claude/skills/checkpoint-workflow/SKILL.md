@@ -142,18 +142,31 @@ bun run checkpoint workflow create 394 "feat/issue-394-tree-sitter"
 
 ## Example: Logging Progress
 
+**IMPORTANT:** Each command is a separate Bash tool call. Replace `<workflow-id>` with the actual ID from the create command output. Never use shell variables like `$WORKFLOW_ID`.
+
 ```bash
-WORKFLOW_ID="workflow-394-1768147000000-abc123"
-
 # Log gate passage
-bun run checkpoint workflow log-action "$WORKFLOW_ID" "gate-1-issue-reviewed" "success"
+bun run checkpoint workflow log-action "<workflow-id>" "gate-1-issue-reviewed" "success"
+```
 
+```bash
 # Transition to implement phase
-bun run checkpoint workflow set-phase "$WORKFLOW_ID" "implement"
+bun run checkpoint workflow set-phase "<workflow-id>" "implement"
+```
 
-# Log a commit
-bun run checkpoint workflow log-commit "$WORKFLOW_ID" "abc1234" "feat(module): add new feature"
+To log a commit, first get the SHA:
 
+```bash
+git rev-parse HEAD
+```
+
+Then use the SHA value from that output:
+
+```bash
+bun run checkpoint workflow log-commit "<workflow-id>" "<sha>" "feat(module): add new feature"
+```
+
+```bash
 # Mark workflow complete
-bun run checkpoint workflow set-status "$WORKFLOW_ID" "completed"
+bun run checkpoint workflow set-status "<workflow-id>" "completed"
 ```
