@@ -210,6 +210,8 @@ gh api graphql -f query='
 
 **Set status to "Blocked" (awaiting review):**
 
+<!-- Board IDs are defined in .claude/skills/board-manager/SKILL.md and helpers/board.ts -->
+
 ```bash
 gh api graphql \
   -f projectId="PVT_kwDOB1lz3c4BI2yZ" \

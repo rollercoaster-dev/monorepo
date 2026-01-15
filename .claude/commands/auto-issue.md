@@ -15,7 +15,7 @@ Fully autonomous issue-to-PR workflow. Delegates to specialized agents.
 
 ## Workflow
 
-```
+```text
 Phase 1: Setup     → setup-agent
 Phase 2: Research  → issue-researcher
 Phase 3: Implement → atomic-developer
@@ -29,7 +29,7 @@ Phase 5: Finalize  → finalize-agent
 
 **Agent:** `setup-agent`
 
-```
+```text
 Task(setup-agent):
   Input:  { issue_number: <N> }
   Output: { workflow_id, branch, issue }
@@ -51,7 +51,7 @@ The setup-agent will:
 
 **Agent:** `issue-researcher`
 
-```
+```text
 Task(issue-researcher):
   Input:  { issue_number: <N>, workflow_id: <from-phase-1> }
   Output: { plan_path, complexity, commit_count }
@@ -74,7 +74,7 @@ The issue-researcher will:
 
 **Agent:** `atomic-developer`
 
-```
+```text
 Task(atomic-developer):
   Input:  { issue_number: <N>, workflow_id, plan_path: <from-phase-2> }
   Output: { commits, validation }
@@ -95,7 +95,7 @@ The atomic-developer will:
 
 **Agent:** `review-orchestrator`
 
-```
+```text
 Task(review-orchestrator):
   Input:  { workflow_id }
   Output: { findings, summary }
@@ -118,7 +118,7 @@ The review-orchestrator will:
 
 **Agent:** `finalize-agent`
 
-```
+```text
 Task(finalize-agent):
   Input:  { issue_number: <N>, workflow_id, findings_summary: <from-phase-4> }
   Output: { pr }
@@ -142,7 +142,7 @@ Triggered when `review-orchestrator` returns unresolved critical findings.
 
 **Notify user via Telegram:**
 
-```
+```text
 ESCALATION: Issue #<N>
 
 Unresolved critical findings:

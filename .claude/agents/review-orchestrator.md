@@ -94,7 +94,7 @@ bun run checkpoint workflow log-action "<workflow_id>" "review_started" "success
 
 Spawn all agents simultaneously using Task tool with multiple calls:
 
-```
+```text
 Task(pr-review-toolkit:code-reviewer): "Review code changes for issue workflow <workflow_id>"
 Task(pr-review-toolkit:pr-test-analyzer): "Analyze test coverage for changes"
 Task(pr-review-toolkit:silent-failure-hunter): "Check for silent failures in changes"
@@ -141,7 +141,7 @@ bun run checkpoint workflow log-action "<workflow_id>" "agent_completed" "succes
 
 **For each CRITICAL finding:**
 
-```
+```text
 attempt = 0
 while not fixed AND attempt < max_retry:
     attempt++
@@ -228,7 +228,7 @@ bun run checkpoint workflow log-action "<workflow_id>" "review_complete" "succes
 
 ## Output Format
 
-```
+```text
 REVIEW COMPLETE
 
 Agents Run: code-reviewer, test-analyzer, silent-failure-hunter
