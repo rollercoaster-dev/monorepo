@@ -57,6 +57,17 @@ Before modifying files, consider:
 
 Safe operations (always allowed): reading files, searching, running tests, analyzing code.
 
+## Search Priority
+
+When exploring the codebase, use these tools in order:
+
+1. **`/graph-query`** - Code relationships (callers, dependencies, blast radius)
+2. **`/docs-search`** - Project documentation and patterns
+3. **`/knowledge-query`** - Past learnings, mistakes, patterns
+4. **Grep/Glob** - Last resort for raw text search
+
+The code graph and documentation index are refreshed on session start. Using them first provides better context than raw text search.
+
 ## Workflows
 
 | Command                  | Use Case                       |

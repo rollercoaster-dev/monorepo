@@ -53,6 +53,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '💡 Consider using /graph-query for code relationships or /docs-search for documentation before raw text search.'",
+            "description": "Nudge to use knowledge graph before grep/glob"
+          }
+        ]
+      }
     ]
   },
   "permissions": {
