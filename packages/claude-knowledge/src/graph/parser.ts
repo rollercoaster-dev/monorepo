@@ -95,8 +95,13 @@ export function findTsFiles(dir: string): string[] {
       }
 
       if (stat.isDirectory()) {
-        // Skip test directories
-        if (entry === "__tests__" || entry === "test" || entry === "tests") {
+        // Skip test directories and node_modules
+        if (
+          entry === "__tests__" ||
+          entry === "test" ||
+          entry === "tests" ||
+          entry === "node_modules"
+        ) {
           continue;
         }
         walk(path);
