@@ -19,10 +19,15 @@ import {
   getSummary,
 } from "../graph";
 import { metrics } from "../checkpoint/metrics";
+import { recordGraphQuery } from "../session";
 
 /**
- * Log a graph query for metrics tracking.
+ * Log a graph query for metrics tracking and session state.
  * Wrapped in try/catch to ensure logging failures don't break queries.
+ *
+ * Records to:
+ * - metrics: For aggregate analysis across sessions
+ * - session state: For PreToolUse hook to check graph-first pattern
  */
 function logQuery(
   queryType: string,
@@ -30,6 +35,16 @@ function logQuery(
   resultCount: number,
   durationMs: number,
 ): void {
+  // Record to session state (for PreToolUse hook)
+  try {
+    recordGraphQuery(queryType, queryParams, resultCount);
+  } catch (error) {
+    logger.warn(
+      `Failed to record graph query to session state: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  // Record to metrics (for aggregate analysis)
   try {
     metrics.logGraphQuery({
       source: metrics.determineQuerySource(),

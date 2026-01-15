@@ -49,22 +49,25 @@ model: sonnet
 
 This agent uses patterns from [shared/](../shared/):
 
+- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[validation-commands.md](../shared/validation-commands.md)** - Post-fix validation
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Fix commit format
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Fix attempt logging
 
-## Code Graph (Recommended)
+## Tool Selection (MANDATORY)
 
-Use the `graph-query` skill to understand fix impact before applying changes.
+**Before fixing code, check impact with graph.** See [tool-selection.md](../shared/tool-selection.md).
 
-**When to use graph queries:**
-
-- Before fixing, check blast radius to understand scope
-- When fix might affect callers, identify them first
-- For type changes, find all dependent code
-- To verify fix doesn't break downstream consumers
-
-See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
+```
+┌─────────────────────────────────────────────────────────┐
+│  BEFORE applying any fix:                               │
+│                                                         │
+│  graph what-calls <fn>      → Who else uses this?      │
+│  graph blast-radius <file>  → What might break?        │
+│                                                         │
+│  Fixes without impact analysis cause cascading bugs.   │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Purpose
 
