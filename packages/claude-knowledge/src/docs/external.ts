@@ -140,10 +140,81 @@ export async function fetchExternalDoc(spec: ExternalDocSpec): Promise<string> {
 }
 
 /**
+ * Decode HTML entities in a string.
+ * Done BEFORE tag stripping to handle encoded dangerous content.
+ *
+ * @param text - Text with HTML entities
+ * @returns Decoded text
+ */
+function decodeHtmlEntities(text: string): string {
+  // Decode numeric entities first
+  text = text.replace(/&#(\d+);/g, (_match, dec) =>
+    String.fromCharCode(parseInt(dec, 10)),
+  );
+  text = text.replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) =>
+    String.fromCharCode(parseInt(hex, 16)),
+  );
+
+  // Decode named entities - order matters to avoid double-decoding
+  // Decode &amp; LAST so we don't create new entities from e.g. &amp;lt;
+  const entities: [RegExp, string][] = [
+    [/&lt;/g, "<"],
+    [/&gt;/g, ">"],
+    [/&quot;/g, '"'],
+    [/&#39;/g, "'"],
+    [/&apos;/g, "'"],
+    [/&nbsp;/g, " "],
+    [/&amp;/g, "&"], // Must be last
+  ];
+
+  for (const [pattern, replacement] of entities) {
+    text = text.replace(pattern, replacement);
+  }
+
+  return text;
+}
+
+/**
+ * Iteratively remove dangerous tags until none remain.
+ * Handles nested/encoded tags that might survive a single pass.
+ *
+ * @param html - HTML content to sanitize
+ * @param tagName - Tag name to remove (e.g., "script", "style")
+ * @returns Sanitized HTML
+ */
+function removeDangerousTag(html: string, tagName: string): string {
+  // Match opening tag with any attributes, content, and closing tag with optional whitespace
+  // Use case-insensitive and dotall flags
+  const pattern = new RegExp(
+    `<${tagName}\\b[^>]*>[\\s\\S]*?<\\/${tagName}\\s*>`,
+    "gi",
+  );
+
+  let previous = "";
+  let current = html;
+
+  // Iterate until no more matches (handles nested cases)
+  while (previous !== current) {
+    previous = current;
+    current = current.replace(pattern, "");
+  }
+
+  // Also remove any orphaned opening or closing tags
+  current = current.replace(new RegExp(`<${tagName}\\b[^>]*>`, "gi"), "");
+  current = current.replace(new RegExp(`<\\/${tagName}\\s*>`, "gi"), "");
+
+  return current;
+}
+
+/**
  * Convert HTML to markdown.
  *
  * Simple regex-based conversion that preserves structure but doesn't require heavy dependencies.
  * Converts headings, code blocks, links, and strips scripts/styles/navigation.
+ *
+ * Security: This function is designed for converting trusted external documentation
+ * (official spec pages) to markdown for search indexing. The output is stored in
+ * a database and used for semantic search, not rendered as HTML.
  *
  * @param html - HTML content to convert
  * @returns Markdown content
@@ -151,24 +222,32 @@ export async function fetchExternalDoc(spec: ExternalDocSpec): Promise<string> {
 export function convertHtmlToMarkdown(html: string): string {
   let markdown = html;
 
-  // Remove scripts, styles, and navigation elements
-  markdown = markdown.replace(
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    "",
-  );
-  markdown = markdown.replace(
-    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
-    "",
-  );
-  markdown = markdown.replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, "");
-  markdown = markdown.replace(
-    /<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi,
-    "",
-  );
-  markdown = markdown.replace(
-    /<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi,
-    "",
-  );
+  // STEP 1: Decode HTML entities FIRST
+  // This reveals any encoded dangerous content before we strip it
+  markdown = decodeHtmlEntities(markdown);
+
+  // STEP 2: Iteratively remove dangerous elements
+  // Use iterative removal to handle nested/malformed tags
+  const dangerousTags = [
+    "script",
+    "style",
+    "iframe",
+    "object",
+    "embed",
+    "form",
+    "input",
+    "button",
+  ];
+  for (const tag of dangerousTags) {
+    markdown = removeDangerousTag(markdown, tag);
+  }
+
+  // Remove navigation/layout elements (less dangerous but not useful for docs)
+  markdown = removeDangerousTag(markdown, "nav");
+  markdown = removeDangerousTag(markdown, "header");
+  markdown = removeDangerousTag(markdown, "footer");
+
+  // STEP 3: Convert structural elements to markdown
 
   // Convert headings
   markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, "\n# $1\n");
@@ -203,16 +282,15 @@ export function convertHtmlToMarkdown(html: string): string {
   // Convert line breaks
   markdown = markdown.replace(/<br\s*\/?>/gi, "\n");
 
-  // Remove remaining HTML tags
+  // STEP 4: Remove ALL remaining HTML tags
   markdown = markdown.replace(/<[^>]+>/g, "");
 
-  // Decode HTML entities
-  markdown = markdown.replace(/&lt;/g, "<");
-  markdown = markdown.replace(/&gt;/g, ">");
-  markdown = markdown.replace(/&amp;/g, "&");
-  markdown = markdown.replace(/&quot;/g, '"');
-  markdown = markdown.replace(/&#39;/g, "'");
-  markdown = markdown.replace(/&nbsp;/g, " ");
+  // STEP 5: Final safety check - remove any angle brackets that might have
+  // survived through edge cases. Since this is markdown for text search,
+  // we don't need to preserve any remaining HTML-like content.
+  // Replace < and > with safe alternatives to prevent any injection
+  markdown = markdown.replace(/</g, "[");
+  markdown = markdown.replace(/>/g, "]");
 
   // Clean up excessive whitespace
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
