@@ -55,18 +55,7 @@ This agent uses patterns from [shared/](../shared/):
 
 ## Code Graph (Recommended)
 
-Use the `graph-query` skill to understand fix impact before applying changes:
-
-```bash
-# Assess blast radius before fixing a file
-bun run checkpoint graph blast-radius <file-path>
-
-# Find what calls the function being fixed
-bun run checkpoint graph what-calls <function-name>
-
-# Check if fix affects exported public API
-bun run checkpoint graph exports [package-name]
-```
+Use the `graph-query` skill to understand fix impact before applying changes.
 
 **When to use graph queries:**
 
@@ -74,6 +63,8 @@ bun run checkpoint graph exports [package-name]
 - When fix might affect callers, identify them first
 - For type changes, find all dependent code
 - To verify fix doesn't break downstream consumers
+
+See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
 
 ## Purpose
 

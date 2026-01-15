@@ -55,21 +55,7 @@ This agent uses patterns from [shared/](../shared/):
 
 ## Code Graph (Recommended)
 
-Use the `graph-query` skill to understand dependencies before implementing changes:
-
-```bash
-# Find what calls a function you're modifying
-bun run checkpoint graph what-calls <function-name>
-
-# Assess impact of file changes
-bun run checkpoint graph blast-radius <file-path>
-
-# Find related entities to modify together
-bun run checkpoint graph find <name> [type]
-
-# Check package exports for public API awareness
-bun run checkpoint graph exports [package-name]
-```
+Use the `graph-query` skill to understand dependencies before implementing changes.
 
 **When to use graph queries:**
 
@@ -77,6 +63,8 @@ bun run checkpoint graph exports [package-name]
 - Before changing types, find all usages
 - Before refactoring, understand the blast radius
 - When unsure if a change affects other files
+
+See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
 
 ## Purpose
 

@@ -196,7 +196,7 @@ gh api graphql \
 
 Use `mcp__mcp-communicator-telegram__notify_user` to send:
 
-```
+```text
 Started: Issue #<number>
 Title: <title>
 Branch: <branch>
@@ -263,7 +263,7 @@ Return structured output:
 
 After completing all steps, report:
 
-```
+```text
 SETUP COMPLETE
 
 Issue: #<number> - <title>

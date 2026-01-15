@@ -77,6 +77,23 @@ const impact = await graph.blastRadius("handleRequest");
 
 See [Feature Assessment](docs/FEATURE-ASSESSMENT.md) for detailed analysis.
 
+## Skills Integration
+
+Claude Code skills provide structured access to claude-knowledge features:
+
+| Feature              | Skill               | Description                                      |
+| -------------------- | ------------------- | ------------------------------------------------ |
+| Workflow checkpoints | checkpoint-workflow | Track issue-based workflows, resume after breaks |
+| Session lifecycle    | checkpoint-session  | Auto-inject knowledge, extract learnings         |
+| Code graph queries   | graph-query         | Query call hierarchies, blast radius analysis    |
+| Documentation search | docs-search         | Index and search project docs semantically       |
+| Knowledge queries    | knowledge-query     | Semantic search over learnings and patterns      |
+| Context metrics      | context-metrics     | Dogfooding metrics for optimization              |
+
+Skills are markdown files in `.claude/skills/` that describe when and how Claude Code should use these features. They provide command references, usage examples, and integration patterns.
+
+**Session Hooks**: The `onSessionStart` and `onSessionEnd` hooks are fully implemented and accessible via CLI (`checkpoint session-start`/`session-end`), but are not automatically triggered by Claude Code yet. Automatic injection requires Claude Code client integration (tracked separately).
+
 ## CLI Reference
 
 ```bash

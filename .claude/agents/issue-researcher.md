@@ -51,44 +51,6 @@ This agent uses patterns from [shared/](../shared/):
 
 Use the `graph-query` skill to understand codebase structure efficiently.
 
-### Graph Readiness Check
-
-Before running queries, ensure the graph is populated:
-
-```bash
-# Check if graph has data
-bun run checkpoint graph summary
-
-# If empty, parse relevant packages first
-bun run checkpoint graph parse packages/openbadges-types
-bun run checkpoint graph parse apps/openbadges-modular-server
-```
-
-### Query Commands
-
-```bash
-# Find what calls a function (full call tree)
-bun run checkpoint graph what-calls <function-name>
-
-# Find direct callers only (simpler output)
-bun run checkpoint graph callers <function-name>
-
-# Find what depends on a module/type/interface
-bun run checkpoint graph what-depends-on <name>
-
-# Assess blast radius before changes
-bun run checkpoint graph blast-radius <file-path>
-
-# Search for entities by name
-bun run checkpoint graph find <name> [type]
-
-# Get package exports overview
-bun run checkpoint graph exports [package-name]
-
-# Get codebase statistics (useful for scope estimation)
-bun run checkpoint graph summary [package-name]
-```
-
 **When to use graph queries:**
 
 - Understanding call hierarchies before modifying functions
@@ -96,6 +58,10 @@ bun run checkpoint graph summary [package-name]
 - Assessing impact of file changes
 - Exploring unfamiliar packages
 - Estimating scope with codebase statistics
+
+**Important**: Before running queries, ensure the graph is populated for relevant packages. Use the graph summary command to check readiness and parse commands to populate the graph as needed.
+
+See `.claude/skills/graph-query/SKILL.md` for available commands and usage examples.
 
 ## Purpose
 
