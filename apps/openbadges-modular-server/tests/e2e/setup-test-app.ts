@@ -415,8 +415,44 @@ export async function setupTestApp(
                 }
               }
 
+              // Apply the assertion type column migration
+              const typeColumnMigrationPath = join(
+                APP_ROOT,
+                "drizzle/migrations/0002_abandoned_colonel_america.sql",
+              );
+              if (fs.existsSync(typeColumnMigrationPath)) {
+                logger.info(
+                  "Applying type column migration for E2E tests",
+                );
+                try {
+                  const typeColumnSql = fs.readFileSync(
+                    typeColumnMigrationPath,
+                    "utf8",
+                  );
+                  db.exec(typeColumnSql);
+                  logger.info("Type column migration applied successfully");
+                } catch (error) {
+                  // If column already exists, that's fine
+                  if (
+                    error.message &&
+                    (error.message.includes("already exists") ||
+                      error.message.includes("duplicate column"))
+                  ) {
+                    logger.info(
+                      "Type column already exists, skipping migration",
+                    );
+                  } else {
+                    throw error;
+                  }
+                }
+              } else {
+                logger.warn(
+                  `Type column migration file not found: ${typeColumnMigrationPath}`,
+                );
+              }
+
               logger.info(
-                "All SQLite migrations applied successfully (including status lists)",
+                "All SQLite migrations applied successfully (including status lists and type column)",
               );
             } catch (error) {
               // If tables already exist, that's fine
@@ -680,6 +716,47 @@ export async function setupTestApp(
                 } else {
                   logger.warn(
                     `Achievement versioning migration file not found: ${versioningMigrationPath}`,
+                  );
+                }
+
+                // Apply the assertion type column migration for PostgreSQL
+                const pgTypeColumnMigrationPath = join(
+                  APP_ROOT,
+                  "drizzle/pg-migrations/0002_abandoned_peter_quill.sql",
+                );
+                if (fs.existsSync(pgTypeColumnMigrationPath)) {
+                  logger.info(
+                    "Applying PostgreSQL type column migration for E2E tests",
+                  );
+                  try {
+                    const pgTypeColumnSql = fs.readFileSync(
+                      pgTypeColumnMigrationPath,
+                      "utf8",
+                    );
+                    await client.unsafe(pgTypeColumnSql);
+                    logger.info(
+                      "PostgreSQL type column migration applied successfully",
+                    );
+                  } catch (error) {
+                    const errorMessage =
+                      error instanceof Error ? error.message : String(error);
+                    // If column already exists, that's fine
+                    if (errorMessage.includes("already exists")) {
+                      logger.info(
+                        "Type column already exists in PostgreSQL, skipping migration",
+                      );
+                    } else {
+                      logger.warn(
+                        "PostgreSQL type column migration failed (may be expected)",
+                        {
+                          error: errorMessage,
+                        },
+                      );
+                    }
+                  }
+                } else {
+                  logger.warn(
+                    `PostgreSQL type column migration file not found: ${pgTypeColumnMigrationPath}`,
                   );
                 }
               } catch (error) {
