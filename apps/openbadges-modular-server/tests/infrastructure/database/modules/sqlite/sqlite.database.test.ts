@@ -71,6 +71,7 @@ describeSqlite("SQLiteDatabase Integration (in-memory)", () => {
         verification TEXT,
         revoked INTEGER,
         revocation_reason TEXT,
+        type TEXT DEFAULT 'Assertion',
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         additional_fields TEXT
