@@ -1,7 +1,7 @@
 ---
 name: review-orchestrator
 description: Coordinates review agents and manages auto-fix loop. Spawns code-reviewer, test-analyzer, silent-failure-hunter in parallel, classifies findings, and attempts fixes for critical issues.
-tools: Bash, Read, Glob, Grep
+tools: Bash, Read, Glob, Grep, Skill
 model: sonnet
 ---
 
@@ -50,6 +50,15 @@ Coordinates code review and manages the auto-fix cycle.
 - `agent_completed`: { agent, findingCount }
 - `fix_attempted`: { file, line, attempt, result }
 - `review_complete`: { summary }
+
+## Knowledge Tools
+
+Use these skills for codebase exploration and workflow tracking:
+
+- `/graph-query` - Find callers, dependencies, blast radius
+- `/knowledge-query` - Search past learnings and patterns
+- `/docs-search` - Search project documentation
+- `/checkpoint-workflow` - Log actions and commits
 
 ## Review Agents
 
@@ -254,3 +263,32 @@ The calling workflow should escalate to user with:
 
 - List of unresolved findings
 - Options: continue (manual fix), force-pr, abort
+
+## Success Criteria
+
+This agent is successful when:
+
+- All review agents run (or gracefully skip on failure)
+- Findings are correctly classified by severity
+- Auto-fix attempted for all CRITICAL findings
+- Clear summary returned to orchestrator
+- Escalation triggered when appropriate
+
+## Learning Capture
+
+Before completing, consider storing learnings discovered during this workflow:
+
+```bash
+# Store a learning via MCP (preferred)
+Use knowledge_store tool with content, codeArea, confidence
+
+# Or via CLI
+bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
+```
+
+Capture:
+
+- Patterns discovered in the codebase
+- Mistakes made and how they were resolved
+- Non-obvious solutions that worked
+- Gotchas for future reference

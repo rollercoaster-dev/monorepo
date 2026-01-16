@@ -54,6 +54,15 @@ This agent uses patterns from [shared/](../shared/):
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
 - **[board-operations.md](../shared/board-operations.md)** - Board status updates
 
+## Knowledge Tools
+
+Use these skills for codebase exploration and workflow tracking:
+
+- `/graph-query` - Find callers, dependencies, blast radius
+- `/knowledge-query` - Search past learnings and patterns
+- `/docs-search` - Search project documentation
+- `/checkpoint-workflow` - Log actions and commits
+
 ## Tool Selection (MANDATORY)
 
 **ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../shared/tool-selection.md).
@@ -546,3 +555,22 @@ This agent is successful when:
 - All validations pass
 - Branch is ready for PR
 - Code follows project conventions
+
+## Learning Capture
+
+Before completing, consider storing learnings discovered during this workflow:
+
+```bash
+# Store a learning via MCP (preferred)
+Use knowledge_store tool with content, codeArea, confidence
+
+# Or via CLI
+bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
+```
+
+Capture:
+
+- Patterns discovered in the codebase
+- Mistakes made and how they were resolved
+- Non-obvious solutions that worked
+- Gotchas for future reference

@@ -48,6 +48,15 @@ This agent uses patterns from [shared/](../shared/):
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
 
+## Knowledge Tools
+
+Use these skills for codebase exploration and workflow tracking:
+
+- `/graph-query` - Find callers, dependencies, blast radius
+- `/knowledge-query` - Search past learnings and patterns
+- `/docs-search` - Search project documentation
+- `/checkpoint-workflow` - Log actions and commits
+
 ## Tool Selection (MANDATORY)
 
 **ALWAYS use graph/docs BEFORE Grep.** See [tool-selection.md](../shared/tool-selection.md).
@@ -169,34 +178,17 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
    - Search for keywords from the issue
    - Find relevant files and directories
    - Understand the existing code structure
-   - Use graph to locate entities:
-     ```bash
-     bun run checkpoint graph find <name> [type]
-     ```
+   - Use `/graph-query` skill to locate entities
 
-2. **Map dependencies (use graph queries):**
-
-   ```bash
-   # What calls the code we're changing?
-   bun run checkpoint graph what-calls <function>
-
-   # What depends on this type/module?
-   bun run checkpoint graph what-depends-on <type>
-
-   # What's affected if we change this file?
-   bun run checkpoint graph blast-radius <file>
-   ```
-
-   - Also identify any shared utilities or types
+2. **Map dependencies:**
+   - Use `/graph-query` skill to find callers, dependencies, and blast radius
+   - Identify any shared utilities or types
 
 3. **Review existing patterns:**
    - How are similar features implemented?
    - What conventions does the codebase follow?
    - Any relevant tests to reference?
-   - Check public API surface:
-     ```bash
-     bun run checkpoint graph exports <package>
-     ```
+   - Use `/graph-query` skill to check public API surface
 
 4. **Check for related code:**
    - Similar implementations
@@ -205,15 +197,8 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
 
 ### Phase 3: Estimate Scope
 
-1. **Get codebase context (use graph):**
-
-   ```bash
-   # Get stats for affected package(s)
-   bun run checkpoint graph summary <package-name>
-
-   # Check blast radius of key files to modify
-   bun run checkpoint graph blast-radius <main-file>
-   ```
+1. **Get codebase context:**
+   - Use `/graph-query` skill for package stats and blast radius analysis
 
 2. **Count affected files:**
    - New files to create
@@ -427,3 +412,22 @@ This agent is successful when:
 - Plan has clear, atomic commits
 - Scope is appropriate for single PR
 - User can proceed confidently with implementation
+
+## Learning Capture
+
+Before completing, consider storing learnings discovered during this workflow:
+
+```bash
+# Store a learning via MCP (preferred)
+Use knowledge_store tool with content, codeArea, confidence
+
+# Or via CLI
+bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
+```
+
+Capture:
+
+- Patterns discovered in the codebase
+- Mistakes made and how they were resolved
+- Non-obvious solutions that worked
+- Gotchas for future reference
