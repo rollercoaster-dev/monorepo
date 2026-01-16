@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenBadges System - UI Skeleton</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid #e5e5e5;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 8px 12px;
+      margin-bottom: 24px;
+      color: #1a1a1a;
+    }
+
+    .nav-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      color: #666;
+    }
+
+    .nav-item:hover {
+      background: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    .nav-item.active {
+      background: #f0f0f0;
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    .nav-spacer {
+      flex: 1;
+    }
+
+    /* Main content */
+    .main {
+      padding: 32px 48px;
+      max-width: 1000px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: #666;
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    /* Badge grid */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .badge-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .badge-card:hover {
+      border-color: #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .badge-image {
+      width: 72px;
+      height: 72px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .badge-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .badge-issuer {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .badge-date {
+      font-size: 12px;
+      color: #999;
+      margin-top: 8px;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      color: #1a1a1a;
+      font-size: 16px;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #999;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-hint {
+      font-size: 13px;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+
+    .btn-primary {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #333;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #1a1a1a;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e5e5;
+    }
+
+    /* Issuer selector */
+    .issuer-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .issuer-option {
+      cursor: pointer;
+    }
+
+    .issuer-option-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      transition: border-color 0.15s;
+    }
+
+    .issuer-option input:checked + .issuer-option-content {
+      border-color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    .issuer-option:hover .issuer-option-content {
+      border-color: #ccc;
+    }
+
+    .issuer-avatar {
+      width: 40px;
+      height: 40px;
+      background: #e5e5e5;
+      border-radius: 50%;
+    }
+
+    .issuer-avatar.org {
+      border-radius: 8px;
+      background: #ddd;
+    }
+
+    .issuer-name {
+      font-weight: 500;
+    }
+
+    .issuer-type {
+      font-size: 13px;
+      color: #888;
+    }
+
+    /* Page sections */
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    /* Tabs for page switching */
+    .page-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .page-tab {
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border: none;
+      border-radius: 6px;
+      color: #666;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .page-tab:hover {
+      background: #e5e5e5;
+    }
+
+    .page-tab.active {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    /* Page visibility */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Verify result */
+    .verify-result {
+      padding: 24px;
+      border-radius: 12px;
+      margin-top: 24px;
+    }
+
+    .verify-valid {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .verify-invalid {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    /* Settings sections */
+    .settings-section {
+      padding: 24px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .settings-section-title {
+      font-weight: 500;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #888;
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #666;
+    }
+
+    /* Badge detail */
+    .badge-detail-header {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .badge-detail-image {
+      width: 140px;
+      height: 140px;
+      background: #f0f0f0;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .badge-detail-info {
+      flex: 1;
+    }
+
+    .badge-detail-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .badge-detail-issuer {
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .badge-detail-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* Metadata */
+    .metadata-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metadata-item {
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .metadata-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .metadata-value {
+      font-size: 14px;
+    }
+
+    /* Org members table */
+    .members-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .members-table th,
+    .members-table td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .members-table th {
+      font-size: 12px;
+      font-weight: 500;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .member-avatar {
+      width: 32px;
+      height: 32px;
+      background: #e5e5e5;
+      border-radius: 50%;
+    }
+
+    .role-badge {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .role-admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-creator {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .role-issuer {
+      background: #f3e8ff;
+      color: #6b21a8;
+    }
+
+    /* Upload area */
+    .upload-area {
+      padding: 32px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      text-align: center;
+      color: #888;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .upload-area:hover {
+      border-color: #bbb;
+    }
+
+    /* Back link */
+    .back-link {
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .back-link:hover {
+      color: #1a1a1a;
+    }
+
+    /* Radio and checkbox groups */
+    .radio-group,
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .radio-option,
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .radio-option input,
+    .checkbox-option input {
+      width: 18px;
+      height: 18px;
+      accent-color: #1a1a1a;
+    }
+
+    .radio-option span,
+    .checkbox-option span {
+      font-size: 14px;
+    }
+
+    /* Approval options */
+    .approval-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .approval-option {
+      cursor: pointer;
+    }
+
+    .approval-option-content {
+      padding: 16px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      transition: border-color 0.15s;
+    }
+
+    .approval-option input:checked + .approval-option-content {
+      border-color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    .approval-option:hover .approval-option-content {
+      border-color: #ccc;
+    }
+
+    .approval-option-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .approval-option-desc {
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* Application cards */
+    .application-card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .application-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .application-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .application-badge-image {
+      width: 48px;
+      height: 48px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    .application-badge-name {
+      font-weight: 500;
+    }
+
+    .application-applicant {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .application-date {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .application-status {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-approved {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .application-evidence {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .application-evidence-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .application-evidence-item {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .application-evidence-item a {
+      color: #2563eb;
+    }
+
+    .application-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-approve {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn-approve:hover {
+      background: #15803d;
+    }
+
+    .btn-reject {
+      background: #fff;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-reject:hover {
+      background: #fef2f2;
+    }
+
+    /* Tabs within page */
+    .inner-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #e5e5e5;
+      padding-bottom: 12px;
+    }
+
+    .inner-tab {
+      padding: 8px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #666;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .inner-tab:hover {
+      background: #f5f5f5;
+    }
+
+    .inner-tab.active {
+      background: #f0f0f0;
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    .count-badge {
+      background: #e5e5e5;
+      color: #666;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+
+    .inner-tab.active .count-badge {
+      background: #1a1a1a;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="page-tab" onclick="showPage('badges')">My Badges</button>
+    <button class="page-tab" onclick="showPage('badge-detail')">Badge Detail</button>
+    <button class="page-tab" onclick="showPage('create')">Create Badge</button>
+    <button class="page-tab" onclick="showPage('verify')">Verify</button>
+    <button class="page-tab" onclick="showPage('settings')">Settings</button>
+    <button class="page-tab" onclick="showPage('review')">Review Applications</button>
+  </div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">openbadges</div>
+
+      <div class="nav-item active">Dashboard</div>
+      <div class="nav-item">My Badges</div>
+      <div class="nav-item">Create Badge</div>
+      <div class="nav-item">Verify</div>
+      <div class="nav-item">Review Applications</div>
+
+      <div class="nav-spacer"></div>
+
+      <div class="nav-item">Settings</div>
+    </aside>
+
+    <main class="main">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page active">
+        <header class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Welcome back, Jane</p>
+        </header>
+
+        <section class="section">
+          <h2 class="section-title">Recent Badges</h2>
+          <div class="badge-grid">
+            <div class="badge-card">
+              <div class="badge-image"></div>
+              <div class="badge-name">Open Source Contributor</div>
+              <div class="badge-issuer">Issued by: You</div>
+              <div class="badge-date">Jan 15, 2026</div>
+            </div>
+            <div class="badge-card">
+              <div class="badge-image"></div>
+              <div class="badge-name">TypeScript Fundamentals</div>
+              <div class="badge-issuer">Issued by: Fobizz</div>
+              <div class="badge-date">Jan 10, 2026</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Quick Actions</h2>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-primary">Create Badge</button>
+            <button class="btn btn-secondary">Verify Badge</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- MY BADGES PAGE -->
+      <div id="page-badges" class="page">
+        <header class="page-header">
+          <h1 class="page-title">My Badges</h1>
+          <p class="page-subtitle">Badges you've earned and issued</p>
+        </header>
+
+        <div class="badge-grid">
+          <div class="badge-card">
+            <div class="badge-image"></div>
+            <div class="badge-name">Open Source Contributor</div>
+            <div class="badge-issuer">Issued by: You</div>
+            <div class="badge-date">Jan 15, 2026</div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-image"></div>
+            <div class="badge-name">TypeScript Fundamentals</div>
+            <div class="badge-issuer">Issued by: Fobizz</div>
+            <div class="badge-date">Jan 10, 2026</div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-image"></div>
+            <div class="badge-name">Accessibility Champion</div>
+            <div class="badge-issuer">Issued by: ACME Corp</div>
+            <div class="badge-date">Dec 28, 2025</div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-image"></div>
+            <div class="badge-name">First Contribution</div>
+            <div class="badge-issuer">Issued by: You</div>
+            <div class="badge-date">Dec 15, 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BADGE DETAIL PAGE -->
+      <div id="page-badge-detail" class="page">
+        <a href="#" class="back-link">Back to My Badges</a>
+
+        <div class="badge-detail-header">
+          <div class="badge-detail-image"></div>
+          <div class="badge-detail-info">
+            <h1 class="badge-detail-name">Open Source Contributor</h1>
+            <p class="badge-detail-issuer">Issued by: Jane Developer (You)</p>
+            <p style="color: #666; margin-top: 12px; line-height: 1.5;">
+              Recognized for meaningful contributions to open source projects,
+              including code, documentation, and community support.
+            </p>
+            <div class="badge-detail-actions">
+              <button class="btn btn-primary">Download</button>
+              <button class="btn btn-secondary">Share</button>
+              <button class="btn btn-secondary">View Credential</button>
+            </div>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">Details</h2>
+          <div class="metadata-grid">
+            <div class="metadata-item">
+              <div class="metadata-label">Issued</div>
+              <div class="metadata-value">January 15, 2026</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Expires</div>
+              <div class="metadata-value">Never</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Credential ID</div>
+              <div class="metadata-value" style="font-family: monospace; font-size: 12px;">urn:uuid:a1b2c3d4...</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Status</div>
+              <div class="metadata-value" style="color: #16a34a;">Valid</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">Evidence</h2>
+          <div class="card" style="margin-bottom: 0;">
+            <p style="color: #666; margin-bottom: 8px;">GitHub profile showing contributions</p>
+            <a href="#" style="color: #2563eb;">https://github.com/janedeveloper</a>
+          </div>
+        </section>
+      </div>
+
+      <!-- CREATE BADGE PAGE -->
+      <div id="page-create" class="page">
+        <header class="page-header">
+          <h1 class="page-title">Create Badge</h1>
+          <p class="page-subtitle">Define an achievement and issue it</p>
+        </header>
+
+        <div class="card">
+          <h3 class="card-title">Issue As</h3>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Who is issuing this badge?</p>
+
+          <div class="issuer-options">
+            <label class="issuer-option">
+              <input type="radio" name="issuer" checked style="display: none;">
+              <div class="issuer-option-content">
+                <div class="issuer-avatar"></div>
+                <div>
+                  <div class="issuer-name">Jane Developer</div>
+                  <div class="issuer-type">Personal</div>
+                </div>
+              </div>
+            </label>
+            <label class="issuer-option">
+              <input type="radio" name="issuer" style="display: none;">
+              <div class="issuer-option-content">
+                <div class="issuer-avatar org"></div>
+                <div>
+                  <div class="issuer-name">Fobizz</div>
+                  <div class="issuer-type">Organization - Creator</div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Badge Details</h3>
+
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-input" placeholder="What is this achievement called?">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input form-textarea" placeholder="What does earning this badge mean?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Criteria</label>
+            <textarea class="form-input form-textarea" placeholder="What do you need to do to earn this?"></textarea>
+            <p class="form-hint">Describe the requirements for earning this badge</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Image</label>
+            <div class="upload-area">
+              Drop an image or click to upload
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Evidence Settings</h3>
+
+          <div class="form-group">
+            <label class="form-label">Evidence Requirement</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="evidence-req" checked>
+                <span>None - No evidence needed</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="evidence-req">
+                <span>Optional - Earner can attach evidence</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="evidence-req">
+                <span>Required - Must provide evidence</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Accepted Evidence Types</label>
+            <div class="checkbox-group">
+              <label class="checkbox-option">
+                <input type="checkbox" checked>
+                <span>URL / Link</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox" checked>
+                <span>File Upload</span>
+              </label>
+              <label class="checkbox-option">
+                <input type="checkbox">
+                <span>Text Description</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Instructions for Earner</label>
+            <textarea class="form-input form-textarea" placeholder="What evidence should they provide? Be specific."></textarea>
+            <p class="form-hint">Shown to people applying for this badge</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Approval Method</h3>
+
+          <div class="approval-options">
+            <label class="approval-option selected">
+              <input type="radio" name="approval" checked style="display: none;">
+              <div class="approval-option-content">
+                <div class="approval-option-title">Self-Issue</div>
+                <div class="approval-option-desc">Badge is issued immediately. No review required.</div>
+              </div>
+            </label>
+            <label class="approval-option">
+              <input type="radio" name="approval" style="display: none;">
+              <div class="approval-option-content">
+                <div class="approval-option-title">Review Required</div>
+                <div class="approval-option-desc">Application goes to reviewer queue. Badge issued after approval.</div>
+              </div>
+            </label>
+            <label class="approval-option">
+              <input type="radio" name="approval" style="display: none;">
+              <div class="approval-option-content">
+                <div class="approval-option-title">Claim Code</div>
+                <div class="approval-option-desc">Earner enters a code to claim. Good for events or workshops.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">Recipient</h3>
+
+          <div class="form-group">
+            <label class="form-label">Issue to</label>
+            <input type="text" class="form-input" placeholder="Email address">
+            <p class="form-hint">Leave blank to issue to yourself</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Evidence (optional)</label>
+            <input type="text" class="form-input" placeholder="URL to evidence of achievement">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button class="btn btn-primary">Create and Issue</button>
+          <button class="btn btn-secondary">Save as Template</button>
+        </div>
+      </div>
+
+      <!-- VERIFY PAGE -->
+      <div id="page-verify" class="page">
+        <header class="page-header">
+          <h1 class="page-title">Verify Badge</h1>
+          <p class="page-subtitle">Check if a badge is valid</p>
+        </header>
+
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Badge URL or ID</label>
+            <input type="text" class="form-input" placeholder="Paste a badge URL or credential ID">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Or upload a badge image</label>
+            <div class="upload-area">
+              Drop a baked badge image here
+            </div>
+          </div>
+
+          <button class="btn btn-primary">Verify</button>
+        </div>
+
+        <div class="verify-result verify-valid">
+          <h3 style="color: #16a34a; margin-bottom: 12px; font-weight: 500;">Valid Badge</h3>
+          <p style="margin-bottom: 20px; color: #166534;">This badge was issued by a verified issuer and has not been tampered with.</p>
+
+          <div class="metadata-grid">
+            <div class="metadata-item">
+              <div class="metadata-label">Badge</div>
+              <div class="metadata-value">Open Source Contributor</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Recipient</div>
+              <div class="metadata-value">jane@example.com</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Issuer</div>
+              <div class="metadata-value">Jane Developer</div>
+            </div>
+            <div class="metadata-item">
+              <div class="metadata-label">Issued</div>
+              <div class="metadata-value">January 15, 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="page-settings" class="page">
+        <header class="page-header">
+          <h1 class="page-title">Settings</h1>
+        </header>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Profile</h3>
+
+          <div class="form-group">
+            <label class="form-label">Display Name</label>
+            <input type="text" class="form-input" value="Jane Developer">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" value="jane@example.com">
+          </div>
+
+          <button class="btn btn-secondary">Update Profile</button>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Personal Issuer</h3>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+            How you appear when you issue badges as yourself.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Issuer Name</label>
+            <input type="text" class="form-input" value="Jane Developer">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">URL (optional)</label>
+            <input type="text" class="form-input" placeholder="https://your-website.com">
+          </div>
+
+          <button class="btn btn-secondary">Update Issuer</button>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Organizations</h3>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+            Organizations you can issue badges for.
+          </p>
+
+          <div class="card" style="margin-bottom: 16px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="issuer-avatar org"></div>
+                <div>
+                  <div style="font-weight: 500;">Fobizz</div>
+                  <div style="font-size: 13px; color: #888;">Creator</div>
+                </div>
+              </div>
+              <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Manage</button>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary">Create Organization</button>
+        </div>
+
+        <div class="settings-section">
+          <h3 class="settings-section-title">Fobizz - Members</h3>
+          <p style="color: #666; margin-bottom: 16px; font-size: 14px;">
+            People who can issue badges for this organization.
+          </p>
+
+          <table class="members-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Role</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="member-row">
+                    <div class="member-avatar"></div>
+                    <div>
+                      <div style="font-weight: 500;">Maria Schmidt</div>
+                      <div style="font-size: 13px; color: #888;">maria@fobizz.com</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="role-badge role-admin">Admin</span></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-row">
+                    <div class="member-avatar"></div>
+                    <div>
+                      <div style="font-weight: 500;">Jane Developer</div>
+                      <div style="font-size: 13px; color: #888;">jane@example.com</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="role-badge role-creator">Creator</span></td>
+                <td style="text-align: right; color: #888; font-size: 13px;">You</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="member-row">
+                    <div class="member-avatar"></div>
+                    <div>
+                      <div style="font-weight: 500;">Tom Mueller</div>
+                      <div style="font-size: 13px; color: #888;">tom@fobizz.com</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="role-badge role-issuer">Issuer</span></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 16px;">
+            <button class="btn btn-secondary">Invite Member</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVIEW APPLICATIONS PAGE -->
+      <div id="page-review" class="page">
+        <header class="page-header">
+          <h1 class="page-title">Review Applications</h1>
+          <p class="page-subtitle">Badge applications waiting for your review</p>
+        </header>
+
+        <div class="inner-tabs">
+          <button class="inner-tab active">Pending<span class="count-badge">3</span></button>
+          <button class="inner-tab">Approved<span class="count-badge">12</span></button>
+          <button class="inner-tab">Rejected<span class="count-badge">2</span></button>
+        </div>
+
+        <!-- Application 1 -->
+        <div class="application-card">
+          <div class="application-header">
+            <div class="application-badge">
+              <div class="application-badge-image"></div>
+              <div>
+                <div class="application-badge-name">TypeScript Fundamentals</div>
+                <div class="application-applicant">Applied by: Marcus Chen</div>
+                <div class="application-date">Jan 14, 2026 at 3:42 PM</div>
+              </div>
+            </div>
+            <span class="application-status status-pending">Pending</span>
+          </div>
+
+          <div class="application-evidence">
+            <div class="application-evidence-title">Evidence Submitted</div>
+            <div class="application-evidence-item">
+              <a href="#">https://github.com/marcuschen/typescript-project</a>
+            </div>
+            <div class="application-evidence-item" style="color: #666; margin-top: 8px;">
+              "Completed the TypeScript course and built a full-stack app with strict typing.
+              See the repo for the source code and tests."
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <button class="btn btn-approve" style="padding: 10px 20px;">Approve</button>
+            <button class="btn btn-reject" style="padding: 10px 20px;">Reject</button>
+            <button class="btn btn-secondary" style="padding: 10px 20px;">Request More Info</button>
+          </div>
+        </div>
+
+        <!-- Application 2 -->
+        <div class="application-card">
+          <div class="application-header">
+            <div class="application-badge">
+              <div class="application-badge-image"></div>
+              <div>
+                <div class="application-badge-name">Accessibility Champion</div>
+                <div class="application-applicant">Applied by: Sofia Rodriguez</div>
+                <div class="application-date">Jan 13, 2026 at 11:15 AM</div>
+              </div>
+            </div>
+            <span class="application-status status-pending">Pending</span>
+          </div>
+
+          <div class="application-evidence">
+            <div class="application-evidence-title">Evidence Submitted</div>
+            <div class="application-evidence-item">
+              <a href="#">https://portfolio.sofiar.dev/accessibility-audit</a>
+            </div>
+            <div class="application-evidence-item">
+              <a href="#">lighthouse-report.pdf</a> (uploaded file)
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <button class="btn btn-approve" style="padding: 10px 20px;">Approve</button>
+            <button class="btn btn-reject" style="padding: 10px 20px;">Reject</button>
+            <button class="btn btn-secondary" style="padding: 10px 20px;">Request More Info</button>
+          </div>
+        </div>
+
+        <!-- Application 3 -->
+        <div class="application-card">
+          <div class="application-header">
+            <div class="application-badge">
+              <div class="application-badge-image"></div>
+              <div>
+                <div class="application-badge-name">Open Source Contributor</div>
+                <div class="application-applicant">Applied by: Alex Kim</div>
+                <div class="application-date">Jan 12, 2026 at 9:30 AM</div>
+              </div>
+            </div>
+            <span class="application-status status-pending">Pending</span>
+          </div>
+
+          <div class="application-evidence">
+            <div class="application-evidence-title">Evidence Submitted</div>
+            <div class="application-evidence-item">
+              <a href="#">https://github.com/pulls?q=author:alexkim</a>
+            </div>
+            <div class="application-evidence-item" style="color: #666; margin-top: 8px;">
+              "I've contributed to 5 open source projects this year. The link shows my merged PRs."
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <button class="btn btn-approve" style="padding: 10px 20px;">Approve</button>
+            <button class="btn btn-reject" style="padding: 10px 20px;">Reject</button>
+            <button class="btn btn-secondary" style="padding: 10px 20px;">Request More Info</button>
+          </div>
+        </div>
+
+        <div class="empty-state" style="display: none;">
+          <p class="empty-state-title">No pending applications</p>
+          <p>Applications requiring review will appear here.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+
+      document.querySelectorAll('.page-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      document.getElementById('page-' + pageId).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

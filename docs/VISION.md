@@ -16,6 +16,19 @@ We're building an alternative: **credentials you can issue yourself, verify offl
 
 ---
 
+## What We're Building
+
+**openbadges-system** is an open source badge issuing tool built by rollercoaster.dev.
+
+- Clean, neurodivergent-friendly UI with personality
+- Supports individuals and organizations
+- Full OB2 and OB3 compliance
+- Self-hostable (SQLite or PostgreSQL)
+
+Open source means anyone can use it, fork it, extend it. We build it in the open because that's how good tools get made.
+
+---
+
 ## Core Principles
 
 ### 1. Self-Signed First
