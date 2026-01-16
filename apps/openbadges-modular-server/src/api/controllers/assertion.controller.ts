@@ -38,6 +38,15 @@ import type {
 import { UserPermission } from "../../domains/user/user.entity";
 
 /**
+ * OB3 credential type array per W3C Verifiable Credentials spec.
+ * Used when creating assertions via the v3 API.
+ */
+const OB3_CREDENTIAL_TYPES = [
+  "VerifiableCredential",
+  "OpenBadgeCredential",
+] as const;
+
+/**
  * Maps incoming validated data to the internal Partial<Assertion> format.
  * Only copies properties defined in the internal Assertion entity.
  * Assumes basic type/format validation (like date strings) is done by validation middleware.
@@ -248,11 +257,8 @@ export class AssertionController {
       const assertion = Assertion.create(mappedData);
 
       // Set version-specific type after creation
-      if (version === BadgeVersion.V3) {
-        assertion.type = ['VerifiableCredential', 'OpenBadgeCredential'];
-      } else {
-        assertion.type = 'Assertion'; // OB2 format
-      }
+      assertion.type =
+        version === BadgeVersion.V3 ? [...OB3_CREDENTIAL_TYPES] : "Assertion";
 
       // Sign the assertion if requested
       let signedAssertion = assertion;
@@ -871,11 +877,10 @@ export class AssertionController {
           const assertion = Assertion.create(mappedData);
 
           // Set version-specific type after creation
-          if (version === BadgeVersion.V3) {
-            assertion.type = ['VerifiableCredential', 'OpenBadgeCredential'];
-          } else {
-            assertion.type = 'Assertion'; // OB2 format
-          }
+          assertion.type =
+            version === BadgeVersion.V3
+              ? [...OB3_CREDENTIAL_TYPES]
+              : "Assertion";
 
           // Sign the assertion if requested
           let signedAssertion = assertion;
