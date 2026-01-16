@@ -118,6 +118,22 @@ export class SqliteAssertionMapper {
       id,
     ); // Verification can be null/undefined
 
+    // Parse type field - handle both OB2 string and OB3 array
+    const parsedType = record.type
+      ? (() => {
+          try {
+            const converted = convertJson(record.type, "sqlite", "from");
+            // If it's already a string or array, return it
+            return typeof converted === "string" || Array.isArray(converted)
+              ? converted
+              : record.type;
+          } catch {
+            // If JSON parsing fails, it's a plain string
+            return record.type;
+          }
+        })()
+      : undefined;
+
     // Create and return the domain entity
     try {
       return Assertion.create({
@@ -139,6 +155,7 @@ export class SqliteAssertionMapper {
             : undefined,
         evidence: parsedEvidence,
         verification: parsedVerification,
+        type: parsedType,
         revoked:
           revoked !== null && revoked !== undefined
             ? (convertBoolean(revoked, "sqlite", "from") as boolean)
@@ -234,6 +251,11 @@ export class SqliteAssertionMapper {
         : null,
       verification: entity.verification
         ? (convertJson(entity.verification as object, "sqlite", "to") as string)
+        : null,
+      type: entity.type
+        ? typeof entity.type === "string"
+          ? entity.type
+          : (convertJson(entity.type as object, "sqlite", "to") as string)
         : null,
       revoked:
         entity.revoked !== undefined
