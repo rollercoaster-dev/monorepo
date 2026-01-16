@@ -2,6 +2,7 @@
   "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
     // Project structure
+    "composite": true,
     "outDir": "./dist",
     "rootDir": "./src",
 
@@ -22,7 +23,7 @@
     // Keep strict settings
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*", "schemas/**/*"],
   "exclude": [
     "node_modules",
     "dist",

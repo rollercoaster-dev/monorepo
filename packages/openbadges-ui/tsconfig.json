@@ -1,6 +1,7 @@
 {
   "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
+    "composite": true,
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "allowJs": true,
@@ -22,6 +23,7 @@
     /* Disable strict indexed access to maintain compatibility */
     "noUncheckedIndexedAccess": false,
     "declaration": true,
+    "declarationMap": true,
     "declarationDir": "dist/types",
     "outDir": "dist",
 
