@@ -75,7 +75,9 @@ When MCP is enabled, these native tools are available (preferred over CLI):
 
 - `knowledge://learnings` - Browse all learnings
 - `knowledge://patterns` - Browse patterns
+- `logs://list` - Available log files
 - `logs://test/latest` - Latest test output
+- `logs://file/<name>` - Read a specific log file
 - `workflows://active` - Running workflows
 
 ## Search Priority (MANDATORY)

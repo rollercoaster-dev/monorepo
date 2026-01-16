@@ -36,8 +36,14 @@ export async function readKnowledgeResource(
   uri: string,
 ): Promise<{ uri: string; mimeType: string; text: string } | null> {
   // Parse the URI to extract area parameter if present
-  const url = new URL(uri);
-  const area = url.searchParams.get("area");
+  let area: string | null = null;
+  try {
+    const url = new URL(uri);
+    area = url.searchParams.get("area");
+  } catch {
+    // Malformed URI - return null per function contract
+    return null;
+  }
 
   if (uri.startsWith("knowledge://learnings")) {
     // Query learnings, optionally filtered by area

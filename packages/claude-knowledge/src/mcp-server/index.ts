@@ -122,11 +122,13 @@ async function main(): Promise<void> {
   logger.info("MCP server connected and ready");
 }
 
-// Run if executed directly
-main().catch((error) => {
-  logger.error("Fatal error:", error);
-  process.exit(1);
-});
+// Run if executed directly (Bun entry point check)
+if (import.meta.main) {
+  main().catch((error) => {
+    logger.error("Fatal error:", error);
+    process.exit(1);
+  });
+}
 
 // Export for testing
 export { createServer, SERVER_NAME, SERVER_VERSION };
