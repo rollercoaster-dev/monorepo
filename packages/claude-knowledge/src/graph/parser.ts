@@ -563,6 +563,63 @@ export function extractRelationships(
 }
 
 /**
+ * Extract import map from a source file for call resolution.
+ * Maps imported symbol names to their source file paths (best guess).
+ *
+ * @param sourceFile - ts-morph SourceFile to extract imports from
+ * @param basePath - Base path for relative file resolution
+ * @returns Map where key=imported symbol name, value=source file path
+ */
+export function extractImportMap(
+  sourceFile: SourceFile,
+  basePath: string,
+): Map<string, string> {
+  const importMap = new Map<string, string>();
+  const currentFilePath = relative(basePath, sourceFile.getFilePath());
+
+  sourceFile.getImportDeclarations().forEach((imp) => {
+    const moduleSpecifier = imp.getModuleSpecifierValue();
+    const isRelative = moduleSpecifier.startsWith(".");
+
+    if (!isRelative) {
+      // Skip external imports (node_modules, etc.)
+      return;
+    }
+
+    // Resolve the import target file path
+    const resolvedPath = join(
+      dirname(currentFilePath),
+      moduleSpecifier,
+    ).replace(/\\/g, "/");
+
+    // Try with .ts extension (most common)
+    const possiblePaths = [
+      `${resolvedPath}.ts`,
+      `${resolvedPath}/index.ts`,
+      resolvedPath,
+    ];
+
+    // Use first possibility as best guess
+    const targetPath = possiblePaths[0];
+
+    // Named imports
+    imp.getNamedImports().forEach((named) => {
+      const importedName = named.getName();
+      importMap.set(importedName, targetPath);
+    });
+
+    // Default imports
+    const defaultImport = imp.getDefaultImport();
+    if (defaultImport) {
+      const importedName = defaultImport.getText();
+      importMap.set(importedName, targetPath);
+    }
+  });
+
+  return importMap;
+}
+
+/**
  * Build a lookup map of entities by name for fast call resolution.
  * Groups entities by their simple name (not full ID) to enable quick lookups.
  *
