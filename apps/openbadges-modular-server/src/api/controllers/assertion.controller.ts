@@ -247,6 +247,13 @@ export class AssertionController {
       // Create the assertion using the mapped data
       const assertion = Assertion.create(mappedData);
 
+      // Set version-specific type after creation
+      if (version === BadgeVersion.V3) {
+        assertion.type = ['VerifiableCredential', 'OpenBadgeCredential'];
+      } else {
+        assertion.type = 'Assertion'; // OB2 format
+      }
+
       // Sign the assertion if requested
       let signedAssertion = assertion;
       if (sign) {
