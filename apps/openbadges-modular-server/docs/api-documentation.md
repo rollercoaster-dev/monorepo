@@ -229,9 +229,19 @@ Embeds credential data into a PNG or SVG image using metadata standards. The cre
 
 ```json
 {
-  "bakedImage": "base64-encoded-baked-image-data"
+  "data": "base64-encoded-baked-image-data",
+  "mimeType": "image/png",
+  "size": 12345,
+  "format": "png"
 }
 ```
+
+| Field      | Type   | Description                                         |
+| ---------- | ------ | --------------------------------------------------- |
+| `data`     | string | Base64-encoded baked image with embedded credential |
+| `mimeType` | string | MIME type: `"image/png"` or `"image/svg+xml"`       |
+| `size`     | number | Size of the baked image in bytes                    |
+| `format`   | string | Format of the baked image: `"png"` or `"svg"`       |
 
 **Error Responses**:
 
