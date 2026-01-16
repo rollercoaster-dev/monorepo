@@ -101,9 +101,7 @@ export class CredentialsController {
           credentialId,
           badgeClassIri: assertion.badgeClass,
         });
-        throw new BadRequestError(
-          "Badge class not found for this credential",
-        );
+        throw new BadRequestError("Badge class not found for this credential");
       }
 
       // Fetch the issuer entity (or use embedded issuer if already an object)
@@ -145,19 +143,16 @@ export class CredentialsController {
       // - OB2: type is 'Assertion' or doesn't include OB3 types
       const isOB3 = Array.isArray(assertion.type)
         ? assertion.type.some(
-            (t) =>
-              t === "VerifiableCredential" || t === "OpenBadgeCredential",
+            (t) => t === "VerifiableCredential" || t === "OpenBadgeCredential",
           )
         : false;
       const version = isOB3 ? BadgeVersion.V3 : BadgeVersion.V2;
 
       // Convert assertion to credential format with appropriate version
       // Pass badgeClass and issuer to ensure complete credential embedding
-      const credential = assertion.toJsonLd(
-        version,
-        badgeClass,
-        issuer,
-      ) as OB2.Assertion | OB3.VerifiableCredential;
+      const credential = assertion.toJsonLd(version, badgeClass, issuer) as
+        | OB2.Assertion
+        | OB3.VerifiableCredential;
 
       // Call baking service to embed credential
       logger.debug("Baking credential into image", {
