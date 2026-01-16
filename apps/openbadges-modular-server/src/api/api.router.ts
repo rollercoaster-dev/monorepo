@@ -90,7 +90,6 @@ const BadgeClassQuerySchema = z.object({
   issuer: z.string().min(1, "Issuer ID cannot be empty").optional(),
 });
 
-
 /**
  * Type-safe helper to get validated body from Hono context
  */
