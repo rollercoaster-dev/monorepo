@@ -8,20 +8,21 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
 
-import type {
-  CreateIssuerDto,
-  UpdateIssuerDto,
-  CreateBadgeClassDto,
-  UpdateBadgeClassDto,
-  CreateAssertionDto,
-  UpdateAssertionDto,
-  BatchCreateCredentialsDto,
-  BatchRetrieveCredentialsDto,
-  BatchUpdateCredentialStatusDto,
-  CreateStatusListDto,
-  UpdateCredentialStatusDto,
-  StatusListQueryDto,
-  BakeRequestDto,
+import {
+  BakeRequestSchema,
+  type CreateIssuerDto,
+  type UpdateIssuerDto,
+  type CreateBadgeClassDto,
+  type UpdateBadgeClassDto,
+  type CreateAssertionDto,
+  type UpdateAssertionDto,
+  type BatchCreateCredentialsDto,
+  type BatchRetrieveCredentialsDto,
+  type BatchUpdateCredentialStatusDto,
+  type CreateStatusListDto,
+  type UpdateCredentialStatusDto,
+  type StatusListQueryDto,
+  type BakeRequestDto,
 } from "./dtos";
 import type {
   RelatedAchievementDto,
@@ -87,30 +88,6 @@ import { bakingService } from "../services/baking/baking.service";
  */
 const BadgeClassQuerySchema = z.object({
   issuer: z.string().min(1, "Issuer ID cannot be empty").optional(),
-});
-
-/**
- * Schema for bake request validation
- */
-const BakeRequestSchema = z.object({
-  format: z.enum(["png", "svg"], {
-    errorMap: () => ({ message: "Format must be 'png' or 'svg'" }),
-  }),
-  image: z
-    .string()
-    .min(1, "Image data cannot be empty")
-    .refine(
-      (val) => {
-        // Basic base64 validation
-        try {
-          Buffer.from(val, "base64");
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      { message: "Image data must be valid base64" },
-    ),
 });
 
 /**
