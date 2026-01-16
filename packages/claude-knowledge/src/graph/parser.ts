@@ -343,6 +343,13 @@ function resolveCallTarget(
       }
 
       if (defName) {
+        // Skip if definition is outside the package (e.g., node_modules)
+        // relative() returns paths starting with '..' for files outside basePath
+        if (defFilePath.startsWith("..")) {
+          // External dependency - don't create relationship
+          return null;
+        }
+
         // Verify this entity exists in our entity map
         const entityId = makeEntityId(
           packageName,
@@ -366,8 +373,14 @@ function resolveCallTarget(
     // Look up entities in the imported file
     const candidates = entityLookupMap.get(calledName);
     if (candidates) {
-      // Find entity in the imported file
-      const match = candidates.find((e) => e.filePath === importedFromPath);
+      // Find entity in the imported file - try all possible path variations
+      // to handle cases where import './bar' could be bar.ts or bar/index.ts
+      const possiblePaths = [
+        importedFromPath,
+        importedFromPath.replace(/\.ts$/, "/index.ts"),
+        importedFromPath.replace(/\.ts$/, ""),
+      ];
+      const match = candidates.find((e) => possiblePaths.includes(e.filePath));
       if (match) {
         return match.id;
       }
