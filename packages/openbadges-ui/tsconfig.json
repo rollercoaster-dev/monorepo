@@ -19,9 +19,11 @@
 
     /* Override shared-config for declaration output */
     "noEmit": false,
+    "allowImportingTsExtensions": false,
     /* Disable strict indexed access to maintain compatibility */
     "noUncheckedIndexedAccess": false,
     "declaration": true,
+    "declarationMap": true,
     "declarationDir": "dist/types",
     "outDir": "dist",
 

@@ -2,8 +2,9 @@
   "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
     // Project structure
+    "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
 
     // Enable emit (override shared config's noEmit)
     "noEmit": false,
@@ -22,7 +23,7 @@
     // Keep strict settings
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*", "schemas/**/*.json"],
   "exclude": [
     "node_modules",
     "dist",

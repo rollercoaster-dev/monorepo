@@ -1,6 +1,12 @@
 {
   "extends": "@rollercoaster-dev/shared-config/tsconfig",
   "compilerOptions": {
+    /* Project references */
+    "composite": true,
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+
     /* Environment overrides for Bun server */
     "lib": ["ESNext", "DOM"],
     "target": "ES2017",
@@ -12,7 +18,7 @@
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
-    "noEmit": true,
+    "emitDeclarationOnly": true,
 
     /* Path Aliases */
     "baseUrl": ".",
@@ -37,6 +43,11 @@
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["drizzle.config.ts", "node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "drizzle.config.ts",
+    "drizzle-config-helper.ts"
+  ],
+  "exclude": ["node_modules"]
 }
