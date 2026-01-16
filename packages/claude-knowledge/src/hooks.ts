@@ -28,6 +28,9 @@ import {
   inferCodeAreasFromFiles,
   inferCodeArea,
   formatCommitContent,
+  fetchIssueContext,
+  extractBranchKeywords,
+  type IssueContext,
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
@@ -96,6 +99,29 @@ async function onSessionStart(
   const issueNumber =
     context.issueNumber ??
     (context.branch ? parseIssueNumber(context.branch) : undefined);
+
+  // Fetch issue context for enhanced doc discovery
+  let issueContext: IssueContext | undefined;
+  if (issueNumber) {
+    try {
+      issueContext = await fetchIssueContext(issueNumber);
+      if (issueContext) {
+        logger.debug("Issue context fetched for doc discovery", {
+          issueNumber,
+          keywordCount: issueContext.keywords.length,
+          labelCount: issueContext.labels.length,
+          context: "onSessionStart",
+        });
+      }
+    } catch (error) {
+      // Log but don't fail session - issue context is optional enhancement
+      logger.warn("Failed to fetch issue context", {
+        error: error instanceof Error ? error.message : String(error),
+        issueNumber,
+        context: "onSessionStart",
+      });
+    }
+  }
 
   // Infer code areas from modified files
   const codeAreas = context.modifiedFiles
@@ -191,33 +217,60 @@ async function onSessionStart(
       topics.push(...recentTopics);
     }
 
-    // Search for relevant documentation based on code areas and files
-    if (context.modifiedFiles && context.modifiedFiles.length > 0) {
-      // Build search query from code areas and file basenames
-      const fileBasenames = context.modifiedFiles.map((f) => {
-        const parts = f.split("/");
-        const filename = parts[parts.length - 1];
-        return filename.replace(/\.[^.]+$/, ""); // Remove extension
-      });
+    // Search for relevant documentation based on multiple context signals:
+    // - Code areas from modified files
+    // - File basenames from modified files
+    // - Issue keywords from title/body (via gh CLI)
+    // - Issue labels (e.g., pkg:claude-knowledge → claude-knowledge)
+    // - Branch name keywords (e.g., feat/issue-476-session-context → session, context)
 
-      const searchTerms = [...codeAreas, ...fileBasenames]
-        .filter((term) => term && term.length > 0)
-        .join(" ");
+    // Extract file basenames if modified files exist
+    const fileBasenames = context.modifiedFiles
+      ? context.modifiedFiles.map((f) => {
+          const parts = f.split("/");
+          const filename = parts[parts.length - 1];
+          return filename.replace(/\.[^.]+$/, ""); // Remove extension
+        })
+      : [];
 
-      if (searchTerms.length > 0) {
-        try {
-          const docResults = await searchDocs(searchTerms, {
-            limit: 5,
-            threshold: 0.4,
-          });
-          docs.push(...docResults);
-        } catch (error) {
-          // Log but don't fail the session
-          logger.warn("Failed to search documentation", {
-            error: error instanceof Error ? error.message : String(error),
-            context: "onSessionStart",
-          });
-        }
+    // Get keywords from issue context if available
+    const issueKeywords = issueContext?.keywords ?? [];
+    const labelKeywords = issueContext?.labels ?? [];
+
+    // Extract keywords from branch name (e.g., feat/issue-476-doc-search → doc, search)
+    const branchKeywords = extractBranchKeywords(context.branch);
+
+    // Combine all search terms
+    const searchTerms = [
+      ...codeAreas,
+      ...fileBasenames,
+      ...issueKeywords,
+      ...labelKeywords,
+      ...branchKeywords,
+    ]
+      .filter((term) => term && term.length > 0)
+      .join(" ");
+
+    // Run doc search if we have any search terms (not just when files are modified)
+    if (searchTerms.length > 0) {
+      try {
+        const docResults = await searchDocs(searchTerms, {
+          limit: 5,
+          threshold: 0.4,
+        });
+        docs.push(...docResults);
+
+        logger.debug("Doc search completed", {
+          searchTerms,
+          resultsCount: docResults.length,
+          context: "onSessionStart",
+        });
+      } catch (error) {
+        // Log but don't fail the session
+        logger.warn("Failed to search documentation", {
+          error: error instanceof Error ? error.message : String(error),
+          context: "onSessionStart",
+        });
       }
     }
   } catch (error) {
