@@ -15,6 +15,13 @@
       "when": 1750785621220,
       "tag": "0001_concerned_leech",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768554933348,
+      "tag": "0002_abandoned_peter_quill",
+      "breakpoints": true
     }
   ]
 }

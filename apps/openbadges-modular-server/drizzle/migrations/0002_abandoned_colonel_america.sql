@@ -1,0 +1,1 @@
+ALTER TABLE `assertions` ADD `type` text DEFAULT 'Assertion';
