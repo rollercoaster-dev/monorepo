@@ -25,9 +25,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { Logger } from "@rollercoaster-dev/rd-logger";
 import { tools, handleToolCall } from "./tools/index.js";
-
-// Resource registry will be imported once implemented
-// import { resources, handleResourceRead } from "./resources/index.js";
+import { resources, readResource } from "./resources/index.js";
 
 const logger = new Logger();
 
@@ -71,26 +69,28 @@ function createServer(): Server {
 
   // List available resources
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
-    logger.debug("Listing resources");
-    // Will return actual resources once implemented
-    return { resources: [] };
+    logger.debug("[mcp-server] Listing resources", { count: resources.length });
+    return { resources };
   });
 
   // Handle resource reads
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
-    logger.debug(`Resource read: ${uri}`);
+    logger.debug("[mcp-server] Resource read", { uri });
 
-    // Will dispatch to actual handlers once implemented
-    return {
-      contents: [
-        {
-          uri,
-          mimeType: "text/plain",
-          text: `Resource '${uri}' not yet implemented`,
-        },
-      ],
-    };
+    const result = await readResource(uri);
+    if ("error" in result) {
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "text/plain",
+            text: JSON.stringify({ error: result.error }),
+          },
+        ],
+      };
+    }
+    return result;
   });
 
   return server;
