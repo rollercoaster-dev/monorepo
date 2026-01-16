@@ -8,13 +8,12 @@
     // Packages
     { "path": "./packages/rd-logger" },
     { "path": "./packages/openbadges-types" },
-    { "path": "./packages/openbadges-ui" },
     { "path": "./packages/claude-knowledge" },
     { "path": "./packages/claude-workflows" },
     // Apps
     { "path": "./apps/openbadges-modular-server" }
-    // Note: shared-config and openbadges-system excluded
+    // Note: shared-config, openbadges-ui, and openbadges-system excluded
     // - shared-config: config-only package with no TypeScript source files
-    // - openbadges-system: Vue SFC declaration limitations prevent composite mode
+    // - openbadges-ui, openbadges-system: Vue SFC declaration limitations prevent composite mode
   ]
 }

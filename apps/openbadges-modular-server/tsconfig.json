@@ -18,7 +18,7 @@
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
-    "noEmit": true,
+    "emitDeclarationOnly": true,
 
     /* Path Aliases */
     "baseUrl": ".",
