@@ -5,6 +5,48 @@
  * credentials into PNG or SVG images.
  */
 
+import { z } from "zod";
+
+/**
+ * Maximum image size (10MB)
+ * Matches the size limit for baked image verification
+ */
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+/**
+ * Base64 pattern validation (standard base64, not base64url)
+ * Matches the pattern used in verify.dto.ts for baked images
+ */
+const base64Pattern = /^[A-Za-z0-9+/]*={0,2}$/;
+
+/**
+ * Zod schema for bake request validation
+ * Validates format and base64-encoded image with size limit
+ */
+export const BakeRequestSchema = z.object({
+  /**
+   * Image format for baking
+   * Must be either 'png' or 'svg'
+   */
+  format: z.enum(["png", "svg"], {
+    errorMap: () => ({ message: "Format must be 'png' or 'svg'" }),
+  }),
+
+  /**
+   * Base64-encoded image data
+   * Must be valid base64 and under 10MB
+   */
+  image: z
+    .string()
+    .min(1, "Image data cannot be empty")
+    .refine((val) => val.length <= MAX_IMAGE_SIZE, {
+      message: `Image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB`,
+    })
+    .refine((val) => base64Pattern.test(val), {
+      message: "Image must be valid base64 encoded data",
+    }),
+});
+
 /**
  * Request DTO for baking a credential into an image
  *
