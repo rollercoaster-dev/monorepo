@@ -14,11 +14,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write '*.{js,mjs,json}'",
     "format:check": "prettier --check '*.{js,mjs,json}'",
-    "test": "echo 'No tests for shared-config'",
-    "test:unit": "echo 'No tests for shared-config'",
-    "test:integration": "echo 'No tests for shared-config'",
-    "test:e2e": "echo 'No tests for shared-config'",
-    "type-check": "echo 'No types to check'"
+    "test": "exit 0",
+    "test:unit": "exit 0",
+    "test:integration": "exit 0",
+    "test:e2e": "exit 0",
+    "type-check": "exit 0"
   },
   "files": [
     "eslint.config.mjs",
