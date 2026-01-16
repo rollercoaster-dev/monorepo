@@ -12,7 +12,7 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
 
-    /* Disable declaration emit - shared-config enables it but Vue SFCs can't emit declarations for external types */
+    /* Disable declaration emit - Vue SFCs can't emit declarations with composite mode */
     "declaration": false,
     "declarationMap": false,
 

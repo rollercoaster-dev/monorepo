@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -8,10 +12,7 @@
     "skipLibCheck": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "types": ["bun"],
-    "paths": {
-      "@rollercoaster-dev/rd-logger": ["../rd-logger/src/index.ts"]
-    }
+    "types": ["bun"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
