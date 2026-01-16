@@ -38,9 +38,8 @@ async function resetSqliteDatabase(): Promise<void> {
     logger.info("Resetting database tables", { tables });
 
     // Import RepositoryFactory to get the same connection used by tests
-    const { RepositoryFactory } = await import(
-      "@/infrastructure/repository.factory"
-    );
+    const { RepositoryFactory } =
+      await import("@/infrastructure/repository.factory");
 
     // Get the SQLite connection manager from RepositoryFactory
     // This ensures we use the SAME database connection as the test server
