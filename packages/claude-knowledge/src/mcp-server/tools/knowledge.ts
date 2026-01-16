@@ -8,6 +8,8 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { knowledge } from "../../knowledge/index.js";
 import type { Learning, QueryContext } from "../../types.js";
+import type { SearchSimilarOptions } from "../../knowledge/semantic.js";
+import { recordDocsSearch } from "../../session/index.js";
 
 /**
  * Tool definitions for knowledge operations.
@@ -83,6 +85,38 @@ export const knowledgeTools: Tool[] = [
       required: ["content"],
     },
   },
+  {
+    name: "knowledge_search_similar",
+    description:
+      "Search for semantically similar learnings using vector embeddings. " +
+      "Unlike keyword search, this finds conceptually related learnings even without exact word matches. " +
+      "Example: searching 'validate user input' can find learnings about 'form validation' or 'sanitization'.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        query: {
+          type: "string",
+          description: "Natural language query to find similar learnings",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum results to return (default: 10)",
+          default: 10,
+        },
+        threshold: {
+          type: "number",
+          description: "Minimum similarity score 0.0-1.0 (default: 0.3)",
+          default: 0.3,
+        },
+        includeRelated: {
+          type: "boolean",
+          description: "Include related patterns and mistakes (default: false)",
+          default: false,
+        },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
 /**
@@ -108,6 +142,11 @@ export async function handleKnowledgeToolCall(
         };
 
         const results = await knowledge.query(context);
+
+        // Record usage for PreToolUse hook (unlocks Grep/Glob)
+        const queryDesc =
+          context.keywords?.join(" ") || context.codeArea || "query";
+        recordDocsSearch(queryDesc, results.length);
 
         if (results.length === 0) {
           return {
@@ -203,6 +242,88 @@ export async function handleKnowledgeToolCall(
                     codeArea: learning.codeArea,
                     filePath: learning.filePath,
                   },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "knowledge_search_similar": {
+        const query = args.query as string;
+        if (!query) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "query is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const options: SearchSimilarOptions = {
+          limit: (args.limit as number) || 10,
+          threshold: (args.threshold as number) || 0.3,
+          includeRelated: (args.includeRelated as boolean) || false,
+        };
+
+        const results = await knowledge.searchSimilar(query, options);
+
+        // Record usage for PreToolUse hook (unlocks Grep/Glob)
+        recordDocsSearch(query, results.length);
+
+        if (results.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    message: "No similar learnings found",
+                    query,
+                    threshold: options.threshold,
+                    results: [],
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  count: results.length,
+                  query,
+                  results: results.map((r) => ({
+                    similarity: r.relevanceScore?.toFixed(3),
+                    learning: {
+                      id: r.learning.id,
+                      content: r.learning.content,
+                      codeArea: r.learning.codeArea,
+                      confidence: r.learning.confidence,
+                      sourceIssue: r.learning.sourceIssue,
+                    },
+                    relatedPatterns: r.relatedPatterns?.map((p) => ({
+                      id: p.id,
+                      name: p.name,
+                      description: p.description,
+                    })),
+                    relatedMistakes: r.relatedMistakes?.map((m) => ({
+                      id: m.id,
+                      description: m.description,
+                      howFixed: m.howFixed,
+                    })),
+                  })),
                 },
                 null,
                 2,

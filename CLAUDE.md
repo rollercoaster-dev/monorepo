@@ -61,15 +61,16 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 
 When MCP is enabled, these native tools are available (preferred over CLI):
 
-| Tool                    | Purpose                             |
-| ----------------------- | ----------------------------------- |
-| `knowledge_query`       | Query learnings, patterns, mistakes |
-| `knowledge_store`       | Store new learnings                 |
-| `graph_what_calls`      | Find function callers               |
-| `graph_blast_radius`    | Analyze change impact               |
-| `graph_find`            | Locate code entities                |
-| `checkpoint_workflow_*` | Manage workflow checkpoints         |
-| `output_save`           | Save long output to file            |
+| Tool                       | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `knowledge_search_similar` | **Semantic search** - find related concepts |
+| `knowledge_query`          | Keyword search learnings, patterns          |
+| `knowledge_store`          | Store new learnings                         |
+| `graph_what_calls`         | Find function callers                       |
+| `graph_blast_radius`       | Analyze change impact                       |
+| `graph_find`               | Locate code entities                        |
+| `checkpoint_workflow_*`    | Manage workflow checkpoints                 |
+| `output_save`              | Save long output to file                    |
 
 **Resources** (browsable data):
 
@@ -82,22 +83,25 @@ When MCP is enabled, these native tools are available (preferred over CLI):
 
 ## Search Priority (MANDATORY)
 
-**ALWAYS try MCP tools or graph queries BEFORE Grep.** 1 query = 10 greps worth of context.
+**ALWAYS try MCP tools BEFORE Grep/Glob.** 1 query = 10 greps worth of context.
 
-| Question          | MCP Tool (preferred) | CLI Fallback                 |
-| ----------------- | -------------------- | ---------------------------- |
-| Who calls X?      | `graph_what_calls`   | `bun run g:calls <fn>`       |
-| Impact of change? | `graph_blast_radius` | `bun run g:blast <file>`     |
-| Where is X?       | `graph_find`         | `bun run g:find <name>`      |
-| Past learnings?   | `knowledge_query`    | `checkpoint knowledge query` |
+| Question                    | MCP Tool (preferred)       | Fallback          |
+| --------------------------- | -------------------------- | ----------------- |
+| How did we handle X before? | `knowledge_search_similar` | `knowledge_query` |
+| Past learnings about X?     | `knowledge_search_similar` | `knowledge_query` |
+| Who calls function X?       | `graph_what_calls`         | Grep              |
+| Impact of changing file X?  | `graph_blast_radius`       | Grep              |
+| Where is X defined?         | `graph_find`               | Glob              |
 
 **Priority order:**
 
-1. **MCP tools** - Native tools when MCP server is connected
+1. **Semantic search** (`knowledge_search_similar`) - Finds conceptually related learnings
 2. **Graph queries** - Code relationships (callers, dependencies, blast radius)
-3. **Docs search** - Project documentation and patterns
-4. **Knowledge query** - Past learnings, mistakes, patterns
+3. **Knowledge query** - Keyword-based search for exact matches
+4. **Docs search** - Project documentation and patterns
 5. **Grep/Glob** - LAST RESORT for literal text search only
+
+**Why semantic first?** It finds "validation" when you search "input checking" - concepts, not keywords.
 
 The code graph is populated on session start. Using it first saves 10x tool calls.
 
