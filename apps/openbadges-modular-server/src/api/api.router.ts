@@ -23,6 +23,7 @@ import type {
   StatusListQueryDto,
   BakeRequestDto,
 } from "./dtos";
+import { BakeRequestSchema } from "./dtos/bake-request.dto";
 import type {
   RelatedAchievementDto,
   EndorsementCredentialDto,
@@ -89,29 +90,6 @@ const BadgeClassQuerySchema = z.object({
   issuer: z.string().min(1, "Issuer ID cannot be empty").optional(),
 });
 
-/**
- * Schema for bake request validation
- */
-const BakeRequestSchema = z.object({
-  format: z.enum(["png", "svg"], {
-    errorMap: () => ({ message: "Format must be 'png' or 'svg'" }),
-  }),
-  image: z
-    .string()
-    .min(1, "Image data cannot be empty")
-    .refine(
-      (val) => {
-        // Basic base64 validation
-        try {
-          Buffer.from(val, "base64");
-          return true;
-        } catch {
-          return false;
-        }
-      },
-      { message: "Image data must be valid base64" },
-    ),
-});
 
 /**
  * Type-safe helper to get validated body from Hono context
