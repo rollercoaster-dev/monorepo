@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS graph_queries (
 );
 
 -- Indexes for graph query metrics
--- Note: idx_graph_queries_source is created in Migration 2 (after adding source column)
+-- Note: idx_graph_queries_source is created in Migration 2 (line ~280, after adding source column)
 CREATE INDEX IF NOT EXISTS idx_graph_queries_session ON graph_queries(session_id);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_workflow ON graph_queries(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_type ON graph_queries(query_type);
