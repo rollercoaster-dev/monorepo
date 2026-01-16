@@ -11,15 +11,13 @@ import { logger } from "@/utils/logging/logger.service";
 /**
  * Reset a SQLite database by deleting all data
  *
- * This is a simplified version that doesn't try to access the internal client directly.
- * Instead, it uses the database interface methods to delete data from each table.
+ * This version uses the RepositoryFactory's connection manager to ensure
+ * we're operating on the same database instance used by the tests.
+ * This is critical for :memory: databases where each connection is separate.
  */
 async function resetSqliteDatabase(): Promise<void> {
   try {
     logger.info("Resetting SQLite database...");
-
-    // Get database instance
-    await DatabaseFactory.createDatabase("sqlite");
 
     // Tables to clean up (in order to avoid foreign key constraints)
     const tables = [
@@ -39,21 +37,22 @@ async function resetSqliteDatabase(): Promise<void> {
 
     logger.info("Resetting database tables", { tables });
 
-    // Get direct access to the SQLite database
-    const { Database } = require("bun:sqlite");
-    const path = require("path");
-    let sqliteFile =
-      process.env.SQLITE_DB_PATH || process.env.SQLITE_FILE || ":memory:";
+    // Import RepositoryFactory to get the same connection used by tests
+    const { RepositoryFactory } =
+      await import("@/infrastructure/repository.factory");
 
-    // Convert relative paths to absolute using app root
-    // This handles running from monorepo root where cwd differs from app dir
-    if (sqliteFile !== ":memory:" && !path.isAbsolute(sqliteFile)) {
-      const appRoot = path.resolve(import.meta.dir, "../../..");
-      sqliteFile = path.resolve(appRoot, sqliteFile);
+    // Get the SQLite connection manager from RepositoryFactory
+    // This ensures we use the SAME database connection as the test server
+    const connectionManager = RepositoryFactory.getSqliteConnectionManager();
+    if (!connectionManager) {
+      logger.warn(
+        "SQLite connection manager not available, database may not be initialized yet",
+      );
+      return;
     }
 
-    logger.debug(`Using SQLite database at: ${sqliteFile}`);
-    const sqliteDb = new Database(sqliteFile);
+    // Get the underlying database client
+    const sqliteDb = connectionManager.getClient();
 
     // Disable foreign key constraints temporarily
     sqliteDb.run("PRAGMA foreign_keys = OFF");
@@ -68,7 +67,7 @@ async function resetSqliteDatabase(): Promise<void> {
         try {
           const count = sqliteDb
             .query(`SELECT COUNT(*) as count FROM ${table}`)
-            .get();
+            .get() as { count: number } | null;
           logger.debug(
             `Deleted all data from ${table}, remaining rows: ${
               count?.count || 0

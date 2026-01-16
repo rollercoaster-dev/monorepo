@@ -19,7 +19,12 @@ import { resetDatabase } from "./helpers/database-reset.helper";
 import { setupTestApp, stopTestServer } from "./setup-test-app";
 import { getAvailablePort, releasePort } from "./helpers/port-manager.helper";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// Get the directory of this test file to resolve fixture paths correctly
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const APP_ROOT = join(__dirname, "../..");
 
 // Port and URL configuration
 let TEST_PORT: number;
@@ -153,7 +158,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load PNG fixture and encode to base64
-      const pngPath = join(process.cwd(), "tests/fixtures/test-badge.png");
+      const pngPath = join(APP_ROOT, "tests/fixtures/test-badge.png");
       const pngBuffer = readFileSync(pngPath);
       const pngBase64 = pngBuffer.toString("base64");
       logger.info("Loaded PNG fixture", {
@@ -217,11 +222,16 @@ describe("Baking API - E2E", () => {
         statusText: verifyResponse.statusText,
       });
 
-      // Verify extraction succeeded (full verification requires embedded issuer data)
+      // Verify extraction and validation succeeded
       expect(verifyResponse.status).toBe(200);
       const verifyResult = (await verifyResponse.json()) as {
         isValid: boolean;
         status: string;
+        credential?: {
+          id: string;
+          issuer?: unknown;
+          [key: string]: unknown;
+        };
         error?: string;
         metadata?: {
           extractionAttempted?: boolean;
@@ -237,10 +247,24 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.extractionSucceeded).toBe(true);
       expect(verifyResult.metadata?.sourceFormat).toBe("png");
 
-      // Note: Full verification (isValid: true) requires the credential to have
-      // embedded issuer data. The current serialization doesn't include this,
-      // so we verify extraction success rather than full credential validity.
-      // This is a known limitation that should be addressed in a follow-up issue.
+      // Verify embedded issuer data is present in the extracted credential
+      expect(verifyResult.credential).toBeDefined();
+      expect(verifyResult.credential?.issuer).toBeDefined();
+      expect(typeof verifyResult.credential?.issuer).toBe("object");
+
+      // Verify issuer has required OB3 fields (id and name are required)
+      const issuer = verifyResult.credential?.issuer as {
+        id?: string;
+        name?: string;
+        url?: string;
+      };
+      expect(issuer.id).toBeDefined();
+      expect(issuer.name).toBeDefined();
+
+      // Note: Full verification (isValid: true) requires proper cryptographic signing.
+      // This fix ensures issuer data IS embedded (necessary for verification),
+      // but verification may still fail due to unsigned test credentials.
+      // The important assertion is that issuer is now an embedded object, not just an IRI.
       expect(verifyResult.status).toBeDefined();
     });
   });
@@ -270,7 +294,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load SVG fixture and encode to base64
-      const svgPath = join(process.cwd(), "tests/fixtures/test-badge.svg");
+      const svgPath = join(APP_ROOT, "tests/fixtures/test-badge.svg");
       const svgBuffer = readFileSync(svgPath);
       const svgBase64 = svgBuffer.toString("base64");
       logger.info("Loaded SVG fixture", {
@@ -334,11 +358,16 @@ describe("Baking API - E2E", () => {
         statusText: verifyResponse.statusText,
       });
 
-      // Verify extraction succeeded (full verification requires embedded issuer data)
+      // Verify extraction and validation succeeded
       expect(verifyResponse.status).toBe(200);
       const verifyResult = (await verifyResponse.json()) as {
         isValid: boolean;
         status: string;
+        credential?: {
+          id: string;
+          issuer?: unknown;
+          [key: string]: unknown;
+        };
         error?: string;
         metadata?: {
           extractionAttempted?: boolean;
@@ -354,7 +383,24 @@ describe("Baking API - E2E", () => {
       expect(verifyResult.metadata?.extractionSucceeded).toBe(true);
       expect(verifyResult.metadata?.sourceFormat).toBe("svg");
 
-      // Note: Full verification requires embedded issuer data (see PNG test comments)
+      // Verify embedded issuer data is present in the extracted credential
+      expect(verifyResult.credential).toBeDefined();
+      expect(verifyResult.credential?.issuer).toBeDefined();
+      expect(typeof verifyResult.credential?.issuer).toBe("object");
+
+      // Verify issuer has required OB3 fields (id and name are required)
+      const issuer = verifyResult.credential?.issuer as {
+        id?: string;
+        name?: string;
+        url?: string;
+      };
+      expect(issuer.id).toBeDefined();
+      expect(issuer.name).toBeDefined();
+
+      // Note: Full verification (isValid: true) requires proper cryptographic signing.
+      // This fix ensures issuer data IS embedded (necessary for verification),
+      // but verification may still fail due to unsigned test credentials.
+      // The important assertion is that issuer is now an embedded object, not just an IRI.
       expect(verifyResult.status).toBeDefined();
     });
   });
@@ -384,7 +430,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load PNG fixture and bake credential
-      const pngPath = join(process.cwd(), "tests/fixtures/test-badge.png");
+      const pngPath = join(APP_ROOT, "tests/fixtures/test-badge.png");
       const pngBuffer = readFileSync(pngPath);
       const pngBase64 = pngBuffer.toString("base64");
 

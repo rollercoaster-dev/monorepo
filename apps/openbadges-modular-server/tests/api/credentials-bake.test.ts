@@ -6,12 +6,16 @@ import { describe, it, expect, beforeEach, mock } from "bun:test";
 import type { Shared, OB3 } from "openbadges-types";
 import { CredentialsController } from "../../src/api/controllers/credentials.controller";
 import type { AssertionRepository } from "../../src/domains/assertion/assertion.repository";
+import type { BadgeClassRepository } from "../../src/domains/badgeClass/badgeClass.repository";
+import type { IssuerRepository } from "../../src/domains/issuer/issuer.repository";
 import type {
   BakingService,
   BakedImage,
 } from "../../src/services/baking/types";
 import type { BakeRequestDto } from "../../src/api/dtos";
 import { Assertion } from "../../src/domains/assertion/assertion.entity";
+import { BadgeClass } from "../../src/domains/badgeClass/badgeClass.entity";
+import { Issuer } from "../../src/domains/issuer/issuer.entity";
 import { BadRequestError } from "../../src/infrastructure/errors/bad-request.error";
 
 // Sample test fixtures
@@ -28,6 +32,14 @@ const mockAssertionRepository: Partial<AssertionRepository> = {
   findById: mock(),
 };
 
+const mockBadgeClassRepository: Partial<BadgeClassRepository> = {
+  findById: mock(),
+};
+
+const mockIssuerRepository: Partial<IssuerRepository> = {
+  findById: mock(),
+};
+
 const mockBakingService: Partial<BakingService> = {
   bake: mock(),
   unbake: mock(),
@@ -38,10 +50,24 @@ const mockBakingService: Partial<BakingService> = {
 describe("Bake Credential Endpoint Unit Tests", () => {
   let credentialsController: CredentialsController;
   let mockAssertion: Assertion;
+  let mockBadgeClass: BadgeClass;
+  let mockIssuer: Issuer;
 
   beforeEach(() => {
     // Reset all mocks
     Object.values(mockAssertionRepository).forEach((mockFn) => {
+      if (typeof mockFn === "function" && "mockReset" in mockFn) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mockFn as any).mockReset();
+      }
+    });
+    Object.values(mockBadgeClassRepository).forEach((mockFn) => {
+      if (typeof mockFn === "function" && "mockReset" in mockFn) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mockFn as any).mockReset();
+      }
+    });
+    Object.values(mockIssuerRepository).forEach((mockFn) => {
       if (typeof mockFn === "function" && "mockReset" in mockFn) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (mockFn as any).mockReset();
@@ -57,8 +83,29 @@ describe("Bake Credential Endpoint Unit Tests", () => {
     // Create controller with mocked dependencies
     credentialsController = new CredentialsController(
       mockAssertionRepository as AssertionRepository,
+      mockBadgeClassRepository as BadgeClassRepository,
+      mockIssuerRepository as IssuerRepository,
       mockBakingService as BakingService,
     );
+
+    // Create a mock issuer
+    mockIssuer = Issuer.create({
+      id: "urn:uuid:issuer-123" as Shared.IRI,
+      name: "Test Issuer",
+      url: "https://example.com" as Shared.IRI,
+      email: "issuer@example.com",
+    });
+
+    // Create a mock badge class
+    mockBadgeClass = BadgeClass.create({
+      id: "urn:uuid:badge-class-123" as Shared.IRI,
+      name: "Test Badge",
+      description: "Test Badge Description",
+      issuer: mockIssuer.id,
+      criteria: {
+        narrative: "Test criteria",
+      },
+    });
 
     // Create a mock assertion
     mockAssertion = Assertion.create({
@@ -67,8 +114,8 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         id: "did:example:recipient123" as Shared.IRI,
         type: "Profile",
       } as OB3.CredentialSubject,
-      badgeClass: "urn:uuid:badge-class-123" as Shared.IRI,
-      issuer: "urn:uuid:issuer-123" as Shared.IRI,
+      badgeClass: mockBadgeClass.id,
+      issuer: mockIssuer.id,
       issuedOn: "2023-01-01T00:00:00Z",
     });
   });
@@ -93,6 +140,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -132,6 +185,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
@@ -210,6 +269,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // Mock baking service to throw an error (e.g., malformed image)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
@@ -272,6 +337,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         mockAssertion,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockRejectedValue(
         new Error("Baking service internal error"),
       );
@@ -323,6 +394,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
         mockAssertion,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 
       // Act
@@ -362,6 +439,12 @@ describe("Bake Credential Endpoint Unit Tests", () => {
       (mockAssertionRepository.findById as any).mockResolvedValue(
         mockAssertion,
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockBadgeClassRepository.findById as any).mockResolvedValue(
+        mockBadgeClass,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mockIssuerRepository.findById as any).mockResolvedValue(mockIssuer);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockBakingService.bake as any).mockResolvedValue(mockBakedImage);
 

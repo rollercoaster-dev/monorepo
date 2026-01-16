@@ -212,6 +212,12 @@ export class Assertion {
    * @param badgeClass Optional badge class for the assertion
    * @param issuer Optional issuer for the assertion
    * @returns A JSON-LD representation of the assertion
+   *
+   * IMPORTANT: For OB3 compliance, the issuer parameter MUST be provided.
+   * The Open Badges 3.0 specification requires that credentials include
+   * embedded issuer profile data for full verification. Without the issuer
+   * parameter, the credential will only contain an issuer IRI reference,
+   * which will fail verification as verifiers cannot resolve issuer metadata.
    */
   toJsonLd(
     version: BadgeVersion = BadgeVersion.V3,

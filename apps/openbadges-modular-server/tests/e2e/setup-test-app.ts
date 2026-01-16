@@ -266,8 +266,9 @@ export async function setupTestApp(
           const db = connectionManager.getClient();
 
           // Apply the latest migration SQL that includes issuer_id column
+          // Use APP_ROOT to resolve paths correctly when running from monorepo root
           const sqlFilePath = join(
-            process.cwd(),
+            APP_ROOT,
             "drizzle/migrations/0000_fixed_migration.sql",
           );
           if (fs.existsSync(sqlFilePath)) {
@@ -282,7 +283,7 @@ export async function setupTestApp(
 
               // Apply the status list migration
               const statusListMigrationPath = join(
-                process.cwd(),
+                APP_ROOT,
                 "drizzle/migrations/0003_add_status_lists.sql",
               );
               if (fs.existsSync(statusListMigrationPath)) {
@@ -315,7 +316,7 @@ export async function setupTestApp(
 
               // Apply the latest achievement versioning migration that includes the version column
               const latestVersioningMigrationPath = join(
-                process.cwd(),
+                APP_ROOT,
                 "drizzle/migrations/0001_cool_martin_li.sql",
               );
               if (fs.existsSync(latestVersioningMigrationPath)) {
@@ -377,7 +378,7 @@ export async function setupTestApp(
 
                 // Fallback to the old migration file
                 const versioningMigrationPath = join(
-                  process.cwd(),
+                  APP_ROOT,
                   "drizzle/migrations/0005_add_achievement_versioning_relationships.sql",
                 );
                 if (fs.existsSync(versioningMigrationPath)) {
@@ -483,7 +484,7 @@ export async function setupTestApp(
 
             // Apply the fixed migration SQL
             const sqlFilePath = join(
-              process.cwd(),
+              APP_ROOT,
               "drizzle/pg-migrations/0000_strong_gideon_fixed.sql",
             );
             if (fs.existsSync(sqlFilePath)) {
@@ -572,7 +573,7 @@ export async function setupTestApp(
 
                 // Apply additional migration to add missing columns
                 const additionalMigrationPath = join(
-                  process.cwd(),
+                  APP_ROOT,
                   "drizzle/pg-migrations/0003_add_missing_columns.sql",
                 );
                 if (fs.existsSync(additionalMigrationPath)) {
@@ -602,7 +603,7 @@ export async function setupTestApp(
 
                 // Apply status list migration for PostgreSQL
                 const statusListMigrationPath = join(
-                  process.cwd(),
+                  APP_ROOT,
                   "drizzle/pg-migrations/0004_add_status_lists.sql",
                 );
                 if (fs.existsSync(statusListMigrationPath)) {
@@ -643,7 +644,7 @@ export async function setupTestApp(
 
                 // Apply achievement versioning and relationships migration for PostgreSQL
                 const versioningMigrationPath = join(
-                  process.cwd(),
+                  APP_ROOT,
                   "drizzle/pg-migrations/0006_add_achievement_versioning_relationships.sql",
                 );
                 if (fs.existsSync(versioningMigrationPath)) {
@@ -698,7 +699,7 @@ export async function setupTestApp(
 
               // Try the original file as a fallback
               const originalSqlFilePath = join(
-                process.cwd(),
+                APP_ROOT,
                 "drizzle/pg-migrations/0000_strong_gideon.sql",
               );
               if (fs.existsSync(originalSqlFilePath)) {
@@ -789,7 +790,7 @@ export async function setupTestApp(
 
                   // Apply status list migration for PostgreSQL (fallback path)
                   const statusListMigrationPath = join(
-                    process.cwd(),
+                    APP_ROOT,
                     "drizzle/pg-migrations/0004_add_status_lists.sql",
                   );
                   if (fs.existsSync(statusListMigrationPath)) {
