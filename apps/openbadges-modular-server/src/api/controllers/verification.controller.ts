@@ -231,11 +231,20 @@ export class VerificationController {
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      // If it's an extraction/format error, return structured error
-      if (
+      // If it's an extraction/format error or corruption, return structured error
+      // Handle various corruption indicators:
+      // - Unsupported image format errors
+      // - SyntaxError (JSON parsing failures)
+      // - Messages containing "corrupted" or "invalid"
+      // - Buffer/parsing errors
+      const isCorruptionError =
         error instanceof Error &&
-        error.message.includes("Unsupported image format")
-      ) {
+        (error.message.includes("Unsupported image format") ||
+          error.message.includes("corrupted") ||
+          error.message.includes("invalid") ||
+          error instanceof SyntaxError);
+
+      if (isCorruptionError) {
         return {
           isValid: false,
           status: "invalid",
@@ -250,8 +259,7 @@ export class VerificationController {
                 check: "extraction",
                 description: "Extract credential from baked image",
                 passed: false,
-                error:
-                  "Unsupported image format - unable to extract credential",
+                error: "Invalid or corrupted badge data",
               },
             ],
           },
