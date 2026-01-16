@@ -14,6 +14,7 @@ import {
   makeFileId,
   derivePackageName,
   findTsFiles,
+  buildEntityLookupMap,
 } from "./parser";
 import { Project } from "ts-morph";
 
@@ -320,15 +321,25 @@ export function oldGreet(): string {
 
     it("extracts import relationships", () => {
       const project = new Project({ skipAddingFilesFromTsConfig: true });
-      project.addSourceFileAtPath(join(FIXTURES_DIR, "simple.ts"));
+      const simpleFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "simple.ts"),
+      );
       const sourceFile = project.addSourceFileAtPath(
         join(FIXTURES_DIR, "calls.ts"),
       );
+
+      // Build entity lookup map from both files
+      const entities = [
+        ...extractEntities(simpleFile, FIXTURES_DIR, TEST_PKG),
+        ...extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG),
+      ];
+      const entityLookupMap = buildEntityLookupMap(entities);
 
       const relationships = extractRelationships(
         sourceFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       const imports = relationships.filter((r) => r.type === "imports");
@@ -337,15 +348,25 @@ export function oldGreet(): string {
 
     it("extracts call relationships", () => {
       const project = new Project({ skipAddingFilesFromTsConfig: true });
-      project.addSourceFileAtPath(join(FIXTURES_DIR, "simple.ts"));
+      const simpleFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "simple.ts"),
+      );
       const sourceFile = project.addSourceFileAtPath(
         join(FIXTURES_DIR, "calls.ts"),
       );
+
+      // Build entity lookup map from both files
+      const entities = [
+        ...extractEntities(simpleFile, FIXTURES_DIR, TEST_PKG),
+        ...extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG),
+      ];
+      const entityLookupMap = buildEntityLookupMap(entities);
 
       const relationships = extractRelationships(
         sourceFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       const calls = relationships.filter((r) => r.type === "calls");
@@ -358,10 +379,14 @@ export function oldGreet(): string {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const entityLookupMap = buildEntityLookupMap(entities);
+
       const relationships = extractRelationships(
         sourceFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       const extends_ = relationships.filter((r) => r.type === "extends");
@@ -375,10 +400,14 @@ export function oldGreet(): string {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
+      const entities = extractEntities(sourceFile, FIXTURES_DIR, TEST_PKG);
+      const entityLookupMap = buildEntityLookupMap(entities);
+
       const relationships = extractRelationships(
         sourceFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       const implements_ = relationships.filter((r) => r.type === "implements");
@@ -560,13 +589,23 @@ export function oldGreet(): string {
       const callsFile = project.addSourceFileAtPath(
         join(FIXTURES_DIR, "calls.ts"),
       );
-      project.addSourceFileAtPath(join(FIXTURES_DIR, "simple.ts"));
+      const simpleFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "simple.ts"),
+      );
+
+      // Build entity lookup map from both files
+      const entities = [
+        ...extractEntities(callsFile, FIXTURES_DIR, TEST_PKG),
+        ...extractEntities(simpleFile, FIXTURES_DIR, TEST_PKG),
+      ];
+      const entityLookupMap = buildEntityLookupMap(entities);
 
       // Extract relationships from calls.ts
       const relationships = extractRelationships(
         callsFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       // Find the relationship where doWork calls greet
@@ -589,10 +628,14 @@ export function oldGreet(): string {
         join(FIXTURES_DIR, "classes.ts"),
       );
 
+      const entities = extractEntities(classFile, FIXTURES_DIR, TEST_PKG);
+      const entityLookupMap = buildEntityLookupMap(entities);
+
       const relationships = extractRelationships(
         classFile,
         FIXTURES_DIR,
         TEST_PKG,
+        entityLookupMap,
       );
 
       // Should not have any synthetic "call:xxx" IDs
