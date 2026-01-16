@@ -149,3 +149,49 @@ export function parseConventionalCommit(message: string): {
     description: match[3],
   };
 }
+
+/**
+ * Extract meaningful keywords from a branch name.
+ * E.g., "feat/issue-476-session-context" → ["session", "context"]
+ *
+ * Filters out:
+ * - Common prefixes (feat, fix, issue, etc.)
+ * - Issue numbers
+ * - Single characters
+ * - Pure numbers
+ *
+ * @param branch - Git branch name
+ * @returns Array of meaningful keywords
+ */
+export function extractBranchKeywords(branch: string | undefined): string[] {
+  if (!branch) return [];
+
+  // Common prefixes and words to filter out
+  const filterWords = new Set([
+    "feat",
+    "fix",
+    "feature",
+    "bugfix",
+    "hotfix",
+    "issue",
+    "chore",
+    "refactor",
+    "test",
+    "docs",
+    "build",
+    "ci",
+  ]);
+
+  // Split on / and - to get parts
+  const parts = branch
+    .toLowerCase()
+    .split(/[/-]/)
+    .filter(
+      (part) =>
+        part.length > 2 && // Filter short parts
+        !filterWords.has(part) && // Filter common prefixes
+        !/^\d+$/.test(part), // Filter pure numbers (issue numbers)
+    );
+
+  return parts;
+}

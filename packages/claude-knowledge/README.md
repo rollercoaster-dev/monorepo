@@ -94,6 +94,43 @@ Skills are markdown files in `.claude/skills/` that describe when and how Claude
 
 **Session Hooks**: The `onSessionStart` and `onSessionEnd` hooks are fully implemented and accessible via CLI (`checkpoint session-start`/`session-end`), but are not automatically triggered by Claude Code yet. Automatic injection requires Claude Code client integration (tracked separately).
 
+### Issue-Based Doc Discovery
+
+When working with `/work-on-issue` workflows, the session hooks automatically fetch GitHub issue metadata to enhance documentation discovery:
+
+```bash
+# Session start with issue context
+bun run checkpoint session-start --issue 476
+
+# Searches docs using:
+# - Issue title keywords: "enhance", "session", "doc", "injection"
+# - Issue labels: pkg:claude-knowledge → "claude-knowledge"
+# - Branch keywords: feat/issue-476-context → "context"
+```
+
+**How it works:**
+
+1. Fetches issue metadata via `gh issue view --json title,body,labels`
+2. Extracts keywords from title and body (filters stop words)
+3. Parses label prefixes (e.g., `pkg:claude-knowledge` → `claude-knowledge`)
+4. Extracts keywords from branch name
+5. Combines with file-based signals for comprehensive doc search
+
+**Requirements:**
+
+- GitHub CLI (`gh`) installed and authenticated
+- Issue number provided via `--issue` flag or parsed from branch name
+
+**Cache behavior:**
+
+- Results cached for 15 minutes to avoid repeated API calls
+- Cache is session-scoped (in-memory, not persisted)
+
+**Fallback:**
+
+- If `gh` CLI fails or issue not found, falls back to file-based doc search
+- Session continues normally without issue context
+
 ## CLI Reference
 
 ```bash
@@ -104,7 +141,7 @@ bun run checkpoint workflow set-phase <id> <phase>
 bun run checkpoint workflow log-commit <id> <sha> <message>
 
 # Session hooks
-bun run checkpoint session-start
+bun run checkpoint session-start [--issue <number>]
 bun run checkpoint session-end
 
 # Graph commands
