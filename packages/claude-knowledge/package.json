@@ -6,13 +6,16 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "bin": {
-    "checkpoint": "src/cli/index.ts"
+    "checkpoint": "src/cli/index.ts",
+    "claude-knowledge-mcp": "src/mcp-server/index.ts"
   },
   "scripts": {
     "test": "bun test",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "mcp-server": "bun run src/mcp-server/index.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
     "@rollercoaster-dev/rd-logger": "workspace:*",
     "marked": "17.0.1",
     "tree-sitter-wasms": "0.1.13",

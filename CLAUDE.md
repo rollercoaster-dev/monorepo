@@ -57,24 +57,47 @@ Before modifying files, consider:
 
 Safe operations (always allowed): reading files, searching, running tests, analyzing code.
 
+## MCP Tools Available
+
+When MCP is enabled, these native tools are available (preferred over CLI):
+
+| Tool                    | Purpose                             |
+| ----------------------- | ----------------------------------- |
+| `knowledge_query`       | Query learnings, patterns, mistakes |
+| `knowledge_store`       | Store new learnings                 |
+| `graph_what_calls`      | Find function callers               |
+| `graph_blast_radius`    | Analyze change impact               |
+| `graph_find`            | Locate code entities                |
+| `checkpoint_workflow_*` | Manage workflow checkpoints         |
+| `output_save`           | Save long output to file            |
+
+**Resources** (browsable data):
+
+- `knowledge://learnings` - Browse all learnings
+- `knowledge://patterns` - Browse patterns
+- `logs://list` - Available log files
+- `logs://test/latest` - Latest test output
+- `logs://file/<name>` - Read a specific log file
+- `workflows://active` - Running workflows
+
 ## Search Priority (MANDATORY)
 
-**ALWAYS try graph/docs BEFORE Grep.** 1 graph query = 10 greps worth of context.
+**ALWAYS try MCP tools or graph queries BEFORE Grep.** 1 query = 10 greps worth of context.
 
-| Question          | Shortcut                 | Long Form                          |
-| ----------------- | ------------------------ | ---------------------------------- |
-| Who calls X?      | `bun run g:calls <fn>`   | `checkpoint graph what-calls`      |
-| Who uses type X?  | `bun run g:deps <type>`  | `checkpoint graph what-depends-on` |
-| Impact of change? | `bun run g:blast <file>` | `checkpoint graph blast-radius`    |
-| Where is X?       | `bun run g:find <name>`  | `checkpoint graph find`            |
-| How does X work?  | `bun run d:search "<q>"` | `checkpoint docs search`           |
+| Question          | MCP Tool (preferred) | CLI Fallback                 |
+| ----------------- | -------------------- | ---------------------------- |
+| Who calls X?      | `graph_what_calls`   | `bun run g:calls <fn>`       |
+| Impact of change? | `graph_blast_radius` | `bun run g:blast <file>`     |
+| Where is X?       | `graph_find`         | `bun run g:find <name>`      |
+| Past learnings?   | `knowledge_query`    | `checkpoint knowledge query` |
 
 **Priority order:**
 
-1. **Graph queries** - Code relationships (callers, dependencies, blast radius)
-2. **Docs search** - Project documentation and patterns
-3. **Knowledge query** - Past learnings, mistakes, patterns
-4. **Grep/Glob** - LAST RESORT for literal text search only
+1. **MCP tools** - Native tools when MCP server is connected
+2. **Graph queries** - Code relationships (callers, dependencies, blast radius)
+3. **Docs search** - Project documentation and patterns
+4. **Knowledge query** - Past learnings, mistakes, patterns
+5. **Grep/Glob** - LAST RESORT for literal text search only
 
 The code graph is populated on session start. Using it first saves 10x tool calls.
 

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "claude-knowledge": {
+      "command": "bun",
+      "args": ["run", "packages/claude-knowledge/src/mcp-server/index.ts"],
+      "env": {
+        "KNOWLEDGE_DB_PATH": "${workspaceFolder}/.claude/knowledge.db"
+      }
+    }
+  }
+}

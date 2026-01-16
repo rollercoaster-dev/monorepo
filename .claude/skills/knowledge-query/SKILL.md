@@ -18,9 +18,20 @@ Semantic search and structured queries over the knowledge graph containing learn
 - For semantic search across all stored knowledge
 - To query knowledge by specific filters (code area, file, issue)
 
-## CLI Reference
+## MCP Tools (Preferred)
 
-All commands use the checkpoint CLI:
+When the MCP server is available, use native tools:
+
+| Tool              | Purpose                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| `knowledge_query` | Query with filters (codeArea, file, keywords, issueNumber) |
+| `knowledge_store` | Store learnings, patterns, mistakes                        |
+
+These tools are automatically available when claude-knowledge MCP server is running.
+
+## CLI Reference (Fallback)
+
+When MCP tools are unavailable, use the checkpoint CLI:
 
 ```bash
 bun run checkpoint knowledge <command> [args...]

@@ -8,10 +8,22 @@ allowed-tools: Bash
 
 Query the code graph built from ts-morph static analysis to understand codebase structure and relationships.
 
-## Quick Reference (Copy-Paste)
+## MCP Tools (Preferred)
+
+When the MCP server is available, use native tools:
+
+| Tool                 | Purpose                                       |
+| -------------------- | --------------------------------------------- |
+| `graph_what_calls`   | Find all callers of a function                |
+| `graph_blast_radius` | Find impact of changes to a file (transitive) |
+| `graph_find`         | Search for entities by name and type          |
+
+**Use graph tools instead of Grep chains. 1 query = 10 greps worth of info.**
+
+## CLI Quick Reference (Fallback)
 
 ```bash
-# Shortcuts (preferred)
+# Shortcuts
 bun run g:calls <function>    # Who calls this?
 bun run g:deps <type>         # Who uses this type?
 bun run g:blast <file>        # Impact of change?
@@ -25,8 +37,6 @@ bun run checkpoint graph blast-radius <file>
 bun run checkpoint graph find <name>
 bun run checkpoint graph exports <package>
 ```
-
-**Use graph instead of Grep chains. 1 query = 10 greps worth of info.**
 
 ---
 
