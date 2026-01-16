@@ -43,6 +43,11 @@
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "drizzle.config.ts", "drizzle-config-helper.ts"],
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "drizzle.config.ts",
+    "drizzle-config-helper.ts"
+  ],
   "exclude": ["node_modules"]
 }
