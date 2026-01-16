@@ -96,7 +96,7 @@ const normalizeIssuer = (issuer: OB2.Profile | OB3.Profile) => {
     if (typeof issuer.image === "string") {
       image = issuer.image;
     } else if (typeof issuer.image === "object" && "id" in issuer.image) {
-      image = issuer.image.id;
+      image = issuer.image.id ?? "";
     }
   }
 
