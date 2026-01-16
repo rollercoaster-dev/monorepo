@@ -307,7 +307,9 @@ Resume     checkpoint.create(123, branch)
    Resume from saved phase
 ```
 
-### Flow 2: Knowledge Injection at Session Start
+### Flow 2: Session Start (How, Not What)
+
+**Principle:** Provide paths to information, not the information itself.
 
 ```
 Claude Code session starts
@@ -326,28 +328,49 @@ SessionStart hook fires
         │
         ▼
 Parse issue number from branch
-Infer code areas from files
+Check for active workflow
         │
         ▼
 ┌─────────────────────────────────┐
-│  knowledge.query({             │
-│    codeArea,                   │
-│    filePath,                   │
-│    issueNumber                 │
-│  })                            │
+│  Build warmup with TOKEN       │
+│  BUDGET (~2-4k tokens max)     │
+│                                │
+│  Include:                      │
+│  - Current workflow state      │
+│  - Commands to query knowledge │
+│  - Paths to logs/state files   │
+│                                │
+│  DON'T include:                │
+│  - Full knowledge content      │
+│  - Historical logs             │
+│  - "Potentially useful" data   │
 └─────────────────────────────────┘
         │
         ▼
-┌─────────────────────────────────┐
-│  formatKnowledgeContext(...)   │
-│  - Prioritize by relevance     │
-│  - Enforce token budget        │
-│  - Group by code area          │
-└─────────────────────────────────┘
-        │
-        ▼
-Return formatted markdown
-for context injection
+Return concise warmup:
+- "Query learnings: bun run g:find <topic>"
+- "Test logs at: .claude/logs/"
+- "Workflow state: issue #123, phase: implement"
+```
+
+**Example warmup output (~500 tokens, not 5000):**
+
+```markdown
+## Session Context
+
+**Active workflow:** Issue #123 (feat/auth-improvements), phase: implement
+
+**Query knowledge:**
+
+- Learnings: `bun run knowledge query --area "authentication"`
+- Code graph: `bun run g:calls <function>` | `bun run g:blast <file>`
+- Past patterns: `/knowledge-query patterns`
+
+**State files:**
+
+- Dev plan: `.claude/dev-plans/issue-123.md`
+- Test logs: `.claude/logs/` (grep for failures)
+- Workflow: `bun run checkpoint workflow find 123`
 ```
 
 ### Flow 3: Learning Capture at Session End
@@ -407,6 +430,73 @@ User/agent requests: "What calls getDatabase()?"
         │
         ▼
 Return list of callers with file:line
+```
+
+### Flow 5: Long Output to Files
+
+**Principle:** Large outputs go to files; context gets path + summary.
+
+```
+Command execution (e.g., bun test)
+        │
+        ▼
+┌─────────────────────────────────┐
+│  Capture output                 │
+│  Check line count               │
+└─────────────────────────────────┘
+        │
+        ▼
+   Output > 50 lines?
+   ┌─────┴─────┐
+   │           │
+  Yes          No
+   │           │
+   ▼           ▼
+┌──────────────────┐  Return output
+│ Write to file:   │  directly
+│ .claude/logs/    │  (fits budget)
+│ <type>-<ts>.log  │
+└──────────────────┘
+        │
+        ▼
+┌─────────────────────────────────┐
+│  Generate summary:              │
+│  - Pass/fail status             │
+│  - Error/warning count          │
+│  - Key failure excerpts (3-5)   │
+│  - File path for full output    │
+└─────────────────────────────────┘
+        │
+        ▼
+Return: summary (~100 tokens)
++ path to full log
+```
+
+**Log file organization:**
+
+```
+.claude/
+└── logs/
+    ├── test-2026-01-16-143022.log     # Test run output
+    ├── lint-2026-01-16-143105.log     # Lint results
+    ├── typecheck-2026-01-16-143112.log # Type errors
+    └── build-2026-01-16-143200.log    # Build output
+```
+
+**Summary format example:**
+
+```
+## Test Results
+
+**Status:** FAILED (12 passed, 3 failed)
+**Full log:** `.claude/logs/test-2026-01-16-143022.log`
+
+**Failed tests:**
+- `auth.test.ts:45` - Expected token to be valid
+- `api.test.ts:123` - Connection timeout
+- `db.test.ts:67` - Missing migration
+
+Run `grep -A5 "FAIL" .claude/logs/test-2026-01-16-143022.log` for details.
 ```
 
 ## Integration Points
@@ -577,5 +667,5 @@ src/
 
 ---
 
-_Last updated: 2026-01-13_
+_Last updated: 2026-01-16_
 _Related: [VISION.md](./VISION.md) | [FEATURE-ASSESSMENT.md](./FEATURE-ASSESSMENT.md) | [ROADMAP.md](./ROADMAP.md)_

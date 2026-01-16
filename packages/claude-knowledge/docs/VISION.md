@@ -106,6 +106,101 @@ Developers can:
 
 ## Design Philosophy
 
+### Token Budgets as Guiding Light
+
+**Every context decision must be justified by token economics.**
+
+Context windows are precious and finite. The primary constraint for all knowledge injection, output handling, and state recovery is: _does this earn its tokens?_
+
+```
+┌─────────────────────────────────────────────┐
+│            CONTEXT BUDGET                   │
+│                                             │
+│  ┌─────────────┐ ┌─────────────┐           │
+│  │  Warmup     │ │  Working    │           │
+│  │  (fixed)    │ │  (variable) │           │
+│  │  ~2-4k      │ │  remainder  │           │
+│  └─────────────┘ └─────────────┘           │
+│                                             │
+│  Warmup budget is HARD LIMIT.              │
+│  Every token must justify its presence.    │
+└─────────────────────────────────────────────┘
+```
+
+**Token budget drives real decisions:**
+
+- Session start: "I have 3k tokens for warmup. What's most valuable?"
+- Knowledge injection: "Is this learning worth 200 tokens?"
+- Output handling: "This test output is 5k tokens - save to file instead"
+
+**Anti-pattern:** Dumping everything potentially relevant into context "just in case."
+
+### How, Not What
+
+**Warmup should teach the agent HOW to find information, not dump WHAT it needs.**
+
+Instead of front-loading context with knowledge content, provide _paths to information_:
+
+| Anti-pattern (What)                  | Pattern (How)                                                   |
+| ------------------------------------ | --------------------------------------------------------------- |
+| "Here are 5 learnings about auth..." | "Query learnings: `bun run g:find auth`"                        |
+| "The validation pattern is..."       | "Patterns are in knowledge graph. Query with `knowledge-query`" |
+| "Recent test failures were..."       | "Test logs at `.claude/logs/`. Grep for failures."              |
+
+**Why this works:**
+
+1. **Relevance filtering** - Agent pulls only what's actually needed
+2. **Fresh data** - Queries return current state, not stale snapshots
+3. **Token efficiency** - 50 tokens for a command vs 500 for content
+4. **Adaptability** - Agent can explore deeper if needed
+
+**Warmup should include:**
+
+- Commands to query knowledge (`bun run g:calls`, `knowledge query`)
+- Paths to persistent state (`.claude/logs/`, `.claude/dev-plans/`)
+- Current workflow state (issue, phase, branch)
+- NOT: Full knowledge content, historical logs, or "potentially useful" context
+
+### Outputs to Files
+
+**Long outputs should be written to files, not kept in context.**
+
+When tools return large outputs (test results, lint errors, MCP responses), they bloat context and cause rot. Save them to files; return a path and summary.
+
+```
+┌──────────────────┐      ┌──────────────────┐
+│  Traditional     │      │  File-Based      │
+│                  │      │                  │
+│  bun test        │      │  bun test        │
+│       │          │      │       │          │
+│       ▼          │      │       ▼          │
+│  [5000 tokens    │      │  .claude/logs/   │
+│   in context]    │      │  test-2026-01.log│
+│                  │      │       │          │
+│  Context bloat!  │      │       ▼          │
+│                  │      │  [50 tokens:     │
+│                  │      │   path + summary]│
+│                  │      │                  │
+│                  │      │  Agent greps     │
+│                  │      │  file as needed  │
+└──────────────────┘      └──────────────────┘
+```
+
+**Apply to:**
+
+- Test output (especially failures)
+- Lint/typecheck results
+- Long bash command output
+- MCP tool responses
+- Build logs
+
+**Implementation:**
+
+- Detect output > N lines (e.g., 50)
+- Write to `.claude/logs/<type>-<timestamp>.log`
+- Return: file path + summary (pass/fail, error count)
+- Agent uses grep/read when details needed
+
 ### Local-First
 
 All data stored in `.claude/execution-state.db` (SQLite):
@@ -150,8 +245,9 @@ Designed for low overhead:
 - CLI for inspection and debugging
 - Session hooks for automatic capture
 - Semantic search within local knowledge
+- **MCP server interface** for native Claude Code integration (#519)
 
-### Out of Scope
+### Out of Scope (Current)
 
 - Multi-user synchronization (team features)
 - Multi-project knowledge sharing
@@ -159,6 +255,30 @@ Designed for low overhead:
 - Real-time collaboration
 - Large-scale codebase indexing
 - External API integrations (beyond optional embeddings)
+
+### Future Consideration: Standalone Package
+
+Currently, claude-knowledge lives in the monorepo at `packages/claude-knowledge`. As the MCP server matures and proves valuable across projects, consider extracting to a standalone repository:
+
+```
+github.com/rollercoaster-dev/claude-knowledge-mcp
+```
+
+**Benefits of extraction:**
+
+- Easier adoption in other projects (just add to `.mcp.json`)
+- Cleaner dependency graph (no monorepo baggage)
+- Independent versioning and release cycle
+- Lower barrier for external contributors
+
+**When to extract:**
+
+- MCP server is stable and well-tested
+- Actively used in 2+ projects
+- Clear demand beyond this monorepo
+- Maintenance burden of monorepo location outweighs benefits
+
+**For now:** Stay in monorepo, publish to npm from here, evaluate after MCP is proven.
 
 ## Relationship to Other Components
 
@@ -226,5 +346,5 @@ Deeper integration between checkpoint, knowledge, and code graph:
 
 ---
 
-_Last updated: 2026-01-13_
+_Last updated: 2026-01-16_
 _Related: [ARCHITECTURE.md](./ARCHITECTURE.md) | [FEATURE-ASSESSMENT.md](./FEATURE-ASSESSMENT.md) | [ROADMAP.md](./ROADMAP.md)_

@@ -13,14 +13,138 @@ Work is categorized into four buckets:
 | **Later** | Nice to have, lower priority, depends on user feedback      |
 | **Never** | Out of scope, not aligned with vision, explicitly rejected  |
 
-## Now: Validation Phase
+## Now: Context Engineering Foundation
+
+**Goal**: Implement core context engineering principles before validation.
+
+### 0. Token Budget Enforcement (NEW) - CRITICAL
+
+**Status**: Not created
+**Priority**: P0 (foundational principle)
+
+**What**: Make token budget the primary constraint for all context injection.
+
+**Why**: Currently we front-load context "just in case." This wastes tokens and causes rot. Token budget should drive real decisions about what gets injected.
+
+**Implementation**:
+
+- Define warmup token budget (~2-4k tokens, configurable)
+- Session start hook respects budget strictly
+- Prioritize: workflow state > query commands > paths > content
+- Log actual token usage for optimization
+
+**Success Criteria**:
+
+- Warmup fits in 2-4k tokens consistently
+- No "dump everything" anti-patterns
+- Measurable reduction in initial context size
+
+---
+
+### 0b. Output-to-Files Handler (NEW) - CRITICAL
+
+**Status**: Not created
+**Priority**: P0 (foundational principle)
+
+**What**: Long command outputs (tests, lint, builds) go to files; context gets summary + path.
+
+**Why**: A single `bun test` can add 5k tokens to context. Saving to file and returning a summary dramatically reduces context bloat while preserving information.
+
+**Implementation**:
+
+- Hook/wrapper for common commands (test, lint, typecheck, build)
+- Threshold: outputs > 50 lines → write to `.claude/logs/`
+- Return: pass/fail status, error count, key excerpts, file path
+- Agent greps file when details needed
+
+**Apply to**:
+
+- Test output (especially failures)
+- Lint/typecheck results
+- Build logs
+- Long bash output
+
+**Success Criteria**:
+
+- Test runs return ~100 tokens instead of ~5000
+- Full output preserved in searchable files
+- Agent can retrieve details on demand
+
+---
+
+### 0c. Warmup Refactor: How Not What (NEW) - CRITICAL
+
+**Status**: Not created
+**Priority**: P0 (foundational principle)
+
+**What**: Session warmup provides commands/paths to find information, not the information itself.
+
+**Why**: Injecting knowledge content front-loads potentially irrelevant data. Providing query commands lets the agent pull only what's needed.
+
+**Current (anti-pattern)**:
+
+```
+Here are 5 relevant learnings:
+1. Always validate API input with Zod... (200 tokens)
+2. Use rd-logger for structured logging... (150 tokens)
+...
+```
+
+**Target (pull-based)**:
+
+```
+Query knowledge:
+- Learnings: `bun run knowledge query --area "<topic>"`
+- Code graph: `bun run g:calls <function>`
+- Patterns: `/knowledge-query patterns`
+
+State files:
+- Dev plan: `.claude/dev-plans/issue-123.md`
+- Test logs: `.claude/logs/`
+```
+
+**Success Criteria**:
+
+- Warmup is ~500 tokens of pointers, not ~2000 tokens of content
+- Agent queries knowledge on-demand
+- Relevant information still accessible when needed
+
+---
+
+### 0d. MCP Server Interface (#519) - HIGH
+
+**Status**: Open
+**Priority**: P0 (enables adoption)
+
+**What**: Convert claude-knowledge to an MCP server for native Claude Code tool integration.
+
+**Why**: CLI commands have adoption friction - Claude forgets to use them. MCP tools appear alongside Read, Write, Bash as native tools. With MCP Tool Search (now default in Claude Code), tool schemas are loaded on-demand, aligning with our "how not what" principle.
+
+**Implementation**:
+
+- MCP server scaffold with Bun
+- Tools: `knowledge_query`, `graph_what_calls`, `checkpoint_workflow_find`, `output_save`
+- Resources: browsable learnings, logs, workflows
+- Keep CLI for hooks and debugging
+
+**Success Criteria**:
+
+- Claude uses knowledge/graph tools naturally (no prompting)
+- Tools work in MCP Inspector for debugging
+- Can be added to other projects via `.mcp.json`
+
+**Future**: If proven valuable across projects, consider extracting to standalone repo.
+
+---
+
+## Next: Validation Phase
 
 **Goal**: Prove the knowledge graph provides real value before investing more.
 
 ### 1. Dogfood Knowledge Graph (#387) - CRITICAL
 
 **Status**: Open
-**Priority**: P0 (blocks everything else)
+**Priority**: P1 (after MCP enables adoption)
 
 **What**: Use the knowledge graph daily for 4-6 weeks with systematic metrics tracking.
 
@@ -295,44 +419,67 @@ These are explicitly NOT planned:
 ## Dependency Graph
 
 ```
-                    ┌─────────────────────┐
-                    │  #387 Dogfooding    │
-                    │     (CRITICAL)      │
-                    └─────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-              ▼               ▼               ▼
-        ┌──────────┐    ┌──────────┐    ┌──────────┐
-        │  #416    │    │ Metrics  │    │ Code     │
-        │ Relevance│    │Dashboard │    │ Graph    │
-        │ Tracking │    │ (new)    │    │ Examples │
-        └──────────┘    └──────────┘    └──────────┘
-              │
-              ▼
+   ┌──────────────────────────────────────────────┐
+   │         CONTEXT ENGINEERING FOUNDATION       │
+   │              (implement first)               │
+   └──────────────────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+        ▼                 ▼                 ▼
+  ┌───────────┐     ┌───────────┐     ┌───────────┐
+  │  Token    │     │ Output-to │     │  Warmup   │
+  │  Budget   │     │   Files   │     │  How Not  │
+  │ Enforce   │     │  Handler  │     │   What    │
+  └───────────┘     └───────────┘     └───────────┘
+        │                 │                 │
+        └─────────────────┼─────────────────┘
+                          │
+                          ▼
+                ┌─────────────────────┐
+                │  #519 MCP Server    │
+                │  (enables adoption) │
+                └─────────────────────┘
+                          │
+                          ▼
+                ┌─────────────────────┐
+                │  #387 Dogfooding    │
+                │   (with MCP tools)  │
+                └─────────────────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          │               │               │
+          ▼               ▼               ▼
+    ┌──────────┐    ┌──────────┐    ┌──────────┐
+    │  #416    │    │ Metrics  │    │ Code     │
+    │ Relevance│    │Dashboard │    │ Graph    │
+    │ Tracking │    │ (new)    │    │ Examples │
+    └──────────┘    └──────────┘    └──────────┘
+          │
+          ▼
    ┌──────────────────────────────────────────────┐
    │              VALIDATION GATE                 │
    │         (4-6 weeks of usage data)            │
    └──────────────────────────────────────────────┘
-              │
-    ┌─────────┼─────────┬─────────┐
-    │         │         │         │
-    ▼         ▼         ▼         ▼
+          │
+    ┌─────┼─────────┬─────────┐
+    │     │         │         │
+    ▼     ▼         ▼         ▼
 ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
 │ #411  │ │ #396  │ │ #418  │ │ Code  │
 │ PR    │ │ Boot- │ │ Gate  │ │ Graph │
 │Reviews│ │ strap │ │ State │ │ Perf  │
 └───────┘ └───────┘ └───────┘ └───────┘
-              │
-              ▼
+          │
+          ▼
    ┌──────────────────────────────────────────────┐
    │              USER FEEDBACK                   │
    │         (clear demand signal)                │
    └──────────────────────────────────────────────┘
-              │
-    ┌─────────┼─────────┬─────────┐
-    │         │         │         │
-    ▼         ▼         ▼         ▼
+          │
+    ┌─────┼─────────┬─────────┐
+    │     │         │         │
+    ▼     ▼         ▼         ▼
 ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
 │ #448  │ │ #446  │ │ #439  │ │ #405  │
 │ Conv  │ │ Rel   │ │Hybrid │ │ Local │
@@ -389,4 +536,4 @@ Every 3 months, review:
 
 ---
 
-_Last updated: 2026-01-13_
+_Last updated: 2026-01-16_
