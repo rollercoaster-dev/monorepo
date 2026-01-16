@@ -110,6 +110,34 @@ describe("AssertionController", () => {
       findByBadgeClass: mock(async () => []),
       delete: mock(async () => true),
       revoke: mock(async () => null),
+      createBatch: mock(async (assertions: Omit<Assertion, "id">[]) => {
+        // Return batch results with IDs
+        return assertions.map((assertion, index) => ({
+          success: true,
+          assertion: Assertion.create({
+            ...assertion,
+            id: `urn:uuid:assertion-${index}` as Shared.IRI,
+            issuer: mockIssuerId,
+          }),
+        }));
+      }),
+      findByIds: mock(async (ids: Shared.IRI[]) => {
+        // Return assertions for the given IDs
+        return ids.map((id, index) => {
+          const assertion = Assertion.create({
+            id,
+            badgeClass: mockBadgeClassId,
+            recipient: {
+              type: "email",
+              identity: `recipient${index}@example.com`,
+              hashed: false,
+            },
+            issuedOn: new Date().toISOString(),
+            issuer: mockIssuerId,
+          });
+          return assertion;
+        });
+      }),
     } as unknown as AssertionRepository;
 
     mockBadgeClassRepository = {
@@ -312,6 +340,146 @@ describe("AssertionController", () => {
       expect(
         (result as OB3.VerifiableCredential).credentialStatus,
       ).toBeUndefined();
+    });
+
+    it("should create v3 assertion with OB3 type array", async () => {
+      // Arrange
+      const createDto = {
+        badge: mockBadgeClassId,
+        recipient: {
+          type: "email",
+          identity: "sha256$abc123",
+          hashed: true,
+        },
+        issuedOn: new Date().toISOString(),
+      };
+
+      // Act
+      const result = await assertionController.createAssertion(
+        createDto,
+        BadgeVersion.V3,
+        false,
+      );
+
+      // Assert - V3 assertions should have type array
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.type)).toBe(true);
+      const types = result.type as string[];
+      expect(types).toContain("VerifiableCredential");
+      expect(types).toContain("OpenBadgeCredential");
+    });
+
+    it("should create v2 assertion with OB2 type string", async () => {
+      // Arrange
+      const createDto = {
+        badge: mockBadgeClassId,
+        recipient: {
+          type: "email",
+          identity: "sha256$abc123",
+          hashed: true,
+        },
+        issuedOn: new Date().toISOString(),
+      };
+
+      // Act
+      const result = await assertionController.createAssertion(
+        createDto,
+        BadgeVersion.V2,
+        false,
+      );
+
+      // Assert - V2 assertions should have type string
+      expect(result).toBeDefined();
+      expect(typeof result.type).toBe("string");
+      expect(result.type).toBe("Assertion");
+    });
+  });
+
+  describe("createAssertionsBatch", () => {
+    it("should create v3 assertions with OB3 type array", async () => {
+      // Arrange
+      const batchDto = {
+        credentials: [
+          {
+            badge: mockBadgeClassId,
+            recipient: {
+              type: "email",
+              identity: "sha256$abc123",
+              hashed: true,
+            },
+            issuedOn: new Date().toISOString(),
+          },
+          {
+            badge: mockBadgeClassId,
+            recipient: {
+              type: "email",
+              identity: "sha256$def456",
+              hashed: true,
+            },
+            issuedOn: new Date().toISOString(),
+          },
+        ],
+      };
+
+      // Act
+      const result = await assertionController.createAssertionsBatch(
+        batchDto,
+        BadgeVersion.V3,
+        false,
+      );
+
+      // Assert - All V3 assertions should have type array
+      expect(result.summary.successful).toBe(2);
+      for (const res of result.results) {
+        if (res.success && res.data) {
+          expect(Array.isArray(res.data.type)).toBe(true);
+          const types = res.data.type as string[];
+          expect(types).toContain("VerifiableCredential");
+          expect(types).toContain("OpenBadgeCredential");
+        }
+      }
+    });
+
+    it("should create v2 assertions with OB2 type string", async () => {
+      // Arrange
+      const batchDto = {
+        credentials: [
+          {
+            badge: mockBadgeClassId,
+            recipient: {
+              type: "email",
+              identity: "sha256$abc123",
+              hashed: true,
+            },
+            issuedOn: new Date().toISOString(),
+          },
+          {
+            badge: mockBadgeClassId,
+            recipient: {
+              type: "email",
+              identity: "sha256$def456",
+              hashed: true,
+            },
+            issuedOn: new Date().toISOString(),
+          },
+        ],
+      };
+
+      // Act
+      const result = await assertionController.createAssertionsBatch(
+        batchDto,
+        BadgeVersion.V2,
+        false,
+      );
+
+      // Assert - All V2 assertions should have type string
+      expect(result.summary.successful).toBe(2);
+      for (const res of result.results) {
+        if (res.success && res.data) {
+          expect(typeof res.data.type).toBe("string");
+          expect(res.data.type).toBe("Assertion");
+        }
+      }
     });
   });
 });
