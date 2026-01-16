@@ -1,5 +1,7 @@
 # Dependency Checking
 
+> **Architecture:** Used by issue-researcher and milestone-planner for dependency analysis. See [agent-architecture.md](../docs/agent-architecture.md).
+
 Shared patterns for detecting and handling issue dependencies.
 
 ## Detection Patterns

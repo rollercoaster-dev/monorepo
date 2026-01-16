@@ -220,6 +220,9 @@ export interface VerificationResult {
   /** Error message if verification failed */
   error?: string;
 
+  /** The credential that was verified (included for baked credentials) */
+  credential?: Record<string, unknown>;
+
   /** Additional metadata about the verification */
   metadata?: VerificationMetadata;
 }

@@ -54,6 +54,9 @@ test-keys-jwk/
 *.sqlite
 *.sqlite3
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 
 # Temporary files
 tmp/
@@ -65,9 +68,13 @@ Thumbs.db
 
 # Claude Code settings
 .claude/settings.local.json
+.claude/*.local.md
 .claude/dev-plans/
 .claude/execution-state.db
 # Note: .claude/settings.json should be committed (team-shared settings)
+
+# Package-level claude-knowledge test artifacts
+packages/claude-knowledge/.claude/
 .playwright-mcp/
 
 # Git worktrees for /auto-milestone

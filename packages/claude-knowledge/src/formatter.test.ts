@@ -291,7 +291,7 @@ describe("formatKnowledgeContext", () => {
       },
     };
 
-    const output = formatKnowledgeContext(learnings, [], [], [], options);
+    const output = formatKnowledgeContext(learnings, [], [], [], [], options);
 
     // Context info is now shown in the token usage line or omitted
     expect(output).toContain("## Relevant Knowledge");
@@ -328,7 +328,7 @@ describe("formatKnowledgeContext", () => {
       },
     };
 
-    const output = formatKnowledgeContext([], [], mistakes, [], options);
+    const output = formatKnowledgeContext([], [], mistakes, [], [], options);
 
     expect(output).toContain("### Past Mistakes in Current Files");
     expect(output).toContain("`src/current.ts`");
@@ -357,11 +357,13 @@ describe("formatKnowledgeContext", () => {
       },
     };
 
-    const output = formatKnowledgeContext([], [], mistakes, [], options);
+    const output = formatKnowledgeContext([], [], mistakes, [], [], options);
 
-    // Current implementation shows all mistakes together
-    expect(output).toContain("### Mistakes to Avoid");
+    // Current file mistakes get high priority section
+    expect(output).toContain("### Past Mistakes in Current Files");
     expect(output).toContain("Current file mistake");
+    // Other mistakes go to separate lower-priority section
+    expect(output).toContain("### Mistakes to Avoid");
     expect(output).toContain("Other mistake");
   });
 
@@ -388,7 +390,7 @@ describe("formatKnowledgeContext", () => {
 
     const options: FormatOptions = { maxTokens: 500 }; // Small budget
 
-    const output = formatKnowledgeContext(learnings, [], [], [], options);
+    const output = formatKnowledgeContext(learnings, [], [], [], [], options);
 
     // Token budget is enforced - output should be within budget
     // Check that token count shown is reasonable
@@ -405,10 +407,10 @@ describe("formatKnowledgeContext", () => {
       },
     ];
 
-    const withPaths = formatKnowledgeContext([], [], mistakes, [], {
+    const withPaths = formatKnowledgeContext([], [], mistakes, [], [], {
       showFilePaths: true,
     });
-    const withoutPaths = formatKnowledgeContext([], [], mistakes, [], {
+    const withoutPaths = formatKnowledgeContext([], [], mistakes, [], [], {
       showFilePaths: false,
     });
 
@@ -474,6 +476,7 @@ describe("formatKnowledgeContext", () => {
       learnings,
       patterns,
       mistakes,
+      [],
       [],
       options,
     );

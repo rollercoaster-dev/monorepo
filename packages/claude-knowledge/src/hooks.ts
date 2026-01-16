@@ -35,6 +35,7 @@ import {
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
 import { formatKnowledgeContext, formatWorkflowState } from "./formatter";
+import { initializeState } from "./session";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -72,6 +73,22 @@ const MAX_TOPICS = 5;
 async function onSessionStart(
   context: SessionContext,
 ): Promise<KnowledgeContext> {
+  // Initialize session state for tool usage tracking
+  // This enables PreToolUse hook to enforce graph-first patterns
+  try {
+    initializeState();
+    logger.debug("Session state initialized for tool tracking", {
+      sessionId: process.env.CLAUDE_SESSION_ID,
+      context: "onSessionStart",
+    });
+  } catch (error) {
+    // Non-fatal: tool tracking is best-effort
+    logger.warn("Could not initialize session state", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionStart",
+    });
+  }
+
   const learnings: QueryResult[] = [];
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];
@@ -325,9 +342,23 @@ async function onSessionStart(
 
   // Prepend workflow state to summary if available
   const workflowSection = formatWorkflowState(workflowState);
-  const summary = workflowSection
-    ? `${workflowSection}\n${knowledgeSummary}`
-    : knowledgeSummary;
+
+  // Add tool selection reminder for graph-first pattern
+  const toolSelectionReminder = `
+## Tool Selection Reminder
+**For code exploration, use graph tools BEFORE Grep/Glob:**
+- \`bun run g:calls <fn>\`  → Find callers
+- \`bun run g:deps <fn>\`   → Find dependencies
+- \`bun run g:find <name>\` → Find entities
+- \`bun run d:search <q>\`  → Search docs
+
+Graph queries return precise AST-based results in ~500 tokens.
+Grep/Glob may require 3-10 calls at 2000-8000 tokens.
+`;
+
+  const summary = [workflowSection, toolSelectionReminder, knowledgeSummary]
+    .filter(Boolean)
+    .join("\n");
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();

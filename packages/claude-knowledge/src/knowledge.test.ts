@@ -156,12 +156,28 @@ describe("knowledge API", () => {
     });
 
     test("handles corpus with no embeddings gracefully", async () => {
-      // Reset database to have no learnings
-      resetDatabase(TEST_DB);
+      // Use a fresh database with no data
+      closeDatabase();
+      const EMPTY_DB = ".claude/test-knowledge-empty.db";
+      try {
+        await unlink(EMPTY_DB);
+      } catch {
+        /* file may not exist */
+      }
+      resetDatabase(EMPTY_DB);
 
       const results = await knowledge.searchSimilar("any query");
 
       expect(results).toHaveLength(0);
+
+      // Clean up and restore original DB for other tests
+      closeDatabase();
+      try {
+        await unlink(EMPTY_DB);
+      } catch {
+        /* ignore */
+      }
+      resetDatabase(TEST_DB);
     });
   });
 

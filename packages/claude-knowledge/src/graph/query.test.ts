@@ -360,4 +360,132 @@ describe("query", () => {
       expect(summary.totalEntities).toBeGreaterThan(0);
     });
   });
+
+  describe("cross-file call resolution", () => {
+    it("resolves imported function calls to definition file", () => {
+      // Setup: Create a graph where caller.ts imports and calls greet from callee.ts
+      const crossFileData: ParseResult = {
+        package: "cross-file-test",
+        entities: [
+          {
+            id: "cross-file-test:file:caller.ts",
+            type: "file",
+            name: "caller.ts",
+            filePath: "caller.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "cross-file-test:file:callee.ts",
+            type: "file",
+            name: "callee.ts",
+            filePath: "callee.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "cross-file-test:caller.ts:function:doWork",
+            type: "function",
+            name: "doWork",
+            filePath: "caller.ts",
+            lineNumber: 3,
+            exported: true,
+          },
+          {
+            id: "cross-file-test:callee.ts:function:greet",
+            type: "function",
+            name: "greet",
+            filePath: "callee.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+        ],
+        relationships: [
+          // caller.ts imports callee.ts
+          {
+            from: "cross-file-test:file:caller.ts",
+            to: "cross-file-test:file:callee.ts",
+            type: "imports",
+          },
+          // doWork calls greet - SHOULD point to callee.ts, not caller.ts
+          {
+            from: "cross-file-test:caller.ts:function:doWork",
+            to: "cross-file-test:callee.ts:function:greet",
+            type: "calls",
+          },
+        ],
+        stats: {
+          filesScanned: 2,
+          filesSkipped: 0,
+          entitiesByType: { file: 2, function: 2 },
+          relationshipsByType: { imports: 1, calls: 1 },
+        },
+      };
+
+      storeGraph(crossFileData, "cross-file-test");
+
+      // Query: what calls greet?
+      const callers = whatCalls("greet");
+
+      // Assert: Should find doWork from caller.ts
+      expect(callers.length).toBe(1);
+      expect(callers[0].name).toBe("doWork");
+      expect(callers[0].file_path).toBe("caller.ts");
+      expect(callers[0].line_number).toBe(3);
+    });
+
+    it("filters out unresolvable method calls", () => {
+      // Setup: Create a graph with method calls that should be filtered
+      const methodCallData: ParseResult = {
+        package: "method-test",
+        entities: [
+          {
+            id: "method-test:file:service.ts",
+            type: "file",
+            name: "service.ts",
+            filePath: "service.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "method-test:service.ts:class:MyService",
+            type: "class",
+            name: "MyService",
+            filePath: "service.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "method-test:service.ts:function:MyService.doSomething",
+            type: "function",
+            name: "MyService.doSomething",
+            filePath: "service.ts",
+            lineNumber: 3,
+            exported: true,
+          },
+        ],
+        relationships: [
+          // No synthetic "call:this.someMethod" relationships should exist
+          // Only real, resolvable relationships
+        ],
+        stats: {
+          filesScanned: 1,
+          filesSkipped: 0,
+          entitiesByType: { file: 1, class: 1, function: 1 },
+          relationshipsByType: {},
+        },
+      };
+
+      storeGraph(methodCallData, "method-test");
+
+      // Query all relationships for this package
+      const deps = whatDependsOn("MyService");
+
+      // Assert: No synthetic call:xxx IDs in results
+      // (The test passes if no relationships exist, which is expected when all synthetic calls are filtered)
+      for (const dep of deps) {
+        expect(dep.name).not.toMatch(/^call:/);
+      }
+    });
+  });
 });

@@ -46,6 +46,91 @@ See the [OB3 Roadmap](./ob3-roadmap.md) for detailed implementation progress.
 
 ## API Endpoints
 
+### Well-Known Endpoints
+
+These public endpoints provide cryptographic key distribution and decentralized identity information according to standard specifications.
+
+#### GET /.well-known/jwks.json
+
+Returns the JSON Web Key Set (JWKS) containing the server's public keys for credential verification.
+
+**Specification**: [RFC 7517 - JSON Web Key (JWK)](https://tools.ietf.org/html/rfc7517)
+
+**Authentication**: None required (public endpoint)
+
+**Response Headers**:
+
+- `Content-Type: application/json`
+- `Cache-Control: public, max-age=3600`
+
+**Response Format** (200 OK):
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "use": "sig",
+      "kid": "default",
+      "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx...",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+**Use Cases**:
+
+- Verifying signed credentials (JWS/JWT)
+- Establishing trust in issuer identity
+- Integration with OAuth 2.0 / OpenID Connect flows
+
+#### GET /.well-known/did.json
+
+Returns the DID:web document for the issuer, providing decentralized identity information and verification methods.
+
+**Specification**: [W3C Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/did-core/) with [DID:web Method](https://w3c-ccg.github.io/did-method-web/)
+
+**Authentication**: None required (public endpoint)
+
+**Response Headers**:
+
+- `Content-Type: application/did+json`
+- `Cache-Control: public, max-age=3600`
+
+**Response Format** (200 OK):
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:example.org",
+  "verificationMethod": [
+    {
+      "id": "did:web:example.org#default",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:example.org",
+      "publicKeyJwk": {
+        "kty": "RSA",
+        "use": "sig",
+        "kid": "default",
+        "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx...",
+        "e": "AQAB"
+      }
+    }
+  ],
+  "assertionMethod": ["did:web:example.org#default"]
+}
+```
+
+**Use Cases**:
+
+- Decentralized issuer identity verification
+- Integration with W3C Verifiable Credentials ecosystem
+- Cross-platform credential verification
+
 ### Version 2.0 Endpoints (Open Badges 2.0)
 
 All endpoints under the `/v2/` path return responses formatted according to the Open Badges 2.0 specification.
@@ -114,6 +199,214 @@ The following endpoints use the Open Badges 3.0 compliant naming convention, whe
 - `POST /v3/credentials/:id/revoke` - Revoke a credential
 - `GET /v3/credentials/:id/verify` - Verify a credential
 - `POST /v3/credentials/:id/sign` - Sign a credential
+- `POST /v3/credentials/:id/bake` - Bake credential into image
+
+##### POST /v3/credentials/:id/bake
+
+Embeds credential data into a PNG or SVG image using metadata standards. The credential URL is embedded in the image file, allowing the badge to be shared as a portable image while maintaining verifiability.
+
+**Authentication**: Required (API key or Bearer token)
+
+**URL Parameters**:
+
+- `id` - Credential ID (UUID or IRI)
+
+**Request Body**:
+
+```json
+{
+  "format": "png",
+  "image": "base64-encoded-image-data"
+}
+```
+
+| Field    | Type   | Required | Description                      |
+| -------- | ------ | -------- | -------------------------------- |
+| `format` | string | Yes      | Image format: `"png"` or `"svg"` |
+| `image`  | string | Yes      | Base64-encoded source image data |
+
+**Response Format** (200 OK):
+
+```json
+{
+  "bakedImage": "base64-encoded-baked-image-data"
+}
+```
+
+**Error Responses**:
+
+- `400 Bad Request` - Invalid format or malformed base64 image data
+- `401 Unauthorized` - Missing or invalid authentication
+- `404 Not Found` - Credential ID does not exist
+
+**Baking Process**:
+
+- **PNG**: Credential URL embedded in iTXt chunk with keyword "openbadges"
+- **SVG**: Credential URL embedded in `<metadata>` element with `openbadges` attribute
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/credentials/abc123/bake \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "png",
+    "image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  }'
+```
+
+**Use Cases**:
+
+- Social media sharing of verifiable badges
+- Email signatures with embedded credentials
+- Portfolio display with verification capability
+
+#### Verification Endpoints
+
+Public endpoints for verifying credentials in various formats. These endpoints are intentionally unauthenticated to support verification by third parties (employers, institutions, etc.).
+
+##### POST /v3/verify
+
+Verifies a credential in JSON-LD or JWT format. Validates the credential structure, signature, and issuer trust chain.
+
+**Authentication**: None required (public endpoint)
+
+**Note**: This endpoint is intentionally unauthenticated to enable verification by employers, educational institutions, or any party that receives a credential. Rate limiting should be applied at the infrastructure level (reverse proxy, CDN, or API gateway).
+
+**Request Body**:
+
+Option 1 - JSON-LD Credential:
+
+```json
+{
+  "@context": ["https://www.w3.org/2018/credentials/v1"],
+  "type": ["VerifiableCredential", "OpenBadgeCredential"],
+  "id": "https://example.org/credentials/abc123",
+  "issuer": {...},
+  "credentialSubject": {...},
+  "proof": {...}
+}
+```
+
+Option 2 - JWT String:
+
+```json
+{
+  "credential": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response Format** (200 OK):
+
+```json
+{
+  "isValid": true,
+  "hasValidSignature": true,
+  "details": {
+    "issuer": "https://example.org/issuers/issuer123",
+    "issuedOn": "2024-01-15T00:00:00Z",
+    "expirationDate": "2025-01-15T00:00:00Z",
+    "recipient": "recipient@example.org",
+    "revoked": false
+  }
+}
+```
+
+**Response Fields**:
+| Field | Type | Description |
+|-------|------|-------------|
+| `isValid` | boolean | Overall validity (structure, signature, not revoked) |
+| `hasValidSignature` | boolean | Cryptographic signature verification result |
+| `details` | object | Additional verification information |
+
+**Error Responses**:
+
+- `400 Bad Request` - Malformed credential or invalid format
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/verify \
+  -H "Content-Type: application/json" \
+  -d @credential.json
+```
+
+**Use Cases**:
+
+- Employer verification of job applicant badges
+- University verification of incoming student credentials
+- Self-service verification by credential holders
+
+##### POST /v3/verify/baked
+
+Extracts and verifies a credential from a baked image (PNG or SVG). Combines extraction and verification in a single operation.
+
+**Authentication**: None required (public endpoint)
+
+**Note**: This endpoint follows the same public access model as POST /v3/verify. Rate limiting should be applied at the infrastructure level.
+
+**Request Body**:
+
+```json
+{
+  "format": "png",
+  "image": "base64-encoded-baked-image-data"
+}
+```
+
+| Field    | Type   | Required | Description                      |
+| -------- | ------ | -------- | -------------------------------- |
+| `format` | string | Yes      | Image format: `"png"` or `"svg"` |
+| `image`  | string | Yes      | Base64-encoded baked image data  |
+
+**Response Format** (200 OK):
+
+```json
+{
+  "isValid": true,
+  "hasValidSignature": true,
+  "details": {
+    "issuer": "https://example.org/issuers/issuer123",
+    "issuedOn": "2024-01-15T00:00:00Z",
+    "recipient": "recipient@example.org",
+    "revoked": false,
+    "extractionMetadata": {
+      "credentialUrl": "https://example.org/credentials/abc123",
+      "extractedFrom": "png",
+      "extractionMethod": "iTXt chunk"
+    }
+  }
+}
+```
+
+**Extraction Process**:
+
+- **PNG**: Reads credential URL from iTXt chunk with keyword "openbadges"
+- **SVG**: Reads credential URL from `<metadata>` element with `openbadges` attribute
+- After extraction, fetches and verifies the credential using the same process as POST /v3/verify
+
+**Error Responses**:
+
+- `400 Bad Request` - Invalid format, malformed base64, or no embedded credential found
+- `404 Not Found` - Embedded credential URL returns 404
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.org/v3/verify/baked \
+  -H "Content-Type: application/json" \
+  -d '{
+    "format": "png",
+    "image": "iVBORw0KGgoAAAANSUhEUgAAAA..."
+  }'
+```
+
+**Use Cases**:
+
+- Verification of badge images shared on social media
+- Portfolio verification from downloaded badge images
+- Automated verification in applicant tracking systems
 
 #### Legacy Endpoints (Deprecated)
 

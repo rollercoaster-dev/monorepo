@@ -95,8 +95,13 @@ export function findTsFiles(dir: string): string[] {
       }
 
       if (stat.isDirectory()) {
-        // Skip test directories
-        if (entry === "__tests__" || entry === "test" || entry === "tests") {
+        // Skip test directories and node_modules
+        if (
+          entry === "__tests__" ||
+          entry === "test" ||
+          entry === "tests" ||
+          entry === "node_modules"
+        ) {
           continue;
         }
         walk(path);
@@ -282,6 +287,71 @@ export function extractEntities(
 }
 
 /**
+ * Resolve a call expression to its actual definition entity ID.
+ * Uses ts-morph's definition resolution to find where the called function is defined.
+ *
+ * @param call - CallExpression to resolve
+ * @param packageName - Package name for entity IDs
+ * @param currentFilePath - Current file path (relative to basePath)
+ * @param basePath - Base path for package
+ * @returns Entity ID of the called function, or synthetic ID if unresolvable
+ */
+function resolveCallTarget(
+  call: Node,
+  packageName: string,
+  currentFilePath: string,
+  basePath: string,
+): string | null {
+  // Get the expression being called
+  const expression = call.getChildAtIndex(0); // Left side of the call
+  const calledName = expression.getText();
+
+  // Try to resolve to definition using ts-morph
+  try {
+    const definitions =
+      expression.getType().getSymbol()?.getDeclarations() || [];
+
+    if (definitions.length > 0) {
+      const def = definitions[0];
+      const defSourceFile = def.getSourceFile();
+      const defFilePath = relative(basePath, defSourceFile.getFilePath());
+
+      // Extract entity name from definition
+      let defName: string | undefined;
+      if (def.isKind(SyntaxKind.FunctionDeclaration)) {
+        defName = def.getName();
+      } else if (def.isKind(SyntaxKind.MethodDeclaration)) {
+        const methodName = def.getName();
+        const parentClass = def.getParentIfKind(SyntaxKind.ClassDeclaration);
+        const className = parentClass?.getName();
+        if (className && methodName) {
+          defName = `${className}.${methodName}`;
+        }
+      } else if (def.isKind(SyntaxKind.VariableDeclaration)) {
+        defName = def.getName();
+      } else if (def.isKind(SyntaxKind.ClassDeclaration)) {
+        defName = def.getName();
+      }
+
+      if (defName) {
+        return makeEntityId(packageName, defFilePath, defName, "function");
+      }
+    }
+  } catch {
+    // Resolution failed - fall through to heuristics
+  }
+
+  // Fallback: use heuristics
+  if (calledName.includes(".")) {
+    // Method call or property access - can't resolve
+    return null; // Will be filtered out
+  }
+
+  // Direct function call - assume it's in current file
+  return makeEntityId(packageName, currentFilePath, calledName, "function");
+}
+
+/**
  * Extract relationships from a source file.
  *
  * @param sourceFile - ts-morph SourceFile to extract from
@@ -403,9 +473,6 @@ export function extractRelationships(
 
   // Call relationships - find all function calls
   sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-    const expression = call.getExpression();
-    const calledName = expression.getText();
-
     // Find the containing function/method
     let containingFn: Node | undefined = call;
     while (
@@ -450,18 +517,12 @@ export function extractRelationships(
       }
     }
 
-    // Try to resolve the called function
-    let toId: string;
-    if (calledName.includes(".")) {
-      // Method call or property access
-      toId = `call:${calledName}`;
-    } else {
-      // Direct function call - could be local or imported
-      const possibleIds = [
-        makeEntityId(packageName, filePath, calledName, "function"),
-        makeEntityId(packageName, filePath, calledName, "class"),
-      ];
-      toId = possibleIds[0];
+    // Resolve the called function to its definition
+    const toId = resolveCallTarget(call, packageName, filePath, basePath);
+
+    // Skip unresolvable calls (e.g., method calls, property access)
+    if (toId === null) {
+      return;
     }
 
     relationships.push({

@@ -1,69 +1,72 @@
 ---
 name: issue-researcher
 description: Fetches a GitHub issue, researches the codebase, and creates a detailed development plan with atomic commits. Use this at the start of any issue to plan the implementation.
-tools: Bash, Read, Glob, Grep, WebFetch, Write
+tools: Bash, Read, Glob, Grep, WebFetch, Write, Skill
 model: sonnet
 ---
 
 # Issue Researcher Agent
 
+## Contract
+
+### Input
+
+| Field          | Type   | Required | Description                          |
+| -------------- | ------ | -------- | ------------------------------------ |
+| `issue_number` | number | Yes      | GitHub issue number                  |
+| `workflow_id`  | string | No       | Checkpoint workflow ID (for logging) |
+| `issue_body`   | string | No       | Pre-fetched issue body (skips fetch) |
+
+### Output
+
+| Field             | Type     | Description                          |
+| ----------------- | -------- | ------------------------------------ |
+| `plan_path`       | string   | Path to created dev plan             |
+| `complexity`      | string   | TRIVIAL, SMALL, MEDIUM, LARGE        |
+| `estimated_lines` | number   | Estimated lines of code              |
+| `commit_count`    | number   | Number of planned commits            |
+| `affected_files`  | string[] | Files that will be modified          |
+| `has_blockers`    | boolean  | Whether issue has unmet dependencies |
+
+### Side Effects
+
+- Creates dev plan at `.claude/dev-plans/issue-<N>.md`
+- Logs plan creation to checkpoint (if workflow_id provided)
+
+### Checkpoint Actions Logged
+
+- `dev_plan_created`: { planPath, complexity, commitCount, estimatedLines }
+
+---
+
 ## Shared Patterns
 
 This agent uses patterns from [shared/](../shared/):
 
+- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[dependency-checking.md](../shared/dependency-checking.md)** - Blocker detection and handling
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
 
-## Code Graph (Recommended)
+## Tool Selection (MANDATORY)
 
-Use the `graph-query` skill to understand codebase structure efficiently.
+**ALWAYS use graph/docs BEFORE Grep.** See [tool-selection.md](../shared/tool-selection.md).
 
-### Graph Readiness Check
-
-Before running queries, ensure the graph is populated:
-
-```bash
-# Check if graph has data
-bun run checkpoint graph summary
-
-# If empty, parse relevant packages first
-bun run checkpoint graph parse packages/openbadges-types
-bun run checkpoint graph parse apps/openbadges-modular-server
+```
+┌─────────────────────────────────────────────────────────┐
+│  STOP: Before using Grep, try these first:             │
+│                                                         │
+│  graph what-calls <fn>      → Find all callers         │
+│  graph what-depends-on <t>  → Find all usages          │
+│  graph blast-radius <file>  → Impact analysis          │
+│  graph find <name>          → Locate entity            │
+│  docs search "<query>"      → Find documentation       │
+│                                                         │
+│  Grep is LAST RESORT for literal text search only.     │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Query Commands
-
-```bash
-# Find what calls a function (full call tree)
-bun run checkpoint graph what-calls <function-name>
-
-# Find direct callers only (simpler output)
-bun run checkpoint graph callers <function-name>
-
-# Find what depends on a module/type/interface
-bun run checkpoint graph what-depends-on <name>
-
-# Assess blast radius before changes
-bun run checkpoint graph blast-radius <file-path>
-
-# Search for entities by name
-bun run checkpoint graph find <name> [type]
-
-# Get package exports overview
-bun run checkpoint graph exports [package-name]
-
-# Get codebase statistics (useful for scope estimation)
-bun run checkpoint graph summary [package-name]
-```
-
-**When to use graph queries:**
-
-- Understanding call hierarchies before modifying functions
-- Finding all usages of a type/class/interface
-- Assessing impact of file changes
-- Exploring unfamiliar packages
-- Estimating scope with codebase statistics
+**Why:** 1 graph query = 1 tool call. Grep chains = 5-15 tool calls. Graph is 10x more efficient.
 
 ## Purpose
 

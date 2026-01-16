@@ -13,6 +13,7 @@ import {
   makeEntityId,
   makeFileId,
   derivePackageName,
+  findTsFiles,
 } from "./parser";
 import { Project } from "ts-morph";
 
@@ -524,6 +525,81 @@ export function oldGreet(): string {
 
       expect(oldGreet).toBeDefined();
       expect(oldGreet?.jsDocContent).toContain("@deprecated");
+    });
+  });
+
+  describe("findTsFiles", () => {
+    it("excludes node_modules directories", () => {
+      const files = findTsFiles(FIXTURES_DIR);
+
+      // Should not include any files from node_modules
+      const nodeModulesFiles = files.filter((f) => f.includes("node_modules"));
+      expect(nodeModulesFiles.length).toBe(0);
+    });
+
+    it("excludes test directories", () => {
+      const files = findTsFiles(FIXTURES_DIR);
+
+      // Should not include test files
+      const testFiles = files.filter(
+        (f) =>
+          f.includes("__tests__") ||
+          f.includes("/test/") ||
+          f.includes("/tests/"),
+      );
+      expect(testFiles.length).toBe(0);
+    });
+  });
+
+  describe("extractRelationships - cross-file calls", () => {
+    const TEST_PKG = "test-fixtures";
+
+    it("resolves imported function calls to definition file", () => {
+      // Parse both files (need both for ts-morph to resolve imports)
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const callsFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "calls.ts"),
+      );
+      project.addSourceFileAtPath(join(FIXTURES_DIR, "simple.ts"));
+
+      // Extract relationships from calls.ts
+      const relationships = extractRelationships(
+        callsFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
+
+      // Find the relationship where doWork calls greet
+      const greetCall = relationships.find(
+        (r) =>
+          r.type === "calls" &&
+          r.to.includes("simple.ts") &&
+          r.to.includes("greet"),
+      );
+
+      // Should resolve to simple.ts:function:greet, not calls.ts:function:greet
+      expect(greetCall).toBeDefined();
+      expect(greetCall?.to).toContain("simple.ts");
+      expect(greetCall?.to).not.toContain("calls.ts");
+    });
+
+    it("filters out unresolvable method calls", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const classFile = project.addSourceFileAtPath(
+        join(FIXTURES_DIR, "classes.ts"),
+      );
+
+      const relationships = extractRelationships(
+        classFile,
+        FIXTURES_DIR,
+        TEST_PKG,
+      );
+
+      // Should not have any synthetic "call:xxx" IDs
+      const syntheticCalls = relationships.filter((r) =>
+        r.to.startsWith("call:"),
+      );
+      expect(syntheticCalls.length).toBe(0);
     });
   });
 });

@@ -1,45 +1,74 @@
 ---
 name: atomic-developer
 description: Implements code changes following a development plan with atomic commits. Each commit is self-contained and the PR focuses on a single change. Use after issue-researcher creates a plan.
-tools: Bash, Read, Write, Edit, Glob, Grep
+tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 model: sonnet
 ---
 
 # Atomic Developer Agent
 
+## Contract
+
+### Input
+
+| Field          | Type   | Required | Description                          |
+| -------------- | ------ | -------- | ------------------------------------ |
+| `issue_number` | number | Yes      | GitHub issue number                  |
+| `workflow_id`  | string | No       | Checkpoint workflow ID (for logging) |
+| `plan_path`    | string | Yes      | Path to dev plan file                |
+| `start_step`   | number | No       | Resume from specific step            |
+
+### Output
+
+| Field                   | Type     | Description          |
+| ----------------------- | -------- | -------------------- |
+| `commits`               | array    | List of commits made |
+| `commits[].sha`         | string   | Commit SHA           |
+| `commits[].message`     | string   | Commit message       |
+| `commits[].files`       | string[] | Files changed        |
+| `validation.type_check` | boolean  | Type-check passed    |
+| `validation.lint`       | boolean  | Lint passed          |
+| `validation.tests`      | boolean  | Tests passed         |
+| `validation.build`      | boolean  | Build passed         |
+
+### Side Effects
+
+- Creates/modifies files per plan
+- Makes git commits
+- Logs each commit to checkpoint (if workflow_id provided)
+
+### Checkpoint Actions Logged
+
+- `commit_created`: { sha, message, files } (per commit)
+- `implementation_complete`: { commitCount, validationPassed }
+
+---
+
 ## Shared Patterns
 
 This agent uses patterns from [shared/](../shared/):
 
+- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
 - **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint commands
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
 - **[board-operations.md](../shared/board-operations.md)** - Board status updates
 
-## Code Graph (Recommended)
+## Tool Selection (MANDATORY)
 
-Use the `graph-query` skill to understand dependencies before implementing changes:
+**ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../shared/tool-selection.md).
 
-```bash
-# Find what calls a function you're modifying
-bun run checkpoint graph what-calls <function-name>
-
-# Assess impact of file changes
-bun run checkpoint graph blast-radius <file-path>
-
-# Find related entities to modify together
-bun run checkpoint graph find <name> [type]
-
-# Check package exports for public API awareness
-bun run checkpoint graph exports [package-name]
 ```
-
-**When to use graph queries:**
-
-- Before modifying a function, check what calls it
-- Before changing types, find all usages
-- Before refactoring, understand the blast radius
-- When unsure if a change affects other files
+┌─────────────────────────────────────────────────────────┐
+│  Before modifying code, check impact with graph:        │
+│                                                         │
+│  graph what-calls <fn>      → Who calls this?          │
+│  graph what-depends-on <t>  → Who uses this type?      │
+│  graph blast-radius <file>  → What breaks if I change? │
+│                                                         │
+│  1 query vs 10 greps. Use the graph.                   │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Purpose
 
@@ -252,7 +281,19 @@ For each step in the development plan:
    bun test <specific-test-file>
    ```
 
-5. **Stage and commit:**
+5. **Format changed files:**
+
+   ```bash
+   bun run format
+   ```
+
+   Verify formatting passes:
+
+   ```bash
+   bun run lint
+   ```
+
+6. **Stage and commit:**
 
    ```bash
    git add <specific-files>
@@ -261,20 +302,22 @@ For each step in the development plan:
 
    **Log commit to checkpoint (if WORKFLOW_ID provided):**
 
-   ```typescript
-   if (WORKFLOW_ID) {
-     import { checkpoint } from "claude-knowledge";
+   First, get the commit SHA (separate command):
 
-     const COMMIT_SHA = $(git rev-parse HEAD);
-     const COMMIT_MSG = $(git log -1 --pretty=%B);
-
-     checkpoint.logCommit(WORKFLOW_ID, COMMIT_SHA, COMMIT_MSG);
-
-     console.log(`[ATOMIC-DEV] Logged commit ${COMMIT_SHA.slice(0, 7)} to checkpoint`);
-   }
+   ```bash
+   git rev-parse HEAD
    ```
 
-6. **Report progress:**
+   Then log to checkpoint using the literal SHA from the output:
+
+   ```bash
+   bun run checkpoint workflow log-commit "<workflow-id>" "<sha-from-above>" "<type>(<scope>): <message>"
+   ```
+
+   **IMPORTANT:** Never combine these into one command with `&&` or shell variables.
+   Each command is a separate Bash tool call. Use the actual SHA value, not `$COMMIT_SHA`.
+
+7. **Report progress:**
    - Confirm commit made
    - Show files changed
    - Note any deviations from plan

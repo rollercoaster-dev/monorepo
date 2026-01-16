@@ -11,12 +11,12 @@
           },
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-start",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
             "description": "Load relevant knowledge for session context"
           },
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
             "description": "Refresh code graph on session start"
           }
         ]
@@ -31,12 +31,12 @@
           },
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-start",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
             "description": "Load relevant knowledge for session context"
           },
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
             "description": "Refresh code graph on session resume"
           }
         ]
@@ -48,8 +48,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli.ts session-end --interrupted",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-end --interrupted",
             "description": "Extract and store learnings before compaction (mark as interrupted)"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-gate.ts",
+            "description": "Enforce graph-first pattern: block Grep/Glob until graph queries made"
           }
         ]
       }
@@ -79,7 +91,7 @@
       "Bash(bun dev:*)",
       "Bash(bun run:*)",
       "Bash(bun scripts/checkpoint-cli.ts:*)",
-      "Bash(bun packages/claude-knowledge/src/cli.ts:*)",
+      "Bash(bun packages/claude-knowledge/src/cli/index.ts:*)",
       "Bash(bun packages/claude-workflows/src/cli.ts:*)",
       "Bash(./scripts/worktree-manager.sh:*)",
       "Bash(git checkout:*)",
@@ -101,6 +113,9 @@
       "Bash(rm -f .claude/dev-plans/:*)",
       "Bash(rm .claude/dev-plans/:*)",
       "Skill(board-manager)",
+      "Skill(graph-query)",
+      "Skill(docs-search)",
+      "Skill(knowledge-query)",
       "Edit",
       "Write"
     ],

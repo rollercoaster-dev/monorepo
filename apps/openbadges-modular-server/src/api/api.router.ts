@@ -21,6 +21,7 @@ import type {
   CreateStatusListDto,
   UpdateCredentialStatusDto,
   StatusListQueryDto,
+  BakeRequestDto,
 } from "./dtos";
 import type {
   RelatedAchievementDto,
@@ -40,6 +41,7 @@ import type { AssertionController } from "./controllers/assertion.controller";
 import { StatusListController } from "./controllers/status-list.controller";
 import { VersionController } from "./controllers/version.controller";
 import type { JwksController } from "./controllers/jwks.controller";
+import { CredentialsController } from "./controllers/credentials.controller";
 import { BadgeVersion } from "../utils/version/badge-version";
 import { openApiConfig } from "./openapi";
 import { HealthCheckService } from "../utils/monitoring/health-check.service";
@@ -54,8 +56,12 @@ import {
   validateRelatedAchievementMiddleware,
   validateEndorsementCredentialMiddleware,
   validateVerifyCredentialMiddleware,
+  validateVerifyBakedImageMiddleware,
 } from "../utils/validation/validation-middleware";
-import type { VerifyCredentialRequestDto } from "./dtos";
+import type {
+  VerifyCredentialRequestDto,
+  VerifyBakedImageRequestDto,
+} from "./dtos";
 import { VerificationController } from "./controllers/verification.controller";
 import type { BackpackController } from "../domains/backpack/backpack.controller";
 import type { UserController } from "../domains/user/user.controller";
@@ -73,6 +79,7 @@ import {
 } from "../utils/errors/api-error-handler";
 import { z } from "zod";
 import { BadRequestError } from "../infrastructure/errors/bad-request.error";
+import { bakingService } from "../services/baking/baking.service";
 
 /**
  * Schema for badge class query parameters
@@ -80,6 +87,30 @@ import { BadRequestError } from "../infrastructure/errors/bad-request.error";
  */
 const BadgeClassQuerySchema = z.object({
   issuer: z.string().min(1, "Issuer ID cannot be empty").optional(),
+});
+
+/**
+ * Schema for bake request validation
+ */
+const BakeRequestSchema = z.object({
+  format: z.enum(["png", "svg"], {
+    errorMap: () => ({ message: "Format must be 'png' or 'svg'" }),
+  }),
+  image: z
+    .string()
+    .min(1, "Image data cannot be empty")
+    .refine(
+      (val) => {
+        // Basic base64 validation
+        try {
+          Buffer.from(val, "base64");
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: "Image data must be valid base64" },
+    ),
 });
 
 /**
@@ -230,6 +261,7 @@ function addDeprecationWarning(newEndpoint: string) {
  * @param badgeClassController The badge class controller
  * @param assertionController The assertion controller
  * @param statusListController The status list controller
+ * @param credentialsController The credentials controller (optional)
  * @returns The versioned router
  */
 export function createVersionedRouter(
@@ -238,6 +270,7 @@ export function createVersionedRouter(
   badgeClassController: BadgeClassController,
   assertionController: AssertionController,
   statusListController: StatusListController,
+  credentialsController?: CredentialsController,
 ): Hono {
   const router = new Hono();
 
@@ -1207,6 +1240,44 @@ export function createVersionedRouter(
     }
   });
 
+  // Bake credential into image (only if credentialsController is provided)
+  if (credentialsController) {
+    router.post("/credentials/:id/bake", requireAuth(), async (c) => {
+      const id = c.req.param("id");
+      try {
+        // Parse and validate request body
+        const rawBody = await c.req.json();
+        const validation = BakeRequestSchema.safeParse(rawBody);
+
+        if (!validation.success) {
+          throw new BadRequestError(
+            `Invalid bake request: ${validation.error.errors.map((e) => e.message).join(", ")}`,
+          );
+        }
+
+        const body = validation.data as BakeRequestDto;
+
+        // Call controller to bake credential
+        const result = await credentialsController.bakeCredential(id, body);
+
+        if (!result) {
+          return sendNotFoundError(c, "Credential", {
+            endpoint: "POST /credentials/:id/bake",
+            id,
+          });
+        }
+
+        return c.json(result);
+      } catch (error) {
+        return sendApiError(c, error, {
+          endpoint: "POST /credentials/:id/bake",
+          id,
+          body: await c.req.json().catch(() => ({})),
+        });
+      }
+    });
+  }
+
   router.post(
     "/assertions/:id/sign",
     addDeprecationWarning("/credentials/:id/sign"),
@@ -1497,6 +1568,29 @@ export function createVersionedRouter(
         });
       }
     });
+
+    // POST /v3/verify/baked - Verify a baked image credential
+    // This endpoint extracts a credential from a baked image (PNG or SVG) and verifies it
+    // NOTE: Intentionally unauthenticated - follows same security model as POST /v3/verify
+    // Rate limiting should be applied at the infrastructure level (reverse proxy/CDN).
+    router.post(
+      "/verify/baked",
+      validateVerifyBakedImageMiddleware(),
+      async (c) => {
+        try {
+          const body = getValidatedBody<VerifyBakedImageRequestDto>(c);
+          const result = await verificationController.verifyBakedImage(body);
+
+          // Return appropriate status code based on verification result
+          // 200 OK for all responses - the isValid field indicates actual validity
+          return c.json(result);
+        } catch (error) {
+          return sendApiError(c, error, {
+            endpoint: "POST /verify/baked",
+          });
+        }
+      },
+    );
   }
 
   return router;
@@ -1756,6 +1850,19 @@ export async function createApiRouter(
     await RepositoryFactory.createStatusListRepository();
   const statusListController = new StatusListController(statusListRepository);
 
+  // Create credentials controller for baking operations
+  const assertionRepository =
+    await RepositoryFactory.createAssertionRepository();
+  const badgeClassRepository =
+    await RepositoryFactory.createBadgeClassRepository();
+  const issuerRepository = await RepositoryFactory.createIssuerRepository();
+  const credentialsController = new CredentialsController(
+    assertionRepository,
+    badgeClassRepository,
+    issuerRepository,
+    bakingService,
+  );
+
   // Version-specific routes
   const v2Router = createVersionedRouter(
     BadgeVersion.V2,
@@ -1763,6 +1870,7 @@ export async function createApiRouter(
     badgeClassController,
     assertionController,
     statusListController,
+    credentialsController,
   );
   const v3Router = createVersionedRouter(
     BadgeVersion.V3,
@@ -1770,6 +1878,7 @@ export async function createApiRouter(
     badgeClassController,
     assertionController,
     statusListController,
+    credentialsController,
   );
 
   // Mount version-specific routers

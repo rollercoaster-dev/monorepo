@@ -7,11 +7,7 @@
 
 import { getDatabase } from "../db/sqlite";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
-import {
-  createOrMergeEntity,
-  createRelationship,
-  generateEmbedding,
-} from "../knowledge/helpers";
+import { createOrMergeEntity, generateEmbedding } from "../knowledge/helpers";
 import type { CodeDoc } from "../types";
 import type { ParseResult, StoreResult, Entity } from "./types";
 
@@ -240,7 +236,6 @@ export async function storeCodeDocs(
   );
 
   let codeDocsCreated = 0;
-  let relationshipsCreated = 0;
 
   // Use transaction for atomicity
   db.run("BEGIN TRANSACTION");
@@ -286,22 +281,20 @@ export async function storeCodeDocs(
       };
 
       // Create CodeDoc entity with embedding
+      // Note: The entityId field in codeDocData links to the graph_entities table,
+      // so we don't create a DOCUMENTS relationship (which would require both IDs
+      // in the entities table). The entityId provides the cross-table link.
       createOrMergeEntity(db, "CodeDoc", codeDocId, codeDocData, embedding);
       codeDocsCreated++;
-
-      // Create DOCUMENTS relationship (CodeDoc -> code entity)
-      // Note: The relationship points from the doc TO the code entity
-      createRelationship(db, codeDocId, entity.id, "DOCUMENTS");
-      relationshipsCreated++;
     }
 
     db.run("COMMIT");
 
-    logger.info(`Created ${codeDocsCreated} CodeDoc entities with embeddings`, {
-      relationshipsCreated,
-    });
+    logger.info(`Created ${codeDocsCreated} CodeDoc entities with embeddings`);
 
-    return { codeDocsCreated, relationshipsCreated };
+    // relationshipsCreated is always 0 now since we use entityId field instead
+    // of DOCUMENTS relationships (which would require both IDs in same table)
+    return { codeDocsCreated, relationshipsCreated: 0 };
   } catch (error) {
     db.run("ROLLBACK");
     logger.error("Failed to store CodeDoc entities", {

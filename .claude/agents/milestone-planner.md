@@ -1,11 +1,27 @@
 ---
 name: milestone-planner
 description: Analyzes a GitHub milestone, builds dependency graph, identifies parallelizable issues, and validates planning. Use when starting /auto-milestone to understand issue dependencies and determine execution order.
-tools: Bash, Read, Glob, Grep
+tools: Bash, Read, Glob, Grep, Skill
 model: sonnet
 ---
 
 # Milestone Planner Agent
+
+## Tool Selection (MANDATORY)
+
+**Use code graph to detect conflicts between issues.** See [tool-selection.md](../shared/tool-selection.md).
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  When checking for conflicts between issues:            │
+│                                                         │
+│  graph blast-radius <file>  → What files are affected? │
+│  graph what-depends-on <t>  → Who uses this type?      │
+│                                                         │
+│  If two issues have overlapping blast radius,          │
+│  they need a dependency relationship.                   │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Purpose
 

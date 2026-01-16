@@ -13,8 +13,12 @@ import type {
   VerificationOptions,
   VerificationResult,
 } from "../../services/verification/types.js";
-import type { VerifyCredentialRequestDto } from "../dtos/verify.dto.js";
+import type {
+  VerifyCredentialRequestDto,
+  VerifyBakedImageRequestDto,
+} from "../dtos/verify.dto.js";
 import { logger } from "../../utils/logging/logger.service.js";
+import { unbake } from "../../services/baking/baking.service.js";
 
 /**
  * Controller for credential verification operations
@@ -98,6 +102,169 @@ export class VerificationController {
         stack: error instanceof Error ? error.stack : undefined,
       });
       // Re-throw to let the router handle the HTTP response
+      throw error;
+    }
+  }
+
+  /**
+   * Verify a baked image credential
+   *
+   * Extracts an Open Badges credential from a baked image (PNG or SVG)
+   * and performs complete verification including:
+   * - Image extraction (unbaking)
+   * - Proof/signature verification
+   * - Issuer verification
+   * - Temporal validation
+   * - Status check (revocation)
+   *
+   * @param request - The verification request containing base64 image data and options
+   * @returns Complete verification result with extraction metadata
+   */
+  async verifyBakedImage(
+    request: VerifyBakedImageRequestDto,
+  ): Promise<VerificationResult> {
+    const { image, options } = request;
+
+    logger.debug("Starting baked image credential verification", {
+      imageLength: image.length,
+      hasOptions: !!options,
+    });
+
+    try {
+      // Decode base64 image data
+      // Handle both raw base64 and data URI formats
+      const base64Data = image.includes(",") ? image.split(",")[1] : image;
+      const imageBuffer = Buffer.from(base64Data, "base64");
+
+      logger.debug("Decoded image data", {
+        bufferSize: imageBuffer.length,
+      });
+
+      // Extract credential from baked image
+      const unbakeResult = await unbake(imageBuffer);
+
+      logger.debug("Unbake completed", {
+        found: unbakeResult.found,
+        sourceFormat: unbakeResult.sourceFormat,
+        credentialType: unbakeResult.credential
+          ? typeof unbakeResult.credential
+          : undefined,
+      });
+
+      // If no credential found, return error result
+      if (!unbakeResult.found || !unbakeResult.credential) {
+        logger.warn("No credential found in baked image", {
+          sourceFormat: unbakeResult.sourceFormat,
+        });
+
+        return {
+          isValid: false,
+          status: "invalid",
+          checks: {
+            proof: [],
+            status: [],
+            temporal: [],
+            issuer: [],
+            schema: [],
+            general: [
+              {
+                check: "extraction",
+                description: "Extract credential from baked image",
+                passed: false,
+                error: "No credential data found in image",
+              },
+            ],
+          },
+          verifiedAt: new Date().toISOString(),
+          metadata: {
+            durationMs: 0,
+            extractionAttempted: true,
+            extractionSucceeded: false,
+            sourceFormat: unbakeResult.sourceFormat,
+          },
+        };
+      }
+
+      // Convert DTO options to verification service options
+      const verificationOptions: VerificationOptions | undefined = options
+        ? {
+            skipProofVerification: options.skipProofVerification,
+            skipStatusCheck: options.skipStatusCheck,
+            skipTemporalValidation: options.skipTemporalValidation,
+            skipIssuerVerification: options.skipIssuerVerification,
+            clockTolerance: options.clockTolerance,
+            allowExpired: options.allowExpired,
+            allowRevoked: options.allowRevoked,
+          }
+        : undefined;
+
+      // Verify the extracted credential
+      const credential = unbakeResult.credential as Record<string, unknown>;
+      const verificationResult = await verify(credential, verificationOptions);
+
+      // Add extraction metadata and the credential to the result
+      const enhancedResult: VerificationResult = {
+        ...verificationResult,
+        credential,
+        metadata: {
+          ...verificationResult.metadata,
+          extractionAttempted: true,
+          extractionSucceeded: true,
+          sourceFormat: unbakeResult.sourceFormat,
+        },
+      };
+
+      logger.debug("Baked credential verification completed", {
+        status: enhancedResult.status,
+        isValid: enhancedResult.isValid,
+        sourceFormat: unbakeResult.sourceFormat,
+        durationMs: enhancedResult.metadata?.durationMs,
+      });
+
+      return enhancedResult;
+    } catch (error) {
+      // Log the error with full context
+      logger.error("Baked credential verification failed with exception", {
+        imageLength: image.length,
+        hasOptions: !!options,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // If it's an extraction/format error, return structured error
+      if (
+        error instanceof Error &&
+        error.message.includes("Unsupported image format")
+      ) {
+        return {
+          isValid: false,
+          status: "invalid",
+          checks: {
+            proof: [],
+            status: [],
+            temporal: [],
+            issuer: [],
+            schema: [],
+            general: [
+              {
+                check: "extraction",
+                description: "Extract credential from baked image",
+                passed: false,
+                error:
+                  "Unsupported image format - unable to extract credential",
+              },
+            ],
+          },
+          verifiedAt: new Date().toISOString(),
+          metadata: {
+            durationMs: 0,
+            extractionAttempted: true,
+            extractionSucceeded: false,
+          },
+        };
+      }
+
+      // Re-throw for other errors
       throw error;
     }
   }
