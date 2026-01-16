@@ -19,7 +19,12 @@ import { resetDatabase } from "./helpers/database-reset.helper";
 import { setupTestApp, stopTestServer } from "./setup-test-app";
 import { getAvailablePort, releasePort } from "./helpers/port-manager.helper";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// Get the directory of this test file to resolve fixture paths correctly
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const APP_ROOT = join(__dirname, "../..");
 
 // Port and URL configuration
 let TEST_PORT: number;
@@ -153,7 +158,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load PNG fixture and encode to base64
-      const pngPath = join(process.cwd(), "tests/fixtures/test-badge.png");
+      const pngPath = join(APP_ROOT, "tests/fixtures/test-badge.png");
       const pngBuffer = readFileSync(pngPath);
       const pngBase64 = pngBuffer.toString("base64");
       logger.info("Loaded PNG fixture", {
@@ -289,7 +294,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load SVG fixture and encode to base64
-      const svgPath = join(process.cwd(), "tests/fixtures/test-badge.svg");
+      const svgPath = join(APP_ROOT, "tests/fixtures/test-badge.svg");
       const svgBuffer = readFileSync(svgPath);
       const svgBase64 = svgBuffer.toString("base64");
       logger.info("Loaded SVG fixture", {
@@ -425,7 +430,7 @@ describe("Baking API - E2E", () => {
       logger.info("Created test credential", { credentialId });
 
       // Step 4: Load PNG fixture and bake credential
-      const pngPath = join(process.cwd(), "tests/fixtures/test-badge.png");
+      const pngPath = join(APP_ROOT, "tests/fixtures/test-badge.png");
       const pngBuffer = readFileSync(pngPath);
       const pngBase64 = pngBuffer.toString("base64");
 
