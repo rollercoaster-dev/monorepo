@@ -421,9 +421,7 @@ export async function setupTestApp(
                 "drizzle/migrations/0002_abandoned_colonel_america.sql",
               );
               if (fs.existsSync(typeColumnMigrationPath)) {
-                logger.info(
-                  "Applying type column migration for E2E tests",
-                );
+                logger.info("Applying type column migration for E2E tests");
                 try {
                   const typeColumnSql = fs.readFileSync(
                     typeColumnMigrationPath,

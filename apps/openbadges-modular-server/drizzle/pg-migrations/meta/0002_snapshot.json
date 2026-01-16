@@ -131,12 +131,8 @@
           "name": "api_keys_user_id_users_id_fk",
           "tableFrom": "api_keys",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -146,9 +142,7 @@
         "api_keys_key_unique": {
           "name": "api_keys_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -331,12 +325,8 @@
           "name": "assertions_badge_class_id_badge_classes_id_fk",
           "tableFrom": "assertions",
           "tableTo": "badge_classes",
-          "columnsFrom": [
-            "badge_class_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["badge_class_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -344,12 +334,8 @@
           "name": "assertions_issuer_id_issuers_id_fk",
           "tableFrom": "assertions",
           "tableTo": "issuers",
-          "columnsFrom": [
-            "issuer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issuer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -591,12 +577,8 @@
           "name": "badge_classes_issuer_id_issuers_id_fk",
           "tableFrom": "badge_classes",
           "tableTo": "issuers",
-          "columnsFrom": [
-            "issuer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issuer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -604,12 +586,8 @@
           "name": "badge_classes_previous_version_badge_classes_id_fk",
           "tableFrom": "badge_classes",
           "tableTo": "badge_classes",
-          "columnsFrom": [
-            "previous_version"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["previous_version"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -769,12 +747,8 @@
           "name": "credential_status_entries_credential_id_assertions_id_fk",
           "tableFrom": "credential_status_entries",
           "tableTo": "assertions",
-          "columnsFrom": [
-            "credential_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credential_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -782,12 +756,8 @@
           "name": "credential_status_entries_status_list_id_status_lists_id_fk",
           "tableFrom": "credential_status_entries",
           "tableTo": "status_lists",
-          "columnsFrom": [
-            "status_list_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["status_list_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1034,12 +1004,8 @@
           "name": "platform_users_platform_id_platforms_id_fk",
           "tableFrom": "platform_users",
           "tableTo": "platforms",
-          "columnsFrom": [
-            "platform_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["platform_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1151,16 +1117,12 @@
         "platforms_name_unique": {
           "name": "platforms_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         },
         "platforms_client_id_unique": {
           "name": "platforms_client_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "client_id"
-          ]
+          "columns": ["client_id"]
         }
       },
       "policies": {},
@@ -1234,9 +1196,7 @@
         "roles_name_unique": {
           "name": "roles_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1378,12 +1338,8 @@
           "name": "status_lists_issuer_id_issuers_id_fk",
           "tableFrom": "status_lists",
           "tableTo": "issuers",
-          "columnsFrom": [
-            "issuer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issuer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1481,12 +1437,8 @@
           "name": "user_assertions_user_id_platform_users_id_fk",
           "tableFrom": "user_assertions",
           "tableTo": "platform_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1494,12 +1446,8 @@
           "name": "user_assertions_assertion_id_assertions_id_fk",
           "tableFrom": "user_assertions",
           "tableTo": "assertions",
-          "columnsFrom": [
-            "assertion_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assertion_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1599,12 +1547,8 @@
           "name": "user_roles_user_id_users_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1612,12 +1556,8 @@
           "name": "user_roles_role_id_roles_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1755,16 +1695,12 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

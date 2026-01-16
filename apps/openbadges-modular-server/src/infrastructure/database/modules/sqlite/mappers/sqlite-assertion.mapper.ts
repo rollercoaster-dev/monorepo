@@ -177,6 +177,7 @@ export class SqliteAssertionMapper {
                 "expires",
                 "evidence",
                 "verification",
+                "type",
                 "revoked",
                 "revocationReason",
               ].includes(k),
