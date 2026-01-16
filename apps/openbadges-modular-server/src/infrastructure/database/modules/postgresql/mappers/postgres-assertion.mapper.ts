@@ -64,6 +64,13 @@ export class PostgresAssertionMapper {
         ? domainAdditionalFieldsRaw
         : {};
 
+    // Parse type field - handle both OB2 string and OB3 array
+    const domainType = convertJson<string | string[]>(
+      record.type as string | string[],
+      "postgresql",
+      "from",
+    );
+
     // Create and return the domain entity
     return Assertion.create({
       // Convert UUID to URN format for application use
@@ -86,6 +93,7 @@ export class PostgresAssertionMapper {
         typeof domainVerification === "object" && domainVerification !== null
           ? domainVerification
           : undefined,
+      type: domainType,
       // revoked is expected to be boolean by Assertion.create? Check entity.
       revoked: this.mapRevokedFromDb(record.revoked), // Use helper method
       revocationReason: record.revocationReason,
@@ -160,6 +168,7 @@ export class PostgresAssertionMapper {
       expires: safeConvertToDate(entity.expires), // Use safe conversion
       evidence: convertJson(entity.evidence, "postgresql", "to"),
       verification: convertJson(entity.verification, "postgresql", "to"),
+      type: convertJson(entity.type, "postgresql", "to"),
       revoked: convertJson(
         entity.revoked ? { status: true } : null,
         "postgresql",
