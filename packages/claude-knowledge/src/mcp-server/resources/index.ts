@@ -7,13 +7,16 @@
 
 import type { Resource } from "@modelcontextprotocol/sdk/types.js";
 import { knowledgeResources, readKnowledgeResource } from "./knowledge.js";
+import { logsResources, readLogsResource } from "./logs.js";
+import { workflowsResources, readWorkflowsResource } from "./workflows.js";
 
 /**
  * All available MCP resources.
  */
 export const resources: Resource[] = [
   ...knowledgeResources,
-  // Logs and workflow resources will be added in commit 7
+  ...logsResources,
+  ...workflowsResources,
 ];
 
 /**
@@ -27,8 +30,8 @@ const resourceHandlers: Record<
   ) => Promise<{ uri: string; mimeType: string; text: string } | null>
 > = {
   "knowledge://": readKnowledgeResource,
-  // logs://: readLogsResource (commit 7)
-  // workflows://: readWorkflowsResource (commit 7)
+  "logs://": readLogsResource,
+  "workflows://": readWorkflowsResource,
 };
 
 /**
@@ -59,3 +62,5 @@ export async function readResource(
 
 // Re-export individual resource modules for direct imports
 export { knowledgeResources, readKnowledgeResource } from "./knowledge.js";
+export { logsResources, readLogsResource } from "./logs.js";
+export { workflowsResources, readWorkflowsResource } from "./workflows.js";
