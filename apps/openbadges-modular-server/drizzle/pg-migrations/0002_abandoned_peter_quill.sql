@@ -1,0 +1,1 @@
+ALTER TABLE "assertions" ADD COLUMN "type" jsonb DEFAULT '"Assertion"';
