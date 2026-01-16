@@ -563,6 +563,81 @@ export function extractRelationships(
 }
 
 /**
+ * Build a lookup map of entities by name for fast call resolution.
+ * Groups entities by their simple name (not full ID) to enable quick lookups.
+ *
+ * @param entities - Array of all entities
+ * @returns Map where key=entity name, value=array of matching entities
+ */
+export function buildEntityLookupMap(
+  entities: Entity[],
+): Map<string, Entity[]> {
+  const lookupMap = new Map<string, Entity[]>();
+
+  for (const entity of entities) {
+    // Skip file entities - we only care about code entities
+    if (entity.type === "file") {
+      continue;
+    }
+
+    const existing = lookupMap.get(entity.name) || [];
+    existing.push(entity);
+    lookupMap.set(entity.name, existing);
+  }
+
+  return lookupMap;
+}
+
+/**
+ * Find the best matching entity from candidates based on context.
+ * Prioritizes: same file > same package > exported > first match
+ *
+ * @param candidates - Array of potential entity matches
+ * @param currentFile - Current file path for context
+ * @param isImported - Whether this symbol was explicitly imported
+ * @returns Best matching entity or null if no good match
+ */
+export function findBestMatch(
+  candidates: Entity[],
+  currentFile: string,
+  isImported: boolean,
+): Entity | null {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // If only one candidate, use it
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+
+  // Scoring: same file (100) > same package (50) > exported (25) > first (0)
+  let bestScore = -1;
+  let bestMatch: Entity | null = null;
+
+  for (const candidate of candidates) {
+    let score = 0;
+
+    // Prefer entities in the same file (unless explicitly imported)
+    if (!isImported && candidate.filePath === currentFile) {
+      score += 100;
+    }
+
+    // Prefer exported entities (more likely to be imported)
+    if (candidate.exported) {
+      score += 25;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = candidate;
+    }
+  }
+
+  return bestMatch || candidates[0];
+}
+
+/**
  * Extract JSDoc content from a declaration node.
  * Returns null if no JSDoc exists or content is empty.
  *
