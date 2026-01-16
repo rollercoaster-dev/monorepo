@@ -195,6 +195,7 @@ export const assertions = pgTable(
     expires: timestamp("expires"),
     evidence: jsonb("evidence"),
     verification: jsonb("verification"),
+    type: jsonb("type").default("Assertion"), // OB2 string "Assertion" or OB3 array ["VerifiableCredential", "OpenBadgeCredential"]
     revoked: jsonb("revoked"),
     revocationReason: text("revocation_reason"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

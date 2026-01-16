@@ -189,6 +189,7 @@ export const assertions = sqliteTable(
     expires: integer("expires"),
     evidence: text("evidence"),
     verification: text("verification"),
+    type: text("type").default("Assertion"), // OB2 string "Assertion" or OB3 JSON array ["VerifiableCredential", "OpenBadgeCredential"]
     revoked: integer("revoked"),
     revocationReason: text("revocation_reason"),
     createdAt: integer("created_at").notNull(),
