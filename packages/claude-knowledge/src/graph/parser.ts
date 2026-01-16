@@ -288,25 +288,34 @@ export function extractEntities(
 
 /**
  * Resolve a call expression to its actual definition entity ID.
- * Uses ts-morph's definition resolution to find where the called function is defined.
+ * Uses multi-pass resolution strategy to minimize orphaned relationships.
+ *
+ * Pass 1: ts-morph type system resolution
+ * Pass 2: Import-aware lookup (check if symbol was imported)
+ * Pass 3: Entity lookup map (find matching entities in codebase)
+ * Pass 4: Return null for unresolvable (external/dynamic calls)
  *
  * @param call - CallExpression to resolve
  * @param packageName - Package name for entity IDs
  * @param currentFilePath - Current file path (relative to basePath)
  * @param basePath - Base path for package
- * @returns Entity ID of the called function, or synthetic ID if unresolvable
+ * @param entityLookupMap - Map of entity names to entities (for Pass 3)
+ * @param importMap - Map of imported symbols to file paths (for Pass 2)
+ * @returns Entity ID of the called function, or null if unresolvable
  */
 function resolveCallTarget(
   call: Node,
   packageName: string,
   currentFilePath: string,
   basePath: string,
+  entityLookupMap: Map<string, Entity[]>,
+  importMap: Map<string, string>,
 ): string | null {
   // Get the expression being called
   const expression = call.getChildAtIndex(0); // Left side of the call
   const calledName = expression.getText();
 
-  // Try to resolve to definition using ts-morph
+  // PASS 1: Try to resolve using ts-morph type system
   try {
     const definitions =
       expression.getType().getSymbol()?.getDeclarations() || [];
@@ -334,21 +343,72 @@ function resolveCallTarget(
       }
 
       if (defName) {
-        return makeEntityId(packageName, defFilePath, defName, "function");
+        // Skip if definition is outside the package (e.g., node_modules)
+        // relative() returns paths starting with '..' for files outside basePath
+        if (defFilePath.startsWith("..")) {
+          // External dependency - don't create relationship
+          return null;
+        }
+
+        // Verify this entity exists in our entity map
+        const entityId = makeEntityId(
+          packageName,
+          defFilePath,
+          defName,
+          "function",
+        );
+        const candidates = entityLookupMap.get(defName);
+        if (candidates && candidates.some((e) => e.id === entityId)) {
+          return entityId;
+        }
       }
     }
   } catch {
-    // Resolution failed - fall through to heuristics
+    // Resolution failed - fall through to next pass
   }
 
-  // Fallback: use heuristics
+  // PASS 2: Check import map for this symbol
+  const importedFromPath = importMap.get(calledName);
+  if (importedFromPath) {
+    // Look up entities in the imported file
+    const candidates = entityLookupMap.get(calledName);
+    if (candidates) {
+      // Find entity in the imported file - try all possible path variations
+      // to handle cases where import './bar' could be bar.ts or bar/index.ts
+      const possiblePaths = [
+        importedFromPath,
+        importedFromPath.replace(/\.ts$/, "/index.ts"),
+        importedFromPath.replace(/\.ts$/, ""),
+      ];
+      const match = candidates.find((e) => possiblePaths.includes(e.filePath));
+      if (match) {
+        return match.id;
+      }
+    }
+  }
+
+  // PASS 3: Entity lookup map fallback
+  // Skip method calls and property access (e.g., "obj.method", "this.helper")
   if (calledName.includes(".")) {
-    // Method call or property access - can't resolve
-    return null; // Will be filtered out
+    return null; // Cannot resolve - skip this relationship
   }
 
-  // Direct function call - assume it's in current file
-  return makeEntityId(packageName, currentFilePath, calledName, "function");
+  // Look up the called name in entity map
+  const candidates = entityLookupMap.get(calledName);
+  if (candidates && candidates.length > 0) {
+    // Use findBestMatch to select most likely candidate
+    const bestMatch = findBestMatch(candidates, currentFilePath, false);
+    if (bestMatch) {
+      return bestMatch.id;
+    }
+  }
+
+  // PASS 4: Unresolvable - return null (don't create synthetic IDs)
+  // This handles:
+  // - External library calls (console.log, JSON.stringify)
+  // - Dynamic calls (variables containing function references)
+  // - Method calls we couldn't resolve
+  return null;
 }
 
 /**
@@ -357,15 +417,20 @@ function resolveCallTarget(
  * @param sourceFile - ts-morph SourceFile to extract from
  * @param basePath - Base path for relative file paths
  * @param packageName - Package name for entity IDs
+ * @param entityLookupMap - Map of entity names to entities for call resolution
  */
 export function extractRelationships(
   sourceFile: SourceFile,
   basePath: string,
   packageName: string,
+  entityLookupMap: Map<string, Entity[]>,
 ): Relationship[] {
   const relationships: Relationship[] = [];
   const filePath = relative(basePath, sourceFile.getFilePath());
   const fileId = makeFileId(packageName, filePath);
+
+  // Build import map for this file
+  const importMap = extractImportMap(sourceFile, basePath);
 
   // Import relationships
   sourceFile.getImportDeclarations().forEach((imp) => {
@@ -518,7 +583,14 @@ export function extractRelationships(
     }
 
     // Resolve the called function to its definition
-    const toId = resolveCallTarget(call, packageName, filePath, basePath);
+    const toId = resolveCallTarget(
+      call,
+      packageName,
+      filePath,
+      basePath,
+      entityLookupMap,
+      importMap,
+    );
 
     // Skip unresolvable calls (e.g., method calls, property access)
     if (toId === null) {
@@ -560,6 +632,138 @@ export function extractRelationships(
   });
 
   return relationships;
+}
+
+/**
+ * Extract import map from a source file for call resolution.
+ * Maps imported symbol names to their source file paths (best guess).
+ *
+ * @param sourceFile - ts-morph SourceFile to extract imports from
+ * @param basePath - Base path for relative file resolution
+ * @returns Map where key=imported symbol name, value=source file path
+ */
+export function extractImportMap(
+  sourceFile: SourceFile,
+  basePath: string,
+): Map<string, string> {
+  const importMap = new Map<string, string>();
+  const currentFilePath = relative(basePath, sourceFile.getFilePath());
+
+  sourceFile.getImportDeclarations().forEach((imp) => {
+    const moduleSpecifier = imp.getModuleSpecifierValue();
+    const isRelative = moduleSpecifier.startsWith(".");
+
+    if (!isRelative) {
+      // Skip external imports (node_modules, etc.)
+      return;
+    }
+
+    // Resolve the import target file path
+    const resolvedPath = join(
+      dirname(currentFilePath),
+      moduleSpecifier,
+    ).replace(/\\/g, "/");
+
+    // Try with .ts extension (most common)
+    const possiblePaths = [
+      `${resolvedPath}.ts`,
+      `${resolvedPath}/index.ts`,
+      resolvedPath,
+    ];
+
+    // Use first possibility as best guess
+    const targetPath = possiblePaths[0];
+
+    // Named imports
+    imp.getNamedImports().forEach((named) => {
+      const importedName = named.getName();
+      importMap.set(importedName, targetPath);
+    });
+
+    // Default imports
+    const defaultImport = imp.getDefaultImport();
+    if (defaultImport) {
+      const importedName = defaultImport.getText();
+      importMap.set(importedName, targetPath);
+    }
+  });
+
+  return importMap;
+}
+
+/**
+ * Build a lookup map of entities by name for fast call resolution.
+ * Groups entities by their simple name (not full ID) to enable quick lookups.
+ *
+ * @param entities - Array of all entities
+ * @returns Map where key=entity name, value=array of matching entities
+ */
+export function buildEntityLookupMap(
+  entities: Entity[],
+): Map<string, Entity[]> {
+  const lookupMap = new Map<string, Entity[]>();
+
+  for (const entity of entities) {
+    // Skip file entities - we only care about code entities
+    if (entity.type === "file") {
+      continue;
+    }
+
+    const existing = lookupMap.get(entity.name) || [];
+    existing.push(entity);
+    lookupMap.set(entity.name, existing);
+  }
+
+  return lookupMap;
+}
+
+/**
+ * Find the best matching entity from candidates based on context.
+ * Prioritizes: same file > same package > exported > first match
+ *
+ * @param candidates - Array of potential entity matches
+ * @param currentFile - Current file path for context
+ * @param isImported - Whether this symbol was explicitly imported
+ * @returns Best matching entity or null if no good match
+ */
+export function findBestMatch(
+  candidates: Entity[],
+  currentFile: string,
+  isImported: boolean,
+): Entity | null {
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  // If only one candidate, use it
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+
+  // Scoring: same file (100) > same package (50) > exported (25) > first (0)
+  let bestScore = -1;
+  let bestMatch: Entity | null = null;
+
+  for (const candidate of candidates) {
+    let score = 0;
+
+    // Prefer entities in the same file (unless explicitly imported)
+    if (!isImported && candidate.filePath === currentFile) {
+      score += 100;
+    }
+
+    // Prefer exported entities (more likely to be imported)
+    if (candidate.exported) {
+      score += 25;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = candidate;
+    }
+  }
+
+  return bestMatch || candidates[0];
 }
 
 /**
@@ -648,12 +852,16 @@ export function parsePackage(
     allEntities.push(...entities);
   });
 
+  // Build entity lookup map for call resolution
+  const entityLookupMap = buildEntityLookupMap(allEntities);
+
   // Second pass: extract relationships
   project.getSourceFiles().forEach((sourceFile) => {
     const relationships = extractRelationships(
       sourceFile,
       packagePath,
       pkgName,
+      entityLookupMap,
     );
     allRelationships.push(...relationships);
   });
