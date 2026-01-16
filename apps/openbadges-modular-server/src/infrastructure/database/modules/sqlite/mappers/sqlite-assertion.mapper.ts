@@ -128,7 +128,11 @@ export class SqliteAssertionMapper {
               ? converted
               : record.type;
           } catch {
-            // If JSON parsing fails, it's a plain string
+            // If JSON parsing fails, it's a plain string - log for debugging
+            logger.debug("Type field parsed as plain string (not JSON)", {
+              recordId: id,
+              typeValue: record.type,
+            });
             return record.type;
           }
         })()

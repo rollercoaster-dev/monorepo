@@ -65,6 +65,8 @@ export class PostgresAssertionMapper {
         : {};
 
     // Parse type field - handle both OB2 string and OB3 array
+    // Note: PostgreSQL stores type as JSONB, so convertJson returns native types
+    // without needing JSON.parse - no try-catch needed unlike SQLite's TEXT storage
     const domainType = convertJson<string | string[]>(
       record.type as string | string[],
       "postgresql",
