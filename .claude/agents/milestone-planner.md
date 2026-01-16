@@ -38,10 +38,38 @@ Analyzes all issues in a GitHub milestone, builds a dependency graph, identifies
 
 The prompt should include:
 
-- **Milestone name**: The GitHub milestone to analyze
-- **Mode**: `validate` (check planning) or `plan` (propose dependencies)
+- **mode**: `"milestone"` (fetch from milestone) or `"issues"` (specific issue list)
+- **milestone_name**: The GitHub milestone to analyze (if mode == "milestone")
+- **issue_numbers**: Array of issue numbers to process (if mode == "issues")
+- **planning_mode**: `validate` (check planning) or `plan` (propose dependencies)
 
 ## Workflow
+
+### Phase 0: Input Handling
+
+Determine fetch strategy based on mode:
+
+**If mode == "issues":**
+
+```bash
+# Fetch specific issues directly
+for issue in issue_numbers:
+  gh issue view $issue --json number,title,body,state,labels,milestone
+```
+
+Create synthetic milestone object for consistency:
+
+```json
+{
+  "name": "Ad-hoc batch",
+  "number": null,
+  "source": "issues",
+  "issues_requested": [153, 154, 155]
+}
+```
+
+**If mode == "milestone":**
+Proceed to Phase 1 (current behavior).
 
 ### Phase 1: Fetch Milestone Issues
 
@@ -52,6 +80,8 @@ gh api repos/rollercoaster-dev/monorepo/milestones --jq '.[] | select(.title == 
 # Get all issues in milestone
 gh issue list --milestone "<name>" --state all --json number,title,body,state,labels
 ```
+
+Note: Skip this phase if mode == "issues" (already fetched in Phase 0).
 
 ### Phase 2: Parse Dependencies
 
@@ -132,13 +162,15 @@ Return a JSON structure:
 
 ```json
 {
+  "source": "milestone" | "issues",
   "milestone": {
-    "name": "OB3 Phase 1",
-    "number": 5,
+    "name": "OB3 Phase 1" | "Ad-hoc batch",
+    "number": 5 | null,
     "total_issues": 20,
     "open_issues": 15,
     "closed_issues": 5
   },
+  "issues_requested": [153, 154, 155],  // only present if source == "issues"
   "planning_status": "ready" | "needs_review",
   "planning_issues": [
     "Issues #115 and #116 both touch baking code but have no dependency relationship"
@@ -184,10 +216,17 @@ ELSE:
 
 ## Error Handling
 
+**For mode == "milestone":**
+
 1. **Milestone not found**: Report error with available milestones
 2. **No open issues**: Report milestone complete
-3. **All issues blocked**: Report deadlock with dependency chain
-4. **API errors**: Retry with exponential backoff (2s, 4s, 8s)
+
+**For mode == "issues":**
+
+1. **Issue not found**: Report "Issue #X not found"
+2. **No valid issues**: Report "None of the specified issues exist"
+
+**Both modes:** 3. **All issues blocked**: Report deadlock with dependency chain 4. **API errors**: Retry with exponential backoff (2s, 4s, 8s) 5. **Cross-milestone dependencies**: Warn but don't block (issues may come from different milestones)
 
 ## Example Analysis
 

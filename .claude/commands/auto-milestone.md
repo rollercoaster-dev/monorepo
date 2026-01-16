@@ -15,7 +15,9 @@ claude
 ## Quick Reference
 
 ```bash
-/auto-milestone "OB3 Phase 1"              # Full autonomous run
+/auto-milestone "OB3 Phase 1"              # All issues in milestone
+/auto-milestone 153 154 155                # Specific issues (space-separated)
+/auto-milestone 153,154,155                # Specific issues (comma-separated)
 /auto-milestone "Badge Generator" --dry-run # Analyze only, show plan
 /auto-milestone "OB3 Phase 1" --parallel 5  # Run 5 issues concurrently
 /auto-milestone "OB3 Phase 1" --wave 1      # Only run first wave
@@ -45,20 +47,51 @@ Phase 5: Cleanup  → remove worktrees, report summary
 
 ---
 
+## Argument Parsing
+
+Detect input type from `$ARGUMENTS`:
+
+| Pattern                              | Mode        | Example                        |
+| ------------------------------------ | ----------- | ------------------------------ |
+| Numbers only (space/comma separated) | `issues`    | `153 154 155` or `153,154,155` |
+| Quoted string or text                | `milestone` | `"OB3 Phase 1"`                |
+
+**Validation:**
+
+- Empty arguments → Error: "Usage: /auto-milestone <milestone-name> or <issue-numbers>"
+- Mix of numbers and text → Error: "Cannot mix issue numbers and milestone name"
+- Invalid issue number → Error: "Issue #X not found"
+
+---
+
 ## Phase 1: Plan
 
 **Agent:** `milestone-planner`
 
 ```
 Task(milestone-planner):
-  Input:  { milestone_name: "$ARGUMENTS" }
+  Input:  {
+    mode: "milestone" | "issues",
+    milestone_name: "$ARGUMENTS",   # if mode == "milestone"
+    issue_numbers: [153, 154, 155]  # if mode == "issues" (parsed from $ARGUMENTS)
+  }
   Output: { planning_status, free_issues[], dependency_graph, execution_waves[] }
 ```
 
 The milestone-planner will:
 
+**For mode: "milestone":**
+
 - Validate milestone exists
 - Fetch all issues in milestone
+
+**For mode: "issues":**
+
+- Validate each issue exists
+- Fetch issue details directly
+
+**Then (both modes):**
+
 - Parse dependency markers
 - Build dependency graph
 - Identify free (unblocked) issues
