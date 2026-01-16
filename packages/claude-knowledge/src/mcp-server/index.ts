@@ -24,9 +24,9 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { Logger } from "@rollercoaster-dev/rd-logger";
+import { tools, handleToolCall } from "./tools/index.js";
 
-// Tool and resource registries will be imported once implemented
-// import { tools, handleToolCall } from "./tools/index.js";
+// Resource registry will be imported once implemented
 // import { resources, handleResourceRead } from "./resources/index.js";
 
 const logger = new Logger();
@@ -53,26 +53,20 @@ function createServer(): Server {
 
   // List available tools
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    logger.debug("[mcp-server] Listing tools");
-    // Will return actual tools once implemented
-    return { tools: [] };
+    logger.debug("[mcp-server] Listing tools", { count: tools.length });
+    return { tools };
   });
 
   // Handle tool invocations
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    logger.debug(`Tool call: ${name}`, args);
+    logger.debug("[mcp-server] Tool call", { name, args });
 
-    // Will dispatch to actual handlers once implemented
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Tool '${name}' not yet implemented`,
-        },
-      ],
-      isError: true,
-    };
+    const result = await handleToolCall(
+      name,
+      (args as Record<string, unknown>) || {},
+    );
+    return result;
   });
 
   // List available resources
