@@ -8,7 +8,7 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { Buffer } from "node:buffer";
 
 /**
@@ -126,8 +126,35 @@ export async function handleOutputToolCall(
         // Sanitize filename to prevent path traversal
         const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-        const directory =
-          (args.directory as string) || join(process.cwd(), DEFAULT_OUTPUT_DIR);
+        // Validate and sanitize directory to prevent path traversal
+        const baseOutputDir = join(process.cwd(), ".claude");
+        let directory: string;
+
+        if (args.directory) {
+          // Remove path traversal attempts and resolve within .claude/
+          const sanitizedDir = (args.directory as string).replace(/\.\./g, "");
+          directory = join(baseOutputDir, sanitizedDir);
+
+          // Verify resolved path stays within .claude/
+          const resolvedDir = resolve(directory);
+          const resolvedBase = resolve(baseOutputDir);
+          if (!resolvedDir.startsWith(resolvedBase)) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "directory must be within .claude/",
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+        } else {
+          directory = join(process.cwd(), DEFAULT_OUTPUT_DIR);
+        }
+
         const filePath = join(directory, sanitizedFilename);
 
         // Ensure directory exists
