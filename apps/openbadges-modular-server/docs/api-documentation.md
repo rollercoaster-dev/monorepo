@@ -236,12 +236,12 @@ Embeds credential data into a PNG or SVG image using metadata standards. The cre
 }
 ```
 
-| Field      | Type   | Description                                           |
-| ---------- | ------ | ----------------------------------------------------- |
-| `data`     | string | Base64-encoded baked image with embedded credential   |
-| `mimeType` | string | MIME type: `"image/png"` or `"image/svg+xml"`         |
-| `size`     | number | Size of the baked image in bytes                      |
-| `format`   | string | Format of the baked image: `"png"` or `"svg"`         |
+| Field      | Type   | Description                                         |
+| ---------- | ------ | --------------------------------------------------- |
+| `data`     | string | Base64-encoded baked image with embedded credential |
+| `mimeType` | string | MIME type: `"image/png"` or `"image/svg+xml"`       |
+| `size`     | number | Size of the baked image in bytes                    |
+| `format`   | string | Format of the baked image: `"png"` or `"svg"`       |
 
 **Error Responses**:
 
