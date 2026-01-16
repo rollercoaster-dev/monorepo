@@ -1,40 +1,45 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import BadgeClassCard from "@components/badges/BadgeClassCard.vue";
+import type { OB2, OB3, Shared } from "openbadges-types";
 
 // Mock OB2 BadgeClass data
-const mockOB2BadgeClass = {
-  id: "https://example.org/badges/1",
+const mockOB2BadgeClass: OB2.BadgeClass = {
+  id: "https://example.org/badges/1" as Shared.IRI,
   type: "BadgeClass" as const,
   name: "Web Developer Certificate",
   description: "Demonstrates proficiency in web development technologies",
-  image: "https://example.org/badge-image.png",
+  image: "https://example.org/badge-image.png" as Shared.IRI,
   criteria: {
+    id: "https://example.org/criteria/1" as Shared.IRI,
     narrative: "Complete all required courses and projects",
   },
   issuer: {
-    id: "https://example.org/issuers/1",
+    id: "https://example.org/issuers/1" as Shared.IRI,
+    type: "Profile",
     name: "Tech Academy",
   },
   tags: ["web", "development", "javascript", "html", "css"],
 };
 
 // Mock OB3 Achievement data
-const mockOB3Achievement = {
-  id: "https://example.org/achievements/2",
-  type: ["Achievement"] as [string, ...string[]],
+const mockOB3Achievement: OB3.Achievement = {
+  id: "https://example.org/achievements/2" as Shared.IRI,
+  type: ["Achievement"],
   name: "Data Science Fundamentals",
   description: "Understanding of core data science concepts",
   image: {
-    id: "https://example.org/ds-badge.png",
+    id: "https://example.org/ds-badge.png" as Shared.IRI,
     type: "Image" as const,
   },
   criteria: {
     narrative: "Pass the data science assessment",
   },
   creator: {
-    id: "https://example.org/issuers/2",
+    id: "https://example.org/issuers/2" as Shared.IRI,
+    type: ["Profile"],
     name: "Data Institute",
+    url: "https://data-institute.org" as Shared.IRI,
   },
 };
 
@@ -188,7 +193,10 @@ describe("BadgeClassCard", () => {
 
   describe("fallback image", () => {
     it("shows fallback when no image provided", () => {
-      const badgeNoImage = { ...mockOB2BadgeClass, image: undefined };
+      const badgeNoImage = {
+        ...mockOB2BadgeClass,
+        image: undefined,
+      } as unknown as OB2.BadgeClass;
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: badgeNoImage },
       });
