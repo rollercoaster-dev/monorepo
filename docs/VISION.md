@@ -95,7 +95,7 @@ Open Badges 3.0 and W3C Verifiable Credentials. Not proprietary extensions.
 ### What's Missing
 
 - **Self-Signed Badges**: Core differentiator not yet implemented
-- **Backpack**: User-facing badge collection interface
+- **Backpack UI**: User-facing badge collection interface (backend complete, UI needed)
 - **Badge Generator**: Simple tool to create and issue badges
 - **Offline Verification**: Verify without network
 

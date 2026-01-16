@@ -129,6 +129,35 @@ When someone verifies a badge:
 
 ---
 
+## Badge Image Creation
+
+Three options for creating badge images:
+
+### 1. Templates (Default)
+
+Pre-made badge shapes with customizable colors:
+
+- Circle, Hexagon, Star, Shield, Ribbon, Square
+- Color palette picker
+- Instant preview
+
+### 2. AI Generation (Optional)
+
+Describe your badge, AI generates options:
+
+- Text prompt input
+- Returns 4 variations
+- Select and customize
+
+### 3. Upload
+
+Bring your own image:
+
+- PNG or SVG
+- Recommended 512x512px
+
+---
+
 ## What We're NOT Building (Yet)
 
 These features exist in enterprise platforms but add complexity:

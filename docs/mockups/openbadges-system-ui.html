@@ -729,6 +729,280 @@
       background: #1a1a1a;
       color: #fff;
     }
+
+    /* Image tabs */
+    .image-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .image-tab {
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border: none;
+      border-radius: 6px;
+      color: #666;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .image-tab:hover {
+      background: #e5e5e5;
+    }
+
+    .image-tab.active {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    /* Template grid */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .template-card {
+      cursor: pointer;
+      padding: 12px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+
+    .template-card:hover {
+      border-color: #ccc;
+    }
+
+    .template-card.selected {
+      border-color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    .template-preview {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 8px;
+    }
+
+    .template-name {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .template-card.selected .template-name {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    /* Color picker */
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .color-swatch.selected {
+      border-color: #1a1a1a;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1a1a1a;
+    }
+
+    .color-swatch.custom {
+      background: #fff;
+      border: 2px dashed #ccc;
+      font-size: 16px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .color-swatch.custom:hover {
+      border-color: #999;
+    }
+
+    /* AI section */
+    .ai-results {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .ai-result-card {
+      aspect-ratio: 1;
+      background: #f5f5f5;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .ai-result-card:hover {
+      border-color: #ccc;
+    }
+
+    .ai-result-card.selected {
+      border-color: #1a1a1a;
+    }
+
+    /* Badge preview card (in Create Badge) */
+    .badge-preview-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .badge-preview-card:hover {
+      border-color: #ccc;
+      background: #fafafa;
+    }
+
+    .badge-preview-image {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+
+    .badge-preview-info {
+      flex: 1;
+    }
+
+    .badge-preview-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .badge-preview-action {
+      font-size: 13px;
+      color: #2563eb;
+    }
+
+    /* Designer page layout */
+    .designer-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 32px;
+    }
+
+    .designer-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 48px;
+      min-height: 400px;
+    }
+
+    .designer-preview-badge {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 24px;
+    }
+
+    .designer-preview-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .designer-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .designer-section {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .designer-section-title {
+      font-weight: 500;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    /* Shape grid */
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .shape-option {
+      aspect-ratio: 1;
+      border: 2px solid #e5e5e5;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s;
+    }
+
+    .shape-option:hover {
+      border-color: #ccc;
+    }
+
+    .shape-option.selected {
+      border-color: #1a1a1a;
+      background: #fafafa;
+    }
+
+    .shape-icon {
+      width: 32px;
+      height: 32px;
+      background: #e5e5e5;
+    }
+
+    /* AI prompt */
+    .ai-prompt-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: none;
+      min-height: 80px;
+      margin-bottom: 12px;
+    }
+
+    .ai-prompt-input:focus {
+      outline: none;
+      border-color: #999;
+    }
   </style>
 </head>
 <body>
@@ -740,6 +1014,7 @@
     <button class="page-tab" onclick="showPage('verify')">Verify</button>
     <button class="page-tab" onclick="showPage('settings')">Settings</button>
     <button class="page-tab" onclick="showPage('review')">Review Applications</button>
+    <button class="page-tab" onclick="showPage('designer')">Badge Designer</button>
   </div>
 
   <div class="app">
@@ -935,9 +1210,16 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Image</label>
-            <div class="upload-area">
-              Drop an image or click to upload
+            <label class="form-label">Badge Image</label>
+
+            <div class="badge-preview-card" onclick="showPage('designer')">
+              <div class="badge-preview-image">
+                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%;"></div>
+              </div>
+              <div class="badge-preview-info">
+                <div class="badge-preview-name">Circle - Blue</div>
+                <div class="badge-preview-action">Click to customize in designer</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1321,6 +1603,107 @@
         <div class="empty-state" style="display: none;">
           <p class="empty-state-title">No pending applications</p>
           <p>Applications requiring review will appear here.</p>
+        </div>
+      </div>
+
+      <!-- BADGE DESIGNER PAGE -->
+      <div id="page-designer" class="page">
+        <a href="#" class="back-link" onclick="showPage('create'); return false;">Back to Create Badge</a>
+
+        <header class="page-header">
+          <h1 class="page-title">Badge Designer</h1>
+          <p class="page-subtitle">Customize your badge image</p>
+        </header>
+
+        <div class="designer-layout">
+          <!-- Live preview -->
+          <div class="designer-preview">
+            <div class="designer-preview-badge">
+              <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%;"></div>
+            </div>
+            <div class="designer-preview-label">Circle - Blue</div>
+          </div>
+
+          <!-- Design controls -->
+          <div class="designer-sidebar">
+            <!-- Method tabs -->
+            <div class="image-tabs">
+              <button class="image-tab active">Templates</button>
+              <button class="image-tab">AI Generate</button>
+              <button class="image-tab">Upload</button>
+            </div>
+
+            <!-- Templates section -->
+            <div class="designer-section">
+              <div class="designer-section-title">Shape</div>
+              <div class="shape-grid">
+                <div class="shape-option selected" title="Circle">
+                  <div class="shape-icon" style="border-radius: 50%;"></div>
+                </div>
+                <div class="shape-option" title="Hexagon">
+                  <div class="shape-icon" style="clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>
+                </div>
+                <div class="shape-option" title="Star">
+                  <div class="shape-icon" style="clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>
+                </div>
+                <div class="shape-option" title="Shield">
+                  <div class="shape-icon" style="clip-path: polygon(50% 100%, 0% 70%, 0% 0%, 100% 0%, 100% 70%);"></div>
+                </div>
+                <div class="shape-option" title="Square">
+                  <div class="shape-icon" style="border-radius: 4px;"></div>
+                </div>
+                <div class="shape-option" title="Ribbon">
+                  <div class="shape-icon" style="clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%);"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="designer-section">
+              <div class="designer-section-title">Color</div>
+              <div class="color-swatches">
+                <div class="color-swatch selected" style="background: #3b82f6;" title="Blue"></div>
+                <div class="color-swatch" style="background: #16a34a;" title="Green"></div>
+                <div class="color-swatch" style="background: #f97316;" title="Orange"></div>
+                <div class="color-swatch" style="background: #8b5cf6;" title="Purple"></div>
+                <div class="color-swatch" style="background: #ec4899;" title="Pink"></div>
+                <div class="color-swatch" style="background: #1a1a1a;" title="Black"></div>
+                <div class="color-swatch custom" title="Custom">+</div>
+              </div>
+            </div>
+
+            <!-- AI section (hidden by default, shown when AI tab active) -->
+            <div class="designer-section" style="display: none;">
+              <div class="designer-section-title">Describe your badge</div>
+              <textarea class="ai-prompt-input" placeholder="A golden trophy badge with laurel wreath for coding excellence..."></textarea>
+              <button class="btn btn-primary" style="width: 100%;">Generate Options</button>
+
+              <div style="margin-top: 16px;">
+                <div class="designer-section-title">Results</div>
+                <div class="ai-results">
+                  <div class="ai-result-card"></div>
+                  <div class="ai-result-card"></div>
+                  <div class="ai-result-card"></div>
+                  <div class="ai-result-card"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload section (hidden by default) -->
+            <div class="designer-section" style="display: none;">
+              <div class="designer-section-title">Upload Image</div>
+              <div class="upload-area">
+                Drop image here or click to browse
+                <br><br>
+                <span style="font-size: 12px;">PNG or SVG, 512x512px recommended</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <button class="btn btn-primary" style="flex: 1;" onclick="showPage('create')">Use This Badge</button>
+              <button class="btn btn-secondary">Download</button>
+            </div>
+          </div>
         </div>
       </div>
 

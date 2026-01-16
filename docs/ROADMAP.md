@@ -2,55 +2,70 @@
 
 Structured path from current state to product. Based on [issue themes analysis](./issue-themes.md).
 
-**Last updated:** 2026-01-15
+**Last updated:** 2026-01-16
 
 ---
 
 ## Milestone Overview
 
-| #   | Milestone              | Open | Closed | Status       |
-| --- | ---------------------- | ---- | ------ | ------------ |
-| 01  | OB3 Phase 1: Core Spec | 0    | 24     | **Complete** |
-| 02  | Badge Generator        | 5    | 18     | In Progress  |
-| 03  | Self-Signed Badges     | 4    | 0      | Not Started  |
-| 04  | Badge Backpack         | 7    | 1      | Not Started  |
-| 05  | Core Services          | 12   | 0      | Not Started  |
-| 06  | Developer Experience   | 13   | 0      | Not Started  |
-| 07  | OB3 Phase 2: UI Layer  | 7    | 0      | **Next**     |
-| 08  | OB3 Phase 3: Quality   | 3    | 0      | Not Started  |
-| 09  | UI Components          | 15   | 0      | Not Started  |
-| 10  | Infrastructure         | 14   | 10     | In Progress  |
-| 11  | Documentation          | 8    | 6      | In Progress  |
-| -   | Claude Knowledge Graph | 19   | 25     | Active       |
+Milestones are numbered by dependency order. The `-i` suffix indicates independent tracks that can run in parallel.
+
+| #    | Milestone              | Open | Closed | Status              |
+| ---- | ---------------------- | ---- | ------ | ------------------- |
+| 01   | OB3 Phase 1: Core Spec | 0    | 24     | **Complete**        |
+| 02   | Badge Generator        | 0    | 27     | **Complete**        |
+| 03   | Infrastructure         | 17   | 10     | **Next** (blocking) |
+| 04   | OB3 Phase 2: UI Layer  | 6    | 1      | Next                |
+| 05   | OB3 Phase 3: Quality   | 3    | 0      | Not Started         |
+| 06   | Issuer Model UI        | 13   | 0      | Not Started         |
+| 07   | UI Components          | 15   | 0      | Not Started         |
+| 08   | Badge Backpack         | 7    | 1      | Not Started         |
+| 09   | Core Services          | 13   | 0      | Not Started         |
+| 10-i | Self-Signed Badges     | 4    | 0      | Independent         |
+| 11-i | Developer Experience   | 13   | 0      | Independent         |
+| 12-i | Documentation          | 8    | 6      | Independent         |
+| -    | Claude Knowledge Graph | 18   | 26     | Active              |
 
 ---
 
 ## Current Focus
 
-### Priority 1: OB3 Phase 2 - UI Layer (#07)
+### Priority 1: Infrastructure (#03) - BLOCKING
+
+Build and type errors in openbadges-ui that block all UI work.
+
+**Issues:**
+
+- #224: Path alias resolution in type declarations
+- #227: Type errors in Vue components
+- #228: Type errors in test files
+
+**Why now:** These bugs block any new openbadges-ui component work.
+
+### Priority 2: OB3 Phase 2 - UI Layer (#04)
 
 The server-side OB3 work (Phase 1) is complete. Now the UI needs to catch up.
 
 **Issues:**
 
 - #153-158: UI OB3 compliance fixes
-- #159-163: System OB3 integration
+- #160-163: System OB3 integration
 
 **Why now:** OB3 types exist, server is compliant. UI/System need to use them.
 
-### Priority 2: Badge Generator (#02)
+### Priority 3: Issuer Model UI (#06)
 
-Mostly complete (18/23 done). Finish remaining 5 issues.
+UI primitives for badge creation. Depends on OB3 Phase 2. Enables Badge Generator UI.
 
-### Priority 3: Core Services (#05)
+### Priority 4: UI Components (#07)
 
-Baking and verification pipelines. Depends on OB3 UI being stable.
+Display components for badge viewing. After OB3 Phase 2 for OB3-native components.
 
 ---
 
 ## Phase 1: Complete OB3 Migration (Current)
 
-### Milestone 07: OB3 Phase 2 - UI Layer
+### Milestone 04: OB3 Phase 2 - UI Layer
 
 | Issue | Title                                      | Priority |
 | ----- | ------------------------------------------ | -------- |
@@ -61,32 +76,61 @@ Baking and verification pipelines. Depends on OB3 UI being stable.
 | #157  | ARIA labels for OB3 credentialSubject      | Medium   |
 | #158  | Validate OB3 @context array format         | High     |
 
-### Milestone 08: OB3 Phase 3 - Quality
+### Milestone 05: OB3 Phase 3 - Quality
 
 | Issue | Title                                      | Priority |
 | ----- | ------------------------------------------ | -------- |
-| #159  | BadgeIssuerForm OB3 Achievement fields     | High     |
 | #160  | OB3 validFrom/validUntil in badge issuance | High     |
 | #162  | OB3 support in validation middleware       | High     |
+| #163  | OB3 badge creation/issuance tests          | High     |
 
 **Completion criteria:** All packages handle OB3 credentials natively.
+
+Note: #159 (BadgeIssuerForm OB3 fields) was closed - form is being deprecated via #534.
 
 ---
 
 ## Phase 2: Core Features
 
-### Milestone 05: Core Services
+### Milestone 06: Issuer Model UI
 
-Baking and verification - the core badge operations.
+UI primitives for badge creation and management. Enables the issuer model (personal/org issuers, evidence, approval workflows).
 
-**Baking Pipeline:**
+**Design References:**
 
-- #115: PNG chunk utilities
-- #116: PNG baking service
-- #117: SVG parsing utilities
-- #118: SVG baking service
-- #119: Unified baking service
-- #120: Bake credential endpoint
+- Mockup: `docs/mockups/openbadges-system-ui.html`
+- Design: `docs/design/issuer-model.md`
+
+**Form Primitives:**
+
+- #522: IssuerSelector - Personal/org picker
+- #523: EvidenceSettings - Evidence requirement config
+- #524: ApprovalMethodPicker - Self/review/claim code
+
+**Badge Designer:**
+
+- #525: BadgePreviewCard - Clickable preview thumbnail
+- #526: BadgeDesigner - Main designer component
+- #527: ShapeSelector - Template shape grid
+- #528: ColorPicker - Color swatch picker
+- #529: ImageUploader - Drag/drop upload
+
+**Review & Management:**
+
+- #530: ApplicationCard - Review queue item
+- #531: MembersTable - Org member management
+- #532-533: RoleBadge, StatusBadge - Status indicators
+- #534: Deprecate BadgeIssuerForm
+
+**Dependencies:** OB3 Phase 2 (#04) should complete first for OB3-native components.
+
+**Completion criteria:** Can build Create Badge and Review Applications pages from primitives.
+
+### Milestone 09: Core Services
+
+API key management and remaining infrastructure.
+
+**Baking Pipeline:** ✅ COMPLETE (#115-120 all closed)
 
 **Verification Pipeline:**
 
@@ -96,13 +140,17 @@ Baking and verification - the core badge operations.
 - #125: Verify credential endpoint
 - #126: Verify baked image endpoint
 
-**Completion criteria:** Can embed and extract credentials from images.
+**API Key Management:**
 
-### Milestone 02: Badge Generator (In Progress)
+- #164-167: SQLite/PostgreSQL repositories and endpoints
 
-Simple tool to create badges. 18/23 issues done.
+**Completion criteria:** Full API key management, verification endpoints complete.
 
-### Milestone 03: Self-Signed Badges
+### Milestone 02: Badge Generator ✅ COMPLETE
+
+Simple tool to create badges. All 27 issues closed.
+
+### Milestone 10-i: Self-Signed Badges (Independent Track)
 
 The differentiating feature. Issue badges without server.
 
@@ -110,49 +158,50 @@ The differentiating feature. Issue badges without server.
 - Offline-capable badge creation
 - Export with embedded verification
 
-### Milestone 04: Badge Backpack
+### Milestone 08: Badge Backpack
 
-Personal badge collection interface.
+Personal badge collection interface. Backend is complete - UI components needed.
 
 - Badge import/export
-- Collection display
+- Collection display (BackpackToolbar, BackpackStats, BackpackFilters)
 - Sharing capabilities
 
 ---
 
 ## Phase 3: Developer Experience
 
-### Milestone 06: Developer Experience
+### Milestone 03: Infrastructure - BLOCKING
+
+Must fix before UI work can proceed.
+
+- #224, #227, #228: openbadges-ui build/type errors
+- #190-194: TypeScript strictness, package config cleanup
+- #242: Fix flaky integration tests
+
+**Completion criteria:** Clean CI, openbadges-ui builds without errors.
+
+### Milestone 11-i: Developer Experience (Independent Track)
 
 **rd-logger Integration:**
 
 - #218-223: Consistent logging across all packages
 
-**API Key Management:**
-
-- #164-167: SQLite/PostgreSQL API key repositories
-
-### Milestone 10: Infrastructure (In Progress)
-
-- #190-194: TypeScript strictness, package config cleanup
-- #242: Fix flaky integration tests
-
-**Completion criteria:** Clean CI, consistent tooling.
+**Completion criteria:** Consistent logging, clean tooling.
 
 ---
 
 ## Phase 4: Polish
 
-### Milestone 09: UI Components
+### Milestone 07: UI Components
 
-Complete the component library:
+Complete the display component library:
 
 - Badge metadata panel
 - Badge detail view
 - Verification result card
 - Backpack toolbar and stats
 
-### Milestone 11: Documentation (In Progress)
+### Milestone 12-i: Documentation (Independent Track)
 
 - Developer guides
 - API documentation
@@ -196,12 +245,15 @@ This supports development velocity but doesn't block product features.
 
 For new contributors or when unsure what to pick:
 
-1. **High impact, low dependency:** Infrastructure fixes (#190-194)
+1. **BLOCKING:** Infrastructure bugs (#224, #227, #228) - Fix first
 2. **Current milestone:** OB3 Phase 2 issues (#153-158)
-3. **Documentation:** Always welcome (#203, #209)
-4. **Bug fixes:** Flaky tests (#242)
+3. **After OB3 Phase 2:** Issuer Model UI (#522-534)
+4. **Documentation:** Always welcome (#203, #209) - Independent track
+5. **Bug fixes:** Flaky tests (#242)
 
-Avoid starting Core Services (#05) until OB3 Phases 2-3 are done.
+**Dependency chain:** Infrastructure (#03) → OB3 Phase 2 (#04) → Issuer Model UI (#06) → UI Components (#07) → Badge Backpack (#08)
+
+**Independent tracks:** Self-Signed (#10-i), Developer Experience (#11-i), Documentation (#12-i)
 
 ---
 

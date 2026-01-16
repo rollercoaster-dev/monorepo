@@ -2,7 +2,7 @@
 
 Analysis of 70 issues in the "Next" column to identify priorities and clusters.
 
-**Analysis Date:** 2026-01-15
+**Analysis Date:** 2026-01-16
 
 **Note:** This is a point-in-time analysis. Some issues listed below may have been completed since this analysis. For current status, check the [ROADMAP.md](./ROADMAP.md) milestone overview or GitHub directly.
 
@@ -13,6 +13,7 @@ Analysis of 70 issues in the "Next" column to identify priorities and clusters.
 | Theme                       | Count | Priority     | Dependencies                      |
 | --------------------------- | ----- | ------------ | --------------------------------- |
 | OB3 Compliance              | 21    | **Critical** | Foundation for all badge features |
+| Issuer Model UI             | 13    | **High**     | Depends on OB3 Phase 2            |
 | Badge Baking & Verification | 14    | High         | Depends on OB3 types              |
 | rd-logger Integration       | 6     | Medium       | Independent                       |
 | Documentation               | 11    | Medium       | Can parallel other work           |
@@ -63,7 +64,44 @@ OB3 work touches all three main packages (server, UI, system). It should be done
 
 ---
 
-## Theme 2: Badge Baking & Verification (14 issues)
+## Theme 2: Issuer Model UI (13 issues)
+
+**Why it matters:** UI primitives for the issuer model redesign. Enables personal/org issuers, evidence workflows, approval methods, and badge design.
+
+**Design References:**
+
+- Mockup: `docs/mockups/openbadges-system-ui.html`
+- Design: `docs/design/issuer-model.md`
+
+### Form Primitives (#522-524)
+
+- #522: IssuerSelector - Personal/org radio card picker
+- #523: EvidenceSettings - Evidence requirement configuration
+- #524: ApprovalMethodPicker - Self-issue/review/claim code
+
+### Badge Designer (#525-529)
+
+- #525: BadgePreviewCard - Clickable preview thumbnail
+- #526: BadgeDesigner - Main designer component with tabs
+- #527: ShapeSelector - Template shape grid
+- #528: ColorPicker - Color swatch picker
+- #529: ImageUploader - Drag/drop upload area
+
+### Review & Management (#530-534)
+
+- #530: ApplicationCard - Review queue item
+- #531: MembersTable - Org member management
+- #532: RoleBadge - Admin/Creator/Issuer indicators
+- #533: StatusBadge - Pending/Approved/Rejected indicators
+- #534: Deprecate BadgeIssuerForm
+
+### Key Insight
+
+These are composable primitives, not monolithic components. This allows flexible composition for different use cases. Depends on OB3 Phase 2 for OB3-native types. Complements Theme 5 (UI Components) which focuses on display; this theme focuses on creation/management.
+
+---
+
+## Theme 3: Badge Baking & Verification (14 issues)
 
 **Why it matters:** Core badge functionality - embedding credentials in images and verifying them.
 
@@ -91,7 +129,7 @@ Clear dependency chain already labeled. Both pipelines can be worked in parallel
 
 ---
 
-## Theme 3: rd-logger Integration (6 issues)
+## Theme 4: rd-logger Integration (6 issues)
 
 **Why it matters:** Consistent logging across all packages. rd-logger is already published but not used everywhere.
 
@@ -110,7 +148,7 @@ This is independent work that can happen in parallel with OB3. Clean technical d
 
 ---
 
-## Theme 4: Documentation (11 issues)
+## Theme 5: Documentation (11 issues)
 
 **Why it matters:** Good docs reduce friction for contributors and users.
 
@@ -141,7 +179,7 @@ Documentation can be done incrementally alongside feature work. TSDoc (#203) and
 
 ---
 
-## Theme 5: UI Components (10 issues)
+## Theme 6: UI Components (10 issues)
 
 **Why it matters:** Complete the component library for badge display, verification, and management.
 
@@ -168,7 +206,7 @@ UI work should wait until OB3 UI fixes (#153-158) are done. New components shoul
 
 ---
 
-## Theme 6: API Key Management (4 issues)
+## Theme 7: API Key Management (4 issues)
 
 **Why it matters:** Security feature for production deployments.
 
@@ -185,7 +223,7 @@ This follows the existing multi-database pattern. It can be done after OB3 migra
 
 ---
 
-## Theme 7: Infrastructure/Tech Debt (5 issues)
+## Theme 8: Infrastructure/Tech Debt (5 issues)
 
 **Why it matters:** Code quality and maintainability.
 
@@ -204,7 +242,7 @@ Small, independent tasks. Good for cleanup between major features. #242 (flaky t
 
 ---
 
-## Theme 8: Server Features (6 issues)
+## Theme 9: Server Features (6 issues)
 
 **Why it matters:** Production-ready server capabilities.
 
@@ -237,7 +275,11 @@ openbadges-types (DONE - OB3 types exist)
          │
          ├──► OB3 UI (#153-158)
          │           │
-         │           └──► New UI Components (#62-67)
+         │           ├──► Issuer Model UI (#522-534)
+         │           │           │
+         │           │           └──► Badge Generator UI
+         │           │
+         │           └──► Display Components (#62-67)
          │
          └──► OB3 System (#159-163)
 
@@ -259,14 +301,15 @@ Independent tracks:
 
 ### Phase 2: Core Features
 
-1. Baking pipeline (#115-120)
-2. Verification pipeline (#122-126)
-3. API key management (#164-167)
+1. Issuer Model UI (#522-534) - creation/management primitives
+2. Baking pipeline (#115-120)
+3. Verification pipeline (#122-126)
+4. API key management (#164-167)
 
 ### Phase 3: Polish
 
 1. rd-logger integration (#218-223)
-2. New UI components (#62-67)
+2. Display UI components (#62-67)
 3. Documentation improvements (#54-57, #203-209)
 
 ### Ongoing (any time)
