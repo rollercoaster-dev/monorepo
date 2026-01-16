@@ -54,7 +54,7 @@ const normalizedBadgeClass = computed(() => {
     if (typeof badge.image === "string") {
       image = badge.image;
     } else if (typeof badge.image === "object" && "id" in badge.image) {
-      image = badge.image.id;
+      image = badge.image.id ?? "";
     }
   }
 
