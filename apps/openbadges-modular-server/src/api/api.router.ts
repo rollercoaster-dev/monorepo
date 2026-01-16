@@ -8,22 +8,22 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
 
-import type {
-  CreateIssuerDto,
-  UpdateIssuerDto,
-  CreateBadgeClassDto,
-  UpdateBadgeClassDto,
-  CreateAssertionDto,
-  UpdateAssertionDto,
-  BatchCreateCredentialsDto,
-  BatchRetrieveCredentialsDto,
-  BatchUpdateCredentialStatusDto,
-  CreateStatusListDto,
-  UpdateCredentialStatusDto,
-  StatusListQueryDto,
-  BakeRequestDto,
+import {
+  BakeRequestSchema,
+  type CreateIssuerDto,
+  type UpdateIssuerDto,
+  type CreateBadgeClassDto,
+  type UpdateBadgeClassDto,
+  type CreateAssertionDto,
+  type UpdateAssertionDto,
+  type BatchCreateCredentialsDto,
+  type BatchRetrieveCredentialsDto,
+  type BatchUpdateCredentialStatusDto,
+  type CreateStatusListDto,
+  type UpdateCredentialStatusDto,
+  type StatusListQueryDto,
+  type BakeRequestDto,
 } from "./dtos";
-import { BakeRequestSchema } from "./dtos/bake-request.dto";
 import type {
   RelatedAchievementDto,
   EndorsementCredentialDto,
