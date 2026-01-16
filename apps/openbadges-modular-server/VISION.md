@@ -46,16 +46,19 @@ The architecture supports connecting to other badge servers later. But you can r
 ### Core API
 
 **Issuers:** Create and manage badge issuers
+
 - CRUD operations
 - DID document generation (did:web)
 - Profile management
 
 **Badge Classes:** Define achievement types
+
 - CRUD operations
 - Criteria and alignment
 - Image management
 
 **Assertions:** Issue badges to recipients
+
 - Create and revoke
 - Evidence attachment
 - Recipient identity handling
@@ -112,6 +115,7 @@ docker run -p 3000:3000 -v ./data:/app/data ghcr.io/rollercoaster-dev/openbadges
 That's it. You have a badge server.
 
 **Data stays local:**
+
 - SQLite database in `./data`
 - Keys in `./data/keys`
 - No cloud required
@@ -144,10 +148,12 @@ DatabaseInterface (contract for database operations)
 ```
 
 **Currently supported:**
+
 - SQLite (default, zero-config)
 - PostgreSQL (production scale)
 
 **To add a new database (e.g., MongoDB):**
+
 1. Create `modules/mongodb/mongodb.module.ts` implementing `DatabaseModuleInterface`
 2. Create `modules/mongodb/services/mongodb-database.service.ts` implementing `DatabaseInterface`
 3. Add mappers and repositories following existing patterns
