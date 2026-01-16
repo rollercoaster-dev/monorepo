@@ -17,9 +17,21 @@ Manage workflow state persistence for issue-based development workflows.
 - Checking if a workflow exists for an issue
 - Resuming interrupted workflows
 
-## CLI Reference
+## MCP Tools (Preferred)
 
-All commands use the checkpoint CLI:
+When the MCP server is available, use native tools:
+
+| Tool                         | Purpose                                   |
+| ---------------------------- | ----------------------------------------- |
+| `checkpoint_workflow_find`   | Check if workflow exists for an issue     |
+| `checkpoint_workflow_create` | Start tracking a new workflow             |
+| `checkpoint_workflow_update` | Update phase, status, log actions/commits |
+
+These tools are automatically available when claude-knowledge MCP server is running.
+
+## CLI Reference (Fallback)
+
+When MCP tools are unavailable, use the checkpoint CLI:
 
 ```bash
 bun run checkpoint workflow <command> [args...]
