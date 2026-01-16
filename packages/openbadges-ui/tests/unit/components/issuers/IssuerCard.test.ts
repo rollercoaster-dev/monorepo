@@ -1,20 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import IssuerCard from "@components/issuers/IssuerCard.vue";
+import type { OB2, OB3, Shared } from "openbadges-types";
 
 // Mock OB2 issuer data
-const mockOB2Issuer = {
-  id: "https://example.org/issuers/1",
+const mockOB2Issuer: OB2.Profile = {
+  id: "https://example.org/issuers/1" as Shared.IRI,
   type: "Profile" as const,
   name: "Test University",
-  url: "https://test-university.edu",
+  url: "https://test-university.edu" as Shared.IRI,
   email: "badges@test-university.edu",
   description: "A test university issuing digital credentials",
-  image: "https://example.org/logo.png",
+  image: "https://example.org/logo.png" as Shared.IRI,
 };
 
 // Mock OB3 issuer data (Profile)
-const mockOB3Issuer = {
+const mockOB3Issuer: OB3.Profile = {
   id: "https://example.org/issuers/2",
   type: ["Profile"] as [string, ...string[]],
   name: "Digital Academy",
