@@ -496,45 +496,43 @@ describe("Baking API - E2E", () => {
       });
 
       // Step 7: Verify that tamper is detected
-      // The endpoint may either:
-      // - Return 200 with extraction failure metadata (graceful handling)
-      // - Return 400/500 if the corruption prevents parsing (exception handling)
-      // Both are valid tamper detection behaviors
+      // The endpoint should return 200 with extraction failure metadata (graceful handling)
+      // Corruption errors should NOT result in 500s after the fix
 
-      if (verifyResponse.status === 200) {
-        // Graceful handling - extraction was attempted but failed
-        const verifyResult = (await verifyResponse.json()) as {
-          isValid: boolean;
-          status: string;
-          metadata?: {
-            extractionAttempted?: boolean;
-            extractionSucceeded?: boolean;
-          };
+      expect(verifyResponse.status).toBe(200);
+
+      const verifyResult = (await verifyResponse.json()) as {
+        isValid: boolean;
+        status: string;
+        checks?: {
+          general?: Array<{
+            check: string;
+            passed: boolean;
+            error?: string;
+          }>;
         };
+        metadata?: {
+          extractionAttempted?: boolean;
+          extractionSucceeded?: boolean;
+        };
+      };
 
-        logger.info("Tampered verification result (graceful)", {
-          verifyResult,
-        });
+      logger.info("Tampered verification result", {
+        verifyResult,
+      });
 
-        // Verification should fail for tampered image
-        expect(verifyResult.isValid).toBe(false);
-        expect(verifyResult.status).toBe("invalid");
-        expect(verifyResult.metadata?.extractionAttempted).toBe(true);
-        expect(verifyResult.metadata?.extractionSucceeded).toBe(false);
-      } else {
-        // Exception handling - corruption was severe enough to throw
-        logger.info("Tampered verification result (exception)", {
-          status: verifyResponse.status,
-        });
+      // Verification should fail for tampered image
+      expect(verifyResult.isValid).toBe(false);
+      expect(verifyResult.status).toBe("invalid");
+      expect(verifyResult.metadata?.extractionAttempted).toBe(true);
+      expect(verifyResult.metadata?.extractionSucceeded).toBe(false);
 
-        // 400 or 500 indicates the tampered image couldn't be processed
-        // This is also valid tamper detection behavior
-        expect([400, 500]).toContain(verifyResponse.status);
-      }
-
-      // Note: Additional detailed checks for extraction errors are skipped
-      // when the endpoint returns 400/500 since verifyResult won't be available.
-      // The key assertion is that tampered images are not accepted as valid.
+      // Should have extraction failure in general checks
+      const extractionCheck = verifyResult.checks?.general?.find(
+        (c) => c.check === "extraction",
+      );
+      expect(extractionCheck?.passed).toBe(false);
+      expect(extractionCheck?.error).toBe("Invalid or corrupted badge data");
     });
   });
 });
