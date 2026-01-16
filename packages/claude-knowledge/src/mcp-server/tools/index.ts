@@ -8,6 +8,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { knowledgeTools, handleKnowledgeToolCall } from "./knowledge.js";
 import { graphTools, handleGraphToolCall } from "./graph.js";
+import { checkpointTools, handleCheckpointToolCall } from "./checkpoint.js";
 
 /**
  * All available MCP tools.
@@ -15,7 +16,7 @@ import { graphTools, handleGraphToolCall } from "./graph.js";
 export const tools: Tool[] = [
   ...knowledgeTools,
   ...graphTools,
-  // Checkpoint tools will be added in commit 4
+  ...checkpointTools,
   // Output tool will be added in commit 5
 ];
 
@@ -32,7 +33,7 @@ const toolHandlers: Record<
 > = {
   knowledge_: handleKnowledgeToolCall,
   graph_: handleGraphToolCall,
-  // checkpoint_: handleCheckpointToolCall (commit 4)
+  checkpoint_: handleCheckpointToolCall,
   // output_: handleOutputToolCall (commit 5)
 };
 
@@ -68,3 +69,4 @@ export async function handleToolCall(
 // Re-export individual tool modules for direct imports
 export { knowledgeTools, handleKnowledgeToolCall } from "./knowledge.js";
 export { graphTools, handleGraphToolCall } from "./graph.js";
+export { checkpointTools, handleCheckpointToolCall } from "./checkpoint.js";
