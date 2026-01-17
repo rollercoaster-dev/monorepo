@@ -27,5 +27,13 @@ const queryLoggerInstance = new QueryLogger(logger, {
 
 export const queryLogger = queryLoggerInstance;
 
+/**
+ * Get the Logger instance for external use (e.g., middleware integration)
+ * @returns The Logger instance
+ */
+export const getLogger = (): Logger => {
+  return logger;
+};
+
 // Re-export type for backward compatibility
 export type LogContext = Record<string, unknown>;
