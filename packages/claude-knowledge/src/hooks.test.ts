@@ -43,7 +43,8 @@ describe("hooks", () => {
       expect(result.learnings).toEqual([]);
       expect(result.patterns).toEqual([]);
       expect(result.mistakes).toEqual([]);
-      expect(result.summary).toContain("No relevant knowledge found");
+      // summary only contains workflow state now (empty when no workflow)
+      expect(result.summary).toBe("");
     });
 
     it("should parse issue number from branch name", async () => {
@@ -63,7 +64,7 @@ describe("hooks", () => {
 
       expect(result.learnings.length).toBe(1);
       expect(result.learnings[0].learning.sourceIssue).toBe(456);
-      expect(result.summary).toContain("Issue #456");
+      // summary only contains workflow state, not knowledge context
     });
 
     it("should use provided issue number over branch parsing", async () => {
@@ -111,7 +112,7 @@ describe("hooks", () => {
 
       expect(result.learnings.length).toBe(1);
       expect(result.learnings[0].learning.codeArea).toBe("Database");
-      expect(result.summary).toContain("Area: Database");
+      // summary only contains workflow state, not knowledge context
     });
 
     it("should get patterns for code areas", async () => {
@@ -129,7 +130,7 @@ describe("hooks", () => {
 
       expect(result.patterns.length).toBe(1);
       expect(result.patterns[0].name).toBe("SQL Injection Prevention");
-      expect(result.summary).toContain("SQL Injection Prevention");
+      // summary only contains workflow state, not knowledge context
     });
 
     it("should get mistakes for modified files", async () => {
@@ -149,8 +150,7 @@ describe("hooks", () => {
       expect(result.mistakes[0].description).toBe(
         "Used string concatenation in SQL",
       );
-      // New formatter uses "Past Mistakes in Current Files" for modified files
-      expect(result.summary).toContain("Past Mistakes in Current Files");
+      // summary only contains workflow state, not knowledge context
     });
 
     it("should deduplicate learnings from multiple queries", async () => {
@@ -175,7 +175,7 @@ describe("hooks", () => {
       expect(result.learnings.length).toBe(1);
     });
 
-    it("should format summary with all sections", async () => {
+    it("should return all data sections without formatting in summary", async () => {
       await knowledge.store([
         {
           id: "learning-1",
@@ -205,15 +205,15 @@ describe("hooks", () => {
         modifiedFiles: ["src/api/routes.ts"],
       });
 
-      expect(result.summary).toContain("## Relevant Knowledge");
-      // New formatter uses "Code Area:" instead of "### Learnings"
-      expect(result.summary).toContain("### Code Area:");
-      expect(result.summary).toContain("### Patterns");
-      // Mistakes in modified files use different header
-      expect(result.summary).toContain("Past Mistakes in Current Files");
-      expect(result.summary).toContain("[#123]");
-      expect(result.summary).toContain("REST Pattern");
-      expect(result.summary).toContain("Wrong HTTP method");
+      // Raw data is returned for consumer to format as needed
+      expect(result.learnings.length).toBe(1);
+      expect(result.learnings[0].learning.content).toBe("Important learning");
+      expect(result.patterns.length).toBe(1);
+      expect(result.patterns[0].name).toBe("REST Pattern");
+      expect(result.mistakes.length).toBe(1);
+      expect(result.mistakes[0].description).toBe("Wrong HTTP method");
+      // summary only contains workflow state (empty when no workflow)
+      expect(result.summary).toBe("");
     });
 
     it("should handle empty context gracefully", async () => {
@@ -224,7 +224,8 @@ describe("hooks", () => {
       expect(result.learnings).toEqual([]);
       expect(result.patterns).toEqual([]);
       expect(result.mistakes).toEqual([]);
-      expect(result.summary).toContain("No relevant knowledge found");
+      // summary only contains workflow state (empty when no workflow)
+      expect(result.summary).toBe("");
     });
 
     it("should respect max limits", async () => {
@@ -266,7 +267,7 @@ describe("hooks", () => {
       expect(result.topics![0].content).toContain("OAuth");
     });
 
-    it("should include topics in formatted summary", async () => {
+    it("should return topics in result for consumer formatting", async () => {
       await knowledge.storeTopic({
         id: "topic-db-1",
         content: "Database schema discussion: normalized tables",
@@ -279,8 +280,11 @@ describe("hooks", () => {
         modifiedFiles: ["src/db/schema.ts"],
       });
 
-      expect(result.summary).toContain("Recent Conversation Topics");
-      expect(result.summary).toContain("normalized tables");
+      // Raw topics returned for consumer to format as needed
+      expect(result.topics!.length).toBeGreaterThan(0);
+      expect(result.topics![0].content).toContain("normalized tables");
+      // summary only contains workflow state
+      expect(result.summary).toBe("");
     });
 
     it("should respect MAX_TOPICS limit", async () => {
