@@ -30,6 +30,7 @@ import {
   formatCommitContent,
   fetchIssueContext,
   extractBranchKeywords,
+  extractLearningsFromTranscript,
   type IssueContext,
 } from "./utils";
 import type { Learning } from "./types";
@@ -504,7 +505,31 @@ async function onSessionEnd(
   const learnings: Learning[] = [];
   const learningIds: string[] = [];
 
-  // Extract learnings from commits
+  // 1. LLM-based extraction (high confidence: 0.8)
+  // Extract technical insights from conversation that aren't in commits
+  if (session.sessionId) {
+    try {
+      const llmLearnings = await extractLearningsFromTranscript(
+        session.sessionId,
+      );
+      learnings.push(...llmLearnings);
+
+      logger.debug("LLM extraction completed", {
+        count: llmLearnings.length,
+        sessionId: session.sessionId,
+        context: "onSessionEnd",
+      });
+    } catch (error) {
+      // Log but don't fail - fallback to commit-based extraction
+      logger.warn("LLM extraction failed, using commit-based only", {
+        error: error instanceof Error ? error.message : String(error),
+        sessionId: session.sessionId,
+        context: "onSessionEnd",
+      });
+    }
+  }
+
+  // 2. Extract learnings from commits (medium confidence: 0.6)
   for (const commit of session.commits) {
     const parsed = parseConventionalCommit(commit.message);
 
@@ -529,7 +554,8 @@ async function onSessionEnd(
     }
   }
 
-  // Extract learnings from modified files (grouped by code area)
+  // 3. Extract learnings from modified files (low confidence: 0.48)
+  // Grouped by code area
   if (session.modifiedFiles && session.modifiedFiles.length > 0) {
     const areaFiles = new Map<string, string[]>();
 
