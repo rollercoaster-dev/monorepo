@@ -51,7 +51,7 @@ app.use(
     loggerInstance,
     skip: (c) => {
       const path = new URL(c.req.url).pathname;
-      return path === "/health" || path === "/metrics";
+      return config.logging.skipPaths.includes(path);
     },
   }),
 );
