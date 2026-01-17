@@ -103,7 +103,105 @@ _To be completed after all categories reviewed._
 
 ## 2. Logging Standardization
 
-_To be reviewed in next commit._
+### PRs Reviewed
+
+| PR   | Title                                                    | Author  | +/-        | Status      |
+| ---- | -------------------------------------------------------- | ------- | ---------- | ----------- |
+| #550 | feat(openbadges-system): integrate rd-logger             | joeczar | +104/-64   | ✅ Reviewed |
+| #548 | feat(openbadges-server): implement SensitiveValue        | joeczar | +188/-21   | ✅ Reviewed |
+| #547 | refactor(openbadges-server): replace QueryLoggerService  | joeczar | +28/-348   | ✅ Reviewed |
+| #546 | feat(openbadges-server): integrate honoLogger middleware | joeczar | +37/-3     | ✅ Reviewed |
+| #545 | refactor(logger): replace wrapper facade with rd-logger  | joeczar | +1142/-110 | ✅ Reviewed |
+
+### Findings
+
+#### PR #550 - rd-logger Integration (openbadges-system)
+
+**Quality:** Good
+
+- Clean integration of rd-logger in openbadges-system app
+- Simple, minimal logger setup (12 lines)
+- QueryLogger ready for future Kysely integration
+
+**Observations:**
+
+- Consistent pattern with openbadges-modular-server
+- Environment-based log level configuration
+- Development-only debug query logging
+
+#### PR #548 - SensitiveValue Credential Protection
+
+**Quality:** Excellent (Security-Critical)
+
+- Implements SensitiveValue wrapper for credentials
+- Prevents accidental logging of passwords, tokens, API keys
+- Comprehensive test coverage (188 lines added)
+- Integration tests for logging security
+
+**Observations:**
+
+- Critical security improvement
+- Tests verify credentials don't appear in logs
+- Applied to JWT service, password service, OAuth adapters
+- Good pattern for future sensitive data handling
+
+#### PR #547 - QueryLoggerService Replacement
+
+**Quality:** Good
+
+- Significant code reduction (-348 lines)
+- Replaced custom QueryLoggerService with rd-logger's built-in QueryLogger
+- Cleaner, more maintainable codebase
+
+**Observations:**
+
+- Good refactoring to remove custom implementation
+- rd-logger's QueryLogger provides same functionality
+- Reduces maintenance burden
+
+#### PR #546 - honoLogger Middleware Integration
+
+**Quality:** Good
+
+- Adds request/response logging middleware
+- Integrates with existing Logger instance
+- Minimal code change (+37 lines)
+
+**Observations:**
+
+- Clean middleware integration
+- Request context middleware for correlation
+- Good observability improvement
+
+#### PR #545 - Direct rd-logger Usage
+
+**Quality:** Good
+
+- Major refactor to use rd-logger directly
+- Removes wrapper facade pattern
+- Comprehensive logger service tests added
+
+**Observations:**
+
+- Large PR due to doc formatting changes included
+- Core changes are clean and focused
+- Tests verify logger behavior
+
+### Logging Standardization Summary
+
+| Metric        | Assessment                                     |
+| ------------- | ---------------------------------------------- |
+| Consistency   | ✅ rd-logger used across both apps             |
+| Security      | ✅ SensitiveValue protects credentials         |
+| Code Quality  | ✅ Removed custom implementations, reduced LOC |
+| Observability | ✅ Request logging middleware added            |
+| Test Coverage | ✅ Logger and security tests added             |
+
+**Recommendations:**
+
+1. Document SensitiveValue usage patterns in CONTRIBUTING.md
+2. Consider adding structured logging examples to developer docs
+3. Add log correlation IDs for distributed tracing (future)
 
 ---
 
@@ -124,7 +222,7 @@ _To be reviewed in subsequent commit._
 | Category                | PRs | Lines Added | Assessment  |
 | ----------------------- | --- | ----------- | ----------- |
 | Test Infrastructure     | 4   | 2,499       | ✅ Complete |
-| Logging Standardization | 5   | TBD         | Pending     |
+| Logging Standardization | 5   | 1,499       | ✅ Complete |
 | TypeScript & Tooling    | 5   | TBD         | Pending     |
 | UI & Cleanup            | 3   | TBD         | Pending     |
 
@@ -132,11 +230,11 @@ _To be reviewed in subsequent commit._
 
 ## Security Assessment
 
-| Area                | Status  | Notes                             |
-| ------------------- | ------- | --------------------------------- |
-| OAuth Tests         | ✅      | PKCE flow, token handling tested  |
-| Auth Tests          | ✅      | JWT validation, middleware tested |
-| Credential Handling | Pending | Review #548                       |
+| Area                | Status | Notes                                |
+| ------------------- | ------ | ------------------------------------ |
+| OAuth Tests         | ✅     | PKCE flow, token handling tested     |
+| Auth Tests          | ✅     | JWT validation, middleware tested    |
+| Credential Handling | ✅     | SensitiveValue prevents log exposure |
 
 ---
 
@@ -150,3 +248,4 @@ _To be reviewed in subsequent commit._
 ## Change Log
 
 - 2026-01-17: Initial review - Test Infrastructure (PRs #558-561)
+- 2026-01-17: Logging Standardization review (PRs #545-550)
