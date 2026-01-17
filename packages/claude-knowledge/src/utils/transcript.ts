@@ -7,7 +7,7 @@
  * This module provides utilities to locate and access these transcripts.
  */
 
-import { existsSync } from "fs";
+import { existsSync, readdirSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -41,19 +41,23 @@ export function getTranscriptPath(sessionId: string): string | null {
     return null;
   }
 
-  // For now, we need to search for the transcript file
-  // The project-path-hash is not easily computable from the session context
-  // Future enhancement: cache project hash or pass it from CLI
-  //
-  // Current approach: Check common pattern first
+  // Search all project directories for the transcript file
   // Pattern: ~/.claude/projects/{hash}/{sessionId}.jsonl
-  //
-  // For MVP, we'll return null and log a debug message
-  // The LLM extraction will gracefully handle this
-  //
-  // TODO: Implement directory traversal to find transcript
-  // This is a placeholder for the actual implementation
-  // which would use readdirSync to search project directories
+  try {
+    const projectDirs = readdirSync(claudeDir, { withFileTypes: true });
+
+    for (const dir of projectDirs) {
+      if (!dir.isDirectory()) continue;
+
+      const transcriptPath = join(claudeDir, dir.name, `${sessionId}.jsonl`);
+      if (existsSync(transcriptPath)) {
+        return transcriptPath;
+      }
+    }
+  } catch {
+    // Directory read failed, return null gracefully
+    return null;
+  }
 
   return null;
 }

@@ -244,7 +244,12 @@ export async function extractLearningsFromTranscript(
     // Convert to Learning objects
     const learnings: Learning[] = [];
     for (const item of extracted) {
-      if (!item.content || typeof item.content !== "string") {
+      // Skip items with missing, non-string, or whitespace-only content
+      if (
+        !item.content ||
+        typeof item.content !== "string" ||
+        !item.content.trim()
+      ) {
         continue;
       }
 
