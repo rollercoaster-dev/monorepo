@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
+import { honoLogger, honoErrorHandler } from '@rollercoaster-dev/rd-logger'
 import { userRoutes } from './routes/users'
 import { authRoutes } from './routes/auth'
 import { badgesRoutes } from './routes/badges'
@@ -10,6 +10,7 @@ import { requireAuth } from './middleware/auth'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
 import { openApiConfig } from './openapi'
+import { logger } from './utils/logger'
 
 // Define a simpler JSON value type to avoid deep type recursion
 type JSONValue =
@@ -25,7 +26,13 @@ type JSONValue =
 const app = new Hono()
 
 // Middleware
-app.use('*', logger())
+app.use(
+  '*',
+  honoLogger({
+    loggerInstance: logger,
+    skip: c => c.req.path === '/api/health',
+  })
+)
 app.use(
   '*',
   cors({
@@ -34,6 +41,9 @@ app.use(
     allowHeaders: ['Content-Type', 'Authorization'],
   })
 )
+
+// Error handler
+app.onError(honoErrorHandler(logger))
 
 // Health check endpoint
 app.get('/api/health', c => {
@@ -86,6 +96,7 @@ app.get('/swagger-ui/*', async c => {
   const filePath = `./node_modules/swagger-ui-dist/${path}`
 
   try {
+    // eslint-disable-next-line no-undef
     const file = Bun.file(filePath)
 
     if (await file.exists()) {
@@ -124,7 +135,7 @@ app.get('/swagger-ui/*', async c => {
       })
     }
   } catch (error) {
-    console.error('Error serving swagger-ui asset', { path, error })
+    logger.error('Error serving swagger-ui asset', { path, error })
   }
 
   return c.notFound()
@@ -250,7 +261,7 @@ app.get('/.well-known/jwks.json', async c => {
 
     return c.json(jwks)
   } catch (error) {
-    console.error('Error generating JWKS:', error)
+    logger.error('Error generating JWKS', { error })
     return c.json({ error: 'Failed to generate JWKS' }, 500)
   }
 })
@@ -283,7 +294,7 @@ async function safeJsonResponse(response: Response): Promise<JSONValue> {
     // Fallback to empty object for invalid JSON values
     return {}
   } catch (error) {
-    console.error('Error parsing JSON response:', error)
+    logger.error('Error parsing JSON response', { error })
     return {}
   }
 }
@@ -366,9 +377,11 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as 200 | 201 | 400 | 401 | 403 | 404 | 500)
   } catch (error) {
-    console.error('Error proxying request to OpenBadges server:', error)
-    console.error('Server URL:', openbadgesUrl)
-    console.error('Request path:', c.req.path)
+    logger.error('Error proxying request to OpenBadges server', {
+      error,
+      serverUrl: openbadgesUrl,
+      requestPath: c.req.path,
+    })
     return c.json({ error: 'Failed to communicate with local OpenBadges server' }, 500)
   }
 })
@@ -377,19 +390,21 @@ app.all('/api/bs/*', proxyRequiresAuth ? requireAuth : (_c, next) => next(), asy
 if (oauthConfig.enabled) {
   try {
     validateOAuthConfig()
-    console.log('OAuth configuration validated successfully')
+    logger.info('OAuth configuration validated successfully')
   } catch (error) {
-    console.error('OAuth configuration validation failed:', error)
+    logger.error('OAuth configuration validation failed', { error })
     process.exit(1)
   }
 } else {
-  console.log('OAuth is disabled - skipping OAuth configuration validation')
+  logger.info('OAuth is disabled - skipping OAuth configuration validation')
 }
 
 // Start the server
 const port = parseInt(process.env.PORT || '8888')
-console.log(`Server is running on http://localhost:${port}`)
-console.log(`API Documentation available at http://localhost:${port}/docs`)
+logger.info('Server is running', {
+  server: `http://localhost:${port}`,
+  docs: `http://localhost:${port}/docs`,
+})
 
 // Export for Bun to pick up
 export default {
