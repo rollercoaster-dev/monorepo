@@ -236,7 +236,7 @@ export async function compressBitstring(
 
     return compressed;
   } catch (error) {
-    logger.error("Failed to compress bitstring", { error });
+    logger.logError("Failed to compress bitstring", error as Error);
     throw new Error("Failed to compress bitstring");
   }
 }
@@ -259,7 +259,7 @@ export async function decompressBitstring(
 
     return new Uint8Array(decompressed);
   } catch (error) {
-    logger.error("Failed to decompress bitstring", { error });
+    logger.logError("Failed to decompress bitstring", error as Error);
     throw new Error("Failed to decompress bitstring");
   }
 }
@@ -297,7 +297,7 @@ export async function encodeBitstring(bitstring: Uint8Array): Promise<string> {
 
     return encoded;
   } catch (error) {
-    logger.error("Failed to encode bitstring", { error });
+    logger.logError("Failed to encode bitstring", error as Error);
     throw new Error("Failed to encode bitstring");
   }
 }
@@ -359,8 +359,7 @@ export async function decodeBitstring(
 
     return bitstring;
   } catch (error) {
-    logger.error("Failed to decode bitstring", {
-      error,
+    logger.logError("Failed to decode bitstring", error as Error, {
       encodedList:
         encodedList.length > 50
           ? encodedList.substring(0, 50) + "..."
