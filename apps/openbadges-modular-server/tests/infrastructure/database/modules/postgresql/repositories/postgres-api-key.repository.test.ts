@@ -100,7 +100,8 @@ const runTests = await isDatabaseAvailable();
   });
 
   it("should return null when finding a non-existent API key by ID", async () => {
-    const nonExistentId = "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
+    const nonExistentId =
+      "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const foundApiKey = await repository.findById(nonExistentId);
 
     expect(foundApiKey).toBeNull();
@@ -199,11 +200,15 @@ const runTests = await isDatabaseAvailable();
     expect(updatedApiKey?.id).toBe(createdApiKey.id);
     expect(updatedApiKey?.name).toBe("Updated Name");
     expect(updatedApiKey?.description).toBe("Updated description");
-    expect(updatedApiKey?.permissions).toEqual({ roles: ["user"], scope: "read-only" });
+    expect(updatedApiKey?.permissions).toEqual({
+      roles: ["user"],
+      scope: "read-only",
+    });
   });
 
   it("should return null when updating a non-existent API key", async () => {
-    const nonExistentId = "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
+    const nonExistentId =
+      "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const updatedApiKey = await repository.update(nonExistentId, {
       name: "Updated Name",
     });
@@ -228,7 +233,8 @@ const runTests = await isDatabaseAvailable();
   });
 
   it("should return false when deleting a non-existent API key", async () => {
-    const nonExistentId = "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
+    const nonExistentId =
+      "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const deleted = await repository.delete(nonExistentId);
 
     expect(deleted).toBe(false);
@@ -251,7 +257,8 @@ const runTests = await isDatabaseAvailable();
   });
 
   it("should return null when revoking a non-existent API key", async () => {
-    const nonExistentId = "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
+    const nonExistentId =
+      "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const revokedApiKey = await repository.revoke(nonExistentId);
 
     expect(revokedApiKey).toBeNull();
@@ -275,7 +282,8 @@ const runTests = await isDatabaseAvailable();
   });
 
   it("should return null when updating last used for a non-existent API key", async () => {
-    const nonExistentId = "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
+    const nonExistentId =
+      "urn:uuid:00000000-0000-0000-0000-000000000000" as Shared.IRI;
     const updatedApiKey = await repository.updateLastUsed(nonExistentId);
 
     expect(updatedApiKey).toBeNull();
