@@ -14,6 +14,7 @@ import type {
 import { logger } from "../../utils/logging/logger.service";
 import type { JWTPayload } from "jose";
 import { createRemoteJWKSet, jwtVerify, errors as joseErrors } from "jose";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 interface OAuth2Config {
   /**
@@ -109,6 +110,12 @@ export class OAuth2Adapter implements AuthAdapter {
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const sensitiveToken = new SensitiveValue(token);
+
+    logger.debug("Verifying OAuth2 token", {
+      token: sensitiveToken,
+      provider: this.providerName,
+    });
 
     try {
       const tokenPayload = await this.verifyToken(token);
@@ -207,6 +214,11 @@ export class OAuth2Adapter implements AuthAdapter {
         this.config.clientSecret
       ) {
         try {
+          logger.debug("Using token introspection endpoint", {
+            endpoint: this.config.introspectionEndpoint,
+            token: new SensitiveValue(token),
+          });
+
           const response = await fetch(this.config.introspectionEndpoint, {
             method: "POST",
             headers: {
