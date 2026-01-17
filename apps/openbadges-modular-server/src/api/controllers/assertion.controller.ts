@@ -423,7 +423,12 @@ export class AssertionController {
 
       if (badgeClass) {
         // Pass entities directly
-        return convertAssertionToJsonLd(assertion, version, badgeClass, issuer ?? undefined);
+        return convertAssertionToJsonLd(
+          assertion,
+          version,
+          badgeClass,
+          issuer ?? undefined,
+        );
       }
     }
 
@@ -479,7 +484,12 @@ export class AssertionController {
         const issuer = await this.issuerRepository.findById(issuerIri);
         // Pass entities directly
         return assertions.map((assertion) =>
-          convertAssertionToJsonLd(assertion, version, badgeClass, issuer ?? undefined),
+          convertAssertionToJsonLd(
+            assertion,
+            version,
+            badgeClass,
+            issuer ?? undefined,
+          ),
         );
       }
     }
@@ -713,7 +723,11 @@ export class AssertionController {
           ? await this.issuerRepository.findById(issuerIri)
           : null;
         // Pass entities directly
-        return signedAssertion.toJsonLd(version, badgeClass ?? undefined, issuer ?? undefined);
+        return signedAssertion.toJsonLd(
+          version,
+          badgeClass ?? undefined,
+          issuer ?? undefined,
+        );
       } else {
         // For V2 or if related entities are not needed/found
         return signedAssertion.toJsonLd(version);
