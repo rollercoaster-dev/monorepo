@@ -7,9 +7,10 @@
 
 import { Project, SyntaxKind } from "ts-morph";
 import type { SourceFile, Node, JSDoc } from "ts-morph";
-import { readdirSync, statSync } from "fs";
+import { readdirSync, statSync, readFileSync } from "fs";
 import { join, relative, dirname } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { parse as parseVueSFC } from "@vue/compiler-sfc";
 import type {
   Entity,
   Relationship,
@@ -133,6 +134,56 @@ export function findTsFiles(dir: string): string[] {
   }
 
   return files;
+}
+
+/**
+ * Extract TypeScript content from a Vue SFC file.
+ * Supports both <script lang="ts"> and <script setup lang="ts"> syntax.
+ *
+ * @param filePath - Path to the Vue file
+ * @returns Object with script content and syntax type, or null if no TypeScript script found
+ */
+export function extractVueScript(
+  filePath: string,
+): { content: string; isSetupSyntax: boolean } | null {
+  try {
+    const fileContent = readFileSync(filePath, "utf-8");
+    const { descriptor, errors } = parseVueSFC(fileContent, {
+      filename: filePath,
+    });
+
+    // Log parse errors if any
+    if (errors.length > 0) {
+      logger.warn(`Failed to parse Vue file: ${filePath}`, {
+        errors: errors.map((e) => e.message),
+      });
+      return null;
+    }
+
+    // Check <script setup> first (modern Vue 3 pattern)
+    if (descriptor.scriptSetup && descriptor.scriptSetup.lang === "ts") {
+      return {
+        content: descriptor.scriptSetup.content,
+        isSetupSyntax: true,
+      };
+    }
+
+    // Fall back to regular <script>
+    if (descriptor.script && descriptor.script.lang === "ts") {
+      return {
+        content: descriptor.script.content,
+        isSetupSyntax: false,
+      };
+    }
+
+    // No TypeScript script found
+    return null;
+  } catch (error) {
+    logger.warn(`Error extracting script from Vue file: ${filePath}`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 /**
