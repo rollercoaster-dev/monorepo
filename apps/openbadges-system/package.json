@@ -22,6 +22,7 @@
     "test:client": "bunx vitest run -c vitest.client.config.ts",
     "test:server": "bun test src/server/**/*.bun.test.ts",
     "test:server:vitest": "bunx vitest run -c vitest.server.config.ts",
+    "test:server:coverage": "bunx vitest run -c vitest.server.config.ts --coverage",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
