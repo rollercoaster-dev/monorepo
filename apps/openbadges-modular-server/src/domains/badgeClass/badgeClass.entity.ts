@@ -44,15 +44,15 @@ export class BadgeClass
     Omit<Partial<OB2.BadgeClass>, "image">,
     Omit<Partial<OB3.Achievement>, "image">
 {
-  id: Shared.IRI;
+  id!: Shared.IRI;
   /**
    * The type of the badge class, which can be a single string or an array of strings.
    * - For Open Badges 2.0, this is 'BadgeClass' in the internal representation, but 'BadgeClass' in the output.
    * - For Open Badges 3.0, this is 'BadgeClass' in the internal representation, but 'Achievement' in the output.
    */
   type: string | string[] = "BadgeClass";
-  issuer: Shared.IRI | OB3.Issuer;
-  name: string | Shared.MultiLanguageString;
+  issuer!: Shared.IRI | OB3.Issuer;
+  name!: string | Shared.MultiLanguageString;
   description?: string | Shared.MultiLanguageString;
   image?: Shared.IRI | Shared.OB3ImageObject;
   criteria?: OB2.Criteria | OB3.Criteria;

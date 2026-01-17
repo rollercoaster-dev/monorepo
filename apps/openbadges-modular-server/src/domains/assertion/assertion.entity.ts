@@ -32,7 +32,7 @@ import type { ProofType, ProofArray } from "../../utils/types/proof.types";
 export class Assertion {
   // Note: We're not implementing the interfaces directly due to type conflicts
   // between OB2 and OB3 specifications
-  id: Shared.IRI;
+  id!: Shared.IRI;
   /**
    * The type of the assertion, which can be a single string or an array of strings.
    * - For Open Badges 2.0, this is typically a single string, e.g., 'Assertion'.
@@ -41,9 +41,9 @@ export class Assertion {
    * The default value is 'Assertion' for internal representation.
    */
   type: string | string[] = "Assertion";
-  badgeClass: Shared.IRI;
-  recipient: OB2.IdentityObject | OB3.CredentialSubject;
-  issuedOn: string;
+  badgeClass!: Shared.IRI;
+  recipient!: OB2.IdentityObject | OB3.CredentialSubject;
+  issuedOn!: string;
   expires?: string;
   evidence?: OB2.Evidence[] | OB3.Evidence[];
   verification?: OB2.VerificationObject | OB3.Proof;
