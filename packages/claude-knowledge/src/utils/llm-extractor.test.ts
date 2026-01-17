@@ -41,7 +41,7 @@ describe("extractLearningsFromTranscript", () => {
     // Mock fetch to throw network error
     global.fetch = mock(() => {
       throw new Error("Network connection failed");
-    });
+    }) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -56,7 +56,7 @@ describe("extractLearningsFromTranscript", () => {
           headers: { "Content-Type": "text/plain" },
         }),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -71,7 +71,7 @@ describe("extractLearningsFromTranscript", () => {
           headers: { "Content-Type": "text/plain" },
         }),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -86,7 +86,7 @@ describe("extractLearningsFromTranscript", () => {
           headers: { "Content-Type": "text/plain" },
         }),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -112,7 +112,7 @@ describe("extractLearningsFromTranscript", () => {
           },
         ),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -136,7 +136,7 @@ describe("extractLearningsFromTranscript", () => {
           },
         ),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
@@ -162,7 +162,7 @@ describe("extractLearningsFromTranscript", () => {
           },
         ),
       ),
-    );
+    ) as unknown as typeof fetch;
 
     const result = await extractLearningsFromTranscript("test-session-id");
 
