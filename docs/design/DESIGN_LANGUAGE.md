@@ -162,6 +162,7 @@ The landing page uses extreme contrast (electric yellow, deep purple, black). Th
 | `--space-2`  | 0.5rem (8px)   | Icon gaps, compact padding |
 | `--space-3`  | 0.75rem (12px) | Button padding             |
 | `--space-4`  | 1rem (16px)    | Card padding, section gaps |
+| `--space-5`  | 1.25rem (20px) | Comfortable card padding   |
 | `--space-6`  | 1.5rem (24px)  | Card margins               |
 | `--space-8`  | 2rem (32px)    | Section padding            |
 | `--space-12` | 3rem (48px)    | Page margins               |
