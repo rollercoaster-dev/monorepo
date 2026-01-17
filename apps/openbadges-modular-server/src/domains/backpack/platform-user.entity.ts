@@ -6,14 +6,14 @@ import { createOrGenerateIRI } from "@utils/types/iri-utils";
 import type { PlatformUserMetadata } from "./backpack.types";
 
 export class PlatformUser {
-  id: Shared.IRI;
-  platformId: Shared.IRI;
-  externalUserId: string;
+  id!: Shared.IRI;
+  platformId!: Shared.IRI;
+  externalUserId!: string;
   displayName?: string;
   email?: string;
   metadata?: PlatformUserMetadata;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   /**
    * Private constructor to enforce creation through factory method

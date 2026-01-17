@@ -20,12 +20,12 @@ export interface UserAssertionData {
 }
 
 export class UserAssertion {
-  id: Shared.IRI;
-  userId: Shared.IRI;
-  assertionId: Shared.IRI;
-  addedAt: Date;
-  updatedAt: Date;
-  status: UserAssertionStatus;
+  id!: Shared.IRI;
+  userId!: Shared.IRI;
+  assertionId!: Shared.IRI;
+  addedAt!: Date;
+  updatedAt!: Date;
+  status!: UserAssertionStatus;
   metadata?: UserAssertionMetadata;
 
   /**
