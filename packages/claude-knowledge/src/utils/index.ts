@@ -27,3 +27,7 @@ export {
   getIssueCacheSize,
   type IssueContext,
 } from "./issue-fetcher";
+
+export { getTranscriptPath } from "./transcript";
+
+export { extractLearningsFromTranscript } from "./llm-extractor";
