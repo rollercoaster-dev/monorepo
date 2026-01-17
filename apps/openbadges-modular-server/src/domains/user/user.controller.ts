@@ -14,6 +14,7 @@ import type {
 import { logger } from "../../utils/logging/logger.service";
 import type { Shared } from "openbadges-types";
 import { PasswordService } from "../../auth/services/password.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 /**
  * User controller for handling user-related HTTP requests
@@ -37,8 +38,11 @@ export class UserController {
     metadata?: Record<string, unknown>;
   }): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
-      // Validate password if provided
-      if (data.password && !PasswordService.isPasswordSecure(data.password)) {
+      // Validate password if provided - extract actual password only when needed
+      if (
+        data.password &&
+        !PasswordService.isPasswordSecure(data.password)
+      ) {
         return {
           status: 400,
           body: {
@@ -59,7 +63,7 @@ export class UserController {
         metadata: data.metadata,
       };
 
-      // Create user
+      // Create user - password will be wrapped in service
       const user = await this.userService.createUser(userParams, data.password);
 
       return {
@@ -205,8 +209,14 @@ export class UserController {
     },
   ): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
-      // Validate new password
-      if (!PasswordService.isPasswordSecure(data.newPassword)) {
+      // Wrap passwords for safe logging
+      const sensitiveNewPassword = new SensitiveValue(data.newPassword);
+      const sensitiveCurrentPassword = data.currentPassword
+        ? new SensitiveValue(data.currentPassword)
+        : undefined;
+
+      // Validate new password - extract actual password only when needed
+      if (!PasswordService.isPasswordSecure(sensitiveNewPassword.getValue())) {
         return {
           status: 400,
           body: {
@@ -230,7 +240,7 @@ export class UserController {
       }
 
       // If current password is provided, verify it
-      if (data.currentPassword) {
+      if (sensitiveCurrentPassword) {
         if (!user.passwordHash) {
           return {
             status: 400,
@@ -242,7 +252,7 @@ export class UserController {
         }
 
         const isValid = await PasswordService.verifyPassword(
-          data.currentPassword,
+          sensitiveCurrentPassword.getValue(),
           user.passwordHash,
         );
 
@@ -257,8 +267,8 @@ export class UserController {
         }
       }
 
-      // Update password
-      await this.userService.updatePassword(id, data.newPassword);
+      // Update password - extract actual password only when needed
+      await this.userService.updatePassword(id, sensitiveNewPassword.getValue());
 
       return {
         status: 200,

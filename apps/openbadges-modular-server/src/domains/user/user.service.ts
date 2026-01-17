@@ -16,6 +16,7 @@ import type {
 import { PasswordService } from "../../auth/services/password.service";
 import { logger } from "../../utils/logging/logger.service";
 import type { Shared } from "openbadges-types";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 /**
  * User service for managing users
@@ -55,15 +56,16 @@ export class UserService {
 
       // Hash password if provided
       if (password) {
+        const sensitivePassword = new SensitiveValue(password);
         userParams.passwordHash = await PasswordService.hashPassword(password);
-        logger.debug(`Password hash created for user ${params.username}`);
+        logger.debug(`Password hash created for user ${params.username}`, {
+          password: sensitivePassword, // Will log as [REDACTED]
+        });
       }
 
       // Create user
       const user = await this.userRepository.create(userParams);
-      logger.debug(
-        `User created: ${user.id} (${user.username}) with passwordHash: ${user.passwordHash ? "yes" : "no"}`,
-      );
+      logger.debug(`User created: ${user.id} (${user.username})`);
       return user;
     } catch (error) {
       logger.logError("Failed to create user", error as Error);
@@ -151,6 +153,9 @@ export class UserService {
    */
   async updatePassword(id: Shared.IRI, password: string): Promise<User | null> {
     try {
+      // Wrap password for safe logging
+      const sensitivePassword = new SensitiveValue(password);
+
       // Check if user exists
       const existingUser = await this.userRepository.findById(id);
       if (!existingUser) {
@@ -159,6 +164,9 @@ export class UserService {
 
       // Hash password
       const passwordHash = await PasswordService.hashPassword(password);
+      logger.debug(`Password updated for user ${id}`, {
+        password: sensitivePassword, // Will log as [REDACTED]
+      });
 
       // Update user
       return await this.userRepository.update(id, { passwordHash });
@@ -193,6 +201,9 @@ export class UserService {
     password: string,
   ): Promise<User | null> {
     try {
+      // Wrap password for safe logging
+      const sensitivePassword = new SensitiveValue(password);
+
       // Find user by username or email
       const isEmail = usernameOrEmail.includes("@");
       const user = isEmail
@@ -216,6 +227,10 @@ export class UserService {
         user.passwordHash,
       );
       if (!isPasswordValid) {
+        logger.debug("Password verification failed", {
+          password: sensitivePassword, // Will log as [REDACTED]
+          userId: user.id,
+        });
         return null;
       }
 
