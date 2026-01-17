@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { jwtService } from '../services/jwt'
+import { logger } from '../utils/logger'
 
 const badgesRoutes = new Hono()
 
@@ -36,7 +37,7 @@ async function safeJsonResponse(response: Response): Promise<JSONValue> {
     // Fallback to empty object for invalid JSON values
     return {}
   } catch (error) {
-    console.error('Error parsing JSON response:', error)
+    logger.error('Error parsing JSON response', { error })
 
     return {}
   }
@@ -72,7 +73,7 @@ badgesRoutes.post('/verify', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    console.error('Error processing verification request:', error)
+    logger.error('Error processing verification request', { error })
     return c.json(
       {
         valid: false,
@@ -121,7 +122,7 @@ badgesRoutes.get('/assertions/:id', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    console.error('Error retrieving assertion:', error)
+    logger.error('Error retrieving assertion', { error })
     return c.json({ error: 'Failed to retrieve assertion' }, 500)
   }
 })
@@ -154,7 +155,7 @@ badgesRoutes.get('/badge-classes', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    console.error('Error retrieving badge classes:', error)
+    logger.error('Error retrieving badge classes', { error })
     return c.json({ error: 'Failed to retrieve badge classes' }, 500)
   }
 })
@@ -195,7 +196,7 @@ badgesRoutes.get('/badge-classes/:id', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    console.error('Error retrieving badge class:', error)
+    logger.error('Error retrieving badge class', { error })
     return c.json({ error: 'Failed to retrieve badge class' }, 500)
   }
 })
@@ -225,7 +226,7 @@ badgesRoutes.get('/revocation-list', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as 200)
   } catch (error) {
-    console.error('Error retrieving revocation list:', error)
+    logger.error('Error retrieving revocation list', { error })
     // If revocation service is unavailable, return empty list (fail open)
     return c.json([])
   }
@@ -366,7 +367,7 @@ badgesRoutes.all('/*', async c => {
     const data = await safeJsonResponse(response)
     return c.json(data, response.status as HttpStatusCode)
   } catch (error) {
-    console.error('Error proxying badges request:', error)
+    logger.error('Error proxying badges request', { error })
     return c.json({ error: 'Failed to communicate with OpenBadges server' }, 500)
   }
 })
