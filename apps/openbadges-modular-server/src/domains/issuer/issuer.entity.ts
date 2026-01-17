@@ -21,10 +21,10 @@ export class Issuer
     Omit<Partial<OB2.Profile>, "image">,
     Omit<Partial<OB3.Issuer>, "image">
 {
-  id: Shared.IRI;
+  id!: Shared.IRI;
   type: string = "Issuer"; // Changed from 'Profile' to 'Issuer' for OBv3 compliance
-  name: string | Shared.MultiLanguageString;
-  url: Shared.IRI;
+  name!: string | Shared.MultiLanguageString;
+  url!: Shared.IRI;
   email?: string;
   description?: string | Shared.MultiLanguageString;
   image?: Shared.IRI | OB2.Image | Shared.OB3ImageObject;

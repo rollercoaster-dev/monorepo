@@ -30,12 +30,12 @@ export class Role {
   /**
    * Unique identifier for the role
    */
-  id: Shared.IRI;
+  id!: Shared.IRI;
 
   /**
    * Name of the role
    */
-  name: string;
+  name!: string;
 
   /**
    * Description of the role
@@ -45,17 +45,17 @@ export class Role {
   /**
    * Permissions granted to the role
    */
-  permissions: RolePermissions;
+  permissions!: RolePermissions;
 
   /**
    * Creation date of the role
    */
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * Last update date of the role
    */
-  updatedAt: Date;
+  updatedAt!: Date;
 
   /**
    * Create a new role

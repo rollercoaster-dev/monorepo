@@ -7,16 +7,16 @@ import { PlatformStatus } from "./backpack.types";
 import { createOrGenerateIRI } from "@utils/types/iri-utils";
 
 export class Platform {
-  id: Shared.IRI;
-  name: string;
+  id!: Shared.IRI;
+  name!: string;
   description?: string;
-  clientId: string;
-  publicKey: string;
+  clientId!: string;
+  publicKey!: string;
   webhookUrl?: string;
-  status: PlatformStatus;
+  status!: PlatformStatus;
   metadata?: PlatformMetadata;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   /**
    * Private constructor to enforce creation through factory method

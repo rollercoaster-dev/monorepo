@@ -41,22 +41,22 @@ export class ApiKey {
   /**
    * Unique identifier for the API Key
    */
-  id: Shared.IRI;
+  id!: Shared.IRI;
 
   /**
    * The API Key value (used for authentication)
    */
-  key: string;
+  key!: string;
 
   /**
    * Name of the API Key (for display purposes)
    */
-  name: string;
+  name!: string;
 
   /**
    * User ID associated with the API Key
    */
-  userId: string;
+  userId!: string;
 
   /**
    * Description of the API Key
@@ -66,7 +66,7 @@ export class ApiKey {
   /**
    * Permissions granted to the API Key
    */
-  permissions: ApiKeyPermissions;
+  permissions!: ApiKeyPermissions;
 
   /**
    * Expiration date of the API Key
@@ -81,17 +81,17 @@ export class ApiKey {
   /**
    * Whether the API Key has been revoked
    */
-  revoked: boolean;
+  revoked!: boolean;
 
   /**
    * Creation date of the API Key
    */
-  createdAt: Date;
+  createdAt!: Date;
 
   /**
    * Last update date of the API Key
    */
-  updatedAt: Date;
+  updatedAt!: Date;
 
   /**
    * Create a new API Key

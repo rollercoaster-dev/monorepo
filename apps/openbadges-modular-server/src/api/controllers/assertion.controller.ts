@@ -326,7 +326,7 @@ export class AssertionController {
           createdAssertion,
           version,
           badgeClass,
-          issuer,
+          issuer ?? undefined,
         );
       }
 
@@ -365,7 +365,7 @@ export class AssertionController {
                 : (badgeClass.issuer as OB3.Issuer).id;
             const issuer = await this.issuerRepository.findById(issuerId);
             // Pass entities directly
-            return assertion.toJsonLd(version, badgeClass, issuer);
+            return assertion.toJsonLd(version, badgeClass, issuer ?? undefined);
           }
         }
 
@@ -423,7 +423,12 @@ export class AssertionController {
 
       if (badgeClass) {
         // Pass entities directly
-        return convertAssertionToJsonLd(assertion, version, badgeClass, issuer);
+        return convertAssertionToJsonLd(
+          assertion,
+          version,
+          badgeClass,
+          issuer ?? undefined,
+        );
       }
     }
 
@@ -479,7 +484,12 @@ export class AssertionController {
         const issuer = await this.issuerRepository.findById(issuerIri);
         // Pass entities directly
         return assertions.map((assertion) =>
-          convertAssertionToJsonLd(assertion, version, badgeClass, issuer),
+          convertAssertionToJsonLd(
+            assertion,
+            version,
+            badgeClass,
+            issuer ?? undefined,
+          ),
         );
       }
     }
@@ -550,7 +560,7 @@ export class AssertionController {
           updatedAssertion,
           version,
           badgeClass,
-          issuer,
+          issuer ?? undefined,
         );
       }
     }
@@ -713,7 +723,11 @@ export class AssertionController {
           ? await this.issuerRepository.findById(issuerIri)
           : null;
         // Pass entities directly
-        return signedAssertion.toJsonLd(version, badgeClass, issuer);
+        return signedAssertion.toJsonLd(
+          version,
+          badgeClass ?? undefined,
+          issuer ?? undefined,
+        );
       } else {
         // For V2 or if related entities are not needed/found
         return signedAssertion.toJsonLd(version);
@@ -837,6 +851,7 @@ export class AssertionController {
 
       for (let i = 0; i < data.credentials.length; i++) {
         const credentialData = data.credentials[i];
+        if (!credentialData) continue;
         try {
           // Map incoming data to internal format
           const mappedData = mapToAssertionEntity(credentialData);
@@ -929,9 +944,11 @@ export class AssertionController {
 
       for (let i = 0; i < validationResults.length; i++) {
         const validationResult = validationResults[i];
+        if (!validationResult) continue;
 
         if (validationResult.success) {
           const batchResult = batchResults[batchIndex];
+          if (!batchResult) continue;
           batchIndex++;
 
           if (batchResult.success && batchResult.assertion) {
@@ -974,9 +991,11 @@ export class AssertionController {
 
       for (let i = 0; i < validationResults.length; i++) {
         const validationResult = validationResults[i];
+        if (!validationResult) continue;
 
         if (validationResult.success) {
           const batchResult = batchResults[batchIndex];
+          if (!batchResult) continue;
           batchIndex++;
 
           if (batchResult.success && batchResult.assertion) {
