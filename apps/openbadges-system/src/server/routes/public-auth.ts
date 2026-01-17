@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { userService } from '../services/user'
 import { jwtService } from '../services/jwt'
+import { logger } from '../utils/logger'
 
 // Simple rate limiting for user enumeration protection
 const rateLimiter = new Map<string, { count: number; resetTime: number }>()
@@ -108,7 +109,7 @@ publicAuthRoutes.get('/users/lookup', async c => {
       return c.json({ exists: false })
     }
   } catch (err) {
-    console.error('Error looking up user:', err)
+    logger.error('Error looking up user', { error: err })
     return c.json({ error: 'Failed to lookup user' }, 500)
   }
 })
@@ -166,7 +167,7 @@ publicAuthRoutes.post('/users/register', async c => {
       201
     )
   } catch (err) {
-    console.error('Error creating user:', err)
+    logger.error('Error creating user', { error: err })
     return c.json({ error: 'Failed to create user' }, 500)
   }
 })
@@ -201,7 +202,7 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
     await userService.addUserCredential(userId, parsed.data)
     return c.json({ success: true })
   } catch (err) {
-    console.error('Error adding user credential:', err)
+    logger.error('Error adding user credential', { error: err })
     return c.json({ error: 'Failed to add credential' }, 500)
   }
 })
@@ -242,7 +243,7 @@ publicAuthRoutes.patch('/users/:userId/credentials/:credentialId', async c => {
     await userService.updateUserCredential(userId, credentialId, { lastUsed: parsed.data.lastUsed })
     return c.json({ success: true })
   } catch (err) {
-    console.error('Error updating credential:', err)
+    logger.error('Error updating credential', { error: err })
     return c.json({ error: 'Failed to update credential' }, 500)
   }
 })
@@ -280,7 +281,7 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (err) {
-    console.error('Error generating token:', err)
+    logger.error('Error generating token', { error: err })
     return c.json({ error: 'Failed to generate token' }, 500)
   }
 })
