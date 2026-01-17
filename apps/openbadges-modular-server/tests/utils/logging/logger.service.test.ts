@@ -97,7 +97,7 @@ describe("Logger Service", () => {
     expect(logErrorSpy).toHaveBeenCalledWith(
       "Operation failed",
       error,
-      additionalContext
+      additionalContext,
     );
   });
 

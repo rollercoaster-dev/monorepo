@@ -166,17 +166,46 @@
       gap: var(--space-1);
     }
 
-    .logo {
+    /* Logo styles */
+    .logo-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      margin-bottom: var(--space-6);
+      text-decoration: none;
+      color: var(--text-primary);
+      border-radius: var(--radius-md);
+      transition: color var(--transition-fast);
+    }
+
+    .logo-link:hover {
+      color: var(--accent-purple);
+    }
+
+    .logo-link:hover .logo-icon {
+      color: var(--accent-purple);
+    }
+
+    .logo-link:focus-visible {
+      box-shadow: var(--shadow-focus);
+    }
+
+    .logo-icon {
+      flex-shrink: 0;
+      transition: color var(--transition-fast);
+    }
+
+    .logo-text {
       font-family: var(--font-headline);
       font-size: var(--text-lg);
       font-weight: var(--font-bold);
-      padding: var(--space-2) var(--space-3);
-      margin-bottom: var(--space-6);
-      color: var(--text-primary);
       letter-spacing: -0.02em;
     }
 
     .nav-item {
+      display: block;
+      text-decoration: none;
       padding: var(--space-3) var(--space-4);
       border-radius: var(--radius-md);
       cursor: pointer;
@@ -1241,30 +1270,33 @@
   <!-- Skip link for keyboard users -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <div class="page-tabs">
-    <button class="page-tab active" onclick="showPage('dashboard')">Dashboard</button>
-    <button class="page-tab" onclick="showPage('badges')">My Badges</button>
-    <button class="page-tab" onclick="showPage('badge-detail')">Badge Detail</button>
-    <button class="page-tab" onclick="showPage('create')">Create Badge</button>
-    <button class="page-tab" onclick="showPage('verify')">Verify</button>
-    <button class="page-tab" onclick="showPage('settings')">Settings</button>
-    <button class="page-tab" onclick="showPage('review')">Review Applications</button>
-    <button class="page-tab" onclick="showPage('designer')">Badge Designer</button>
-  </div>
-
   <div class="app">
     <aside class="sidebar">
-      <div class="logo">openbadges</div>
+      <!-- Brand with rollercoaster.dev logo -->
+      <a href="#" class="logo-link" aria-label="rollercoaster.dev home" onclick="showPage('dashboard'); return false;">
+        <svg viewBox="0 0 1200 1200" width="28" height="28" class="logo-icon">
+          <path fill="currentColor" d="M957.63,617.12c.16,107.37-.23,214.7-1.17,321.98-5.41,20.24-34.49,20.31-40.41,1.19-4.38-14.16-.6-34-.51-48.55.19-30.28-1.95-60.11,0-90.16l-.22-193.08c-.68-2.38-7.55-.82-9.62-.58-21.42,2.51-40.42,11.55-58.12,23.25.16,101.91-.23,203.77-1.17,305.59-5.33,23.12-36.22,24.12-40.98,1.17l-.71-3.2-.46-270.78c-27.21,32.14-52.94,66.62-76.11,101.86l-1.13,2.42c.25,56.58-.15,113.15-1.21,169.69-5.26,22.16-37.37,23.06-42.15-2.34-.94-40.11-1.33-80.31-1.17-120.6-28.92,26.67-66.85,42.65-106.56,32.21-2.9-.76-12.18-5.29-12.87-5.28-.48,31.25-.87,62.47-1.17,93.67-2.83,15.08-15.76,22.54-30.42,16.96-8.97-3.42-11.37-9.45-12.9-18.13-.39-39.47-.78-78.89-1.17-118.26-.31-.26-1.9-.27-2.93-1.12-28.07-23.14-50.62-53.68-78.45-77.32-1.17-.04-.34,1.66-.58,2.34-.4,65.1-.79,130.28-1.17,195.53-3.43,15.36-16.49,22.79-31.6,16.96-6.58-2.54-12.89-11.83-12.89-18.72v-209c-44.48,2.84-74.88,34.27-81.96,77.28-.4,44.41-.79,88.9-1.17,133.48-2.68,14.25-14.33,22.14-28.76,17.63-8.45-2.64-11.6-8.41-13.39-16.46-.89-46.99-1.23-95.82,0-142.84,8.45-94,114.18-146.3,194.97-94.86,52.91,33.69,94.35,125.87,167.97,97.77,49.88-19.04,103.67-120.83,142.26-163.33,48.27-53.16,124.4-96.74,197.28-64.94,30.84,13.45,22.7,50.18-9.34,48.57Z"/>
+          <path fill="currentColor" d="M594.39,201.77c26.75-3.92,39.18,22.01,62.88,29,18.93,5.58,41.99-.51,57.38,11.7,16.22,12.87,12.12,37.54,21.06,55.05,9.15,17.92,34.36,29.38,36.8,49.84,3.03,25.49-18.97,39.75-21.81,62.23-3.23,25.51,8.52,51.92-18.22,68.42-11.76,7.26-28.71,9.23-39.38,16.82-13.96,9.93-20.59,31.87-38.06,38.05-23.37,8.26-40.27-13.9-65.06-7.69-15.3,3.84-25.92,12.99-43.1,7.99-19.12-5.57-24.45-28.06-38.93-38.35-12.54-8.91-31.63-9.54-43.8-19.42-20-16.22-11.54-40.66-13.45-62.65-2.2-25.34-26.05-38.7-22.19-66.59,2.63-19,25.83-30.9,34.79-46,11.14-18.77,5.32-44.27,23.62-58.34,15.2-11.68,36.88-5.47,55.03-10.54,19.12-5.34,35.41-27.02,52.44-29.52Z"/>
+          <path fill="currentColor" d="M574.76,553.9c-3.36,21.05-7.59,42.36-12.24,63.26-1.03,4.63-4.66,24.82-7.64,26.31-2.28,1.14-5.63,1.03-7.7-.54l-30.45-34.09-39.12,16.01c-2.38.8-4.74-.12-6.47-1.88l21.65-110.73c1.39-.64,3.08,1.01,4.02,1.94,6.3,6.26,12,16.98,18.22,23.93,16.45,18.38,36.04,23.16,59.74,15.78Z"/>
+          <path fill="currentColor" d="M655.22,642.53c-3.42,2.76-9.11,2.19-10.28-2.49l-18.58-84.26c.66-1.14,1.16-1.73,2.6-1.68,5.37.21,12.05,3.55,18.94,3.33,6.04-.19,17.45-3.61,22.93-6.41,15.73-8.03,23.85-28.22,36.84-39.24l22.66,110.41c-1.18,2.27-3.28,3-5.72,2.65-7.27-1.05-37-16.3-40.19-15.72l-29.19,33.41Z"/>
+        </svg>
+        <span class="logo-text">openbadges</span>
+      </a>
 
-      <div class="nav-item active">Dashboard</div>
-      <div class="nav-item">My Badges</div>
-      <div class="nav-item">Create Badge</div>
-      <div class="nav-item">Verify</div>
-      <div class="nav-item">Review Applications</div>
+      <!-- Main navigation -->
+      <nav aria-label="Main navigation">
+        <a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard'); return false;">Dashboard</a>
+        <a href="#" class="nav-item" data-page="badges" onclick="showPage('badges'); return false;">My Badges</a>
+        <a href="#" class="nav-item" data-page="create" onclick="showPage('create'); return false;">Create Badge</a>
+        <a href="#" class="nav-item" data-page="verify" onclick="showPage('verify'); return false;">Verify</a>
+        <a href="#" class="nav-item" data-page="review" onclick="showPage('review'); return false;">Review Applications</a>
+      </nav>
 
       <div class="nav-spacer"></div>
 
-      <div class="nav-item">Settings</div>
+      <nav aria-label="Settings">
+        <a href="#" class="nav-item" data-page="settings" onclick="showPage('settings'); return false;">Settings</a>
+      </nav>
     </aside>
 
     <main class="main" id="main-content">
@@ -1272,8 +1304,8 @@
       <!-- DASHBOARD PAGE -->
       <div id="page-dashboard" class="page active">
         <header class="page-header">
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Welcome back, Jane</p>
+          <h1 class="page-title">Hey, Jane</h1>
+          <p class="page-subtitle">Here's what's happening with your badges.</p>
         </header>
 
         <section class="section">
@@ -1295,10 +1327,10 @@
         </section>
 
         <section class="section">
-          <h2 class="section-title">Quick Actions</h2>
+          <h2 class="section-title">What's next?</h2>
           <div style="display: flex; gap: 12px;">
-            <button class="btn btn-primary">Create Badge</button>
-            <button class="btn btn-secondary">Verify Badge</button>
+            <button class="btn btn-primary" onclick="showPage('create')">Create a Badge</button>
+            <button class="btn btn-secondary" onclick="showPage('verify')">Verify a Badge</button>
           </div>
         </section>
       </div>
@@ -1307,7 +1339,7 @@
       <div id="page-badges" class="page">
         <header class="page-header">
           <h1 class="page-title">My Badges</h1>
-          <p class="page-subtitle">Badges you've earned and issued</p>
+          <p class="page-subtitle">Everything you've earned and given out.</p>
         </header>
 
         <div class="badge-grid">
@@ -1340,14 +1372,21 @@
 
       <!-- BADGE DETAIL PAGE -->
       <div id="page-badge-detail" class="page">
-        <a href="#" class="back-link">Back to My Badges</a>
+        <a href="#" class="back-link" onclick="showPage('badges'); return false;">← Back to My Badges</a>
 
         <div class="badge-detail-header">
-          <div class="badge-detail-image"></div>
+          <div class="badge-detail-image">
+            <!-- Badge image with brand purple gradient -->
+            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--accent-purple), #8b5cf6); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+            </div>
+          </div>
           <div class="badge-detail-info">
             <h1 class="badge-detail-name">Open Source Contributor</h1>
             <p class="badge-detail-issuer">Issued by: Jane Developer (You)</p>
-            <p style="color: #666; margin-top: 12px; line-height: 1.5;">
+            <p style="color: var(--text-secondary); margin-top: var(--space-3); line-height: var(--leading-relaxed);">
               Recognized for meaningful contributions to open source projects,
               including code, documentation, and community support.
             </p>
@@ -1394,7 +1433,7 @@
       <div id="page-create" class="page">
         <header class="page-header">
           <h1 class="page-title">Create Badge</h1>
-          <p class="page-subtitle">Define an achievement and issue it</p>
+          <p class="page-subtitle">Recognize an achievement. Make it official.</p>
         </header>
 
         <div class="card">
@@ -1549,7 +1588,7 @@
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 24px;">
-          <button class="btn btn-primary">Create and Issue</button>
+          <button class="btn btn-primary">Issue Badge</button>
           <button class="btn btn-secondary">Save as Template</button>
         </div>
       </div>
@@ -1558,7 +1597,7 @@
       <div id="page-verify" class="page">
         <header class="page-header">
           <h1 class="page-title">Verify Badge</h1>
-          <p class="page-subtitle">Check if a badge is valid</p>
+          <p class="page-subtitle">Check if a badge is legit.</p>
         </header>
 
         <div class="card">
@@ -1732,7 +1771,7 @@
       <div id="page-review" class="page">
         <header class="page-header">
           <h1 class="page-title">Review Applications</h1>
-          <p class="page-subtitle">Badge applications waiting for your review</p>
+          <p class="page-subtitle">People are asking for badges. Your call.</p>
         </header>
 
         <div class="inner-tabs">
@@ -1837,18 +1876,18 @@
 
         <!-- Character moment: friendly empty state -->
         <div class="empty-state" style="display: none;">
-          <p class="empty-state-title">All caught up.</p>
-          <p>Applications needing review will appear here when they arrive.</p>
+          <p class="empty-state-title">Nothing waiting. Nice work.</p>
+          <p>New applications will show up here. Go grab a coffee.</p>
         </div>
       </div>
 
       <!-- BADGE DESIGNER PAGE -->
       <div id="page-designer" class="page">
-        <a href="#" class="back-link" onclick="showPage('create'); return false;">Back to Create Badge</a>
+        <a href="#" class="back-link" onclick="showPage('create'); return false;">← Back to Create Badge</a>
 
         <header class="page-header">
           <h1 class="page-title">Badge Designer</h1>
-          <p class="page-subtitle">Customize your badge image</p>
+          <p class="page-subtitle">Make it look good. Or weird. Your badge, your choice.</p>
         </header>
 
         <div class="designer-layout">
@@ -1948,17 +1987,34 @@
 
   <script>
     function showPage(pageId) {
+      // Update page visibility
       document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
       });
+      document.getElementById('page-' + pageId).classList.add('active');
 
-      document.querySelectorAll('.page-tab').forEach(tab => {
-        tab.classList.remove('active');
+      // Update sidebar navigation active state
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.page === pageId) {
+          item.classList.add('active');
+        }
       });
 
-      document.getElementById('page-' + pageId).classList.add('active');
-      event.target.classList.add('active');
+      // Scroll to top of main content
+      window.scrollTo(0, 0);
     }
+
+    // Handle badge card clicks to navigate to detail
+    document.querySelectorAll('.badge-card').forEach(card => {
+      card.addEventListener('click', () => showPage('badge-detail'));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showPage('badge-detail');
+        }
+      });
+    });
   </script>
 </body>
 </html>

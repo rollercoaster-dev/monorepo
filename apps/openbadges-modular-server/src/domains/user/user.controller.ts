@@ -39,10 +39,7 @@ export class UserController {
   }): Promise<{ status: number; body: Record<string, unknown> }> {
     try {
       // Validate password if provided - extract actual password only when needed
-      if (
-        data.password &&
-        !PasswordService.isPasswordSecure(data.password)
-      ) {
+      if (data.password && !PasswordService.isPasswordSecure(data.password)) {
         return {
           status: 400,
           body: {
@@ -268,7 +265,10 @@ export class UserController {
       }
 
       // Update password - extract actual password only when needed
-      await this.userService.updatePassword(id, sensitiveNewPassword.getValue());
+      await this.userService.updatePassword(
+        id,
+        sensitiveNewPassword.getValue(),
+      );
 
       return {
         status: 200,
