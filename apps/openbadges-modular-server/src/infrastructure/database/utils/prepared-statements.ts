@@ -195,12 +195,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          queryLogger.logQuery(
-            `ERROR: ${query}`,
-            params,
-            duration,
-            "sqlite",
-          );
+          queryLogger.logQuery(`ERROR: ${query}`, params, duration, "sqlite");
           throw error;
         }
       };
