@@ -12,20 +12,21 @@ describe("getTranscriptPath", () => {
   });
 
   it("should return null for non-existent transcript", () => {
-    // Currently returns null as placeholder
-    // TODO: Update when directory traversal is implemented
+    // Returns null when no transcript file exists in any project directory
     const result = getTranscriptPath("test-session-id");
     expect(result).toBeNull();
   });
 
   it("should return null for invalid session ID format", () => {
+    // Path traversal prevention - rejects session IDs with slashes
     const result = getTranscriptPath("invalid/session/id");
     expect(result).toBeNull();
   });
 
-  // Future tests when directory traversal is implemented:
-  // - should resolve path when transcript exists
-  // - should expand ~ to home directory
-  // - should search across project directories
-  // - should handle project-path-hash correctly
+  it("should return null for path traversal attempts", () => {
+    // Rejects session IDs that could escape directory structure
+    expect(getTranscriptPath("../../etc/passwd")).toBeNull();
+    expect(getTranscriptPath("..")).toBeNull();
+    expect(getTranscriptPath("foo/../bar")).toBeNull();
+  });
 });

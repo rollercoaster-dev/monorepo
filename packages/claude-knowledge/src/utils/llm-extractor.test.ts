@@ -40,139 +40,7 @@ describe("extractLearningsFromTranscript", () => {
     expect(result).toEqual([]);
   });
 
-  it("should handle network errors gracefully", async () => {
-    // Mock fetch to throw network error
-    global.fetch = mock(() => {
-      throw new Error("Network connection failed");
-    }) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle 401 authentication errors", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response("Unauthorized", {
-          status: 401,
-          headers: { "Content-Type": "text/plain" },
-        }),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle 429 rate limit errors", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response("Rate limit exceeded", {
-          status: 429,
-          headers: { "Content-Type": "text/plain" },
-        }),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle 500 service errors", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response("Internal server error", {
-          status: 500,
-          headers: { "Content-Type": "text/plain" },
-        }),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle malformed JSON response", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response(
-          JSON.stringify({
-            choices: [
-              {
-                message: {
-                  content: "not valid json",
-                },
-              },
-            ],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        ),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle empty response content", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response(
-          JSON.stringify({
-            choices: [
-              {
-                message: {},
-              },
-            ],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        ),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle response with non-array learnings", async () => {
-    global.fetch = mock(() =>
-      Promise.resolve(
-        new Response(
-          JSON.stringify({
-            choices: [
-              {
-                message: {
-                  content: '{"learning": "single object, not array"}',
-                },
-              },
-            ],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        ),
-      ),
-    ) as unknown as typeof fetch;
-
-    const result = await extractLearningsFromTranscript("test-session-id");
-
-    expect(result).toEqual([]);
-  });
-
-  // Integration test with real temp transcript file
+  // Integration tests with real temp transcript file
   describe("with transcript file", () => {
     let testSessionId: string;
     let testProjectDir: string;
@@ -305,6 +173,143 @@ describe("extractLearningsFromTranscript", () => {
       expect(result).toHaveLength(2);
       expect(result[0].content).toBe("Valid learning");
       expect(result[1].content).toBe("Another valid");
+    });
+
+    // Error handling tests - now properly exercise the fetch path
+    describe("error handling", () => {
+      it("should handle network errors gracefully", async () => {
+        global.fetch = mock(() => {
+          throw new Error("Network connection failed");
+        }) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+
+      it("should handle 401 authentication errors", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response("Unauthorized", {
+              status: 401,
+              headers: { "Content-Type": "text/plain" },
+            }),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+
+      it("should handle 429 rate limit errors", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response("Rate limit exceeded", {
+              status: 429,
+              headers: { "Content-Type": "text/plain" },
+            }),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+
+      it("should handle 500 service errors", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response("Internal server error", {
+              status: 500,
+              headers: { "Content-Type": "text/plain" },
+            }),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    // Malformed response tests - now properly exercise the parsing code
+    describe("malformed responses", () => {
+      it("should handle malformed JSON response", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                choices: [
+                  {
+                    message: {
+                      content: "not valid json",
+                    },
+                  },
+                ],
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+
+      it("should handle empty response content", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                choices: [
+                  {
+                    message: {},
+                  },
+                ],
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
+
+      it("should handle response with non-array learnings", async () => {
+        global.fetch = mock(() =>
+          Promise.resolve(
+            new Response(
+              JSON.stringify({
+                choices: [
+                  {
+                    message: {
+                      content: '{"learning": "single object, not array"}',
+                    },
+                  },
+                ],
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          ),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(testSessionId);
+
+        expect(result).toEqual([]);
+      });
     });
   });
 });

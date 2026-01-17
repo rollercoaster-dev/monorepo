@@ -33,6 +33,12 @@ export function getTranscriptPath(sessionId: string): string | null {
     return null;
   }
 
+  // Validate sessionId format to prevent path traversal attacks
+  // Only allow alphanumeric characters, hyphens, and underscores
+  if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+    return null;
+  }
+
   // Expand ~ to home directory
   const claudeDir = join(homedir(), ".claude", "projects");
 
