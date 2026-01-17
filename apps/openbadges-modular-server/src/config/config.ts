@@ -301,5 +301,10 @@ export const config = {
     useRelativeTime: process.env["LOG_USE_RELATIVE_TIME"] !== "false",
     // Whether to colorize logs
     colorize: process.env["LOG_COLORIZE"] !== "false",
+    // Paths to skip in request/response logging (e.g., health checks, metrics)
+    // Comma-separated list of paths
+    skipPaths: (process.env["LOG_SKIP_PATHS"] || "/health,/metrics")
+      .split(",")
+      .map((path) => path.trim()),
   },
 };
