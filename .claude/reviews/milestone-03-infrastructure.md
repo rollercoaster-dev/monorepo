@@ -14,7 +14,7 @@ The **03 - Infrastructure** milestone represents a comprehensive overhaul of the
 
 | Achievement       | Impact                                                              |
 | ----------------- | ------------------------------------------------------------------- |
-| **Test Coverage** | 80% threshold enforced in CI, 2,499 lines of new tests              |
+| **Test Coverage** | 35% threshold enforced in CI (target 80%), 2,499 lines of new tests |
 | **Logging**       | Standardized on rd-logger, SensitiveValue for credential protection |
 | **Type Safety**   | Strict TypeScript mode enabled, all type errors resolved            |
 | **Privacy**       | Self-hosted fonts eliminate CDN tracking                            |
