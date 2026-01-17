@@ -4,6 +4,7 @@ import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
 import { z } from 'zod'
 import { requireAuth, requireSelfOrAdminFromParam, requireAdmin } from '../middleware/auth'
+import { logger } from '../utils/logger'
 
 const authRoutes = new Hono()
 
@@ -24,7 +25,7 @@ authRoutes.get('/validate', async c => {
 
     return c.json({ success: true, payload })
   } catch (error) {
-    console.error('Token validation failed:', error)
+    logger.error('Token validation failed', { error })
     return c.json({ success: false, error: 'Validation error' }, 500)
   }
 })
@@ -71,7 +72,7 @@ authRoutes.post('/platform-token', requireAdmin, async c => {
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (error) {
-    console.error('Platform token generation failed:', error)
+    logger.error('Platform token generation failed', { error })
     return c.json({ error: 'Failed to generate platform token' }, 500)
   }
 })
@@ -118,7 +119,7 @@ authRoutes.post('/oauth-token', requireAuth, async c => {
       expires_at: provider.token_expires_at,
     })
   } catch (error) {
-    console.error('OAuth token retrieval failed:', error)
+    logger.error('OAuth token retrieval failed', { error })
     return c.json({ error: 'Failed to get OAuth token' }, 500)
   }
 })
@@ -165,7 +166,7 @@ authRoutes.post('/oauth-token/refresh', requireAuth, async c => {
     // For other providers, implement token refresh logic here
     return c.json({ error: 'Token refresh not implemented for this provider' }, 501)
   } catch (error) {
-    console.error('OAuth token refresh failed:', error)
+    logger.error('OAuth token refresh failed', { error })
     return c.json({ error: 'Failed to refresh OAuth token' }, 500)
   }
 })
@@ -213,7 +214,7 @@ authRoutes.post('/sync-user', requireAuth, async c => {
       )
     }
   } catch (error) {
-    console.error('User sync failed:', error)
+    logger.error('User sync failed', { error })
     return c.json({ error: 'Failed to sync user' }, 500)
   }
 })
@@ -248,7 +249,7 @@ authRoutes.get(
         )
       }
     } catch (error) {
-      console.error('Failed to get badge server profile:', error)
+      logger.error('Failed to get badge server profile', { error })
       return c.json({ error: 'Failed to get profile' }, 500)
     }
   }
