@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { mkdirSync, writeFileSync, rmSync } from "fs";
+import { mkdirSync, writeFileSync, unlinkSync, existsSync } from "fs";
 import { join } from "path";
 import {
   parsePackage,
@@ -15,6 +15,7 @@ import {
   derivePackageName,
   findTsFiles,
   buildEntityLookupMap,
+  extractVueScript,
 } from "./parser";
 import { Project } from "ts-morph";
 
@@ -170,8 +171,21 @@ export function oldGreet(): string {
   });
 
   afterAll(() => {
-    // Clean up test fixtures
-    rmSync(FIXTURES_DIR, { recursive: true, force: true });
+    // Clean up test fixtures (but preserve component.vue)
+    // Delete individual test files instead of entire directory
+    const testFiles = [
+      "simple.ts",
+      "classes.ts",
+      "types.ts",
+      "calls.ts",
+      "documented.ts",
+    ];
+    testFiles.forEach((file) => {
+      const filePath = join(FIXTURES_DIR, file);
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
+    });
   });
 
   describe("derivePackageName", () => {
@@ -643,6 +657,87 @@ export function oldGreet(): string {
         r.to.startsWith("call:"),
       );
       expect(syntheticCalls.length).toBe(0);
+    });
+  });
+
+  describe("Vue SFC parsing", () => {
+    it("extracts script content from <script setup lang='ts'>", () => {
+      const componentPath = join(FIXTURES_DIR, "component.vue");
+      const result = extractVueScript(componentPath);
+
+      expect(result).toBeDefined();
+      expect(result?.isSetupSyntax).toBe(true);
+      expect(result?.content).toContain("_formatDate");
+      expect(result?.content).toContain("import { ref }");
+      expect(result?.content).toContain("BadgeProps");
+    });
+
+    it("returns null for non-existent files", () => {
+      const result = extractVueScript(join(FIXTURES_DIR, "nonexistent.vue"));
+      expect(result).toBeNull();
+    });
+
+    it("extracts entities from Vue component", () => {
+      const project = new Project({ skipAddingFilesFromTsConfig: true });
+      const componentPath = join(FIXTURES_DIR, "component.vue");
+      const vueScript = extractVueScript(componentPath);
+
+      expect(vueScript).toBeDefined();
+      if (vueScript) {
+        const sourceFile = project.createSourceFile(
+          "component.vue.ts",
+          vueScript.content,
+        );
+        const entities = extractEntities(
+          sourceFile,
+          FIXTURES_DIR,
+          "test-pkg",
+          "component.vue",
+        );
+
+        // Should have file entity
+        const fileEntity = entities.find((e) => e.type === "file");
+        expect(fileEntity).toBeDefined();
+        expect(fileEntity?.filePath).toBe("component.vue");
+
+        // Should extract function
+        const formatDateFn = entities.find((e) => e.name === "_formatDate");
+        expect(formatDateFn).toBeDefined();
+        expect(formatDateFn?.type).toBe("function");
+        expect(formatDateFn?.filePath).toBe("component.vue");
+        expect(formatDateFn?.jsDocContent).toContain("Format a date");
+
+        // Should extract interface
+        const badgePropsInterface = entities.find(
+          (e) => e.name === "BadgeProps",
+        );
+        expect(badgePropsInterface).toBeDefined();
+        expect(badgePropsInterface?.type).toBe("interface");
+        expect(badgePropsInterface?.filePath).toBe("component.vue");
+
+        // Should extract increment function
+        const incrementFn = entities.find((e) => e.name === "increment");
+        expect(incrementFn).toBeDefined();
+        expect(incrementFn?.filePath).toBe("component.vue");
+      }
+    });
+
+    it("parsePackage includes Vue files in scan", () => {
+      const result = parsePackage(FIXTURES_DIR, "test-pkg");
+
+      // Should count Vue files
+      expect(result.stats.vueFilesProcessed).toBeGreaterThan(0);
+
+      // Should extract entities from Vue files
+      const vueEntities = result.entities.filter((e) =>
+        e.filePath.endsWith(".vue"),
+      );
+      expect(vueEntities.length).toBeGreaterThan(0);
+
+      // Verify one of the Vue entities
+      const formatDateFn = vueEntities.find((e) => e.name === "_formatDate");
+      expect(formatDateFn).toBeDefined();
+      expect(formatDateFn?.filePath).toBe("component.vue");
     });
   });
 });
