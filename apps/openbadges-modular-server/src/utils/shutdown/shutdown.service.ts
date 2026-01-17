@@ -9,9 +9,8 @@
 import { RepositoryFactory } from "../../infrastructure/repository.factory";
 import { CacheFactory } from "../../infrastructure/cache/cache.factory";
 import { PreparedStatementManager } from "../../infrastructure/database/utils/prepared-statements";
-import { QueryLoggerService } from "../../infrastructure/database/utils/query-logger.service";
 import { config } from "../../config/config";
-import { logger } from "../logging/logger.service";
+import { logger, queryLogger } from "../logging/logger.service";
 
 export interface ShutdownOptions {
   /**
@@ -224,7 +223,7 @@ export class ShutdownService {
         }
 
         try {
-          const logs = QueryLoggerService.getLogs();
+          const logs = queryLogger.getLogs();
           // In a real application, you would save the logs to a file or database
           if (opts.logging) {
             logger.info(`${logs.length} query logs saved.`);

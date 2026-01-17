@@ -5,8 +5,7 @@
  */
 
 import { config } from "@/config/config";
-import { QueryLoggerService } from "./query-logger.service";
-import { logger } from "@/utils/logging/logger.service";
+import { logger, queryLogger } from "@/utils/logging/logger.service";
 
 // Database client types
 type PostgresClient = {
@@ -63,7 +62,7 @@ export class PreparedStatementManager {
         try {
           const result = await client.query(query, params);
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `DIRECT: ${query}`,
             params,
             duration,
@@ -72,7 +71,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR: ${query}`,
             params,
             duration,
@@ -99,7 +98,7 @@ export class PreparedStatementManager {
           // For now, we'll just execute the query directly
           const result = await client.query(query, params);
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `PREPARED ${name}: ${query}`,
             params,
             duration,
@@ -115,7 +114,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR PREPARED ${name}: ${query}`,
             params,
             duration,
@@ -146,7 +145,7 @@ export class PreparedStatementManager {
         try {
           const result = await client.query(query, params);
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `FALLBACK ${name}: ${query}`,
             params,
             duration,
@@ -155,7 +154,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR FALLBACK ${name}: ${query}`,
             params,
             duration,
@@ -192,11 +191,11 @@ export class PreparedStatementManager {
             result = client.prepare(query).run(...params);
           }
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(query, params, duration, "sqlite");
+          queryLogger.logQuery(query, params, duration, "sqlite");
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR: ${query}`,
             params,
             duration,
@@ -228,7 +227,7 @@ export class PreparedStatementManager {
             result = stmt.run(...params);
           }
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `PREPARED ${name}: ${query}`,
             params,
             duration,
@@ -244,7 +243,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR PREPARED ${name}: ${query}`,
             params,
             duration,
@@ -281,7 +280,7 @@ export class PreparedStatementManager {
             result = client.prepare(query).run(...params);
           }
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `FALLBACK ${name}: ${query}`,
             params,
             duration,
@@ -290,7 +289,7 @@ export class PreparedStatementManager {
           return result as T;
         } catch (error) {
           const duration = Date.now() - startTime;
-          QueryLoggerService.logQuery(
+          queryLogger.logQuery(
             `ERROR FALLBACK ${name}: ${query}`,
             params,
             duration,
