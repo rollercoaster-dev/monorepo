@@ -6,6 +6,16 @@
   "main": "dist/openbadges-ui.umd.js",
   "module": "dist/openbadges-ui.es.js",
   "types": "dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/openbadges-ui.es.js",
+      "require": "./dist/openbadges-ui.umd.js"
+    },
+    "./styles": {
+      "import": "./dist/style.css"
+    }
+  },
   "files": [
     "dist",
     "src"
