@@ -3,6 +3,7 @@
  */
 
 import { describe, test, expect, spyOn, beforeEach, afterEach } from "bun:test";
+import { Logger } from "@rollercoaster-dev/rd-logger";
 import { logger } from "@utils/logging/logger.service";
 
 describe("Logger Service", () => {
@@ -11,6 +12,7 @@ describe("Logger Service", () => {
   let infoSpy: ReturnType<typeof spyOn>;
   let warnSpy: ReturnType<typeof spyOn>;
   let errorSpy: ReturnType<typeof spyOn>;
+  let logErrorSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
     // Set up spies on logger methods
@@ -18,9 +20,7 @@ describe("Logger Service", () => {
     infoSpy = spyOn(logger, "info");
     warnSpy = spyOn(logger, "warn");
     errorSpy = spyOn(logger, "error");
-
-    // Assume default level allows all for most tests, specific tests will check filtering
-    // We can't change the level after init, so tests must work with the initial level
+    logErrorSpy = spyOn(logger, "logError");
   });
 
   afterEach(() => {
@@ -29,6 +29,11 @@ describe("Logger Service", () => {
     infoSpy.mockRestore();
     warnSpy.mockRestore();
     errorSpy.mockRestore();
+    logErrorSpy.mockRestore();
+  });
+
+  test("should be an instance of Logger class", () => {
+    expect(logger).toBeInstanceOf(Logger);
   });
 
   test("should call the correct log method", () => {
@@ -74,21 +79,38 @@ describe("Logger Service", () => {
     expect(infoSpy).toHaveBeenCalledWith("User action", context);
   });
 
-  test("should handle Error objects correctly", () => {
-    // Spy on console.error and provide an empty implementation to suppress output
-    const consoleErrorSpy = spyOn(console, "error");
-    consoleErrorSpy.mockImplementation(() => {});
-
+  test("should handle Error objects correctly with logError", () => {
     const error = new Error("Test error");
-    // Assuming logError internally calls logger.error
+    // logError is a dedicated method in rd-logger's Logger class
     logger.logError("An error occurred", error);
-    // logError passes error inside the context object as { error: error }
-    expect(errorSpy).toHaveBeenCalledWith("An error occurred", {
-      error: error,
-    });
 
-    // Restore the original console.error
-    consoleErrorSpy.mockRestore();
+    // Verify logError was called with correct arguments
+    expect(logErrorSpy).toHaveBeenCalledWith("An error occurred", error);
+  });
+
+  test("should handle Error objects with additional context", () => {
+    const error = new Error("Test error");
+    const additionalContext = { userId: "123", operation: "save" };
+
+    logger.logError("Operation failed", error, additionalContext);
+
+    expect(logErrorSpy).toHaveBeenCalledWith(
+      "Operation failed",
+      error,
+      additionalContext
+    );
+  });
+
+  test("should call fatal method with correct level", () => {
+    // Spy on the internal log method to verify fatal level is used
+    const logSpy = spyOn(logger, "log");
+
+    logger.fatal("Fatal error");
+
+    // Verify log was called with 'fatal' level
+    expect(logSpy).toHaveBeenCalledWith("fatal", "Fatal error", undefined);
+
+    logSpy.mockRestore();
   });
 
   // Define a type for the test object with a potential circular reference
