@@ -1,4 +1,5 @@
 import type { User } from './user'
+import { logger } from '../utils/logger'
 
 export interface BadgeServerUser {
   id: string
@@ -84,7 +85,7 @@ export class UserSyncService {
 
       return null
     } catch (error) {
-      console.error('Error getting badge server user:', error)
+      logger.error('Error getting badge server user', { error })
       return null
     }
   }
@@ -112,11 +113,14 @@ export class UserSyncService {
       if (response.ok) {
         return await response.json()
       } else {
-        console.error('Failed to create badge server user:', response.status, await response.text())
+        logger.error('Failed to create badge server user', {
+          status: response.status,
+          body: await response.text(),
+        })
         return null
       }
     } catch (error) {
-      console.error('Error creating badge server user:', error)
+      logger.error('Error creating badge server user', { error })
       return null
     }
   }
@@ -147,11 +151,14 @@ export class UserSyncService {
       if (response.ok) {
         return await response.json()
       } else {
-        console.error('Failed to update badge server user:', response.status, await response.text())
+        logger.error('Failed to update badge server user', {
+          status: response.status,
+          body: await response.text(),
+        })
         return null
       }
     } catch (error) {
-      console.error('Error updating badge server user:', error)
+      logger.error('Error updating badge server user', { error })
       return null
     }
   }
@@ -218,7 +225,7 @@ export class UserSyncService {
         }
       }
     } catch (error) {
-      console.error('Error syncing user:', error)
+      logger.error('Error syncing user', { error })
       return {
         success: false,
         error: `User sync failed: ${(error as Error).message}`,
@@ -241,7 +248,7 @@ export class UserSyncService {
 
       return false
     } catch (error) {
-      console.error('Error syncing user permissions:', error)
+      logger.error('Error syncing user permissions', { error })
       return false
     }
   }
@@ -259,7 +266,7 @@ export class UserSyncService {
 
       return null
     } catch (error) {
-      console.error('Error getting badge server user profile:', error)
+      logger.error('Error getting badge server user profile', { error })
       return null
     }
   }
