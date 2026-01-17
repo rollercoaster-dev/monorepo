@@ -71,6 +71,8 @@ export interface ParseStats {
   filesScanned: number;
   /** Number of files skipped (tests, declarations, etc.) */
   filesSkipped: number;
+  /** Number of Vue SFC files processed */
+  vueFilesProcessed?: number;
   /** Entity counts by type */
   entitiesByType: Record<string, number>;
   /** Relationship counts by type */

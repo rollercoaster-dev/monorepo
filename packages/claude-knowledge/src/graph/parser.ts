@@ -192,14 +192,17 @@ export function extractVueScript(
  * @param sourceFile - ts-morph SourceFile to extract from
  * @param basePath - Base path for relative file paths
  * @param packageName - Package name for entity IDs
+ * @param originalFilePath - Optional original file path (for Vue files, overrides sourceFile path)
  */
 export function extractEntities(
   sourceFile: SourceFile,
   basePath: string,
   packageName: string,
+  originalFilePath?: string,
 ): Entity[] {
   const entities: Entity[] = [];
-  const filePath = relative(basePath, sourceFile.getFilePath());
+  const filePath =
+    originalFilePath || relative(basePath, sourceFile.getFilePath());
 
   // Add file as an entity
   entities.push({
@@ -893,11 +896,26 @@ export function parsePackage(
   const tsFiles = options?.files || findTsFiles(packagePath);
   const parseErrors: Array<{ file: string; error: string }> = [];
   let filesSkipped = 0;
+  let vueFilesProcessed = 0;
+
+  // Track Vue file mappings (virtual path -> original path)
+  const vueFileMapping = new Map<string, string>();
 
   // Add all files to the project with error handling
   tsFiles.forEach((file) => {
     try {
-      project.addSourceFileAtPath(file);
+      if (file.endsWith(".vue")) {
+        const vueScript = extractVueScript(file);
+        if (vueScript) {
+          // Create virtual TypeScript file for ts-morph
+          const virtualPath = `${file}.ts`;
+          project.createSourceFile(virtualPath, vueScript.content);
+          vueFileMapping.set(virtualPath, relative(packagePath, file));
+          vueFilesProcessed++;
+        }
+      } else {
+        project.addSourceFileAtPath(file);
+      }
     } catch (error) {
       parseErrors.push({
         file,
@@ -919,7 +937,14 @@ export function parsePackage(
 
   // First pass: extract all entities
   project.getSourceFiles().forEach((sourceFile) => {
-    const entities = extractEntities(sourceFile, packagePath, pkgName);
+    const sourceFilePath = sourceFile.getFilePath();
+    const originalVuePath = vueFileMapping.get(sourceFilePath);
+    const entities = extractEntities(
+      sourceFile,
+      packagePath,
+      pkgName,
+      originalVuePath,
+    );
     allEntities.push(...entities);
   });
 
@@ -951,6 +976,7 @@ export function parsePackage(
   const stats: ParseStats = {
     filesScanned: tsFiles.length,
     filesSkipped,
+    vueFilesProcessed,
     entitiesByType,
     relationshipsByType,
   };
