@@ -10,6 +10,7 @@ import { JwtService } from "./services/jwt.service";
 import { logger } from "../utils/logging/logger.service";
 import type { Shared } from "openbadges-types";
 import { v4 as uuidv4 } from "uuid";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 /**
  * Authentication controller for handling auth-related HTTP requests
@@ -29,6 +30,9 @@ export class AuthController {
     clientIp?: string;
     userAgent?: string;
   }): Promise<{ status: number; body: Record<string, unknown> }> {
+    // Wrap password immediately for safe logging
+    const sensitivePassword = new SensitiveValue(data.password);
+
     // Create context for structured logging
     const logContext = {
       requestId: data.requestId || uuidv4(),
@@ -36,6 +40,7 @@ export class AuthController {
       userAgent: data.userAgent ? data.userAgent.substring(0, 100) : "unknown",
       action: "login",
       usernameOrEmail: data.usernameOrEmail,
+      password: sensitivePassword, // Will log as [REDACTED]
     };
 
     try {
@@ -57,10 +62,10 @@ export class AuthController {
 
       logger.debug("Processing login attempt", logContext);
 
-      // Authenticate user
+      // Authenticate user - extract actual password only when needed
       const user = await this.userService.authenticateUser(
         data.usernameOrEmail,
-        data.password,
+        sensitivePassword.getValue(),
       );
 
       if (!user) {
@@ -146,6 +151,9 @@ export class AuthController {
     clientIp?: string;
     userAgent?: string;
   }): Promise<{ status: number; body: Record<string, unknown> }> {
+    // Wrap password immediately for safe logging
+    const sensitivePassword = new SensitiveValue(data.password);
+
     // Create context for structured logging
     const logContext = {
       requestId: data.requestId || uuidv4(),
@@ -154,6 +162,7 @@ export class AuthController {
       action: "register",
       username: data.username,
       email: data.email,
+      password: sensitivePassword, // Will log as [REDACTED]
     };
 
     try {
@@ -178,8 +187,8 @@ export class AuthController {
         };
       }
 
-      // Validate password
-      if (!PasswordService.isPasswordSecure(data.password)) {
+      // Validate password - extract actual password only when needed
+      if (!PasswordService.isPasswordSecure(sensitivePassword.getValue())) {
         logger.warn("Registration attempt with insecure password", {
           ...logContext,
           error: "Insecure password",
@@ -194,7 +203,7 @@ export class AuthController {
         };
       }
 
-      // Create user
+      // Create user - extract actual password only when needed
       const user = await this.userService.createUser(
         {
           username: data.username,
@@ -202,7 +211,7 @@ export class AuthController {
           firstName: data.firstName,
           lastName: data.lastName,
         },
-        data.password,
+        sensitivePassword.getValue(),
       );
 
       // Add user info to log context

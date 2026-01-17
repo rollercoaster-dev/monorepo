@@ -7,9 +7,8 @@
 
 import { performance } from "perf_hooks";
 import { config } from "../../config/config";
-import { logger } from "../logging/logger.service";
+import { logger, queryLogger } from "../logging/logger.service";
 import type { CacheService } from "../../infrastructure/cache/cache.service";
-import { QueryLoggerService } from "../../infrastructure/database/utils/query-logger.service";
 import { PreparedStatementManager } from "../../infrastructure/database/utils/prepared-statements";
 import { type DatabaseInterface } from "../../infrastructure/database/interfaces/database.interface";
 import { type CacheStats } from "../../infrastructure/cache/cache.interface";
@@ -63,18 +62,15 @@ export interface HealthCheckResult {
 export class HealthCheckService {
   private readonly db: DatabaseInterface;
   private readonly cacheService?: CacheService;
-  private readonly queryLogger?: QueryLoggerService;
   private readonly preparedStatementManager?: PreparedStatementManager;
 
   constructor(
     db: DatabaseInterface,
     cacheService?: CacheService,
-    queryLogger?: QueryLoggerService,
     preparedStatementManager?: PreparedStatementManager,
   ) {
     this.db = db;
     this.cacheService = cacheService;
-    this.queryLogger = queryLogger;
     this.preparedStatementManager = preparedStatementManager;
   }
 
@@ -170,11 +166,11 @@ export class HealthCheckService {
     }
 
     // Get Query Logger Metrics (if available)
-    if (this.queryLogger && config.database.queryLogging) {
+    if (config.database.queryLogging) {
       baseResult.queries = {
         enabled: true,
-        stats: QueryLoggerService.getStats(),
-        slowQueries: QueryLoggerService.getSlowQueries(),
+        stats: queryLogger.getStats(),
+        slowQueries: queryLogger.getSlowQueries(),
       };
     }
 

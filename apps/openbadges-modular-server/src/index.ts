@@ -6,6 +6,7 @@
  */
 
 import { Hono } from "hono";
+import { honoLogger, honoErrorHandler } from "@rollercoaster-dev/rd-logger";
 import { RepositoryFactory } from "./infrastructure/repository.factory";
 import { createApiRouter } from "./api/api.router";
 import { config } from "./config/config";
@@ -26,10 +27,9 @@ import {
   createErrorHandlerMiddleware,
   handleNotFound,
 } from "./utils/errors/error-handler.middleware";
-import { logger } from "./utils/logging/logger.service";
+import { logger, getLogger } from "./utils/logging/logger.service";
 import { getAppVersion } from "./utils/version/app-version";
 
-import { createRequestContextMiddleware } from "./utils/logging/request-context.middleware";
 import { initializeAuthentication } from "./auth/auth.initializer";
 import {
   createAuthMiddleware,
@@ -40,9 +40,21 @@ import { AuthController } from "./auth/auth.controller";
 // Create the main application
 const app = new Hono();
 
+// Get logger instance for middleware
+const loggerInstance = getLogger();
+
 // Add middleware
-app.use(createRequestContextMiddleware());
 app.use(createSecurityMiddleware());
+app.use(
+  "*",
+  honoLogger({
+    loggerInstance,
+    skip: (c) => {
+      const path = new URL(c.req.url).pathname;
+      return config.logging.skipPaths.includes(path);
+    },
+  }),
+);
 app.use(createAuthMiddleware());
 app.use(createAuthDebugMiddleware());
 
@@ -177,6 +189,9 @@ export async function setupApp(): Promise<Hono> {
     app.route("", apiRouter);
     app.notFound(handleNotFound);
     app.use(createErrorHandlerMiddleware());
+
+    // Add honoErrorHandler for uncaught errors
+    app.onError(honoErrorHandler(loggerInstance));
 
     // Start the server with Bun
     const server = Bun.serve({

@@ -1,6 +1,10 @@
 /**
  * Request Context Middleware
  *
+ * @deprecated This middleware is deprecated in favor of honoLogger from @rollercoaster-dev/rd-logger.
+ * Use honoLogger() for automatic request/response logging with correlation IDs.
+ * The getRequestId() helper is still available for manual request ID retrieval.
+ *
  * This middleware adds a unique request ID to each request and makes it available
  * throughout the request lifecycle. It also adds the request ID to response headers.
  */
@@ -20,6 +24,8 @@ type RequestContextVariables = {
 /**
  * Middleware that adds a unique request ID to each request
  * and logs basic request information
+ *
+ * @deprecated Use honoLogger from @rollercoaster-dev/rd-logger instead
  */
 export function createRequestContextMiddleware(): MiddlewareHandler<{
   Variables: RequestContextVariables;

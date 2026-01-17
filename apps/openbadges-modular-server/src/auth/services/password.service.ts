@@ -6,6 +6,7 @@
  */
 
 import { logger } from "../../utils/logging/logger.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 /**
  * Password service for hashing and verifying passwords
@@ -23,6 +24,9 @@ export class PasswordService {
    */
   static async hashPassword(password: string): Promise<string> {
     try {
+      const sensitivePassword = new SensitiveValue(password);
+      logger.debug("Hashing password", { password: sensitivePassword }); // Safe log
+
       // Import bcrypt dynamically to avoid issues with Bun
       const bcrypt = await import("bcrypt");
       return await bcrypt.hash(password, this.SALT_ROUNDS);
@@ -43,6 +47,9 @@ export class PasswordService {
     hash: string,
   ): Promise<boolean> {
     try {
+      const sensitivePassword = new SensitiveValue(password);
+      logger.debug("Verifying password", { password: sensitivePassword }); // Safe log
+
       // Import bcrypt dynamically to avoid issues with Bun
       const bcrypt = await import("bcrypt");
       return await bcrypt.compare(password, hash);

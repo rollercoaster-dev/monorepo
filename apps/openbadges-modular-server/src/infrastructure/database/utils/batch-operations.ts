@@ -7,8 +7,7 @@
 import { eq, inArray } from "drizzle-orm";
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import type { PgColumn } from "drizzle-orm/pg-core";
-import { QueryLoggerService } from "./query-logger.service";
-import { logger } from "@/utils/logging/logger.service";
+import { logger, queryLogger } from "@/utils/logging/logger.service";
 
 // Re-export the types we need for batch operations
 export type { DatabaseClient } from "@/utils/types/common-types";
@@ -98,7 +97,7 @@ export async function executeBatch<T>(
     }
 
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `BATCH OPERATION (${operations.length} operations)`,
       undefined,
       duration,
@@ -129,7 +128,7 @@ export async function executeBatch<T>(
     }
 
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `ERROR BATCH OPERATION (${operations.length} operations): ${error.message}`,
       undefined,
       duration,
@@ -193,7 +192,7 @@ export async function batchInsert<T>(
     }
 
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `BATCH INSERT INTO ${table.name} (${records.length} records)`,
       undefined,
       duration,
@@ -203,7 +202,7 @@ export async function batchInsert<T>(
     return result as T[];
   } catch (error) {
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `ERROR BATCH INSERT INTO ${table.name} (${records.length} records): ${error.message}`,
       undefined,
       duration,
@@ -261,7 +260,7 @@ export async function batchUpdate<T>(
     const flatResults = results.flat() as T[];
 
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `BATCH UPDATE ${table.name} (${records.length} records)`,
       undefined,
       duration,
@@ -271,7 +270,7 @@ export async function batchUpdate<T>(
     return flatResults;
   } catch (error) {
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `ERROR BATCH UPDATE ${table.name} (${records.length} records): ${error.message}`,
       undefined,
       duration,
@@ -351,7 +350,7 @@ export async function batchDelete(
     }
 
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `BATCH DELETE FROM ${table.name} (${ids.length} records, deleted ${deletedCount})`,
       undefined,
       duration,
@@ -361,7 +360,7 @@ export async function batchDelete(
     return deletedCount;
   } catch (error) {
     const duration = Date.now() - startTime;
-    QueryLoggerService.logQuery(
+    queryLogger.logQuery(
       `ERROR BATCH DELETE FROM ${table.name} (${ids.length} records): ${error.message}`,
       undefined,
       duration,
