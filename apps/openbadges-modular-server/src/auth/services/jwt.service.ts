@@ -9,6 +9,7 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { config } from "../../config/config";
 import { logger } from "../../utils/logging/logger.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 /**
  * JWT payload structure for authenticated users
@@ -85,6 +86,11 @@ export class JwtService {
         .setExpirationTime(payload.exp)
         .sign(this.SECRET);
 
+      logger.debug("JWT token generated", {
+        token: new SensitiveValue(token),
+        userId: payload.sub,
+      });
+
       return token;
     } catch (error) {
       logger.logError("Failed to generate JWT token", error as Error);
@@ -99,6 +105,9 @@ export class JwtService {
    */
   static async verifyToken(token: string): Promise<JwtPayload> {
     try {
+      const sensitiveToken = new SensitiveValue(token);
+      logger.debug("Verifying JWT token", { token: sensitiveToken });
+
       const { payload } = await jwtVerify(token, this.SECRET, {
         issuer: this.ISSUER,
       });
@@ -133,6 +142,11 @@ export class JwtService {
       return null;
     }
 
-    return authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    logger.debug("Extracted JWT token from header", {
+      token: new SensitiveValue(token),
+    });
+
+    return token;
   }
 }

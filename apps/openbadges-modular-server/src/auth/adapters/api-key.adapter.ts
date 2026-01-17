@@ -12,6 +12,7 @@ import type {
 } from "./auth-adapter.interface";
 import type { ApiKeyRepository } from "../../domains/auth/apiKey.repository";
 import { logger } from "../../utils/logging/logger.service";
+import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
 
 interface ApiKeyConfig {
   /**
@@ -83,17 +84,29 @@ export class ApiKeyAdapter implements AuthAdapter {
       };
     }
 
+    // Wrap API key for safe logging
+    const sensitiveApiKey = new SensitiveValue(apiKey);
+
     // Check if the API key exists in the configuration
     const keyConfig = this.apiKeyConfig.keys[apiKey];
 
     if (!keyConfig) {
-      logger.warn(`Invalid API key attempt: ${apiKey.substring(0, 8)}...`);
+      logger.warn("Invalid API key attempt", {
+        apiKey: sensitiveApiKey, // Will show as [REDACTED]
+        provider: this.providerName,
+      });
       return {
         isAuthenticated: false,
         error: "Invalid API key",
         provider: this.providerName,
       };
     }
+
+    logger.debug("API key authenticated", {
+      apiKey: sensitiveApiKey, // Will show as [REDACTED]
+      userId: keyConfig.userId,
+      provider: this.providerName,
+    });
 
     return {
       isAuthenticated: true,
