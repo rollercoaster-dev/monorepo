@@ -64,11 +64,11 @@ export function derivePackageName(packagePath: string): string {
 }
 
 /**
- * Find all TypeScript files recursively, excluding test files.
+ * Find all TypeScript and Vue SFC files recursively, excluding test files.
  * Handles filesystem errors gracefully by logging and continuing.
  *
  * @param dir - Directory to search
- * @returns Array of TypeScript file paths
+ * @returns Array of TypeScript and Vue file paths
  */
 export function findTsFiles(dir: string): string[] {
   const files: string[] = [];
@@ -112,10 +112,11 @@ export function findTsFiles(dir: string): string[] {
         }
         walk(path);
       } else if (
-        entry.endsWith(".ts") &&
-        !entry.endsWith(".test.ts") &&
-        !entry.endsWith(".spec.ts") &&
-        !entry.endsWith(".d.ts")
+        (entry.endsWith(".ts") &&
+          !entry.endsWith(".test.ts") &&
+          !entry.endsWith(".spec.ts") &&
+          !entry.endsWith(".d.ts")) ||
+        (entry.endsWith(".vue") && !entry.endsWith(".test.vue"))
       ) {
         files.push(path);
       }
