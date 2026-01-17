@@ -57,53 +57,50 @@ Before modifying files, consider:
 
 Safe operations (always allowed): reading files, searching, running tests, analyzing code.
 
-## MCP Tools Available
+## Search Priority (DEFAULT)
 
-When MCP is enabled, these native tools are available (preferred over CLI):
+**Always use MCP tools first. Grep/Glob are fallback only.**
 
-| Tool                       | Purpose                                     |
-| -------------------------- | ------------------------------------------- |
-| `knowledge_search_similar` | **Semantic search** - find related concepts |
-| `knowledge_query`          | Keyword search learnings, patterns          |
-| `knowledge_store`          | Store new learnings                         |
-| `graph_what_calls`         | Find function callers                       |
-| `graph_blast_radius`       | Analyze change impact                       |
-| `graph_find`               | Locate code entities                        |
-| `checkpoint_workflow_*`    | Manage workflow checkpoints                 |
-| `output_save`              | Save long output to file                    |
+### Graph Tools (Code Structure)
+
+| Tool                 | Use For              | Why Default                                     |
+| -------------------- | -------------------- | ----------------------------------------------- |
+| `graph_find`         | Locating definitions | AST-precise, finds declarations not just text   |
+| `graph_what_calls`   | Finding callers      | Shows actual usage patterns, not string matches |
+| `graph_blast_radius` | Impact analysis      | Transitive deps - prevents breaking changes     |
+
+### Knowledge Tools (Past Context)
+
+| Tool                       | Use For              | Why Default                                     |
+| -------------------------- | -------------------- | ----------------------------------------------- |
+| `knowledge_search_similar` | Finding related work | Semantic - "auth" finds "credential validation" |
+| `knowledge_query`          | Exact lookups        | By area, file, or issue number                  |
+| `knowledge_store`          | Capturing insights   | Persists for future sessions                    |
+
+### Other MCP Tools
+
+| Tool                    | Purpose                     |
+| ----------------------- | --------------------------- |
+| `checkpoint_workflow_*` | Manage workflow checkpoints |
+| `output_save`           | Save long output to file    |
+
+### Fallback (Grep/Glob)
+
+Use only when:
+
+- MCP returned no results
+- Searching for literal strings/regex patterns
+- Looking outside the indexed codebase
+
+### Capture Learnings
+
+When you discover something interesting - a pattern, a gotcha, a non-obvious solution - store it with `knowledge_store`. Future sessions benefit from what you learn today.
 
 **Resources** (browsable data):
 
 - `knowledge://learnings` - Browse all learnings
 - `knowledge://patterns` - Browse patterns
-- `logs://list` - Available log files
-- `logs://test/latest` - Latest test output
-- `logs://file/<name>` - Read a specific log file
 - `workflows://active` - Running workflows
-
-## Search Priority (MANDATORY)
-
-**ALWAYS try MCP tools BEFORE Grep/Glob.** 1 query = 10 greps worth of context.
-
-| Question                    | MCP Tool (preferred)       | Fallback          |
-| --------------------------- | -------------------------- | ----------------- |
-| How did we handle X before? | `knowledge_search_similar` | `knowledge_query` |
-| Past learnings about X?     | `knowledge_search_similar` | `knowledge_query` |
-| Who calls function X?       | `graph_what_calls`         | Grep              |
-| Impact of changing file X?  | `graph_blast_radius`       | Grep              |
-| Where is X defined?         | `graph_find`               | Glob              |
-
-**Priority order:**
-
-1. **Semantic search** (`knowledge_search_similar`) - Finds conceptually related learnings
-2. **Graph queries** - Code relationships (callers, dependencies, blast radius)
-3. **Knowledge query** - Keyword-based search for exact matches
-4. **Docs search** - Project documentation and patterns
-5. **Grep/Glob** - LAST RESORT for literal text search only
-
-**Why semantic first?** It finds "validation" when you search "input checking" - concepts, not keywords.
-
-The code graph is populated on session start. Using it first saves 10x tool calls.
 
 ## Workflows
 

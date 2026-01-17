@@ -34,7 +34,7 @@ import {
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
-import { formatKnowledgeContext, formatWorkflowState } from "./formatter";
+import { formatWorkflowState } from "./formatter";
 import { initializeState } from "./session";
 
 /**
@@ -323,42 +323,8 @@ async function onSessionStart(
     });
   }
 
-  // Format summary for injection using new formatter
-  const knowledgeSummary = formatKnowledgeContext(
-    learnings,
-    patterns,
-    mistakes,
-    topics,
-    docs,
-    {
-      maxTokens: 2000,
-      context: {
-        issueNumber,
-        primaryCodeArea,
-        modifiedFiles: context.modifiedFiles,
-      },
-    },
-  );
-
-  // Prepend workflow state to summary if available
-  const workflowSection = formatWorkflowState(workflowState);
-
-  // Add tool selection reminder for graph-first pattern
-  const toolSelectionReminder = `
-## Tool Selection Reminder
-**For code exploration, use graph tools BEFORE Grep/Glob:**
-- \`bun run g:calls <fn>\`  → Find callers
-- \`bun run g:deps <fn>\`   → Find dependencies
-- \`bun run g:find <name>\` → Find entities
-- \`bun run d:search <q>\`  → Search docs
-
-Graph queries return precise AST-based results in ~500 tokens.
-Grep/Glob may require 3-10 calls at 2000-8000 tokens.
-`;
-
-  const summary = [workflowSection, toolSelectionReminder, knowledgeSummary]
-    .filter(Boolean)
-    .join("\n");
+  // Format workflow state for injection (only checkpoint info, guidance is in CLAUDE.md)
+  const summary = formatWorkflowState(workflowState);
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
