@@ -75,19 +75,19 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, UserPermission[]> = {
  * User entity
  */
 export class User {
-  id: Shared.IRI;
-  username: string;
-  email: string;
+  id!: Shared.IRI;
+  username!: string;
+  email!: string;
   passwordHash?: string;
   firstName?: string;
   lastName?: string;
-  roles: UserRole[];
-  permissions: UserPermission[];
-  isActive: boolean;
+  roles!: UserRole[];
+  permissions!: UserPermission[];
+  isActive!: boolean;
   lastLogin?: Date;
   metadata?: Record<string, unknown>;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   /**
    * Private constructor to enforce creation through factory method
