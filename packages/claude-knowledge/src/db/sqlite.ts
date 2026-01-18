@@ -224,6 +224,20 @@ CREATE TABLE IF NOT EXISTS external_docs (
 
 -- Indexes for external docs lookups
 CREATE INDEX IF NOT EXISTS idx_external_docs_source_type ON external_docs(source_type);
+
+-- Tool usage metrics for tracking Claude's tool selection patterns
+-- Used by PreToolUse hook to log calls, reported at session end
+CREATE TABLE IF NOT EXISTS tool_usage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  tool_name TEXT NOT NULL,
+  tool_category TEXT NOT NULL CHECK (tool_category IN ('graph', 'search', 'read', 'write', 'other')),
+  created_at TEXT NOT NULL
+);
+
+-- Indexes for tool usage queries
+CREATE INDEX IF NOT EXISTS idx_tool_usage_session ON tool_usage(session_id);
+CREATE INDEX IF NOT EXISTS idx_tool_usage_category ON tool_usage(tool_category);
 `;
 
 /**

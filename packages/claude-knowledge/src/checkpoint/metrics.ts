@@ -465,6 +465,226 @@ function getGraphQuerySummary(): {
   };
 }
 
+// ============================================================================
+// Tool Usage Metrics Functions
+// ============================================================================
+
+/**
+ * Valid tool categories for classification.
+ */
+export type ToolCategory = "graph" | "search" | "read" | "write" | "other";
+
+/**
+ * Categorize a tool name into one of the predefined categories.
+ * Used to classify Claude's tool usage for graph vs search comparison.
+ */
+function categorizeToolName(toolName: string): ToolCategory {
+  // Graph tools (MCP and CLI)
+  const graphTools = [
+    "graph_find",
+    "graph_what_calls",
+    "graph_blast_radius",
+    "mcp__claude-knowledge__graph_find",
+    "mcp__claude-knowledge__graph_what_calls",
+    "mcp__claude-knowledge__graph_blast_radius",
+  ];
+  if (graphTools.includes(toolName)) {
+    return "graph";
+  }
+
+  // Search tools (Grep/Glob)
+  const searchTools = ["Grep", "Glob", "grep", "glob"];
+  if (searchTools.includes(toolName)) {
+    return "search";
+  }
+
+  // Read tools
+  const readTools = ["Read", "read", "WebFetch", "WebSearch"];
+  if (readTools.includes(toolName)) {
+    return "read";
+  }
+
+  // Write tools
+  const writeTools = ["Write", "Edit", "write", "edit", "NotebookEdit"];
+  if (writeTools.includes(toolName)) {
+    return "write";
+  }
+
+  return "other";
+}
+
+/**
+ * Log a tool usage event for the current session.
+ * Called by PreToolUse hook to track all tool calls.
+ *
+ * @param sessionId - The session identifier
+ * @param toolName - Name of the tool being used
+ */
+function logToolUsage(sessionId: string, toolName: string): void {
+  const db = getDatabase();
+  const category = categorizeToolName(toolName);
+
+  db.run(
+    `
+    INSERT INTO tool_usage (session_id, tool_name, tool_category, created_at)
+    VALUES (?, ?, ?, ?)
+    `,
+    [sessionId, toolName, category, new Date().toISOString()],
+  );
+}
+
+/**
+ * Tool usage summary for a session.
+ */
+export interface ToolUsageSummary {
+  sessionId: string;
+  totalCalls: number;
+  byCategory: Record<ToolCategory, number>;
+  graphSearchRatio: number | null;
+  topTools: Array<{ tool: string; count: number }>;
+}
+
+/**
+ * Get tool usage summary for a session.
+ * Returns counts by category and graph/search ratio.
+ *
+ * @param sessionId - The session to get stats for
+ * @returns Tool usage summary with counts and ratio
+ */
+function getToolUsageSummary(sessionId: string): ToolUsageSummary {
+  const db = getDatabase();
+
+  // Get counts by category
+  type CategoryRow = { tool_category: ToolCategory; count: number };
+  const categoryRows = db
+    .query<CategoryRow, [string]>(
+      `
+      SELECT tool_category, COUNT(*) as count
+      FROM tool_usage
+      WHERE session_id = ?
+      GROUP BY tool_category
+      `,
+    )
+    .all(sessionId);
+
+  const byCategory: Record<ToolCategory, number> = {
+    graph: 0,
+    search: 0,
+    read: 0,
+    write: 0,
+    other: 0,
+  };
+
+  let totalCalls = 0;
+  for (const row of categoryRows) {
+    byCategory[row.tool_category] = row.count;
+    totalCalls += row.count;
+  }
+
+  // Calculate graph/search ratio (null if no searches)
+  const graphSearchRatio =
+    byCategory.search > 0 ? byCategory.graph / byCategory.search : null;
+
+  // Get top tools
+  type ToolRow = { tool_name: string; count: number };
+  const toolRows = db
+    .query<ToolRow, [string]>(
+      `
+      SELECT tool_name, COUNT(*) as count
+      FROM tool_usage
+      WHERE session_id = ?
+      GROUP BY tool_name
+      ORDER BY count DESC
+      LIMIT 10
+      `,
+    )
+    .all(sessionId);
+
+  const topTools = toolRows.map((row) => ({
+    tool: row.tool_name,
+    count: row.count,
+  }));
+
+  return {
+    sessionId,
+    totalCalls,
+    byCategory,
+    graphSearchRatio,
+    topTools,
+  };
+}
+
+/**
+ * Get aggregate tool usage stats across all sessions.
+ * Useful for analyzing overall tool selection patterns.
+ */
+function getToolUsageAggregate(): {
+  totalSessions: number;
+  totalCalls: number;
+  avgCallsPerSession: number;
+  byCategory: Record<ToolCategory, number>;
+  avgGraphSearchRatio: number | null;
+} {
+  const db = getDatabase();
+
+  // Get total sessions and calls
+  type TotalsRow = {
+    total_sessions: number;
+    total_calls: number;
+  };
+  const totals = db
+    .query<TotalsRow, []>(
+      `
+      SELECT
+        COUNT(DISTINCT session_id) as total_sessions,
+        COUNT(*) as total_calls
+      FROM tool_usage
+      `,
+    )
+    .get();
+
+  const totalSessions = totals?.total_sessions ?? 0;
+  const totalCalls = totals?.total_calls ?? 0;
+  const avgCallsPerSession =
+    totalSessions > 0 ? Math.round((totalCalls / totalSessions) * 10) / 10 : 0;
+
+  // Get counts by category
+  type CategoryRow = { tool_category: ToolCategory; count: number };
+  const categoryRows = db
+    .query<CategoryRow, []>(
+      `
+      SELECT tool_category, COUNT(*) as count
+      FROM tool_usage
+      GROUP BY tool_category
+      `,
+    )
+    .all();
+
+  const byCategory: Record<ToolCategory, number> = {
+    graph: 0,
+    search: 0,
+    read: 0,
+    write: 0,
+    other: 0,
+  };
+
+  for (const row of categoryRows) {
+    byCategory[row.tool_category] = row.count;
+  }
+
+  // Calculate average graph/search ratio
+  const avgGraphSearchRatio =
+    byCategory.search > 0 ? byCategory.graph / byCategory.search : null;
+
+  return {
+    totalSessions,
+    totalCalls,
+    avgCallsPerSession,
+    byCategory,
+    avgGraphSearchRatio,
+  };
+}
+
 export const metrics = {
   saveContextMetrics,
   getContextMetrics,
@@ -474,4 +694,9 @@ export const metrics = {
   getGraphQueries,
   getGraphQuerySummary,
   determineQuerySource,
+  // Tool usage metrics
+  logToolUsage,
+  getToolUsageSummary,
+  getToolUsageAggregate,
+  categorizeToolName,
 };
