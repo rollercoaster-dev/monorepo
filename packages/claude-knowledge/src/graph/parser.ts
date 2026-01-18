@@ -117,7 +117,9 @@ export function findTsFiles(dir: string): string[] {
           !entry.endsWith(".test.ts") &&
           !entry.endsWith(".spec.ts") &&
           !entry.endsWith(".d.ts")) ||
-        (entry.endsWith(".vue") && !entry.endsWith(".test.vue"))
+        (entry.endsWith(".vue") &&
+          !entry.endsWith(".test.vue") &&
+          !entry.endsWith(".spec.vue"))
       ) {
         files.push(path);
       }
@@ -479,15 +481,18 @@ function resolveCallTarget(
  * @param basePath - Base path for relative file paths
  * @param packageName - Package name for entity IDs
  * @param entityLookupMap - Map of entity names to entities for call resolution
+ * @param originalFilePath - Original file path (for Vue files mapped to virtual .ts)
  */
 export function extractRelationships(
   sourceFile: SourceFile,
   basePath: string,
   packageName: string,
   entityLookupMap: Map<string, Entity[]>,
+  originalFilePath?: string,
 ): Relationship[] {
   const relationships: Relationship[] = [];
-  const filePath = relative(basePath, sourceFile.getFilePath());
+  const filePath =
+    originalFilePath || relative(basePath, sourceFile.getFilePath());
   const fileId = makeFileId(packageName, filePath);
 
   // Build import map for this file
@@ -953,11 +958,14 @@ export function parsePackage(
 
   // Second pass: extract relationships
   project.getSourceFiles().forEach((sourceFile) => {
+    const sourceFilePath = sourceFile.getFilePath();
+    const originalVuePath = vueFileMapping.get(sourceFilePath);
     const relationships = extractRelationships(
       sourceFile,
       packagePath,
       pkgName,
       entityLookupMap,
+      originalVuePath,
     );
     allRelationships.push(...relationships);
   });
