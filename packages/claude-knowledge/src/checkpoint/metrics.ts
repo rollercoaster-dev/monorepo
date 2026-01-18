@@ -691,9 +691,39 @@ function getToolUsageAggregate(): {
     byCategory[row.tool_category] = row.count;
   }
 
-  // Calculate average graph/search ratio
+  // Calculate average graph/search ratio across sessions
+  // (average of per-session ratios, not global ratio)
+  type SessionRatioRow = {
+    session_id: string;
+    graph_count: number;
+    search_count: number;
+  };
+  const sessionRows = db
+    .query<SessionRatioRow, []>(
+      `
+      SELECT
+        session_id,
+        SUM(CASE WHEN tool_category = 'graph' THEN 1 ELSE 0 END) as graph_count,
+        SUM(CASE WHEN tool_category = 'search' THEN 1 ELSE 0 END) as search_count
+      FROM tool_usage
+      GROUP BY session_id
+      `,
+    )
+    .all();
+
+  // Compute per-session ratios for sessions with search_count > 0
+  const sessionRatios: number[] = [];
+  for (const row of sessionRows) {
+    if (row.search_count > 0) {
+      sessionRatios.push(row.graph_count / row.search_count);
+    }
+  }
+
+  // Average of per-session ratios (null if no sessions have search calls)
   const avgGraphSearchRatio =
-    byCategory.search > 0 ? byCategory.graph / byCategory.search : null;
+    sessionRatios.length > 0
+      ? sessionRatios.reduce((sum, r) => sum + r, 0) / sessionRatios.length
+      : null;
 
   return {
     totalSessions,
