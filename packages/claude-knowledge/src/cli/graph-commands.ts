@@ -397,16 +397,10 @@ export async function handleGraphCommands(
       logger.info(`Parsing monorepo at: ${rootPath}`);
     }
 
+    // parseMonorepo throws if no packages found
     const result = parseMonorepo(rootPath);
 
-    if (result.packages.size === 0) {
-      throw new Error(
-        `No packages found in ${rootPath}. ` +
-          `Expected packages/ and/or apps/ directories with package.json files.`,
-      );
-    }
-
-    // Store each package's results
+    // Store each package's results with error handling
     let totalEntitiesStored = 0;
     let totalRelationshipsStored = 0;
     let totalCodeDocs = 0;
@@ -415,28 +409,53 @@ export async function handleGraphCommands(
       entities: number;
       relationships: number;
       codeDocs: number;
+      error?: string;
     }> = [];
+    const storeErrors: Array<{ pkg: string; error: string }> = [];
 
     for (const [pkgName, pkgResult] of result.packages) {
-      if (!quiet) {
-        logger.info(
-          `Storing ${pkgName}: ${pkgResult.entities.length} entities`,
-        );
+      try {
+        if (!quiet) {
+          logger.info(
+            `Storing ${pkgName}: ${pkgResult.entities.length} entities`,
+          );
+        }
+
+        const storeResult = storeGraph(pkgResult, pkgName);
+        const codeDocResult = await storeCodeDocs(pkgResult);
+
+        packageResults.push({
+          name: pkgName,
+          entities: storeResult.entitiesStored,
+          relationships: storeResult.relationshipsStored,
+          codeDocs: codeDocResult.codeDocsCreated,
+        });
+
+        totalEntitiesStored += storeResult.entitiesStored;
+        totalRelationshipsStored += storeResult.relationshipsStored;
+        totalCodeDocs += codeDocResult.codeDocsCreated;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        logger.error(`Failed to store package ${pkgName}`, {
+          error: errorMessage,
+        });
+        storeErrors.push({ pkg: pkgName, error: errorMessage });
+        packageResults.push({
+          name: pkgName,
+          entities: 0,
+          relationships: 0,
+          codeDocs: 0,
+          error: errorMessage,
+        });
       }
+    }
 
-      const storeResult = storeGraph(pkgResult, pkgName);
-      const codeDocResult = await storeCodeDocs(pkgResult);
-
-      packageResults.push({
-        name: pkgName,
-        entities: storeResult.entitiesStored,
-        relationships: storeResult.relationshipsStored,
-        codeDocs: codeDocResult.codeDocsCreated,
-      });
-
-      totalEntitiesStored += storeResult.entitiesStored;
-      totalRelationshipsStored += storeResult.relationshipsStored;
-      totalCodeDocs += codeDocResult.codeDocsCreated;
+    // Fail if any packages failed to store
+    if (storeErrors.length > 0) {
+      throw new Error(
+        `Failed to store ${storeErrors.length} package(s): ${storeErrors.map((e) => e.pkg).join(", ")}`,
+      );
     }
 
     // Output final JSON

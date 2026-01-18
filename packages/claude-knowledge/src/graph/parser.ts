@@ -51,27 +51,6 @@ export function makeFileId(packageName: string, filePath: string): string {
 }
 
 /**
- * Derive package name from a file path within a monorepo.
- * Extracts the package/app name from paths like:
- * - "packages/rd-logger/src/index.ts" -> "rd-logger"
- * - "apps/openbadges-server/src/api/routes.ts" -> "openbadges-server"
- *
- * @param filePath - File path (can be relative or absolute)
- * @returns Package name extracted from path
- */
-export function derivePackageNameFromFile(filePath: string): string {
-  const normalized = filePath.replace(/\\/g, "/");
-
-  // Match packages/<name>/... or apps/<name>/...
-  const match = normalized.match(/(?:packages|apps)\/([^/]+)/);
-  if (match && match[1]) {
-    return match[1];
-  }
-
-  return "unknown";
-}
-
-/**
  * Derive package name from a package root path.
  * e.g., "packages/rd-logger" -> "rd-logger"
  *
@@ -968,7 +947,14 @@ export function parsePackage(
   if (parseErrors.length > 0) {
     logger.warn(`${parseErrors.length} file(s) failed to parse`, {
       errors: parseErrors.slice(0, 5),
+      ...(parseErrors.length > 5 && {
+        note: `${parseErrors.length - 5} more errors - use debug level to see all`,
+      }),
     });
+    // Log all errors at debug level for troubleshooting
+    if (parseErrors.length > 5) {
+      logger.debug("All parse errors", { errors: parseErrors });
+    }
   }
 
   const allEntities: Entity[] = [];
@@ -1032,6 +1018,17 @@ export function parsePackage(
 }
 
 /**
+ * Check if an error is a "file not found" error (ENOENT).
+ */
+function isNotFoundError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error as { code: string }).code === "ENOENT"
+  );
+}
+
+/**
  * Discover all package directories in a monorepo.
  * Looks for directories in packages/ and apps/ that contain a package.json.
  *
@@ -1056,16 +1053,34 @@ export function discoverPackages(
             try {
               statSync(join(pkgPath, "package.json"));
               packages.push({ name: entry, path: pkgPath });
-            } catch {
-              // No package.json - skip
+            } catch (error) {
+              // Only silently skip ENOENT (no package.json)
+              if (!isNotFoundError(error)) {
+                logger.warn(`Cannot read package.json for ${entry}`, {
+                  path: pkgPath,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+              }
             }
           }
-        } catch {
-          // Can't stat - skip
+        } catch (error) {
+          // Only silently skip ENOENT
+          if (!isNotFoundError(error)) {
+            logger.warn(`Cannot stat directory entry ${entry}`, {
+              path: pkgPath,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
         }
       }
-    } catch {
-      // Container doesn't exist - skip
+    } catch (error) {
+      // Only silently skip ENOENT (container doesn't exist)
+      if (!isNotFoundError(error)) {
+        logger.warn(`Cannot read ${container} directory`, {
+          path: containerPath,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
   }
 
@@ -1089,16 +1104,10 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
   const packages = discoverPackages(rootPath);
 
   if (packages.length === 0) {
-    logger.warn("No packages found in monorepo", { rootPath });
-    return {
-      packages: new Map(),
-      stats: {
-        totalFiles: 0,
-        totalEntities: 0,
-        totalRelationships: 0,
-        packagesFound: [],
-      },
-    };
+    throw new Error(
+      `No packages found in ${rootPath}. ` +
+        `Expected packages/ and/or apps/ directories containing package.json files.`,
+    );
   }
 
   logger.info(`Discovered ${packages.length} packages`, {
@@ -1117,7 +1126,8 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
     string,
     { original: string; pkgName: string }
   >();
-  const parseErrors: Array<{ file: string; error: string }> = [];
+  const parseErrors: Array<{ file: string; error: string; pkgName: string }> =
+    [];
 
   for (const pkg of packages) {
     const tsFiles = findTsFiles(pkg.path);
@@ -1142,6 +1152,7 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
       } catch (error) {
         parseErrors.push({
           file,
+          pkgName: pkg.name,
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -1151,7 +1162,14 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
   if (parseErrors.length > 0) {
     logger.warn(`${parseErrors.length} file(s) failed to load`, {
       errors: parseErrors.slice(0, 5),
+      ...(parseErrors.length > 5 && {
+        note: `${parseErrors.length - 5} more errors - use debug level to see all`,
+      }),
     });
+    // Log all errors at debug level for troubleshooting
+    if (parseErrors.length > 5) {
+      logger.debug("All parse errors", { errors: parseErrors });
+    }
   }
 
   // Build a map of absolute path -> package info for lookup
@@ -1266,13 +1284,19 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
       relationshipsByType[r.type] = (relationshipsByType[r.type] || 0) + 1;
     });
 
+    // Count files that failed to parse for this package
+    const filesSkipped = parseErrors.filter(
+      (e) => e.pkgName === pkg.name,
+    ).length;
+
     results.set(pkg.name, {
       package: pkg.name,
       entities,
       relationships,
       stats: {
-        filesScanned: allFiles.filter((f) => f.pkgName === pkg.name).length,
-        filesSkipped: 0,
+        filesScanned:
+          allFiles.filter((f) => f.pkgName === pkg.name).length + filesSkipped,
+        filesSkipped,
         vueFilesProcessed: [...vueFileMapping.values()].filter(
           (v) => v.pkgName === pkg.name,
         ).length,
