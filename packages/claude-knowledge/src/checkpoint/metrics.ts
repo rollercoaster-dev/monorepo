@@ -498,18 +498,37 @@ function categorizeToolName(toolName: string): ToolCategory {
     return "search";
   }
 
-  // Read tools
-  const readTools = ["Read", "read", "WebFetch", "WebSearch"];
+  // Read tools (including knowledge queries)
+  const readTools = [
+    "Read",
+    "read",
+    "WebFetch",
+    "WebSearch",
+    "knowledge_query",
+    "knowledge_search_similar",
+    "mcp__claude-knowledge__knowledge_query",
+    "mcp__claude-knowledge__knowledge_search_similar",
+  ];
   if (readTools.includes(toolName)) {
     return "read";
   }
 
   // Write tools
-  const writeTools = ["Write", "Edit", "write", "edit", "NotebookEdit"];
+  const writeTools = [
+    "Write",
+    "Edit",
+    "write",
+    "edit",
+    "NotebookEdit",
+    "knowledge_store",
+    "mcp__claude-knowledge__knowledge_store",
+  ];
   if (writeTools.includes(toolName)) {
     return "write";
   }
 
+  // Explicitly categorize common tools as "other" for clarity
+  // Bash, Task, LSP, TodoWrite, Skill, etc. are tracked but don't affect graph/search ratio
   return "other";
 }
 
