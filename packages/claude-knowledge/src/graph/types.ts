@@ -179,3 +179,19 @@ export interface IncrementalParseOptions {
   /** Package name for metadata lookups */
   package?: string;
 }
+
+/**
+ * Result of parsing an entire monorepo.
+ * Contains results grouped by package for proper storage.
+ */
+export interface MonorepoParseResult {
+  /** Results per package */
+  packages: Map<string, ParseResult>;
+  /** Combined statistics */
+  stats: {
+    totalFiles: number;
+    totalEntities: number;
+    totalRelationships: number;
+    packagesFound: string[];
+  };
+}

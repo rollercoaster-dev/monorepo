@@ -8,6 +8,7 @@
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parsePackage,
+  parseMonorepo,
   storeGraph,
   storeCodeDocs,
   getStoredFileMetadata,
@@ -388,14 +389,102 @@ export async function handleGraphCommands(
         2,
       ) + "\n",
     );
+  } else if (command === "parse-monorepo") {
+    // Usage: graph parse-monorepo [root-path] [--quiet]
+    const rootPath = filteredArgs[0] || process.cwd();
+
+    if (!quiet) {
+      logger.info(`Parsing monorepo at: ${rootPath}`);
+    }
+
+    // parseMonorepo throws if no packages found
+    const result = parseMonorepo(rootPath);
+
+    // Store each package's results with error handling
+    let totalEntitiesStored = 0;
+    let totalRelationshipsStored = 0;
+    let totalCodeDocs = 0;
+    const packageResults: Array<{
+      name: string;
+      entities: number;
+      relationships: number;
+      codeDocs: number;
+      error?: string;
+    }> = [];
+    const storeErrors: Array<{ pkg: string; error: string }> = [];
+
+    for (const [pkgName, pkgResult] of result.packages) {
+      try {
+        if (!quiet) {
+          logger.info(
+            `Storing ${pkgName}: ${pkgResult.entities.length} entities`,
+          );
+        }
+
+        const storeResult = storeGraph(pkgResult, pkgName);
+        const codeDocResult = await storeCodeDocs(pkgResult);
+
+        packageResults.push({
+          name: pkgName,
+          entities: storeResult.entitiesStored,
+          relationships: storeResult.relationshipsStored,
+          codeDocs: codeDocResult.codeDocsCreated,
+        });
+
+        totalEntitiesStored += storeResult.entitiesStored;
+        totalRelationshipsStored += storeResult.relationshipsStored;
+        totalCodeDocs += codeDocResult.codeDocsCreated;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        logger.error(`Failed to store package ${pkgName}`, {
+          error: errorMessage,
+        });
+        storeErrors.push({ pkg: pkgName, error: errorMessage });
+        packageResults.push({
+          name: pkgName,
+          entities: 0,
+          relationships: 0,
+          codeDocs: 0,
+          error: errorMessage,
+        });
+      }
+    }
+
+    // Output final JSON (even on partial failure for debugging)
+    const output: Record<string, unknown> = {
+      command: "parse-monorepo",
+      rootPath,
+      ...result.stats,
+      stored: {
+        entities: totalEntitiesStored,
+        relationships: totalRelationshipsStored,
+        codeDocs: totalCodeDocs,
+      },
+      packages: packageResults,
+    };
+    if (storeErrors.length > 0) {
+      output.hasErrors = true;
+    }
+    process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+
+    // Fail if any packages failed to store
+    if (storeErrors.length > 0) {
+      throw new Error(
+        `Failed to store ${storeErrors.length} package(s): ${storeErrors.map((e) => e.pkg).join(", ")}`,
+      );
+    }
   } else {
     throw new Error(
       `Unknown graph command: ${command}\n` +
         `Available commands:\n` +
         `  parse <path> [name] [--incremental] [--quiet]\n` +
-        `    - Parse a package and store graph data\n` +
+        `    - Parse a single package and store graph data\n` +
         `    - --incremental: Only parse files that changed since last parse\n` +
         `    - --quiet: Suppress verbose logging\n` +
+        `  parse-monorepo [root] [--quiet]\n` +
+        `    - Parse entire monorepo with cross-package relationship resolution\n` +
+        `    - Automatically discovers packages in packages/ and apps/\n` +
         `  what-calls <name>      - Find what calls the specified function\n` +
         `  what-depends-on <name> - Find dependencies on an entity\n` +
         `  blast-radius <file>    - Find entities affected by changes to a file\n` +
