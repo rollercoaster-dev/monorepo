@@ -36,7 +36,6 @@ import {
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
 import { formatWorkflowState } from "./formatter";
-import { initializeState } from "./session";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -74,22 +73,6 @@ const MAX_TOPICS = 5;
 async function onSessionStart(
   context: SessionContext,
 ): Promise<KnowledgeContext> {
-  // Initialize session state for tool usage tracking
-  // This enables PreToolUse hook to enforce graph-first patterns
-  try {
-    initializeState();
-    logger.debug("Session state initialized for tool tracking", {
-      sessionId: process.env.CLAUDE_SESSION_ID,
-      context: "onSessionStart",
-    });
-  } catch (error) {
-    // Non-fatal: tool tracking is best-effort
-    logger.warn("Could not initialize session state", {
-      error: error instanceof Error ? error.message : String(error),
-      context: "onSessionStart",
-    });
-  }
-
   const learnings: QueryResult[] = [];
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];

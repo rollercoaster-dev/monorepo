@@ -7,7 +7,6 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { graph } from "../../graph/index.js";
-import { recordGraphQuery } from "../../session/index.js";
 
 /**
  * Tool definitions for graph operations.
@@ -111,9 +110,6 @@ export async function handleGraphToolCall(
 
         const callers = graph.whatCalls(fnName);
 
-        // Record usage for PreToolUse hook (unlocks Grep/Glob)
-        recordGraphQuery("what_calls", fnName, callers.length);
-
         return {
           content: [
             {
@@ -153,9 +149,6 @@ export async function handleGraphToolCall(
 
         const maxDepth = (args.maxDepth as number) || 5;
         const affected = graph.blastRadius(file, maxDepth);
-
-        // Record usage for PreToolUse hook (unlocks Grep/Glob)
-        recordGraphQuery("blast_radius", file, affected.length);
 
         // Group by depth for clearer output
         const byDepth: Record<number, typeof affected> = {};
@@ -210,9 +203,6 @@ export async function handleGraphToolCall(
         const limit = (args.limit as number) || 20;
 
         const entities = graph.findEntities(entityName, entityType, limit);
-
-        // Record usage for PreToolUse hook (unlocks Grep/Glob)
-        recordGraphQuery("find", entityName, entities.length);
 
         return {
           content: [

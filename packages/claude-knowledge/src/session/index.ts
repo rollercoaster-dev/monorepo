@@ -1,31 +1,14 @@
 /**
- * Session tracking module
+ * Session module - DEPRECATED
  *
- * Provides state tracking for Claude Code sessions to enforce
- * graph-first tool selection patterns.
+ * This module previously provided session state tracking for the PreToolUse hook.
+ * The session state functionality was removed in #571 because:
+ * - CLAUDE_SESSION_ID environment variable is never set by Claude Code
+ * - Session state across tool calls was not working
+ *
+ * Tool usage is now tracked via metrics (see checkpoint/metrics.ts)
+ * and reported at session end.
  */
 
-export {
-  // Types
-  type SessionState,
-  type GraphQuery,
-  type DocsSearch,
-  // State management
-  loadState,
-  saveState,
-  initializeState,
-  getOrCreateState,
-  clearState,
-  // Recording functions (called by graph/docs commands)
-  recordGraphQuery,
-  recordDocsSearch,
-  recordGrepBlocked,
-  recordGrepAllowed,
-  // Query functions (called by PreToolUse hook)
-  hasGraphBeenQueried,
-  hasDocsBeenSearched,
-  hasKnowledgeToolsBeenUsed,
-  getUsageSummary,
-  // CLI handler
-  handleStateCommands,
-} from "./state";
+// This module is intentionally empty.
+// Keeping it to avoid breaking any imports that haven't been updated.
