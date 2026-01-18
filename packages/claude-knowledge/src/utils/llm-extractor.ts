@@ -16,8 +16,8 @@ import { readFileSync } from "fs";
 /** LLM-extracted learnings have lower confidence than manual (but higher than commit-based) */
 const LLM_EXTRACT_CONFIDENCE = 0.8;
 
-/** Gemini 2.0 Flash model via OpenRouter (free tier) */
-const LLM_MODEL = "google/gemini-2.0-flash-exp:free";
+/** Gemini model via OpenRouter (2.5 Flash is fast and cheap) */
+const LLM_MODEL = process.env.LLM_EXTRACTOR_MODEL || "google/gemini-2.5-flash";
 
 /**
  * Extraction prompt that focuses on technical insights.

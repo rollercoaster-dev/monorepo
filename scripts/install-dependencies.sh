@@ -27,8 +27,10 @@ if [ "$CLAUDE_CODE_REMOTE" = "true" ]; then
   echo -e "${YELLOW}📡 Running in Claude Code Web environment${NC}"
   ENV_TYPE="web"
 else
-  echo -e "${YELLOW}💻 Running in local environment${NC}"
-  ENV_TYPE="local"
+  # Local environment - skip dependency setup (already installed)
+  echo -e "${GREEN}✓${NC} Local environment detected - skipping dependency setup"
+  echo -e "${YELLOW}ℹ${NC}  Run 'bun install && bun run build' manually if needed"
+  exit 0
 fi
 
 # Navigate to project root

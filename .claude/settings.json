@@ -7,37 +7,24 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install-dependencies.sh",
-            "description": "Install pnpm dependencies on session startup"
+            "description": "Install dependencies (web only, skips on local)"
           },
           {
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
             "description": "Load relevant knowledge for session context"
-          },
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
-            "description": "Refresh code graph on session start"
           }
         ]
-      },
+      }
+    ],
+    "SessionEnd": [
       {
-        "matcher": "resume",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install-dependencies.sh",
-            "description": "Install pnpm dependencies on session resume"
-          },
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
-            "description": "Load relevant knowledge for session context"
-          },
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts graph parse \"$CLAUDE_PROJECT_DIR/packages\" --quiet",
-            "description": "Refresh code graph on session resume"
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-end",
+            "description": "Extract and store learnings via LLM at session end"
           }
         ]
       }
