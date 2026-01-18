@@ -384,6 +384,12 @@ export interface SessionEndResult {
   learningsStored: number;
   /** IDs of the stored learnings */
   learningIds: string[];
+  /** Tool usage metrics for this session (if available) */
+  toolUsage?: {
+    graph: number;
+    search: number;
+    ratio: number | null;
+  };
 }
 
 // ============================================================================
