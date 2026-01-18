@@ -12,7 +12,6 @@ import { handleGraphCommands } from "./graph-commands";
 import { handleDocsCommands } from "./docs-commands";
 import { handleKnowledgeCommands } from "./knowledge-commands";
 import { handleStatusCommand } from "./status-commands";
-import { handleStateCommands } from "../session";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -88,13 +87,6 @@ if (args.length === 0) {
   console.error("  knowledge list-files");
   console.error("  knowledge stats");
   console.error("  status [--commits <n>] [--issues <n>] [--json]");
-  console.error("  state show");
-  console.error("  state summary");
-  console.error("  state init");
-  console.error("  state clear");
-  console.error("  state has-graph");
-  console.error("  state has-docs");
-  console.error("  state has-knowledge");
   process.exit(1);
 }
 
@@ -132,8 +124,6 @@ try {
     // status doesn't use command/commandArgs split the same way
     const allArgs = command ? [command, ...commandArgs] : commandArgs;
     await handleStatusCommand(allArgs);
-  } else if (category === "state") {
-    await handleStateCommands(command, commandArgs);
   } else {
     throw new Error(`Unknown category: ${category}`);
   }

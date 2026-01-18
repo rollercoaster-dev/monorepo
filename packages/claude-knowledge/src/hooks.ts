@@ -20,7 +20,7 @@ import type {
 } from "./types";
 import { knowledge, searchSimilarTopics } from "./knowledge/index";
 import { searchDocs } from "./docs/search";
-import { checkpoint } from "./checkpoint";
+import { checkpoint, metrics } from "./checkpoint";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parseIssueNumber,
@@ -36,7 +36,6 @@ import {
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
 import { formatWorkflowState } from "./formatter";
-import { initializeState } from "./session";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -74,22 +73,6 @@ const MAX_TOPICS = 5;
 async function onSessionStart(
   context: SessionContext,
 ): Promise<KnowledgeContext> {
-  // Initialize session state for tool usage tracking
-  // This enables PreToolUse hook to enforce graph-first patterns
-  try {
-    initializeState();
-    logger.debug("Session state initialized for tool tracking", {
-      sessionId: process.env.CLAUDE_SESSION_ID,
-      context: "onSessionStart",
-    });
-  } catch (error) {
-    // Non-fatal: tool tracking is best-effort
-    logger.warn("Could not initialize session state", {
-      error: error instanceof Error ? error.message : String(error),
-      context: "onSessionStart",
-    });
-  }
-
   const learnings: QueryResult[] = [];
   const patterns: Pattern[] = [];
   const mistakes: Mistake[] = [];
@@ -707,7 +690,7 @@ async function onSessionEnd(
         }
       }
 
-      const metrics: Omit<ContextMetrics, "id"> = {
+      const contextMetricsData: Omit<ContextMetrics, "id"> = {
         sessionId: session.sessionId,
         issueNumber,
         filesRead: session.filesRead ?? 0,
@@ -719,7 +702,7 @@ async function onSessionEnd(
         createdAt: new Date().toISOString(),
       };
 
-      checkpoint.saveContextMetrics(metrics);
+      checkpoint.saveContextMetrics(contextMetricsData);
 
       logger.debug("Session metrics saved", {
         sessionId: session.sessionId,
@@ -737,9 +720,56 @@ async function onSessionEnd(
     }
   }
 
+  // Query and log tool usage metrics for this session
+  // Uses date-based session ID to match PreToolUse hook
+  let toolUsageSummary: ReturnType<typeof metrics.getToolUsageSummary> | null =
+    null;
+  try {
+    const today = new Date();
+    const dailySessionId = `daily-${today.toISOString().split("T")[0]}`;
+    toolUsageSummary = metrics.getToolUsageSummary(dailySessionId);
+
+    if (toolUsageSummary.totalCalls > 0) {
+      const { byCategory, graphSearchRatio } = toolUsageSummary;
+
+      logger.info("Tool Usage This Session", {
+        graph: byCategory.graph,
+        search: byCategory.search,
+        read: byCategory.read,
+        write: byCategory.write,
+        other: byCategory.other,
+        total: toolUsageSummary.totalCalls,
+        graphSearchRatio:
+          graphSearchRatio !== null ? graphSearchRatio.toFixed(2) : "N/A",
+        context: "onSessionEnd",
+      });
+
+      // Log guidance if graph/search ratio is low
+      if (graphSearchRatio !== null && graphSearchRatio < 1.0) {
+        logger.info(
+          "Consider using graph tools (graph_find, graph_what_calls) before Grep/Glob for better context efficiency",
+          { context: "onSessionEnd" },
+        );
+      }
+    }
+  } catch (error) {
+    // Non-critical - don't fail session end
+    logger.debug("Could not retrieve tool usage metrics", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionEnd",
+    });
+  }
+
   return {
     learningsStored: learnings.length,
     learningIds,
+    toolUsage: toolUsageSummary
+      ? {
+          graph: toolUsageSummary.byCategory.graph,
+          search: toolUsageSummary.byCategory.search,
+          ratio: toolUsageSummary.graphSearchRatio,
+        }
+      : undefined,
   };
 }
 

@@ -26,3 +26,6 @@ export const checkpoint = {
   // Metrics operations
   ...metrics,
 };
+
+// Export metrics separately for direct access to tool usage functions
+export { metrics };

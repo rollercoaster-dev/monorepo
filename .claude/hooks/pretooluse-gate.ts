@@ -1,25 +1,20 @@
 #!/usr/bin/env bun
 /**
- * PreToolUse Gate Hook
+ * PreToolUse Metrics Hook
  *
- * Enforces graph-first tool selection pattern by blocking Grep/Glob
- * until at least one graph or docs query has been made in the session.
+ * Logs tool usage metrics for analyzing Claude's tool selection patterns.
+ * Always allows the tool call - this is an observer, not a gatekeeper.
  *
- * Usage: Called automatically by Claude Code before Grep/Glob tool use.
+ * Usage: Called automatically by Claude Code before any tool use.
  *
- * Returns JSON with permissionDecision:
- * - "allow": Graph/docs have been queried, grep is allowed
- * - "deny": No graph/docs queries yet, explain why and suggest alternatives
+ * Metrics collected:
+ * - Tool name and category (graph, search, read, write, other)
+ * - Timestamp for session grouping
  *
- * Note: The "deny" message IS shown to Claude, enabling it to learn and adapt.
+ * The graph-first pattern is encouraged via CLAUDE.md guidance, not enforcement.
  */
 
-import {
-  hasKnowledgeToolsBeenUsed,
-  recordGrepBlocked,
-  recordGrepAllowed,
-  getUsageSummary,
-} from "../../packages/claude-knowledge/src/session";
+import { metrics } from "../../packages/claude-knowledge/src/checkpoint/metrics";
 
 interface HookInput {
   tool_name: string;
@@ -36,7 +31,7 @@ interface HookOutput {
 /**
  * Create a hook output response.
  */
-function createOutput(decision: "allow" | "deny", reason?: string): HookOutput {
+function createOutput(decision: "allow", reason?: string): HookOutput {
   return {
     hookSpecificOutput: {
       permissionDecision: decision,
@@ -46,103 +41,23 @@ function createOutput(decision: "allow" | "deny", reason?: string): HookOutput {
 }
 
 /**
- * Check if this Grep/Glob call should be blocked.
+ * Get a session identifier for grouping metrics.
  *
- * Blocking criteria:
- * - No graph queries made yet in this session
- * - No docs searches made yet in this session
+ * Priority:
+ * 1. CLAUDE_SESSION_ID env var (if Claude Code ever provides it)
+ * 2. Date-based ID (groups all tool calls per day)
  *
- * Exceptions (always allow):
- * - Reading specific files (known paths)
- * - Simple directory listings
- * - Searching in .claude/ directory (meta operations)
+ * Using date-based grouping means we can see daily tool selection patterns.
  */
-function shouldBlock(
-  toolName: string,
-  toolInput: Record<string, unknown>,
-): boolean {
-  // Allow if graph or docs have been used
-  if (hasKnowledgeToolsBeenUsed()) {
-    return false;
+function getSessionId(): string {
+  if (process.env.CLAUDE_SESSION_ID) {
+    return process.env.CLAUDE_SESSION_ID;
   }
 
-  // Check for exception patterns
-  const pattern = toolInput.pattern as string | undefined;
-  const path = toolInput.path as string | undefined;
-
-  // Allow .claude/ directory operations (meta operations)
-  if (path?.includes(".claude/") || pattern?.includes(".claude/")) {
-    return false;
-  }
-
-  // Allow specific file types that are unlikely to benefit from graph
-  // (e.g., config files, package.json, README)
-  const configPatterns = [
-    "package.json",
-    "tsconfig.json",
-    "*.config.*",
-    "README*",
-    "CLAUDE.md",
-    ".env*",
-    "*.lock",
-  ];
-
-  if (pattern) {
-    const isConfigPattern = configPatterns.some((cfg) => {
-      // IMPORTANT: Escape dots FIRST, then replace asterisks with .*
-      // Wrong order would escape the dot in .* causing broken regex
-      const regex = new RegExp(
-        "^" + cfg.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$",
-        "i",
-      );
-      return regex.test(pattern);
-    });
-    if (isConfigPattern) return false;
-  }
-
-  // Block by default if no graph/docs queries made
-  return true;
-}
-
-/**
- * Generate the deny message with helpful guidance.
- */
-function generateDenyMessage(
-  toolName: string,
-  toolInput: Record<string, unknown>,
-): string {
-  const pattern = toolInput.pattern as string | undefined;
-  const query = toolInput.query as string | undefined;
-
-  const searchTarget = pattern || query || "unknown";
-
-  return `
-🚫 **Graph-First Required**
-
-Before using ${toolName}, try these graph tools first:
-
-\`\`\`bash
-# Find entities by name
-bun run g:find "${searchTarget}"
-
-# Find what calls a function
-bun run g:calls "${searchTarget}"
-
-# Find dependencies of an entity
-bun run g:deps "${searchTarget}"
-
-# Search documentation
-bun run d:search "${searchTarget}"
-\`\`\`
-
-**Why?**
-- Graph queries: 1 call, ~500 tokens, AST-precise
-- Grep/Glob: 3-10 calls, 2000-8000 tokens, text-based
-
-After running a graph query, ${toolName} will be allowed.
-
-${getUsageSummary()}
-`.trim();
+  // Use date-based session ID (YYYY-MM-DD format)
+  // This groups all tool calls for a day together
+  const today = new Date();
+  return `daily-${today.toISOString().split("T")[0]}`;
 }
 
 /**
@@ -163,23 +78,17 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { tool_name, tool_input } = hookInput;
+  const { tool_name } = hookInput;
+  const sessionId = getSessionId();
 
-  if (shouldBlock(tool_name, tool_input)) {
-    try {
-      recordGrepBlocked();
-    } catch {
-      // Non-critical - metrics only
-    }
-    output(createOutput("deny", generateDenyMessage(tool_name, tool_input)));
-    return;
-  }
-
+  // Log the tool usage for metrics (non-blocking, fire-and-forget)
   try {
-    recordGrepAllowed();
+    metrics.logToolUsage(sessionId, tool_name);
   } catch {
-    // Non-critical - metrics only
+    // Non-critical - don't block tool usage if metrics fail
   }
+
+  // Always allow - we're observing, not blocking
   output(createOutput("allow"));
 }
 

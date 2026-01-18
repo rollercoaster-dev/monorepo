@@ -9,7 +9,6 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { knowledge } from "../../knowledge/index.js";
 import type { Learning, QueryContext } from "../../types.js";
 import type { SearchSimilarOptions } from "../../knowledge/semantic.js";
-import { recordDocsSearch } from "../../session/index.js";
 
 /**
  * Tool definitions for knowledge operations.
@@ -143,11 +142,6 @@ export async function handleKnowledgeToolCall(
 
         const results = await knowledge.query(context);
 
-        // Record usage for PreToolUse hook (unlocks Grep/Glob)
-        const queryDesc =
-          context.keywords?.join(" ") || context.codeArea || "query";
-        recordDocsSearch(queryDesc, results.length);
-
         if (results.length === 0) {
           return {
             content: [
@@ -272,9 +266,6 @@ export async function handleKnowledgeToolCall(
         };
 
         const results = await knowledge.searchSimilar(query, options);
-
-        // Record usage for PreToolUse hook (unlocks Grep/Glob)
-        recordDocsSearch(query, results.length);
 
         if (results.length === 0) {
           return {
