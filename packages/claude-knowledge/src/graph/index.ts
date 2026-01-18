@@ -30,7 +30,14 @@ export * from "./types";
 export { parsePackage } from "./parser";
 
 // Storage
-export { storeGraph, storeCodeDocs, clearPackage } from "./store";
+export {
+  storeGraph,
+  storeCodeDocs,
+  clearPackage,
+  getStoredFileMetadata,
+  updateFileMetadata,
+  deleteFileMetadata,
+} from "./store";
 
 // Query
 export {

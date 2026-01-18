@@ -10,6 +10,9 @@ import {
   parsePackage,
   storeGraph,
   storeCodeDocs,
+  getStoredFileMetadata,
+  updateFileMetadata,
+  deleteFileMetadata,
   whatCalls,
   whatDependsOn,
   blastRadius,
@@ -18,8 +21,11 @@ import {
   getCallers,
   getSummary,
 } from "../graph";
+import { findTsFiles, derivePackageName } from "../graph/parser";
 import { metrics } from "../checkpoint/metrics";
 import { recordGraphQuery } from "../session";
+import { statSync } from "fs";
+import { relative } from "path";
 
 /**
  * Log a graph query for metrics tracking and session state.
@@ -67,29 +73,137 @@ export async function handleGraphCommands(
   command: string,
   args: string[],
 ): Promise<void> {
-  // Parse --quiet flag for suppressing verbose output (useful for hooks)
+  // Parse flags
   const quiet = args.includes("--quiet");
-  const filteredArgs = args.filter((arg) => arg !== "--quiet");
+  const incremental = args.includes("--incremental");
+  const filteredArgs = args.filter(
+    (arg) => arg !== "--quiet" && arg !== "--incremental",
+  );
 
   if (command === "parse") {
-    // Usage: graph parse <package-path> [package-name] [--quiet]
+    // Usage: graph parse <package-path> [package-name] [--quiet] [--incremental]
     const packagePath = filteredArgs[0];
-    const packageName = filteredArgs[1];
+    let packageName = filteredArgs[1];
     if (!packagePath) {
       throw new Error(
-        "Usage: graph parse <package-path> [package-name] [--quiet]",
+        "Usage: graph parse <package-path> [package-name] [--quiet] [--incremental]",
       );
     }
 
-    if (!quiet) logger.info(`Parsing package: ${packagePath}`);
-    const parseResult = parsePackage(packagePath, packageName);
+    // Derive package name if not provided
+    if (!packageName) {
+      packageName = derivePackageName(packagePath);
+    }
+
+    let filesChanged = 0;
+    let filesDeleted = 0;
+    let filesUnchanged = 0;
+    let changedFiles: string[] | undefined;
+    let deletedFiles: string[] = [];
+
+    if (incremental) {
+      // Get stored file metadata
+      const storedMetadata = getStoredFileMetadata(packageName);
+
+      // Find current TypeScript files
+      const currentFiles = findTsFiles(packagePath);
+      const currentFilesSet = new Set(currentFiles);
+
+      // Determine changed files
+      changedFiles = currentFiles.filter((file) => {
+        const relativePath = relative(packagePath, file);
+        const stored = storedMetadata.get(relativePath);
+        if (!stored) {
+          // New file
+          return true;
+        }
+        try {
+          const currentMtime = statSync(file).mtimeMs;
+          return currentMtime > stored.mtimeMs; // Modified
+        } catch {
+          // File read error - reparse
+          return true;
+        }
+      });
+
+      // Determine deleted files
+      deletedFiles = Array.from(storedMetadata.keys()).filter((filePath) => {
+        // Convert relative path back to absolute for checking
+        const absolutePath = `${packagePath}/${filePath}`;
+        return !currentFilesSet.has(absolutePath);
+      });
+
+      filesChanged = changedFiles.length;
+      filesDeleted = deletedFiles.length;
+      filesUnchanged = currentFiles.length - changedFiles.length;
+
+      // Early exit if no changes
+      if (filesChanged === 0 && filesDeleted === 0) {
+        process.stdout.write(
+          JSON.stringify(
+            {
+              command: "parse",
+              incremental: true,
+              status: "no-changes",
+              packagePath,
+              packageName,
+              filesChanged: 0,
+              filesDeleted: 0,
+              filesUnchanged,
+            },
+            null,
+            2,
+          ) + "\n",
+        );
+        return;
+      }
+
+      if (!quiet) {
+        logger.info(
+          `Incremental parse: ${filesChanged} changed, ${filesDeleted} deleted, ${filesUnchanged} unchanged`,
+        );
+      }
+
+      // Delete metadata for deleted files
+      if (deletedFiles.length > 0) {
+        deleteFileMetadata(packageName, deletedFiles);
+      }
+    }
+
+    // Parse (full or incremental)
+    if (!quiet && !incremental) logger.info(`Parsing package: ${packagePath}`);
+    const parseResult = parsePackage(packagePath, packageName, {
+      files: changedFiles,
+    });
 
     if (!quiet) {
       logger.info(`Found ${parseResult.entities.length} entities`);
       logger.info(`Found ${parseResult.relationships.length} relationships`);
       logger.info(`Storing graph data for package: ${parseResult.package}`);
     }
-    const storeResult = storeGraph(parseResult, parseResult.package);
+
+    // Store (full or incremental)
+    const storeResult = storeGraph(parseResult, parseResult.package, {
+      incremental,
+      deletedFiles: deletedFiles.length > 0 ? deletedFiles : undefined,
+    });
+
+    // Update file metadata for changed files
+    if (incremental && changedFiles) {
+      for (const file of changedFiles) {
+        const relativePath = relative(packagePath, file);
+        try {
+          const mtime = statSync(file).mtimeMs;
+          // Count entities for this file
+          const entityCount = parseResult.entities.filter(
+            (e) => e.filePath === relativePath,
+          ).length;
+          updateFileMetadata(packageName, relativePath, mtime, entityCount);
+        } catch (error) {
+          logger.warn(`Failed to update metadata for ${file}`, { error });
+        }
+      }
+    }
 
     // Create CodeDoc entities with embeddings for semantic search
     // This enables "what does this function do?" queries
@@ -97,23 +211,26 @@ export async function handleGraphCommands(
 
     // Always output final JSON (allows hooks to detect success/failure)
     // Use stdout.write to avoid logger formatting that would corrupt JSON
-    process.stdout.write(
-      JSON.stringify(
-        {
-          command: "parse",
-          packagePath,
-          packageName: parseResult.package,
-          ...parseResult.stats,
-          stored: {
-            entities: storeResult.entitiesStored,
-            relationships: storeResult.relationshipsStored,
-            codeDocs: codeDocResult.codeDocsCreated,
-          },
-        },
-        null,
-        2,
-      ) + "\n",
-    );
+    const output: Record<string, unknown> = {
+      command: "parse",
+      packagePath,
+      packageName: parseResult.package,
+      ...parseResult.stats,
+      stored: {
+        entities: storeResult.entitiesStored,
+        relationships: storeResult.relationshipsStored,
+        codeDocs: codeDocResult.codeDocsCreated,
+      },
+    };
+
+    if (incremental) {
+      output.incremental = true;
+      output.filesChanged = filesChanged;
+      output.filesDeleted = filesDeleted;
+      output.filesUnchanged = filesUnchanged;
+    }
+
+    process.stdout.write(JSON.stringify(output, null, 2) + "\n");
   } else if (command === "what-calls") {
     // Usage: graph what-calls <name>
     const name = filteredArgs[0];
