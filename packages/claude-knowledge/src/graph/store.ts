@@ -9,7 +9,7 @@ import { getDatabase } from "../db/sqlite";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import { createOrMergeEntity, generateEmbedding } from "../knowledge/helpers";
 import type { CodeDoc } from "../types";
-import type { ParseResult, StoreResult, Entity } from "./types";
+import type { ParseResult, StoreResult, Entity, FileMetadata } from "./types";
 
 /** Error information for failed insert operations */
 interface InsertError {
@@ -302,4 +302,97 @@ export async function storeCodeDocs(
     });
     throw error;
   }
+}
+
+/**
+ * Get stored file metadata for a package.
+ * Returns a map of file paths to metadata for quick lookups during incremental parsing.
+ *
+ * @param packageName - Package name to query
+ * @returns Map where key=file path, value=FileMetadata
+ */
+export function getStoredFileMetadata(
+  packageName: string,
+): Map<string, FileMetadata> {
+  const db = getDatabase();
+
+  const rows = db
+    .query<
+      {
+        file_path: string;
+        package: string;
+        mtime_ms: number;
+        last_parsed: string;
+        entity_count: number;
+      },
+      [string]
+    >(
+      `SELECT file_path, package, mtime_ms, last_parsed, entity_count
+       FROM graph_file_metadata
+       WHERE package = ?`,
+    )
+    .all(packageName);
+
+  const metadataMap = new Map<string, FileMetadata>();
+  for (const row of rows) {
+    metadataMap.set(row.file_path, {
+      filePath: row.file_path,
+      package: row.package,
+      mtimeMs: row.mtime_ms,
+      lastParsed: row.last_parsed,
+      entityCount: row.entity_count,
+    });
+  }
+
+  return metadataMap;
+}
+
+/**
+ * Update file metadata after successfully parsing a file.
+ * Used by incremental parsing to track parse state.
+ *
+ * @param packageName - Package name
+ * @param filePath - File path relative to package root
+ * @param mtimeMs - File modification time in milliseconds
+ * @param entityCount - Number of entities extracted from this file
+ */
+export function updateFileMetadata(
+  packageName: string,
+  filePath: string,
+  mtimeMs: number,
+  entityCount: number,
+): void {
+  const db = getDatabase();
+
+  db.prepare(
+    `INSERT OR REPLACE INTO graph_file_metadata
+     (file_path, package, mtime_ms, last_parsed, entity_count)
+     VALUES (?, ?, ?, ?, ?)`,
+  ).run(filePath, packageName, mtimeMs, new Date().toISOString(), entityCount);
+}
+
+/**
+ * Delete file metadata for removed files.
+ * Used during incremental parsing when files are deleted from the filesystem.
+ *
+ * @param packageName - Package name
+ * @param filePaths - Array of file paths to delete
+ */
+export function deleteFileMetadata(
+  packageName: string,
+  filePaths: string[],
+): void {
+  if (filePaths.length === 0) {
+    return;
+  }
+
+  const db = getDatabase();
+
+  // Build placeholders for IN clause
+  const placeholders = filePaths.map(() => "?").join(",");
+
+  db.prepare(
+    `DELETE FROM graph_file_metadata
+     WHERE package = ? AND file_path IN (${placeholders})`,
+  ).run(packageName, ...filePaths);
 }
