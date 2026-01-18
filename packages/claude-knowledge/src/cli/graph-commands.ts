@@ -407,7 +407,10 @@ export async function handleGraphCommands(
     throw new Error(
       `Unknown graph command: ${command}\n` +
         `Available commands:\n` +
-        `  parse <path> [name]    - Parse a package and store graph data\n` +
+        `  parse <path> [name] [--incremental] [--quiet]\n` +
+        `    - Parse a package and store graph data\n` +
+        `    - --incremental: Only parse files that changed since last parse\n` +
+        `    - --quiet: Suppress verbose logging\n` +
         `  what-calls <name>      - Find what calls the specified function\n` +
         `  what-depends-on <name> - Find dependencies on an entity\n` +
         `  blast-radius <file>    - Find entities affected by changes to a file\n` +
