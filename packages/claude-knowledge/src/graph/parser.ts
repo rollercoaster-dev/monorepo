@@ -17,6 +17,7 @@ import type {
   ParseResult,
   ParseStats,
   IncrementalParseOptions,
+  MonorepoParseResult,
 } from "./types";
 
 /**
@@ -50,18 +51,49 @@ export function makeFileId(packageName: string, filePath: string): string {
 }
 
 /**
- * Derive package name from path.
- * e.g., "packages/rd-logger/src" -> "rd-logger"
+ * Derive package name from a file path within a monorepo.
+ * Extracts the package/app name from paths like:
+ * - "packages/rd-logger/src/index.ts" -> "rd-logger"
+ * - "apps/openbadges-server/src/api/routes.ts" -> "openbadges-server"
+ *
+ * @param filePath - File path (can be relative or absolute)
+ * @returns Package name extracted from path
+ */
+export function derivePackageNameFromFile(filePath: string): string {
+  const normalized = filePath.replace(/\\/g, "/");
+
+  // Match packages/<name>/... or apps/<name>/...
+  const match = normalized.match(/(?:packages|apps)\/([^/]+)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  return "unknown";
+}
+
+/**
+ * Derive package name from a package root path.
+ * e.g., "packages/rd-logger" -> "rd-logger"
+ *
+ * For container directories (packages/, apps/), returns the directory name
+ * which signals that files should be grouped by their individual package paths.
  */
 export function derivePackageName(packagePath: string): string {
-  const parts = packagePath.replace(/\\/g, "/").split("/");
-  // Look for "packages/X" pattern
+  const parts = packagePath.replace(/\\/g, "/").split("/").filter(Boolean);
+  const lastPart = parts[parts.length - 1];
+
+  // Look for "packages/X" or "apps/X" pattern
   const packagesIdx = parts.indexOf("packages");
   if (packagesIdx !== -1 && parts.length > packagesIdx + 1) {
     return parts[packagesIdx + 1];
   }
-  // Fallback: use the directory name
-  return parts.filter(Boolean).pop() || "unknown";
+  const appsIdx = parts.indexOf("apps");
+  if (appsIdx !== -1 && parts.length > appsIdx + 1) {
+    return parts[appsIdx + 1];
+  }
+
+  // Fallback: use the directory name (for standalone repos or container dirs)
+  return lastPart || "unknown";
 }
 
 /**
@@ -996,5 +1028,270 @@ export function parsePackage(
     entities: allEntities,
     relationships: allRelationships,
     stats,
+  };
+}
+
+/**
+ * Discover all package directories in a monorepo.
+ * Looks for directories in packages/ and apps/ that contain a package.json.
+ *
+ * @param rootPath - Path to the monorepo root
+ * @returns Array of { name, path } for each discovered package
+ */
+export function discoverPackages(
+  rootPath: string,
+): Array<{ name: string; path: string }> {
+  const packages: Array<{ name: string; path: string }> = [];
+
+  for (const container of ["packages", "apps"]) {
+    const containerPath = join(rootPath, container);
+    try {
+      const entries = readdirSync(containerPath);
+      for (const entry of entries) {
+        const pkgPath = join(containerPath, entry);
+        try {
+          const stat = statSync(pkgPath);
+          if (stat.isDirectory()) {
+            // Verify it's a package by checking for package.json
+            try {
+              statSync(join(pkgPath, "package.json"));
+              packages.push({ name: entry, path: pkgPath });
+            } catch {
+              // No package.json - skip
+            }
+          }
+        } catch {
+          // Can't stat - skip
+        }
+      }
+    } catch {
+      // Container doesn't exist - skip
+    }
+  }
+
+  return packages;
+}
+
+/**
+ * Parse an entire monorepo, extracting entities and relationships across all packages.
+ * Uses a single ts-morph Project to enable cross-package relationship resolution.
+ *
+ * @param rootPath - Path to the monorepo root (directory containing packages/ and/or apps/)
+ * @returns MonorepoParseResult with entities grouped by package
+ *
+ * @example
+ * const result = parseMonorepo("/path/to/monorepo");
+ * for (const [pkgName, pkgResult] of result.packages) {
+ *   storeGraph(pkgResult, pkgName);
+ * }
+ */
+export function parseMonorepo(rootPath: string): MonorepoParseResult {
+  const packages = discoverPackages(rootPath);
+
+  if (packages.length === 0) {
+    logger.warn("No packages found in monorepo", { rootPath });
+    return {
+      packages: new Map(),
+      stats: {
+        totalFiles: 0,
+        totalEntities: 0,
+        totalRelationships: 0,
+        packagesFound: [],
+      },
+    };
+  }
+
+  logger.info(`Discovered ${packages.length} packages`, {
+    packages: packages.map((p) => p.name),
+  });
+
+  // Create a single ts-morph Project for cross-package resolution
+  const project = new Project({
+    skipAddingFilesFromTsConfig: true,
+  });
+
+  // Collect all files across all packages
+  const allFiles: Array<{ file: string; pkgName: string; pkgPath: string }> =
+    [];
+  const vueFileMapping = new Map<
+    string,
+    { original: string; pkgName: string }
+  >();
+  const parseErrors: Array<{ file: string; error: string }> = [];
+
+  for (const pkg of packages) {
+    const tsFiles = findTsFiles(pkg.path);
+
+    for (const file of tsFiles) {
+      try {
+        if (file.endsWith(".vue")) {
+          const vueScript = extractVueScript(file);
+          if (vueScript) {
+            const absoluteFile = resolve(file);
+            const virtualPath = `${absoluteFile}.ts`;
+            project.createSourceFile(virtualPath, vueScript.content);
+            vueFileMapping.set(virtualPath, {
+              original: relative(pkg.path, file),
+              pkgName: pkg.name,
+            });
+          }
+        } else {
+          project.addSourceFileAtPath(file);
+        }
+        allFiles.push({ file, pkgName: pkg.name, pkgPath: pkg.path });
+      } catch (error) {
+        parseErrors.push({
+          file,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  if (parseErrors.length > 0) {
+    logger.warn(`${parseErrors.length} file(s) failed to load`, {
+      errors: parseErrors.slice(0, 5),
+    });
+  }
+
+  // Build a map of absolute path -> package info for lookup
+  const filePackageMap = new Map<
+    string,
+    { pkgName: string; pkgPath: string }
+  >();
+  for (const { file, pkgName, pkgPath } of allFiles) {
+    filePackageMap.set(resolve(file), { pkgName, pkgPath });
+  }
+
+  // First pass: extract all entities, grouped by package
+  const entitiesByPackage = new Map<string, Entity[]>();
+  const allEntities: Entity[] = [];
+
+  for (const sourceFile of project.getSourceFiles()) {
+    const sourceFilePath = sourceFile.getFilePath();
+    const vueInfo = vueFileMapping.get(sourceFilePath);
+
+    let pkgName: string;
+    let pkgPath: string;
+    let relativeFilePath: string;
+
+    if (vueInfo) {
+      // Vue file - use stored mapping
+      pkgName = vueInfo.pkgName;
+      const pkg = packages.find((p) => p.name === pkgName);
+      pkgPath = pkg?.path || rootPath;
+      relativeFilePath = vueInfo.original;
+    } else {
+      // Regular TS file - look up by absolute path
+      const fileInfo = filePackageMap.get(sourceFilePath);
+      if (!fileInfo) {
+        // File not in any package (shouldn't happen)
+        continue;
+      }
+      pkgName = fileInfo.pkgName;
+      pkgPath = fileInfo.pkgPath;
+      relativeFilePath = relative(pkgPath, sourceFilePath);
+    }
+
+    const entities = extractEntities(
+      sourceFile,
+      pkgPath,
+      pkgName,
+      vueInfo ? relativeFilePath : undefined,
+    );
+
+    // Group by package
+    const existing = entitiesByPackage.get(pkgName) || [];
+    existing.push(...entities);
+    entitiesByPackage.set(pkgName, existing);
+    allEntities.push(...entities);
+  }
+
+  // Build lookup map from ALL entities for cross-package resolution
+  const entityLookupMap = buildEntityLookupMap(allEntities);
+
+  // Second pass: extract relationships with cross-package awareness
+  const relationshipsByPackage = new Map<string, Relationship[]>();
+
+  for (const sourceFile of project.getSourceFiles()) {
+    const sourceFilePath = sourceFile.getFilePath();
+    const vueInfo = vueFileMapping.get(sourceFilePath);
+
+    let pkgName: string;
+    let pkgPath: string;
+    let relativeFilePath: string | undefined;
+
+    if (vueInfo) {
+      pkgName = vueInfo.pkgName;
+      const pkg = packages.find((p) => p.name === pkgName);
+      pkgPath = pkg?.path || rootPath;
+      relativeFilePath = vueInfo.original;
+    } else {
+      const fileInfo = filePackageMap.get(sourceFilePath);
+      if (!fileInfo) continue;
+      pkgName = fileInfo.pkgName;
+      pkgPath = fileInfo.pkgPath;
+    }
+
+    const relationships = extractRelationships(
+      sourceFile,
+      pkgPath,
+      pkgName,
+      entityLookupMap,
+      relativeFilePath,
+    );
+
+    // Group by package (source package)
+    const existing = relationshipsByPackage.get(pkgName) || [];
+    existing.push(...relationships);
+    relationshipsByPackage.set(pkgName, existing);
+  }
+
+  // Build per-package results
+  const results = new Map<string, ParseResult>();
+  let totalEntities = 0;
+  let totalRelationships = 0;
+
+  for (const pkg of packages) {
+    const entities = entitiesByPackage.get(pkg.name) || [];
+    const relationships = relationshipsByPackage.get(pkg.name) || [];
+
+    const entitiesByType: Record<string, number> = {};
+    entities.forEach((e) => {
+      entitiesByType[e.type] = (entitiesByType[e.type] || 0) + 1;
+    });
+
+    const relationshipsByType: Record<string, number> = {};
+    relationships.forEach((r) => {
+      relationshipsByType[r.type] = (relationshipsByType[r.type] || 0) + 1;
+    });
+
+    results.set(pkg.name, {
+      package: pkg.name,
+      entities,
+      relationships,
+      stats: {
+        filesScanned: allFiles.filter((f) => f.pkgName === pkg.name).length,
+        filesSkipped: 0,
+        vueFilesProcessed: [...vueFileMapping.values()].filter(
+          (v) => v.pkgName === pkg.name,
+        ).length,
+        entitiesByType,
+        relationshipsByType,
+      },
+    });
+
+    totalEntities += entities.length;
+    totalRelationships += relationships.length;
+  }
+
+  return {
+    packages: results,
+    stats: {
+      totalFiles: allFiles.length,
+      totalEntities,
+      totalRelationships,
+      packagesFound: packages.map((p) => p.name),
+    },
   };
 }
