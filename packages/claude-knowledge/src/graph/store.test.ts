@@ -387,7 +387,7 @@ describe("store", () => {
 
       // Should have new entities (file + newFunc), not old ones
       expect(indexEntities.length).toBe(2);
-      const names = indexEntities.map((e: any) => e.name);
+      const names = indexEntities.map((e: { name: string }) => e.name);
       expect(names).toContain("newFunc");
       expect(names).not.toContain("greet");
       expect(names).not.toContain("Greeter");

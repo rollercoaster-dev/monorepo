@@ -177,15 +177,3 @@ export interface IncrementalParseOptions {
   /** Package name for metadata lookups */
   package?: string;
 }
-
-/**
- * Result of incremental parsing with change tracking.
- */
-export interface IncrementalParseResult extends ParseResult {
-  /** Number of files changed since last parse */
-  filesChanged: number;
-  /** Number of files deleted since last parse */
-  filesDeleted: number;
-  /** Number of files unchanged (skipped) */
-  filesUnchanged: number;
-}

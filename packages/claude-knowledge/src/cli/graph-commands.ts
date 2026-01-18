@@ -119,7 +119,7 @@ export async function handleGraphCommands(
         }
         try {
           const currentMtime = statSync(file).mtimeMs;
-          return currentMtime > stored.mtimeMs; // Modified
+          return currentMtime !== stored.mtimeMs; // Modified (catches both forward and backward changes)
         } catch {
           // File read error - reparse
           return true;
@@ -163,11 +163,6 @@ export async function handleGraphCommands(
           `Incremental parse: ${filesChanged} changed, ${filesDeleted} deleted, ${filesUnchanged} unchanged`,
         );
       }
-
-      // Delete metadata for deleted files
-      if (deletedFiles.length > 0) {
-        deleteFileMetadata(packageName, deletedFiles);
-      }
     }
 
     // Parse (full or incremental)
@@ -187,6 +182,11 @@ export async function handleGraphCommands(
       incremental,
       deletedFiles: deletedFiles.length > 0 ? deletedFiles : undefined,
     });
+
+    // Delete metadata for deleted files (after successful store)
+    if (incremental && deletedFiles.length > 0) {
+      deleteFileMetadata(packageName, deletedFiles);
+    }
 
     // Update file metadata for changed files
     if (incremental && changedFiles) {
