@@ -739,5 +739,21 @@ export function oldGreet(): string {
       expect(formatDateFn).toBeDefined();
       expect(formatDateFn?.filePath).toBe("component.vue");
     });
+
+    it("parsePackage uses original .vue paths, not virtual .vue.ts paths", () => {
+      const result = parsePackage(FIXTURES_DIR, "test-pkg");
+
+      // No entity should have .vue.ts in the path (that's the virtual path)
+      const virtualPathEntities = result.entities.filter((e) =>
+        e.filePath.includes(".vue.ts"),
+      );
+      expect(virtualPathEntities.length).toBe(0);
+
+      // No relationship should reference .vue.ts paths
+      const virtualPathRelationships = result.relationships.filter(
+        (r) => r.from.includes(".vue.ts") || r.to.includes(".vue.ts"),
+      );
+      expect(virtualPathRelationships.length).toBe(0);
+    });
   });
 });

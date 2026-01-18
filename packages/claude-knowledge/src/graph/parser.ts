@@ -8,7 +8,7 @@
 import { Project, SyntaxKind } from "ts-morph";
 import type { SourceFile, Node, JSDoc } from "ts-morph";
 import { readdirSync, statSync, readFileSync } from "fs";
-import { join, relative, dirname } from "path";
+import { join, relative, dirname, resolve } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import { parse as parseVueSFC } from "@vue/compiler-sfc";
 import type {
@@ -913,7 +913,9 @@ export function parsePackage(
         const vueScript = extractVueScript(file);
         if (vueScript) {
           // Create virtual TypeScript file for ts-morph
-          const virtualPath = `${file}.ts`;
+          // Use absolute path so it matches sourceFile.getFilePath()
+          const absoluteFile = resolve(file);
+          const virtualPath = `${absoluteFile}.ts`;
           project.createSourceFile(virtualPath, vueScript.content);
           vueFileMapping.set(virtualPath, relative(packagePath, file));
           vueFilesProcessed++;
