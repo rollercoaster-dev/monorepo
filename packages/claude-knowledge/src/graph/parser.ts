@@ -1051,8 +1051,10 @@ export function discoverPackages(
           if (stat.isDirectory()) {
             // Verify it's a package by checking for package.json
             try {
-              statSync(join(pkgPath, "package.json"));
-              packages.push({ name: entry, path: pkgPath });
+              const pkgJsonPath = join(pkgPath, "package.json");
+              const pkgJson = JSON.parse(readFileSync(pkgJsonPath, "utf-8"));
+              // Use actual package name from package.json, fall back to directory name
+              packages.push({ name: pkgJson.name || entry, path: pkgPath });
             } catch (error) {
               // Only silently skip ENOENT (no package.json)
               if (!isNotFoundError(error)) {
