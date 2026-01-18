@@ -201,6 +201,18 @@ CREATE TABLE IF NOT EXISTS doc_index (
 -- Indexes for document indexing lookups
 CREATE INDEX IF NOT EXISTS idx_doc_index_hash ON doc_index(content_hash);
 
+-- Graph file metadata for incremental parsing
+CREATE TABLE IF NOT EXISTS graph_file_metadata (
+  file_path TEXT PRIMARY KEY,
+  package TEXT NOT NULL,
+  mtime_ms INTEGER NOT NULL,
+  last_parsed TEXT NOT NULL,
+  entity_count INTEGER DEFAULT 0
+);
+
+-- Indexes for graph file metadata lookups
+CREATE INDEX IF NOT EXISTS idx_graph_file_metadata_package ON graph_file_metadata(package, mtime_ms);
+
 -- External documentation cache (for fetched specs like OB2, OB3, VC)
 CREATE TABLE IF NOT EXISTS external_docs (
   url TEXT PRIMARY KEY,

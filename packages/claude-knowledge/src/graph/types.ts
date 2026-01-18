@@ -150,3 +150,30 @@ export interface GraphSummary {
   /** Packages in the graph */
   packages: Array<{ name: string; entityCount: number }>;
 }
+
+/**
+ * File metadata for incremental parsing.
+ * Tracks parse state per file to enable change detection.
+ */
+export interface FileMetadata {
+  /** File path relative to package root */
+  filePath: string;
+  /** Package name */
+  package: string;
+  /** File modification time in milliseconds */
+  mtimeMs: number;
+  /** ISO timestamp of last successful parse */
+  lastParsed: string;
+  /** Number of entities extracted from this file */
+  entityCount: number;
+}
+
+/**
+ * Options for incremental parsing.
+ */
+export interface IncrementalParseOptions {
+  /** Only parse these specific files (filtered list) */
+  files?: string[];
+  /** Package name for metadata lookups */
+  package?: string;
+}

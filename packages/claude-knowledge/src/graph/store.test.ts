@@ -4,7 +4,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { storeGraph, clearPackage } from "./store";
+import {
+  storeGraph,
+  clearPackage,
+  getStoredFileMetadata,
+  updateFileMetadata,
+  deleteFileMetadata,
+} from "./store";
 import { getDatabase, resetDatabase, closeDatabase } from "../db/sqlite";
 import type { ParseResult } from "./types";
 import { unlink, mkdir } from "fs/promises";
@@ -237,6 +243,198 @@ describe("store", () => {
     it("handles non-existent package gracefully", () => {
       // Should not throw
       expect(() => clearPackage("non-existent")).not.toThrow();
+    });
+  });
+
+  describe("file metadata", () => {
+    it("stores and retrieves file metadata", () => {
+      const now = Date.now();
+      updateFileMetadata("test-pkg", "src/index.ts", now, 5);
+
+      const metadata = getStoredFileMetadata("test-pkg");
+      expect(metadata.size).toBe(1);
+      expect(metadata.get("src/index.ts")).toBeDefined();
+      expect(metadata.get("src/index.ts")?.mtimeMs).toBe(now);
+      expect(metadata.get("src/index.ts")?.entityCount).toBe(5);
+    });
+
+    it("updates existing file metadata", () => {
+      const time1 = Date.now();
+      updateFileMetadata("test-pkg", "src/index.ts", time1, 5);
+
+      const time2 = time1 + 1000;
+      updateFileMetadata("test-pkg", "src/index.ts", time2, 7);
+
+      const metadata = getStoredFileMetadata("test-pkg");
+      expect(metadata.size).toBe(1);
+      expect(metadata.get("src/index.ts")?.mtimeMs).toBe(time2);
+      expect(metadata.get("src/index.ts")?.entityCount).toBe(7);
+    });
+
+    it("deletes file metadata", () => {
+      const now = Date.now();
+      updateFileMetadata("test-pkg", "src/index.ts", now, 5);
+      updateFileMetadata("test-pkg", "src/utils.ts", now, 3);
+
+      deleteFileMetadata("test-pkg", ["src/index.ts"]);
+
+      const metadata = getStoredFileMetadata("test-pkg");
+      expect(metadata.size).toBe(1);
+      expect(metadata.has("src/index.ts")).toBe(false);
+      expect(metadata.has("src/utils.ts")).toBe(true);
+    });
+
+    it("returns empty map for unknown package", () => {
+      const metadata = getStoredFileMetadata("unknown");
+      expect(metadata.size).toBe(0);
+    });
+  });
+
+  describe("incremental storage", () => {
+    it("preserves existing entities when incremental=true", () => {
+      // Store initial data with 2 files
+      const initial = createTestParseResult("test-pkg");
+      storeGraph(initial, "test-pkg");
+
+      const db = getDatabase();
+      const initialCount = db
+        .query("SELECT COUNT(*) as count FROM graph_entities WHERE package = ?")
+        .get("test-pkg") as { count: number };
+
+      // Create data for just one file (incremental update)
+      const incremental: ParseResult = {
+        package: "test-pkg",
+        entities: [
+          {
+            id: "test-pkg:src/new.ts:file:src/new.ts",
+            type: "file",
+            name: "src/new.ts",
+            filePath: "src/new.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "test-pkg:src/new.ts:function:newFunc",
+            type: "function",
+            name: "newFunc",
+            filePath: "src/new.ts",
+            lineNumber: 5,
+            exported: true,
+          },
+        ],
+        relationships: [],
+        stats: {
+          filesScanned: 1,
+          filesSkipped: 0,
+          entitiesByType: { file: 1, function: 1 },
+          relationshipsByType: {},
+        },
+      };
+
+      storeGraph(incremental, "test-pkg", { incremental: true });
+
+      const afterCount = db
+        .query("SELECT COUNT(*) as count FROM graph_entities WHERE package = ?")
+        .get("test-pkg") as { count: number };
+
+      // Should have initial entities + new entities
+      expect(afterCount.count).toBe(initialCount.count + 2);
+    });
+
+    it("deletes entities for reparsed files in incremental mode", () => {
+      // Store initial data
+      const initial = createTestParseResult("test-pkg");
+      storeGraph(initial, "test-pkg");
+
+      // Update one file (src/index.ts) with different entities
+      const updated: ParseResult = {
+        package: "test-pkg",
+        entities: [
+          {
+            id: "test-pkg:src/index.ts:file:src/index.ts",
+            type: "file",
+            name: "src/index.ts",
+            filePath: "src/index.ts",
+            lineNumber: 1,
+            exported: true,
+          },
+          {
+            id: "test-pkg:src/index.ts:function:newFunc",
+            type: "function",
+            name: "newFunc",
+            filePath: "src/index.ts",
+            lineNumber: 5,
+            exported: true,
+          },
+        ],
+        relationships: [],
+        stats: {
+          filesScanned: 1,
+          filesSkipped: 0,
+          entitiesByType: { file: 1, function: 1 },
+          relationshipsByType: {},
+        },
+      };
+
+      storeGraph(updated, "test-pkg", { incremental: true });
+
+      const db = getDatabase();
+      const indexEntities = db
+        .query(
+          "SELECT * FROM graph_entities WHERE package = ? AND file_path = ?",
+        )
+        .all("test-pkg", "src/index.ts");
+
+      // Should have new entities (file + newFunc), not old ones
+      expect(indexEntities.length).toBe(2);
+      const names = indexEntities.map((e: { name: string }) => e.name);
+      expect(names).toContain("newFunc");
+      expect(names).not.toContain("greet");
+      expect(names).not.toContain("Greeter");
+    });
+
+    it("deletes entities for deleted files", () => {
+      // Store initial data
+      const initial = createTestParseResult("test-pkg");
+      storeGraph(initial, "test-pkg");
+
+      const db = getDatabase();
+      const beforeCount = db
+        .query("SELECT COUNT(*) as count FROM graph_entities WHERE package = ?")
+        .get("test-pkg") as { count: number };
+
+      // Store empty result but mark src/index.ts as deleted
+      const empty: ParseResult = {
+        package: "test-pkg",
+        entities: [],
+        relationships: [],
+        stats: {
+          filesScanned: 0,
+          filesSkipped: 0,
+          entitiesByType: {},
+          relationshipsByType: {},
+        },
+      };
+
+      storeGraph(empty, "test-pkg", {
+        incremental: true,
+        deletedFiles: ["src/index.ts"],
+      });
+
+      const afterCount = db
+        .query("SELECT COUNT(*) as count FROM graph_entities WHERE package = ?")
+        .get("test-pkg") as { count: number };
+
+      // Should have fewer entities (deleted src/index.ts entities)
+      expect(afterCount.count).toBeLessThan(beforeCount.count);
+
+      // Verify specific file entities were deleted
+      const indexEntities = db
+        .query(
+          "SELECT * FROM graph_entities WHERE package = ? AND file_path = ?",
+        )
+        .all("test-pkg", "src/index.ts");
+      expect(indexEntities.length).toBe(0);
     });
   });
 });

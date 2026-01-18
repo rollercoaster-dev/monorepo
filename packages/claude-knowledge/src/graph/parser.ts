@@ -10,7 +10,13 @@ import type { SourceFile, Node, JSDoc } from "ts-morph";
 import { readdirSync, statSync } from "fs";
 import { join, relative, dirname } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
-import type { Entity, Relationship, ParseResult, ParseStats } from "./types";
+import type {
+  Entity,
+  Relationship,
+  ParseResult,
+  ParseStats,
+  IncrementalParseOptions,
+} from "./types";
 
 /**
  * Generate a globally unique ID for an entity.
@@ -806,11 +812,23 @@ export function extractJsDocContent(node: {
  *
  * @param packagePath - Path to the package source directory
  * @param packageName - Optional package name (derived from path if not provided)
+ * @param options - Optional incremental parsing options
  * @returns ParseResult with entities, relationships, and statistics
+ *
+ * @example
+ * // Full parse
+ * const result = parsePackage("packages/my-pkg");
+ *
+ * @example
+ * // Incremental parse (only specific files)
+ * const result = parsePackage("packages/my-pkg", "my-pkg", {
+ *   files: ["src/foo.ts", "src/bar.ts"]
+ * });
  */
 export function parsePackage(
   packagePath: string,
   packageName?: string,
+  options?: IncrementalParseOptions,
 ): ParseResult {
   // Derive package name once and pass explicitly (no global state)
   const pkgName = packageName || derivePackageName(packagePath);
@@ -819,7 +837,8 @@ export function parsePackage(
     skipAddingFilesFromTsConfig: true,
   });
 
-  const tsFiles = findTsFiles(packagePath);
+  // Use filtered file list if provided, otherwise find all TypeScript files
+  const tsFiles = options?.files || findTsFiles(packagePath);
   const parseErrors: Array<{ file: string; error: string }> = [];
   let filesSkipped = 0;
 
