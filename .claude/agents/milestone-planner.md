@@ -9,7 +9,7 @@ model: sonnet
 
 ## Tool Selection (MANDATORY)
 
-**Use code graph to detect conflicts between issues.** See [tool-selection.md](../shared/tool-selection.md).
+**Use code graph to detect conflicts between issues.** See [tool-selection.md](../docs/tool-selection.md).
 
 ```
 ┌─────────────────────────────────────────────────────────┐

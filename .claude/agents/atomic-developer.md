@@ -48,7 +48,7 @@ model: sonnet
 
 This agent uses patterns from [shared/](../shared/):
 
-- **[tool-selection.md](../shared/tool-selection.md)** - **REQUIRED: Tool priority order**
+- **[tool-selection.md](../docs/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
 - **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint commands
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
@@ -65,7 +65,7 @@ Use these skills for codebase exploration and workflow tracking:
 
 ## Tool Selection (MANDATORY)
 
-**ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../shared/tool-selection.md).
+**ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../docs/tool-selection.md).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
