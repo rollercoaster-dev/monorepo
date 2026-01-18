@@ -7,9 +7,10 @@
 
 import { Project, SyntaxKind } from "ts-morph";
 import type { SourceFile, Node, JSDoc } from "ts-morph";
-import { readdirSync, statSync } from "fs";
+import { readdirSync, statSync, readFileSync } from "fs";
 import { join, relative, dirname } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { parse as parseVueSFC } from "@vue/compiler-sfc";
 import type {
   Entity,
   Relationship,
@@ -64,11 +65,11 @@ export function derivePackageName(packagePath: string): string {
 }
 
 /**
- * Find all TypeScript files recursively, excluding test files.
+ * Find all TypeScript and Vue SFC files recursively, excluding test files.
  * Handles filesystem errors gracefully by logging and continuing.
  *
  * @param dir - Directory to search
- * @returns Array of TypeScript file paths
+ * @returns Array of TypeScript and Vue file paths
  */
 export function findTsFiles(dir: string): string[] {
   const files: string[] = [];
@@ -112,10 +113,13 @@ export function findTsFiles(dir: string): string[] {
         }
         walk(path);
       } else if (
-        entry.endsWith(".ts") &&
-        !entry.endsWith(".test.ts") &&
-        !entry.endsWith(".spec.ts") &&
-        !entry.endsWith(".d.ts")
+        (entry.endsWith(".ts") &&
+          !entry.endsWith(".test.ts") &&
+          !entry.endsWith(".spec.ts") &&
+          !entry.endsWith(".d.ts")) ||
+        (entry.endsWith(".vue") &&
+          !entry.endsWith(".test.vue") &&
+          !entry.endsWith(".spec.vue"))
       ) {
         files.push(path);
       }
@@ -135,19 +139,72 @@ export function findTsFiles(dir: string): string[] {
 }
 
 /**
+ * Extract TypeScript content from a Vue SFC file.
+ * Supports both <script lang="ts"> and <script setup lang="ts"> syntax.
+ *
+ * @param filePath - Path to the Vue file
+ * @returns Object with script content and syntax type, or null if no TypeScript script found
+ */
+export function extractVueScript(
+  filePath: string,
+): { content: string; isSetupSyntax: boolean } | null {
+  try {
+    const fileContent = readFileSync(filePath, "utf-8");
+    const { descriptor, errors } = parseVueSFC(fileContent, {
+      filename: filePath,
+    });
+
+    // Log parse errors if any
+    if (errors.length > 0) {
+      logger.warn(`Failed to parse Vue file: ${filePath}`, {
+        errors: errors.map((e) => e.message),
+      });
+      return null;
+    }
+
+    // Check <script setup> first (modern Vue 3 pattern)
+    if (descriptor.scriptSetup && descriptor.scriptSetup.lang === "ts") {
+      return {
+        content: descriptor.scriptSetup.content,
+        isSetupSyntax: true,
+      };
+    }
+
+    // Fall back to regular <script>
+    if (descriptor.script && descriptor.script.lang === "ts") {
+      return {
+        content: descriptor.script.content,
+        isSetupSyntax: false,
+      };
+    }
+
+    // No TypeScript script found
+    return null;
+  } catch (error) {
+    logger.warn(`Error extracting script from Vue file: ${filePath}`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+/**
  * Extract entities from a source file.
  *
  * @param sourceFile - ts-morph SourceFile to extract from
  * @param basePath - Base path for relative file paths
  * @param packageName - Package name for entity IDs
+ * @param originalFilePath - Optional original file path (for Vue files, overrides sourceFile path)
  */
 export function extractEntities(
   sourceFile: SourceFile,
   basePath: string,
   packageName: string,
+  originalFilePath?: string,
 ): Entity[] {
   const entities: Entity[] = [];
-  const filePath = relative(basePath, sourceFile.getFilePath());
+  const filePath =
+    originalFilePath || relative(basePath, sourceFile.getFilePath());
 
   // Add file as an entity
   entities.push({
@@ -424,15 +481,18 @@ function resolveCallTarget(
  * @param basePath - Base path for relative file paths
  * @param packageName - Package name for entity IDs
  * @param entityLookupMap - Map of entity names to entities for call resolution
+ * @param originalFilePath - Original file path (for Vue files mapped to virtual .ts)
  */
 export function extractRelationships(
   sourceFile: SourceFile,
   basePath: string,
   packageName: string,
   entityLookupMap: Map<string, Entity[]>,
+  originalFilePath?: string,
 ): Relationship[] {
   const relationships: Relationship[] = [];
-  const filePath = relative(basePath, sourceFile.getFilePath());
+  const filePath =
+    originalFilePath || relative(basePath, sourceFile.getFilePath());
   const fileId = makeFileId(packageName, filePath);
 
   // Build import map for this file
@@ -841,11 +901,26 @@ export function parsePackage(
   const tsFiles = options?.files || findTsFiles(packagePath);
   const parseErrors: Array<{ file: string; error: string }> = [];
   let filesSkipped = 0;
+  let vueFilesProcessed = 0;
+
+  // Track Vue file mappings (virtual path -> original path)
+  const vueFileMapping = new Map<string, string>();
 
   // Add all files to the project with error handling
   tsFiles.forEach((file) => {
     try {
-      project.addSourceFileAtPath(file);
+      if (file.endsWith(".vue")) {
+        const vueScript = extractVueScript(file);
+        if (vueScript) {
+          // Create virtual TypeScript file for ts-morph
+          const virtualPath = `${file}.ts`;
+          project.createSourceFile(virtualPath, vueScript.content);
+          vueFileMapping.set(virtualPath, relative(packagePath, file));
+          vueFilesProcessed++;
+        }
+      } else {
+        project.addSourceFileAtPath(file);
+      }
     } catch (error) {
       parseErrors.push({
         file,
@@ -867,7 +942,14 @@ export function parsePackage(
 
   // First pass: extract all entities
   project.getSourceFiles().forEach((sourceFile) => {
-    const entities = extractEntities(sourceFile, packagePath, pkgName);
+    const sourceFilePath = sourceFile.getFilePath();
+    const originalVuePath = vueFileMapping.get(sourceFilePath);
+    const entities = extractEntities(
+      sourceFile,
+      packagePath,
+      pkgName,
+      originalVuePath,
+    );
     allEntities.push(...entities);
   });
 
@@ -876,11 +958,14 @@ export function parsePackage(
 
   // Second pass: extract relationships
   project.getSourceFiles().forEach((sourceFile) => {
+    const sourceFilePath = sourceFile.getFilePath();
+    const originalVuePath = vueFileMapping.get(sourceFilePath);
     const relationships = extractRelationships(
       sourceFile,
       packagePath,
       pkgName,
       entityLookupMap,
+      originalVuePath,
     );
     allRelationships.push(...relationships);
   });
@@ -899,6 +984,7 @@ export function parsePackage(
   const stats: ParseStats = {
     filesScanned: tsFiles.length,
     filesSkipped,
+    vueFilesProcessed,
     entitiesByType,
     relationshipsByType,
   };
