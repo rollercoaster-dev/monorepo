@@ -451,31 +451,29 @@ export async function handleGraphCommands(
       }
     }
 
+    // Output final JSON (even on partial failure for debugging)
+    const output: Record<string, unknown> = {
+      command: "parse-monorepo",
+      rootPath,
+      ...result.stats,
+      stored: {
+        entities: totalEntitiesStored,
+        relationships: totalRelationshipsStored,
+        codeDocs: totalCodeDocs,
+      },
+      packages: packageResults,
+    };
+    if (storeErrors.length > 0) {
+      output.hasErrors = true;
+    }
+    process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+
     // Fail if any packages failed to store
     if (storeErrors.length > 0) {
       throw new Error(
         `Failed to store ${storeErrors.length} package(s): ${storeErrors.map((e) => e.pkg).join(", ")}`,
       );
     }
-
-    // Output final JSON
-    process.stdout.write(
-      JSON.stringify(
-        {
-          command: "parse-monorepo",
-          rootPath,
-          ...result.stats,
-          stored: {
-            entities: totalEntitiesStored,
-            relationships: totalRelationshipsStored,
-            codeDocs: totalCodeDocs,
-          },
-          packages: packageResults,
-        },
-        null,
-        2,
-      ) + "\n",
-    );
   } else {
     throw new Error(
       `Unknown graph command: ${command}\n` +
