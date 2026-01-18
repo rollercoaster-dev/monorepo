@@ -57,76 +57,19 @@ Before modifying files, consider:
 
 Safe operations (always allowed): reading files, searching, running tests, analyzing code.
 
-## Search Priority (DEFAULT)
+## Search Priority
 
 **Always use MCP tools first. Grep/Glob are fallback only.**
 
-### Why Graph First?
-
 Graph tools are dramatically better than text search:
 
-- **Speed**: Pre-indexed AST lookups are instant vs scanning every file
-- **Accuracy**: Finds actual definitions, not string matches (e.g., "Config" in comments, variable names, imports)
-- **Context efficiency**: Returns 10-20 precise results vs 200+ grep matches that consume context
-- **Semantic understanding**: `graph_what_calls` shows actual call relationships, not just where the string appears
+- **Speed**: Pre-indexed AST lookups are instant
+- **Accuracy**: Finds actual definitions, not string matches
+- **Context efficiency**: 10-20 precise results vs 200+ grep matches
 
-A single `graph_find` call often replaces 3-5 grep iterations of "found too many matches, let me refine..."
+Key tools: `graph_find` (definitions), `graph_what_calls` (callers), `graph_blast_radius` (impact)
 
-Tool usage is tracked and reported at session end. Aim for graph/search ratio > 1.0.
-
-### Graph Tools (Code Structure)
-
-| Tool                 | Use For              | Why Default                                     |
-| -------------------- | -------------------- | ----------------------------------------------- |
-| `graph_find`         | Locating definitions | AST-precise, finds declarations not just text   |
-| `graph_what_calls`   | Finding callers      | Shows actual usage patterns, not string matches |
-| `graph_blast_radius` | Impact analysis      | Transitive deps - prevents breaking changes     |
-
-### When to Use Graph vs Grep
-
-| Looking For                 | Use This             | Why                                   |
-| --------------------------- | -------------------- | ------------------------------------- |
-| Function/class definition   | `graph_find`         | Finds declaration, not usages         |
-| What calls a function       | `graph_what_calls`   | Actual call sites, not string matches |
-| Impact of changing a file   | `graph_blast_radius` | Transitive dependencies               |
-| Literal string in code      | `Grep`               | Graph only indexes code entities      |
-| Config files (package.json) | `Grep/Glob`          | Not in code graph                     |
-| Error message text          | `Grep`               | Strings aren't indexed                |
-
-### Knowledge Tools (Past Context)
-
-| Tool                       | Use For              | Why Default                                     |
-| -------------------------- | -------------------- | ----------------------------------------------- |
-| `knowledge_search_similar` | Finding related work | Semantic - "auth" finds "credential validation" |
-| `knowledge_query`          | Exact lookups        | By area, file, or issue number                  |
-| `knowledge_store`          | Capturing insights   | Persists for future sessions                    |
-
-### Other MCP Tools
-
-| Tool                    | Purpose                     |
-| ----------------------- | --------------------------- |
-| `checkpoint_workflow_*` | Manage workflow checkpoints |
-| `output_save`           | Save long output to file    |
-| `metrics_*`             | Query tool usage stats      |
-
-### Fallback (Grep/Glob)
-
-Use only when:
-
-- MCP returned no results
-- Searching for literal strings/regex patterns
-- Looking outside the indexed codebase
-- Config files, READMEs, or non-code content
-
-### Capture Learnings
-
-When you discover something interesting - a pattern, a gotcha, a non-obvious solution - store it with `knowledge_store`. Future sessions benefit from what you learn today.
-
-**Resources** (browsable data):
-
-- `knowledge://learnings` - Browse all learnings
-- `knowledge://patterns` - Browse patterns
-- `workflows://active` - Running workflows
+See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for detailed decision tables and fallback guidance.
 
 ## Workflows
 
