@@ -23,11 +23,24 @@ interface InsertError {
  *
  * @param data - ParseResult from parsePackage()
  * @param packageName - Package name for the graph data
+ * @param options - Optional incremental storage options
  * @returns StoreResult with success status and counts
+ *
+ * @example
+ * // Full storage (clears package first)
+ * storeGraph(data, "my-pkg");
+ *
+ * @example
+ * // Incremental storage (only updates changed files)
+ * storeGraph(data, "my-pkg", {
+ *   incremental: true,
+ *   deletedFiles: ["src/old.ts"]
+ * });
  */
 export function storeGraph(
   data: ParseResult,
   packageName: string,
+  options?: { incremental?: boolean; deletedFiles?: string[] },
 ): StoreResult {
   const db = getDatabase();
 
@@ -37,8 +50,50 @@ export function storeGraph(
 
   // Use transaction for atomic writes - all or nothing
   const storeTransaction = db.transaction(() => {
-    // Clear existing data for this package (inside transaction for atomicity)
-    clearPackageInternal(db, packageName);
+    if (options?.incremental) {
+      // Incremental mode: Delete entities only for files being reparsed and deleted files
+      const filesToDelete = new Set<string>();
+
+      // Add files from the new parse result (we're replacing their entities)
+      for (const entity of data.entities) {
+        if (entity.type === "file") {
+          filesToDelete.add(entity.filePath);
+        }
+      }
+
+      // Add deleted files
+      if (options.deletedFiles) {
+        for (const file of options.deletedFiles) {
+          filesToDelete.add(file);
+        }
+      }
+
+      // Delete entities for these files
+      if (filesToDelete.size > 0) {
+        const filePaths = Array.from(filesToDelete);
+        const placeholders = filePaths.map(() => "?").join(",");
+
+        // Delete relationships where from_entity is in these files
+        db.prepare(
+          `DELETE FROM graph_relationships WHERE from_entity IN
+           (SELECT id FROM graph_entities WHERE package = ? AND file_path IN (${placeholders}))`,
+        ).run(packageName, ...filePaths);
+
+        // Delete relationships where to_entity is in these files
+        db.prepare(
+          `DELETE FROM graph_relationships WHERE to_entity IN
+           (SELECT id FROM graph_entities WHERE package = ? AND file_path IN (${placeholders}))`,
+        ).run(packageName, ...filePaths);
+
+        // Delete entities for these files
+        db.prepare(
+          `DELETE FROM graph_entities WHERE package = ? AND file_path IN (${placeholders})`,
+        ).run(packageName, ...filePaths);
+      }
+    } else {
+      // Full mode: Clear existing data for this package (inside transaction for atomicity)
+      clearPackageInternal(db, packageName);
+    }
 
     // Insert entities
     const insertEntity = db.prepare(`
