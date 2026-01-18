@@ -61,6 +61,19 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 
 **Always use MCP tools first. Grep/Glob are fallback only.**
 
+### Why Graph First?
+
+Graph tools are dramatically better than text search:
+
+- **Speed**: Pre-indexed AST lookups are instant vs scanning every file
+- **Accuracy**: Finds actual definitions, not string matches (e.g., "Config" in comments, variable names, imports)
+- **Context efficiency**: Returns 10-20 precise results vs 200+ grep matches that consume context
+- **Semantic understanding**: `graph_what_calls` shows actual call relationships, not just where the string appears
+
+A single `graph_find` call often replaces 3-5 grep iterations of "found too many matches, let me refine..."
+
+Tool usage is tracked and reported at session end. Aim for graph/search ratio > 1.0.
+
 ### Graph Tools (Code Structure)
 
 | Tool                 | Use For              | Why Default                                     |
@@ -68,6 +81,17 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 | `graph_find`         | Locating definitions | AST-precise, finds declarations not just text   |
 | `graph_what_calls`   | Finding callers      | Shows actual usage patterns, not string matches |
 | `graph_blast_radius` | Impact analysis      | Transitive deps - prevents breaking changes     |
+
+### When to Use Graph vs Grep
+
+| Looking For                 | Use This             | Why                                   |
+| --------------------------- | -------------------- | ------------------------------------- |
+| Function/class definition   | `graph_find`         | Finds declaration, not usages         |
+| What calls a function       | `graph_what_calls`   | Actual call sites, not string matches |
+| Impact of changing a file   | `graph_blast_radius` | Transitive dependencies               |
+| Literal string in code      | `Grep`               | Graph only indexes code entities      |
+| Config files (package.json) | `Grep/Glob`          | Not in code graph                     |
+| Error message text          | `Grep`               | Strings aren't indexed                |
 
 ### Knowledge Tools (Past Context)
 
@@ -83,6 +107,7 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 | ----------------------- | --------------------------- |
 | `checkpoint_workflow_*` | Manage workflow checkpoints |
 | `output_save`           | Save long output to file    |
+| `metrics_*`             | Query tool usage stats      |
 
 ### Fallback (Grep/Glob)
 
@@ -91,6 +116,7 @@ Use only when:
 - MCP returned no results
 - Searching for literal strings/regex patterns
 - Looking outside the indexed codebase
+- Config files, READMEs, or non-code content
 
 ### Capture Learnings
 
