@@ -157,7 +157,7 @@ export function extractVueScript(
     // Log parse errors if any
     if (errors.length > 0) {
       logger.warn(`Failed to parse Vue file: ${filePath}`, {
-        errors: errors.map((e) => e.message),
+        errors: errors.map((e: { message: string }) => e.message),
       });
       return null;
     }
