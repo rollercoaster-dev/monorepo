@@ -403,7 +403,12 @@ if (oauthConfig.enabled) {
 }
 
 // Start the server
-const port = parseInt(process.env.SYSTEM_SERVER_PORT || process.env.PORT || '8888')
+const rawPort = process.env.SYSTEM_SERVER_PORT || process.env.PORT || '8888'
+const parsedPort = Number.parseInt(rawPort, 10)
+const port = Number.isFinite(parsedPort) ? parsedPort : 8888
+if (!Number.isFinite(parsedPort)) {
+  logger.warn('Invalid server port, falling back to 8888', { rawPort })
+}
 logger.info('Server is running', {
   server: `http://localhost:${port}`,
   docs: `http://localhost:${port}/docs`,
