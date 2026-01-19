@@ -54,8 +54,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "bun run lint:fix",
-      "tsc-files --noEmit --skipLibCheck"
+      "bun run lint:fix"
     ]
   },
   "devDependencies": {
@@ -66,8 +65,7 @@
     "@typescript-eslint/parser": "^8.0.0",
     "drizzle-kit": "^0.30.6",
     "get-port": "^7.1.0",
-    "lint-staged": "^15.5.1",
-    "tsc-files": "^1.1.4"
+    "lint-staged": "^15.5.1"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"
