@@ -27,7 +27,7 @@
 export * from "./types";
 
 // Parser
-export { parsePackage } from "./parser";
+export { parsePackage, parseMonorepo, discoverPackages } from "./parser";
 
 // Storage
 export {
@@ -51,7 +51,7 @@ export {
 } from "./query";
 
 // Import for graph object
-import { parsePackage } from "./parser";
+import { parsePackage, parseMonorepo, discoverPackages } from "./parser";
 import { storeGraph, storeCodeDocs, clearPackage } from "./store";
 import {
   whatCalls,
@@ -70,6 +70,8 @@ import {
 export const graph = {
   // Parser
   parsePackage,
+  parseMonorepo,
+  discoverPackages,
 
   // Storage
   storeGraph,

@@ -2,10 +2,7 @@
   "mcpServers": {
     "claude-knowledge": {
       "command": "bun",
-      "args": ["run", "packages/claude-knowledge/src/mcp-server/index.ts"],
-      "env": {
-        "CLAUDE_SESSION_ID": "${CLAUDE_SESSION_ID}"
-      }
+      "args": ["run", "packages/claude-knowledge/src/mcp-server/index.ts"]
     }
   }
 }
