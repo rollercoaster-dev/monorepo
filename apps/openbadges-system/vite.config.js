@@ -22,12 +22,12 @@ export default defineConfig(({ mode }) => {
 
     // Development server configuration
     server: {
-      port: parseInt(process.env.VITE_PORT || '7777'),
+      port: parseInt(process.env.SYSTEM_VITE_PORT || process.env.VITE_PORT || '7777'),
       strictPort: false, // Allow Vite to try the next available port
       open: true,
       proxy: {
         '/api': {
-          target: `http://localhost:${process.env.PORT || '8888'}`,
+          target: `http://localhost:${process.env.SYSTEM_SERVER_PORT || process.env.PORT || '8888'}`,
           changeOrigin: true,
           secure: false,
           rewrite: path => path,
