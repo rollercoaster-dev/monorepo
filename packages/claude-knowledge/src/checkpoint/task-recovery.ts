@@ -163,7 +163,7 @@ function getWorkOnIssueTaskStatus(
   // finalize: Finalize in progress
 
   const phaseToGateMap: Record<WorkflowPhase, number> = {
-    research: 1, // When in research, Gate 1 or 2 is in progress
+    research: 0, // When in research, Gate 1 is in progress (default to first gate in phase)
     implement: 2, // When in implement, Gate 3 is in progress
     review: 3, // When in review, Gate 4 is in progress
     finalize: 4, // When in finalize, Finalize task is in progress
