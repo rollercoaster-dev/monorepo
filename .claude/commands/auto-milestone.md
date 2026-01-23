@@ -41,13 +41,18 @@ Native task tracking provides wave-based progress visualization during milestone
 
 ### Wave-Based Task Creation
 
-Create tasks during Phase 1 (Planning) after dependency analysis:
+Create ALL tasks upfront during Phase 1 (Planning) after dependency analysis:
 
 ```text
-Phase 1: After dependency analysis complete:
+Phase 1: After dependency analysis complete, create all tasks at once:
 
-For each issue in Wave 1 (no dependencies):
-  TaskCreate({
+wave1Tasks = []
+wave2Tasks = []
+waveNTasks = []
+
+# Create Wave 1 tasks (no dependencies)
+For each issue in Wave 1:
+  taskId = TaskCreate({
     subject: "Issue #<N>: <title>",
     description: "<issue-summary>",
     activeForm: "Working on issue #<N>",
@@ -55,28 +60,34 @@ For each issue in Wave 1 (no dependencies):
       issueNumber: <N>,
       workflowId: "<milestone-workflow-id>",
       waveNumber: 1,
-      milestoneId: "<milestone-name>",
-      worktreeId: "<worktree-path>"
+      milestoneId: "<milestone-name>"
     }
   })
+  wave1Tasks.push(taskId)
 
-For each issue in Wave 2 (depends on Wave 1):
-  TaskCreate({
+# Create Wave 2 tasks (blocked by Wave 1)
+For each issue in Wave 2:
+  taskId = TaskCreate({
     subject: "Issue #<N>: <title>",
     description: "<issue-summary>",
     activeForm: "Working on issue #<N>",
-    blockedBy: [<all-wave-1-task-ids>],  // Blocked until Wave 1 complete
     metadata: {
       issueNumber: <N>,
       workflowId: "<milestone-workflow-id>",
       waveNumber: 2,
-      milestoneId: "<milestone-name>",
-      worktreeId: "<worktree-path>"
+      milestoneId: "<milestone-name>"
     }
   })
+  TaskUpdate(taskId, { addBlockedBy: wave1Tasks })
+  wave2Tasks.push(taskId)
 
-For each issue in Wave N (depends on Wave N-1):
-  → blockedBy: [<all-wave-(N-1)-task-ids>]
+# Create Wave N tasks (blocked by Wave N-1)
+For each issue in Wave N:
+  taskId = TaskCreate({ ... })
+  TaskUpdate(taskId, { addBlockedBy: waveN-1Tasks })
+  waveNTasks.push(taskId)
+
+TaskList() → Show full milestone tree immediately
 ```
 
 ### Task Updates During Execution
