@@ -51,6 +51,10 @@ export const checkpointTools: Tool[] = [
           type: "string",
           description: "Optional worktree path if using git worktrees",
         },
+        taskId: {
+          type: "string",
+          description: "Optional native task ID for task system integration",
+        },
       },
       required: ["issueNumber", "branch"],
     },
@@ -86,6 +90,10 @@ export const checkpointTools: Tool[] = [
           type: "string",
           enum: ["running", "paused", "completed", "failed"],
           description: "New workflow status",
+        },
+        taskId: {
+          type: "string",
+          description: "Link workflow to a native task ID",
         },
       },
       required: ["workflowId"],
@@ -156,6 +164,7 @@ export async function handleCheckpointToolCall(
                     phase: data.workflow.phase,
                     status: data.workflow.status,
                     retryCount: data.workflow.retryCount,
+                    taskId: data.workflow.taskId ?? null,
                     createdAt: data.workflow.createdAt,
                     updatedAt: data.workflow.updatedAt,
                   },
@@ -209,7 +218,13 @@ export async function handleCheckpointToolCall(
         }
 
         const worktree = args.worktree as string | undefined;
-        const workflow = checkpoint.create(issueNumber, branch, worktree);
+        const taskId = args.taskId as string | undefined;
+        const workflow = checkpoint.create(
+          issueNumber,
+          branch,
+          worktree,
+          taskId,
+        );
 
         return {
           content: [
@@ -226,6 +241,7 @@ export async function handleCheckpointToolCall(
                     worktree: workflow.worktree,
                     phase: workflow.phase,
                     status: workflow.status,
+                    taskId: workflow.taskId ?? null,
                     createdAt: workflow.createdAt,
                   },
                 },
@@ -253,14 +269,16 @@ export async function handleCheckpointToolCall(
 
         const phase = args.phase as WorkflowPhase | undefined;
         const status = args.status as WorkflowStatus | undefined;
+        const taskId = args.taskId as string | undefined;
 
-        if (!phase && !status) {
+        if (!phase && !status && !taskId) {
           return {
             content: [
               {
                 type: "text",
                 text: JSON.stringify({
-                  error: "At least one of phase or status must be provided",
+                  error:
+                    "At least one of phase, status, or taskId must be provided",
                 }),
               },
             ],
@@ -278,6 +296,26 @@ export async function handleCheckpointToolCall(
         if (status) {
           checkpoint.setStatus(workflowId, status);
           updates.push(`status → ${status}`);
+        }
+
+        if (taskId) {
+          const data = checkpoint.load(workflowId);
+          if (!data) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: `Workflow not found: ${workflowId}`,
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          data.workflow.taskId = taskId;
+          checkpoint.save(data.workflow);
+          updates.push(`taskId → ${taskId}`);
         }
 
         return {
