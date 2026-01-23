@@ -631,3 +631,51 @@ export interface GraphQueryMetrics {
   /** ISO timestamp when the query was executed */
   createdAt: string;
 }
+
+/**
+ * Task snapshot captured at workflow phase boundaries
+ */
+export interface TaskSnapshot {
+  /** Auto-incrementing row ID */
+  id: number;
+  /** Workflow ID this snapshot belongs to */
+  workflowId: string;
+  /** Workflow phase when snapshot was captured */
+  phase: string;
+  /** Native task system task ID */
+  taskId: string;
+  /** Human-readable task description */
+  taskSubject: string;
+  /** Task status at time of snapshot */
+  taskStatus: string;
+  /** Optional JSON metadata about the task */
+  taskMetadata?: string;
+  /** ISO timestamp when snapshot was captured */
+  capturedAt: string;
+}
+
+/**
+ * Aggregated task metrics across workflows
+ */
+export interface TaskMetrics {
+  /** Total number of task snapshots captured */
+  totalTasks: number;
+  /** Number of completed tasks */
+  completedTasks: number;
+  /** Task completion rate (0-1) */
+  completionRate: number;
+  /** Average task duration in milliseconds */
+  avgDurationMs: number;
+  /** Metrics broken down by workflow phase */
+  byPhase: {
+    phase: string;
+    count: number;
+    completionRate: number;
+  }[];
+  /** Metrics broken down by workflow */
+  byWorkflow: {
+    workflowId: string;
+    count: number;
+    completionRate: number;
+  }[];
+}
