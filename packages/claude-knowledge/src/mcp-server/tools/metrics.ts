@@ -61,6 +61,34 @@ export const metricsTools: Tool[] = [
       required: [],
     },
   },
+  {
+    name: "metrics_get_task_snapshots",
+    description:
+      "Get task snapshots for a workflow (or all workflows). " +
+      "Returns task state captured at workflow phase boundaries.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        workflowId: {
+          type: "string",
+          description:
+            "Optional workflow ID to filter by. Omit to get all snapshots.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "metrics_get_task_metrics",
+    description:
+      "Get aggregated task metrics across all workflows. " +
+      "Returns completion rates, duration statistics, and breakdown by phase/workflow.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 /**
@@ -156,6 +184,33 @@ export async function handleMetricsToolCall(
             {
               type: "text",
               text: JSON.stringify(aggregate, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_snapshots": {
+        const workflowId = args.workflowId as string | undefined;
+        const snapshots = metrics.getTaskSnapshots(workflowId);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(snapshots, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_metrics": {
+        const taskMetrics = metrics.getTaskMetrics();
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(taskMetrics, null, 2),
             },
           ],
         };
