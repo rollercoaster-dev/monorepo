@@ -26,6 +26,7 @@ export interface Workflow {
   phase: WorkflowPhase;
   status: WorkflowStatus;
   retryCount: number;
+  taskId?: string; // Optional native task ID for task system integration
   createdAt: string;
   updatedAt: string;
 }
