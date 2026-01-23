@@ -11,6 +11,91 @@ Gated workflow requiring human approval at each phase.
 /work-on-issue 123 --skip-review # Skip Gate 4 (pre-PR review)
 ```
 
+## Task System Integration
+
+Native task tracking provides progress visualization during the workflow. Tasks are supplementary to the checkpoint system (which remains source of truth).
+
+### Task Creation Pattern
+
+Create tasks at workflow start and update as gates pass:
+
+```text
+After Phase 1 Setup:
+  TaskCreate({
+    subject: "Gate 1: Review Issue #<N>",
+    description: "Review issue details, check blockers, validate requirements",
+    activeForm: "Reviewing issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "setup", gate: 1 }
+  })
+
+After Gate 1 Approved:
+  TaskUpdate(gate1TaskId, { status: "completed" })
+  TaskCreate({
+    subject: "Gate 2: Review Plan for #<N>",
+    description: "Review development plan, approve implementation approach",
+    activeForm: "Reviewing plan",
+    metadata: { issueNumber: <N>, workflowId, phase: "research", gate: 2 }
+  })
+  → blockedBy: [gate1TaskId]
+
+After Gate 2 Approved:
+  TaskUpdate(gate2TaskId, { status: "completed" })
+  TaskCreate({
+    subject: "Gate 3: Implement #<N>",
+    description: "Implement changes per plan, review each commit",
+    activeForm: "Implementing changes",
+    metadata: { issueNumber: <N>, workflowId, phase: "implement", gate: 3 }
+  })
+  → blockedBy: [gate2TaskId]
+
+After Gate 3 Approved (all commits):
+  TaskUpdate(gate3TaskId, { status: "completed" })
+  TaskCreate({
+    subject: "Gate 4: Pre-PR Review for #<N>",
+    description: "Run review agents, address critical findings",
+    activeForm: "Running reviews",
+    metadata: { issueNumber: <N>, workflowId, phase: "review", gate: 4 }
+  })
+  → blockedBy: [gate3TaskId]
+
+After Gate 4 Approved:
+  TaskUpdate(gate4TaskId, { status: "completed" })
+  # Finalize is not a gate - it runs after Gate 4 approval
+  TaskCreate({
+    subject: "Finalize: Create PR for #<N>",
+    description: "Push branch, create PR, update board",
+    activeForm: "Finalizing PR",
+    metadata: { issueNumber: <N>, workflowId, phase: "finalize" }
+  })
+  → blockedBy: [gate4TaskId]
+
+After PR Created:
+  TaskUpdate(finalizeTaskId, { status: "completed" })
+  TaskList() → Show final progress summary
+```
+
+### Progress Visualization
+
+After each gate, display progress with `TaskList()`:
+
+```text
+Tasks for Issue #123:
+├─ Gate 1: Review Issue #123      [COMPLETED]
+├─ Gate 2: Review Plan for #123   [COMPLETED]
+├─ Gate 3: Implement #123         [IN_PROGRESS]
+├─ Gate 4: Pre-PR Review for #123 [PENDING, blocked by Gate 3]
+└─ Finalize: Create PR for #123   [PENDING, blocked by Gate 4]
+```
+
+### Key Points
+
+- **Checkpoint remains source of truth** - Tasks provide UI only
+- **blockedBy enforces sequence** - Prevents gate skipping
+- **Tasks are supplementary** - Workflow continues if task operations fail
+- **Metadata links to checkpoint** - Enables cross-reference for debugging
+
+---
+
 ## Workflow
 
 ```

@@ -29,6 +29,7 @@ function mapRowToWorkflow(row: {
   phase: WorkflowPhase;
   status: WorkflowStatus;
   retry_count: number;
+  task_id?: string | null;
   created_at: string;
   updated_at: string;
 }): Workflow {
@@ -40,6 +41,7 @@ function mapRowToWorkflow(row: {
     phase: row.phase,
     status: row.status,
     retryCount: row.retry_count,
+    taskId: row.task_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -52,6 +54,7 @@ function create(
   issueNumber: number,
   branch: string,
   worktree?: string,
+  taskId?: string,
 ): Workflow {
   const db = getDatabase();
   const id = generateWorkflowId(issueNumber);
@@ -65,14 +68,15 @@ function create(
     phase: "research",
     status: "running",
     retryCount: 0,
+    taskId,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 
   db.run(
     `
-      INSERT INTO workflows (id, issue_number, branch, worktree, phase, status, retry_count, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO workflows (id, issue_number, branch, worktree, phase, status, retry_count, task_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       workflow.id,
@@ -82,6 +86,7 @@ function create(
       workflow.phase,
       workflow.status,
       workflow.retryCount,
+      workflow.taskId ?? null,
       workflow.createdAt,
       workflow.updatedAt,
     ],
@@ -101,7 +106,7 @@ function save(workflow: Workflow): void {
   const result = db.run(
     `
       UPDATE workflows
-      SET phase = ?, status = ?, retry_count = ?, worktree = ?, updated_at = ?
+      SET phase = ?, status = ?, retry_count = ?, worktree = ?, task_id = ?, updated_at = ?
       WHERE id = ?
     `,
     [
@@ -109,6 +114,7 @@ function save(workflow: Workflow): void {
       workflow.status,
       workflow.retryCount,
       workflow.worktree,
+      workflow.taskId ?? null,
       workflow.updatedAt,
       workflow.id,
     ],
@@ -138,6 +144,7 @@ function load(workflowId: string): CheckpointData | null {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -145,7 +152,7 @@ function load(workflowId: string): CheckpointData | null {
     >(
       `
       SELECT id, issue_number, branch, worktree, phase, status,
-             retry_count, created_at, updated_at
+             retry_count, task_id, created_at, updated_at
       FROM workflows WHERE id = ?
     `,
     )
@@ -411,6 +418,7 @@ function listActive(): Workflow[] {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -418,7 +426,7 @@ function listActive(): Workflow[] {
     >(
       `
       SELECT id, issue_number, branch, worktree, phase, status,
-             retry_count, created_at, updated_at
+             retry_count, task_id, created_at, updated_at
       FROM workflows WHERE status IN ('running', 'paused') ORDER BY updated_at DESC
     `,
     )
@@ -541,6 +549,7 @@ function listMilestoneWorkflows(milestoneId: string): Workflow[] {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -548,7 +557,7 @@ function listMilestoneWorkflows(milestoneId: string): Workflow[] {
     >(
       `
       SELECT w.id, w.issue_number, w.branch, w.worktree, w.phase, w.status,
-             w.retry_count, w.created_at, w.updated_at
+             w.retry_count, w.task_id, w.created_at, w.updated_at
       FROM workflows w
       JOIN milestone_workflows mw ON w.id = mw.workflow_id
       WHERE mw.milestone_id = ?

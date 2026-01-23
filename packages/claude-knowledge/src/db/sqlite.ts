@@ -394,6 +394,27 @@ function runMigrations(database: Database): void {
       );
     }
   }
+
+  // Migration 5: Add 'task_id' column to workflows table (for task system integration)
+  // Check if task_id column exists
+  const workflowsColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(workflows)")
+    .all();
+
+  const hasTaskIdColumn = workflowsColumns.some(
+    (col) => col.name === "task_id",
+  );
+
+  if (!hasTaskIdColumn) {
+    try {
+      // Add task_id column (nullable, optional for backward compatibility)
+      database.run("ALTER TABLE workflows ADD COLUMN task_id TEXT NULL");
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add task_id to workflows): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 }
 
 export function getDatabase(dbPath?: string): Database {
