@@ -5,6 +5,7 @@ import type {
   ReviewFindingsSummary,
   TaskMetrics,
   TaskSnapshot,
+  WorkflowPhase,
 } from "../types";
 import { workflow } from "./workflow";
 
@@ -805,7 +806,7 @@ function getTaskSnapshots(workflowId?: string): TaskSnapshot[] {
   return rows.map((row) => ({
     id: row.id,
     workflowId: row.workflow_id,
-    phase: row.phase,
+    phase: row.phase as WorkflowPhase,
     taskId: row.task_id,
     taskSubject: row.task_subject,
     taskStatus: row.task_status,
@@ -844,18 +845,21 @@ function getTaskMetrics(): TaskMetrics {
   const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
 
   // Calculate average duration (time between first and last snapshot for same taskId)
+  // Uses subquery to compute per-task durations, then averages across all tasks
   type DurationRow = {
     avg_duration_ms: number | null;
   };
   const durationResult = db
     .query<DurationRow, []>(
       `
-      SELECT AVG(
-        CAST((julianday(MAX(captured_at)) - julianday(MIN(captured_at))) * 24 * 60 * 60 * 1000 AS INTEGER)
-      ) as avg_duration_ms
-      FROM task_snapshots
-      GROUP BY task_id
-      HAVING COUNT(*) > 1
+      SELECT AVG(duration_ms) as avg_duration_ms
+      FROM (
+        SELECT
+          CAST((julianday(MAX(captured_at)) - julianday(MIN(captured_at))) * 24 * 60 * 60 * 1000 AS INTEGER) as duration_ms
+        FROM task_snapshots
+        GROUP BY task_id
+        HAVING COUNT(*) > 1
+      )
       `,
     )
     .get();
@@ -883,7 +887,7 @@ function getTaskMetrics(): TaskMetrics {
     .all();
 
   const byPhase = phaseRows.map((row) => ({
-    phase: row.phase,
+    phase: row.phase as WorkflowPhase,
     count: row.count,
     completionRate: row.count > 0 ? row.completed / row.count : 0,
   }));

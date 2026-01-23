@@ -1,3 +1,4 @@
+import { createRequire } from "module";
 import { getDatabase } from "../db/sqlite";
 import type {
   Workflow,
@@ -7,6 +8,9 @@ import type {
   WorkflowPhase,
   WorkflowStatus,
 } from "../types";
+
+// Create require for ESM compatibility (used for lazy loading to avoid circular deps)
+const require = createRequire(import.meta.url);
 import {
   generateWorkflowId,
   now,
@@ -373,7 +377,7 @@ function setPhase(
   // Log task snapshot if provided
   if (taskSnapshot) {
     // Lazy import to avoid circular dependency with metrics.ts
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+
     const { metrics } = require("./metrics.js");
     metrics.logTaskSnapshot(
       workflowId,

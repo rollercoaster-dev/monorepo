@@ -641,7 +641,7 @@ export interface TaskSnapshot {
   /** Workflow ID this snapshot belongs to */
   workflowId: string;
   /** Workflow phase when snapshot was captured */
-  phase: string;
+  phase: WorkflowPhase;
   /** Native task system task ID */
   taskId: string;
   /** Human-readable task description */
@@ -668,7 +668,7 @@ export interface TaskMetrics {
   avgDurationMs: number;
   /** Metrics broken down by workflow phase */
   byPhase: {
-    phase: string;
+    phase: WorkflowPhase;
     count: number;
     completionRate: number;
   }[];
