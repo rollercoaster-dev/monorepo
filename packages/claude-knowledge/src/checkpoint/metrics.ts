@@ -3,6 +3,9 @@ import type {
   ContextMetrics,
   GraphQueryMetrics,
   ReviewFindingsSummary,
+  TaskMetrics,
+  TaskSnapshot,
+  WorkflowPhase,
 } from "../types";
 import { workflow } from "./workflow";
 
@@ -734,6 +737,197 @@ function getToolUsageAggregate(): {
   };
 }
 
+/**
+ * Log a task snapshot at a workflow phase boundary.
+ * Captures task state for metrics tracking.
+ *
+ * @param workflowId - Workflow ID this snapshot belongs to
+ * @param phase - Workflow phase when snapshot was captured
+ * @param taskId - Native task system task ID
+ * @param taskSubject - Human-readable task description
+ * @param taskStatus - Task status (pending, in_progress, completed)
+ * @param taskMetadata - Optional JSON metadata about the task
+ */
+function logTaskSnapshot(
+  workflowId: string,
+  phase: string,
+  taskId: string,
+  taskSubject: string,
+  taskStatus: string,
+  taskMetadata?: string,
+): void {
+  const db = getDatabase();
+
+  db.run(
+    `
+    INSERT INTO task_snapshots (workflow_id, phase, task_id, task_subject, task_status, task_metadata, captured_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      workflowId,
+      phase,
+      taskId,
+      taskSubject,
+      taskStatus,
+      taskMetadata ?? null,
+      new Date().toISOString(),
+    ],
+  );
+}
+
+/**
+ * Get task snapshots for a workflow (or all workflows).
+ * Returns snapshots ordered by capture time descending.
+ *
+ * @param workflowId - Optional workflow ID to filter by
+ * @returns Array of task snapshots
+ */
+function getTaskSnapshots(workflowId?: string): TaskSnapshot[] {
+  const db = getDatabase();
+
+  type SnapshotRow = {
+    id: number;
+    workflow_id: string;
+    phase: string;
+    task_id: string;
+    task_subject: string;
+    task_status: string;
+    task_metadata: string | null;
+    captured_at: string;
+  };
+
+  const query = workflowId
+    ? `SELECT * FROM task_snapshots WHERE workflow_id = ? ORDER BY captured_at DESC`
+    : `SELECT * FROM task_snapshots ORDER BY captured_at DESC`;
+
+  const params = workflowId ? [workflowId] : [];
+  const rows = db.query<SnapshotRow, string[]>(query).all(...params);
+
+  return rows.map((row) => ({
+    id: row.id,
+    workflowId: row.workflow_id,
+    phase: row.phase as WorkflowPhase,
+    taskId: row.task_id,
+    taskSubject: row.task_subject,
+    taskStatus: row.task_status,
+    taskMetadata: row.task_metadata ?? undefined,
+    capturedAt: row.captured_at,
+  }));
+}
+
+/**
+ * Get aggregated task metrics across all workflows.
+ * Calculates completion rates and duration statistics.
+ *
+ * @returns Aggregated task metrics
+ */
+function getTaskMetrics(): TaskMetrics {
+  const db = getDatabase();
+
+  // Get total tasks and completed tasks
+  type TotalsRow = {
+    total_tasks: number;
+    completed_tasks: number;
+  };
+  const totals = db
+    .query<TotalsRow, []>(
+      `
+      SELECT
+        COUNT(*) as total_tasks,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed_tasks
+      FROM task_snapshots
+      `,
+    )
+    .get();
+
+  const totalTasks = totals?.total_tasks ?? 0;
+  const completedTasks = totals?.completed_tasks ?? 0;
+  const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
+
+  // Calculate average duration (time between first and last snapshot for same taskId)
+  // Uses subquery to compute per-task durations, then averages across all tasks
+  type DurationRow = {
+    avg_duration_ms: number | null;
+  };
+  const durationResult = db
+    .query<DurationRow, []>(
+      `
+      SELECT AVG(duration_ms) as avg_duration_ms
+      FROM (
+        SELECT
+          CAST((julianday(MAX(captured_at)) - julianday(MIN(captured_at))) * 24 * 60 * 60 * 1000 AS INTEGER) as duration_ms
+        FROM task_snapshots
+        GROUP BY task_id
+        HAVING COUNT(*) > 1
+      )
+      `,
+    )
+    .get();
+
+  const avgDurationMs = durationResult?.avg_duration_ms ?? 0;
+
+  // Get metrics by phase
+  type PhaseRow = {
+    phase: string;
+    count: number;
+    completed: number;
+  };
+  const phaseRows = db
+    .query<PhaseRow, []>(
+      `
+      SELECT
+        phase,
+        COUNT(*) as count,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed
+      FROM task_snapshots
+      GROUP BY phase
+      ORDER BY phase
+      `,
+    )
+    .all();
+
+  const byPhase = phaseRows.map((row) => ({
+    phase: row.phase as WorkflowPhase,
+    count: row.count,
+    completionRate: row.count > 0 ? row.completed / row.count : 0,
+  }));
+
+  // Get metrics by workflow
+  type WorkflowRow = {
+    workflow_id: string;
+    count: number;
+    completed: number;
+  };
+  const workflowRows = db
+    .query<WorkflowRow, []>(
+      `
+      SELECT
+        workflow_id,
+        COUNT(*) as count,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed
+      FROM task_snapshots
+      GROUP BY workflow_id
+      ORDER BY workflow_id
+      `,
+    )
+    .all();
+
+  const byWorkflow = workflowRows.map((row) => ({
+    workflowId: row.workflow_id,
+    count: row.count,
+    completionRate: row.count > 0 ? row.completed / row.count : 0,
+  }));
+
+  return {
+    totalTasks,
+    completedTasks,
+    completionRate,
+    avgDurationMs,
+    byPhase,
+    byWorkflow,
+  };
+}
+
 export const metrics = {
   saveContextMetrics,
   getContextMetrics,
@@ -748,4 +942,8 @@ export const metrics = {
   getToolUsageSummary,
   getToolUsageAggregate,
   categorizeToolName,
+  // Task metrics
+  logTaskSnapshot,
+  getTaskSnapshots,
+  getTaskMetrics,
 };

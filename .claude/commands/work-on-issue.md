@@ -17,60 +17,79 @@ Native task tracking provides progress visualization during the workflow. Tasks 
 
 ### Task Creation Pattern
 
-Create tasks at workflow start and update as gates pass:
+Create ALL tasks upfront after Phase 1 Setup, with blockedBy dependencies:
 
 ```text
-After Phase 1 Setup:
-  TaskCreate({
+After Phase 1 Setup completes, create all tasks at once:
+
+  gate1 = TaskCreate({
     subject: "Gate 1: Review Issue #<N>",
     description: "Review issue details, check blockers, validate requirements",
     activeForm: "Reviewing issue #<N>",
-    metadata: { issueNumber: <N>, workflowId, phase: "setup", gate: 1 }
+    metadata: { issueNumber: <N>, workflowId, phase: "research", gate: 1 }
   })
 
-After Gate 1 Approved:
-  TaskUpdate(gate1TaskId, { status: "completed" })
-  TaskCreate({
+  gate2 = TaskCreate({
     subject: "Gate 2: Review Plan for #<N>",
     description: "Review development plan, approve implementation approach",
     activeForm: "Reviewing plan",
     metadata: { issueNumber: <N>, workflowId, phase: "research", gate: 2 }
   })
-  → blockedBy: [gate1TaskId]
+  TaskUpdate(gate2, { addBlockedBy: [gate1] })
 
-After Gate 2 Approved:
-  TaskUpdate(gate2TaskId, { status: "completed" })
-  TaskCreate({
+  gate3 = TaskCreate({
     subject: "Gate 3: Implement #<N>",
     description: "Implement changes per plan, review each commit",
     activeForm: "Implementing changes",
     metadata: { issueNumber: <N>, workflowId, phase: "implement", gate: 3 }
   })
-  → blockedBy: [gate2TaskId]
+  TaskUpdate(gate3, { addBlockedBy: [gate2] })
 
-After Gate 3 Approved (all commits):
-  TaskUpdate(gate3TaskId, { status: "completed" })
-  TaskCreate({
+  gate4 = TaskCreate({
     subject: "Gate 4: Pre-PR Review for #<N>",
     description: "Run review agents, address critical findings",
     activeForm: "Running reviews",
     metadata: { issueNumber: <N>, workflowId, phase: "review", gate: 4 }
   })
-  → blockedBy: [gate3TaskId]
+  TaskUpdate(gate4, { addBlockedBy: [gate3] })
 
-After Gate 4 Approved:
-  TaskUpdate(gate4TaskId, { status: "completed" })
-  # Finalize is not a gate - it runs after Gate 4 approval
-  TaskCreate({
+  finalize = TaskCreate({
     subject: "Finalize: Create PR for #<N>",
     description: "Push branch, create PR, update board",
     activeForm: "Finalizing PR",
     metadata: { issueNumber: <N>, workflowId, phase: "finalize" }
   })
-  → blockedBy: [gate4TaskId]
+  TaskUpdate(finalize, { addBlockedBy: [gate4] })
 
-After PR Created:
-  TaskUpdate(finalizeTaskId, { status: "completed" })
+  TaskList() → Show full workflow tree immediately
+```
+
+### Task Updates During Workflow
+
+Update status as gates progress:
+
+```text
+Starting Gate 1:
+  TaskUpdate(gate1, { status: "in_progress" })
+
+Gate 1 Approved:
+  TaskUpdate(gate1, { status: "completed" })
+  TaskUpdate(gate2, { status: "in_progress" })
+
+Gate 2 Approved:
+  TaskUpdate(gate2, { status: "completed" })
+  TaskUpdate(gate3, { status: "in_progress" })
+
+Gate 3 Approved:
+  TaskUpdate(gate3, { status: "completed" })
+  TaskUpdate(gate4, { status: "in_progress" })
+
+Gate 4 Approved:
+  TaskUpdate(gate4, { status: "completed" })
+  TaskUpdate(finalize, { status: "in_progress" })
+
+PR Created:
+  TaskUpdate(finalize, { status: "completed" })
   TaskList() → Show final progress summary
 ```
 
