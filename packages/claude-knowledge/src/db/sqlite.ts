@@ -238,6 +238,23 @@ CREATE TABLE IF NOT EXISTS tool_usage (
 -- Indexes for tool usage queries
 CREATE INDEX IF NOT EXISTS idx_tool_usage_session ON tool_usage(session_id);
 CREATE INDEX IF NOT EXISTS idx_tool_usage_category ON tool_usage(tool_category);
+
+-- Task snapshots table
+-- Captures task state at workflow phase boundaries for metrics tracking
+CREATE TABLE IF NOT EXISTS task_snapshots (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  workflow_id TEXT NOT NULL,
+  phase TEXT NOT NULL,
+  task_id TEXT NOT NULL,
+  task_subject TEXT NOT NULL,
+  task_status TEXT NOT NULL,
+  task_metadata TEXT,
+  captured_at TEXT NOT NULL,
+  FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_snapshots_workflow ON task_snapshots(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_task_snapshots_phase ON task_snapshots(phase);
 `;
 
 /**
