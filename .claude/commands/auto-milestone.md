@@ -35,6 +35,102 @@ claude
 
 ---
 
+## Task System Integration
+
+Native task tracking provides wave-based progress visualization during milestone execution. Tasks are supplementary to the checkpoint system (which remains source of truth).
+
+### Wave-Based Task Creation
+
+Create tasks during Phase 1 (Planning) after dependency analysis:
+
+```
+Phase 1: After dependency analysis complete:
+
+For each issue in Wave 1 (no dependencies):
+  TaskCreate({
+    subject: "Issue #<N>: <title>",
+    description: "<issue-summary>",
+    activeForm: "Working on issue #<N>",
+    metadata: {
+      issueNumber: <N>,
+      workflowId: "<milestone-workflow-id>",
+      waveNumber: 1,
+      milestoneId: "<milestone-name>",
+      worktreeId: "<worktree-path>"
+    }
+  })
+
+For each issue in Wave 2 (depends on Wave 1):
+  TaskCreate({
+    subject: "Issue #<N>: <title>",
+    description: "<issue-summary>",
+    activeForm: "Working on issue #<N>",
+    blockedBy: [<all-wave-1-task-ids>],  // Blocked until Wave 1 complete
+    metadata: {
+      issueNumber: <N>,
+      workflowId: "<milestone-workflow-id>",
+      waveNumber: 2,
+      milestoneId: "<milestone-name>",
+      worktreeId: "<worktree-path>"
+    }
+  })
+
+For each issue in Wave N (depends on Wave N-1):
+  → blockedBy: [<all-wave-(N-1)-task-ids>]
+```
+
+### Task Updates During Execution
+
+Update task status as issues progress through Phase 2:
+
+```
+Phase 2: Execute (as each issue progresses):
+
+On /auto-issue start for issue:
+  TaskUpdate(taskId, { status: "in_progress" })
+
+On /auto-issue complete (PR created):
+  TaskUpdate(taskId, { status: "completed" })
+
+On /auto-issue failure:
+  TaskUpdate(taskId, { status: "completed", metadata: { failed: true, error } })
+
+After each wave completes:
+  TaskList() → Show wave progress, next wave unblocked
+```
+
+### Progress Visualization
+
+Display progress at phase transitions with `TaskList()`:
+
+```
+Milestone "OB3 Phase 1" Progress:
+
+Wave 1 (No dependencies):
+├─ Issue #153: Add KeyPair type      [COMPLETED] ✓
+├─ Issue #154: Implement generator   [COMPLETED] ✓
+└─ Issue #155: Add storage service   [IN_PROGRESS] ...
+
+Wave 2 (Depends on Wave 1):
+├─ Issue #156: Add JWKS endpoint     [PENDING, blocked by Wave 1]
+└─ Issue #157: Integrate with auth   [PENDING, blocked by Wave 1]
+
+Wave 3 (Depends on Wave 2):
+└─ Issue #158: E2E tests             [PENDING, blocked by Wave 2]
+
+Progress: 2/6 complete (33%)
+```
+
+### Key Points
+
+- **Checkpoint remains source of truth** - Tasks provide UI only
+- **blockedBy enforces wave order** - Prevents premature execution
+- **Tasks track per-issue status** - Independent of /auto-issue internals
+- **Metadata links to checkpoint** - Enables cross-reference for debugging
+- **Tasks survive failures** - Mark as completed with error metadata
+
+---
+
 ## Workflow
 
 ```
