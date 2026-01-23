@@ -58,18 +58,18 @@ const gate2TaskId = TaskCreate({
   blockedBy: [gate1TaskId],
 });
 
-// Continue pattern for Gates 3, 4, 5...
+// Continue pattern for Gates 3, 4, then Finalize (not a gate)...
 ```
 
 ### Gate-to-Task Mapping
 
-| Gate | Phase     | Task Subject                   | Blocking Dependency |
-| ---- | --------- | ------------------------------ | ------------------- |
-| 1    | Setup     | "Gate 1: Review Issue #N"      | None                |
-| 2    | Research  | "Gate 2: Review Plan for #N"   | Gate 1              |
-| 3    | Implement | "Gate 3: Implement #N"         | Gate 2              |
-| 4    | Review    | "Gate 4: Pre-PR Review for #N" | Gate 3              |
-| 5    | Finalize  | "Gate 5: Finalize PR for #N"   | Gate 4              |
+| Gate     | Phase     | Task Subject                   | Blocking Dependency |
+| -------- | --------- | ------------------------------ | ------------------- |
+| 1        | Setup     | "Gate 1: Review Issue #N"      | None                |
+| 2        | Research  | "Gate 2: Review Plan for #N"   | Gate 1              |
+| 3        | Implement | "Gate 3: Implement #N"         | Gate 2              |
+| 4        | Review    | "Gate 4: Pre-PR Review for #N" | Gate 3              |
+| Finalize | Finalize  | "Finalize: Create PR for #N"   | Gate 4              |
 
 ### When to Update Tasks
 
@@ -88,13 +88,13 @@ TaskList(); // Display current state to user
 
 ### Progress Visualization Example
 
-```
+```text
 Tasks for Issue #123:
 ├─ Gate 1: Review Issue #123      [COMPLETED] ✓
 ├─ Gate 2: Review Plan for #123   [COMPLETED] ✓
 ├─ Gate 3: Implement #123         [IN_PROGRESS] ...
 ├─ Gate 4: Pre-PR Review for #123 [PENDING, blocked by Gate 3]
-└─ Gate 5: Finalize PR for #123   [PENDING, blocked by Gate 4]
+└─ Finalize: Create PR for #123   [PENDING, blocked by Gate 4]
 ```
 
 ---
@@ -216,8 +216,8 @@ interface TaskMetadata {
 
 ```typescript
 interface WorkOnIssueMetadata extends TaskMetadata {
-  phase: WorkflowPhase; // "setup" | "research" | "implement" | "review" | "finalize"
-  gate: number; // 1-5
+  phase: WorkflowPhase; // "research" | "implement" | "review" | "finalize"
+  gate?: number; // 1-4 (omit for finalize task which is not a gate)
 }
 ```
 

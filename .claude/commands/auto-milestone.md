@@ -43,7 +43,7 @@ Native task tracking provides wave-based progress visualization during milestone
 
 Create tasks during Phase 1 (Planning) after dependency analysis:
 
-```
+```text
 Phase 1: After dependency analysis complete:
 
 For each issue in Wave 1 (no dependencies):
@@ -83,7 +83,7 @@ For each issue in Wave N (depends on Wave N-1):
 
 Update task status as issues progress through Phase 2:
 
-```
+```text
 Phase 2: Execute (as each issue progresses):
 
 On /auto-issue start for issue:
@@ -103,7 +103,7 @@ After each wave completes:
 
 Display progress at phase transitions with `TaskList()`:
 
-```
+```text
 Milestone "OB3 Phase 1" Progress:
 
 Wave 1 (No dependencies):

@@ -19,7 +19,7 @@ Native task tracking provides progress visualization during the workflow. Tasks 
 
 Create tasks at workflow start and update as gates pass:
 
-```
+```text
 After Phase 1 Setup:
   TaskCreate({
     subject: "Gate 1: Review Issue #<N>",
@@ -60,16 +60,17 @@ After Gate 3 Approved (all commits):
 
 After Gate 4 Approved:
   TaskUpdate(gate4TaskId, { status: "completed" })
+  # Finalize is not a gate - it runs after Gate 4 approval
   TaskCreate({
-    subject: "Gate 5: Finalize PR for #<N>",
+    subject: "Finalize: Create PR for #<N>",
     description: "Push branch, create PR, update board",
     activeForm: "Finalizing PR",
-    metadata: { issueNumber: <N>, workflowId, phase: "finalize", gate: 5 }
+    metadata: { issueNumber: <N>, workflowId, phase: "finalize" }
   })
   → blockedBy: [gate4TaskId]
 
 After PR Created:
-  TaskUpdate(gate5TaskId, { status: "completed" })
+  TaskUpdate(finalizeTaskId, { status: "completed" })
   TaskList() → Show final progress summary
 ```
 
@@ -77,13 +78,13 @@ After PR Created:
 
 After each gate, display progress with `TaskList()`:
 
-```
+```text
 Tasks for Issue #123:
 ├─ Gate 1: Review Issue #123      [COMPLETED]
 ├─ Gate 2: Review Plan for #123   [COMPLETED]
 ├─ Gate 3: Implement #123         [IN_PROGRESS]
 ├─ Gate 4: Pre-PR Review for #123 [PENDING, blocked by Gate 3]
-└─ Gate 5: Finalize PR for #123   [PENDING, blocked by Gate 4]
+└─ Finalize: Create PR for #123   [PENDING, blocked by Gate 4]
 ```
 
 ### Key Points
