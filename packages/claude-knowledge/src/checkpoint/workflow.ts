@@ -342,9 +342,21 @@ function logCommit(workflowId: string, sha: string, message: string): void {
 
 /**
  * Update workflow phase
+ * @param workflowId - Workflow ID to update
+ * @param phase - New workflow phase
+ * @param taskSnapshot - Optional task snapshot to log at phase boundary
  * @throws Error if workflow doesn't exist
  */
-function setPhase(workflowId: string, phase: WorkflowPhase): void {
+function setPhase(
+  workflowId: string,
+  phase: WorkflowPhase,
+  taskSnapshot?: {
+    taskId: string;
+    taskSubject: string;
+    taskStatus: string;
+    taskMetadata?: string;
+  },
+): void {
   const db = getDatabase();
   const result = db.run(
     `UPDATE workflows SET phase = ?, updated_at = ? WHERE id = ?`,
@@ -355,6 +367,21 @@ function setPhase(workflowId: string, phase: WorkflowPhase): void {
     throw new Error(
       `Failed to update workflow phase: No workflow found with ID "${workflowId}". ` +
         `The workflow may have been deleted or the ID is incorrect.`,
+    );
+  }
+
+  // Log task snapshot if provided
+  if (taskSnapshot) {
+    // Lazy import to avoid circular dependency with metrics.ts
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+    const { metrics } = require("./metrics.js");
+    metrics.logTaskSnapshot(
+      workflowId,
+      phase,
+      taskSnapshot.taskId,
+      taskSnapshot.taskSubject,
+      taskSnapshot.taskStatus,
+      taskSnapshot.taskMetadata,
     );
   }
 }
