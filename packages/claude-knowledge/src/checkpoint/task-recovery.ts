@@ -130,13 +130,40 @@ const AUTO_ISSUE_PHASES: GateDefinition[] = [
 // ============================================================================
 
 /**
- * Determine task status based on workflow phase and gate index.
- * Uses the phase order to determine which tasks are completed.
+ * Determine the last completed gate from checkpoint actions.
+ * Returns -1 if no gates have been completed (Gate 1 in progress).
+ */
+function getLastCompletedGateFromActions(
+  actions: CheckpointData["actions"],
+): number {
+  // Look for gate completion actions in reverse order (most recent first)
+  // Gate actions follow patterns like: "gate-1-*", "gate-2-*", etc.
+  let lastCompletedGate = -1;
+
+  for (const action of actions) {
+    const match = action.action.match(/gate-(\d+)/i);
+    if (match && action.result === "success") {
+      const gateNum = parseInt(match[1], 10);
+      // Gate numbers are 1-indexed, convert to 0-indexed
+      const gateIndex = gateNum - 1;
+      if (gateIndex > lastCompletedGate) {
+        lastCompletedGate = gateIndex;
+      }
+    }
+  }
+
+  return lastCompletedGate;
+}
+
+/**
+ * Determine task status based on workflow phase, gate index, and actions.
+ * Uses actions to accurately determine which gate is active in the research phase.
  */
 function getWorkOnIssueTaskStatus(
   currentPhase: WorkflowPhase,
   currentStatus: WorkflowStatus,
   gateIndex: number,
+  lastCompletedGate: number,
 ): RecoveredTaskStatus {
   // If workflow completed, all tasks are completed
   if (currentStatus === "completed") {
@@ -146,40 +173,21 @@ function getWorkOnIssueTaskStatus(
   // If workflow failed, mark current task as completed (with error)
   // and subsequent tasks as pending
   if (currentStatus === "failed") {
-    const phaseIndex = getPhaseIndex(currentPhase, "work-on-issue");
-    if (gateIndex < phaseIndex) {
+    if (gateIndex <= lastCompletedGate) {
       return "completed";
     }
-    if (gateIndex === phaseIndex) {
-      return "completed"; // Current phase failed, mark as completed with error
+    if (gateIndex === lastCompletedGate + 1) {
+      return "completed"; // Current gate failed, mark as completed with error
     }
     return "pending";
   }
 
-  // Map phases to gate completion
-  // research: Gate 1 in progress or Gate 2 in progress
-  // implement: Gate 3 in progress
-  // review: Gate 4 in progress
-  // finalize: Finalize in progress
-
-  const phaseToGateMap: Record<WorkflowPhase, number> = {
-    research: 0, // When in research, Gate 1 is in progress (default to first gate in phase)
-    implement: 2, // When in implement, Gate 3 is in progress
-    review: 3, // When in review, Gate 4 is in progress
-    finalize: 4, // When in finalize, Finalize task is in progress
-    // Milestone phases (not used for work-on-issue)
-    planning: 0,
-    execute: 0,
-    merge: 0,
-    cleanup: 0,
-  };
-
-  const currentGateIndex = phaseToGateMap[currentPhase];
-
-  if (gateIndex < currentGateIndex) {
+  // For running workflows, use the last completed gate to determine status
+  // This handles the research phase correctly (Gate 1 vs Gate 2)
+  if (gateIndex <= lastCompletedGate) {
     return "completed";
   }
-  if (gateIndex === currentGateIndex) {
+  if (gateIndex === lastCompletedGate + 1) {
     return "in_progress";
   }
   return "pending";
@@ -229,8 +237,9 @@ function getAutoIssueTaskStatus(
 
 /**
  * Get phase index for ordering.
+ * Reserved for future use in phase-based ordering.
  */
-function getPhaseIndex(
+function _getPhaseIndex(
   phase: WorkflowPhase,
   workflowType: RecoverableWorkflowType,
 ): number {
@@ -264,11 +273,19 @@ function getPhaseIndex(
 export function recoverWorkOnIssueTasks(
   checkpointData: CheckpointData,
 ): TaskRecoveryPlan {
-  const { workflow: wf } = checkpointData;
+  const { workflow: wf, actions } = checkpointData;
   const issueNumber = wf.issueNumber;
 
+  // Determine last completed gate from actions for accurate status mapping
+  const lastCompletedGate = getLastCompletedGateFromActions(actions);
+
   const tasks: RecoveredTask[] = WORK_ON_ISSUE_GATES.map((gate) => {
-    const status = getWorkOnIssueTaskStatus(wf.phase, wf.status, gate.index);
+    const status = getWorkOnIssueTaskStatus(
+      wf.phase,
+      wf.status,
+      gate.index,
+      lastCompletedGate,
+    );
 
     return {
       subject: gate.subject(issueNumber),
@@ -403,11 +420,16 @@ export function recoverAutoMilestoneTasks(
 
     for (const wf of waveWorkflows) {
       // Determine task status based on workflow status
+      // Map workflow status to task status preserving progress signal
       let status: RecoveredTaskStatus;
       if (wf.status === "completed") {
         status = "completed";
-      } else if (wf.status === "running") {
+      } else if (wf.status === "running" || wf.status === "paused") {
+        // Paused workflows still show as in_progress to preserve progress
         status = "in_progress";
+      } else if (wf.status === "failed") {
+        // Failed workflows are marked completed (with error signal in metadata)
+        status = "completed";
       } else {
         status = "pending";
       }
@@ -424,6 +446,7 @@ export function recoverAutoMilestoneTasks(
           waveNumber: waveNum,
           milestoneId: ms.id,
           milestoneName: ms.name,
+          ...(wf.status === "failed" && { failed: true }),
         },
       });
     }

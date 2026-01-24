@@ -515,11 +515,11 @@ function formatRecoveryInstructions(plan: TaskRecoveryPlan): string {
     const varName = `task${i}`;
     taskVars.push(varName);
 
-    // TaskCreate call
+    // TaskCreate call (use JSON.stringify for safe string escaping)
     lines.push(`${varName} = TaskCreate({`);
-    lines.push(`  subject: "${task.subject}",`);
-    lines.push(`  description: "${task.description}",`);
-    lines.push(`  activeForm: "${task.activeForm}",`);
+    lines.push(`  subject: ${JSON.stringify(task.subject)},`);
+    lines.push(`  description: ${JSON.stringify(task.description)},`);
+    lines.push(`  activeForm: ${JSON.stringify(task.activeForm)},`);
     lines.push(`  metadata: ${JSON.stringify(task.metadata)}`);
     lines.push(`})`);
 

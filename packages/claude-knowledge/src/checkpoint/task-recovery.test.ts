@@ -51,12 +51,24 @@ function createTestWorkflow(
     );
   }
 
-  // Log some actions based on workflow type detection
+  // Log gate actions based on phase for /work-on-issue workflows
+  // Gate actions are used to determine which gate is currently active
   const isWorkOnIssue = issueNumber >= 100 && issueNumber < 200;
   if (isWorkOnIssue) {
-    // Log gate-style actions for /work-on-issue detection
-    if (phase !== "research") {
+    // Log completed gate actions based on current phase
+    // research: no gates completed yet (Gate 1 in progress)
+    // implement: gates 1-2 completed (Gate 3 in progress)
+    // review: gates 1-3 completed (Gate 4 in progress)
+    // finalize: gates 1-4 completed (Finalize in progress)
+    if (phase === "implement" || phase === "review" || phase === "finalize") {
       checkpoint.logAction(workflow.id, "gate-1-issue-reviewed", "success");
+      checkpoint.logAction(workflow.id, "gate-2-plan-approved", "success");
+    }
+    if (phase === "review" || phase === "finalize") {
+      checkpoint.logAction(workflow.id, "gate-3-implemented", "success");
+    }
+    if (phase === "finalize") {
+      checkpoint.logAction(workflow.id, "gate-4-review-passed", "success");
     }
   }
 

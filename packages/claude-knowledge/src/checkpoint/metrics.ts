@@ -897,7 +897,18 @@ function getTaskProgress(taskId: string): TaskProgress {
       >(`SELECT task_status FROM task_snapshots WHERE task_id = ? ORDER BY captured_at DESC LIMIT 1`)
       .get(taskId);
 
-    const status = row?.task_status ?? "pending";
+    // If no snapshot exists, return zeros (not found)
+    if (!row) {
+      return {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+        percentage: 0,
+      };
+    }
+
+    const status = row.task_status;
     const completed = status === "completed" ? 1 : 0;
     const inProgress = status === "in_progress" ? 1 : 0;
     const pending = status === "pending" ? 1 : 0;
