@@ -13,7 +13,6 @@ import type {
   MilestoneCheckpointData,
   RecoveredTask,
   RecoveredTaskStatus,
-  RecoverableWorkflowType,
   TaskRecoveryPlan,
   WorkflowPhase,
   WorkflowStatus,
@@ -206,20 +205,16 @@ function getAutoIssueTaskStatus(
     return "completed";
   }
 
-  // Map phases to task indices
-  const phaseToIndexMap: Record<WorkflowPhase, number> = {
-    research: 1, // During research, setup is done, research is in progress
+  // Map auto-issue phases to task indices
+  // Setup (0) is always completed once we have a checkpoint
+  const phaseToIndexMap: Record<string, number> = {
+    research: 1,
     implement: 2,
     review: 3,
     finalize: 4,
-    // Milestone phases
-    planning: 0,
-    execute: 1,
-    merge: 3,
-    cleanup: 4,
   };
 
-  const currentTaskIndex = phaseToIndexMap[currentPhase];
+  const currentTaskIndex = phaseToIndexMap[currentPhase] ?? 1;
 
   // Setup task (index 0) is always completed once we have a checkpoint
   if (taskIndex === 0) {
@@ -233,34 +228,6 @@ function getAutoIssueTaskStatus(
     return currentStatus === "failed" ? "completed" : "in_progress";
   }
   return "pending";
-}
-
-/**
- * Get phase index for ordering.
- * Reserved for future use in phase-based ordering.
- */
-function _getPhaseIndex(
-  phase: WorkflowPhase,
-  workflowType: RecoverableWorkflowType,
-): number {
-  if (workflowType === "auto-milestone") {
-    const milestonePhases: WorkflowPhase[] = [
-      "planning",
-      "execute",
-      "review",
-      "merge",
-      "cleanup",
-    ];
-    return milestonePhases.indexOf(phase);
-  }
-
-  const issuePhases: WorkflowPhase[] = [
-    "research",
-    "implement",
-    "review",
-    "finalize",
-  ];
-  return issuePhases.indexOf(phase);
 }
 
 // ============================================================================
@@ -357,6 +324,27 @@ export function recoverAutoIssueTasks(
 }
 
 /**
+ * Map workflow status to task status for milestone workflows.
+ * - completed/failed: "completed" (failed has error in metadata)
+ * - running/paused: "in_progress" (preserve progress signal)
+ * - pending: "pending"
+ */
+function mapWorkflowStatusToTaskStatus(
+  workflowStatus: WorkflowStatus,
+): RecoveredTaskStatus {
+  switch (workflowStatus) {
+    case "completed":
+    case "failed":
+      return "completed";
+    case "running":
+    case "paused":
+      return "in_progress";
+    default:
+      return "pending";
+  }
+}
+
+/**
  * Generate task recovery plan for /auto-milestone workflow.
  * Creates wave-based task structure with dependencies.
  */
@@ -419,20 +407,7 @@ export function recoverAutoMilestoneTasks(
     }
 
     for (const wf of waveWorkflows) {
-      // Determine task status based on workflow status
-      // Map workflow status to task status preserving progress signal
-      let status: RecoveredTaskStatus;
-      if (wf.status === "completed") {
-        status = "completed";
-      } else if (wf.status === "running" || wf.status === "paused") {
-        // Paused workflows still show as in_progress to preserve progress
-        status = "in_progress";
-      } else if (wf.status === "failed") {
-        // Failed workflows are marked completed (with error signal in metadata)
-        status = "completed";
-      } else {
-        status = "pending";
-      }
+      const status = mapWorkflowStatusToTaskStatus(wf.status);
 
       tasks.push({
         subject: `Issue #${wf.issueNumber}: Wave ${waveNum}`,

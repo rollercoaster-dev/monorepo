@@ -881,9 +881,25 @@ function getChildTasks(parentTaskId: string): TaskSnapshot[] {
  * If the task has no children, progress is based on the task's own status.
  *
  * @param taskId - Task ID to get progress for
+ * @param visited - Set of already-visited task IDs to prevent infinite recursion on cyclic data
  * @returns Progress aggregation including percentage
  */
-function getTaskProgress(taskId: string): TaskProgress {
+function getTaskProgress(
+  taskId: string,
+  visited: Set<string> = new Set(),
+): TaskProgress {
+  // Cycle detection - prevent infinite recursion on corrupt/cyclic data
+  if (visited.has(taskId)) {
+    return {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      pending: 0,
+      percentage: 0,
+    };
+  }
+  visited.add(taskId);
+
   const children = getChildTasks(taskId);
 
   if (children.length === 0) {
@@ -929,7 +945,7 @@ function getTaskProgress(taskId: string): TaskProgress {
 
   for (const child of children) {
     // Recursively get progress for each child (handles nested hierarchies)
-    const childProgress = getTaskProgress(child.taskId);
+    const childProgress = getTaskProgress(child.taskId, visited);
     completed += childProgress.completed;
     inProgress += childProgress.inProgress;
     pending += childProgress.pending;
@@ -970,24 +986,38 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
   };
 
   // Get the most recent snapshot for each task
-  const whereClause = workflowId ? "WHERE ts.workflow_id = ?" : "";
-
-  const rows = db
-    .query<SnapshotRow, string[]>(
-      `
-      SELECT ts.*
-      FROM task_snapshots ts
-      INNER JOIN (
-        SELECT task_id, MAX(captured_at) as max_captured
-        FROM task_snapshots
-        ${workflowId ? "WHERE workflow_id = ?" : ""}
-        GROUP BY task_id
-      ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
-      ${whereClause}
-      ORDER BY ts.captured_at ASC
-      `,
-    )
-    .all(...(workflowId ? [workflowId, workflowId] : []));
+  // Use separate queries for filtered vs unfiltered to avoid fragile SQL construction
+  const rows = workflowId
+    ? db
+        .query<SnapshotRow, [string, string]>(
+          `
+          SELECT ts.*
+          FROM task_snapshots ts
+          INNER JOIN (
+            SELECT task_id, MAX(captured_at) as max_captured
+            FROM task_snapshots
+            WHERE workflow_id = ?
+            GROUP BY task_id
+          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          WHERE ts.workflow_id = ?
+          ORDER BY ts.captured_at ASC
+          `,
+        )
+        .all(workflowId, workflowId)
+    : db
+        .query<SnapshotRow, []>(
+          `
+          SELECT ts.*
+          FROM task_snapshots ts
+          INNER JOIN (
+            SELECT task_id, MAX(captured_at) as max_captured
+            FROM task_snapshots
+            GROUP BY task_id
+          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ORDER BY ts.captured_at ASC
+          `,
+        )
+        .all();
 
   // Convert rows to TaskSnapshot objects
   const snapshots: TaskSnapshot[] = rows.map((row) => ({

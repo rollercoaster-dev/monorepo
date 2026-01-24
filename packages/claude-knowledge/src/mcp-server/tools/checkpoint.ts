@@ -7,7 +7,11 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { checkpoint } from "../../checkpoint/index.js";
-import type { WorkflowPhase, WorkflowStatus } from "../../types.js";
+import type {
+  TaskRecoveryPlan,
+  WorkflowPhase,
+  WorkflowStatus,
+} from "../../types.js";
 
 /**
  * Tool definitions for checkpoint workflow operations.
@@ -377,7 +381,7 @@ export async function handleCheckpointToolCall(
           | "auto-issue"
           | undefined;
 
-        // Validate at least one identifier is provided
+        // Validate exactly one identifier is provided
         if (issueNumber === undefined && !milestoneName) {
           return {
             content: [
@@ -385,6 +389,21 @@ export async function handleCheckpointToolCall(
                 type: "text",
                 text: JSON.stringify({
                   error: "Either issueNumber or milestoneName must be provided",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        if (issueNumber !== undefined && milestoneName) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error:
+                    "Provide either issueNumber or milestoneName, not both",
                 }),
               },
             ],
@@ -496,8 +515,6 @@ export async function handleCheckpointToolCall(
  * Format recovery instructions for Claude to execute.
  * Returns a string with TaskCreate/TaskUpdate pseudocode.
  */
-import type { TaskRecoveryPlan } from "../../types.js";
-
 function formatRecoveryInstructions(plan: TaskRecoveryPlan): string {
   const lines: string[] = [
     `# Task Recovery for ${plan.workflowType}`,
