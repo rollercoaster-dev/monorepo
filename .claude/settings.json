@@ -1,5 +1,18 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-gate.ts",
+            "timeout": 5000,
+            "description": "Augment Grep with graph_find results + log metrics"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "startup",

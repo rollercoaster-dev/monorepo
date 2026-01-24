@@ -640,7 +640,8 @@ function getToolUsageSummary(sessionId: string): ToolUsageSummary {
 
 /**
  * Get aggregate tool usage stats across all sessions.
- * Useful for analyzing overall tool selection patterns.
+ * Combines data from both tool_usage (native tools via PreToolUse hook)
+ * and graph_queries (MCP graph tools) for accurate graph vs search ratio.
  */
 function getToolUsageAggregate(): {
   totalSessions: number;
@@ -651,12 +652,12 @@ function getToolUsageAggregate(): {
 } {
   const db = getDatabase();
 
-  // Get total sessions and calls
+  // Get total sessions and calls from tool_usage (native tools)
   type TotalsRow = {
     total_sessions: number;
     total_calls: number;
   };
-  const totals = db
+  const toolUsageTotals = db
     .query<TotalsRow, []>(
       `
       SELECT
@@ -667,12 +668,7 @@ function getToolUsageAggregate(): {
     )
     .get();
 
-  const totalSessions = totals?.total_sessions ?? 0;
-  const totalCalls = totals?.total_calls ?? 0;
-  const avgCallsPerSession =
-    totalSessions > 0 ? Math.round((totalCalls / totalSessions) * 10) / 10 : 0;
-
-  // Get counts by category
+  // Get counts by category from tool_usage
   type CategoryRow = { tool_category: ToolCategory; count: number };
   const categoryRows = db
     .query<CategoryRow, []>(
@@ -696,38 +692,26 @@ function getToolUsageAggregate(): {
     byCategory[row.tool_category] = row.count;
   }
 
-  // Calculate average graph/search ratio across sessions
-  // (average of per-session ratios, not global ratio)
-  type SessionRatioRow = {
-    session_id: string;
-    graph_count: number;
-    search_count: number;
-  };
-  const sessionRows = db
-    .query<SessionRatioRow, []>(
-      `
-      SELECT
-        session_id,
-        SUM(CASE WHEN tool_category = 'graph' THEN 1 ELSE 0 END) as graph_count,
-        SUM(CASE WHEN tool_category = 'search' THEN 1 ELSE 0 END) as search_count
-      FROM tool_usage
-      GROUP BY session_id
-      `,
-    )
-    .all();
+  // Add graph queries from graph_queries table (MCP graph tools)
+  // These don't go through PreToolUse hook, so we need to count them separately
+  type GraphCountRow = { count: number };
+  const graphQueryCount = db
+    .query<GraphCountRow, []>(`SELECT COUNT(*) as count FROM graph_queries`)
+    .get();
 
-  // Compute per-session ratios for sessions with search_count > 0
-  const sessionRatios: number[] = [];
-  for (const row of sessionRows) {
-    if (row.search_count > 0) {
-      sessionRatios.push(row.graph_count / row.search_count);
-    }
-  }
+  byCategory.graph += graphQueryCount?.count ?? 0;
 
-  // Average of per-session ratios (null if no sessions have search calls)
+  // Calculate totals including graph_queries
+  const totalSessions = toolUsageTotals?.total_sessions ?? 0;
+  const totalCalls =
+    (toolUsageTotals?.total_calls ?? 0) + (graphQueryCount?.count ?? 0);
+  const avgCallsPerSession =
+    totalSessions > 0 ? Math.round((totalCalls / totalSessions) * 10) / 10 : 0;
+
+  // Calculate global graph/search ratio (simpler and more accurate)
   const avgGraphSearchRatio =
-    sessionRatios.length > 0
-      ? sessionRatios.reduce((sum, r) => sum + r, 0) / sessionRatios.length
+    byCategory.search > 0
+      ? Math.round((byCategory.graph / byCategory.search) * 100) / 100
       : null;
 
   return {

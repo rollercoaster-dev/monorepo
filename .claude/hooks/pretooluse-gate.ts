@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /**
- * PreToolUse Metrics Hook
+ * PreToolUse Metrics + Graph Augmentation Hook
  *
- * Logs tool usage metrics for analyzing Claude's tool selection patterns.
- * Always allows the tool call - this is an observer, not a gatekeeper.
+ * Two responsibilities:
+ * 1. Logs tool usage metrics for analyzing Claude's tool selection patterns.
+ * 2. Augments Grep calls with graph_find results (passive knowledge injection).
  *
  * Usage: Called automatically by Claude Code before any tool use.
  *
@@ -11,10 +12,16 @@
  * - Tool name and category (graph, search, read, write, other)
  * - Timestamp for session grouping
  *
- * The graph-first pattern is encouraged via CLAUDE.md guidance, not enforcement.
+ * Graph augmentation:
+ * - When Grep is called, extract the pattern
+ * - If pattern looks like an identifier, run graph_find
+ * - Output graph results as additional context (non-blocking)
+ *
+ * The graph-first pattern is encouraged via passive augmentation, not blocking.
  */
 
 import { metrics } from "../../packages/claude-knowledge/src/checkpoint/metrics";
+import { graph } from "../../packages/claude-knowledge/src/graph/index";
 
 interface HookInput {
   tool_name: string;
@@ -67,6 +74,55 @@ function output(result: HookOutput): void {
   console.log(JSON.stringify(result));
 }
 
+/**
+ * Check if a pattern looks like an identifier (function/class/variable name).
+ * Identifiers are typically camelCase, PascalCase, or snake_case.
+ */
+function looksLikeIdentifier(pattern: string): boolean {
+  // Skip if pattern has regex metacharacters (likely a regex, not an identifier)
+  if (/[.*+?^${}()|[\]\\]/.test(pattern)) {
+    return false;
+  }
+  // Skip if pattern is very short (likely too generic)
+  if (pattern.length < 3) {
+    return false;
+  }
+  // Match typical identifier patterns: camelCase, PascalCase, snake_case
+  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(pattern);
+}
+
+/**
+ * Augment Grep calls with graph_find results.
+ * Outputs graph context as stderr (visible in hook output) before allowing Grep.
+ */
+async function augmentGrepWithGraph(
+  pattern: string,
+): Promise<string | undefined> {
+  if (!looksLikeIdentifier(pattern)) {
+    return undefined;
+  }
+
+  try {
+    const results = graph.findEntities(pattern, undefined, 5);
+    if (results.length === 0) {
+      return undefined;
+    }
+
+    const lines = [
+      `\n🕸️ Graph augmentation for "${pattern}":`,
+      ...results.map(
+        (r) =>
+          `  → ${r.type} ${r.name} in ${r.filePath}:${r.lineNumber ?? "?"}`,
+      ),
+      "",
+    ];
+    return lines.join("\n");
+  } catch {
+    // Graph lookup failed - don't block Grep
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   const input = await Bun.stdin.text();
 
@@ -78,7 +134,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { tool_name } = hookInput;
+  const { tool_name, tool_input } = hookInput;
   const sessionId = getSessionId();
 
   // Log the tool usage for metrics (non-blocking, fire-and-forget)
@@ -86,6 +142,16 @@ async function main(): Promise<void> {
     metrics.logToolUsage(sessionId, tool_name);
   } catch {
     // Non-critical - don't block tool usage if metrics fail
+  }
+
+  // Augment Grep calls with graph results (passive knowledge injection)
+  if (tool_name === "Grep" && tool_input.pattern) {
+    const pattern = String(tool_input.pattern);
+    const graphContext = await augmentGrepWithGraph(pattern);
+    if (graphContext) {
+      // Output to stderr so it appears in hook feedback but doesn't interfere with JSON
+      console.error(graphContext);
+    }
   }
 
   // Always allow - we're observing, not blocking
