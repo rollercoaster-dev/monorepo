@@ -155,11 +155,11 @@ CREATE INDEX IF NOT EXISTS idx_graph_queries_session ON graph_queries(session_id
 CREATE INDEX IF NOT EXISTS idx_graph_queries_workflow ON graph_queries(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_graph_queries_type ON graph_queries(query_type);
 
--- Code graph entities (functions, classes, files, types)
+-- Code graph entities (functions, classes, files, types, enums)
 -- Part of Issue #431 Experiment 3: Code Graph Prototype
 CREATE TABLE IF NOT EXISTS graph_entities (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('function', 'class', 'type', 'interface', 'variable', 'file')),
+  type TEXT NOT NULL CHECK (type IN ('function', 'class', 'type', 'interface', 'variable', 'file', 'enum')),
   name TEXT NOT NULL,
   file_path TEXT NOT NULL,
   line_number INTEGER,
@@ -478,6 +478,61 @@ function runMigrations(database: Database): void {
       `Migration failed (add parent_task_id to task_snapshots): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+
+  // Migration 7: Add 'enum' to graph_entities type CHECK constraint
+  const graphEntitiesSchemaRow = database
+    .query<
+      { sql: string },
+      []
+    >("SELECT sql FROM sqlite_master WHERE type='table' AND name='graph_entities'")
+    .get();
+
+  if (
+    graphEntitiesSchemaRow &&
+    !graphEntitiesSchemaRow.sql.includes("'enum'")
+  ) {
+    database.run("BEGIN TRANSACTION");
+    try {
+      database.run(`
+        CREATE TABLE graph_entities_new (
+          id TEXT PRIMARY KEY,
+          type TEXT NOT NULL CHECK (type IN ('function', 'class', 'type', 'interface', 'variable', 'file', 'enum')),
+          name TEXT NOT NULL,
+          file_path TEXT NOT NULL,
+          line_number INTEGER,
+          exported INTEGER DEFAULT 0,
+          package TEXT,
+          metadata TEXT
+        )
+      `);
+      database.run(
+        "INSERT INTO graph_entities_new SELECT * FROM graph_entities",
+      );
+      database.run("DROP TABLE graph_entities");
+      database.run("ALTER TABLE graph_entities_new RENAME TO graph_entities");
+
+      // Recreate indexes
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_graph_entities_name ON graph_entities(name)",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_graph_entities_file ON graph_entities(file_path)",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_graph_entities_type ON graph_entities(type)",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_graph_entities_package ON graph_entities(package)",
+      );
+
+      database.run("COMMIT");
+    } catch (error) {
+      database.run("ROLLBACK");
+      throw new Error(
+        `Migration failed (add enum to graph_entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 }
 
 export function getDatabase(dbPath?: string): Database {
@@ -509,6 +564,14 @@ export function getDatabase(dbPath?: string): Database {
 
   // Enable foreign keys
   db.run("PRAGMA foreign_keys = ON;");
+
+  // Performance optimizations for bulk indexing operations
+  // synchronous=NORMAL: trades some durability for significant write speed gain
+  // cache_size=10000: ~40MB cache (10000 pages * 4KB default page size)
+  // temp_store=MEMORY: keep temporary tables in memory
+  db.run("PRAGMA synchronous = NORMAL;");
+  db.run("PRAGMA cache_size = 10000;");
+  db.run("PRAGMA temp_store = MEMORY;");
 
   // Run schema initialization
   try {
