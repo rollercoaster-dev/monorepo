@@ -4,6 +4,7 @@ import { validateBadge, isBadge, isOB2Profile } from "openbadges-types";
 import {
   isOB2Assertion,
   isOB3VerifiableCredential,
+  validateOB3Context,
   OB2Guards,
   OB3Guards,
 } from "@utils/type-helpers";
@@ -565,39 +566,14 @@ export class BadgeVerificationService {
     badge: OB3.VerifiableCredential,
     result: VerificationResult,
   ): void {
-    // Validate context
-    if (!badge["@context"] || !Array.isArray(badge["@context"])) {
+    // Validate @context using the unified validateOB3Context function
+    // This supports string, array, and object formats per the OB3 spec
+    const contextValidation = validateOB3Context(badge["@context"]);
+    if (!contextValidation.valid) {
       result.contentValidation.errors.push(
-        "OB3 credential is missing a valid context",
+        contextValidation.error || "OB3 credential has invalid @context",
       );
       result.contentValidation.isValid = false;
-    } else {
-      // Check for required contexts
-      const hasW3CContext = badge["@context"].some(
-        (ctx) =>
-          ctx === "https://www.w3.org/2018/credentials/v1" ||
-          ctx === "https://w3id.org/credentials/v1",
-      );
-
-      const hasOB3Context = badge["@context"].some(
-        (ctx) =>
-          ctx === "https://purl.imsglobal.org/spec/ob/v3p0/context.json" ||
-          ctx === "https://w3id.org/openbadges/v3",
-      );
-
-      if (!hasW3CContext) {
-        result.contentValidation.errors.push(
-          "OB3 credential is missing the W3C Verifiable Credentials context",
-        );
-        result.contentValidation.isValid = false;
-      }
-
-      if (!hasOB3Context) {
-        result.contentValidation.errors.push(
-          "OB3 credential is missing the Open Badges v3 context",
-        );
-        result.contentValidation.isValid = false;
-      }
     }
 
     // Validate type

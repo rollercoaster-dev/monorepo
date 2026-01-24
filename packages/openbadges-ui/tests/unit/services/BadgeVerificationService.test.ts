@@ -164,7 +164,6 @@ describe("BadgeVerificationService", () => {
     });
 
     it("should reject an invalid badge", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await BadgeVerificationService.verifyBadge(
         invalidBadge as any,
       );
@@ -230,7 +229,7 @@ describe("BadgeVerificationService", () => {
           achievement: undefined,
         },
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = await BadgeVerificationService.verifyBadge(
         badgeWithMissingAchievement as any,
       );
@@ -247,7 +246,7 @@ describe("BadgeVerificationService", () => {
         type: "Invalid",
         id: "not-a-valid-badge",
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = await BadgeVerificationService.verifyBadge(
         invalidBadge as any,
       );
@@ -255,6 +254,168 @@ describe("BadgeVerificationService", () => {
       expect(result.isValid).toBe(false);
       // The error message might vary, but it should contain some error text
       expect(result.errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("OB3 @context validation", () => {
+    // Base OB3 badge for context testing
+    const baseOB3Badge: OB3.VerifiableCredential = {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+      ],
+      id: createIRI("http://example.org/credentials/3732"),
+      type: ["VerifiableCredential", "OpenBadgeCredential"],
+      issuer: {
+        id: createIRI("http://example.org/issuers/1"),
+        type: "Profile",
+        name: "Test Issuer",
+        url: createIRI("http://example.org/issuers/1"),
+      },
+      validFrom: createDateTime("2023-01-01T00:00:00Z"),
+      credentialSubject: {
+        id: createIRI("did:example:ebfeb1f712ebc6f1c276e12ec21"),
+        type: "AchievementSubject",
+        achievement: {
+          id: createIRI("http://example.org/achievements/1"),
+          type: "Achievement",
+          name: "Test Badge",
+          description: "A test badge",
+          image: {
+            id: createIRI("http://example.org/badges/5/image"),
+            type: "Image",
+          },
+          criteria: {
+            narrative: "Complete the verification requirements.",
+          },
+        },
+      },
+      proof: {
+        type: "Ed25519Signature2020",
+        created: createDateTime("2023-01-01T00:00:00Z"),
+        verificationMethod: createIRI("http://example.org/issuers/1#keys/1"),
+        proofPurpose: "assertionMethod",
+        proofValue:
+          "z58DAdFfa9SkqZMVPxAQpic6FPCsJWa6SpsfDLnfWE3SV8mZ9qqLH81imXXAiLnJwkoXkgZ1xQ24zQ6yVsQFKR29D",
+      },
+    };
+
+    it("should accept OB3 badge with valid array @context", async () => {
+      const result = await BadgeVerificationService.verifyBadge(baseOB3Badge);
+
+      expect(result.badgeVersion).toBe("OB3");
+      // Context validation should pass
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context is required",
+      );
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context must include W3C Verifiable Credentials context",
+      );
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context must include Open Badges 3.0 context",
+      );
+    });
+
+    it("should accept OB3 badge with string @context", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": "https://www.w3.org/2018/credentials/v1",
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      // String context is a valid format
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context is required",
+      );
+    });
+
+    it("should accept OB3 badge with object @context (embedded)", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": {
+          "@vocab": "https://www.w3.org/2018/credentials#",
+          ob: "https://purl.imsglobal.org/spec/ob/v3p0/vocab#",
+        },
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      // Object context is a valid format
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context is required",
+      );
+    });
+
+    it("should reject OB3 badge with missing VC context in array", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": ["https://purl.imsglobal.org/spec/ob/v3p0/context.json"],
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      expect(result.contentValidation?.errors).toContain(
+        "@context must include W3C Verifiable Credentials context",
+      );
+      expect(result.contentValidation?.isValid).toBe(false);
+    });
+
+    it("should reject OB3 badge with missing OB3 context in array", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      expect(result.contentValidation?.errors).toContain(
+        "@context must include Open Badges 3.0 context",
+      );
+      expect(result.contentValidation?.isValid).toBe(false);
+    });
+
+    it("should reject OB3 badge with empty @context array", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": [],
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      expect(result.contentValidation?.errors).toContain(
+        "@context array must not be empty",
+      );
+      expect(result.contentValidation?.isValid).toBe(false);
+    });
+
+    it("should accept OB3 badge with VC v2 context", async () => {
+      const badge = {
+        ...baseOB3Badge,
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+      };
+      const result = await BadgeVerificationService.verifyBadge(
+        badge as OB3.VerifiableCredential,
+      );
+
+      expect(result.badgeVersion).toBe("OB3");
+      // Should not have context-related errors
+      expect(result.contentValidation?.errors).not.toContain(
+        "@context must include W3C Verifiable Credentials context",
+      );
     });
   });
 });
