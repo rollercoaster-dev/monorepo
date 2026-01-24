@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ob3-issuer.schema.json",
+  "title": "Open Badges 3.0 Issuer",
+  "description": "JSON Schema for validating Open Badges 3.0 Issuer/Profile objects",
+  "type": "object",
+  "required": ["id", "type", "name"],
+  "properties": {
+    "@context": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": ["string", "object"] } },
+        { "type": "object" }
+      ]
+    },
+    "id": { "type": "string", "format": "uri" },
+    "type": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "name": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "$ref": "#/definitions/MultiLanguageString" }
+      ]
+    },
+    "description": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/definitions/MultiLanguageString" }
+      ]
+    },
+    "url": { "type": "string", "format": "uri" },
+    "email": { "type": "string", "format": "email" },
+    "phone": { "type": "string" },
+    "image": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/Image" }
+      ]
+    },
+    "address": { "$ref": "#/definitions/Address" },
+    "otherIdentifier": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/IdentifierEntry" }
+    },
+    "parentOrg": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/Profile" }
+      ]
+    },
+    "publicKey": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/CryptographicKey" }
+      ]
+    }
+  },
+  "definitions": {
+    "MultiLanguageString": {
+      "type": "object",
+      "description": "Multi-language string with language codes as keys",
+      "additionalProperties": { "type": "string" }
+    },
+    "Image": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": "string" },
+        "caption": { "type": "string" }
+      }
+    },
+    "Address": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "addressCountry": { "type": "string" },
+        "addressCountryCode": { "type": "string" },
+        "addressRegion": { "type": "string" },
+        "addressLocality": { "type": "string" },
+        "streetAddress": { "type": "string" },
+        "postOfficeBoxNumber": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "geo": { "$ref": "#/definitions/GeoCoordinates" }
+      }
+    },
+    "GeoCoordinates": {
+      "type": "object",
+      "required": ["type", "latitude", "longitude"],
+      "properties": {
+        "type": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      }
+    },
+    "IdentifierEntry": {
+      "type": "object",
+      "required": ["type", "identifier", "identifierType"],
+      "properties": {
+        "type": { "type": "string" },
+        "identifier": { "type": "string" },
+        "identifierType": { "type": "string" }
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/definitions/MultiLanguageString" }
+          ]
+        }
+      }
+    },
+    "CryptographicKey": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": "string" },
+        "owner": { "type": "string", "format": "uri" },
+        "publicKeyPem": { "type": "string" },
+        "publicKeyMultibase": { "type": "string" },
+        "publicKeyJwk": { "type": "object" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

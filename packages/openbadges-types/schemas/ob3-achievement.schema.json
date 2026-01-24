@@ -1,0 +1,236 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ob3-achievement.schema.json",
+  "title": "Open Badges 3.0 Achievement",
+  "description": "JSON Schema for validating Open Badges 3.0 Achievement objects",
+  "type": "object",
+  "required": ["id", "type", "name", "criteria"],
+  "properties": {
+    "@context": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": ["string", "object"] } },
+        { "type": "object" }
+      ]
+    },
+    "id": { "type": "string", "format": "uri" },
+    "type": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": { "type": "string" },
+          "contains": { "const": "Achievement" }
+        }
+      ]
+    },
+    "name": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "$ref": "#/definitions/MultiLanguageString" }
+      ]
+    },
+    "description": {
+      "oneOf": [
+        { "type": "string" },
+        { "$ref": "#/definitions/MultiLanguageString" }
+      ]
+    },
+    "image": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/Image" }
+      ]
+    },
+    "criteria": { "$ref": "#/definitions/Criteria" },
+    "achievementType": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+    "creator": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/Profile" }
+      ]
+    },
+    "creditsAvailable": { "type": "number", "minimum": 0 },
+    "fieldOfStudy": { "type": "string" },
+    "humanCode": { "type": "string" },
+    "inLanguage": { "type": "string" },
+    "otherIdentifier": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/IdentifierEntry" }
+    },
+    "related": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Related" }
+    },
+    "resultDescription": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ResultDescription" }
+    },
+    "specialization": { "type": "string" },
+    "tag": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "version": { "type": "string" },
+    "alignment": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Alignment" }
+    }
+  },
+  "definitions": {
+    "MultiLanguageString": {
+      "type": "object",
+      "description": "Multi-language string with language codes as keys",
+      "additionalProperties": { "type": "string" }
+    },
+    "Image": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": "string" },
+        "caption": { "type": "string" }
+      }
+    },
+    "Criteria": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "narrative": { "type": "string" }
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "name": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/definitions/MultiLanguageString" }
+          ]
+        },
+        "url": { "type": "string", "format": "uri" },
+        "email": { "type": "string", "format": "email" },
+        "description": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/definitions/MultiLanguageString" }
+          ]
+        },
+        "image": {
+          "oneOf": [
+            { "type": "string", "format": "uri" },
+            { "$ref": "#/definitions/Image" }
+          ]
+        }
+      }
+    },
+    "IdentifierEntry": {
+      "type": "object",
+      "required": ["type", "identifier", "identifierType"],
+      "properties": {
+        "type": { "type": "string" },
+        "identifier": { "type": "string" },
+        "identifierType": { "type": "string" }
+      }
+    },
+    "Related": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "inLanguage": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "ResultDescription": {
+      "type": "object",
+      "required": ["id", "type", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "name": { "type": "string" },
+        "alignment": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Alignment" }
+        },
+        "allowedValue": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "requiredLevel": { "type": "string", "format": "uri" },
+        "requiredValue": { "type": "string" },
+        "resultType": { "type": "string" },
+        "rubricCriterionLevel": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/RubricCriterionLevel" }
+        },
+        "valueMax": { "type": "string" },
+        "valueMin": { "type": "string" }
+      }
+    },
+    "RubricCriterionLevel": {
+      "type": "object",
+      "required": ["id", "type", "name"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "name": { "type": "string" },
+        "alignment": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Alignment" }
+        },
+        "description": { "type": "string" },
+        "level": { "type": "string" },
+        "points": { "type": "string" }
+      }
+    },
+    "Alignment": {
+      "type": "object",
+      "required": ["type", "targetName", "targetUrl"],
+      "properties": {
+        "type": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "targetCode": { "type": "string" },
+        "targetDescription": { "type": "string" },
+        "targetFramework": { "type": "string" },
+        "targetName": { "type": "string" },
+        "targetType": { "type": "string" },
+        "targetUrl": { "type": "string", "format": "uri" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

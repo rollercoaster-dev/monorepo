@@ -8,7 +8,11 @@ import type {
 
 // Import JSON schemas - these are loaded synchronously
 import ob2AssertionSchema from "../schemas/ob2-assertion.schema.json" with { type: "json" };
+import ob2BadgeClassSchema from "../schemas/ob2-badgeclass.schema.json" with { type: "json" };
+import ob2ProfileSchema from "../schemas/ob2-profile.schema.json" with { type: "json" };
 import ob3CredentialSchema from "../schemas/ob3-credential.schema.json" with { type: "json" };
+import ob3AchievementSchema from "../schemas/ob3-achievement.schema.json" with { type: "json" };
+import ob3IssuerSchema from "../schemas/ob3-issuer.schema.json" with { type: "json" };
 
 // Create AJV instance with validation
 const ajv = new Ajv({
@@ -23,7 +27,11 @@ addFormats(ajv);
 
 // Lazy-compiled validators
 let _validateOB2Schema: ValidateFunction | null = null;
+let _validateOB2BadgeClassSchema: ValidateFunction | null = null;
+let _validateOB2ProfileSchema: ValidateFunction | null = null;
 let _validateOB3Schema: ValidateFunction | null = null;
+let _validateOB3AchievementSchema: ValidateFunction | null = null;
+let _validateOB3IssuerSchema: ValidateFunction | null = null;
 
 function getOB2Validator(): ValidateFunction {
   if (!_validateOB2Schema) {
@@ -32,11 +40,39 @@ function getOB2Validator(): ValidateFunction {
   return _validateOB2Schema;
 }
 
+function getOB2BadgeClassValidator(): ValidateFunction {
+  if (!_validateOB2BadgeClassSchema) {
+    _validateOB2BadgeClassSchema = ajv.compile(ob2BadgeClassSchema);
+  }
+  return _validateOB2BadgeClassSchema;
+}
+
+function getOB2ProfileValidator(): ValidateFunction {
+  if (!_validateOB2ProfileSchema) {
+    _validateOB2ProfileSchema = ajv.compile(ob2ProfileSchema);
+  }
+  return _validateOB2ProfileSchema;
+}
+
 function getOB3Validator(): ValidateFunction {
   if (!_validateOB3Schema) {
     _validateOB3Schema = ajv.compile(ob3CredentialSchema);
   }
   return _validateOB3Schema;
+}
+
+function getOB3AchievementValidator(): ValidateFunction {
+  if (!_validateOB3AchievementSchema) {
+    _validateOB3AchievementSchema = ajv.compile(ob3AchievementSchema);
+  }
+  return _validateOB3AchievementSchema;
+}
+
+function getOB3IssuerValidator(): ValidateFunction {
+  if (!_validateOB3IssuerSchema) {
+    _validateOB3IssuerSchema = ajv.compile(ob3IssuerSchema);
+  }
+  return _validateOB3IssuerSchema;
 }
 
 /**
@@ -438,4 +474,240 @@ export function validateBadgeWithSchema(
 
   // Default to OB2 for legacy support
   return validateOB2AssertionDetailed(data);
+}
+
+// ============================================================================
+// OB2 Entity Validators
+// ============================================================================
+
+/**
+ * Validates an Open Badges 2.0 BadgeClass against the JSON Schema
+ * @param data The BadgeClass to validate
+ * @returns Simple validation result with errors
+ */
+export function validateOB2BadgeClass(data: unknown): SchemaValidationResult {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errors: [{ message: "Data must be an object" }],
+    };
+  }
+
+  const valid = getOB2BadgeClassValidator()(data);
+  return {
+    valid,
+    errors: ajvErrorsToSimple(getOB2BadgeClassValidator().errors),
+  };
+}
+
+/**
+ * Validates an Open Badges 2.0 BadgeClass with detailed 1EdTech-aligned report
+ * @param data The BadgeClass to validate
+ * @returns ValidationReportContent with detailed messages
+ */
+export function validateOB2BadgeClassDetailed(
+  data: unknown,
+): ValidationReportContent {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [
+        {
+          name: "VALIDATE_TYPE",
+          messageLevel: "ERROR",
+          success: false,
+          result: "Data must be an object",
+        },
+      ],
+      openBadgesVersion: "2.0",
+    };
+  }
+
+  const valid = getOB2BadgeClassValidator()(data);
+  const messages = ajvErrorsToMessages(getOB2BadgeClassValidator().errors);
+
+  return {
+    valid,
+    errorCount: messages.filter((m) => m.messageLevel === "ERROR").length,
+    warningCount: messages.filter((m) => m.messageLevel === "WARNING").length,
+    messages,
+    openBadgesVersion: "2.0",
+  };
+}
+
+/**
+ * Validates an Open Badges 2.0 Profile/Issuer against the JSON Schema
+ * @param data The Profile to validate
+ * @returns Simple validation result with errors
+ */
+export function validateOB2Profile(data: unknown): SchemaValidationResult {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errors: [{ message: "Data must be an object" }],
+    };
+  }
+
+  const valid = getOB2ProfileValidator()(data);
+  return {
+    valid,
+    errors: ajvErrorsToSimple(getOB2ProfileValidator().errors),
+  };
+}
+
+/**
+ * Validates an Open Badges 2.0 Profile/Issuer with detailed 1EdTech-aligned report
+ * @param data The Profile to validate
+ * @returns ValidationReportContent with detailed messages
+ */
+export function validateOB2ProfileDetailed(
+  data: unknown,
+): ValidationReportContent {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [
+        {
+          name: "VALIDATE_TYPE",
+          messageLevel: "ERROR",
+          success: false,
+          result: "Data must be an object",
+        },
+      ],
+      openBadgesVersion: "2.0",
+    };
+  }
+
+  const valid = getOB2ProfileValidator()(data);
+  const messages = ajvErrorsToMessages(getOB2ProfileValidator().errors);
+
+  return {
+    valid,
+    errorCount: messages.filter((m) => m.messageLevel === "ERROR").length,
+    warningCount: messages.filter((m) => m.messageLevel === "WARNING").length,
+    messages,
+    openBadgesVersion: "2.0",
+  };
+}
+
+// ============================================================================
+// OB3 Entity Validators
+// ============================================================================
+
+/**
+ * Validates an Open Badges 3.0 Achievement against the JSON Schema
+ * @param data The Achievement to validate
+ * @returns Simple validation result with errors
+ */
+export function validateOB3Achievement(data: unknown): SchemaValidationResult {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errors: [{ message: "Data must be an object" }],
+    };
+  }
+
+  const valid = getOB3AchievementValidator()(data);
+  return {
+    valid,
+    errors: ajvErrorsToSimple(getOB3AchievementValidator().errors),
+  };
+}
+
+/**
+ * Validates an Open Badges 3.0 Achievement with detailed 1EdTech-aligned report
+ * @param data The Achievement to validate
+ * @returns ValidationReportContent with detailed messages
+ */
+export function validateOB3AchievementDetailed(
+  data: unknown,
+): ValidationReportContent {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [
+        {
+          name: "VALIDATE_TYPE",
+          messageLevel: "ERROR",
+          success: false,
+          result: "Data must be an object",
+        },
+      ],
+      openBadgesVersion: "3.0",
+    };
+  }
+
+  const valid = getOB3AchievementValidator()(data);
+  const messages = ajvErrorsToMessages(getOB3AchievementValidator().errors);
+
+  return {
+    valid,
+    errorCount: messages.filter((m) => m.messageLevel === "ERROR").length,
+    warningCount: messages.filter((m) => m.messageLevel === "WARNING").length,
+    messages,
+    openBadgesVersion: "3.0",
+  };
+}
+
+/**
+ * Validates an Open Badges 3.0 Issuer/Profile against the JSON Schema
+ * @param data The Issuer to validate
+ * @returns Simple validation result with errors
+ */
+export function validateOB3Issuer(data: unknown): SchemaValidationResult {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errors: [{ message: "Data must be an object" }],
+    };
+  }
+
+  const valid = getOB3IssuerValidator()(data);
+  return {
+    valid,
+    errors: ajvErrorsToSimple(getOB3IssuerValidator().errors),
+  };
+}
+
+/**
+ * Validates an Open Badges 3.0 Issuer/Profile with detailed 1EdTech-aligned report
+ * @param data The Issuer to validate
+ * @returns ValidationReportContent with detailed messages
+ */
+export function validateOB3IssuerDetailed(
+  data: unknown,
+): ValidationReportContent {
+  if (typeof data !== "object" || data === null) {
+    return {
+      valid: false,
+      errorCount: 1,
+      warningCount: 0,
+      messages: [
+        {
+          name: "VALIDATE_TYPE",
+          messageLevel: "ERROR",
+          success: false,
+          result: "Data must be an object",
+        },
+      ],
+      openBadgesVersion: "3.0",
+    };
+  }
+
+  const valid = getOB3IssuerValidator()(data);
+  const messages = ajvErrorsToMessages(getOB3IssuerValidator().errors);
+
+  return {
+    valid,
+    errorCount: messages.filter((m) => m.messageLevel === "ERROR").length,
+    warningCount: messages.filter((m) => m.messageLevel === "WARNING").length,
+    messages,
+    openBadgesVersion: "3.0",
+  };
 }

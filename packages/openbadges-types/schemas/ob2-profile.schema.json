@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ob2-profile.schema.json",
+  "title": "Open Badges 2.0 Profile",
+  "description": "JSON Schema for validating Open Badges 2.0 Profile/Issuer objects",
+  "type": "object",
+  "required": ["id", "type", "name"],
+  "properties": {
+    "@context": { "type": ["string", "array", "object"] },
+    "id": { "type": "string", "format": "uri" },
+    "type": {
+      "type": ["string", "array"],
+      "contains": { "enum": ["Profile", "Issuer"] }
+    },
+    "name": { "type": "string", "minLength": 1 },
+    "url": { "type": "string", "format": "uri" },
+    "email": { "type": "string" },
+    "telephone": { "type": "string" },
+    "description": { "type": "string" },
+    "image": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/Image" }
+      ]
+    },
+    "publicKey": {
+      "oneOf": [
+        { "type": "string", "format": "uri" },
+        { "$ref": "#/definitions/CryptographicKey" }
+      ]
+    },
+    "verification": { "$ref": "#/definitions/VerificationObject" },
+    "revocationList": { "type": "string", "format": "uri" }
+  },
+  "definitions": {
+    "Image": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": "string" },
+        "caption": { "type": "string" },
+        "author": { "type": "string" }
+      }
+    },
+    "VerificationObject": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": ["string", "array"] },
+        "verificationProperty": { "type": "string" },
+        "startsWith": { "type": ["string", "array"] },
+        "allowedOrigins": { "type": ["string", "array"] },
+        "creator": { "type": "string", "format": "uri" }
+      }
+    },
+    "CryptographicKey": {
+      "type": "object",
+      "required": ["id", "type", "owner", "publicKeyPem"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "type": { "type": "string" },
+        "owner": { "type": "string", "format": "uri" },
+        "publicKeyPem": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": true
+}
