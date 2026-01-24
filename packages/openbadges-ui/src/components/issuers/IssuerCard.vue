@@ -190,18 +190,18 @@ const truncatedDescription = computed(() => {
 
 <style>
 .manus-issuer-card {
-  --issuer-border-color: #e2e8f0;
-  --issuer-border-radius: 8px;
-  --issuer-padding: 16px;
-  --issuer-background: #ffffff;
-  --issuer-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --issuer-name-color: #1a202c;
-  --issuer-text-color: #4a5568;
-  --issuer-link-color: #3182ce;
-  --issuer-hover-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --issuer-focus-outline-color: #3182ce;
-  --issuer-fallback-bg: #e2e8f0;
-  --issuer-fallback-color: #4a5568;
+  --issuer-border-color: var(--ob-border-color, #e2e8f0);
+  --issuer-border-radius: var(--ob-border-radius-lg, 8px);
+  --issuer-padding: var(--ob-space-4, 16px);
+  --issuer-background: var(--ob-bg-primary, #ffffff);
+  --issuer-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
+  --issuer-name-color: var(--ob-text-primary, #1a202c);
+  --issuer-text-color: var(--ob-text-secondary, #4a5568);
+  --issuer-link-color: var(--ob-primary, #3182ce);
+  --issuer-hover-shadow: var(--ob-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.15));
+  --issuer-focus-outline-color: var(--ob-primary, #3182ce);
+  --issuer-fallback-bg: var(--ob-gray-200, #e2e8f0);
+  --issuer-fallback-color: var(--ob-text-secondary, #4a5568);
 
   display: flex;
   flex-direction: row;
@@ -211,8 +211,10 @@ const truncatedDescription = computed(() => {
   padding: var(--issuer-padding);
   background-color: var(--issuer-background);
   box-shadow: var(--issuer-shadow);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
   max-width: 400px;
+  font-family: var(--ob-font-family, inherit);
+  color: var(--issuer-text-color);
 }
 
 .manus-issuer-card.is-interactive {
@@ -225,12 +227,12 @@ const truncatedDescription = computed(() => {
 
 .manus-issuer-card.is-interactive:focus {
   outline: 2px solid var(--issuer-focus-outline-color);
-  outline-offset: 2px;
+  outline-offset: var(--ob-space-1, 2px);
 }
 
 .manus-issuer-image {
   flex: 0 0 64px;
-  margin-right: 16px;
+  margin-right: var(--ob-space-4, 16px);
 }
 
 .manus-issuer-img {
@@ -251,8 +253,8 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-initials {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--ob-font-size-xl, 1.5rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--issuer-fallback-color);
 }
 
@@ -260,14 +262,14 @@ const truncatedDescription = computed(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ob-space-1, 4px);
   min-width: 0;
 }
 
 .manus-issuer-name {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: var(--ob-font-size-lg, 1.125rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--issuer-name-color);
   white-space: nowrap;
   overflow: hidden;
@@ -276,14 +278,14 @@ const truncatedDescription = computed(() => {
 
 .manus-issuer-description {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--issuer-text-color);
-  line-height: 1.4;
+  line-height: var(--ob-line-height-normal, 1.4);
 }
 
 .manus-issuer-url,
 .manus-issuer-email {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
 }
 
 .manus-issuer-url a,
@@ -300,13 +302,13 @@ const truncatedDescription = computed(() => {
 
 /* Content density styles */
 .manus-issuer-card.density-compact {
-  padding: 8px;
+  padding: var(--ob-space-2, 8px);
   max-width: 300px;
 }
 
 .manus-issuer-card.density-compact .manus-issuer-image {
   flex: 0 0 40px;
-  margin-right: 10px;
+  margin-right: var(--ob-space-2, 10px);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-img,
@@ -316,29 +318,29 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-card.density-compact .manus-issuer-initials {
-  font-size: 1rem;
+  font-size: var(--ob-font-size-md, 1rem);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-name {
-  font-size: 0.975rem;
+  font-size: var(--ob-font-size-md, 0.975rem);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-description {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
 }
 
 .manus-issuer-card.density-normal {
-  padding: 16px;
+  padding: var(--ob-space-4, 16px);
 }
 
 .manus-issuer-card.density-spacious {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   max-width: 500px;
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-image {
   flex: 0 0 80px;
-  margin-right: 20px;
+  margin-right: var(--ob-space-5, 20px);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-img,
@@ -348,29 +350,29 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-initials {
-  font-size: 2rem;
+  font-size: var(--ob-font-size-2xl, 2rem);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-name {
-  font-size: 1.25rem;
+  font-size: var(--ob-font-size-xl, 1.25rem);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-content {
-  gap: 8px;
+  gap: var(--ob-space-2, 8px);
 }
 
 /* Accessibility focus styles */
 .manus-issuer-card:focus-visible,
 .manus-issuer-card.is-interactive:focus-visible {
-  outline: 3px solid #ff9800;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 4px #ffe0b2;
+  outline: 3px solid var(--ob-border-color-focus, #ff9800);
+  outline-offset: var(--ob-space-1, 3px);
+  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
 }
 
 .manus-issuer-url a:focus-visible,
 .manus-issuer-email a:focus-visible {
-  outline: 2px solid #ff9800;
-  outline-offset: 2px;
-  background: #fff3e0;
+  outline: 2px solid var(--ob-border-color-focus, #ff9800);
+  outline-offset: var(--ob-space-1, 2px);
+  background: var(--ob-warning-light, #fff3e0);
 }
 </style>

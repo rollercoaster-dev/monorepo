@@ -165,15 +165,36 @@ const densityClass = computed(() => {
 
 <style>
 .manus-badge-display {
-  --badge-border-color: #e2e8f0;
-  --badge-border-radius: 8px;
-  --badge-padding: 16px;
-  --badge-background: #ffffff;
-  --badge-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --badge-title-color: #1a202c;
-  --badge-text-color: #4a5568;
-  --badge-hover-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --badge-focus-outline-color: #3182ce;
+  --badge-border-color: var(
+    --ob-badge-border-color,
+    var(--ob-border-color, #e2e8f0)
+  );
+  --badge-border-radius: var(
+    --ob-badge-border-radius,
+    var(--ob-border-radius-lg, 8px)
+  );
+  --badge-padding: var(--ob-badge-padding, var(--ob-space-4, 16px));
+  --badge-background: var(--ob-badge-background, var(--ob-bg-primary, #ffffff));
+  --badge-shadow: var(
+    --ob-badge-shadow,
+    var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1))
+  );
+  --badge-title-color: var(
+    --ob-badge-title-color,
+    var(--ob-text-primary, #1a202c)
+  );
+  --badge-text-color: var(
+    --ob-badge-text-color,
+    var(--ob-text-secondary, #4a5568)
+  );
+  --badge-hover-shadow: var(
+    --ob-badge-hover-shadow,
+    var(--ob-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.15))
+  );
+  --badge-focus-outline-color: var(
+    --ob-badge-focus-outline-color,
+    var(--ob-primary, #3182ce)
+  );
 
   display: flex;
   flex-direction: column;
@@ -182,8 +203,10 @@ const densityClass = computed(() => {
   padding: var(--badge-padding);
   background-color: var(--badge-background);
   box-shadow: var(--badge-shadow);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
   max-width: 300px;
+  font-family: var(--ob-font-family, inherit);
+  color: var(--badge-text-color);
 }
 
 .manus-badge-display.is-interactive {
@@ -202,62 +225,62 @@ const densityClass = computed(() => {
 .manus-badge-image {
   display: flex;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--ob-space-3, 12px);
 }
 
 .manus-badge-img {
   max-width: 100%;
   height: auto;
   max-height: 150px;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
 }
 
 .manus-badge-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ob-space-2, 8px);
 }
 
 .manus-badge-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: var(--ob-font-size-xl, 1.25rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--badge-title-color);
 }
 
 .manus-badge-description {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--badge-text-color);
-  line-height: 1.4;
+  line-height: var(--ob-line-height-normal, 1.4);
 }
 
 .manus-badge-issuer,
 .manus-badge-date,
 .manus-badge-expiry,
 .manus-badge-verification-toggle {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
   color: var(--badge-text-color);
 }
 
 .manus-badge-verification-toggle-button {
   background: none;
   border: none;
-  color: #3182ce;
+  color: var(--ob-primary, #3182ce);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
   padding: 0;
   text-decoration: underline;
 }
 
 .manus-badge-verification-toggle-button:hover {
-  color: #2c5282;
+  color: var(--ob-primary-dark, #2c5282);
 }
 
 .manus-badge-verification-container {
-  margin-top: 12px;
+  margin-top: var(--ob-space-3, 12px);
   border-top: 1px solid var(--badge-border-color);
-  padding-top: 12px;
+  padding-top: var(--ob-space-3, 12px);
 }
 
 /* Responsive adjustments */
@@ -269,7 +292,7 @@ const densityClass = computed(() => {
 
   .manus-badge-image {
     flex: 0 0 120px;
-    margin-right: 16px;
+    margin-right: var(--ob-space-4, 16px);
     margin-bottom: 0;
   }
 
@@ -280,34 +303,35 @@ const densityClass = computed(() => {
 
 /* Content density styles */
 .manus-badge-display.density-compact {
-  padding: 8px;
-  gap: 4px;
+  padding: var(--ob-space-2, 8px);
+  gap: var(--ob-space-1, 4px);
 }
 .manus-badge-display.density-normal {
-  padding: 16px;
-  gap: 8px;
+  padding: var(--ob-space-4, 16px);
+  gap: var(--ob-space-2, 8px);
 }
 .manus-badge-display.density-spacious {
-  padding: 28px;
-  gap: 16px;
+  padding: var(--ob-space-6, 28px);
+  gap: var(--ob-space-4, 16px);
 }
 
 .manus-badge-display:focus-visible,
 .manus-badge-display.is-interactive:focus-visible {
-  outline: 3px solid #ff9800;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 4px #ffe0b2;
+  outline: var(--ob-badge-focus-outline-width, 3px) solid
+    var(--ob-badge-focus-outline-color, #ff9800);
+  outline-offset: var(--ob-space-1, 3px);
+  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
 }
 
 .manus-badge-verification-toggle-button:focus-visible,
 .manus-badge-verification-toggle-button:active {
-  outline: 2px solid #ff9800;
-  background: #fff3e0;
+  outline: 2px solid var(--ob-border-color-focus, #ff9800);
+  background: var(--ob-warning-light, #fff3e0);
 }
 
 .manus-badge-verification-toggle-button {
   transition:
-    background 0.2s,
-    color 0.2s;
+    background var(--ob-transition-fast, 0.2s),
+    color var(--ob-transition-fast, 0.2s);
 }
 </style>

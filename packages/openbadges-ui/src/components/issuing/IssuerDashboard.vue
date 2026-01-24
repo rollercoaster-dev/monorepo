@@ -271,52 +271,77 @@ onMounted(() => {
 
 <style>
 .manus-issuer-dashboard {
-  --dashboard-border-color: #e2e8f0;
-  --dashboard-background: #ffffff;
-  --dashboard-text-color: #1a202c;
-  --dashboard-secondary-color: #4a5568;
-  --dashboard-accent-color: #3182ce;
-  --dashboard-tab-active-border: #3182ce;
-  --dashboard-tab-hover-bg: #f7fafc;
-  --dashboard-empty-color: #718096;
+  --dashboard-border-color: var(
+    --ob-dashboard-border-color,
+    var(--ob-border-color, #e2e8f0)
+  );
+  --dashboard-background: var(
+    --ob-dashboard-background,
+    var(--ob-bg-primary, #ffffff)
+  );
+  --dashboard-text-color: var(
+    --ob-dashboard-text-color,
+    var(--ob-text-primary, #1a202c)
+  );
+  --dashboard-secondary-color: var(
+    --ob-dashboard-secondary-color,
+    var(--ob-text-secondary, #4a5568)
+  );
+  --dashboard-accent-color: var(
+    --ob-dashboard-accent-color,
+    var(--ob-primary, #3182ce)
+  );
+  --dashboard-tab-active-border: var(
+    --ob-dashboard-tab-active-border,
+    var(--ob-primary, #3182ce)
+  );
+  --dashboard-tab-hover-bg: var(
+    --ob-dashboard-tab-hover-bg,
+    var(--ob-bg-secondary, #f7fafc)
+  );
+  --dashboard-empty-color: var(
+    --ob-dashboard-empty-color,
+    var(--ob-text-secondary, #718096)
+  );
 
   display: flex;
   flex-direction: column;
   background-color: var(--dashboard-background);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: 8px;
+  border-radius: var(--ob-border-radius-lg, 8px);
   overflow: hidden;
   color: var(--dashboard-text-color);
+  font-family: var(--ob-font-family, inherit);
 }
 
 .manus-dashboard-header {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   border-bottom: 1px solid var(--dashboard-border-color);
 }
 
 .manus-dashboard-title {
-  margin: 0 0 16px;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin: 0 0 var(--ob-space-4, 16px);
+  font-size: var(--ob-font-size-2xl, 1.5rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
 }
 
 .manus-dashboard-tabs {
   display: flex;
-  gap: 2px;
+  gap: var(--ob-space-1, 2px);
   border-bottom: 1px solid var(--dashboard-border-color);
-  margin: 0 -24px -1px;
+  margin: 0 calc(var(--ob-space-6, 24px) * -1) -1px;
 }
 
 .manus-tab-button {
-  padding: 12px 24px;
+  padding: var(--ob-space-3, 12px) var(--ob-space-6, 24px);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: var(--ob-font-size-md, 1rem);
+  font-weight: var(--ob-font-weight-medium, 500);
   color: var(--dashboard-secondary-color);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--ob-transition-fast, 0.2s) ease;
 }
 
 .manus-tab-button:hover {
@@ -329,7 +354,7 @@ onMounted(() => {
 }
 
 .manus-dashboard-content {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
 }
 
 .manus-tab-panel {
@@ -338,35 +363,37 @@ onMounted(() => {
 
 .manus-tab-panel:focus {
   box-shadow: 0 0 0 2px var(--dashboard-accent-color);
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
 }
 
 .manus-dashboard-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--ob-space-4, 16px);
+  margin-bottom: var(--ob-space-6, 24px);
 }
 
 .manus-dashboard-filter,
 .manus-dashboard-sort {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ob-space-2, 8px);
 }
 
 .manus-filter-label,
 .manus-sort-label {
-  font-weight: 500;
+  font-weight: var(--ob-font-weight-medium, 500);
   color: var(--dashboard-secondary-color);
 }
 
 .manus-filter-input,
 .manus-sort-select {
-  padding: 8px 12px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: 4px;
-  font-size: 0.875rem;
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  color: var(--dashboard-text-color);
+  background: var(--dashboard-background);
 }
 
 .manus-filter-input {
@@ -375,23 +402,23 @@ onMounted(() => {
 
 .manus-dashboard-loading,
 .manus-dashboard-empty {
-  padding: 48px 24px;
+  padding: var(--ob-space-12, 48px) var(--ob-space-6, 24px);
   text-align: center;
   color: var(--dashboard-empty-color);
 }
 
 .manus-dashboard-empty button {
-  margin-top: 16px;
+  margin-top: var(--ob-space-4, 16px);
 }
 
 .manus-button {
-  padding: 8px 16px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-md, 1rem);
+  font-weight: var(--ob-font-weight-medium, 500);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--ob-transition-fast, 0.2s) ease;
 }
 
 .manus-button-primary {
@@ -400,28 +427,28 @@ onMounted(() => {
 }
 
 .manus-button-primary:hover {
-  background-color: #2c5282;
+  background-color: var(--ob-primary-dark, #2c5282);
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .manus-dashboard-header,
   .manus-dashboard-content {
-    padding: 16px;
+    padding: var(--ob-space-4, 16px);
   }
 
   .manus-dashboard-tabs {
-    margin: 0 -16px -1px;
+    margin: 0 calc(var(--ob-space-4, 16px) * -1) -1px;
   }
 
   .manus-tab-button {
-    padding: 10px 16px;
-    font-size: 0.875rem;
+    padding: var(--ob-space-2, 10px) var(--ob-space-4, 16px);
+    font-size: var(--ob-font-size-sm, 0.875rem);
   }
 
   .manus-dashboard-controls {
     flex-direction: column;
-    gap: 12px;
+    gap: var(--ob-space-3, 12px);
   }
 
   .manus-filter-input {

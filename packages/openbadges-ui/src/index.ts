@@ -34,6 +34,7 @@ export { default as IssuerDashboard } from "@components/issuing/IssuerDashboard.
 // Export services
 export { BadgeService } from "@services/BadgeService";
 export { BadgeVerificationService } from "@services/BadgeVerificationService";
+export { AccessibilityService } from "@services/AccessibilityService";
 
 // Export plugin for Vue.use()
 export { default as OpenBadgesUIPlugin } from "./plugin";
