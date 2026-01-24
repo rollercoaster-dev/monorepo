@@ -109,8 +109,9 @@ If a merge is blocked:
 
 - `BLOCKED` status means CI is still running or checks haven't completed
 - "base branch policy prohibits the merge" means WAIT, not bypass
-- Use `--auto` to queue for merge when checks pass
-- Or wait and check status again
+- Wait for CI to complete, then check review comments before merging
+
+Do NOT use `--auto` flag - it skips review comment validation.
 
 The `--admin` flag:
 
