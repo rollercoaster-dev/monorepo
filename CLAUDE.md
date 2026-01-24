@@ -81,6 +81,26 @@ See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for det
 
 See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
+### IMPORTANT: Workflow Integrity
+
+**YOU MUST follow all workflow phases. YOU MUST NOT commit directly to main.**
+
+"Autonomous" mode means no user approval gates - it does NOT mean skip phases or bypass branch isolation.
+
+Why this matters:
+
+- **User control** - PRs give the user a chance to review/reject before merge
+- **Rollback safety** - Closing a PR is trivial; reverting main commits is disruptive
+- **Quality** - Review phase catches bugs before they reach production
+- **Token efficiency** - Research phase prevents trial-and-error coding
+
+The correct pattern:
+
+```text
+Issue → Feature Branch → Commits → PR → Review → Merge
+NEVER: Issue → Commit directly to main
+```
+
 ## Proactive Reviews
 
 Use after completing relevant work:
