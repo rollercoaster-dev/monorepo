@@ -2,8 +2,12 @@
 import { computed, ref } from "vue";
 import type { OB2, OB3 } from "@/types";
 
+/**
+ * BadgeClassCard accepts OB2 BadgeClass, single OB3 Achievement, or an array of OB3 Achievements.
+ * When an array is provided, the first achievement is displayed with an indicator for additional achievements.
+ */
 interface Props {
-  badgeClass: OB2.BadgeClass | OB3.Achievement;
+  badgeClass: OB2.BadgeClass | OB3.Achievement | OB3.Achievement[];
   interactive?: boolean;
   showDescription?: boolean;
   showCriteria?: boolean;
@@ -22,8 +26,27 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: "click", badgeClass: OB2.BadgeClass | OB3.Achievement): void;
+  (
+    e: "click",
+    badgeClass: OB2.BadgeClass | OB3.Achievement | OB3.Achievement[],
+  ): void;
 }>();
+
+// Extract primary badge for display (first achievement if array)
+const primaryBadge = computed<OB2.BadgeClass | OB3.Achievement>(() => {
+  if (Array.isArray(props.badgeClass)) {
+    return props.badgeClass[0];
+  }
+  return props.badgeClass;
+});
+
+// Count of additional achievements when array is provided
+const additionalAchievementsCount = computed(() => {
+  if (Array.isArray(props.badgeClass)) {
+    return props.badgeClass.length - 1;
+  }
+  return 0;
+});
 
 // Helper to get string from MultiLanguageString
 const getLocalizedString = (
@@ -37,7 +60,7 @@ const getLocalizedString = (
 
 // Normalize badge class data between OB2 and OB3 formats
 const normalizedBadgeClass = computed(() => {
-  const badge = props.badgeClass;
+  const badge = primaryBadge.value;
 
   // Get ID
   const id = badge.id || "";
@@ -216,6 +239,17 @@ const truncatedCriteria = computed(() => {
           class="manus-badge-class-tag manus-badge-class-tag-more"
         >
           +{{ normalizedBadgeClass.tags.length - 5 }}
+        </span>
+      </div>
+      <div
+        v-if="additionalAchievementsCount > 0"
+        class="manus-badge-class-multi"
+        :aria-label="`This credential includes ${additionalAchievementsCount} more achievement${additionalAchievementsCount > 1 ? 's' : ''}`"
+      >
+        <span class="manus-badge-class-multi-badge">
+          +{{ additionalAchievementsCount }} more achievement{{
+            additionalAchievementsCount > 1 ? "s" : ""
+          }}
         </span>
       </div>
       <slot name="badge-class-actions" />
@@ -407,6 +441,22 @@ const truncatedCriteria = computed(() => {
 
 .manus-badge-class-card.density-spacious .manus-badge-class-content {
   gap: 8px;
+}
+
+/* Multi-achievement indicator */
+.manus-badge-class-multi {
+  margin-top: 4px;
+}
+
+.manus-badge-class-multi-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #edf2f7;
+  color: #4a5568;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px dashed #a0aec0;
 }
 
 /* Accessibility focus styles */
