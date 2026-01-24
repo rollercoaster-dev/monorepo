@@ -2,6 +2,45 @@
 
 This document details the development workflows available in the monorepo.
 
+---
+
+## CRITICAL: Why These Workflows Exist
+
+These workflows aren't bureaucracy - they're **guardrails that protect code quality and user control**.
+
+### The Core Principle
+
+**Every code change goes through a PR.** No exceptions.
+
+This means:
+
+- User can review before merge
+- CI can validate before merge
+- Rollback is trivial (close PR vs. revert commits)
+- Code review catches bugs early
+
+### What "Autonomous" Doesn't Mean
+
+"Autonomous" mode removes **user approval gates** - it does NOT remove:
+
+- Branch creation (still required)
+- PR creation (still required)
+- Review phase (still runs, just auto-fixes)
+- The phases themselves (all still execute)
+
+### Why This Saves Tokens
+
+Counter-intuitively, following the workflow **reduces** total token usage:
+
+| With Workflow                   | Without Workflow                    |
+| ------------------------------- | ----------------------------------- |
+| Research → understand once      | Trial-and-error → understand slowly |
+| Atomic commits → small, focused | Big commits → hard to review/fix    |
+| Review phase → catch bugs early | No review → bugs reach production   |
+| PR → async CI review            | Direct commits → no safety net      |
+
+---
+
 ## Workflow Overview
 
 | Workflow   | Command                   | Use Case                                   |

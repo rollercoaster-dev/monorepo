@@ -12,6 +12,7 @@ export { Shared, OB2, OB3, CompositeGuards, BadgeNormalizer };
 export type { Badge };
 export * from "./validation";
 export * from "./validation-report";
+export * from "./validateWithSchema";
 export * from "./type-guards";
 export * from "./utils";
 

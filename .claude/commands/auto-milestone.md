@@ -12,6 +12,37 @@ claude
 /auto-milestone "OB3 Phase 1"
 ```
 
+---
+
+## CRITICAL: Branch Isolation is Non-Negotiable
+
+**YOU MUST NEVER commit directly to `main` during this workflow.**
+
+### Why Branch Isolation Matters
+
+1. **Review Quality** - Each issue gets its own PR with focused code review. Committing to main bypasses all review.
+2. **Rollback Safety** - If an issue's implementation is wrong, we can close the PR. Direct commits to main require reverts.
+3. **Dependency Tracking** - The workflow tracks which issues depend on others. Direct commits break this graph.
+4. **User Control** - The user can review each PR before it merges. Direct commits remove user control entirely.
+5. **Token Efficiency** - PRs allow asynchronous CI review. The workflow can move on while CI runs.
+
+### What Happens If You Bypass
+
+- Code quality degrades (no focused review)
+- User loses ability to approve/reject changes
+- Rollbacks become painful (revert commits vs. close PR)
+- You break the trust the user placed in you
+- The workflow loses all its value
+
+### The Correct Pattern
+
+```text
+Issue #123 → feat/issue-123-... branch → PR #456 → Review → Merge to main
+Issue #124 → feat/issue-124-... branch → PR #457 → Review → Merge to main
+
+NEVER: Issue #123 → commit directly to main
+```
+
 ## Quick Reference
 
 ```bash
@@ -151,6 +182,34 @@ Phase 3: Review   → poll PRs, dispatch fixes
 Phase 4: Merge    → merge in dependency order
 Phase 5: Cleanup  → remove worktrees, report summary
 ```
+
+### Why Each Phase Matters
+
+| Phase   | Purpose                                                                                   |
+| ------- | ----------------------------------------------------------------------------------------- |
+| Plan    | **Prevents wasted work** - identifies blocked issues BEFORE starting implementation       |
+| Execute | **Isolates changes** - each issue in its own worktree/branch prevents cross-contamination |
+| Review  | **Catches bugs early** - automated review agents find issues before human reviewers do    |
+| Merge   | **Maintains stability** - dependency order ensures each merge builds on a stable base     |
+| Cleanup | **Respects the codebase** - removes temporary worktrees, leaves repo clean                |
+
+### Why Worktrees?
+
+Git worktrees allow parallel branches without switching contexts. Each issue gets its own directory:
+
+```
+.worktrees/
+├── issue-153/  ← feat/issue-153-add-keypair
+├── issue-154/  ← feat/issue-154-implement-generator
+└── issue-155/  ← feat/issue-155-add-storage
+```
+
+**Benefits:**
+
+- **Isolation** - Changes to one issue don't affect others
+- **Parallel CI** - Each PR can run CI independently
+- **Easy cleanup** - Delete the directory, branch survives
+- **Resume safety** - If interrupted, worktrees preserve state
 
 ---
 

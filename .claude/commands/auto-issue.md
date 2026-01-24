@@ -4,6 +4,42 @@ Fully autonomous issue-to-PR workflow. Delegates to specialized agents.
 
 **Mode:** Autonomous - no gates, auto-fix enabled, escalation only on unresolved critical findings.
 
+---
+
+## CRITICAL: Workflow Integrity
+
+**YOU MUST follow all phases in sequence. YOU MUST NOT commit directly to main.**
+
+**Exception:** The `--skip-review` and `--dry-run` flags are explicitly permitted - they modify behavior within the workflow, not bypass it entirely.
+
+### Why This Workflow Exists
+
+1. **Structured Progress** - Each phase produces artifacts (branch, plan, commits, PR) that can be reviewed
+2. **Recovery Points** - Checkpoints let you resume after interruption without losing work
+3. **Quality Gates** - Review phase catches bugs before the user ever sees them
+4. **User Control** - The final PR gives the user a chance to approve or reject before merging
+
+### What "Autonomous" Actually Means
+
+"Autonomous" means **no user approval gates between phases** - NOT "do whatever you want":
+
+```text
+CORRECT understanding:
+  Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 (no stopping for approval)
+
+WRONG understanding:
+  "Skip phases" or "commit directly to main" or "ignore the workflow"
+```
+
+### Anti-Patterns to Avoid
+
+| Anti-Pattern                  | Why It's Wrong                                     |
+| ----------------------------- | -------------------------------------------------- |
+| Committing directly to main   | Bypasses review, removes user control              |
+| Skipping the branch creation  | No PR possible, no rollback safety                 |
+| Skipping phases without flags | Use `--skip-review` or `--dry-run` for valid skips |
+| Not creating a PR             | User never gets to approve/reject the changes      |
+
 ## Quick Reference
 
 ```bash
@@ -22,6 +58,31 @@ Phase 3: Implement → atomic-developer
 Phase 4: Review    → review-orchestrator
 Phase 5: Finalize  → finalize-agent
 ```
+
+### Why Each Phase is Required
+
+| Phase     | Purpose                                          | What It Produces                    |
+| --------- | ------------------------------------------------ | ----------------------------------- |
+| Setup     | Create isolated branch for this issue's work     | Branch `feat/issue-N-...`           |
+| Research  | Understand before acting; plan before coding     | Dev plan in `.claude/dev-plans/`    |
+| Implement | Execute the plan with atomic, reviewable commits | Commits on the feature branch       |
+| Review    | Catch bugs, security issues, style problems      | Findings report, auto-fixes applied |
+| Finalize  | Create PR for user review before merge           | PR ready for human approval         |
+
+### Why This Saves Tokens (and Time)
+
+Following the workflow actually **reduces** total token usage:
+
+1. **Research phase** - Understanding the codebase first prevents trial-and-error coding
+2. **Atomic commits** - Small commits are easier to review and fix than large diffs
+3. **Review phase** - Catching bugs here is cheaper than fixing after merge
+4. **PR creation** - Async review by CI/humans doesn't block your context
+
+**Skipping phases costs more:**
+
+- No research → wrong implementation → rewrite everything
+- No review → bugs in production → emergency fixes
+- No PR → direct commits → manual reverts when things break
 
 ---
 
