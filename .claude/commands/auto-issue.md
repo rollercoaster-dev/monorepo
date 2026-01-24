@@ -25,6 +25,107 @@ Phase 5: Finalize  → finalize-agent
 
 ---
 
+## Task System Integration
+
+Native task tracking provides progress visualization during autonomous execution. Tasks are supplementary to the checkpoint system (which remains source of truth).
+
+### Task Creation Pattern
+
+Create ALL tasks upfront after Phase 1 Setup completes:
+
+```text
+After Phase 1 Setup completes, create all tasks at once:
+
+  setup = TaskCreate({
+    subject: "Setup: Initialize #<N>",
+    description: "Create branch, checkpoint, update board",
+    activeForm: "Setting up issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "setup" }
+  })
+  TaskUpdate(setup, { status: "completed" })  # Already done
+
+  research = TaskCreate({
+    subject: "Research: Analyze #<N>",
+    description: "Analyze codebase, create development plan",
+    activeForm: "Researching issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "research" }
+  })
+  TaskUpdate(research, { addBlockedBy: [setup] })
+
+  implement = TaskCreate({
+    subject: "Implement: Build #<N>",
+    description: "Implement changes with atomic commits",
+    activeForm: "Implementing issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "implement" }
+  })
+  TaskUpdate(implement, { addBlockedBy: [research] })
+
+  review = TaskCreate({
+    subject: "Review: Validate #<N>",
+    description: "Run review agents, auto-fix critical findings",
+    activeForm: "Reviewing issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "review" }
+  })
+  TaskUpdate(review, { addBlockedBy: [implement] })
+
+  finalize = TaskCreate({
+    subject: "Finalize: Create PR for #<N>",
+    description: "Push branch, create PR, update board",
+    activeForm: "Finalizing issue #<N>",
+    metadata: { issueNumber: <N>, workflowId, phase: "finalize" }
+  })
+  TaskUpdate(finalize, { addBlockedBy: [review] })
+
+  TaskList() → Show full workflow tree immediately
+```
+
+### Task Updates During Workflow
+
+Update status as phases progress (autonomous - no user interaction):
+
+```text
+Starting Research:
+  TaskUpdate(research, { status: "in_progress" })
+
+Research Complete:
+  TaskUpdate(research, { status: "completed" })
+  TaskUpdate(implement, { status: "in_progress" })
+
+Implementation Complete:
+  TaskUpdate(implement, { status: "completed" })
+  TaskUpdate(review, { status: "in_progress" })
+
+Review Complete:
+  TaskUpdate(review, { status: "completed" })
+  TaskUpdate(finalize, { status: "in_progress" })
+
+PR Created:
+  TaskUpdate(finalize, { status: "completed" })
+  TaskList() → Show final progress summary
+```
+
+### Progress Visualization
+
+Display progress at phase transitions with `TaskList()`:
+
+```text
+Issue #123 Progress:
+├─ Setup: Initialize #123     [COMPLETED] ✓
+├─ Research: Analyze #123     [COMPLETED] ✓
+├─ Implement: Build #123      [IN_PROGRESS] ...
+├─ Review: Validate #123      [PENDING, blocked by Implement]
+└─ Finalize: Create PR #123   [PENDING, blocked by Review]
+```
+
+### Key Points
+
+- **Checkpoint remains source of truth** - Tasks provide UI only
+- **blockedBy enforces sequence** - Visualizes workflow order
+- **Tasks are supplementary** - Workflow continues if task operations fail
+- **Metadata links to checkpoint** - Enables cross-reference for debugging
+
+---
+
 ## Phase 1: Setup
 
 **Agent:** `setup-agent`

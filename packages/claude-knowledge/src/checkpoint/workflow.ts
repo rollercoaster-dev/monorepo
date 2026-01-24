@@ -1,3 +1,4 @@
+import { createRequire } from "module";
 import { getDatabase } from "../db/sqlite";
 import type {
   Workflow,
@@ -7,6 +8,9 @@ import type {
   WorkflowPhase,
   WorkflowStatus,
 } from "../types";
+
+// Create require for ESM compatibility (used for lazy loading to avoid circular deps)
+const require = createRequire(import.meta.url);
 import {
   generateWorkflowId,
   now,
@@ -29,6 +33,7 @@ function mapRowToWorkflow(row: {
   phase: WorkflowPhase;
   status: WorkflowStatus;
   retry_count: number;
+  task_id?: string | null;
   created_at: string;
   updated_at: string;
 }): Workflow {
@@ -40,6 +45,7 @@ function mapRowToWorkflow(row: {
     phase: row.phase,
     status: row.status,
     retryCount: row.retry_count,
+    taskId: row.task_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -52,6 +58,7 @@ function create(
   issueNumber: number,
   branch: string,
   worktree?: string,
+  taskId?: string,
 ): Workflow {
   const db = getDatabase();
   const id = generateWorkflowId(issueNumber);
@@ -65,14 +72,15 @@ function create(
     phase: "research",
     status: "running",
     retryCount: 0,
+    taskId,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
 
   db.run(
     `
-      INSERT INTO workflows (id, issue_number, branch, worktree, phase, status, retry_count, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO workflows (id, issue_number, branch, worktree, phase, status, retry_count, task_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       workflow.id,
@@ -82,6 +90,7 @@ function create(
       workflow.phase,
       workflow.status,
       workflow.retryCount,
+      workflow.taskId ?? null,
       workflow.createdAt,
       workflow.updatedAt,
     ],
@@ -101,7 +110,7 @@ function save(workflow: Workflow): void {
   const result = db.run(
     `
       UPDATE workflows
-      SET phase = ?, status = ?, retry_count = ?, worktree = ?, updated_at = ?
+      SET phase = ?, status = ?, retry_count = ?, worktree = ?, task_id = ?, updated_at = ?
       WHERE id = ?
     `,
     [
@@ -109,6 +118,7 @@ function save(workflow: Workflow): void {
       workflow.status,
       workflow.retryCount,
       workflow.worktree,
+      workflow.taskId ?? null,
       workflow.updatedAt,
       workflow.id,
     ],
@@ -138,6 +148,7 @@ function load(workflowId: string): CheckpointData | null {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -145,7 +156,7 @@ function load(workflowId: string): CheckpointData | null {
     >(
       `
       SELECT id, issue_number, branch, worktree, phase, status,
-             retry_count, created_at, updated_at
+             retry_count, task_id, created_at, updated_at
       FROM workflows WHERE id = ?
     `,
     )
@@ -335,9 +346,21 @@ function logCommit(workflowId: string, sha: string, message: string): void {
 
 /**
  * Update workflow phase
+ * @param workflowId - Workflow ID to update
+ * @param phase - New workflow phase
+ * @param taskSnapshot - Optional task snapshot to log at phase boundary
  * @throws Error if workflow doesn't exist
  */
-function setPhase(workflowId: string, phase: WorkflowPhase): void {
+function setPhase(
+  workflowId: string,
+  phase: WorkflowPhase,
+  taskSnapshot?: {
+    taskId: string;
+    taskSubject: string;
+    taskStatus: string;
+    taskMetadata?: string;
+  },
+): void {
   const db = getDatabase();
   const result = db.run(
     `UPDATE workflows SET phase = ?, updated_at = ? WHERE id = ?`,
@@ -348,6 +371,21 @@ function setPhase(workflowId: string, phase: WorkflowPhase): void {
     throw new Error(
       `Failed to update workflow phase: No workflow found with ID "${workflowId}". ` +
         `The workflow may have been deleted or the ID is incorrect.`,
+    );
+  }
+
+  // Log task snapshot if provided
+  if (taskSnapshot) {
+    // Lazy import to avoid circular dependency with metrics.ts
+
+    const { metrics } = require("./metrics.js");
+    metrics.logTaskSnapshot(
+      workflowId,
+      phase,
+      taskSnapshot.taskId,
+      taskSnapshot.taskSubject,
+      taskSnapshot.taskStatus,
+      taskSnapshot.taskMetadata,
     );
   }
 }
@@ -411,6 +449,7 @@ function listActive(): Workflow[] {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -418,7 +457,7 @@ function listActive(): Workflow[] {
     >(
       `
       SELECT id, issue_number, branch, worktree, phase, status,
-             retry_count, created_at, updated_at
+             retry_count, task_id, created_at, updated_at
       FROM workflows WHERE status IN ('running', 'paused') ORDER BY updated_at DESC
     `,
     )
@@ -541,6 +580,7 @@ function listMilestoneWorkflows(milestoneId: string): Workflow[] {
         phase: WorkflowPhase;
         status: WorkflowStatus;
         retry_count: number;
+        task_id?: string | null;
         created_at: string;
         updated_at: string;
       },
@@ -548,7 +588,7 @@ function listMilestoneWorkflows(milestoneId: string): Workflow[] {
     >(
       `
       SELECT w.id, w.issue_number, w.branch, w.worktree, w.phase, w.status,
-             w.retry_count, w.created_at, w.updated_at
+             w.retry_count, w.task_id, w.created_at, w.updated_at
       FROM workflows w
       JOIN milestone_workflows mw ON w.id = mw.workflow_id
       WHERE mw.milestone_id = ?

@@ -40,18 +40,6 @@
           }
         ]
       }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Grep|Glob",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-gate.ts",
-            "description": "Enforce graph-first pattern: block Grep/Glob until graph queries made"
-          }
-        ]
-      }
     ]
   },
   "permissions": {

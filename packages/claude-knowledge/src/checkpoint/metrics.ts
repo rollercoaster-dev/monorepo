@@ -3,6 +3,11 @@ import type {
   ContextMetrics,
   GraphQueryMetrics,
   ReviewFindingsSummary,
+  TaskMetrics,
+  TaskProgress,
+  TaskSnapshot,
+  TaskTreeNode,
+  WorkflowPhase,
 } from "../types";
 import { workflow } from "./workflow";
 
@@ -734,6 +739,446 @@ function getToolUsageAggregate(): {
   };
 }
 
+/**
+ * Log a task snapshot at a workflow phase boundary.
+ * Captures task state for metrics tracking.
+ *
+ * @param workflowId - Workflow ID this snapshot belongs to
+ * @param phase - Workflow phase when snapshot was captured
+ * @param taskId - Native task system task ID
+ * @param taskSubject - Human-readable task description
+ * @param taskStatus - Task status (pending, in_progress, completed)
+ * @param taskMetadata - Optional JSON metadata about the task
+ * @param parentTaskId - Optional parent task ID for hierarchical tasks
+ */
+function logTaskSnapshot(
+  workflowId: string,
+  phase: string,
+  taskId: string,
+  taskSubject: string,
+  taskStatus: string,
+  taskMetadata?: string,
+  parentTaskId?: string,
+): void {
+  const db = getDatabase();
+
+  db.run(
+    `
+    INSERT INTO task_snapshots (workflow_id, phase, task_id, task_subject, task_status, task_metadata, parent_task_id, captured_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      workflowId,
+      phase,
+      taskId,
+      taskSubject,
+      taskStatus,
+      taskMetadata ?? null,
+      parentTaskId ?? null,
+      new Date().toISOString(),
+    ],
+  );
+}
+
+/**
+ * Get task snapshots for a workflow (or all workflows).
+ * Returns snapshots ordered by capture time descending.
+ *
+ * @param workflowId - Optional workflow ID to filter by
+ * @returns Array of task snapshots
+ */
+function getTaskSnapshots(workflowId?: string): TaskSnapshot[] {
+  const db = getDatabase();
+
+  type SnapshotRow = {
+    id: number;
+    workflow_id: string;
+    phase: string;
+    task_id: string;
+    task_subject: string;
+    task_status: string;
+    task_metadata: string | null;
+    parent_task_id: string | null;
+    captured_at: string;
+  };
+
+  const query = workflowId
+    ? `SELECT * FROM task_snapshots WHERE workflow_id = ? ORDER BY captured_at DESC`
+    : `SELECT * FROM task_snapshots ORDER BY captured_at DESC`;
+
+  const params = workflowId ? [workflowId] : [];
+  const rows = db.query<SnapshotRow, string[]>(query).all(...params);
+
+  return rows.map((row) => ({
+    id: row.id,
+    workflowId: row.workflow_id,
+    phase: row.phase as WorkflowPhase,
+    taskId: row.task_id,
+    taskSubject: row.task_subject,
+    taskStatus: row.task_status,
+    taskMetadata: row.task_metadata ?? undefined,
+    parentTaskId: row.parent_task_id ?? undefined,
+    capturedAt: row.captured_at,
+  }));
+}
+
+/**
+ * Get child tasks for a parent task.
+ * Returns the most recent snapshot for each child task.
+ *
+ * @param parentTaskId - Parent task ID to get children for
+ * @returns Array of child task snapshots
+ */
+function getChildTasks(parentTaskId: string): TaskSnapshot[] {
+  const db = getDatabase();
+
+  type SnapshotRow = {
+    id: number;
+    workflow_id: string;
+    phase: string;
+    task_id: string;
+    task_subject: string;
+    task_status: string;
+    task_metadata: string | null;
+    parent_task_id: string | null;
+    captured_at: string;
+  };
+
+  // Get the most recent snapshot for each child task
+  const rows = db
+    .query<SnapshotRow, [string, string]>(
+      `
+      SELECT ts.*
+      FROM task_snapshots ts
+      INNER JOIN (
+        SELECT task_id, MAX(captured_at) as max_captured
+        FROM task_snapshots
+        WHERE parent_task_id = ?
+        GROUP BY task_id
+      ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+      WHERE ts.parent_task_id = ?
+      ORDER BY ts.captured_at DESC
+      `,
+    )
+    .all(parentTaskId, parentTaskId);
+
+  return rows.map((row) => ({
+    id: row.id,
+    workflowId: row.workflow_id,
+    phase: row.phase as WorkflowPhase,
+    taskId: row.task_id,
+    taskSubject: row.task_subject,
+    taskStatus: row.task_status,
+    taskMetadata: row.task_metadata ?? undefined,
+    parentTaskId: row.parent_task_id ?? undefined,
+    capturedAt: row.captured_at,
+  }));
+}
+
+/**
+ * Calculate progress for a task, aggregating from children if present.
+ * If the task has children, progress is calculated from child statuses.
+ * If the task has no children, progress is based on the task's own status.
+ *
+ * @param taskId - Task ID to get progress for
+ * @param visited - Set of already-visited task IDs to prevent infinite recursion on cyclic data
+ * @returns Progress aggregation including percentage
+ */
+function getTaskProgress(
+  taskId: string,
+  visited: Set<string> = new Set(),
+): TaskProgress {
+  // Cycle detection - prevent infinite recursion on corrupt/cyclic data
+  if (visited.has(taskId)) {
+    return {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      pending: 0,
+      percentage: 0,
+    };
+  }
+  visited.add(taskId);
+
+  const children = getChildTasks(taskId);
+
+  if (children.length === 0) {
+    // Leaf task - get the most recent snapshot for this task
+    const db = getDatabase();
+    type StatusRow = { task_status: string };
+    const row = db
+      .query<
+        StatusRow,
+        [string]
+      >(`SELECT task_status FROM task_snapshots WHERE task_id = ? ORDER BY captured_at DESC LIMIT 1`)
+      .get(taskId);
+
+    // If no snapshot exists, return zeros (not found)
+    if (!row) {
+      return {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+        percentage: 0,
+      };
+    }
+
+    const status = row.task_status;
+    const completed = status === "completed" ? 1 : 0;
+    const inProgress = status === "in_progress" ? 1 : 0;
+    const pending = status === "pending" ? 1 : 0;
+
+    return {
+      total: 1,
+      completed,
+      inProgress,
+      pending,
+      percentage: completed * 100,
+    };
+  }
+
+  // Parent task - aggregate from children
+  let completed = 0;
+  let inProgress = 0;
+  let pending = 0;
+
+  for (const child of children) {
+    // Recursively get progress for each child (handles nested hierarchies)
+    const childProgress = getTaskProgress(child.taskId, visited);
+    completed += childProgress.completed;
+    inProgress += childProgress.inProgress;
+    pending += childProgress.pending;
+  }
+
+  const total = completed + inProgress + pending;
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    total,
+    completed,
+    inProgress,
+    pending,
+    percentage,
+  };
+}
+
+/**
+ * Build a hierarchical task tree from snapshots.
+ * Returns root tasks (tasks with no parent) with their children nested.
+ *
+ * @param workflowId - Optional workflow ID to filter by
+ * @returns Array of root task tree nodes
+ */
+function getTaskTree(workflowId?: string): TaskTreeNode[] {
+  const db = getDatabase();
+
+  type SnapshotRow = {
+    id: number;
+    workflow_id: string;
+    phase: string;
+    task_id: string;
+    task_subject: string;
+    task_status: string;
+    task_metadata: string | null;
+    parent_task_id: string | null;
+    captured_at: string;
+  };
+
+  // Get the most recent snapshot for each task
+  // Use separate queries for filtered vs unfiltered to avoid fragile SQL construction
+  const rows = workflowId
+    ? db
+        .query<SnapshotRow, [string, string]>(
+          `
+          SELECT ts.*
+          FROM task_snapshots ts
+          INNER JOIN (
+            SELECT task_id, MAX(captured_at) as max_captured
+            FROM task_snapshots
+            WHERE workflow_id = ?
+            GROUP BY task_id
+          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          WHERE ts.workflow_id = ?
+          ORDER BY ts.captured_at ASC
+          `,
+        )
+        .all(workflowId, workflowId)
+    : db
+        .query<SnapshotRow, []>(
+          `
+          SELECT ts.*
+          FROM task_snapshots ts
+          INNER JOIN (
+            SELECT task_id, MAX(captured_at) as max_captured
+            FROM task_snapshots
+            GROUP BY task_id
+          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ORDER BY ts.captured_at ASC
+          `,
+        )
+        .all();
+
+  // Convert rows to TaskSnapshot objects
+  const snapshots: TaskSnapshot[] = rows.map((row) => ({
+    id: row.id,
+    workflowId: row.workflow_id,
+    phase: row.phase as WorkflowPhase,
+    taskId: row.task_id,
+    taskSubject: row.task_subject,
+    taskStatus: row.task_status,
+    taskMetadata: row.task_metadata ?? undefined,
+    parentTaskId: row.parent_task_id ?? undefined,
+    capturedAt: row.captured_at,
+  }));
+
+  // Build a map of taskId -> snapshot
+  const snapshotMap = new Map<string, TaskSnapshot>();
+  for (const snapshot of snapshots) {
+    snapshotMap.set(snapshot.taskId, snapshot);
+  }
+
+  // Build a map of parentTaskId -> children
+  const childrenMap = new Map<string, TaskSnapshot[]>();
+  for (const snapshot of snapshots) {
+    if (snapshot.parentTaskId) {
+      const siblings = childrenMap.get(snapshot.parentTaskId) ?? [];
+      siblings.push(snapshot);
+      childrenMap.set(snapshot.parentTaskId, siblings);
+    }
+  }
+
+  // Recursively build tree nodes
+  function buildNode(snapshot: TaskSnapshot): TaskTreeNode {
+    const children = childrenMap.get(snapshot.taskId) ?? [];
+    const childNodes = children.map(buildNode);
+    const progress = getTaskProgress(snapshot.taskId);
+
+    return {
+      task: snapshot,
+      children: childNodes,
+      progress,
+    };
+  }
+
+  // Find root tasks (no parent) and build tree
+  const rootTasks = snapshots.filter((s) => !s.parentTaskId);
+  return rootTasks.map(buildNode);
+}
+
+/**
+ * Get aggregated task metrics across all workflows.
+ * Calculates completion rates and duration statistics.
+ *
+ * @returns Aggregated task metrics
+ */
+function getTaskMetrics(): TaskMetrics {
+  const db = getDatabase();
+
+  // Get total tasks and completed tasks
+  type TotalsRow = {
+    total_tasks: number;
+    completed_tasks: number;
+  };
+  const totals = db
+    .query<TotalsRow, []>(
+      `
+      SELECT
+        COUNT(*) as total_tasks,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed_tasks
+      FROM task_snapshots
+      `,
+    )
+    .get();
+
+  const totalTasks = totals?.total_tasks ?? 0;
+  const completedTasks = totals?.completed_tasks ?? 0;
+  const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
+
+  // Calculate average duration (time between first and last snapshot for same taskId)
+  // Uses subquery to compute per-task durations, then averages across all tasks
+  type DurationRow = {
+    avg_duration_ms: number | null;
+  };
+  const durationResult = db
+    .query<DurationRow, []>(
+      `
+      SELECT AVG(duration_ms) as avg_duration_ms
+      FROM (
+        SELECT
+          CAST((julianday(MAX(captured_at)) - julianday(MIN(captured_at))) * 24 * 60 * 60 * 1000 AS INTEGER) as duration_ms
+        FROM task_snapshots
+        GROUP BY task_id
+        HAVING COUNT(*) > 1
+      )
+      `,
+    )
+    .get();
+
+  const avgDurationMs = durationResult?.avg_duration_ms ?? 0;
+
+  // Get metrics by phase
+  type PhaseRow = {
+    phase: string;
+    count: number;
+    completed: number;
+  };
+  const phaseRows = db
+    .query<PhaseRow, []>(
+      `
+      SELECT
+        phase,
+        COUNT(*) as count,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed
+      FROM task_snapshots
+      GROUP BY phase
+      ORDER BY phase
+      `,
+    )
+    .all();
+
+  const byPhase = phaseRows.map((row) => ({
+    phase: row.phase as WorkflowPhase,
+    count: row.count,
+    completionRate: row.count > 0 ? row.completed / row.count : 0,
+  }));
+
+  // Get metrics by workflow
+  type WorkflowRow = {
+    workflow_id: string;
+    count: number;
+    completed: number;
+  };
+  const workflowRows = db
+    .query<WorkflowRow, []>(
+      `
+      SELECT
+        workflow_id,
+        COUNT(*) as count,
+        COUNT(CASE WHEN task_status = 'completed' THEN 1 END) as completed
+      FROM task_snapshots
+      GROUP BY workflow_id
+      ORDER BY workflow_id
+      `,
+    )
+    .all();
+
+  const byWorkflow = workflowRows.map((row) => ({
+    workflowId: row.workflow_id,
+    count: row.count,
+    completionRate: row.count > 0 ? row.completed / row.count : 0,
+  }));
+
+  return {
+    totalTasks,
+    completedTasks,
+    completionRate,
+    avgDurationMs,
+    byPhase,
+    byWorkflow,
+  };
+}
+
 export const metrics = {
   saveContextMetrics,
   getContextMetrics,
@@ -748,4 +1193,12 @@ export const metrics = {
   getToolUsageSummary,
   getToolUsageAggregate,
   categorizeToolName,
+  // Task metrics
+  logTaskSnapshot,
+  getTaskSnapshots,
+  getTaskMetrics,
+  // Task hierarchy
+  getChildTasks,
+  getTaskProgress,
+  getTaskTree,
 };

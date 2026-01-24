@@ -61,6 +61,86 @@ export const metricsTools: Tool[] = [
       required: [],
     },
   },
+  {
+    name: "metrics_get_task_snapshots",
+    description:
+      "Get task snapshots for a workflow (or all workflows). " +
+      "Returns task state captured at workflow phase boundaries.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        workflowId: {
+          type: "string",
+          description:
+            "Optional workflow ID to filter by. Omit to get all snapshots.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "metrics_get_task_metrics",
+    description:
+      "Get aggregated task metrics across all workflows. " +
+      "Returns completion rates, duration statistics, and breakdown by phase/workflow.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "metrics_get_task_tree",
+    description:
+      "Get hierarchical task tree for a workflow. " +
+      "Returns tasks with their children nested and progress aggregated. " +
+      "Use to visualize task hierarchy in complex workflows.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        workflowId: {
+          type: "string",
+          description:
+            "Optional workflow ID to filter by. Omit to get all tasks.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "metrics_get_task_progress",
+    description:
+      "Get progress for a specific task, including child task aggregation. " +
+      "Returns total, completed, in-progress, pending counts and percentage. " +
+      "Progress rolls up from children for parent tasks.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        taskId: {
+          type: "string",
+          description: "Task ID to get progress for",
+        },
+      },
+      required: ["taskId"],
+    },
+  },
+  {
+    name: "metrics_get_child_tasks",
+    description:
+      "Get child tasks for a parent task. " +
+      "Returns the most recent snapshot for each child. " +
+      "Use to explore task hierarchy.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        parentTaskId: {
+          type: "string",
+          description: "Parent task ID to get children for",
+        },
+      },
+      required: ["parentTaskId"],
+    },
+  },
 ];
 
 /**
@@ -156,6 +236,101 @@ export async function handleMetricsToolCall(
             {
               type: "text",
               text: JSON.stringify(aggregate, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_snapshots": {
+        const workflowId = args.workflowId as string | undefined;
+        const snapshots = metrics.getTaskSnapshots(workflowId);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(snapshots, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_metrics": {
+        const taskMetrics = metrics.getTaskMetrics();
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(taskMetrics, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_tree": {
+        const workflowId = args.workflowId as string | undefined;
+        const tree = metrics.getTaskTree(workflowId);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(tree, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_task_progress": {
+        const taskId = args.taskId as string;
+
+        if (!taskId) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "taskId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const progress = metrics.getTaskProgress(taskId);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(progress, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "metrics_get_child_tasks": {
+        const parentTaskId = args.parentTaskId as string;
+
+        if (!parentTaskId) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "parentTaskId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const children = metrics.getChildTasks(parentTaskId);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(children, null, 2),
             },
           ],
         };

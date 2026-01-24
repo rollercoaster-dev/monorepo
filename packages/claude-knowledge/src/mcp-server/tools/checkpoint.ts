@@ -7,7 +7,11 @@
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { checkpoint } from "../../checkpoint/index.js";
-import type { WorkflowPhase, WorkflowStatus } from "../../types.js";
+import type {
+  TaskRecoveryPlan,
+  WorkflowPhase,
+  WorkflowStatus,
+} from "../../types.js";
 
 /**
  * Tool definitions for checkpoint workflow operations.
@@ -31,6 +35,38 @@ export const checkpointTools: Tool[] = [
     },
   },
   {
+    name: "checkpoint_recover_tasks",
+    description:
+      "Recover native tasks from checkpoint state for session resume. " +
+      "Returns a task recovery plan with task definitions, statuses, and blockedBy relationships. " +
+      "Use when resuming /work-on-issue, /auto-issue, or /auto-milestone workflows " +
+      "to recreate task progress visualization. " +
+      "The returned plan describes TaskCreate/TaskUpdate calls to make.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        issueNumber: {
+          type: "number",
+          description:
+            "GitHub issue number to recover tasks for (for single-issue workflows)",
+        },
+        milestoneName: {
+          type: "string",
+          description:
+            "Milestone name to recover tasks for (for /auto-milestone workflows)",
+        },
+        workflowType: {
+          type: "string",
+          enum: ["work-on-issue", "auto-issue"],
+          description:
+            "Force workflow type detection (optional, auto-detected if omitted)",
+        },
+      },
+      // Neither is required - at least one must be provided
+      required: [],
+    },
+  },
+  {
     name: "checkpoint_workflow_create",
     description:
       "Create a new workflow checkpoint for an issue. " +
@@ -50,6 +86,10 @@ export const checkpointTools: Tool[] = [
         worktree: {
           type: "string",
           description: "Optional worktree path if using git worktrees",
+        },
+        taskId: {
+          type: "string",
+          description: "Optional native task ID for task system integration",
         },
       },
       required: ["issueNumber", "branch"],
@@ -86,6 +126,10 @@ export const checkpointTools: Tool[] = [
           type: "string",
           enum: ["running", "paused", "completed", "failed"],
           description: "New workflow status",
+        },
+        taskId: {
+          type: "string",
+          description: "Link workflow to a native task ID",
         },
       },
       required: ["workflowId"],
@@ -156,6 +200,7 @@ export async function handleCheckpointToolCall(
                     phase: data.workflow.phase,
                     status: data.workflow.status,
                     retryCount: data.workflow.retryCount,
+                    taskId: data.workflow.taskId ?? null,
                     createdAt: data.workflow.createdAt,
                     updatedAt: data.workflow.updatedAt,
                   },
@@ -209,7 +254,13 @@ export async function handleCheckpointToolCall(
         }
 
         const worktree = args.worktree as string | undefined;
-        const workflow = checkpoint.create(issueNumber, branch, worktree);
+        const taskId = args.taskId as string | undefined;
+        const workflow = checkpoint.create(
+          issueNumber,
+          branch,
+          worktree,
+          taskId,
+        );
 
         return {
           content: [
@@ -226,6 +277,7 @@ export async function handleCheckpointToolCall(
                     worktree: workflow.worktree,
                     phase: workflow.phase,
                     status: workflow.status,
+                    taskId: workflow.taskId ?? null,
                     createdAt: workflow.createdAt,
                   },
                 },
@@ -253,14 +305,16 @@ export async function handleCheckpointToolCall(
 
         const phase = args.phase as WorkflowPhase | undefined;
         const status = args.status as WorkflowStatus | undefined;
+        const taskId = args.taskId as string | undefined;
 
-        if (!phase && !status) {
+        if (!phase && !status && !taskId) {
           return {
             content: [
               {
                 type: "text",
                 text: JSON.stringify({
-                  error: "At least one of phase or status must be provided",
+                  error:
+                    "At least one of phase, status, or taskId must be provided",
                 }),
               },
             ],
@@ -280,6 +334,26 @@ export async function handleCheckpointToolCall(
           updates.push(`status → ${status}`);
         }
 
+        if (taskId) {
+          const data = checkpoint.load(workflowId);
+          if (!data) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: `Workflow not found: ${workflowId}`,
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          data.workflow.taskId = taskId;
+          checkpoint.save(data.workflow);
+          updates.push(`taskId → ${taskId}`);
+        }
+
         return {
           content: [
             {
@@ -290,6 +364,115 @@ export async function handleCheckpointToolCall(
                   workflowId,
                   updates,
                   message: `Workflow updated: ${updates.join(", ")}`,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "checkpoint_recover_tasks": {
+        const issueNumber = args.issueNumber as number | undefined;
+        const milestoneName = args.milestoneName as string | undefined;
+        const workflowType = args.workflowType as
+          | "work-on-issue"
+          | "auto-issue"
+          | undefined;
+
+        // Validate exactly one identifier is provided
+        if (issueNumber === undefined && !milestoneName) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "Either issueNumber or milestoneName must be provided",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        if (issueNumber !== undefined && milestoneName) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error:
+                    "Provide either issueNumber or milestoneName, not both",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Recover by milestone if milestoneName provided
+        if (milestoneName) {
+          const plan = checkpoint.recoverTasksByMilestone(milestoneName);
+          if (!plan) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    found: false,
+                    message: `No milestone found with name "${milestoneName}"`,
+                    milestoneName,
+                  }),
+                },
+              ],
+            };
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    found: true,
+                    recoveryPlan: plan,
+                    instructions: formatRecoveryInstructions(plan),
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
+        // Recover by issue number
+        const plan = checkpoint.recoverTasksByIssue(issueNumber!, workflowType);
+        if (!plan) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  found: false,
+                  message: `No workflow found for issue #${issueNumber}`,
+                  issueNumber,
+                }),
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  found: true,
+                  recoveryPlan: plan,
+                  instructions: formatRecoveryInstructions(plan),
                 },
                 null,
                 2,
@@ -326,4 +509,57 @@ export async function handleCheckpointToolCall(
       isError: true,
     };
   }
+}
+
+/**
+ * Format recovery instructions for Claude to execute.
+ * Returns a string with TaskCreate/TaskUpdate pseudocode.
+ */
+function formatRecoveryInstructions(plan: TaskRecoveryPlan): string {
+  const lines: string[] = [
+    `# Task Recovery for ${plan.workflowType}`,
+    `# ${plan.summary}`,
+    "",
+    "# Execute these TaskCreate/TaskUpdate calls in order:",
+    "",
+  ];
+
+  // Track task variable names for blockedBy references
+  const taskVars: string[] = [];
+
+  for (let i = 0; i < plan.tasks.length; i++) {
+    const task = plan.tasks[i];
+    const varName = `task${i}`;
+    taskVars.push(varName);
+
+    // TaskCreate call (use JSON.stringify for safe string escaping)
+    lines.push(`${varName} = TaskCreate({`);
+    lines.push(`  subject: ${JSON.stringify(task.subject)},`);
+    lines.push(`  description: ${JSON.stringify(task.description)},`);
+    lines.push(`  activeForm: ${JSON.stringify(task.activeForm)},`);
+    lines.push(`  metadata: ${JSON.stringify(task.metadata)}`);
+    lines.push(`})`);
+
+    // Set blockedBy if needed
+    if (task.blockedByIndices.length > 0) {
+      const blockers = task.blockedByIndices.map((idx) => taskVars[idx]);
+      lines.push(
+        `TaskUpdate(${varName}, { addBlockedBy: [${blockers.join(", ")}] })`,
+      );
+    }
+
+    // Set status if not pending (default)
+    if (task.status === "completed") {
+      lines.push(`TaskUpdate(${varName}, { status: "completed" })`);
+    } else if (task.status === "in_progress") {
+      lines.push(`TaskUpdate(${varName}, { status: "in_progress" })`);
+    }
+
+    lines.push("");
+  }
+
+  lines.push("# Show recovered task tree");
+  lines.push("TaskList()");
+
+  return lines.join("\n");
 }

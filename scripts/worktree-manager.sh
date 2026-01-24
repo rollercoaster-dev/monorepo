@@ -17,7 +17,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORKTREE_BASE="$REPO_ROOT/.worktrees"
+REPO_NAME="$(basename "$REPO_ROOT")"
+WORKTREE_BASE="$HOME/Code/worktrees"
 
 # Claude Knowledge CLI for state management
 CLI_CMD="bun $REPO_ROOT/packages/claude-knowledge/src/cli.ts"
@@ -131,7 +132,7 @@ ensure_base_dir() {
 # get_worktree_path returns the filesystem path for the worktree directory for the given issue number.
 get_worktree_path() {
   local issue_number=$1
-  echo "$WORKTREE_BASE/issue-$issue_number"
+  echo "$WORKTREE_BASE/$REPO_NAME-issue-$issue_number"
 }
 
 # update_state creates or updates a workflow using the CLI
@@ -466,13 +467,13 @@ cmd_sync() {
 
   # Get list of actual git worktrees
   local actual_worktrees
-  actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep ".worktrees/issue-" | sed 's/worktree //')
+  actual_worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep "$REPO_NAME-issue-" | sed 's/worktree //')
 
   # Add untracked worktrees to state
   while read -r worktree_path; do
     if [[ -n "$worktree_path" ]]; then
       local issue_number
-      issue_number=$(basename "$worktree_path" | sed 's/issue-//')
+      issue_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-issue-//")
 
       # Check if workflow exists
       local result
