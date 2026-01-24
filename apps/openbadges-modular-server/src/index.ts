@@ -202,8 +202,10 @@ export async function setupApp(): Promise<Hono> {
     });
 
     const devHost = process.env.DEV_HOST || config.server.host;
-    const useHttps = devHost.endsWith('.ts.net');
-    const baseUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${config.server.port}`;
+    const useHttps = devHost.endsWith(".ts.net");
+    const baseUrl = useHttps
+      ? `https://${devHost}`
+      : `http://${devHost}:${config.server.port}`;
     logger.info(`Server started successfully`, {
       server: baseUrl,
       "swagger docs": `${baseUrl}/docs`,
