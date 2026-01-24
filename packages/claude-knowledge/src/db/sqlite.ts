@@ -241,6 +241,7 @@ CREATE INDEX IF NOT EXISTS idx_tool_usage_category ON tool_usage(tool_category);
 
 -- Task snapshots table
 -- Captures task state at workflow phase boundaries for metrics tracking
+-- parent_task_id enables hierarchical task structures (Issue #580)
 CREATE TABLE IF NOT EXISTS task_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   workflow_id TEXT NOT NULL,
@@ -249,12 +250,29 @@ CREATE TABLE IF NOT EXISTS task_snapshots (
   task_subject TEXT NOT NULL,
   task_status TEXT NOT NULL,
   task_metadata TEXT,
+  parent_task_id TEXT,
   captured_at TEXT NOT NULL,
   FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_task_snapshots_workflow ON task_snapshots(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_task_snapshots_phase ON task_snapshots(phase);
+-- Note: idx_task_snapshots_parent is created in Migration 6 after adding parent_task_id column
+-- This avoids failures on existing DBs that lack the column during schema init
+
+-- Task hierarchy table
+-- Stores explicit parent-child relationships for hierarchical task structures
+CREATE TABLE IF NOT EXISTS task_hierarchy (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  parent_task_id TEXT NOT NULL,
+  child_task_id TEXT NOT NULL,
+  order_index INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE(parent_task_id, child_task_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_hierarchy_parent ON task_hierarchy(parent_task_id);
+CREATE INDEX IF NOT EXISTS idx_task_hierarchy_child ON task_hierarchy(child_task_id);
 `;
 
 /**
@@ -431,6 +449,34 @@ function runMigrations(database: Database): void {
         `Migration failed (add task_id to workflows): ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  // Migration 6: Add 'parent_task_id' column to task_snapshots table (for task hierarchy)
+  // Check if parent_task_id column exists
+  const taskSnapshotsColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(task_snapshots)")
+    .all();
+
+  const hasParentTaskIdColumn = taskSnapshotsColumns.some(
+    (col) => col.name === "parent_task_id",
+  );
+
+  try {
+    if (!hasParentTaskIdColumn) {
+      // Add parent_task_id column (nullable, for hierarchical task structures)
+      database.run(
+        "ALTER TABLE task_snapshots ADD COLUMN parent_task_id TEXT NULL",
+      );
+    }
+
+    // Always ensure index exists (idempotent) - handles both new and migrated DBs
+    database.run(
+      "CREATE INDEX IF NOT EXISTS idx_task_snapshots_parent ON task_snapshots(parent_task_id)",
+    );
+  } catch (error) {
+    throw new Error(
+      `Migration failed (add parent_task_id to task_snapshots): ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
