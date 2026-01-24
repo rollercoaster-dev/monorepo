@@ -1381,7 +1381,18 @@ function extractTemplateRelationships(
     let targetId: string | null = null;
 
     if (importedFromPath) {
-      const match = candidates.find((e) => e.filePath === importedFromPath);
+      // Normalize paths for comparison - extractImportMap() may return .ts paths
+      // while the actual file is .vue, so check multiple variants
+      const normalizedPaths = [
+        importedFromPath,
+        importedFromPath.replace(/\.ts$/, ".vue"),
+        importedFromPath.replace(/\.ts$/, ""),
+      ];
+      const match = candidates.find((e) =>
+        normalizedPaths.some(
+          (p) => e.filePath === p || e.filePath.replace(/\.vue$/, "") === p,
+        ),
+      );
       if (match) {
         targetId = match.id;
       }

@@ -130,14 +130,19 @@ export function storeGraph(
 
     // Insert relationships (OR IGNORE to skip duplicates from unique index)
     const insertRel = db.prepare(`
-      INSERT OR IGNORE INTO graph_relationships (from_entity, to_entity, type)
-      VALUES (?, ?, ?)
+      INSERT OR IGNORE INTO graph_relationships (from_entity, to_entity, type, metadata)
+      VALUES (?, ?, ?, ?)
     `);
 
     let relsCount = 0;
     for (const rel of data.relationships) {
       try {
-        const result = insertRel.run(rel.from, rel.to, rel.type);
+        const result = insertRel.run(
+          rel.from,
+          rel.to,
+          rel.type,
+          rel.metadata ?? null,
+        );
         // Only count if row was actually inserted (not ignored as duplicate)
         if (result.changes > 0) {
           relsCount++;
