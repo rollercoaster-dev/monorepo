@@ -142,14 +142,14 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 
 <style>
 .manus-profile-viewer {
-  --profile-padding: 24px;
-  --profile-gap: 32px;
-  --profile-border-color: #e2e8f0;
-  --profile-background: #ffffff;
-  --profile-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --profile-title-color: #1a202c;
-  --profile-text-color: #4a5568;
-  --profile-link-color: #3182ce;
+  --profile-padding: var(--ob-profile-padding, var(--ob-space-6, 24px));
+  --profile-gap: var(--ob-profile-gap, var(--ob-space-8, 32px));
+  --profile-border-color: var(--ob-border-color, #e2e8f0);
+  --profile-background: var(--ob-bg-primary, #ffffff);
+  --profile-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
+  --profile-title-color: var(--ob-text-primary, #1a202c);
+  --profile-text-color: var(--ob-text-secondary, #4a5568);
+  --profile-link-color: var(--ob-primary, #3182ce);
 
   display: flex;
   flex-direction: column;
@@ -157,15 +157,17 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   padding: var(--profile-padding);
   background-color: var(--profile-background);
   border: 1px solid var(--profile-border-color);
-  border-radius: 8px;
+  border-radius: var(--ob-border-radius-lg, 8px);
   box-shadow: var(--profile-shadow);
+  font-family: var(--ob-font-family, inherit);
+  color: var(--profile-text-color);
 }
 
 .manus-profile-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--ob-space-4, 16px);
   text-align: center;
 }
 
@@ -188,41 +190,41 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #4a5568;
-  color: white;
-  font-size: 2rem;
-  font-weight: bold;
+  background-color: var(--ob-gray-700, #4a5568);
+  color: var(--ob-text-inverse, #ffffff);
+  font-size: var(--ob-font-size-2xl, 2rem);
+  font-weight: var(--ob-font-weight-bold, 700);
 }
 
 .manus-profile-name {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--ob-font-size-2xl, 1.5rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--profile-title-color);
 }
 
 .manus-profile-description {
-  margin: 8px 0 0;
-  font-size: 0.875rem;
+  margin: var(--ob-space-2, 8px) 0 0;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--profile-text-color);
-  line-height: 1.5;
+  line-height: var(--ob-line-height-normal, 1.5);
 }
 
 .manus-profile-details {
-  margin-top: 12px;
+  margin-top: var(--ob-space-3, 12px);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ob-space-1, 4px);
 }
 
 .manus-profile-detail {
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--profile-text-color);
 }
 
 .manus-profile-detail-label {
-  font-weight: 500;
-  margin-right: 4px;
+  font-weight: var(--ob-font-weight-medium, 500);
+  margin-right: var(--ob-space-1, 4px);
 }
 
 .manus-profile-detail-value {
@@ -235,14 +237,14 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 }
 
 .manus-section-title {
-  margin: 0 0 16px;
-  font-size: 1.25rem;
-  font-weight: 600;
+  margin: 0 0 var(--ob-space-4, 16px);
+  font-size: var(--ob-font-size-xl, 1.25rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--profile-title-color);
 }
 
 .manus-profile-loading {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   text-align: center;
   color: var(--profile-text-color);
 }

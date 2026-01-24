@@ -259,18 +259,21 @@ const truncatedCriteria = computed(() => {
 
 <style>
 .manus-badge-class-card {
-  --badge-class-border-color: #e2e8f0;
-  --badge-class-border-radius: 8px;
-  --badge-class-padding: 16px;
-  --badge-class-background: #ffffff;
-  --badge-class-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --badge-class-name-color: #1a202c;
-  --badge-class-text-color: #4a5568;
-  --badge-class-hover-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --badge-class-focus-outline-color: #3182ce;
-  --badge-class-tag-bg: #e2e8f0;
-  --badge-class-tag-color: #4a5568;
-  --badge-class-fallback-bg: #f7fafc;
+  --badge-class-border-color: var(--ob-border-color, #e2e8f0);
+  --badge-class-border-radius: var(--ob-border-radius-lg, 8px);
+  --badge-class-padding: var(--ob-space-4, 16px);
+  --badge-class-background: var(--ob-bg-primary, #ffffff);
+  --badge-class-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
+  --badge-class-name-color: var(--ob-text-primary, #1a202c);
+  --badge-class-text-color: var(--ob-text-secondary, #4a5568);
+  --badge-class-hover-shadow: var(
+    --ob-shadow-md,
+    0 4px 8px rgba(0, 0, 0, 0.15)
+  );
+  --badge-class-focus-outline-color: var(--ob-primary, #3182ce);
+  --badge-class-tag-bg: var(--ob-gray-200, #e2e8f0);
+  --badge-class-tag-color: var(--ob-text-secondary, #4a5568);
+  --badge-class-fallback-bg: var(--ob-bg-secondary, #f7fafc);
 
   display: flex;
   flex-direction: column;
@@ -279,8 +282,10 @@ const truncatedCriteria = computed(() => {
   padding: var(--badge-class-padding);
   background-color: var(--badge-class-background);
   box-shadow: var(--badge-class-shadow);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
   max-width: 300px;
+  font-family: var(--ob-font-family, inherit);
+  color: var(--badge-class-text-color);
 }
 
 .manus-badge-class-card.is-interactive {
@@ -293,27 +298,27 @@ const truncatedCriteria = computed(() => {
 
 .manus-badge-class-card.is-interactive:focus {
   outline: 2px solid var(--badge-class-focus-outline-color);
-  outline-offset: 2px;
+  outline-offset: var(--ob-space-1, 2px);
 }
 
 .manus-badge-class-image {
   display: flex;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--ob-space-3, 12px);
 }
 
 .manus-badge-class-img {
   max-width: 100%;
   height: auto;
   max-height: 120px;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
   object-fit: contain;
 }
 
 .manus-badge-class-img-fallback {
   width: 80px;
   height: 80px;
-  border-radius: 8px;
+  border-radius: var(--ob-border-radius-lg, 8px);
   background-color: var(--badge-class-fallback-bg);
   display: flex;
   align-items: center;
@@ -321,70 +326,70 @@ const truncatedCriteria = computed(() => {
 }
 
 .manus-badge-class-icon {
-  font-size: 2.5rem;
+  font-size: var(--ob-font-size-3xl, 2.5rem);
 }
 
 .manus-badge-class-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--ob-space-2, 6px);
 }
 
 .manus-badge-class-name {
   margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: var(--ob-font-size-lg, 1.125rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
   color: var(--badge-class-name-color);
-  line-height: 1.3;
+  line-height: var(--ob-line-height-tight, 1.3);
 }
 
 .manus-badge-class-description {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--badge-class-text-color);
-  line-height: 1.4;
+  line-height: var(--ob-line-height-normal, 1.4);
 }
 
 .manus-badge-class-issuer {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
   color: var(--badge-class-text-color);
 }
 
 .manus-badge-class-criteria {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
   color: var(--badge-class-text-color);
   font-style: italic;
 }
 
 .manus-badge-class-criteria-label {
-  font-weight: 500;
+  font-weight: var(--ob-font-weight-medium, 500);
   font-style: normal;
 }
 
 .manus-badge-class-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
+  gap: var(--ob-space-1, 4px);
+  margin-top: var(--ob-space-1, 4px);
 }
 
 .manus-badge-class-tag {
   display: inline-block;
-  padding: 2px 8px;
+  padding: var(--ob-space-1, 2px) var(--ob-space-2, 8px);
   background-color: var(--badge-class-tag-bg);
   color: var(--badge-class-tag-color);
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 500;
+  border-radius: var(--ob-border-radius-pill, 12px);
+  font-size: var(--ob-font-size-xs, 0.7rem);
+  font-weight: var(--ob-font-weight-medium, 500);
 }
 
 .manus-badge-class-tag-more {
-  background-color: #cbd5e0;
+  background-color: var(--ob-gray-300, #cbd5e0);
 }
 
 /* Content density styles */
 .manus-badge-class-card.density-compact {
-  padding: 10px;
+  padding: var(--ob-space-2, 10px);
   max-width: 240px;
 }
 
@@ -402,23 +407,23 @@ const truncatedCriteria = computed(() => {
 }
 
 .manus-badge-class-card.density-compact .manus-badge-class-name {
-  font-size: 0.975rem;
+  font-size: var(--ob-font-size-md, 0.975rem);
 }
 
 .manus-badge-class-card.density-compact .manus-badge-class-description {
-  font-size: 0.75rem;
+  font-size: var(--ob-font-size-xs, 0.75rem);
 }
 
 .manus-badge-class-card.density-compact .manus-badge-class-content {
-  gap: 4px;
+  gap: var(--ob-space-1, 4px);
 }
 
 .manus-badge-class-card.density-normal {
-  padding: 16px;
+  padding: var(--ob-space-4, 16px);
 }
 
 .manus-badge-class-card.density-spacious {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   max-width: 350px;
 }
 
@@ -436,34 +441,34 @@ const truncatedCriteria = computed(() => {
 }
 
 .manus-badge-class-card.density-spacious .manus-badge-class-name {
-  font-size: 1.25rem;
+  font-size: var(--ob-font-size-xl, 1.25rem);
 }
 
 .manus-badge-class-card.density-spacious .manus-badge-class-content {
-  gap: 8px;
+  gap: var(--ob-space-2, 8px);
 }
 
 /* Multi-achievement indicator */
 .manus-badge-class-multi {
-  margin-top: 4px;
+  margin-top: var(--ob-space-1, 4px);
 }
 
 .manus-badge-class-multi-badge {
   display: inline-block;
-  padding: 2px 8px;
-  background-color: #edf2f7;
-  color: #4a5568;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border: 1px dashed #a0aec0;
+  padding: var(--ob-space-1, 2px) var(--ob-space-2, 8px);
+  background-color: var(--ob-gray-100, #edf2f7);
+  color: var(--ob-text-secondary, #4a5568);
+  border-radius: var(--ob-border-radius-pill, 12px);
+  font-size: var(--ob-font-size-xs, 0.7rem);
+  font-weight: var(--ob-font-weight-medium, 500);
+  border: 1px dashed var(--ob-border-color-muted, #a0aec0);
 }
 
 /* Accessibility focus styles */
 .manus-badge-class-card:focus-visible,
 .manus-badge-class-card.is-interactive:focus-visible {
-  outline: 3px solid #ff9800;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 4px #ffe0b2;
+  outline: 3px solid var(--ob-border-color-focus, #ff9800);
+  outline-offset: var(--ob-space-1, 3px);
+  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
 }
 </style>
