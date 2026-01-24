@@ -23,7 +23,7 @@ import type { OB2, OB3 } from "openbadges-types";
  *
  * | Name | Type | Default | Description |
  * |------|------|---------|-------------|
- * | `badgeClass` | `OB2.BadgeClass \| OB3.Achievement` | Required | The badge class to display |
+ * | `badgeClass` | `OB2.BadgeClass \| OB3.Achievement \| OB3.Achievement[]` | Required | The badge class to display (arrays show first with indicator) |
  * | `interactive` | `boolean` | `false` | Whether the card is clickable |
  * | `showDescription` | `boolean` | `true` | Show the badge description |
  * | `showCriteria` | `boolean` | `false` | Show the badge criteria |
@@ -35,7 +35,7 @@ import type { OB2, OB3 } from "openbadges-types";
  *
  * | Name | Payload | Description |
  * |------|---------|-------------|
- * | `click` | `OB2.BadgeClass \| OB3.Achievement` | Emitted when the card is clicked (if interactive) |
+ * | `click` | `OB2.BadgeClass \| OB3.Achievement \| OB3.Achievement[]` | Emitted when the card is clicked (if interactive) |
  *
  * ## Slots
  *
@@ -127,6 +127,60 @@ const badgeManyTags: OB2.BadgeClass = {
   ],
 };
 
+// Mock OB3 Achievement array (multi-achievement credential per OB3 spec)
+const mockOB3AchievementArray: OB3.Achievement[] = [
+  {
+    id: "https://example.org/achievements/multi-1",
+    type: ["Achievement"] as [string, ...string[]],
+    name: "Cloud Architecture Fundamentals",
+    description:
+      "Core understanding of cloud computing principles, including IaaS, PaaS, SaaS, and hybrid architectures.",
+    image: {
+      id: "https://placehold.co/200x200/e53e3e/white?text=CA",
+      type: "Image" as const,
+    },
+    criteria: {
+      narrative:
+        "Complete all cloud architecture modules and pass the certification exam.",
+    },
+    creator: {
+      id: "https://example.org/issuers/cloud",
+      name: "Cloud Academy",
+    },
+  } as OB3.Achievement,
+  {
+    id: "https://example.org/achievements/multi-2",
+    type: ["Achievement"] as [string, ...string[]],
+    name: "Container Orchestration",
+    description: "Proficiency in Kubernetes and Docker container management.",
+    image: {
+      id: "https://placehold.co/200x200/3182ce/white?text=CO",
+      type: "Image" as const,
+    },
+    criteria: {
+      narrative:
+        "Deploy and manage a multi-container application in Kubernetes.",
+    },
+    creator: {
+      id: "https://example.org/issuers/cloud",
+      name: "Cloud Academy",
+    },
+  } as OB3.Achievement,
+  {
+    id: "https://example.org/achievements/multi-3",
+    type: ["Achievement"] as [string, ...string[]],
+    name: "Infrastructure as Code",
+    description: "Skills in Terraform, CloudFormation, and Pulumi.",
+    criteria: {
+      narrative: "Build and deploy infrastructure using IaC tools.",
+    },
+    creator: {
+      id: "https://example.org/issuers/cloud",
+      name: "Cloud Academy",
+    },
+  } as OB3.Achievement,
+];
+
 const state = ref({
   badgeClass: mockOB2BadgeClass,
   interactive: false,
@@ -137,7 +191,9 @@ const state = ref({
   density: "normal" as "compact" | "normal" | "spacious",
 });
 
-function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
+function onBadgeClassClick(
+  badgeClass: OB2.BadgeClass | OB3.Achievement | OB3.Achievement[],
+): void {
   console.log("Badge class clicked:", badgeClass);
 }
 </script>
@@ -179,6 +235,15 @@ function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
         <p>
           When a badge has more than 5 tags, only the first 5 are displayed with
           a "+N" indicator showing how many additional tags exist.
+        </p>
+
+        <h2>Multi-Achievement Credentials (OB3)</h2>
+        <p>
+          Per the OB3 spec, <code>credentialSubject.achievement</code> can be an
+          array. When an array is provided, the component displays the first
+          achievement with a "+N more achievements" indicator. This approach was
+          chosen because badge cards are typically displayed in lists, and
+          showing all achievements would break the visual consistency.
         </p>
 
         <h2>Accessibility</h2>
@@ -225,6 +290,26 @@ function onBadgeClassClick(badgeClass: OB2.BadgeClass | OB3.Achievement): void {
     <Variant title="OB3 Achievement">
       <BadgeClassCard
         :badge-class="mockOB3Achievement"
+        :show-description="state.showDescription"
+        :show-criteria="state.showCriteria"
+        :show-issuer="state.showIssuer"
+        :show-tags="state.showTags"
+        :interactive="state.interactive"
+        :density="state.density"
+        @click="onBadgeClassClick"
+      />
+    </Variant>
+
+    <Variant title="OB3 Achievement Array (Multi-Achievement)">
+      <div class="story-description">
+        <p>
+          Per OB3 spec, <code>credentialSubject.achievement</code> can be an
+          array. When passed an array, the component displays the first
+          achievement with a "+N more" indicator.
+        </p>
+      </div>
+      <BadgeClassCard
+        :badge-class="mockOB3AchievementArray"
         :show-description="state.showDescription"
         :show-criteria="state.showCriteria"
         :show-issuer="state.showIssuer"
