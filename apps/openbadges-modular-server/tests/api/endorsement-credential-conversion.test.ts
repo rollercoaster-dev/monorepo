@@ -514,7 +514,9 @@ describe("EndorsementCredential Conversion Fix", () => {
       const result = testConvertToEndorsementCredential(dto);
 
       expect(Array.isArray(result["@context"])).toBe(true);
-      expect(result["@context"]).toContain("https://www.w3.org/ns/credentials/v2");
+      expect(result["@context"]).toContain(
+        "https://www.w3.org/ns/credentials/v2",
+      );
       expect(result["@context"]).toContain(
         "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
       );

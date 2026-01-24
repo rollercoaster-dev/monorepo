@@ -316,9 +316,7 @@ describe("Achievement Required Fields Validation", () => {
       // Embedded Achievement should have all required properties
       expect(embedded.id).toBe("https://example.com/badges/embedded");
       expect(embedded.name).toBe("Embedded Achievement");
-      expect(embedded.description).toBe(
-        "An embedded achievement for testing",
-      );
+      expect(embedded.description).toBe("An embedded achievement for testing");
       expect(embedded.criteria).toBeDefined();
     });
   });
