@@ -15,6 +15,7 @@ import {
   extractVueScript,
   parsePackage,
 } from "../parser";
+import { addToEntityCache, type EntityCache } from "../store";
 import type { ProgressCallback } from "../types";
 import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
@@ -400,5 +401,271 @@ describe("makeEntityId and makeFileId", () => {
   it("should normalize Windows paths", () => {
     const id = makeEntityId("pkg", "src\\utils\\helper.ts", "fn", "function");
     expect(id).toBe("pkg:src/utils/helper.ts:function:fn");
+  });
+});
+
+describe("addToEntityCache", () => {
+  it("should create new file entry when none exists", () => {
+    const cache: EntityCache = new Map();
+    const entity = {
+      filePath: "src/utils.ts",
+      name: "formatDate",
+      id: "pkg:src/utils.ts:function:formatDate",
+    };
+
+    const isNew = addToEntityCache(cache, entity);
+
+    expect(isNew).toBe(true);
+    expect(cache.has("src/utils.ts")).toBe(true);
+    expect(cache.get("src/utils.ts")?.get("formatDate")).toBe(
+      "pkg:src/utils.ts:function:formatDate",
+    );
+  });
+
+  it("should add to existing file entry", () => {
+    const cache: EntityCache = new Map();
+    const entity1 = {
+      filePath: "src/utils.ts",
+      name: "formatDate",
+      id: "pkg:src/utils.ts:function:formatDate",
+    };
+    const entity2 = {
+      filePath: "src/utils.ts",
+      name: "parseDate",
+      id: "pkg:src/utils.ts:function:parseDate",
+    };
+
+    addToEntityCache(cache, entity1);
+    const isNew = addToEntityCache(cache, entity2);
+
+    expect(isNew).toBe(true);
+    expect(cache.get("src/utils.ts")?.size).toBe(2);
+    expect(cache.get("src/utils.ts")?.get("parseDate")).toBe(
+      "pkg:src/utils.ts:function:parseDate",
+    );
+  });
+
+  it("should return false when overwriting existing entry", () => {
+    const cache: EntityCache = new Map();
+    const entity1 = {
+      filePath: "src/utils.ts",
+      name: "formatDate",
+      id: "pkg:src/utils.ts:function:formatDate",
+    };
+    const entity2 = {
+      filePath: "src/utils.ts",
+      name: "formatDate",
+      id: "pkg:src/utils.ts:function:formatDate-v2",
+    };
+
+    addToEntityCache(cache, entity1);
+    const isNew = addToEntityCache(cache, entity2);
+
+    expect(isNew).toBe(false);
+    expect(cache.get("src/utils.ts")?.get("formatDate")).toBe(
+      "pkg:src/utils.ts:function:formatDate-v2",
+    );
+  });
+
+  it("should handle multiple files independently", () => {
+    const cache: EntityCache = new Map();
+    const entity1 = {
+      filePath: "src/a.ts",
+      name: "fnA",
+      id: "pkg:src/a.ts:function:fnA",
+    };
+    const entity2 = {
+      filePath: "src/b.ts",
+      name: "fnB",
+      id: "pkg:src/b.ts:function:fnB",
+    };
+
+    addToEntityCache(cache, entity1);
+    addToEntityCache(cache, entity2);
+
+    expect(cache.size).toBe(2);
+    expect(cache.get("src/a.ts")?.get("fnA")).toBe("pkg:src/a.ts:function:fnA");
+    expect(cache.get("src/b.ts")?.get("fnB")).toBe("pkg:src/b.ts:function:fnB");
+  });
+});
+
+describe("Vue template component relationship extraction", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "vue-rel-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it("should extract PascalCase component usage from template", () => {
+    // Create a component that uses another component
+    // Note: For the relationship to be created, the child component must have
+    // a named entity that matches the component name used in the template
+    const childComponent = `
+<template>
+  <div>Child</div>
+</template>
+
+<script setup lang="ts">
+// Export a constant matching the component name for entity lookup
+export const ChildComponent = { name: 'ChildComponent' };
+</script>
+`;
+    const parentComponent = `
+<template>
+  <div>
+    <ChildComponent />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ChildComponent } from './ChildComponent.vue';
+</script>
+`;
+    writeFileSync(join(tempDir, "ChildComponent.vue"), childComponent);
+    writeFileSync(join(tempDir, "ParentComponent.vue"), parentComponent);
+
+    const result = parsePackage(tempDir, "test-pkg");
+
+    // Find the relationship from parent to child
+    const templateRelationship = result.relationships.find(
+      (r) =>
+        r.from.includes("ParentComponent") &&
+        r.to.includes("ChildComponent") &&
+        r.type === "calls",
+    );
+
+    expect(templateRelationship).toBeDefined();
+  });
+
+  it("should convert kebab-case to PascalCase for component lookup", () => {
+    // Child component with a named export matching the PascalCase name
+    const childComponent = `
+<template>
+  <div>Child</div>
+</template>
+
+<script setup lang="ts">
+// Export a constant matching the PascalCase name for entity lookup
+export const MyComponent = { name: 'MyComponent' };
+</script>
+`;
+    const parentComponent = `
+<template>
+  <div>
+    <my-component />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { MyComponent } from './MyComponent.vue';
+</script>
+`;
+    writeFileSync(join(tempDir, "MyComponent.vue"), childComponent);
+    writeFileSync(join(tempDir, "Parent.vue"), parentComponent);
+
+    const result = parsePackage(tempDir, "test-pkg");
+
+    // Find the relationship - kebab-case in template should resolve to PascalCase component
+    const templateRelationship = result.relationships.find(
+      (r) =>
+        r.from.includes("Parent") &&
+        r.to.includes("MyComponent") &&
+        r.type === "calls",
+    );
+
+    expect(templateRelationship).toBeDefined();
+  });
+
+  it("should not create relationships for standard HTML tags", () => {
+    const component = `
+<template>
+  <div>
+    <span>Text</span>
+    <button>Click</button>
+    <input type="text" />
+  </div>
+</template>
+
+<script setup lang="ts">
+</script>
+`;
+    writeFileSync(join(tempDir, "Test.vue"), component);
+
+    const result = parsePackage(tempDir, "test-pkg");
+
+    // Should not have relationships to div, span, button, input
+    const htmlTagRelationships = result.relationships.filter(
+      (r) =>
+        r.to.includes("div") ||
+        r.to.includes("span") ||
+        r.to.includes("button") ||
+        r.to.includes("input"),
+    );
+
+    expect(htmlTagRelationships.length).toBe(0);
+  });
+
+  it("should not create relationships for Vue built-in elements", () => {
+    const component = `
+<template>
+  <transition>
+    <teleport to="body">
+      <suspense>
+        <keep-alive>
+          <component :is="dynamic" />
+        </keep-alive>
+      </suspense>
+    </teleport>
+  </transition>
+</template>
+
+<script setup lang="ts">
+const dynamic = 'div';
+</script>
+`;
+    writeFileSync(join(tempDir, "Test.vue"), component);
+
+    const result = parsePackage(tempDir, "test-pkg");
+
+    // Should not have relationships to Vue built-in elements
+    const vueBuiltinRelationships = result.relationships.filter(
+      (r) =>
+        r.to.includes("transition") ||
+        r.to.includes("teleport") ||
+        r.to.includes("suspense") ||
+        r.to.includes("keep-alive") ||
+        r.to.includes("component"),
+    );
+
+    expect(vueBuiltinRelationships.length).toBe(0);
+  });
+
+  it("should handle templates with no custom components", () => {
+    const component = `
+<template>
+  <div>
+    <p>Just text</p>
+  </div>
+</template>
+
+<script setup lang="ts">
+const msg = 'hello';
+</script>
+`;
+    writeFileSync(join(tempDir, "Test.vue"), component);
+
+    // Should not throw, and should have no template-component relationships
+    const result = parsePackage(tempDir, "test-pkg");
+
+    const templateRelationships = result.relationships.filter(
+      (r) => r.type === "calls" && r.from.includes("Test.vue"),
+    );
+
+    // Should not have any "calls" relationships from this file (no custom components)
+    expect(templateRelationships.length).toBe(0);
   });
 });

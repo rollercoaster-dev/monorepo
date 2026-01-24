@@ -360,6 +360,9 @@ export async function storeCodeDocs(
     db.run("ROLLBACK");
     logger.error("Failed to store CodeDoc entities", {
       error: error instanceof Error ? error.message : String(error),
+      processed: codeDocsCreated,
+      total: entitiesWithJsDoc.length,
+      currentEntity: entitiesWithJsDoc[codeDocsCreated]?.id,
     });
     throw error;
   }

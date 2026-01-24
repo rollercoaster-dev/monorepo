@@ -240,7 +240,7 @@ export type ParseProgressPhase = "scan" | "load" | "entities" | "relationships";
  * Called at each phase of the parsing process.
  *
  * @param phase - Current parsing phase
- * @param current - Current item number (0-indexed)
+ * @param current - Current item number (1-indexed during processing)
  * @param total - Total number of items in this phase
  * @param message - Human-readable progress message
  */

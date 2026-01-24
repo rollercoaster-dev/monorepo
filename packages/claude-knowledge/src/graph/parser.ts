@@ -239,7 +239,7 @@ function extractTemplateComponentCalls(
       walkTemplateAst(compiled.ast, calls);
     }
   } catch (error) {
-    logger.debug(`Failed to parse Vue template in ${filePath}`, {
+    logger.warn(`Failed to parse Vue template in ${filePath}`, {
       error: error instanceof Error ? error.message : String(error),
     });
   }
