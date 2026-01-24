@@ -257,7 +257,22 @@ CREATE TABLE IF NOT EXISTS task_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_task_snapshots_workflow ON task_snapshots(workflow_id);
 CREATE INDEX IF NOT EXISTS idx_task_snapshots_phase ON task_snapshots(phase);
-CREATE INDEX IF NOT EXISTS idx_task_snapshots_parent ON task_snapshots(parent_task_id);
+-- Note: idx_task_snapshots_parent is created in Migration 6 after adding parent_task_id column
+-- This avoids failures on existing DBs that lack the column during schema init
+
+-- Task hierarchy table
+-- Stores explicit parent-child relationships for hierarchical task structures
+CREATE TABLE IF NOT EXISTS task_hierarchy (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  parent_task_id TEXT NOT NULL,
+  child_task_id TEXT NOT NULL,
+  order_index INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE(parent_task_id, child_task_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_hierarchy_parent ON task_hierarchy(parent_task_id);
+CREATE INDEX IF NOT EXISTS idx_task_hierarchy_child ON task_hierarchy(child_task_id);
 `;
 
 /**
@@ -446,22 +461,22 @@ function runMigrations(database: Database): void {
     (col) => col.name === "parent_task_id",
   );
 
-  if (!hasParentTaskIdColumn) {
-    try {
+  try {
+    if (!hasParentTaskIdColumn) {
       // Add parent_task_id column (nullable, for hierarchical task structures)
       database.run(
         "ALTER TABLE task_snapshots ADD COLUMN parent_task_id TEXT NULL",
       );
-
-      // Create index for efficient parent-child queries
-      database.run(
-        "CREATE INDEX IF NOT EXISTS idx_task_snapshots_parent ON task_snapshots(parent_task_id)",
-      );
-    } catch (error) {
-      throw new Error(
-        `Migration failed (add parent_task_id to task_snapshots): ${error instanceof Error ? error.message : String(error)}`,
-      );
     }
+
+    // Always ensure index exists (idempotent) - handles both new and migrated DBs
+    database.run(
+      "CREATE INDEX IF NOT EXISTS idx_task_snapshots_parent ON task_snapshots(parent_task_id)",
+    );
+  } catch (error) {
+    throw new Error(
+      `Migration failed (add parent_task_id to task_snapshots): ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

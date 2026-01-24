@@ -711,6 +711,27 @@ export interface TaskMetrics {
 }
 
 // ============================================================================
+// Task Hierarchy Types
+// ============================================================================
+
+/**
+ * Parent-child task relationship for hierarchical task structures.
+ * Enables complex workflows with sub-tasks (e.g., implementation phase with multiple commits).
+ */
+export interface TaskHierarchy {
+  /** Auto-incrementing row ID */
+  id: number;
+  /** Parent task ID (from native task system) */
+  parentTaskId: string;
+  /** Child task ID (from native task system) */
+  childTaskId: string;
+  /** Display order among siblings (lower = first) */
+  orderIndex: number;
+  /** ISO timestamp when relationship was created */
+  createdAt: string;
+}
+
+// ============================================================================
 // Task Recovery Types (Session Resume)
 // ============================================================================
 
