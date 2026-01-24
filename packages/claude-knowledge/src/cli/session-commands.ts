@@ -146,8 +146,10 @@ export async function handleSessionStart(args: string[]): Promise<void> {
     });
   }
 
-  // Output the summary (for injection into context)
-  console.log(context.summary);
+  // Knowledge injection disabled - learnings are queried on-demand via MCP tools
+  // See: https://github.com/rollercoaster-dev/monorepo - session discussing Beads vs claude-knowledge
+  // The session-start context is too early (we don't know what we'll work on yet)
+  // console.log(context.summary);
 
   // Output session metadata for session-end to consume
   // This is output as a special marker that can be captured
