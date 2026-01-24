@@ -451,6 +451,190 @@ describe("EndorsementCredential Conversion Fix", () => {
     });
   });
 
+  /**
+   * EndorsementCredential Structure Validation Tests
+   *
+   * Per Open Badges 3.0 specification, EndorsementCredential is a
+   * VerifiableCredential with specific structure requirements:
+   *
+   * Required fields:
+   * - @context: Array including VC and OB3 contexts
+   * - id: IRI (required)
+   * - type: ["VerifiableCredential", "EndorsementCredential"]
+   * - issuer: IRI or Issuer object with id, type, name, url
+   * - validFrom: DateTime string (VC Data Model 2.0)
+   * - credentialSubject: Object with id, type, and optional endorsementComment
+   *
+   * @see https://www.imsglobal.org/spec/ob/v3p0/#endorsementcredential
+   */
+  describe("EndorsementCredential Structure Validation", () => {
+    it("should have correct type array including both VerifiableCredential and EndorsementCredential", () => {
+      const dto: EndorsementCredentialDto = {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+        ],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+          endorsementComment: "This is an excellent achievement!",
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(result.type).toEqual([
+        "VerifiableCredential",
+        "EndorsementCredential",
+      ]);
+      expect(result.type[0]).toBe("VerifiableCredential");
+      expect(result.type[1]).toBe("EndorsementCredential");
+    });
+
+    it("should include required @context array with VC and OB3 contexts", () => {
+      const dto: EndorsementCredentialDto = {
+        "@context": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+        ],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(Array.isArray(result["@context"])).toBe(true);
+      expect(result["@context"]).toContain(
+        "https://www.w3.org/ns/credentials/v2",
+      );
+      expect(result["@context"]).toContain(
+        "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
+      );
+    });
+
+    it("should have validFrom field (VC Data Model 2.0 temporal field)", () => {
+      const validFromDate = "2024-01-15T12:00:00Z";
+      const dto: EndorsementCredentialDto = {
+        "@context": ["https://www.w3.org/ns/credentials/v2"],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: validFromDate,
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(result.validFrom).toBe(validFromDate);
+    });
+
+    it("should have properly structured credentialSubject with id and type", () => {
+      const dto: EndorsementCredentialDto = {
+        "@context": ["https://www.w3.org/ns/credentials/v2"],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+          endorsementComment: "Highly recommended achievement!",
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(result.credentialSubject).toBeDefined();
+      expect(result.credentialSubject.id).toBe(
+        toIRI("https://example.org/achievements/456"),
+      );
+      expect(result.credentialSubject.type).toEqual(["EndorsementSubject"]);
+      expect(result.credentialSubject.endorsementComment).toBe(
+        "Highly recommended achievement!",
+      );
+    });
+
+    it("should accept credentialSubject without optional endorsementComment", () => {
+      const dto: EndorsementCredentialDto = {
+        "@context": ["https://www.w3.org/ns/credentials/v2"],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+          // No endorsementComment - it's optional
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(result.credentialSubject.endorsementComment).toBeUndefined();
+    });
+
+    it("should handle embedded issuer object with full profile", () => {
+      const dto: EndorsementCredentialDto = {
+        "@context": ["https://www.w3.org/ns/credentials/v2"],
+        id: "https://example.org/endorsements/1",
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: {
+          id: "https://example.org/issuers/endorser",
+          type: ["Profile"],
+          name: "Endorsing Organization",
+        },
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(typeof result.issuer).toBe("object");
+      if (typeof result.issuer === "object") {
+        expect(result.issuer.id).toBe(
+          toIRI("https://example.org/issuers/endorser"),
+        );
+        expect(result.issuer.name).toBe("Endorsing Organization");
+        expect(result.issuer.url).toBeDefined();
+      }
+    });
+
+    it("should preserve id as valid IRI", () => {
+      const endorsementId = "https://example.org/endorsements/abc123";
+      const dto: EndorsementCredentialDto = {
+        "@context": ["https://www.w3.org/ns/credentials/v2"],
+        id: endorsementId,
+        type: ["VerifiableCredential", "EndorsementCredential"],
+        issuer: "https://example.org/issuers/endorser",
+        validFrom: "2024-01-15T12:00:00Z",
+        credentialSubject: {
+          id: "https://example.org/achievements/456",
+          type: ["EndorsementSubject"],
+        },
+      };
+
+      const result = testConvertToEndorsementCredential(dto);
+
+      expect(result.id).toBe(toIRI(endorsementId));
+    });
+  });
+
   describe("Additional fields preservation", () => {
     it("should preserve additional top-level fields via spread operator", () => {
       const dto = {

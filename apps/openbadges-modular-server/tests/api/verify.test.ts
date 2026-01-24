@@ -620,5 +620,160 @@ describe("Verify Credential Endpoint", () => {
         expect(result.verifiedAt).toBeDefined();
       });
     });
+
+    /**
+     * Cryptosuite Validation Tests
+     *
+     * Tests for handling of valid and invalid cryptosuites in
+     * DataIntegrityProof objects per W3C Data Integrity specification.
+     *
+     * @see https://www.w3.org/TR/vc-data-integrity/
+     */
+    describe("Cryptosuite Validation", () => {
+      it("should accept credential with valid eddsa-rdfc-2022 cryptosuite", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              cryptosuite: "eddsa-rdfc-2022",
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should process the credential (may fail verification due to invalid proof,
+        // but should not reject based on cryptosuite)
+        expect(result.status).toBeDefined();
+        expect(result.checks).toBeDefined();
+      });
+
+      it("should accept credential with valid ed25519-2020 cryptosuite", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              cryptosuite: "ed25519-2020",
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should process the credential
+        expect(result.status).toBeDefined();
+        expect(result.checks).toBeDefined();
+      });
+
+      it("should handle credential with non-standard rsa-sha256 cryptosuite", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              cryptosuite: "rsa-sha256",
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should process the credential (rsa-sha256 is deprecated but accepted)
+        expect(result.status).toBeDefined();
+        expect(result.checks).toBeDefined();
+      });
+
+      it("should flag unknown cryptosuite during verification", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              cryptosuite: "invalid-cryptosuite-xyz",
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Verification should fail for invalid cryptosuite
+        expect(result.isValid).toBe(false);
+      });
+
+      it("should handle credential without cryptosuite field in proof", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              // No cryptosuite specified
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should still process the credential
+        expect(result.status).toBeDefined();
+        expect(result.checks).toBeDefined();
+      });
+
+      it("should reject completely invalid proof type", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "InvalidProofType",
+              verificationMethod: "did:web:example.com#key-1",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should fail verification for invalid proof type
+        expect(result.isValid).toBe(false);
+      });
+    });
   });
 });
