@@ -199,9 +199,10 @@ oauthRoutes.get('/github/callback', async c => {
 
       // Create a secure way to pass auth data to frontend
       // For now, we'll use URL params (in production, consider using encrypted cookies or session storage)
-      const frontendUrl = process.env.VITE_PORT
-        ? `http://localhost:${process.env.VITE_PORT}`
-        : 'http://localhost:7777'
+      const devHost = process.env.DEV_HOST || 'localhost'
+      const useHttps = devHost.endsWith('.ts.net')
+      const port = process.env.SYSTEM_VITE_PORT || process.env.VITE_PORT || '7777'
+      const frontendUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${port}`
       const callbackUrl = new URL('/auth/oauth/callback', frontendUrl)
       callbackUrl.searchParams.set('success', 'true')
       callbackUrl.searchParams.set('token', jwtToken)

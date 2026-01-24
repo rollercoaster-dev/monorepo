@@ -201,10 +201,13 @@ export async function setupApp(): Promise<Hono> {
       development: process.env.NODE_ENV !== "production",
     });
 
+    const devHost = process.env.DEV_HOST || config.server.host;
+    const useHttps = devHost.endsWith('.ts.net');
+    const baseUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${config.server.port}`;
     logger.info(`Server started successfully`, {
-      server: `http://${config.server.host}:${config.server.port}`,
-      "swagger docs": `http://${config.server.host}:${config.server.port}/docs`,
-      "openapi json": `http://${config.server.host}:${config.server.port}/swagger`,
+      server: baseUrl,
+      "swagger docs": `${baseUrl}/docs`,
+      "openapi json": `${baseUrl}/swagger`,
     });
 
     if (config.auth?.enabled) {

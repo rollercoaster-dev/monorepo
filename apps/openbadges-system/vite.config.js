@@ -25,7 +25,8 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: parseInt(process.env.SYSTEM_VITE_PORT || process.env.VITE_PORT || '7777'),
       strictPort: false, // Allow Vite to try the next available port
-      open: true,
+      open: false, // Don't auto-open browser on remote server
+      allowedHosts: ['.ts.net'], // Allow Tailscale hosts
       proxy: {
         '/api': {
           target: `http://localhost:${process.env.SYSTEM_SERVER_PORT || process.env.PORT || '8888'}`,
@@ -79,6 +80,21 @@ export default defineConfig(({ mode }) => {
 
     // Plugins
     plugins: [
+      // Log clickable dev URL with custom hostname
+      {
+        name: 'dev-url-logger',
+        configureServer(server) {
+          server.httpServer?.once('listening', () => {
+            const host = process.env.DEV_HOST || 'localhost'
+            // Use HTTPS without port when using Tailscale serve (it handles port mapping)
+            const useHttps = host.endsWith('.ts.net')
+            const url = useHttps
+              ? `https://${host}/`
+              : `http://${host}:${server.config.server.port}/`
+            console.log(`\n  ➜  Dev URL: ${url}\n`)
+          })
+        },
+      },
       VueRouter({
         routesFolder: 'src/client/pages',
         dts: 'src/client/typed-router.d.ts',

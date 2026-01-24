@@ -409,9 +409,12 @@ const port = Number.isFinite(parsedPort) ? parsedPort : 8888
 if (!Number.isFinite(parsedPort)) {
   logger.warn('Invalid server port, falling back to 8888', { rawPort })
 }
+const devHost = process.env.DEV_HOST || 'localhost'
+const useHttps = devHost.endsWith('.ts.net')
+const baseUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${port}`
 logger.info('Server is running', {
-  server: `http://localhost:${port}`,
-  docs: `http://localhost:${port}/docs`,
+  server: baseUrl,
+  docs: `${baseUrl}/docs`,
 })
 
 // Export for Bun to pick up
