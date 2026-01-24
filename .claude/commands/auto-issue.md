@@ -8,7 +8,9 @@ Fully autonomous issue-to-PR workflow. Delegates to specialized agents.
 
 ## CRITICAL: Workflow Integrity
 
-**YOU MUST follow all phases in sequence. YOU MUST NOT skip phases or commit directly to main.**
+**YOU MUST follow all phases in sequence. YOU MUST NOT commit directly to main.**
+
+**Exception:** The `--skip-review` and `--dry-run` flags are explicitly permitted - they modify behavior within the workflow, not bypass it entirely.
 
 ### Why This Workflow Exists
 
@@ -31,13 +33,12 @@ WRONG understanding:
 
 ### Anti-Patterns to Avoid
 
-| Anti-Pattern                 | Why It's Wrong                                   |
-| ---------------------------- | ------------------------------------------------ |
-| Committing directly to main  | Bypasses review, removes user control            |
-| Skipping the branch creation | No PR possible, no rollback safety               |
-| Skipping the research phase  | Implementation without plan leads to wasted work |
-| Skipping the review phase    | Bugs reach the user that could have been caught  |
-| Not creating a PR            | User never gets to approve/reject the changes    |
+| Anti-Pattern                  | Why It's Wrong                                     |
+| ----------------------------- | -------------------------------------------------- |
+| Committing directly to main   | Bypasses review, removes user control              |
+| Skipping the branch creation  | No PR possible, no rollback safety                 |
+| Skipping phases without flags | Use `--skip-review` or `--dry-run` for valid skips |
+| Not creating a PR             | User never gets to approve/reject the changes      |
 
 ## Quick Reference
 
