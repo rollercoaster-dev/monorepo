@@ -1,6 +1,6 @@
 # /auto-milestone $ARGUMENTS
 
-Autonomous milestone-to-PRs workflow. Validates dependencies, spawns parallel /auto-issue workers, handles reviews, merges in order.
+Autonomous milestone-to-PRs workflow. Validates dependencies, spawns sequential /auto-issue workers by default, handles reviews, merges in order.
 
 **Mode:** Autonomous with planning gate - only stops if dependencies are unclear.
 
@@ -15,11 +15,11 @@ claude
 ## Quick Reference
 
 ```bash
-/auto-milestone "OB3 Phase 1"              # All issues in milestone
+/auto-milestone "OB3 Phase 1"              # All issues in milestone (sequential)
 /auto-milestone 153 154 155                # Specific issues (space-separated)
 /auto-milestone 153,154,155                # Specific issues (comma-separated)
 /auto-milestone "Badge Generator" --dry-run # Analyze only, show plan
-/auto-milestone "OB3 Phase 1" --parallel 5  # Run 5 issues concurrently
+/auto-milestone "OB3 Phase 1" --parallel 3  # Run 3 issues concurrently
 /auto-milestone "OB3 Phase 1" --wave 1      # Only run first wave
 ```
 
@@ -27,7 +27,7 @@ claude
 
 | Setting        | Default | Description                  |
 | -------------- | ------- | ---------------------------- |
-| `--parallel`   | 3       | Max concurrent issue workers |
+| `--parallel`   | 1       | Max concurrent issue workers |
 | `--dry-run`    | false   | Analyze and plan only        |
 | `--wave`       | all     | Only run specific wave       |
 | `--skip-ci`    | false   | Skip waiting for CI          |
@@ -146,7 +146,7 @@ Progress: 2/6 complete (33%)
 
 ```
 Phase 1: Plan     → milestone-planner → GATE (if dependencies unclear)
-Phase 2: Execute  → spawn parallel /auto-issue in worktrees
+Phase 2: Execute  → spawn /auto-issue in worktrees (sequential by default)
 Phase 3: Review   → poll PRs, dispatch fixes
 Phase 4: Merge    → merge in dependency order
 Phase 5: Cleanup  → remove worktrees, report summary
@@ -221,9 +221,9 @@ Display:
 
 ---
 
-## Phase 2: Execute (Parallel)
+## Phase 2: Execute
 
-For each issue in the current wave (up to `--parallel` limit):
+For each issue in the current wave (up to `--parallel` limit, default: 1 sequential):
 
 1. **Create worktree:**
 
@@ -231,7 +231,7 @@ For each issue in the current wave (up to `--parallel` limit):
    "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" create "$issue"
    ```
 
-2. **Spawn parallel /auto-issue subagents:**
+2. **Spawn /auto-issue subagent(s):** (sequential by default, use `--parallel N` for concurrency)
 
    ```
    Task(auto-issue workflow):
