@@ -101,6 +101,26 @@ Issue → Feature Branch → Commits → PR → Review → Merge
 NEVER: Issue → Commit directly to main
 ```
 
+### NEVER Use --admin Flag
+
+**YOU MUST NEVER use `gh pr merge --admin` to bypass branch protection.**
+
+If a merge is blocked:
+
+- `BLOCKED` status means CI is still running or checks haven't completed
+- "base branch policy prohibits the merge" means WAIT, not bypass
+- Use `--auto` to queue for merge when checks pass
+- Or wait and check status again
+
+The `--admin` flag:
+
+- Bypasses ALL branch protections
+- Merges even with failing CI
+- Deletes the branch (with `--delete-branch`), making recovery difficult
+- Violates user trust and workflow integrity
+
+If merge fails, ASK the user what to do. Never bypass protections autonomously.
+
 ## Proactive Reviews
 
 Use after completing relevant work:

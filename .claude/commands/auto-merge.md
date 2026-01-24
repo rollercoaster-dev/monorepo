@@ -239,6 +239,14 @@ gh pr view <number> --json mergeStateStatus,mergeable,reviewDecision
 gh pr merge <number> --squash --delete-branch
 ```
 
+**CRITICAL: NEVER use `--admin` flag.** If merge is blocked:
+
+- Use `--auto` to queue for merge when checks pass
+- Or wait for CI to complete
+- Or ASK the user what to do
+
+The `--admin` flag bypasses all protections and can merge broken code. Never use it.
+
 **Post-merge:**
 
 1. Update checkpoint workflow status to "completed" (if exists)
@@ -314,16 +322,17 @@ After PR identified, create all tasks:
 
 ## Error Handling
 
-| Error                   | Behavior                      |
-| ----------------------- | ----------------------------- |
-| PR not found            | Report error, exit            |
-| PR is draft             | Report error, exit            |
-| PR already merged       | Report success (no-op), exit  |
-| PR closed               | Report error, exit            |
-| Unresolvable conflict   | Report details, exit          |
-| CI fails 3+ times       | Report details, exit          |
-| Review comment unclear  | Skip comment, note in summary |
-| Merge blocked (unknown) | Report mergeStateStatus, exit |
+| Error                  | Behavior                                   |
+| ---------------------- | ------------------------------------------ |
+| PR not found           | Report error, exit                         |
+| PR is draft            | Report error, exit                         |
+| PR already merged      | Report success (no-op), exit               |
+| PR closed              | Report error, exit                         |
+| Unresolvable conflict  | Report details, exit                       |
+| CI fails 3+ times      | Report details, exit                       |
+| Review comment unclear | Skip comment, note in summary              |
+| Merge blocked          | Use `--auto` or wait, NEVER use `--admin`  |
+| Branch policy error    | Wait for CI, use `--auto`, or ASK the user |
 
 ---
 
