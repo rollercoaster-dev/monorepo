@@ -88,6 +88,84 @@ app.mount("#app");
 - **useProfile**: Handles profile data for issuers and recipients
 - **useBadgeVerification**: Provides functionality for verifying badge authenticity
 
+## OB3 Context Validation
+
+Open Badges 3.0 (OB3) credentials use JSON-LD `@context` to define vocabulary and semantics. This library validates `@context` in OB3 VerifiableCredentials according to the W3C Verifiable Credentials and OB3 specifications.
+
+### Supported Formats
+
+The `@context` field accepts three formats:
+
+**1. String (single context URI)**
+
+```json
+{
+  "@context": "https://www.w3.org/2018/credentials/v1"
+}
+```
+
+**2. Array (multiple contexts) - Recommended**
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://purl.imsglobal.org/spec/ob/v3p0/context.json"
+  ]
+}
+```
+
+**3. Object (embedded context)**
+
+```json
+{
+  "@context": {
+    "@vocab": "https://www.w3.org/2018/credentials#",
+    "ob": "https://purl.imsglobal.org/spec/ob/v3p0/vocab#"
+  }
+}
+```
+
+### Required Context URIs
+
+When using array format, the following contexts must be present:
+
+| Context                    | Required URIs (any of)                                                                                                                       |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| W3C Verifiable Credentials | `https://www.w3.org/2018/credentials/v1` or `https://www.w3.org/ns/credentials/v2`                                                           |
+| Open Badges 3.0            | `https://purl.imsglobal.org/spec/ob/v3p0/context.json` or URLs containing `purl.imsglobal.org/spec/ob/v3p0` or `openbadges.org/spec/ob/v3p0` |
+
+### Type Guards
+
+Use the type guard with strict mode for complete validation:
+
+```typescript
+import { isOB3VerifiableCredential } from "openbadges-ui";
+
+// Non-strict (default): validates structure, not context URIs
+if (isOB3VerifiableCredential(badge)) {
+  // badge has required OB3 fields
+}
+
+// Strict: also validates @context has required URIs (for array format)
+if (isOB3VerifiableCredential(badge, true)) {
+  // badge has valid structure AND proper context
+}
+```
+
+### Validation Utility
+
+For direct context validation:
+
+```typescript
+import { validateOB3Context } from "openbadges-ui";
+
+const result = validateOB3Context(badge["@context"]);
+if (!result.valid) {
+  console.error(result.error); // e.g., "@context must include Open Badges 3.0 context"
+}
+```
+
 ## Theming
 
 The library includes several built-in themes:
@@ -169,7 +247,7 @@ bun run test:coverage
 bun run test:watch
 ```
 
-**Test Results:** ✅ 120/120 tests passing (100%)
+**Test Results:** ✅ 195/195 tests passing (100%)
 
 **Important:** Always use `bun run test` (not `bun test`). The difference:
 
