@@ -289,6 +289,20 @@ function walkTemplateAst(node: unknown, calls: TemplateComponentCall[]): void {
 }
 
 /**
+ * Add metadata to an entity only if it has properties.
+ * Avoids cluttering entities with empty metadata objects.
+ */
+function withMetadata<T extends object>(
+  entity: T,
+  metadata: EntityMetadata,
+): T & { metadata?: EntityMetadata } {
+  if (Object.keys(metadata).length > 0) {
+    return { ...entity, metadata };
+  }
+  return entity;
+}
+
+/**
  * Generate a globally unique ID for an entity.
  * Format: `{package}:{filePath}:{type}:{name}`
  *
@@ -536,15 +550,16 @@ export function extractEntities(
         metadata.typeParameters = typeParams.map((tp) => tp.getName());
       }
 
-      const entity: Entity = {
+      const baseEntity = {
         id: makeEntityId(packageName, filePath, name, "function"),
-        type: "function",
+        type: "function" as const,
         name,
         filePath,
         lineNumber: fn.getStartLineNumber(),
         exported: fn.isExported(),
-        ...(Object.keys(metadata).length > 0 && { metadata }),
       };
+
+      const entity: Entity = withMetadata(baseEntity, metadata);
 
       const jsDocContent = extractJsDocContent(fn);
       if (jsDocContent) {
@@ -567,17 +582,16 @@ export function extractEntities(
         classMetadata.typeParameters = typeParams.map((tp) => tp.getName());
       }
 
-      const classEntity: Entity = {
+      const baseClassEntity = {
         id: makeEntityId(packageName, filePath, name, "class"),
-        type: "class",
+        type: "class" as const,
         name,
         filePath,
         lineNumber: cls.getStartLineNumber(),
         exported: cls.isExported(),
-        ...(Object.keys(classMetadata).length > 0 && {
-          metadata: classMetadata,
-        }),
       };
+
+      const classEntity: Entity = withMetadata(baseClassEntity, classMetadata);
 
       const classJsDocContent = extractJsDocContent(cls);
       if (classJsDocContent) {
@@ -611,22 +625,24 @@ export function extractEntities(
           methodMetadata.typeParameters = typeParams.map((tp) => tp.getName());
         }
 
-        const methodEntity: Entity = {
+        const baseMethodEntity = {
           id: makeEntityId(
             packageName,
             filePath,
             `${name}.${methodName}`,
             "function",
           ),
-          type: "function",
+          type: "function" as const,
           name: `${name}.${methodName}`,
           filePath,
           lineNumber: method.getStartLineNumber(),
           exported: cls.isExported(),
-          ...(Object.keys(methodMetadata).length > 0 && {
-            metadata: methodMetadata,
-          }),
         };
+
+        const methodEntity: Entity = withMetadata(
+          baseMethodEntity,
+          methodMetadata,
+        );
 
         const methodJsDocContent = extractJsDocContent(method);
         if (methodJsDocContent) {
@@ -649,15 +665,16 @@ export function extractEntities(
       metadata.typeParameters = typeParams.map((tp) => tp.getName());
     }
 
-    const entity: Entity = {
+    const baseEntity = {
       id: makeEntityId(packageName, filePath, name, "type"),
-      type: "type",
+      type: "type" as const,
       name,
       filePath,
       lineNumber: typeAlias.getStartLineNumber(),
       exported: typeAlias.isExported(),
-      ...(Object.keys(metadata).length > 0 && { metadata }),
     };
+
+    const entity: Entity = withMetadata(baseEntity, metadata);
 
     const jsDocContent = extractJsDocContent(typeAlias);
     if (jsDocContent) {
@@ -678,15 +695,16 @@ export function extractEntities(
       metadata.typeParameters = typeParams.map((tp) => tp.getName());
     }
 
-    const entity: Entity = {
+    const baseEntity = {
       id: makeEntityId(packageName, filePath, name, "interface"),
-      type: "interface",
+      type: "interface" as const,
       name,
       filePath,
       lineNumber: iface.getStartLineNumber(),
       exported: iface.isExported(),
-      ...(Object.keys(metadata).length > 0 && { metadata }),
     };
+
+    const entity: Entity = withMetadata(baseEntity, metadata);
 
     const jsDocContent = extractJsDocContent(iface);
     if (jsDocContent) {
@@ -720,15 +738,16 @@ export function extractEntities(
       });
     }
 
-    const entity: Entity = {
+    const baseEntity = {
       id: makeEntityId(packageName, filePath, name, "enum"),
-      type: "enum",
+      type: "enum" as const,
       name,
       filePath,
       lineNumber: enumDecl.getStartLineNumber(),
       exported: enumDecl.isExported(),
-      ...(Object.keys(metadata).length > 0 && { metadata }),
     };
+
+    const entity: Entity = withMetadata(baseEntity, metadata);
 
     const jsDocContent = extractJsDocContent(enumDecl);
     if (jsDocContent) {
@@ -784,20 +803,17 @@ export function extractEntities(
       }
     }
 
-    entities.push({
-      id: makeEntityId(
-        packageName,
-        filePath,
-        name,
-        isArrowFn ? "function" : "variable",
-      ),
-      type: isArrowFn ? "function" : "variable",
+    const entityType = isArrowFn ? "function" : "variable";
+    const baseEntity = {
+      id: makeEntityId(packageName, filePath, name, entityType),
+      type: entityType as "function" | "variable",
       name,
       filePath,
       lineNumber: decl.getStartLineNumber(),
       exported: decl.isExported(),
-      ...(Object.keys(metadata).length > 0 && { metadata }),
-    });
+    };
+
+    entities.push(withMetadata(baseEntity, metadata));
   });
 
   return entities;
@@ -1322,6 +1338,80 @@ export function extractJsDocContent(node: {
 }
 
 /**
+ * Extract template component relationships from Vue template content.
+ * Resolves component usage to entity relationships using import map and entity lookup.
+ *
+ * @param templateContent - Vue template source
+ * @param filePath - Relative file path for the Vue component
+ * @param packageName - Package name for ID generation
+ * @param sourceFile - ts-morph source file for import extraction
+ * @param basePath - Base path for import resolution
+ * @param entityLookupMap - Entity lookup map for resolution
+ * @returns Array of template component call relationships
+ */
+function extractTemplateRelationships(
+  templateContent: string,
+  filePath: string,
+  packageName: string,
+  sourceFile: SourceFile,
+  basePath: string,
+  entityLookupMap: Map<string, Entity[]>,
+): Relationship[] {
+  const relationships: Relationship[] = [];
+  const templateCalls = extractTemplateComponentCalls(
+    templateContent,
+    filePath,
+  );
+
+  if (templateCalls.length === 0) {
+    return relationships;
+  }
+
+  const importMap = extractImportMap(sourceFile, basePath);
+  const fileId = makeFileId(packageName, filePath);
+
+  for (const call of templateCalls) {
+    const candidates = entityLookupMap.get(call.componentName);
+    if (!candidates || candidates.length === 0) {
+      continue;
+    }
+
+    // Try import map first, then fall back to best match
+    const importedFromPath = importMap.get(call.componentName);
+    let targetId: string | null = null;
+
+    if (importedFromPath) {
+      const match = candidates.find((e) => e.filePath === importedFromPath);
+      if (match) {
+        targetId = match.id;
+      }
+    }
+
+    if (!targetId) {
+      const bestMatch = findBestMatch(candidates, filePath, !!importedFromPath);
+      if (bestMatch) {
+        targetId = bestMatch.id;
+      }
+    }
+
+    if (targetId) {
+      relationships.push({
+        from: fileId,
+        to: targetId,
+        type: "calls",
+        metadata: JSON.stringify({
+          usage: "template-component",
+          line: call.line,
+          column: call.column,
+        }),
+      });
+    }
+  }
+
+  return relationships;
+}
+
+/**
  * Parse a TypeScript package and extract entities and relationships.
  *
  * @param packagePath - Path to the package source directory
@@ -1486,61 +1576,15 @@ export function parsePackage(
 
     // Third pass (Vue only): extract template component calls
     if (vueInfo?.templateContent) {
-      const templateCalls = extractTemplateComponentCalls(
+      const templateRelationships = extractTemplateRelationships(
         vueInfo.templateContent,
         vueInfo.originalPath,
+        pkgName,
+        sourceFile,
+        packagePath,
+        entityLookupMap,
       );
-
-      // Build import map to resolve component file paths
-      const importMap = extractImportMap(sourceFile, packagePath);
-
-      // Create "calls" relationships for template component usage
-      const fileId = makeFileId(pkgName, vueInfo.originalPath);
-
-      for (const call of templateCalls) {
-        // Try to resolve the component to an entity
-        const candidates = entityLookupMap.get(call.componentName);
-        let targetId: string | null = null;
-
-        if (candidates && candidates.length > 0) {
-          // Check import map first
-          const importedFromPath = importMap.get(call.componentName);
-          if (importedFromPath) {
-            const match = candidates.find(
-              (e) => e.filePath === importedFromPath,
-            );
-            if (match) {
-              targetId = match.id;
-            }
-          }
-
-          // Fall back to best match
-          if (!targetId) {
-            const bestMatch = findBestMatch(
-              candidates,
-              vueInfo.originalPath,
-              !!importedFromPath,
-            );
-            if (bestMatch) {
-              targetId = bestMatch.id;
-            }
-          }
-        }
-
-        // Only create relationship if we resolved the target
-        if (targetId) {
-          allRelationships.push({
-            from: fileId,
-            to: targetId,
-            type: "calls",
-            metadata: JSON.stringify({
-              usage: "template-component",
-              line: call.line,
-              column: call.column,
-            }),
-          });
-        }
-      }
+      allRelationships.push(...templateRelationships);
     }
   });
 
@@ -1822,61 +1866,15 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
 
     // Third pass (Vue only): extract template component calls
     if (vueInfo?.templateContent && relativeFilePath) {
-      const templateCalls = extractTemplateComponentCalls(
+      const templateRelationships = extractTemplateRelationships(
         vueInfo.templateContent,
         relativeFilePath,
+        pkgName,
+        sourceFile,
+        pkgPath,
+        entityLookupMap,
       );
-
-      // Build import map to resolve component file paths
-      const importMap = extractImportMap(sourceFile, pkgPath);
-
-      // Create "calls" relationships for template component usage
-      const fileId = makeFileId(pkgName, relativeFilePath);
-
-      for (const call of templateCalls) {
-        // Try to resolve the component to an entity
-        const candidates = entityLookupMap.get(call.componentName);
-        let targetId: string | null = null;
-
-        if (candidates && candidates.length > 0) {
-          // Check import map first
-          const importedFromPath = importMap.get(call.componentName);
-          if (importedFromPath) {
-            const match = candidates.find(
-              (e) => e.filePath === importedFromPath,
-            );
-            if (match) {
-              targetId = match.id;
-            }
-          }
-
-          // Fall back to best match
-          if (!targetId) {
-            const bestMatch = findBestMatch(
-              candidates,
-              relativeFilePath,
-              !!importedFromPath,
-            );
-            if (bestMatch) {
-              targetId = bestMatch.id;
-            }
-          }
-        }
-
-        // Only create relationship if we resolved the target
-        if (targetId) {
-          existing.push({
-            from: fileId,
-            to: targetId,
-            type: "calls",
-            metadata: JSON.stringify({
-              usage: "template-component",
-              line: call.line,
-              column: call.column,
-            }),
-          });
-        }
-      }
+      existing.push(...templateRelationships);
     }
 
     relationshipsByPackage.set(pkgName, existing);

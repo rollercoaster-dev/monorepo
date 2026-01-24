@@ -485,6 +485,29 @@ export function addToEntityCache(
   return isNew;
 }
 
+/** Database row type for entity queries */
+interface EntityRow {
+  id: string;
+  name: string;
+  file_path: string;
+  type: string;
+}
+
+/** Convert database row to entity object with camelCase filePath */
+function rowToEntity(row: EntityRow): {
+  id: string;
+  name: string;
+  filePath: string;
+  type: string;
+} {
+  return {
+    id: row.id,
+    name: row.name,
+    filePath: row.file_path,
+    type: row.type,
+  };
+}
+
 /**
  * Get all entities from the database for cache pre-loading.
  * Used to build entity lookup cache for O(1) cross-file relationship resolution.
@@ -500,31 +523,20 @@ export function getAllEntities(
   if (packageName) {
     return db
       .query<
-        { id: string; name: string; file_path: string; type: string },
+        EntityRow,
         [string]
-      >(
-        "SELECT id, name, file_path, type FROM graph_entities WHERE package = ?",
-      )
+      >("SELECT id, name, file_path, type FROM graph_entities WHERE package = ?")
       .all(packageName)
-      .map((row) => ({
-        id: row.id,
-        name: row.name,
-        filePath: row.file_path,
-        type: row.type,
-      }));
+      .map(rowToEntity);
   }
 
   return db
-    .query<{ id: string; name: string; file_path: string; type: string }, []>(
-      "SELECT id, name, file_path, type FROM graph_entities",
-    )
+    .query<
+      EntityRow,
+      []
+    >("SELECT id, name, file_path, type FROM graph_entities")
     .all()
-    .map((row) => ({
-      id: row.id,
-      name: row.name,
-      filePath: row.file_path,
-      type: row.type,
-    }));
+    .map(rowToEntity);
 }
 
 /**
