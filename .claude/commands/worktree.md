@@ -2,6 +2,8 @@
 
 Manage git worktrees for parallel Claude Code sessions.
 
+Worktrees are stored at `~/Code/worktrees/<repo>-issue-<N>` (outside the repo).
+
 ## Usage
 
 Run the worktree manager script with the provided arguments:
@@ -27,6 +29,12 @@ Run the worktree manager script with the provided arguments:
 /worktree status
 /worktree remove 164
 ```
+
+## Worktree Location
+
+Worktrees are created at: `~/Code/worktrees/monorepo-issue-<N>`
+
+This keeps worktrees outside the main repo to avoid nesting issues.
 
 ## Workflow
 

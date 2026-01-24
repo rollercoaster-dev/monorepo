@@ -81,6 +81,14 @@ See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for det
 
 See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
+## Proactive Agents
+
+Use these agents after completing relevant work:
+
+- `markdown-reviewer` - After editing `.md` files
+- `senior-code-reviewer` - After implementing features
+- `openbadges-compliance-reviewer` - After badge/credential code changes
+
 ## Documentation
 
 - [Development Workflows](docs/development-workflows.md) - gates, agents, plugins
