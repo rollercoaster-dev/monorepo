@@ -95,15 +95,20 @@ export function storeGraph(
       clearPackageInternal(db, packageName);
     }
 
-    // Insert entities
+    // Insert entities with metadata (batch insert using single prepared statement)
     const insertEntity = db.prepare(`
-      INSERT OR REPLACE INTO graph_entities (id, type, name, file_path, line_number, exported, package)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO graph_entities (id, type, name, file_path, line_number, exported, package, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     let entitiesCount = 0;
     for (const entity of data.entities) {
       try {
+        // Serialize metadata to JSON if present
+        const metadataJson = entity.metadata
+          ? JSON.stringify(entity.metadata)
+          : null;
+
         insertEntity.run(
           entity.id,
           entity.type,
@@ -112,6 +117,7 @@ export function storeGraph(
           entity.lineNumber,
           entity.exported ? 1 : 0,
           packageName,
+          metadataJson,
         );
         entitiesCount++;
       } catch (error) {
@@ -124,14 +130,19 @@ export function storeGraph(
 
     // Insert relationships (OR IGNORE to skip duplicates from unique index)
     const insertRel = db.prepare(`
-      INSERT OR IGNORE INTO graph_relationships (from_entity, to_entity, type)
-      VALUES (?, ?, ?)
+      INSERT OR IGNORE INTO graph_relationships (from_entity, to_entity, type, metadata)
+      VALUES (?, ?, ?, ?)
     `);
 
     let relsCount = 0;
     for (const rel of data.relationships) {
       try {
-        const result = insertRel.run(rel.from, rel.to, rel.type);
+        const result = insertRel.run(
+          rel.from,
+          rel.to,
+          rel.type,
+          rel.metadata ?? null,
+        );
         // Only count if row was actually inserted (not ignored as duplicate)
         if (result.changes > 0) {
           relsCount++;
@@ -354,6 +365,9 @@ export async function storeCodeDocs(
     db.run("ROLLBACK");
     logger.error("Failed to store CodeDoc entities", {
       error: error instanceof Error ? error.message : String(error),
+      processed: codeDocsCreated,
+      total: entitiesWithJsDoc.length,
+      currentEntity: entitiesWithJsDoc[codeDocsCreated]?.id,
     });
     throw error;
   }
@@ -450,4 +464,102 @@ export function deleteFileMetadata(
     `DELETE FROM graph_file_metadata
      WHERE package = ? AND file_path IN (${placeholders})`,
   ).run(packageName, ...filePaths);
+}
+
+/**
+ * Entity lookup cache type for O(1) cross-file relationship resolution.
+ * Maps filePath -> (entityName -> entityId)
+ */
+export type EntityCache = Map<string, Map<string, string>>;
+
+/**
+ * Add an entity to the lookup cache.
+ *
+ * @param cache - The entity cache to update
+ * @param entity - Entity with filePath, name, and id
+ * @returns true if entity was added, false if it overwrote an existing entry
+ */
+export function addToEntityCache(
+  cache: EntityCache,
+  entity: { filePath: string; name: string; id: string },
+): boolean {
+  let nameMap = cache.get(entity.filePath);
+  if (!nameMap) {
+    nameMap = new Map<string, string>();
+    cache.set(entity.filePath, nameMap);
+  }
+  const isNew = !nameMap.has(entity.name);
+  nameMap.set(entity.name, entity.id);
+  return isNew;
+}
+
+/** Database row type for entity queries */
+interface EntityRow {
+  id: string;
+  name: string;
+  file_path: string;
+  type: string;
+}
+
+/** Convert database row to entity object with camelCase filePath */
+function rowToEntity(row: EntityRow): {
+  id: string;
+  name: string;
+  filePath: string;
+  type: string;
+} {
+  return {
+    id: row.id,
+    name: row.name,
+    filePath: row.file_path,
+    type: row.type,
+  };
+}
+
+/**
+ * Get all entities from the database for cache pre-loading.
+ * Used to build entity lookup cache for O(1) cross-file relationship resolution.
+ *
+ * @param packageName - Optional package filter
+ * @returns Array of entities with id, name, filePath
+ */
+export function getAllEntities(
+  packageName?: string,
+): Array<{ id: string; name: string; filePath: string; type: string }> {
+  const db = getDatabase();
+
+  if (packageName) {
+    return db
+      .query<
+        EntityRow,
+        [string]
+      >("SELECT id, name, file_path, type FROM graph_entities WHERE package = ?")
+      .all(packageName)
+      .map(rowToEntity);
+  }
+
+  return db
+    .query<
+      EntityRow,
+      []
+    >("SELECT id, name, file_path, type FROM graph_entities")
+    .all()
+    .map(rowToEntity);
+}
+
+/**
+ * Build entity lookup cache from all entities for O(1) resolution.
+ *
+ * @param packageName - Optional package filter
+ * @returns EntityCache map
+ */
+export function buildEntityCache(packageName?: string): EntityCache {
+  const cache: EntityCache = new Map();
+  const entities = getAllEntities(packageName);
+
+  for (const entity of entities) {
+    addToEntityCache(cache, entity);
+  }
+
+  return cache;
 }

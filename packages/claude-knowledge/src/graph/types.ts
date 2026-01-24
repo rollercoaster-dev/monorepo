@@ -12,7 +12,41 @@ export type EntityType =
   | "type"
   | "interface"
   | "variable"
-  | "file";
+  | "file"
+  | "enum";
+
+/**
+ * Richer metadata for entities extracted from code.
+ * Stored as JSON in the metadata column.
+ */
+export interface EntityMetadata {
+  /** Whether function is async */
+  async?: boolean;
+  /** Whether function is a generator */
+  generator?: boolean;
+  /** Whether this is an arrow function */
+  arrowFunction?: boolean;
+  /** Parameter names */
+  parameters?: string[];
+  /** Return type annotation */
+  returnType?: string;
+  /** Generic type parameters (e.g., ['T', 'U']) */
+  typeParameters?: string[];
+  /** Variable declaration kind (const, let, var) */
+  kind?: "const" | "let" | "var";
+  /** Whether class method is static */
+  static?: boolean;
+  /** For enums: whether it's a const enum */
+  const?: boolean;
+  /** For enums: array of member definitions */
+  members?: Array<{ name: string; value?: string }>;
+  /** Vue component type (composition or options API) */
+  componentType?: "composition" | "options";
+  /** For Vue template relationships: marks component usage in template */
+  usage?: "template-component";
+  /** Any additional custom metadata */
+  [key: string]: unknown;
+}
 
 /** Types of relationships between entities */
 export type RelationshipType =
@@ -24,7 +58,7 @@ export type RelationshipType =
   | "defines";
 
 /**
- * A code entity (function, class, type, interface, variable, or file).
+ * A code entity (function, class, type, interface, variable, file, or enum).
  * Stored in graph_entities table.
  */
 export interface Entity {
@@ -42,8 +76,8 @@ export interface Entity {
   exported: boolean;
   /** Optional package name (set during storage) */
   package?: string;
-  /** Optional metadata JSON */
-  metadata?: string;
+  /** Optional metadata (async, parameters, returnType, etc.) */
+  metadata?: EntityMetadata;
   /** JSDoc content if present */
   jsDocContent?: string;
 }
@@ -194,4 +228,33 @@ export interface MonorepoParseResult {
     totalRelationships: number;
     packagesFound: string[];
   };
+}
+
+/**
+ * Progress callback phases for parsing operations.
+ */
+export type ParseProgressPhase = "scan" | "load" | "entities" | "relationships";
+
+/**
+ * Progress callback type for reporting parsing progress.
+ * Called at each phase of the parsing process.
+ *
+ * @param phase - Current parsing phase
+ * @param current - Current item number (1-indexed during processing)
+ * @param total - Total number of items in this phase
+ * @param message - Human-readable progress message
+ */
+export type ProgressCallback = (
+  phase: ParseProgressPhase,
+  current: number,
+  total: number,
+  message: string,
+) => void;
+
+/**
+ * Options for parsing operations.
+ */
+export interface ParseOptions extends IncrementalParseOptions {
+  /** Progress callback for reporting parsing status */
+  onProgress?: ProgressCallback;
 }
