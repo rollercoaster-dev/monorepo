@@ -10,15 +10,283 @@ import type { SourceFile, Node, JSDoc } from "ts-morph";
 import { readdirSync, statSync, readFileSync } from "fs";
 import { join, relative, dirname, resolve } from "path";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
-import { parse as parseVueSFC } from "@vue/compiler-sfc";
+import { parse as parseVueSFC, compileTemplate } from "@vue/compiler-sfc";
 import type {
   Entity,
+  EntityMetadata,
   Relationship,
   ParseResult,
   ParseStats,
-  IncrementalParseOptions,
   MonorepoParseResult,
+  ParseOptions,
 } from "./types";
+
+/**
+ * Standard HTML5 element tags (module-scope for performance).
+ * Used to distinguish custom Vue components from native HTML elements in templates.
+ */
+const HTML_TAGS = new Set([
+  // Main root
+  "html",
+  // Document metadata
+  "base",
+  "head",
+  "link",
+  "meta",
+  "style",
+  "title",
+  // Sectioning root
+  "body",
+  // Content sectioning
+  "address",
+  "article",
+  "aside",
+  "footer",
+  "header",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hgroup",
+  "main",
+  "nav",
+  "section",
+  "search",
+  // Text content
+  "blockquote",
+  "dd",
+  "div",
+  "dl",
+  "dt",
+  "figcaption",
+  "figure",
+  "hr",
+  "li",
+  "menu",
+  "ol",
+  "p",
+  "pre",
+  "ul",
+  // Inline text semantics
+  "a",
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "br",
+  "cite",
+  "code",
+  "data",
+  "dfn",
+  "em",
+  "i",
+  "kbd",
+  "mark",
+  "q",
+  "rp",
+  "rt",
+  "ruby",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "time",
+  "u",
+  "var",
+  "wbr",
+  // Image and multimedia
+  "area",
+  "audio",
+  "img",
+  "map",
+  "track",
+  "video",
+  // Embedded content
+  "embed",
+  "iframe",
+  "object",
+  "param",
+  "picture",
+  "portal",
+  "source",
+  // SVG and MathML
+  "svg",
+  "math",
+  // Scripting
+  "canvas",
+  "noscript",
+  "script",
+  // Demarcating edits
+  "del",
+  "ins",
+  // Table content
+  "caption",
+  "col",
+  "colgroup",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  // Forms
+  "button",
+  "datalist",
+  "fieldset",
+  "form",
+  "input",
+  "label",
+  "legend",
+  "meter",
+  "optgroup",
+  "option",
+  "output",
+  "progress",
+  "select",
+  "textarea",
+  // Interactive elements
+  "details",
+  "dialog",
+  "summary",
+  // Web Components
+  "slot",
+  "template",
+  // Vue special elements
+  "component",
+  "transition",
+  "transition-group",
+  "keep-alive",
+  "teleport",
+  "suspense",
+]);
+
+/**
+ * Convert kebab-case to PascalCase.
+ * e.g., "my-component" -> "MyComponent"
+ */
+function kebabToPascalCase(str: string): string {
+  return str
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
+
+/**
+ * Check if a tag name is a custom Vue component (not a standard HTML tag).
+ */
+function isCustomComponent(tagName: string): boolean {
+  // Check if it's an HTML tag (case-insensitive)
+  if (HTML_TAGS.has(tagName.toLowerCase())) {
+    return false;
+  }
+
+  // PascalCase components (e.g., MyComponent)
+  if (/^[A-Z]/.test(tagName)) {
+    return true;
+  }
+
+  // kebab-case components with a hyphen (e.g., my-component)
+  if (tagName.includes("-")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Interface for template component calls extracted from Vue templates.
+ */
+interface TemplateComponentCall {
+  /** Name of the component being used */
+  componentName: string;
+  /** Line number in the template */
+  line: number;
+  /** Column number in the template */
+  column: number;
+}
+
+/**
+ * Extract component usage from a Vue template AST.
+ * Finds all custom component tags used in the template.
+ *
+ * @param templateContent - The template source code
+ * @param filePath - Path to the Vue file (for error context)
+ * @returns Array of component calls found in the template
+ */
+function extractTemplateComponentCalls(
+  templateContent: string,
+  filePath: string,
+): TemplateComponentCall[] {
+  const calls: TemplateComponentCall[] = [];
+
+  try {
+    // Compile template to get AST
+    const compiled = compileTemplate({
+      source: templateContent,
+      filename: filePath,
+      id: filePath,
+    });
+
+    // Walk the AST to find component usage
+    // The compiled.ast contains the template AST
+    if (compiled.ast && "children" in compiled.ast) {
+      walkTemplateAst(compiled.ast, calls);
+    }
+  } catch (error) {
+    logger.debug(`Failed to parse Vue template in ${filePath}`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return calls;
+}
+
+/**
+ * Recursively walk the template AST to find component usage.
+ */
+function walkTemplateAst(node: unknown, calls: TemplateComponentCall[]): void {
+  if (!node || typeof node !== "object") return;
+
+  const nodeObj = node as Record<string, unknown>;
+
+  // Check if this is an element node
+  if (nodeObj.type === 1 && typeof nodeObj.tag === "string") {
+    const tagName = nodeObj.tag;
+
+    if (isCustomComponent(tagName)) {
+      // Get location info
+      const loc = nodeObj.loc as
+        | { start?: { line: number; column: number } }
+        | undefined;
+      const line = loc?.start?.line ?? 1;
+      const column = loc?.start?.column ?? 1;
+
+      // Normalize to PascalCase for lookup
+      const componentName = tagName.includes("-")
+        ? kebabToPascalCase(tagName)
+        : tagName;
+
+      calls.push({
+        componentName,
+        line,
+        column,
+      });
+    }
+  }
+
+  // Recurse into children
+  if (Array.isArray(nodeObj.children)) {
+    for (const child of nodeObj.children) {
+      walkTemplateAst(child, calls);
+    }
+  }
+}
 
 /**
  * Generate a globally unique ID for an entity.
@@ -150,15 +418,26 @@ export function findTsFiles(dir: string): string[] {
 }
 
 /**
+ * Result of extracting content from a Vue SFC file.
+ */
+export interface VueExtractResult {
+  /** TypeScript content from <script> or <script setup> */
+  content: string;
+  /** Whether the script uses <script setup> syntax */
+  isSetupSyntax: boolean;
+  /** Template content (if present) for component tracking */
+  templateContent?: string;
+}
+
+/**
  * Extract TypeScript content from a Vue SFC file.
  * Supports both <script lang="ts"> and <script setup lang="ts"> syntax.
+ * Also extracts template content for component usage tracking.
  *
  * @param filePath - Path to the Vue file
- * @returns Object with script content and syntax type, or null if no TypeScript script found
+ * @returns Object with script content, syntax type, and template, or null if no TypeScript script found
  */
-export function extractVueScript(
-  filePath: string,
-): { content: string; isSetupSyntax: boolean } | null {
+export function extractVueScript(filePath: string): VueExtractResult | null {
   try {
     const fileContent = readFileSync(filePath, "utf-8");
     const { descriptor, errors } = parseVueSFC(fileContent, {
@@ -173,11 +452,15 @@ export function extractVueScript(
       return null;
     }
 
+    // Get template content if present
+    const templateContent = descriptor.template?.content;
+
     // Check <script setup> first (modern Vue 3 pattern)
     if (descriptor.scriptSetup && descriptor.scriptSetup.lang === "ts") {
       return {
         content: descriptor.scriptSetup.content,
         isSetupSyntax: true,
+        templateContent,
       };
     }
 
@@ -186,6 +469,7 @@ export function extractVueScript(
       return {
         content: descriptor.script.content,
         isSetupSyntax: false,
+        templateContent,
       };
     }
 
@@ -200,7 +484,7 @@ export function extractVueScript(
 }
 
 /**
- * Extract entities from a source file.
+ * Extract entities from a source file with rich metadata.
  *
  * @param sourceFile - ts-morph SourceFile to extract from
  * @param basePath - Base path for relative file paths
@@ -227,10 +511,31 @@ export function extractEntities(
     exported: true,
   });
 
-  // Functions
+  // Functions with rich metadata
   sourceFile.getFunctions().forEach((fn) => {
     const name = fn.getName();
     if (name) {
+      // Build rich metadata
+      const metadata: EntityMetadata = {};
+
+      if (fn.isAsync()) metadata.async = true;
+      if (fn.isGenerator()) metadata.generator = true;
+
+      const params = fn.getParameters();
+      if (params.length > 0) {
+        metadata.parameters = params.map((p) => p.getName());
+      }
+
+      const returnTypeNode = fn.getReturnTypeNode();
+      if (returnTypeNode) {
+        metadata.returnType = returnTypeNode.getText();
+      }
+
+      const typeParams = fn.getTypeParameters();
+      if (typeParams.length > 0) {
+        metadata.typeParameters = typeParams.map((tp) => tp.getName());
+      }
+
       const entity: Entity = {
         id: makeEntityId(packageName, filePath, name, "function"),
         type: "function",
@@ -238,6 +543,7 @@ export function extractEntities(
         filePath,
         lineNumber: fn.getStartLineNumber(),
         exported: fn.isExported(),
+        ...(Object.keys(metadata).length > 0 && { metadata }),
       };
 
       const jsDocContent = extractJsDocContent(fn);
@@ -249,10 +555,18 @@ export function extractEntities(
     }
   });
 
-  // Classes
+  // Classes with rich metadata
   sourceFile.getClasses().forEach((cls) => {
     const name = cls.getName();
     if (name) {
+      // Build class metadata
+      const classMetadata: EntityMetadata = {};
+
+      const typeParams = cls.getTypeParameters();
+      if (typeParams.length > 0) {
+        classMetadata.typeParameters = typeParams.map((tp) => tp.getName());
+      }
+
       const classEntity: Entity = {
         id: makeEntityId(packageName, filePath, name, "class"),
         type: "class",
@@ -260,6 +574,9 @@ export function extractEntities(
         filePath,
         lineNumber: cls.getStartLineNumber(),
         exported: cls.isExported(),
+        ...(Object.keys(classMetadata).length > 0 && {
+          metadata: classMetadata,
+        }),
       };
 
       const classJsDocContent = extractJsDocContent(cls);
@@ -269,9 +586,31 @@ export function extractEntities(
 
       entities.push(classEntity);
 
-      // Class methods as separate entities
+      // Class methods with rich metadata
       cls.getMethods().forEach((method) => {
         const methodName = method.getName();
+
+        // Build method metadata
+        const methodMetadata: EntityMetadata = {};
+
+        if (method.isAsync()) methodMetadata.async = true;
+        if (method.isStatic()) methodMetadata.static = true;
+
+        const params = method.getParameters();
+        if (params.length > 0) {
+          methodMetadata.parameters = params.map((p) => p.getName());
+        }
+
+        const returnTypeNode = method.getReturnTypeNode();
+        if (returnTypeNode) {
+          methodMetadata.returnType = returnTypeNode.getText();
+        }
+
+        const typeParams = method.getTypeParameters();
+        if (typeParams.length > 0) {
+          methodMetadata.typeParameters = typeParams.map((tp) => tp.getName());
+        }
+
         const methodEntity: Entity = {
           id: makeEntityId(
             packageName,
@@ -284,6 +623,9 @@ export function extractEntities(
           filePath,
           lineNumber: method.getStartLineNumber(),
           exported: cls.isExported(),
+          ...(Object.keys(methodMetadata).length > 0 && {
+            metadata: methodMetadata,
+          }),
         };
 
         const methodJsDocContent = extractJsDocContent(method);
@@ -296,9 +638,17 @@ export function extractEntities(
     }
   });
 
-  // Type aliases
+  // Type aliases with type parameters
   sourceFile.getTypeAliases().forEach((typeAlias) => {
     const name = typeAlias.getName();
+
+    // Build metadata
+    const metadata: EntityMetadata = {};
+    const typeParams = typeAlias.getTypeParameters();
+    if (typeParams.length > 0) {
+      metadata.typeParameters = typeParams.map((tp) => tp.getName());
+    }
+
     const entity: Entity = {
       id: makeEntityId(packageName, filePath, name, "type"),
       type: "type",
@@ -306,6 +656,7 @@ export function extractEntities(
       filePath,
       lineNumber: typeAlias.getStartLineNumber(),
       exported: typeAlias.isExported(),
+      ...(Object.keys(metadata).length > 0 && { metadata }),
     };
 
     const jsDocContent = extractJsDocContent(typeAlias);
@@ -316,9 +667,17 @@ export function extractEntities(
     entities.push(entity);
   });
 
-  // Interfaces
+  // Interfaces with type parameters
   sourceFile.getInterfaces().forEach((iface) => {
     const name = iface.getName();
+
+    // Build metadata
+    const metadata: EntityMetadata = {};
+    const typeParams = iface.getTypeParameters();
+    if (typeParams.length > 0) {
+      metadata.typeParameters = typeParams.map((tp) => tp.getName());
+    }
+
     const entity: Entity = {
       id: makeEntityId(packageName, filePath, name, "interface"),
       type: "interface",
@@ -326,6 +685,7 @@ export function extractEntities(
       filePath,
       lineNumber: iface.getStartLineNumber(),
       exported: iface.isExported(),
+      ...(Object.keys(metadata).length > 0 && { metadata }),
     };
 
     const jsDocContent = extractJsDocContent(iface);
@@ -336,11 +696,93 @@ export function extractEntities(
     entities.push(entity);
   });
 
-  // Variable declarations (especially arrow functions)
+  // Enums with members
+  sourceFile.getEnums().forEach((enumDecl) => {
+    const name = enumDecl.getName();
+
+    // Build enum metadata
+    const metadata: EntityMetadata = {};
+
+    if (enumDecl.isConstEnum()) {
+      metadata.const = true;
+    }
+
+    // Extract enum members
+    const members = enumDecl.getMembers();
+    if (members.length > 0) {
+      metadata.members = members.map((member) => {
+        const memberName = member.getName();
+        const value = member.getValue();
+        return {
+          name: memberName,
+          ...(value !== undefined && { value: String(value) }),
+        };
+      });
+    }
+
+    const entity: Entity = {
+      id: makeEntityId(packageName, filePath, name, "enum"),
+      type: "enum",
+      name,
+      filePath,
+      lineNumber: enumDecl.getStartLineNumber(),
+      exported: enumDecl.isExported(),
+      ...(Object.keys(metadata).length > 0 && { metadata }),
+    };
+
+    const jsDocContent = extractJsDocContent(enumDecl);
+    if (jsDocContent) {
+      entity.jsDocContent = jsDocContent;
+    }
+
+    entities.push(entity);
+  });
+
+  // Variable declarations with metadata
   sourceFile.getVariableDeclarations().forEach((decl) => {
     const name = decl.getName();
     const initializer = decl.getInitializer();
     const isArrowFn = initializer?.getKind() === SyntaxKind.ArrowFunction;
+
+    // Build metadata
+    const metadata: EntityMetadata = {};
+
+    // Get variable kind (const, let, var)
+    const varStatement = decl.getVariableStatement();
+    if (varStatement) {
+      const declarationKind = varStatement.getDeclarationKind();
+      if (declarationKind) {
+        metadata.kind = declarationKind.toLowerCase() as
+          | "const"
+          | "let"
+          | "var";
+      }
+    }
+
+    if (isArrowFn) {
+      metadata.arrowFunction = true;
+
+      // Extract arrow function metadata
+      const arrowFn = initializer;
+      if (arrowFn && arrowFn.isKind(SyntaxKind.ArrowFunction)) {
+        if (arrowFn.isAsync()) metadata.async = true;
+
+        const params = arrowFn.getParameters();
+        if (params.length > 0) {
+          metadata.parameters = params.map((p) => p.getName());
+        }
+
+        const returnTypeNode = arrowFn.getReturnTypeNode();
+        if (returnTypeNode) {
+          metadata.returnType = returnTypeNode.getText();
+        }
+
+        const typeParams = arrowFn.getTypeParameters();
+        if (typeParams.length > 0) {
+          metadata.typeParameters = typeParams.map((tp) => tp.getName());
+        }
+      }
+    }
 
     entities.push({
       id: makeEntityId(
@@ -354,6 +796,7 @@ export function extractEntities(
       filePath,
       lineNumber: decl.getStartLineNumber(),
       exported: decl.isExported(),
+      ...(Object.keys(metadata).length > 0 && { metadata }),
     });
   });
 
@@ -883,7 +1326,7 @@ export function extractJsDocContent(node: {
  *
  * @param packagePath - Path to the package source directory
  * @param packageName - Optional package name (derived from path if not provided)
- * @param options - Optional incremental parsing options
+ * @param options - Optional parsing options (files filter, progress callback)
  * @returns ParseResult with entities, relationships, and statistics
  *
  * @example
@@ -895,30 +1338,58 @@ export function extractJsDocContent(node: {
  * const result = parsePackage("packages/my-pkg", "my-pkg", {
  *   files: ["src/foo.ts", "src/bar.ts"]
  * });
+ *
+ * @example
+ * // Parse with progress callback
+ * const result = parsePackage("packages/my-pkg", "my-pkg", {
+ *   onProgress: (phase, current, total, message) => {
+ *     console.log(`[${phase}] ${current}/${total}: ${message}`);
+ *   }
+ * });
  */
 export function parsePackage(
   packagePath: string,
   packageName?: string,
-  options?: IncrementalParseOptions,
+  options?: ParseOptions,
 ): ParseResult {
   // Derive package name once and pass explicitly (no global state)
   const pkgName = packageName || derivePackageName(packagePath);
+  const onProgress = options?.onProgress;
 
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
   });
 
+  // Phase 1: Scan - Find all source files
+  onProgress?.("scan", 0, 0, "Scanning for source files...");
+
   // Use filtered file list if provided, otherwise find all TypeScript files
   const tsFiles = options?.files || findTsFiles(packagePath);
+  onProgress?.(
+    "scan",
+    tsFiles.length,
+    tsFiles.length,
+    `Found ${tsFiles.length} files`,
+  );
   const parseErrors: Array<{ file: string; error: string }> = [];
   let filesSkipped = 0;
   let vueFilesProcessed = 0;
 
-  // Track Vue file mappings (virtual path -> original path)
-  const vueFileMapping = new Map<string, string>();
+  // Track Vue file mappings (virtual path -> { original path, template content })
+  const vueFileMapping = new Map<
+    string,
+    { originalPath: string; templateContent?: string }
+  >();
 
-  // Add all files to the project with error handling
-  tsFiles.forEach((file) => {
+  // Phase 2: Load - Add all files to the project
+  tsFiles.forEach((file, index) => {
+    onProgress?.(
+      "load",
+      index + 1,
+      tsFiles.length,
+      `Loading ${relative(packagePath, file)}`,
+    );
+
     try {
       if (file.endsWith(".vue")) {
         const vueScript = extractVueScript(file);
@@ -928,7 +1399,10 @@ export function parsePackage(
           const absoluteFile = resolve(file);
           const virtualPath = `${absoluteFile}.ts`;
           project.createSourceFile(virtualPath, vueScript.content);
-          vueFileMapping.set(virtualPath, relative(packagePath, file));
+          vueFileMapping.set(virtualPath, {
+            originalPath: relative(packagePath, file),
+            templateContent: vueScript.templateContent,
+          });
           vueFilesProcessed++;
         }
       } else {
@@ -960,15 +1434,26 @@ export function parsePackage(
   const allEntities: Entity[] = [];
   const allRelationships: Relationship[] = [];
 
-  // First pass: extract all entities
-  project.getSourceFiles().forEach((sourceFile) => {
+  // Phase 3: Entities - Extract all entities
+  const sourceFiles = project.getSourceFiles();
+  sourceFiles.forEach((sourceFile, index) => {
     const sourceFilePath = sourceFile.getFilePath();
-    const originalVuePath = vueFileMapping.get(sourceFilePath);
+    const vueInfo = vueFileMapping.get(sourceFilePath);
+    const displayPath =
+      vueInfo?.originalPath || relative(packagePath, sourceFilePath);
+
+    onProgress?.(
+      "entities",
+      index + 1,
+      sourceFiles.length,
+      `Extracting entities from ${displayPath}`,
+    );
+
     const entities = extractEntities(
       sourceFile,
       packagePath,
       pkgName,
-      originalVuePath,
+      vueInfo?.originalPath,
     );
     allEntities.push(...entities);
   });
@@ -976,18 +1461,87 @@ export function parsePackage(
   // Build entity lookup map for call resolution
   const entityLookupMap = buildEntityLookupMap(allEntities);
 
-  // Second pass: extract relationships
-  project.getSourceFiles().forEach((sourceFile) => {
+  // Phase 4: Relationships - Extract all relationships
+  sourceFiles.forEach((sourceFile, index) => {
     const sourceFilePath = sourceFile.getFilePath();
-    const originalVuePath = vueFileMapping.get(sourceFilePath);
+    const vueInfo = vueFileMapping.get(sourceFilePath);
+    const displayPath =
+      vueInfo?.originalPath || relative(packagePath, sourceFilePath);
+
+    onProgress?.(
+      "relationships",
+      index + 1,
+      sourceFiles.length,
+      `Extracting relationships from ${displayPath}`,
+    );
+
     const relationships = extractRelationships(
       sourceFile,
       packagePath,
       pkgName,
       entityLookupMap,
-      originalVuePath,
+      vueInfo?.originalPath,
     );
     allRelationships.push(...relationships);
+
+    // Third pass (Vue only): extract template component calls
+    if (vueInfo?.templateContent) {
+      const templateCalls = extractTemplateComponentCalls(
+        vueInfo.templateContent,
+        vueInfo.originalPath,
+      );
+
+      // Build import map to resolve component file paths
+      const importMap = extractImportMap(sourceFile, packagePath);
+
+      // Create "calls" relationships for template component usage
+      const fileId = makeFileId(pkgName, vueInfo.originalPath);
+
+      for (const call of templateCalls) {
+        // Try to resolve the component to an entity
+        const candidates = entityLookupMap.get(call.componentName);
+        let targetId: string | null = null;
+
+        if (candidates && candidates.length > 0) {
+          // Check import map first
+          const importedFromPath = importMap.get(call.componentName);
+          if (importedFromPath) {
+            const match = candidates.find(
+              (e) => e.filePath === importedFromPath,
+            );
+            if (match) {
+              targetId = match.id;
+            }
+          }
+
+          // Fall back to best match
+          if (!targetId) {
+            const bestMatch = findBestMatch(
+              candidates,
+              vueInfo.originalPath,
+              !!importedFromPath,
+            );
+            if (bestMatch) {
+              targetId = bestMatch.id;
+            }
+          }
+        }
+
+        // Only create relationship if we resolved the target
+        if (targetId) {
+          allRelationships.push({
+            from: fileId,
+            to: targetId,
+            type: "calls",
+            metadata: JSON.stringify({
+              usage: "template-component",
+              line: call.line,
+              column: call.column,
+            }),
+          });
+        }
+      }
+    }
   });
 
   // Calculate stats
@@ -1126,7 +1680,7 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
     [];
   const vueFileMapping = new Map<
     string,
-    { original: string; pkgName: string }
+    { original: string; pkgName: string; templateContent?: string }
   >();
   const parseErrors: Array<{ file: string; error: string; pkgName: string }> =
     [];
@@ -1145,6 +1699,7 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
             vueFileMapping.set(virtualPath, {
               original: relative(pkg.path, file),
               pkgName: pkg.name,
+              templateContent: vueScript.templateContent,
             });
           }
         } else {
@@ -1264,6 +1819,66 @@ export function parseMonorepo(rootPath: string): MonorepoParseResult {
     // Group by package (source package)
     const existing = relationshipsByPackage.get(pkgName) || [];
     existing.push(...relationships);
+
+    // Third pass (Vue only): extract template component calls
+    if (vueInfo?.templateContent && relativeFilePath) {
+      const templateCalls = extractTemplateComponentCalls(
+        vueInfo.templateContent,
+        relativeFilePath,
+      );
+
+      // Build import map to resolve component file paths
+      const importMap = extractImportMap(sourceFile, pkgPath);
+
+      // Create "calls" relationships for template component usage
+      const fileId = makeFileId(pkgName, relativeFilePath);
+
+      for (const call of templateCalls) {
+        // Try to resolve the component to an entity
+        const candidates = entityLookupMap.get(call.componentName);
+        let targetId: string | null = null;
+
+        if (candidates && candidates.length > 0) {
+          // Check import map first
+          const importedFromPath = importMap.get(call.componentName);
+          if (importedFromPath) {
+            const match = candidates.find(
+              (e) => e.filePath === importedFromPath,
+            );
+            if (match) {
+              targetId = match.id;
+            }
+          }
+
+          // Fall back to best match
+          if (!targetId) {
+            const bestMatch = findBestMatch(
+              candidates,
+              relativeFilePath,
+              !!importedFromPath,
+            );
+            if (bestMatch) {
+              targetId = bestMatch.id;
+            }
+          }
+        }
+
+        // Only create relationship if we resolved the target
+        if (targetId) {
+          existing.push({
+            from: fileId,
+            to: targetId,
+            type: "calls",
+            metadata: JSON.stringify({
+              usage: "template-component",
+              line: call.line,
+              column: call.column,
+            }),
+          });
+        }
+      }
+    }
+
     relationshipsByPackage.set(pkgName, existing);
   }
 
