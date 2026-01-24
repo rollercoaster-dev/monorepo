@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
 
     // Development server configuration
     server: {
+      host: true,
       port: parseInt(process.env.SYSTEM_VITE_PORT || process.env.VITE_PORT || '7777'),
       strictPort: false, // Allow Vite to try the next available port
       open: true,

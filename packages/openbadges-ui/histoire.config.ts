@@ -9,6 +9,9 @@ export default defineConfig({
   // Use a custom index.html template
   vite: {
     base: "/openbadges-ui/",
+    server: {
+      host: true,
+    },
     resolve: {
       alias: {
         "@": "/src",
