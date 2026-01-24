@@ -43,6 +43,57 @@ const mockOB3Achievement: OB3.Achievement = {
   },
 };
 
+// Mock OB3 Achievement array data (multi-achievement credential)
+const mockOB3AchievementArray: OB3.Achievement[] = [
+  {
+    id: "https://example.org/achievements/primary" as Shared.IRI,
+    type: ["Achievement"],
+    name: "Primary Achievement",
+    description: "This is the primary achievement in the array",
+    image: {
+      id: "https://example.org/primary-badge.png" as Shared.IRI,
+      type: "Image" as const,
+    },
+    criteria: {
+      narrative: "Complete the primary requirements",
+    },
+    creator: {
+      id: "https://example.org/issuers/multi" as Shared.IRI,
+      type: ["Profile"],
+      name: "Multi-Achievement Issuer",
+      url: "https://multi-issuer.org" as Shared.IRI,
+    },
+  },
+  {
+    id: "https://example.org/achievements/secondary" as Shared.IRI,
+    type: ["Achievement"],
+    name: "Secondary Achievement",
+    description: "This is the secondary achievement",
+    image: {
+      id: "https://example.org/secondary-badge.png" as Shared.IRI,
+      type: "Image" as const,
+    },
+    criteria: {
+      narrative: "Complete the secondary requirements",
+    },
+    creator: {
+      id: "https://example.org/issuers/multi" as Shared.IRI,
+      type: ["Profile"],
+      name: "Multi-Achievement Issuer",
+      url: "https://multi-issuer.org" as Shared.IRI,
+    },
+  },
+  {
+    id: "https://example.org/achievements/tertiary" as Shared.IRI,
+    type: ["Achievement"],
+    name: "Tertiary Achievement",
+    description: "This is the tertiary achievement",
+    criteria: {
+      narrative: "Complete the tertiary requirements",
+    },
+  },
+];
+
 describe("BadgeClassCard", () => {
   describe("rendering with OB2 data", () => {
     it("renders badge name", () => {
@@ -120,6 +171,91 @@ describe("BadgeClassCard", () => {
       const img = wrapper.find("img");
       expect(img.exists()).toBe(true);
       expect(img.attributes("src")).toBe("https://example.org/ds-badge.png");
+    });
+  });
+
+  describe("rendering with OB3 Achievement arrays", () => {
+    it("displays first achievement name from array", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray },
+      });
+      expect(wrapper.text()).toContain("Primary Achievement");
+      // Should NOT show subsequent achievements' names directly
+      expect(wrapper.text()).not.toContain("Secondary Achievement");
+      expect(wrapper.text()).not.toContain("Tertiary Achievement");
+    });
+
+    it("shows +N more achievements indicator for arrays with multiple achievements", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray },
+      });
+      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      expect(multiIndicator.exists()).toBe(true);
+      expect(multiIndicator.text()).toContain("+2 more achievements");
+    });
+
+    it("hides multi-achievement indicator for single achievement (not array)", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3Achievement },
+      });
+      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      expect(multiIndicator.exists()).toBe(false);
+    });
+
+    it("extracts description from first achievement in array", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray, showDescription: true },
+      });
+      expect(wrapper.text()).toContain("primary achievement in the array");
+    });
+
+    it("extracts image from first achievement in array", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray },
+      });
+      const img = wrapper.find("img");
+      expect(img.exists()).toBe(true);
+      expect(img.attributes("src")).toBe(
+        "https://example.org/primary-badge.png",
+      );
+    });
+
+    it("extracts creator/issuer from first achievement in array", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray, showIssuer: true },
+      });
+      expect(wrapper.text()).toContain("Multi-Achievement Issuer");
+    });
+
+    it("emits click with entire array when interactive", async () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray, interactive: true },
+      });
+      await wrapper.trigger("click");
+      expect(wrapper.emitted("click")).toBeTruthy();
+      expect(wrapper.emitted("click")![0]).toEqual([mockOB3AchievementArray]);
+    });
+
+    it("shows singular form for +1 more achievement", () => {
+      const twoAchievements = mockOB3AchievementArray.slice(0, 2);
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: twoAchievements },
+      });
+      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      expect(multiIndicator.exists()).toBe(true);
+      expect(multiIndicator.text()).toContain("+1 more achievement");
+      // Should NOT have "achievements" plural
+      expect(multiIndicator.text()).not.toMatch(/\+1 more achievements/);
+    });
+
+    it("provides accessible aria-label for multi-achievement indicator", () => {
+      const wrapper = mount(BadgeClassCard, {
+        props: { badgeClass: mockOB3AchievementArray },
+      });
+      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      expect(multiIndicator.attributes("aria-label")).toContain(
+        "2 more achievements",
+      );
     });
   });
 
