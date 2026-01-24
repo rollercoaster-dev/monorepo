@@ -81,13 +81,13 @@ See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for det
 
 See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
-## Proactive Agents
+## Proactive Reviews
 
-Use these agents after completing relevant work:
+Use after completing relevant work:
 
-- `markdown-reviewer` - After editing `.md` files
-- `senior-code-reviewer` - After implementing features
-- `openbadges-compliance-reviewer` - After badge/credential code changes
+- `/markdown-reviewer` - After editing `.md` files
+- `senior-code-reviewer` agent - After implementing features
+- `openbadges-compliance-reviewer` agent - After badge/credential code changes
 
 ## Documentation
 
