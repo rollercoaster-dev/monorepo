@@ -533,6 +533,32 @@ function runMigrations(database: Database): void {
       );
     }
   }
+
+  // Migration 8: Add 'content_hash' column to entities table for duplicate detection
+  // Check if content_hash column exists
+  const entitiesColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(entities)")
+    .all();
+
+  const hasContentHashColumn = entitiesColumns.some(
+    (col) => col.name === "content_hash",
+  );
+
+  if (!hasContentHashColumn) {
+    try {
+      // Add content_hash column (nullable for backward compatibility)
+      database.run("ALTER TABLE entities ADD COLUMN content_hash TEXT NULL");
+
+      // Create index for content_hash lookups
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_entity_content_hash ON entities(content_hash)",
+      );
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add content_hash to entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 }
 
 export function getDatabase(dbPath?: string): Database {
