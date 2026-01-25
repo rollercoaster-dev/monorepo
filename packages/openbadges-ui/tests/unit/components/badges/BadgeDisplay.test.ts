@@ -645,4 +645,191 @@ describe("BadgeDisplay.vue", () => {
       );
     });
   });
+
+  // Recipient information tests
+  describe("Recipient information display", () => {
+    it("does not show recipient info by default", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockBadge },
+      });
+
+      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+    });
+
+    it("shows recipient email from OB2 Assertion when showRecipient is true", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: mockBadge,
+          showRecipient: true,
+        },
+      });
+
+      const recipientSection = wrapper.find(".manus-badge-recipient");
+      expect(recipientSection.exists()).toBe(true);
+      expect(recipientSection.attributes("role")).toBe("region");
+      expect(recipientSection.attributes("aria-label")).toBe(
+        "Recipient information",
+      );
+
+      const emailSpan = wrapper.find(".manus-badge-recipient-email");
+      expect(emailSpan.exists()).toBe(true);
+      expect(emailSpan.text()).toContain("test@example.org");
+      expect(emailSpan.attributes("aria-label")).toBe(
+        "Recipient email address",
+      );
+    });
+
+    it("shows recipient name, email, and role from OB3 credential when showRecipient is true", () => {
+      const ob3WithRecipient = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/123",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer",
+          type: "Profile",
+          name: "OB3 Issuer",
+        },
+        validFrom: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient123",
+          type: "AchievementSubject",
+          name: "Alice Johnson",
+          email: "alice@example.org",
+          role: "Senior Developer",
+          achievement: {
+            id: "https://example.org/achievements/1",
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "Test description",
+            image: "https://example.org/badge.png",
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: ob3WithRecipient,
+          showRecipient: true,
+        },
+      });
+
+      const recipientSection = wrapper.find(".manus-badge-recipient");
+      expect(recipientSection.exists()).toBe(true);
+
+      const nameSpan = wrapper.find(".manus-badge-recipient-name");
+      expect(nameSpan.exists()).toBe(true);
+      expect(nameSpan.text()).toContain("Alice Johnson");
+      expect(nameSpan.attributes("aria-label")).toBe("Recipient name");
+
+      const emailSpan = wrapper.find(".manus-badge-recipient-email");
+      expect(emailSpan.exists()).toBe(true);
+      expect(emailSpan.text()).toContain("alice@example.org");
+      expect(emailSpan.attributes("aria-label")).toBe(
+        "Recipient email address",
+      );
+
+      const roleSpan = wrapper.find(".manus-badge-recipient-role");
+      expect(roleSpan.exists()).toBe(true);
+      expect(roleSpan.text()).toContain("Senior Developer");
+      expect(roleSpan.attributes("aria-label")).toBe("Recipient role");
+    });
+
+    it("handles OB3 credentialSubject.name as MultiLanguageString", () => {
+      const ob3WithMultiLangName = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/456",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer",
+          type: "Profile",
+          name: "OB3 Issuer",
+        },
+        validFrom: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient456",
+          type: "AchievementSubject",
+          name: {
+            en: "Bob Martinez",
+            es: "Roberto Martínez",
+          },
+          achievement: {
+            id: "https://example.org/achievements/1",
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "Test description",
+            image: "https://example.org/badge.png",
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: ob3WithMultiLangName,
+          showRecipient: true,
+        },
+      });
+
+      const nameSpan = wrapper.find(".manus-badge-recipient-name");
+      expect(nameSpan.exists()).toBe(true);
+      expect(nameSpan.text()).toContain("Bob Martinez");
+    });
+
+    it("hides recipient info in simplifiedView even when showRecipient is true", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: mockBadge,
+          showRecipient: true,
+          simplifiedView: true,
+        },
+      });
+
+      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+    });
+
+    it("does not show recipient section when badge has no recipient data", () => {
+      const badgeWithoutRecipient = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/789",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer",
+          type: "Profile",
+          name: "OB3 Issuer",
+        },
+        validFrom: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient789",
+          type: "AchievementSubject",
+          achievement: {
+            id: "https://example.org/achievements/1",
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "Test description",
+            image: "https://example.org/badge.png",
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: badgeWithoutRecipient,
+          showRecipient: true,
+        },
+      });
+
+      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+    });
+  });
 });
