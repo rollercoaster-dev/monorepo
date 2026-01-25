@@ -16,7 +16,7 @@ import {
   mkdirSync,
 } from "fs";
 import { spawnSync } from "bun";
-import { join, isAbsolute } from "path";
+import { join, isAbsolute, dirname } from "path";
 
 /**
  * Get the git repository root directory.
@@ -158,8 +158,8 @@ export async function exportToJSONL(
     }
   }
 
-  // Ensure directory exists
-  const dir = resolvedPath.substring(0, resolvedPath.lastIndexOf("/"));
+  // Ensure directory exists (use dirname for cross-platform compatibility)
+  const dir = dirname(resolvedPath);
   if (dir && !existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
