@@ -7,7 +7,6 @@ Open Badges credentialing system with self-signed badges, local-first architectu
 **Stack**: Bun 1.3.2 + Turborepo + TypeScript (strict, no `any`)
 
 ```bash
-# Essential commands
 bun dev                    # Start all apps
 bun run build              # Build all packages
 bun test                   # Run all tests
@@ -33,41 +32,23 @@ Each package has its own `CLAUDE.md` with package-specific context.
 
 ## Conventions
 
-- **Testing**: Bun test runner, tests colocated (`*.test.ts`). Use `bun run test:unit` from root.
+- **Testing**: Bun test runner, tests colocated (`*.test.ts`)
 - **Commits**: Conventional commits (`feat`, `fix`, `chore`, etc.)
 - **Versioning**: Changesets for version management (`bunx changeset`)
 
 ## Implementation Philosophy
 
-Keep solutions simple and focused. Only make changes that are directly requested.
+Keep solutions simple and focused. Only make changes directly requested.
 
-- Don't add features or refactor code beyond what was asked
+- Don't add features or refactor beyond what was asked
 - Don't add error handling for scenarios that can't happen
 - Don't create abstractions for one-time operations
-- Reuse existing patterns; the right complexity is the minimum needed
-- For `/work-on-issue` workflow, follow all gates exactly and pause at each one
+- Reuse existing patterns; minimum complexity needed
+- **Fix issues now** - When reviews identify problems, fix immediately. No tech debt.
 
-## No Tech Debt Rule
-
-**If it can be fixed now, fix it.**
-
-When CodeRabbit, Claude review, or any code review identifies issues - even minor nitpicks - fix them immediately rather than deferring. This prevents accumulation of small issues that become larger problems.
-
-## File Modification
-
-Before modifying files, consider:
-
-1. Was an explicit change requested?
-2. Have relevant workflow gates been passed?
-3. Is this the minimal change needed?
-
-Safe operations (always allowed): reading files, searching, running tests, analyzing code.
-
-## Search Priority
+## Search: Graph First
 
 **Always use graph tools first. Grep/Glob are fallback only.**
-
-### Decision Triggers
 
 | If you're about to...                    | Use this instead     |
 | ---------------------------------------- | -------------------- |
@@ -77,48 +58,7 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 | Search for a literal string or regex     | Grep (fallback OK)   |
 | Find config files by name                | Glob (fallback OK)   |
 
-### Graph Tools with Examples
-
-**`mcp__claude-knowledge__graph_find`** - Find where something is defined
-
-```
-# Find a function definition
-graph_find(name="getTranscriptPath", type="function")
-→ Returns: [{name, type, filePath, lineNumber}]
-
-# Find a class
-graph_find(name="BadgeService", type="class")
-
-# Fuzzy search (partial match)
-graph_find(name="Transcript")  # finds getTranscriptPath, TranscriptParser, etc.
-```
-
-**`mcp__claude-knowledge__graph_what_calls`** - Find all callers of a function
-
-```
-# What calls this function?
-graph_what_calls(name="getTranscriptPath")
-→ Returns: [{caller, callerFile, callerLine, callee, calleeFile}]
-
-# Useful before renaming or changing a function's signature
-```
-
-**`mcp__claude-knowledge__graph_blast_radius`** - Impact analysis before changes
-
-```
-# What depends on this file?
-graph_blast_radius(file="src/utils/transcript.ts")
-→ Returns: All files that import/depend on this file (transitive)
-
-# Use before refactoring to understand what might break
-```
-
-### Why Graph > Grep
-
-- **Precision**: `graph_find(name="store")` finds the `store` function definition, not every usage of the word "store"
-- **Context**: Returns file path + line number, ready to Read
-- **Speed**: Pre-indexed AST, instant results
-- **Efficiency**: 5 precise results vs 200 grep matches that need filtering
+See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for examples and detailed guidance.
 
 ## Workflows
 
@@ -130,46 +70,16 @@ graph_blast_radius(file="src/utils/transcript.ts")
 
 See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
-### IMPORTANT: Workflow Integrity
+### Branch Protection Rules
 
 **YOU MUST follow all workflow phases. YOU MUST NOT commit directly to main.**
 
-"Autonomous" mode means no user approval gates - it does NOT mean skip phases or bypass branch isolation.
+- Always: `Issue → Feature Branch → Commits → PR → Review → Merge`
+- Never: Commit directly to main, even in "autonomous" mode
+- Never: Use `gh pr merge --admin` to bypass protections
+- Never: Use `--auto` flag (skips review comment validation)
 
-Why this matters:
-
-- **User control** - PRs give the user a chance to review/reject before merge
-- **Rollback safety** - Closing a PR is trivial; reverting main commits is disruptive
-- **Quality** - Review phase catches bugs before they reach production
-- **Token efficiency** - Research phase prevents trial-and-error coding
-
-The correct pattern:
-
-```text
-Issue → Feature Branch → Commits → PR → Review → Merge
-NEVER: Issue → Commit directly to main
-```
-
-### NEVER Use --admin Flag
-
-**YOU MUST NEVER use `gh pr merge --admin` to bypass branch protection.**
-
-If a merge is blocked:
-
-- `BLOCKED` status means CI is still running or checks haven't completed
-- "base branch policy prohibits the merge" means WAIT, not bypass
-- Wait for CI to complete, then check review comments before merging
-
-Do NOT use `--auto` flag - it skips review comment validation.
-
-The `--admin` flag:
-
-- Bypasses ALL branch protections
-- Merges even with failing CI
-- Deletes the branch (with `--delete-branch`), making recovery difficult
-- Violates user trust and workflow integrity
-
-If merge fails, ASK the user what to do. Never bypass protections autonomously.
+If merge is blocked, WAIT for CI. If unclear, ASK.
 
 ## Proactive Reviews
 
@@ -184,7 +94,6 @@ Use after completing relevant work:
 - [Development Workflows](docs/development-workflows.md) - gates, agents, plugins
 - [Publishing Guide](docs/publishing-guide.md) - npm, Docker, Changesets
 - [Monorepo Structure](docs/monorepo-structure.md) - deps, packages, env vars
-- [Context Engineering](docs/context-engineering-best-practices.md) - Opus 4.5 best practices
 
 ## Current Focus
 

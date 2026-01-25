@@ -12,13 +12,50 @@ Tool usage is tracked and reported at session end. Aim for graph/search ratio > 
 
 ---
 
-## Graph Tools (Code Structure)
+## Graph Tools with Examples
 
-| Tool                 | Use For              | Why Default                                     |
-| -------------------- | -------------------- | ----------------------------------------------- |
-| `graph_find`         | Locating definitions | AST-precise, finds declarations not just text   |
-| `graph_what_calls`   | Finding callers      | Shows actual usage patterns, not string matches |
-| `graph_blast_radius` | Impact analysis      | Transitive deps - prevents breaking changes     |
+**`mcp__claude-knowledge__graph_find`** - Find where something is defined
+
+```
+# Find a function definition
+graph_find(name="getTranscriptPath", type="function")
+→ Returns: [{name, type, filePath, lineNumber}]
+
+# Find a class
+graph_find(name="BadgeService", type="class")
+
+# Fuzzy search (partial match)
+graph_find(name="Transcript")  # finds getTranscriptPath, TranscriptParser, etc.
+```
+
+**`mcp__claude-knowledge__graph_what_calls`** - Find all callers
+
+```
+# What calls this function?
+graph_what_calls(name="getTranscriptPath")
+→ Returns: [{caller, callerFile, callerLine, callee, calleeFile}]
+
+# Useful before renaming or changing a function's signature
+```
+
+**`mcp__claude-knowledge__graph_blast_radius`** - Impact analysis
+
+```
+# What depends on this file?
+graph_blast_radius(file="src/utils/transcript.ts")
+→ Returns: All files that import/depend on this file (transitive)
+
+# Use before refactoring to understand what might break
+```
+
+---
+
+## Why Graph > Grep
+
+- **Precision**: `graph_find(name="store")` finds the definition, not every usage of "store"
+- **Context**: Returns file path + line number, ready to Read
+- **Speed**: Pre-indexed AST, instant results
+- **Efficiency**: 5 precise results vs 200 grep matches
 
 ---
 
