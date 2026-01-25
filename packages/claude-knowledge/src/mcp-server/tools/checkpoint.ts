@@ -20,9 +20,9 @@ export const checkpointTools: Tool[] = [
   {
     name: "checkpoint_workflow_find",
     description:
-      "Find an existing workflow checkpoint by issue number. " +
-      "Returns the most recent workflow for the issue with its actions and commits. " +
-      "Use to check if work has already started on an issue.",
+      "Workflows track progress on issues - phase, commits, actions taken. " +
+      "Checking for existing work prevents starting fresh on something already in progress " +
+      "and surfaces where previous work left off.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -37,11 +37,9 @@ export const checkpointTools: Tool[] = [
   {
     name: "checkpoint_recover_tasks",
     description:
-      "Recover native tasks from checkpoint state for session resume. " +
-      "Returns a task recovery plan with task definitions, statuses, and blockedBy relationships. " +
-      "Use when resuming /work-on-issue, /auto-issue, or /auto-milestone workflows " +
-      "to recreate task progress visualization. " +
-      "The returned plan describes TaskCreate/TaskUpdate calls to make.",
+      "Rebuilds the task tree from checkpoint state after interruption. " +
+      "Tasks, their statuses, and dependencies are restored so work can continue with accurate progress tracking. " +
+      "Returns a plan of TaskCreate/TaskUpdate calls to execute.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -69,9 +67,8 @@ export const checkpointTools: Tool[] = [
   {
     name: "checkpoint_workflow_create",
     description:
-      "Create a new workflow checkpoint for an issue. " +
-      "Initializes the workflow in 'research' phase with 'running' status. " +
-      "Use at the start of /work-on-issue or /auto-issue workflows.",
+      "Creates a checkpoint to track work on an issue. " +
+      "Enables progress recovery if interrupted and provides a record of actions and commits for the work.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -98,9 +95,8 @@ export const checkpointTools: Tool[] = [
   {
     name: "checkpoint_workflow_update",
     description:
-      "Update workflow phase and/or status. " +
-      "Use to track progress through workflow phases (research → implement → review → finalize). " +
-      "Also use to mark workflow as paused, completed, or failed.",
+      "Records phase transitions (research → implement → review → finalize) and status changes. " +
+      "Keeps checkpoint state accurate for recovery and metrics.",
     inputSchema: {
       type: "object" as const,
       properties: {

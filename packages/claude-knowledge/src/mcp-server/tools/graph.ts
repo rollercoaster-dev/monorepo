@@ -15,9 +15,9 @@ export const graphTools: Tool[] = [
   {
     name: "graph_what_calls",
     description:
-      "Find all functions/methods that call a specific function. " +
-      "Use to understand usage patterns and impact of changes. " +
-      "Returns callers with file paths and line numbers.",
+      "Shows every function that calls a given function, with exact file:line. " +
+      "When changing a function's behavior or signature, these are the places that will be affected. " +
+      "String search finds mentions; this finds actual call sites in the AST.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -33,9 +33,9 @@ export const graphTools: Tool[] = [
   {
     name: "graph_blast_radius",
     description:
-      "Analyze the impact of changes to a file by finding all dependent entities. " +
-      "Uses transitive dependency traversal to show the full blast radius. " +
-      "Essential before refactoring or making breaking changes.",
+      "Maps all files that depend on a given file, transitively. " +
+      "Before modifying shared code, this shows the full impact - files 3 imports away that will break. " +
+      "Prevents surprise failures in distant parts of the codebase.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -55,9 +55,9 @@ export const graphTools: Tool[] = [
   {
     name: "graph_find",
     description:
-      "Find code entities (functions, classes, types, interfaces, variables) by name. " +
-      "Use to locate definitions before reading or modifying code. " +
-      "More precise than grep for finding declarations.",
+      "The code graph indexes all definitions (functions, classes, types) with file:line locations. " +
+      "Returns precise matches - asking for 'store' finds the definition, not every usage of the word. " +
+      "Grep returns hundreds of string matches; this returns the 5 declarations you actually need.",
     inputSchema: {
       type: "object" as const,
       properties: {

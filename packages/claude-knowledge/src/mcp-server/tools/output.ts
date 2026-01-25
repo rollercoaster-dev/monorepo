@@ -23,9 +23,9 @@ export const outputTools: Tool[] = [
   {
     name: "output_save",
     description:
-      "Save long output to a file and return a summary. " +
-      "Use for large outputs that would consume too much context. " +
-      "Returns the file path and a summary (first + last lines).",
+      "Long outputs (test runs, build logs) consume context window. " +
+      "Saving to file and returning a summary preserves the full content " +
+      "while keeping context available for actual work.",
     inputSchema: {
       type: "object" as const,
       properties: {

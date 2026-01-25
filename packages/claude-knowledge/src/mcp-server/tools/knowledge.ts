@@ -17,9 +17,9 @@ export const knowledgeTools: Tool[] = [
   {
     name: "knowledge_query",
     description:
-      "Query the knowledge graph for learnings, patterns, and mistakes. " +
-      "Use to find relevant past learnings before implementing features or fixing bugs. " +
-      "Returns learnings with related patterns and mistakes via graph traversal.",
+      "Structured lookup of learnings by code area, file, or issue number. " +
+      "When working in a specific area (auth, database, API), learnings tagged to that area contain hard-won insights. " +
+      "When touching a file, past mistakes on that file are exactly what you need to avoid repeating.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -52,9 +52,8 @@ export const knowledgeTools: Tool[] = [
   {
     name: "knowledge_store",
     description:
-      "Store a new learning in the knowledge graph. " +
-      "Use to capture insights, patterns discovered, or lessons learned during development. " +
-      "Learnings are automatically linked to code areas and files.",
+      "Learnings captured now persist for future work. Gotchas that cost you time, non-obvious solutions, patterns that worked well - " +
+      "these become searchable knowledge. What you learn today helps tomorrow. Capture immediately while context is fresh.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -87,9 +86,9 @@ export const knowledgeTools: Tool[] = [
   {
     name: "knowledge_search_similar",
     description:
-      "Search for semantically similar learnings using vector embeddings. " +
-      "Unlike keyword search, this finds conceptually related learnings even without exact word matches. " +
-      "Example: searching 'validate user input' can find learnings about 'form validation' or 'sanitization'.",
+      "You have accumulated learnings from past work. This searches them semantically - " +
+      "'auth validation' finds 'credential verification' even without exact words. " +
+      "Checking here first surfaces solutions, gotchas, and patterns already discovered, saving you from re-solving problems or repeating past mistakes.",
     inputSchema: {
       type: "object" as const,
       properties: {
