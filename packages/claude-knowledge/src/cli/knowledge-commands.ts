@@ -3,6 +3,7 @@ import type { Learning, Pattern, Mistake } from "../types";
 import { parseIntSafe } from "./shared/validation";
 import { randomUUID } from "crypto";
 import { getDatabase } from "../db/sqlite";
+import { exportToJSONL, importFromJSONL } from "../knowledge/sync";
 
 /**
  * Handle knowledge commands.
@@ -690,6 +691,52 @@ export async function handleKnowledgeCommands(
           `Failed to prune learnings: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    }
+  } else if (command === "export-knowledge") {
+    // knowledge export-knowledge [--output <path>]
+    let outputPath = ".claude/knowledge.jsonl";
+
+    // Parse arguments
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (arg === "--output" && args[i + 1]) {
+        outputPath = args[i + 1];
+        i++;
+      } else {
+        throw new Error(`Unknown argument: ${arg}`);
+      }
+    }
+
+    // Export to JSONL
+    const result = await exportToJSONL(outputPath);
+
+    console.log("Knowledge exported successfully");
+    console.log(`Exported: ${result.exported} entities`);
+    console.log(`File: ${result.filePath}`);
+  } else if (command === "import-knowledge") {
+    // knowledge import-knowledge [--input <path>]
+    let inputPath = ".claude/knowledge.jsonl";
+
+    // Parse arguments
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (arg === "--input" && args[i + 1]) {
+        inputPath = args[i + 1];
+        i++;
+      } else {
+        throw new Error(`Unknown argument: ${arg}`);
+      }
+    }
+
+    // Import from JSONL
+    const result = await importFromJSONL(inputPath);
+
+    console.log("Knowledge imported successfully");
+    console.log(`Imported: ${result.imported} new entities`);
+    console.log(`Updated: ${result.updated} existing entities`);
+    console.log(`Skipped: ${result.skipped} duplicates`);
+    if (result.errors > 0) {
+      console.log(`Errors: ${result.errors} invalid records`);
     }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
