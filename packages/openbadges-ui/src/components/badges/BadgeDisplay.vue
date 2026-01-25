@@ -96,6 +96,7 @@ const densityClass = computed(() => {
   <div
     class="manus-badge-display"
     :class="[densityClass, { 'is-interactive': interactive }]"
+    :role="interactive ? 'button' : 'article'"
     :tabindex="interactive ? 0 : undefined"
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
