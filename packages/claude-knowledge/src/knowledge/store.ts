@@ -10,6 +10,7 @@ import {
   createRelationship,
 } from "./helpers";
 import type { Database } from "bun:sqlite";
+import { hashContent } from "../docs/store";
 
 /**
  * Execute a database operation within a transaction.
@@ -82,7 +83,26 @@ export async function store(learnings: Learning[]): Promise<void> {
         // Ensure learning has an ID
         const learningId = learning.id || `learning-${randomUUID()}`;
 
-        // Create Learning entity with embedding
+        // Check for duplicate content via hash
+        const contentHash = hashContent(learning.content);
+        const duplicate = db
+          .query<
+            { id: string },
+            [string]
+          >("SELECT id FROM entities WHERE type = 'Learning' AND content_hash = ?")
+          .get(contentHash);
+
+        if (duplicate) {
+          logger.warn("Duplicate learning detected, skipping", {
+            newId: learningId,
+            existingId: duplicate.id,
+            contentHash,
+            context: "knowledge.store",
+          });
+          continue;
+        }
+
+        // Create Learning entity with embedding and content hash
         createOrMergeEntity(
           db,
           "Learning",
@@ -92,6 +112,7 @@ export async function store(learnings: Learning[]): Promise<void> {
             id: learningId,
           },
           embedding,
+          contentHash,
         );
 
         // Auto-create/merge CodeArea entity if specified

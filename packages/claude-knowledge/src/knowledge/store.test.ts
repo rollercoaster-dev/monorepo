@@ -120,6 +120,45 @@ describe("knowledge storage operations", () => {
         knowledge.store([{ id: "conflict-id", content: "Fail" }]),
       ).rejects.toThrow(/already exists with type "CodeArea"/);
     });
+
+    test("skips duplicate learnings with same content hash", async () => {
+      const learning1 = {
+        id: "learning-dup-1",
+        content: "CSS variables fail silently when undefined",
+        confidence: 0.8,
+      };
+      const learning2 = {
+        id: "learning-dup-2",
+        content: "CSS variables fail silently when undefined", // Same content
+        confidence: 0.8,
+      };
+
+      await knowledge.store([learning1]);
+      await knowledge.store([learning2]);
+
+      // Should only have one learning stored
+      const learnings = getEntitiesByType("Learning");
+      expect(learnings).toHaveLength(1);
+      expect(learnings[0].id).toBe("learning-dup-1");
+    });
+
+    test("stores learnings with different content", async () => {
+      await knowledge.store([
+        {
+          id: "learning-unique-1",
+          content: "CSS variables fail silently",
+          confidence: 0.8,
+        },
+        {
+          id: "learning-unique-2",
+          content: "CSS variables work great", // Different
+          confidence: 0.8,
+        },
+      ]);
+
+      const learnings = getEntitiesByType("Learning");
+      expect(learnings).toHaveLength(2);
+    });
   });
 
   describe("storePattern()", () => {

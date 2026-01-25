@@ -31,3 +31,5 @@ export {
 export { getTranscriptPath } from "./transcript";
 
 export { extractLearningsFromTranscript } from "./llm-extractor";
+
+export { hashContent } from "../docs/store";

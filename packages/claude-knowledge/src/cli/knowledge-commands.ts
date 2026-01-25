@@ -606,6 +606,91 @@ export async function handleKnowledgeCommands(
         console.log(`  ${file.path ?? "(unknown)"}: ${file.total} references`);
       }
     }
+  } else if (command === "prune") {
+    // knowledge prune [--confidence <threshold>] [--dry-run]
+    let confidenceThreshold = 0.5; // Default threshold
+    let dryRun = false;
+
+    // Parse arguments
+    let i = 0;
+    while (i < args.length) {
+      const arg = args[i];
+
+      if (arg === "--confidence" && args[i + 1]) {
+        const value = parseIntSafe(args[i + 1], "confidence threshold");
+        if (value < 0 || value > 100) {
+          throw new Error("Confidence threshold must be between 0 and 100");
+        }
+        confidenceThreshold = value / 100; // Convert to 0.0-1.0
+        i += 2;
+      } else if (arg === "--dry-run") {
+        dryRun = true;
+        i++;
+      } else {
+        throw new Error(`Unknown argument: ${arg}`);
+      }
+    }
+
+    // Query learnings below threshold
+    const db = getDatabase();
+    const learningsToPrune = db
+      .query<{ id: string; content: string; confidence: number }, [number]>(
+        `
+        SELECT id, json_extract(data, '$.content') as content, json_extract(data, '$.confidence') as confidence
+        FROM entities
+        WHERE type = 'Learning'
+          AND json_extract(data, '$.confidence') < ?
+      `,
+      )
+      .all(confidenceThreshold);
+
+    if (learningsToPrune.length === 0) {
+      console.log(
+        `No learnings found with confidence below ${confidenceThreshold.toFixed(2)}`,
+      );
+      return;
+    }
+
+    console.log(
+      `Found ${learningsToPrune.length} learning(s) with confidence below ${confidenceThreshold.toFixed(2)}`,
+    );
+
+    if (dryRun) {
+      console.log("\nDry run - would delete:");
+      for (const learning of learningsToPrune) {
+        console.log(
+          `  - [${learning.confidence.toFixed(2)}] ${learning.content.substring(0, 60)}${learning.content.length > 60 ? "..." : ""}`,
+        );
+      }
+      console.log(
+        `\nRun without --dry-run to actually delete these learnings.`,
+      );
+    } else {
+      // Delete learnings
+      db.run("BEGIN TRANSACTION");
+      try {
+        const placeholders = learningsToPrune.map(() => "?").join(",");
+        const ids = learningsToPrune.map((l) => l.id);
+
+        // Delete relationships first (foreign key constraint)
+        db.run(
+          `DELETE FROM relationships WHERE from_id IN (${placeholders}) OR to_id IN (${placeholders})`,
+          [...ids, ...ids],
+        );
+
+        // Delete entities
+        db.run(`DELETE FROM entities WHERE id IN (${placeholders})`, ids);
+
+        db.run("COMMIT");
+
+        console.log(`\nDeleted ${learningsToPrune.length} learning(s).`);
+      } catch (error) {
+        db.run("ROLLBACK");
+        throw new Error(
+          `Failed to prune learnings: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
   } else {
     throw new Error(`Unknown knowledge command: ${command}`);
   }

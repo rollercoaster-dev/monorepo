@@ -26,7 +26,6 @@ import {
   parseIssueNumber,
   parseConventionalCommit,
   inferCodeAreasFromFiles,
-  inferCodeArea,
   formatCommitContent,
   fetchIssueContext,
   extractBranchKeywords,
@@ -446,13 +445,13 @@ export interface ExtendedSessionSummary extends SessionSummary {
 /**
  * Extract and store learnings from the session.
  *
- * Analyzes commits made during the session to extract learnings:
- * - Parses conventional commit messages for type and scope
- * - Infers code areas from modified files
- * - Stores learnings with lower confidence for auto-extracted content
- * - Saves context metrics for dogfooding validation if session ID provided
+ * Extracts learnings from two sources:
+ * 1. LLM analysis of conversation transcripts (high confidence: 0.8)
+ * 2. Conventional commit messages (medium confidence: 0.6)
  *
- * @param session - Session summary with commits and modified files
+ * Also tracks context metrics for dogfooding validation.
+ *
+ * @param session - Session summary with commits and optional session timing
  * @returns Result indicating learnings stored
  */
 async function onSessionEnd(
@@ -490,23 +489,27 @@ async function onSessionEnd(
 
   // 1. LLM-based extraction (high confidence: 0.8)
   // Extract technical insights from conversation that aren't in commits
-  if (session.sessionId) {
+  if (session.startTime) {
     try {
+      const startTime = new Date(session.startTime);
+      const endTime = new Date(); // Session end is now
+
       const llmLearnings = await extractLearningsFromTranscript(
-        session.sessionId,
+        startTime,
+        endTime,
       );
       learnings.push(...llmLearnings);
 
       logger.debug("LLM extraction completed", {
         count: llmLearnings.length,
-        sessionId: session.sessionId,
+        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
         context: "onSessionEnd",
       });
     } catch (error) {
       // Log but don't fail - fallback to commit-based extraction
       logger.warn("LLM extraction failed, using commit-based only", {
         error: error instanceof Error ? error.message : String(error),
-        sessionId: session.sessionId,
+        startTime: session.startTime,
         context: "onSessionEnd",
       });
     }
@@ -530,46 +533,6 @@ async function onSessionEnd(
           source: "auto-extracted",
           commitSha: commit.sha,
           commitType: parsed.type,
-        },
-      };
-
-      learnings.push(learning);
-    }
-  }
-
-  // 3. Extract learnings from modified files (low confidence: 0.48)
-  // Grouped by code area
-  if (session.modifiedFiles && session.modifiedFiles.length > 0) {
-    const areaFiles = new Map<string, string[]>();
-
-    for (const filePath of session.modifiedFiles) {
-      const area = inferCodeArea(filePath);
-      if (area) {
-        const files = areaFiles.get(area) || [];
-        files.push(filePath);
-        areaFiles.set(area, files);
-      }
-    }
-
-    // Create one learning per code area worked on
-    for (const [area, files] of areaFiles) {
-      // Skip if we already have a learning for this area from commits
-      if (learnings.some((l) => l.codeArea === area)) {
-        continue;
-      }
-
-      const learningId = `learning-auto-${randomUUID()}`;
-      learningIds.push(learningId);
-
-      const learning: Learning = {
-        id: learningId,
-        content: `Worked on ${area}: modified ${files.length} file(s)`,
-        codeArea: area,
-        confidence: AUTO_EXTRACT_CONFIDENCE * 0.8, // Even lower for file-based
-        metadata: {
-          source: "auto-extracted",
-          fileCount: files.length,
-          files: files.slice(0, 5), // Store first 5 files
         },
       };
 
