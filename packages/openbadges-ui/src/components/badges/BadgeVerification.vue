@@ -183,31 +183,32 @@ watch(
 
 <style>
 .ob-badge-verification {
-  --verification-border-color: #e2e8f0;
-  --verification-background: #f7fafc;
-  --verification-text-color: #4a5568;
-  --verification-valid-color: #38a169;
-  --verification-invalid-color: #e53e3e;
-  --verification-warning-color: #dd6b20;
-  --verification-button-bg: #4299e1;
-  --verification-button-color: #ffffff;
-  --verification-button-hover-bg: #3182ce;
-  --verification-button-disabled-bg: #a0aec0;
-  --verification-label-color: #718096;
+  --verification-border-color: var(--ob-border-color, #e2e8f0);
+  --verification-background: var(--ob-bg-secondary, #f7fafc);
+  --verification-text-color: var(--ob-text-secondary, #4a5568);
+  --verification-valid-color: var(--ob-success, #38a169);
+  --verification-invalid-color: var(--ob-error, #e53e3e);
+  --verification-warning-color: var(--ob-warning, #dd6b20);
+  --verification-button-bg: var(--ob-primary, #4299e1);
+  --verification-button-color: var(--ob-text-inverse, #ffffff);
+  --verification-button-hover-bg: var(--ob-primary-dark, #3182ce);
+  --verification-button-disabled-bg: var(--ob-text-disabled, #a0aec0);
+  --verification-label-color: var(--ob-text-secondary, #718096);
 
-  margin-top: 1rem;
-  padding: 1rem;
+  margin-top: var(--ob-space-4, 1rem);
+  padding: var(--ob-space-4, 1rem);
   border: 1px solid var(--verification-border-color);
-  border-radius: 0.375rem;
+  border-radius: var(--ob-border-radius-md, 0.375rem);
   background-color: var(--verification-background);
   color: var(--verification-text-color);
+  font-family: var(--ob-font-family, inherit);
 }
 
 .ob-badge-verification-status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--ob-space-2, 0.5rem);
 }
 
 .ob-badge-verification-result {
@@ -228,7 +229,7 @@ watch(
 }
 
 .ob-badge-verification-icon {
-  margin-right: 0.25rem;
+  margin-right: var(--ob-space-1, 0.25rem);
   font-weight: bold;
 }
 
@@ -236,11 +237,12 @@ watch(
   background-color: var(--verification-button-bg);
   color: var(--verification-button-color);
   border: none;
-  border-radius: 0.25rem;
-  padding: 0.5rem 1rem;
+  border-radius: var(--ob-border-radius-sm, 0.25rem);
+  padding: var(--ob-space-2, 0.5rem) var(--ob-space-4, 1rem);
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s;
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-weight: var(--ob-font-weight-medium, 500);
+  transition: background-color var(--ob-transition-fast, 0.2s);
 }
 
 .ob-badge-verification-button:hover:not(:disabled) {
@@ -253,28 +255,28 @@ watch(
 }
 
 .ob-badge-verification-details {
-  margin-top: 1rem;
+  margin-top: var(--ob-space-4, 1rem);
   border-top: 1px solid var(--verification-border-color);
-  padding-top: 1rem;
+  padding-top: var(--ob-space-4, 1rem);
 }
 
 .ob-badge-verification-method,
 .ob-badge-verification-expiration,
 .ob-badge-verification-revocation,
 .ob-badge-verification-timestamp {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--ob-space-2, 0.5rem);
 }
 
 .ob-badge-verification-label {
   color: var(--verification-label-color);
-  margin-right: 0.5rem;
-  font-weight: 500;
+  margin-right: var(--ob-space-2, 0.5rem);
+  font-weight: var(--ob-font-weight-medium, 500);
 }
 
 .ob-badge-verification-errors,
 .ob-badge-verification-warnings {
-  margin-top: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: var(--ob-space-3, 0.75rem);
+  margin-bottom: var(--ob-space-3, 0.75rem);
 }
 
 .ob-badge-verification-errors {
@@ -287,17 +289,17 @@ watch(
 
 .ob-badge-verification-section-title {
   margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  margin-bottom: var(--ob-space-2, 0.5rem);
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
 }
 
 .ob-badge-verification-errors ul,
 .ob-badge-verification-warnings ul {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-  padding-left: 1.5rem;
-  font-size: 0.875rem;
+  margin-top: var(--ob-space-1, 0.25rem);
+  margin-bottom: var(--ob-space-1, 0.25rem);
+  padding-left: var(--ob-space-6, 1.5rem);
+  font-size: var(--ob-font-size-sm, 0.875rem);
 }
 
 .ob-badge-verification-loading {
@@ -330,31 +332,31 @@ watch(
 
 /* Dark theme support */
 .ob-dark-theme .ob-badge-verification {
-  --verification-border-color: #2d3748;
-  --verification-background: #1a202c;
-  --verification-text-color: #e2e8f0;
-  --verification-valid-color: #48bb78;
-  --verification-invalid-color: #f56565;
-  --verification-warning-color: #ed8936;
-  --verification-button-bg: #4299e1;
-  --verification-button-color: #ffffff;
-  --verification-button-hover-bg: #3182ce;
-  --verification-button-disabled-bg: #718096;
-  --verification-label-color: #a0aec0;
+  --verification-border-color: var(--ob-border-color, #2d3748);
+  --verification-background: var(--ob-bg-primary, #1a202c);
+  --verification-text-color: var(--ob-text-primary, #e2e8f0);
+  --verification-valid-color: var(--ob-success, #48bb78);
+  --verification-invalid-color: var(--ob-error, #f56565);
+  --verification-warning-color: var(--ob-warning, #ed8936);
+  --verification-button-bg: var(--ob-primary, #4299e1);
+  --verification-button-color: var(--ob-text-inverse, #ffffff);
+  --verification-button-hover-bg: var(--ob-primary-dark, #3182ce);
+  --verification-button-disabled-bg: var(--ob-text-disabled, #718096);
+  --verification-label-color: var(--ob-text-secondary, #a0aec0);
 }
 
 /* High contrast theme support */
 .ob-high-contrast-theme .ob-badge-verification {
-  --verification-border-color: #000000;
-  --verification-background: #ffffff;
-  --verification-text-color: #000000;
-  --verification-valid-color: #006400;
-  --verification-invalid-color: #8b0000;
-  --verification-warning-color: #b8860b;
-  --verification-button-bg: #000000;
-  --verification-button-color: #ffffff;
-  --verification-button-hover-bg: #333333;
-  --verification-button-disabled-bg: #666666;
-  --verification-label-color: #000000;
+  --verification-border-color: var(--ob-border-color, #000000);
+  --verification-background: var(--ob-bg-primary, #ffffff);
+  --verification-text-color: var(--ob-text-primary, #000000);
+  --verification-valid-color: var(--ob-success, #006400);
+  --verification-invalid-color: var(--ob-error, #8b0000);
+  --verification-warning-color: var(--ob-warning, #b8860b);
+  --verification-button-bg: var(--ob-primary, #000000);
+  --verification-button-color: var(--ob-text-inverse, #ffffff);
+  --verification-button-hover-bg: var(--ob-primary-dark, #333333);
+  --verification-button-disabled-bg: var(--ob-text-disabled, #666666);
+  --verification-label-color: var(--ob-text-primary, #000000);
 }
 </style>

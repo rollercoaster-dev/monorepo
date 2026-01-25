@@ -365,35 +365,37 @@ const hasActiveFilters = computed(() => {
 
 <style>
 .manus-badge-class-list {
-  --badge-class-list-gap: 16px;
-  --badge-class-list-empty-color: #718096;
-  --badge-class-list-pagination-gap: 8px;
-  --badge-class-list-button-bg: #e2e8f0;
-  --badge-class-list-button-color: #4a5568;
-  --badge-class-list-button-hover-bg: #cbd5e0;
-  --badge-class-list-button-disabled-bg: #edf2f7;
-  --badge-class-list-button-disabled-color: #a0aec0;
+  --badge-class-list-gap: var(--ob-space-4, 16px);
+  --badge-class-list-empty-color: var(--ob-text-secondary, #718096);
+  --badge-class-list-pagination-gap: var(--ob-space-2, 8px);
+  --badge-class-list-button-bg: var(--ob-gray-200, #e2e8f0);
+  --badge-class-list-button-color: var(--ob-text-secondary, #4a5568);
+  --badge-class-list-button-hover-bg: var(--ob-gray-300, #cbd5e0);
+  --badge-class-list-button-disabled-bg: var(--ob-gray-100, #edf2f7);
+  --badge-class-list-button-disabled-color: var(--ob-text-disabled, #a0aec0);
 
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--badge-class-list-gap, var(--ob-space-6, 24px));
+  font-family: var(--ob-font-family, inherit);
+  color: var(--ob-text-primary, inherit);
 }
 
 .manus-badge-class-list.density-compact {
-  --badge-class-list-gap: 8px;
+  --badge-class-list-gap: var(--ob-space-2, 8px);
 }
 
 .manus-badge-class-list.density-normal {
-  --badge-class-list-gap: 16px;
+  --badge-class-list-gap: var(--ob-space-4, 16px);
 }
 
 .manus-badge-class-list.density-spacious {
-  --badge-class-list-gap: 24px;
+  --badge-class-list-gap: var(--ob-space-6, 24px);
 }
 
 .manus-badge-class-list-controls {
   display: flex;
-  gap: 12px;
+  gap: var(--ob-space-3, 12px);
   align-items: center;
   flex-wrap: wrap;
 }
@@ -401,10 +403,12 @@ const hasActiveFilters = computed(() => {
 .manus-badge-class-list-search,
 .manus-badge-class-list-filter,
 .manus-badge-class-list-density-select {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  border: 1px solid var(--ob-border-color, #e2e8f0);
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-md, 1rem);
+  color: var(--ob-text-primary, inherit);
+  background: var(--ob-bg-primary, #ffffff);
 }
 
 .manus-badge-class-list-search {
@@ -413,23 +417,23 @@ const hasActiveFilters = computed(() => {
 }
 
 .manus-badge-class-list-clear-btn {
-  padding: 8px 12px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
   background-color: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  color: #4a5568;
+  border: 1px solid var(--ob-border-color, #e2e8f0);
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  color: var(--ob-text-secondary, #4a5568);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--ob-transition-fast, 0.2s) ease;
 }
 
 .manus-badge-class-list-clear-btn:hover {
-  background-color: #f7fafc;
+  background-color: var(--ob-bg-secondary, #f7fafc);
 }
 
 .manus-badge-class-list-loading,
 .manus-badge-class-list-empty {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   text-align: center;
   color: var(--badge-class-list-empty-color);
 }
@@ -467,19 +471,20 @@ const hasActiveFilters = computed(() => {
   align-items: center;
   justify-content: center;
   gap: var(--badge-class-list-pagination-gap);
-  margin-top: 16px;
+  margin-top: var(--ob-space-4, 16px);
   flex-wrap: wrap;
 }
 
 .manus-pagination-button {
-  padding: 8px 16px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
   background-color: var(--badge-class-list-button-bg);
   color: var(--badge-class-list-button-color);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s ease;
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-weight: var(--ob-font-weight-medium, 500);
+  transition: background-color var(--ob-transition-fast, 0.2s) ease;
 }
 
 .manus-pagination-button:hover:not(:disabled) {
@@ -493,12 +498,12 @@ const hasActiveFilters = computed(() => {
 }
 
 .manus-pagination-button:focus-visible {
-  outline: 3px solid #ff9800;
-  outline-offset: 2px;
+  outline: 3px solid var(--ob-border-color-focus, #ff9800);
+  outline-offset: var(--ob-space-1, 2px);
 }
 
 .manus-pagination-info {
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--badge-class-list-button-color);
 }
 

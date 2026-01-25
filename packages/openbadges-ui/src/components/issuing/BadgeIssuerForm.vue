@@ -417,72 +417,105 @@ const resetForm = () => {
 
 <style>
 .manus-badge-issuer-form {
-  --form-border-color: #e2e8f0;
-  --form-background: #ffffff;
-  --form-text-color: #1a202c;
-  --form-label-color: #4a5568;
-  --form-input-border: #cbd5e0;
-  --form-input-focus: #3182ce;
-  --form-error-color: #e53e3e;
-  --form-success-color: #38a169;
-  --form-help-color: #718096;
-  --form-button-primary-bg: #3182ce;
-  --form-button-primary-color: #ffffff;
-  --form-button-secondary-bg: #e2e8f0;
-  --form-button-secondary-color: #4a5568;
-  --form-button-disabled-bg: #edf2f7;
-  --form-button-disabled-color: #a0aec0;
+  --form-border-color: var(
+    --ob-form-border-color,
+    var(--ob-border-color, #e2e8f0)
+  );
+  --form-background: var(--ob-form-background, var(--ob-bg-primary, #ffffff));
+  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary, #1a202c));
+  --form-label-color: var(
+    --ob-form-label-color,
+    var(--ob-text-secondary, #4a5568)
+  );
+  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300, #cbd5e0));
+  --form-input-focus: var(--ob-form-input-focus, var(--ob-primary, #3182ce));
+  --form-error-color: var(--ob-form-error-color, var(--ob-error, #e53e3e));
+  --form-success-color: var(
+    --ob-form-success-color,
+    var(--ob-success, #38a169)
+  );
+  --form-help-color: var(
+    --ob-form-help-color,
+    var(--ob-text-secondary, #718096)
+  );
+  --form-button-primary-bg: var(
+    --ob-form-button-primary-bg,
+    var(--ob-primary, #3182ce)
+  );
+  --form-button-primary-color: var(
+    --ob-form-button-primary-color,
+    var(--ob-text-inverse, #ffffff)
+  );
+  --form-button-secondary-bg: var(
+    --ob-form-button-secondary-bg,
+    var(--ob-gray-200, #e2e8f0)
+  );
+  --form-button-secondary-color: var(
+    --ob-form-button-secondary-color,
+    var(--ob-text-secondary, #4a5568)
+  );
+  --form-button-disabled-bg: var(
+    --ob-form-button-disabled-bg,
+    var(--ob-gray-100, #edf2f7)
+  );
+  --form-button-disabled-color: var(
+    --ob-form-button-disabled-color,
+    var(--ob-text-disabled, #a0aec0)
+  );
 
   max-width: 600px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   background-color: var(--form-background);
   border: 1px solid var(--form-border-color);
-  border-radius: 8px;
+  border-radius: var(--ob-border-radius-lg, 8px);
   color: var(--form-text-color);
+  font-family: var(--ob-font-family, inherit);
 }
 
 .manus-form-section {
-  margin-bottom: 24px;
+  margin-bottom: var(--ob-space-6, 24px);
   padding: 0;
   border: none;
 }
 
 .manus-form-section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
+  font-size: var(--ob-font-size-xl, 1.25rem);
+  font-weight: var(--ob-font-weight-semibold, 600);
+  margin-bottom: var(--ob-space-4, 16px);
+  padding-bottom: var(--ob-space-2, 8px);
   border-bottom: 1px solid var(--form-border-color);
 }
 
 .manus-form-field {
-  margin-bottom: 16px;
+  margin-bottom: var(--ob-space-4, 16px);
 }
 
 .manus-form-label {
   display: block;
-  margin-bottom: 4px;
-  font-weight: 500;
+  margin-bottom: var(--ob-space-1, 4px);
+  font-weight: var(--ob-font-weight-medium, 500);
   color: var(--form-label-color);
 }
 
 .manus-form-input,
 .manus-form-textarea {
   width: 100%;
-  padding: 8px 12px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
   border: 1px solid var(--form-input-border);
-  border-radius: 4px;
-  font-size: 1rem;
-  line-height: 1.5;
-  transition: border-color 0.2s ease;
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-md, 1rem);
+  line-height: var(--ob-line-height-normal, 1.5);
+  transition: border-color var(--ob-transition-fast, 0.2s) ease;
+  color: var(--form-text-color);
+  background: var(--form-background);
 }
 
 .manus-form-input:focus,
 .manus-form-textarea:focus {
   outline: none;
   border-color: var(--form-input-focus);
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(49, 130, 206, 0.2));
 }
 
 .manus-form-input-error {
@@ -491,31 +524,31 @@ const resetForm = () => {
 
 .manus-form-error {
   color: var(--form-error-color);
-  font-size: 0.875rem;
-  margin-top: 4px;
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  margin-top: var(--ob-space-1, 4px);
 }
 
 .manus-form-help {
   color: var(--form-help-color);
-  font-size: 0.875rem;
-  margin-top: 4px;
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  margin-top: var(--ob-space-1, 4px);
 }
 
 .manus-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: var(--ob-space-3, 12px);
+  margin-top: var(--ob-space-6, 24px);
 }
 
 .manus-button {
-  padding: 8px 16px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-md, 1rem);
+  font-weight: var(--ob-font-weight-medium, 500);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--ob-transition-fast, 0.2s) ease;
 }
 
 .manus-button-primary {
@@ -524,7 +557,7 @@ const resetForm = () => {
 }
 
 .manus-button-primary:hover:not(:disabled) {
-  background-color: #2c5282;
+  background-color: var(--ob-primary-dark, #2c5282);
 }
 
 .manus-button-secondary {
@@ -533,7 +566,7 @@ const resetForm = () => {
 }
 
 .manus-button-secondary:hover:not(:disabled) {
-  background-color: #cbd5e0;
+  background-color: var(--ob-gray-300, #cbd5e0);
 }
 
 .manus-button:disabled {
@@ -543,34 +576,34 @@ const resetForm = () => {
 }
 
 .manus-form-errors {
-  margin-top: 24px;
-  padding: 12px;
-  background-color: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 4px;
+  margin-top: var(--ob-space-6, 24px);
+  padding: var(--ob-space-3, 12px);
+  background-color: var(--ob-error-light, #fff5f5);
+  border: 1px solid var(--ob-error-light, #fed7d7);
+  border-radius: var(--ob-border-radius-sm, 4px);
   color: var(--form-error-color);
 }
 
 .manus-form-errors ul {
-  margin: 8px 0 0;
-  padding-left: 24px;
+  margin: var(--ob-space-2, 8px) 0 0;
+  padding-left: var(--ob-space-6, 24px);
 }
 
 .manus-form-success {
-  margin-top: 24px;
-  padding: 12px;
-  background-color: #f0fff4;
-  border: 1px solid #c6f6d5;
-  border-radius: 4px;
+  margin-top: var(--ob-space-6, 24px);
+  padding: var(--ob-space-3, 12px);
+  background-color: var(--ob-success-light, #f0fff4);
+  border: 1px solid var(--ob-success-light, #c6f6d5);
+  border-radius: var(--ob-border-radius-sm, 4px);
   color: var(--form-success-color);
-  font-weight: 500;
+  font-weight: var(--ob-font-weight-medium, 500);
   text-align: center;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .manus-badge-issuer-form {
-    padding: 16px;
+    padding: var(--ob-space-4, 16px);
   }
 
   .manus-form-actions {

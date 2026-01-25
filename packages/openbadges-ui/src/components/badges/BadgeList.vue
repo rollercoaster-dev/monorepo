@@ -311,52 +311,77 @@ const handleDensityChange = (event: Event) => {
 
 <style>
 .manus-badge-list {
-  --badge-list-gap: 16px;
-  --badge-list-empty-color: #718096;
-  --badge-list-pagination-gap: 8px;
-  --badge-list-button-bg: #e2e8f0;
-  --badge-list-button-color: #4a5568;
-  --badge-list-button-hover-bg: #cbd5e0;
-  --badge-list-button-disabled-bg: #edf2f7;
-  --badge-list-button-disabled-color: #a0aec0;
+  --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4, 16px));
+  --badge-list-empty-color: var(
+    --ob-badge-list-empty-color,
+    var(--ob-text-secondary, #718096)
+  );
+  --badge-list-pagination-gap: var(
+    --ob-badge-list-pagination-gap,
+    var(--ob-space-2, 8px)
+  );
+  --badge-list-button-bg: var(
+    --ob-badge-list-button-bg,
+    var(--ob-gray-200, #e2e8f0)
+  );
+  --badge-list-button-color: var(
+    --ob-badge-list-button-color,
+    var(--ob-text-secondary, #4a5568)
+  );
+  --badge-list-button-hover-bg: var(
+    --ob-badge-list-button-hover-bg,
+    var(--ob-gray-300, #cbd5e0)
+  );
+  --badge-list-button-disabled-bg: var(
+    --ob-badge-list-button-disabled-bg,
+    var(--ob-gray-100, #edf2f7)
+  );
+  --badge-list-button-disabled-color: var(
+    --ob-badge-list-button-disabled-color,
+    var(--ob-text-disabled, #a0aec0)
+  );
 
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--badge-list-gap, var(--ob-space-6, 24px));
+  font-family: var(--ob-font-family, inherit);
+  color: var(--ob-text-primary, inherit);
 }
 
 .manus-badge-list.density-compact {
-  --badge-list-gap: 4px;
+  --badge-list-gap: var(--ob-space-1, 4px);
 }
 
 .manus-badge-list.density-normal {
-  --badge-list-gap: 16px;
+  --badge-list-gap: var(--ob-space-4, 16px);
 }
 
 .manus-badge-list.density-spacious {
-  --badge-list-gap: 32px;
+  --badge-list-gap: var(--ob-space-8, 32px);
 }
 
 .manus-badge-list-controls {
   display: flex;
-  gap: 12px;
+  gap: var(--ob-space-3, 12px);
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--ob-space-3, 12px);
   flex-wrap: wrap;
 }
 
 .manus-badge-list-filter-input,
 .manus-badge-list-filter-select,
 .manus-badge-list-density-select {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  border: 1px solid var(--ob-border-color, #e2e8f0);
+  border-radius: var(--ob-border-radius-sm, 4px);
+  font-size: var(--ob-font-size-md, 1rem);
+  color: var(--ob-text-primary, inherit);
+  background: var(--ob-bg-primary, #ffffff);
 }
 
 .manus-badge-list-loading,
 .manus-badge-list-empty {
-  padding: 24px;
+  padding: var(--ob-space-6, 24px);
   text-align: center;
   color: var(--badge-list-empty-color);
 }
@@ -381,10 +406,10 @@ const handleDensityChange = (event: Event) => {
 .manus-badge-list.grid-layout .manus-badge-list-item {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 12px;
+  background: var(--ob-bg-primary, #ffffff);
+  border: 1px solid var(--ob-border-color, #e2e8f0);
+  border-radius: var(--ob-border-radius-lg, 8px);
+  padding: var(--ob-space-3, 12px);
 }
 
 .manus-badge-list-pagination {
@@ -392,18 +417,20 @@ const handleDensityChange = (event: Event) => {
   align-items: center;
   justify-content: center;
   gap: var(--badge-list-pagination-gap);
-  margin-top: 16px;
+  margin-top: var(--ob-space-4, 16px);
   flex-wrap: wrap;
 }
 
 .manus-pagination-button {
-  padding: 8px 16px;
+  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
   background-color: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-weight: var(--ob-font-weight-medium, 500);
+  transition: background-color var(--ob-transition-fast, 0.2s);
 }
 
 .manus-pagination-button:hover:not(:disabled) {
@@ -417,7 +444,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 .manus-pagination-info {
-  font-size: 0.875rem;
+  font-size: var(--ob-font-size-sm, 0.875rem);
   color: var(--badge-list-button-color);
 }
 
@@ -433,39 +460,39 @@ const handleDensityChange = (event: Event) => {
 .manus-badge-list.grid-layout .badge-summary {
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
+  gap: var(--ob-space-2, 8px);
 }
 
 .badge-expand-btn {
-  margin-left: 16px;
-  padding: 4px 12px;
+  margin-left: var(--ob-space-4, 16px);
+  padding: var(--ob-space-1, 4px) var(--ob-space-3, 12px);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm, 4px);
   background: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  font-size: 0.9rem;
+  font-size: var(--ob-font-size-sm, 0.9rem);
   cursor: pointer;
   align-self: flex-end;
 }
 
 .badge-summary:focus-visible,
 .manus-badge-list-item:focus-visible {
-  outline: 3px solid #3182ce;
-  outline-offset: 2px;
+  outline: 3px solid var(--ob-border-color-focus, #3182ce);
+  outline-offset: var(--ob-space-1, 2px);
 }
 
 .badge-details {
-  background: #f7fafc;
-  border-radius: 4px;
-  margin-top: 8px;
-  padding: 12px;
+  background: var(--ob-bg-secondary, #f7fafc);
+  border-radius: var(--ob-border-radius-sm, 4px);
+  margin-top: var(--ob-space-2, 8px);
+  padding: var(--ob-space-3, 12px);
   font-size: 0.95em;
-  color: #2d3748;
+  color: var(--ob-text-primary, #2d3748);
 }
 
 .manus-badge-list-item.is-expanded {
-  background: #f0f4f8;
-  border-radius: 6px;
+  background: var(--ob-bg-secondary, #f0f4f8);
+  border-radius: var(--ob-border-radius-md, 6px);
 }
 
 /* Responsive adjustments */
@@ -478,7 +505,7 @@ const handleDensityChange = (event: Event) => {
   .manus-badge-list.grid-layout .badge-summary {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: var(--ob-space-2, 8px);
   }
 }
 
