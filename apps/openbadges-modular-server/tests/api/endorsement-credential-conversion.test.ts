@@ -8,80 +8,9 @@
 import { describe, expect, it } from "bun:test";
 import type { EndorsementCredentialDto } from "@/api/validation/badgeClass.schemas";
 
-// We need to access the private function for testing, so we'll create a test version
-// This simulates the fixed logic from the convertToEndorsementCredential function
+// Import the actual implementation to test it
+import { convertToEndorsementCredential } from "@/api/api.router";
 import { toIRI } from "@/utils/types/iri-utils";
-import type { OB3, Shared } from "openbadges-types";
-import type { EndorsementCredential } from "@/domains/badgeClass/badgeClass.entity";
-
-function testConvertToEndorsementCredential(
-  dto: EndorsementCredentialDto,
-): EndorsementCredential {
-  // Convert issuer to proper format
-  let issuer: EndorsementCredential["issuer"];
-  if (typeof dto.issuer === "string") {
-    issuer = toIRI(dto.issuer);
-  } else if (dto.issuer && typeof dto.issuer === "object") {
-    // For issuer objects, we need to handle the case where we don't have a valid URL
-    // Since OB3.Issuer requires a url property, we need to provide one
-    let issuerUrl: Shared.IRI;
-
-    if (dto.issuer.id && toIRI(dto.issuer.id)) {
-      try {
-        // Check if the id is a valid URL (not just a UUID)
-        new URL(dto.issuer.id);
-        issuerUrl = toIRI(dto.issuer.id)!;
-      } catch {
-        // If id is not a valid URL (e.g., it's a UUID), use a placeholder URL
-        // This ensures we have a valid OB3.Issuer object
-        issuerUrl = toIRI(`https://example.org/issuers/${dto.issuer.id}`)!;
-      }
-    } else {
-      // If no id is provided, use a generic placeholder
-      issuerUrl = toIRI("https://example.org/issuers/unknown")!;
-    }
-
-    // Convert the issuer object to OB3.Issuer format
-    const issuerObj: OB3.Issuer = {
-      ...dto.issuer, // Preserve additional fields via spread operator
-      id: dto.issuer.id ? toIRI(dto.issuer.id) : undefined,
-      name: dto.issuer.name,
-      type: dto.issuer.type,
-      url: issuerUrl,
-    };
-
-    issuer = issuerObj;
-  } else {
-    throw new Error("Invalid issuer format in endorsement credential");
-  }
-
-  return {
-    "@context": dto["@context"],
-    id: toIRI(dto.id),
-    type: dto.type as ["VerifiableCredential", "EndorsementCredential"],
-    issuer,
-    validFrom: dto.validFrom,
-    credentialSubject: {
-      id: toIRI(dto.credentialSubject.id),
-      type: dto.credentialSubject.type,
-      endorsementComment: dto.credentialSubject.endorsementComment,
-    },
-    // Pass through any additional fields
-    ...Object.fromEntries(
-      Object.entries(dto).filter(
-        ([key]) =>
-          ![
-            "@context",
-            "id",
-            "type",
-            "issuer",
-            "validFrom",
-            "credentialSubject",
-          ].includes(key),
-      ),
-    ),
-  };
-}
 
 describe("EndorsementCredential Conversion Fix", () => {
   describe("convertToEndorsementCredential issuer URL mapping", () => {
@@ -103,7 +32,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -133,7 +62,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -167,7 +96,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -193,7 +122,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("string");
       expect(result.issuer).toBe(toIRI("https://example.org/issuers/123"));
@@ -215,7 +144,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       } as unknown as EndorsementCredentialDto;
 
-      expect(() => testConvertToEndorsementCredential(dto)).toThrow(
+      expect(() => convertToEndorsementCredential(dto)).toThrow(
         "Invalid issuer format in endorsement credential",
       );
     });
@@ -234,7 +163,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       } as unknown as EndorsementCredentialDto;
 
-      expect(() => testConvertToEndorsementCredential(dto)).toThrow(
+      expect(() => convertToEndorsementCredential(dto)).toThrow(
         "Invalid issuer format in endorsement credential",
       );
     });
@@ -253,7 +182,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       } as unknown as EndorsementCredentialDto;
 
-      expect(() => testConvertToEndorsementCredential(dto)).toThrow(
+      expect(() => convertToEndorsementCredential(dto)).toThrow(
         "Invalid issuer format in endorsement credential",
       );
     });
@@ -272,7 +201,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       } as unknown as EndorsementCredentialDto;
 
-      expect(() => testConvertToEndorsementCredential(dto)).toThrow(
+      expect(() => convertToEndorsementCredential(dto)).toThrow(
         "Invalid issuer format in endorsement credential",
       );
     });
@@ -303,7 +232,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -344,7 +273,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -374,7 +303,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -406,7 +335,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -437,7 +366,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -485,7 +414,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(result.type).toEqual([
         "VerifiableCredential",
@@ -511,7 +440,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(Array.isArray(result["@context"])).toBe(true);
       expect(result["@context"]).toContain(
@@ -536,7 +465,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(result.validFrom).toBe(validFromDate);
     });
@@ -555,7 +484,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(result.credentialSubject).toBeDefined();
       expect(result.credentialSubject.id).toBe(
@@ -581,7 +510,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(result.credentialSubject.endorsementComment).toBeUndefined();
     });
@@ -603,7 +532,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(typeof result.issuer).toBe("object");
       if (typeof result.issuer === "object") {
@@ -629,7 +558,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         },
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       expect(result.id).toBe(toIRI(endorsementId));
     });
@@ -670,7 +599,7 @@ describe("EndorsementCredential Conversion Fix", () => {
         customProperty: string;
       };
 
-      const result = testConvertToEndorsementCredential(dto);
+      const result = convertToEndorsementCredential(dto);
 
       // Verify core fields are converted correctly
       expect(result.issuer).toBe(toIRI("https://example.org/issuers/123"));
