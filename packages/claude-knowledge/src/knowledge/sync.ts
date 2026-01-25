@@ -66,6 +66,33 @@ export interface ImportResult {
 }
 
 /**
+ * Shape of a JSONL record for import.
+ */
+interface JSONLRecord {
+  id: string;
+  type: string;
+  data: unknown;
+  created_at: string;
+  updated_at: string;
+  content_hash?: string | null;
+}
+
+/**
+ * Type guard to validate a parsed JSON value is a valid JSONL record.
+ */
+function isJSONLRecord(value: unknown): value is JSONLRecord {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === "string" &&
+    typeof v.type === "string" &&
+    "data" in v &&
+    typeof v.created_at === "string" &&
+    typeof v.updated_at === "string"
+  );
+}
+
+/**
  * Get file modification time in milliseconds.
  * Path is resolved relative to git root if not absolute.
  *
@@ -227,24 +254,18 @@ export async function importFromJSONL(
   try {
     for (const line of lines) {
       try {
-        // Parse JSON line
-        const record = JSON.parse(line);
+        // Parse JSON line and validate with type guard
+        const parsed: unknown = JSON.parse(line);
 
-        // Validate required fields
-        if (
-          !record.id ||
-          !record.type ||
-          !record.data ||
-          !record.created_at ||
-          !record.updated_at
-        ) {
+        if (!isJSONLRecord(parsed)) {
           logger.warn("Invalid JSONL record, skipping", {
-            recordId: record.id,
             context: "sync.importFromJSONL",
           });
           errors++;
           continue;
         }
+
+        const record = parsed;
 
         // Check for existing entity by content_hash (if available)
         if (record.content_hash) {
@@ -266,15 +287,17 @@ export async function importFromJSONL(
               continue;
             }
 
-            // Record is newer, update existing entity
+            // Record is newer, update existing entity (including created_at for idempotency)
             db.run(
               `
               UPDATE entities
-              SET data = ?, updated_at = ?, content_hash = ?
+              SET type = ?, data = ?, created_at = ?, updated_at = ?, content_hash = ?
               WHERE id = ?
             `,
               [
+                record.type,
                 JSON.stringify(record.data),
+                record.created_at,
                 record.updated_at,
                 record.content_hash,
                 existing.id,
@@ -304,15 +327,17 @@ export async function importFromJSONL(
             continue;
           }
 
-          // Record is newer, update existing entity
+          // Record is newer, update existing entity (including created_at for idempotency)
           db.run(
             `
             UPDATE entities
-            SET data = ?, updated_at = ?, content_hash = ?
+            SET type = ?, data = ?, created_at = ?, updated_at = ?, content_hash = ?
             WHERE id = ?
           `,
             [
+              record.type,
               JSON.stringify(record.data),
+              record.created_at,
               record.updated_at,
               record.content_hash || null,
               existingById.id,
