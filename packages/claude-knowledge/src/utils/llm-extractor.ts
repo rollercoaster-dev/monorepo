@@ -10,7 +10,7 @@
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import type { Learning } from "../types";
 import { randomUUID } from "crypto";
-import { getTranscriptPath } from "./transcript";
+import { findTranscriptByTimeRange } from "./transcript";
 import { readFileSync } from "fs";
 
 /** LLM-extracted learnings have lower confidence than manual (but higher than commit-based) */
@@ -113,44 +113,61 @@ function parseTranscript(transcriptPath: string): string {
 }
 
 /**
- * Extract learnings from a session transcript using LLM.
+ * Extract learnings from session transcripts using LLM.
  *
- * @param sessionId - Session identifier
+ * Finds all transcripts modified within the session time range and
+ * extracts technical insights from them.
+ *
+ * @param startTime - Session start time
+ * @param endTime - Session end time
  * @returns Array of extracted learnings (empty if extraction fails)
  *
  * @example
  * ```typescript
- * const learnings = await extractLearningsFromTranscript("session-abc-123");
+ * const start = new Date('2026-01-25T10:00:00Z');
+ * const end = new Date('2026-01-25T11:00:00Z');
+ * const learnings = await extractLearningsFromTranscript(start, end);
  * // Returns Learning[] with confidence 0.8
  * ```
  */
 export async function extractLearningsFromTranscript(
-  sessionId: string,
+  startTime: Date,
+  endTime: Date,
 ): Promise<Learning[]> {
   // Get API key (fail silently if not configured)
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     logger.debug("OPENROUTER_API_KEY not set, skipping LLM extraction", {
-      sessionId,
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
     });
     return [];
   }
 
-  // Get transcript path
-  const transcriptPath = getTranscriptPath(sessionId);
-  if (!transcriptPath) {
-    logger.debug("Transcript not found, skipping LLM extraction", {
-      sessionId,
-    });
+  // Find transcripts in time range
+  const transcriptPaths = findTranscriptByTimeRange(startTime, endTime);
+  if (transcriptPaths.length === 0) {
+    logger.debug(
+      "No transcripts found in time range, skipping LLM extraction",
+      {
+        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      },
+    );
     return [];
   }
 
-  // Parse transcript
-  const transcriptText = parseTranscript(transcriptPath);
-  if (!transcriptText || transcriptText.length === 0) {
-    logger.debug("Empty transcript, skipping LLM extraction", {
-      sessionId,
-      transcriptPath,
+  // Parse all transcripts and combine
+  let combinedText = "";
+  for (const transcriptPath of transcriptPaths) {
+    const text = parseTranscript(transcriptPath);
+    if (text) {
+      combinedText += text + "\n\n---\n\n";
+    }
+  }
+
+  if (!combinedText || combinedText.trim().length === 0) {
+    logger.debug("Empty transcripts, skipping LLM extraction", {
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      transcriptCount: transcriptPaths.length,
     });
     return [];
   }
@@ -170,7 +187,7 @@ export async function extractLearningsFromTranscript(
         model: LLM_MODEL,
         messages: [
           { role: "system", content: EXTRACTION_PROMPT },
-          { role: "user", content: transcriptText },
+          { role: "user", content: combinedText },
         ],
       }),
     });
@@ -178,7 +195,7 @@ export async function extractLearningsFromTranscript(
     // Network error - log warning and return empty array
     logger.warn("LLM extraction network error", {
       error: error instanceof Error ? error.message : String(error),
-      sessionId,
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
     });
     return [];
   }
@@ -196,7 +213,10 @@ export async function extractLearningsFromTranscript(
       errorMessage = `LLM extraction failed: Service error (${status})`;
     }
 
-    logger.warn(errorMessage, { sessionId, status });
+    logger.warn(errorMessage, {
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      status,
+    });
     return [];
   }
 
@@ -209,7 +229,7 @@ export async function extractLearningsFromTranscript(
   } catch (error) {
     logger.warn("LLM extraction: Failed to parse response JSON", {
       error: error instanceof Error ? error.message : String(error),
-      sessionId,
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
     });
     return [];
   }
@@ -217,7 +237,9 @@ export async function extractLearningsFromTranscript(
   // Extract content from response
   const content = data.choices?.[0]?.message?.content;
   if (!content) {
-    logger.warn("LLM extraction: No content in response", { sessionId });
+    logger.warn("LLM extraction: No content in response", {
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+    });
     return [];
   }
 
@@ -237,7 +259,9 @@ export async function extractLearningsFromTranscript(
     }>;
 
     if (!Array.isArray(extracted)) {
-      logger.warn("LLM extraction: Response is not an array", { sessionId });
+      logger.warn("LLM extraction: Response is not an array", {
+        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      });
       return [];
     }
 
@@ -262,13 +286,14 @@ export async function extractLearningsFromTranscript(
         metadata: {
           source: "llm-extracted",
           model: LLM_MODEL,
-          sessionId,
+          timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
         },
       });
     }
 
     logger.debug("LLM extraction completed", {
-      sessionId,
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      transcriptCount: transcriptPaths.length,
       extractedCount: learnings.length,
     });
 
@@ -276,7 +301,7 @@ export async function extractLearningsFromTranscript(
   } catch (error) {
     logger.warn("LLM extraction: Failed to parse learnings JSON", {
       error: error instanceof Error ? error.message : String(error),
-      sessionId,
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
       content: content.substring(0, 200), // Log first 200 chars for debugging
     });
     return [];

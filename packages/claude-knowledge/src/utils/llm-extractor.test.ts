@@ -6,7 +6,7 @@
 
 import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
 import { extractLearningsFromTranscript } from "./llm-extractor";
-import { mkdirSync, writeFileSync, rmSync } from "fs";
+import { mkdirSync, writeFileSync, rmSync, utimesSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -28,35 +28,40 @@ describe("extractLearningsFromTranscript", () => {
   it("should return empty array when API key is missing", async () => {
     delete process.env.OPENROUTER_API_KEY;
 
-    const result = await extractLearningsFromTranscript("test-session-id");
+    const startTime = new Date("2026-01-25T10:00:00Z");
+    const endTime = new Date("2026-01-25T11:00:00Z");
+    const result = await extractLearningsFromTranscript(startTime, endTime);
 
     expect(result).toEqual([]);
   });
 
-  it("should return empty array when transcript not found", async () => {
-    // getTranscriptPath returns null for non-existent transcripts
-    const result = await extractLearningsFromTranscript("nonexistent-session");
+  it("should return empty array when no transcripts in time range", async () => {
+    // Use a time range in the far past with no transcripts
+    const startTime = new Date("2000-01-01T00:00:00Z");
+    const endTime = new Date("2000-01-01T01:00:00Z");
+    const result = await extractLearningsFromTranscript(startTime, endTime);
 
     expect(result).toEqual([]);
   });
 
   // Integration tests with real temp transcript file
   describe("with transcript file", () => {
-    let testSessionId: string;
     let testProjectDir: string;
     let testTranscriptPath: string;
+    let testFileTime: number;
+    let startTime: Date;
+    let endTime: Date;
 
     beforeEach(() => {
       // Generate unique IDs for each test
       const timestamp = Date.now();
-      testSessionId = `test-integration-session-${timestamp}`;
       testProjectDir = join(
         homedir(),
         ".claude",
         "projects",
-        `test-project-${timestamp}`,
+        `test-llm-extract-${timestamp}`,
       );
-      testTranscriptPath = join(testProjectDir, `${testSessionId}.jsonl`);
+      testTranscriptPath = join(testProjectDir, "session-test.jsonl");
 
       // Create temp directory and transcript file
       mkdirSync(testProjectDir, { recursive: true });
@@ -87,6 +92,18 @@ describe("extractLearningsFromTranscript", () => {
         testTranscriptPath,
         transcript.map((m) => JSON.stringify(m)).join("\n"),
       );
+
+      // Set file mtime to a specific time and create time range around it
+      testFileTime = timestamp;
+      utimesSync(
+        testTranscriptPath,
+        new Date(testFileTime),
+        new Date(testFileTime),
+      );
+
+      // Time range that includes this file
+      startTime = new Date(testFileTime - 5000); // 5 seconds before
+      endTime = new Date(testFileTime + 5000); // 5 seconds after
     });
 
     afterEach(() => {
@@ -126,7 +143,7 @@ describe("extractLearningsFromTranscript", () => {
         ),
       ) as unknown as typeof fetch;
 
-      const result = await extractLearningsFromTranscript(testSessionId);
+      const result = await extractLearningsFromTranscript(startTime, endTime);
 
       // Should return learnings with proper structure
       expect(result).toHaveLength(1);
@@ -167,7 +184,7 @@ describe("extractLearningsFromTranscript", () => {
         ),
       ) as unknown as typeof fetch;
 
-      const result = await extractLearningsFromTranscript(testSessionId);
+      const result = await extractLearningsFromTranscript(startTime, endTime);
 
       // Should only have 2 valid learnings (empty and whitespace filtered)
       expect(result).toHaveLength(2);
@@ -182,7 +199,7 @@ describe("extractLearningsFromTranscript", () => {
           throw new Error("Network connection failed");
         }) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -197,7 +214,7 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -212,7 +229,7 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -227,7 +244,7 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -256,7 +273,7 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -280,7 +297,7 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
@@ -306,10 +323,66 @@ describe("extractLearningsFromTranscript", () => {
           ),
         ) as unknown as typeof fetch;
 
-        const result = await extractLearningsFromTranscript(testSessionId);
+        const result = await extractLearningsFromTranscript(startTime, endTime);
 
         expect(result).toEqual([]);
       });
+    });
+
+    it("should combine multiple transcripts in time range", async () => {
+      // Create a second transcript file
+      const transcript2Path = join(testProjectDir, "session-test-2.jsonl");
+      const transcript2 = [
+        {
+          type: "user",
+          message: { role: "user", content: "Another question" },
+        },
+        {
+          type: "assistant",
+          message: {
+            role: "assistant",
+            content: [{ type: "text", text: "Another insight" }],
+          },
+        },
+      ];
+      writeFileSync(
+        transcript2Path,
+        transcript2.map((m) => JSON.stringify(m)).join("\n"),
+      );
+      utimesSync(
+        transcript2Path,
+        new Date(testFileTime),
+        new Date(testFileTime),
+      );
+
+      const mockLearnings = [
+        { content: "Learning from combined transcripts", codeArea: "test" },
+      ];
+
+      global.fetch = mock(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify(mockLearnings),
+                  },
+                },
+              ],
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
+        ),
+      ) as unknown as typeof fetch;
+
+      const result = await extractLearningsFromTranscript(startTime, endTime);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toBe("Learning from combined transcripts");
     });
   });
 });

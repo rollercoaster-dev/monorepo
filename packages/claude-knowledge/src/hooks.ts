@@ -490,23 +490,27 @@ async function onSessionEnd(
 
   // 1. LLM-based extraction (high confidence: 0.8)
   // Extract technical insights from conversation that aren't in commits
-  if (session.sessionId) {
+  if (session.startTime) {
     try {
+      const startTime = new Date(session.startTime);
+      const endTime = new Date(); // Session end is now
+
       const llmLearnings = await extractLearningsFromTranscript(
-        session.sessionId,
+        startTime,
+        endTime,
       );
       learnings.push(...llmLearnings);
 
       logger.debug("LLM extraction completed", {
         count: llmLearnings.length,
-        sessionId: session.sessionId,
+        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
         context: "onSessionEnd",
       });
     } catch (error) {
       // Log but don't fail - fallback to commit-based extraction
       logger.warn("LLM extraction failed, using commit-based only", {
         error: error instanceof Error ? error.message : String(error),
-        sessionId: session.sessionId,
+        startTime: session.startTime,
         context: "onSessionEnd",
       });
     }
