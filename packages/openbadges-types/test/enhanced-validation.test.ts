@@ -27,6 +27,7 @@ describe("OB2 BadgeClass Validation", () => {
     type: "BadgeClass",
     name: "Test Badge",
     description: "A test badge for validation",
+    image: "https://example.org/badges/1/image.png",
     criteria: {
       narrative: "Complete the test requirements",
     },

@@ -681,6 +681,31 @@ describe("Verify Credential Endpoint", () => {
         expect(result.checks).toBeDefined();
       });
 
+      it("should accept credential with valid ecdsa-rdfc-2019 cryptosuite", async () => {
+        const request = {
+          credential: {
+            "@context": ["https://www.w3.org/2018/credentials/v1"],
+            type: ["VerifiableCredential"],
+            issuer: "did:web:example.com",
+            issuanceDate: "2024-01-01T00:00:00Z",
+            proof: {
+              type: "DataIntegrityProof",
+              cryptosuite: "ecdsa-rdfc-2019",
+              verificationMethod: "did:web:example.com#key-1",
+              created: "2024-01-01T00:00:00Z",
+              proofPurpose: "assertionMethod",
+              proofValue: "test-proof-value",
+            },
+          },
+        };
+
+        const result = await controller.verifyCredential(request);
+
+        // Should process the credential (ECDSA is a valid cryptosuite)
+        expect(result.status).toBeDefined();
+        expect(result.checks).toBeDefined();
+      });
+
       it("should handle credential with non-standard rsa-sha256 cryptosuite", async () => {
         const request = {
           credential: {

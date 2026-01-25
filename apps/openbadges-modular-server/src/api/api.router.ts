@@ -114,7 +114,7 @@ function convertToRelated(dto: RelatedAchievementDto): Related {
 /**
  * Convert EndorsementCredentialDto to EndorsementCredential domain type
  */
-function convertToEndorsementCredential(
+export function convertToEndorsementCredential(
   dto: EndorsementCredentialDto,
 ): EndorsementCredential {
   // Convert issuer to proper format

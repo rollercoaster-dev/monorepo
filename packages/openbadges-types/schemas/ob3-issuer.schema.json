@@ -16,8 +16,12 @@
     "id": { "type": "string", "format": "uri" },
     "type": {
       "oneOf": [
-        { "type": "string" },
-        { "type": "array", "items": { "type": "string" } }
+        { "type": "string", "const": "Profile" },
+        {
+          "type": "array",
+          "items": { "type": "string" },
+          "contains": { "const": "Profile" }
+        }
       ]
     },
     "name": {

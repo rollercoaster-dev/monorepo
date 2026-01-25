@@ -4,7 +4,15 @@
   "title": "Open Badges 2.0 BadgeClass",
   "description": "JSON Schema for validating Open Badges 2.0 BadgeClass objects",
   "type": "object",
-  "required": ["id", "type", "name", "description", "criteria", "issuer"],
+  "required": [
+    "id",
+    "type",
+    "name",
+    "description",
+    "criteria",
+    "issuer",
+    "image"
+  ],
   "properties": {
     "@context": { "type": ["string", "array", "object"] },
     "id": { "type": "string", "format": "uri" },

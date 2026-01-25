@@ -33,8 +33,12 @@ const emit = defineEmits<{
 }>();
 
 // Extract primary badge for display (first achievement if array)
-const primaryBadge = computed<OB2.BadgeClass | OB3.Achievement>(() => {
+const primaryBadge = computed<OB2.BadgeClass | OB3.Achievement | null>(() => {
   if (Array.isArray(props.badgeClass)) {
+    // Guard against empty array to prevent runtime errors
+    if (props.badgeClass.length === 0) {
+      return null;
+    }
     return props.badgeClass[0];
   }
   return props.badgeClass;
@@ -61,6 +65,19 @@ const getLocalizedString = (
 // Normalize badge class data between OB2 and OB3 formats
 const normalizedBadgeClass = computed(() => {
   const badge = primaryBadge.value;
+
+  // Return empty data if no badge available
+  if (!badge) {
+    return {
+      id: "",
+      name: "",
+      description: "",
+      image: "",
+      criteria: "",
+      issuerName: "",
+      tags: [],
+    };
+  }
 
   // Get ID
   const id = badge.id || "";

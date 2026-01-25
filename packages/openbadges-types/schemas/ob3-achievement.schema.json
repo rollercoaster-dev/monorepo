@@ -16,7 +16,7 @@
     "id": { "type": "string", "format": "uri" },
     "type": {
       "oneOf": [
-        { "type": "string" },
+        { "type": "string", "const": "Achievement" },
         {
           "type": "array",
           "items": { "type": "string" },
