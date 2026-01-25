@@ -1,4 +1,5 @@
 export * from "./guards";
+export * from "./constants";
 import type { IRI, DateTime, MarkdownText } from "../shared/common";
 import type { JsonLdObject, JsonLdArray } from "../shared/jsonld";
 

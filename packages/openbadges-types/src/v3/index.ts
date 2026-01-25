@@ -1,5 +1,6 @@
 export * from "./guards";
 export * from "./Profile";
+export * from "./constants";
 import type {
   IRI,
   DateTime,

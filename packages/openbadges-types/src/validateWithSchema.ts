@@ -5,6 +5,8 @@ import type {
   ValidationMessage,
   MessageLevel,
 } from "./validation-report";
+import { OB2_TYPES } from "./v2/constants";
+import { OB3_TYPES } from "./v3/constants";
 
 // Import JSON schemas - these are loaded synchronously
 import ob2AssertionSchema from "../schemas/ob2-assertion.schema.json" with { type: "json" };
@@ -420,13 +422,13 @@ export function validateBadgeWithSchema(
   const typeArray = Array.isArray(type) ? type : [type];
 
   if (
-    typeArray.includes("VerifiableCredential") ||
-    typeArray.includes("OpenBadgeCredential")
+    typeArray.includes(OB3_TYPES.VERIFIABLE_CREDENTIAL) ||
+    typeArray.includes(OB3_TYPES.OPEN_BADGE_CREDENTIAL)
   ) {
     return validateOB3CredentialDetailed(data);
   }
 
-  if (typeArray.includes("Assertion")) {
+  if (typeArray.includes(OB2_TYPES.ASSERTION)) {
     return validateOB2AssertionDetailed(data);
   }
 

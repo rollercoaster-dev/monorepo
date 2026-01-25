@@ -12,6 +12,7 @@ import type {
   RevocationList,
   CryptographicKey,
 } from "./index";
+import { OB2_TYPES } from "./constants";
 
 /**
  * Type guard to check if a value is an OB2 Assertion
@@ -24,7 +25,7 @@ export function isAssertion(value: unknown): value is Assertion {
   }
 
   // Check for required properties
-  if (!hasJsonLdType(value, "Assertion")) {
+  if (!hasJsonLdType(value, OB2_TYPES.ASSERTION)) {
     return false;
   }
 
@@ -82,8 +83,8 @@ export function isBadgeClass(value: unknown): value is BadgeClass {
   if (
     !("type" in value) ||
     (Array.isArray(value.type)
-      ? !value.type.includes("BadgeClass")
-      : value.type !== "BadgeClass")
+      ? !value.type.includes(OB2_TYPES.BADGE_CLASS)
+      : value.type !== OB2_TYPES.BADGE_CLASS)
   ) {
     return false;
   }
