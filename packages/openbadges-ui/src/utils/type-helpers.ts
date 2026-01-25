@@ -154,9 +154,35 @@ export const OB3Guards = {
   },
 };
 
-// Helper to check if a type value includes a specific type string
-// Handles both string and array forms per OB2/OB3 spec
-function typeIncludes(typeValue: unknown, targetType: string): boolean {
+/**
+ * Helper to check if a type value includes a specific type string.
+ * Handles both string and array forms per OB2/OB3 spec.
+ *
+ * Open Badges specifications allow the `type` field to be:
+ * - OB2: string `'Assertion'` OR array `['Assertion', ...]`
+ * - OB3: array `['VerifiableCredential', 'OpenBadgeCredential', ...]`
+ *
+ * This utility provides consistent type checking across both formats.
+ *
+ * @param typeValue - The type value to check (string, array, or other)
+ * @param targetType - The type string to search for (e.g., 'Assertion', 'VerifiableCredential')
+ * @returns `true` if the targetType is found, `false` otherwise
+ *
+ * @example
+ * ```typescript
+ * // OB2 string format
+ * typeIncludes('Assertion', 'Assertion') // true
+ *
+ * // OB3 array format
+ * typeIncludes(['VerifiableCredential', 'OpenBadgeCredential'], 'VerifiableCredential') // true
+ *
+ * // Edge cases
+ * typeIncludes(undefined, 'Assertion') // false
+ * typeIncludes(null, 'Assertion') // false
+ * typeIncludes([], 'Assertion') // false
+ * ```
+ */
+export function typeIncludes(typeValue: unknown, targetType: string): boolean {
   if (typeof typeValue === "string") {
     return typeValue === targetType;
   }
