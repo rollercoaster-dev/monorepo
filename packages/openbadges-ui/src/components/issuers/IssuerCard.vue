@@ -308,7 +308,7 @@ const truncatedDescription = computed(() => {
 
 .manus-issuer-card.density-compact .manus-issuer-image {
   flex: 0 0 40px;
-  margin-right: var(--ob-space-2, 10px);
+  margin-right: var(--ob-space-2, 8px);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-img,

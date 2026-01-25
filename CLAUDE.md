@@ -47,6 +47,12 @@ Keep solutions simple and focused. Only make changes that are directly requested
 - Reuse existing patterns; the right complexity is the minimum needed
 - For `/work-on-issue` workflow, follow all gates exactly and pause at each one
 
+## No Tech Debt Rule
+
+**If it can be fixed now, fix it.**
+
+When CodeRabbit, Claude review, or any code review identifies issues - even minor nitpicks - fix them immediately rather than deferring. This prevents accumulation of small issues that become larger problems.
+
 ## File Modification
 
 Before modifying files, consider:
