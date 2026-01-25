@@ -1,8 +1,9 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { knowledge } from "./knowledge/index";
 import { closeDatabase, resetDatabase } from "./db/sqlite";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "./test-utils";
 
 const TEST_DB = ".claude/test-knowledge-main.db";
 
@@ -14,11 +15,7 @@ describe("knowledge API", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("searchSimilar()", () => {
@@ -159,11 +156,7 @@ describe("knowledge API", () => {
       // Use a fresh database with no data
       closeDatabase();
       const EMPTY_DB = ".claude/test-knowledge-empty.db";
-      try {
-        await unlink(EMPTY_DB);
-      } catch {
-        /* file may not exist */
-      }
+      await cleanupTestDb(EMPTY_DB);
       resetDatabase(EMPTY_DB);
 
       const results = await knowledge.searchSimilar("any query");
@@ -172,11 +165,7 @@ describe("knowledge API", () => {
 
       // Clean up and restore original DB for other tests
       closeDatabase();
-      try {
-        await unlink(EMPTY_DB);
-      } catch {
-        /* ignore */
-      }
+      await cleanupTestDb(EMPTY_DB);
       resetDatabase(TEST_DB);
     });
   });

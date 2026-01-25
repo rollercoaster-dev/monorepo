@@ -1,9 +1,10 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { knowledge } from "./index";
 import { closeDatabase, resetDatabase } from "../db/sqlite";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { getEntity, getEntitiesByType } from "../__tests__/helpers";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-knowledge-topics.db";
 
@@ -15,11 +16,7 @@ describe("knowledge topics", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("storeTopic()", () => {

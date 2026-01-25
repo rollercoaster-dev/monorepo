@@ -1,8 +1,9 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { knowledge } from "./index";
 import { closeDatabase, resetDatabase } from "../db/sqlite";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-knowledge-query.db";
 
@@ -14,11 +15,7 @@ describe("knowledge query operations", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("query()", () => {

@@ -37,6 +37,9 @@ export interface EmbeddingUsageMetrics {
 /** Cost per 1M tokens for text-embedding-3-small */
 const OPENAI_COST_PER_1M_TOKENS = 0.02;
 
+/** Timeout for embedding API calls (10 seconds) */
+const EMBEDDING_FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * OpenAI embedding provider using the embeddings API.
  *
@@ -108,6 +111,12 @@ export class OpenAIEmbedding implements EmbeddingProvider {
     }
 
     let response: Response;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      EMBEDDING_FETCH_TIMEOUT_MS,
+    );
+
     try {
       response = await fetch("https://api.openai.com/v1/embeddings", {
         method: "POST",
@@ -120,11 +129,20 @@ export class OpenAIEmbedding implements EmbeddingProvider {
           model: this.model,
           dimensions: this._dimensions,
         }),
+        signal: controller.signal,
       });
     } catch (error) {
-      // Network errors (DNS, connection refused, timeout, etc.)
+      // Handle timeout separately from other network errors
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(
+          `OpenAI API request timed out after ${EMBEDDING_FETCH_TIMEOUT_MS}ms`,
+        );
+      }
+      // Network errors (DNS, connection refused, etc.)
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`OpenAI API network error: ${message}`);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
@@ -268,6 +286,12 @@ export class OpenRouterEmbedding implements EmbeddingProvider {
     }
 
     let response: Response;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      EMBEDDING_FETCH_TIMEOUT_MS,
+    );
+
     try {
       response = await fetch("https://openrouter.ai/api/v1/embeddings", {
         method: "POST",
@@ -282,11 +306,20 @@ export class OpenRouterEmbedding implements EmbeddingProvider {
           model: this.model,
           dimensions: this._dimensions,
         }),
+        signal: controller.signal,
       });
     } catch (error) {
-      // Network errors (DNS, connection refused, timeout, etc.)
+      // Handle timeout separately from other network errors
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(
+          `OpenRouter API request timed out after ${EMBEDDING_FETCH_TIMEOUT_MS}ms`,
+        );
+      }
+      // Network errors (DNS, connection refused, etc.)
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`OpenRouter API network error: ${message}`);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!response.ok) {

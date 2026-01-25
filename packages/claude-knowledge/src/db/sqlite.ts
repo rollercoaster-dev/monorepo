@@ -591,6 +591,10 @@ export function getDatabase(dbPath?: string): Database {
   // Enable foreign keys
   db.run("PRAGMA foreign_keys = ON;");
 
+  // Enable WAL mode for better concurrency (readers don't block writers)
+  // This reduces the risk of DB lock issues when multiple processes access the DB
+  db.run("PRAGMA journal_mode = WAL;");
+
   // Performance optimizations for bulk indexing operations
   // synchronous=NORMAL: trades some durability for significant write speed gain
   // cache_size=10000: ~40MB cache (10000 pages * 4KB default page size)

@@ -16,8 +16,9 @@ import {
 import { storeGraph } from "./store";
 import { resetDatabase, closeDatabase } from "../db/sqlite";
 import type { ParseResult } from "./types";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-graph-query.db";
 
@@ -171,11 +172,7 @@ describe("query", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("whatCalls", () => {

@@ -7,9 +7,16 @@
  * This module provides utilities to locate and access these transcripts.
  */
 
-import { existsSync, readdirSync, statSync } from "fs";
+import { existsSync } from "fs";
+import { readdir, stat } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
+
+/** Maximum number of project directories to scan (safety limit) */
+const MAX_PROJECT_DIRS = 100;
+
+/** Maximum number of transcript files to scan per project (safety limit) */
+const MAX_FILES_PER_PROJECT = 500;
 
 /**
  * Get the path to a session transcript file.
@@ -22,13 +29,15 @@ import { join } from "path";
  *
  * @example
  * ```typescript
- * const path = getTranscriptPath("session-abc-123");
+ * const path = await getTranscriptPath("session-abc-123");
  * if (path) {
  *   const content = readFileSync(path, 'utf-8');
  * }
  * ```
  */
-export function getTranscriptPath(sessionId: string): string | null {
+export async function getTranscriptPath(
+  sessionId: string,
+): Promise<string | null> {
   if (!sessionId) {
     return null;
   }
@@ -50,7 +59,10 @@ export function getTranscriptPath(sessionId: string): string | null {
   // Search all project directories for the transcript file
   // Pattern: ~/.claude/projects/{hash}/{sessionId}.jsonl
   try {
-    const projectDirs = readdirSync(claudeDir, { withFileTypes: true });
+    const entries = await readdir(claudeDir, { withFileTypes: true });
+
+    // Apply safety limit
+    const projectDirs = entries.slice(0, MAX_PROJECT_DIRS);
 
     for (const dir of projectDirs) {
       if (!dir.isDirectory()) continue;
@@ -83,14 +95,14 @@ export function getTranscriptPath(sessionId: string): string | null {
  * ```typescript
  * const start = new Date('2026-01-25T10:00:00Z');
  * const end = new Date('2026-01-25T11:00:00Z');
- * const transcripts = findTranscriptByTimeRange(start, end);
+ * const transcripts = await findTranscriptByTimeRange(start, end);
  * // Returns: ['/path/to/transcript1.jsonl', '/path/to/transcript2.jsonl']
  * ```
  */
-export function findTranscriptByTimeRange(
+export async function findTranscriptByTimeRange(
   startTime: Date,
   endTime: Date,
-): string[] {
+): Promise<string[]> {
   const claudeDir = join(homedir(), ".claude", "projects");
 
   // Return empty array if directory doesn't exist
@@ -101,25 +113,44 @@ export function findTranscriptByTimeRange(
   const matchingTranscripts: Array<{ path: string; mtime: number }> = [];
 
   try {
-    const projectDirs = readdirSync(claudeDir, { withFileTypes: true });
+    const entries = await readdir(claudeDir, { withFileTypes: true });
+
+    // Apply safety limit
+    const projectDirs = entries.slice(0, MAX_PROJECT_DIRS);
 
     for (const dir of projectDirs) {
       if (!dir.isDirectory()) continue;
 
       const projectPath = join(claudeDir, dir.name);
-      const files = readdirSync(projectPath, { withFileTypes: true });
 
-      for (const file of files) {
+      let files;
+      try {
+        files = await readdir(projectPath, { withFileTypes: true });
+      } catch {
+        // Skip inaccessible directories
+        continue;
+      }
+
+      // Apply safety limit per project
+      const limitedFiles = files.slice(0, MAX_FILES_PER_PROJECT);
+
+      for (const file of limitedFiles) {
         // Only process .jsonl files
         if (!file.isFile() || !file.name.endsWith(".jsonl")) continue;
 
         const transcriptPath = join(projectPath, file.name);
-        const stats = statSync(transcriptPath);
-        const mtime = stats.mtimeMs;
 
-        // Check if file was modified within time range
-        if (mtime >= startTime.getTime() && mtime <= endTime.getTime()) {
-          matchingTranscripts.push({ path: transcriptPath, mtime });
+        try {
+          const stats = await stat(transcriptPath);
+          const mtime = stats.mtimeMs;
+
+          // Check if file was modified within time range
+          if (mtime >= startTime.getTime() && mtime <= endTime.getTime()) {
+            matchingTranscripts.push({ path: transcriptPath, mtime });
+          }
+        } catch {
+          // Skip inaccessible files
+          continue;
         }
       }
     }
