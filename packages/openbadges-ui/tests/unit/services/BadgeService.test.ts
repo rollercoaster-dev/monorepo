@@ -347,5 +347,148 @@ describe("BadgeService", () => {
       expect(normalized).toHaveProperty("issuer");
       expect(normalized.issuer).toHaveProperty("name", "Unknown Issuer");
     });
+
+    it("should extract recipient email from OB2 Assertion", () => {
+      const ob2Assertion = {
+        "@context": "https://w3id.org/openbadges/v2",
+        type: "Assertion",
+        id: "http://example.org/badge1",
+        recipient: {
+          identity: "recipient@example.org",
+          type: "email",
+          hashed: false,
+        },
+        badge: {
+          type: "BadgeClass",
+          id: "http://example.org/badgeclass1",
+          name: "Test Badge",
+          description: "A test badge",
+          image: "http://example.org/badge.png",
+          issuer: {
+            type: "Profile",
+            id: "http://example.org/issuer",
+            name: "Test Issuer",
+          },
+        },
+        issuedOn: "2023-01-01T00:00:00Z",
+        verification: {
+          type: "hosted",
+        },
+      } as OB2.Assertion;
+
+      const normalized = BadgeService.normalizeBadge(ob2Assertion);
+
+      expect(normalized.recipient).toBeDefined();
+      expect(normalized.recipient?.email).toBe("recipient@example.org");
+    });
+
+    it("should extract recipient data from OB3 credentialSubject", () => {
+      const ob3VC = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        id: createIRI("http://example.org/credentials/123"),
+        issuer: {
+          id: createIRI("http://example.org/issuers/1"),
+          type: "Profile",
+          name: "Test Issuer",
+          url: createIRI("http://example.org"),
+        },
+        validFrom: "2023-01-01T00:00:00Z",
+        credentialSubject: {
+          id: createIRI("did:example:123"),
+          type: "AchievementSubject",
+          name: "Jane Doe",
+          email: "jane.doe@example.org",
+          role: "Software Engineer",
+          achievement: {
+            id: createIRI("http://example.org/achievements/1"),
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "A test achievement",
+            image: createIRI("http://example.org/badge.png"),
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any as OB3.VerifiableCredential;
+
+      const normalized = BadgeService.normalizeBadge(ob3VC);
+
+      expect(normalized.recipient).toBeDefined();
+      expect(normalized.recipient?.name).toBe("Jane Doe");
+      expect(normalized.recipient?.email).toBe("jane.doe@example.org");
+      expect(normalized.recipient?.role).toBe("Software Engineer");
+    });
+
+    it("should handle OB3 credentialSubject.name as MultiLanguageString", () => {
+      const ob3VC = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        id: createIRI("http://example.org/credentials/456"),
+        issuer: {
+          id: createIRI("http://example.org/issuers/1"),
+          type: "Profile",
+          name: "Test Issuer",
+          url: createIRI("http://example.org"),
+        },
+        validFrom: "2023-01-01T00:00:00Z",
+        credentialSubject: {
+          id: createIRI("did:example:456"),
+          type: "AchievementSubject",
+          name: {
+            en: "John Smith",
+            es: "Juan Herrero",
+          },
+          email: "john@example.org",
+          achievement: {
+            id: createIRI("http://example.org/achievements/1"),
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "A test achievement",
+            image: createIRI("http://example.org/badge.png"),
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any as OB3.VerifiableCredential;
+
+      const normalized = BadgeService.normalizeBadge(ob3VC);
+
+      expect(normalized.recipient).toBeDefined();
+      expect(normalized.recipient?.name).toBe("John Smith");
+      expect(normalized.recipient?.email).toBe("john@example.org");
+    });
+
+    it("should return undefined recipient when no recipient data available", () => {
+      const ob3VC = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        id: createIRI("http://example.org/credentials/789"),
+        issuer: {
+          id: createIRI("http://example.org/issuers/1"),
+          type: "Profile",
+          name: "Test Issuer",
+          url: createIRI("http://example.org"),
+        },
+        validFrom: "2023-01-01T00:00:00Z",
+        credentialSubject: {
+          id: createIRI("did:example:789"),
+          type: "AchievementSubject",
+          achievement: {
+            id: createIRI("http://example.org/achievements/1"),
+            type: "Achievement",
+            name: "Test Achievement",
+            description: "A test achievement",
+            image: createIRI("http://example.org/badge.png"),
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any as OB3.VerifiableCredential;
+
+      const normalized = BadgeService.normalizeBadge(ob3VC);
+
+      expect(normalized.recipient).toBeUndefined();
+    });
   });
 });
