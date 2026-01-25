@@ -8,7 +8,38 @@
 
 import { getDatabase } from "../db/sqlite";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
-import { statSync, readFileSync, writeFileSync, existsSync } from "fs";
+import {
+  statSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+} from "fs";
+import { spawnSync } from "bun";
+import { join, isAbsolute } from "path";
+
+/**
+ * Get the git repository root directory.
+ * Falls back to current working directory if not in a git repo.
+ */
+function getGitRoot(): string {
+  const result = spawnSync(["git", "rev-parse", "--show-toplevel"]);
+  if (result.success) {
+    return result.stdout.toString().trim();
+  }
+  return process.cwd();
+}
+
+/**
+ * Resolve a path relative to the git repository root.
+ * If the path is already absolute, returns it as-is.
+ */
+function resolveFromGitRoot(relativePath: string): string {
+  if (isAbsolute(relativePath)) {
+    return relativePath;
+  }
+  return join(getGitRoot(), relativePath);
+}
 
 /**
  * Result from exportToJSONL operation.
@@ -36,20 +67,22 @@ export interface ImportResult {
 
 /**
  * Get file modification time in milliseconds.
+ * Path is resolved relative to git root if not absolute.
  *
- * @param filePath - Path to the file
+ * @param filePath - Path to the file (resolved relative to git root)
  * @returns Modification time in milliseconds, or 0 if file doesn't exist
  */
 export function getFileModificationTime(filePath: string): number {
+  const resolvedPath = resolveFromGitRoot(filePath);
   try {
-    if (!existsSync(filePath)) {
+    if (!existsSync(resolvedPath)) {
       return 0;
     }
-    const stats = statSync(filePath);
+    const stats = statSync(resolvedPath);
     return stats.mtimeMs;
   } catch (error) {
     logger.warn("Failed to get file modification time", {
-      filePath,
+      filePath: resolvedPath,
       error: error instanceof Error ? error.message : String(error),
       context: "sync.getFileModificationTime",
     });
@@ -69,6 +102,8 @@ export function getFileModificationTime(filePath: string): number {
 export async function exportToJSONL(
   outputPath: string = ".claude/knowledge.jsonl",
 ): Promise<ExportResult> {
+  // Resolve path relative to git root for consistent location
+  const resolvedPath = resolveFromGitRoot(outputPath);
   const db = getDatabase();
 
   // Define database row shape (snake_case from SQLite)
@@ -123,25 +158,31 @@ export async function exportToJSONL(
     }
   }
 
+  // Ensure directory exists
+  const dir = resolvedPath.substring(0, resolvedPath.lastIndexOf("/"));
+  if (dir && !existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
   // Write to file
   try {
     const content = lines.join("\n");
-    writeFileSync(outputPath, content, "utf-8");
+    writeFileSync(resolvedPath, content, "utf-8");
   } catch (error) {
     throw new Error(
-      `Failed to write JSONL to ${outputPath}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to write JSONL to ${resolvedPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
   logger.debug("Exported knowledge to JSONL", {
     exported: lines.length,
-    filePath: outputPath,
+    filePath: resolvedPath,
     context: "sync.exportToJSONL",
   });
 
   return {
     exported: lines.length,
-    filePath: outputPath,
+    filePath: resolvedPath,
   };
 }
 
@@ -158,15 +199,17 @@ export async function exportToJSONL(
 export async function importFromJSONL(
   inputPath: string = ".claude/knowledge.jsonl",
 ): Promise<ImportResult> {
+  // Resolve path relative to git root for consistent location
+  const resolvedPath = resolveFromGitRoot(inputPath);
   const db = getDatabase();
 
   // Read file
   let content: string;
   try {
-    content = readFileSync(inputPath, "utf-8");
+    content = readFileSync(resolvedPath, "utf-8");
   } catch (error) {
     throw new Error(
-      `Failed to read JSONL from ${inputPath}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to read JSONL from ${resolvedPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
@@ -242,7 +285,44 @@ export async function importFromJSONL(
           }
         }
 
-        // No duplicate found, insert new entity
+        // No content_hash match found - check for existing entity by ID
+        const existingById = db
+          .query<
+            { id: string; created_at: string },
+            [string]
+          >("SELECT id, created_at FROM entities WHERE id = ?")
+          .get(record.id);
+
+        if (existingById) {
+          // Entity with this ID exists - compare timestamps
+          const existingDate = new Date(existingById.created_at);
+          const recordDate = new Date(record.created_at);
+
+          if (recordDate <= existingDate) {
+            // Existing is newer or same age, skip import
+            skipped++;
+            continue;
+          }
+
+          // Record is newer, update existing entity
+          db.run(
+            `
+            UPDATE entities
+            SET data = ?, updated_at = ?, content_hash = ?
+            WHERE id = ?
+          `,
+            [
+              JSON.stringify(record.data),
+              record.updated_at,
+              record.content_hash || null,
+              existingById.id,
+            ],
+          );
+          updated++;
+          continue;
+        }
+
+        // No duplicate found by content_hash or ID, insert new entity
         db.run(
           `
           INSERT INTO entities (id, type, data, created_at, updated_at, content_hash)
@@ -280,7 +360,7 @@ export async function importFromJSONL(
     updated,
     skipped,
     errors,
-    filePath: inputPath,
+    filePath: resolvedPath,
     context: "sync.importFromJSONL",
   });
 
