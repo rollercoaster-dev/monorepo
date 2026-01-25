@@ -35,6 +35,7 @@ import {
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
 import { formatWorkflowState } from "./formatter";
+import { importFromJSONL, getFileModificationTime } from "./knowledge/sync";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -104,6 +105,32 @@ async function onSessionStart(
         context: "onSessionStart",
       });
     }
+  }
+
+  // Auto-import knowledge from JSONL if file is newer than database
+  try {
+    const jsonlPath = ".claude/knowledge.jsonl";
+    const dbPath = ".claude/execution-state.db";
+
+    const jsonlMtime = getFileModificationTime(jsonlPath);
+    const dbMtime = getFileModificationTime(dbPath);
+
+    if (jsonlMtime > 0 && jsonlMtime > dbMtime) {
+      const result = await importFromJSONL(jsonlPath);
+      logger.debug("Auto-imported knowledge from JSONL", {
+        imported: result.imported,
+        updated: result.updated,
+        skipped: result.skipped,
+        errors: result.errors,
+        context: "onSessionStart",
+      });
+    }
+  } catch (error) {
+    // Log but don't fail session - import is optional enhancement
+    logger.warn("Failed to auto-import JSONL", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionStart",
+    });
   }
 
   // Infer code areas from modified files
