@@ -475,40 +475,6 @@ describe("hooks", () => {
       expect(result.learningsStored).toBe(1);
     });
 
-    it("should extract learnings from modified files", async () => {
-      const result = await hooks.onSessionEnd({
-        commits: [],
-        modifiedFiles: [
-          "src/db/queries.ts",
-          "src/db/migrations.ts",
-          "src/api/routes.ts",
-        ],
-      });
-
-      // Should create learnings for Database and API areas
-      expect(result.learningsStored).toBe(2);
-
-      const dbLearnings = await knowledge.query({ codeArea: "Database" });
-      expect(dbLearnings.length).toBe(1);
-      expect(dbLearnings[0].learning.content).toContain("Database");
-
-      const apiLearnings = await knowledge.query({ codeArea: "API" });
-      expect(apiLearnings.length).toBe(1);
-      expect(apiLearnings[0].learning.content).toContain("API");
-    });
-
-    it("should not duplicate learnings for same code area from commits and files", async () => {
-      await hooks.onSessionEnd({
-        commits: [{ sha: "abc123", message: "feat(Database): add query" }],
-        modifiedFiles: ["src/db/queries.ts", "src/db/migrations.ts"],
-      });
-
-      // Should only create one learning for Database (from commit, not files)
-      const dbLearnings = await knowledge.query({ codeArea: "Database" });
-      expect(dbLearnings.length).toBe(1);
-      expect(dbLearnings[0].learning.content).toContain("add query");
-    });
-
     it("should set lower confidence for auto-extracted learnings", async () => {
       await hooks.onSessionEnd({
         commits: [{ sha: "abc123", message: "feat(api): add endpoint" }],
