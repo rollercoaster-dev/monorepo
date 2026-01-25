@@ -34,8 +34,17 @@ export const OB2Guards = {
     if (typeof value !== "object" || value === null) {
       return false;
     }
-    // OB2 Evidence is a flexible object with no strict required props
-    return true;
+    const obj = value as Record<string, unknown>;
+    // OB2 Evidence has no required fields, but should have at least one known property
+    return (
+      "id" in obj ||
+      "type" in obj ||
+      "narrative" in obj ||
+      "name" in obj ||
+      "description" in obj ||
+      "genre" in obj ||
+      "audience" in obj
+    );
   },
 
   isAlignmentObject: (value: unknown): value is OB2.AlignmentObject => {
@@ -50,16 +59,24 @@ export const OB2Guards = {
     if (typeof value !== "object" || value === null) {
       return false;
     }
-    // OB2 Image is a flexible object with no strict required props
-    return true;
+    const obj = value as Record<string, unknown>;
+    // OB2 Image has no required fields, but should have at least one known property
+    return (
+      "id" in obj ||
+      "type" in obj ||
+      "caption" in obj ||
+      "author" in obj ||
+      "imageData" in obj
+    );
   },
 
   isCriteria: (value: unknown): value is OB2.Criteria => {
     if (typeof value !== "object" || value === null) {
       return false;
     }
-    // OB2 Criteria is a flexible object with no strict required props
-    return true;
+    const obj = value as Record<string, unknown>;
+    // OB2 Criteria has no required fields, but should have at least one known property
+    return "id" in obj || "narrative" in obj;
   },
 };
 
