@@ -25,55 +25,30 @@ const ajv = new Ajv({
 // Add format validators (uri, email, etc.)
 addFormats(ajv);
 
+/**
+ * Creates a lazy validator getter that compiles the schema on first access
+ * @param schema The JSON schema to compile
+ * @returns A getter function that returns the compiled validator
+ */
+function createLazyValidator(
+  schema: Record<string, unknown>,
+): () => ValidateFunction {
+  let validator: ValidateFunction | null = null;
+  return () => {
+    if (!validator) {
+      validator = ajv.compile(schema);
+    }
+    return validator;
+  };
+}
+
 // Lazy-compiled validators
-let _validateOB2Schema: ValidateFunction | null = null;
-let _validateOB2BadgeClassSchema: ValidateFunction | null = null;
-let _validateOB2ProfileSchema: ValidateFunction | null = null;
-let _validateOB3Schema: ValidateFunction | null = null;
-let _validateOB3AchievementSchema: ValidateFunction | null = null;
-let _validateOB3IssuerSchema: ValidateFunction | null = null;
-
-function getOB2Validator(): ValidateFunction {
-  if (!_validateOB2Schema) {
-    _validateOB2Schema = ajv.compile(ob2AssertionSchema);
-  }
-  return _validateOB2Schema;
-}
-
-function getOB2BadgeClassValidator(): ValidateFunction {
-  if (!_validateOB2BadgeClassSchema) {
-    _validateOB2BadgeClassSchema = ajv.compile(ob2BadgeClassSchema);
-  }
-  return _validateOB2BadgeClassSchema;
-}
-
-function getOB2ProfileValidator(): ValidateFunction {
-  if (!_validateOB2ProfileSchema) {
-    _validateOB2ProfileSchema = ajv.compile(ob2ProfileSchema);
-  }
-  return _validateOB2ProfileSchema;
-}
-
-function getOB3Validator(): ValidateFunction {
-  if (!_validateOB3Schema) {
-    _validateOB3Schema = ajv.compile(ob3CredentialSchema);
-  }
-  return _validateOB3Schema;
-}
-
-function getOB3AchievementValidator(): ValidateFunction {
-  if (!_validateOB3AchievementSchema) {
-    _validateOB3AchievementSchema = ajv.compile(ob3AchievementSchema);
-  }
-  return _validateOB3AchievementSchema;
-}
-
-function getOB3IssuerValidator(): ValidateFunction {
-  if (!_validateOB3IssuerSchema) {
-    _validateOB3IssuerSchema = ajv.compile(ob3IssuerSchema);
-  }
-  return _validateOB3IssuerSchema;
-}
+const getOB2Validator = createLazyValidator(ob2AssertionSchema);
+const getOB2BadgeClassValidator = createLazyValidator(ob2BadgeClassSchema);
+const getOB2ProfileValidator = createLazyValidator(ob2ProfileSchema);
+const getOB3Validator = createLazyValidator(ob3CredentialSchema);
+const getOB3AchievementValidator = createLazyValidator(ob3AchievementSchema);
+const getOB3IssuerValidator = createLazyValidator(ob3IssuerSchema);
 
 /**
  * Validation error structure for individual issues
