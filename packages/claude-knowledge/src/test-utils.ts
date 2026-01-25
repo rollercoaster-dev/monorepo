@@ -14,8 +14,15 @@ export async function cleanupTestDb(dbPath: string): Promise<void> {
   for (const file of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
     try {
       await unlink(file);
-    } catch {
-      // Ignore if file doesn't exist
+    } catch (error) {
+      // Only ignore "file not found" errors - surface permission/lock issues
+      const isNotFound =
+        error instanceof Error &&
+        "code" in error &&
+        (error as { code?: string }).code === "ENOENT";
+      if (!isNotFound) {
+        throw error;
+      }
     }
   }
 }

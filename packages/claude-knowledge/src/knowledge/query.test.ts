@@ -10,6 +10,7 @@ const TEST_DB = ".claude/test-knowledge-query.db";
 describe("knowledge query operations", () => {
   beforeEach(async () => {
     if (!existsSync(".claude")) await mkdir(".claude", { recursive: true });
+    await cleanupTestDb(TEST_DB); // Clean stale files from interrupted runs
     resetDatabase(TEST_DB);
   });
 
