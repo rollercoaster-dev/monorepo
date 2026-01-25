@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import BadgeDisplay from "@/components/badges/BadgeDisplay.vue";
-import { typedAssertion } from "../../../test-utils";
+import { typedAssertion, typedCredential } from "../../../test-utils";
 
 describe("BadgeDisplay.vue", () => {
   const mockBadge = typedAssertion({
@@ -301,5 +301,260 @@ describe("BadgeDisplay.vue", () => {
     expect(wrapper.find(".manus-badge-verification-toggle").exists()).toBe(
       false,
     );
+  });
+
+  // OB3 VerifiableCredential Tests
+  describe("OB3 VerifiableCredential rendering", () => {
+    const mockOB3Credential = typedCredential({
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+      ],
+      id: "https://example.org/credentials/123",
+      type: ["VerifiableCredential", "OpenBadgeCredential"],
+      issuer: {
+        id: "https://example.org/issuer",
+        type: "Profile",
+        name: "OB3 Test Issuer",
+        url: "https://example.org",
+        image: "https://example.org/issuer-logo.png",
+      },
+      validFrom: "2024-01-15T00:00:00Z",
+      validUntil: "2025-01-15T00:00:00Z",
+      credentialSubject: {
+        id: "did:example:recipient123",
+        type: "AchievementSubject",
+        achievement: {
+          id: "https://example.org/achievements/web-dev",
+          type: "Achievement",
+          name: "Web Development Mastery",
+          description: "Demonstrated proficiency in modern web development",
+          image: "https://example.org/badge-image.png",
+          criteria: {
+            narrative: "Complete all web development modules",
+          },
+        },
+      },
+    });
+
+    it("renders OB3 badge name correctly", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockOB3Credential },
+      });
+
+      expect(wrapper.find(".manus-badge-title").text()).toBe(
+        "Web Development Mastery",
+      );
+    });
+
+    it("renders OB3 badge description correctly", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockOB3Credential },
+      });
+
+      expect(wrapper.find(".manus-badge-description").text()).toBe(
+        "Demonstrated proficiency in modern web development",
+      );
+    });
+
+    it("renders OB3 badge image correctly", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockOB3Credential },
+      });
+
+      const img = wrapper.find(".manus-badge-img");
+      expect(img.attributes("src")).toBe("https://example.org/badge-image.png");
+      expect(img.attributes("alt")).toBe("Badge: Web Development Mastery");
+    });
+
+    it("renders OB3 issuer name correctly", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockOB3Credential },
+      });
+
+      expect(wrapper.find(".manus-badge-issuer").text()).toContain(
+        "OB3 Test Issuer",
+      );
+    });
+
+    it("renders OB3 validFrom date correctly", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: mockOB3Credential },
+      });
+
+      expect(wrapper.find(".manus-badge-date").text()).toContain(
+        "Jan 15, 2024",
+      );
+    });
+
+    it("renders OB3 validUntil date when showExpiryDate is true", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: mockOB3Credential,
+          showExpiryDate: true,
+        },
+      });
+
+      expect(wrapper.find(".manus-badge-expiry").exists()).toBe(true);
+      expect(wrapper.find(".manus-badge-expiry").text()).toContain(
+        "Jan 15, 2025",
+      );
+    });
+
+    it("handles OB3 image as OB3ImageObject", () => {
+      const credentialWithImageObject = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/456",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer",
+          type: "Profile",
+          name: "Test Issuer",
+          url: "https://example.org",
+        },
+        validFrom: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient",
+          type: "AchievementSubject",
+          achievement: {
+            id: "https://example.org/achievements/1",
+            type: "Achievement",
+            name: "Image Object Badge",
+            description: "Badge with OB3ImageObject",
+            image: {
+              id: "https://example.org/image-object.png",
+              type: "Image",
+              caption: "Badge image with caption",
+            },
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: credentialWithImageObject },
+      });
+
+      const img = wrapper.find(".manus-badge-img");
+      expect(img.attributes("src")).toBe(
+        "https://example.org/image-object.png",
+      );
+    });
+
+    it("handles OB3 issuer as IRI string", () => {
+      const credentialWithIssuerIRI = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/789",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: "https://example.org/issuer-profile",
+        validFrom: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient",
+          type: "AchievementSubject",
+          achievement: {
+            id: "https://example.org/achievements/2",
+            type: "Achievement",
+            name: "IRI Issuer Badge",
+            description: "Badge with issuer as IRI",
+            image: "https://example.org/badge.png",
+            criteria: { narrative: "Test criteria" },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: credentialWithIssuerIRI },
+      });
+
+      // When issuer is IRI, fallback to "Unknown Issuer"
+      expect(wrapper.find(".manus-badge-issuer").text()).toContain(
+        "Unknown Issuer",
+      );
+    });
+
+    it("handles OB3 achievement array (uses first achievement)", () => {
+      const credentialWithAchievementArray = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/multi",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer",
+          type: "Profile",
+          name: "Multi-Achievement Issuer",
+          url: "https://example.org",
+        },
+        validFrom: "2024-06-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:recipient",
+          type: "AchievementSubject",
+          achievement: [
+            {
+              id: "https://example.org/achievements/first",
+              type: "Achievement",
+              name: "First Achievement",
+              description: "The first achievement in the array",
+              image: "https://example.org/first-badge.png",
+              criteria: { narrative: "First criteria" },
+            },
+            {
+              id: "https://example.org/achievements/second",
+              type: "Achievement",
+              name: "Second Achievement",
+              description: "The second achievement",
+              image: "https://example.org/second-badge.png",
+              criteria: { narrative: "Second criteria" },
+            },
+          ],
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: credentialWithAchievementArray },
+      });
+
+      // Should display the first achievement's name
+      expect(wrapper.find(".manus-badge-title").text()).toBe(
+        "First Achievement",
+      );
+    });
+
+    it("emits click event with OB3 credential when interactive", async () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: mockOB3Credential,
+          interactive: true,
+        },
+      });
+
+      await wrapper.trigger("click");
+
+      const clickEvents = wrapper.emitted("click");
+      expect(clickEvents).toBeTruthy();
+      if (clickEvents) {
+        expect(clickEvents[0][0]).toEqual(mockOB3Credential);
+      }
+    });
+
+    it("applies accessibility attributes for OB3 credentials", () => {
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: mockOB3Credential,
+          interactive: true,
+        },
+      });
+
+      const badgeElement = wrapper.find(".manus-badge-display");
+      expect(badgeElement.attributes("tabindex")).toBe("0");
+      expect(badgeElement.classes()).toContain("is-interactive");
+    });
   });
 });

@@ -69,11 +69,18 @@ export function typedCredential(
   if (typeof credential.id === "string") {
     credential.id = asIRI(credential.id);
   }
+  // Handle both legacy (issuanceDate/expirationDate) and VC 2.0 (validFrom/validUntil)
   if (typeof credential.issuanceDate === "string") {
     credential.issuanceDate = asDateTime(credential.issuanceDate);
   }
   if (typeof credential.expirationDate === "string") {
     credential.expirationDate = asDateTime(credential.expirationDate);
+  }
+  if (typeof credential.validFrom === "string") {
+    credential.validFrom = asDateTime(credential.validFrom);
+  }
+  if (typeof credential.validUntil === "string") {
+    credential.validUntil = asDateTime(credential.validUntil);
   }
 
   // Process issuer field
@@ -100,22 +107,29 @@ export function typedCredential(
     // Process achievement inside credentialSubject
     if (
       typeof subject.achievement === "object" &&
-      subject.achievement !== null &&
-      !Array.isArray(subject.achievement)
+      subject.achievement !== null
     ) {
-      const achievement = subject.achievement as Record<string, unknown>;
-      if (typeof achievement.id === "string") {
-        achievement.id = asIRI(achievement.id);
-      }
+      const achievements = Array.isArray(subject.achievement)
+        ? subject.achievement
+        : [subject.achievement];
 
-      // Process image inside achievement
-      if (typeof achievement.image === "object" && achievement.image !== null) {
-        const image = achievement.image as Record<string, unknown>;
-        if (typeof image.id === "string") {
-          image.id = asIRI(image.id);
+      for (const achievement of achievements) {
+        if (typeof achievement === "object" && achievement !== null) {
+          const ach = achievement as Record<string, unknown>;
+          if (typeof ach.id === "string") {
+            ach.id = asIRI(ach.id);
+          }
+
+          // Process image inside achievement
+          if (typeof ach.image === "object" && ach.image !== null) {
+            const image = ach.image as Record<string, unknown>;
+            if (typeof image.id === "string") {
+              image.id = asIRI(image.id);
+            }
+          } else if (typeof ach.image === "string") {
+            ach.image = asIRI(ach.image);
+          }
         }
-      } else if (typeof achievement.image === "string") {
-        achievement.image = asIRI(achievement.image);
       }
     }
   }
