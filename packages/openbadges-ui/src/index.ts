@@ -36,5 +36,17 @@ export { BadgeService } from "@services/BadgeService";
 export { BadgeVerificationService } from "@services/BadgeVerificationService";
 export { AccessibilityService } from "@services/AccessibilityService";
 
+// Export utility functions
+export {
+  typeIncludes,
+  validateOB3Context,
+  isOB2Assertion,
+  isOB3VerifiableCredential,
+  createIRI,
+  createDateTime,
+  OB2Guards,
+  OB3Guards,
+} from "@/utils/type-helpers";
+
 // Export plugin for Vue.use()
 export { default as OpenBadgesUIPlugin } from "./plugin";

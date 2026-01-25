@@ -88,6 +88,45 @@ app.mount("#app");
 - **useProfile**: Handles profile data for issuers and recipients
 - **useBadgeVerification**: Provides functionality for verifying badge authenticity
 
+## Utility Functions
+
+### Type Helpers
+
+The library exports utility functions for working with Open Badges data:
+
+#### `typeIncludes(typeValue, targetType)`
+
+Checks if a type value includes a specific type string. Handles both OB2 (string or array) and OB3 (array) formats.
+
+```typescript
+import { typeIncludes } from "openbadges-ui";
+
+// OB2 string format
+typeIncludes("Assertion", "Assertion"); // true
+
+// OB3 array format
+typeIncludes(
+  ["VerifiableCredential", "OpenBadgeCredential"],
+  "VerifiableCredential",
+); // true
+
+// Edge cases
+typeIncludes(undefined, "Assertion"); // false
+typeIncludes([], "Assertion"); // false
+```
+
+**Why this is needed:** Open Badges 2.0 allows `type` to be a string OR array, while OB3 requires an array. This utility provides consistent type checking across both formats.
+
+#### Other Exported Utilities
+
+- **`isOB2Assertion(badge)`** - Type guard for OB2 assertions
+- **`isOB3VerifiableCredential(badge, strict?)`** - Type guard for OB3 credentials
+- **`validateOB3Context(context)`** - Validates @context structure
+- **`createIRI(url)`** - Creates IRI branded type
+- **`createDateTime(dateTimeString)`** - Creates DateTime branded type
+- **`OB2Guards`** - Namespace with OB2 type guards (IdentityObject, VerificationObject, Evidence, etc.)
+- **`OB3Guards`** - Namespace with OB3 type guards (Proof, CredentialStatus, Issuer, etc.)
+
 ## OB3 Context Validation
 
 Open Badges 3.0 (OB3) credentials use JSON-LD `@context` to define vocabulary and semantics. This library validates `@context` in OB3 VerifiableCredentials according to the W3C Verifiable Credentials and OB3 specifications.

@@ -1,12 +1,189 @@
 // tests/unit/utils/type-helpers.test.ts
 import { describe, it, expect } from "vitest";
 import {
+  typeIncludes,
   validateOB3Context,
   isOB3VerifiableCredential,
+  isOB2Assertion,
   createIRI,
   createDateTime,
 } from "@/utils/type-helpers";
-import type { OB3 } from "openbadges-types";
+import type { OB2, OB3 } from "openbadges-types";
+
+describe("typeIncludes", () => {
+  describe("string format (OB2)", () => {
+    it("should return true when string matches target type", () => {
+      expect(typeIncludes("Assertion", "Assertion")).toBe(true);
+      expect(typeIncludes("BadgeClass", "BadgeClass")).toBe(true);
+      expect(typeIncludes("Profile", "Profile")).toBe(true);
+    });
+
+    it("should return false when string does not match target type", () => {
+      expect(typeIncludes("Assertion", "BadgeClass")).toBe(false);
+      expect(typeIncludes("Profile", "Assertion")).toBe(false);
+    });
+
+    it("should be case-sensitive", () => {
+      expect(typeIncludes("assertion", "Assertion")).toBe(false);
+      expect(typeIncludes("ASSERTION", "Assertion")).toBe(false);
+    });
+  });
+
+  describe("array format (OB3)", () => {
+    it("should return true when array contains target type", () => {
+      expect(
+        typeIncludes(
+          ["VerifiableCredential", "OpenBadgeCredential"],
+          "VerifiableCredential",
+        ),
+      ).toBe(true);
+      expect(
+        typeIncludes(
+          ["VerifiableCredential", "OpenBadgeCredential"],
+          "OpenBadgeCredential",
+        ),
+      ).toBe(true);
+    });
+
+    it("should return false when array does not contain target type", () => {
+      expect(
+        typeIncludes(
+          ["VerifiableCredential", "OpenBadgeCredential"],
+          "Assertion",
+        ),
+      ).toBe(false);
+    });
+
+    it("should handle single-element arrays", () => {
+      expect(
+        typeIncludes(["VerifiableCredential"], "VerifiableCredential"),
+      ).toBe(true);
+      expect(typeIncludes(["Assertion"], "BadgeClass")).toBe(false);
+    });
+
+    it("should return false for empty arrays", () => {
+      expect(typeIncludes([], "Assertion")).toBe(false);
+      expect(typeIncludes([], "VerifiableCredential")).toBe(false);
+    });
+
+    it("should handle arrays with multiple types (OB2 spec allows arrays)", () => {
+      expect(typeIncludes(["Assertion", "Extension"], "Assertion")).toBe(true);
+      expect(typeIncludes(["Assertion", "Extension"], "Extension")).toBe(true);
+      expect(typeIncludes(["Assertion", "Extension"], "BadgeClass")).toBe(
+        false,
+      );
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should return false for undefined", () => {
+      expect(typeIncludes(undefined, "Assertion")).toBe(false);
+      expect(typeIncludes(undefined, "VerifiableCredential")).toBe(false);
+    });
+
+    it("should return false for null", () => {
+      expect(typeIncludes(null, "Assertion")).toBe(false);
+      expect(typeIncludes(null, "VerifiableCredential")).toBe(false);
+    });
+
+    it("should return false for numbers", () => {
+      expect(typeIncludes(42, "Assertion")).toBe(false);
+      expect(typeIncludes(0, "VerifiableCredential")).toBe(false);
+    });
+
+    it("should return false for objects", () => {
+      expect(typeIncludes({}, "Assertion")).toBe(false);
+      expect(typeIncludes({ type: "Assertion" }, "Assertion")).toBe(false);
+    });
+
+    it("should return false for booleans", () => {
+      expect(typeIncludes(true, "Assertion")).toBe(false);
+      expect(typeIncludes(false, "VerifiableCredential")).toBe(false);
+    });
+
+    it("should handle empty string", () => {
+      expect(typeIncludes("", "Assertion")).toBe(false);
+      expect(typeIncludes("", "")).toBe(true); // Empty string matches empty target
+    });
+
+    it("should handle special characters in type strings", () => {
+      expect(typeIncludes("Type-With-Dashes", "Type-With-Dashes")).toBe(true);
+      expect(typeIncludes("Type.With.Dots", "Type.With.Dots")).toBe(true);
+      expect(typeIncludes(["Type:With:Colons"], "Type:With:Colons")).toBe(true);
+    });
+  });
+
+  describe("real-world OB2/OB3 usage", () => {
+    it("should correctly identify OB2 Assertion type (string)", () => {
+      expect(typeIncludes("Assertion", "Assertion")).toBe(true);
+    });
+
+    it("should correctly identify OB3 VerifiableCredential type (array)", () => {
+      const type = ["VerifiableCredential", "OpenBadgeCredential"];
+      expect(typeIncludes(type, "VerifiableCredential")).toBe(true);
+      expect(typeIncludes(type, "OpenBadgeCredential")).toBe(true);
+    });
+
+    it("should handle OB2 type as array (spec allows both)", () => {
+      expect(typeIncludes(["Assertion"], "Assertion")).toBe(true);
+    });
+  });
+});
+
+describe("isOB2Assertion", () => {
+  // Base valid OB2 assertion for testing
+  const validOB2Assertion: OB2.Assertion = {
+    "@context": "https://w3id.org/openbadges/v2",
+    id: createIRI("http://example.org/assertions/123"),
+    type: "Assertion",
+    recipient: {
+      type: "email",
+      identity: "test@example.org",
+      hashed: false,
+    },
+    badge: {
+      type: "BadgeClass",
+      id: createIRI("http://example.org/badges/1"),
+      name: "Test Badge",
+      description: "Test badge description",
+      image: createIRI("http://example.org/badge.png"),
+      criteria: { narrative: "Test criteria" },
+      issuer: {
+        id: createIRI("http://example.org/issuers/1"),
+        type: "Profile",
+        name: "Test Issuer",
+      },
+    },
+    verification: { type: "hosted" },
+    issuedOn: createDateTime("2023-01-01T00:00:00Z"),
+  };
+
+  it("should return true for valid OB2 assertion", () => {
+    expect(isOB2Assertion(validOB2Assertion)).toBe(true);
+  });
+
+  it("should return false for non-object values", () => {
+    expect(isOB2Assertion(null)).toBe(false);
+    expect(isOB2Assertion(undefined)).toBe(false);
+    expect(isOB2Assertion("string")).toBe(false);
+    expect(isOB2Assertion(123)).toBe(false);
+    expect(isOB2Assertion(true)).toBe(false);
+  });
+
+  it("should return false when missing required fields", () => {
+    expect(isOB2Assertion({ type: "Assertion" })).toBe(false);
+    const { recipient: _, ...withoutRecipient } = validOB2Assertion;
+    expect(isOB2Assertion(withoutRecipient)).toBe(false);
+  });
+
+  it("should handle type as array (OB2 spec allows both)", () => {
+    const assertionWithArrayType = {
+      ...validOB2Assertion,
+      type: ["Assertion"],
+    };
+    expect(isOB2Assertion(assertionWithArrayType)).toBe(true);
+  });
+});
 
 describe("validateOB3Context", () => {
   describe("valid formats", () => {
