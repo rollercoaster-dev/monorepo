@@ -323,6 +323,3 @@ export function isOB3VerifiableCredential(
 
   return true;
 }
-
-// Export a dummy value to make the module recognized
-export const __moduleMarker = true;
