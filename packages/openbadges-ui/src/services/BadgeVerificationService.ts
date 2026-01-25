@@ -411,11 +411,6 @@ export class BadgeVerificationService {
     // After all validation, ensure contentValidation.isValid is correct
     result.contentValidation.isValid =
       result.contentValidation.errors.length === 0;
-
-    // Ensure that if any content validation errors exist, isValid is set to false
-    if (result.contentValidation.errors.length > 0) {
-      result.contentValidation.isValid = false;
-    }
   }
 
   /**
