@@ -14,6 +14,7 @@ import { getDefaultEmbedder, floatArrayToBuffer } from "../embeddings";
  * @param id - Entity ID
  * @param data - Entity data
  * @param embedding - Optional embedding vector for semantic search
+ * @param contentHash - Optional content hash for duplicate detection (Learning entities only)
  * @returns The entity ID (existing or new)
  */
 export function createOrMergeEntity(
@@ -22,6 +23,7 @@ export function createOrMergeEntity(
   id: string,
   data: unknown,
   embedding?: Buffer,
+  contentHash?: string,
 ): string {
   const now = new Date().toISOString();
 
@@ -38,11 +40,21 @@ export function createOrMergeEntity(
         `Entity "${id}" already exists with type "${existing.type}", cannot update as "${type}"`,
       );
     }
-    // Update existing entity (including embedding if provided)
-    if (embedding) {
+    // Update existing entity (including embedding and content_hash if provided)
+    if (embedding && contentHash) {
+      db.run(
+        "UPDATE entities SET data = ?, embedding = ?, content_hash = ?, updated_at = ? WHERE id = ?",
+        [JSON.stringify(data), embedding, contentHash, now, id],
+      );
+    } else if (embedding) {
       db.run(
         "UPDATE entities SET data = ?, embedding = ?, updated_at = ? WHERE id = ?",
         [JSON.stringify(data), embedding, now, id],
+      );
+    } else if (contentHash) {
+      db.run(
+        "UPDATE entities SET data = ?, content_hash = ?, updated_at = ? WHERE id = ?",
+        [JSON.stringify(data), contentHash, now, id],
       );
     } else {
       db.run("UPDATE entities SET data = ?, updated_at = ? WHERE id = ?", [
@@ -54,11 +66,21 @@ export function createOrMergeEntity(
     return existing.id;
   }
 
-  // Insert new entity (with or without embedding)
-  if (embedding) {
+  // Insert new entity (with or without embedding and content_hash)
+  if (embedding && contentHash) {
+    db.run(
+      "INSERT INTO entities (id, type, data, embedding, content_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), embedding, contentHash, now, now],
+    );
+  } else if (embedding) {
     db.run(
       "INSERT INTO entities (id, type, data, embedding, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
       [id, type, JSON.stringify(data), embedding, now, now],
+    );
+  } else if (contentHash) {
+    db.run(
+      "INSERT INTO entities (id, type, data, content_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [id, type, JSON.stringify(data), contentHash, now, now],
     );
   } else {
     db.run(
