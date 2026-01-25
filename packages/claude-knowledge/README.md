@@ -11,6 +11,7 @@ Cross-session learning and workflow persistence for Claude Code autonomous workf
 | [Feature Assessment](docs/FEATURE-ASSESSMENT.md) | Maturity evaluation, usage analysis         |
 | [Roadmap](docs/ROADMAP.md)                       | Prioritized next steps with rationale       |
 | [Metrics](docs/METRICS.md)                       | Validation plan and measurement methodology |
+| [Knowledge Sync](docs/KNOWLEDGE-SYNC.md)         | Git-based knowledge sync across machines    |
 
 ## Quick Start
 
@@ -143,6 +144,10 @@ bun run checkpoint workflow log-commit <id> <sha> <message>
 # Session hooks
 bun run checkpoint session-start [--issue <number>]
 bun run checkpoint session-end
+
+# Knowledge sync (git-based)
+bun run checkpoint knowledge export-knowledge [--output <path>]
+bun run checkpoint knowledge import-knowledge [--input <path>]
 
 # Graph commands
 bun run checkpoint graph parse <path>
