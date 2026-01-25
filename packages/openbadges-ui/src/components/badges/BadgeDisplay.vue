@@ -9,6 +9,7 @@ interface Props {
   showDescription?: boolean;
   showIssuedDate?: boolean;
   showExpiryDate?: boolean;
+  showRecipient?: boolean;
   interactive?: boolean;
   showVerification?: boolean;
   autoVerify?: boolean;
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
   showDescription: true,
   showIssuedDate: true,
   showExpiryDate: false,
+  showRecipient: false,
   interactive: false,
   showVerification: false,
   autoVerify: false,
@@ -123,6 +125,34 @@ const densityClass = computed(() => {
       </p>
       <div v-if="!simplifiedView" class="manus-badge-issuer">
         <span>Issued by: {{ normalizedBadge.issuer.name }}</span>
+      </div>
+      <div
+        v-if="showRecipient && normalizedBadge.recipient && !simplifiedView"
+        class="manus-badge-recipient"
+        role="region"
+        aria-label="Recipient information"
+      >
+        <span
+          v-if="normalizedBadge.recipient.name"
+          class="manus-badge-recipient-name"
+          aria-label="Recipient name"
+        >
+          Awarded to: {{ normalizedBadge.recipient.name }}
+        </span>
+        <span
+          v-if="normalizedBadge.recipient.email"
+          class="manus-badge-recipient-email"
+          aria-label="Recipient email address"
+        >
+          Email: {{ normalizedBadge.recipient.email }}
+        </span>
+        <span
+          v-if="normalizedBadge.recipient.role"
+          class="manus-badge-recipient-role"
+          aria-label="Recipient role"
+        >
+          Role: {{ normalizedBadge.recipient.role }}
+        </span>
       </div>
       <div v-if="showIssuedDate && !simplifiedView" class="manus-badge-date">
         <span>Issued: {{ formatDate(normalizedBadge.issuedOn) }}</span>
@@ -260,6 +290,23 @@ const densityClass = computed(() => {
 .manus-badge-date,
 .manus-badge-expiry,
 .manus-badge-verification-toggle {
+  font-size: var(--ob-font-size-xs, 0.75rem);
+  color: var(--badge-text-color);
+}
+
+.manus-badge-recipient {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ob-space-1, 4px);
+  padding: var(--ob-space-2, 8px);
+  background-color: var(--ob-bg-secondary, #f7fafc);
+  border-radius: var(--ob-border-radius-sm, 4px);
+  border: 1px solid var(--badge-border-color);
+}
+
+.manus-badge-recipient-name,
+.manus-badge-recipient-email,
+.manus-badge-recipient-role {
   font-size: var(--ob-font-size-xs, 0.75rem);
   color: var(--badge-text-color);
 }
