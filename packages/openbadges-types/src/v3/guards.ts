@@ -22,6 +22,7 @@ import type {
   TermsOfUse,
   IdentityObject,
 } from "./index";
+import { OB3_TYPES } from "./constants";
 
 /**
  * Type guard to check if a value is an OB3 VerifiableCredential
@@ -38,8 +39,8 @@ export function isVerifiableCredential(
 
   // Must have both 'VerifiableCredential' and 'OpenBadgeCredential' types
   if (
-    !hasJsonLdType(value, "VerifiableCredential") ||
-    !hasJsonLdType(value, "OpenBadgeCredential")
+    !hasJsonLdType(value, OB3_TYPES.VERIFIABLE_CREDENTIAL) ||
+    !hasJsonLdType(value, OB3_TYPES.OPEN_BADGE_CREDENTIAL)
   ) {
     return false;
   }
@@ -82,12 +83,12 @@ export function isIssuer(value: unknown): value is Issuer {
     // Ensure 'type' is either a string or an array of strings
     if (Array.isArray(type)) {
       if (type.every((item) => typeof item === "string")) {
-        return type.includes("Profile");
+        return type.includes(OB3_TYPES.PROFILE);
       } else {
         return false; // Invalid array contents
       }
     } else if (typeof type === "string") {
-      return type === "Profile";
+      return type === OB3_TYPES.PROFILE;
     } else {
       return false; // Unexpected type
     }
@@ -165,12 +166,12 @@ export function isAchievement(value: unknown): value is Achievement {
     // Ensure 'type' is either a string or an array of strings
     if (Array.isArray(type)) {
       if (type.every((item) => typeof item === "string")) {
-        return type.includes("Achievement");
+        return type.includes(OB3_TYPES.ACHIEVEMENT);
       } else {
         return false; // Invalid array contents
       }
     } else if (typeof type === "string") {
-      return type === "Achievement";
+      return type === OB3_TYPES.ACHIEVEMENT;
     } else {
       return false; // Unexpected type
     }
@@ -214,10 +215,10 @@ export function isEvidence(value: unknown): value is Evidence {
     const type = value.type;
     if (Array.isArray(type)) {
       // If it's an array, at least one element should be 'Evidence'
-      if (!type.includes("Evidence")) {
+      if (!type.includes(OB3_TYPES.EVIDENCE)) {
         return false;
       }
-    } else if (typeof type === "string" && type !== "Evidence") {
+    } else if (typeof type === "string" && type !== OB3_TYPES.EVIDENCE) {
       return false;
     }
   }
@@ -241,10 +242,10 @@ export function isCriteria(value: unknown): value is Criteria {
     const type = value.type;
     if (Array.isArray(type)) {
       // If it's an array, at least one element should be 'Criteria'
-      if (!type.includes("Criteria")) {
+      if (!type.includes(OB3_TYPES.CRITERIA)) {
         return false;
       }
-    } else if (typeof type === "string" && type !== "Criteria") {
+    } else if (typeof type === "string" && type !== OB3_TYPES.CRITERIA) {
       return false;
     }
   }

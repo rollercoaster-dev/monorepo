@@ -15,6 +15,10 @@ export const OB2Context = "https://w3id.org/openbadges/v2";
 export const OB3Context =
   "https://purl.imsglobal.org/spec/ob/v3p0/context.json";
 
+// OB3 context with version 3.0.3
+export const OB3Context_v3_0_3 =
+  "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json";
+
 // Type for W3C Verifiable Credentials context (v1)
 export const VCContext = "https://www.w3.org/2018/credentials/v1";
 
@@ -78,7 +82,21 @@ export function hasJsonLdType(value: unknown, type: string): boolean {
 }
 
 /**
+ * Helper to check if a context string matches OB3 (base or versioned)
+ * @param contextStr The context string to check
+ * @returns True if it's any OB3 context variant
+ */
+function isOB3ContextVariant(contextStr: string): boolean {
+  return (
+    contextStr === OB3Context ||
+    contextStr === OB3Context_v3_0_3 ||
+    contextStr.startsWith("https://purl.imsglobal.org/spec/ob/v3p0/context")
+  );
+}
+
+/**
  * Type guard to check if a value has a specific JSON-LD context
+ * For OB3Context, this also matches versioned variants (e.g., context-3.0.3.json)
  * @param value The value to check
  * @param context The context to check for
  * @returns True if the value has the specified context, false otherwise
@@ -88,12 +106,23 @@ export function hasJsonLdContext(value: unknown, context: string): boolean {
     return false;
   }
 
-  if (Array.isArray(value["@context"])) {
-    return value["@context"].includes(context);
+  const contextValue = value["@context"];
+  const isOB3Check = context === OB3Context;
+
+  if (Array.isArray(contextValue)) {
+    if (isOB3Check) {
+      return contextValue.some(
+        (c) => typeof c === "string" && isOB3ContextVariant(c),
+      );
+    }
+    return contextValue.includes(context);
   }
 
-  if (typeof value["@context"] === "string") {
-    return value["@context"] === context;
+  if (typeof contextValue === "string") {
+    if (isOB3Check) {
+      return isOB3ContextVariant(contextValue);
+    }
+    return contextValue === context;
   }
 
   return false;
