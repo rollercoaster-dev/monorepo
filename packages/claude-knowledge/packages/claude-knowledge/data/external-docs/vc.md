@@ -154,7 +154,6 @@ if that is not possible.
                       This document is governed by the
                       [03 November 2023 W3C Process Document](https://www.w3.org/policies/process/20231103/).
 
-
 ## 1. Introduction
 
 [](#introduction)
@@ -266,14 +265,12 @@ roles:
 
           [holder](#dfn-holders)
 
-
 A role an [entity](#dfn-entities) might perform by possessing one or more [verifiable credentials](#dfn-verifiable-credential) and generating [verifiable presentations](#dfn-verifiable-presentation) from them. A holder is
 often, but not always, a [subject](#dfn-subjects) of the [verifiable credentials](#dfn-verifiable-credential) they are
 holding. Holders store their [credentials](#dfn-credential) in [credential repositories](#dfn-credential-repositories).
 Example holders include students, employees, and customers.
 
           [issuer](#dfn-issuers)
-
 
 A role an [entity](#dfn-entities) can perform by asserting [claims](#dfn-claims) about one or more
 [subjects](#dfn-subjects), creating a [verifiable credential](#dfn-verifiable-credential) from these [claims](#dfn-claims), and
@@ -283,18 +280,15 @@ and individuals.
 
           [subject](#dfn-subjects)
 
-
 A thing about which [claims](#dfn-claims) are made. Example subjects include human beings,
 animals, and things.
 
           [verifier](#dfn-verifier)
 
-
 A role an [entity](#dfn-entities) performs by receiving one or more [verifiable credentials](#dfn-verifiable-credential), optionally inside a [verifiable presentation](#dfn-verifiable-presentation) for processing.
 Example verifiers include employers, security personnel, and websites.
 
           [verifiable data registry](#dfn-verifiable-data-registries)
-
 
 A role a system might perform by mediating the creation and [verification](#dfn-verify) of
 identifiers, [verification material](#dfn-verification-material), and other relevant data, such as
@@ -355,8 +349,6 @@ As well as sections marked as non-normative, all authoring guidelines, diagrams,
         when, and only when, they appear in all
         capitals, as shown here.
 
-
-
 A conforming document is a
 [compacted](https://www.w3.org/TR/json-ld11-api/#compaction-algorithms) JSON-LD
 document that complies with all of the relevant "MUST" statements in this
@@ -407,11 +399,9 @@ The following terms are used to describe concepts in this specification.
 
         claim
 
-
 An assertion made about a [subject](#dfn-subjects).
 
         credential
-
 
 A set of one or more [claims](#dfn-claims) made by an [issuer](#dfn-issuers). The [claims](#dfn-claims)
 in a credential can be about different [subjects](#dfn-subjects). The definition of
@@ -420,7 +410,6 @@ NIST's definitions of
 credential.
 
         decentralized identifier
-
 
 A portable URL-based identifier, also known as a DID,
 is associated with an [entity](#dfn-entities). These identifiers are most often used in a
@@ -432,12 +421,10 @@ An example of a DID is `did:example:123456abcdef`. See the
 
         default graph
 
-
 The [graph](#dfn-graphs) containing all [claims](#dfn-claims) that are not explicitly part of
 a [named graph](#dfn-named-graphs).
 
         entity
-
 
 Anything that can be referenced in statements as an abstract or concrete noun.
 Entities include but are not limited to people, organizations, physical things,
@@ -448,14 +435,12 @@ cannot issue credentials.
 
         graph
 
-
 A set of claims, forming a network of information composed of [subjects](#dfn-subjects)
 and their relationship to other [subjects](#dfn-subjects) or data. Each [claim](#dfn-claims) is
 part of a graph; either explicit in the case of [named graphs](#dfn-named-graphs), or
 implicit for the [default graph](#dfn-default-graph).
 
         holder
-
 
 A role an [entity](#dfn-entities) might perform by possessing one or more
 [verifiable credentials](#dfn-verifiable-credential) and generating [verifiable presentations](#dfn-verifiable-presentation)
@@ -465,14 +450,12 @@ from them. A holder is often, but not always, a [subject](#dfn-subjects) of the
 
         issuer
 
-
 A role an [entity](#dfn-entities) can perform by asserting [claims](#dfn-claims) about one or
 more [subjects](#dfn-subjects), creating a [verifiable credential](#dfn-verifiable-credential) from these
 [claims](#dfn-claims), and transmitting the [verifiable credential](#dfn-verifiable-credential) to a
 [holder](#dfn-holders).
 
         named graph
-
 
 A [graph](#dfn-graphs) associated with specific properties, such as
 `verifiableCredential`. These properties
@@ -481,35 +464,29 @@ corresponding JSON objects.
 
         presentation
 
-
 Data derived from one or more [verifiable credentials](#dfn-verifiable-credential) issued by one or
 more [issuers](#dfn-issuers) that is shared with a specific [verifier](#dfn-verifier).
 
         credential repository
-
 
 Software, such as a file system, storage vault, or personal [verifiable credential](#dfn-verifiable-credential) wallet, that stores and protects access to [holders'](#dfn-holders)
 [verifiable credentials](#dfn-verifiable-credential).
 
         selective disclosure
 
-
 The ability of a [holder](#dfn-holders) to make fine-grained decisions about what
 information to share.
 
         unlinkable disclosure
-
 
 A type of [selective disclosure](#dfn-selective-disclosure) where [presentations](#dfn-presentation) cannot be correlated
 between [verifiers](#dfn-verifier).
 
         subject
 
-
 A thing about which [claims](#dfn-claims) are made.
 
         validation
-
 
 The assurance that a [claim](#dfn-claims) from a specific [issuer](#dfn-issuers) satisfies the business
 requirements of a [verifier](#dfn-verifier) for a particular use. This specification defines
@@ -522,13 +499,11 @@ their systems.
 
         verifiable credential
 
-
 A tamper-evident [credential](#dfn-credential) whose authorship can be cryptographically
 verified. Verifiable credentials can be used to build
 [verifiable presentations](#dfn-verifiable-presentation), which can also be cryptographically verifiable.
 
         verifiable data registry
-
 
 A role a system might perform by mediating the creation and [verification](#dfn-verify)
 of identifiers, [verification material](#dfn-verification-material), and other relevant data, such as
@@ -540,7 +515,6 @@ as namespaces for identifiers.
 
         verifiable presentation
 
-
 A tamper-evident presentation of information encoded in such a way that
 authorship of the data can be trusted after a process of cryptographic
 verification. Certain types of verifiable presentations might contain data that
@@ -548,7 +522,6 @@ is synthesized from, but does not contain, the original [verifiable credentials]
 (for example, zero-knowledge proofs).
 
         verification
-
 
 The evaluation of whether a [verifiable credential](#dfn-verifiable-credential) or [verifiable presentation](#dfn-verifiable-presentation) is an authentic and current statement of the issuer or presenter,
 respectively. This includes checking that the credential or presentation
@@ -558,7 +531,6 @@ evaluation of the truth of [claims](#dfn-claims) encoded in the credential.
 
         verifier
 
-
 A role an [entity](#dfn-entities) performs by receiving one or more
 [verifiable credentials](#dfn-verifiable-credential), optionally inside a
 [verifiable presentation](#dfn-verifiable-presentation) for processing. Other specifications might refer
@@ -566,13 +538,11 @@ to this concept as a relying party.
 
         verification material
 
-
 Information that is used to verify the security of cryptographically
 protected information. For example, a cryptographic public key is used to verify
 a digital signature associated with a [verifiable credential](#dfn-verifiable-credential).
 
         URL
-
 
 A Uniform Resource Locator, as defined by the [URL Standard](https://url.spec.whatwg.org/). URLs can be
 dereferenced to result in a resource, such as a document. The rules
@@ -689,12 +659,6 @@ payload contains a single information graph, which is the [verifiable credential
             Information graphs associated with a basic verifiable credential,
             using an [enveloping proof](#dfn-enveloping-proof) based on [Securing Verifiable Credentials using JOSE and COSE](https://www.w3.org/TR/vc-jose-cose/)
             [[VC-JOSE-COSE](#bib-vc-jose-cose)].
-
-
-
-
-
-
 
 ### 3.3 Presentations
 
@@ -850,71 +814,57 @@ properties are defined in this specification for a [verifiable credential](#dfn-
 
           @context
 
-
 Defined in Section [4.3 Contexts](#contexts).
 
           id
-
 
 Defined in Section [4.4 Identifiers](#identifiers).
 
           type
 
-
 Defined in Section [4.5 Types](#types).
 
           name
-
 
 Defined in Section [4.6 Names and Descriptions](#names-and-descriptions).
 
           description
 
-
 Defined in Section [4.6 Names and Descriptions](#names-and-descriptions).
 
           issuer
-
 
 Defined in Section [4.7 Issuer](#issuer).
 
           credentialSubject
 
-
 Defined in Section [4.8 Credential Subject](#credential-subject).
 
           validFrom
-
 
 Defined in Section [4.9 Validity Period](#validity-period).
 
           validUntil
 
-
 Defined in Section [4.9 Validity Period](#validity-period).
 
           status
-
 
 Defined in Section [4.10 Status](#status).
 
           credentialSchema
 
-
 Defined in Section [4.11 Data Schemas](#data-schemas).
 
           refreshService
-
 
 Defined in Section [5.4 Refreshing](#refreshing).
 
           termsOfUse
 
-
 Defined in Section [5.5 Terms of Use](#terms-of-use).
 
           evidence
-
 
 Defined in Section [5.6 Evidence](#evidence).
 
@@ -950,7 +900,6 @@ by using the `relatedResource` feature described in Section
 [5.3 Integrity of Related Resources](#integrity-of-related-resources) or any effectively equivalent mechanism.
 
           @context
-
 
 The value of the `@context` [property](#dfn-property) MUST be an [ordered set](https://infra.spec.whatwg.org/#ordered-set)
 where the first item is a [URL](#dfn-url) with the value
@@ -1036,15 +985,12 @@ if not used judiciously.
 
           id
 
-
 The `id` [property](#dfn-property) is OPTIONAL. If present, `id` [property](#dfn-property)'s value
 MUST be a single [URL](#dfn-url), which MAY be dereferenceable. It is
 RECOMMENDED that the [URL](#dfn-url) in the `id` be one which, if dereferenceable, results
 in a document containing machine-readable information about the `id`.
 
     [Example 3](#example-use-of-the-id-property): Use of the id property
-
-
 
 - Credential
 - ecdsa
@@ -1252,11 +1198,6 @@ d28443a10128a05901be7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTMsImV4cCI6MTc0Njk4NjMxMywiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy81NjUwNDkiLCJ2YWxpZEZyb20iOiIyMDEwLTAxLTAxVDAwOjAwOjAwWiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImRlZ3JlZSI6eyJuYW1lIjoiQmFjaGVsb3Igb2YgU2NpZW5jZSBhbmQgQXJ0cyIsIl9zZCI6WyJhbDRaR3cxellsZU1BMTA2SXpiLVhlc0pBbldDZ1NpNW5QbjFKRVYxamo4Il19LCJfc2QiOlsiOC1vWU9FU1JrNjBpbVozblgzY2E5RGxIeXFJcTk4RnQzX19HMUFsYU90MCJdfSwiX3NkIjpbIk9EUGNVWENXbGQtSGlxQ1h5NEhuY1Mxb3hqaURpRE9wMTJ4YlVveEZvU2MiLCJVaGtGbUw3cXc0UVlLWDJjVDNMWFAwcDZ5VHc1UmlIRG5xWGxfMFZLZnhBIl19
 .YASiTse77TXvt7jYyChZOd6x0TbbBeEVZ14pekiOWw6G6N40a3evbWFBAkuPcStVFZPshFy1GFECySRVAhcD5A
@@ -1382,15 +1323,12 @@ information can be used during [validation](#dfn-claim-validation) processes, as
 
           type
 
-
 The value of the `type` [property](#dfn-property) MUST be one or more
 [terms](https://www.w3.org/TR/json-ld11/#dfn-term) and
 [absolute URL strings](https://url.spec.whatwg.org/#absolute-url-string). If more than
 one value is provided, the order does not matter.
 
     [Example 4](#example-use-of-the-type-property): Use of the type property
-
-
 
 - Credential
 - ecdsa
@@ -1598,11 +1536,6 @@ d28443a10128a05901be7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTMsImV4cCI6MTc0Njk4NjMxMywiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy81NjUwNDkiLCJ2YWxpZEZyb20iOiIyMDEwLTAxLTAxVDAwOjAwOjAwWiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImRlZ3JlZSI6eyJuYW1lIjoiQmFjaGVsb3Igb2YgU2NpZW5jZSBhbmQgQXJ0cyIsIl9zZCI6WyJEUkg1aWVsZHdHNXJPMlVQNXlYYlBXWHNTaFFNSmxESlJfZlFVbmhZVDNFIl19LCJfc2QiOlsiUzRvTGpDb0dNckpuMnFFR2lXY1JNNmdFNGZ6cVVFcVIzNC1FOWdjZzIyWSJdfSwiX3NkIjpbIlZtWnFMMkpKUFB0RDk2TmxwNE43TzFRMXhFRmNMZ1hCVzVfQWFGQXp4Sm8iLCJaYTdxRkpZSnRSTExSOFNRT1VUYUxwaDZBY21QSGlYVkc5Ni03Wnp3MEtJIl19
 .ypl46Q1EqUERV-IUUS\_-qGoAESfv_WdXwtHOk2vX7QTZNFf0NNfg-w2OR8JPRe97kZBDQLuBZKPJhBXdFjbSwg
@@ -1700,12 +1633,6 @@ MUST have a [type](#dfn-type) specified.
 
               Object
               Type
-
-
-
-
-
-
 
 [Verifiable credential](#dfn-verifiable-credential) object
 
@@ -1821,7 +1748,6 @@ serve these purposes.
 
           name
 
-
 An OPTIONAL property that expresses the name of the [credential](#dfn-credential). If
 present, the value of the `name` [property](#dfn-property) MUST be a string or
 a language value object as described in
@@ -1832,7 +1758,6 @@ they might hold.
 
           description
 
-
 An OPTIONAL property that conveys specific details about a [credential](#dfn-credential). If
 present, the value of the `description` [property](#dfn-property) MUST be a
 string or a language value object as described in
@@ -1842,8 +1767,6 @@ information about the [credential](#dfn-credential) to remind an individual of i
 without having to look through the entirety of the [claims](#dfn-claims).
 
     [Example 5](#example-use-of-the-name-and-description-properties): Use of the name and description properties
-
-
 
 - Credential
 - ecdsa
@@ -2087,11 +2010,6 @@ d28443a10128a05902807b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTMsImV4cCI6MTc0Njk4NjMxMywiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjp7Im5hbWUiOiJFeGFtcGxlIFVuaXZlcnNpdHkiLCJkZXNjcmlwdGlvbiI6IkEgcHVibGljIHVuaXZlcnNpdHkgZm9jdXNpbmcgb24gdGVhY2hpbmcgZXhhbXBsZXMuIiwiX3NkIjpbIjN5U2k5WkUtdWp0RDQ4NDRacGY4V2NMY3EwQWlyajVqbFJmLTNSQVJPcmsiXX0sInZhbGlkRnJvbSI6IjIwMTUtMDUtMTBUMTI6MzA6MDBaIiwibmFtZSI6IkV4YW1wbGUgVW5pdmVyc2l0eSBEZWdyZWUiLCJkZXNjcmlwdGlvbiI6IjIwMTUgQmFjaGVsb3Igb2YgU2NpZW5jZSBhbmQgQXJ0cyBEZWdyZWUiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJkZWdyZWUiOnsibmFtZSI6IkJhY2hlbG9yIG9mIFNjaWVuY2UgYW5kIEFydHMiLCJfc2QiOlsiZnRIMUtTRTVzNmZKd1cyMWY2STBlUmNtYW9SX2s5YTVBS2lTMnFidFVTNCJdfSwiX3NkIjpbIkNJaDBOYWN4ME5IWUJ5QTFoZ1NlWDdoMXF0amNvUGRIODR1NTN0a2t6R3ciXX0sIl9zZCI6WyI2UFk1X1dKU1pUaWszdG9rOHg0eEF0TWstOGpqWnpzZnV6dXhUX2JvY0wwIiwiVE9XWGhJS1dPeHBZbHgtUmtoal9kVTh3Sml2cmRuOUNrbm9fcXVvNng4YyJdfQ
 .FzX3Ke7i888rlwj2XY-Xmd73hKH4oGaIp68z2xqPS1Bv17BKSaKQwfxgf22iNAguzVvlIQVXjRqpg0G-S46xDA
@@ -2310,7 +2228,6 @@ A [verifiable credential](#dfn-verifiable-credential) MUST have an `issuer` [pro
 
           issuer
 
-
 The value of the `issuer` [property](#dfn-property) MUST be either a [URL](#dfn-url) or an object
 containing an `id` [property](#dfn-property) whose value is a [URL](#dfn-url); in either case, the
 issuer selects this [URL](#dfn-url) to identify itself in a globally unambiguous way. It
@@ -2320,8 +2237,6 @@ about the [issuer](#dfn-issuers) that can be used to [verify](#dfn-verify) the i
 in the [credential](#dfn-credential).
 
     [Example 7](#example-use-of-the-issuer-property): Use of the issuer property
-
-
 
 - Credential
 - ecdsa
@@ -2529,11 +2444,6 @@ d28443a10128a05901ba7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTMsImV4cCI6MTc0Njk4NjMxMywiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy8xNCIsInZhbGlkRnJvbSI6IjIwMTAtMDEtMDFUMTk6MjM6MjRaIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiZGVncmVlIjp7Im5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIiwiX3NkIjpbImN4X0JsU2pRSVp6bjN5aFRhc0pEeGhLZVlrcndLc25fLXc1RGFKVVdNYmMiXX0sIl9zZCI6WyJOcm96NFFQRHFTOGZkdVI0bDFQaFZwS3l6aFJzN2xha3VlQUZDMmhNa2hzIl19LCJfc2QiOlsiSk84RmdIYmVuLVdlOHJvUDBiM09uV1hrVHZSMlYzOXRTSllzdmpiTy12cyIsImhvckxSUTVqbHpNcFktWDdKMXA1Wmh4UXNNNmMyaHhoZXNjUnF0RnRQSDgiXX0
 .DVnk8KsBnPp-Z9vnpReTasbST4ENcNjOwn9qxCgDx7H33VsJaFi0DyCa2auVKb1oSL0IilelgxsEVs27fMClSA
@@ -2630,8 +2540,6 @@ It is also possible to express additional information about the issuer by
 associating an object with the issuer property:
 
     [Example 8](#example-expanded-use-of-the-issuer-property): Expanded use of the issuer property
-
-
 
 - Credential
 - ecdsa
@@ -2857,11 +2765,6 @@ d28443a10128a05901df7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTQsImV4cCI6MTc0Njk4NjMxNCwiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjp7Im5hbWUiOiJFeGFtcGxlIFVuaXZlcnNpdHkiLCJfc2QiOlsiYTQ0Y2M5VHU1eGd1N3hCTHlMaTdwVUoxTHFpdHlPVDZqMWxMNF9xZW04SSJdfSwidmFsaWRGcm9tIjoiMjAxMC0wMS0wMVQxOToyMzoyNFoiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJkZWdyZWUiOnsibmFtZSI6IkJhY2hlbG9yIG9mIFNjaWVuY2UgYW5kIEFydHMiLCJfc2QiOlsiRHViUDR4bXg4dk5FNFBuYUUzYjlzRGpKWUhIaHpETVFxUVdnUlg2d2ZzWSJdfSwiX3NkIjpbIkJaa0tyVXpjbFhWcHZEUzRFWUh1YkZZa0w3am9lTXlJUFluVlhoS3dBaDQiXX0sIl9zZCI6WyJDT3F6UUNsT2ZTNzc2dXBmaENuVmRyYjdsWWhHY0lBZlRCWDVWeTB3V1E4IiwiS0t0QnoydUxOZzVrd1ZyNHkzWGhHWkhXRXI3aTc3WGFHOVhHbldPV0ZCbyJdfQ
 .-JMxTewqTy\_\_6Dh_WAXAS6_TqnXHV66JpBSzVZ61NCP6DdYAAIwgGCo5gbF6HyAerxUjSmCfe9vmUTIgtZ_U3g
@@ -2989,7 +2892,6 @@ A [verifiable credential](#dfn-verifiable-credential) MUST contain a `credential
 
           credentialSubject
 
-
 The value of the `credentialSubject` [property](#dfn-property) is a set of objects where each
 object MUST be the [subject](#dfn-subjects) of one or more [claims](#dfn-claims), which MUST be
 serialized inside the `credentialSubject` [property](#dfn-property). Each object MAY also
@@ -2997,8 +2899,6 @@ contain an `id` [property](#dfn-property) to identify the [subject](#dfn-subject
 Section [4.4 Identifiers](#identifiers).
 
     [Example 9](#example-use-of-the-credentialsubject-property): Use of the credentialSubject property
-
-
 
 - Credential
 - ecdsa
@@ -3206,11 +3106,6 @@ d28443a10128a05901be7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTQsImV4cCI6MTc0Njk4NjMxNCwiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy81NjUwNDkiLCJ2YWxpZEZyb20iOiIyMDEwLTAxLTAxVDAwOjAwOjAwWiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImRlZ3JlZSI6eyJuYW1lIjoiQmFjaGVsb3Igb2YgU2NpZW5jZSBhbmQgQXJ0cyIsIl9zZCI6WyJlU3NEMXVhcVNuZUdIVEVjTWxlM1ZzWlJwOHRNbmo1Q0dyN1EzandzdkZrIl19LCJfc2QiOlsiYU5MMTNnNnUtenN2VG1YVkFfOVRYdXlrSVdpRzd0djVvbExzdHNieDlkayJdfSwiX3NkIjpbIkRsMHp6eHZJcXA1TVdBNWEzSTJQRDFNQXJ3NlZBNFFMeWRscVNsSkVCeVkiLCJqVmtSaTdLMGUySTFkbFJURXREdlFVTEIxcWZaZ3NNcGlCdjVQYWsyMXlzIl19
 .Yh2d9J3y-SKxa16vZzRVQKaya0V66OPIar-C9PGVzOu2Q7_0IbsYqTJxtNYsQ39fk64p1-QEgCmWPWHFRAD_qw
@@ -3349,7 +3244,6 @@ a particular point on the timeline.
 
           validFrom
 
-
 If present, the value of the `validFrom` [property](#dfn-property) MUST be a
 [[XMLSCHEMA11-2](https://www.w3.org/TR/xmlschema11-2/#dateTime)]
 `dateTimeStamp` string value representing the date and time the
@@ -3362,7 +3256,6 @@ earlier than the point in time expressed by the `validUntil` value.
 
           validUntil
 
-
 If present, the value of the `validUntil` [property](#dfn-property) MUST be a
 [[XMLSCHEMA11-2](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)]
 `dateTimeStamp` string value representing the date and time the
@@ -3374,8 +3267,6 @@ value MUST express a point in time that is temporally the same or later than the
 point in time expressed by the `validFrom` value.
 
     [Example 11](#example-use-of-the-validfrom-and-validuntil-properties): Use of the validFrom and validUntil properties
-
-
 
 - Credential
 - ecdsa
@@ -3589,11 +3480,6 @@ d28443a10128a05901de7b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
         Issuer Disclosures
 
-
-
-
-
-
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTQsImV4cCI6MTc0Njk4NjMxNCwiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy8xNCIsInZhbGlkRnJvbSI6IjIwMTAtMDEtMDFUMTk6MjM6MjRaIiwidmFsaWRVbnRpbCI6IjIwMjAtMDEtMDFUMTk6MjM6MjRaIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiZGVncmVlIjp7Im5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIiwiX3NkIjpbInRreDZVVzN3VF9OcVRpeHZWR2tzd2RaRi1rQkE0TmhBV1pHSmxhUURpREkiXX0sIl9zZCI6WyJmTmpEU0RIbDNIQkNTQ1hSRzh0OWJud1RIMUpTT0JQOE0wWmFaQlpQTmNJIl19LCJfc2QiOlsiUHhTdmNMelpvam1Lck5qMWVKWDNxVjZKcVoxdFBVV1dYMFo5Q2dLRTlEVSIsInRTSThIellYN2RYdHhpMVc3UHUxckg4S3ZFNUxBRkNEVVNxcHpsbmdzRDgiXX0
 .4gc3oF3a-OHOSwVC1eiCZP-ureWU-bdPdjBlL-xBjUsE5qL2sBQbg5PP_CO6JgZiBONpr3iU6cL0MF9iPpu9Eg
@@ -3708,13 +3594,11 @@ are defined for every object:
 
           id
 
-
 The `id` [property](#dfn-property) is OPTIONAL. It MAY be used to provide a
 unique identifier for the credential status object. If present, the
 normative guidance in Section [4.4 Identifiers](#identifiers) MUST be followed.
 
           type
-
 
 The `type` [property](#dfn-property) is REQUIRED. It is used to express the
 type of status information expressed by the object. The related normative
@@ -3839,8 +3723,6 @@ data schema, which an [issuer](#dfn-issuers) can include in the [verifiable cred
 that it issues:
 
           credentialSchema
-
-
 
 The value of the `credentialSchema` [property](#dfn-property) MUST be one or
 more data schemas that provide [verifiers](#dfn-verifier) with enough information to
@@ -4025,13 +3907,11 @@ The following properties are defined for a [verifiable presentation](#dfn-verifi
 
           id
 
-
 The `id` [property](#dfn-property) is optional. It MAY be used to provide a
 unique identifier for the [verifiable presentation](#dfn-verifiable-presentation). If present, the
 normative guidance in Section [4.4 Identifiers](#identifiers) MUST be followed.
 
           type
-
 
 The `type` [property](#dfn-property) MUST be present. It is used to express the
 type of [verifiable presentation](#dfn-verifiable-presentation). One value of this property MUST be
@@ -4039,7 +3919,6 @@ type of [verifiable presentation](#dfn-verifiable-presentation). One value of th
 related normative guidance in Section [4.5 Types](#types) MUST be followed.
 
           verifiableCredential
-
 
 The `verifiableCredential` [property](#dfn-property) MAY be present. The value
 MUST be one or more [verifiable credential](#dfn-verifiable-credential) and/or
@@ -4052,7 +3931,6 @@ MUST express information that is secured using a
 See Section [5.12 Verifiable Credential Graphs](#verifiable-credential-graphs) for further details.
 
           holder
-
 
 The [verifiable presentation](#dfn-verifiable-presentation) MAY include a `holder`
 [property](#dfn-property). If present, the value MUST be either a [URL](#dfn-url) or an object
@@ -4096,7 +3974,6 @@ This can be accomplished by associating the `verifiableCredential` property with
 an object that has a `type` of `EnvelopedVerifiableCredential`.
 
             EnvelopedVerifiableCredential
-
 
 They are used to associate an object containing an enveloped
 [verifiable credential](#dfn-verifiable-credential) with the `verifiableCredential` property in a
@@ -4148,7 +4025,6 @@ using a mechanism that "envelops" the payload, such as
 object that has a `type` of `EnvelopedVerifiablePresentation`.
 
             EnvelopedVerifiablePresentation
-
 
 Used to express an enveloped [verifiable presentation](#dfn-verifiable-presentation).
 The `@context` property of the object MUST be present and include a context,
@@ -4432,8 +4308,6 @@ Let us assume we start with the [credential](#dfn-credential) shown below.
 
     [Example 22](#example-a-simple-credential): A simple credential
 
-
-
 - Credential
 - ecdsa
 - ecdsa-sd
@@ -4616,11 +4490,6 @@ d28443a10128a05901487b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
 
         Issuer Disclosures
-
-
-
-
-
 
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTQsImV4cCI6MTc0Njk4NjMxNCwiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly9pc3N1ZXIuZXhhbXBsZS9pc3N1ZXJzLzE0IiwidmFsaWRGcm9tIjoiMjAxOC0wMi0yNFQwNToyODowNFoiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjoiSmFuZSBEb2UiLCJfc2QiOlsidVE2NkFmZXF3dWY0Y2s5NXI2cTFWZVZEM3FVYjU0VTJtUmdZdGRWQVpkbyJdfSwiX3NkIjpbIktwdURNMGVHaWtoNXBiVjhUR1lrYjZTdDNaLUZadkNtWmxkeGl1NmwydzgiLCJiUzFQMVNOc2tUb2h1QlRCeE8tNHF4bThRT21sQmlDTXhnVXJnYkNpWHM4Il19
@@ -4850,7 +4719,6 @@ To extend integrity protection to a related resource, an [issuer](#dfn-issuers) 
 
           relatedResource
 
-
 The value of the `relatedResource` property MUST be one or more objects of the
 following form:
 
@@ -4861,13 +4729,11 @@ following form:
 
                   `id`
 
-
 The identifier for the resource is REQUIRED and conforms to the format defined
 in Section [4.4 Identifiers](#identifiers). The value MUST be unique among the list of
 related resource objects.
 
                   `mediaType`
-
 
 An OPTIONAL valid media type as listed in the
 
@@ -4875,14 +4741,12 @@ IANA Media Types registry.
 
                   `digestSRI`
 
-
 One or more cryptographic digests, as defined by the `hash-expression` ABNF
 grammar defined in the [Subresource Integrity](https://www.w3.org/TR/SRI/) specification,
 Section 3.5: The `integrity`
 attribute.
 
                   `digestMultibase`
-
 
 One or more cryptographic digests, as defined by the `digestMultibase`
 property in the [Verifiable Credential Data Integrity 1.0](https://www.w3.org/TR/vc-data-integrity/)
@@ -4981,7 +4845,6 @@ protected in some way.
 
           refreshService
 
-
 The value of the `refreshService` [property](#dfn-property) MUST be one or more
 refresh services that provides enough information to the recipient's software
 such that the recipient can refresh the [verifiable credential](#dfn-verifiable-credential). Each
@@ -5054,7 +4917,6 @@ the identity of the entity under whose authority the [issuer](#dfn-issuers) issu
 this particular [verifiable credential](#dfn-verifiable-credential)
 
           termsOfUse
-
 
 The value of the `termsOfUse` [property](#dfn-property) MUST specify one or
 more terms of use policies under which the creator issued the [credential](#dfn-credential)
@@ -5147,20 +5009,17 @@ information.
 
           evidence
 
-
 If present, the value of the `evidence` [property](#dfn-property) MUST be either a single
 object or a set of one or more objects. The following [properties](#dfn-property) are defined
 for every evidence object:
 
               id
 
-
 The `id` [property](#dfn-property) is OPTIONAL. It MAY be used to provide a unique identifier
 for the evidence object. If present, the normative guidance in Section
 [4.4 Identifiers](#identifiers) MUST be followed.
 
               type
-
 
 The `type` [property](#dfn-property) is REQUIRED. It is used to express the type of evidence
 information expressed by the object. The related normative guidance in Section
@@ -5511,14 +5370,12 @@ see Section [4.5 Types](#types).
 
               `confidenceMethod`
 
-
 A property used for specifying one or more methods that a verifier might use to
 increase their confidence that the value of a property in or of a verifiable
 credential or verifiable presentation is accurate. The associated vocabulary
 URL MUST be `https://www.w3.org/2018/credentials#confidenceMethod`.
 
               `renderMethod`
-
 
 A property used for specifying one or more methods to render a credential into a
 visual, auditory, haptic, or other format. The associated vocabulary URL MUST be
@@ -5652,17 +5509,14 @@ returns a verification result with at least the following [items](https://infra.
 
           [boolean](https://infra.spec.whatwg.org/#boolean) verified
 
-
 A verification status whose value is `true` if the verification succeeded and
 `false` if it did not.
 
           [map](https://infra.spec.whatwg.org/#ordered-map) verifiedDocument
 
-
 A document that only contains information that was successfully secured.
 
           [string](https://infra.spec.whatwg.org/#string) mediaType
-
 
 A media type as defined in [[RFC6838](#bib-rfc6838)].
 
@@ -6174,18 +6028,15 @@ properties:
 
           type
 
-
 The `type` [property](#dfn-property) MUST be present and its value MUST be a [URL](#dfn-url)
 identifying the type of problem.
 
           title
 
-
 The `title` [property](#dfn-property) SHOULD provide a short
 but specific human-readable string for the problem.
 
           detail
-
 
 The `detail` [property](#dfn-property) SHOULD provide a
 longer human-readable string for the problem.
@@ -6610,8 +6461,6 @@ possible by not specifying the [subject](#dfn-subjects) identifier, expressed us
 
     [Example 35](#example-use-of-issuer-properties): Use of issuer properties
 
-
-
 - Credential
 - ecdsa
 - ecdsa-sd
@@ -6812,11 +6661,6 @@ d28443a10128a05901a27b2240636f6e74657874223a5b2268747470733a2f2f7777772e77332e6f
 
 
         Issuer Disclosures
-
-
-
-
-
 
 eyJraWQiOiJFeEhrQk1XOWZtYmt2VjI2Nm1ScHVQMnNVWV9OX0VXSU4xbGFwVXpPOHJvIiwiYWxnIjoiRVMyNTYifQ
 .eyJpYXQiOjE3NDU3NzY3MTQsImV4cCI6MTc0Njk4NjMxNCwiX3NkX2FsZyI6InNoYS0yNTYiLCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvZXhhbXBsZXMvdjIiXSwiaXNzdWVyIjoiaHR0cHM6Ly91bml2ZXJzaXR5LmV4YW1wbGUvaXNzdWVycy8xNCIsInZhbGlkRnJvbSI6IjIwMTctMTAtMjJUMTI6MjM6NDhaIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiZGVncmVlIjp7Im5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIiwiX3NkIjpbIl9BT1Y2UkQwSmFobzVaaUgxSUxNd0pXSlE3cS1ueWVveVhIQWoyeVdtUlkiXX19LCJfc2QiOlsiUG9aeVBTUGtzd1AyODdsRU5ZMDJHdzg1Q2NzMjYyWU5fVkZLSEFpOGZ3byIsIlY0Y0k4aDQ5VUt6em5UdGpMQV9NZ3hBblFoeWR0ME45OWVVdjBTZXJibDQiXX0
@@ -8167,11 +8011,6 @@ to ensure that developers can verify that the content of each file is correct.
 
               JSON-LD Documents and Hashes
 
-
-
-
-
-
 URL: https://www.w3.org/2018/credentials#
 
 Resolved Document: https://www.w3.org/2018/credentials/index.jsonld
@@ -8202,11 +8041,6 @@ and other specifications that benefit from such definitions:
 
               Base Class
               Purpose
-
-
-
-
-
 
 `CredentialEvidence`
 
@@ -8249,9 +8083,6 @@ the [termsOfUse](#terms-of-use) property.
 
           This section defines datatypes that are used by this specification.
 
-
-
-
 #### B.3.1 The `sriString` Datatype
 
 [](#the-sristring-datatype)
@@ -8264,19 +8095,16 @@ specification. The `sriString` datatype is defined as follows:
               `https://www.w3.org/2018/credentials#sriString`
               The lexical space
 
-
 See the ABNF
 grammar, defining the `integrity` attribute in the [[SRI](#bib-sri)] specification,
 for the restrictions on the string format.
 
               The value space
 
-
 A (possibly empty) list of (alg,val) pairs, where alg identifies a
 hash function, and val is an integer as a standard mathematical concept.
 
               The lexical-to-value mapping
-
 
 Any element of the lexical space is mapped to the value space by following the
 [parse metadata algorithm](https://www.w3.org/TR/SRI/#parse-metadata)
@@ -8284,7 +8112,6 @@ based on the ABNF
 grammar in the [[SRI](#bib-sri)] specification.
 
               The canonical mapping
-
 
 The canonical mapping consists of the lexical-to-value mapping.
 
@@ -8398,7 +8225,6 @@ identifying documents conforming to the [verifiable credentials](#dfn-verifiable
 
             Encoding considerations:
 
-
 Resources that use the `application/vc` media type are required to conform to
 all of the requirements for the `application/ld+json` media type and are
 therefore subject to the same encoding considerations specified in Section 11
@@ -8409,7 +8235,6 @@ of [The JavaScript Object Notation (JSON) Data Interchange Format](https://www.r
 
 
             Contact:
-
 
 W3C Verifiable Credentials Working Group
 [public-vc-wg@w3.org](mailto:public-vc-wg@w3.org)
@@ -8450,7 +8275,6 @@ identifying documents conforming to the [verifiable presentations](#dfn-verifiab
 
             Encoding considerations:
 
-
 Resources that use the `application/vp` media type are required to conform to
 all of the requirements for the `application/ld+json` media type and are
 therefore subject to the same encoding considerations specified in Section 11
@@ -8461,7 +8285,6 @@ of [The JavaScript Object Notation (JSON) Data Interchange Format](https://www.r
 
 
             Contact:
-
 
 W3C Verifiable Credentials Working Group
 [public-vc-wg@w3.org](mailto:public-vc-wg@w3.org)
@@ -8519,8 +8342,6 @@ using [embedded proofs](#dfn-embedded-proof) based on [[VC-DATA-INTEGRITY](#bib-
           associated with a [verifiable presentation](#dfn-verifiable-presentation) referring to two
           verifiable credentials using [enveloping proofs](#dfn-enveloping-proof) based on JOSE
           [[VC-JOSE-COSE](#bib-vc-jose-cose)].
-
-
 
 ## E. Revision History
 
@@ -9082,9 +8903,6 @@ Yancy Ribbens.
 
         [Permalink](#dfn-conforming-document)
 
-
-
-
 Referenced in:
 
       [§ 1.3 Conformance](#ref-for-dfn-conforming-document-1) [(2)](#ref-for-dfn-conforming-document-2) [(3)](#ref-for-dfn-conforming-document-3) [(4)](#ref-for-dfn-conforming-document-4) [(5)](#ref-for-dfn-conforming-document-5) [(6)](#ref-for-dfn-conforming-document-6)
@@ -9114,9 +8932,6 @@ Referenced in:
 
         [Permalink](#dfn-conforming-issuer-implementation)
 
-
-
-
 Referenced in:
 
       [§ 1.3 Conformance](#ref-for-dfn-conforming-issuer-implementation-1)
@@ -9129,9 +8944,6 @@ Referenced in:
 
 
         [Permalink](#dfn-conforming-verifier-implementation)
-
-
-
 
 Referenced in:
 
@@ -9148,8 +8960,6 @@ Referenced in:
 
         [Permalink](#dfn-claims)
         exported
-
-
 
 Referenced in:
 
@@ -9206,8 +9016,6 @@ Referenced in:
 
         [Permalink](#dfn-credential)
         exported
-
-
 
 Referenced in:
 
@@ -9298,9 +9106,6 @@ Referenced in:
 
         [Permalink](#dfn-decentralized-identifiers)
 
-
-
-
 Referenced in:
 
       [§ 4.4 Identifiers](#ref-for-dfn-decentralized-identifiers-2) [(2)](#ref-for-dfn-decentralized-identifiers-3) [(3)](#ref-for-dfn-decentralized-identifiers-4) [(4)](#ref-for-dfn-decentralized-identifiers-5) [(5)](#ref-for-dfn-decentralized-identifiers-6) [(6)](#ref-for-dfn-decentralized-identifiers-7) [(7)](#ref-for-dfn-decentralized-identifiers-8) [(8)](#ref-for-dfn-decentralized-identifiers-9)
@@ -9313,9 +9118,6 @@ Referenced in:
 
 
         [Permalink](#dfn-default-graph)
-
-
-
 
 Referenced in:
 
@@ -9337,9 +9139,6 @@ Referenced in:
 
 
         [Permalink](#dfn-entities)
-
-
-
 
 Referenced in:
 
@@ -9370,9 +9169,6 @@ Referenced in:
 
         [Permalink](#dfn-graphs)
 
-
-
-
 Referenced in:
 
       [§ 2. Terminology](#ref-for-dfn-graphs-1) [(2)](#ref-for-dfn-graphs-2) [(3)](#ref-for-dfn-graphs-3)
@@ -9396,8 +9192,6 @@ Referenced in:
 
         [Permalink](#dfn-holders)
         exported
-
-
 
 Referenced in:
 
@@ -9501,8 +9295,6 @@ Referenced in:
         [Permalink](#dfn-issuers)
         exported
 
-
-
 Referenced in:
 
       [§ Abstract](#ref-for-dfn-issuers-1) [(2)](#ref-for-dfn-issuers-2)
@@ -9604,9 +9396,6 @@ Referenced in:
 
         [Permalink](#dfn-named-graphs)
 
-
-
-
 Referenced in:
 
       [§ 2. Terminology](#ref-for-dfn-named-graphs-1) [(2)](#ref-for-dfn-named-graphs-2)
@@ -9626,8 +9415,6 @@ Referenced in:
 
         [Permalink](#dfn-presentation)
         exported
-
-
 
 Referenced in:
 
@@ -9675,8 +9462,6 @@ Referenced in:
         [Permalink](#dfn-credential-repositories)
         exported
 
-
-
 Referenced in:
 
       [§ 1.2 Ecosystem Overview](#ref-for-dfn-credential-repositories-1)
@@ -9697,8 +9482,6 @@ Referenced in:
         [Permalink](#dfn-selective-disclosure)
         exported
 
-
-
 Referenced in:
 
       [§ 2. Terminology](#ref-for-dfn-selective-disclosure-1)
@@ -9715,8 +9498,6 @@ Referenced in:
         [Permalink](#dfn-unlinkable-disclosure)
         exported
 
-
-
 Referenced in:
 
       [§ 5.7 Zero-Knowledge Proofs](#ref-for-dfn-unlinkable-disclosure-1) [(2)](#ref-for-dfn-unlinkable-disclosure-2)
@@ -9728,8 +9509,6 @@ Referenced in:
 
         [Permalink](#dfn-subjects)
         exported
-
-
 
 Referenced in:
 
@@ -9797,8 +9576,6 @@ Referenced in:
         [Permalink](#dfn-claim-validation)
         exported
 
-
-
 Referenced in:
 
       [§ 4.5 Types](#ref-for-dfn-claim-validation-1)
@@ -9818,8 +9595,6 @@ Referenced in:
 
         [Permalink](#dfn-verifiable-credential)
         exported
-
-
 
 Referenced in:
 
@@ -10013,8 +9788,6 @@ Referenced in:
         [Permalink](#dfn-verifiable-data-registries)
         exported
 
-
-
 Referenced in:
 
       [§ 1.2 Ecosystem Overview](#ref-for-dfn-verifiable-data-registries-1)
@@ -10030,8 +9803,6 @@ Referenced in:
 
         [Permalink](#dfn-verifiable-presentation)
         exported
-
-
 
 Referenced in:
 
@@ -10135,8 +9906,6 @@ Referenced in:
         [Permalink](#dfn-verify)
         exported
 
-
-
 Referenced in:
 
       [§ 1. Introduction](#ref-for-dfn-verify-1)
@@ -10176,8 +9945,6 @@ Referenced in:
 
         [Permalink](#dfn-verifier)
         exported
-
-
 
 Referenced in:
 
@@ -10294,9 +10061,6 @@ Referenced in:
 
         [Permalink](#dfn-relying-parties)
 
-
-
-
 Referenced in:
 
       [§ 1.2 Ecosystem Overview](#ref-for-dfn-relying-parties-1)
@@ -10307,9 +10071,6 @@ Referenced in:
 
 
         [Permalink](#dfn-verification-material)
-
-
-
 
 Referenced in:
 
@@ -10331,9 +10092,6 @@ Referenced in:
 
 
         [Permalink](#dfn-url)
-
-
-
 
 Referenced in:
 
@@ -10359,9 +10117,6 @@ Referenced in:
 
 
         [Permalink](#dfn-property)
-
-
-
 
 Referenced in:
 
@@ -10428,9 +10183,6 @@ Referenced in:
 
         [Permalink](#dfn-proof-graph)
 
-
-
-
 Referenced in:
 
       [§ 3.2 Credentials](#ref-for-dfn-proof-graph-1)
@@ -10448,8 +10200,6 @@ Referenced in:
 
         [Permalink](#dfn-type)
         exported
-
-
 
 Referenced in:
 
@@ -10475,8 +10225,6 @@ Referenced in:
         [Permalink](#dfn-securing-mechanism)
         exported
 
-
-
 Referenced in:
 
       [§ 8.4 Identifier-Based Correlation](#ref-for-dfn-securing-mechanism-1)
@@ -10490,8 +10238,6 @@ Referenced in:
 
         [Permalink](#dfn-enveloping-proof)
         exported
-
-
 
 Referenced in:
 
@@ -10519,8 +10265,6 @@ Referenced in:
         [Permalink](#dfn-embedded-proof)
         exported
 
-
-
 Referenced in:
 
       [§ 3.2 Credentials](#ref-for-dfn-embedded-proof-1) [(2)](#ref-for-dfn-embedded-proof-2)
@@ -10540,9 +10284,6 @@ Referenced in:
 
         [Permalink](#dfn-verifiable-presentation-graph)
 
-
-
-
 Referenced in:
 
       [§ 3.3 Presentations](#ref-for-dfn-verifiable-presentation-graph-1) [(2)](#ref-for-dfn-verifiable-presentation-graph-2) [(3)](#ref-for-dfn-verifiable-presentation-graph-3)
@@ -10556,8 +10297,6 @@ Referenced in:
 
         [Permalink](#dfn-verifiable-credential-graph)
         exported
-
-
 
 Referenced in:
 
@@ -10574,9 +10313,6 @@ Referenced in:
 
         [Permalink](#dfn-general-json-ld-processing)
 
-
-
-
 Referenced in:
 
       [§ 6.3 Type-Specific Credential Processing](#ref-for-dfn-general-json-ld-processing-1) [(2)](#ref-for-dfn-general-json-ld-processing-2)
@@ -10587,9 +10323,6 @@ Referenced in:
 
 
         [Permalink](#dfn-type-specific-credential-processing)
-
-
-
 
 Referenced in:
 
@@ -10606,9 +10339,6 @@ Referenced in:
 
         [Permalink](#dfn-problemdetails)
 
-
-
-
 Referenced in:
 
       [§ 7.1 Verification](#ref-for-dfn-problemdetails-1) [(2)](#ref-for-dfn-problemdetails-2)
@@ -10621,9 +10351,6 @@ Referenced in:
 
 
         [Permalink](#dfn-bearer-credentials)
-
-
-
 
 Referenced in:
 
