@@ -15,8 +15,11 @@ export const OB2Context = "https://w3id.org/openbadges/v2";
 export const OB3Context =
   "https://purl.imsglobal.org/spec/ob/v3p0/context.json";
 
-// Type for W3C Verifiable Credentials context
+// Type for W3C Verifiable Credentials context (v1)
 export const VCContext = "https://www.w3.org/2018/credentials/v1";
+
+// Type for W3C Verifiable Credentials context v2
+export const VCContextV2 = "https://www.w3.org/ns/credentials/v2";
 
 // Helper type for JSON-LD arrays
 export type JsonLdArray<T> = T | T[];

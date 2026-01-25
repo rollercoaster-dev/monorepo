@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { OB2, OB3 } from "@/types";
+import { getLocalizedString } from "@utils/localization";
 
 /**
  * BadgeClassCard accepts OB2 BadgeClass, single OB3 Achievement, or an array of OB3 Achievements.
@@ -51,16 +52,6 @@ const additionalAchievementsCount = computed(() => {
   }
   return 0;
 });
-
-// Helper to get string from MultiLanguageString
-const getLocalizedString = (
-  value: string | { [key: string]: string } | undefined,
-): string => {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  // For MultiLanguageString, prefer 'en' or first available
-  return value["en"] || Object.values(value)[0] || "";
-};
 
 // Normalize badge class data between OB2 and OB3 formats
 const normalizedBadgeClass = computed(() => {

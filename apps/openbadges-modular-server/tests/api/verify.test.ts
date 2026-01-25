@@ -3,6 +3,10 @@
  *
  * Tests for POST /v3/verify endpoint that verifies credentials
  * in both JSON-LD and JWT formats.
+ *
+ * Note: To avoid network calls for DID resolution in tests, use:
+ *   options: { skipIssuerVerification: true }
+ * This prevents the did:web resolver from making HTTP requests.
  */
 
 import { describe, expect, it } from "bun:test";

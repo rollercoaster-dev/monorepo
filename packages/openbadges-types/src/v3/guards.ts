@@ -3,6 +3,7 @@ import {
   hasJsonLdType,
   hasJsonLdContext,
   VCContext,
+  VCContextV2,
   OB3Context,
 } from "../shared";
 import type {
@@ -44,10 +45,10 @@ export function isVerifiableCredential(
   }
 
   // Check for required contexts (both VC and OB3)
-  if (
-    !hasJsonLdContext(value, VCContext) ||
-    !hasJsonLdContext(value, OB3Context)
-  ) {
+  // Support both VC v1 and v2 contexts
+  const hasVCContext =
+    hasJsonLdContext(value, VCContext) || hasJsonLdContext(value, VCContextV2);
+  if (!hasVCContext || !hasJsonLdContext(value, OB3Context)) {
     return false;
   }
 

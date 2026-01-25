@@ -118,6 +118,90 @@ function verifyExpiration(
 }
 
 /**
+ * Verify temporal range validity (validFrom < validUntil)
+ *
+ * Ensures that if both validFrom and validUntil are present,
+ * validFrom must be before validUntil.
+ *
+ * @param credential - Credential object to check
+ * @returns Verification check result
+ *
+ * @see https://www.w3.org/TR/vc-data-model-2.0/#validity-period
+ */
+function verifyTemporalRange(
+  credential: Record<string, unknown>,
+): VerificationCheck {
+  const validFrom = (credential.validFrom ?? credential.issuanceDate) as
+    | string
+    | undefined;
+  const validUntil = (credential.validUntil ?? credential.expirationDate) as
+    | string
+    | undefined;
+
+  // If either date is missing, skip this check (handled by other validators)
+  if (!validFrom || !validUntil) {
+    return {
+      check: "temporal.range",
+      description: "Temporal range validation",
+      passed: true,
+      details: {
+        hasValidFrom: !!validFrom,
+        hasValidUntil: !!validUntil,
+      },
+    };
+  }
+
+  const fromDate = new Date(validFrom);
+  const untilDate = new Date(validUntil);
+
+  // Check if dates are valid
+  if (isNaN(fromDate.getTime())) {
+    return {
+      check: "temporal.range",
+      description: "Temporal range validation",
+      passed: false,
+      error: `Invalid validFrom date format: ${validFrom}`,
+    };
+  }
+
+  if (isNaN(untilDate.getTime())) {
+    return {
+      check: "temporal.range",
+      description: "Temporal range validation",
+      passed: false,
+      error: `Invalid validUntil date format: ${validUntil}`,
+    };
+  }
+
+  // Check that validFrom is before validUntil
+  if (fromDate >= untilDate) {
+    return {
+      check: "temporal.range",
+      description: "Temporal range validation",
+      passed: false,
+      error: `validFrom (${validFrom}) must be before validUntil (${validUntil})`,
+      details: {
+        validFrom,
+        validUntil,
+      },
+    };
+  }
+
+  return {
+    check: "temporal.range",
+    description: "Temporal range validation",
+    passed: true,
+    details: {
+      validFrom,
+      validUntil,
+      validityPeriod: Math.floor(
+        (untilDate.getTime() - fromDate.getTime()) / 1000,
+      ),
+    },
+  };
+}
+
+/**
  * Verify issuance date of a credential
  *
  * Checks if credential's issuance date is valid (not in the future).
@@ -713,23 +797,29 @@ export async function verify(
     // Steps 2 & 3: Issuer Verification and Temporal Validation (parallel)
     // These are independent checks that don't depend on each other
     // Note: Promise.all automatically wraps non-promise values
-    const [issuerChecks, issuanceCheck, expirationCheck] = await Promise.all([
-      // Step 2: Issuer Verification
-      options?.skipIssuerVerification ? [] : verifyIssuer(issuer),
-      // Step 3a: Temporal Validation - Issuance Date
-      options?.skipTemporalValidation
-        ? null
-        : verifyIssuanceDate(credentialObj, options),
-      // Step 3b: Temporal Validation - Expiration
-      options?.skipTemporalValidation
-        ? null
-        : verifyExpiration(credentialObj, options),
-    ]);
+    const [issuerChecks, issuanceCheck, expirationCheck, rangeCheck] =
+      await Promise.all([
+        // Step 2: Issuer Verification
+        options?.skipIssuerVerification ? [] : verifyIssuer(issuer),
+        // Step 3a: Temporal Validation - Issuance Date
+        options?.skipTemporalValidation
+          ? null
+          : verifyIssuanceDate(credentialObj, options),
+        // Step 3b: Temporal Validation - Expiration
+        options?.skipTemporalValidation
+          ? null
+          : verifyExpiration(credentialObj, options),
+        // Step 3c: Temporal Validation - Range
+        options?.skipTemporalValidation
+          ? null
+          : verifyTemporalRange(credentialObj),
+      ]);
 
     // Add results to checks
     checks.issuer.push(...issuerChecks);
     if (issuanceCheck) checks.temporal.push(issuanceCheck);
     if (expirationCheck) checks.temporal.push(expirationCheck);
+    if (rangeCheck) checks.temporal.push(rangeCheck);
 
     // Determine overall status
     const allChecks = [
