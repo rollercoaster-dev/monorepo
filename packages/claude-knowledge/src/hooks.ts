@@ -35,7 +35,11 @@ import {
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
 import { formatWorkflowState } from "./formatter";
-import { importFromJSONL, getFileModificationTime } from "./knowledge/sync";
+import {
+  importFromJSONL,
+  exportToJSONL,
+  getFileModificationTime,
+} from "./knowledge/sync";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -745,6 +749,22 @@ async function onSessionEnd(
   } catch (error) {
     // Non-critical - don't fail session end
     logger.debug("Could not retrieve tool usage metrics", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionEnd",
+    });
+  }
+
+  // Auto-export knowledge to JSONL on session end
+  try {
+    const result = await exportToJSONL(".claude/knowledge.jsonl");
+    logger.debug("Exported knowledge to JSONL", {
+      exported: result.exported,
+      filePath: result.filePath,
+      context: "onSessionEnd",
+    });
+  } catch (error) {
+    // Log but don't fail session end - export is optional enhancement
+    logger.warn("Failed to export knowledge to JSONL", {
       error: error instanceof Error ? error.message : String(error),
       context: "onSessionEnd",
     });
