@@ -194,6 +194,20 @@ describe("extractLearningsFromTranscript", () => {
 
     // Error handling tests - now properly exercise the fetch path
     describe("error handling", () => {
+      it("should handle timeout errors gracefully", async () => {
+        // Simulate AbortError (what AbortController throws on timeout)
+        const abortError = new Error("The operation was aborted");
+        abortError.name = "AbortError";
+        global.fetch = mock(() =>
+          Promise.reject(abortError),
+        ) as unknown as typeof fetch;
+
+        const result = await extractLearningsFromTranscript(startTime, endTime);
+
+        // Should return empty array (graceful degradation) rather than throwing
+        expect(result).toEqual([]);
+      });
+
       it("should handle network errors gracefully", async () => {
         global.fetch = mock(() => {
           throw new Error("Network connection failed");

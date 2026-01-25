@@ -276,6 +276,23 @@ describe("OpenAIEmbedding", () => {
         globalThis.fetch = originalFetch;
       }
     });
+
+    test("throws timeout error when API is unresponsive", async () => {
+      const originalFetch = globalThis.fetch;
+      // Simulate AbortError (what AbortController throws on timeout)
+      const abortError = new Error("The operation was aborted");
+      abortError.name = "AbortError";
+      globalThis.fetch = mock(() => Promise.reject(abortError));
+
+      try {
+        const embedder = new OpenAIEmbedding("test-api-key");
+        await expect(embedder.generate("test")).rejects.toThrow(
+          /OpenAI API request timed out/,
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
   });
 
   describe("static methods", () => {
@@ -609,6 +626,23 @@ describe("OpenRouterEmbedding", () => {
         const embedder = new OpenRouterEmbedding("test-api-key");
         await expect(embedder.generate("test")).rejects.toThrow(
           "OpenRouter API bad request",
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    test("throws timeout error when API is unresponsive", async () => {
+      const originalFetch = globalThis.fetch;
+      // Simulate AbortError (what AbortController throws on timeout)
+      const abortError = new Error("The operation was aborted");
+      abortError.name = "AbortError";
+      globalThis.fetch = mock(() => Promise.reject(abortError));
+
+      try {
+        const embedder = new OpenRouterEmbedding("test-api-key");
+        await expect(embedder.generate("test")).rejects.toThrow(
+          /OpenRouter API request timed out/,
         );
       } finally {
         globalThis.fetch = originalFetch;
