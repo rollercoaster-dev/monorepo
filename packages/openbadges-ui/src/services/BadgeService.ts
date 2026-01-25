@@ -6,6 +6,7 @@ import {
   isOB2Assertion,
   isOB3VerifiableCredential,
 } from "@utils/type-helpers";
+import { getLocalizedString } from "@utils/localization";
 
 /**
  * Utility service for badge-related operations
@@ -204,38 +205,30 @@ export class BadgeService {
       const achievement = badge.credentialSubject.achievement;
       const issuer = badge.issuer;
 
-      // Handle achievement name which could be a string or array
+      // Handle achievement name using localization utility
       let achievementName = "Unknown Badge";
       if (typeof achievement === "object") {
         if (Array.isArray(achievement)) {
           // If achievement is an array, use the first one's name
           if (achievement.length > 0 && "name" in achievement[0]) {
-            const name = achievement[0].name;
-            achievementName = typeof name === "string" ? name : "Unknown Badge";
+            achievementName =
+              getLocalizedString(achievement[0].name) || "Unknown Badge";
           }
         } else if ("name" in achievement) {
           // Single achievement object
-          const name = achievement.name;
-          if (typeof name === "string") {
-            achievementName = name;
-          } else if (Array.isArray(name) && name.length > 0) {
-            achievementName =
-              typeof name[0] === "string" ? name[0] : "Unknown Badge";
-          }
+          achievementName =
+            getLocalizedString(achievement.name) || "Unknown Badge";
         }
       }
 
-      // Handle achievement description
+      // Handle achievement description using localization utility
       let achievementDescription = "";
       if (
         typeof achievement === "object" &&
         !Array.isArray(achievement) &&
         "description" in achievement
       ) {
-        const description = achievement.description;
-        if (typeof description === "string") {
-          achievementDescription = description;
-        }
+        achievementDescription = getLocalizedString(achievement.description);
       }
 
       // Handle achievement image
