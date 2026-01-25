@@ -65,17 +65,60 @@ Safe operations (always allowed): reading files, searching, running tests, analy
 
 ## Search Priority
 
-**Always use MCP tools first. Grep/Glob are fallback only.**
+**Always use graph tools first. Grep/Glob are fallback only.**
 
-Graph tools are dramatically better than text search:
+### Decision Triggers
 
-- **Speed**: Pre-indexed AST lookups are instant
-- **Accuracy**: Finds actual definitions, not string matches
-- **Context efficiency**: 10-20 precise results vs 200+ grep matches
+| If you're about to...                    | Use this instead     |
+| ---------------------------------------- | -------------------- |
+| Grep for a function/class/type name      | `graph_find`         |
+| Find what calls a function               | `graph_what_calls`   |
+| Understand impact before changing a file | `graph_blast_radius` |
+| Search for a literal string or regex     | Grep (fallback OK)   |
+| Find config files by name                | Glob (fallback OK)   |
 
-Key tools: `graph_find` (definitions), `graph_what_calls` (callers), `graph_blast_radius` (impact)
+### Graph Tools with Examples
 
-See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for detailed decision tables and fallback guidance.
+**`mcp__claude-knowledge__graph_find`** - Find where something is defined
+
+```
+# Find a function definition
+graph_find(name="getTranscriptPath", type="function")
+→ Returns: [{name, type, filePath, lineNumber}]
+
+# Find a class
+graph_find(name="BadgeService", type="class")
+
+# Fuzzy search (partial match)
+graph_find(name="Transcript")  # finds getTranscriptPath, TranscriptParser, etc.
+```
+
+**`mcp__claude-knowledge__graph_what_calls`** - Find all callers of a function
+
+```
+# What calls this function?
+graph_what_calls(name="getTranscriptPath")
+→ Returns: [{caller, callerFile, callerLine, callee, calleeFile}]
+
+# Useful before renaming or changing a function's signature
+```
+
+**`mcp__claude-knowledge__graph_blast_radius`** - Impact analysis before changes
+
+```
+# What depends on this file?
+graph_blast_radius(file="src/utils/transcript.ts")
+→ Returns: All files that import/depend on this file (transitive)
+
+# Use before refactoring to understand what might break
+```
+
+### Why Graph > Grep
+
+- **Precision**: `graph_find(name="store")` finds the `store` function definition, not every usage of the word "store"
+- **Context**: Returns file path + line number, ready to Read
+- **Speed**: Pre-indexed AST, instant results
+- **Efficiency**: 5 precise results vs 200 grep matches that need filtering
 
 ## Workflows
 
