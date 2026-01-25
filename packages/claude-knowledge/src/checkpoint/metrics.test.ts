@@ -2,8 +2,9 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { metrics } from "./metrics";
 import { workflow } from "./workflow";
 import { closeDatabase, resetDatabase } from "../db/sqlite";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-metrics.db";
 
@@ -24,11 +25,7 @@ describe("determineQuerySource", () => {
     // Restore original env
     process.env = originalEnv;
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      // Ignore if file doesn't exist
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   test("returns 'cli' when no env vars set", () => {
@@ -88,11 +85,7 @@ describe("logGraphQuery", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      // Ignore if file doesn't exist
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   test("succeeds without session ID and persists data", () => {
@@ -202,11 +195,7 @@ describe("getGraphQuerySummary", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      // Ignore if file doesn't exist
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   test("includes queriesBySource in summary", () => {
@@ -257,11 +246,7 @@ describe("Task Hierarchy", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      // Ignore if file doesn't exist
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("logTaskSnapshot with parentTaskId", () => {

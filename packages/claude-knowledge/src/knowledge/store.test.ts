@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { knowledge } from "./index";
 import { closeDatabase, resetDatabase } from "../db/sqlite";
 import type { Learning } from "../types";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import {
   db,
@@ -12,6 +12,7 @@ import {
   getRelsTo,
   countEntities,
 } from "../__tests__/helpers";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-knowledge-store.db";
 
@@ -23,11 +24,7 @@ describe("knowledge storage operations", () => {
 
   afterEach(async () => {
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("store()", () => {

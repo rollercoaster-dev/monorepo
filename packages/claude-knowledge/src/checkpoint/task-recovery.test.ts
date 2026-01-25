@@ -18,8 +18,9 @@ import {
   recoverTasksByMilestone,
 } from "./task-recovery";
 import type { CheckpointData } from "../types";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-task-recovery.db";
 
@@ -102,11 +103,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   closeDatabase();
-  try {
-    await unlink(TEST_DB);
-  } catch {
-    // Ignore if file doesn't exist
-  }
+  await cleanupTestDb(TEST_DB);
 });
 
 // ============================================================================

@@ -19,6 +19,9 @@ const LLM_EXTRACT_CONFIDENCE = 0.8;
 /** Gemini model via OpenRouter (2.5 Flash is fast and cheap) */
 const LLM_MODEL = process.env.LLM_EXTRACTOR_MODEL || "google/gemini-2.5-flash";
 
+/** Timeout for LLM API calls (30 seconds) - prevents session hooks from hanging */
+const LLM_FETCH_TIMEOUT_MS = 30_000;
+
 /**
  * Extraction prompt that focuses on technical insights.
  * Excludes generic advice and information already in commits.
@@ -144,7 +147,7 @@ export async function extractLearningsFromTranscript(
   }
 
   // Find transcripts in time range
-  const transcriptPaths = findTranscriptByTimeRange(startTime, endTime);
+  const transcriptPaths = await findTranscriptByTimeRange(startTime, endTime);
   if (transcriptPaths.length === 0) {
     logger.debug(
       "No transcripts found in time range, skipping LLM extraction",
@@ -172,8 +175,11 @@ export async function extractLearningsFromTranscript(
     return [];
   }
 
-  // Call OpenRouter API
+  // Call OpenRouter API with timeout to prevent session hooks from hanging
   let response: Response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), LLM_FETCH_TIMEOUT_MS);
+
   try {
     response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -190,14 +196,25 @@ export async function extractLearningsFromTranscript(
           { role: "user", content: combinedText },
         ],
       }),
+      signal: controller.signal,
     });
   } catch (error) {
+    // Handle timeout separately from other network errors
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.warn("LLM extraction timed out", {
+        timeoutMs: LLM_FETCH_TIMEOUT_MS,
+        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      });
+      return [];
+    }
     // Network error - log warning and return empty array
     logger.warn("LLM extraction network error", {
       error: error instanceof Error ? error.message : String(error),
       timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
     });
     return [];
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   // Handle API errors

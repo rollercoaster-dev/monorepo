@@ -13,8 +13,9 @@ import {
 } from "./store";
 import { getDatabase, resetDatabase, closeDatabase } from "../db/sqlite";
 import type { ParseResult } from "./types";
-import { unlink, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
 
 const TEST_DB = ".claude/test-graph-store.db";
 
@@ -28,11 +29,7 @@ describe("store", () => {
   afterEach(async () => {
     // Clean up
     closeDatabase();
-    try {
-      await unlink(TEST_DB);
-    } catch {
-      /* ignore */
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   const createTestParseResult = (
