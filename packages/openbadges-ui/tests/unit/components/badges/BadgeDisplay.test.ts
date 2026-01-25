@@ -556,5 +556,93 @@ describe("BadgeDisplay.vue", () => {
       expect(badgeElement.attributes("tabindex")).toBe("0");
       expect(badgeElement.classes()).toContain("is-interactive");
     });
+
+    it("renders OB3 credential with issuanceDate/expirationDate correctly", () => {
+      const ob3CredentialWithLegacyDates = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/legacy-456",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer-legacy",
+          type: "Profile",
+          name: "Legacy Date Issuer",
+          url: "https://example.org",
+        },
+        issuanceDate: "2023-06-15T00:00:00Z",
+        expirationDate: "2024-06-15T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:legacy456",
+          type: "AchievementSubject",
+          achievement: {
+            id: "https://example.org/achievements/legacy",
+            type: "Achievement",
+            name: "Legacy Date Achievement",
+            description: "Achievement using legacy date fields",
+            image: "https://example.org/legacy-badge.png",
+            criteria: {
+              narrative: "Complete legacy requirements",
+            },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: { badge: ob3CredentialWithLegacyDates },
+      });
+
+      expect(wrapper.find(".manus-badge-title").text()).toBe(
+        "Legacy Date Achievement",
+      );
+      expect(wrapper.find(".manus-badge-date").text()).toContain(
+        "Jun 15, 2023",
+      );
+    });
+
+    it("renders OB3 credential expirationDate when showExpiryDate is true", () => {
+      const ob3CredentialWithExpiry = typedCredential({
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://purl.imsglobal.org/spec/ob/v3p0/context.json",
+        ],
+        id: "https://example.org/credentials/expiry-789",
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        issuer: {
+          id: "https://example.org/issuer-expiry",
+          type: "Profile",
+          name: "Expiry Test Issuer",
+        },
+        issuanceDate: "2023-06-15T00:00:00Z",
+        expirationDate: "2024-06-15T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:expiry789",
+          type: "AchievementSubject",
+          achievement: {
+            id: "https://example.org/achievements/expiry",
+            type: "Achievement",
+            name: "Expiry Test Achievement",
+            description: "Achievement with expiration",
+            image: "https://example.org/expiry-badge.png",
+            criteria: {
+              narrative: "Complete before expiration",
+            },
+          },
+        },
+      });
+
+      const wrapper = mount(BadgeDisplay, {
+        props: {
+          badge: ob3CredentialWithExpiry,
+          showExpiryDate: true,
+        },
+      });
+
+      expect(wrapper.find(".manus-badge-expiry").exists()).toBe(true);
+      expect(wrapper.find(".manus-badge-expiry").text()).toContain(
+        "Jun 15, 2024",
+      );
+    });
   });
 });
