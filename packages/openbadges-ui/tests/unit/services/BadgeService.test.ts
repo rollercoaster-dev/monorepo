@@ -251,6 +251,87 @@ describe("BadgeService", () => {
       expect(normalized).toHaveProperty("expires", "2024-01-01T00:00:00Z");
     });
 
+    it("should normalize OB3 VerifiableCredential with issuanceDate/expirationDate fallback", () => {
+      const ob3VCWithLegacyDates = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        id: "http://example.org/credentials/456",
+        issuer: {
+          id: "http://example.org/issuers/2",
+          name: "Legacy Date Issuer",
+          url: "http://example.org/legacy",
+        },
+        issuanceDate: "2023-06-15T00:00:00Z",
+        expirationDate: "2024-06-15T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:456",
+          achievement: {
+            id: "http://example.org/achievements/2",
+            name: "Legacy Date Achievement",
+            description: "Achievement with legacy date fields",
+            image: "http://example.org/legacy-badge.png",
+            criteria: { narrative: "Legacy criteria" },
+          },
+        },
+      } as any;
+
+      const normalized = BadgeService.normalizeBadge(ob3VCWithLegacyDates);
+
+      expect(normalized).toHaveProperty(
+        "id",
+        "http://example.org/credentials/456",
+      );
+      expect(normalized).toHaveProperty("name", "Legacy Date Achievement");
+      expect(normalized).toHaveProperty(
+        "description",
+        "Achievement with legacy date fields",
+      );
+      expect(normalized).toHaveProperty(
+        "image",
+        "http://example.org/legacy-badge.png",
+      );
+      expect(normalized).toHaveProperty("issuer");
+      expect(normalized.issuer).toHaveProperty("name", "Legacy Date Issuer");
+      expect(normalized.issuer).toHaveProperty(
+        "url",
+        "http://example.org/legacy",
+      );
+      expect(normalized).toHaveProperty("issuedOn", "2023-06-15T00:00:00Z");
+      expect(normalized).toHaveProperty("expires", "2024-06-15T00:00:00Z");
+    });
+
+    it("should prioritize validFrom over issuanceDate when both exist", () => {
+      const ob3VCWithBothDateFields = {
+        "@context": ["https://www.w3.org/2018/credentials/v1"],
+        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        id: "http://example.org/credentials/789",
+        issuer: {
+          id: "http://example.org/issuers/3",
+          name: "Mixed Date Issuer",
+        },
+        validFrom: "2024-01-01T00:00:00Z",
+        validUntil: "2025-01-01T00:00:00Z",
+        issuanceDate: "2023-01-01T00:00:00Z",
+        expirationDate: "2024-01-01T00:00:00Z",
+        credentialSubject: {
+          id: "did:example:789",
+          achievement: {
+            id: "http://example.org/achievements/3",
+            name: "Mixed Date Achievement",
+            description: "Achievement with both date field sets",
+            image: "http://example.org/mixed-badge.png",
+            criteria: { narrative: "Mixed criteria" },
+          },
+        },
+      } as any;
+
+      const normalized = BadgeService.normalizeBadge(ob3VCWithBothDateFields);
+
+      // Should use validFrom/validUntil, not issuanceDate/expirationDate
+      expect(normalized).toHaveProperty("issuedOn", "2024-01-01T00:00:00Z");
+      expect(normalized).toHaveProperty("expires", "2025-01-01T00:00:00Z");
+    });
+
     it("should handle unknown badge formats", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const unknownBadge = { foo: "bar" } as any;
