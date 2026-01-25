@@ -130,6 +130,11 @@ export class BadgeService {
     };
     issuedOn: string;
     expires?: string;
+    recipient?: {
+      name?: string;
+      email?: string;
+      role?: string;
+    };
   } {
     if (isOB2Assertion(badge)) {
       // Handle OB2 Assertion
@@ -181,6 +186,15 @@ export class BadgeService {
         }
       }
 
+      // Extract recipient data from OB2 Assertion
+      let recipientEmail: string | undefined;
+      if (badge.recipient && typeof badge.recipient === "object") {
+        recipientEmail =
+          "identity" in badge.recipient
+            ? (badge.recipient.identity as string)
+            : undefined;
+      }
+
       return {
         id: badge.id as string,
         name:
@@ -199,6 +213,7 @@ export class BadgeService {
         },
         issuedOn: badge.issuedOn as string,
         expires: badge.expires as string | undefined,
+        recipient: recipientEmail ? { email: recipientEmail } : undefined,
       };
     } else if (isOB3VerifiableCredential(badge)) {
       // Handle OB3 VerifiableCredential
@@ -271,6 +286,29 @@ export class BadgeService {
         }
       }
 
+      // Extract recipient data from OB3 CredentialSubject
+      const credentialSubject = badge.credentialSubject;
+      let recipientName: string | undefined;
+      let recipientEmail: string | undefined;
+      let recipientRole: string | undefined;
+
+      if (credentialSubject) {
+        // Handle name (could be string or MultiLanguageString)
+        if ("name" in credentialSubject && credentialSubject.name) {
+          recipientName = getLocalizedString(credentialSubject.name);
+        }
+
+        // Handle email
+        if ("email" in credentialSubject && credentialSubject.email) {
+          recipientEmail = credentialSubject.email;
+        }
+
+        // Handle role
+        if ("role" in credentialSubject && credentialSubject.role) {
+          recipientRole = credentialSubject.role;
+        }
+      }
+
       return {
         id: badge.id as string,
         name: achievementName,
@@ -286,6 +324,14 @@ export class BadgeService {
         expires: (badge.validUntil || badge.expirationDate) as
           | string
           | undefined,
+        recipient:
+          recipientName || recipientEmail || recipientRole
+            ? {
+                name: recipientName,
+                email: recipientEmail,
+                role: recipientRole,
+              }
+            : undefined,
       };
     }
 
