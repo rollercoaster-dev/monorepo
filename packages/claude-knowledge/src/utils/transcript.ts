@@ -100,10 +100,17 @@ export async function getTranscriptPath(
  * // Returns: ['/path/to/transcript1.jsonl', '/path/to/transcript2.jsonl']
  * ```
  */
+/** Buffer added to endTime to catch transcripts still being written during session-end */
+const END_TIME_BUFFER_MS = 60_000;
+
 export async function findTranscriptByTimeRange(
   startTime: Date,
   endTime: Date,
 ): Promise<string[]> {
+  // Add buffer to end time to catch transcripts that are still being written
+  // during session-end hook execution (mtime may lag slightly behind endTime)
+  const bufferedEndTime = new Date(endTime.getTime() + END_TIME_BUFFER_MS);
+
   const claudeDir = join(homedir(), ".claude", "projects");
 
   // Return empty array if directory doesn't exist
@@ -153,8 +160,11 @@ export async function findTranscriptByTimeRange(
           const stats = await stat(transcriptPath);
           const mtime = stats.mtimeMs;
 
-          // Check if file was modified within time range
-          if (mtime >= startTime.getTime() && mtime <= endTime.getTime()) {
+          // Check if file was modified within time range (with buffer on end)
+          if (
+            mtime >= startTime.getTime() &&
+            mtime <= bufferedEndTime.getTime()
+          ) {
             matchingTranscripts.push({ path: transcriptPath, mtime });
           }
         } catch {
@@ -169,7 +179,8 @@ export async function findTranscriptByTimeRange(
   }
 
   logger.info("Transcript discovery completed", {
-    timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+    timeRange: `${startTime.toISOString()} - ${bufferedEndTime.toISOString()}`,
+    endTimeBufferMs: END_TIME_BUFFER_MS,
     filesScanned,
     filesInRange: matchingTranscripts.length,
     projectDirsScanned,
