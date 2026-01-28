@@ -9,20 +9,21 @@ import { resetDefaultEmbedder } from "../embeddings";
 import { unlinkSync, existsSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { randomUUID } from "crypto";
 import { ensureMetadataDir, getSessionMetadataPath } from "./shared";
-
-const TEST_DB = join(tmpdir(), "test-session-commands.db");
 
 describe("handleSessionEnd --dry-run", () => {
   let consoleLogSpy: ReturnType<typeof spyOn>;
   let originalOutput: string[];
+  let testDbPath: string;
 
   beforeEach(() => {
+    testDbPath = join(tmpdir(), `test-session-commands-${randomUUID()}.db`);
     resetDefaultEmbedder();
-    if (existsSync(TEST_DB)) {
-      unlinkSync(TEST_DB);
+    if (existsSync(testDbPath)) {
+      unlinkSync(testDbPath);
     }
-    resetDatabase(TEST_DB);
+    resetDatabase(testDbPath);
 
     // Capture console.log output
     originalOutput = [];
@@ -36,8 +37,8 @@ describe("handleSessionEnd --dry-run", () => {
   afterEach(() => {
     closeDatabase();
     resetDefaultEmbedder();
-    if (existsSync(TEST_DB)) {
-      unlinkSync(TEST_DB);
+    if (existsSync(testDbPath)) {
+      unlinkSync(testDbPath);
     }
     consoleLogSpy.mockRestore();
   });

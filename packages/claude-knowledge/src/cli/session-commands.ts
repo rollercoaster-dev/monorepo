@@ -269,7 +269,7 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     });
 
     try {
-      metadataFilePath = await findLatestSessionMetadataFile();
+      metadataFilePath = await findLatestSessionMetadataFile(sessionId);
       if (metadataFilePath) {
         logger.info("Found session metadata file", {
           path: metadataFilePath,
@@ -378,10 +378,12 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     );
 
     console.log("\nTranscript Discovery:");
+    let transcriptsFound = 0;
     if (startTime) {
       const start = new Date(startTime);
       const end = new Date();
       const transcripts = await findTranscriptByTimeRange(start, end);
+      transcriptsFound = transcripts.length;
       console.log(
         `  Time range: ${start.toISOString()} - ${end.toISOString()}`,
       );
@@ -401,6 +403,7 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
       const end = new Date();
       const fallbackStart = new Date(end.getTime() - 2 * 60 * 60 * 1000);
       const transcripts = await findTranscriptByTimeRange(fallbackStart, end);
+      transcriptsFound = transcripts.length;
       console.log(
         `  Fallback time range (last 2h): ${fallbackStart.toISOString()} - ${end.toISOString()}`,
       );
@@ -418,8 +421,7 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     }
 
     console.log("\nLLM Extraction Readiness:");
-    // Extraction always fires: with exact startTime or 2-hour fallback window
-    const willExtract = hasApiKey;
+    const willExtract = hasApiKey && transcriptsFound > 0;
     console.log(`  Will extract: ${willExtract ? "yes" : "no"}`);
     if (!startTime) {
       console.log(
@@ -428,6 +430,9 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     }
     if (!hasApiKey) {
       console.log("  Blocked by: OPENROUTER_API_KEY not configured");
+    }
+    if (transcriptsFound === 0) {
+      console.log("  Blocked by: no transcripts found in time range");
     }
 
     console.log("\nCommit-based Extraction:");
