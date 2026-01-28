@@ -574,6 +574,12 @@ async function onSessionEnd(
         context: "onSessionEnd",
       });
     }
+  } else {
+    logger.info("LLM extraction skipped: no session start time available", {
+      hasSessionId: !!session.sessionId,
+      hasWorkflowId: !!session.workflowId,
+      context: "onSessionEnd",
+    });
   }
 
   // 2. Extract learnings from commits (medium confidence: 0.6)

@@ -11,6 +11,7 @@ import { existsSync } from "fs";
 import { readdir, stat } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /** Maximum number of project directories to scan (safety limit) */
 const MAX_PROJECT_DIRS = 100;
@@ -107,10 +108,16 @@ export async function findTranscriptByTimeRange(
 
   // Return empty array if directory doesn't exist
   if (!existsSync(claudeDir)) {
+    logger.info("No Claude projects directory found", {
+      expectedPath: claudeDir,
+      context: "findTranscriptByTimeRange",
+    });
     return [];
   }
 
   const matchingTranscripts: Array<{ path: string; mtime: number }> = [];
+  let filesScanned = 0;
+  let projectDirsScanned = 0;
 
   try {
     const entries = await readdir(claudeDir, { withFileTypes: true });
@@ -120,6 +127,7 @@ export async function findTranscriptByTimeRange(
 
     for (const dir of projectDirs) {
       if (!dir.isDirectory()) continue;
+      projectDirsScanned++;
 
       const projectPath = join(claudeDir, dir.name);
 
@@ -137,6 +145,7 @@ export async function findTranscriptByTimeRange(
       for (const file of limitedFiles) {
         // Only process .jsonl files
         if (!file.isFile() || !file.name.endsWith(".jsonl")) continue;
+        filesScanned++;
 
         const transcriptPath = join(projectPath, file.name);
 
@@ -158,6 +167,14 @@ export async function findTranscriptByTimeRange(
     // Directory read failed, return empty array gracefully
     return [];
   }
+
+  logger.info("Transcript discovery completed", {
+    timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+    filesScanned,
+    filesInRange: matchingTranscripts.length,
+    projectDirsScanned,
+    context: "findTranscriptByTimeRange",
+  });
 
   // Sort by modification time (oldest first)
   return matchingTranscripts

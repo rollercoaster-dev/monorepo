@@ -140,8 +140,9 @@ export async function extractLearningsFromTranscript(
   // Get API key (fail silently if not configured)
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    logger.debug("OPENROUTER_API_KEY not set, skipping LLM extraction", {
+    logger.info("LLM extraction skipped: OPENROUTER_API_KEY not configured", {
       timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      context: "extractLearningsFromTranscript",
     });
     return [];
   }
@@ -149,12 +150,10 @@ export async function extractLearningsFromTranscript(
   // Find transcripts in time range
   const transcriptPaths = await findTranscriptByTimeRange(startTime, endTime);
   if (transcriptPaths.length === 0) {
-    logger.debug(
-      "No transcripts found in time range, skipping LLM extraction",
-      {
-        timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
-      },
-    );
+    logger.info("LLM extraction skipped: no transcripts found in time range", {
+      timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
+      context: "extractLearningsFromTranscript",
+    });
     return [];
   }
 
@@ -168,9 +167,10 @@ export async function extractLearningsFromTranscript(
   }
 
   if (!combinedText || combinedText.trim().length === 0) {
-    logger.debug("Empty transcripts, skipping LLM extraction", {
+    logger.info("LLM extraction skipped: transcripts are empty", {
       timeRange: `${startTime.toISOString()} - ${endTime.toISOString()}`,
       transcriptCount: transcriptPaths.length,
+      context: "extractLearningsFromTranscript",
     });
     return [];
   }
