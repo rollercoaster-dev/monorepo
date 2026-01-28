@@ -1,0 +1,2 @@
+{"id":"goal-e8509a82-3ddf-4dde-a316-65e1424cf535","type":"Goal","title":"07 - UI Components milestone","data":{"description":"20 open issues: theming epic, component buildout, app features, cross-cutting"},"stack_order":0,"status":"active","created_at":"2026-01-28T19:34:41.118Z","updated_at":"2026-01-28T19:34:52.241Z"}
+{"_type":"relationship","from_id":"goal-e8509a82-3ddf-4dde-a316-65e1424cf535","to_id":"interrupt-7b640e90-ebd0-4e4a-bf04-c8af710ad600","type":"INTERRUPTED_BY","created_at":"2026-01-28T19:34:49.299Z"}
