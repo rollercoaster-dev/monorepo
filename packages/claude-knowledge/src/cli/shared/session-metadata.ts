@@ -133,15 +133,18 @@ export async function findLatestSessionMetadataFile(
     }
 
     // Filter to non-stale files and optionally by sessionId
-    const validFiles = sessionFiles
-      .filter((f) => now - f.timestamp <= STALE_THRESHOLD_MS)
+    const nonStaleFiles = sessionFiles.filter(
+      (f) => now - f.timestamp <= STALE_THRESHOLD_MS,
+    );
+    const validFiles = nonStaleFiles
       .filter((f) => (sessionId ? f.sessionId === sessionId : true))
       .sort((a, b) => b.timestamp - a.timestamp);
 
     if (validFiles.length === 0) {
       logger.info("No valid session metadata files found", {
         scannedFiles: sessionFiles.length,
-        staleFiles: sessionFiles.length - validFiles.length,
+        staleFiles: sessionFiles.length - nonStaleFiles.length,
+        filteredBySessionId: nonStaleFiles.length - validFiles.length,
         sessionIdFilter: sessionId,
         context: "findLatestSessionMetadataFile",
       });

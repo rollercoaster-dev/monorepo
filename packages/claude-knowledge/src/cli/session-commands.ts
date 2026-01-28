@@ -389,14 +389,33 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
         }
       }
     } else {
-      console.log("  (skipped - no start time available)");
+      // Show fallback window discovery (matches the 2-hour fallback in hooks.ts)
+      const end = new Date();
+      const fallbackStart = new Date(end.getTime() - 2 * 60 * 60 * 1000);
+      const transcripts = await findTranscriptByTimeRange(fallbackStart, end);
+      console.log(
+        `  Fallback time range (last 2h): ${fallbackStart.toISOString()} - ${end.toISOString()}`,
+      );
+      console.log(`  Transcripts found: ${transcripts.length}`);
+      for (const t of transcripts) {
+        try {
+          const stats = await stat(t);
+          console.log(`    - ${t}`);
+          console.log(`      Modified: ${stats.mtime.toISOString()}`);
+        } catch {
+          console.log(`    - ${t} (could not stat)`);
+        }
+      }
     }
 
     console.log("\nLLM Extraction Readiness:");
-    const willExtract = !!startTime && hasApiKey;
+    // Extraction always fires: with exact startTime or 2-hour fallback window
+    const willExtract = hasApiKey;
     console.log(`  Will extract: ${willExtract ? "yes" : "no"}`);
     if (!startTime) {
-      console.log("  Blocked by: Missing session start time");
+      console.log(
+        "  Note: Will use fallback time window (last 2 hours) since start time is missing",
+      );
     }
     if (!hasApiKey) {
       console.log("  Blocked by: OPENROUTER_API_KEY not configured");

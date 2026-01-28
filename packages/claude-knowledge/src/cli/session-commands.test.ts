@@ -92,11 +92,12 @@ describe("handleSessionEnd --dry-run", () => {
     expect(output).not.toContain("Learnings stored:");
   });
 
-  it("should show transcript discovery is skipped when no start time", async () => {
+  it("should show fallback transcript discovery when no start time", async () => {
     await handleSessionEnd(["--dry-run"]);
 
     const output = originalOutput.join("\n");
-    expect(output).toContain("(skipped - no start time available)");
+    expect(output).toContain("Fallback time range (last 2h):");
+    expect(output).toContain("Transcripts found:");
   });
 
   it("should show transcript discovery when start time provided", async () => {
@@ -106,15 +107,15 @@ describe("handleSessionEnd --dry-run", () => {
     const output = originalOutput.join("\n");
     expect(output).toContain("Transcript Discovery:");
     expect(output).toContain("Transcripts found:");
-    // Should NOT contain the "skipped" message
-    expect(output).not.toContain("(skipped - no start time available)");
+    // Should NOT contain the fallback message
+    expect(output).not.toContain("Fallback time range");
   });
 
-  it("should indicate blocked when start time is missing", async () => {
+  it("should indicate fallback when start time is missing", async () => {
     await handleSessionEnd(["--dry-run"]);
 
     const output = originalOutput.join("\n");
-    expect(output).toContain("Blocked by: Missing session start time");
+    expect(output).toContain("Will use fallback time window (last 2 hours)");
   });
 
   it("should hydrate metadata from temp file when available", async () => {
