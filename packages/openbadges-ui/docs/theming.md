@@ -6,7 +6,7 @@ OpenBadges UI uses CSS custom properties (variables) for theming. This guide cov
 
 Tokens are organized in three tiers:
 
-```
+```text
 Foundational  →  raw values (palette, font stacks, spacing)
      ↓
 Semantic      →  context tokens (--ob-background, --ob-primary, --ob-border…)
@@ -217,6 +217,7 @@ function toggleDarkMode(enabled: boolean) {
   document.body.classList.toggle("ob-dark-theme", enabled);
 }
 
+// theme: short name without prefix/suffix, e.g. "large-text", "dyslexia-friendly"
 function setNDTheme(theme: string | null) {
   // Remove all ND theme classes
   const ndClasses = [

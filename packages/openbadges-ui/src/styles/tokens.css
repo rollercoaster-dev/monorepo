@@ -319,6 +319,20 @@
   --ob-badge-hover-shadow: var(--ob-shadow-md);
   --ob-badge-focus-outline-color: var(--ob-ring);
 
+  /* ── Badge Verification ✦ ───────────────────────────────────────── */
+
+  --ob-verification-border-color: var(--ob-border);
+  --ob-verification-background: var(--ob-muted);
+  --ob-verification-text-color: var(--ob-muted-foreground);
+  --ob-verification-valid-color: var(--ob-success);
+  --ob-verification-invalid-color: var(--ob-destructive);
+  --ob-verification-warning-color: var(--ob-warning);
+  --ob-verification-button-bg: var(--ob-primary);
+  --ob-verification-button-color: var(--ob-primary-foreground);
+  --ob-verification-button-hover-bg: var(--ob-primary-dark);
+  --ob-verification-button-disabled-bg: var(--ob-text-disabled);
+  --ob-verification-label-color: var(--ob-muted-foreground);
+
   /* ── Badge List ✦ ───────────────────────────────────────────────── */
 
   --ob-badge-list-gap: var(--ob-space-4);

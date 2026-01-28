@@ -183,17 +183,17 @@ watch(
 
 <style>
 .ob-badge-verification {
-  --verification-border-color: var(--ob-border-color, #e2e8f0);
-  --verification-background: var(--ob-bg-secondary, #f7fafc);
-  --verification-text-color: var(--ob-text-secondary, #4a5568);
-  --verification-valid-color: var(--ob-success, #38a169);
-  --verification-invalid-color: var(--ob-error, #e53e3e);
-  --verification-warning-color: var(--ob-warning, #dd6b20);
-  --verification-button-bg: var(--ob-primary, #4299e1);
-  --verification-button-color: var(--ob-text-inverse, #ffffff);
-  --verification-button-hover-bg: var(--ob-primary-dark, #3182ce);
-  --verification-button-disabled-bg: var(--ob-text-disabled, #a0aec0);
-  --verification-label-color: var(--ob-text-secondary, #718096);
+  --verification-border-color: var(--ob-verification-border-color);
+  --verification-background: var(--ob-verification-background);
+  --verification-text-color: var(--ob-verification-text-color);
+  --verification-valid-color: var(--ob-verification-valid-color);
+  --verification-invalid-color: var(--ob-verification-invalid-color);
+  --verification-warning-color: var(--ob-verification-warning-color);
+  --verification-button-bg: var(--ob-verification-button-bg);
+  --verification-button-color: var(--ob-verification-button-color);
+  --verification-button-hover-bg: var(--ob-verification-button-hover-bg);
+  --verification-button-disabled-bg: var(--ob-verification-button-disabled-bg);
+  --verification-label-color: var(--ob-verification-label-color);
 
   margin-top: var(--ob-space-4, 1rem);
   padding: var(--ob-space-4, 1rem);
