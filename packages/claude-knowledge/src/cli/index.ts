@@ -46,7 +46,7 @@ if (args.length === 0) {
   console.error("  workflow verify-not-worktree");
   console.error("  session-start [--branch <name>] [--issue <number>]");
   console.error(
-    "  session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",
+    "  session-end [--dry-run] [--workflow-id <id>] [--session-id <id>] [--learnings-injected <n>] [--start-time <iso>] [--compacted] [--interrupted] [--review-findings <n>] [--files-read <n>]",
   );
   console.error("  learning analyze <workflow-id> <dev-plan-path>");
   console.error(

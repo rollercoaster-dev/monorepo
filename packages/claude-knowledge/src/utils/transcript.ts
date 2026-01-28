@@ -11,6 +11,7 @@ import { existsSync } from "fs";
 import { readdir, stat } from "fs/promises";
 import { homedir } from "os";
 import { join } from "path";
+import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
 /** Maximum number of project directories to scan (safety limit) */
 const MAX_PROJECT_DIRS = 100;
@@ -72,8 +73,12 @@ export async function getTranscriptPath(
         return transcriptPath;
       }
     }
-  } catch {
-    // Directory read failed, return null gracefully
+  } catch (error) {
+    logger.debug("Failed to search for transcript by session ID", {
+      sessionId,
+      error: error instanceof Error ? error.message : String(error),
+      context: "getTranscriptPath",
+    });
     return null;
   }
 
@@ -99,18 +104,31 @@ export async function getTranscriptPath(
  * // Returns: ['/path/to/transcript1.jsonl', '/path/to/transcript2.jsonl']
  * ```
  */
+/** Buffer added to endTime to catch transcripts still being written during session-end */
+const END_TIME_BUFFER_MS = 60_000;
+
 export async function findTranscriptByTimeRange(
   startTime: Date,
   endTime: Date,
 ): Promise<string[]> {
+  // Add buffer to end time to catch transcripts that are still being written
+  // during session-end hook execution (mtime may lag slightly behind endTime)
+  const bufferedEndTime = new Date(endTime.getTime() + END_TIME_BUFFER_MS);
+
   const claudeDir = join(homedir(), ".claude", "projects");
 
   // Return empty array if directory doesn't exist
   if (!existsSync(claudeDir)) {
+    logger.info("No Claude projects directory found", {
+      expectedPath: claudeDir,
+      context: "findTranscriptByTimeRange",
+    });
     return [];
   }
 
   const matchingTranscripts: Array<{ path: string; mtime: number }> = [];
+  let filesScanned = 0;
+  let projectDirsScanned = 0;
 
   try {
     const entries = await readdir(claudeDir, { withFileTypes: true });
@@ -120,14 +138,19 @@ export async function findTranscriptByTimeRange(
 
     for (const dir of projectDirs) {
       if (!dir.isDirectory()) continue;
+      projectDirsScanned++;
 
       const projectPath = join(claudeDir, dir.name);
 
       let files;
       try {
         files = await readdir(projectPath, { withFileTypes: true });
-      } catch {
-        // Skip inaccessible directories
+      } catch (error) {
+        logger.debug("Skipped inaccessible project directory", {
+          path: projectPath,
+          error: error instanceof Error ? error.message : String(error),
+          context: "findTranscriptByTimeRange",
+        });
         continue;
       }
 
@@ -137,6 +160,7 @@ export async function findTranscriptByTimeRange(
       for (const file of limitedFiles) {
         // Only process .jsonl files
         if (!file.isFile() || !file.name.endsWith(".jsonl")) continue;
+        filesScanned++;
 
         const transcriptPath = join(projectPath, file.name);
 
@@ -144,20 +168,40 @@ export async function findTranscriptByTimeRange(
           const stats = await stat(transcriptPath);
           const mtime = stats.mtimeMs;
 
-          // Check if file was modified within time range
-          if (mtime >= startTime.getTime() && mtime <= endTime.getTime()) {
+          // Check if file was modified within time range (with buffer on end)
+          if (
+            mtime >= startTime.getTime() &&
+            mtime <= bufferedEndTime.getTime()
+          ) {
             matchingTranscripts.push({ path: transcriptPath, mtime });
           }
-        } catch {
-          // Skip inaccessible files
+        } catch (error) {
+          logger.debug("Could not stat transcript file", {
+            path: transcriptPath,
+            error: error instanceof Error ? error.message : String(error),
+            context: "findTranscriptByTimeRange",
+          });
           continue;
         }
       }
     }
-  } catch {
-    // Directory read failed, return empty array gracefully
+  } catch (error) {
+    logger.warn("Failed to scan transcript directories", {
+      dir: claudeDir,
+      error: error instanceof Error ? error.message : String(error),
+      context: "findTranscriptByTimeRange",
+    });
     return [];
   }
+
+  logger.info("Transcript discovery completed", {
+    timeRange: `${startTime.toISOString()} - ${bufferedEndTime.toISOString()}`,
+    endTimeBufferMs: END_TIME_BUFFER_MS,
+    filesScanned,
+    filesInRange: matchingTranscripts.length,
+    projectDirsScanned,
+    context: "findTranscriptByTimeRange",
+  });
 
   // Sort by modification time (oldest first)
   return matchingTranscripts

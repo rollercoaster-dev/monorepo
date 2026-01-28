@@ -84,6 +84,13 @@ export async function findLatestSessionMetadataFile(
     const files = await readdir(SESSION_METADATA_DIR);
     const now = Date.now();
 
+    logger.debug("Scanning session metadata directory", {
+      dir: SESSION_METADATA_DIR,
+      totalFiles: files.length,
+      sessionIdFilter: sessionId,
+      context: "findLatestSessionMetadataFile",
+    });
+
     const sessionFiles = files
       .filter(
         (f) =>
@@ -119,22 +126,42 @@ export async function findLatestSessionMetadataFile(
             file: f.name,
             context: "findLatestSessionMetadataFile",
           });
-        } catch {
-          // Ignore cleanup errors
+        } catch (error) {
+          logger.debug("Could not clean up stale session metadata file", {
+            file: f.name,
+            error: error instanceof Error ? error.message : String(error),
+            context: "findLatestSessionMetadataFile",
+          });
         }
       }
     }
 
     // Filter to non-stale files and optionally by sessionId
-    const validFiles = sessionFiles
-      .filter((f) => now - f.timestamp <= STALE_THRESHOLD_MS)
+    const nonStaleFiles = sessionFiles.filter(
+      (f) => now - f.timestamp <= STALE_THRESHOLD_MS,
+    );
+    const validFiles = nonStaleFiles
       .filter((f) => (sessionId ? f.sessionId === sessionId : true))
       .sort((a, b) => b.timestamp - a.timestamp);
 
-    if (validFiles.length === 0) return null;
+    if (validFiles.length === 0) {
+      logger.info("No valid session metadata files found", {
+        scannedFiles: sessionFiles.length,
+        staleFiles: sessionFiles.length - nonStaleFiles.length,
+        filteredBySessionId: nonStaleFiles.length - validFiles.length,
+        sessionIdFilter: sessionId,
+        context: "findLatestSessionMetadataFile",
+      });
+      return null;
+    }
 
     return join(SESSION_METADATA_DIR, validFiles[0].name);
-  } catch {
+  } catch (error) {
+    logger.warn("Failed to scan session metadata directory", {
+      dir: SESSION_METADATA_DIR,
+      error: error instanceof Error ? error.message : String(error),
+      context: "findLatestSessionMetadataFile",
+    });
     return null;
   }
 }

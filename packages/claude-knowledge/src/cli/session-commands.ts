@@ -1,9 +1,10 @@
 import { checkpoint } from "../checkpoint";
 import { hooks } from "../hooks";
 import { parseModifiedFiles, parseRecentCommits } from "../utils";
+import { findTranscriptByTimeRange } from "../utils/transcript";
 import type { Workflow } from "../types";
 import { $ } from "bun";
-import { unlink } from "fs/promises";
+import { stat, unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import { indexMonorepoDocs } from "../docs";
 import {
@@ -12,6 +13,7 @@ import {
   getSessionMetadataPath,
   ensureMetadataDir,
   findLatestSessionMetadataFile,
+  SESSION_METADATA_DIR,
   STALE_THRESHOLD_HOURS,
   STALE_THRESHOLD_MS,
 } from "./shared";
@@ -211,7 +213,8 @@ export async function handleSessionStart(args: string[]): Promise<void> {
  * Handle session-end command.
  */
 export async function handleSessionEnd(args: string[]): Promise<void> {
-  // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
+  // session-end [--dry-run] [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
+  let dryRun = false;
   let workflowId: string | undefined;
   let sessionId: string | undefined;
   let learningsInjected: number | undefined;
@@ -225,7 +228,9 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const nextArg = args[i + 1];
-    if (arg === "--workflow-id" && nextArg) {
+    if (arg === "--dry-run") {
+      dryRun = true;
+    } else if (arg === "--workflow-id" && nextArg) {
       workflowId = nextArg;
       i++;
     } else if (arg === "--session-id" && nextArg) {
@@ -256,9 +261,20 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
   // If any session metadata is missing, try to hydrate from temp file
   // This enables automatic correlation with session-start hook
   if (!sessionId || startTime == null || learningsInjected == null) {
+    logger.debug("Searching for session metadata file", {
+      hasSessionId: !!sessionId,
+      hasStartTime: startTime != null,
+      hasLearningsInjected: learningsInjected != null,
+      context: "session-end",
+    });
+
     try {
-      metadataFilePath = await findLatestSessionMetadataFile();
+      metadataFilePath = await findLatestSessionMetadataFile(sessionId);
       if (metadataFilePath) {
+        logger.info("Found session metadata file", {
+          path: metadataFilePath,
+          context: "session-end",
+        });
         const file = Bun.file(metadataFilePath);
         const content = await file.text();
         const parsed = JSON.parse(content);
@@ -279,6 +295,14 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
           });
           metadataFilePath = null;
         }
+      } else {
+        logger.info(
+          "No session metadata file found, will use CLI arguments only",
+          {
+            searchedDir: SESSION_METADATA_DIR,
+            context: "session-end",
+          },
+        );
       }
     } catch (error) {
       // Non-fatal: continue without session correlation
@@ -310,7 +334,14 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     // Try to get files from last 10 commits
     const result = await $`git diff --name-only HEAD~10..HEAD`.quiet();
     modifiedFiles = result.text().trim().split("\n").filter(Boolean);
-  } catch {
+  } catch (primaryError) {
+    logger.debug("Primary git diff failed, trying fallback", {
+      error:
+        primaryError instanceof Error
+          ? primaryError.message
+          : String(primaryError),
+      context: "session-end",
+    });
     // Fallback: repo may have fewer than 10 commits - get all commits from root
     try {
       const result = await $`git log --name-only --pretty=format: -10`.quiet();
@@ -325,6 +356,91 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
         );
       }
     }
+  }
+
+  // If dry-run, output diagnostic info and exit without running extraction
+  if (dryRun) {
+    console.log("\n=== Session End Dry-Run Diagnostics ===\n");
+
+    console.log("Session Metadata:");
+    console.log(`  Session ID: ${sessionId || "(not available)"}`);
+    console.log(`  Start Time: ${startTime || "(not available)"}`);
+    console.log(
+      `  Learnings Injected: ${learningsInjected ?? "(not available)"}`,
+    );
+    console.log(`  Workflow ID: ${workflowId || "(not available)"}`);
+    console.log(`  Metadata File: ${metadataFilePath || "(not found)"}`);
+
+    console.log("\nAPI Configuration:");
+    const hasApiKey = !!process.env.OPENROUTER_API_KEY;
+    console.log(
+      `  OPENROUTER_API_KEY: ${hasApiKey ? "configured" : "NOT SET"}`,
+    );
+
+    console.log("\nTranscript Discovery:");
+    let transcriptsFound = 0;
+    if (startTime) {
+      const start = new Date(startTime);
+      const end = new Date();
+      const transcripts = await findTranscriptByTimeRange(start, end);
+      transcriptsFound = transcripts.length;
+      console.log(
+        `  Time range: ${start.toISOString()} - ${end.toISOString()}`,
+      );
+      console.log(`  Transcripts found: ${transcripts.length}`);
+      for (const t of transcripts) {
+        try {
+          const stats = await stat(t);
+          console.log(`    - ${t}`);
+          console.log(`      Modified: ${stats.mtime.toISOString()}`);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          console.log(`    - ${t} (could not stat: ${reason})`);
+        }
+      }
+    } else {
+      // Show fallback window discovery (matches the 2-hour fallback in hooks.ts)
+      const end = new Date();
+      const fallbackStart = new Date(end.getTime() - 2 * 60 * 60 * 1000);
+      const transcripts = await findTranscriptByTimeRange(fallbackStart, end);
+      transcriptsFound = transcripts.length;
+      console.log(
+        `  Fallback time range (last 2h): ${fallbackStart.toISOString()} - ${end.toISOString()}`,
+      );
+      console.log(`  Transcripts found: ${transcripts.length}`);
+      for (const t of transcripts) {
+        try {
+          const stats = await stat(t);
+          console.log(`    - ${t}`);
+          console.log(`      Modified: ${stats.mtime.toISOString()}`);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          console.log(`    - ${t} (could not stat: ${reason})`);
+        }
+      }
+    }
+
+    console.log("\nLLM Extraction Readiness:");
+    const willExtract = hasApiKey && transcriptsFound > 0;
+    console.log(`  Will extract: ${willExtract ? "yes" : "no"}`);
+    if (!startTime) {
+      console.log(
+        "  Note: Will use fallback time window (last 2 hours) since start time is missing",
+      );
+    }
+    if (!hasApiKey) {
+      console.log("  Blocked by: OPENROUTER_API_KEY not configured");
+    }
+    if (transcriptsFound === 0) {
+      console.log("  Blocked by: no transcripts found in time range");
+    }
+
+    console.log("\nCommit-based Extraction:");
+    console.log(`  Recent commits: ${commits.length}`);
+    console.log(`  Modified files: ${modifiedFiles.length}`);
+
+    console.log("\n=== End of Dry-Run Diagnostics ===\n");
+    return;
   }
 
   // Call onSessionEnd with session metadata if provided
