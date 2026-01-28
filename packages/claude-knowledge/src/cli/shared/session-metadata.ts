@@ -126,8 +126,12 @@ export async function findLatestSessionMetadataFile(
             file: f.name,
             context: "findLatestSessionMetadataFile",
           });
-        } catch {
-          // Ignore cleanup errors
+        } catch (error) {
+          logger.debug("Could not clean up stale session metadata file", {
+            file: f.name,
+            error: error instanceof Error ? error.message : String(error),
+            context: "findLatestSessionMetadataFile",
+          });
         }
       }
     }

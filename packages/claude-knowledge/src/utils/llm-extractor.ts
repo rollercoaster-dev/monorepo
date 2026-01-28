@@ -137,7 +137,7 @@ export async function extractLearningsFromTranscript(
   startTime: Date,
   endTime: Date,
 ): Promise<Learning[]> {
-  // Get API key (fail silently if not configured)
+  // Get API key (logs info-level message if not configured, extraction skipped)
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     logger.info("LLM extraction skipped: OPENROUTER_API_KEY not configured", {

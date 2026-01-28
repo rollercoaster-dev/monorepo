@@ -73,8 +73,12 @@ export async function getTranscriptPath(
         return transcriptPath;
       }
     }
-  } catch {
-    // Directory read failed, return null gracefully
+  } catch (error) {
+    logger.debug("Failed to search for transcript by session ID", {
+      sessionId,
+      error: error instanceof Error ? error.message : String(error),
+      context: "getTranscriptPath",
+    });
     return null;
   }
 
@@ -141,8 +145,12 @@ export async function findTranscriptByTimeRange(
       let files;
       try {
         files = await readdir(projectPath, { withFileTypes: true });
-      } catch {
-        // Skip inaccessible directories
+      } catch (error) {
+        logger.debug("Skipped inaccessible project directory", {
+          path: projectPath,
+          error: error instanceof Error ? error.message : String(error),
+          context: "findTranscriptByTimeRange",
+        });
         continue;
       }
 
@@ -167,14 +175,22 @@ export async function findTranscriptByTimeRange(
           ) {
             matchingTranscripts.push({ path: transcriptPath, mtime });
           }
-        } catch {
-          // Skip inaccessible files
+        } catch (error) {
+          logger.debug("Could not stat transcript file", {
+            path: transcriptPath,
+            error: error instanceof Error ? error.message : String(error),
+            context: "findTranscriptByTimeRange",
+          });
           continue;
         }
       }
     }
-  } catch {
-    // Directory read failed, return empty array gracefully
+  } catch (error) {
+    logger.warn("Failed to scan transcript directories", {
+      dir: claudeDir,
+      error: error instanceof Error ? error.message : String(error),
+      context: "findTranscriptByTimeRange",
+    });
     return [];
   }
 

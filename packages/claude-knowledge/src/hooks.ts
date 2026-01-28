@@ -578,10 +578,12 @@ async function onSessionEnd(
     // Fallback: use recent transcript files (last 2 hours) when startTime is missing
     try {
       logger.info(
-        "LLM extraction using fallback time window (no session start time)",
+        "LLM extraction using fallback time window (no session start time). " +
+          "Results may include transcripts from other recent sessions.",
         {
           hasSessionId: !!session.sessionId,
           hasWorkflowId: !!session.workflowId,
+          fallbackWindowHours: 2,
           context: "onSessionEnd",
         },
       );

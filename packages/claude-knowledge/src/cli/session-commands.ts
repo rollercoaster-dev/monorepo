@@ -334,7 +334,14 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
     // Try to get files from last 10 commits
     const result = await $`git diff --name-only HEAD~10..HEAD`.quiet();
     modifiedFiles = result.text().trim().split("\n").filter(Boolean);
-  } catch {
+  } catch (primaryError) {
+    logger.debug("Primary git diff failed, trying fallback", {
+      error:
+        primaryError instanceof Error
+          ? primaryError.message
+          : String(primaryError),
+      context: "session-end",
+    });
     // Fallback: repo may have fewer than 10 commits - get all commits from root
     try {
       const result = await $`git log --name-only --pretty=format: -10`.quiet();
@@ -384,8 +391,9 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
           const stats = await stat(t);
           console.log(`    - ${t}`);
           console.log(`      Modified: ${stats.mtime.toISOString()}`);
-        } catch {
-          console.log(`    - ${t} (could not stat)`);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          console.log(`    - ${t} (could not stat: ${reason})`);
         }
       }
     } else {
@@ -402,8 +410,9 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
           const stats = await stat(t);
           console.log(`    - ${t}`);
           console.log(`      Modified: ${stats.mtime.toISOString()}`);
-        } catch {
-          console.log(`    - ${t} (could not stat)`);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          console.log(`    - ${t} (could not stat: ${reason})`);
         }
       }
     }
