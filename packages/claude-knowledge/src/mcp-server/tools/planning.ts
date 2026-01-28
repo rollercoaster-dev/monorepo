@@ -99,7 +99,7 @@ export async function handlePlanningToolCall(
     switch (name) {
       case "planning_goal_push": {
         const title = args.title as string;
-        if (!title) {
+        if (!title || title.trim().length === 0) {
           return {
             content: [
               {
@@ -110,11 +110,42 @@ export async function handlePlanningToolCall(
             isError: true,
           };
         }
+        if (title.length > 200) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "title must be 200 characters or fewer",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const issueNumber = args.issueNumber as number | undefined;
+        if (
+          issueNumber !== undefined &&
+          (!Number.isInteger(issueNumber) || issueNumber < 1)
+        ) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "issueNumber must be a positive integer",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
 
         const { goal, stack } = pushGoal({
-          title,
+          title: title.trim(),
           description: args.description as string | undefined,
-          issueNumber: args.issueNumber as number | undefined,
+          issueNumber,
         });
 
         return {
@@ -150,7 +181,12 @@ export async function handlePlanningToolCall(
       case "planning_interrupt_push": {
         const title = args.title as string;
         const reason = args.reason as string;
-        if (!title || !reason) {
+        if (
+          !title ||
+          title.trim().length === 0 ||
+          !reason ||
+          reason.trim().length === 0
+        ) {
           return {
             content: [
               {
@@ -163,10 +199,36 @@ export async function handlePlanningToolCall(
             isError: true,
           };
         }
+        if (title.length > 200) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "title must be 200 characters or fewer",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+        if (reason.length > 500) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "reason must be 500 characters or fewer",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
 
         const { interrupt, interruptedItem, stack } = pushInterrupt({
-          title,
-          reason,
+          title: title.trim(),
+          reason: reason.trim(),
         });
 
         return {
