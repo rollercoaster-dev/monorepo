@@ -575,11 +575,37 @@ async function onSessionEnd(
       });
     }
   } else {
-    logger.info("LLM extraction skipped: no session start time available", {
-      hasSessionId: !!session.sessionId,
-      hasWorkflowId: !!session.workflowId,
-      context: "onSessionEnd",
-    });
+    // Fallback: use recent transcript files (last 2 hours) when startTime is missing
+    try {
+      logger.info(
+        "LLM extraction using fallback time window (no session start time)",
+        {
+          hasSessionId: !!session.sessionId,
+          hasWorkflowId: !!session.workflowId,
+          context: "onSessionEnd",
+        },
+      );
+
+      const now = new Date();
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+      const llmLearnings = await extractLearningsFromTranscript(
+        twoHoursAgo,
+        now,
+      );
+      learnings.push(...llmLearnings);
+
+      logger.info("LLM extraction completed with fallback", {
+        count: llmLearnings.length,
+        timeRange: `${twoHoursAgo.toISOString()} - ${now.toISOString()}`,
+        context: "onSessionEnd",
+      });
+    } catch (error) {
+      logger.warn("Fallback LLM extraction failed, using commit-based only", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "onSessionEnd",
+      });
+    }
   }
 
   // 2. Extract learnings from commits (medium confidence: 0.6)
