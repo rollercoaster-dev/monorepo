@@ -26,6 +26,8 @@
   --ob-foreground: #f7fafc;
   --ob-card: #2d3748;
   --ob-card-foreground: #f7fafc;
+  --ob-popover: #2d3748;
+  --ob-popover-foreground: #f7fafc;
   --ob-muted: #2d3748;
   --ob-muted-foreground: #e2e8f0;
   --ob-accent: #4a5568;
@@ -120,6 +122,8 @@
   --ob-foreground: #000000;
   --ob-card: #ffffff;
   --ob-card-foreground: #000000;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #000000;
   --ob-muted: #f0f0f0;
   --ob-muted-foreground: #000000;
 
@@ -168,6 +172,7 @@
   --ob-border-color: #000000;
   --ob-border-color-focus: #0000ff;
   --ob-ring: #0000ff;
+  --ob-input: #ffffff;
 
   /* No shadows — rely on borders for distinction */
   --ob-shadow-sm: none;
@@ -247,6 +252,8 @@
   --ob-foreground: #333333;
   --ob-card: #f8f5e4;
   --ob-card-foreground: #333333;
+  --ob-popover: #f8f5e4;
+  --ob-popover-foreground: #333333;
   --ob-muted: #f0edd8;
   --ob-muted-foreground: #555555;
 
@@ -272,6 +279,9 @@
   --ob-ring: #0066cc;
   --ob-border-color-focus: #0066cc;
   --ob-shadow-focus: 0 0 0 4px rgba(0, 102, 204, 0.4);
+
+  /* Form input background (matches muted surface) */
+  --ob-input: #f0edd8;
 
   /* Clear visual boundaries */
   --ob-border-width: 2px;
@@ -323,6 +333,8 @@
   --ob-foreground: #222222;
   --ob-card: #ffffff;
   --ob-card-foreground: #222222;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #222222;
   --ob-muted: #f0f0f0;
   --ob-muted-foreground: #444444;
 
@@ -346,6 +358,9 @@
   --ob-destructive: #cc0000;
   --ob-error: #cc0000;
   --ob-warning: #cc6600;
+
+  /* Form input background */
+  --ob-input: #f0f0f0;
 
   /* Strong borders */
   --ob-border-width: 2px;
@@ -392,7 +407,14 @@
   /* Simplified surfaces */
   --ob-background: #ffffff;
   --ob-foreground: #222222;
+  --ob-card: #ffffff;
+  --ob-card-foreground: #222222;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #222222;
+  --ob-muted: #f0f0f0;
   --ob-muted-foreground: #444444;
+  --ob-accent: #f0f0f0;
+  --ob-accent-foreground: #222222;
 
   /* Aliases */
   --ob-bg-primary: #ffffff;
@@ -407,7 +429,10 @@
   --ob-secondary-dark: #444444;
   --ob-secondary-light: #888888;
 
-  /* Clear hierarchy */
+  /* Form & borders */
+  --ob-border: #dddddd;
+  --ob-border-color: #dddddd;
+  --ob-input: #f0f0f0;
   --ob-border-width: 2px;
   --ob-border-radius-md: 4px;
   --ob-border-radius-lg: 8px;
@@ -450,6 +475,8 @@
   --ob-foreground: #333333;
   --ob-card: #f7f7f7;
   --ob-card-foreground: #333333;
+  --ob-popover: #f7f7f7;
+  --ob-popover-foreground: #333333;
   --ob-muted: #eeeeee;
   --ob-muted-foreground: #666666;
 
@@ -489,6 +516,9 @@
   --ob-gray-700: #444444;
   --ob-gray-800: #333333;
   --ob-gray-900: #222222;
+
+  /* Form input background */
+  --ob-input: #eeeeee;
 
   /* Clear borders, no shadows */
   --ob-border: #dddddd;
