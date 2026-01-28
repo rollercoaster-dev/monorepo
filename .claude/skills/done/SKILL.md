@@ -9,7 +9,7 @@ Pop the top item from the planning stack, mark it as completed, and resume the p
 
 ## Usage
 
-```
+```bash
 /done
 ```
 
@@ -28,8 +28,8 @@ No arguments needed - always operates on the top of the stack.
 
 Use the `planning_stack_pop` MCP tool:
 
-```
-planning_stack_pop({})
+```typescript
+planning_stack_pop({});
 ```
 
 After popping, display:
@@ -42,7 +42,7 @@ After popping, display:
 
 ## Example Output
 
-```
+```text
 Completed: "Fix CI failure" (Interrupt)
   Summary: Resolved: "Fix CI failure". 2 commits. Duration: 2h.
   Resumed: "Knowledge cleanup" (Goal)

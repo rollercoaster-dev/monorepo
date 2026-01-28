@@ -9,7 +9,7 @@ Push an interrupt onto the planning stack. Interrupts represent unplanned contex
 
 ## Usage
 
-```
+```bash
 /interrupt <title> <reason>
 ```
 
@@ -23,7 +23,7 @@ Push an interrupt onto the planning stack. Interrupts represent unplanned contex
 
 ## Examples
 
-```
+```bash
 /interrupt Fix CI failure Tests breaking on main
 /interrupt Urgent code review PR #620 needs immediate review
 /interrupt Bug in badge verification Users reporting invalid badges
@@ -33,11 +33,11 @@ Push an interrupt onto the planning stack. Interrupts represent unplanned contex
 
 Use the `planning_interrupt_push` MCP tool:
 
-```
+```typescript
 planning_interrupt_push({
   title: "<first few words>",
-  reason: "<remaining words>"
-})
+  reason: "<remaining words>",
+});
 ```
 
 Parse the arguments:

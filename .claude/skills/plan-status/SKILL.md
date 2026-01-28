@@ -9,7 +9,7 @@ Display the current planning stack with git activity context and stale item dete
 
 ## Usage
 
-```
+```bash
 /plan status
 ```
 
@@ -26,13 +26,13 @@ No arguments needed.
 
 Use the `planning_stack_status` MCP tool:
 
-```
-planning_stack_status({})
+```typescript
+planning_stack_status({});
 ```
 
 Format the output as a readable status report:
 
-```
+```text
 Current stack (depth: N):
 
 1. [Type] Title (status, age)
@@ -48,7 +48,7 @@ Observations: ...
 
 ## Example Output
 
-```
+```text
 Current stack (depth: 3):
 
 1. [Interrupt] Fix CI failure (active, 2h)

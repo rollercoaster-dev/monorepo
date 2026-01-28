@@ -9,7 +9,7 @@ Push a new goal onto the planning stack. Goals represent high-level work objecti
 
 ## Usage
 
-```
+```bash
 /goal <title> [issue-number]
 ```
 
@@ -22,7 +22,7 @@ Push a new goal onto the planning stack. Goals represent high-level work objecti
 
 ## Examples
 
-```
+```bash
 /goal Implement badge generator 294
 /goal Refactor authentication
 /goal Fix test isolation
@@ -32,7 +32,7 @@ Push a new goal onto the planning stack. Goals represent high-level work objecti
 
 Use the `planning_goal_push` MCP tool:
 
-```
+```typescript
 planning_goal_push({
   title: "<title from arguments>",
   issueNumber: <number if provided>
