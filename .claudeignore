@@ -1,0 +1,38 @@
+# Git worktrees - these are full repo copies that duplicate scanning
+.worktrees/
+
+# Dependencies - massive and not useful for Claude to scan
+node_modules/
+.bun-cache/
+
+# Build artifacts
+dist/
+build/
+out/
+.turbo/
+
+# Old/backup database files in .claude
+.claude/*.old
+.claude/*.backup-*
+
+# Test databases
+*.test.db
+*.db.old
+
+# Large binary/media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# Lock files (huge and not useful)
+bun.lockb
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
