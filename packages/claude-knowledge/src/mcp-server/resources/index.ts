@@ -9,6 +9,7 @@ import type { Resource } from "@modelcontextprotocol/sdk/types.js";
 import { knowledgeResources, readKnowledgeResource } from "./knowledge.js";
 import { logsResources, readLogsResource } from "./logs.js";
 import { workflowsResources, readWorkflowsResource } from "./workflows.js";
+import { planningResources, readPlanningResource } from "./planning.js";
 
 /**
  * All available MCP resources.
@@ -17,6 +18,7 @@ export const resources: Resource[] = [
   ...knowledgeResources,
   ...logsResources,
   ...workflowsResources,
+  ...planningResources,
 ];
 
 /**
@@ -32,6 +34,7 @@ const resourceHandlers: Record<
   "knowledge://": readKnowledgeResource,
   "logs://": readLogsResource,
   "workflows://": readWorkflowsResource,
+  "planning://": readPlanningResource,
 };
 
 /**
@@ -64,3 +67,4 @@ export async function readResource(
 export { knowledgeResources, readKnowledgeResource } from "./knowledge.js";
 export { logsResources, readLogsResource } from "./logs.js";
 export { workflowsResources, readWorkflowsResource } from "./workflows.js";
+export { planningResources, readPlanningResource } from "./planning.js";
