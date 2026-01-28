@@ -156,7 +156,7 @@ bun test --coverage
 - **Strict mode enabled** - Fix type errors, don't use `any`
 - **Explicit types** - Prefer explicit over inferred when it aids clarity
 - **Functional when possible** - Pure functions, immutability
-- **Avoid `/** */` JSDoc in inline object types when content contains `*/`** - Use `//` line comments instead. A glob pattern like `packages/*/docs/` inside a JSDoc comment will close the comment block early and produce cascading parse errors.
+- **Avoid `/** _/`JSDoc in inline object types when content contains`_/`** - Use `//`line comments instead. A glob pattern like`packages/\*/docs/` inside a JSDoc comment will close the comment block early and produce cascading parse errors.
 
   ```typescript
   // Bad - the */ in the glob closes the JSDoc comment
