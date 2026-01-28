@@ -12,6 +12,7 @@ import {
   getSessionMetadataPath,
   ensureMetadataDir,
   findLatestSessionMetadataFile,
+  SESSION_METADATA_DIR,
   STALE_THRESHOLD_HOURS,
   STALE_THRESHOLD_MS,
 } from "./shared";
@@ -256,9 +257,20 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
   // If any session metadata is missing, try to hydrate from temp file
   // This enables automatic correlation with session-start hook
   if (!sessionId || startTime == null || learningsInjected == null) {
+    logger.debug("Searching for session metadata file", {
+      hasSessionId: !!sessionId,
+      hasStartTime: startTime != null,
+      hasLearningsInjected: learningsInjected != null,
+      context: "session-end",
+    });
+
     try {
       metadataFilePath = await findLatestSessionMetadataFile();
       if (metadataFilePath) {
+        logger.info("Found session metadata file", {
+          path: metadataFilePath,
+          context: "session-end",
+        });
         const file = Bun.file(metadataFilePath);
         const content = await file.text();
         const parsed = JSON.parse(content);
@@ -279,6 +291,14 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
           });
           metadataFilePath = null;
         }
+      } else {
+        logger.info(
+          "No session metadata file found, will use CLI arguments only",
+          {
+            searchedDir: SESSION_METADATA_DIR,
+            context: "session-end",
+          },
+        );
       }
     } catch (error) {
       // Non-fatal: continue without session correlation
