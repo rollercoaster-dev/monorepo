@@ -1,17 +1,24 @@
 /**
  * Rollercoaster.dev Open Badges Component Library - Main CSS
  *
- * This file imports all the CSS files used in the component library.
+ * Import order matters:
+ *   1. fonts   – @font-face declarations and font family variables
+ *   2. tokens  – foundational + semantic + component defaults (:root)
+ *   3. themes  – theme class overrides (no :root block)
+ *   4. accessibility – a11y utilities and media queries
  */
 
-/* Import theme variables */
-@import './themes.css';
+/* Import font definitions (must precede tokens that reference font vars) */
+@import "./fonts.css";
 
-/* Import font definitions */
-@import './fonts.css';
+/* Import token contract (foundational → semantic → component defaults) */
+@import "./tokens.css";
+
+/* Import theme class overrides */
+@import "./themes.css";
 
 /* Import accessibility styles */
-@import './accessibility.css';
+@import "./accessibility.css";
 
 /* Default theme class */
 .ob-default-theme {
