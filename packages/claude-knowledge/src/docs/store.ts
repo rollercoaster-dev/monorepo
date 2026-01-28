@@ -251,8 +251,18 @@ export async function indexDocument(
       if (linkToCode) {
         const codeEntityIds = extractCodeReferences(section.content, db);
         for (const codeEntityId of codeEntityIds) {
-          createRelationship(db, sectionId, codeEntityId, "DOCUMENTS");
-          linkedToCode++;
+          // Verify entity exists in knowledge graph (extractCodeReferences queries
+          // graph_entities, but relationships FK requires entities table)
+          const codeEntityExists = db
+            .query<
+              { id: string },
+              [string]
+            >("SELECT id FROM entities WHERE id = ?")
+            .get(codeEntityId);
+          if (codeEntityExists) {
+            createRelationship(db, sectionId, codeEntityId, "DOCUMENTS");
+            linkedToCode++;
+          }
         }
       }
 

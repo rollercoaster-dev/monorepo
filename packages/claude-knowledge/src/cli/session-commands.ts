@@ -3,8 +3,11 @@ import { hooks } from "../hooks";
 import { parseModifiedFiles, parseRecentCommits } from "../utils";
 import type { Workflow } from "../types";
 import { $ } from "bun";
+import { resolve } from "path";
+import { Glob } from "bun";
 import { unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { indexDocument, indexDirectory } from "../docs";
 import {
   parseIntSafe,
   isValidSessionMetadata,
@@ -54,6 +57,90 @@ function promptWorkflowResume(workflows: Workflow[]): void {
     "Reply with the issue number and action, e.g.: '414 y' to resume, '414 n' to skip, '414 abandon' to mark failed",
   );
   console.log("=================================\n");
+}
+
+// Skip patterns for docs indexing (matches bootstrap-docs.ts)
+const SKIP_GLOBS = [
+  new Glob("**/node_modules/**"),
+  new Glob("**/.bun-cache/**"),
+  new Glob(".changeset/README.md"),
+  new Glob(".claude/dev-plans/**"),
+];
+
+function shouldSkipDoc(path: string): boolean {
+  for (const glob of SKIP_GLOBS) {
+    if (glob.match(path)) return true;
+  }
+  return false;
+}
+
+/**
+ * Ensure documentation is indexed incrementally.
+ * Uses content-hash caching so unchanged files are skipped instantly.
+ * Non-fatal — session continues if indexing fails.
+ */
+async function ensureDocsIndexed(cwd: string): Promise<void> {
+  const monorepoRoot = cwd;
+  let indexed = 0;
+  let skipped = 0;
+
+  // Priority 1: Root context files
+  for (const name of ["CLAUDE.md", "README.md"]) {
+    const filePath = resolve(monorepoRoot, name);
+    try {
+      const result = await indexDocument(filePath);
+      if (result.status === "unchanged") skipped++;
+      else indexed++;
+    } catch {
+      // Skip missing or unreadable files
+    }
+  }
+
+  // Priority 2: docs/ directory
+  try {
+    const docsDir = resolve(monorepoRoot, "docs");
+    const result = await indexDirectory(docsDir);
+    indexed += result.filesIndexed;
+    skipped += result.filesSkipped;
+  } catch {
+    // docs/ may not exist
+  }
+
+  // Priority 3: Package CLAUDE.md files
+  const packageGlob = new Glob("packages/*/CLAUDE.md");
+  for await (const file of packageGlob.scan({
+    cwd: monorepoRoot,
+    absolute: true,
+  })) {
+    if (shouldSkipDoc(file)) continue;
+    try {
+      const result = await indexDocument(file);
+      if (result.status === "unchanged") skipped++;
+      else indexed++;
+    } catch {
+      // Skip failures
+    }
+  }
+
+  // Priority 4: App CLAUDE.md files
+  const appGlob = new Glob("apps/*/CLAUDE.md");
+  for await (const file of appGlob.scan({
+    cwd: monorepoRoot,
+    absolute: true,
+  })) {
+    if (shouldSkipDoc(file)) continue;
+    try {
+      const result = await indexDocument(file);
+      if (result.status === "unchanged") skipped++;
+      else indexed++;
+    } catch {
+      // Skip failures
+    }
+  }
+
+  if (indexed > 0) {
+    logger.info(`Docs index: ${indexed} indexed, ${skipped} unchanged`);
+  }
 }
 
 /**
@@ -117,6 +204,17 @@ export async function handleSessionStart(args: string[]): Promise<void> {
     modifiedFiles,
     issueNumber,
   });
+
+  // Ensure documentation is indexed (incremental, skips unchanged files)
+  try {
+    await ensureDocsIndexed(cwd);
+  } catch (error) {
+    // Non-fatal: session continues without docs indexing
+    logger.warn("Could not index documentation", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "session-start",
+    });
+  }
 
   // Clean up stale workflows before checking for resume
   try {

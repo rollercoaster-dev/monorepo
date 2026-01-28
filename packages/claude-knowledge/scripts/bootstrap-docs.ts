@@ -103,30 +103,23 @@ async function bootstrap(): Promise<number> {
     `Monorepo docs: ${docsResult.filesIndexed} indexed, ${docsResult.filesSkipped} skipped, ${docsResult.filesFailed} failed`,
   );
 
-  // Priority 3: Package CLAUDE.md files
-  logger.info("\n[Priority 3] Indexing package CLAUDE.md files...");
-  const packageGlob = new Glob("packages/*/CLAUDE.md");
-  const packageClaudeMdFiles: string[] = [];
-  for await (const file of packageGlob.scan({
-    cwd: monorepoRoot,
-    absolute: true,
-  })) {
-    if (!shouldSkip(file)) {
-      packageClaudeMdFiles.push(file);
-    }
-  }
-
-  for (const filePath of packageClaudeMdFiles) {
-    const packageName = filePath.split("/packages/")[1]?.split("/")[0] || "?";
-    const result = await indexSingleDoc(
-      filePath,
-      `packages/${packageName}/CLAUDE.md`,
-    );
-    if (result.indexed) {
-      totalFiles++;
-      totalSections += result.sections;
-    } else if (!result.success) {
-      totalFailed++;
+  // Priority 3: Package and app CLAUDE.md files
+  logger.info("\n[Priority 3] Indexing package and app CLAUDE.md files...");
+  for (const prefix of ["packages", "apps"]) {
+    const claudeGlob = new Glob(`${prefix}/*/CLAUDE.md`);
+    for await (const file of claudeGlob.scan({
+      cwd: monorepoRoot,
+      absolute: true,
+    })) {
+      if (shouldSkip(file)) continue;
+      const name = file.split(`/${prefix}/`)[1]?.split("/")[0] || "?";
+      const result = await indexSingleDoc(file, `${prefix}/${name}/CLAUDE.md`);
+      if (result.indexed) {
+        totalFiles++;
+        totalSections += result.sections;
+      } else if (!result.success) {
+        totalFailed++;
+      }
     }
   }
 
