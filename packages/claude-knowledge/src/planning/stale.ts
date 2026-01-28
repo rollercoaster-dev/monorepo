@@ -113,15 +113,15 @@ export function detectStaleItems(): StaleItem[] {
       }
     }
 
-    // Check for items with no recent activity (> 7 days old, no commits)
-    const ageMs = Date.now() - new Date(item.createdAt).getTime();
+    // Check for items with no recent activity (> 7 days since last update)
+    const ageMs = Date.now() - new Date(item.updatedAt).getTime();
     const ageDays = ageMs / (24 * 60 * 60 * 1000);
 
     if (ageDays > 7 && item.status === "paused") {
       staleItems.push({
         item,
         staleSince: item.updatedAt,
-        reason: `Paused for ${Math.floor(ageDays)} days. No recent activity.`,
+        reason: `No activity for ${Math.floor(ageDays)} days while paused.`,
       });
     }
   }

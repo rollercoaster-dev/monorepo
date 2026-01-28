@@ -161,18 +161,19 @@ export function createInterrupt(opts: {
   const db = getDatabase();
   const now = new Date().toISOString();
   const id = `interrupt-${randomUUID()}`;
-
-  // Get current top item before pushing
-  const currentTop = getStackTop();
-
-  const data = JSON.stringify({
-    reason: opts.reason,
-    interruptedId: currentTop?.id,
-    metadata: opts.metadata,
-  });
+  let currentTop: PlanningEntity | null = null;
 
   db.run("BEGIN TRANSACTION");
   try {
+    // Get current top item inside transaction for consistency
+    currentTop = getStackTop();
+
+    const data = JSON.stringify({
+      reason: opts.reason,
+      interruptedId: currentTop?.id,
+      metadata: opts.metadata,
+    });
+
     // Shift existing active/paused items down
     db.run(
       `UPDATE planning_entities SET stack_order = stack_order + 1, updated_at = ?
@@ -278,13 +279,17 @@ export function getStackDepth(): number {
  */
 export function popStack(): PlanningEntity | null {
   const db = getDatabase();
-  const top = getStackTop();
-  if (!top) return null;
-
   const now = new Date().toISOString();
 
   db.run("BEGIN TRANSACTION");
   try {
+    // Get top item inside transaction for consistency
+    const top = getStackTop();
+    if (!top) {
+      db.run("ROLLBACK");
+      return null;
+    }
+
     // Mark the top item as completed and remove from stack
     db.run(
       `UPDATE planning_entities SET status = 'completed', stack_order = NULL, updated_at = ?
@@ -307,12 +312,12 @@ export function popStack(): PlanningEntity | null {
     );
 
     db.run("COMMIT");
+
+    return { ...top, status: "completed", stackOrder: null, updatedAt: now };
   } catch (error) {
     db.run("ROLLBACK");
     throw error;
   }
-
-  return { ...top, status: "completed", stackOrder: null, updatedAt: now };
 }
 
 /**
