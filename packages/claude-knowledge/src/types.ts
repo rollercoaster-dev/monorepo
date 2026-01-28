@@ -790,3 +790,134 @@ export interface TaskRecoveryPlan {
   /** Human-readable summary of what's being recovered */
   summary: string;
 }
+
+// ============================================================================
+// Planning Graph Types (Issue #625)
+// ============================================================================
+
+/**
+ * Entity types in the planning graph.
+ */
+export type PlanningEntityType = "Goal" | "Interrupt";
+
+/**
+ * Relationship types in the planning graph.
+ * - INTERRUPTED_BY: Goal was interrupted by an Interrupt
+ * - PAUSED_FOR: Goal was paused for another Goal
+ * - COMPLETED_AS: Completed item was summarized as a Learning
+ */
+export type PlanningRelationshipType =
+  | "INTERRUPTED_BY"
+  | "PAUSED_FOR"
+  | "COMPLETED_AS";
+
+/**
+ * Status of a planning entity on the stack.
+ */
+export type PlanningEntityStatus = "active" | "paused" | "completed";
+
+/**
+ * Base interface for all planning entities.
+ */
+export interface PlanningEntityBase {
+  /** Unique identifier */
+  id: string;
+  /** Entity type discriminator */
+  type: PlanningEntityType;
+  /** Short title for display */
+  title: string;
+  /** Position on the stack (0 = top/most recent) */
+  stackOrder: number | null;
+  /** Current status */
+  status: PlanningEntityStatus;
+  /** ISO timestamp when created */
+  createdAt: string;
+  /** ISO timestamp when last updated */
+  updatedAt: string;
+}
+
+/**
+ * A high-level work objective on the planning stack.
+ */
+export interface Goal extends PlanningEntityBase {
+  type: "Goal";
+  /** Optional description of the goal */
+  description?: string;
+  /** Optional linked GitHub issue number */
+  issueNumber?: number;
+  /** Optional metadata */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * A context switch that interrupted the current focus.
+ */
+export interface Interrupt extends PlanningEntityBase {
+  type: "Interrupt";
+  /** Why this interrupt happened */
+  reason: string;
+  /** ID of the goal/interrupt that was interrupted */
+  interruptedId?: string;
+  /** Optional metadata */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Union type for all planning entities.
+ */
+export type PlanningEntity = Goal | Interrupt;
+
+/**
+ * A relationship between two planning entities.
+ */
+export interface PlanningRelationship {
+  id?: number;
+  fromId: string;
+  toId: string;
+  type: PlanningRelationshipType;
+  data?: Record<string, unknown>;
+  createdAt: string;
+}
+
+/**
+ * The current state of the planning stack.
+ */
+export interface PlanningStack {
+  /** All active/paused items ordered by stack position (0 = top) */
+  items: PlanningEntity[];
+  /** Number of items on the stack */
+  depth: number;
+  /** The topmost item (current focus), if any */
+  topItem?: PlanningEntity;
+}
+
+/**
+ * Summary generated when an item is completed and popped from the stack.
+ */
+export interface StackCompletionSummary {
+  /** The completed item */
+  item: PlanningEntity;
+  /** Human-readable summary text */
+  summary: string;
+  /** Duration in milliseconds from creation to completion */
+  durationMs: number;
+  /** Git artifacts associated with this work (commits, PRs) */
+  artifacts?: {
+    commitCount?: number;
+    prNumber?: number;
+    prMerged?: boolean;
+    issueClosed?: boolean;
+  };
+}
+
+/**
+ * A stale item detected on the planning stack.
+ */
+export interface StaleItem {
+  /** The stale planning entity */
+  item: PlanningEntity;
+  /** When the item became stale (ISO timestamp) */
+  staleSince: string;
+  /** Human-readable reason why it's stale */
+  reason: string;
+}

@@ -52,6 +52,20 @@ export {
 // Phase 4: Dogfooding & Validation
 export { mineMergedPRs } from "./utils";
 
+// Phase 5: Planning Graph
+export {
+  pushGoal,
+  pushInterrupt,
+  popStack,
+  peekStack,
+  getStackDepth,
+  getStackTop,
+  detectStaleItems,
+  summarizeCompletion,
+  exportPlanningToJSONL,
+  importPlanningFromJSONL,
+} from "./planning/index";
+
 export type {
   Learning,
   Pattern,
@@ -84,4 +98,16 @@ export type {
   // Context metrics types (dogfooding)
   ContextMetrics,
   GraphQueryMetrics,
+  // Planning graph types
+  PlanningEntityType,
+  PlanningRelationshipType,
+  PlanningEntityStatus,
+  PlanningEntityBase,
+  Goal,
+  Interrupt,
+  PlanningEntity,
+  PlanningRelationship,
+  PlanningStack,
+  StackCompletionSummary,
+  StaleItem,
 } from "./types";

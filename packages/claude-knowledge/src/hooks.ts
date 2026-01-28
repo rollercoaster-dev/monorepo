@@ -40,6 +40,11 @@ import {
   exportToJSONL,
   getFileModificationTime,
 } from "./knowledge/sync";
+import {
+  importPlanningFromJSONL,
+  exportPlanningToJSONL,
+  getPlanningFileModificationTime,
+} from "./planning/sync";
 
 /**
  * Extended session context that includes metrics tracking.
@@ -132,6 +137,31 @@ async function onSessionStart(
   } catch (error) {
     // Log but don't fail session - import is optional enhancement
     logger.warn("Failed to auto-import JSONL", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionStart",
+    });
+  }
+
+  // Auto-import planning state from JSONL if file is newer than database
+  try {
+    const planningJsonlPath = ".claude/planning.jsonl";
+    const dbPath = ".claude/execution-state.db";
+
+    const planningMtime = getPlanningFileModificationTime(planningJsonlPath);
+    const dbMtime = getFileModificationTime(dbPath);
+
+    if (planningMtime > 0 && planningMtime > dbMtime) {
+      const result = await importPlanningFromJSONL(planningJsonlPath);
+      logger.debug("Auto-imported planning from JSONL", {
+        imported: result.imported,
+        updated: result.updated,
+        skipped: result.skipped,
+        errors: result.errors,
+        context: "onSessionStart",
+      });
+    }
+  } catch (error) {
+    logger.warn("Failed to auto-import planning JSONL", {
       error: error instanceof Error ? error.message : String(error),
       context: "onSessionStart",
     });
@@ -765,6 +795,23 @@ async function onSessionEnd(
   } catch (error) {
     // Log but don't fail session end - export is optional enhancement
     logger.warn("Failed to export knowledge to JSONL", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "onSessionEnd",
+    });
+  }
+
+  // Auto-export planning state to JSONL on session end
+  try {
+    const planningResult = await exportPlanningToJSONL(
+      ".claude/planning.jsonl",
+    );
+    logger.debug("Exported planning to JSONL", {
+      exported: planningResult.exported,
+      filePath: planningResult.filePath,
+      context: "onSessionEnd",
+    });
+  } catch (error) {
+    logger.warn("Failed to export planning to JSONL", {
       error: error instanceof Error ? error.message : String(error),
       context: "onSessionEnd",
     });

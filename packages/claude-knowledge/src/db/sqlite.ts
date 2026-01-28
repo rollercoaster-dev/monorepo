@@ -273,6 +273,39 @@ CREATE TABLE IF NOT EXISTS task_hierarchy (
 
 CREATE INDEX IF NOT EXISTS idx_task_hierarchy_parent ON task_hierarchy(parent_task_id);
 CREATE INDEX IF NOT EXISTS idx_task_hierarchy_child ON task_hierarchy(child_task_id);
+
+-- Planning graph entities (Goal/Interrupt stack for project management)
+-- Part of Issue #625: Planning Graph Phase 1
+CREATE TABLE IF NOT EXISTS planning_entities (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK (type IN ('Goal', 'Interrupt')),
+  title TEXT NOT NULL,
+  data JSON NOT NULL,
+  stack_order INTEGER,
+  status TEXT NOT NULL CHECK (status IN ('active', 'paused', 'completed')) DEFAULT 'active',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+-- Planning graph relationships (links between planning entities)
+CREATE TABLE IF NOT EXISTS planning_relationships (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('INTERRUPTED_BY', 'PAUSED_FOR', 'COMPLETED_AS')),
+  data JSON,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (from_id) REFERENCES planning_entities(id) ON DELETE CASCADE,
+  FOREIGN KEY (to_id) REFERENCES planning_entities(id) ON DELETE CASCADE
+);
+
+-- Indexes for planning graph queries
+CREATE INDEX IF NOT EXISTS idx_planning_entities_type ON planning_entities(type);
+CREATE INDEX IF NOT EXISTS idx_planning_entities_status ON planning_entities(status);
+CREATE INDEX IF NOT EXISTS idx_planning_entities_stack_order ON planning_entities(stack_order);
+CREATE INDEX IF NOT EXISTS idx_planning_rel_from ON planning_relationships(from_id, type);
+CREATE INDEX IF NOT EXISTS idx_planning_rel_to ON planning_relationships(to_id, type);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_planning_rel_unique ON planning_relationships(from_id, to_id, type);
 `;
 
 /**
