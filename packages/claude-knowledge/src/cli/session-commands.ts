@@ -5,6 +5,7 @@ import type { Workflow } from "../types";
 import { $ } from "bun";
 import { unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { indexMonorepoDocs } from "../docs";
 import {
   parseIntSafe,
   isValidSessionMetadata,
@@ -117,6 +118,22 @@ export async function handleSessionStart(args: string[]): Promise<void> {
     modifiedFiles,
     issueNumber,
   });
+
+  // Ensure documentation is indexed (incremental, skips unchanged files)
+  try {
+    const docStats = await indexMonorepoDocs(cwd);
+    if (docStats.indexed > 0) {
+      logger.info(
+        `Docs index: ${docStats.indexed} indexed, ${docStats.skipped} unchanged`,
+      );
+    }
+  } catch (error) {
+    // Non-fatal: session continues without docs indexing
+    logger.warn("Could not index documentation", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "session-start",
+    });
+  }
 
   // Clean up stale workflows before checking for resume
   try {

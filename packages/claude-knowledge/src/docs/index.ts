@@ -28,3 +28,10 @@ export {
   convertHtmlToMarkdown,
 } from "./external";
 export type { ExternalDocSpec } from "./external";
+
+export {
+  indexMonorepoDocs,
+  shouldSkipDoc,
+  DOC_SKIP_PATTERNS,
+} from "./index-monorepo";
+export type { DocIndexStats, DocIndexCallbacks } from "./index-monorepo";
