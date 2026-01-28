@@ -207,32 +207,43 @@ if (!result.valid) {
 
 ## Theming
 
-The library includes several built-in themes:
+The library uses a **CSS custom property token contract** for theming. Tokens are organized in three tiers — foundational primitives, semantic tokens (the public API), and component tokens — so you can customize appearance without modifying component source code.
 
-- Default theme
-- Dark theme
-- High contrast theme
-- Large text theme
-- Dyslexia-friendly theme
-- ADHD-friendly theme
-- Autism-friendly theme
+**Override semantic tokens to create a custom theme:**
 
-To apply a theme:
+```css
+.my-brand {
+  --ob-primary: #8b5cf6;
+  --ob-primary-foreground: #ffffff;
+  --ob-background: #faf5ff;
+  --ob-foreground: #1e1b4b;
+}
+```
+
+**Built-in themes** (apply via CSS class or `AccessibilityService`):
+
+| Class                         | Description                                        |
+| ----------------------------- | -------------------------------------------------- |
+| `.ob-dark-theme`              | Dark mode                                          |
+| `.ob-high-contrast-theme`     | WCAG AAA contrast                                  |
+| `.ob-large-text-theme`        | Larger fonts and line heights                      |
+| `.ob-dyslexia-friendly-theme` | OpenDyslexic font, cream background, extra spacing |
+| `.ob-low-vision-theme`        | Atkinson Hyperlegible, high contrast, large text   |
+| `.ob-low-info-theme`          | Simplified palette, reduced distractions           |
+| `.ob-autism-friendly-theme`   | Predictable layouts, muted colours, no shadows     |
 
 ```javascript
 import { AccessibilityService } from "openbadges-ui";
-
-// Apply dark theme
 AccessibilityService.applyTheme("dark");
 ```
 
-Or use CSS classes directly:
-
 ```html
 <body class="ob-dark-theme">
-  <!-- Your app content -->
+  <!-- Components use dark theme tokens -->
 </body>
 ```
+
+For the full token reference, override examples, and ND theme guide, see **[docs/theming.md](./docs/theming.md)**.
 
 ## Accessibility
 

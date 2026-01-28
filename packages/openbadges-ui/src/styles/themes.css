@@ -1,178 +1,71 @@
 /**
- * Rollercoaster.dev Open Badges Component Library - Theme Variables
+ * Rollercoaster.dev Open Badges Component Library — Theme Overrides
  *
- * This file defines CSS custom properties (variables) for theming the component library.
- * Applications can override these variables to customize the appearance of components.
+ * This file contains built-in theme classes that override the semantic tokens
+ * defined in tokens.css.  Import tokens.css BEFORE this file.
+ *
+ * Each theme class overrides semantic tokens (--ob-background, --ob-primary, …)
+ * so component tokens automatically inherit the changes via var() references.
+ *
+ * Available themes:
+ *   .ob-dark-theme              – Dark mode
+ *   .ob-high-contrast-theme     – WCAG AAA contrast
+ *   .ob-large-text-theme        – Larger fonts and line heights
+ *   .ob-dyslexia-friendly-theme – OpenDyslexic font, cream bg, extra spacing
+ *   .ob-low-vision-theme        – Atkinson Hyperlegible, high contrast, large text
+ *   .ob-low-info-theme          – Simplified palette, reduced distractions
+ *   .ob-autism-friendly-theme   – Predictable layout, muted palette, no shadows
  */
 
-:root {
-  /* Color Palette */
-  --ob-primary: #3182ce;
-  --ob-primary-dark: #2c5282;
-  --ob-primary-light: #4299e1;
-  --ob-secondary: #718096;
-  --ob-secondary-dark: #4a5568;
-  --ob-secondary-light: #a0aec0;
-  --ob-success: #38a169;
-  --ob-success-light: #c6f6d5;
-  --ob-error: #e53e3e;
-  --ob-error-light: #fed7d7;
-  --ob-warning: #d69e2e;
-  --ob-warning-light: #feebc8;
-  --ob-info: #3182ce;
-  --ob-info-light: #bee3f8;
-
-  /* Neutral Colors */
-  --ob-gray-50: #f7fafc;
-  --ob-gray-100: #edf2f7;
-  --ob-gray-200: #e2e8f0;
-  --ob-gray-300: #cbd5e0;
-  --ob-gray-400: #a0aec0;
-  --ob-gray-500: #718096;
-  --ob-gray-600: #4a5568;
-  --ob-gray-700: #2d3748;
-  --ob-gray-800: #1a202c;
-  --ob-gray-900: #171923;
-
-  /* Text Colors */
-  --ob-text-primary: var(--ob-gray-800);
-  --ob-text-secondary: var(--ob-gray-600);
-  --ob-text-disabled: var(--ob-gray-400);
-  --ob-text-inverse: white;
-
-  /* Background Colors */
-  --ob-bg-primary: white;
-  --ob-bg-secondary: var(--ob-gray-50);
-  --ob-bg-disabled: var(--ob-gray-100);
-
-  /* Border Colors */
-  --ob-border-color: var(--ob-gray-200);
-  --ob-border-color-focus: var(--ob-primary);
-
-  /* Spacing - Ensure consistent usage */
-  --ob-space-1: 0.25rem;
-  --ob-space-2: 0.5rem;
-  --ob-space-3: 0.75rem;
-  --ob-space-4: 1rem;
-  --ob-space-5: 1.25rem;
-  --ob-space-6: 1.5rem;
-  --ob-space-8: 2rem;
-  --ob-space-10: 2.5rem;
-  --ob-space-12: 3rem;
-  --ob-space-16: 4rem;
-
-  /* Typography */
-  --ob-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Keep system default for broad compatibility */
-  --ob-font-size-xs: 0.75rem;
-  --ob-font-size-sm: 0.875rem;
-  --ob-font-size-md: 1rem;
-  --ob-font-size-lg: 1.125rem;
-  --ob-font-size-xl: 1.25rem;
-  --ob-font-size-2xl: 1.5rem;
-  --ob-font-weight-normal: 400;
-  --ob-font-weight-medium: 500;
-  --ob-font-weight-semibold: 600;
-  --ob-font-weight-bold: 700;
-  --ob-line-height-tight: 1.3;
-  --ob-line-height-normal: 1.6;
-  --ob-line-height-relaxed: 1.8;
-
-  /* Borders */
-  --ob-border-width: 1px;
-  --ob-border-radius-sm: 0.25rem;
-  --ob-border-radius-md: 0.375rem;
-  --ob-border-radius-lg: 0.75rem;
-  --ob-border-radius-xl: 1rem; /* 16px */
-
-  /* Shadows - Refined for subtlety */
-  --ob-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --ob-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.05);
-  --ob-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --ob-shadow-focus: 0 0 0 3px rgba(49, 130, 206, 0.4);
-
-  /* Transitions - Ensure consistent usage */
-  --ob-transition-fast: 150ms;
-  --ob-transition-normal: 300ms;
-  --ob-transition-slow: 500ms;
-
-  /* Z-index */
-  --ob-z-index-dropdown: 1000;
-  --ob-z-index-sticky: 1100;
-  --ob-z-index-modal: 1300;
-  --ob-z-index-tooltip: 1400;
-
-  /* Component-specific variables */
-
-  /* Badge Display - Apply updated radius/shadow */
-  --ob-badge-border-color: var(--ob-border-color);
-  --ob-badge-border-radius: var(--ob-border-radius-lg);
-  --ob-badge-padding: var(--ob-space-4);
-  --ob-badge-background: var(--ob-bg-primary);
-  --ob-badge-shadow: var(--ob-shadow-sm);
-  --ob-badge-title-color: var(--ob-text-primary);
-  --ob-badge-text-color: var(--ob-text-secondary);
-  --ob-badge-hover-shadow: var(--ob-shadow-md);
-  --ob-badge-focus-outline-color: var(--ob-primary);
-
-  /* Badge List - Apply updated radius */
-  --ob-badge-list-gap: var(--ob-space-4);
-  --ob-badge-list-empty-color: var(--ob-text-secondary);
-  --ob-badge-list-pagination-gap: var(--ob-space-2);
-  --ob-badge-list-button-bg: var(--ob-gray-200);
-  --ob-badge-list-button-color: var(--ob-text-secondary);
-  --ob-badge-list-button-hover-bg: var(--ob-gray-300);
-  --ob-badge-list-button-disabled-bg: var(--ob-gray-100);
-  --ob-badge-list-button-disabled-color: var(--ob-text-disabled);
-
-  /* Profile Viewer - Apply updated radius/shadow */
-  --ob-profile-padding: var(--ob-space-6);
-  --ob-profile-gap: var(--ob-space-8);
-  --ob-profile-border-color: var(--ob-border-color);
-  --ob-profile-background: var(--ob-bg-primary);
-  --ob-profile-shadow: var(--ob-shadow-sm);
-  --ob-profile-title-color: var(--ob-text-primary);
-  --ob-profile-text-color: var(--ob-text-secondary);
-  --ob-profile-link-color: var(--ob-primary);
-
-  /* Badge Issuer Form - Apply updated radius */
-  --ob-form-border-color: var(--ob-border-color);
-  --ob-form-background: var(--ob-bg-primary);
-  --ob-form-text-color: var(--ob-text-primary);
-  --ob-form-label-color: var(--ob-text-secondary);
-  --ob-form-input-border: var(--ob-gray-300);
-  --ob-form-input-focus: var(--ob-primary);
-  --ob-form-error-color: var(--ob-error);
-  --ob-form-success-color: var(--ob-success);
-  --ob-form-help-color: var(--ob-text-secondary);
-  --ob-form-button-primary-bg: var(--ob-primary);
-  --ob-form-button-primary-color: var(--ob-text-inverse);
-  --ob-form-button-secondary-bg: var(--ob-gray-200);
-  --ob-form-button-secondary-color: var(--ob-text-secondary);
-  --ob-form-button-disabled-bg: var(--ob-bg-disabled);
-  --ob-form-button-disabled-color: var(--ob-text-disabled);
-
-  /* Issuer Dashboard - Apply updated radius */
-  --ob-dashboard-border-color: var(--ob-border-color);
-  --ob-dashboard-background: var(--ob-bg-primary);
-  --ob-dashboard-text-color: var(--ob-text-primary);
-  --ob-dashboard-secondary-color: var(--ob-text-secondary);
-  --ob-dashboard-accent-color: var(--ob-primary);
-  --ob-dashboard-tab-active-border: var(--ob-primary);
-  --ob-dashboard-tab-hover-bg: var(--ob-gray-50);
-  --ob-dashboard-empty-color: var(--ob-text-secondary);
-}
-
-/* Dark Theme */
+/* ================================================================== *
+ * Dark Theme                                                          *
+ * ================================================================== */
 .ob-dark-theme {
-  /* Color Palette */
+  /* Semantic surfaces */
+  --ob-background: #1a202c;
+  --ob-foreground: #f7fafc;
+  --ob-card: #2d3748;
+  --ob-card-foreground: #f7fafc;
+  --ob-popover: #2d3748;
+  --ob-popover-foreground: #f7fafc;
+  --ob-muted: #2d3748;
+  --ob-muted-foreground: #e2e8f0;
+  --ob-accent: #4a5568;
+  --ob-accent-foreground: #f7fafc;
+
+  /* Aliases (for components still referencing old names) */
+  --ob-bg-primary: #1a202c;
+  --ob-bg-secondary: #2d3748;
+  --ob-bg-disabled: #4a5568;
+  --ob-text-primary: #f7fafc;
+  --ob-text-secondary: #e2e8f0;
+  --ob-text-disabled: #a0aec0;
+  --ob-text-inverse: #1a202c;
+
+  /* Interactive states */
   --ob-primary: #63b3ed;
+  --ob-primary-foreground: #1a202c;
+  --ob-secondary: #a0aec0;
+  --ob-secondary-foreground: #1a202c;
+
+  /* Foundational palette (inverted for dark mode) */
+  --ob-color-primary: #63b3ed;
+  --ob-color-primary-dark: #4299e1;
+  --ob-color-primary-light: #90cdf4;
+  --ob-color-secondary: #a0aec0;
+  --ob-color-secondary-dark: #718096;
+  --ob-color-secondary-light: #cbd5e0;
+
+  /* Legacy palette aliases */
   --ob-primary-dark: #4299e1;
   --ob-primary-light: #90cdf4;
-  --ob-secondary: #a0aec0;
   --ob-secondary-dark: #718096;
   --ob-secondary-light: #cbd5e0;
+
+  /* Feedback states */
   --ob-success: #68d391;
   --ob-success-light: #9ae6b4;
+  --ob-destructive: #fc8181;
   --ob-error: #fc8181;
   --ob-error-light: #feb2b2;
   --ob-warning: #f6ad55;
@@ -180,7 +73,19 @@
   --ob-info: #63b3ed;
   --ob-info-light: #90cdf4;
 
-  /* Neutral Colors */
+  /* Neutral scale (inverted) */
+  --ob-color-gray-50: #2d3748;
+  --ob-color-gray-100: #2d3748;
+  --ob-color-gray-200: #4a5568;
+  --ob-color-gray-300: #718096;
+  --ob-color-gray-400: #a0aec0;
+  --ob-color-gray-500: #cbd5e0;
+  --ob-color-gray-600: #e2e8f0;
+  --ob-color-gray-700: #edf2f7;
+  --ob-color-gray-800: #f7fafc;
+  --ob-color-gray-900: #ffffff;
+
+  /* Legacy gray aliases */
   --ob-gray-50: #2d3748;
   --ob-gray-100: #2d3748;
   --ob-gray-200: #4a5568;
@@ -192,39 +97,69 @@
   --ob-gray-800: #f7fafc;
   --ob-gray-900: #ffffff;
 
-  /* Text Colors */
-  --ob-text-primary: var(--ob-gray-800);
-  --ob-text-secondary: var(--ob-gray-600);
-  --ob-text-disabled: var(--ob-gray-400);
-  --ob-text-inverse: #1a202c;
-
-  /* Background Colors */
-  --ob-bg-primary: #1a202c;
-  --ob-bg-secondary: #2d3748;
-  --ob-bg-disabled: #4a5568;
-
-  /* Border Colors */
+  /* Form & borders */
+  --ob-border: #4a5568;
   --ob-border-color: #4a5568;
   --ob-border-color-focus: var(--ob-primary);
+  --ob-ring: #63b3ed;
+  --ob-input: #2d3748;
 
-  /* Shadows */
+  /* Shadows (stronger for dark backgrounds) */
   --ob-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
-  --ob-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.26);
-  --ob-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+  --ob-shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.26);
+  --ob-shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
   --ob-shadow-focus: 0 0 0 3px rgba(99, 179, 237, 0.4);
 }
 
-/* High Contrast Theme */
+/* ================================================================== *
+ * High Contrast Theme                                                 *
+ * ================================================================== */
 .ob-high-contrast-theme {
-  /* Color Palette */
+  /* Semantic surfaces */
+  --ob-background: #ffffff;
+  --ob-foreground: #000000;
+  --ob-card: #ffffff;
+  --ob-card-foreground: #000000;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #000000;
+  --ob-muted: #f0f0f0;
+  --ob-muted-foreground: #000000;
+
+  /* Aliases */
+  --ob-bg-primary: #ffffff;
+  --ob-bg-secondary: #f0f0f0;
+  --ob-bg-disabled: #d0d0d0;
+  --ob-text-primary: #000000;
+  --ob-text-secondary: #000000;
+  --ob-text-disabled: #606060;
+  --ob-text-inverse: #ffffff;
+
+  /* Interactive states */
   --ob-primary: #0000ff;
+  --ob-primary-foreground: #ffffff;
+  --ob-secondary: #606060;
+  --ob-secondary-foreground: #ffffff;
+
+  /* Foundational palette */
+  --ob-color-primary: #0000ff;
+  --ob-color-primary-dark: #0000cc;
+  --ob-color-primary-light: #3333ff;
+  --ob-color-secondary: #606060;
+  --ob-color-secondary-dark: #404040;
+  --ob-color-secondary-light: #808080;
+
+  /* Legacy palette aliases */
   --ob-primary-dark: #0000cc;
   --ob-primary-light: #3333ff;
-  --ob-secondary: #606060;
   --ob-secondary-dark: #404040;
   --ob-secondary-light: #808080;
+
+  /* Feedback states */
   --ob-success: #008000;
   --ob-success-light: #ccffcc;
+  --ob-destructive: #ff0000;
   --ob-error: #ff0000;
   --ob-error-light: #ffcccc;
   --ob-warning: #ff8000;
@@ -232,28 +167,20 @@
   --ob-info: #0000ff;
   --ob-info-light: #ccccff;
 
-  /* Text Colors */
-  --ob-text-primary: #000000;
-  --ob-text-secondary: #000000;
-  --ob-text-disabled: #606060;
-  --ob-text-inverse: #ffffff;
-
-  /* Background Colors */
-  --ob-bg-primary: #ffffff;
-  --ob-bg-secondary: #f0f0f0;
-  --ob-bg-disabled: #d0d0d0;
-
-  /* Border Colors */
+  /* Form & borders */
+  --ob-border: #000000;
   --ob-border-color: #000000;
   --ob-border-color-focus: #0000ff;
+  --ob-ring: #0000ff;
+  --ob-input: #ffffff;
 
-  /* Shadows */
+  /* No shadows — rely on borders for distinction */
   --ob-shadow-sm: none;
   --ob-shadow-md: none;
   --ob-shadow-lg: none;
   --ob-shadow-focus: 0 0 0 3px rgba(0, 0, 255, 0.5);
 
-  /* Component-specific overrides */
+  /* Component overrides (thicker borders for clarity) */
   --ob-badge-border-color: #000000;
   --ob-badge-border-width: 2px;
   --ob-badge-shadow: none;
@@ -271,7 +198,9 @@
   --ob-dashboard-tab-active-border-width: 3px;
 }
 
-/* Reduced Motion Theme */
+/* ================================================================== *
+ * Reduced Motion (system preference)                                  *
+ * ================================================================== */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --ob-transition-fast: 0ms;
@@ -280,7 +209,9 @@
   }
 }
 
-/* Large Text Theme for improved readability */
+/* ================================================================== *
+ * Large Text Theme                                                    *
+ * ================================================================== */
 .ob-large-text-theme {
   --ob-font-size-xs: 0.875rem;
   --ob-font-size-sm: 1rem;
@@ -294,37 +225,50 @@
   --ob-space-between-paragraphs: 1.5em;
 }
 
-/* Dyslexia-friendly Theme - Enhanced for better readability based on research */
+/* ================================================================== *
+ * Dyslexia-friendly Theme                                             *
+ * Based on British Dyslexia Association guidelines                    *
+ * ================================================================== */
 .ob-dyslexia-friendly-theme {
-  /* Typography improvements - based on British Dyslexia Association guidelines */
+  /* Typography — OpenDyslexic with generous spacing */
   --ob-font-family: var(--ob-font-opendyslexic);
-  --ob-font-size-xs: 0.875rem; /* Minimum 14px */
-  --ob-font-size-sm: 1rem;     /* 16px */
-  --ob-font-size-md: 1.125rem;  /* 18px */
-  --ob-font-size-lg: 1.25rem;   /* 20px */
-  --ob-font-size-xl: 1.5rem;    /* 24px */
-  --ob-font-size-2xl: 1.75rem;  /* 28px */
-  --ob-line-height-tight: 1.5;   /* Minimum 1.5 */
-  --ob-line-height-normal: 1.7;  /* Recommended for body text */
-  --ob-line-height-relaxed: 1.9; /* For longer text blocks */
-  --ob-letter-spacing: 0.05em;   /* Slightly increased letter spacing */
-  --ob-word-spacing: 0.1em;      /* Increased word spacing */
-  --ob-font-weight-normal: 400;  /* Regular weight for better readability */
-  --ob-font-weight-medium: 500;  /* Medium weight for emphasis */
-  --ob-font-weight-bold: 700;    /* Bold for headings */
+  --ob-font-size-xs: 0.875rem; /* 14px minimum */
+  --ob-font-size-sm: 1rem; /* 16px */
+  --ob-font-size-md: 1.125rem; /* 18px */
+  --ob-font-size-lg: 1.25rem; /* 20px */
+  --ob-font-size-xl: 1.5rem; /* 24px */
+  --ob-font-size-2xl: 1.75rem; /* 28px */
+  --ob-line-height-tight: 1.5;
+  --ob-line-height-normal: 1.7;
+  --ob-line-height-relaxed: 1.9;
+  --ob-letter-spacing: 0.05em;
+  --ob-word-spacing: 0.1em;
+  --ob-font-weight-normal: 400;
+  --ob-font-weight-medium: 500;
+  --ob-font-weight-bold: 700;
 
-  /* Colors for reduced visual stress - cream background with dark text */
-  --ob-bg-primary: #f8f5e4;      /* Light cream background - reduces visual stress */
-  --ob-bg-secondary: #f0edd8;    /* Slightly darker cream for contrast */
-  --ob-text-primary: #333333;    /* Dark gray text - not pure black */
-  --ob-text-secondary: #555555;  /* Medium gray for secondary text */
+  /* Cream background reduces visual stress */
+  --ob-background: #f8f5e4;
+  --ob-foreground: #333333;
+  --ob-card: #f8f5e4;
+  --ob-card-foreground: #333333;
+  --ob-popover: #f8f5e4;
+  --ob-popover-foreground: #333333;
+  --ob-muted: #f0edd8;
+  --ob-muted-foreground: #555555;
+
+  /* Aliases */
+  --ob-bg-primary: #f8f5e4;
+  --ob-bg-secondary: #f0edd8;
+  --ob-text-primary: #333333;
+  --ob-text-secondary: #555555;
 
   /* Component backgrounds */
-  --ob-badge-background: var(--ob-bg-primary);
-  --ob-form-background: var(--ob-bg-primary);
-  --ob-dashboard-background: var(--ob-bg-primary);
+  --ob-badge-background: var(--ob-background);
+  --ob-form-background: var(--ob-background);
+  --ob-dashboard-background: var(--ob-background);
 
-  /* Increased spacing for better readability */
+  /* Increased spacing */
   --ob-space-4: 1.25rem;
   --ob-space-6: 1.75rem;
   --ob-space-8: 2.25rem;
@@ -332,96 +276,127 @@
   --ob-paragraph-spacing: 1.5em;
 
   /* Stronger focus indicators */
+  --ob-ring: #0066cc;
   --ob-border-color-focus: #0066cc;
   --ob-shadow-focus: 0 0 0 4px rgba(0, 102, 204, 0.4);
 
-  /* Borders and structure - clear visual boundaries */
-  --ob-border-width: 2px;        /* Thicker borders for clearer boundaries */
-  --ob-border-color: #c8c3a9;    /* Muted border color */
-  --ob-border-radius-md: 6px;    /* Slightly rounded corners */
-  --ob-border-radius-lg: 8px;    /* Rounded corners for larger elements */
+  /* Form input background (matches muted surface) */
+  --ob-input: #f0edd8;
 
-  /* Accent colors - muted to reduce visual stress */
-  --ob-primary: #1b70b6;         /* Muted blue - less harsh than standard blue */
-  --ob-primary-dark: #155a92;    /* Darker blue for hover states */
-  --ob-primary-light: #5a9bd5;   /* Lighter blue for backgrounds */
-  --ob-success: #2e8b57;         /* Muted green */
-  --ob-error: #b54942;           /* Muted red */
-  --ob-warning: #b5913a;         /* Muted amber */
+  /* Clear visual boundaries */
+  --ob-border-width: 2px;
+  --ob-border: #c8c3a9;
+  --ob-border-color: #c8c3a9;
+  --ob-border-radius-md: 6px;
+  --ob-border-radius-lg: 8px;
 
-  /* Reduced shadows to minimize visual noise */
+  /* Muted accent colours to reduce visual stress */
+  --ob-primary: #1b70b6;
+  --ob-primary-foreground: #ffffff;
+  --ob-primary-dark: #155a92;
+  --ob-primary-light: #5a9bd5;
+  --ob-success: #2e8b57;
+  --ob-error: #b54942;
+  --ob-destructive: #b54942;
+  --ob-warning: #b5913a;
+
+  /* Reduced shadows */
   --ob-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
   --ob-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
   --ob-shadow-lg: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Low Vision Theme - Using Atkinson Hyperlegible for maximum legibility */
+/* ================================================================== *
+ * Low Vision Theme                                                    *
+ * Uses Atkinson Hyperlegible for maximum legibility                   *
+ * ================================================================== */
 .ob-low-vision-theme {
-  /* Typography for clarity - using Atkinson Hyperlegible font */
+  /* Typography — Atkinson Hyperlegible with large sizes */
   --ob-font-family: var(--ob-font-atkinson);
-  --ob-font-size-xs: 1rem;      /* 16px minimum */
-  --ob-font-size-sm: 1.125rem;  /* 18px */
-  --ob-font-size-md: 1.25rem;   /* 20px */
-  --ob-font-size-lg: 1.5rem;    /* 24px */
-  --ob-font-size-xl: 1.75rem;   /* 28px */
-  --ob-font-size-2xl: 2rem;     /* 32px */
-  --ob-line-height-tight: 1.5;   /* Minimum 1.5 */
-  --ob-line-height-normal: 1.7;  /* Recommended for body text */
-  --ob-line-height-relaxed: 1.9; /* For longer text blocks */
-  --ob-letter-spacing: 0.01em;   /* Slightly increased letter spacing */
-  --ob-word-spacing: 0.05em;     /* Increased word spacing */
-  --ob-font-weight-normal: 400;  /* Regular weight for better readability */
-  --ob-font-weight-medium: 600;  /* Medium weight for emphasis */
-  --ob-font-weight-bold: 700;    /* Bold for headings */
+  --ob-font-size-xs: 1rem; /* 16px minimum */
+  --ob-font-size-sm: 1.125rem; /* 18px */
+  --ob-font-size-md: 1.25rem; /* 20px */
+  --ob-font-size-lg: 1.5rem; /* 24px */
+  --ob-font-size-xl: 1.75rem; /* 28px */
+  --ob-font-size-2xl: 2rem; /* 32px */
+  --ob-line-height-tight: 1.5;
+  --ob-line-height-normal: 1.7;
+  --ob-line-height-relaxed: 1.9;
+  --ob-letter-spacing: 0.01em;
+  --ob-word-spacing: 0.05em;
+  --ob-font-weight-normal: 400;
+  --ob-font-weight-medium: 600;
+  --ob-font-weight-bold: 700;
 
-  /* High contrast colors for better visibility */
-  --ob-primary: #0066cc;         /* Strong blue */
-  --ob-primary-dark: #004d99;    /* Darker blue for hover states */
-  --ob-primary-light: #4d94ff;   /* Lighter blue for backgrounds */
-  --ob-bg-primary: #ffffff;      /* Pure white background */
-  --ob-bg-secondary: #f0f0f0;    /* Light gray for secondary backgrounds */
-  --ob-text-primary: #222222;    /* Near black for text - not pure black */
-  --ob-text-secondary: #444444;  /* Dark gray for secondary text */
+  /* High contrast colours */
+  --ob-background: #ffffff;
+  --ob-foreground: #222222;
+  --ob-card: #ffffff;
+  --ob-card-foreground: #222222;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #222222;
+  --ob-muted: #f0f0f0;
+  --ob-muted-foreground: #444444;
 
-  /* Reduced color palette to minimize distractions */
-  --ob-secondary: #666666;       /* Medium gray */
-  --ob-secondary-dark: #444444;  /* Darker gray */
-  --ob-secondary-light: #888888; /* Lighter gray */
-  --ob-success: #008000;         /* Clear green */
-  --ob-error: #cc0000;           /* Clear red */
-  --ob-warning: #cc6600;         /* Clear orange */
+  /* Aliases */
+  --ob-bg-primary: #ffffff;
+  --ob-bg-secondary: #f0f0f0;
+  --ob-text-primary: #222222;
+  --ob-text-secondary: #444444;
 
-  /* Clear visual hierarchy with strong borders */
-  --ob-border-width: 2px;        /* Thicker borders for clearer boundaries */
-  --ob-border-color: #999999;    /* Medium gray border */
-  --ob-border-radius-md: 6px;    /* Slightly rounded corners */
-  --ob-border-radius-lg: 8px;    /* Rounded corners for larger elements */
+  /* Interactive states */
+  --ob-primary: #0066cc;
+  --ob-primary-foreground: #ffffff;
+  --ob-primary-dark: #004d99;
+  --ob-primary-light: #4d94ff;
+  --ob-secondary: #666666;
+  --ob-secondary-dark: #444444;
+  --ob-secondary-light: #888888;
+
+  /* Feedback states */
+  --ob-success: #008000;
+  --ob-destructive: #cc0000;
+  --ob-error: #cc0000;
+  --ob-warning: #cc6600;
+
+  /* Form input background */
+  --ob-input: #f0f0f0;
+
+  /* Strong borders */
+  --ob-border-width: 2px;
+  --ob-border: #999999;
+  --ob-border-color: #999999;
+  --ob-border-radius-md: 6px;
+  --ob-border-radius-lg: 8px;
 
   /* Strong focus indicators */
+  --ob-ring: #0066cc;
   --ob-border-color-focus: #0066cc;
   --ob-shadow-focus: 0 0 0 4px rgba(0, 102, 204, 0.5);
 
-  /* Reduced shadows to minimize visual noise */
+  /* Reduced shadows */
   --ob-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
   --ob-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
   --ob-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-  /* Component-specific overrides */
+  /* Component overrides */
   --ob-badge-border-color: #999999;
   --ob-badge-border-width: 2px;
   --ob-badge-title-color: #222222;
   --ob-badge-text-color: #444444;
 
-  /* Form elements with clear focus states */
   --ob-form-input-border: #999999;
   --ob-form-input-focus: #0066cc;
   --ob-form-button-primary-bg: #0066cc;
   --ob-form-button-primary-color: #ffffff;
 }
 
-/* Low Info Theme - Focused on reducing distractions and clear hierarchy */
+/* ================================================================== *
+ * Low Info Theme                                                      *
+ * Reduces distractions with simplified palette and clear hierarchy     *
+ * ================================================================== */
 .ob-low-info-theme {
-  /* Typography for clarity */
+  /* Typography */
   --ob-font-family: var(--ob-font-atkinson);
   --ob-font-size-md: 1rem;
   --ob-line-height-normal: 1.6;
@@ -429,66 +404,108 @@
   --ob-font-weight-medium: 600;
   --ob-font-weight-bold: 700;
 
-  /* High contrast colors for focus */
-  --ob-primary: #0066cc;
-  --ob-primary-dark: #004d99;
-  --ob-primary-light: #4d94ff;
+  /* Simplified surfaces */
+  --ob-background: #ffffff;
+  --ob-foreground: #222222;
+  --ob-card: #ffffff;
+  --ob-card-foreground: #222222;
+  --ob-popover: #ffffff;
+  --ob-popover-foreground: #222222;
+  --ob-muted: #f0f0f0;
+  --ob-muted-foreground: #444444;
+  --ob-accent: #f0f0f0;
+  --ob-accent-foreground: #222222;
+
+  /* Aliases */
   --ob-bg-primary: #ffffff;
   --ob-text-primary: #222222;
 
-  /* Reduced color palette to minimize distractions */
+  /* Interactive states */
+  --ob-primary: #0066cc;
+  --ob-primary-foreground: #ffffff;
+  --ob-primary-dark: #004d99;
+  --ob-primary-light: #4d94ff;
   --ob-secondary: #666666;
   --ob-secondary-dark: #444444;
   --ob-secondary-light: #888888;
 
-  /* Clear visual hierarchy */
+  /* Form & borders */
+  --ob-border: #dddddd;
+  --ob-border-color: #dddddd;
+  --ob-input: #f0f0f0;
   --ob-border-width: 2px;
   --ob-border-radius-md: 4px;
   --ob-border-radius-lg: 8px;
 
   /* Strong focus indicators */
+  --ob-ring: #0066cc;
   --ob-border-color-focus: #0066cc;
   --ob-shadow-focus: 0 0 0 4px rgba(0, 102, 204, 0.5);
 
-  /* Reduced shadows to minimize visual noise */
+  /* Reduced shadows */
   --ob-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
   --ob-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
   --ob-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
 
-  /* Component-specific overrides */
+  /* Component overrides */
   --ob-badge-border-color: #dddddd;
   --ob-badge-border-width: 2px;
   --ob-badge-title-color: #222222;
   --ob-badge-text-color: #444444;
 
-  /* Form elements with clear focus states */
   --ob-form-input-border: #999999;
   --ob-form-input-focus: #0066cc;
   --ob-form-button-primary-bg: #0066cc;
   --ob-form-button-primary-color: #ffffff;
 }
 
-/* Autism-friendly Theme - Predictable layouts and reduced sensory stimulation */
+/* ================================================================== *
+ * Autism-friendly Theme                                               *
+ * Predictable layouts and reduced sensory stimulation                 *
+ * ================================================================== */
 .ob-autism-friendly-theme {
-  /* Typography - consistent and predictable */
+  /* Typography — consistent and predictable */
   --ob-font-family: "Arial", sans-serif;
   --ob-font-size-md: 1rem;
   --ob-line-height-normal: 1.5;
   --ob-font-weight-normal: 400;
 
-  /* Muted colors to reduce sensory overload */
-  --ob-primary: #3d7e9a;
-  --ob-primary-dark: #2d5d72;
-  --ob-primary-light: #6ba3bc;
+  /* Muted surfaces to reduce sensory overload */
+  --ob-background: #f7f7f7;
+  --ob-foreground: #333333;
+  --ob-card: #f7f7f7;
+  --ob-card-foreground: #333333;
+  --ob-popover: #f7f7f7;
+  --ob-popover-foreground: #333333;
+  --ob-muted: #eeeeee;
+  --ob-muted-foreground: #666666;
+
+  /* Aliases */
   --ob-bg-primary: #f7f7f7;
   --ob-text-primary: #333333;
 
-  /* Neutral color palette */
+  /* Muted interactive states */
+  --ob-primary: #3d7e9a;
+  --ob-primary-foreground: #ffffff;
+  --ob-primary-dark: #2d5d72;
+  --ob-primary-light: #6ba3bc;
   --ob-secondary: #777777;
   --ob-secondary-dark: #555555;
   --ob-secondary-light: #999999;
 
-  /* Reduced color contrast to minimize visual stress */
+  /* Neutral gray scale */
+  --ob-color-gray-50: #f7f7f7;
+  --ob-color-gray-100: #eeeeee;
+  --ob-color-gray-200: #e0e0e0;
+  --ob-color-gray-300: #cccccc;
+  --ob-color-gray-400: #aaaaaa;
+  --ob-color-gray-500: #888888;
+  --ob-color-gray-600: #666666;
+  --ob-color-gray-700: #444444;
+  --ob-color-gray-800: #333333;
+  --ob-color-gray-900: #222222;
+
+  /* Legacy gray aliases */
   --ob-gray-50: #f7f7f7;
   --ob-gray-100: #eeeeee;
   --ob-gray-200: #e0e0e0;
@@ -500,17 +517,20 @@
   --ob-gray-800: #333333;
   --ob-gray-900: #222222;
 
-  /* Clear borders for predictable boundaries */
+  /* Form input background */
+  --ob-input: #eeeeee;
+
+  /* Clear borders, no shadows */
+  --ob-border: #dddddd;
   --ob-border-color: #dddddd;
   --ob-border-width: 1px;
   --ob-border-radius-md: 4px;
-
-  /* Minimal shadows to reduce visual complexity */
   --ob-shadow-sm: none;
   --ob-shadow-md: none;
   --ob-shadow-lg: none;
 
   /* Predictable focus indicators */
+  --ob-ring: #3d7e9a;
   --ob-border-color-focus: #3d7e9a;
   --ob-shadow-focus: 0 0 0 2px rgba(61, 126, 154, 0.4);
 
@@ -519,13 +539,12 @@
   --ob-space-6: 1.5rem;
   --ob-space-8: 2rem;
 
-  /* Component-specific overrides for consistency */
+  /* Component overrides */
   --ob-badge-border-color: #dddddd;
   --ob-badge-background: #f7f7f7;
   --ob-badge-title-color: #333333;
   --ob-badge-text-color: #555555;
 
-  /* Form elements with clear, predictable states */
   --ob-form-input-border: #cccccc;
   --ob-form-input-focus: #3d7e9a;
   --ob-form-background: #f7f7f7;
