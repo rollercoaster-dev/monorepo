@@ -1,9 +1,10 @@
 import { checkpoint } from "../checkpoint";
 import { hooks } from "../hooks";
 import { parseModifiedFiles, parseRecentCommits } from "../utils";
+import { findTranscriptByTimeRange } from "../utils/transcript";
 import type { Workflow } from "../types";
 import { $ } from "bun";
-import { unlink } from "fs/promises";
+import { stat, unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import { indexMonorepoDocs } from "../docs";
 import {
@@ -212,7 +213,8 @@ export async function handleSessionStart(args: string[]): Promise<void> {
  * Handle session-end command.
  */
 export async function handleSessionEnd(args: string[]): Promise<void> {
-  // session-end [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
+  // session-end [--dry-run] [--workflow-id <id>] [--session-id <id>] [--learnings-injected <count>] [--start-time <iso>] [--interrupted]
+  let dryRun = false;
   let workflowId: string | undefined;
   let sessionId: string | undefined;
   let learningsInjected: number | undefined;
@@ -226,7 +228,9 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const nextArg = args[i + 1];
-    if (arg === "--workflow-id" && nextArg) {
+    if (arg === "--dry-run") {
+      dryRun = true;
+    } else if (arg === "--workflow-id" && nextArg) {
       workflowId = nextArg;
       i++;
     } else if (arg === "--session-id" && nextArg) {
@@ -345,6 +349,65 @@ export async function handleSessionEnd(args: string[]): Promise<void> {
         );
       }
     }
+  }
+
+  // If dry-run, output diagnostic info and exit without running extraction
+  if (dryRun) {
+    console.log("\n=== Session End Dry-Run Diagnostics ===\n");
+
+    console.log("Session Metadata:");
+    console.log(`  Session ID: ${sessionId || "(not available)"}`);
+    console.log(`  Start Time: ${startTime || "(not available)"}`);
+    console.log(
+      `  Learnings Injected: ${learningsInjected ?? "(not available)"}`,
+    );
+    console.log(`  Workflow ID: ${workflowId || "(not available)"}`);
+    console.log(`  Metadata File: ${metadataFilePath || "(not found)"}`);
+
+    console.log("\nAPI Configuration:");
+    const hasApiKey = !!process.env.OPENROUTER_API_KEY;
+    console.log(
+      `  OPENROUTER_API_KEY: ${hasApiKey ? "configured" : "NOT SET"}`,
+    );
+
+    console.log("\nTranscript Discovery:");
+    if (startTime) {
+      const start = new Date(startTime);
+      const end = new Date();
+      const transcripts = await findTranscriptByTimeRange(start, end);
+      console.log(
+        `  Time range: ${start.toISOString()} - ${end.toISOString()}`,
+      );
+      console.log(`  Transcripts found: ${transcripts.length}`);
+      for (const t of transcripts) {
+        try {
+          const stats = await stat(t);
+          console.log(`    - ${t}`);
+          console.log(`      Modified: ${stats.mtime.toISOString()}`);
+        } catch {
+          console.log(`    - ${t} (could not stat)`);
+        }
+      }
+    } else {
+      console.log("  (skipped - no start time available)");
+    }
+
+    console.log("\nLLM Extraction Readiness:");
+    const willExtract = !!startTime && hasApiKey;
+    console.log(`  Will extract: ${willExtract ? "yes" : "no"}`);
+    if (!startTime) {
+      console.log("  Blocked by: Missing session start time");
+    }
+    if (!hasApiKey) {
+      console.log("  Blocked by: OPENROUTER_API_KEY not configured");
+    }
+
+    console.log("\nCommit-based Extraction:");
+    console.log(`  Recent commits: ${commits.length}`);
+    console.log(`  Modified files: ${modifiedFiles.length}`);
+
+    console.log("\n=== End of Dry-Run Diagnostics ===\n");
+    return;
   }
 
   // Call onSessionEnd with session metadata if provided
