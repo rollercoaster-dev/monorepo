@@ -11,6 +11,7 @@ import { graphTools, handleGraphToolCall } from "./graph.js";
 import { checkpointTools, handleCheckpointToolCall } from "./checkpoint.js";
 import { outputTools, handleOutputToolCall } from "./output.js";
 import { metricsTools, handleMetricsToolCall } from "./metrics.js";
+import { planningTools, handlePlanningToolCall } from "./planning.js";
 
 /**
  * All available MCP tools.
@@ -21,6 +22,7 @@ export const tools: Tool[] = [
   ...checkpointTools,
   ...outputTools,
   ...metricsTools,
+  ...planningTools,
 ];
 
 /**
@@ -39,6 +41,7 @@ const toolHandlers: Record<
   checkpoint_: handleCheckpointToolCall,
   output_: handleOutputToolCall,
   metrics_: handleMetricsToolCall,
+  planning_: handlePlanningToolCall,
 };
 
 /**
@@ -76,3 +79,4 @@ export { graphTools, handleGraphToolCall } from "./graph.js";
 export { checkpointTools, handleCheckpointToolCall } from "./checkpoint.js";
 export { outputTools, handleOutputToolCall } from "./output.js";
 export { metricsTools, handleMetricsToolCall } from "./metrics.js";
+export { planningTools, handlePlanningToolCall } from "./planning.js";
