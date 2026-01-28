@@ -317,14 +317,25 @@ The finalize-agent will:
 
 ---
 
-## Gate Rules
+## Critical Rules
 
-From `.claude/rules/gate-workflow.md`:
+**YOU are the orchestrator. Do not delegate gate handling to agents.**
 
-1. **Gates require explicit approval** - Silence is not approval
-2. **One gate at a time** - Don't batch or preview future gates
-3. **Show complete information** - Don't summarize at gates
-4. **File changes after gate approval** - Modifications only after Gate 2
+1. **STOP means STOP** — Literally halt and wait for user input
+2. **Gates require explicit approval** — Silence is not approval
+3. **One gate at a time** — Don't batch or preview future gates
+4. **Show, don't summarize** — Full content at every gate
+5. **Evidence, not claims** — "Verified" requires showing output, not describing it
+6. **File changes after Gate 2 only** — No modifications before plan approval
+
+### Skipped Gate Recovery
+
+If you realize you skipped a gate:
+
+1. STOP immediately
+2. Acknowledge: "I skipped a gate. Let me go back."
+3. Return to the missed gate and show the required content
+4. Do not continue until gate is passed
 
 ---
 
