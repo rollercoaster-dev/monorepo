@@ -262,6 +262,14 @@ export async function indexDocument(
           if (codeEntityExists) {
             createRelationship(db, sectionId, codeEntityId, "DOCUMENTS");
             linkedToCode++;
+          } else {
+            logger.debug(
+              "Skipped code ref: entity in graph_entities but not entities",
+              {
+                codeEntityId,
+                section: section.heading,
+              },
+            );
           }
         }
       }
