@@ -414,6 +414,60 @@ Rules:
 }
 
 // ---------------------------------------------------------------------------
+// Pre-existing Work Detection
+// ---------------------------------------------------------------------------
+
+import { existsSync } from "fs";
+import { homedir } from "os";
+
+const WORKTREE_BASE = resolve(homedir(), "Code/worktrees");
+const REPO_NAME = "monorepo";
+
+interface ExistingWork {
+  pr?: number;
+  branch?: string;
+  worktree?: string;
+}
+
+function findExistingWorktree(issue: number): string | null {
+  const worktreePath = resolve(WORKTREE_BASE, `${REPO_NAME}-issue-${issue}`);
+  return existsSync(worktreePath) ? worktreePath : null;
+}
+
+async function findExistingPR(
+  issue: number,
+): Promise<{ pr: number; branch: string } | null> {
+  try {
+    // Search for any open PR whose branch contains the issue number
+    const result =
+      await $`gh pr list --search "head:feat/issue-${issue}" --state open --json number,headRefName --limit 1`.quiet();
+    const prs = JSON.parse(result.text()) as Array<{
+      number: number;
+      headRefName: string;
+    }>;
+    if (prs.length > 0) {
+      return { pr: prs[0].number, branch: prs[0].headRefName };
+    }
+  } catch {
+    // Fall through
+  }
+  return null;
+}
+
+async function findExistingWork(issue: number): Promise<ExistingWork | null> {
+  const pr = await findExistingPR(issue);
+  const worktree = findExistingWorktree(issue);
+
+  if (!pr && !worktree) return null;
+
+  return {
+    pr: pr?.pr,
+    branch: pr?.branch,
+    worktree: worktree ?? undefined,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Execution
 // ---------------------------------------------------------------------------
 
@@ -430,11 +484,51 @@ async function executeIssue(
   const logFile = resolve(OUTPUT_DIR, `issue-${issue}.log`);
   log(`[Wave ${wave}] Starting issue #${issue} → ${logFile}`);
 
+  // 0. Check for pre-existing work from a prior orchestrator or manual run
+  const priorWork = await findExistingWork(issue);
+  if (priorWork?.pr) {
+    logOk(
+      `[Wave ${wave}] Issue #${issue} already has PR #${priorWork.pr} (branch: ${priorWork.branch}), skipping execution`,
+    );
+    // Ensure a workflow is linked to our milestone
+    const existing = checkpoint.findByIssue(issue);
+    let wfId: string;
+    if (existing) {
+      wfId = existing.workflow.id;
+    } else {
+      const wf = checkpoint.create(
+        issue,
+        priorWork.branch ?? `feat/issue-${issue}`,
+      );
+      checkpoint.linkWorkflowToMilestone(wf.id, milestoneId, wave);
+      wfId = wf.id;
+    }
+    checkpoint.setStatus(wfId, "completed");
+    checkpoint.logAction(wfId, "pr-created", "success", {
+      pr: priorWork.pr,
+      wave,
+      source: "pre-existing",
+    });
+    return { pr: priorWork.pr };
+  }
+
+  if (priorWork?.worktree) {
+    logWarn(
+      `[Wave ${wave}] Issue #${issue} has existing worktree at ${priorWork.worktree} (no PR yet), will reuse`,
+    );
+  }
+
   // 1. Create worktree
   try {
-    await $`bash ${WORKTREE_MANAGER} create ${issue}`.quiet();
+    await $`bash ${WORKTREE_MANAGER} create ${issue}`;
   } catch (e) {
-    logErr(`Failed to create worktree for #${issue}: ${e}`);
+    const msg =
+      e instanceof Error
+        ? e.message
+        : typeof e === "object" && e !== null && "stderr" in e
+          ? String((e as { stderr: unknown }).stderr)
+          : String(e);
+    logErr(`Failed to create worktree for #${issue}: ${msg}`);
     throw e;
   }
 
@@ -510,11 +604,11 @@ async function executeIssue(
     throw e;
   }
 
-  // 4. Extract PR number
+  // 4. Extract PR number (branch may include issue title suffix)
   let prNumber: number | undefined;
   try {
     const prResult =
-      await $`gh pr list --head feat/issue-${issue} --json number --limit 1`.quiet();
+      await $`gh pr list --search "head:feat/issue-${issue}" --state open --json number --limit 1`.quiet();
     const prs = JSON.parse(prResult.text()) as Array<{ number: number }>;
     if (prs.length > 0) {
       prNumber = prs[0].number;
@@ -794,8 +888,37 @@ async function cleanup(
     }
   }
 
-  // Mark milestone completed
-  checkpoint.setMilestoneStatus(milestoneId, "completed");
+  // Mark milestone status based on workflow results
+  const db = getDatabase();
+  const stats = db
+    .query<{ status: string; cnt: number }, [string]>(
+      `SELECT w.status, COUNT(*) as cnt
+       FROM workflows w
+       JOIN milestone_workflows mw ON w.id = mw.workflow_id
+       WHERE mw.milestone_id = ?
+       GROUP BY w.status`,
+    )
+    .all(milestoneId);
+
+  const statusCounts = Object.fromEntries(stats.map((r) => [r.status, r.cnt]));
+  const completedCount = statusCounts["completed"] ?? 0;
+  const failedCount = statusCounts["failed"] ?? 0;
+  const totalCount = stats.reduce((s, r) => s + r.cnt, 0);
+
+  if (completedCount === totalCount) {
+    checkpoint.setMilestoneStatus(milestoneId, "completed");
+    logOk(`All ${totalCount} issue(s) completed`);
+  } else if (completedCount > 0) {
+    checkpoint.setMilestoneStatus(milestoneId, "completed");
+    logWarn(
+      `${completedCount}/${totalCount} issue(s) completed, ${failedCount} failed`,
+    );
+  } else {
+    // All failed — leave milestone as running so --resume can pick it up
+    logErr(
+      `All ${totalCount} issue(s) failed — milestone left as running. Use --resume to retry.`,
+    );
+  }
 
   // Print summary
   try {
@@ -819,7 +942,7 @@ function getMilestoneName(config: Config): string {
   return config.mode === "epic" ? `epic-${config.target}` : config.target;
 }
 
-function loadResumeState(config: Config): ResumeState | null {
+async function loadResumeState(config: Config): Promise<ResumeState | null> {
   const data = checkpoint.findMilestoneByName(getMilestoneName(config));
   if (!data) return null;
 
@@ -888,7 +1011,31 @@ function loadResumeState(config: Config): ResumeState | null {
         }
       }
 
-      // No PR yet — mark failed so executeWave will re-run it
+      // No PR in checkpoint — check GitHub for pre-existing PRs
+      const ghPR = await findExistingPR(row.issue_number);
+      if (ghPR) {
+        checkpoint.setStatus(row.workflow_id, "completed");
+        checkpoint.logAction(row.workflow_id, "pr-created", "success", {
+          pr: ghPR.pr,
+          source: "pre-existing",
+        });
+        completedIssues.add(row.issue_number);
+        recovered++;
+        logOk(
+          `Recovered #${row.issue_number} (found existing PR #${ghPR.pr} on GitHub)`,
+        );
+        continue;
+      }
+
+      // No PR anywhere — check for worktree (in-progress work without PR)
+      const worktree = findExistingWorktree(row.issue_number);
+      if (worktree) {
+        logWarn(
+          `Issue #${row.issue_number} has worktree at ${worktree} but no PR — will re-execute`,
+        );
+      }
+
+      // Mark failed so executeWave will re-run it
       if (row.status === "running") {
         checkpoint.setStatus(row.workflow_id, "failed");
       }
@@ -946,7 +1093,7 @@ async function main(): Promise<void> {
   // --- Resume or Fresh ---
   if (config.resume) {
     log("Resuming from checkpoint...");
-    const state = loadResumeState(config);
+    const state = await loadResumeState(config);
     if (!state) {
       logErr("No checkpoint found to resume. Run without --resume first.");
       process.exit(1);
@@ -954,6 +1101,11 @@ async function main(): Promise<void> {
     milestoneId = state.milestoneId;
     waves = state.waves;
     completedIssues = state.completedIssues;
+
+    // Reset milestone to running so execution can proceed
+    checkpoint.setMilestoneStatus(milestoneId, "running");
+    checkpoint.setMilestonePhase(milestoneId, "execute");
+
     logOk(`Resumed: ${completedIssues.size} issue(s) already completed`);
   } else {
     // Guard: if milestone already exists, suggest --resume
