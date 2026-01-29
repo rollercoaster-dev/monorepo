@@ -62,11 +62,12 @@ See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for exa
 
 ## Workflows
 
-| Command                  | Use Case                       |
-| ------------------------ | ------------------------------ |
-| `/work-on-issue <n>`     | Supervised with approval gates |
-| `/auto-issue <n>`        | Fully automated                |
-| `/auto-milestone <name>` | Parallel milestone execution   |
+| Command                  | Use Case                         |
+| ------------------------ | -------------------------------- |
+| `/work-on-issue <n>`     | Supervised with approval gates   |
+| `/auto-issue <n>`        | Fully automated                  |
+| `/auto-milestone <name>` | Parallel milestone execution     |
+| `/auto-epic <n>`         | Epic sub-issues with GitHub deps |
 
 See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
