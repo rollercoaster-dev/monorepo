@@ -107,14 +107,17 @@ const filteredBadges = computed(() => {
   return filtered;
 });
 
+// Guard against invalid pageSize values
+const effectivePageSize = computed(() => Math.max(1, props.pageSize));
+
 // Compute total pages based on filtered badges
 const totalPages = computed(() => {
-  return Math.ceil(filteredBadges.value.length / props.pageSize);
+  return Math.ceil(filteredBadges.value.length / effectivePageSize.value);
 });
 
 // Watch for filteredBadges or pageSize changes to clamp current page
 watch(
-  () => [filteredBadges.value.length, props.pageSize],
+  () => [filteredBadges.value.length, effectivePageSize.value],
   () => {
     if (!props.showPagination) {
       return;
@@ -136,8 +139,8 @@ const paginatedBadges = computed(() => {
     return filteredBadges.value;
   }
 
-  const start = (internalCurrentPage.value - 1) * props.pageSize;
-  const end = start + props.pageSize;
+  const start = (internalCurrentPage.value - 1) * effectivePageSize.value;
+  const end = start + effectivePageSize.value;
   return filteredBadges.value.slice(start, end);
 });
 

@@ -98,14 +98,17 @@ const filteredIssuers = computed(() => {
   });
 });
 
+// Guard against invalid pageSize values
+const effectivePageSize = computed(() => Math.max(1, props.pageSize));
+
 // Compute total pages
 const totalPages = computed(() => {
-  return Math.ceil(filteredIssuers.value.length / props.pageSize);
+  return Math.ceil(filteredIssuers.value.length / effectivePageSize.value);
 });
 
 // Watch for filteredIssuers changes to clamp current page
 watch(
-  () => [filteredIssuers.value.length, props.pageSize],
+  () => [filteredIssuers.value.length, effectivePageSize.value],
   () => {
     if (!props.showPagination) return;
     const total = totalPages.value;
@@ -125,8 +128,8 @@ const paginatedIssuers = computed(() => {
     return filteredIssuers.value;
   }
 
-  const start = (internalCurrentPage.value - 1) * props.pageSize;
-  const end = start + props.pageSize;
+  const start = (internalCurrentPage.value - 1) * effectivePageSize.value;
+  const end = start + effectivePageSize.value;
   return filteredIssuers.value.slice(start, end);
 });
 
