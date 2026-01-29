@@ -51,4 +51,4 @@ Hardcoded hex/pixel values are not permitted in fallback chains. All visual valu
 
 ## Legacy
 
-The previous `manus-` prefix is deprecated. Components are migrating to `ob-` as part of issue #595.
+The previous `manus-` prefix has been fully replaced with `ob-` as part of issue #595. All components now use the `ob-` prefix with BEM-style naming.

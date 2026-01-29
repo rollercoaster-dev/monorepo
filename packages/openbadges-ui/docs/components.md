@@ -43,7 +43,7 @@ The `BadgeDisplay` component renders a single badge with its image, name, descri
 </template>
 
 <script setup>
-import { BadgeDisplay } from "manus-ai-components";
+import { BadgeDisplay } from "openbadges-ui";
 import { ref } from "vue";
 
 // Example badge (OB2 format)
@@ -131,7 +131,7 @@ The `BadgeList` component displays a collection of badges with support for grid/
 </template>
 
 <script setup>
-import { BadgeList } from "manus-ai-components";
+import { BadgeList } from "openbadges-ui";
 import { ref } from "vue";
 import { mockAssertions } from "./mockData";
 
@@ -190,7 +190,7 @@ The `ProfileViewer` component displays a user or issuer profile along with their
 </template>
 
 <script setup>
-import { ProfileViewer } from "manus-ai-components";
+import { ProfileViewer } from "openbadges-ui";
 import { ref } from "vue";
 import { mockProfiles } from "./mockData";
 
@@ -277,7 +277,7 @@ The `IssuerDashboard` component provides a complete dashboard for badge issuers.
 </template>
 
 <script setup>
-import { IssuerDashboard } from "manus-ai-components";
+import { IssuerDashboard } from "openbadges-ui";
 import { ref } from "vue";
 import { mockProfiles, mockAssertions } from "./mockData";
 
@@ -335,7 +335,7 @@ The `BadgeVerification` component displays verification status and details for a
 </template>
 
 <script setup>
-import { BadgeVerification } from "manus-ai-components";
+import { BadgeVerification } from "openbadges-ui";
 import { ref } from "vue";
 
 // Example badge (OB2 format)
@@ -418,7 +418,7 @@ The `useBadgeVerification` composable provides functionality for verifying badge
 </template>
 
 <script setup>
-import { useBadgeVerification } from "manus-ai-components";
+import { useBadgeVerification } from "openbadges-ui";
 import { ref } from "vue";
 
 const badge = ref({
@@ -468,7 +468,7 @@ The `useBadgeIssuer` composable provides functionality for creating and issuing 
 </template>
 
 <script setup>
-import { useBadgeIssuer } from "manus-ai-components";
+import { useBadgeIssuer } from "openbadges-ui";
 
 const { state, isValid, issueBadge } = useBadgeIssuer();
 
@@ -531,7 +531,7 @@ The `useBadges` composable provides functionality for managing a collection of b
 </template>
 
 <script setup>
-import { useBadges } from "manus-ai-components";
+import { useBadges } from "openbadges-ui";
 import { mockAssertions } from "./mockData";
 
 const { filterText, sortBy, sortDirection, normalizedBadges, setBadges } =
@@ -579,7 +579,7 @@ The `useProfile` composable provides functionality for managing profile data.
 </template>
 
 <script setup>
-import { useProfile } from "manus-ai-components";
+import { useProfile } from "openbadges-ui";
 import { onMounted } from "vue";
 
 const { profile, isLoading, error, isIssuer, displayName, loadProfile } =
@@ -606,7 +606,7 @@ The library includes several built-in themes:
 #### Applying Themes
 
 ```javascript
-import { AccessibilityService } from "manus-ai-components";
+import { AccessibilityService } from "openbadges-ui";
 
 // Apply dark theme
 AccessibilityService.applyTheme("dark");
@@ -627,7 +627,7 @@ AccessibilityService.applyTheme("default");
 Or use CSS classes directly:
 
 ```html
-<body class="manus-dark-theme">
+<body class="ob-dark-theme">
   <!-- Your app content -->
 </body>
 ```
@@ -639,7 +639,7 @@ The library provides utility services for accessibility:
 #### AccessibilityService
 
 ```javascript
-import { AccessibilityService } from "manus-ai-components";
+import { AccessibilityService } from "openbadges-ui";
 
 // Generate alt text for badge images
 const altText = AccessibilityService.generateBadgeAltText("AI Ethics Badge");
@@ -659,7 +659,7 @@ const reducedMotion = AccessibilityService.prefersReducedMotion();
 For developers to check their implementations:
 
 ```javascript
-import { AccessibilityAudit } from "manus-ai-components";
+import { AccessibilityAudit } from "openbadges-ui";
 
 // Audit an element for accessibility issues
 const element = document.querySelector(".my-component");
