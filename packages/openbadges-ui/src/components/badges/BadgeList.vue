@@ -343,7 +343,7 @@ const handleDensityChange = (event: Event) => {
 
   display: flex;
   flex-direction: column;
-  gap: var(--badge-list-gap, var(--ob-space-6));
+  gap: var(--badge-list-gap);
   font-family: var(--ob-font-family);
   color: var(--ob-text-primary);
 }
@@ -499,13 +499,6 @@ const handleDensityChange = (event: Event) => {
 @media (max-width: 639px) {
   .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
     grid-template-columns: 1fr;
-  }
-
-  /* On small screens, make summary row-friendly again if needed */
-  .ob-badge-list.ob-badge-list--grid-layout .badge-summary {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--ob-space-2);
   }
 }
 

@@ -371,7 +371,7 @@ const hasActiveFilters = computed(() => {
 
   display: flex;
   flex-direction: column;
-  gap: var(--ob-badge-class-list-gap, var(--ob-space-6));
+  gap: var(--ob-badge-class-list-gap);
   font-family: var(--ob-font-family);
   color: var(--ob-text-primary);
 }

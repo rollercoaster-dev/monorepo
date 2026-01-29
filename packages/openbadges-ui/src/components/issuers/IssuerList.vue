@@ -340,10 +340,6 @@ const handleDensityChange = (event: Event) => {
   display: flex;
 }
 
-.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__item {
-  display: flex;
-}
-
 /* Make cards stretch to fill grid cell */
 .ob-issuer-list.ob-issuer-list--grid-layout
   .ob-issuer-list__item
