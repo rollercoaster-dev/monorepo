@@ -306,6 +306,51 @@ CREATE INDEX IF NOT EXISTS idx_planning_entities_stack_order ON planning_entitie
 CREATE INDEX IF NOT EXISTS idx_planning_rel_from ON planning_relationships(from_id, type);
 CREATE INDEX IF NOT EXISTS idx_planning_rel_to ON planning_relationships(to_id, type);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_planning_rel_unique ON planning_relationships(from_id, to_id, type);
+
+-- Planning graph plans (milestone/epic execution order)
+CREATE TABLE IF NOT EXISTS planning_plans (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  goal_id TEXT NOT NULL,
+  source_type TEXT NOT NULL CHECK (source_type IN ('milestone', 'epic', 'learning-path', 'manual')),
+  source_ref TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (goal_id) REFERENCES planning_entities(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_planning_plans_goal ON planning_plans(goal_id);
+CREATE INDEX IF NOT EXISTS idx_planning_plans_source ON planning_plans(source_type, source_ref);
+
+-- Planning graph steps (individual units of work within a plan)
+CREATE TABLE IF NOT EXISTS planning_steps (
+  id TEXT PRIMARY KEY,
+  plan_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  ordinal INTEGER NOT NULL,
+  wave INTEGER NOT NULL,
+  external_ref_type TEXT NOT NULL CHECK (external_ref_type IN ('issue', 'badge', 'manual')),
+  external_ref_number INTEGER,
+  external_ref_criteria TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (plan_id) REFERENCES planning_plans(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_planning_steps_plan ON planning_steps(plan_id);
+CREATE INDEX IF NOT EXISTS idx_planning_steps_wave ON planning_steps(wave);
+CREATE INDEX IF NOT EXISTS idx_planning_steps_ordinal ON planning_steps(ordinal);
+
+-- Planning step dependencies (directed acyclic graph)
+CREATE TABLE IF NOT EXISTS planning_step_dependencies (
+  step_id TEXT NOT NULL,
+  depends_on_step_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (step_id, depends_on_step_id),
+  FOREIGN KEY (step_id) REFERENCES planning_steps(id) ON DELETE CASCADE,
+  FOREIGN KEY (depends_on_step_id) REFERENCES planning_steps(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_step_deps_step ON planning_step_dependencies(step_id);
+CREATE INDEX IF NOT EXISTS idx_step_deps_depends_on ON planning_step_dependencies(depends_on_step_id);
 `;
 
 /**
@@ -589,6 +634,30 @@ function runMigrations(database: Database): void {
     } catch (error) {
       throw new Error(
         `Migration failed (add content_hash to entities): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // Migration 9: Add 'plan_step_id' column to planning_entities table
+  const planningEntitiesColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(planning_entities)")
+    .all();
+
+  const hasPlanStepIdColumn = planningEntitiesColumns.some(
+    (col) => col.name === "plan_step_id",
+  );
+
+  if (!hasPlanStepIdColumn) {
+    try {
+      database.run(
+        "ALTER TABLE planning_entities ADD COLUMN plan_step_id TEXT NULL",
+      );
+      database.run(
+        "CREATE INDEX IF NOT EXISTS idx_planning_entities_plan_step ON planning_entities(plan_step_id)",
+      );
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add plan_step_id to planning_entities): ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
