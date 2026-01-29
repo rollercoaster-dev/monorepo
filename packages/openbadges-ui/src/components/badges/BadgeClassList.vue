@@ -365,37 +365,37 @@ const hasActiveFilters = computed(() => {
 
 <style>
 .manus-badge-class-list {
-  --badge-class-list-gap: var(--ob-space-4, 16px);
-  --badge-class-list-empty-color: var(--ob-text-secondary, #718096);
-  --badge-class-list-pagination-gap: var(--ob-space-2, 8px);
-  --badge-class-list-button-bg: var(--ob-gray-200, #e2e8f0);
-  --badge-class-list-button-color: var(--ob-text-secondary, #4a5568);
-  --badge-class-list-button-hover-bg: var(--ob-gray-300, #cbd5e0);
-  --badge-class-list-button-disabled-bg: var(--ob-gray-100, #edf2f7);
-  --badge-class-list-button-disabled-color: var(--ob-text-disabled, #a0aec0);
+  --badge-class-list-gap: var(--ob-space-4);
+  --badge-class-list-empty-color: var(--ob-text-secondary);
+  --badge-class-list-pagination-gap: var(--ob-space-2);
+  --badge-class-list-button-bg: var(--ob-gray-200);
+  --badge-class-list-button-color: var(--ob-text-secondary);
+  --badge-class-list-button-hover-bg: var(--ob-gray-300);
+  --badge-class-list-button-disabled-bg: var(--ob-gray-100);
+  --badge-class-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
-  gap: var(--badge-class-list-gap, var(--ob-space-6, 24px));
-  font-family: var(--ob-font-family, inherit);
-  color: var(--ob-text-primary, inherit);
+  gap: var(--badge-class-list-gap, var(--ob-space-6));
+  font-family: var(--ob-font-family);
+  color: var(--ob-text-primary);
 }
 
 .manus-badge-class-list.density-compact {
-  --badge-class-list-gap: var(--ob-space-2, 8px);
+  --badge-class-list-gap: var(--ob-space-2);
 }
 
 .manus-badge-class-list.density-normal {
-  --badge-class-list-gap: var(--ob-space-4, 16px);
+  --badge-class-list-gap: var(--ob-space-4);
 }
 
 .manus-badge-class-list.density-spacious {
-  --badge-class-list-gap: var(--ob-space-6, 24px);
+  --badge-class-list-gap: var(--ob-space-6);
 }
 
 .manus-badge-class-list-controls {
   display: flex;
-  gap: var(--ob-space-3, 12px);
+  gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
 }
@@ -403,12 +403,12 @@ const hasActiveFilters = computed(() => {
 .manus-badge-class-list-search,
 .manus-badge-class-list-filter,
 .manus-badge-class-list-density-select {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  color: var(--ob-text-primary, inherit);
-  background: var(--ob-bg-primary, #ffffff);
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  color: var(--ob-text-primary);
+  background: var(--ob-bg-primary);
 }
 
 .manus-badge-class-list-search {
@@ -417,23 +417,23 @@ const hasActiveFilters = computed(() => {
 }
 
 .manus-badge-class-list-clear-btn {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  padding: var(--ob-space-2) var(--ob-space-3);
   background-color: transparent;
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  color: var(--ob-text-secondary, #4a5568);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-sm);
+  color: var(--ob-text-secondary);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
 .manus-badge-class-list-clear-btn:hover {
-  background-color: var(--ob-bg-secondary, #f7fafc);
+  background-color: var(--ob-bg-secondary);
 }
 
 .manus-badge-class-list-loading,
 .manus-badge-class-list-empty {
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   text-align: center;
   color: var(--badge-class-list-empty-color);
 }
@@ -471,20 +471,20 @@ const hasActiveFilters = computed(() => {
   align-items: center;
   justify-content: center;
   gap: var(--badge-class-list-pagination-gap);
-  margin-top: var(--ob-space-4, 16px);
+  margin-top: var(--ob-space-4);
   flex-wrap: wrap;
 }
 
 .manus-pagination-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+  padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--badge-class-list-button-bg);
   color: var(--badge-class-list-button-color);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
+  border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  font-weight: var(--ob-font-weight-medium, 500);
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-medium);
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
 .manus-pagination-button:hover:not(:disabled) {
@@ -498,12 +498,12 @@ const hasActiveFilters = computed(() => {
 }
 
 .manus-pagination-button:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 2px);
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
 }
 
 .manus-pagination-info {
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-size: var(--ob-font-size-sm);
   color: var(--badge-class-list-button-color);
 }
 

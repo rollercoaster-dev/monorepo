@@ -311,77 +311,74 @@ const handleDensityChange = (event: Event) => {
 
 <style>
 .manus-badge-list {
-  --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4, 16px));
+  --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4));
   --badge-list-empty-color: var(
     --ob-badge-list-empty-color,
-    var(--ob-text-secondary, #718096)
+    var(--ob-text-secondary)
   );
   --badge-list-pagination-gap: var(
     --ob-badge-list-pagination-gap,
-    var(--ob-space-2, 8px)
+    var(--ob-space-2)
   );
-  --badge-list-button-bg: var(
-    --ob-badge-list-button-bg,
-    var(--ob-gray-200, #e2e8f0)
-  );
+  --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-gray-200));
   --badge-list-button-color: var(
     --ob-badge-list-button-color,
-    var(--ob-text-secondary, #4a5568)
+    var(--ob-text-secondary)
   );
   --badge-list-button-hover-bg: var(
     --ob-badge-list-button-hover-bg,
-    var(--ob-gray-300, #cbd5e0)
+    var(--ob-gray-300)
   );
   --badge-list-button-disabled-bg: var(
     --ob-badge-list-button-disabled-bg,
-    var(--ob-gray-100, #edf2f7)
+    var(--ob-gray-100)
   );
   --badge-list-button-disabled-color: var(
     --ob-badge-list-button-disabled-color,
-    var(--ob-text-disabled, #a0aec0)
+    var(--ob-text-disabled)
   );
 
   display: flex;
   flex-direction: column;
-  gap: var(--badge-list-gap, var(--ob-space-6, 24px));
-  font-family: var(--ob-font-family, inherit);
-  color: var(--ob-text-primary, inherit);
+  gap: var(--badge-list-gap, var(--ob-space-6));
+  font-family: var(--ob-font-family);
+  color: var(--ob-text-primary);
 }
 
 .manus-badge-list.density-compact {
-  --badge-list-gap: var(--ob-space-1, 4px);
+  --badge-list-gap: var(--ob-space-1);
 }
 
 .manus-badge-list.density-normal {
-  --badge-list-gap: var(--ob-space-4, 16px);
+  --badge-list-gap: var(--ob-space-4);
 }
 
 .manus-badge-list.density-spacious {
-  --badge-list-gap: var(--ob-space-8, 32px);
+  --badge-list-gap: var(--ob-space-8);
 }
 
 .manus-badge-list-controls {
   display: flex;
-  gap: var(--ob-space-3, 12px);
+  gap: var(--ob-space-3);
   align-items: center;
-  margin-bottom: var(--ob-space-3, 12px);
+  margin-bottom: var(--ob-space-3);
   flex-wrap: wrap;
 }
 
 .manus-badge-list-filter-input,
 .manus-badge-list-filter-select,
 .manus-badge-list-density-select {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  color: var(--ob-text-primary, inherit);
-  background: var(--ob-bg-primary, #ffffff);
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  color: var(--ob-text-primary);
+  background: var(--ob-bg-primary);
 }
 
 .manus-badge-list-loading,
 .manus-badge-list-empty {
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   text-align: center;
   color: var(--badge-list-empty-color);
 }
@@ -406,10 +403,10 @@ const handleDensityChange = (event: Event) => {
 .manus-badge-list.grid-layout .manus-badge-list-item {
   display: flex;
   flex-direction: column;
-  background: var(--ob-bg-primary, #ffffff);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-lg, 8px);
-  padding: var(--ob-space-3, 12px);
+  background: var(--ob-bg-primary);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-lg);
+  padding: var(--ob-space-3);
 }
 
 .manus-badge-list-pagination {
@@ -417,20 +414,20 @@ const handleDensityChange = (event: Event) => {
   align-items: center;
   justify-content: center;
   gap: var(--badge-list-pagination-gap);
-  margin-top: var(--ob-space-4, 16px);
+  margin-top: var(--ob-space-4);
   flex-wrap: wrap;
 }
 
 .manus-pagination-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+  padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
+  border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  font-weight: var(--ob-font-weight-medium, 500);
-  transition: background-color var(--ob-transition-fast, 0.2s);
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-medium);
+  transition: background-color var(--ob-transition-fast);
 }
 
 .manus-pagination-button:hover:not(:disabled) {
@@ -444,7 +441,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 .manus-pagination-info {
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-size: var(--ob-font-size-sm);
   color: var(--badge-list-button-color);
 }
 
@@ -460,39 +457,39 @@ const handleDensityChange = (event: Event) => {
 .manus-badge-list.grid-layout .badge-summary {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--ob-space-2, 8px);
+  gap: var(--ob-space-2);
 }
 
 .badge-expand-btn {
-  margin-left: var(--ob-space-4, 16px);
-  padding: var(--ob-space-1, 4px) var(--ob-space-3, 12px);
+  margin-left: var(--ob-space-4);
+  padding: var(--ob-space-1) var(--ob-space-3);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
+  border-radius: var(--ob-border-radius-sm);
   background: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  font-size: var(--ob-font-size-sm, 0.9rem);
+  font-size: var(--ob-font-size-sm);
   cursor: pointer;
   align-self: flex-end;
 }
 
 .badge-summary:focus-visible,
 .manus-badge-list-item:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #3182ce);
-  outline-offset: var(--ob-space-1, 2px);
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
 }
 
 .badge-details {
-  background: var(--ob-bg-secondary, #f7fafc);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  margin-top: var(--ob-space-2, 8px);
-  padding: var(--ob-space-3, 12px);
-  font-size: 0.95em;
-  color: var(--ob-text-primary, #2d3748);
+  background: var(--ob-bg-secondary);
+  border-radius: var(--ob-border-radius-sm);
+  margin-top: var(--ob-space-2);
+  padding: var(--ob-space-3);
+  font-size: var(--ob-font-size-sm);
+  color: var(--ob-text-primary);
 }
 
 .manus-badge-list-item.is-expanded {
-  background: var(--ob-bg-secondary, #f0f4f8);
-  border-radius: var(--ob-border-radius-md, 6px);
+  background: var(--ob-bg-secondary);
+  border-radius: var(--ob-border-radius-md);
 }
 
 /* Responsive adjustments */
@@ -505,7 +502,7 @@ const handleDensityChange = (event: Event) => {
   .manus-badge-list.grid-layout .badge-summary {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--ob-space-2, 8px);
+    gap: var(--ob-space-2);
   }
 }
 
