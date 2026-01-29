@@ -683,11 +683,30 @@ export function getStepsByPlan(planId: string): PlanStep[] {
     >(`SELECT * FROM planning_steps WHERE plan_id = ? ORDER BY ordinal ASC`)
     .all(planId);
 
-  // Fetch dependencies for all steps
-  return rows.map((row) => {
-    const dependsOn = getStepDependencies(row.id);
-    return rowToPlanStep(row, dependsOn);
-  });
+  if (rows.length === 0) return [];
+
+  // Batch-fetch all dependencies in one query to avoid N+1
+  const stepIds = rows.map((r) => r.id);
+  const placeholders = stepIds.map(() => "?").join(",");
+  const deps = db
+    .query<
+      StepDependencyRow,
+      string[]
+    >(`SELECT * FROM planning_step_dependencies WHERE step_id IN (${placeholders})`)
+    .all(...stepIds);
+
+  // Group dependencies by step ID
+  const depsByStep = new Map<string, string[]>();
+  for (const dep of deps) {
+    const existing = depsByStep.get(dep.step_id);
+    if (existing) {
+      existing.push(dep.depends_on_step_id);
+    } else {
+      depsByStep.set(dep.step_id, [dep.depends_on_step_id]);
+    }
+  }
+
+  return rows.map((row) => rowToPlanStep(row, depsByStep.get(row.id) ?? []));
 }
 
 /**
