@@ -161,7 +161,7 @@ describe("IssuerCard", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: issuerNoImage },
       });
-      const fallback = wrapper.find(".manus-issuer-img-fallback");
+      const fallback = wrapper.find(".ob-issuer-card__img-fallback");
       expect(fallback.exists()).toBe(true);
       expect(wrapper.text()).toContain("T"); // First letter of "Test University"
     });

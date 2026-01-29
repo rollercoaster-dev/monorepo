@@ -136,7 +136,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB2BadgeClass, showTags: true },
       });
-      const tags = wrapper.findAll(".manus-badge-class-tag");
+      const tags = wrapper.findAll(".ob-badge-class-card__tag");
       // 5 visible tags + overflow indicator if more than 5
       expect(tags.length).toBeLessThanOrEqual(6);
     });
@@ -189,7 +189,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB3AchievementArray },
       });
-      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      const multiIndicator = wrapper.find(".ob-badge-class-card__multi");
       expect(multiIndicator.exists()).toBe(true);
       expect(multiIndicator.text()).toContain("+2 more achievements");
     });
@@ -198,7 +198,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB3Achievement },
       });
-      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      const multiIndicator = wrapper.find(".ob-badge-class-card__multi");
       expect(multiIndicator.exists()).toBe(false);
     });
 
@@ -241,7 +241,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: twoAchievements },
       });
-      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      const multiIndicator = wrapper.find(".ob-badge-class-card__multi");
       expect(multiIndicator.exists()).toBe(true);
       expect(multiIndicator.text()).toContain("+1 more achievement");
       // Should NOT have "achievements" plural
@@ -252,7 +252,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB3AchievementArray },
       });
-      const multiIndicator = wrapper.find(".manus-badge-class-multi");
+      const multiIndicator = wrapper.find(".ob-badge-class-card__multi");
       expect(multiIndicator.attributes("aria-label")).toContain(
         "2 more achievements",
       );
@@ -336,7 +336,7 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: badgeNoImage },
       });
-      const fallback = wrapper.find(".manus-badge-class-img-fallback");
+      const fallback = wrapper.find(".ob-badge-class-card__img-fallback");
       expect(fallback.exists()).toBe(true);
     });
   });

@@ -125,7 +125,9 @@ describe("BadgeList and BadgeDisplay Integration", () => {
     );
 
     // Click the next page button
-    await wrapper.find(".manus-pagination-button:last-child").trigger("click");
+    await wrapper
+      .find(".ob-badge-list__pagination-button:last-child")
+      .trigger("click");
 
     // Check that the page-change event was emitted
     const pageChangeEvents = wrapper.emitted("page-change");
@@ -154,8 +156,8 @@ describe("BadgeList and BadgeDisplay Integration", () => {
     });
 
     // Check that the empty message is displayed
-    expect(wrapper.find(".manus-badge-list-empty").exists()).toBe(true);
-    expect(wrapper.find(".manus-badge-list-empty").text()).toContain(
+    expect(wrapper.find(".ob-badge-list__empty").exists()).toBe(true);
+    expect(wrapper.find(".ob-badge-list__empty").text()).toContain(
       "No badges found",
     );
 
@@ -173,8 +175,8 @@ describe("BadgeList and BadgeDisplay Integration", () => {
     });
 
     // Check that the loading message is displayed
-    expect(wrapper.find(".manus-badge-list-loading").exists()).toBe(true);
-    expect(wrapper.find(".manus-badge-list-loading").text()).toContain(
+    expect(wrapper.find(".ob-badge-list__loading").exists()).toBe(true);
+    expect(wrapper.find(".ob-badge-list__loading").text()).toContain(
       "Loading badges",
     );
 
@@ -234,7 +236,7 @@ describe("BadgeList and BadgeDisplay Integration", () => {
     const wrapper = mount(BadgeList, {
       props: { badges: mockBadges },
     });
-    const input = wrapper.find(".manus-badge-list-filter-input");
+    const input = wrapper.find(".ob-badge-list__filter-input");
     await input.setValue("Test Badge");
     expect(wrapper.findAllComponents(BadgeDisplay).length).toBeGreaterThan(0);
     await input.setValue("Nonexistent");

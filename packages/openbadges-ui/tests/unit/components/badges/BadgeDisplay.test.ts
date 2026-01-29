@@ -43,21 +43,25 @@ describe("BadgeDisplay.vue", () => {
     });
 
     // Check if badge name is displayed
-    expect(wrapper.find(".manus-badge-title").text()).toBe("Test Badge");
+    expect(wrapper.find(".ob-badge-display__title").text()).toBe("Test Badge");
 
     // Check if badge description is displayed
-    expect(wrapper.find(".manus-badge-description").text()).toBe(
+    expect(wrapper.find(".ob-badge-display__description").text()).toBe(
       "A test badge description",
     );
 
     // Check if issuer name is displayed
-    expect(wrapper.find(".manus-badge-issuer").text()).toContain("Test Issuer");
+    expect(wrapper.find(".ob-badge-display__issuer").text()).toContain(
+      "Test Issuer",
+    );
 
     // Check if issue date is displayed
-    expect(wrapper.find(".manus-badge-date").text()).toContain("Jan 1, 2023");
+    expect(wrapper.find(".ob-badge-display__date").text()).toContain(
+      "Jan 1, 2023",
+    );
 
     // Check if image is displayed with correct src
-    const img = wrapper.find(".manus-badge-img");
+    const img = wrapper.find(".ob-badge-display__img");
     expect(img.attributes("src")).toBe("http://example.org/badge.png");
     expect(img.attributes("alt")).toBe("Badge: Test Badge");
   });
@@ -71,7 +75,7 @@ describe("BadgeDisplay.vue", () => {
     });
 
     // Description should not be displayed
-    expect(wrapper.find(".manus-badge-description").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-display__description").exists()).toBe(false);
   });
 
   it("respects showIssuedDate prop", async () => {
@@ -83,7 +87,7 @@ describe("BadgeDisplay.vue", () => {
     });
 
     // Issue date should not be displayed
-    expect(wrapper.find(".manus-badge-date").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-display__date").exists()).toBe(false);
   });
 
   it("respects showExpiryDate prop", async () => {
@@ -93,7 +97,7 @@ describe("BadgeDisplay.vue", () => {
         badge: mockBadge,
       },
     });
-    expect(wrapper1.find(".manus-badge-expiry").exists()).toBe(false);
+    expect(wrapper1.find(".ob-badge-display__expiry").exists()).toBe(false);
 
     // Now check that expiry is shown when showExpiryDate is true
     const wrapper2 = mount(BadgeDisplay, {
@@ -102,8 +106,8 @@ describe("BadgeDisplay.vue", () => {
         showExpiryDate: true,
       },
     });
-    expect(wrapper2.find(".manus-badge-expiry").exists()).toBe(true);
-    expect(wrapper2.find(".manus-badge-expiry").text()).toContain(
+    expect(wrapper2.find(".ob-badge-display__expiry").exists()).toBe(true);
+    expect(wrapper2.find(".ob-badge-display__expiry").text()).toContain(
       "Jan 1, 2024",
     );
   });
@@ -148,7 +152,7 @@ describe("BadgeDisplay.vue", () => {
       },
     });
 
-    const badgeElement = wrapper.find(".manus-badge-display");
+    const badgeElement = wrapper.find(".ob-badge-display");
     expect(badgeElement.attributes("tabindex")).toBe("0");
     expect(badgeElement.classes()).toContain("is-interactive");
   });
@@ -161,7 +165,7 @@ describe("BadgeDisplay.vue", () => {
       },
     });
 
-    const badgeElement = wrapper.find(".manus-badge-display");
+    const badgeElement = wrapper.find(".ob-badge-display");
     expect(badgeElement.attributes("tabindex")).toBeUndefined();
     expect(badgeElement.classes()).not.toContain("is-interactive");
   });
@@ -180,22 +184,22 @@ describe("BadgeDisplay.vue", () => {
     });
 
     // Initially, the toggle button should be visible but not the verification component
-    expect(wrapper.find(".manus-badge-verification-toggle").exists()).toBe(
-      true,
-    );
-    expect(wrapper.find(".manus-badge-verification-container").exists()).toBe(
-      false,
-    );
+    expect(
+      wrapper.find(".ob-badge-display__verification-toggle").exists(),
+    ).toBe(true);
+    expect(
+      wrapper.find(".ob-badge-display__verification-container").exists(),
+    ).toBe(false);
 
     // Click the toggle button
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Now the verification component should be visible
-    expect(wrapper.find(".manus-badge-verification-container").exists()).toBe(
-      true,
-    );
+    expect(
+      wrapper.find(".ob-badge-display__verification-container").exists(),
+    ).toBe(true);
   });
 
   it("emits verified event when verification is complete", async () => {
@@ -220,7 +224,7 @@ describe("BadgeDisplay.vue", () => {
 
     // Toggle verification details to show the verification component
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Check if the verified event was emitted
@@ -253,7 +257,7 @@ describe("BadgeDisplay.vue", () => {
 
     // Toggle verification details to show the verification component
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Check that the verified event was emitted with false
@@ -271,12 +275,12 @@ describe("BadgeDisplay.vue", () => {
         contentDensity: "compact",
       },
     });
-    expect(wrapper.find(".manus-badge-display").classes()).toContain(
+    expect(wrapper.find(".ob-badge-display").classes()).toContain(
       "density-compact",
     );
     wrapper.setProps({ contentDensity: "spacious" });
     return wrapper.vm.$nextTick().then(() => {
-      expect(wrapper.find(".manus-badge-display").classes()).toContain(
+      expect(wrapper.find(".ob-badge-display").classes()).toContain(
         "density-spacious",
       );
     });
@@ -294,13 +298,13 @@ describe("BadgeDisplay.vue", () => {
       },
     });
     // Description, issuer, dates, and verification should be hidden
-    expect(wrapper.find(".manus-badge-description").exists()).toBe(false);
-    expect(wrapper.find(".manus-badge-issuer").exists()).toBe(false);
-    expect(wrapper.find(".manus-badge-date").exists()).toBe(false);
-    expect(wrapper.find(".manus-badge-expiry").exists()).toBe(false);
-    expect(wrapper.find(".manus-badge-verification-toggle").exists()).toBe(
-      false,
-    );
+    expect(wrapper.find(".ob-badge-display__description").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-display__issuer").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-display__date").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-display__expiry").exists()).toBe(false);
+    expect(
+      wrapper.find(".ob-badge-display__verification-toggle").exists(),
+    ).toBe(false);
   });
 
   // OB3 VerifiableCredential Tests
@@ -342,7 +346,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockOB3Credential },
       });
 
-      expect(wrapper.find(".manus-badge-title").text()).toBe(
+      expect(wrapper.find(".ob-badge-display__title").text()).toBe(
         "Web Development Mastery",
       );
     });
@@ -352,7 +356,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockOB3Credential },
       });
 
-      expect(wrapper.find(".manus-badge-description").text()).toBe(
+      expect(wrapper.find(".ob-badge-display__description").text()).toBe(
         "Demonstrated proficiency in modern web development",
       );
     });
@@ -362,7 +366,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockOB3Credential },
       });
 
-      const img = wrapper.find(".manus-badge-img");
+      const img = wrapper.find(".ob-badge-display__img");
       expect(img.attributes("src")).toBe("https://example.org/badge-image.png");
       expect(img.attributes("alt")).toBe("Badge: Web Development Mastery");
     });
@@ -372,7 +376,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockOB3Credential },
       });
 
-      expect(wrapper.find(".manus-badge-issuer").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__issuer").text()).toContain(
         "OB3 Test Issuer",
       );
     });
@@ -382,7 +386,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockOB3Credential },
       });
 
-      expect(wrapper.find(".manus-badge-date").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__date").text()).toContain(
         "Jan 15, 2024",
       );
     });
@@ -395,8 +399,8 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      expect(wrapper.find(".manus-badge-expiry").exists()).toBe(true);
-      expect(wrapper.find(".manus-badge-expiry").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__expiry").exists()).toBe(true);
+      expect(wrapper.find(".ob-badge-display__expiry").text()).toContain(
         "Jan 15, 2025",
       );
     });
@@ -438,7 +442,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: credentialWithImageObject },
       });
 
-      const img = wrapper.find(".manus-badge-img");
+      const img = wrapper.find(".ob-badge-display__img");
       expect(img.attributes("src")).toBe(
         "https://example.org/image-object.png",
       );
@@ -473,7 +477,7 @@ describe("BadgeDisplay.vue", () => {
       });
 
       // When issuer is IRI, fallback to "Unknown Issuer"
-      expect(wrapper.find(".manus-badge-issuer").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__issuer").text()).toContain(
         "Unknown Issuer",
       );
     });
@@ -522,7 +526,7 @@ describe("BadgeDisplay.vue", () => {
       });
 
       // Should display the first achievement's name
-      expect(wrapper.find(".manus-badge-title").text()).toBe(
+      expect(wrapper.find(".ob-badge-display__title").text()).toBe(
         "First Achievement",
       );
     });
@@ -552,7 +556,7 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      const badgeElement = wrapper.find(".manus-badge-display");
+      const badgeElement = wrapper.find(".ob-badge-display");
       expect(badgeElement.attributes("tabindex")).toBe("0");
       expect(badgeElement.classes()).toContain("is-interactive");
     });
@@ -593,10 +597,10 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: ob3CredentialWithLegacyDates },
       });
 
-      expect(wrapper.find(".manus-badge-title").text()).toBe(
+      expect(wrapper.find(".ob-badge-display__title").text()).toBe(
         "Legacy Date Achievement",
       );
-      expect(wrapper.find(".manus-badge-date").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__date").text()).toContain(
         "Jun 15, 2023",
       );
     });
@@ -639,8 +643,8 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      expect(wrapper.find(".manus-badge-expiry").exists()).toBe(true);
-      expect(wrapper.find(".manus-badge-expiry").text()).toContain(
+      expect(wrapper.find(".ob-badge-display__expiry").exists()).toBe(true);
+      expect(wrapper.find(".ob-badge-display__expiry").text()).toContain(
         "Jun 15, 2024",
       );
     });
@@ -653,7 +657,7 @@ describe("BadgeDisplay.vue", () => {
         props: { badge: mockBadge },
       });
 
-      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+      expect(wrapper.find(".ob-badge-display__recipient").exists()).toBe(false);
     });
 
     it("shows recipient email from OB2 Assertion when showRecipient is true", () => {
@@ -664,14 +668,14 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      const recipientSection = wrapper.find(".manus-badge-recipient");
+      const recipientSection = wrapper.find(".ob-badge-display__recipient");
       expect(recipientSection.exists()).toBe(true);
       expect(recipientSection.attributes("role")).toBe("region");
       expect(recipientSection.attributes("aria-label")).toBe(
         "Recipient information",
       );
 
-      const emailSpan = wrapper.find(".manus-badge-recipient-email");
+      const emailSpan = wrapper.find(".ob-badge-display__recipient-email");
       expect(emailSpan.exists()).toBe(true);
       expect(emailSpan.text()).toContain("test@example.org");
       expect(emailSpan.attributes("aria-label")).toBe(
@@ -717,22 +721,22 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      const recipientSection = wrapper.find(".manus-badge-recipient");
+      const recipientSection = wrapper.find(".ob-badge-display__recipient");
       expect(recipientSection.exists()).toBe(true);
 
-      const nameSpan = wrapper.find(".manus-badge-recipient-name");
+      const nameSpan = wrapper.find(".ob-badge-display__recipient-name");
       expect(nameSpan.exists()).toBe(true);
       expect(nameSpan.text()).toContain("Alice Johnson");
       expect(nameSpan.attributes("aria-label")).toBe("Recipient name");
 
-      const emailSpan = wrapper.find(".manus-badge-recipient-email");
+      const emailSpan = wrapper.find(".ob-badge-display__recipient-email");
       expect(emailSpan.exists()).toBe(true);
       expect(emailSpan.text()).toContain("alice@example.org");
       expect(emailSpan.attributes("aria-label")).toBe(
         "Recipient email address",
       );
 
-      const roleSpan = wrapper.find(".manus-badge-recipient-role");
+      const roleSpan = wrapper.find(".ob-badge-display__recipient-role");
       expect(roleSpan.exists()).toBe(true);
       expect(roleSpan.text()).toContain("Senior Developer");
       expect(roleSpan.attributes("aria-label")).toBe("Recipient role");
@@ -777,7 +781,7 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      const nameSpan = wrapper.find(".manus-badge-recipient-name");
+      const nameSpan = wrapper.find(".ob-badge-display__recipient-name");
       expect(nameSpan.exists()).toBe(true);
       expect(nameSpan.text()).toContain("Bob Martinez");
     });
@@ -791,7 +795,7 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+      expect(wrapper.find(".ob-badge-display__recipient").exists()).toBe(false);
     });
 
     it("does not show recipient section when badge has no recipient data", () => {
@@ -829,7 +833,7 @@ describe("BadgeDisplay.vue", () => {
         },
       });
 
-      expect(wrapper.find(".manus-badge-recipient").exists()).toBe(false);
+      expect(wrapper.find(".ob-badge-display__recipient").exists()).toBe(false);
     });
   });
 });

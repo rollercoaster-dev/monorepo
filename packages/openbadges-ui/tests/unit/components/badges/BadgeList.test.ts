@@ -86,7 +86,7 @@ describe("BadgeList.vue", () => {
     });
 
     // Check if the correct number of badges are rendered
-    const badgeItems = wrapper.findAll(".manus-badge-list-item");
+    const badgeItems = wrapper.findAll(".ob-badge-list__item");
     expect(badgeItems.length).toBe(2);
   });
 
@@ -99,8 +99,8 @@ describe("BadgeList.vue", () => {
     });
 
     // Check if loading message is displayed
-    expect(wrapper.find(".manus-badge-list-loading").exists()).toBe(true);
-    expect(wrapper.find(".manus-badge-list-loading").text()).toContain(
+    expect(wrapper.find(".ob-badge-list__loading").exists()).toBe(true);
+    expect(wrapper.find(".ob-badge-list__loading").text()).toContain(
       "Loading badges",
     );
   });
@@ -113,8 +113,8 @@ describe("BadgeList.vue", () => {
     });
 
     // Check if empty message is displayed
-    expect(wrapper.find(".manus-badge-list-empty").exists()).toBe(true);
-    expect(wrapper.find(".manus-badge-list-empty").text()).toContain(
+    expect(wrapper.find(".ob-badge-list__empty").exists()).toBe(true);
+    expect(wrapper.find(".ob-badge-list__empty").text()).toContain(
       "No badges found",
     );
   });
@@ -184,10 +184,10 @@ describe("BadgeList.vue", () => {
     });
 
     // Check if pagination is displayed
-    expect(wrapper.find(".manus-badge-list-pagination").exists()).toBe(true);
+    expect(wrapper.find(".ob-badge-list__pagination").exists()).toBe(true);
 
     // Check if page info is correct
-    expect(wrapper.find(".manus-pagination-info").text()).toContain(
+    expect(wrapper.find(".ob-badge-list__pagination-info").text()).toContain(
       "Page 1 of 3",
     );
   });
@@ -207,7 +207,7 @@ describe("BadgeList.vue", () => {
     });
 
     // Check that pagination is not displayed
-    expect(wrapper.find(".manus-badge-list-pagination").exists()).toBe(false);
+    expect(wrapper.find(".ob-badge-list__pagination").exists()).toBe(false);
   });
 
   it("emits page-change event when pagination buttons are clicked", async () => {
@@ -228,7 +228,9 @@ describe("BadgeList.vue", () => {
     });
 
     // Click the next page button
-    await wrapper.find(".manus-pagination-button:last-child").trigger("click");
+    await wrapper
+      .find(".ob-badge-list__pagination-button:last-child")
+      .trigger("click");
 
     // Check that page-change event is emitted with the correct page number
     const pageChangeEvents = wrapper.emitted("page-change");
@@ -253,7 +255,7 @@ describe("BadgeList.vue", () => {
       },
     });
 
-    expect(wrapper1.find(".manus-pagination-info").text()).toContain(
+    expect(wrapper1.find(".ob-badge-list__pagination-info").text()).toContain(
       "Page 1 of 2",
     );
 
@@ -272,7 +274,7 @@ describe("BadgeList.vue", () => {
     });
 
     // Pagination should not be displayed with only 1 page
-    expect(wrapper2.find(".manus-badge-list-pagination").exists()).toBe(false);
+    expect(wrapper2.find(".ob-badge-list__pagination").exists()).toBe(false);
   });
 
   it("uses the provided ariaLabel prop for accessibility", () => {
@@ -288,7 +290,7 @@ describe("BadgeList.vue", () => {
       },
     });
 
-    const listElement = wrapper.find(".manus-badge-list-items");
+    const listElement = wrapper.find(".ob-badge-list__items");
     expect(listElement.attributes("aria-label")).toBe(
       "Custom badge list label",
     );
@@ -299,9 +301,9 @@ describe("BadgeList.vue", () => {
       props: { badges: mockBadges },
       global: { stubs: { BadgeDisplay: true } },
     });
-    const input = wrapper.find(".manus-badge-list-filter-input");
+    const input = wrapper.find(".ob-badge-list__filter-input");
     await input.setValue("Test Badge 1");
-    expect(wrapper.findAll(".manus-badge-list-item").length).toBe(1);
+    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(1);
   });
 
   it("shows and changes display density", async () => {
@@ -332,11 +334,11 @@ describe("BadgeList.vue", () => {
       props: { badges: mockBadges },
       global: { stubs: { BadgeDisplay: true } },
     });
-    const select = wrapper.find(".manus-badge-list-filter-select");
+    const select = wrapper.find(".ob-badge-list__filter-select");
     await select.setValue("earned");
-    expect(wrapper.findAll(".manus-badge-list-item").length).toBe(2); // placeholder logic always returns all
+    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(2); // placeholder logic always returns all
     await select.setValue("not-earned");
-    expect(wrapper.findAll(".manus-badge-list-item").length).toBe(0); // placeholder logic always returns none
+    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(0); // placeholder logic always returns none
   });
 
   it("shows focus indicator on badge-summary", async () => {
