@@ -144,14 +144,14 @@ describe("IssuerCard", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: mockOB2Issuer, density: "compact" },
       });
-      expect(wrapper.classes()).toContain("density-compact");
+      expect(wrapper.classes()).toContain("ob-issuer-card--density-compact");
     });
 
     it("applies spacious density class", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: mockOB2Issuer, density: "spacious" },
       });
-      expect(wrapper.classes()).toContain("density-spacious");
+      expect(wrapper.classes()).toContain("ob-issuer-card--density-spacious");
     });
   });
 
@@ -161,7 +161,7 @@ describe("IssuerCard", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: issuerNoImage },
       });
-      const fallback = wrapper.find(".manus-issuer-img-fallback");
+      const fallback = wrapper.find(".ob-issuer-card__img-fallback");
       expect(fallback.exists()).toBe(true);
       expect(wrapper.text()).toContain("T"); // First letter of "Test University"
     });

@@ -192,27 +192,31 @@ const resetForm = () => {
 </script>
 
 <template>
-  <div class="manus-badge-issuer-form">
+  <div class="ob-badge-issuer-form">
     <form novalidate @submit.prevent="handleSubmit">
-      <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">Badge Information</legend>
+      <fieldset class="ob-badge-issuer-form__section">
+        <legend class="ob-badge-issuer-form__section-title">
+          Badge Information
+        </legend>
 
         <!-- Badge Name -->
-        <div class="manus-form-field">
-          <label for="badge-name" class="manus-form-label">Badge Name *</label>
+        <div class="ob-badge-issuer-form__field">
+          <label for="badge-name" class="ob-badge-issuer-form__label"
+            >Badge Name *</label
+          >
           <input
             id="badge-name"
             v-model="state.badgeClass.name"
             type="text"
-            class="manus-form-input"
-            :class="{ 'manus-form-input-error': hasError('name') }"
+            class="ob-badge-issuer-form__input"
+            :class="{ 'ob-badge-issuer-form__input--error': hasError('name') }"
             required
             aria-describedby="badge-name-error"
           />
           <div
             v-if="hasError('name')"
             id="badge-name-error"
-            class="manus-form-error"
+            class="ob-badge-issuer-form__error"
             role="alert"
           >
             Badge name is required
@@ -220,15 +224,17 @@ const resetForm = () => {
         </div>
 
         <!-- Badge Description -->
-        <div class="manus-form-field">
-          <label for="badge-description" class="manus-form-label"
+        <div class="ob-badge-issuer-form__field">
+          <label for="badge-description" class="ob-badge-issuer-form__label"
             >Description *</label
           >
           <textarea
             id="badge-description"
             v-model="state.badgeClass.description"
-            class="manus-form-textarea"
-            :class="{ 'manus-form-input-error': hasError('description') }"
+            class="ob-badge-issuer-form__textarea"
+            :class="{
+              'ob-badge-issuer-form__input--error': hasError('description'),
+            }"
             rows="3"
             required
             aria-describedby="badge-description-error"
@@ -236,7 +242,7 @@ const resetForm = () => {
           <div
             v-if="hasError('description')"
             id="badge-description-error"
-            class="manus-form-error"
+            class="ob-badge-issuer-form__error"
             role="alert"
           >
             Badge description is required
@@ -244,14 +250,16 @@ const resetForm = () => {
         </div>
 
         <!-- Badge Image URL -->
-        <div class="manus-form-field">
-          <label for="badge-image" class="manus-form-label">Image URL *</label>
+        <div class="ob-badge-issuer-form__field">
+          <label for="badge-image" class="ob-badge-issuer-form__label"
+            >Image URL *</label
+          >
           <input
             id="badge-image"
             v-model="badgeImageUrl"
             type="url"
-            class="manus-form-input"
-            :class="{ 'manus-form-input-error': hasError('image') }"
+            class="ob-badge-issuer-form__input"
+            :class="{ 'ob-badge-issuer-form__input--error': hasError('image') }"
             placeholder="https://example.com/badge-image.png"
             required
             aria-describedby="badge-image-error badge-image-help"
@@ -259,67 +267,75 @@ const resetForm = () => {
           <div
             v-if="hasError('image')"
             id="badge-image-error"
-            class="manus-form-error"
+            class="ob-badge-issuer-form__error"
             role="alert"
           >
             Valid badge image URL is required
           </div>
-          <div id="badge-image-help" class="manus-form-help">
+          <div id="badge-image-help" class="ob-badge-issuer-form__help">
             Provide a URL to an image for this badge (PNG, SVG, or JPEG
             recommended)
           </div>
         </div>
 
         <!-- Badge Criteria -->
-        <div class="manus-form-field">
-          <label for="badge-criteria" class="manus-form-label">Criteria</label>
+        <div class="ob-badge-issuer-form__field">
+          <label for="badge-criteria" class="ob-badge-issuer-form__label"
+            >Criteria</label
+          >
           <textarea
             id="badge-criteria"
             v-model="criteriaText"
-            class="manus-form-textarea"
+            class="ob-badge-issuer-form__textarea"
             rows="3"
             placeholder="Describe what someone must do to earn this badge"
           />
         </div>
 
         <!-- Badge Tags -->
-        <div class="manus-form-field">
-          <label for="badge-tags" class="manus-form-label">Tags</label>
+        <div class="ob-badge-issuer-form__field">
+          <label for="badge-tags" class="ob-badge-issuer-form__label"
+            >Tags</label
+          >
           <input
             id="badge-tags"
             v-model="tagsInput"
             type="text"
-            class="manus-form-input"
+            class="ob-badge-issuer-form__input"
             placeholder="Enter comma-separated tags"
             aria-describedby="badge-tags-help"
           />
-          <div id="badge-tags-help" class="manus-form-help">
+          <div id="badge-tags-help" class="ob-badge-issuer-form__help">
             Optional: Add comma-separated tags to help categorize this badge
           </div>
         </div>
       </fieldset>
 
-      <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">Issuer Information</legend>
+      <fieldset class="ob-badge-issuer-form__section">
+        <legend class="ob-badge-issuer-form__section-title">
+          Issuer Information
+        </legend>
 
         <!-- Issuer Name -->
-        <div class="manus-form-field">
-          <label for="issuer-name" class="manus-form-label"
+        <div class="ob-badge-issuer-form__field">
+          <label for="issuer-name" class="ob-badge-issuer-form__label"
             >Issuer Name *</label
           >
           <input
             id="issuer-name"
             v-model="issuerName"
             type="text"
-            class="manus-form-input"
-            :class="{ 'manus-form-input-error': hasError('issuer') }"
+            class="ob-badge-issuer-form__input"
+            :class="{
+              'ob-badge-issuer-form__input--error': hasError('issuer'),
+            }"
             required
             aria-describedby="issuer-name-error"
           />
           <div
             v-if="hasError('issuer')"
             id="issuer-name-error"
-            class="manus-form-error"
+            class="ob-badge-issuer-form__error"
             role="alert"
           >
             Issuer name is required
@@ -327,39 +343,45 @@ const resetForm = () => {
         </div>
 
         <!-- Issuer URL -->
-        <div class="manus-form-field">
-          <label for="issuer-url" class="manus-form-label">Issuer URL</label>
+        <div class="ob-badge-issuer-form__field">
+          <label for="issuer-url" class="ob-badge-issuer-form__label"
+            >Issuer URL</label
+          >
           <input
             id="issuer-url"
             v-model="issuerUrl"
             type="url"
-            class="manus-form-input"
+            class="ob-badge-issuer-form__input"
             placeholder="https://example.org"
           />
         </div>
       </fieldset>
 
-      <fieldset class="manus-form-section">
-        <legend class="manus-form-section-title">Recipient Information</legend>
+      <fieldset class="ob-badge-issuer-form__section">
+        <legend class="ob-badge-issuer-form__section-title">
+          Recipient Information
+        </legend>
 
         <!-- Recipient Email -->
-        <div class="manus-form-field">
-          <label for="recipient-email" class="manus-form-label"
+        <div class="ob-badge-issuer-form__field">
+          <label for="recipient-email" class="ob-badge-issuer-form__label"
             >Recipient Email *</label
           >
           <input
             id="recipient-email"
             v-model="state.recipientEmail"
             type="email"
-            class="manus-form-input"
-            :class="{ 'manus-form-input-error': hasError('recipient') }"
+            class="ob-badge-issuer-form__input"
+            :class="{
+              'ob-badge-issuer-form__input--error': hasError('recipient'),
+            }"
             required
             aria-describedby="recipient-email-error"
           />
           <div
             v-if="hasError('recipient')"
             id="recipient-email-error"
-            class="manus-form-error"
+            class="ob-badge-issuer-form__error"
             role="alert"
           >
             Valid recipient email is required
@@ -368,10 +390,10 @@ const resetForm = () => {
       </fieldset>
 
       <!-- Form Actions -->
-      <div class="manus-form-actions">
+      <div class="ob-badge-issuer-form__actions">
         <button
           type="button"
-          class="manus-button manus-button-secondary"
+          class="ob-badge-issuer-form__button ob-badge-issuer-form__button--secondary"
           :disabled="state.isSubmitting"
           @click="resetForm"
         >
@@ -379,7 +401,7 @@ const resetForm = () => {
         </button>
         <button
           type="submit"
-          class="manus-button manus-button-primary"
+          class="ob-badge-issuer-form__button ob-badge-issuer-form__button--primary"
           :disabled="state.isSubmitting"
         >
           <span v-if="state.isSubmitting">Issuing...</span>
@@ -390,7 +412,7 @@ const resetForm = () => {
       <!-- Form Errors -->
       <div
         v-if="state.errors.length > 0"
-        class="manus-form-errors"
+        class="ob-badge-issuer-form__errors"
         role="alert"
         aria-live="polite"
       >
@@ -405,7 +427,7 @@ const resetForm = () => {
       <!-- Success Message -->
       <div
         v-if="state.success"
-        class="manus-form-success"
+        class="ob-badge-issuer-form__success"
         role="status"
         aria-live="polite"
       >
@@ -416,201 +438,186 @@ const resetForm = () => {
 </template>
 
 <style>
-.manus-badge-issuer-form {
-  --form-border-color: var(
-    --ob-form-border-color,
-    var(--ob-border-color, #e2e8f0)
-  );
-  --form-background: var(--ob-form-background, var(--ob-bg-primary, #ffffff));
-  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary, #1a202c));
-  --form-label-color: var(
-    --ob-form-label-color,
-    var(--ob-text-secondary, #4a5568)
-  );
-  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300, #cbd5e0));
-  --form-input-focus: var(--ob-form-input-focus, var(--ob-primary, #3182ce));
-  --form-error-color: var(--ob-form-error-color, var(--ob-error, #e53e3e));
-  --form-success-color: var(
-    --ob-form-success-color,
-    var(--ob-success, #38a169)
-  );
-  --form-help-color: var(
-    --ob-form-help-color,
-    var(--ob-text-secondary, #718096)
-  );
-  --form-button-primary-bg: var(
-    --ob-form-button-primary-bg,
-    var(--ob-primary, #3182ce)
-  );
+.ob-badge-issuer-form {
+  --form-border-color: var(--ob-form-border-color, var(--ob-border-color));
+  --form-background: var(--ob-form-background, var(--ob-bg-primary));
+  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary));
+  --form-label-color: var(--ob-form-label-color, var(--ob-text-secondary));
+  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300));
+  --form-input-focus: var(--ob-form-input-focus, var(--ob-primary));
+  --form-error-color: var(--ob-form-error-color, var(--ob-error));
+  --form-success-color: var(--ob-form-success-color, var(--ob-success));
+  --form-help-color: var(--ob-form-help-color, var(--ob-text-secondary));
+  --form-button-primary-bg: var(--ob-form-button-primary-bg, var(--ob-primary));
   --form-button-primary-color: var(
     --ob-form-button-primary-color,
-    var(--ob-text-inverse, #ffffff)
+    var(--ob-text-inverse)
   );
   --form-button-secondary-bg: var(
     --ob-form-button-secondary-bg,
-    var(--ob-gray-200, #e2e8f0)
+    var(--ob-gray-200)
   );
   --form-button-secondary-color: var(
     --ob-form-button-secondary-color,
-    var(--ob-text-secondary, #4a5568)
+    var(--ob-text-secondary)
   );
   --form-button-disabled-bg: var(
     --ob-form-button-disabled-bg,
-    var(--ob-gray-100, #edf2f7)
+    var(--ob-gray-100)
   );
   --form-button-disabled-color: var(
     --ob-form-button-disabled-color,
-    var(--ob-text-disabled, #a0aec0)
+    var(--ob-text-disabled)
   );
 
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   background-color: var(--form-background);
   border: 1px solid var(--form-border-color);
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   color: var(--form-text-color);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
 }
 
-.manus-form-section {
-  margin-bottom: var(--ob-space-6, 24px);
+.ob-badge-issuer-form__section {
+  margin-bottom: var(--ob-space-6);
   padding: 0;
   border: none;
 }
 
-.manus-form-section-title {
-  font-size: var(--ob-font-size-xl, 1.25rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
-  margin-bottom: var(--ob-space-4, 16px);
-  padding-bottom: var(--ob-space-2, 8px);
+.ob-badge-issuer-form__section-title {
+  font-size: var(--ob-font-size-xl);
+  font-weight: var(--ob-font-weight-semibold);
+  margin-bottom: var(--ob-space-4);
+  padding-bottom: var(--ob-space-2);
   border-bottom: 1px solid var(--form-border-color);
 }
 
-.manus-form-field {
-  margin-bottom: var(--ob-space-4, 16px);
+.ob-badge-issuer-form__field {
+  margin-bottom: var(--ob-space-4);
 }
 
-.manus-form-label {
+.ob-badge-issuer-form__label {
   display: block;
-  margin-bottom: var(--ob-space-1, 4px);
-  font-weight: var(--ob-font-weight-medium, 500);
+  margin-bottom: var(--ob-space-1);
+  font-weight: var(--ob-font-weight-medium);
   color: var(--form-label-color);
 }
 
-.manus-form-input,
-.manus-form-textarea {
+.ob-badge-issuer-form__input,
+.ob-badge-issuer-form__textarea {
   width: 100%;
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--form-input-border);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  line-height: var(--ob-line-height-normal, 1.5);
-  transition: border-color var(--ob-transition-fast, 0.2s) ease;
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  line-height: var(--ob-line-height-normal);
+  transition: border-color var(--ob-transition-fast) ease;
   color: var(--form-text-color);
   background: var(--form-background);
 }
 
-.manus-form-input:focus,
-.manus-form-textarea:focus {
+.ob-badge-issuer-form__input:focus,
+.ob-badge-issuer-form__textarea:focus {
   outline: none;
   border-color: var(--form-input-focus);
-  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(49, 130, 206, 0.2));
+  box-shadow: var(--ob-shadow-focus);
 }
 
-.manus-form-input-error {
+.ob-badge-issuer-form__input--error {
   border-color: var(--form-error-color);
 }
 
-.manus-form-error {
+.ob-badge-issuer-form__error {
   color: var(--form-error-color);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  margin-top: var(--ob-space-1, 4px);
+  font-size: var(--ob-font-size-sm);
+  margin-top: var(--ob-space-1);
 }
 
-.manus-form-help {
+.ob-badge-issuer-form__help {
   color: var(--form-help-color);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  margin-top: var(--ob-space-1, 4px);
+  font-size: var(--ob-font-size-sm);
+  margin-top: var(--ob-space-1);
 }
 
-.manus-form-actions {
+.ob-badge-issuer-form__actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--ob-space-3, 12px);
-  margin-top: var(--ob-space-6, 24px);
+  gap: var(--ob-space-3);
+  margin-top: var(--ob-space-6);
 }
 
-.manus-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+.ob-badge-issuer-form__button {
+  padding: var(--ob-space-2) var(--ob-space-4);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-button-primary {
+.ob-badge-issuer-form__button--primary {
   background-color: var(--form-button-primary-bg);
   color: var(--form-button-primary-color);
 }
 
-.manus-button-primary:hover:not(:disabled) {
-  background-color: var(--ob-primary-dark, #2c5282);
+.ob-badge-issuer-form__button--primary:hover:not(:disabled) {
+  background-color: var(--ob-primary-dark);
 }
 
-.manus-button-secondary {
+.ob-badge-issuer-form__button--secondary {
   background-color: var(--form-button-secondary-bg);
   color: var(--form-button-secondary-color);
 }
 
-.manus-button-secondary:hover:not(:disabled) {
-  background-color: var(--ob-gray-300, #cbd5e0);
+.ob-badge-issuer-form__button--secondary:hover:not(:disabled) {
+  background-color: var(--ob-gray-300);
 }
 
-.manus-button:disabled {
+.ob-badge-issuer-form__button:disabled {
   background-color: var(--form-button-disabled-bg);
   color: var(--form-button-disabled-color);
   cursor: not-allowed;
 }
 
-.manus-form-errors {
-  margin-top: var(--ob-space-6, 24px);
-  padding: var(--ob-space-3, 12px);
-  background-color: var(--ob-error-light, #fff5f5);
-  border: 1px solid var(--ob-error-light, #fed7d7);
-  border-radius: var(--ob-border-radius-sm, 4px);
+.ob-badge-issuer-form__errors {
+  margin-top: var(--ob-space-6);
+  padding: var(--ob-space-3);
+  background-color: var(--ob-error-light);
+  border: 1px solid var(--ob-error-light);
+  border-radius: var(--ob-border-radius-sm);
   color: var(--form-error-color);
 }
 
-.manus-form-errors ul {
-  margin: var(--ob-space-2, 8px) 0 0;
-  padding-left: var(--ob-space-6, 24px);
+.ob-badge-issuer-form__errors ul {
+  margin: var(--ob-space-2) 0 0;
+  padding-left: var(--ob-space-6);
 }
 
-.manus-form-success {
-  margin-top: var(--ob-space-6, 24px);
-  padding: var(--ob-space-3, 12px);
-  background-color: var(--ob-success-light, #f0fff4);
-  border: 1px solid var(--ob-success-light, #c6f6d5);
-  border-radius: var(--ob-border-radius-sm, 4px);
+.ob-badge-issuer-form__success {
+  margin-top: var(--ob-space-6);
+  padding: var(--ob-space-3);
+  background-color: var(--ob-success-light);
+  border: 1px solid var(--ob-success-light);
+  border-radius: var(--ob-border-radius-sm);
   color: var(--form-success-color);
-  font-weight: var(--ob-font-weight-medium, 500);
+  font-weight: var(--ob-font-weight-medium);
   text-align: center;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .manus-badge-issuer-form {
-    padding: var(--ob-space-4, 16px);
+  .ob-badge-issuer-form {
+    padding: var(--ob-space-4);
   }
 
-  .manus-form-actions {
+  .ob-badge-issuer-form__actions {
     flex-direction: column;
   }
 
-  .manus-button {
+  .ob-badge-issuer-form__button {
     width: 100%;
   }
 }

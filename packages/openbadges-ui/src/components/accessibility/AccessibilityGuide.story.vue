@@ -436,75 +436,67 @@ const isOpen = ref(true);
 .guide-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
+  padding: var(--ob-space-8);
+  font-family: var(--ob-font-family);
 }
 
 h1 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
+  font-size: var(--ob-font-size-3xl);
+  margin-bottom: var(--ob-space-6);
 }
 
 h2 {
-  font-size: 1.5rem;
-  margin: 2rem 0 1rem;
+  font-size: var(--ob-font-size-2xl);
+  margin: var(--ob-space-8) 0 var(--ob-space-4);
 }
 
 p {
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  line-height: var(--ob-line-height-relaxed);
+  margin-bottom: var(--ob-space-4);
 }
 
 ul,
 ol {
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
+  margin-bottom: var(--ob-space-6);
+  line-height: var(--ob-line-height-relaxed);
 }
 
 li {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--ob-space-2);
 }
 
 a {
-  color: #3182ce;
+  color: var(--ob-primary);
   text-decoration: underline;
 }
 
 a:hover {
-  color: #2c5282;
+  color: var(--ob-primary-dark);
 }
 
 .component-demo {
-  margin: 2rem 0;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem;
+  margin: var(--ob-space-8) 0;
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-lg);
+  padding: var(--ob-space-4);
 }
 
 .font-examples {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin: 2rem 0;
+  gap: var(--ob-space-6);
+  margin: var(--ob-space-8) 0;
 }
 
 .font-example {
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: var(--ob-space-4);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-lg);
 }
 
 .font-example h3 {
   margin-top: 0;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--ob-space-2);
 }
 
 .font-example p {
@@ -513,15 +505,15 @@ a:hover {
 
 code {
   font-family: monospace;
-  background-color: #f8f9fa;
+  background-color: var(--ob-bg-secondary);
   padding: 0.2em 0.4em;
-  border-radius: 3px;
+  border-radius: var(--ob-border-radius-sm);
 }
 
 pre {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 4px;
+  background-color: var(--ob-bg-secondary);
+  padding: var(--ob-space-4);
+  border-radius: var(--ob-border-radius-sm);
   overflow-x: auto;
 }
 

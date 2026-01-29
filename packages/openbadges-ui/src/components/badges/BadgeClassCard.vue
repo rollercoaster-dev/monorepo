@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import type { OB2, OB3 } from "@/types";
 import { getLocalizedString } from "@utils/localization";
 
@@ -147,18 +147,9 @@ const handleClick = () => {
   }
 };
 
-// Focus state for accessibility
-const isFocused = ref(false);
-const onFocus = () => {
-  isFocused.value = true;
-};
-const onBlur = () => {
-  isFocused.value = false;
-};
-
 // Computed classes for content density
 const densityClass = computed(() => {
-  return `density-${props.density}`;
+  return `ob-badge-class-card--density-${props.density}`;
 });
 
 // Truncate description for display
@@ -182,7 +173,7 @@ const truncatedCriteria = computed(() => {
 
 <template>
   <div
-    class="manus-badge-class-card"
+    class="ob-badge-class-card"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
     role="article"
@@ -190,71 +181,69 @@ const truncatedCriteria = computed(() => {
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
-    @focus="onFocus"
-    @blur="onBlur"
   >
-    <div class="manus-badge-class-image">
+    <div class="ob-badge-class-card__image">
       <img
         v-if="normalizedBadgeClass.image"
         :src="normalizedBadgeClass.image"
         :alt="generateAltText(normalizedBadgeClass.name)"
-        class="manus-badge-class-img"
+        class="ob-badge-class-card__img"
       />
       <div
         v-else
-        class="manus-badge-class-img-fallback"
+        class="ob-badge-class-card__img-fallback"
         :aria-label="generateAltText(normalizedBadgeClass.name)"
       >
-        <span class="manus-badge-class-icon" aria-hidden="true">🏅</span>
+        <span class="ob-badge-class-card__icon" aria-hidden="true">🏅</span>
       </div>
     </div>
-    <div class="manus-badge-class-content">
-      <h3 class="manus-badge-class-name">
+    <div class="ob-badge-class-card__content">
+      <h3 class="ob-badge-class-card__name">
         {{ normalizedBadgeClass.name }}
       </h3>
       <p
         v-if="showDescription && truncatedDescription"
-        class="manus-badge-class-description"
+        class="ob-badge-class-card__description"
       >
         {{ truncatedDescription }}
       </p>
       <div
         v-if="showIssuer && normalizedBadgeClass.issuerName"
-        class="manus-badge-class-issuer"
+        class="ob-badge-class-card__issuer"
       >
         <span>By: {{ normalizedBadgeClass.issuerName }}</span>
       </div>
       <div
         v-if="showCriteria && truncatedCriteria"
-        class="manus-badge-class-criteria"
+        class="ob-badge-class-card__criteria"
       >
-        <span class="manus-badge-class-criteria-label">Criteria:</span>
+        <span class="ob-badge-class-card__criteria-label">Criteria:</span>
         {{ truncatedCriteria }}
       </div>
       <div
         v-if="showTags && normalizedBadgeClass.tags.length > 0"
-        class="manus-badge-class-tags"
+        class="ob-badge-class-card__tags"
       >
         <span
           v-for="tag in normalizedBadgeClass.tags.slice(0, 5)"
           :key="tag"
-          class="manus-badge-class-tag"
+          class="ob-badge-class-card__tag"
         >
           {{ tag }}
         </span>
         <span
           v-if="normalizedBadgeClass.tags.length > 5"
-          class="manus-badge-class-tag manus-badge-class-tag-more"
+          class="ob-badge-class-card__tag ob-badge-class-card__tag--more"
         >
           +{{ normalizedBadgeClass.tags.length - 5 }}
         </span>
       </div>
       <div
         v-if="additionalAchievementsCount > 0"
-        class="manus-badge-class-multi"
+        class="ob-badge-class-card__multi"
         :aria-label="`This credential includes ${additionalAchievementsCount} more achievement${additionalAchievementsCount > 1 ? 's' : ''}`"
       >
-        <span class="manus-badge-class-multi-badge">
+        <span class="ob-badge-class-card__multi-badge">
           +{{ additionalAchievementsCount }} more achievement{{
             additionalAchievementsCount > 1 ? "s" : ""
           }}
@@ -266,22 +255,19 @@ const truncatedCriteria = computed(() => {
 </template>
 
 <style>
-.manus-badge-class-card {
-  --badge-class-border-color: var(--ob-border-color, #e2e8f0);
-  --badge-class-border-radius: var(--ob-border-radius-lg, 8px);
-  --badge-class-padding: var(--ob-space-4, 16px);
-  --badge-class-background: var(--ob-bg-primary, #ffffff);
-  --badge-class-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
-  --badge-class-name-color: var(--ob-text-primary, #1a202c);
-  --badge-class-text-color: var(--ob-text-secondary, #4a5568);
-  --badge-class-hover-shadow: var(
-    --ob-shadow-md,
-    0 4px 8px rgba(0, 0, 0, 0.15)
-  );
-  --badge-class-focus-outline-color: var(--ob-primary, #3182ce);
-  --badge-class-tag-bg: var(--ob-gray-200, #e2e8f0);
-  --badge-class-tag-color: var(--ob-text-secondary, #4a5568);
-  --badge-class-fallback-bg: var(--ob-bg-secondary, #f7fafc);
+.ob-badge-class-card {
+  --badge-class-border-color: var(--ob-border-color);
+  --badge-class-border-radius: var(--ob-border-radius-lg);
+  --badge-class-padding: var(--ob-space-4);
+  --badge-class-background: var(--ob-bg-primary);
+  --badge-class-shadow: var(--ob-shadow-sm);
+  --badge-class-name-color: var(--ob-text-primary);
+  --badge-class-text-color: var(--ob-text-secondary);
+  --badge-class-hover-shadow: var(--ob-shadow-md);
+  --badge-class-focus-outline-color: var(--ob-primary);
+  --badge-class-tag-bg: var(--ob-gray-200);
+  --badge-class-tag-color: var(--ob-text-secondary);
+  --badge-class-fallback-bg: var(--ob-bg-secondary);
 
   display: flex;
   flex-direction: column;
@@ -290,193 +276,204 @@ const truncatedCriteria = computed(() => {
   padding: var(--badge-class-padding);
   background-color: var(--badge-class-background);
   box-shadow: var(--badge-class-shadow);
-  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
+  transition: box-shadow var(--ob-transition-fast) ease;
   max-width: 300px;
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
   color: var(--badge-class-text-color);
 }
 
-.manus-badge-class-card.is-interactive {
+.ob-badge-class-card.is-interactive {
   cursor: pointer;
 }
 
-.manus-badge-class-card.is-interactive:hover {
+.ob-badge-class-card.is-interactive:hover {
   box-shadow: var(--badge-class-hover-shadow);
 }
 
-.manus-badge-class-card.is-interactive:focus {
+.ob-badge-class-card.is-interactive:focus {
   outline: 2px solid var(--badge-class-focus-outline-color);
-  outline-offset: var(--ob-space-1, 2px);
+  outline-offset: var(--ob-space-1);
 }
 
-.manus-badge-class-image {
+.ob-badge-class-card__image {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--ob-space-3, 12px);
+  margin-bottom: var(--ob-space-3);
 }
 
-.manus-badge-class-img {
+.ob-badge-class-card__img {
   max-width: 100%;
   height: auto;
   max-height: 120px;
-  border-radius: var(--ob-border-radius-sm, 4px);
+  border-radius: var(--ob-border-radius-sm);
   object-fit: contain;
 }
 
-.manus-badge-class-img-fallback {
+.ob-badge-class-card__img-fallback {
   width: 80px;
   height: 80px;
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   background-color: var(--badge-class-fallback-bg);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.manus-badge-class-icon {
-  font-size: var(--ob-font-size-3xl, 2.5rem);
+.ob-badge-class-card__icon {
+  font-size: var(--ob-font-size-3xl);
 }
 
-.manus-badge-class-content {
+.ob-badge-class-card__content {
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-2, 6px);
+  gap: var(--ob-space-2);
 }
 
-.manus-badge-class-name {
+.ob-badge-class-card__name {
   margin: 0;
-  font-size: var(--ob-font-size-lg, 1.125rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  font-size: var(--ob-font-size-lg);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--badge-class-name-color);
-  line-height: var(--ob-line-height-tight, 1.3);
+  line-height: var(--ob-line-height-tight);
 }
 
-.manus-badge-class-description {
+.ob-badge-class-card__description {
   margin: 0;
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-size: var(--ob-font-size-sm);
   color: var(--badge-class-text-color);
-  line-height: var(--ob-line-height-normal, 1.4);
+  line-height: var(--ob-line-height-normal);
 }
 
-.manus-badge-class-issuer {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+.ob-badge-class-card__issuer {
+  font-size: var(--ob-font-size-xs);
   color: var(--badge-class-text-color);
 }
 
-.manus-badge-class-criteria {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+.ob-badge-class-card__criteria {
+  font-size: var(--ob-font-size-xs);
   color: var(--badge-class-text-color);
   font-style: italic;
 }
 
-.manus-badge-class-criteria-label {
-  font-weight: var(--ob-font-weight-medium, 500);
+.ob-badge-class-card__criteria-label {
+  font-weight: var(--ob-font-weight-medium);
   font-style: normal;
 }
 
-.manus-badge-class-tags {
+.ob-badge-class-card__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ob-space-1, 4px);
-  margin-top: var(--ob-space-1, 4px);
+  gap: var(--ob-space-1);
+  margin-top: var(--ob-space-1);
 }
 
-.manus-badge-class-tag {
+.ob-badge-class-card__tag {
   display: inline-block;
-  padding: var(--ob-space-1, 2px) var(--ob-space-2, 8px);
+  padding: var(--ob-space-1) var(--ob-space-2);
   background-color: var(--badge-class-tag-bg);
   color: var(--badge-class-tag-color);
-  border-radius: var(--ob-border-radius-pill, 12px);
-  font-size: var(--ob-font-size-xs, 0.7rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  border-radius: var(--ob-border-radius-pill);
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-medium);
 }
 
-.manus-badge-class-tag-more {
-  background-color: var(--ob-gray-300, #cbd5e0);
+.ob-badge-class-card__tag--more {
+  background-color: var(--ob-gray-300);
 }
 
 /* Content density styles */
-.manus-badge-class-card.density-compact {
-  padding: var(--ob-space-2, 10px);
+.ob-badge-class-card.ob-badge-class-card--density-compact {
+  padding: var(--ob-space-2);
   max-width: 240px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-img {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__img {
   max-height: 80px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-img-fallback {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__img-fallback {
   width: 60px;
   height: 60px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-icon {
-  font-size: 1.75rem;
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__icon {
+  font-size: var(--ob-font-size-2xl);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-name {
-  font-size: var(--ob-font-size-md, 0.975rem);
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__name {
+  font-size: var(--ob-font-size-md);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-description {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__description {
+  font-size: var(--ob-font-size-xs);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-content {
-  gap: var(--ob-space-1, 4px);
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__content {
+  gap: var(--ob-space-1);
 }
 
-.manus-badge-class-card.density-normal {
-  padding: var(--ob-space-4, 16px);
+.ob-badge-class-card.ob-badge-class-card--density-normal {
+  padding: var(--ob-space-4);
 }
 
-.manus-badge-class-card.density-spacious {
-  padding: var(--ob-space-6, 24px);
+.ob-badge-class-card.ob-badge-class-card--density-spacious {
+  padding: var(--ob-space-6);
   max-width: 350px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-img {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__img {
   max-height: 150px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-img-fallback {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__img-fallback {
   width: 100px;
   height: 100px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-icon {
-  font-size: 3rem;
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__icon {
+  font-size: var(--ob-font-size-3xl);
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-name {
-  font-size: var(--ob-font-size-xl, 1.25rem);
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__name {
+  font-size: var(--ob-font-size-xl);
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-content {
-  gap: var(--ob-space-2, 8px);
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__content {
+  gap: var(--ob-space-2);
 }
 
 /* Multi-achievement indicator */
-.manus-badge-class-multi {
-  margin-top: var(--ob-space-1, 4px);
+.ob-badge-class-card__multi {
+  margin-top: var(--ob-space-1);
 }
 
-.manus-badge-class-multi-badge {
+.ob-badge-class-card__multi-badge {
   display: inline-block;
-  padding: var(--ob-space-1, 2px) var(--ob-space-2, 8px);
-  background-color: var(--ob-gray-100, #edf2f7);
-  color: var(--ob-text-secondary, #4a5568);
-  border-radius: var(--ob-border-radius-pill, 12px);
-  font-size: var(--ob-font-size-xs, 0.7rem);
-  font-weight: var(--ob-font-weight-medium, 500);
-  border: 1px dashed var(--ob-border-color-muted, #a0aec0);
+  padding: var(--ob-space-1) var(--ob-space-2);
+  background-color: var(--ob-gray-100);
+  color: var(--ob-text-secondary);
+  border-radius: var(--ob-border-radius-pill);
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-medium);
+  border: 1px dashed var(--ob-border-color-muted);
 }
 
 /* Accessibility focus styles */
-.manus-badge-class-card:focus-visible,
-.manus-badge-class-card.is-interactive:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 3px);
-  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
+.ob-badge-class-card:focus-visible,
+.ob-badge-class-card.is-interactive:focus-visible {
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 </style>

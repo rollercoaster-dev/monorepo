@@ -129,10 +129,6 @@ const handleBadgeIssued = (assertion: OB2.Assertion) => {
   emit("badge-issued", assertion);
 };
 
-const handleFormReset = () => {
-  // Any additional reset logic can go here
-};
-
 const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   emit("badge-click", badge);
 };
@@ -147,31 +143,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="manus-issuer-dashboard">
+  <div class="ob-issuer-dashboard">
     <!-- Dashboard Header -->
-    <header class="manus-dashboard-header">
-      <h1 class="manus-dashboard-title">Badge Issuer Dashboard</h1>
+    <header class="ob-issuer-dashboard__header">
+      <h1 class="ob-issuer-dashboard__title">Badge Issuer Dashboard</h1>
 
-      <div class="manus-dashboard-tabs">
+      <div class="ob-issuer-dashboard__tabs" role="tablist">
         <button
           id="issue-tab"
-          class="manus-tab-button"
+          class="ob-issuer-dashboard__tab-button"
           :class="{ active: activeTab === 'issue' }"
           aria-controls="issue-tab-panel"
           :aria-selected="activeTab === 'issue'"
           role="tab"
           @click="setActiveTab('issue')"
+          @keydown.right.prevent="setActiveTab('badges')"
         >
           Issue New Badge
         </button>
         <button
           id="badges-tab"
-          class="manus-tab-button"
+          class="ob-issuer-dashboard__tab-button"
           :class="{ active: activeTab === 'badges' }"
           aria-controls="badges-tab-panel"
           :aria-selected="activeTab === 'badges'"
           role="tab"
           @click="setActiveTab('badges')"
+          @keydown.left.prevent="setActiveTab('issue')"
         >
           My Badges
         </button>
@@ -179,12 +177,12 @@ onMounted(() => {
     </header>
 
     <!-- Tab Panels -->
-    <div class="manus-dashboard-content">
+    <div class="ob-issuer-dashboard__content">
       <!-- Issue New Badge Tab -->
       <div
         v-show="activeTab === 'issue'"
         id="issue-tab-panel"
-        class="manus-tab-panel"
+        class="ob-issuer-dashboard__tab-panel"
         role="tabpanel"
         aria-labelledby="issue-tab"
         tabindex="0"
@@ -192,7 +190,6 @@ onMounted(() => {
         <BadgeIssuerForm
           :initial-badge-class="initialBadgeClass"
           @badge-issued="handleBadgeIssued"
-          @reset="handleFormReset"
         />
       </div>
 
@@ -200,29 +197,33 @@ onMounted(() => {
       <div
         v-show="activeTab === 'badges'"
         id="badges-tab-panel"
-        class="manus-tab-panel"
+        class="ob-issuer-dashboard__tab-panel"
         role="tabpanel"
         aria-labelledby="badges-tab"
         tabindex="0"
       >
-        <div class="manus-dashboard-controls">
-          <div class="manus-dashboard-filter">
-            <label for="badge-filter" class="manus-filter-label">Filter:</label>
+        <div class="ob-issuer-dashboard__controls">
+          <div class="ob-issuer-dashboard__filter">
+            <label for="badge-filter" class="ob-issuer-dashboard__filter-label"
+              >Filter:</label
+            >
             <input
               id="badge-filter"
               v-model="filterText"
               type="text"
-              class="manus-filter-input"
+              class="ob-issuer-dashboard__filter-input"
               placeholder="Search badges..."
             />
           </div>
 
-          <div class="manus-dashboard-sort">
-            <label for="badge-sort" class="manus-sort-label">Sort by:</label>
+          <div class="ob-issuer-dashboard__sort">
+            <label for="badge-sort" class="ob-issuer-dashboard__sort-label"
+              >Sort by:</label
+            >
             <select
               id="badge-sort"
               v-model="sortOption"
-              class="manus-sort-select"
+              class="ob-issuer-dashboard__sort-select"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -234,7 +235,7 @@ onMounted(() => {
 
         <div
           v-if="loading"
-          class="manus-dashboard-loading"
+          class="ob-issuer-dashboard__loading"
           role="status"
           aria-live="polite"
         >
@@ -243,13 +244,13 @@ onMounted(() => {
 
         <div
           v-else-if="filteredBadges.length === 0"
-          class="manus-dashboard-empty"
+          class="ob-issuer-dashboard__empty"
           role="status"
         >
           <p v-if="filterText">No badges match your search.</p>
           <p v-else>You haven't issued any badges yet.</p>
           <button
-            class="manus-button manus-button-primary"
+            class="ob-issuer-dashboard__button ob-issuer-dashboard__button--primary"
             @click="setActiveTab('issue')"
           >
             Issue Your First Badge
@@ -270,188 +271,182 @@ onMounted(() => {
 </template>
 
 <style>
-.manus-issuer-dashboard {
+.ob-issuer-dashboard {
   --dashboard-border-color: var(
     --ob-dashboard-border-color,
-    var(--ob-border-color, #e2e8f0)
+    var(--ob-border-color)
   );
-  --dashboard-background: var(
-    --ob-dashboard-background,
-    var(--ob-bg-primary, #ffffff)
-  );
+  --dashboard-background: var(--ob-dashboard-background, var(--ob-bg-primary));
   --dashboard-text-color: var(
     --ob-dashboard-text-color,
-    var(--ob-text-primary, #1a202c)
+    var(--ob-text-primary)
   );
   --dashboard-secondary-color: var(
     --ob-dashboard-secondary-color,
-    var(--ob-text-secondary, #4a5568)
+    var(--ob-text-secondary)
   );
-  --dashboard-accent-color: var(
-    --ob-dashboard-accent-color,
-    var(--ob-primary, #3182ce)
-  );
+  --dashboard-accent-color: var(--ob-dashboard-accent-color, var(--ob-primary));
   --dashboard-tab-active-border: var(
     --ob-dashboard-tab-active-border,
-    var(--ob-primary, #3182ce)
+    var(--ob-primary)
   );
   --dashboard-tab-hover-bg: var(
     --ob-dashboard-tab-hover-bg,
-    var(--ob-bg-secondary, #f7fafc)
+    var(--ob-bg-secondary)
   );
   --dashboard-empty-color: var(
     --ob-dashboard-empty-color,
-    var(--ob-text-secondary, #718096)
+    var(--ob-text-secondary)
   );
 
   display: flex;
   flex-direction: column;
   background-color: var(--dashboard-background);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   overflow: hidden;
   color: var(--dashboard-text-color);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
 }
 
-.manus-dashboard-header {
-  padding: var(--ob-space-6, 24px);
+.ob-issuer-dashboard__header {
+  padding: var(--ob-space-6);
   border-bottom: 1px solid var(--dashboard-border-color);
 }
 
-.manus-dashboard-title {
-  margin: 0 0 var(--ob-space-4, 16px);
-  font-size: var(--ob-font-size-2xl, 1.5rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+.ob-issuer-dashboard__title {
+  margin: 0 0 var(--ob-space-4);
+  font-size: var(--ob-font-size-2xl);
+  font-weight: var(--ob-font-weight-semibold);
 }
 
-.manus-dashboard-tabs {
+.ob-issuer-dashboard__tabs {
   display: flex;
-  gap: var(--ob-space-1, 2px);
+  gap: var(--ob-space-1);
   border-bottom: 1px solid var(--dashboard-border-color);
-  margin: 0 calc(var(--ob-space-6, 24px) * -1) -1px;
+  margin: 0 calc(var(--ob-space-6) * -1) -1px;
 }
 
-.manus-tab-button {
-  padding: var(--ob-space-3, 12px) var(--ob-space-6, 24px);
+.ob-issuer-dashboard__tab-button {
+  padding: var(--ob-space-3) var(--ob-space-6);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
   cursor: pointer;
-  transition: all var(--ob-transition-fast, 0.2s) ease;
+  transition: all var(--ob-transition-fast) ease;
 }
 
-.manus-tab-button:hover {
+.ob-issuer-dashboard__tab-button:hover {
   background-color: var(--dashboard-tab-hover-bg);
 }
 
-.manus-tab-button.active {
+.ob-issuer-dashboard__tab-button.active {
   color: var(--dashboard-accent-color);
   border-bottom-color: var(--dashboard-tab-active-border);
 }
 
-.manus-dashboard-content {
-  padding: var(--ob-space-6, 24px);
+.ob-issuer-dashboard__content {
+  padding: var(--ob-space-6);
 }
 
-.manus-tab-panel {
+.ob-issuer-dashboard__tab-panel {
   outline: none;
 }
 
-.manus-tab-panel:focus {
-  box-shadow: 0 0 0 2px var(--dashboard-accent-color);
-  border-radius: var(--ob-border-radius-sm, 4px);
+.ob-issuer-dashboard__tab-panel:focus {
+  box-shadow: var(--ob-shadow-focus);
+  border-radius: var(--ob-border-radius-sm);
 }
 
-.manus-dashboard-controls {
+.ob-issuer-dashboard__controls {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ob-space-4, 16px);
-  margin-bottom: var(--ob-space-6, 24px);
+  gap: var(--ob-space-4);
+  margin-bottom: var(--ob-space-6);
 }
 
-.manus-dashboard-filter,
-.manus-dashboard-sort {
+.ob-issuer-dashboard__filter,
+.ob-issuer-dashboard__sort {
   display: flex;
   align-items: center;
-  gap: var(--ob-space-2, 8px);
+  gap: var(--ob-space-2);
 }
 
-.manus-filter-label,
-.manus-sort-label {
-  font-weight: var(--ob-font-weight-medium, 500);
+.ob-issuer-dashboard__filter-label,
+.ob-issuer-dashboard__sort-label {
+  font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
 }
 
-.manus-filter-input,
-.manus-sort-select {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+.ob-issuer-dashboard__filter-input,
+.ob-issuer-dashboard__sort-select {
+  padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-sm);
   color: var(--dashboard-text-color);
   background: var(--dashboard-background);
 }
 
-.manus-filter-input {
-  width: 200px;
+.ob-issuer-dashboard__filter-input {
+  width: var(--ob-input-width-md, 12.5rem);
 }
 
-.manus-dashboard-loading,
-.manus-dashboard-empty {
-  padding: var(--ob-space-12, 48px) var(--ob-space-6, 24px);
+.ob-issuer-dashboard__loading,
+.ob-issuer-dashboard__empty {
+  padding: var(--ob-space-12) var(--ob-space-6);
   text-align: center;
   color: var(--dashboard-empty-color);
 }
 
-.manus-dashboard-empty button {
-  margin-top: var(--ob-space-4, 16px);
+.ob-issuer-dashboard__empty button {
+  margin-top: var(--ob-space-4);
 }
 
-.manus-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+.ob-issuer-dashboard__button {
+  padding: var(--ob-space-2) var(--ob-space-4);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-button-primary {
+.ob-issuer-dashboard__button--primary {
   background-color: var(--dashboard-accent-color);
-  color: white;
+  color: var(--ob-text-inverse);
 }
 
-.manus-button-primary:hover {
-  background-color: var(--ob-primary-dark, #2c5282);
+.ob-issuer-dashboard__button--primary:hover {
+  background-color: var(--ob-primary-dark);
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .manus-dashboard-header,
-  .manus-dashboard-content {
-    padding: var(--ob-space-4, 16px);
+  .ob-issuer-dashboard__header,
+  .ob-issuer-dashboard__content {
+    padding: var(--ob-space-4);
   }
 
-  .manus-dashboard-tabs {
-    margin: 0 calc(var(--ob-space-4, 16px) * -1) -1px;
+  .ob-issuer-dashboard__tabs {
+    margin: 0 calc(var(--ob-space-4) * -1) -1px;
   }
 
-  .manus-tab-button {
-    padding: var(--ob-space-2, 10px) var(--ob-space-4, 16px);
-    font-size: var(--ob-font-size-sm, 0.875rem);
+  .ob-issuer-dashboard__tab-button {
+    padding: var(--ob-space-2) var(--ob-space-4);
+    font-size: var(--ob-font-size-sm);
   }
 
-  .manus-dashboard-controls {
+  .ob-issuer-dashboard__controls {
     flex-direction: column;
-    gap: var(--ob-space-3, 12px);
+    gap: var(--ob-space-3);
   }
 
-  .manus-filter-input {
+  .ob-issuer-dashboard__filter-input {
     width: 100%;
   }
 }

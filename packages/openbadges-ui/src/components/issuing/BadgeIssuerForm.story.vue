@@ -53,7 +53,9 @@ function onReset() {
     :layout="{ type: 'single', iframe: true }"
   >
     <Variant title="Empty">
-      <div style="display: flex; gap: 1rem; align-items: flex-start">
+      <div
+        style="display: flex; gap: var(--ob-space-4); align-items: flex-start"
+      >
         <BadgeIssuerForm
           :initial-badge-class="state.initialBadgeClass"
           :initial-recipient-email="state.initialRecipientEmail"
@@ -64,9 +66,9 @@ function onReset() {
         <div
           style="
             flex: 1;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
+            border: 1px solid var(--ob-border-color);
+            border-radius: var(--ob-border-radius-lg);
+            padding: var(--ob-space-3);
           "
         >
           <h4 style="margin-top: 0">Live Preview</h4>
@@ -209,9 +211,9 @@ AccessibilityService.applyTheme('high-contrast');
 
 <style>
 .story-description {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background-color: #f0f0f0;
-  border-radius: 4px;
+  margin-bottom: var(--ob-space-4);
+  padding: var(--ob-space-2);
+  background-color: var(--ob-bg-secondary);
+  border-radius: var(--ob-border-radius-sm);
 }
 </style>

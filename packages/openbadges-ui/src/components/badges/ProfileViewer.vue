@@ -57,48 +57,52 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 </script>
 
 <template>
-  <div class="manus-profile-viewer">
+  <div class="ob-profile-viewer">
     <!-- Profile Header -->
-    <section class="manus-profile-header" aria-labelledby="profile-title">
-      <div class="manus-profile-avatar">
+    <section class="ob-profile-viewer__header" aria-labelledby="profile-title">
+      <div class="ob-profile-viewer__avatar">
         <img
           v-if="profile.image"
           :src="profile.image"
           :alt="`${profile.name}'s avatar`"
-          class="manus-profile-image"
+          class="ob-profile-viewer__image"
         />
-        <div v-else class="manus-profile-image-placeholder" aria-hidden="true">
+        <div
+          v-else
+          class="ob-profile-viewer__image-placeholder"
+          aria-hidden="true"
+        >
           {{ getInitials(profile.name) }}
         </div>
       </div>
 
-      <div class="manus-profile-info">
-        <h2 id="profile-title" class="manus-profile-name">
+      <div class="ob-profile-viewer__info">
+        <h2 id="profile-title" class="ob-profile-viewer__name">
           {{ profile.name }}
         </h2>
 
-        <p v-if="profile.description" class="manus-profile-description">
+        <p v-if="profile.description" class="ob-profile-viewer__description">
           {{ profile.description }}
         </p>
 
-        <div class="manus-profile-details">
-          <div v-if="profile.email" class="manus-profile-detail">
-            <span class="manus-profile-detail-label">Email:</span>
+        <div class="ob-profile-viewer__details">
+          <div v-if="profile.email" class="ob-profile-viewer__detail">
+            <span class="ob-profile-viewer__detail-label">Email:</span>
             <a
               :href="`mailto:${profile.email}`"
-              class="manus-profile-detail-value"
+              class="ob-profile-viewer__detail-value"
             >
               {{ profile.email }}
             </a>
           </div>
 
-          <div v-if="profile.url" class="manus-profile-detail">
-            <span class="manus-profile-detail-label">Website:</span>
+          <div v-if="profile.url" class="ob-profile-viewer__detail">
+            <span class="ob-profile-viewer__detail-label">Website:</span>
             <a
               :href="profile.url"
               target="_blank"
               rel="noopener noreferrer"
-              class="manus-profile-detail-value"
+              class="ob-profile-viewer__detail-value"
             >
               {{ formatUrl(profile.url) }}
               <span class="visually-hidden">(opens in a new tab)</span>
@@ -109,14 +113,14 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
     </section>
 
     <!-- Badges Section -->
-    <section class="manus-profile-badges" aria-labelledby="badges-title">
-      <h3 id="badges-title" class="manus-section-title">
+    <section class="ob-profile-viewer__badges" aria-labelledby="badges-title">
+      <h3 id="badges-title" class="ob-profile-viewer__section-title">
         {{ badgesSectionTitle }}
       </h3>
 
       <div
         v-if="loading"
-        class="manus-profile-loading"
+        class="ob-profile-viewer__loading"
         role="status"
         aria-live="polite"
       >
@@ -141,15 +145,15 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 </template>
 
 <style>
-.manus-profile-viewer {
-  --profile-padding: var(--ob-profile-padding, var(--ob-space-6, 24px));
-  --profile-gap: var(--ob-profile-gap, var(--ob-space-8, 32px));
-  --profile-border-color: var(--ob-border-color, #e2e8f0);
-  --profile-background: var(--ob-bg-primary, #ffffff);
-  --profile-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
-  --profile-title-color: var(--ob-text-primary, #1a202c);
-  --profile-text-color: var(--ob-text-secondary, #4a5568);
-  --profile-link-color: var(--ob-primary, #3182ce);
+.ob-profile-viewer {
+  --profile-padding: var(--ob-profile-padding, var(--ob-space-6));
+  --profile-gap: var(--ob-profile-gap, var(--ob-space-8));
+  --profile-border-color: var(--ob-border-color);
+  --profile-background: var(--ob-bg-primary);
+  --profile-shadow: var(--ob-shadow-sm);
+  --profile-title-color: var(--ob-text-primary);
+  --profile-text-color: var(--ob-text-secondary);
+  --profile-link-color: var(--ob-primary);
 
   display: flex;
   flex-direction: column;
@@ -157,94 +161,94 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   padding: var(--profile-padding);
   background-color: var(--profile-background);
   border: 1px solid var(--profile-border-color);
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   box-shadow: var(--profile-shadow);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
   color: var(--profile-text-color);
 }
 
-.manus-profile-header {
+.ob-profile-viewer__header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--ob-space-4, 16px);
+  gap: var(--ob-space-4);
   text-align: center;
 }
 
-.manus-profile-avatar {
+.ob-profile-viewer__avatar {
   width: 100px;
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
 }
 
-.manus-profile-image {
+.ob-profile-viewer__image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.manus-profile-image-placeholder {
+.ob-profile-viewer__image-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ob-gray-700, #4a5568);
-  color: var(--ob-text-inverse, #ffffff);
-  font-size: var(--ob-font-size-2xl, 2rem);
-  font-weight: var(--ob-font-weight-bold, 700);
+  background-color: var(--ob-gray-700);
+  color: var(--ob-text-inverse);
+  font-size: var(--ob-font-size-2xl);
+  font-weight: var(--ob-font-weight-bold);
 }
 
-.manus-profile-name {
+.ob-profile-viewer__name {
   margin: 0;
-  font-size: var(--ob-font-size-2xl, 1.5rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  font-size: var(--ob-font-size-2xl);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--profile-title-color);
 }
 
-.manus-profile-description {
-  margin: var(--ob-space-2, 8px) 0 0;
-  font-size: var(--ob-font-size-sm, 0.875rem);
+.ob-profile-viewer__description {
+  margin: var(--ob-space-2) 0 0;
+  font-size: var(--ob-font-size-sm);
   color: var(--profile-text-color);
-  line-height: var(--ob-line-height-normal, 1.5);
+  line-height: var(--ob-line-height-normal);
 }
 
-.manus-profile-details {
-  margin-top: var(--ob-space-3, 12px);
+.ob-profile-viewer__details {
+  margin-top: var(--ob-space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-1, 4px);
+  gap: var(--ob-space-1);
 }
 
-.manus-profile-detail {
-  font-size: var(--ob-font-size-sm, 0.875rem);
+.ob-profile-viewer__detail {
+  font-size: var(--ob-font-size-sm);
   color: var(--profile-text-color);
 }
 
-.manus-profile-detail-label {
-  font-weight: var(--ob-font-weight-medium, 500);
-  margin-right: var(--ob-space-1, 4px);
+.ob-profile-viewer__detail-label {
+  font-weight: var(--ob-font-weight-medium);
+  margin-right: var(--ob-space-1);
 }
 
-.manus-profile-detail-value {
+.ob-profile-viewer__detail-value {
   color: var(--profile-link-color);
   text-decoration: none;
 }
 
-.manus-profile-detail-value:hover {
+.ob-profile-viewer__detail-value:hover {
   text-decoration: underline;
 }
 
-.manus-section-title {
-  margin: 0 0 var(--ob-space-4, 16px);
-  font-size: var(--ob-font-size-xl, 1.25rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+.ob-profile-viewer__section-title {
+  margin: 0 0 var(--ob-space-4);
+  font-size: var(--ob-font-size-xl);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--profile-title-color);
 }
 
-.manus-profile-loading {
-  padding: var(--ob-space-6, 24px);
+.ob-profile-viewer__loading {
+  padding: var(--ob-space-6);
   text-align: center;
   color: var(--profile-text-color);
 }
@@ -263,12 +267,12 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 
 /* Responsive adjustments */
 @media (min-width: 640px) {
-  .manus-profile-header {
+  .ob-profile-viewer__header {
     flex-direction: row;
     text-align: left;
   }
 
-  .manus-profile-info {
+  .ob-profile-viewer__info {
     flex: 1;
   }
 }

@@ -256,42 +256,42 @@ const handleSpacingChange = (event: Event) => {
 .ob-font-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-4, 1rem);
-  padding: var(--ob-space-4, 1rem);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-md, 4px);
-  background-color: var(--ob-bg-secondary, #f8f9fa);
+  gap: var(--ob-space-4);
+  padding: var(--ob-space-4);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-md);
+  background-color: var(--ob-bg-secondary);
 }
 
 .ob-font-selector-group {
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-2, 0.5rem);
+  gap: var(--ob-space-2);
 }
 
 .ob-font-selector-label {
-  font-weight: var(--ob-font-weight-medium, 500);
-  color: var(--ob-text-primary, #1a202c);
+  font-weight: var(--ob-font-weight-medium);
+  color: var(--ob-text-primary);
 }
 
 .ob-font-selector-select {
-  padding: var(--ob-space-2, 0.5rem);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-md, 4px);
-  background-color: var(--ob-bg-primary, #ffffff);
+  padding: var(--ob-space-2);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-md);
+  background-color: var(--ob-bg-primary);
   min-height: 44px; /* Minimum touch target size */
 }
 
 .ob-font-selector-description {
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  color: var(--ob-text-secondary, #4a5568);
+  font-size: var(--ob-font-size-sm);
+  color: var(--ob-text-secondary);
   margin: 0;
 }
 
 .ob-font-selector-checkbox-group {
   display: flex;
   align-items: center;
-  gap: var(--ob-space-2, 0.5rem);
+  gap: var(--ob-space-2);
 }
 
 .ob-font-selector-checkbox {
@@ -300,19 +300,19 @@ const handleSpacingChange = (event: Event) => {
 }
 
 .ob-font-selector-checkbox-label {
-  font-weight: var(--ob-font-weight-medium, 500);
-  color: var(--ob-text-primary, #1a202c);
+  font-weight: var(--ob-font-weight-medium);
+  color: var(--ob-text-primary);
 }
 
 .ob-font-selector-preview {
-  margin-top: var(--ob-space-4, 1rem);
-  padding: var(--ob-space-4, 1rem);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-md, 4px);
-  background-color: var(--ob-bg-primary, #ffffff);
+  margin-top: var(--ob-space-4);
+  padding: var(--ob-space-4);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-md);
+  background-color: var(--ob-bg-primary);
 }
 
 .ob-font-selector-preview p {
-  margin: var(--ob-space-2, 0.5rem) 0;
+  margin: var(--ob-space-2) 0;
 }
 </style>

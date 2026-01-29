@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import type { OB2, OB3 } from "@/types";
+import { getLocalizedString } from "@utils/localization";
 
 interface Props {
   issuer: OB2.Profile | OB3.Profile;
@@ -21,43 +22,18 @@ const emit = defineEmits<{
   (e: "click", issuer: OB2.Profile | OB3.Profile): void;
 }>();
 
-/**
- * Get a localized string from a value that may be a plain string or a JSON-LD language map.
- * OB3 supports multi-language fields as `{ "en": "English", "es": "Spanish" }`.
- * @param value - A string or language map object
- * @param fallback - Default value if extraction fails
- * @returns The extracted string value
- */
-const getLocalizedString = (
-  value: string | Record<string, string> | undefined,
-  fallback = "",
-): string => {
-  if (!value) return fallback;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") {
-    // Try common language codes in order of preference
-    const preferredLangs = ["en", "en-US", "en-GB", Object.keys(value)[0]];
-    for (const lang of preferredLangs) {
-      if (lang && value[lang]) return value[lang];
-    }
-  }
-  return fallback;
-};
-
 // Normalize issuer data between OB2 and OB3 formats
 const normalizedIssuer = computed(() => {
   const issuer = props.issuer;
 
   // Get name - required in both OB2 and OB3, may be localized in OB3
-  const name = getLocalizedString(
-    issuer.name as string | Record<string, string>,
-    "Unknown Issuer",
-  );
+  const name =
+    getLocalizedString(issuer.name as string | Record<string, string>) ||
+    "Unknown Issuer";
 
   // Get description - may be localized in OB3
   const description = getLocalizedString(
     issuer.description as string | Record<string, string>,
-    "",
   );
 
   // Get URL - OB2 uses url, OB3 also uses url
@@ -101,18 +77,9 @@ const handleClick = () => {
   }
 };
 
-// Focus state for accessibility
-const isFocused = ref(false);
-const onFocus = () => {
-  isFocused.value = true;
-};
-const onBlur = () => {
-  isFocused.value = false;
-};
-
 // Computed classes for content density
 const densityClass = computed(() => {
-  return `density-${props.density}`;
+  return `ob-issuer-card--density-${props.density}`;
 });
 
 // Truncate description for display
@@ -127,45 +94,46 @@ const truncatedDescription = computed(() => {
 
 <template>
   <div
-    class="manus-issuer-card"
+    class="ob-issuer-card"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
-    role="article"
+    :role="interactive ? 'button' : 'article'"
     :aria-label="`Issuer: ${normalizedIssuer.name}`"
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
-    @focus="onFocus"
-    @blur="onBlur"
   >
-    <div class="manus-issuer-image">
+    <div class="ob-issuer-card__image">
       <img
         v-if="normalizedIssuer.image"
         :src="normalizedIssuer.image"
         :alt="generateAltText(normalizedIssuer.name)"
-        class="manus-issuer-img"
+        class="ob-issuer-card__img"
       />
       <div
         v-else
-        class="manus-issuer-img-fallback"
+        class="ob-issuer-card__img-fallback"
         :aria-label="generateAltText(normalizedIssuer.name)"
       >
-        <span class="manus-issuer-initials">
+        <span class="ob-issuer-card__initials">
           {{ normalizedIssuer.name.charAt(0).toUpperCase() }}
         </span>
       </div>
     </div>
-    <div class="manus-issuer-content">
-      <h3 class="manus-issuer-name">
+    <div class="ob-issuer-card__content">
+      <h3 class="ob-issuer-card__name">
         {{ normalizedIssuer.name }}
       </h3>
       <p
         v-if="showDescription && truncatedDescription"
-        class="manus-issuer-description"
+        class="ob-issuer-card__description"
       >
         {{ truncatedDescription }}
       </p>
-      <div v-if="showContact && normalizedIssuer.url" class="manus-issuer-url">
+      <div
+        v-if="showContact && normalizedIssuer.url"
+        class="ob-issuer-card__url"
+      >
         <a
           :href="normalizedIssuer.url"
           target="_blank"
@@ -177,7 +145,7 @@ const truncatedDescription = computed(() => {
       </div>
       <div
         v-if="showContact && normalizedIssuer.email"
-        class="manus-issuer-email"
+        class="ob-issuer-card__email"
       >
         <a :href="`mailto:${normalizedIssuer.email}`" @click.stop>
           {{ normalizedIssuer.email }}
@@ -189,19 +157,19 @@ const truncatedDescription = computed(() => {
 </template>
 
 <style>
-.manus-issuer-card {
-  --issuer-border-color: var(--ob-border-color, #e2e8f0);
-  --issuer-border-radius: var(--ob-border-radius-lg, 8px);
-  --issuer-padding: var(--ob-space-4, 16px);
-  --issuer-background: var(--ob-bg-primary, #ffffff);
-  --issuer-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
-  --issuer-name-color: var(--ob-text-primary, #1a202c);
-  --issuer-text-color: var(--ob-text-secondary, #4a5568);
-  --issuer-link-color: var(--ob-primary, #3182ce);
-  --issuer-hover-shadow: var(--ob-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.15));
-  --issuer-focus-outline-color: var(--ob-primary, #3182ce);
-  --issuer-fallback-bg: var(--ob-gray-200, #e2e8f0);
-  --issuer-fallback-color: var(--ob-text-secondary, #4a5568);
+.ob-issuer-card {
+  --issuer-border-color: var(--ob-border-color);
+  --issuer-border-radius: var(--ob-border-radius-lg);
+  --issuer-padding: var(--ob-space-4);
+  --issuer-background: var(--ob-bg-primary);
+  --issuer-shadow: var(--ob-shadow-sm);
+  --issuer-name-color: var(--ob-text-primary);
+  --issuer-text-color: var(--ob-text-secondary);
+  --issuer-link-color: var(--ob-primary);
+  --issuer-hover-shadow: var(--ob-shadow-md);
+  --issuer-focus-outline-color: var(--ob-primary);
+  --issuer-fallback-bg: var(--ob-gray-200);
+  --issuer-fallback-color: var(--ob-text-secondary);
 
   display: flex;
   flex-direction: row;
@@ -211,38 +179,38 @@ const truncatedDescription = computed(() => {
   padding: var(--issuer-padding);
   background-color: var(--issuer-background);
   box-shadow: var(--issuer-shadow);
-  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
+  transition: box-shadow var(--ob-transition-fast) ease;
   max-width: 400px;
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
   color: var(--issuer-text-color);
 }
 
-.manus-issuer-card.is-interactive {
+.ob-issuer-card.is-interactive {
   cursor: pointer;
 }
 
-.manus-issuer-card.is-interactive:hover {
+.ob-issuer-card.is-interactive:hover {
   box-shadow: var(--issuer-hover-shadow);
 }
 
-.manus-issuer-card.is-interactive:focus {
+.ob-issuer-card.is-interactive:focus {
   outline: 2px solid var(--issuer-focus-outline-color);
-  outline-offset: var(--ob-space-1, 2px);
+  outline-offset: var(--ob-space-1);
 }
 
-.manus-issuer-image {
+.ob-issuer-card__image {
   flex: 0 0 64px;
-  margin-right: var(--ob-space-4, 16px);
+  margin-right: var(--ob-space-4);
 }
 
-.manus-issuer-img {
+.ob-issuer-card__img {
   width: 64px;
   height: 64px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.manus-issuer-img-fallback {
+.ob-issuer-card__img-fallback {
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -252,127 +220,127 @@ const truncatedDescription = computed(() => {
   justify-content: center;
 }
 
-.manus-issuer-initials {
-  font-size: var(--ob-font-size-xl, 1.5rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+.ob-issuer-card__initials {
+  font-size: var(--ob-font-size-xl);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--issuer-fallback-color);
 }
 
-.manus-issuer-content {
+.ob-issuer-card__content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-1, 4px);
+  gap: var(--ob-space-1);
   min-width: 0;
 }
 
-.manus-issuer-name {
+.ob-issuer-card__name {
   margin: 0;
-  font-size: var(--ob-font-size-lg, 1.125rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  font-size: var(--ob-font-size-lg);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--issuer-name-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.manus-issuer-description {
+.ob-issuer-card__description {
   margin: 0;
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-size: var(--ob-font-size-sm);
   color: var(--issuer-text-color);
-  line-height: var(--ob-line-height-normal, 1.4);
+  line-height: var(--ob-line-height-normal);
 }
 
-.manus-issuer-url,
-.manus-issuer-email {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+.ob-issuer-card__url,
+.ob-issuer-card__email {
+  font-size: var(--ob-font-size-xs);
 }
 
-.manus-issuer-url a,
-.manus-issuer-email a {
+.ob-issuer-card__url a,
+.ob-issuer-card__email a {
   color: var(--issuer-link-color);
   text-decoration: none;
   word-break: break-all;
 }
 
-.manus-issuer-url a:hover,
-.manus-issuer-email a:hover {
+.ob-issuer-card__url a:hover,
+.ob-issuer-card__email a:hover {
   text-decoration: underline;
 }
 
 /* Content density styles */
-.manus-issuer-card.density-compact {
-  padding: var(--ob-space-2, 8px);
+.ob-issuer-card.ob-issuer-card--density-compact {
+  padding: var(--ob-space-2);
   max-width: 300px;
 }
 
-.manus-issuer-card.density-compact .manus-issuer-image {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__image {
   flex: 0 0 40px;
-  margin-right: var(--ob-space-2, 8px);
+  margin-right: var(--ob-space-2);
 }
 
-.manus-issuer-card.density-compact .manus-issuer-img,
-.manus-issuer-card.density-compact .manus-issuer-img-fallback {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__img,
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__img-fallback {
   width: 40px;
   height: 40px;
 }
 
-.manus-issuer-card.density-compact .manus-issuer-initials {
-  font-size: var(--ob-font-size-md, 1rem);
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__initials {
+  font-size: var(--ob-font-size-md);
 }
 
-.manus-issuer-card.density-compact .manus-issuer-name {
-  font-size: var(--ob-font-size-md, 0.975rem);
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__name {
+  font-size: var(--ob-font-size-md);
 }
 
-.manus-issuer-card.density-compact .manus-issuer-description {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__description {
+  font-size: var(--ob-font-size-xs);
 }
 
-.manus-issuer-card.density-normal {
-  padding: var(--ob-space-4, 16px);
+.ob-issuer-card.ob-issuer-card--density-normal {
+  padding: var(--ob-space-4);
 }
 
-.manus-issuer-card.density-spacious {
-  padding: var(--ob-space-6, 24px);
+.ob-issuer-card.ob-issuer-card--density-spacious {
+  padding: var(--ob-space-6);
   max-width: 500px;
 }
 
-.manus-issuer-card.density-spacious .manus-issuer-image {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__image {
   flex: 0 0 80px;
-  margin-right: var(--ob-space-5, 20px);
+  margin-right: var(--ob-space-5);
 }
 
-.manus-issuer-card.density-spacious .manus-issuer-img,
-.manus-issuer-card.density-spacious .manus-issuer-img-fallback {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__img,
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__img-fallback {
   width: 80px;
   height: 80px;
 }
 
-.manus-issuer-card.density-spacious .manus-issuer-initials {
-  font-size: var(--ob-font-size-2xl, 2rem);
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__initials {
+  font-size: var(--ob-font-size-2xl);
 }
 
-.manus-issuer-card.density-spacious .manus-issuer-name {
-  font-size: var(--ob-font-size-xl, 1.25rem);
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__name {
+  font-size: var(--ob-font-size-xl);
 }
 
-.manus-issuer-card.density-spacious .manus-issuer-content {
-  gap: var(--ob-space-2, 8px);
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__content {
+  gap: var(--ob-space-2);
 }
 
 /* Accessibility focus styles */
-.manus-issuer-card:focus-visible,
-.manus-issuer-card.is-interactive:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 3px);
-  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
+.ob-issuer-card:focus-visible,
+.ob-issuer-card.is-interactive:focus-visible {
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
-.manus-issuer-url a:focus-visible,
-.manus-issuer-email a:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 2px);
-  background: var(--ob-warning-light, #fff3e0);
+.ob-issuer-card__url a:focus-visible,
+.ob-issuer-card__email a:focus-visible {
+  outline: 2px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  background: var(--ob-warning-light);
 }
 </style>

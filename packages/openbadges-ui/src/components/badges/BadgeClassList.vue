@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import type { OB2, OB3 } from "@/types";
 import BadgeClassCard from "@components/badges/BadgeClassCard.vue";
+import { getLocalizedString } from "@utils/localization";
 
 interface Props {
   badgeClasses: (OB2.BadgeClass | OB3.Achievement)[];
@@ -52,19 +53,13 @@ watch(
   },
 );
 
+// Guard against invalid pageSize values
+const effectivePageSize = computed(() => Math.max(1, props.pageSize));
+
 // Search and filter state
 const searchText = ref("");
 const issuerFilter = ref("");
 const tagFilter = ref("");
-
-// Helper to get string from MultiLanguageString
-const getLocalizedString = (
-  value: string | { [key: string]: string } | undefined,
-): string => {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  return value["en"] || Object.values(value)[0] || "";
-};
 
 // Normalize badge class for search/filtering
 const normalizeBadgeClass = (badge: OB2.BadgeClass | OB3.Achievement) => {
@@ -156,12 +151,12 @@ const filteredBadgeClasses = computed(() => {
 
 // Compute total pages
 const totalPages = computed(() => {
-  return Math.ceil(filteredBadgeClasses.value.length / props.pageSize);
+  return Math.ceil(filteredBadgeClasses.value.length / effectivePageSize.value);
 });
 
 // Watch for filteredBadgeClasses changes to clamp current page
 watch(
-  () => [filteredBadgeClasses.value.length, props.pageSize],
+  () => [filteredBadgeClasses.value.length, effectivePageSize.value],
   () => {
     if (!props.showPagination) return;
     const total = totalPages.value;
@@ -181,8 +176,8 @@ const paginatedBadgeClasses = computed(() => {
     return filteredBadgeClasses.value;
   }
 
-  const start = (internalCurrentPage.value - 1) * props.pageSize;
-  const end = start + props.pageSize;
+  const start = (internalCurrentPage.value - 1) * effectivePageSize.value;
+  const end = start + effectivePageSize.value;
   return filteredBadgeClasses.value.slice(start, end);
 });
 
@@ -227,21 +222,21 @@ const hasActiveFilters = computed(() => {
 
 <template>
   <div
-    class="manus-badge-class-list"
+    class="ob-badge-class-list"
     :class="[
-      `density-${internalDensity}`,
-      { 'grid-layout': layout === 'grid' },
+      `ob-badge-class-list--density-${internalDensity}`,
+      { 'ob-badge-class-list--grid-layout': layout === 'grid' },
     ]"
   >
     <!-- Search and filter controls -->
     <div
-      class="manus-badge-class-list-controls"
+      class="ob-badge-class-list__controls"
       role="region"
       aria-label="Badge list controls"
     >
       <input
         v-model="searchText"
-        class="manus-badge-class-list-search"
+        class="ob-badge-class-list__search"
         type="search"
         placeholder="Search badges..."
         aria-label="Search badges by name or description"
@@ -249,7 +244,7 @@ const hasActiveFilters = computed(() => {
       <select
         v-if="uniqueIssuers.length > 1"
         v-model="issuerFilter"
-        class="manus-badge-class-list-filter"
+        class="ob-badge-class-list__filter"
         aria-label="Filter by issuer"
       >
         <option value="">All Issuers</option>
@@ -260,7 +255,7 @@ const hasActiveFilters = computed(() => {
       <select
         v-if="uniqueTags.length > 0"
         v-model="tagFilter"
-        class="manus-badge-class-list-filter"
+        class="ob-badge-class-list__filter"
         aria-label="Filter by tag"
       >
         <option value="">All Tags</option>
@@ -270,7 +265,7 @@ const hasActiveFilters = computed(() => {
       </select>
       <select
         :value="internalDensity"
-        class="manus-badge-class-list-density-select"
+        class="ob-badge-class-list__density-select"
         aria-label="Display density"
         @change="handleDensityChange"
       >
@@ -280,7 +275,7 @@ const hasActiveFilters = computed(() => {
       </select>
       <button
         v-if="hasActiveFilters"
-        class="manus-badge-class-list-clear-btn"
+        class="ob-badge-class-list__clear-btn"
         type="button"
         @click="clearFilters"
       >
@@ -291,7 +286,7 @@ const hasActiveFilters = computed(() => {
     <!-- Loading state -->
     <div
       v-if="loading"
-      class="manus-badge-class-list-loading"
+      class="ob-badge-class-list__loading"
       role="status"
       aria-live="polite"
     >
@@ -301,7 +296,7 @@ const hasActiveFilters = computed(() => {
     <!-- Empty state -->
     <div
       v-else-if="normalizedBadgeClasses.length === 0"
-      class="manus-badge-class-list-empty"
+      class="ob-badge-class-list__empty"
       role="status"
     >
       <slot name="empty">
@@ -310,11 +305,11 @@ const hasActiveFilters = computed(() => {
     </div>
 
     <!-- Badge class list -->
-    <ul v-else class="manus-badge-class-list-items" :aria-label="ariaLabel">
+    <ul v-else class="ob-badge-class-list__items" :aria-label="ariaLabel">
       <li
         v-for="badge in normalizedBadgeClasses"
         :key="badge.id"
-        class="manus-badge-class-list-item"
+        class="ob-badge-class-list__item"
       >
         <slot
           name="badge-class"
@@ -334,12 +329,12 @@ const hasActiveFilters = computed(() => {
     <!-- Pagination -->
     <div
       v-if="showPagination && totalPages > 1"
-      class="manus-badge-class-list-pagination"
+      class="ob-badge-class-list__pagination"
       role="navigation"
       aria-label="Pagination"
     >
       <button
-        class="manus-pagination-button"
+        class="ob-badge-class-list__pagination-button"
         :disabled="internalCurrentPage === 1"
         aria-label="Previous page"
         @click="handlePageChange(internalCurrentPage - 1)"
@@ -347,12 +342,12 @@ const hasActiveFilters = computed(() => {
         Previous
       </button>
 
-      <span class="manus-pagination-info">
+      <span class="ob-badge-class-list__pagination-info">
         Page {{ internalCurrentPage }} of {{ totalPages }}
       </span>
 
       <button
-        class="manus-pagination-button"
+        class="ob-badge-class-list__pagination-button"
         :disabled="internalCurrentPage === totalPages"
         aria-label="Next page"
         @click="handlePageChange(internalCurrentPage + 1)"
@@ -364,161 +359,163 @@ const hasActiveFilters = computed(() => {
 </template>
 
 <style>
-.manus-badge-class-list {
-  --badge-class-list-gap: var(--ob-space-4, 16px);
-  --badge-class-list-empty-color: var(--ob-text-secondary, #718096);
-  --badge-class-list-pagination-gap: var(--ob-space-2, 8px);
-  --badge-class-list-button-bg: var(--ob-gray-200, #e2e8f0);
-  --badge-class-list-button-color: var(--ob-text-secondary, #4a5568);
-  --badge-class-list-button-hover-bg: var(--ob-gray-300, #cbd5e0);
-  --badge-class-list-button-disabled-bg: var(--ob-gray-100, #edf2f7);
-  --badge-class-list-button-disabled-color: var(--ob-text-disabled, #a0aec0);
+.ob-badge-class-list {
+  --ob-badge-class-list-gap: var(--ob-space-4);
+  --ob-badge-class-list-empty-color: var(--ob-text-secondary);
+  --ob-badge-class-list-pagination-gap: var(--ob-space-2);
+  --ob-badge-class-list-button-bg: var(--ob-gray-200);
+  --ob-badge-class-list-button-color: var(--ob-text-secondary);
+  --ob-badge-class-list-button-hover-bg: var(--ob-gray-300);
+  --ob-badge-class-list-button-disabled-bg: var(--ob-gray-100);
+  --ob-badge-class-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
-  gap: var(--badge-class-list-gap, var(--ob-space-6, 24px));
-  font-family: var(--ob-font-family, inherit);
-  color: var(--ob-text-primary, inherit);
+  gap: var(--ob-badge-class-list-gap);
+  font-family: var(--ob-font-family);
+  color: var(--ob-text-primary);
 }
 
-.manus-badge-class-list.density-compact {
-  --badge-class-list-gap: var(--ob-space-2, 8px);
+.ob-badge-class-list.ob-badge-class-list--density-compact {
+  --ob-badge-class-list-gap: var(--ob-space-2);
 }
 
-.manus-badge-class-list.density-normal {
-  --badge-class-list-gap: var(--ob-space-4, 16px);
+.ob-badge-class-list.ob-badge-class-list--density-normal {
+  --ob-badge-class-list-gap: var(--ob-space-4);
 }
 
-.manus-badge-class-list.density-spacious {
-  --badge-class-list-gap: var(--ob-space-6, 24px);
+.ob-badge-class-list.ob-badge-class-list--density-spacious {
+  --ob-badge-class-list-gap: var(--ob-space-6);
 }
 
-.manus-badge-class-list-controls {
+.ob-badge-class-list__controls {
   display: flex;
-  gap: var(--ob-space-3, 12px);
+  gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
 }
 
-.manus-badge-class-list-search,
-.manus-badge-class-list-filter,
-.manus-badge-class-list-density-select {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  color: var(--ob-text-primary, inherit);
-  background: var(--ob-bg-primary, #ffffff);
+.ob-badge-class-list__search,
+.ob-badge-class-list__filter,
+.ob-badge-class-list__density-select {
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  color: var(--ob-text-primary);
+  background: var(--ob-bg-primary);
 }
 
-.manus-badge-class-list-search {
+.ob-badge-class-list__search {
   flex: 1;
   min-width: 180px;
 }
 
-.manus-badge-class-list-clear-btn {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+.ob-badge-class-list__clear-btn {
+  padding: var(--ob-space-2) var(--ob-space-3);
   background-color: transparent;
-  border: 1px solid var(--ob-border-color, #e2e8f0);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  color: var(--ob-text-secondary, #4a5568);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-sm);
+  color: var(--ob-text-secondary);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-badge-class-list-clear-btn:hover {
-  background-color: var(--ob-bg-secondary, #f7fafc);
+.ob-badge-class-list__clear-btn:hover {
+  background-color: var(--ob-bg-secondary);
 }
 
-.manus-badge-class-list-loading,
-.manus-badge-class-list-empty {
-  padding: var(--ob-space-6, 24px);
+.ob-badge-class-list__loading,
+.ob-badge-class-list__empty {
+  padding: var(--ob-space-6);
   text-align: center;
-  color: var(--badge-class-list-empty-color);
+  color: var(--ob-badge-class-list-empty-color);
 }
 
-.manus-badge-class-list-items {
+.ob-badge-class-list__items {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--badge-class-list-gap);
+  gap: var(--ob-badge-class-list-gap);
 }
 
-.manus-badge-class-list.grid-layout .manus-badge-class-list-items {
+.ob-badge-class-list.ob-badge-class-list--grid-layout
+  .ob-badge-class-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--badge-class-list-gap);
+  gap: var(--ob-badge-class-list-gap);
   align-items: stretch;
 }
 
-.manus-badge-class-list-item {
+.ob-badge-class-list__item {
   display: flex;
 }
 
 /* Make cards stretch to fill grid cell */
-.manus-badge-class-list.grid-layout
-  .manus-badge-class-list-item
-  :deep(.manus-badge-class-card) {
+.ob-badge-class-list.ob-badge-class-list--grid-layout
+  .ob-badge-class-list__item
+  :deep(.ob-badge-class-card) {
   width: 100%;
   max-width: none;
 }
 
-.manus-badge-class-list-pagination {
+.ob-badge-class-list__pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--badge-class-list-pagination-gap);
-  margin-top: var(--ob-space-4, 16px);
+  gap: var(--ob-badge-class-list-pagination-gap);
+  margin-top: var(--ob-space-4);
   flex-wrap: wrap;
 }
 
-.manus-pagination-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
-  background-color: var(--badge-class-list-button-bg);
-  color: var(--badge-class-list-button-color);
+.ob-badge-class-list__pagination-button {
+  padding: var(--ob-space-2) var(--ob-space-4);
+  background-color: var(--ob-badge-class-list-button-bg);
+  color: var(--ob-badge-class-list-button-color);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
+  border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  font-weight: var(--ob-font-weight-medium, 500);
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-medium);
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-pagination-button:hover:not(:disabled) {
-  background-color: var(--badge-class-list-button-hover-bg);
+.ob-badge-class-list__pagination-button:hover:not(:disabled) {
+  background-color: var(--ob-badge-class-list-button-hover-bg);
 }
 
-.manus-pagination-button:disabled {
-  background-color: var(--badge-class-list-button-disabled-bg);
-  color: var(--badge-class-list-button-disabled-color);
+.ob-badge-class-list__pagination-button:disabled {
+  background-color: var(--ob-badge-class-list-button-disabled-bg);
+  color: var(--ob-badge-class-list-button-disabled-color);
   cursor: not-allowed;
 }
 
-.manus-pagination-button:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 2px);
+.ob-badge-class-list__pagination-button:focus-visible {
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
 }
 
-.manus-pagination-info {
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  color: var(--badge-class-list-button-color);
+.ob-badge-class-list__pagination-info {
+  font-size: var(--ob-font-size-sm);
+  color: var(--ob-badge-class-list-button-color);
 }
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .manus-badge-class-list.grid-layout .manus-badge-class-list-items {
+  .ob-badge-class-list.ob-badge-class-list--grid-layout
+    .ob-badge-class-list__items {
     grid-template-columns: 1fr;
   }
 
-  .manus-badge-class-list-controls {
+  .ob-badge-class-list__controls {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .manus-badge-class-list-search {
+  .ob-badge-class-list__search {
     width: 100%;
   }
 }

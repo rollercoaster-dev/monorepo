@@ -88,18 +88,10 @@ describe("ProfileViewer.vue", () => {
     });
 
     // Check if profile name is displayed
-    expect(wrapper.find(".manus-profile-name").text()).toBe("Jane Doe");
+    expect(wrapper.find(".ob-profile-viewer__name").text()).toBe("Jane Doe");
 
     // Check if profile description is displayed
-    expect(wrapper.find(".manus-profile-description").text()).toBe(
-      "Software developer and open badges enthusiast",
-    );
-
-    // Check if profile name is displayed correctly
-    expect(wrapper.find(".manus-profile-name").text()).toBe("Jane Doe");
-
-    // Check if profile description is displayed
-    expect(wrapper.find(".manus-profile-description").text()).toBe(
+    expect(wrapper.find(".ob-profile-viewer__description").text()).toBe(
       "Software developer and open badges enthusiast",
     );
   });
@@ -138,18 +130,17 @@ describe("ProfileViewer.vue", () => {
     });
 
     // Description should be displayed
-    expect(wrapper.find(".manus-profile-description").exists()).toBe(true);
-    expect(wrapper.find(".manus-profile-description").text()).toBe(
+    expect(wrapper.find(".ob-profile-viewer__description").exists()).toBe(true);
+    expect(wrapper.find(".ob-profile-viewer__description").text()).toBe(
       "Software developer and open badges enthusiast",
     );
   });
 
-  it("respects showUrl prop", async () => {
+  it("renders profile URL as a link", () => {
     const wrapper = mount(ProfileViewer, {
       props: {
         profile: mockProfile,
         badges: mockProfile.badges,
-        showUrl: false,
       },
       global: {
         stubs: {
@@ -158,8 +149,11 @@ describe("ProfileViewer.vue", () => {
       },
     });
 
-    // URL should not be displayed
-    expect(wrapper.find(".manus-profile-url").exists()).toBe(false);
+    // URL should be rendered as a link with the correct href
+    const urlLink = wrapper.find(
+      '.ob-profile-viewer__detail-value[href="http://example.org/jane"]',
+    );
+    expect(urlLink.exists()).toBe(true);
   });
 
   it("respects badgeLayout prop", () => {
@@ -213,8 +207,8 @@ describe("ProfileViewer.vue", () => {
     });
 
     // Check if loading message is displayed
-    expect(wrapper.find(".manus-profile-loading").exists()).toBe(true);
-    expect(wrapper.find(".manus-profile-loading").text()).toContain(
+    expect(wrapper.find(".ob-profile-viewer__loading").exists()).toBe(true);
+    expect(wrapper.find(".ob-profile-viewer__loading").text()).toContain(
       "Loading badges",
     );
   });
@@ -248,7 +242,9 @@ describe("ProfileViewer.vue", () => {
     });
 
     // Check if issuer title is displayed
-    expect(wrapper1.find(".manus-section-title").text()).toBe("Badges Offered");
+    expect(wrapper1.find(".ob-profile-viewer__section-title").text()).toBe(
+      "Badges Offered",
+    );
 
     // Test with Recipient profile
     const recipientProfile = { ...mockProfile, type: "Recipient" as const };
@@ -265,6 +261,8 @@ describe("ProfileViewer.vue", () => {
     });
 
     // Check if recipient title is displayed
-    expect(wrapper2.find(".manus-section-title").text()).toBe("Badges Earned");
+    expect(wrapper2.find(".ob-profile-viewer__section-title").text()).toBe(
+      "Badges Earned",
+    );
   });
 });
