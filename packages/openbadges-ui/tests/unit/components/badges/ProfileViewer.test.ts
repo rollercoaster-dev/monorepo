@@ -94,14 +94,6 @@ describe("ProfileViewer.vue", () => {
     expect(wrapper.find(".ob-profile-viewer__description").text()).toBe(
       "Software developer and open badges enthusiast",
     );
-
-    // Check if profile name is displayed correctly
-    expect(wrapper.find(".ob-profile-viewer__name").text()).toBe("Jane Doe");
-
-    // Check if profile description is displayed
-    expect(wrapper.find(".ob-profile-viewer__description").text()).toBe(
-      "Software developer and open badges enthusiast",
-    );
   });
 
   it("passes badges to BadgeList component", () => {

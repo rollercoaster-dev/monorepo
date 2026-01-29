@@ -129,10 +129,6 @@ const handleBadgeIssued = (assertion: OB2.Assertion) => {
   emit("badge-issued", assertion);
 };
 
-const handleFormReset = () => {
-  // Any additional reset logic can go here
-};
-
 const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   emit("badge-click", badge);
 };
@@ -194,7 +190,6 @@ onMounted(() => {
         <BadgeIssuerForm
           :initial-badge-class="initialBadgeClass"
           @badge-issued="handleBadgeIssued"
-          @reset="handleFormReset"
         />
       </div>
 
