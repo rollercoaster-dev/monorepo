@@ -29,6 +29,21 @@ export {
   getAllEntities,
   getRelationships,
   createRelationship,
+  // Plan CRUD
+  createPlan,
+  getPlan,
+  getPlanByGoal,
+  updatePlan,
+  deletePlan,
+  getAllPlans,
+  // PlanStep CRUD
+  createPlanStep,
+  getPlanStep,
+  getStepsByPlan,
+  updatePlanStep,
+  deletePlanStep,
+  addStepDependency,
+  getStepDependencies,
 } from "./store";
 
 // Summarization
