@@ -152,7 +152,7 @@ onMounted(() => {
     <header class="ob-issuer-dashboard__header">
       <h1 class="ob-issuer-dashboard__title">Badge Issuer Dashboard</h1>
 
-      <div class="ob-issuer-dashboard__tabs">
+      <div class="ob-issuer-dashboard__tabs" role="tablist">
         <button
           id="issue-tab"
           class="ob-issuer-dashboard__tab-button"
@@ -161,6 +161,7 @@ onMounted(() => {
           :aria-selected="activeTab === 'issue'"
           role="tab"
           @click="setActiveTab('issue')"
+          @keydown.right.prevent="setActiveTab('badges')"
         >
           Issue New Badge
         </button>
@@ -172,6 +173,7 @@ onMounted(() => {
           :aria-selected="activeTab === 'badges'"
           role="tab"
           @click="setActiveTab('badges')"
+          @keydown.left.prevent="setActiveTab('issue')"
         >
           My Badges
         </button>
@@ -395,7 +397,7 @@ onMounted(() => {
 }
 
 .ob-issuer-dashboard__filter-input {
-  width: 200px;
+  width: var(--ob-input-width-md, 12.5rem);
 }
 
 .ob-issuer-dashboard__loading,
