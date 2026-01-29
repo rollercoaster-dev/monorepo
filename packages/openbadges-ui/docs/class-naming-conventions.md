@@ -6,7 +6,7 @@ All openbadges-ui classes use the `ob-` prefix to match the token namespace.
 
 ## Pattern (BEM-inspired)
 
-```
+```text
 ob-<component>              → root element
 ob-<component>__<element>   → child element
 ob-<component>--<modifier>  → variant modifier
