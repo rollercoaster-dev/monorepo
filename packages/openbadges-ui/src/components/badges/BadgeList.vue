@@ -313,11 +313,11 @@ const handleDensityChange = (event: Event) => {
 .ob-badge-list {
   --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4));
   --badge-list-empty-color: var(
-    --ob-badge-list__empty-color,
+    --ob-badge-list-empty-color,
     var(--ob-text-secondary)
   );
   --badge-list-pagination-gap: var(
-    --ob-badge-list__pagination-gap,
+    --ob-badge-list-pagination-gap,
     var(--ob-space-2)
   );
   --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-gray-200));
