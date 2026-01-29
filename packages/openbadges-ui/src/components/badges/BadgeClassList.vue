@@ -368,32 +368,32 @@ const hasActiveFilters = computed(() => {
 
 <style>
 .ob-badge-class-list {
-  --badge-class-list-gap: var(--ob-space-4);
-  --badge-class-list-empty-color: var(--ob-text-secondary);
-  --badge-class-list-pagination-gap: var(--ob-space-2);
-  --badge-class-list-button-bg: var(--ob-gray-200);
-  --badge-class-list-button-color: var(--ob-text-secondary);
-  --badge-class-list-button-hover-bg: var(--ob-gray-300);
-  --badge-class-list-button-disabled-bg: var(--ob-gray-100);
-  --badge-class-list-button-disabled-color: var(--ob-text-disabled);
+  --ob-badge-class-list-gap: var(--ob-space-4);
+  --ob-badge-class-list-empty-color: var(--ob-text-secondary);
+  --ob-badge-class-list-pagination-gap: var(--ob-space-2);
+  --ob-badge-class-list-button-bg: var(--ob-gray-200);
+  --ob-badge-class-list-button-color: var(--ob-text-secondary);
+  --ob-badge-class-list-button-hover-bg: var(--ob-gray-300);
+  --ob-badge-class-list-button-disabled-bg: var(--ob-gray-100);
+  --ob-badge-class-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
-  gap: var(--badge-class-list-gap, var(--ob-space-6));
+  gap: var(--ob-badge-class-list-gap, var(--ob-space-6));
   font-family: var(--ob-font-family);
   color: var(--ob-text-primary);
 }
 
 .ob-badge-class-list.density-compact {
-  --badge-class-list-gap: var(--ob-space-2);
+  --ob-badge-class-list-gap: var(--ob-space-2);
 }
 
 .ob-badge-class-list.density-normal {
-  --badge-class-list-gap: var(--ob-space-4);
+  --ob-badge-class-list-gap: var(--ob-space-4);
 }
 
 .ob-badge-class-list.density-spacious {
-  --badge-class-list-gap: var(--ob-space-6);
+  --ob-badge-class-list-gap: var(--ob-space-6);
 }
 
 .ob-badge-class-list__controls {
@@ -438,7 +438,7 @@ const hasActiveFilters = computed(() => {
 .ob-badge-class-list__empty {
   padding: var(--ob-space-6);
   text-align: center;
-  color: var(--badge-class-list-empty-color);
+  color: var(--ob-badge-class-list-empty-color);
 }
 
 .ob-badge-class-list__items {
@@ -447,13 +447,13 @@ const hasActiveFilters = computed(() => {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--badge-class-list-gap);
+  gap: var(--ob-badge-class-list-gap);
 }
 
 .ob-badge-class-list.grid-layout .ob-badge-class-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--badge-class-list-gap);
+  gap: var(--ob-badge-class-list-gap);
   align-items: stretch;
 }
 
@@ -473,15 +473,15 @@ const hasActiveFilters = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--badge-class-list-pagination-gap);
+  gap: var(--ob-badge-class-list-pagination-gap);
   margin-top: var(--ob-space-4);
   flex-wrap: wrap;
 }
 
 .ob-badge-class-list__pagination-button {
   padding: var(--ob-space-2) var(--ob-space-4);
-  background-color: var(--badge-class-list-button-bg);
-  color: var(--badge-class-list-button-color);
+  background-color: var(--ob-badge-class-list-button-bg);
+  color: var(--ob-badge-class-list-button-color);
   border: none;
   border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
@@ -491,12 +491,12 @@ const hasActiveFilters = computed(() => {
 }
 
 .ob-badge-class-list__pagination-button:hover:not(:disabled) {
-  background-color: var(--badge-class-list-button-hover-bg);
+  background-color: var(--ob-badge-class-list-button-hover-bg);
 }
 
 .ob-badge-class-list__pagination-button:disabled {
-  background-color: var(--badge-class-list-button-disabled-bg);
-  color: var(--badge-class-list-button-disabled-color);
+  background-color: var(--ob-badge-class-list-button-disabled-bg);
+  color: var(--ob-badge-class-list-button-disabled-color);
   cursor: not-allowed;
 }
 
@@ -507,7 +507,7 @@ const hasActiveFilters = computed(() => {
 
 .ob-badge-class-list__pagination-info {
   font-size: var(--ob-font-size-sm);
-  color: var(--badge-class-list-button-color);
+  color: var(--ob-badge-class-list-button-color);
 }
 
 /* Responsive adjustments */
