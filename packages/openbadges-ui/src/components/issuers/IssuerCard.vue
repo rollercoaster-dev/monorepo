@@ -190,18 +190,18 @@ const truncatedDescription = computed(() => {
 
 <style>
 .manus-issuer-card {
-  --issuer-border-color: var(--ob-border-color, #e2e8f0);
-  --issuer-border-radius: var(--ob-border-radius-lg, 8px);
-  --issuer-padding: var(--ob-space-4, 16px);
-  --issuer-background: var(--ob-bg-primary, #ffffff);
-  --issuer-shadow: var(--ob-shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.1));
-  --issuer-name-color: var(--ob-text-primary, #1a202c);
-  --issuer-text-color: var(--ob-text-secondary, #4a5568);
-  --issuer-link-color: var(--ob-primary, #3182ce);
-  --issuer-hover-shadow: var(--ob-shadow-md, 0 4px 8px rgba(0, 0, 0, 0.15));
-  --issuer-focus-outline-color: var(--ob-primary, #3182ce);
-  --issuer-fallback-bg: var(--ob-gray-200, #e2e8f0);
-  --issuer-fallback-color: var(--ob-text-secondary, #4a5568);
+  --issuer-border-color: var(--ob-border-color);
+  --issuer-border-radius: var(--ob-border-radius-lg);
+  --issuer-padding: var(--ob-space-4);
+  --issuer-background: var(--ob-bg-primary);
+  --issuer-shadow: var(--ob-shadow-sm);
+  --issuer-name-color: var(--ob-text-primary);
+  --issuer-text-color: var(--ob-text-secondary);
+  --issuer-link-color: var(--ob-primary);
+  --issuer-hover-shadow: var(--ob-shadow-md);
+  --issuer-focus-outline-color: var(--ob-primary);
+  --issuer-fallback-bg: var(--ob-gray-200);
+  --issuer-fallback-color: var(--ob-text-secondary);
 
   display: flex;
   flex-direction: row;
@@ -211,9 +211,9 @@ const truncatedDescription = computed(() => {
   padding: var(--issuer-padding);
   background-color: var(--issuer-background);
   box-shadow: var(--issuer-shadow);
-  transition: box-shadow var(--ob-transition-fast, 0.2s) ease;
+  transition: box-shadow var(--ob-transition-fast) ease;
   max-width: 400px;
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
   color: var(--issuer-text-color);
 }
 
@@ -227,12 +227,12 @@ const truncatedDescription = computed(() => {
 
 .manus-issuer-card.is-interactive:focus {
   outline: 2px solid var(--issuer-focus-outline-color);
-  outline-offset: var(--ob-space-1, 2px);
+  outline-offset: var(--ob-space-1);
 }
 
 .manus-issuer-image {
   flex: 0 0 64px;
-  margin-right: var(--ob-space-4, 16px);
+  margin-right: var(--ob-space-4);
 }
 
 .manus-issuer-img {
@@ -253,8 +253,8 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-initials {
-  font-size: var(--ob-font-size-xl, 1.5rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  font-size: var(--ob-font-size-xl);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--issuer-fallback-color);
 }
 
@@ -262,14 +262,14 @@ const truncatedDescription = computed(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--ob-space-1, 4px);
+  gap: var(--ob-space-1);
   min-width: 0;
 }
 
 .manus-issuer-name {
   margin: 0;
-  font-size: var(--ob-font-size-lg, 1.125rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  font-size: var(--ob-font-size-lg);
+  font-weight: var(--ob-font-weight-semibold);
   color: var(--issuer-name-color);
   white-space: nowrap;
   overflow: hidden;
@@ -278,14 +278,14 @@ const truncatedDescription = computed(() => {
 
 .manus-issuer-description {
   margin: 0;
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  font-size: var(--ob-font-size-sm);
   color: var(--issuer-text-color);
-  line-height: var(--ob-line-height-normal, 1.4);
+  line-height: var(--ob-line-height-normal);
 }
 
 .manus-issuer-url,
 .manus-issuer-email {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+  font-size: var(--ob-font-size-xs);
 }
 
 .manus-issuer-url a,
@@ -302,13 +302,13 @@ const truncatedDescription = computed(() => {
 
 /* Content density styles */
 .manus-issuer-card.density-compact {
-  padding: var(--ob-space-2, 8px);
+  padding: var(--ob-space-2);
   max-width: 300px;
 }
 
 .manus-issuer-card.density-compact .manus-issuer-image {
   flex: 0 0 40px;
-  margin-right: var(--ob-space-2, 8px);
+  margin-right: var(--ob-space-2);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-img,
@@ -318,29 +318,29 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-card.density-compact .manus-issuer-initials {
-  font-size: var(--ob-font-size-md, 1rem);
+  font-size: var(--ob-font-size-md);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-name {
-  font-size: var(--ob-font-size-md, 0.975rem);
+  font-size: var(--ob-font-size-md);
 }
 
 .manus-issuer-card.density-compact .manus-issuer-description {
-  font-size: var(--ob-font-size-xs, 0.75rem);
+  font-size: var(--ob-font-size-xs);
 }
 
 .manus-issuer-card.density-normal {
-  padding: var(--ob-space-4, 16px);
+  padding: var(--ob-space-4);
 }
 
 .manus-issuer-card.density-spacious {
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   max-width: 500px;
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-image {
   flex: 0 0 80px;
-  margin-right: var(--ob-space-5, 20px);
+  margin-right: var(--ob-space-5);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-img,
@@ -350,29 +350,29 @@ const truncatedDescription = computed(() => {
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-initials {
-  font-size: var(--ob-font-size-2xl, 2rem);
+  font-size: var(--ob-font-size-2xl);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-name {
-  font-size: var(--ob-font-size-xl, 1.25rem);
+  font-size: var(--ob-font-size-xl);
 }
 
 .manus-issuer-card.density-spacious .manus-issuer-content {
-  gap: var(--ob-space-2, 8px);
+  gap: var(--ob-space-2);
 }
 
 /* Accessibility focus styles */
 .manus-issuer-card:focus-visible,
 .manus-issuer-card.is-interactive:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 3px);
-  box-shadow: var(--ob-shadow-focus, 0 0 0 4px #ffe0b2);
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .manus-issuer-url a:focus-visible,
 .manus-issuer-email a:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #ff9800);
-  outline-offset: var(--ob-space-1, 2px);
-  background: var(--ob-warning-light, #fff3e0);
+  outline: 2px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  background: var(--ob-warning-light);
 }
 </style>
