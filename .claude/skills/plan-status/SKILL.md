@@ -19,31 +19,57 @@ No arguments needed.
 
 1. Retrieves the current planning stack
 2. Runs stale detection against GitHub (cached, 5-min TTL)
-3. Displays the full stack with status and warnings
-4. Shows actionable next steps
+3. **For each goal**: searches knowledge for an associated plan (e.g. milestone plan, execution order)
+4. Displays the full stack with status, warnings, and **concrete next steps from the plan**
+5. Shows actionable next steps based on plan data, not generic advice
 
 ## Implementation
 
-Use the `planning_stack_status` MCP tool:
+### Step 1: Get the stack
 
 ```typescript
 planning_stack_status({});
 ```
 
-Format the output as a readable status report:
+### Step 2: Enrich each goal with its plan
+
+For each item in the stack (especially goals), search knowledge for an associated plan:
+
+```typescript
+knowledge_search_similar({
+  query: `${item.title} plan execution order`,
+  limit: 3,
+  threshold: 0.5,
+});
+```
+
+If a plan is found, extract:
+
+- **Progress** (e.g. "1/21 done, 5%")
+- **Current wave/phase** and what's next
+- **Specific next ticket(s)** with issue numbers
+
+### Step 3: Format output
+
+Include plan details inline with each stack item. The "Next action" must reference specific tickets, not generic advice.
 
 ```text
 Current stack (depth: N):
 
 1. [Type] Title (status, age)
-   Details...
-   Warning if stale...
-
-2. [Type] Title (status, age)
-   ...
+   Progress: X/Y (Z%)
+   Next: #123 - Specific ticket description [Wave N]
+   Then: #456 - Next ticket [Wave N+1, blocked on #123]
+   ⚠️ Warning if stale...
 
 Stale items: N
-Observations: ...
+Next action: Start #123 (ticket description) — use /work-on-issue 123
+```
+
+**If no plan is found** for a goal, say so explicitly:
+
+```
+   ⚠️ No plan found — run milestone analysis to create one
 ```
 
 ## Example Output
@@ -58,11 +84,13 @@ Current stack (depth: 3):
 2. [Goal] Knowledge cleanup #608 (paused, 3d)
    ⚠️ Issue #608 closed 1 day ago - run /done to summarize
 
-3. [Goal] OB3 Phase 1 #294 (paused, 7d)
-   No recent activity
+3. [Goal] 07 - UI Components milestone (paused, 7d)
+   Progress: 1/21 (5%)
+   Next: #594 - Define styling tokens contract [Wave 1]
+   Then: #595 - Refactor component styles [Wave 2, blocked on #594]
 
 Stale items: 1
-Next action: Fix CI, then /done to resume Knowledge cleanup.
+Next action: Fix CI, then /done to pop Knowledge cleanup, then start #594 with /work-on-issue 594
 ```
 
 ## When to Use
