@@ -10,6 +10,8 @@ import { randomUUID } from "crypto";
 import type {
   Goal,
   Interrupt,
+  Plan,
+  PlanSourceType,
   PlanningEntity,
   PlanningEntityStatus,
   PlanningRelationship,
@@ -58,6 +60,7 @@ function rowToEntity(row: PlanningEntityRow): PlanningEntity {
       type: "Goal" as const,
       description: data.description as string | undefined,
       issueNumber: data.issueNumber as number | undefined,
+      planStepId: data.planStepId as string | undefined,
       metadata: data.metadata as Record<string, unknown> | undefined,
     };
   }
@@ -94,6 +97,7 @@ export function createGoal(opts: {
   title: string;
   description?: string;
   issueNumber?: number;
+  planStepId?: string;
   metadata?: Record<string, unknown>;
 }): Goal {
   const db = getDatabase();
@@ -103,6 +107,7 @@ export function createGoal(opts: {
   const data = JSON.stringify({
     description: opts.description,
     issueNumber: opts.issueNumber,
+    planStepId: opts.planStepId,
     metadata: opts.metadata,
   });
 
@@ -141,6 +146,7 @@ export function createGoal(opts: {
     title: opts.title,
     description: opts.description,
     issueNumber: opts.issueNumber,
+    planStepId: opts.planStepId,
     metadata: opts.metadata,
     stackOrder: 0,
     status: "active",
@@ -430,4 +436,131 @@ export function createRelationship(
      VALUES (?, ?, ?, ?, ?)`,
     [fromId, toId, type, data ? JSON.stringify(data) : null, now],
   );
+}
+
+// ============================================================================
+// Plan CRUD Operations
+// ============================================================================
+
+/** Row shape from SQLite planning_plans table */
+interface PlanRow {
+  id: string;
+  title: string;
+  goal_id: string;
+  source_type: string;
+  source_ref: string | null;
+  created_at: string;
+}
+
+/**
+ * Convert a database row to a typed Plan.
+ */
+function rowToPlan(row: PlanRow): Plan {
+  return {
+    id: row.id,
+    title: row.title,
+    goalId: row.goal_id,
+    sourceType: row.source_type as PlanSourceType,
+    sourceRef: row.source_ref ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Create a Plan linked to a Goal.
+ */
+export function createPlan(opts: {
+  title: string;
+  goalId: string;
+  sourceType: PlanSourceType;
+  sourceRef?: string;
+}): Plan {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = `plan-${randomUUID()}`;
+
+  db.run(
+    `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [id, opts.title, opts.goalId, opts.sourceType, opts.sourceRef ?? null, now],
+  );
+
+  return {
+    id,
+    title: opts.title,
+    goalId: opts.goalId,
+    sourceType: opts.sourceType,
+    sourceRef: opts.sourceRef,
+    createdAt: now,
+  };
+}
+
+/**
+ * Get a Plan by its ID.
+ */
+export function getPlan(id: string): Plan | null {
+  const db = getDatabase();
+  const row = db
+    .query<PlanRow, [string]>(`SELECT * FROM planning_plans WHERE id = ?`)
+    .get(id);
+
+  return row ? rowToPlan(row) : null;
+}
+
+/**
+ * Get a Plan by its Goal ID.
+ */
+export function getPlanByGoal(goalId: string): Plan | null {
+  const db = getDatabase();
+  const row = db
+    .query<PlanRow, [string]>(`SELECT * FROM planning_plans WHERE goal_id = ?`)
+    .get(goalId);
+
+  return row ? rowToPlan(row) : null;
+}
+
+/**
+ * Update a Plan.
+ */
+export function updatePlan(
+  id: string,
+  updates: Partial<Pick<Plan, "title" | "sourceRef">>,
+): void {
+  const db = getDatabase();
+  const fields: string[] = [];
+  const values: (string | null)[] = [];
+
+  if (updates.title !== undefined) {
+    fields.push("title = ?");
+    values.push(updates.title);
+  }
+  if (updates.sourceRef !== undefined) {
+    fields.push("source_ref = ?");
+    values.push(updates.sourceRef ?? null);
+  }
+
+  if (fields.length === 0) return;
+
+  values.push(id);
+  db.run(`UPDATE planning_plans SET ${fields.join(", ")} WHERE id = ?`, values);
+}
+
+/**
+ * Delete a Plan (cascades to PlanSteps via foreign key).
+ */
+export function deletePlan(id: string): void {
+  const db = getDatabase();
+  db.run(`DELETE FROM planning_plans WHERE id = ?`, [id]);
+}
+
+/**
+ * Get all Plans.
+ */
+export function getAllPlans(): Plan[] {
+  const db = getDatabase();
+  const rows = db
+    .query<PlanRow, []>(`SELECT * FROM planning_plans ORDER BY created_at ASC`)
+    .all();
+
+  return rows.map(rowToPlan);
 }
