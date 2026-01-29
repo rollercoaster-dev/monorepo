@@ -147,15 +147,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="manus-issuer-dashboard">
+  <div class="ob-issuer-dashboard">
     <!-- Dashboard Header -->
-    <header class="manus-dashboard-header">
-      <h1 class="manus-dashboard-title">Badge Issuer Dashboard</h1>
+    <header class="ob-issuer-dashboard__header">
+      <h1 class="ob-issuer-dashboard__title">Badge Issuer Dashboard</h1>
 
-      <div class="manus-dashboard-tabs">
+      <div class="ob-issuer-dashboard__tabs">
         <button
           id="issue-tab"
-          class="manus-tab-button"
+          class="ob-issuer-dashboard__tab-button"
           :class="{ active: activeTab === 'issue' }"
           aria-controls="issue-tab-panel"
           :aria-selected="activeTab === 'issue'"
@@ -166,7 +166,7 @@ onMounted(() => {
         </button>
         <button
           id="badges-tab"
-          class="manus-tab-button"
+          class="ob-issuer-dashboard__tab-button"
           :class="{ active: activeTab === 'badges' }"
           aria-controls="badges-tab-panel"
           :aria-selected="activeTab === 'badges'"
@@ -179,12 +179,12 @@ onMounted(() => {
     </header>
 
     <!-- Tab Panels -->
-    <div class="manus-dashboard-content">
+    <div class="ob-issuer-dashboard__content">
       <!-- Issue New Badge Tab -->
       <div
         v-show="activeTab === 'issue'"
         id="issue-tab-panel"
-        class="manus-tab-panel"
+        class="ob-issuer-dashboard__tab-panel"
         role="tabpanel"
         aria-labelledby="issue-tab"
         tabindex="0"
@@ -200,29 +200,33 @@ onMounted(() => {
       <div
         v-show="activeTab === 'badges'"
         id="badges-tab-panel"
-        class="manus-tab-panel"
+        class="ob-issuer-dashboard__tab-panel"
         role="tabpanel"
         aria-labelledby="badges-tab"
         tabindex="0"
       >
-        <div class="manus-dashboard-controls">
-          <div class="manus-dashboard-filter">
-            <label for="badge-filter" class="manus-filter-label">Filter:</label>
+        <div class="ob-issuer-dashboard__controls">
+          <div class="ob-issuer-dashboard__filter">
+            <label for="badge-filter" class="ob-issuer-dashboard__filter-label"
+              >Filter:</label
+            >
             <input
               id="badge-filter"
               v-model="filterText"
               type="text"
-              class="manus-filter-input"
+              class="ob-issuer-dashboard__filter-input"
               placeholder="Search badges..."
             />
           </div>
 
-          <div class="manus-dashboard-sort">
-            <label for="badge-sort" class="manus-sort-label">Sort by:</label>
+          <div class="ob-issuer-dashboard__sort">
+            <label for="badge-sort" class="ob-issuer-dashboard__sort-label"
+              >Sort by:</label
+            >
             <select
               id="badge-sort"
               v-model="sortOption"
-              class="manus-sort-select"
+              class="ob-issuer-dashboard__sort-select"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -234,7 +238,7 @@ onMounted(() => {
 
         <div
           v-if="loading"
-          class="manus-dashboard-loading"
+          class="ob-issuer-dashboard__loading"
           role="status"
           aria-live="polite"
         >
@@ -243,13 +247,13 @@ onMounted(() => {
 
         <div
           v-else-if="filteredBadges.length === 0"
-          class="manus-dashboard-empty"
+          class="ob-issuer-dashboard__empty"
           role="status"
         >
           <p v-if="filterText">No badges match your search.</p>
           <p v-else>You haven't issued any badges yet.</p>
           <button
-            class="manus-button manus-button-primary"
+            class="ob-issuer-dashboard__button ob-issuer-dashboard__button--primary"
             @click="setActiveTab('issue')"
           >
             Issue Your First Badge
@@ -270,7 +274,7 @@ onMounted(() => {
 </template>
 
 <style>
-.manus-issuer-dashboard {
+.ob-issuer-dashboard {
   --dashboard-border-color: var(
     --ob-dashboard-border-color,
     var(--ob-border-color)
@@ -308,25 +312,25 @@ onMounted(() => {
   font-family: var(--ob-font-family);
 }
 
-.manus-dashboard-header {
+.ob-issuer-dashboard__header {
   padding: var(--ob-space-6);
   border-bottom: 1px solid var(--dashboard-border-color);
 }
 
-.manus-dashboard-title {
+.ob-issuer-dashboard__title {
   margin: 0 0 var(--ob-space-4);
   font-size: var(--ob-font-size-2xl);
   font-weight: var(--ob-font-weight-semibold);
 }
 
-.manus-dashboard-tabs {
+.ob-issuer-dashboard__tabs {
   display: flex;
   gap: var(--ob-space-1);
   border-bottom: 1px solid var(--dashboard-border-color);
   margin: 0 calc(var(--ob-space-6) * -1) -1px;
 }
 
-.manus-tab-button {
+.ob-issuer-dashboard__tab-button {
   padding: var(--ob-space-3) var(--ob-space-6);
   background: none;
   border: none;
@@ -338,50 +342,50 @@ onMounted(() => {
   transition: all var(--ob-transition-fast) ease;
 }
 
-.manus-tab-button:hover {
+.ob-issuer-dashboard__tab-button:hover {
   background-color: var(--dashboard-tab-hover-bg);
 }
 
-.manus-tab-button.active {
+.ob-issuer-dashboard__tab-button.active {
   color: var(--dashboard-accent-color);
   border-bottom-color: var(--dashboard-tab-active-border);
 }
 
-.manus-dashboard-content {
+.ob-issuer-dashboard__content {
   padding: var(--ob-space-6);
 }
 
-.manus-tab-panel {
+.ob-issuer-dashboard__tab-panel {
   outline: none;
 }
 
-.manus-tab-panel:focus {
+.ob-issuer-dashboard__tab-panel:focus {
   box-shadow: var(--ob-shadow-focus);
   border-radius: var(--ob-border-radius-sm);
 }
 
-.manus-dashboard-controls {
+.ob-issuer-dashboard__controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ob-space-4);
   margin-bottom: var(--ob-space-6);
 }
 
-.manus-dashboard-filter,
-.manus-dashboard-sort {
+.ob-issuer-dashboard__filter,
+.ob-issuer-dashboard__sort {
   display: flex;
   align-items: center;
   gap: var(--ob-space-2);
 }
 
-.manus-filter-label,
-.manus-sort-label {
+.ob-issuer-dashboard__filter-label,
+.ob-issuer-dashboard__sort-label {
   font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
 }
 
-.manus-filter-input,
-.manus-sort-select {
+.ob-issuer-dashboard__filter-input,
+.ob-issuer-dashboard__sort-select {
   padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--dashboard-border-color);
   border-radius: var(--ob-border-radius-sm);
@@ -390,22 +394,22 @@ onMounted(() => {
   background: var(--dashboard-background);
 }
 
-.manus-filter-input {
+.ob-issuer-dashboard__filter-input {
   width: 200px;
 }
 
-.manus-dashboard-loading,
-.manus-dashboard-empty {
+.ob-issuer-dashboard__loading,
+.ob-issuer-dashboard__empty {
   padding: var(--ob-space-12) var(--ob-space-6);
   text-align: center;
   color: var(--dashboard-empty-color);
 }
 
-.manus-dashboard-empty button {
+.ob-issuer-dashboard__empty button {
   margin-top: var(--ob-space-4);
 }
 
-.manus-button {
+.ob-issuer-dashboard__button {
   padding: var(--ob-space-2) var(--ob-space-4);
   border: none;
   border-radius: var(--ob-border-radius-sm);
@@ -415,37 +419,37 @@ onMounted(() => {
   transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-button-primary {
+.ob-issuer-dashboard__button--primary {
   background-color: var(--dashboard-accent-color);
   color: var(--ob-text-inverse);
 }
 
-.manus-button-primary:hover {
+.ob-issuer-dashboard__button--primary:hover {
   background-color: var(--ob-primary-dark);
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .manus-dashboard-header,
-  .manus-dashboard-content {
+  .ob-issuer-dashboard__header,
+  .ob-issuer-dashboard__content {
     padding: var(--ob-space-4);
   }
 
-  .manus-dashboard-tabs {
+  .ob-issuer-dashboard__tabs {
     margin: 0 calc(var(--ob-space-4) * -1) -1px;
   }
 
-  .manus-tab-button {
+  .ob-issuer-dashboard__tab-button {
     padding: var(--ob-space-2) var(--ob-space-4);
     font-size: var(--ob-font-size-sm);
   }
 
-  .manus-dashboard-controls {
+  .ob-issuer-dashboard__controls {
     flex-direction: column;
     gap: var(--ob-space-3);
   }
 
-  .manus-filter-input {
+  .ob-issuer-dashboard__filter-input {
     width: 100%;
   }
 }

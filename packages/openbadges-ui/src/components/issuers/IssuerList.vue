@@ -184,7 +184,7 @@ const handleDensityChange = (event: Event) => {
 
 <template>
   <div
-    class="manus-issuer-list"
+    class="ob-issuer-list"
     :class="[
       `density-${internalDensity}`,
       { 'grid-layout': layout === 'grid' },
@@ -192,20 +192,20 @@ const handleDensityChange = (event: Event) => {
   >
     <!-- Search and density controls -->
     <div
-      class="manus-issuer-list-controls"
+      class="ob-issuer-list__controls"
       role="region"
       aria-label="Issuer list controls"
     >
       <input
         v-model="searchText"
-        class="manus-issuer-list-search"
+        class="ob-issuer-list__search"
         type="search"
         placeholder="Search issuers..."
         aria-label="Search issuers by name or description"
       />
       <select
         :value="internalDensity"
-        class="manus-issuer-list-density-select"
+        class="ob-issuer-list__density-select"
         aria-label="Display density"
         @change="handleDensityChange"
       >
@@ -218,7 +218,7 @@ const handleDensityChange = (event: Event) => {
     <!-- Loading state -->
     <div
       v-if="loading"
-      class="manus-issuer-list-loading"
+      class="ob-issuer-list__loading"
       role="status"
       aria-live="polite"
     >
@@ -228,7 +228,7 @@ const handleDensityChange = (event: Event) => {
     <!-- Empty state -->
     <div
       v-else-if="normalizedIssuers.length === 0"
-      class="manus-issuer-list-empty"
+      class="ob-issuer-list__empty"
       role="status"
     >
       <slot name="empty">
@@ -237,11 +237,11 @@ const handleDensityChange = (event: Event) => {
     </div>
 
     <!-- Issuer list -->
-    <ul v-else class="manus-issuer-list-items" :aria-label="ariaLabel">
+    <ul v-else class="ob-issuer-list__items" :aria-label="ariaLabel">
       <li
         v-for="issuer in normalizedIssuers"
         :key="issuer.id"
-        class="manus-issuer-list-item"
+        class="ob-issuer-list__item"
       >
         <slot name="issuer" :issuer="issuer.original" :normalized="issuer">
           <IssuerCard
@@ -257,12 +257,12 @@ const handleDensityChange = (event: Event) => {
     <!-- Pagination -->
     <div
       v-if="showPagination && totalPages > 1"
-      class="manus-issuer-list-pagination"
+      class="ob-issuer-list__pagination"
       role="navigation"
       aria-label="Pagination"
     >
       <button
-        class="manus-pagination-button"
+        class="ob-issuer-list__pagination-button"
         :disabled="internalCurrentPage === 1"
         aria-label="Previous page"
         @click="handlePageChange(internalCurrentPage - 1)"
@@ -270,12 +270,12 @@ const handleDensityChange = (event: Event) => {
         Previous
       </button>
 
-      <span class="manus-pagination-info">
+      <span class="ob-issuer-list__pagination-info">
         Page {{ internalCurrentPage }} of {{ totalPages }}
       </span>
 
       <button
-        class="manus-pagination-button"
+        class="ob-issuer-list__pagination-button"
         :disabled="internalCurrentPage === totalPages"
         aria-label="Next page"
         @click="handlePageChange(internalCurrentPage + 1)"
@@ -287,7 +287,7 @@ const handleDensityChange = (event: Event) => {
 </template>
 
 <style>
-.manus-issuer-list {
+.ob-issuer-list {
   --issuer-list-gap: var(--ob-space-4);
   --issuer-list-empty-color: var(--ob-text-secondary);
   --issuer-list-pagination-gap: var(--ob-space-2);
@@ -304,46 +304,46 @@ const handleDensityChange = (event: Event) => {
   color: var(--ob-text-primary);
 }
 
-.manus-issuer-list.density-compact {
+.ob-issuer-list.density-compact {
   --issuer-list-gap: var(--ob-space-2);
 }
 
-.manus-issuer-list.density-normal {
+.ob-issuer-list.density-normal {
   --issuer-list-gap: var(--ob-space-4);
 }
 
-.manus-issuer-list.density-spacious {
+.ob-issuer-list.density-spacious {
   --issuer-list-gap: var(--ob-space-6);
 }
 
-.manus-issuer-list-controls {
+.ob-issuer-list__controls {
   display: flex;
   gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
 }
 
-.manus-issuer-list-search,
-.manus-issuer-list-density-select {
+.ob-issuer-list__search,
+.ob-issuer-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
 }
 
-.manus-issuer-list-search {
+.ob-issuer-list__search {
   flex: 1;
   min-width: 200px;
 }
 
-.manus-issuer-list-loading,
-.manus-issuer-list-empty {
+.ob-issuer-list__loading,
+.ob-issuer-list__empty {
   padding: var(--ob-space-6);
   text-align: center;
   color: var(--issuer-list-empty-color);
 }
 
-.manus-issuer-list-items {
+.ob-issuer-list__items {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -352,30 +352,28 @@ const handleDensityChange = (event: Event) => {
   gap: var(--issuer-list-gap);
 }
 
-.manus-issuer-list.grid-layout .manus-issuer-list-items {
+.ob-issuer-list.grid-layout .ob-issuer-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--issuer-list-gap);
   align-items: stretch;
 }
 
-.manus-issuer-list-item {
+.ob-issuer-list__item {
   display: flex;
 }
 
-.manus-issuer-list.grid-layout .manus-issuer-list-item {
+.ob-issuer-list.grid-layout .ob-issuer-list__item {
   display: flex;
 }
 
 /* Make cards stretch to fill grid cell */
-.manus-issuer-list.grid-layout
-  .manus-issuer-list-item
-  :deep(.manus-issuer-card) {
+.ob-issuer-list.grid-layout .ob-issuer-list__item :deep(.ob-issuer-card) {
   width: 100%;
   max-width: none;
 }
 
-.manus-issuer-list-pagination {
+.ob-issuer-list__pagination {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -384,7 +382,7 @@ const handleDensityChange = (event: Event) => {
   flex-wrap: wrap;
 }
 
-.manus-pagination-button {
+.ob-issuer-list__pagination-button {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--issuer-list-button-bg);
   color: var(--issuer-list-button-color);
@@ -395,38 +393,38 @@ const handleDensityChange = (event: Event) => {
   transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-pagination-button:hover:not(:disabled) {
+.ob-issuer-list__pagination-button:hover:not(:disabled) {
   background-color: var(--issuer-list-button-hover-bg);
 }
 
-.manus-pagination-button:disabled {
+.ob-issuer-list__pagination-button:disabled {
   background-color: var(--issuer-list-button-disabled-bg);
   color: var(--issuer-list-button-disabled-color);
   cursor: not-allowed;
 }
 
-.manus-pagination-button:focus-visible {
+.ob-issuer-list__pagination-button:focus-visible {
   outline: 3px solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 
-.manus-pagination-info {
+.ob-issuer-list__pagination-info {
   font-size: var(--ob-font-size-sm);
   color: var(--issuer-list-button-color);
 }
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .manus-issuer-list.grid-layout .manus-issuer-list-items {
+  .ob-issuer-list.grid-layout .ob-issuer-list__items {
     grid-template-columns: 1fr;
   }
 
-  .manus-issuer-list-controls {
+  .ob-issuer-list__controls {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .manus-issuer-list-search {
+  .ob-issuer-list__search {
     width: 100%;
   }
 }
