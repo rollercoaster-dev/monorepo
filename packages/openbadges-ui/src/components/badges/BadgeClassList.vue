@@ -52,6 +52,9 @@ watch(
   },
 );
 
+// Guard against invalid pageSize values
+const effectivePageSize = computed(() => Math.max(1, props.pageSize));
+
 // Search and filter state
 const searchText = ref("");
 const issuerFilter = ref("");
@@ -156,12 +159,12 @@ const filteredBadgeClasses = computed(() => {
 
 // Compute total pages
 const totalPages = computed(() => {
-  return Math.ceil(filteredBadgeClasses.value.length / props.pageSize);
+  return Math.ceil(filteredBadgeClasses.value.length / effectivePageSize.value);
 });
 
 // Watch for filteredBadgeClasses changes to clamp current page
 watch(
-  () => [filteredBadgeClasses.value.length, props.pageSize],
+  () => [filteredBadgeClasses.value.length, effectivePageSize.value],
   () => {
     if (!props.showPagination) return;
     const total = totalPages.value;
@@ -181,8 +184,8 @@ const paginatedBadgeClasses = computed(() => {
     return filteredBadgeClasses.value;
   }
 
-  const start = (internalCurrentPage.value - 1) * props.pageSize;
-  const end = start + props.pageSize;
+  const start = (internalCurrentPage.value - 1) * effectivePageSize.value;
+  const end = start + effectivePageSize.value;
   return filteredBadgeClasses.value.slice(start, end);
 });
 
