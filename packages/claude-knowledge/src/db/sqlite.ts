@@ -638,6 +638,55 @@ function runMigrations(database: Database): void {
     }
   }
 
+  // Migration 10: Add 'updated_at' column to planning_plans and planning_steps tables
+  const plansColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(planning_plans)")
+    .all();
+
+  const plansHasUpdatedAt = plansColumns.some(
+    (col) => col.name === "updated_at",
+  );
+
+  if (!plansHasUpdatedAt) {
+    try {
+      database.run(
+        `ALTER TABLE planning_plans ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`,
+      );
+      // Backfill existing rows: set updated_at = created_at
+      database.run(
+        `UPDATE planning_plans SET updated_at = created_at WHERE updated_at = ''`,
+      );
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add updated_at to planning_plans): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  const stepsColumns = database
+    .query<{ name: string }, []>("PRAGMA table_info(planning_steps)")
+    .all();
+
+  const stepsHasUpdatedAt = stepsColumns.some(
+    (col) => col.name === "updated_at",
+  );
+
+  if (!stepsHasUpdatedAt) {
+    try {
+      database.run(
+        `ALTER TABLE planning_steps ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''`,
+      );
+      // Backfill existing rows: set updated_at = created_at
+      database.run(
+        `UPDATE planning_steps SET updated_at = created_at WHERE updated_at = ''`,
+      );
+    } catch (error) {
+      throw new Error(
+        `Migration failed (add updated_at to planning_steps): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   // Migration 9: Add 'plan_step_id' column to planning_entities table
   const planningEntitiesColumns = database
     .query<{ name: string }, []>("PRAGMA table_info(planning_entities)")

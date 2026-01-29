@@ -86,6 +86,7 @@ interface PlanJSONLRecord {
   source_type: string;
   source_ref?: string;
   created_at: string;
+  updated_at: string;
 }
 
 /** Shape of a JSONL record for plan steps */
@@ -100,6 +101,7 @@ interface PlanStepJSONLRecord {
   external_ref_number?: number;
   external_ref_criteria?: string;
   created_at: string;
+  updated_at: string;
 }
 
 /** Shape of a JSONL record for step dependencies */
@@ -137,6 +139,7 @@ interface PlanRow {
   source_type: string;
   source_ref: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface PlanStepRow {
@@ -149,6 +152,7 @@ interface PlanStepRow {
   external_ref_number: number | null;
   external_ref_criteria: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 interface StepDependencyRow {
@@ -242,7 +246,7 @@ export async function exportPlanningToJSONL(
     const placeholders = entityIds.map(() => "?").join(",");
     const plansQuery = db
       .query<PlanRow, string[]>(
-        `SELECT id, title, goal_id, source_type, source_ref, created_at
+        `SELECT id, title, goal_id, source_type, source_ref, created_at, updated_at
          FROM planning_plans
          WHERE goal_id IN (${placeholders})`,
       )
@@ -259,7 +263,7 @@ export async function exportPlanningToJSONL(
     const placeholders = planIds.map(() => "?").join(",");
     const stepsQuery = db
       .query<PlanStepRow, string[]>(
-        `SELECT id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at
+        `SELECT id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at
          FROM planning_steps
          WHERE plan_id IN (${placeholders})
          ORDER BY ordinal ASC`,
@@ -339,6 +343,7 @@ export async function exportPlanningToJSONL(
         source_type: plan.source_type,
         source_ref: plan.source_ref ?? undefined,
         created_at: plan.created_at,
+        updated_at: plan.updated_at,
       };
       lines.push(JSON.stringify(record));
     } catch (error) {
@@ -364,6 +369,7 @@ export async function exportPlanningToJSONL(
         external_ref_number: step.external_ref_number ?? undefined,
         external_ref_criteria: step.external_ref_criteria ?? undefined,
         created_at: step.created_at,
+        updated_at: step.updated_at,
       };
       lines.push(JSON.stringify(record));
     } catch (error) {
@@ -469,40 +475,107 @@ export async function importPlanningFromJSONL(
           continue;
         }
 
-        // Handle plan records
+        // Handle plan records (newer wins)
         if (isPlanRecord(parsed)) {
-          db.run(
-            `INSERT OR IGNORE INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [
-              parsed.id,
-              parsed.title,
-              parsed.goal_id,
-              parsed.source_type,
-              parsed.source_ref ?? null,
-              parsed.created_at,
-            ],
-          );
+          const planUpdatedAt = parsed.updated_at ?? parsed.created_at;
+          const existingPlan = db
+            .query<
+              { id: string; updated_at: string },
+              [string]
+            >("SELECT id, updated_at FROM planning_plans WHERE id = ?")
+            .get(parsed.id);
+
+          if (existingPlan) {
+            const existingDate = new Date(existingPlan.updated_at);
+            const recordDate = new Date(planUpdatedAt);
+            if (recordDate <= existingDate) {
+              skipped++;
+              continue;
+            }
+            db.run(
+              `UPDATE planning_plans SET title = ?, goal_id = ?, source_type = ?, source_ref = ?, created_at = ?, updated_at = ? WHERE id = ?`,
+              [
+                parsed.title,
+                parsed.goal_id,
+                parsed.source_type,
+                parsed.source_ref ?? null,
+                parsed.created_at,
+                planUpdatedAt,
+                parsed.id,
+              ],
+            );
+            updated++;
+          } else {
+            db.run(
+              `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                parsed.id,
+                parsed.title,
+                parsed.goal_id,
+                parsed.source_type,
+                parsed.source_ref ?? null,
+                parsed.created_at,
+                planUpdatedAt,
+              ],
+            );
+            imported++;
+          }
           continue;
         }
 
-        // Handle plan step records
+        // Handle plan step records (newer wins)
         if (isPlanStepRecord(parsed)) {
-          db.run(
-            `INSERT OR IGNORE INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              parsed.id,
-              parsed.plan_id,
-              parsed.title,
-              parsed.ordinal,
-              parsed.wave,
-              parsed.external_ref_type,
-              parsed.external_ref_number ?? null,
-              parsed.external_ref_criteria ?? null,
-              parsed.created_at,
-            ],
-          );
+          const stepUpdatedAt = parsed.updated_at ?? parsed.created_at;
+          const existingStep = db
+            .query<
+              { id: string; updated_at: string },
+              [string]
+            >("SELECT id, updated_at FROM planning_steps WHERE id = ?")
+            .get(parsed.id);
+
+          if (existingStep) {
+            const existingDate = new Date(existingStep.updated_at);
+            const recordDate = new Date(stepUpdatedAt);
+            if (recordDate <= existingDate) {
+              skipped++;
+              continue;
+            }
+            db.run(
+              `UPDATE planning_steps SET plan_id = ?, title = ?, ordinal = ?, wave = ?, external_ref_type = ?, external_ref_number = ?, external_ref_criteria = ?, created_at = ?, updated_at = ? WHERE id = ?`,
+              [
+                parsed.plan_id,
+                parsed.title,
+                parsed.ordinal,
+                parsed.wave,
+                parsed.external_ref_type,
+                parsed.external_ref_number ?? null,
+                parsed.external_ref_criteria ?? null,
+                parsed.created_at,
+                stepUpdatedAt,
+                parsed.id,
+              ],
+            );
+            updated++;
+          } else {
+            db.run(
+              `INSERT INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                parsed.id,
+                parsed.plan_id,
+                parsed.title,
+                parsed.ordinal,
+                parsed.wave,
+                parsed.external_ref_type,
+                parsed.external_ref_number ?? null,
+                parsed.external_ref_criteria ?? null,
+                parsed.created_at,
+                stepUpdatedAt,
+              ],
+            );
+            imported++;
+          }
           continue;
         }
 

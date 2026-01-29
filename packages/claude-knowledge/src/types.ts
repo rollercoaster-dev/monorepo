@@ -962,6 +962,7 @@ export interface Plan {
   sourceType: PlanSourceType;
   sourceRef?: string; // milestone number, epic issue number, curriculum ID, etc.
   createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -977,4 +978,5 @@ export interface PlanStep {
   externalRef: ExternalRef;
   dependsOn: string[]; // PlanStep IDs (DEPENDS_ON relationship)
   createdAt: string;
+  updatedAt: string;
 }

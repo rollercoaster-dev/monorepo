@@ -453,6 +453,7 @@ interface PlanRow {
   source_type: string;
   source_ref: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -466,6 +467,7 @@ function rowToPlan(row: PlanRow): Plan {
     sourceType: row.source_type as PlanSourceType,
     sourceRef: row.source_ref ?? undefined,
     createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -483,9 +485,17 @@ export function createPlan(opts: {
   const id = `plan-${randomUUID()}`;
 
   db.run(
-    `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, opts.title, opts.goalId, opts.sourceType, opts.sourceRef ?? null, now],
+    `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      opts.title,
+      opts.goalId,
+      opts.sourceType,
+      opts.sourceRef ?? null,
+      now,
+      now,
+    ],
   );
 
   return {
@@ -495,6 +505,7 @@ export function createPlan(opts: {
     sourceType: opts.sourceType,
     sourceRef: opts.sourceRef,
     createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -544,6 +555,9 @@ export function updatePlan(
 
   if (fields.length === 0) return;
 
+  fields.push("updated_at = ?");
+  values.push(new Date().toISOString());
+
   values.push(id);
   db.run(`UPDATE planning_plans SET ${fields.join(", ")} WHERE id = ?`, values);
 }
@@ -583,6 +597,7 @@ interface PlanStepRow {
   external_ref_number: number | null;
   external_ref_criteria: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 /** Row shape from SQLite planning_step_dependencies table */
@@ -611,6 +626,7 @@ function rowToPlanStep(row: PlanStepRow, dependsOn: string[] = []): PlanStep {
     externalRef,
     dependsOn,
     createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -629,8 +645,8 @@ export function createPlanStep(opts: {
   const id = `step-${randomUUID()}`;
 
   db.run(
-    `INSERT INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       opts.planId,
@@ -640,6 +656,7 @@ export function createPlanStep(opts: {
       opts.externalRef.type,
       opts.externalRef.number ?? null,
       opts.externalRef.criteria ?? null,
+      now,
       now,
     ],
   );
@@ -653,6 +670,7 @@ export function createPlanStep(opts: {
     externalRef: opts.externalRef,
     dependsOn: [],
     createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -744,6 +762,9 @@ export function updatePlanStep(
   }
 
   if (fields.length === 0) return;
+
+  fields.push("updated_at = ?");
+  values.push(new Date().toISOString());
 
   values.push(id);
   db.run(`UPDATE planning_steps SET ${fields.join(", ")} WHERE id = ?`, values);
