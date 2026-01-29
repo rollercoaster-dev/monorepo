@@ -417,96 +417,81 @@ const resetForm = () => {
 
 <style>
 .manus-badge-issuer-form {
-  --form-border-color: var(
-    --ob-form-border-color,
-    var(--ob-border-color, #e2e8f0)
-  );
-  --form-background: var(--ob-form-background, var(--ob-bg-primary, #ffffff));
-  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary, #1a202c));
-  --form-label-color: var(
-    --ob-form-label-color,
-    var(--ob-text-secondary, #4a5568)
-  );
-  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300, #cbd5e0));
-  --form-input-focus: var(--ob-form-input-focus, var(--ob-primary, #3182ce));
-  --form-error-color: var(--ob-form-error-color, var(--ob-error, #e53e3e));
-  --form-success-color: var(
-    --ob-form-success-color,
-    var(--ob-success, #38a169)
-  );
-  --form-help-color: var(
-    --ob-form-help-color,
-    var(--ob-text-secondary, #718096)
-  );
-  --form-button-primary-bg: var(
-    --ob-form-button-primary-bg,
-    var(--ob-primary, #3182ce)
-  );
+  --form-border-color: var(--ob-form-border-color, var(--ob-border-color));
+  --form-background: var(--ob-form-background, var(--ob-bg-primary));
+  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary));
+  --form-label-color: var(--ob-form-label-color, var(--ob-text-secondary));
+  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300));
+  --form-input-focus: var(--ob-form-input-focus, var(--ob-primary));
+  --form-error-color: var(--ob-form-error-color, var(--ob-error));
+  --form-success-color: var(--ob-form-success-color, var(--ob-success));
+  --form-help-color: var(--ob-form-help-color, var(--ob-text-secondary));
+  --form-button-primary-bg: var(--ob-form-button-primary-bg, var(--ob-primary));
   --form-button-primary-color: var(
     --ob-form-button-primary-color,
-    var(--ob-text-inverse, #ffffff)
+    var(--ob-text-inverse)
   );
   --form-button-secondary-bg: var(
     --ob-form-button-secondary-bg,
-    var(--ob-gray-200, #e2e8f0)
+    var(--ob-gray-200)
   );
   --form-button-secondary-color: var(
     --ob-form-button-secondary-color,
-    var(--ob-text-secondary, #4a5568)
+    var(--ob-text-secondary)
   );
   --form-button-disabled-bg: var(
     --ob-form-button-disabled-bg,
-    var(--ob-gray-100, #edf2f7)
+    var(--ob-gray-100)
   );
   --form-button-disabled-color: var(
     --ob-form-button-disabled-color,
-    var(--ob-text-disabled, #a0aec0)
+    var(--ob-text-disabled)
   );
 
   max-width: 600px;
   margin: 0 auto;
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   background-color: var(--form-background);
   border: 1px solid var(--form-border-color);
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   color: var(--form-text-color);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
 }
 
 .manus-form-section {
-  margin-bottom: var(--ob-space-6, 24px);
+  margin-bottom: var(--ob-space-6);
   padding: 0;
   border: none;
 }
 
 .manus-form-section-title {
-  font-size: var(--ob-font-size-xl, 1.25rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
-  margin-bottom: var(--ob-space-4, 16px);
-  padding-bottom: var(--ob-space-2, 8px);
+  font-size: var(--ob-font-size-xl);
+  font-weight: var(--ob-font-weight-semibold);
+  margin-bottom: var(--ob-space-4);
+  padding-bottom: var(--ob-space-2);
   border-bottom: 1px solid var(--form-border-color);
 }
 
 .manus-form-field {
-  margin-bottom: var(--ob-space-4, 16px);
+  margin-bottom: var(--ob-space-4);
 }
 
 .manus-form-label {
   display: block;
-  margin-bottom: var(--ob-space-1, 4px);
-  font-weight: var(--ob-font-weight-medium, 500);
+  margin-bottom: var(--ob-space-1);
+  font-weight: var(--ob-font-weight-medium);
   color: var(--form-label-color);
 }
 
 .manus-form-input,
 .manus-form-textarea {
   width: 100%;
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--form-input-border);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  line-height: var(--ob-line-height-normal, 1.5);
-  transition: border-color var(--ob-transition-fast, 0.2s) ease;
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  line-height: var(--ob-line-height-normal);
+  transition: border-color var(--ob-transition-fast) ease;
   color: var(--form-text-color);
   background: var(--form-background);
 }
@@ -515,7 +500,7 @@ const resetForm = () => {
 .manus-form-textarea:focus {
   outline: none;
   border-color: var(--form-input-focus);
-  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(49, 130, 206, 0.2));
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .manus-form-input-error {
@@ -524,31 +509,31 @@ const resetForm = () => {
 
 .manus-form-error {
   color: var(--form-error-color);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  margin-top: var(--ob-space-1, 4px);
+  font-size: var(--ob-font-size-sm);
+  margin-top: var(--ob-space-1);
 }
 
 .manus-form-help {
   color: var(--form-help-color);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  margin-top: var(--ob-space-1, 4px);
+  font-size: var(--ob-font-size-sm);
+  margin-top: var(--ob-space-1);
 }
 
 .manus-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--ob-space-3, 12px);
-  margin-top: var(--ob-space-6, 24px);
+  gap: var(--ob-space-3);
+  margin-top: var(--ob-space-6);
 }
 
 .manus-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+  padding: var(--ob-space-2) var(--ob-space-4);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
 .manus-button-primary {
@@ -557,7 +542,7 @@ const resetForm = () => {
 }
 
 .manus-button-primary:hover:not(:disabled) {
-  background-color: var(--ob-primary-dark, #2c5282);
+  background-color: var(--ob-primary-dark);
 }
 
 .manus-button-secondary {
@@ -566,7 +551,7 @@ const resetForm = () => {
 }
 
 .manus-button-secondary:hover:not(:disabled) {
-  background-color: var(--ob-gray-300, #cbd5e0);
+  background-color: var(--ob-gray-300);
 }
 
 .manus-button:disabled {
@@ -576,34 +561,34 @@ const resetForm = () => {
 }
 
 .manus-form-errors {
-  margin-top: var(--ob-space-6, 24px);
-  padding: var(--ob-space-3, 12px);
-  background-color: var(--ob-error-light, #fff5f5);
-  border: 1px solid var(--ob-error-light, #fed7d7);
-  border-radius: var(--ob-border-radius-sm, 4px);
+  margin-top: var(--ob-space-6);
+  padding: var(--ob-space-3);
+  background-color: var(--ob-error-light);
+  border: 1px solid var(--ob-error-light);
+  border-radius: var(--ob-border-radius-sm);
   color: var(--form-error-color);
 }
 
 .manus-form-errors ul {
-  margin: var(--ob-space-2, 8px) 0 0;
-  padding-left: var(--ob-space-6, 24px);
+  margin: var(--ob-space-2) 0 0;
+  padding-left: var(--ob-space-6);
 }
 
 .manus-form-success {
-  margin-top: var(--ob-space-6, 24px);
-  padding: var(--ob-space-3, 12px);
-  background-color: var(--ob-success-light, #f0fff4);
-  border: 1px solid var(--ob-success-light, #c6f6d5);
-  border-radius: var(--ob-border-radius-sm, 4px);
+  margin-top: var(--ob-space-6);
+  padding: var(--ob-space-3);
+  background-color: var(--ob-success-light);
+  border: 1px solid var(--ob-success-light);
+  border-radius: var(--ob-border-radius-sm);
   color: var(--form-success-color);
-  font-weight: var(--ob-font-weight-medium, 500);
+  font-weight: var(--ob-font-weight-medium);
   text-align: center;
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .manus-badge-issuer-form {
-    padding: var(--ob-space-4, 16px);
+    padding: var(--ob-space-4);
   }
 
   .manus-form-actions {

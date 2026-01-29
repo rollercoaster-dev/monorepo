@@ -273,75 +273,69 @@ onMounted(() => {
 .manus-issuer-dashboard {
   --dashboard-border-color: var(
     --ob-dashboard-border-color,
-    var(--ob-border-color, #e2e8f0)
+    var(--ob-border-color)
   );
-  --dashboard-background: var(
-    --ob-dashboard-background,
-    var(--ob-bg-primary, #ffffff)
-  );
+  --dashboard-background: var(--ob-dashboard-background, var(--ob-bg-primary));
   --dashboard-text-color: var(
     --ob-dashboard-text-color,
-    var(--ob-text-primary, #1a202c)
+    var(--ob-text-primary)
   );
   --dashboard-secondary-color: var(
     --ob-dashboard-secondary-color,
-    var(--ob-text-secondary, #4a5568)
+    var(--ob-text-secondary)
   );
-  --dashboard-accent-color: var(
-    --ob-dashboard-accent-color,
-    var(--ob-primary, #3182ce)
-  );
+  --dashboard-accent-color: var(--ob-dashboard-accent-color, var(--ob-primary));
   --dashboard-tab-active-border: var(
     --ob-dashboard-tab-active-border,
-    var(--ob-primary, #3182ce)
+    var(--ob-primary)
   );
   --dashboard-tab-hover-bg: var(
     --ob-dashboard-tab-hover-bg,
-    var(--ob-bg-secondary, #f7fafc)
+    var(--ob-bg-secondary)
   );
   --dashboard-empty-color: var(
     --ob-dashboard-empty-color,
-    var(--ob-text-secondary, #718096)
+    var(--ob-text-secondary)
   );
 
   display: flex;
   flex-direction: column;
   background-color: var(--dashboard-background);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: var(--ob-border-radius-lg, 8px);
+  border-radius: var(--ob-border-radius-lg);
   overflow: hidden;
   color: var(--dashboard-text-color);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
 }
 
 .manus-dashboard-header {
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
   border-bottom: 1px solid var(--dashboard-border-color);
 }
 
 .manus-dashboard-title {
-  margin: 0 0 var(--ob-space-4, 16px);
-  font-size: var(--ob-font-size-2xl, 1.5rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  margin: 0 0 var(--ob-space-4);
+  font-size: var(--ob-font-size-2xl);
+  font-weight: var(--ob-font-weight-semibold);
 }
 
 .manus-dashboard-tabs {
   display: flex;
-  gap: var(--ob-space-1, 2px);
+  gap: var(--ob-space-1);
   border-bottom: 1px solid var(--dashboard-border-color);
-  margin: 0 calc(var(--ob-space-6, 24px) * -1) -1px;
+  margin: 0 calc(var(--ob-space-6) * -1) -1px;
 }
 
 .manus-tab-button {
-  padding: var(--ob-space-3, 12px) var(--ob-space-6, 24px);
+  padding: var(--ob-space-3) var(--ob-space-6);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
   cursor: pointer;
-  transition: all var(--ob-transition-fast, 0.2s) ease;
+  transition: all var(--ob-transition-fast) ease;
 }
 
 .manus-tab-button:hover {
@@ -354,7 +348,7 @@ onMounted(() => {
 }
 
 .manus-dashboard-content {
-  padding: var(--ob-space-6, 24px);
+  padding: var(--ob-space-6);
 }
 
 .manus-tab-panel {
@@ -362,36 +356,36 @@ onMounted(() => {
 }
 
 .manus-tab-panel:focus {
-  box-shadow: 0 0 0 2px var(--dashboard-accent-color);
-  border-radius: var(--ob-border-radius-sm, 4px);
+  box-shadow: var(--ob-shadow-focus);
+  border-radius: var(--ob-border-radius-sm);
 }
 
 .manus-dashboard-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ob-space-4, 16px);
-  margin-bottom: var(--ob-space-6, 24px);
+  gap: var(--ob-space-4);
+  margin-bottom: var(--ob-space-6);
 }
 
 .manus-dashboard-filter,
 .manus-dashboard-sort {
   display: flex;
   align-items: center;
-  gap: var(--ob-space-2, 8px);
+  gap: var(--ob-space-2);
 }
 
 .manus-filter-label,
 .manus-sort-label {
-  font-weight: var(--ob-font-weight-medium, 500);
+  font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
 }
 
 .manus-filter-input,
 .manus-sort-select {
-  padding: var(--ob-space-2, 8px) var(--ob-space-3, 12px);
+  padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--dashboard-border-color);
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-sm);
   color: var(--dashboard-text-color);
   background: var(--dashboard-background);
 }
@@ -402,53 +396,53 @@ onMounted(() => {
 
 .manus-dashboard-loading,
 .manus-dashboard-empty {
-  padding: var(--ob-space-12, 48px) var(--ob-space-6, 24px);
+  padding: var(--ob-space-12) var(--ob-space-6);
   text-align: center;
   color: var(--dashboard-empty-color);
 }
 
 .manus-dashboard-empty button {
-  margin-top: var(--ob-space-4, 16px);
+  margin-top: var(--ob-space-4);
 }
 
 .manus-button {
-  padding: var(--ob-space-2, 8px) var(--ob-space-4, 16px);
+  padding: var(--ob-space-2) var(--ob-space-4);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 4px);
-  font-size: var(--ob-font-size-md, 1rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
+  font-weight: var(--ob-font-weight-medium);
   cursor: pointer;
-  transition: background-color var(--ob-transition-fast, 0.2s) ease;
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
 .manus-button-primary {
   background-color: var(--dashboard-accent-color);
-  color: white;
+  color: var(--ob-text-inverse);
 }
 
 .manus-button-primary:hover {
-  background-color: var(--ob-primary-dark, #2c5282);
+  background-color: var(--ob-primary-dark);
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .manus-dashboard-header,
   .manus-dashboard-content {
-    padding: var(--ob-space-4, 16px);
+    padding: var(--ob-space-4);
   }
 
   .manus-dashboard-tabs {
-    margin: 0 calc(var(--ob-space-4, 16px) * -1) -1px;
+    margin: 0 calc(var(--ob-space-4) * -1) -1px;
   }
 
   .manus-tab-button {
-    padding: var(--ob-space-2, 10px) var(--ob-space-4, 16px);
-    font-size: var(--ob-font-size-sm, 0.875rem);
+    padding: var(--ob-space-2) var(--ob-space-4);
+    font-size: var(--ob-font-size-sm);
   }
 
   .manus-dashboard-controls {
     flex-direction: column;
-    gap: var(--ob-space-3, 12px);
+    gap: var(--ob-space-3);
   }
 
   .manus-filter-input {
