@@ -130,7 +130,7 @@ const truncatedDescription = computed(() => {
     class="ob-issuer-card"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
-    role="article"
+    :role="interactive ? 'button' : 'article'"
     :aria-label="`Issuer: ${normalizedIssuer.name}`"
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
