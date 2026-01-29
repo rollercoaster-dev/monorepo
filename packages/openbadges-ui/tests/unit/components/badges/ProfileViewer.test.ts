@@ -144,12 +144,11 @@ describe("ProfileViewer.vue", () => {
     );
   });
 
-  it("respects showUrl prop", async () => {
+  it("renders profile URL as a link", () => {
     const wrapper = mount(ProfileViewer, {
       props: {
         profile: mockProfile,
         badges: mockProfile.badges,
-        showUrl: false,
       },
       global: {
         stubs: {
@@ -158,8 +157,11 @@ describe("ProfileViewer.vue", () => {
       },
     });
 
-    // URL should not be displayed
-    expect(wrapper.find(".ob-profile-viewer__url").exists()).toBe(false);
+    // URL should be rendered as a link with the correct href
+    const urlLink = wrapper.find(
+      '.ob-profile-viewer__detail-value[href="http://example.org/jane"]',
+    );
+    expect(urlLink.exists()).toBe(true);
   });
 
   it("respects badgeLayout prop", () => {

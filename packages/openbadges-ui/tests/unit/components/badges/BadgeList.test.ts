@@ -336,9 +336,9 @@ describe("BadgeList.vue", () => {
     });
     const select = wrapper.find(".ob-badge-list__filter-select");
     await select.setValue("earned");
-    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(2); // placeholder logic always returns all
+    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(2); // "earned" placeholder returns all badges
     await select.setValue("not-earned");
-    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(0); // placeholder logic always returns none
+    expect(wrapper.findAll(".ob-badge-list__item").length).toBe(0); // "not-earned" placeholder returns no badges
   });
 
   it("shows focus indicator on badge-summary", async () => {
