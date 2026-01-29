@@ -182,7 +182,7 @@ const truncatedCriteria = computed(() => {
 
 <template>
   <div
-    class="manus-badge-class-card"
+    class="ob-badge-class-card"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
     role="article"
@@ -193,68 +193,68 @@ const truncatedCriteria = computed(() => {
     @focus="onFocus"
     @blur="onBlur"
   >
-    <div class="manus-badge-class-image">
+    <div class="ob-badge-class-card__image">
       <img
         v-if="normalizedBadgeClass.image"
         :src="normalizedBadgeClass.image"
         :alt="generateAltText(normalizedBadgeClass.name)"
-        class="manus-badge-class-img"
+        class="ob-badge-class-card__img"
       />
       <div
         v-else
-        class="manus-badge-class-img-fallback"
+        class="ob-badge-class-card__img-fallback"
         :aria-label="generateAltText(normalizedBadgeClass.name)"
       >
-        <span class="manus-badge-class-icon" aria-hidden="true">🏅</span>
+        <span class="ob-badge-class-card__icon" aria-hidden="true">🏅</span>
       </div>
     </div>
-    <div class="manus-badge-class-content">
-      <h3 class="manus-badge-class-name">
+    <div class="ob-badge-class-card__content">
+      <h3 class="ob-badge-class-card__name">
         {{ normalizedBadgeClass.name }}
       </h3>
       <p
         v-if="showDescription && truncatedDescription"
-        class="manus-badge-class-description"
+        class="ob-badge-class-card__description"
       >
         {{ truncatedDescription }}
       </p>
       <div
         v-if="showIssuer && normalizedBadgeClass.issuerName"
-        class="manus-badge-class-issuer"
+        class="ob-badge-class-card__issuer"
       >
         <span>By: {{ normalizedBadgeClass.issuerName }}</span>
       </div>
       <div
         v-if="showCriteria && truncatedCriteria"
-        class="manus-badge-class-criteria"
+        class="ob-badge-class-card__criteria"
       >
-        <span class="manus-badge-class-criteria-label">Criteria:</span>
+        <span class="ob-badge-class-card__criteria-label">Criteria:</span>
         {{ truncatedCriteria }}
       </div>
       <div
         v-if="showTags && normalizedBadgeClass.tags.length > 0"
-        class="manus-badge-class-tags"
+        class="ob-badge-class-card__tags"
       >
         <span
           v-for="tag in normalizedBadgeClass.tags.slice(0, 5)"
           :key="tag"
-          class="manus-badge-class-tag"
+          class="ob-badge-class-card__tag"
         >
           {{ tag }}
         </span>
         <span
           v-if="normalizedBadgeClass.tags.length > 5"
-          class="manus-badge-class-tag manus-badge-class-tag-more"
+          class="ob-badge-class-card__tag ob-badge-class-card__tag--more"
         >
           +{{ normalizedBadgeClass.tags.length - 5 }}
         </span>
       </div>
       <div
         v-if="additionalAchievementsCount > 0"
-        class="manus-badge-class-multi"
+        class="ob-badge-class-card__multi"
         :aria-label="`This credential includes ${additionalAchievementsCount} more achievement${additionalAchievementsCount > 1 ? 's' : ''}`"
       >
-        <span class="manus-badge-class-multi-badge">
+        <span class="ob-badge-class-card__multi-badge">
           +{{ additionalAchievementsCount }} more achievement{{
             additionalAchievementsCount > 1 ? "s" : ""
           }}
@@ -266,7 +266,7 @@ const truncatedCriteria = computed(() => {
 </template>
 
 <style>
-.manus-badge-class-card {
+.ob-badge-class-card {
   --badge-class-border-color: var(--ob-border-color);
   --badge-class-border-radius: var(--ob-border-radius-lg);
   --badge-class-padding: var(--ob-space-4);
@@ -293,26 +293,26 @@ const truncatedCriteria = computed(() => {
   color: var(--badge-class-text-color);
 }
 
-.manus-badge-class-card.is-interactive {
+.ob-badge-class-card.is-interactive {
   cursor: pointer;
 }
 
-.manus-badge-class-card.is-interactive:hover {
+.ob-badge-class-card.is-interactive:hover {
   box-shadow: var(--badge-class-hover-shadow);
 }
 
-.manus-badge-class-card.is-interactive:focus {
+.ob-badge-class-card.is-interactive:focus {
   outline: 2px solid var(--badge-class-focus-outline-color);
   outline-offset: var(--ob-space-1);
 }
 
-.manus-badge-class-image {
+.ob-badge-class-card__image {
   display: flex;
   justify-content: center;
   margin-bottom: var(--ob-space-3);
 }
 
-.manus-badge-class-img {
+.ob-badge-class-card__img {
   max-width: 100%;
   height: auto;
   max-height: 120px;
@@ -320,7 +320,7 @@ const truncatedCriteria = computed(() => {
   object-fit: contain;
 }
 
-.manus-badge-class-img-fallback {
+.ob-badge-class-card__img-fallback {
   width: 80px;
   height: 80px;
   border-radius: var(--ob-border-radius-lg);
@@ -330,17 +330,17 @@ const truncatedCriteria = computed(() => {
   justify-content: center;
 }
 
-.manus-badge-class-icon {
+.ob-badge-class-card__icon {
   font-size: var(--ob-font-size-3xl);
 }
 
-.manus-badge-class-content {
+.ob-badge-class-card__content {
   display: flex;
   flex-direction: column;
   gap: var(--ob-space-2);
 }
 
-.manus-badge-class-name {
+.ob-badge-class-card__name {
   margin: 0;
   font-size: var(--ob-font-size-lg);
   font-weight: var(--ob-font-weight-semibold);
@@ -348,37 +348,37 @@ const truncatedCriteria = computed(() => {
   line-height: var(--ob-line-height-tight);
 }
 
-.manus-badge-class-description {
+.ob-badge-class-card__description {
   margin: 0;
   font-size: var(--ob-font-size-sm);
   color: var(--badge-class-text-color);
   line-height: var(--ob-line-height-normal);
 }
 
-.manus-badge-class-issuer {
+.ob-badge-class-card__issuer {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-class-text-color);
 }
 
-.manus-badge-class-criteria {
+.ob-badge-class-card__criteria {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-class-text-color);
   font-style: italic;
 }
 
-.manus-badge-class-criteria-label {
+.ob-badge-class-card__criteria-label {
   font-weight: var(--ob-font-weight-medium);
   font-style: normal;
 }
 
-.manus-badge-class-tags {
+.ob-badge-class-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ob-space-1);
   margin-top: var(--ob-space-1);
 }
 
-.manus-badge-class-tag {
+.ob-badge-class-card__tag {
   display: inline-block;
   padding: var(--ob-space-1) var(--ob-space-2);
   background-color: var(--badge-class-tag-bg);
@@ -388,77 +388,77 @@ const truncatedCriteria = computed(() => {
   font-weight: var(--ob-font-weight-medium);
 }
 
-.manus-badge-class-tag-more {
+.ob-badge-class-card__tag--more {
   background-color: var(--ob-gray-300);
 }
 
 /* Content density styles */
-.manus-badge-class-card.density-compact {
+.ob-badge-class-card.density-compact {
   padding: var(--ob-space-2);
   max-width: 240px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-img {
+.ob-badge-class-card.density-compact .ob-badge-class-card__img {
   max-height: 80px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-img-fallback {
+.ob-badge-class-card.density-compact .ob-badge-class-card__img-fallback {
   width: 60px;
   height: 60px;
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-icon {
+.ob-badge-class-card.density-compact .ob-badge-class-card__icon {
   font-size: var(--ob-font-size-2xl);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-name {
+.ob-badge-class-card.density-compact .ob-badge-class-card__name {
   font-size: var(--ob-font-size-md);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-description {
+.ob-badge-class-card.density-compact .ob-badge-class-card__description {
   font-size: var(--ob-font-size-xs);
 }
 
-.manus-badge-class-card.density-compact .manus-badge-class-content {
+.ob-badge-class-card.density-compact .ob-badge-class-card__content {
   gap: var(--ob-space-1);
 }
 
-.manus-badge-class-card.density-normal {
+.ob-badge-class-card.density-normal {
   padding: var(--ob-space-4);
 }
 
-.manus-badge-class-card.density-spacious {
+.ob-badge-class-card.density-spacious {
   padding: var(--ob-space-6);
   max-width: 350px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-img {
+.ob-badge-class-card.density-spacious .ob-badge-class-card__img {
   max-height: 150px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-img-fallback {
+.ob-badge-class-card.density-spacious .ob-badge-class-card__img-fallback {
   width: 100px;
   height: 100px;
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-icon {
+.ob-badge-class-card.density-spacious .ob-badge-class-card__icon {
   font-size: var(--ob-font-size-3xl);
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-name {
+.ob-badge-class-card.density-spacious .ob-badge-class-card__name {
   font-size: var(--ob-font-size-xl);
 }
 
-.manus-badge-class-card.density-spacious .manus-badge-class-content {
+.ob-badge-class-card.density-spacious .ob-badge-class-card__content {
   gap: var(--ob-space-2);
 }
 
 /* Multi-achievement indicator */
-.manus-badge-class-multi {
+.ob-badge-class-card__multi {
   margin-top: var(--ob-space-1);
 }
 
-.manus-badge-class-multi-badge {
+.ob-badge-class-card__multi-badge {
   display: inline-block;
   padding: var(--ob-space-1) var(--ob-space-2);
   background-color: var(--ob-gray-100);
@@ -470,8 +470,8 @@ const truncatedCriteria = computed(() => {
 }
 
 /* Accessibility focus styles */
-.manus-badge-class-card:focus-visible,
-.manus-badge-class-card.is-interactive:focus-visible {
+.ob-badge-class-card:focus-visible,
+.ob-badge-class-card.is-interactive:focus-visible {
   outline: 3px solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);

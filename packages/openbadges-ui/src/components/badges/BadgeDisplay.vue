@@ -96,7 +96,7 @@ const densityClass = computed(() => {
 
 <template>
   <div
-    class="manus-badge-display"
+    class="ob-badge-display"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :role="interactive ? 'button' : 'article'"
     :tabindex="interactive ? 0 : undefined"
@@ -106,69 +106,72 @@ const densityClass = computed(() => {
     @focus="onFocus"
     @blur="onBlur"
   >
-    <div class="manus-badge-image">
+    <div class="ob-badge-display__image">
       <img
         :src="normalizedBadge.image"
         :alt="generateAltText(normalizedBadge.name)"
-        class="manus-badge-img"
+        class="ob-badge-display__img"
       />
     </div>
-    <div class="manus-badge-content">
-      <h3 class="manus-badge-title">
+    <div class="ob-badge-display__content">
+      <h3 class="ob-badge-display__title">
         {{ normalizedBadge.name }}
       </h3>
       <p
         v-if="showDescription && !simplifiedView"
-        class="manus-badge-description"
+        class="ob-badge-display__description"
       >
         {{ normalizedBadge.description }}
       </p>
-      <div v-if="!simplifiedView" class="manus-badge-issuer">
+      <div v-if="!simplifiedView" class="ob-badge-display__issuer">
         <span>Issued by: {{ normalizedBadge.issuer.name }}</span>
       </div>
       <div
         v-if="showRecipient && normalizedBadge.recipient && !simplifiedView"
-        class="manus-badge-recipient"
+        class="ob-badge-display__recipient"
         role="region"
         aria-label="Recipient information"
       >
         <span
           v-if="normalizedBadge.recipient.name"
-          class="manus-badge-recipient-name"
+          class="ob-badge-display__recipient-name"
           aria-label="Recipient name"
         >
           Awarded to: {{ normalizedBadge.recipient.name }}
         </span>
         <span
           v-if="normalizedBadge.recipient.email"
-          class="manus-badge-recipient-email"
+          class="ob-badge-display__recipient-email"
           aria-label="Recipient email address"
         >
           Email: {{ normalizedBadge.recipient.email }}
         </span>
         <span
           v-if="normalizedBadge.recipient.role"
-          class="manus-badge-recipient-role"
+          class="ob-badge-display__recipient-role"
           aria-label="Recipient role"
         >
           Role: {{ normalizedBadge.recipient.role }}
         </span>
       </div>
-      <div v-if="showIssuedDate && !simplifiedView" class="manus-badge-date">
+      <div
+        v-if="showIssuedDate && !simplifiedView"
+        class="ob-badge-display__date"
+      >
         <span>Issued: {{ formatDate(normalizedBadge.issuedOn) }}</span>
       </div>
       <div
         v-if="showExpiryDate && normalizedBadge.expires && !simplifiedView"
-        class="manus-badge-expiry"
+        class="ob-badge-display__expiry"
       >
         <span>Expires: {{ formatDate(normalizedBadge.expires) }}</span>
       </div>
       <div
         v-if="showVerification && !simplifiedView"
-        class="manus-badge-verification-toggle"
+        class="ob-badge-display__verification-toggle"
       >
         <button
-          class="manus-badge-verification-toggle-button"
+          class="ob-badge-display__verification-toggle-button"
           type="button"
           @click.stop="toggleVerificationDetails"
         >
@@ -181,7 +184,7 @@ const densityClass = computed(() => {
       </div>
       <div
         v-if="showVerification && showVerificationDetails && !simplifiedView"
-        class="manus-badge-verification-container"
+        class="ob-badge-display__verification-container"
       >
         <BadgeVerification
           :badge="badge"
@@ -195,7 +198,7 @@ const densityClass = computed(() => {
 </template>
 
 <style>
-.manus-badge-display {
+.ob-badge-display {
   --badge-border-color: var(--ob-badge-border-color, var(--ob-border-color));
   --badge-border-radius: var(
     --ob-badge-border-radius,
@@ -225,61 +228,61 @@ const densityClass = computed(() => {
   color: var(--badge-text-color);
 }
 
-.manus-badge-display.is-interactive {
+.ob-badge-display.is-interactive {
   cursor: pointer;
 }
 
-.manus-badge-display.is-interactive:hover {
+.ob-badge-display.is-interactive:hover {
   box-shadow: var(--badge-hover-shadow);
 }
 
-.manus-badge-display.is-interactive:focus {
+.ob-badge-display.is-interactive:focus {
   outline: 2px solid var(--badge-focus-outline-color);
   outline-offset: 2px;
 }
 
-.manus-badge-image {
+.ob-badge-display__image {
   display: flex;
   justify-content: center;
   margin-bottom: var(--ob-space-3);
 }
 
-.manus-badge-img {
+.ob-badge-display__img {
   max-width: 100%;
   height: auto;
   max-height: 150px;
   border-radius: var(--ob-border-radius-sm);
 }
 
-.manus-badge-content {
+.ob-badge-display__content {
   display: flex;
   flex-direction: column;
   gap: var(--ob-space-2);
 }
 
-.manus-badge-title {
+.ob-badge-display__title {
   margin: 0;
   font-size: var(--ob-font-size-xl);
   font-weight: var(--ob-font-weight-semibold);
   color: var(--badge-title-color);
 }
 
-.manus-badge-description {
+.ob-badge-display__description {
   margin: 0;
   font-size: var(--ob-font-size-sm);
   color: var(--badge-text-color);
   line-height: var(--ob-line-height-normal);
 }
 
-.manus-badge-issuer,
-.manus-badge-date,
-.manus-badge-expiry,
-.manus-badge-verification-toggle {
+.ob-badge-display__issuer,
+.ob-badge-display__date,
+.ob-badge-display__expiry,
+.ob-badge-display__verification-toggle {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-text-color);
 }
 
-.manus-badge-recipient {
+.ob-badge-display__recipient {
   display: flex;
   flex-direction: column;
   gap: var(--ob-space-1);
@@ -289,14 +292,14 @@ const densityClass = computed(() => {
   border: 1px solid var(--badge-border-color);
 }
 
-.manus-badge-recipient-name,
-.manus-badge-recipient-email,
-.manus-badge-recipient-role {
+.ob-badge-display__recipient-name,
+.ob-badge-display__recipient-email,
+.ob-badge-display__recipient-role {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-text-color);
 }
 
-.manus-badge-verification-toggle-button {
+.ob-badge-display__verification-toggle-button {
   background: none;
   border: none;
   color: var(--ob-primary);
@@ -306,11 +309,11 @@ const densityClass = computed(() => {
   text-decoration: underline;
 }
 
-.manus-badge-verification-toggle-button:hover {
+.ob-badge-display__verification-toggle-button:hover {
   color: var(--ob-primary-dark);
 }
 
-.manus-badge-verification-container {
+.ob-badge-display__verification-container {
   margin-top: var(--ob-space-3);
   border-top: 1px solid var(--badge-border-color);
   padding-top: var(--ob-space-3);
@@ -318,51 +321,51 @@ const densityClass = computed(() => {
 
 /* Responsive adjustments */
 @media (min-width: 640px) {
-  .manus-badge-display {
+  .ob-badge-display {
     flex-direction: row;
     max-width: 500px;
   }
 
-  .manus-badge-image {
+  .ob-badge-display__image {
     flex: 0 0 120px;
     margin-right: var(--ob-space-4);
     margin-bottom: 0;
   }
 
-  .manus-badge-content {
+  .ob-badge-display__content {
     flex: 1;
   }
 }
 
 /* Content density styles */
-.manus-badge-display.density-compact {
+.ob-badge-display.density-compact {
   padding: var(--ob-space-2);
   gap: var(--ob-space-1);
 }
-.manus-badge-display.density-normal {
+.ob-badge-display.density-normal {
   padding: var(--ob-space-4);
   gap: var(--ob-space-2);
 }
-.manus-badge-display.density-spacious {
+.ob-badge-display.density-spacious {
   padding: var(--ob-space-6);
   gap: var(--ob-space-4);
 }
 
-.manus-badge-display:focus-visible,
-.manus-badge-display.is-interactive:focus-visible {
+.ob-badge-display:focus-visible,
+.ob-badge-display.is-interactive:focus-visible {
   outline: var(--ob-badge-focus-outline-width, 3px) solid
     var(--ob-badge-focus-outline-color);
   outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
 }
 
-.manus-badge-verification-toggle-button:focus-visible,
-.manus-badge-verification-toggle-button:active {
+.ob-badge-display__verification-toggle-button:focus-visible,
+.ob-badge-display__verification-toggle-button:active {
   outline: 2px solid var(--ob-border-color-focus);
   background: var(--ob-warning-light);
 }
 
-.manus-badge-verification-toggle-button {
+.ob-badge-display__verification-toggle-button {
   transition:
     background var(--ob-transition-fast),
     color var(--ob-transition-fast);

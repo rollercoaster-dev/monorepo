@@ -175,7 +175,7 @@ const handleDensityChange = (event: Event) => {
 
 <template>
   <div
-    class="manus-badge-list"
+    class="ob-badge-list"
     :class="[
       `density-${internalDensity}`,
       { 'grid-layout': layout === 'grid' },
@@ -183,20 +183,20 @@ const handleDensityChange = (event: Event) => {
   >
     <!-- Neurodiversity filter and density controls -->
     <div
-      class="manus-badge-list-controls"
+      class="ob-badge-list__controls"
       role="region"
       aria-label="Badge list controls"
     >
       <input
         v-model="filterText"
-        class="manus-badge-list-filter-input"
+        class="ob-badge-list__filter-input"
         type="search"
         :placeholder="'Filter badges by keyword'"
         aria-label="Filter badges by keyword"
       />
       <select
         v-model="filterEarned"
-        class="manus-badge-list-filter-select"
+        class="ob-badge-list__filter-select"
         aria-label="Filter by earned status"
       >
         <option value="all">All</option>
@@ -205,7 +205,7 @@ const handleDensityChange = (event: Event) => {
       </select>
       <select
         :value="internalDensity"
-        class="manus-badge-list-density-select"
+        class="ob-badge-list__density-select"
         aria-label="Display density"
         @change="handleDensityChange"
       >
@@ -217,7 +217,7 @@ const handleDensityChange = (event: Event) => {
 
     <div
       v-if="loading"
-      class="manus-badge-list-loading"
+      class="ob-badge-list__loading"
       role="status"
       aria-live="polite"
     >
@@ -226,7 +226,7 @@ const handleDensityChange = (event: Event) => {
 
     <div
       v-else-if="normalizedBadges.length === 0"
-      class="manus-badge-list-empty"
+      class="ob-badge-list__empty"
       role="status"
     >
       <slot name="empty">
@@ -234,11 +234,11 @@ const handleDensityChange = (event: Event) => {
       </slot>
     </div>
 
-    <ul v-else class="manus-badge-list-items" :aria-label="ariaLabel">
+    <ul v-else class="ob-badge-list__items" :aria-label="ariaLabel">
       <li
         v-for="badge in normalizedBadges"
         :key="badge.id"
-        class="manus-badge-list-item"
+        class="ob-badge-list__item"
         tabindex="0"
         :class="{ 'is-expanded': expandedBadges.has(badge.id) }"
       >
@@ -278,12 +278,12 @@ const handleDensityChange = (event: Event) => {
 
     <div
       v-if="showPagination && totalPages > 1"
-      class="manus-badge-list-pagination"
+      class="ob-badge-list__pagination"
       role="navigation"
       aria-label="Pagination"
     >
       <button
-        class="manus-pagination-button"
+        class="ob-badge-list__pagination-button"
         :disabled="internalCurrentPage === 1"
         aria-label="Previous page"
         tabindex="0"
@@ -292,12 +292,12 @@ const handleDensityChange = (event: Event) => {
         Previous
       </button>
 
-      <span class="manus-pagination-info">
+      <span class="ob-badge-list__pagination-info">
         Page {{ internalCurrentPage }} of {{ totalPages }}
       </span>
 
       <button
-        class="manus-pagination-button"
+        class="ob-badge-list__pagination-button"
         :disabled="internalCurrentPage === totalPages"
         aria-label="Next page"
         tabindex="0"
@@ -310,14 +310,14 @@ const handleDensityChange = (event: Event) => {
 </template>
 
 <style>
-.manus-badge-list {
+.ob-badge-list {
   --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4));
   --badge-list-empty-color: var(
-    --ob-badge-list-empty-color,
+    --ob-badge-list__empty-color,
     var(--ob-text-secondary)
   );
   --badge-list-pagination-gap: var(
-    --ob-badge-list-pagination-gap,
+    --ob-badge-list__pagination-gap,
     var(--ob-space-2)
   );
   --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-gray-200));
@@ -345,19 +345,19 @@ const handleDensityChange = (event: Event) => {
   color: var(--ob-text-primary);
 }
 
-.manus-badge-list.density-compact {
+.ob-badge-list.density-compact {
   --badge-list-gap: var(--ob-space-1);
 }
 
-.manus-badge-list.density-normal {
+.ob-badge-list.density-normal {
   --badge-list-gap: var(--ob-space-4);
 }
 
-.manus-badge-list.density-spacious {
+.ob-badge-list.density-spacious {
   --badge-list-gap: var(--ob-space-8);
 }
 
-.manus-badge-list-controls {
+.ob-badge-list__controls {
   display: flex;
   gap: var(--ob-space-3);
   align-items: center;
@@ -365,9 +365,9 @@ const handleDensityChange = (event: Event) => {
   flex-wrap: wrap;
 }
 
-.manus-badge-list-filter-input,
-.manus-badge-list-filter-select,
-.manus-badge-list-density-select {
+.ob-badge-list__filter-input,
+.ob-badge-list__filter-select,
+.ob-badge-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
   border: 1px solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-sm);
@@ -376,14 +376,14 @@ const handleDensityChange = (event: Event) => {
   background: var(--ob-bg-primary);
 }
 
-.manus-badge-list-loading,
-.manus-badge-list-empty {
+.ob-badge-list__loading,
+.ob-badge-list__empty {
   padding: var(--ob-space-6);
   text-align: center;
   color: var(--badge-list-empty-color);
 }
 
-.manus-badge-list-items {
+.ob-badge-list__items {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -392,7 +392,7 @@ const handleDensityChange = (event: Event) => {
   gap: var(--badge-list-gap);
 }
 
-.manus-badge-list.grid-layout .manus-badge-list-items {
+.ob-badge-list.grid-layout .ob-badge-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--badge-list-gap);
@@ -400,7 +400,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 /* Make grid items look like cards and avoid content squashing */
-.manus-badge-list.grid-layout .manus-badge-list-item {
+.ob-badge-list.grid-layout .ob-badge-list__item {
   display: flex;
   flex-direction: column;
   background: var(--ob-bg-primary);
@@ -409,7 +409,7 @@ const handleDensityChange = (event: Event) => {
   padding: var(--ob-space-3);
 }
 
-.manus-badge-list-pagination {
+.ob-badge-list__pagination {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,7 +418,7 @@ const handleDensityChange = (event: Event) => {
   flex-wrap: wrap;
 }
 
-.manus-pagination-button {
+.ob-badge-list__pagination-button {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
@@ -430,17 +430,17 @@ const handleDensityChange = (event: Event) => {
   transition: background-color var(--ob-transition-fast);
 }
 
-.manus-pagination-button:hover:not(:disabled) {
+.ob-badge-list__pagination-button:hover:not(:disabled) {
   background-color: var(--badge-list-button-hover-bg);
 }
 
-.manus-pagination-button:disabled {
+.ob-badge-list__pagination-button:disabled {
   background-color: var(--badge-list-button-disabled-bg);
   color: var(--badge-list-button-disabled-color);
   cursor: not-allowed;
 }
 
-.manus-pagination-info {
+.ob-badge-list__pagination-info {
   font-size: var(--ob-font-size-sm);
   color: var(--badge-list-button-color);
 }
@@ -454,7 +454,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 /* In grid layout, stack summary content to keep expand button from squashing */
-.manus-badge-list.grid-layout .badge-summary {
+.ob-badge-list.grid-layout .badge-summary {
   flex-direction: column;
   align-items: stretch;
   gap: var(--ob-space-2);
@@ -473,7 +473,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 .badge-summary:focus-visible,
-.manus-badge-list-item:focus-visible {
+.ob-badge-list__item:focus-visible {
   outline: 3px solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
@@ -487,19 +487,19 @@ const handleDensityChange = (event: Event) => {
   color: var(--ob-text-primary);
 }
 
-.manus-badge-list-item.is-expanded {
+.ob-badge-list__item.is-expanded {
   background: var(--ob-bg-secondary);
   border-radius: var(--ob-border-radius-md);
 }
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .manus-badge-list.grid-layout .manus-badge-list-items {
+  .ob-badge-list.grid-layout .ob-badge-list__items {
     grid-template-columns: 1fr;
   }
 
   /* On small screens, make summary row-friendly again if needed */
-  .manus-badge-list.grid-layout .badge-summary {
+  .ob-badge-list.grid-layout .badge-summary {
     flex-direction: column;
     align-items: stretch;
     gap: var(--ob-space-2);
@@ -508,7 +508,7 @@ const handleDensityChange = (event: Event) => {
 
 /* Medium screens: slightly smaller min card width to fit more columns */
 @media (min-width: 640px) and (max-width: 1023px) {
-  .manus-badge-list.grid-layout .manus-badge-list-items {
+  .ob-badge-list.grid-layout .ob-badge-list__items {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
