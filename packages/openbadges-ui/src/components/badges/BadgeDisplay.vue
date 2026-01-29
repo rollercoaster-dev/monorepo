@@ -79,15 +79,6 @@ const toggleVerificationDetails = () => {
   showVerificationDetails.value = !showVerificationDetails.value;
 };
 
-// Focus state for accessibility
-const isFocused = ref(false);
-const onFocus = () => {
-  isFocused.value = true;
-};
-const onBlur = () => {
-  isFocused.value = false;
-};
-
 // Computed classes for content density
 const densityClass = computed(() => {
   return `ob-badge-display--density-${props.contentDensity}`;
@@ -103,8 +94,6 @@ const densityClass = computed(() => {
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
-    @focus="onFocus"
-    @blur="onBlur"
   >
     <div class="ob-badge-display__image">
       <img

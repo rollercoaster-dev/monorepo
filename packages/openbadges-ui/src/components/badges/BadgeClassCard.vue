@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import type { OB2, OB3 } from "@/types";
 import { getLocalizedString } from "@utils/localization";
 
@@ -147,15 +147,6 @@ const handleClick = () => {
   }
 };
 
-// Focus state for accessibility
-const isFocused = ref(false);
-const onFocus = () => {
-  isFocused.value = true;
-};
-const onBlur = () => {
-  isFocused.value = false;
-};
-
 // Computed classes for content density
 const densityClass = computed(() => {
   return `ob-badge-class-card--density-${props.density}`;
@@ -190,8 +181,6 @@ const truncatedCriteria = computed(() => {
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
     @keydown.space.prevent="handleClick"
-    @focus="onFocus"
-    @blur="onBlur"
   >
     <div class="ob-badge-class-card__image">
       <img
