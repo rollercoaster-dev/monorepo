@@ -805,11 +805,15 @@ export type PlanningEntityType = "Goal" | "Interrupt";
  * - INTERRUPTED_BY: Goal was interrupted by an Interrupt
  * - PAUSED_FOR: Goal was paused for another Goal
  * - COMPLETED_AS: Completed item was summarized as a Learning
+ * - PART_OF: Plan → Goal, PlanStep → Plan
+ * - DEPENDS_ON: PlanStep → PlanStep
  */
 export type PlanningRelationshipType =
   | "INTERRUPTED_BY"
   | "PAUSED_FOR"
-  | "COMPLETED_AS";
+  | "COMPLETED_AS"
+  | "PART_OF"
+  | "DEPENDS_ON";
 
 /**
  * Status of a planning entity on the stack.
@@ -845,6 +849,8 @@ export interface Goal extends PlanningEntityBase {
   description?: string;
   /** Optional linked GitHub issue number */
   issueNumber?: number;
+  /** Links to PlanStep when started via /plan start */
+  planStepId?: string;
   /** Optional metadata */
   metadata?: Record<string, unknown>;
 }
@@ -920,4 +926,55 @@ export interface StaleItem {
   staleSince: string;
   /** Human-readable reason why it's stale */
   reason: string;
+}
+
+// ============================================================================
+// Planning Graph: Plan and PlanStep Types (Issue #636)
+// ============================================================================
+
+/**
+ * Source type for a plan.
+ */
+export type PlanSourceType = "milestone" | "epic" | "learning-path" | "manual";
+
+/**
+ * External reference type for a plan step.
+ */
+export type ExternalRefType = "issue" | "badge" | "manual";
+
+/**
+ * External reference for a plan step (links to GitHub issue, badge, or manual criteria).
+ */
+export interface ExternalRef {
+  type: ExternalRefType;
+  number?: number; // GitHub issue number
+  criteria?: string; // Badge match criteria or manual completion criteria
+}
+
+/**
+ * A plan is an ordered set of steps toward a Goal.
+ * Plans can be created from milestones, epics, learning paths, or manually.
+ */
+export interface Plan {
+  id: string;
+  title: string;
+  goalId: string; // PART_OF relationship to Goal
+  sourceType: PlanSourceType;
+  sourceRef?: string; // milestone number, epic issue number, curriculum ID, etc.
+  createdAt: string;
+}
+
+/**
+ * A plan step is a concrete unit of work within a plan.
+ * Step completion is derived from an external source at query time (never stored).
+ */
+export interface PlanStep {
+  id: string;
+  planId: string; // PART_OF relationship to Plan
+  title: string;
+  ordinal: number; // global execution order
+  wave: number; // parallelization group
+  externalRef: ExternalRef;
+  dependsOn: string[]; // PlanStep IDs (DEPENDS_ON relationship)
+  createdAt: string;
 }
