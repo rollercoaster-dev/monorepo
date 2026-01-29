@@ -193,7 +193,7 @@ describe("BadgeList and BadgeDisplay Integration", () => {
         layout: "grid",
       },
     });
-    expect(gridWrapper.classes()).toContain("grid-layout");
+    expect(gridWrapper.classes()).toContain("ob-badge-list--grid-layout");
 
     // Test list layout
     const listWrapper = mount(BadgeList, {
@@ -202,7 +202,7 @@ describe("BadgeList and BadgeDisplay Integration", () => {
         layout: "list",
       },
     });
-    expect(listWrapper.classes()).not.toContain("grid-layout");
+    expect(listWrapper.classes()).not.toContain("ob-badge-list--grid-layout");
   });
 
   it("should use the slot for customizing badge display", () => {
@@ -247,9 +247,9 @@ describe("BadgeList and BadgeDisplay Integration", () => {
     const wrapper = mount(BadgeList, {
       props: { badges: mockBadges, density: "compact" },
     });
-    expect(wrapper.classes()).toContain("density-compact");
+    expect(wrapper.classes()).toContain("ob-badge-list--density-compact");
     await wrapper.setProps({ density: "spacious" });
-    expect(wrapper.classes()).toContain("density-spacious");
+    expect(wrapper.classes()).toContain("ob-badge-list--density-spacious");
   });
 
   it("should expand and collapse badge details", async () => {

@@ -132,7 +132,7 @@ describe("BadgeList.vue", () => {
         },
       },
     });
-    expect(gridWrapper.classes()).toContain("grid-layout");
+    expect(gridWrapper.classes()).toContain("ob-badge-list--grid-layout");
 
     // Test list layout
     const listWrapper = mount(BadgeList, {
@@ -146,7 +146,7 @@ describe("BadgeList.vue", () => {
         },
       },
     });
-    expect(listWrapper.classes()).not.toContain("grid-layout");
+    expect(listWrapper.classes()).not.toContain("ob-badge-list--grid-layout");
   });
 
   it("emits badge-click event when a badge is clicked", async () => {
@@ -311,9 +311,9 @@ describe("BadgeList.vue", () => {
       props: { badges: mockBadges, density: "compact" },
       global: { stubs: { BadgeDisplay: true } },
     });
-    expect(wrapper.classes()).toContain("density-compact");
+    expect(wrapper.classes()).toContain("ob-badge-list--density-compact");
     await wrapper.setProps({ density: "spacious" });
-    expect(wrapper.classes()).toContain("density-spacious");
+    expect(wrapper.classes()).toContain("ob-badge-list--density-spacious");
   });
 
   it("shows expand/collapse button and toggles details", async () => {

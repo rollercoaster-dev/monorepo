@@ -186,8 +186,8 @@ const handleDensityChange = (event: Event) => {
   <div
     class="ob-issuer-list"
     :class="[
-      `density-${internalDensity}`,
-      { 'grid-layout': layout === 'grid' },
+      `ob-issuer-list--density-${internalDensity}`,
+      { 'ob-issuer-list--grid-layout': layout === 'grid' },
     ]"
   >
     <!-- Search and density controls -->
@@ -304,15 +304,15 @@ const handleDensityChange = (event: Event) => {
   color: var(--ob-text-primary);
 }
 
-.ob-issuer-list.density-compact {
+.ob-issuer-list.ob-issuer-list--density-compact {
   --issuer-list-gap: var(--ob-space-2);
 }
 
-.ob-issuer-list.density-normal {
+.ob-issuer-list.ob-issuer-list--density-normal {
   --issuer-list-gap: var(--ob-space-4);
 }
 
-.ob-issuer-list.density-spacious {
+.ob-issuer-list.ob-issuer-list--density-spacious {
   --issuer-list-gap: var(--ob-space-6);
 }
 
@@ -352,7 +352,7 @@ const handleDensityChange = (event: Event) => {
   gap: var(--issuer-list-gap);
 }
 
-.ob-issuer-list.grid-layout .ob-issuer-list__items {
+.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--issuer-list-gap);
@@ -363,12 +363,14 @@ const handleDensityChange = (event: Event) => {
   display: flex;
 }
 
-.ob-issuer-list.grid-layout .ob-issuer-list__item {
+.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__item {
   display: flex;
 }
 
 /* Make cards stretch to fill grid cell */
-.ob-issuer-list.grid-layout .ob-issuer-list__item :deep(.ob-issuer-card) {
+.ob-issuer-list.ob-issuer-list--grid-layout
+  .ob-issuer-list__item
+  :deep(.ob-issuer-card) {
   width: 100%;
   max-width: none;
 }
@@ -415,7 +417,7 @@ const handleDensityChange = (event: Event) => {
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .ob-issuer-list.grid-layout .ob-issuer-list__items {
+  .ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__items {
     grid-template-columns: 1fr;
   }
 

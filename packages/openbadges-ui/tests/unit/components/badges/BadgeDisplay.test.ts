@@ -276,12 +276,12 @@ describe("BadgeDisplay.vue", () => {
       },
     });
     expect(wrapper.find(".ob-badge-display").classes()).toContain(
-      "density-compact",
+      "ob-badge-display--density-compact",
     );
     wrapper.setProps({ contentDensity: "spacious" });
     return wrapper.vm.$nextTick().then(() => {
       expect(wrapper.find(".ob-badge-display").classes()).toContain(
-        "density-spacious",
+        "ob-badge-display--density-spacious",
       );
     });
   });

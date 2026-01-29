@@ -144,14 +144,14 @@ describe("IssuerCard", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: mockOB2Issuer, density: "compact" },
       });
-      expect(wrapper.classes()).toContain("density-compact");
+      expect(wrapper.classes()).toContain("ob-issuer-card--density-compact");
     });
 
     it("applies spacious density class", () => {
       const wrapper = mount(IssuerCard, {
         props: { issuer: mockOB2Issuer, density: "spacious" },
       });
-      expect(wrapper.classes()).toContain("density-spacious");
+      expect(wrapper.classes()).toContain("ob-issuer-card--density-spacious");
     });
   });
 

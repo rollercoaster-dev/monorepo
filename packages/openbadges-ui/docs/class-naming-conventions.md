@@ -11,14 +11,15 @@ ob-<component>              → root element
 ob-<component>__<element>   → child element
 ob-<component>--<modifier>  → variant modifier
 is-<state>                  → dynamic state (active, expanded, etc.)
-density-<level>             → content density (compact, normal, spacious)
 ```
 
 ## Examples
 
 ```html
 <!-- Badge Display -->
-<div class="ob-badge-display ob-badge-display--interactive density-normal">
+<div
+  class="ob-badge-display ob-badge-display--interactive ob-badge-display--density-normal"
+>
   <div class="ob-badge-display__image">
     <img class="ob-badge-display__img" />
   </div>

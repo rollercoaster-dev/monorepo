@@ -90,7 +90,7 @@ const onBlur = () => {
 
 // Computed classes for content density
 const densityClass = computed(() => {
-  return `density-${props.contentDensity}`;
+  return `ob-badge-display--density-${props.contentDensity}`;
 });
 </script>
 
@@ -338,15 +338,15 @@ const densityClass = computed(() => {
 }
 
 /* Content density styles */
-.ob-badge-display.density-compact {
+.ob-badge-display.ob-badge-display--density-compact {
   padding: var(--ob-space-2);
   gap: var(--ob-space-1);
 }
-.ob-badge-display.density-normal {
+.ob-badge-display.ob-badge-display--density-normal {
   padding: var(--ob-space-4);
   gap: var(--ob-space-2);
 }
-.ob-badge-display.density-spacious {
+.ob-badge-display.ob-badge-display--density-spacious {
   padding: var(--ob-space-6);
   gap: var(--ob-space-4);
 }

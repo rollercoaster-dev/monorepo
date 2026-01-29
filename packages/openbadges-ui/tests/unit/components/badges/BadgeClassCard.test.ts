@@ -316,14 +316,18 @@ describe("BadgeClassCard", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB2BadgeClass, density: "compact" },
       });
-      expect(wrapper.classes()).toContain("density-compact");
+      expect(wrapper.classes()).toContain(
+        "ob-badge-class-card--density-compact",
+      );
     });
 
     it("applies spacious density class", () => {
       const wrapper = mount(BadgeClassCard, {
         props: { badgeClass: mockOB2BadgeClass, density: "spacious" },
       });
-      expect(wrapper.classes()).toContain("density-spacious");
+      expect(wrapper.classes()).toContain(
+        "ob-badge-class-card--density-spacious",
+      );
     });
   });
 

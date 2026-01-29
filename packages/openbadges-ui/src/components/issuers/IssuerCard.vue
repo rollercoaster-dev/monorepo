@@ -112,7 +112,7 @@ const onBlur = () => {
 
 // Computed classes for content density
 const densityClass = computed(() => {
-  return `density-${props.density}`;
+  return `ob-issuer-card--density-${props.density}`;
 });
 
 // Truncate description for display
@@ -304,63 +304,63 @@ const truncatedDescription = computed(() => {
 }
 
 /* Content density styles */
-.ob-issuer-card.density-compact {
+.ob-issuer-card.ob-issuer-card--density-compact {
   padding: var(--ob-space-2);
   max-width: 300px;
 }
 
-.ob-issuer-card.density-compact .ob-issuer-card__image {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__image {
   flex: 0 0 40px;
   margin-right: var(--ob-space-2);
 }
 
-.ob-issuer-card.density-compact .ob-issuer-card__img,
-.ob-issuer-card.density-compact .ob-issuer-card__img-fallback {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__img,
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__img-fallback {
   width: 40px;
   height: 40px;
 }
 
-.ob-issuer-card.density-compact .ob-issuer-card__initials {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__initials {
   font-size: var(--ob-font-size-md);
 }
 
-.ob-issuer-card.density-compact .ob-issuer-card__name {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__name {
   font-size: var(--ob-font-size-md);
 }
 
-.ob-issuer-card.density-compact .ob-issuer-card__description {
+.ob-issuer-card.ob-issuer-card--density-compact .ob-issuer-card__description {
   font-size: var(--ob-font-size-xs);
 }
 
-.ob-issuer-card.density-normal {
+.ob-issuer-card.ob-issuer-card--density-normal {
   padding: var(--ob-space-4);
 }
 
-.ob-issuer-card.density-spacious {
+.ob-issuer-card.ob-issuer-card--density-spacious {
   padding: var(--ob-space-6);
   max-width: 500px;
 }
 
-.ob-issuer-card.density-spacious .ob-issuer-card__image {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__image {
   flex: 0 0 80px;
   margin-right: var(--ob-space-5);
 }
 
-.ob-issuer-card.density-spacious .ob-issuer-card__img,
-.ob-issuer-card.density-spacious .ob-issuer-card__img-fallback {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__img,
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__img-fallback {
   width: 80px;
   height: 80px;
 }
 
-.ob-issuer-card.density-spacious .ob-issuer-card__initials {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__initials {
   font-size: var(--ob-font-size-2xl);
 }
 
-.ob-issuer-card.density-spacious .ob-issuer-card__name {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__name {
   font-size: var(--ob-font-size-xl);
 }
 
-.ob-issuer-card.density-spacious .ob-issuer-card__content {
+.ob-issuer-card.ob-issuer-card--density-spacious .ob-issuer-card__content {
   gap: var(--ob-space-2);
 }
 

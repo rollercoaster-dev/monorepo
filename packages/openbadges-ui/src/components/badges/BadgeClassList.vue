@@ -232,8 +232,8 @@ const hasActiveFilters = computed(() => {
   <div
     class="ob-badge-class-list"
     :class="[
-      `density-${internalDensity}`,
-      { 'grid-layout': layout === 'grid' },
+      `ob-badge-class-list--density-${internalDensity}`,
+      { 'ob-badge-class-list--grid-layout': layout === 'grid' },
     ]"
   >
     <!-- Search and filter controls -->
@@ -384,15 +384,15 @@ const hasActiveFilters = computed(() => {
   color: var(--ob-text-primary);
 }
 
-.ob-badge-class-list.density-compact {
+.ob-badge-class-list.ob-badge-class-list--density-compact {
   --ob-badge-class-list-gap: var(--ob-space-2);
 }
 
-.ob-badge-class-list.density-normal {
+.ob-badge-class-list.ob-badge-class-list--density-normal {
   --ob-badge-class-list-gap: var(--ob-space-4);
 }
 
-.ob-badge-class-list.density-spacious {
+.ob-badge-class-list.ob-badge-class-list--density-spacious {
   --ob-badge-class-list-gap: var(--ob-space-6);
 }
 
@@ -450,7 +450,8 @@ const hasActiveFilters = computed(() => {
   gap: var(--ob-badge-class-list-gap);
 }
 
-.ob-badge-class-list.grid-layout .ob-badge-class-list__items {
+.ob-badge-class-list.ob-badge-class-list--grid-layout
+  .ob-badge-class-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--ob-badge-class-list-gap);
@@ -462,7 +463,7 @@ const hasActiveFilters = computed(() => {
 }
 
 /* Make cards stretch to fill grid cell */
-.ob-badge-class-list.grid-layout
+.ob-badge-class-list.ob-badge-class-list--grid-layout
   .ob-badge-class-list__item
   :deep(.ob-badge-class-card) {
   width: 100%;
@@ -512,7 +513,8 @@ const hasActiveFilters = computed(() => {
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .ob-badge-class-list.grid-layout .ob-badge-class-list__items {
+  .ob-badge-class-list.ob-badge-class-list--grid-layout
+    .ob-badge-class-list__items {
     grid-template-columns: 1fr;
   }
 

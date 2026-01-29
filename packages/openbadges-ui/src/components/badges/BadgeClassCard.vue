@@ -158,7 +158,7 @@ const onBlur = () => {
 
 // Computed classes for content density
 const densityClass = computed(() => {
-  return `density-${props.density}`;
+  return `ob-badge-class-card--density-${props.density}`;
 });
 
 // Truncate description for display
@@ -393,63 +393,74 @@ const truncatedCriteria = computed(() => {
 }
 
 /* Content density styles */
-.ob-badge-class-card.density-compact {
+.ob-badge-class-card.ob-badge-class-card--density-compact {
   padding: var(--ob-space-2);
   max-width: 240px;
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__img {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__img {
   max-height: 80px;
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__img-fallback {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__img-fallback {
   width: 60px;
   height: 60px;
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__icon {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__icon {
   font-size: var(--ob-font-size-2xl);
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__name {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__name {
   font-size: var(--ob-font-size-md);
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__description {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__description {
   font-size: var(--ob-font-size-xs);
 }
 
-.ob-badge-class-card.density-compact .ob-badge-class-card__content {
+.ob-badge-class-card.ob-badge-class-card--density-compact
+  .ob-badge-class-card__content {
   gap: var(--ob-space-1);
 }
 
-.ob-badge-class-card.density-normal {
+.ob-badge-class-card.ob-badge-class-card--density-normal {
   padding: var(--ob-space-4);
 }
 
-.ob-badge-class-card.density-spacious {
+.ob-badge-class-card.ob-badge-class-card--density-spacious {
   padding: var(--ob-space-6);
   max-width: 350px;
 }
 
-.ob-badge-class-card.density-spacious .ob-badge-class-card__img {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__img {
   max-height: 150px;
 }
 
-.ob-badge-class-card.density-spacious .ob-badge-class-card__img-fallback {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__img-fallback {
   width: 100px;
   height: 100px;
 }
 
-.ob-badge-class-card.density-spacious .ob-badge-class-card__icon {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__icon {
   font-size: var(--ob-font-size-3xl);
 }
 
-.ob-badge-class-card.density-spacious .ob-badge-class-card__name {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__name {
   font-size: var(--ob-font-size-xl);
 }
 
-.ob-badge-class-card.density-spacious .ob-badge-class-card__content {
+.ob-badge-class-card.ob-badge-class-card--density-spacious
+  .ob-badge-class-card__content {
   gap: var(--ob-space-2);
 }
 

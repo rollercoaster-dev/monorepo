@@ -177,8 +177,8 @@ const handleDensityChange = (event: Event) => {
   <div
     class="ob-badge-list"
     :class="[
-      `density-${internalDensity}`,
-      { 'grid-layout': layout === 'grid' },
+      `ob-badge-list--density-${internalDensity}`,
+      { 'ob-badge-list--grid-layout': layout === 'grid' },
     ]"
   >
     <!-- Neurodiversity filter and density controls -->
@@ -345,15 +345,15 @@ const handleDensityChange = (event: Event) => {
   color: var(--ob-text-primary);
 }
 
-.ob-badge-list.density-compact {
+.ob-badge-list.ob-badge-list--density-compact {
   --badge-list-gap: var(--ob-space-1);
 }
 
-.ob-badge-list.density-normal {
+.ob-badge-list.ob-badge-list--density-normal {
   --badge-list-gap: var(--ob-space-4);
 }
 
-.ob-badge-list.density-spacious {
+.ob-badge-list.ob-badge-list--density-spacious {
   --badge-list-gap: var(--ob-space-8);
 }
 
@@ -392,7 +392,7 @@ const handleDensityChange = (event: Event) => {
   gap: var(--badge-list-gap);
 }
 
-.ob-badge-list.grid-layout .ob-badge-list__items {
+.ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--badge-list-gap);
@@ -400,7 +400,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 /* Make grid items look like cards and avoid content squashing */
-.ob-badge-list.grid-layout .ob-badge-list__item {
+.ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__item {
   display: flex;
   flex-direction: column;
   background: var(--ob-bg-primary);
@@ -454,7 +454,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 /* In grid layout, stack summary content to keep expand button from squashing */
-.ob-badge-list.grid-layout .badge-summary {
+.ob-badge-list.ob-badge-list--grid-layout .badge-summary {
   flex-direction: column;
   align-items: stretch;
   gap: var(--ob-space-2);
@@ -494,12 +494,12 @@ const handleDensityChange = (event: Event) => {
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .ob-badge-list.grid-layout .ob-badge-list__items {
+  .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
     grid-template-columns: 1fr;
   }
 
   /* On small screens, make summary row-friendly again if needed */
-  .ob-badge-list.grid-layout .badge-summary {
+  .ob-badge-list.ob-badge-list--grid-layout .badge-summary {
     flex-direction: column;
     align-items: stretch;
     gap: var(--ob-space-2);
@@ -508,7 +508,7 @@ const handleDensityChange = (event: Event) => {
 
 /* Medium screens: slightly smaller min card width to fit more columns */
 @media (min-width: 640px) and (max-width: 1023px) {
-  .ob-badge-list.grid-layout .ob-badge-list__items {
+  .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
