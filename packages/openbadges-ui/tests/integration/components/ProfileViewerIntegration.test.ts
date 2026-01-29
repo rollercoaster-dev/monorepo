@@ -66,8 +66,8 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
     });
 
     // Check profile information
-    expect(wrapper.find(".manus-profile-name").text()).toBe("Jane Doe");
-    expect(wrapper.find(".manus-profile-description").text()).toBe(
+    expect(wrapper.find(".ob-profile-viewer__name").text()).toBe("Jane Doe");
+    expect(wrapper.find(".ob-profile-viewer__description").text()).toBe(
       "Software developer and open badges enthusiast",
     );
 
@@ -91,9 +91,9 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
         badges: mockBadges,
       },
     });
-    expect(recipientWrapper.find(".manus-section-title").text()).toBe(
-      "Badges Earned",
-    );
+    expect(
+      recipientWrapper.find(".ob-profile-viewer__section-title").text(),
+    ).toBe("Badges Earned");
 
     // Test with Issuer profile
     const issuerWrapper = mount(ProfileViewer, {
@@ -102,7 +102,7 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
         badges: mockBadges,
       },
     });
-    expect(issuerWrapper.find(".manus-section-title").text()).toBe(
+    expect(issuerWrapper.find(".ob-profile-viewer__section-title").text()).toBe(
       "Badges Offered",
     );
   });
@@ -228,7 +228,9 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
     expect(badgeDisplays.length).toBe(2);
 
     // Click the next page button
-    await wrapper.find(".manus-pagination-button:last-child").trigger("click");
+    await wrapper
+      .find(".ob-badge-list__pagination-button:last-child")
+      .trigger("click");
 
     // Check that the page-change event was emitted from BadgeList
     expect(badgeList.emitted("page-change")).toBeTruthy();
@@ -244,8 +246,8 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
     });
 
     // Check that loading message is displayed
-    expect(wrapper.find(".manus-profile-loading").exists()).toBe(true);
-    expect(wrapper.find(".manus-profile-loading").text()).toContain(
+    expect(wrapper.find(".ob-profile-viewer__loading").exists()).toBe(true);
+    expect(wrapper.find(".ob-profile-viewer__loading").text()).toContain(
       "Loading badges",
     );
 
@@ -262,7 +264,7 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
     });
 
     // Check that profile image is displayed
-    const profileImage = wrapper.find(".manus-profile-image");
+    const profileImage = wrapper.find(".ob-profile-viewer__image");
     expect(profileImage.exists()).toBe(true);
     expect(profileImage.attributes("src")).toBe(
       "http://example.org/profile.jpg",
@@ -281,7 +283,7 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
 
     // Check that initials placeholder is displayed
     const initialsPlaceholder = wrapper.find(
-      ".manus-profile-image-placeholder",
+      ".ob-profile-viewer__image-placeholder",
     );
     expect(initialsPlaceholder.exists()).toBe(true);
     expect(initialsPlaceholder.text()).toBe("JD"); // Jane Doe's initials
@@ -297,7 +299,7 @@ describe("ProfileViewer Integration with BadgeList and BadgeDisplay", () => {
 
     // Check that URL is formatted correctly (protocol removed)
     const urlElement = wrapper.find(
-      '.manus-profile-detail-value[href="http://example.org/jane"]',
+      '.ob-profile-viewer__detail-value[href="http://example.org/jane"]',
     );
     expect(urlElement.exists()).toBe(true);
     expect(urlElement.text()).toContain("example.org/jane");

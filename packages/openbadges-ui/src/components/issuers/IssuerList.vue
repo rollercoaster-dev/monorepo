@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import type { OB2, OB3 } from "@/types";
 import IssuerCard from "@components/issuers/IssuerCard.vue";
+import { getLocalizedString } from "@utils/localization";
 
 interface Props {
   issuers: (OB2.Profile | OB3.Profile)[];
@@ -55,39 +56,14 @@ watch(
 // Search filter state
 const searchText = ref("");
 
-/**
- * Get a localized string from a value that may be a plain string or a JSON-LD language map.
- * OB3 supports multi-language fields as `{ "en": "English", "es": "Spanish" }`.
- * @param value - A string or language map object
- * @param fallback - Default value if extraction fails
- * @returns The extracted string value
- */
-const getLocalizedString = (
-  value: string | Record<string, string> | undefined,
-  fallback = "",
-): string => {
-  if (!value) return fallback;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") {
-    // Try common language codes in order of preference
-    const preferredLangs = ["en", "en-US", "en-GB", Object.keys(value)[0]];
-    for (const lang of preferredLangs) {
-      if (lang && value[lang]) return value[lang];
-    }
-  }
-  return fallback;
-};
-
 // Normalize issuer for search/display
 const normalizeIssuer = (issuer: OB2.Profile | OB3.Profile) => {
   // Use getLocalizedString to handle OB3 multi-language fields
-  const name = getLocalizedString(
-    issuer.name as string | Record<string, string>,
-    "Unknown Issuer",
-  );
+  const name =
+    getLocalizedString(issuer.name as string | Record<string, string>) ||
+    "Unknown Issuer";
   const description = getLocalizedString(
     issuer.description as string | Record<string, string>,
-    "",
   );
   const id = issuer.id || "";
 
@@ -114,24 +90,25 @@ const filteredIssuers = computed(() => {
     // Use getLocalizedString to handle OB3 multi-language fields in search
     const name = getLocalizedString(
       issuer.name as string | Record<string, string>,
-      "",
     ).toLowerCase();
     const description = getLocalizedString(
       issuer.description as string | Record<string, string>,
-      "",
     ).toLowerCase();
     return name.includes(search) || description.includes(search);
   });
 });
 
+// Guard against invalid pageSize values
+const effectivePageSize = computed(() => Math.max(1, props.pageSize));
+
 // Compute total pages
 const totalPages = computed(() => {
-  return Math.ceil(filteredIssuers.value.length / props.pageSize);
+  return Math.ceil(filteredIssuers.value.length / effectivePageSize.value);
 });
 
 // Watch for filteredIssuers changes to clamp current page
 watch(
-  () => [filteredIssuers.value.length, props.pageSize],
+  () => [filteredIssuers.value.length, effectivePageSize.value],
   () => {
     if (!props.showPagination) return;
     const total = totalPages.value;
@@ -151,8 +128,8 @@ const paginatedIssuers = computed(() => {
     return filteredIssuers.value;
   }
 
-  const start = (internalCurrentPage.value - 1) * props.pageSize;
-  const end = start + props.pageSize;
+  const start = (internalCurrentPage.value - 1) * effectivePageSize.value;
+  const end = start + effectivePageSize.value;
   return filteredIssuers.value.slice(start, end);
 });
 
@@ -184,28 +161,28 @@ const handleDensityChange = (event: Event) => {
 
 <template>
   <div
-    class="manus-issuer-list"
+    class="ob-issuer-list"
     :class="[
-      `density-${internalDensity}`,
-      { 'grid-layout': layout === 'grid' },
+      `ob-issuer-list--density-${internalDensity}`,
+      { 'ob-issuer-list--grid-layout': layout === 'grid' },
     ]"
   >
     <!-- Search and density controls -->
     <div
-      class="manus-issuer-list-controls"
+      class="ob-issuer-list__controls"
       role="region"
       aria-label="Issuer list controls"
     >
       <input
         v-model="searchText"
-        class="manus-issuer-list-search"
+        class="ob-issuer-list__search"
         type="search"
         placeholder="Search issuers..."
         aria-label="Search issuers by name or description"
       />
       <select
         :value="internalDensity"
-        class="manus-issuer-list-density-select"
+        class="ob-issuer-list__density-select"
         aria-label="Display density"
         @change="handleDensityChange"
       >
@@ -218,7 +195,7 @@ const handleDensityChange = (event: Event) => {
     <!-- Loading state -->
     <div
       v-if="loading"
-      class="manus-issuer-list-loading"
+      class="ob-issuer-list__loading"
       role="status"
       aria-live="polite"
     >
@@ -228,7 +205,7 @@ const handleDensityChange = (event: Event) => {
     <!-- Empty state -->
     <div
       v-else-if="normalizedIssuers.length === 0"
-      class="manus-issuer-list-empty"
+      class="ob-issuer-list__empty"
       role="status"
     >
       <slot name="empty">
@@ -237,11 +214,11 @@ const handleDensityChange = (event: Event) => {
     </div>
 
     <!-- Issuer list -->
-    <ul v-else class="manus-issuer-list-items" :aria-label="ariaLabel">
+    <ul v-else class="ob-issuer-list__items" :aria-label="ariaLabel">
       <li
         v-for="issuer in normalizedIssuers"
         :key="issuer.id"
-        class="manus-issuer-list-item"
+        class="ob-issuer-list__item"
       >
         <slot name="issuer" :issuer="issuer.original" :normalized="issuer">
           <IssuerCard
@@ -257,12 +234,12 @@ const handleDensityChange = (event: Event) => {
     <!-- Pagination -->
     <div
       v-if="showPagination && totalPages > 1"
-      class="manus-issuer-list-pagination"
+      class="ob-issuer-list__pagination"
       role="navigation"
       aria-label="Pagination"
     >
       <button
-        class="manus-pagination-button"
+        class="ob-issuer-list__pagination-button"
         :disabled="internalCurrentPage === 1"
         aria-label="Previous page"
         @click="handlePageChange(internalCurrentPage - 1)"
@@ -270,12 +247,12 @@ const handleDensityChange = (event: Event) => {
         Previous
       </button>
 
-      <span class="manus-pagination-info">
+      <span class="ob-issuer-list__pagination-info">
         Page {{ internalCurrentPage }} of {{ totalPages }}
       </span>
 
       <button
-        class="manus-pagination-button"
+        class="ob-issuer-list__pagination-button"
         :disabled="internalCurrentPage === totalPages"
         aria-label="Next page"
         @click="handlePageChange(internalCurrentPage + 1)"
@@ -287,61 +264,63 @@ const handleDensityChange = (event: Event) => {
 </template>
 
 <style>
-.manus-issuer-list {
-  --issuer-list-gap: 16px;
-  --issuer-list-empty-color: #718096;
-  --issuer-list-pagination-gap: 8px;
-  --issuer-list-button-bg: #e2e8f0;
-  --issuer-list-button-color: #4a5568;
-  --issuer-list-button-hover-bg: #cbd5e0;
-  --issuer-list-button-disabled-bg: #edf2f7;
-  --issuer-list-button-disabled-color: #a0aec0;
+.ob-issuer-list {
+  --issuer-list-gap: var(--ob-space-4);
+  --issuer-list-empty-color: var(--ob-text-secondary);
+  --issuer-list-pagination-gap: var(--ob-space-2);
+  --issuer-list-button-bg: var(--ob-gray-200);
+  --issuer-list-button-color: var(--ob-text-secondary);
+  --issuer-list-button-hover-bg: var(--ob-gray-300);
+  --issuer-list-button-disabled-bg: var(--ob-gray-100);
+  --issuer-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--ob-space-6);
+  font-family: var(--ob-font-family);
+  color: var(--ob-text-primary);
 }
 
-.manus-issuer-list.density-compact {
-  --issuer-list-gap: 8px;
+.ob-issuer-list.ob-issuer-list--density-compact {
+  --issuer-list-gap: var(--ob-space-2);
 }
 
-.manus-issuer-list.density-normal {
-  --issuer-list-gap: 16px;
+.ob-issuer-list.ob-issuer-list--density-normal {
+  --issuer-list-gap: var(--ob-space-4);
 }
 
-.manus-issuer-list.density-spacious {
-  --issuer-list-gap: 24px;
+.ob-issuer-list.ob-issuer-list--density-spacious {
+  --issuer-list-gap: var(--ob-space-6);
 }
 
-.manus-issuer-list-controls {
+.ob-issuer-list__controls {
   display: flex;
-  gap: 12px;
+  gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
 }
 
-.manus-issuer-list-search,
-.manus-issuer-list-density-select {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 1rem;
+.ob-issuer-list__search,
+.ob-issuer-list__density-select {
+  padding: var(--ob-space-2) var(--ob-space-3);
+  border: 1px solid var(--ob-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  font-size: var(--ob-font-size-md);
 }
 
-.manus-issuer-list-search {
+.ob-issuer-list__search {
   flex: 1;
   min-width: 200px;
 }
 
-.manus-issuer-list-loading,
-.manus-issuer-list-empty {
-  padding: 24px;
+.ob-issuer-list__loading,
+.ob-issuer-list__empty {
+  padding: var(--ob-space-6);
   text-align: center;
   color: var(--issuer-list-empty-color);
 }
 
-.manus-issuer-list-items {
+.ob-issuer-list__items {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -350,81 +329,77 @@ const handleDensityChange = (event: Event) => {
   gap: var(--issuer-list-gap);
 }
 
-.manus-issuer-list.grid-layout .manus-issuer-list-items {
+.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--issuer-list-gap);
   align-items: stretch;
 }
 
-.manus-issuer-list-item {
-  display: flex;
-}
-
-.manus-issuer-list.grid-layout .manus-issuer-list-item {
+.ob-issuer-list__item {
   display: flex;
 }
 
 /* Make cards stretch to fill grid cell */
-.manus-issuer-list.grid-layout
-  .manus-issuer-list-item
-  :deep(.manus-issuer-card) {
+.ob-issuer-list.ob-issuer-list--grid-layout
+  .ob-issuer-list__item
+  :deep(.ob-issuer-card) {
   width: 100%;
   max-width: none;
 }
 
-.manus-issuer-list-pagination {
+.ob-issuer-list__pagination {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--issuer-list-pagination-gap);
-  margin-top: 16px;
+  margin-top: var(--ob-space-4);
   flex-wrap: wrap;
 }
 
-.manus-pagination-button {
-  padding: 8px 16px;
+.ob-issuer-list__pagination-button {
+  padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--issuer-list-button-bg);
   color: var(--issuer-list-button-color);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s ease;
+  font-size: var(--ob-font-size-sm);
+  transition: background-color var(--ob-transition-fast) ease;
 }
 
-.manus-pagination-button:hover:not(:disabled) {
+.ob-issuer-list__pagination-button:hover:not(:disabled) {
   background-color: var(--issuer-list-button-hover-bg);
 }
 
-.manus-pagination-button:disabled {
+.ob-issuer-list__pagination-button:disabled {
   background-color: var(--issuer-list-button-disabled-bg);
   color: var(--issuer-list-button-disabled-color);
   cursor: not-allowed;
 }
 
-.manus-pagination-button:focus-visible {
-  outline: 3px solid #ff9800;
-  outline-offset: 2px;
+.ob-issuer-list__pagination-button:focus-visible {
+  outline: 3px solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
 }
 
-.manus-pagination-info {
-  font-size: 0.875rem;
+.ob-issuer-list__pagination-info {
+  font-size: var(--ob-font-size-sm);
   color: var(--issuer-list-button-color);
 }
 
 /* Responsive adjustments */
 @media (max-width: 639px) {
-  .manus-issuer-list.grid-layout .manus-issuer-list-items {
+  .ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__items {
     grid-template-columns: 1fr;
   }
 
-  .manus-issuer-list-controls {
+  .ob-issuer-list__controls {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .manus-issuer-list-search {
+  .ob-issuer-list__search {
     width: 100%;
   }
 }

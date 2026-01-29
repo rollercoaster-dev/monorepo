@@ -41,19 +41,19 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
     });
 
     // Initially, the verification component should not be visible
-    expect(wrapper.find(".manus-badge-verification-container").exists()).toBe(
-      false,
-    );
+    expect(
+      wrapper.find(".ob-badge-display__verification-container").exists(),
+    ).toBe(false);
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Now the verification component should be visible
-    expect(wrapper.find(".manus-badge-verification-container").exists()).toBe(
-      true,
-    );
+    expect(
+      wrapper.find(".ob-badge-display__verification-container").exists(),
+    ).toBe(true);
   });
 
   it("should pass badge to verification component", async () => {
@@ -67,7 +67,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Get the BadgeVerification component
@@ -87,7 +87,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Get the BadgeVerification component
@@ -139,7 +139,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Wait for all promises to resolve
@@ -186,7 +186,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Get the BadgeVerification component
@@ -241,7 +241,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Get the BadgeVerification component
@@ -304,7 +304,7 @@ describe("BadgeDisplay and BadgeVerification Integration", () => {
 
     // Click the toggle button to show verification
     await wrapper
-      .find(".manus-badge-verification-toggle-button")
+      .find(".ob-badge-display__verification-toggle-button")
       .trigger("click");
 
     // Get the BadgeVerification component
