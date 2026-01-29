@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import type { OB2, OB3 } from "@/types";
 import IssuerCard from "@components/issuers/IssuerCard.vue";
+import { getLocalizedString } from "@utils/localization";
 
 interface Props {
   issuers: (OB2.Profile | OB3.Profile)[];
@@ -55,39 +56,14 @@ watch(
 // Search filter state
 const searchText = ref("");
 
-/**
- * Get a localized string from a value that may be a plain string or a JSON-LD language map.
- * OB3 supports multi-language fields as `{ "en": "English", "es": "Spanish" }`.
- * @param value - A string or language map object
- * @param fallback - Default value if extraction fails
- * @returns The extracted string value
- */
-const getLocalizedString = (
-  value: string | Record<string, string> | undefined,
-  fallback = "",
-): string => {
-  if (!value) return fallback;
-  if (typeof value === "string") return value;
-  if (typeof value === "object") {
-    // Try common language codes in order of preference
-    const preferredLangs = ["en", "en-US", "en-GB", Object.keys(value)[0]];
-    for (const lang of preferredLangs) {
-      if (lang && value[lang]) return value[lang];
-    }
-  }
-  return fallback;
-};
-
 // Normalize issuer for search/display
 const normalizeIssuer = (issuer: OB2.Profile | OB3.Profile) => {
   // Use getLocalizedString to handle OB3 multi-language fields
-  const name = getLocalizedString(
-    issuer.name as string | Record<string, string>,
-    "Unknown Issuer",
-  );
+  const name =
+    getLocalizedString(issuer.name as string | Record<string, string>) ||
+    "Unknown Issuer";
   const description = getLocalizedString(
     issuer.description as string | Record<string, string>,
-    "",
   );
   const id = issuer.id || "";
 
@@ -114,11 +90,9 @@ const filteredIssuers = computed(() => {
     // Use getLocalizedString to handle OB3 multi-language fields in search
     const name = getLocalizedString(
       issuer.name as string | Record<string, string>,
-      "",
     ).toLowerCase();
     const description = getLocalizedString(
       issuer.description as string | Record<string, string>,
-      "",
     ).toLowerCase();
     return name.includes(search) || description.includes(search);
   });

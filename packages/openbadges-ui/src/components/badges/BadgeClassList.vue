@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import type { OB2, OB3 } from "@/types";
 import BadgeClassCard from "@components/badges/BadgeClassCard.vue";
+import { getLocalizedString } from "@utils/localization";
 
 interface Props {
   badgeClasses: (OB2.BadgeClass | OB3.Achievement)[];
@@ -59,15 +60,6 @@ const effectivePageSize = computed(() => Math.max(1, props.pageSize));
 const searchText = ref("");
 const issuerFilter = ref("");
 const tagFilter = ref("");
-
-// Helper to get string from MultiLanguageString
-const getLocalizedString = (
-  value: string | { [key: string]: string } | undefined,
-): string => {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  return value["en"] || Object.values(value)[0] || "";
-};
 
 // Normalize badge class for search/filtering
 const normalizeBadgeClass = (badge: OB2.BadgeClass | OB3.Achievement) => {
