@@ -21,6 +21,7 @@ import {
   getPlan,
   createPlanStep,
   addStepDependency,
+  getStepsByPlan,
 } from "../../planning/store.js";
 import type { Goal, PlanSourceType, ExternalRef } from "../../types.js";
 
@@ -188,6 +189,22 @@ export const planningTools: Tool[] = [
         },
       },
       required: ["planId", "steps"],
+    },
+  },
+  {
+    name: "planning_plan_get",
+    description:
+      "Get a Plan and all its PlanSteps for a Goal. " +
+      "Returns the plan with embedded steps array including dependencies.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        goalId: {
+          type: "string",
+          description: "ID of the Goal to get the plan for",
+        },
+      },
+      required: ["goalId"],
     },
   },
 ];
@@ -806,6 +823,76 @@ export async function handlePlanningToolCall(
                   success: true,
                   message: `Added ${createdSteps.length} steps to plan "${plan.title}"`,
                   steps: createdSteps,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "planning_plan_get": {
+        const goalId = args.goalId as string;
+
+        // Validate required fields
+        if (!goalId || goalId.trim().length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "goalId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get plan by goal
+        const plan = getPlanByGoal(goalId);
+        if (!plan) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  plan: null,
+                  steps: [],
+                  message: `No plan found for goal "${goalId}"`,
+                }),
+              },
+            ],
+          };
+        }
+
+        // Get all steps for this plan
+        const steps = getStepsByPlan(plan.id);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  plan: {
+                    id: plan.id,
+                    title: plan.title,
+                    goalId: plan.goalId,
+                    sourceType: plan.sourceType,
+                    sourceRef: plan.sourceRef,
+                    createdAt: plan.createdAt,
+                    updatedAt: plan.updatedAt,
+                  },
+                  steps: steps.map((step) => ({
+                    id: step.id,
+                    title: step.title,
+                    ordinal: step.ordinal,
+                    wave: step.wave,
+                    externalRef: step.externalRef,
+                    dependsOn: step.dependsOn,
+                    createdAt: step.createdAt,
+                    updatedAt: step.updatedAt,
+                  })),
                 },
                 null,
                 2,
