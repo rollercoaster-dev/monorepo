@@ -58,32 +58,16 @@ export async function computePlanProgress(plan: Plan): Promise<PlanProgress> {
     }
   }
 
-  // Count statuses
-  let done = 0;
-  let inProgress = 0;
-  let notStarted = 0;
-
-  for (const status of statusMap.values()) {
-    if (status === "done") {
-      done++;
-    } else if (status === "in-progress") {
-      inProgress++;
-    } else {
-      notStarted++;
-    }
-  }
-
   // Compute current wave (first wave with non-done steps)
   const currentWave =
     steps.find((s) => statusMap.get(s.id) !== "done")?.wave ?? null;
 
-  // Find next steps and count blocked
-  let blocked = 0;
+  // Build blocked set and next steps in one pass
+  const blockedStepIds = new Set<string>();
   const nextSteps: NextStep[] = [];
 
   for (const step of steps) {
     const status = statusMap.get(step.id);
-    // Defensive: skip if status couldn't be resolved (shouldn't happen)
     if (!status) {
       logger.warn("Step has no resolved status, skipping", {
         stepId: step.id,
@@ -96,12 +80,11 @@ export async function computePlanProgress(plan: Plan): Promise<PlanProgress> {
     // Check if dependencies are met
     const blockedBy = step.dependsOn.filter((depId) => {
       const depStatus = statusMap.get(depId);
-      // If dependency doesn't exist in map, treat as blocker
       return !depStatus || depStatus !== "done";
     });
 
     if (blockedBy.length > 0) {
-      blocked++;
+      blockedStepIds.add(step.id);
       continue;
     }
 
@@ -113,6 +96,27 @@ export async function computePlanProgress(plan: Plan): Promise<PlanProgress> {
         blockedBy,
         wave: step.wave,
       });
+    }
+  }
+
+  // Count statuses (after we know which steps are blocked)
+  let done = 0;
+  let inProgress = 0;
+  let notStarted = 0;
+  let blocked = 0;
+
+  for (const step of steps) {
+    const status = statusMap.get(step.id);
+    if (!status) continue;
+
+    if (status === "done") {
+      done++;
+    } else if (status === "in-progress") {
+      inProgress++;
+    } else if (blockedStepIds.has(step.id)) {
+      blocked++;
+    } else {
+      notStarted++;
     }
   }
 
