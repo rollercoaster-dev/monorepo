@@ -1,8 +1,10 @@
 # /auto-epic $ARGUMENTS
 
-Autonomous epic-to-PRs workflow. Reads GitHub sub-issues and native dependency graph, spawns sequential /auto-issue workers by default.
+Claude-as-orchestrator for epic execution. Reads GitHub sub-issues and native dependency graph, computes waves inline, and spawns `claude -p` workers with per-PR Telegram approval.
 
 **Mode:** Autonomous — no gates, uses explicit GitHub dependencies (no inference needed).
+
+**Architecture:** Claude IS the orchestrator. Workers are separate `claude -p` processes (Opus 4.5). Wave computation is inline (epic deps are explicit in GitHub -- no planner needed).
 
 **Recommended:** Run in tmux for remote observability:
 
@@ -19,6 +21,22 @@ claude
 **YOU MUST NEVER commit directly to `main` during this workflow.**
 
 Each sub-issue gets its own branch → PR → review → merge. See `/auto-milestone` for the full rationale.
+
+---
+
+## CRITICAL: No Nested Agents
+
+**YOU MUST NOT use the Task tool to spawn sub-agents.** Context explosion from nested agents causes OOM failures.
+
+All worker processes run as **separate `claude -p` processes** via Bash:
+
+```bash
+claude -p "/auto-issue <N>" --max-budget-usd 5 --model opus \
+  --output-format text --dangerously-skip-permissions \
+  > .claude/output/issue-<N>.log 2>&1
+```
+
+The only exception is calling the `telegram` skill via the Skill tool (lightweight, no agent context).
 
 ---
 
@@ -45,15 +63,15 @@ Each sub-issue gets its own branch → PR → review → merge. See `/auto-miles
 
 ## How Epics Differ from Milestones
 
-| Aspect         | `/auto-milestone`               | `/auto-epic`                                |
-| -------------- | ------------------------------- | ------------------------------------------- |
-| Input          | Milestone name or issue numbers | Epic issue number                           |
-| Dependencies   | Inferred by milestone-planner   | Explicit in GitHub (blocking/blocked-by)    |
-| Planning       | Heavy analysis needed           | Read the graph directly                     |
-| Scope          | All open issues in milestone    | Sub-issues of one parent issue              |
-| Planning graph | Optional                        | Natural — calls `/plan create --epic` first |
+| Aspect           | `/auto-milestone`                  | `/auto-epic`                             |
+| ---------------- | ---------------------------------- | ---------------------------------------- |
+| Input            | Milestone name or issue numbers    | Epic issue number                        |
+| Dependencies     | Inferred by milestone-planner      | Explicit in GitHub (blocking/blocked-by) |
+| Wave computation | `claude -p` with milestone-planner | Claude inline via `gh api`               |
+| Scope            | All open issues in milestone       | Sub-issues of one parent issue           |
+| Planner needed   | Yes (Sonnet process)               | No — deps already in GitHub              |
 
-The epic flow is leaner because dependencies are already declared in GitHub's native sub-issue and blocking relationships. No inference step needed.
+Epic is leaner: dependencies are already declared in GitHub, so no planner process is needed.
 
 ---
 
@@ -66,11 +84,10 @@ Same pattern as `/auto-milestone`. Create ALL tasks upfront after Phase 1, with 
 ## Workflow
 
 ```
-Phase 1: Plan     → read GitHub sub-issue graph → compute waves
-Phase 2: Execute  → spawn /auto-issue per sub-issue (sequential by default)
-Phase 3: Review   → poll PRs, dispatch fixes
-Phase 4: Merge    → merge in dependency order
-Phase 5: Cleanup  → remove worktrees, report summary
+Phase 1: Plan    → read GitHub sub-issue graph → compute waves inline
+Phase 2: Execute → per-wave: launch claude -p /auto-issue N (Opus 4.5)
+Phase 3: Review  → per-PR: CI → CodeRabbit → fix → Telegram approval → merge
+Phase 4: Cleanup → remove worktrees, update epic, summary, notification
 ```
 
 ---
@@ -94,12 +111,11 @@ Parse `$ARGUMENTS`:
 
 ## Phase 1: Plan
 
-Unlike `/auto-milestone`, this phase does NOT use the milestone-planner agent. It reads the dependency graph directly from GitHub.
+Unlike `/auto-milestone`, this phase does NOT use the milestone-planner. Claude reads the dependency graph directly from GitHub.
 
 ### Step 1: Fetch Sub-Issues
 
 ```bash
-# GraphQL query to get sub-issues
 gh api graphql -f query='query {
   repository(owner: "rollercoaster-dev", name: "monorepo") {
     issue(number: <N>) {
@@ -119,23 +135,13 @@ gh api graphql -f query='query {
 
 ### Step 2: Read Dependency Graph
 
-```bash
-# For each sub-issue, get blocking relationships (native GitHub dependencies)
-gh api graphql -f query='query($number: Int!, $owner: String!, $repo: String!) {
-  repository(owner: $owner, name: $repo) {
-    issue(number: $number) {
-      blockedBy(first: 10) { nodes { number title state } }
-      blocking(first: 10) { nodes { number title state } }
-    }
-  }
-}' -F number=<N> -f owner=rollercoaster-dev -f repo=monorepo
-```
-
-**Fallback**: If `blockedBy`/`blocking` fields return empty, parse from issue body:
+For each sub-issue, extract blocking relationships from the issue body:
 
 ```bash
 gh issue view <N> --json body -q '.body' | grep -oiE '(blocked by|depends on|after) #[0-9]+' | grep -oE '#[0-9]+'
 ```
+
+This parses explicit dependency declarations like "Blocked by #636" or "Depends on #637" from the issue body text. Epic sub-issues in this project use this convention consistently.
 
 ### Step 3: Compute Waves
 
@@ -147,23 +153,16 @@ From the dependency topology:
 
 Filter out already-closed sub-issues (they're done).
 
-### Step 4: Planning Graph Integration (Optional)
+Detect circular dependencies — if found, report and exit.
 
-If the planning graph Phase 2 tools are available:
+### Step 4: Create Checkpoint + Tasks, Display Plan
 
-```
-1. Push goal for the epic (if not already on stack)
-2. Call /plan create --epic <N> to populate Plan + PlanSteps
-3. Each /auto-issue spawned via /plan start <sub-issue> for automatic tracking
-```
-
-If planning graph tools are NOT available, proceed without them (graceful degradation).
-
-### Step 5: Display Plan
+1. Create milestone checkpoint for the epic
+2. Create native tasks for wave visualization (see `/auto-milestone` Task System Integration)
+3. Display wave plan:
 
 ```
 Epic #635: Planning Graph Phase 2 — generic Plan/Step model
-
 Sub-issues: 7 total, 0 closed, 7 open
 
 Wave 1 (no blockers):
@@ -196,28 +195,36 @@ For each sub-issue in wave order (up to `--parallel` limit, default: 1 sequentia
 
 1. **Skip closed sub-issues** — already done, no work needed
 
-2. **Create worktree:**
+2. **Check for pre-existing work** (same as `/auto-milestone`):
+   - Existing PR → skip
+   - Existing branch with commits → create PR only
+   - Nothing → full execution
+
+3. **Ensure repo on main:**
 
    ```bash
-   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" create "$issue"
+   git checkout main && git pull origin main
    ```
 
-3. **Spawn /auto-issue:**
+4. **Launch worker:**
 
-   ```
-   Task(auto-issue workflow):
-     Input:  { issue_number, worktree_path }
-     Output: { issue, status, pr_number, branch, error? }
-   ```
-
-4. **Track progress:**
    ```bash
-   "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" update-status "$issue" "pr-created" "$pr"
+   claude -p "/auto-issue <N>" --max-budget-usd 5 --model opus \
+     --output-format text --dangerously-skip-permissions \
+     > .claude/output/issue-<N>.log 2>&1
    ```
+
+5. **Detect PR:**
+
+   ```bash
+   gh pr list --search "head:feat/issue-<N>" --state open --json number,headRefName --limit 1
+   ```
+
+6. **Update checkpoint and task status**
 
 ### Wave Gating
 
-Wait for ALL issues in current wave to complete (PR created) before starting next wave. This ensures dependencies are merged before dependent work begins.
+Wait for ALL issues in current wave to complete (PR created) before starting next wave. Skip issues whose blockers failed.
 
 ### Failure Handling
 
@@ -230,95 +237,80 @@ If a sub-issue fails:
 
 ---
 
-## Phase 3: Review
+## Phase 3: Per-PR Review Cycle
 
-After all sub-issues in a wave complete:
-
-1. **Collect PRs** from worktree state
-2. **Wait for CI/reviews** with exponential backoff
-3. **Classify findings** (same as /auto-issue rules)
-4. **Dispatch fix subagents** for critical findings
-5. **Re-poll after fixes** (max 3 retries per PR)
-
-### Escalation
-
-If MAX_RETRY exceeded, ask user via `telegram` skill:
-
-- `skip <issue>` — Skip PR and dependents
-- `force <issue>` — Mark ready despite issues
-- `continue` — After manual fix
+**Identical to `/auto-milestone` Phase 3.** For each PR: wait for CI, wait for CodeRabbit, address comments, send Telegram notification, handle reply (merge/changes/skip). See `/auto-milestone` for full step-by-step details.
 
 ---
 
-## Phase 4: Merge
+## Phase 4: Cleanup
 
-Using dependency graph from Phase 1:
+After all waves are processed:
 
-1. **Merge in wave order** (Wave 1 first, then Wave 2, etc.)
-2. **Within a wave**, merge in ordinal order
-3. **Pre-merge validation:**
-   ```bash
-   bun run type-check
-   bun run lint
-   bun test
-   ```
-4. **Merge PR:**
-   ```bash
-   gh pr merge "$pr" --squash --delete-branch
-   ```
-5. **Handle conflicts** — rebase remaining PRs after each merge
-6. **Process next wave** after current wave merges
-
----
-
-## Phase 5: Cleanup
-
-1. **Remove worktrees:**
+1. **Remove worktrees** (if parallel mode used them):
 
    ```bash
    "$CLAUDE_PROJECT_DIR/scripts/worktree-manager.sh" cleanup-all --force
    ```
 
-2. **Update epic issue** — check boxes for completed sub-issues
+2. **Ensure repo on main:**
 
-3. **Close epic** if all sub-issues are closed
+   ```bash
+   git checkout main && git pull origin main
+   ```
 
-4. **Planning graph cleanup** (if available):
-   - Pop epic goal from stack
-   - Generate Beads summary
+3. **Update epic issue** — check boxes for completed sub-issues:
 
-5. **Generate summary and send notification**
+   ```bash
+   # For each closed sub-issue, update checkbox in epic body
+   gh issue view <epic> --json body -q '.body'
+   # Replace "- [ ] ... #N" with "- [x] ... #N" for closed issues
+   gh issue edit <epic> --body "<updated-body>"
+   ```
+
+4. **Close epic** if all sub-issues are closed:
+
+   ```bash
+   gh issue close <epic>
+   ```
+
+5. **Generate summary and send notification:**
+
+   ```text
+   Skill(telegram, args: "notify: EPIC COMPLETE
+   Epic #<N>: <title>
+   Sub-issues: X/Y merged successfully.
+   Failed: <list or 'none'>")
+   ```
+
+6. **Update checkpoint** status to completed or partial.
+
+---
+
+## Resume Protocol
+
+Same as `/auto-milestone`. On start, check for existing checkpoint state and resume at the appropriate phase. See `/auto-milestone` Resume Protocol for the full state-to-action table.
 
 ---
 
 ## State Management
 
-Same as `/auto-milestone` — state tracked in `.worktrees/.state.json`, checkpoints in SQLite.
-
-### Resume
-
-If interrupted, workflow checks for existing state:
-
-| Phase   | Resume Action                   |
-| ------- | ------------------------------- |
-| plan    | Re-read GitHub graph            |
-| execute | Spawn remaining open sub-issues |
-| review  | Continue review handling        |
-| merge   | Continue from next unmerged PR  |
-| cleanup | Re-run cleanup                  |
+Same as `/auto-milestone` — state tracked in checkpoint DB (source of truth) and native tasks (UI only).
 
 ---
 
 ## Error Handling
 
-| Error                 | Behavior                     |
-| --------------------- | ---------------------------- |
-| Epic not found        | Report error, exit           |
-| No sub-issues         | Suggest /auto-issue instead  |
-| Circular deps         | Report cycle, wait for user  |
-| All sub-issues closed | Report "nothing to do", exit |
-| Worktree failure      | Offer clean or skip          |
-| Network/API failure   | Retry with backoff (max 4)   |
+| Error                 | Behavior                               |
+| --------------------- | -------------------------------------- |
+| Epic not found        | Report error, exit                     |
+| No sub-issues         | Suggest /auto-issue instead            |
+| Circular deps         | Report cycle, wait for user            |
+| All sub-issues closed | Report "nothing to do", exit           |
+| Worker failure        | Mark failed, skip dependents, continue |
+| CI failure (2x)       | Mark failed, notify user               |
+| Network/API failure   | Retry with backoff (max 4)             |
+| Telegram unavailable  | Continue in terminal                   |
 
 ---
 
@@ -327,7 +319,7 @@ If interrupted, workflow checks for existing state:
 Workflow succeeds when:
 
 - All open sub-issues processed
-- PRs created, reviewed, and merged
+- PRs created, reviewed, and merged (per-PR approval)
 - Epic issue updated (checkboxes, optionally closed)
 - Worktrees cleaned up
-- Summary report generated
+- Summary report generated and sent via Telegram
