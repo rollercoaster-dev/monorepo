@@ -33,7 +33,9 @@ export async function readPlanningResource(
 
   if (uri === "planning://stack") {
     const stack = peekStack();
-    const staleItems = detectStaleItems();
+    // Stale detection is now async because it checks plan step completion
+    // via external APIs (GitHub, etc.) through the completion resolver
+    const staleItems = await detectStaleItems();
 
     if (stack.depth === 0) {
       return {
