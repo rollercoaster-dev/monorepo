@@ -72,7 +72,7 @@ Created Plans have:
 
 - **title**: Milestone name or "Epic #N: <title>"
 - **sourceType**: `"milestone"` or `"epic"`
-- **sourceId**: Milestone number or epic issue number
+- **sourceRef**: Milestone number or epic issue number (string)
 - **goalId**: ID of active Goal from stack
 - **steps**: Array of PlanStep entities
 
@@ -80,11 +80,11 @@ Created Plans have:
 
 Each step has:
 
-- **issueNumber**: GitHub issue number
 - **title**: Issue title
 - **wave**: Execution wave (0 = can start immediately)
 - **ordinal**: Order within the plan (for display)
-- **dependsOn**: Array of other PlanStep IDs (DEPENDS_ON relationships)
+- **externalRef**: External reference object with `type` (e.g., "issue"), optional `number` (GitHub issue number), and optional `criteria`
+- **dependsOn**: Array of step ordinals (DEPENDS_ON relationships)
 
 ## Wave Assignment
 
@@ -147,20 +147,28 @@ gh issue view <number> --json body,title,number,trackedIssues
 const plan = await planning_plan_create({
   title: milestoneName,
   sourceType: "milestone",
-  sourceId: milestoneNumber,
+  sourceRef: String(milestoneNumber),
   goalId: activeGoal.id,
 });
 
 // Map execution_waves to PlanSteps
 const steps = executionWaves.flatMap((wave, waveIndex) =>
-  wave.issues.map((issueNumber, ordinal) => ({
-    issueNumber,
+  wave.issues.map((issueNumber, indexInWave) => ({
     title: dependencyGraph[issueNumber].title,
     wave: waveIndex,
-    ordinal: waveIndex * 100 + ordinal,
-    dependsOn: dependencyGraph[issueNumber].depends_on.map((depNum) =>
-      findStepId(depNum),
-    ),
+    ordinal: waveIndex * 100 + indexInWave,
+    externalRef: {
+      type: "issue",
+      number: issueNumber,
+    },
+    dependsOn: dependencyGraph[issueNumber].depends_on.map((depNum) => {
+      // Find the ordinal of the dependency step (must be created earlier)
+      const depWave = executionWaves.findIndex((w) =>
+        w.issues.includes(depNum),
+      );
+      const depIndexInWave = executionWaves[depWave].issues.indexOf(depNum);
+      return depWave * 100 + depIndexInWave;
+    }),
   })),
 );
 
