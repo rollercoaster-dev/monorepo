@@ -64,3 +64,18 @@ export {
   getPlanningFileModificationTime,
 } from "./sync";
 export type { PlanningExportResult, PlanningImportResult } from "./sync";
+
+// Completion resolver system
+export {
+  type CompletionResolver,
+  type CompletionStatus,
+} from "./completion-resolver";
+export {
+  getCachedStatus,
+  setCachedStatus,
+  clearCompletionCache,
+} from "./completion-cache";
+export { getResolver } from "./resolvers/factory";
+export { MilestoneResolver } from "./resolvers/milestone-resolver";
+export { ManualResolver } from "./resolvers/manual-resolver";
+export { LearningResolver } from "./resolvers/learning-resolver";
