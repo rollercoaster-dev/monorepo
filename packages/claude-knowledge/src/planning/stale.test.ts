@@ -13,28 +13,67 @@ import {
   getStack,
   deleteEntity,
 } from "./store";
-import type { ExternalRef } from "../types";
+import type { ExternalRef, PlanStep } from "../types";
 import { closeDatabase, resetDatabase } from "../db/sqlite";
 import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { cleanupTestDb } from "../test-utils";
+import {
+  _setResolverForTesting,
+  _resetResolversForTesting,
+} from "./resolvers/factory";
+import type { CompletionResolver } from "./completion-resolver";
+import type { CompletionStatus } from "./completion-resolver";
 
 const TEST_DB = ".claude/test-stale.db";
+
+/**
+ * Create a mock resolver that returns a specific status.
+ */
+function createMockResolver(status: CompletionStatus): CompletionResolver {
+  return {
+    resolve: async (_step: PlanStep): Promise<CompletionStatus> => status,
+  };
+}
+
+/**
+ * Create a mock resolver that tracks calls and returns a specific status.
+ */
+function createTrackingMockResolver(status: CompletionStatus): {
+  resolver: CompletionResolver;
+  calls: PlanStep[];
+} {
+  const calls: PlanStep[] = [];
+  return {
+    resolver: {
+      resolve: async (step: PlanStep): Promise<CompletionStatus> => {
+        calls.push(step);
+        return status;
+      },
+    },
+    calls,
+  };
+}
 
 describe("detectStaleItems", () => {
   beforeEach(async () => {
     if (!existsSync(".claude")) await mkdir(".claude", { recursive: true });
     resetDatabase(TEST_DB);
     clearStaleCache();
+    _resetResolversForTesting();
   });
 
   afterEach(async () => {
     clearStaleCache();
+    _resetResolversForTesting();
     closeDatabase();
     await cleanupTestDb(TEST_DB);
   });
 
   test("detects stale plan-managed goal when linked issue is closed", async () => {
+    // Mock the issue resolver to return "done" (issue closed)
+    _setResolverForTesting("issue", createMockResolver("done"));
+
     // Create a goal with a plan step
     const goal = createGoal({ title: "Implement feature X" });
     const plan = createPlan({
@@ -74,22 +113,21 @@ describe("detectStaleItems", () => {
       goal.id,
     );
 
-    // Mock gh CLI to return closed issue
-    // Note: This test relies on actual GitHub CLI - in a real test environment
-    // we would mock spawnSync. For now, this serves as an integration test.
-    // The completion resolver will call gh CLI and return status based on actual issue state.
-
     const staleItems = await detectStaleItems();
 
-    // We can't assert it's stale without mocking gh CLI, but we can verify
-    // the function runs without error and returns an array
-    expect(Array.isArray(staleItems)).toBe(true);
+    // Should detect as stale because resolver returned "done"
+    const staleGoal = staleItems.find((s) => s.item.id === goal.id);
+    expect(staleGoal).toBeDefined();
+    expect(staleGoal?.reason).toContain("closed");
 
     // Clean up
     deleteEntity(goal.id);
   });
 
   test("ignores plan-managed goal when linked issue is open", async () => {
+    // Mock the issue resolver to return "not-started" (issue open)
+    _setResolverForTesting("issue", createMockResolver("not-started"));
+
     // Create a goal with a plan step for an open issue
     const goal = createGoal({ title: "Work on open issue" });
     const plan = createPlan({
@@ -100,7 +138,7 @@ describe("detectStaleItems", () => {
 
     const externalRef: ExternalRef = {
       type: "issue",
-      number: 999999, // Assuming this issue is open or doesn't exist
+      number: 456,
     };
 
     const step = createPlanStep({
@@ -131,7 +169,7 @@ describe("detectStaleItems", () => {
 
     const staleItems = await detectStaleItems();
 
-    // Should not find this goal as stale (assuming issue is open)
+    // Should NOT find this goal as stale (resolver returned "not-started")
     const staleGoal = staleItems.find((s) => s.item.id === goal.id);
     expect(staleGoal).toBeUndefined();
 
@@ -163,7 +201,7 @@ describe("detectStaleItems", () => {
     // Should not throw error
     const staleItems = await detectStaleItems();
 
-    // Should not flag as stale
+    // Should not flag as stale (graceful handling)
     const staleGoal = staleItems.find((s) => s.item.id === goal.id);
     expect(staleGoal).toBeUndefined();
 
@@ -172,6 +210,9 @@ describe("detectStaleItems", () => {
   });
 
   test("handles manual external ref types", async () => {
+    // Mock the manual resolver to return "not-started"
+    _setResolverForTesting("manual", createMockResolver("not-started"));
+
     // Create a goal with manual completion criteria
     const goal = createGoal({ title: "Manual task" });
     const plan = createPlan({
@@ -211,11 +252,9 @@ describe("detectStaleItems", () => {
       goal.id,
     );
 
-    // Should not throw error with manual type
     const staleItems = await detectStaleItems();
-    expect(Array.isArray(staleItems)).toBe(true);
 
-    // Manual resolver will return "not-started" by default
+    // Manual resolver returned "not-started", so shouldn't be stale
     const staleGoal = staleItems.find((s) => s.item.id === goal.id);
     expect(staleGoal).toBeUndefined();
 
@@ -224,6 +263,9 @@ describe("detectStaleItems", () => {
   });
 
   test("handles badge external ref types", async () => {
+    // Mock the badge resolver to return "not-started"
+    _setResolverForTesting("badge", createMockResolver("not-started"));
+
     // Create a goal with badge learning criteria
     const goal = createGoal({ title: "Earn badge" });
     const plan = createPlan({
@@ -263,24 +305,27 @@ describe("detectStaleItems", () => {
       goal.id,
     );
 
-    // Should not throw error with badge type
     const staleItems = await detectStaleItems();
-    expect(Array.isArray(staleItems)).toBe(true);
 
-    // LearningResolver will return status based on knowledge graph
+    // Badge resolver returned "not-started", so shouldn't be stale
     const staleGoal = staleItems.find((s) => s.item.id === goal.id);
-    // Badge likely not earned yet, so shouldn't be stale
     expect(staleGoal).toBeUndefined();
 
     // Clean up
     deleteEntity(goal.id);
   });
 
-  test("caches completion status results", async () => {
+  test("resolver is called for each detectStaleItems invocation", async () => {
+    // Note: Plan step resolution does NOT cache - each call resolves fresh.
+    // Only the legacy `checkIssueClosed` path caches (for goals with issueNumber).
+    // This test verifies resolver is called each time for plan-managed goals.
+    const { resolver, calls } = createTrackingMockResolver("not-started");
+    _setResolverForTesting("issue", resolver);
+
     // Create a goal with a plan step
-    const goal = createGoal({ title: "Cacheable goal" });
+    const goal = createGoal({ title: "Tracked goal" });
     const plan = createPlan({
-      title: "Cache Test Plan",
+      title: "Tracking Plan",
       goalId: goal.id,
       sourceType: "milestone",
     });
@@ -292,7 +337,7 @@ describe("detectStaleItems", () => {
 
     const step = createPlanStep({
       planId: plan.id,
-      title: "Cached step",
+      title: "Tracked step",
       ordinal: 1,
       wave: 1,
       externalRef,
@@ -317,24 +362,24 @@ describe("detectStaleItems", () => {
     );
 
     // Call detectStaleItems twice
-    const result1 = await detectStaleItems();
-    const result2 = await detectStaleItems();
+    await detectStaleItems();
+    await detectStaleItems();
 
-    // Both should succeed and return same structure
-    expect(Array.isArray(result1)).toBe(true);
-    expect(Array.isArray(result2)).toBe(true);
-
-    // Note: We can't easily verify external API was called only once
-    // without mocking, but we verify that caching doesn't break functionality
+    // Verify resolver was called each time (no caching for plan steps)
+    expect(calls.length).toBe(2);
+    expect(calls[0].id).toBe(step.id);
+    expect(calls[1].id).toBe(step.id);
 
     // Clean up
     deleteEntity(goal.id);
   });
 
   test("respects stale detection for old issues", async () => {
+    // Mock resolver for any issue lookups
+    _setResolverForTesting("issue", createMockResolver("not-started"));
+
     // This tests the existing issue-based stale detection
     // to ensure it still works alongside plan-managed detection
-
     const goal = createGoal({
       title: "Old issue",
       issueNumber: 123,
@@ -347,8 +392,8 @@ describe("detectStaleItems", () => {
     // Call stale detection
     const staleItems = await detectStaleItems();
 
-    // We can't assert stale status without mocking gh CLI,
-    // but we verify the function handles both code paths
+    // Without planStepId, falls back to issue-based detection
+    // which checks via gh CLI (mocked to return not-started, so not stale)
     expect(Array.isArray(staleItems)).toBe(true);
 
     // Clean up
@@ -382,6 +427,51 @@ describe("detectStaleItems", () => {
     expect(staleGoal?.reason).toContain("No activity");
 
     // Clean up
+    deleteEntity(goal.id);
+  });
+
+  test("detects in-progress issue as not stale", async () => {
+    // Mock the issue resolver to return "in-progress"
+    _setResolverForTesting("issue", createMockResolver("in-progress"));
+
+    const goal = createGoal({ title: "In progress work" });
+    const plan = createPlan({
+      title: "In Progress Plan",
+      goalId: goal.id,
+      sourceType: "milestone",
+    });
+
+    const step = createPlanStep({
+      planId: plan.id,
+      title: "Active work",
+      ordinal: 1,
+      wave: 1,
+      externalRef: { type: "issue", number: 789 },
+    });
+
+    const db = await import("../db/sqlite").then((m) => m.getDatabase());
+    const goalData = JSON.parse(
+      db
+        .query<
+          { data: string },
+          [string]
+        >(`SELECT data FROM planning_entities WHERE id = ?`)
+        .get(goal.id)!.data,
+    ) as Record<string, unknown>;
+    goalData.planStepId = step.id;
+
+    db.run(
+      `UPDATE planning_entities SET data = ? WHERE id = ?`,
+      JSON.stringify(goalData),
+      goal.id,
+    );
+
+    const staleItems = await detectStaleItems();
+
+    // In-progress items should not be stale
+    const staleGoal = staleItems.find((s) => s.item.id === goal.id);
+    expect(staleGoal).toBeUndefined();
+
     deleteEntity(goal.id);
   });
 });

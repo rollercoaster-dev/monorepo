@@ -31,3 +31,24 @@ const resolvers: Record<ExternalRefType, CompletionResolver> = {
 export function getResolver(refType: ExternalRefType): CompletionResolver {
   return resolvers[refType];
 }
+
+/**
+ * Override a resolver for testing purposes.
+ * @internal - Only use in tests
+ */
+export function _setResolverForTesting(
+  refType: ExternalRefType,
+  resolver: CompletionResolver,
+): void {
+  resolvers[refType] = resolver;
+}
+
+/**
+ * Reset resolvers to default implementations.
+ * @internal - Only use in tests
+ */
+export function _resetResolversForTesting(): void {
+  resolvers.issue = new MilestoneResolver();
+  resolvers.manual = new ManualResolver();
+  resolvers.badge = new LearningResolver();
+}
