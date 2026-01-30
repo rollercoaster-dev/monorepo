@@ -19,57 +19,48 @@ No arguments needed.
 
 1. Retrieves the current planning stack
 2. Runs stale detection against GitHub (cached, 5-min TTL)
-3. **For each goal**: searches knowledge for an associated plan (e.g. milestone plan, execution order)
-4. Displays the full stack with status, warnings, and **concrete next steps from the plan**
-5. Shows actionable next steps based on plan data, not generic advice
+3. **For active Goals with Plans**: resolves step completion status and computes progress
+4. Displays the full stack with status, progress metrics, and **concrete next steps**
+5. Shows actionable next steps based on plan data (done count, percentage, current wave, next actionable steps)
 
 ## Implementation
 
-### Step 1: Get the stack
+### Step 1: Get the enhanced stack
 
 ```typescript
 planning_stack_status({});
 ```
 
-### Step 2: Enrich each goal with its plan
+The tool now returns progress data for active Goals with Plans. This includes:
 
-For each item in the stack (especially goals), search knowledge for an associated plan:
+- **Progress metrics**: total, done, inProgress, notStarted, blocked counts
+- **Percentage**: overall completion percentage
+- **Current wave**: the first wave with non-done steps
+- **Next steps**: up to 3 actionable steps (non-done, dependencies met, in current wave)
 
-```typescript
-knowledge_search_similar({
-  query: `${item.title} plan execution order`,
-  limit: 3,
-  threshold: 0.5,
-});
-```
+### Step 2: Format output
 
-If a plan is found, extract:
-
-- **Progress** (e.g. "1/21 done, 5%")
-- **Current wave/phase** and what's next
-- **Specific next ticket(s)** with issue numbers
-
-### Step 3: Format output
-
-Include plan details inline with each stack item. The "Next action" must reference specific tickets, not generic advice.
+Parse the MCP tool response and format it for display. Include plan details inline with each stack item. The "Next action" must reference specific tickets from the plan's nextSteps array, not generic advice.
 
 ```text
 Current stack (depth: N):
 
 1. [Type] Title (status, age)
-   Progress: X/Y (Z%)
-   Next: #123 - Specific ticket description [Wave N]
-   Then: #456 - Next ticket [Wave N+1, blocked on #123]
+   Plan: Plan title
+   Progress: X/Y (Z%) — Wave N [current/complete]
+   Next: #123 - Specific step description [Wave N]
+   Then: #456 - Next step [Wave N, parallel]
    ⚠️ Warning if stale...
 
 Stale items: N
-Next action: Start #123 (ticket description) — use /work-on-issue 123
+Next action: Start #123 (step description) — use /plan start 123 or /work-on-issue 123
 ```
 
-**If no plan is found** for a goal, say so explicitly:
+**If no plan exists** for an active goal, it won't have progress data:
 
 ```
-   ⚠️ No plan found — run milestone analysis to create one
+1. [Goal] Feature work (active, 1d)
+   ⚠️ No plan — create one with planning_plan_create
 ```
 
 ## Example Output
@@ -85,12 +76,14 @@ Current stack (depth: 3):
    ⚠️ Issue #608 closed 1 day ago - run /done to summarize
 
 3. [Goal] 07 - UI Components milestone (paused, 7d)
-   Progress: 1/21 (5%)
-   Next: #594 - Define styling tokens contract [Wave 1]
-   Then: #595 - Refactor component styles [Wave 2, blocked on #594]
+   Plan: UI Components execution order
+   Progress: 3/21 (14%) — Wave 1 complete
+   Next: #598 - Badge card component [Wave 2]
+   Then: #599 - Badge list component [Wave 2, parallel]
+   ⚠️ Paused for 7 days - consider resuming or closing
 
-Stale items: 1
-Next action: Fix CI, then /done to pop Knowledge cleanup, then start #594 with /work-on-issue 594
+Stale items: 2
+Next action: Fix CI, then /done to pop Knowledge cleanup, then resume milestone with /plan start 598
 ```
 
 ## When to Use
@@ -100,6 +93,7 @@ Next action: Fix CI, then /done to pop Knowledge cleanup, then start #594 with /
 - Checking if any items need attention
 - Weekly planning reviews
 - Before deciding what to work on next
+- Tracking milestone/epic progress with real-time completion data
 
 ## Related
 
