@@ -242,7 +242,7 @@ After all sub-issues in a wave complete:
 
 ### Escalation
 
-If MAX_RETRY exceeded, ask user via Telegram:
+If MAX_RETRY exceeded, ask user via `telegram` skill:
 
 - `skip <issue>` — Skip PR and dependents
 - `force <issue>` — Mark ready despite issues

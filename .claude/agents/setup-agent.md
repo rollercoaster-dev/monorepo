@@ -194,7 +194,7 @@ gh api graphql \
 
 ### Step 7: Send Notification (unless skip_notify)
 
-Use `mcp__mcp-communicator-telegram__notify_user` to send:
+Use the `telegram` skill (via Skill tool) to send a notification:
 
 ```text
 Started: Issue #<number>

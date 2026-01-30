@@ -230,7 +230,7 @@ bun run checkpoint workflow set-status "<workflow_id>" "completed"
 
 ### Step 9: Send Notification (unless skip_notify)
 
-Use `mcp__mcp-communicator-telegram__notify_user` to send:
+Use the `telegram` skill (via Skill tool) to send a notification:
 
 ```
 PR Created: #<pr_number>
