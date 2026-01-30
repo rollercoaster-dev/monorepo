@@ -14,7 +14,8 @@ import {
 } from "../../planning/stack.js";
 import { summarizeCompletion } from "../../planning/summarize.js";
 import { detectStaleItems } from "../../planning/stale.js";
-import type { Goal } from "../../types.js";
+import { createPlan, getPlanByGoal, getEntity } from "../../planning/store.js";
+import type { Goal, PlanSourceType } from "../../types.js";
 
 /**
  * Tool definitions for planning operations.
@@ -84,6 +85,37 @@ export const planningTools: Tool[] = [
     inputSchema: {
       type: "object" as const,
       properties: {},
+    },
+  },
+  {
+    name: "planning_plan_create",
+    description:
+      "Create a Plan linked to a Goal on the planning stack. " +
+      "Plans define structured execution steps for achieving a Goal. " +
+      "Must validate that the goalId exists before creating the plan.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        title: {
+          type: "string",
+          description: "Short title for the plan (e.g., 'Milestone 1.0')",
+        },
+        goalId: {
+          type: "string",
+          description: "ID of the Goal this plan belongs to",
+        },
+        sourceType: {
+          type: "string",
+          enum: ["milestone", "epic", "learning-path", "manual"],
+          description: "Type of source for this plan",
+        },
+        sourceRef: {
+          type: "string",
+          description:
+            "Optional reference identifier (milestone number, epic issue number, etc.)",
+        },
+      },
+      required: ["title", "goalId", "sourceType"],
     },
   },
 ];
@@ -368,6 +400,112 @@ export async function handlePlanningToolCall(
                     title: s.item.title,
                     reason: s.reason,
                   })),
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "planning_plan_create": {
+        const title = args.title as string;
+        const goalId = args.goalId as string;
+        const sourceType = args.sourceType as PlanSourceType;
+        const sourceRef = args.sourceRef as string | undefined;
+
+        // Validate required fields
+        if (!title || title.trim().length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "title is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+        if (!goalId || goalId.trim().length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "goalId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+        if (!sourceType) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "sourceType is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Validate goalId exists
+        const goal = getEntity(goalId);
+        if (!goal) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: `Goal with id "${goalId}" not found`,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Check if goal already has a plan
+        const existingPlan = getPlanByGoal(goalId);
+        if (existingPlan) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: `Goal "${goalId}" already has a plan (id: ${existingPlan.id})`,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Create the plan
+        const plan = createPlan({
+          title: title.trim(),
+          goalId,
+          sourceType,
+          sourceRef: sourceRef?.trim(),
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success: true,
+                  message: `Plan created: "${plan.title}"`,
+                  plan: {
+                    id: plan.id,
+                    title: plan.title,
+                    goalId: plan.goalId,
+                    sourceType: plan.sourceType,
+                    sourceRef: plan.sourceRef,
+                    createdAt: plan.createdAt,
+                  },
                 },
                 null,
                 2,
