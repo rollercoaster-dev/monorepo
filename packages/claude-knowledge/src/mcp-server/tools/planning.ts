@@ -814,13 +814,13 @@ export async function handlePlanningToolCall(
                   isError: true,
                 };
               }
-              if (depOrdinal === step.ordinal) {
+              if (depOrdinal >= step.ordinal) {
                 return {
                   content: [
                     {
                       type: "text",
                       text: JSON.stringify({
-                        error: `Step with ordinal ${step.ordinal} cannot depend on itself`,
+                        error: `Step with ordinal ${step.ordinal} cannot depend on ordinal ${depOrdinal} (must depend on earlier ordinals only)`,
                       }),
                     },
                   ],

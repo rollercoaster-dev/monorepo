@@ -165,7 +165,9 @@ describe("Plan CRUD MCP tools", () => {
         goalId: goal.id,
       });
       const planData = JSON.parse(getResponse.content[0].text);
-      const step2 = planData.steps.find((s: any) => s.ordinal === 1);
+      const step2 = planData.steps.find(
+        (s: { ordinal: number }) => s.ordinal === 1,
+      );
       expect(step2.dependsOn).toHaveLength(1);
     });
 
@@ -336,7 +338,9 @@ describe("Plan CRUD MCP tools", () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      const step2 = result.steps.find((s: any) => s.ordinal === 1);
+      const step2 = result.steps.find(
+        (s: { ordinal: number }) => s.ordinal === 1,
+      );
       expect(step2.dependsOn).toHaveLength(1);
     });
   });
