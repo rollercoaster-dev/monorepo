@@ -48,6 +48,7 @@ Counter-intuitively, following the workflow **reduces** total token usage:
 | Gated      | `/work-on-issue <number>` | Supervised issue-to-PR with approval gates |
 | Autonomous | `/auto-issue <number>`    | Fully automated issue-to-PR                |
 | Milestone  | `/auto-milestone <name>`  | Parallel milestone execution               |
+| Epic       | `/auto-epic <number>`     | Epic sub-issues with GitHub deps           |
 
 ## Gated Workflow (`/work-on-issue`)
 
@@ -86,25 +87,35 @@ ESCALATION           → Only if auto-fix fails MAX_RETRY times
 Use for batch processing entire milestones with dependency awareness.
 
 ```text
-Phase 1: Plan        → Analyze dependencies, identify free issues
-   GATE: If dependencies unclear → STOP for approval
-Phase 2: Execute     → Spawn parallel /auto-issue in worktrees (default: 3)
-Phase 3: Review      → Poll all PRs, dispatch parallel fixes
-Phase 4: Merge       → Merge in dependency order, handle conflicts
-Phase 5: Cleanup     → Remove worktrees, report summary
+Phase 1: Plan    → claude -p milestone-planner → GATE (if dependencies unclear)
+Phase 2: Execute → per-wave: launch claude -p /auto-issue N (Opus 4.5)
+Phase 3: Review  → per-PR: CI → CodeRabbit → fix → Telegram approval → merge
+Phase 4: Cleanup → remove worktrees, summary, notification
 ```
 
 Run in tmux for SSH observability: `tmux new -s milestone && claude`
 
+## Epic Workflow (`/auto-epic`)
+
+Use for processing epic sub-issues with explicit GitHub dependencies.
+
+```text
+Phase 1: Plan    → read GitHub sub-issue graph → compute waves inline
+Phase 2: Execute → per-wave: launch claude -p /auto-issue N (Opus 4.5)
+Phase 3: Review  → per-PR: CI → CodeRabbit → fix → Telegram approval → merge
+Phase 4: Cleanup → remove worktrees, update epic, summary, notification
+```
+
 ## Workflow Selection Guide
 
-| Scenario                           | `/work-on-issue` | `/auto-issue` | `/auto-milestone` |
-| ---------------------------------- | ---------------- | ------------- | ----------------- |
-| Complex architectural changes      | Yes              | No            | No                |
-| Simple feature, clear requirements | No               | Yes           | Yes (batch)       |
-| Learning/teaching mode             | Yes              | No            | No                |
-| Batch of routine fixes             | No               | Yes           | Yes               |
-| Entire milestone with deps mapped  | No               | No            | Yes               |
+| Scenario                           | `/work-on-issue` | `/auto-issue` | `/auto-milestone` | `/auto-epic` |
+| ---------------------------------- | ---------------- | ------------- | ----------------- | ------------ |
+| Complex architectural changes      | Yes              | No            | No                | No           |
+| Simple feature, clear requirements | No               | Yes           | Yes (batch)       | No           |
+| Learning/teaching mode             | Yes              | No            | No                | No           |
+| Batch of routine fixes             | No               | Yes           | Yes               | No           |
+| Entire milestone with deps mapped  | No               | No            | Yes               | No           |
+| Epic with explicit GitHub deps     | No               | No            | No                | Yes          |
 
 ## Review Pipeline
 
