@@ -14,8 +14,15 @@ import {
 } from "../../planning/stack.js";
 import { summarizeCompletion } from "../../planning/summarize.js";
 import { detectStaleItems } from "../../planning/stale.js";
-import { createPlan, getPlanByGoal, getEntity } from "../../planning/store.js";
-import type { Goal, PlanSourceType } from "../../types.js";
+import {
+  createPlan,
+  getPlanByGoal,
+  getEntity,
+  getPlan,
+  createPlanStep,
+  addStepDependency,
+} from "../../planning/store.js";
+import type { Goal, PlanSourceType, ExternalRef } from "../../types.js";
 
 /**
  * Tool definitions for planning operations.
@@ -116,6 +123,71 @@ export const planningTools: Tool[] = [
         },
       },
       required: ["title", "goalId", "sourceType"],
+    },
+  },
+  {
+    name: "planning_plan_add_steps",
+    description:
+      "Add multiple PlanSteps to a Plan in a batch operation. " +
+      "Steps define concrete units of work with wave-based parallelization and dependency tracking. " +
+      "Dependencies must reference already-created steps (use ordinal order).",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        planId: {
+          type: "string",
+          description: "ID of the Plan to add steps to",
+        },
+        steps: {
+          type: "array",
+          description: "Array of steps to add",
+          items: {
+            type: "object",
+            properties: {
+              title: {
+                type: "string",
+                description: "Step title (e.g., 'Issue #123: Add auth')",
+              },
+              ordinal: {
+                type: "number",
+                description: "Global execution order (0-based)",
+              },
+              wave: {
+                type: "number",
+                description: "Parallelization group (0-based)",
+              },
+              externalRef: {
+                type: "object",
+                description: "External reference for completion tracking",
+                properties: {
+                  type: {
+                    type: "string",
+                    enum: ["issue", "badge", "manual"],
+                    description: "Type of external reference",
+                  },
+                  number: {
+                    type: "number",
+                    description: "GitHub issue number (for type=issue)",
+                  },
+                  criteria: {
+                    type: "string",
+                    description: "Badge criteria or manual completion criteria",
+                  },
+                },
+                required: ["type"],
+              },
+              dependsOn: {
+                type: "array",
+                description:
+                  "Array of step ordinals this step depends on (must be created first)",
+                items: { type: "number" },
+              },
+            },
+            required: ["title", "ordinal", "wave", "externalRef"],
+          },
+        },
+      },
+      required: ["planId", "steps"],
     },
   },
 ];
@@ -506,6 +578,234 @@ export async function handlePlanningToolCall(
                     sourceRef: plan.sourceRef,
                     createdAt: plan.createdAt,
                   },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "planning_plan_add_steps": {
+        const planId = args.planId as string;
+        const stepsInput = args.steps as Array<{
+          title: string;
+          ordinal: number;
+          wave: number;
+          externalRef: ExternalRef;
+          dependsOn?: number[];
+        }>;
+
+        // Validate required fields
+        if (!planId || planId.trim().length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "planId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+        if (!stepsInput || !Array.isArray(stepsInput)) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "steps must be an array",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+        if (stepsInput.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "steps array cannot be empty",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Validate planId exists
+        const plan = getPlan(planId);
+        if (!plan) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: `Plan with id "${planId}" not found`,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Validate each step input
+        for (const step of stepsInput) {
+          if (!step.title || step.title.trim().length === 0) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "All steps must have a title",
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (
+            typeof step.ordinal !== "number" ||
+            step.ordinal < 0 ||
+            !Number.isInteger(step.ordinal)
+          ) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "ordinal must be a non-negative integer",
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (
+            typeof step.wave !== "number" ||
+            step.wave < 0 ||
+            !Number.isInteger(step.wave)
+          ) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "wave must be a non-negative integer",
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (!step.externalRef || !step.externalRef.type) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: "externalRef with type is required for each step",
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+          if (!["issue", "badge", "manual"].includes(step.externalRef.type)) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: `Invalid externalRef.type: ${step.externalRef.type}. Must be "issue", "badge", or "manual"`,
+                  }),
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+
+        // Sort steps by ordinal to ensure dependencies are created before dependents
+        const sortedSteps = [...stepsInput].sort(
+          (a, b) => a.ordinal - b.ordinal,
+        );
+
+        // Create steps and track created step IDs by ordinal
+        const createdSteps: Array<{
+          id: string;
+          ordinal: number;
+          title: string;
+        }> = [];
+        const ordinalToId = new Map<number, string>();
+
+        for (const step of sortedSteps) {
+          const createdStep = createPlanStep({
+            planId,
+            title: step.title.trim(),
+            ordinal: step.ordinal,
+            wave: step.wave,
+            externalRef: step.externalRef,
+          });
+
+          createdSteps.push({
+            id: createdStep.id,
+            ordinal: createdStep.ordinal,
+            title: createdStep.title,
+          });
+          ordinalToId.set(step.ordinal, createdStep.id);
+        }
+
+        // Add dependencies in a second pass (all steps now exist)
+        for (const step of sortedSteps) {
+          if (step.dependsOn && step.dependsOn.length > 0) {
+            const stepId = ordinalToId.get(step.ordinal);
+            if (!stepId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      error: `Internal error: step with ordinal ${step.ordinal} not found`,
+                    }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            for (const depOrdinal of step.dependsOn) {
+              const depId = ordinalToId.get(depOrdinal);
+              if (!depId) {
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify({
+                        error: `Step with ordinal ${step.ordinal} depends on ordinal ${depOrdinal}, but that step was not created`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+              addStepDependency(stepId, depId);
+            }
+          }
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success: true,
+                  message: `Added ${createdSteps.length} steps to plan "${plan.title}"`,
+                  steps: createdSteps,
                 },
                 null,
                 2,
