@@ -6,9 +6,11 @@
  */
 
 import { spawnSync } from "bun";
-import { getStack } from "./store";
+import { getStack, getPlanStep } from "./store";
 import type { Goal, StaleItem } from "../types";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
+import { getResolver } from "./resolvers/factory";
+import type { CompletionStatus } from "./completion-resolver";
 
 /** Cache for GitHub issue state checks (5-minute TTL) */
 const issueStateCache = new Map<
@@ -89,10 +91,14 @@ function formatRelativeTime(isoDate: string): string {
  * Detect stale items on the planning stack.
  *
  * An item is considered stale if:
- * - It's a Goal with a linked issue that has been closed
+ * - It's a Goal with a linked issue that has been closed (via issueNumber)
+ * - It's a Goal with a linked plan step whose external ref is complete (via planStepId)
  * - It's been on the stack with no activity for an extended period
+ *
+ * This function is async because checking plan step completion requires
+ * calling external APIs via the completion resolver system.
  */
-export function detectStaleItems(): StaleItem[] {
+export async function detectStaleItems(): Promise<StaleItem[]> {
   const stack = getStack();
   const staleItems: StaleItem[] = [];
 
@@ -100,6 +106,46 @@ export function detectStaleItems(): StaleItem[] {
     // Check Goals with linked issues
     if (item.type === "Goal") {
       const goal = item as Goal;
+
+      // Check plan-managed goals (via planStepId)
+      if (goal.planStepId) {
+        try {
+          const step = getPlanStep(goal.planStepId);
+          if (step) {
+            const resolver = getResolver(step.externalRef.type);
+            const status: CompletionStatus = await resolver.resolve(step);
+
+            if (status === "done") {
+              // Extract issue number if external ref is an issue
+              const issueNumber =
+                step.externalRef.type === "issue"
+                  ? step.externalRef.number
+                  : undefined;
+
+              const reason = issueNumber
+                ? `Linked issue #${issueNumber} closed — auto-pop?`
+                : `Linked ${step.externalRef.type} complete — auto-pop?`;
+
+              staleItems.push({
+                item,
+                staleSince: new Date().toISOString(),
+                reason,
+              });
+              continue;
+            }
+          }
+        } catch (error) {
+          // If resolver fails, skip this goal (user can still manually /done)
+          logger.debug("Failed to resolve plan step completion", {
+            goalId: goal.id,
+            planStepId: goal.planStepId,
+            error: error instanceof Error ? error.message : String(error),
+            context: "stale.detectStaleItems",
+          });
+        }
+      }
+
+      // Check goals with direct issue links (legacy pattern)
       if (goal.issueNumber) {
         const issueState = checkIssueClosed(goal.issueNumber);
         if (issueState?.closed) {
