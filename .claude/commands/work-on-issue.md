@@ -144,7 +144,7 @@ The setup-agent will:
 - Create feature branch
 - Create checkpoint workflow
 - Add issue to board as "In Progress"
-- Send Telegram notification
+- Send notification via `telegram` skill
 
 ---
 
@@ -159,7 +159,7 @@ The setup-agent will:
 - Labels and milestone
 - Blockers if any
 
-**Ask via Telegram** (or terminal):
+**Ask via `telegram` skill** (or terminal):
 
 > Issue #<N>: <title>
 >
@@ -202,7 +202,7 @@ The issue-researcher will:
 - Planned commit count
 - Affected files
 
-**Ask via Telegram** (or terminal):
+**Ask via `telegram` skill** (or terminal):
 
 > Plan ready for Issue #<N>
 >
@@ -240,7 +240,7 @@ For each commit in the plan:
 - git diff of staged changes
 - Proposed commit message
 
-**Ask via Telegram** (or terminal):
+**Ask via `telegram` skill** (or terminal):
 
 > Commit <N>/<total>: <message>
 >
@@ -279,7 +279,7 @@ Collect and classify findings by severity.
 - Critical issues (if any)
 - Recommendation (proceed or fix)
 
-**Ask via Telegram** (or terminal):
+**Ask via `telegram` skill** (or terminal):
 
 > Review complete for Issue #<N>
 >
@@ -313,7 +313,7 @@ The finalize-agent will:
 - Create PR
 - Update board to "Blocked"
 - Mark workflow complete
-- Send Telegram notification with PR link
+- Send notification via `telegram` skill with PR link
 
 ---
 

@@ -70,45 +70,34 @@ Standard escalation options:
 
 ## Telegram Escalation
 
-Using `askTelegram` for remote approval:
+Use the `telegram` skill (via Skill tool) for remote approval:
 
-```typescript
-const escalationMessage = `🚨 ESCALATION REQUIRED
+```text
+Invoke: Skill(telegram, args: "ask: ESCALATION REQUIRED
 
-Issue: #${issueNumber} - ${title}
-Branch: ${branchName}
-Retry: ${retryCount}/${MAX_RETRY}
+Issue: #<issueNumber> - <title>
+Branch: <branchName>
+Retry: <retryCount>/<MAX_RETRY>
 
 Critical Findings:
-${findings.map((f) => `• ${f.file}: ${f.issue}`).join("\n")}
+<bullet list of findings>
 
 Options:
 1. 'continue' - Fix manually, then continue
 2. 'force-pr' - Create PR with issues flagged
 3. 'abort' - Delete branch and exit
-4. 'reset' - Go back to last good state`;
+4. 'reset' - Go back to last good state")
+```
 
-const response = await askTelegram(escalationMessage, context);
+**Handle the response:**
 
-switch (response.toLowerCase().trim()) {
-  case "continue":
-    // Wait for manual fix, then re-run review
-    break;
-  case "force-pr":
-    // Proceed to PR creation with issues flagged
-    break;
-  case "abort":
-    // Clean up and exit
-    await cleanupBranch(branchName);
-    break;
-  case "reset":
-    // Reset to last good commit
-    await resetToLastGoodState();
-    break;
-  case "TELEGRAM_UNAVAILABLE":
-    // Fall through to terminal-based escalation
-    break;
-}
+```text
+switch response:
+  "continue"  → Wait for manual fix, then re-run review
+  "force-pr"  → Proceed to PR creation with issues flagged
+  "abort"     → Clean up branch and exit
+  "reset"     → Reset to last good commit
+  unavailable → Fall through to terminal-based escalation
 ```
 
 ## Logging Escalation

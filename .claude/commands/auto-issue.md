@@ -203,7 +203,7 @@ The setup-agent will:
 - Create feature branch
 - Create checkpoint workflow
 - Add issue to board as "In Progress"
-- Send Telegram notification
+- Send notification via `telegram` skill
 
 **On error:** Report and exit.
 
@@ -294,7 +294,7 @@ The finalize-agent will:
 - Create PR
 - Update board to "Blocked"
 - Mark workflow complete
-- Send Telegram notification with PR link
+- Send notification via `telegram` skill with PR link
 
 ---
 
@@ -302,7 +302,7 @@ The finalize-agent will:
 
 Triggered when `review-orchestrator` returns unresolved critical findings.
 
-**Notify user via Telegram:**
+**Notify user via `telegram` skill:**
 
 ```text
 ESCALATION: Issue #<N>
@@ -352,7 +352,7 @@ Workflow succeeds when:
 
 - PR is created
 - Board updated to "Blocked"
-- Telegram notification sent
+- Notification sent via `telegram` skill
 - Workflow marked complete
 
 ---
