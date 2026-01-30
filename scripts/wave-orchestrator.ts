@@ -442,7 +442,17 @@ Rules:
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as Wave[];
       if (Array.isArray(parsed) && parsed.length > 0) {
-        waves = parsed;
+        // Validate that all requested issues are present in the output
+        const seen = new Set(parsed.flatMap((w) => w.issues));
+        const missing = issueNumbers.filter((n) => !seen.has(n));
+        if (missing.length > 0) {
+          logWarn(
+            `Claude omitted ${missing.length} issue(s); falling back to single wave`,
+          );
+          waves = [{ wave: 1, issues: issueNumbers }];
+        } else {
+          waves = parsed;
+        }
       } else {
         waves = [{ wave: 1, issues: issueNumbers }];
       }
@@ -624,7 +634,9 @@ async function executeIssue(
   }
 
   logWarn(`[Wave ${wave}] Issue #${issue} completed but no PR detected`);
-  ensureWorkflowLinked(issue, milestoneId, wave);
+  const wfId = getOrCreateLinkedWorkflow(issue, milestoneId, wave);
+  checkpoint.setStatus(wfId, "failed");
+  checkpoint.logAction(wfId, "pr-missing", "failed", { wave });
   return {};
 }
 
@@ -707,11 +719,11 @@ async function executeWave(
   milestoneId: string,
   config: Config,
   completedIssues: Set<number>,
-): Promise<void> {
+): Promise<Set<number>> {
   const pending = wave.issues.filter((i) => !completedIssues.has(i));
   if (pending.length === 0) {
     log(`Wave ${wave.wave}: all issues already completed, skipping`);
-    return;
+    return new Set();
   }
 
   log(
@@ -722,14 +734,14 @@ async function executeWave(
     (issue) => () => executeIssue(issue, wave.wave, milestoneId, config),
   );
 
-  const failedIssues: number[] = [];
+  const execFailed = new Set<number>();
 
   if (config.parallel <= 1) {
     for (const [idx, task] of tasks.entries()) {
       try {
         await task();
       } catch {
-        failedIssues.push(pending[idx]);
+        execFailed.add(pending[idx]);
       }
     }
   } else {
@@ -737,23 +749,37 @@ async function executeWave(
       try {
         return await task();
       } catch {
-        failedIssues.push(pending[idx]);
+        execFailed.add(pending[idx]);
         return { pr: undefined };
       }
     });
     await runWithConcurrency(wrappedTasks, config.parallel);
   }
 
-  if (failedIssues.length > 0) {
+  if (execFailed.size > 0) {
     logWarn(
-      `Wave ${wave.wave}: ${failedIssues.length} issue(s) failed: ${failedIssues.map((i) => `#${i}`).join(", ")}`,
+      `Wave ${wave.wave}: ${execFailed.size} issue(s) failed: ${[...execFailed].map((i) => `#${i}`).join(", ")}`,
     );
   }
+
+  return execFailed;
 }
 
 // ---------------------------------------------------------------------------
 // Review Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Fetch and checkout a PR's branch, ensuring it exists locally.
+ */
+async function checkoutPrBranch(pr: number): Promise<string> {
+  const branchResult =
+    await $`gh pr view ${pr} --json headRefName -q .headRefName`.quiet();
+  const branch = branchResult.text().trim();
+  await $`git -C ${REPO_ROOT} fetch origin ${branch}`.quiet();
+  await $`git -C ${REPO_ROOT} checkout ${branch} --quiet`.quiet();
+  return branch;
+}
 
 /**
  * Wait for CI to pass, retrying with Claude fix attempts if it fails.
@@ -775,10 +801,7 @@ async function waitForCiWithRetries(
   // CI failed — try fix cycles
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const branchResult =
-        await $`gh pr view ${pr} --json headRefName -q .headRefName`.quiet();
-      const branch = branchResult.text().trim();
-      await $`git -C ${REPO_ROOT} checkout ${branch} --quiet`.quiet();
+      await checkoutPrBranch(pr);
 
       const fixProc = Bun.spawn(
         [
@@ -901,11 +924,8 @@ async function spawnReviewFix(
   comments: string,
   config: Config,
 ): Promise<void> {
-  // Checkout PR branch
-  const branchResult =
-    await $`gh pr view ${pr} --json headRefName -q .headRefName`.quiet();
-  const branch = branchResult.text().trim();
-  await $`git -C ${REPO_ROOT} checkout ${branch} --quiet`.quiet();
+  // Checkout PR branch (fetch + checkout + pull)
+  const branch = await checkoutPrBranch(pr);
   await $`git -C ${REPO_ROOT} pull origin ${branch} --quiet`.quiet();
 
   const prompt = `Address these review comments on PR #${pr}:\n${comments}\nFix the issues, commit and push.`;
@@ -1497,7 +1517,23 @@ async function main(): Promise<void> {
     waves = state.waves;
     completedIssues = state.completedIssues;
 
-    issueGraph = inferGraphFromWaves(waves);
+    // Re-fetch real dependencies for epics; infer wave-order for milestones
+    if (config.mode === "epic") {
+      try {
+        const epicNumber = parseInt(config.target, 10);
+        const issues = await fetchSubIssues(epicNumber);
+        await fetchDependencies(issues);
+        issueGraph = issues;
+        log("Restored real dependency graph for epic resume");
+      } catch {
+        logWarn(
+          "Could not re-fetch epic dependencies, falling back to wave-order inference",
+        );
+        issueGraph = inferGraphFromWaves(waves);
+      }
+    } else {
+      issueGraph = inferGraphFromWaves(waves);
+    }
 
     // Reset milestone to running so execution can proceed
     checkpoint.setMilestoneStatus(milestoneId, "running");
@@ -1577,7 +1613,13 @@ async function main(): Promise<void> {
     }
 
     checkpoint.setMilestonePhase(milestoneId, "execute");
-    await executeWave(gatedWave, milestoneId, config, completedIssues);
+    const execFailed = await executeWave(
+      gatedWave,
+      milestoneId,
+      config,
+      completedIssues,
+    );
+    for (const f of execFailed) failedIssues.add(f);
 
     checkpoint.setMilestonePhase(milestoneId, "merge");
     const result = await reviewAndMergeWave(gatedWave, milestoneId, config);
