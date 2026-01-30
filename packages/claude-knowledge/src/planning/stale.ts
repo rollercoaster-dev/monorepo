@@ -6,7 +6,7 @@
  */
 
 import { spawnSync } from "bun";
-import { getStack } from "./store";
+import { getStack, getPlanStep } from "./store";
 import type { Goal, StaleItem } from "../types";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 
@@ -90,6 +90,7 @@ function formatRelativeTime(isoDate: string): string {
  *
  * An item is considered stale if:
  * - It's a Goal with a linked issue that has been closed
+ * - It's a Goal with a planStepId where the linked issue has been closed
  * - It's been on the stack with no activity for an extended period
  */
 export function detectStaleItems(): StaleItem[] {
@@ -100,6 +101,8 @@ export function detectStaleItems(): StaleItem[] {
     // Check Goals with linked issues
     if (item.type === "Goal") {
       const goal = item as Goal;
+
+      // Check direct issue link (existing behavior)
       if (goal.issueNumber) {
         const issueState = checkIssueClosed(goal.issueNumber);
         if (issueState?.closed) {
@@ -109,6 +112,26 @@ export function detectStaleItems(): StaleItem[] {
             reason: `Issue #${goal.issueNumber} closed ${issueState.closedAt ? formatRelativeTime(issueState.closedAt) : ""}. Run /done to summarize.`,
           });
           continue;
+        }
+      }
+
+      // Check planStepId link (new behavior for auto-pop)
+      if (goal.planStepId) {
+        const step = getPlanStep(goal.planStepId);
+        if (
+          step &&
+          step.externalRef.type === "issue" &&
+          step.externalRef.number
+        ) {
+          const issueState = checkIssueClosed(step.externalRef.number);
+          if (issueState?.closed) {
+            staleItems.push({
+              item,
+              staleSince: issueState.closedAt || new Date().toISOString(),
+              reason: `Issue #${step.externalRef.number} closed ${issueState.closedAt ? formatRelativeTime(issueState.closedAt) : ""} - auto-pop recommended. Run /done to summarize.`,
+            });
+            continue;
+          }
         }
       }
     }
