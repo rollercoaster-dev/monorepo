@@ -13,6 +13,9 @@ export interface User {
   roles: string[]
   createdAt: string
   updatedAt: string
+  did?: string
+  didMethod?: 'key' | 'web'
+  didDocument?: string
 }
 
 export interface CreateUserData {
@@ -23,6 +26,7 @@ export interface CreateUserData {
   avatar?: string
   isActive: boolean
   roles: string[]
+  didMethod?: 'key' | 'web'
 }
 
 export interface UpdateUserData {
@@ -32,6 +36,9 @@ export interface UpdateUserData {
   avatar?: string
   isActive?: boolean
   roles?: string[]
+  did?: string
+  didMethod?: 'key' | 'web'
+  didDocument?: string
 }
 
 export interface UserCredential {
@@ -81,6 +88,11 @@ interface UserRow {
   roles: string
   createdAt: string
   updatedAt: string
+  did?: string
+  didMethod?: string
+  didPublicKey?: string
+  didPrivateKey?: string
+  didDocument?: string
 }
 
 interface UserCredentialRow {
@@ -148,9 +160,41 @@ export class UserService {
           isActive BOOLEAN NOT NULL DEFAULT 1,
           roles TEXT NOT NULL DEFAULT '["USER"]',
           createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+          updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          did TEXT,
+          didMethod TEXT,
+          didPublicKey TEXT,
+          didPrivateKey TEXT,
+          didDocument TEXT
         );
       `)
+
+      // Migrate existing users table to add DID fields if they don't exist
+      try {
+        this.getDb().exec(`ALTER TABLE users ADD COLUMN did TEXT`)
+      } catch {
+        // Column already exists
+      }
+      try {
+        this.getDb().exec(`ALTER TABLE users ADD COLUMN didMethod TEXT`)
+      } catch {
+        // Column already exists
+      }
+      try {
+        this.getDb().exec(`ALTER TABLE users ADD COLUMN didPublicKey TEXT`)
+      } catch {
+        // Column already exists
+      }
+      try {
+        this.getDb().exec(`ALTER TABLE users ADD COLUMN didPrivateKey TEXT`)
+      } catch {
+        // Column already exists
+      }
+      try {
+        this.getDb().exec(`ALTER TABLE users ADD COLUMN didDocument TEXT`)
+      } catch {
+        // Column already exists
+      }
 
       // Create user credentials table
       this.getDb().exec(`
@@ -244,6 +288,9 @@ export class UserService {
       roles: JSON.parse(userRow.roles),
       createdAt: userRow.createdAt,
       updatedAt: userRow.updatedAt,
+      did: userRow.did,
+      didMethod: userRow.didMethod as 'key' | 'web' | undefined,
+      didDocument: userRow.didDocument,
     }
   }
 
@@ -384,6 +431,21 @@ export class UserService {
     if (userData.roles !== undefined) {
       updates.push('roles = ?')
       params.push(JSON.stringify(userData.roles))
+    }
+
+    if (userData.did !== undefined) {
+      updates.push('did = ?')
+      params.push(userData.did)
+    }
+
+    if (userData.didMethod !== undefined) {
+      updates.push('didMethod = ?')
+      params.push(userData.didMethod)
+    }
+
+    if (userData.didDocument !== undefined) {
+      updates.push('didDocument = ?')
+      params.push(userData.didDocument)
     }
 
     if (updates.length === 0) {
