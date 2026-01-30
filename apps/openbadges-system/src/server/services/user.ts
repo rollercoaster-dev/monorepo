@@ -467,6 +467,41 @@ export class UserService {
     return true
   }
 
+  async updateUserDID(
+    userId: string,
+    didData: {
+      did: string
+      didMethod: 'key' | 'web'
+      publicKey: string
+      privateKey: string
+      didDocument: string
+    }
+  ): Promise<User | null> {
+    const updates = [
+      'did = ?',
+      'didMethod = ?',
+      'didPublicKey = ?',
+      'didPrivateKey = ?',
+      'didDocument = ?',
+      'updatedAt = ?',
+    ]
+
+    const params = [
+      didData.did,
+      didData.didMethod,
+      didData.publicKey,
+      didData.privateKey,
+      didData.didDocument,
+      new Date().toISOString(),
+      userId,
+    ]
+
+    const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`
+    this.runQuery(sql, params)
+
+    return this.getUserById(userId)
+  }
+
   // Credential management
   async addUserCredential(
     userId: string,

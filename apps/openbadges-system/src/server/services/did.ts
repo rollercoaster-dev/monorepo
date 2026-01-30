@@ -219,6 +219,50 @@ export class DIDService {
       assertionMethod: [verificationMethodId],
     }
   }
+
+  /**
+   * Generates complete DID data for a user
+   *
+   * This method generates a keypair, creates the DID identifier, and creates the DID Document.
+   *
+   * @param userId - User ID for did:web path (optional)
+   * @param method - DID method to use ('key' or 'web')
+   * @param domain - Domain for did:web (required if method is 'web')
+   * @returns Complete DID data ready for storage
+   * @throws Error if method is 'web' but domain is not provided
+   */
+  async generateUserDID(
+    userId: string,
+    method: 'key' | 'web',
+    domain?: string
+  ): Promise<UserDIDData> {
+    // Generate Ed25519 keypair
+    const keyPair = await this.generateEd25519KeyPair()
+
+    // Generate DID based on method
+    let did: string
+    if (method === 'key') {
+      did = this.generateDidKey(keyPair.publicKeyBytes)
+    } else {
+      // method === 'web'
+      if (!domain) {
+        throw new Error('Domain is required for did:web method')
+      }
+      // Use user ID as path for did:web
+      did = this.generateDidWeb(domain, `users/${userId}`)
+    }
+
+    // Create DID Document
+    const didDocument = this.createDidDocument(did, keyPair.publicKey)
+
+    return {
+      did,
+      didMethod: method,
+      publicKey: keyPair.publicKey,
+      privateKey: keyPair.privateKey,
+      didDocument,
+    }
+  }
 }
 
 // Export singleton instance
