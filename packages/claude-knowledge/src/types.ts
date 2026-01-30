@@ -980,3 +980,36 @@ export interface PlanStep {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Progress metrics for a plan.
+ */
+export interface PlanProgress {
+  total: number;
+  done: number;
+  inProgress: number;
+  notStarted: number;
+  blocked: number;
+  percentage: number;
+  currentWave: number | null;
+  nextSteps: NextStep[];
+}
+
+/**
+ * A recommended next step with status and dependencies.
+ */
+export interface NextStep {
+  step: PlanStep;
+  status: string; // CompletionStatus (imported as string to avoid circular deps)
+  blockedBy: string[];
+  wave: number;
+}
+
+/**
+ * Enhanced goal status with plan progress.
+ */
+export interface EnhancedGoalStatus {
+  goal: Goal;
+  plan: Plan | null;
+  progress: PlanProgress | null;
+}
