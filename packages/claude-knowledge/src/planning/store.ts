@@ -808,3 +808,43 @@ export function getStepDependencies(stepId: string): string[] {
 
   return rows.map((row) => row.depends_on_step_id);
 }
+
+/**
+ * Find a PlanStep by issue number from active/paused goals.
+ *
+ * Use case: /plan start needs to look up if an issue is part of any active plan
+ * before pushing a goal. This enables linking Goals to PlanSteps for planning-driven
+ * workflow orchestration.
+ *
+ * @param issueNumber - GitHub issue number to search for
+ * @returns { plan, step, goal } if found, null otherwise
+ */
+export function findStepByIssueNumber(issueNumber: number): {
+  plan: Plan;
+  step: PlanStep;
+  goal: Goal;
+} | null {
+  // Get all active/paused goals on the stack
+  const goals = getStack().filter((item) => item.type === "Goal") as Goal[];
+
+  for (const goal of goals) {
+    // Get the plan linked to this goal (if any)
+    const plan = getPlanByGoal(goal.id);
+    if (!plan) continue;
+
+    // Get all steps for this plan
+    const steps = getStepsByPlan(plan.id);
+
+    // Search for a step with matching issue number
+    for (const step of steps) {
+      if (
+        step.externalRef.type === "issue" &&
+        step.externalRef.number === issueNumber
+      ) {
+        return { plan, step, goal };
+      }
+    }
+  }
+
+  return null;
+}

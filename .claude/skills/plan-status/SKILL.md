@@ -86,6 +86,28 @@ Stale items: 2
 Next action: Fix CI, then /done to pop Knowledge cleanup, then resume milestone with /plan start 598
 ```
 
+## Auto-Pop Detection for Completed Plan Steps
+
+When a goal is created via `/plan start`, it includes a `planStepId` linking it to a specific PlanStep. Stale detection now checks if the linked issue has been closed and recommends auto-pop:
+
+```text
+1. [Goal] Define styling tokens contract #594 (active, 2d)
+   ⚠️ Issue #594 closed 1 day ago - auto-pop recommended. Run /done to summarize.
+```
+
+This enables automatic detection of completed work across sessions. The workflow:
+
+1. User runs `/plan start 594` - goal pushed with `planStepId`
+2. Workflow completes, issue closes (or closes later)
+3. Next session: `/plan status` shows stale warning
+4. User runs `/done` to pop goal and see next step from plan
+
+The detection survives session boundaries because:
+
+- `planStepId` is persisted in SQLite
+- Stale detection queries GitHub API on each check (5-min cache)
+- Works even after compaction or interruption
+
 ## When to Use
 
 - Starting a new session (check where you left off)
@@ -94,9 +116,11 @@ Next action: Fix CI, then /done to pop Knowledge cleanup, then resume milestone 
 - Weekly planning reviews
 - Before deciding what to work on next
 - Tracking milestone/epic progress with real-time completion data
+- After completing work to see what's next
 
 ## Related
 
+- `/plan start` - Start work on issue with planning context
 - `/goal` - Push a new goal
 - `/interrupt` - Push an interrupt
 - `/done` - Complete current item
