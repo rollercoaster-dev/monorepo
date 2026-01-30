@@ -160,6 +160,29 @@ export class DIDService {
   }
 
   /**
+   * Generates a did:web identifier from a domain and optional path
+   *
+   * Format: did:web:<domain> or did:web:<domain>:<path>
+   * The domain is URL-encoded and colons in paths replace slashes
+   *
+   * @param domain - Domain name (e.g., "badges.example.com")
+   * @param path - Optional path (e.g., "user/alice" becomes "user:alice")
+   * @returns did:web identifier
+   */
+  generateDidWeb(domain: string, path?: string): string {
+    // URL-encode the domain (per did:web spec)
+    const encodedDomain = encodeURIComponent(domain)
+
+    if (path) {
+      // Convert path slashes to colons (did:web convention)
+      const encodedPath = path.split('/').map(encodeURIComponent).join(':')
+      return `did:web:${encodedDomain}:${encodedPath}`
+    }
+
+    return `did:web:${encodedDomain}`
+  }
+
+  /**
    * Creates a DID Document for a given DID
    *
    * @param did - The DID identifier
