@@ -207,6 +207,27 @@ export const planningTools: Tool[] = [
       required: ["goalId"],
     },
   },
+  {
+    name: "planning_plan_list_steps",
+    description:
+      "List PlanSteps for a Plan with optional filtering by wave number. " +
+      "Returns steps ordered by ordinal with dependencies included. " +
+      "Note: Completion status filtering is not yet implemented (requires external API integration).",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        planId: {
+          type: "string",
+          description: "ID of the Plan to list steps for",
+        },
+        wave: {
+          type: "number",
+          description: "Optional wave number to filter by (0-based)",
+        },
+      },
+      required: ["planId"],
+    },
+  },
 ];
 
 /**
@@ -893,6 +914,100 @@ export async function handlePlanningToolCall(
                     createdAt: step.createdAt,
                     updatedAt: step.updatedAt,
                   })),
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      case "planning_plan_list_steps": {
+        const planId = args.planId as string;
+        const waveFilter = args.wave as number | undefined;
+
+        // Validate required fields
+        if (!planId || planId.trim().length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({ error: "planId is required" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Validate wave if provided
+        if (
+          waveFilter !== undefined &&
+          (typeof waveFilter !== "number" ||
+            waveFilter < 0 ||
+            !Number.isInteger(waveFilter))
+        ) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: "wave must be a non-negative integer",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get plan to verify it exists
+        const plan = getPlan(planId);
+        if (!plan) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: `Plan with id "${planId}" not found`,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Get all steps for the plan
+        let steps = getStepsByPlan(planId);
+
+        // Filter by wave if specified
+        if (waveFilter !== undefined) {
+          steps = steps.filter((step) => step.wave === waveFilter);
+        }
+
+        // TODO: Add completion status filtering when external ref resolution is implemented
+        // For now, we only support wave filtering. Completion status requires GitHub API
+        // integration to check issue status.
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  planId: plan.id,
+                  planTitle: plan.title,
+                  wave: waveFilter,
+                  steps: steps.map((step) => ({
+                    id: step.id,
+                    title: step.title,
+                    ordinal: step.ordinal,
+                    wave: step.wave,
+                    externalRef: step.externalRef,
+                    dependsOn: step.dependsOn,
+                    createdAt: step.createdAt,
+                    updatedAt: step.updatedAt,
+                  })),
+                  totalSteps: steps.length,
                 },
                 null,
                 2,
