@@ -83,7 +83,7 @@ Same pattern as `/auto-milestone`. Create ALL tasks upfront after Phase 1, with 
 
 ## Workflow
 
-```
+```text
 Phase 1: Plan    → read GitHub sub-issue graph → compute waves inline
 Phase 2: Execute → per-wave: launch claude -p /auto-issue N (Opus 4.5)
 Phase 3: Review  → per-PR: CI → CodeRabbit → fix → Telegram approval → merge
@@ -161,7 +161,7 @@ Detect circular dependencies — if found, report and exit.
 2. Create native tasks for wave visualization (see `/auto-milestone` Task System Integration)
 3. Display wave plan:
 
-```
+```text
 Epic #635: Planning Graph Phase 2 — generic Plan/Step model
 Sub-issues: 7 total, 0 closed, 7 open
 

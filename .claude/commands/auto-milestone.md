@@ -113,7 +113,7 @@ After each wave completes:
 
 ## Workflow
 
-```
+```text
 Phase 1: Plan    → claude -p milestone-planner → GATE (if dependencies unclear)
 Phase 2: Execute → per-wave: launch claude -p /auto-issue N (Opus 4.5)
 Phase 3: Review  → per-PR: CI → CodeRabbit → fix → Telegram approval → merge
@@ -171,7 +171,7 @@ Read the output file. The planner returns:
 
 **If `planning_status == "needs_review"`:**
 
-Notify user via Telegram with the proposed plan:
+Notify user via Telegram with the plan:
 
 ```text
 Skill(telegram, args: "ask: MILESTONE PLAN REVIEW
@@ -199,7 +199,7 @@ After wave plan is confirmed:
 
 1. Create milestone in checkpoint DB:
 
-   ```
+   ```text
    checkpoint_workflow_create for each issue
    ```
 
@@ -207,7 +207,7 @@ After wave plan is confirmed:
 
 3. Display wave plan:
 
-   ```
+   ```text
    Milestone "<name>" — N issues in M waves
 
    Wave 1 (no blockers):
@@ -416,7 +416,7 @@ After all waves are processed:
 
 On start, before Phase 1, check for existing checkpoint state:
 
-```
+```text
 checkpoint_workflow_find for each issue in the milestone
 ```
 
