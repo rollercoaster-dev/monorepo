@@ -79,3 +79,6 @@ export { getResolver } from "./resolvers/factory";
 export { MilestoneResolver } from "./resolvers/milestone-resolver";
 export { ManualResolver } from "./resolvers/manual-resolver";
 export { LearningResolver } from "./resolvers/learning-resolver";
+
+// Plan progress computation
+export { computePlanProgress } from "./progress";
