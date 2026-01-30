@@ -83,7 +83,7 @@ Each step has:
 - **title**: Issue title
 - **wave**: Execution wave (0 = can start immediately)
 - **ordinal**: Order within the plan (for display)
-- **externalRef**: External reference object with `type` (e.g., "issue"), optional `number` (GitHub issue number), and optional `criteria`
+- **externalRef**: External reference object with `type` (e.g., "issue") and optional `number` (GitHub issue number)
 - **dependsOn**: Array of step ordinals (DEPENDS_ON relationships)
 
 ## Wave Assignment
