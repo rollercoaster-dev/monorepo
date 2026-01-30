@@ -473,7 +473,9 @@ export async function handlePlanningToolCall(
 
       case "planning_stack_status": {
         const stack = peekStack();
-        const staleItems = detectStaleItems();
+        // Stale detection is now async because it checks plan step completion
+        // via external APIs (GitHub, etc.) through the completion resolver
+        const staleItems = await detectStaleItems();
 
         // Enhance active Goals with plan progress
         const enhancedItems: Array<Record<string, unknown>> = [];
