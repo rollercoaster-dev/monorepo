@@ -473,10 +473,12 @@ Rules:
 
 async function findExistingPR(
   issue: number,
+  branch?: string,
 ): Promise<{ pr: number; branch: string } | null> {
+  const searchBranch = branch ?? `feat/issue-${issue}`;
   try {
     const result =
-      await $`gh pr list --search "head:feat/issue-${issue}" --state open --json number,headRefName --limit 1`.quiet();
+      await $`gh pr list --search "head:${searchBranch}" --state open --json number,headRefName --limit 1`.quiet();
     const prs = JSON.parse(result.text()) as Array<{
       number: number;
       headRefName: string;
@@ -493,6 +495,86 @@ async function findExistingPR(
 function findExistingWorktree(issue: number): string | null {
   const worktreePath = resolve(WORKTREE_BASE, `monorepo-issue-${issue}`);
   return existsSync(worktreePath) ? worktreePath : null;
+}
+
+/**
+ * Check if a remote branch exists and has commits ahead of main.
+ * Returns the number of commits ahead, or 0 if the branch doesn't exist.
+ */
+async function countBranchCommits(branch: string): Promise<number> {
+  try {
+    await $`git fetch origin ${branch} --quiet`.quiet();
+  } catch (e) {
+    const msg = String(e);
+    if (!msg.includes("couldn't find remote ref")) {
+      logWarn(
+        `Failed to fetch branch "${branch}" (network/auth issue?): ${msg}`,
+      );
+    }
+    return 0;
+  }
+
+  try {
+    const result =
+      await $`git rev-list --count origin/main..origin/${branch}`.quiet();
+    const count = parseInt(result.text().trim(), 10);
+    if (isNaN(count)) {
+      logWarn(
+        `Unexpected rev-list output for branch "${branch}": "${result.text().trim()}"`,
+      );
+      return 0;
+    }
+    return count;
+  } catch (e) {
+    logWarn(`git rev-list failed for fetched branch "${branch}": ${e}`);
+    return 0;
+  }
+}
+
+/**
+ * Get the branch name for an issue from checkpoint or convention.
+ */
+function getIssueBranch(issue: number): string {
+  try {
+    const branch = checkpoint.findByIssue(issue)?.workflow.branch?.trim();
+    if (branch) {
+      return branch;
+    }
+  } catch (e) {
+    logWarn(`Could not read checkpoint for issue #${issue}: ${e}`);
+  }
+  return `feat/issue-${issue}`;
+}
+
+/**
+ * Create a PR for an existing branch that already has commits.
+ * Returns the PR number if found after creation, or null.
+ */
+async function createPRForExistingBranch(
+  issue: number,
+  branch: string,
+  wave: number,
+  milestoneId: string,
+): Promise<number | null> {
+  let title: string;
+  try {
+    const result =
+      await $`gh issue view ${issue} --json title -q .title`.quiet();
+    title = result.text().trim();
+  } catch (e) {
+    logWarn(`Could not fetch title for issue #${issue} (using fallback): ${e}`);
+    title = `feat: implement issue #${issue}`;
+  }
+
+  const body = `Closes #${issue}\n\nAuto-created by wave-orchestrator resume from existing branch.`;
+  await $`gh pr create --head ${branch} --base main --title ${title} --body ${body}`.quiet();
+
+  const pr = await findExistingPR(issue, branch);
+  if (pr) {
+    ensureWorkflowLinked(issue, milestoneId, wave, pr.pr);
+    return pr.pr;
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -543,6 +625,7 @@ async function executeIssue(
   wave: number,
   milestoneId: string,
   config: Config,
+  needsPrOnly?: Set<number>,
 ): Promise<{ pr?: number }> {
   const logFile = resolve(OUTPUT_DIR, `issue-${issue}.log`);
   log(`[Wave ${wave}] Starting issue #${issue} → ${logFile}`);
@@ -555,6 +638,43 @@ async function executeIssue(
     );
     ensureWorkflowLinked(issue, milestoneId, wave, existingPR.pr);
     return { pr: existingPR.pr };
+  }
+
+  // 1b. Check if branch already has commits — skip to PR creation
+  if (needsPrOnly?.has(issue)) {
+    const branch = getIssueBranch(issue);
+    log(
+      `[Wave ${wave}] Issue #${issue} has branch "${branch}" with commits — creating PR only`,
+    );
+    try {
+      const prNumber = await createPRForExistingBranch(
+        issue,
+        branch,
+        wave,
+        milestoneId,
+      );
+      if (prNumber) {
+        logOk(
+          `[Wave ${wave}] Issue #${issue} → PR #${prNumber} (from existing branch)`,
+        );
+        return { pr: prNumber };
+      }
+      // PR was created but search couldn't find it — don't fall through to
+      // full execution as that would create duplicate PRs
+      const msg = `PR created for #${issue} on branch "${branch}" but not found afterward`;
+      logErr(`[Wave ${wave}] ${msg}`);
+      markWorkflowFailed(issue, milestoneId, wave, msg);
+      throw new Error(msg);
+    } catch (e) {
+      // Avoid double-logging errors already handled above
+      if (!(e instanceof Error && e.message.includes("but not found"))) {
+        logErr(
+          `[Wave ${wave}] Failed to create PR for #${issue} from branch "${branch}": ${e}`,
+        );
+        markWorkflowFailed(issue, milestoneId, wave, String(e));
+      }
+      throw e;
+    }
   }
 
   // 2. Resolve working directory
@@ -719,6 +839,7 @@ async function executeWave(
   milestoneId: string,
   config: Config,
   completedIssues: Set<number>,
+  needsPrOnly?: Set<number>,
 ): Promise<Set<number>> {
   const pending = wave.issues.filter((i) => !completedIssues.has(i));
   if (pending.length === 0) {
@@ -731,7 +852,8 @@ async function executeWave(
   );
 
   const tasks = pending.map(
-    (issue) => () => executeIssue(issue, wave.wave, milestoneId, config),
+    (issue) => () =>
+      executeIssue(issue, wave.wave, milestoneId, config, needsPrOnly),
   );
 
   const execFailed = new Set<number>();
@@ -1333,6 +1455,7 @@ interface ResumeState {
   milestoneId: string;
   waves: Wave[];
   completedIssues: Set<number>;
+  needsPrOnly: Set<number>;
 }
 
 function getMilestoneName(config: Config): string {
@@ -1368,6 +1491,7 @@ async function loadResumeState(config: Config): Promise<ResumeState | null> {
 
   const waveMap = new Map<number, number[]>();
   const completedIssues = new Set<number>();
+  const needsPrOnly = new Set<number>();
   let recovered = 0;
 
   for (const row of rows) {
@@ -1426,8 +1550,19 @@ async function loadResumeState(config: Config): Promise<ResumeState | null> {
       const worktree = findExistingWorktree(row.issue_number);
       if (worktree) {
         logWarn(
-          `Issue #${row.issue_number} has worktree at ${worktree} but no PR — will re-execute`,
+          `Issue #${row.issue_number} has worktree at ${worktree} but no PR`,
         );
+      }
+
+      // Check for existing branch with commits (no PR yet)
+      const branchName = getIssueBranch(row.issue_number);
+      const branchCommits = await countBranchCommits(branchName);
+      if (branchCommits > 0) {
+        logWarn(
+          `Issue #${row.issue_number} has branch "${branchName}" with ${branchCommits} commit(s) but no PR — will attempt PR creation only`,
+        );
+        needsPrOnly.add(row.issue_number);
+        continue;
       }
 
       if (row.status === "running") {
@@ -1444,7 +1579,7 @@ async function loadResumeState(config: Config): Promise<ResumeState | null> {
     .sort(([a], [b]) => a - b)
     .map(([wave, issues]) => ({ wave, issues }));
 
-  return { milestoneId, waves, completedIssues };
+  return { milestoneId, waves, completedIssues, needsPrOnly };
 }
 
 // ---------------------------------------------------------------------------
@@ -1504,6 +1639,7 @@ async function main(): Promise<void> {
   let waves: Wave[];
   let issueGraph: IssueNode[] = [];
   let completedIssues = new Set<number>();
+  let needsPrOnly = new Set<number>();
 
   // --- Resume or Fresh ---
   if (config.resume) {
@@ -1516,6 +1652,7 @@ async function main(): Promise<void> {
     milestoneId = state.milestoneId;
     waves = state.waves;
     completedIssues = state.completedIssues;
+    needsPrOnly = state.needsPrOnly;
 
     // Re-fetch real dependencies for epics; infer wave-order for milestones
     if (config.mode === "epic") {
@@ -1618,6 +1755,7 @@ async function main(): Promise<void> {
       milestoneId,
       config,
       completedIssues,
+      needsPrOnly,
     );
     for (const f of execFailed) failedIssues.add(f);
 
