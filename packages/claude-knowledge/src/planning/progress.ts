@@ -82,13 +82,23 @@ export async function computePlanProgress(plan: Plan): Promise<PlanProgress> {
   const nextSteps: NextStep[] = [];
 
   for (const step of steps) {
-    const status = statusMap.get(step.id)!;
+    const status = statusMap.get(step.id);
+    // Defensive: skip if status couldn't be resolved (shouldn't happen)
+    if (!status) {
+      logger.warn("Step has no resolved status, skipping", {
+        stepId: step.id,
+        context: "computePlanProgress",
+      });
+      continue;
+    }
     if (status === "done") continue;
 
     // Check if dependencies are met
-    const blockedBy = step.dependsOn.filter(
-      (depId) => statusMap.get(depId) !== "done",
-    );
+    const blockedBy = step.dependsOn.filter((depId) => {
+      const depStatus = statusMap.get(depId);
+      // If dependency doesn't exist in map, treat as blocker
+      return !depStatus || depStatus !== "done";
+    });
 
     if (blockedBy.length > 0) {
       blocked++;
