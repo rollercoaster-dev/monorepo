@@ -23,7 +23,13 @@ import {
   addStepDependency,
   getStepsByPlan,
 } from "../../planning/store.js";
-import type { Goal, PlanSourceType, ExternalRef } from "../../types.js";
+import { computePlanProgress } from "../../planning/progress.js";
+import type {
+  Goal,
+  Interrupt,
+  PlanSourceType,
+  ExternalRef,
+} from "../../types.js";
 
 /**
  * Tool definitions for planning operations.
@@ -88,8 +94,9 @@ export const planningTools: Tool[] = [
   {
     name: "planning_stack_status",
     description:
-      "Get the current planning stack state with stale item detection. " +
-      "Shows what you're working on, what's paused, and items that may need attention.",
+      "Get the current planning stack state with stale item detection and plan progress. " +
+      "Shows what you're working on, what's paused, items that may need attention, " +
+      "and step-level progress for active Goals with Plans (done count, percentage, current wave, next steps).",
     inputSchema: {
       type: "object" as const,
       properties: {},
@@ -468,9 +475,9 @@ export async function handlePlanningToolCall(
         const stack = peekStack();
         const staleItems = detectStaleItems();
 
-        // Format stack for display
-        const stackDisplay = stack.items.map((item, index) => {
-          const stale = staleItems.find((s) => s.item.id === item.id);
+        // Enhance active Goals with plan progress
+        const enhancedItems: Array<Record<string, unknown>> = [];
+        for (const [index, item] of stack.items.entries()) {
           const entry: Record<string, unknown> = {
             position: index + 1,
             type: item.type,
@@ -479,16 +486,34 @@ export async function handlePlanningToolCall(
             createdAt: item.createdAt,
           };
 
+          // Add plan progress for active Goals
+          if (item.type === "Goal" && item.status === "active") {
+            const plan = getPlanByGoal(item.id);
+            if (plan) {
+              const progress = await computePlanProgress(plan);
+              entry.plan = {
+                id: plan.id,
+                title: plan.title,
+              };
+              entry.progress = progress;
+            }
+          }
+
           if (item.type === "Goal" && (item as Goal).issueNumber) {
             entry.issueNumber = (item as Goal).issueNumber;
           }
 
+          if (item.type === "Interrupt") {
+            entry.reason = (item as Interrupt).reason;
+          }
+
+          const stale = staleItems.find((s) => s.item.id === item.id);
           if (stale) {
             entry.staleWarning = stale.reason;
           }
 
-          return entry;
-        });
+          enhancedItems.push(entry);
+        }
 
         return {
           content: [
@@ -504,7 +529,7 @@ export async function handlePlanningToolCall(
                         status: stack.topItem.status,
                       }
                     : null,
-                  items: stackDisplay,
+                  items: enhancedItems,
                   staleCount: staleItems.length,
                   staleItems: staleItems.map((s) => ({
                     title: s.item.title,
