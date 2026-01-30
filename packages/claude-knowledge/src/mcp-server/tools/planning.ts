@@ -548,12 +548,20 @@ export async function handlePlanningToolCall(
             isError: true,
           };
         }
-        if (!sourceType) {
+        const validSourceTypes = [
+          "milestone",
+          "epic",
+          "learning-path",
+          "manual",
+        ];
+        if (!sourceType || !validSourceTypes.includes(sourceType)) {
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({ error: "sourceType is required" }),
+                text: JSON.stringify({
+                  error: `sourceType must be one of: ${validSourceTypes.join(", ")}`,
+                }),
               },
             ],
             isError: true,
@@ -767,6 +775,75 @@ export async function handlePlanningToolCall(
           }
         }
 
+        // Pre-flight: validate no duplicate ordinals
+        const ordinals = stepsInput.map((s) => s.ordinal);
+        const uniqueOrdinals = new Set(ordinals);
+        if (uniqueOrdinals.size !== ordinals.length) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error:
+                    "Duplicate ordinal values detected. Each step must have a unique ordinal.",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Pre-flight: validate all dependsOn ordinals reference ordinals in this batch
+        for (const step of stepsInput) {
+          if (step.dependsOn) {
+            for (const depOrdinal of step.dependsOn) {
+              if (
+                typeof depOrdinal !== "number" ||
+                !Number.isInteger(depOrdinal) ||
+                depOrdinal < 0
+              ) {
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify({
+                        error: `dependsOn values must be non-negative integers, got: ${JSON.stringify(depOrdinal)}`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+              if (depOrdinal === step.ordinal) {
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify({
+                        error: `Step with ordinal ${step.ordinal} cannot depend on itself`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+              if (!uniqueOrdinals.has(depOrdinal)) {
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify({
+                        error: `Step ordinal ${step.ordinal} depends on ordinal ${depOrdinal}, which is not in the batch`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+            }
+          }
+        }
+
         // Sort steps by ordinal to ensure dependencies are created before dependents
         const sortedSteps = [...stepsInput].sort(
           (a, b) => a.ordinal - b.ordinal,
@@ -869,6 +946,22 @@ export async function handlePlanningToolCall(
           };
         }
 
+        // Validate goal exists
+        const goalEntity = getEntity(goalId);
+        if (!goalEntity) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  error: `Goal with id "${goalId}" not found`,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
         // Get plan by goal
         const plan = getPlanByGoal(goalId);
         if (!plan) {
@@ -879,7 +972,7 @@ export async function handlePlanningToolCall(
                 text: JSON.stringify({
                   plan: null,
                   steps: [],
-                  message: `No plan found for goal "${goalId}"`,
+                  message: `Goal "${goalId}" exists but has no plan yet`,
                 }),
               },
             ],

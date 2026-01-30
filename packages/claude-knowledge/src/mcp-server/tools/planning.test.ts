@@ -243,7 +243,7 @@ describe("Plan CRUD MCP tools", () => {
 
       expect(response.isError).toBe(true);
       const result = JSON.parse(response.content[0].text);
-      expect(result.error).toContain("was not created");
+      expect(result.error).toContain("not in the batch");
     });
   });
 
@@ -290,15 +290,14 @@ describe("Plan CRUD MCP tools", () => {
       expect(result.steps[1].title).toBe("Step 2");
     });
 
-    test("returns null for non-existent goalId", async () => {
+    test("returns error for non-existent goalId", async () => {
       const response = await handlePlanningToolCall("planning_plan_get", {
         goalId: "non-existent-goal",
       });
 
-      expect(response.isError).toBeUndefined();
+      expect(response.isError).toBe(true);
       const result = JSON.parse(response.content[0].text);
-      expect(result.plan).toBeNull();
-      expect(result.steps).toEqual([]);
+      expect(result.error).toContain("not found");
     });
 
     test("returns plan with dependencies correctly populated", async () => {
