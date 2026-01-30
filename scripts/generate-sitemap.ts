@@ -11,7 +11,7 @@
  *   bun scripts/generate-sitemap.ts --format=list   # one route per line
  */
 
-import { resolve, relative } from "path";
+import { resolve } from "path";
 import { Glob } from "bun";
 
 const PAGES_DIR = resolve(
@@ -24,25 +24,17 @@ interface Sitemap {
   dynamic: string[];
 }
 
-function filePathToRoute(filePath: string): {
+function filePathToRoute(relativePath: string): {
   route: string;
   isDynamic: boolean;
 } {
-  // Get path relative to pages dir, remove .vue extension
-  let route = relative(PAGES_DIR, filePath).replace(/\.vue$/, "");
-
-  // Remove index segments (index.vue → parent directory route)
+  let route = relativePath.replace(/\.vue$/, "");
   route = route.replace(/\/index$/, "").replace(/^index$/, "");
 
-  // Convert [param] to :param and detect dynamic routes
   const isDynamic = route.includes("[");
   route = route.replace(/\[([^\]]+)\]/g, ":$1");
 
-  // Ensure leading slash
-  route = "/" + route;
-
-  // Normalize double slashes
-  route = route.replace(/\/+/g, "/");
+  route = ("/" + route).replace(/\/+/g, "/");
 
   return { route, isDynamic };
 }
@@ -52,8 +44,7 @@ async function generateSitemap(): Promise<Sitemap> {
   const glob = new Glob("**/*.vue");
 
   for await (const file of glob.scan({ cwd: PAGES_DIR })) {
-    const fullPath = resolve(PAGES_DIR, file);
-    const { route, isDynamic } = filePathToRoute(fullPath);
+    const { route, isDynamic } = filePathToRoute(file);
 
     if (isDynamic) {
       sitemap.dynamic.push(route);
@@ -62,7 +53,6 @@ async function generateSitemap(): Promise<Sitemap> {
     }
   }
 
-  // Deduplicate and sort for consistent output
   sitemap.static = [...new Set(sitemap.static)].sort();
   sitemap.dynamic = [...new Set(sitemap.dynamic)].sort();
 
@@ -74,9 +64,9 @@ const format = process.argv.includes("--format=list") ? "list" : "json";
 
 if (format === "list") {
   console.log("# Static routes");
-  sitemap.static.forEach((r) => console.log(r));
+  for (const r of sitemap.static) console.log(r);
   console.log("\n# Dynamic routes (need IDs)");
-  sitemap.dynamic.forEach((r) => console.log(r));
+  for (const r of sitemap.dynamic) console.log(r);
 } else {
   console.log(JSON.stringify(sitemap, null, 2));
 }

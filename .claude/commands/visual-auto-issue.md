@@ -27,12 +27,12 @@ gh issue view <N> --json title,body,labels -q '{title: .title, body: .body, labe
 **Match logic:**
 
 1. Extract keywords from issue title + body (component names, page names, feature areas)
-2. Match keywords against sitemap routes:
+2. Fuzzy-match keywords against the sitemap routes. Examples of common matches (not exhaustive — always match dynamically against the sitemap output):
    - "badge" → `/badges`, `/badges/create`, `/badges/issued`
    - "backpack" → `/backpack`
    - "issuer" → `/issuers`, `/issuers/create`, `/issuers/manage`
    - "admin" → `/admin`, `/admin/badges`, `/admin/system`, `/admin/users`
-   - "auth" / "login" → `/auth/login`, `/auth/register`, `/auth/profile`
+   - "auth" / "login" / "oauth" → `/auth/login`, `/auth/register`, `/auth/profile`, `/auth/oauth/callback`
    - "verify" → (skip, dynamic only)
    - "home" / "landing" / "dashboard" → `/`
 3. Always include `/` as baseline
@@ -50,11 +50,13 @@ bun --filter openbadges-system dev &
 DEV_PID=$!
 ```
 
-Wait for server ready (poll until responding):
+Wait for server ready (poll until responding). The default port is 7777; if `SYSTEM_VITE_PORT` or `VITE_PORT` is set, or if 7777 is occupied (`strictPort: false`), detect the actual port from the server output.
 
 ```bash
 for i in $(seq 1 30); do curl -s http://localhost:7777 > /dev/null && break; sleep 2; done
 ```
+
+If all 30 attempts fail, the server did not start — log a warning and skip screenshots per the error handling table.
 
 Create screenshot directory:
 
@@ -82,7 +84,7 @@ kill $DEV_PID 2>/dev/null
 
 Run the inner workflow, passing all arguments through:
 
-```
+```bash
 /auto-issue <N> [flags]
 ```
 
@@ -90,7 +92,7 @@ This executes the full autonomous workflow (setup, research, implement, review, 
 
 **Capture the PR number and branch name from the workflow output.**
 
-If `--dry-run` was passed, the inner workflow stops after research. Skip Phase 6 — no after screenshots needed.
+If `--dry-run` was passed, the inner workflow stops after research. Skip Phase 6 — no after screenshots needed. Before screenshots are still captured during `--dry-run` to document the current visual state alongside the research plan.
 
 ---
 
@@ -107,7 +109,7 @@ bun --filter openbadges-system dev &
 DEV_PID=$!
 ```
 
-Wait for server ready:
+Wait for server ready (same port detection as Phase 0):
 
 ```bash
 for i in $(seq 1 30); do curl -s http://localhost:7777 > /dev/null && break; sleep 2; done
@@ -147,7 +149,7 @@ BRANCH=$(git branch --show-current)
 
 Build a PR comment with before/after comparison tables. For each focus route, construct image URLs:
 
-```
+```text
 https://raw.githubusercontent.com/rollercoaster-dev/monorepo/<BRANCH>/.claude/screenshots/issue-<N>/before/<slug>.png
 https://raw.githubusercontent.com/rollercoaster-dev/monorepo/<BRANCH>/.claude/screenshots/issue-<N>/after/<slug>.png
 ```
@@ -192,9 +194,11 @@ EOF
 
 ## Summary
 
-```
+```text
 visual-auto-issue <N>
 ├─ Phase 0: Generate sitemap → match issue → screenshot BEFORE
 ├─ Phases 1-5: /auto-issue <N> (unchanged)
 └─ Phase 6: Screenshot AFTER → commit → PR comment
 ```
+
+**Note:** Screenshots are committed to the feature branch only. They are pruned when the branch is deleted after merge.
