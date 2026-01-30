@@ -84,7 +84,7 @@ function checkIssueState(issueNumber: number): GitHubIssueState | null {
       };
     }
   } catch (error) {
-    logger.debug("Failed to check GitHub issue state", {
+    logger.warn("Failed to check GitHub issue state", {
       issueNumber,
       error: error instanceof Error ? error.message : String(error),
       context: "milestone-resolver.checkIssueState",
@@ -122,7 +122,11 @@ export class MilestoneResolver implements CompletionResolver {
     // Fetch from GitHub
     const issueState = checkIssueState(issueNumber);
     if (!issueState) {
-      // Failed to fetch - return not-started as safe default
+      logger.warn("Failed to fetch GitHub issue state, returning not-started", {
+        stepId: step.id,
+        issueNumber,
+        context: "milestone-resolver.resolve",
+      });
       return "not-started";
     }
 

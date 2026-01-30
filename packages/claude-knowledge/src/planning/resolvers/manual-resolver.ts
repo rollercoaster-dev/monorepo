@@ -53,13 +53,16 @@ export class ManualResolver implements CompletionResolver {
       status = "done";
     } else {
       // Check if there's an active goal linked to this step
+      // Steps have PART_OF relationships TO Plans, Plans have PART_OF TO Goals
       const activeGoal = db
         .query<{ count: number }, [string]>(
           `
         SELECT COUNT(*) as count
-        FROM planning_entities e
-        JOIN planning_relationships r ON r.from_id = e.id
-        WHERE r.to_id = ? AND r.type = 'PART_OF' AND e.status = 'active'
+        FROM planning_relationships r1
+        JOIN planning_relationships r2 ON r2.from_id = r1.to_id
+        JOIN planning_entities e ON e.id = r2.to_id
+        WHERE r1.from_id = ? AND r1.type = 'PART_OF'
+          AND r2.type = 'PART_OF' AND e.status = 'active'
       `,
         )
         .get(step.id);
