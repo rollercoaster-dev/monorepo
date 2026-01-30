@@ -15,6 +15,17 @@ import {
   getCompleted,
   getRelationships,
   getAllEntities,
+  createPlan,
+  getPlan,
+  getPlanByGoal,
+  deletePlan,
+  getAllPlans,
+  createPlanStep,
+  getPlanStep,
+  getStepsByPlan,
+  deletePlanStep,
+  addStepDependency,
+  getStepDependencies,
 } from "./store";
 
 const TEST_DB = ".claude/test-planning-store.db";
@@ -237,6 +248,377 @@ describe("planning store", () => {
 
       const all = getAllEntities();
       expect(all).toHaveLength(2);
+    });
+  });
+
+  describe("Plan CRUD", () => {
+    describe("createPlan()", () => {
+      test("creates a plan linked to a goal", () => {
+        const goal = createGoal({ title: "Ship OB3" });
+        const plan = createPlan({
+          title: "OB3 Milestone Plan",
+          goalId: goal.id,
+          sourceType: "milestone",
+          sourceRef: "ob3-phase1",
+        });
+
+        expect(plan.id).toStartWith("plan-");
+        expect(plan.title).toBe("OB3 Milestone Plan");
+        expect(plan.goalId).toBe(goal.id);
+        expect(plan.sourceType).toBe("milestone");
+        expect(plan.sourceRef).toBe("ob3-phase1");
+      });
+
+      test("creates plan without sourceRef", () => {
+        const goal = createGoal({ title: "Manual goal" });
+        const plan = createPlan({
+          title: "Manual plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        expect(plan.sourceRef).toBeUndefined();
+      });
+    });
+
+    describe("getPlan()", () => {
+      test("retrieves plan by ID", () => {
+        const goal = createGoal({ title: "Goal" });
+        const created = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "epic",
+        });
+
+        const retrieved = getPlan(created.id);
+        expect(retrieved?.id).toBe(created.id);
+        expect(retrieved?.title).toBe("Plan");
+      });
+
+      test("returns null for unknown ID", () => {
+        expect(getPlan("nonexistent")).toBeNull();
+      });
+    });
+
+    describe("getPlanByGoal()", () => {
+      test("retrieves plan by goal ID", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "milestone",
+        });
+
+        const retrieved = getPlanByGoal(goal.id);
+        expect(retrieved?.id).toBe(plan.id);
+      });
+
+      test("returns null if no plan for goal", () => {
+        const goal = createGoal({ title: "Goal" });
+        expect(getPlanByGoal(goal.id)).toBeNull();
+      });
+    });
+
+    describe("deletePlan()", () => {
+      test("removes plan from database", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        deletePlan(plan.id);
+        expect(getPlan(plan.id)).toBeNull();
+      });
+    });
+
+    describe("getAllPlans()", () => {
+      test("returns all plans", () => {
+        const goal1 = createGoal({ title: "Goal 1" });
+        const goal2 = createGoal({ title: "Goal 2" });
+
+        createPlan({
+          title: "Plan A",
+          goalId: goal1.id,
+          sourceType: "milestone",
+        });
+        createPlan({
+          title: "Plan B",
+          goalId: goal2.id,
+          sourceType: "epic",
+        });
+
+        const plans = getAllPlans();
+        expect(plans).toHaveLength(2);
+      });
+    });
+  });
+
+  describe("PlanStep CRUD", () => {
+    describe("createPlanStep()", () => {
+      test("creates a plan step with issue externalRef", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "milestone",
+        });
+
+        const step = createPlanStep({
+          planId: plan.id,
+          title: "Implement feature X",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "issue", number: 123 },
+        });
+
+        expect(step.id).toStartWith("step-");
+        expect(step.planId).toBe(plan.id);
+        expect(step.title).toBe("Implement feature X");
+        expect(step.ordinal).toBe(0);
+        expect(step.wave).toBe(1);
+        expect(step.externalRef.type).toBe("issue");
+        expect(step.externalRef.number).toBe(123);
+        expect(step.dependsOn).toEqual([]);
+      });
+
+      test("creates step with manual externalRef", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        const step = createPlanStep({
+          planId: plan.id,
+          title: "Manual task",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual", criteria: "Complete when done" },
+        });
+
+        expect(step.externalRef.type).toBe("manual");
+        expect(step.externalRef.criteria).toBe("Complete when done");
+      });
+    });
+
+    describe("getPlanStep()", () => {
+      test("retrieves step by ID", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+        const created = createPlanStep({
+          planId: plan.id,
+          title: "Step",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+
+        const retrieved = getPlanStep(created.id);
+        expect(retrieved?.id).toBe(created.id);
+        expect(retrieved?.title).toBe("Step");
+      });
+
+      test("returns null for unknown ID", () => {
+        expect(getPlanStep("nonexistent")).toBeNull();
+      });
+    });
+
+    describe("getStepsByPlan()", () => {
+      test("returns steps ordered by ordinal", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        createPlanStep({
+          planId: plan.id,
+          title: "Step 2",
+          ordinal: 1,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+        createPlanStep({
+          planId: plan.id,
+          title: "Step 1",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+
+        const steps = getStepsByPlan(plan.id);
+        expect(steps).toHaveLength(2);
+        expect(steps[0].title).toBe("Step 1");
+        expect(steps[1].title).toBe("Step 2");
+      });
+    });
+
+    describe("addStepDependency() / getStepDependencies()", () => {
+      test("adds and retrieves dependencies", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        const step1 = createPlanStep({
+          planId: plan.id,
+          title: "Step 1",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+        const step2 = createPlanStep({
+          planId: plan.id,
+          title: "Step 2",
+          ordinal: 1,
+          wave: 2,
+          externalRef: { type: "manual" },
+        });
+
+        addStepDependency(step2.id, step1.id);
+
+        const deps = getStepDependencies(step2.id);
+        expect(deps).toEqual([step1.id]);
+      });
+
+      test("handles multiple dependencies", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        const step1 = createPlanStep({
+          planId: plan.id,
+          title: "Step 1",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+        const step2 = createPlanStep({
+          planId: plan.id,
+          title: "Step 2",
+          ordinal: 1,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+        const step3 = createPlanStep({
+          planId: plan.id,
+          title: "Step 3",
+          ordinal: 2,
+          wave: 2,
+          externalRef: { type: "manual" },
+        });
+
+        addStepDependency(step3.id, step1.id);
+        addStepDependency(step3.id, step2.id);
+
+        const deps = getStepDependencies(step3.id);
+        expect(deps).toHaveLength(2);
+        expect(deps).toContain(step1.id);
+        expect(deps).toContain(step2.id);
+      });
+    });
+
+    describe("deletePlanStep()", () => {
+      test("removes step and cascades to dependencies", () => {
+        const goal = createGoal({ title: "Goal" });
+        const plan = createPlan({
+          title: "Plan",
+          goalId: goal.id,
+          sourceType: "manual",
+        });
+
+        const step1 = createPlanStep({
+          planId: plan.id,
+          title: "Step 1",
+          ordinal: 0,
+          wave: 1,
+          externalRef: { type: "manual" },
+        });
+        const step2 = createPlanStep({
+          planId: plan.id,
+          title: "Step 2",
+          ordinal: 1,
+          wave: 2,
+          externalRef: { type: "manual" },
+        });
+
+        addStepDependency(step2.id, step1.id);
+        deletePlanStep(step1.id);
+
+        expect(getPlanStep(step1.id)).toBeNull();
+        // Dependencies should also be removed
+        expect(getStepDependencies(step2.id)).toEqual([]);
+      });
+    });
+  });
+
+  describe("cascade deletion", () => {
+    test("deleting a plan cascades to plan steps", () => {
+      const goal = createGoal({ title: "Goal" });
+      const plan = createPlan({
+        title: "Plan",
+        goalId: goal.id,
+        sourceType: "manual",
+      });
+
+      const step = createPlanStep({
+        planId: plan.id,
+        title: "Step",
+        ordinal: 0,
+        wave: 1,
+        externalRef: { type: "manual" },
+      });
+
+      deletePlan(plan.id);
+
+      expect(getPlan(plan.id)).toBeNull();
+      expect(getPlanStep(step.id)).toBeNull();
+    });
+  });
+
+  describe("Goal.planStepId", () => {
+    test("stores and retrieves planStepId field", () => {
+      const parentGoal = createGoal({ title: "Milestone goal" });
+      const plan = createPlan({
+        title: "Plan",
+        goalId: parentGoal.id,
+        sourceType: "manual",
+      });
+
+      const step = createPlanStep({
+        planId: plan.id,
+        title: "Step 1",
+        ordinal: 0,
+        wave: 1,
+        externalRef: { type: "issue", number: 123 },
+      });
+
+      const goal = createGoal({
+        title: "Work on step 1",
+        planStepId: step.id,
+      });
+
+      expect(goal.planStepId).toBe(step.id);
+
+      // Verify it persists via getEntity
+      const retrieved = getEntity(goal.id);
+      expect(retrieved?.type).toBe("Goal");
+      if (retrieved?.type === "Goal") {
+        expect(retrieved.planStepId).toBe(step.id);
+      }
     });
   });
 });

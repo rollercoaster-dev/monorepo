@@ -77,6 +77,41 @@ interface RelationshipJSONLRecord {
   created_at: string;
 }
 
+/** Shape of a JSONL record for plans */
+interface PlanJSONLRecord {
+  _type: "plan";
+  id: string;
+  title: string;
+  goal_id: string;
+  source_type: string;
+  source_ref?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Shape of a JSONL record for plan steps */
+interface PlanStepJSONLRecord {
+  _type: "plan_step";
+  id: string;
+  plan_id: string;
+  title: string;
+  ordinal: number;
+  wave: number;
+  external_ref_type: string;
+  external_ref_number?: number;
+  external_ref_criteria?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Shape of a JSONL record for step dependencies */
+interface StepDependencyJSONLRecord {
+  _type: "step_dependency";
+  step_id: string;
+  depends_on_step_id: string;
+  created_at: string;
+}
+
 /** Row shape from SQLite */
 interface EntityRow {
   id: string;
@@ -94,6 +129,35 @@ interface RelationshipRow {
   to_id: string;
   type: string;
   data: string | null;
+  created_at: string;
+}
+
+interface PlanRow {
+  id: string;
+  title: string;
+  goal_id: string;
+  source_type: string;
+  source_ref: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PlanStepRow {
+  id: string;
+  plan_id: string;
+  title: string;
+  ordinal: number;
+  wave: number;
+  external_ref_type: string;
+  external_ref_number: number | null;
+  external_ref_criteria: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface StepDependencyRow {
+  step_id: string;
+  depends_on_step_id: string;
   created_at: string;
 }
 
@@ -118,6 +182,26 @@ function isRelationshipRecord(
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return v._type === "relationship";
+}
+
+function isPlanRecord(value: unknown): value is PlanJSONLRecord {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return v._type === "plan";
+}
+
+function isPlanStepRecord(value: unknown): value is PlanStepJSONLRecord {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return v._type === "plan_step";
+}
+
+function isStepDependencyRecord(
+  value: unknown,
+): value is StepDependencyJSONLRecord {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return v._type === "step_dependency";
 }
 
 /**
@@ -154,6 +238,52 @@ export async function exportPlanningToJSONL(
       )
       .all(...entityIds, ...entityIds);
     relationships.push(...rels);
+  }
+
+  // Query plans for active entities (Goals)
+  const plans: PlanRow[] = [];
+  if (entityIds.length > 0) {
+    const placeholders = entityIds.map(() => "?").join(",");
+    const plansQuery = db
+      .query<PlanRow, string[]>(
+        `SELECT id, title, goal_id, source_type, source_ref, created_at, updated_at
+         FROM planning_plans
+         WHERE goal_id IN (${placeholders})`,
+      )
+      .all(...entityIds);
+    plans.push(...plansQuery);
+  }
+
+  // Query plan steps for active plans
+  const planIds = plans.map((p) => p.id);
+  const planSteps: PlanStepRow[] = [];
+  const stepDependencies: StepDependencyRow[] = [];
+
+  if (planIds.length > 0) {
+    const placeholders = planIds.map(() => "?").join(",");
+    const stepsQuery = db
+      .query<PlanStepRow, string[]>(
+        `SELECT id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at
+         FROM planning_steps
+         WHERE plan_id IN (${placeholders})
+         ORDER BY ordinal ASC`,
+      )
+      .all(...planIds);
+    planSteps.push(...stepsQuery);
+
+    // Query dependencies for plan steps
+    const stepIds = planSteps.map((s) => s.id);
+    if (stepIds.length > 0) {
+      const stepPlaceholders = stepIds.map(() => "?").join(",");
+      const depsQuery = db
+        .query<StepDependencyRow, string[]>(
+          `SELECT step_id, depends_on_step_id, created_at
+           FROM planning_step_dependencies
+           WHERE step_id IN (${stepPlaceholders})`,
+        )
+        .all(...stepIds);
+      stepDependencies.push(...depsQuery);
+    }
   }
 
   const lines: string[] = [];
@@ -196,6 +326,73 @@ export async function exportPlanningToJSONL(
       lines.push(JSON.stringify(record));
     } catch (error) {
       logger.warn("Failed to serialize planning relationship for export", {
+        error: error instanceof Error ? error.message : String(error),
+        context: "planning-sync.exportPlanningToJSONL",
+      });
+    }
+  }
+
+  // Export plans
+  for (const plan of plans) {
+    try {
+      const record: PlanJSONLRecord = {
+        _type: "plan",
+        id: plan.id,
+        title: plan.title,
+        goal_id: plan.goal_id,
+        source_type: plan.source_type,
+        source_ref: plan.source_ref ?? undefined,
+        created_at: plan.created_at,
+        updated_at: plan.updated_at,
+      };
+      lines.push(JSON.stringify(record));
+    } catch (error) {
+      logger.warn("Failed to serialize plan for export", {
+        planId: plan.id,
+        error: error instanceof Error ? error.message : String(error),
+        context: "planning-sync.exportPlanningToJSONL",
+      });
+    }
+  }
+
+  // Export plan steps
+  for (const step of planSteps) {
+    try {
+      const record: PlanStepJSONLRecord = {
+        _type: "plan_step",
+        id: step.id,
+        plan_id: step.plan_id,
+        title: step.title,
+        ordinal: step.ordinal,
+        wave: step.wave,
+        external_ref_type: step.external_ref_type,
+        external_ref_number: step.external_ref_number ?? undefined,
+        external_ref_criteria: step.external_ref_criteria ?? undefined,
+        created_at: step.created_at,
+        updated_at: step.updated_at,
+      };
+      lines.push(JSON.stringify(record));
+    } catch (error) {
+      logger.warn("Failed to serialize plan step for export", {
+        stepId: step.id,
+        error: error instanceof Error ? error.message : String(error),
+        context: "planning-sync.exportPlanningToJSONL",
+      });
+    }
+  }
+
+  // Export step dependencies
+  for (const dep of stepDependencies) {
+    try {
+      const record: StepDependencyJSONLRecord = {
+        _type: "step_dependency",
+        step_id: dep.step_id,
+        depends_on_step_id: dep.depends_on_step_id,
+        created_at: dep.created_at,
+      };
+      lines.push(JSON.stringify(record));
+    } catch (error) {
+      logger.warn("Failed to serialize step dependency for export", {
         error: error instanceof Error ? error.message : String(error),
         context: "planning-sync.exportPlanningToJSONL",
       });
@@ -274,6 +471,120 @@ export async function importPlanningFromJSONL(
               parsed.data ? JSON.stringify(parsed.data) : null,
               parsed.created_at,
             ],
+          );
+          continue;
+        }
+
+        // Handle plan records (newer wins)
+        if (isPlanRecord(parsed)) {
+          const planUpdatedAt = parsed.updated_at ?? parsed.created_at;
+          const existingPlan = db
+            .query<
+              { id: string; updated_at: string },
+              [string]
+            >("SELECT id, updated_at FROM planning_plans WHERE id = ?")
+            .get(parsed.id);
+
+          if (existingPlan) {
+            const existingDate = new Date(existingPlan.updated_at);
+            const recordDate = new Date(planUpdatedAt);
+            if (recordDate <= existingDate) {
+              skipped++;
+              continue;
+            }
+            db.run(
+              `UPDATE planning_plans SET title = ?, goal_id = ?, source_type = ?, source_ref = ?, created_at = ?, updated_at = ? WHERE id = ?`,
+              [
+                parsed.title,
+                parsed.goal_id,
+                parsed.source_type,
+                parsed.source_ref ?? null,
+                parsed.created_at,
+                planUpdatedAt,
+                parsed.id,
+              ],
+            );
+            updated++;
+          } else {
+            db.run(
+              `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                parsed.id,
+                parsed.title,
+                parsed.goal_id,
+                parsed.source_type,
+                parsed.source_ref ?? null,
+                parsed.created_at,
+                planUpdatedAt,
+              ],
+            );
+            imported++;
+          }
+          continue;
+        }
+
+        // Handle plan step records (newer wins)
+        if (isPlanStepRecord(parsed)) {
+          const stepUpdatedAt = parsed.updated_at ?? parsed.created_at;
+          const existingStep = db
+            .query<
+              { id: string; updated_at: string },
+              [string]
+            >("SELECT id, updated_at FROM planning_steps WHERE id = ?")
+            .get(parsed.id);
+
+          if (existingStep) {
+            const existingDate = new Date(existingStep.updated_at);
+            const recordDate = new Date(stepUpdatedAt);
+            if (recordDate <= existingDate) {
+              skipped++;
+              continue;
+            }
+            db.run(
+              `UPDATE planning_steps SET plan_id = ?, title = ?, ordinal = ?, wave = ?, external_ref_type = ?, external_ref_number = ?, external_ref_criteria = ?, created_at = ?, updated_at = ? WHERE id = ?`,
+              [
+                parsed.plan_id,
+                parsed.title,
+                parsed.ordinal,
+                parsed.wave,
+                parsed.external_ref_type,
+                parsed.external_ref_number ?? null,
+                parsed.external_ref_criteria ?? null,
+                parsed.created_at,
+                stepUpdatedAt,
+                parsed.id,
+              ],
+            );
+            updated++;
+          } else {
+            db.run(
+              `INSERT INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                parsed.id,
+                parsed.plan_id,
+                parsed.title,
+                parsed.ordinal,
+                parsed.wave,
+                parsed.external_ref_type,
+                parsed.external_ref_number ?? null,
+                parsed.external_ref_criteria ?? null,
+                parsed.created_at,
+                stepUpdatedAt,
+              ],
+            );
+            imported++;
+          }
+          continue;
+        }
+
+        // Handle step dependency records
+        if (isStepDependencyRecord(parsed)) {
+          db.run(
+            `INSERT OR IGNORE INTO planning_step_dependencies (step_id, depends_on_step_id, created_at)
+             VALUES (?, ?, ?)`,
+            [parsed.step_id, parsed.depends_on_step_id, parsed.created_at],
           );
           continue;
         }

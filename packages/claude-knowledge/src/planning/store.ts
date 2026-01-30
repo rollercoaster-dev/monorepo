@@ -8,8 +8,13 @@
 import { getDatabase } from "../db/sqlite";
 import { randomUUID } from "crypto";
 import type {
+  ExternalRef,
+  ExternalRefType,
   Goal,
   Interrupt,
+  Plan,
+  PlanSourceType,
+  PlanStep,
   PlanningEntity,
   PlanningEntityStatus,
   PlanningRelationship,
@@ -58,6 +63,7 @@ function rowToEntity(row: PlanningEntityRow): PlanningEntity {
       type: "Goal" as const,
       description: data.description as string | undefined,
       issueNumber: data.issueNumber as number | undefined,
+      planStepId: data.planStepId as string | undefined,
       metadata: data.metadata as Record<string, unknown> | undefined,
     };
   }
@@ -94,6 +100,7 @@ export function createGoal(opts: {
   title: string;
   description?: string;
   issueNumber?: number;
+  planStepId?: string;
   metadata?: Record<string, unknown>;
 }): Goal {
   const db = getDatabase();
@@ -103,6 +110,7 @@ export function createGoal(opts: {
   const data = JSON.stringify({
     description: opts.description,
     issueNumber: opts.issueNumber,
+    planStepId: opts.planStepId,
     metadata: opts.metadata,
   });
 
@@ -141,6 +149,7 @@ export function createGoal(opts: {
     title: opts.title,
     description: opts.description,
     issueNumber: opts.issueNumber,
+    planStepId: opts.planStepId,
     metadata: opts.metadata,
     stackOrder: 0,
     status: "active",
@@ -430,4 +439,372 @@ export function createRelationship(
      VALUES (?, ?, ?, ?, ?)`,
     [fromId, toId, type, data ? JSON.stringify(data) : null, now],
   );
+}
+
+// ============================================================================
+// Plan CRUD Operations
+// ============================================================================
+
+/** Row shape from SQLite planning_plans table */
+interface PlanRow {
+  id: string;
+  title: string;
+  goal_id: string;
+  source_type: string;
+  source_ref: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Convert a database row to a typed Plan.
+ */
+function rowToPlan(row: PlanRow): Plan {
+  return {
+    id: row.id,
+    title: row.title,
+    goalId: row.goal_id,
+    sourceType: row.source_type as PlanSourceType,
+    sourceRef: row.source_ref ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Create a Plan linked to a Goal.
+ */
+export function createPlan(opts: {
+  title: string;
+  goalId: string;
+  sourceType: PlanSourceType;
+  sourceRef?: string;
+}): Plan {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = `plan-${randomUUID()}`;
+
+  db.run(
+    `INSERT INTO planning_plans (id, title, goal_id, source_type, source_ref, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      opts.title,
+      opts.goalId,
+      opts.sourceType,
+      opts.sourceRef ?? null,
+      now,
+      now,
+    ],
+  );
+
+  return {
+    id,
+    title: opts.title,
+    goalId: opts.goalId,
+    sourceType: opts.sourceType,
+    sourceRef: opts.sourceRef,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * Get a Plan by its ID.
+ */
+export function getPlan(id: string): Plan | null {
+  const db = getDatabase();
+  const row = db
+    .query<PlanRow, [string]>(`SELECT * FROM planning_plans WHERE id = ?`)
+    .get(id);
+
+  return row ? rowToPlan(row) : null;
+}
+
+/**
+ * Get a Plan by its Goal ID.
+ */
+export function getPlanByGoal(goalId: string): Plan | null {
+  const db = getDatabase();
+  const row = db
+    .query<PlanRow, [string]>(`SELECT * FROM planning_plans WHERE goal_id = ?`)
+    .get(goalId);
+
+  return row ? rowToPlan(row) : null;
+}
+
+/**
+ * Update a Plan.
+ */
+export function updatePlan(
+  id: string,
+  updates: Partial<Pick<Plan, "title" | "sourceRef">>,
+): void {
+  const db = getDatabase();
+  const fields: string[] = [];
+  const values: (string | null)[] = [];
+
+  if (updates.title !== undefined) {
+    fields.push("title = ?");
+    values.push(updates.title);
+  }
+  if (updates.sourceRef !== undefined) {
+    fields.push("source_ref = ?");
+    values.push(updates.sourceRef ?? null);
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push("updated_at = ?");
+  values.push(new Date().toISOString());
+
+  values.push(id);
+  db.run(`UPDATE planning_plans SET ${fields.join(", ")} WHERE id = ?`, values);
+}
+
+/**
+ * Delete a Plan (cascades to PlanSteps via foreign key).
+ */
+export function deletePlan(id: string): void {
+  const db = getDatabase();
+  db.run(`DELETE FROM planning_plans WHERE id = ?`, [id]);
+}
+
+/**
+ * Get all Plans.
+ */
+export function getAllPlans(): Plan[] {
+  const db = getDatabase();
+  const rows = db
+    .query<PlanRow, []>(`SELECT * FROM planning_plans ORDER BY created_at ASC`)
+    .all();
+
+  return rows.map(rowToPlan);
+}
+
+// ============================================================================
+// PlanStep CRUD Operations
+// ============================================================================
+
+/** Row shape from SQLite planning_steps table */
+interface PlanStepRow {
+  id: string;
+  plan_id: string;
+  title: string;
+  ordinal: number;
+  wave: number;
+  external_ref_type: string;
+  external_ref_number: number | null;
+  external_ref_criteria: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Row shape from SQLite planning_step_dependencies table */
+interface StepDependencyRow {
+  step_id: string;
+  depends_on_step_id: string;
+  created_at: string;
+}
+
+/**
+ * Convert a database row to a typed PlanStep.
+ */
+function rowToPlanStep(row: PlanStepRow, dependsOn: string[] = []): PlanStep {
+  const externalRef: ExternalRef = {
+    type: row.external_ref_type as ExternalRefType,
+    number: row.external_ref_number ?? undefined,
+    criteria: row.external_ref_criteria ?? undefined,
+  };
+
+  return {
+    id: row.id,
+    planId: row.plan_id,
+    title: row.title,
+    ordinal: row.ordinal,
+    wave: row.wave,
+    externalRef,
+    dependsOn,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/**
+ * Create a PlanStep within a Plan.
+ */
+export function createPlanStep(opts: {
+  planId: string;
+  title: string;
+  ordinal: number;
+  wave: number;
+  externalRef: ExternalRef;
+}): PlanStep {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  const id = `step-${randomUUID()}`;
+
+  db.run(
+    `INSERT INTO planning_steps (id, plan_id, title, ordinal, wave, external_ref_type, external_ref_number, external_ref_criteria, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      opts.planId,
+      opts.title,
+      opts.ordinal,
+      opts.wave,
+      opts.externalRef.type,
+      opts.externalRef.number ?? null,
+      opts.externalRef.criteria ?? null,
+      now,
+      now,
+    ],
+  );
+
+  return {
+    id,
+    planId: opts.planId,
+    title: opts.title,
+    ordinal: opts.ordinal,
+    wave: opts.wave,
+    externalRef: opts.externalRef,
+    dependsOn: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * Get a PlanStep by its ID.
+ */
+export function getPlanStep(id: string): PlanStep | null {
+  const db = getDatabase();
+  const row = db
+    .query<PlanStepRow, [string]>(`SELECT * FROM planning_steps WHERE id = ?`)
+    .get(id);
+
+  if (!row) return null;
+
+  const dependsOn = getStepDependencies(id);
+  return rowToPlanStep(row, dependsOn);
+}
+
+/**
+ * Get all PlanSteps for a Plan.
+ */
+export function getStepsByPlan(planId: string): PlanStep[] {
+  const db = getDatabase();
+  const rows = db
+    .query<
+      PlanStepRow,
+      [string]
+    >(`SELECT * FROM planning_steps WHERE plan_id = ? ORDER BY ordinal ASC`)
+    .all(planId);
+
+  if (rows.length === 0) return [];
+
+  // Batch-fetch all dependencies in one query to avoid N+1
+  const stepIds = rows.map((r) => r.id);
+  const placeholders = stepIds.map(() => "?").join(",");
+  const deps = db
+    .query<
+      StepDependencyRow,
+      string[]
+    >(`SELECT * FROM planning_step_dependencies WHERE step_id IN (${placeholders})`)
+    .all(...stepIds);
+
+  // Group dependencies by step ID
+  const depsByStep = new Map<string, string[]>();
+  for (const dep of deps) {
+    const existing = depsByStep.get(dep.step_id);
+    if (existing) {
+      existing.push(dep.depends_on_step_id);
+    } else {
+      depsByStep.set(dep.step_id, [dep.depends_on_step_id]);
+    }
+  }
+
+  return rows.map((row) => rowToPlanStep(row, depsByStep.get(row.id) ?? []));
+}
+
+/**
+ * Update a PlanStep.
+ */
+export function updatePlanStep(
+  id: string,
+  updates: Partial<
+    Pick<PlanStep, "title" | "ordinal" | "wave" | "externalRef">
+  >,
+): void {
+  const db = getDatabase();
+  const fields: string[] = [];
+  const values: (string | number | null)[] = [];
+
+  if (updates.title !== undefined) {
+    fields.push("title = ?");
+    values.push(updates.title);
+  }
+  if (updates.ordinal !== undefined) {
+    fields.push("ordinal = ?");
+    values.push(updates.ordinal);
+  }
+  if (updates.wave !== undefined) {
+    fields.push("wave = ?");
+    values.push(updates.wave);
+  }
+  if (updates.externalRef !== undefined) {
+    fields.push("external_ref_type = ?");
+    values.push(updates.externalRef.type);
+    fields.push("external_ref_number = ?");
+    values.push(updates.externalRef.number ?? null);
+    fields.push("external_ref_criteria = ?");
+    values.push(updates.externalRef.criteria ?? null);
+  }
+
+  if (fields.length === 0) return;
+
+  fields.push("updated_at = ?");
+  values.push(new Date().toISOString());
+
+  values.push(id);
+  db.run(`UPDATE planning_steps SET ${fields.join(", ")} WHERE id = ?`, values);
+}
+
+/**
+ * Delete a PlanStep (cascades to dependencies via foreign key).
+ */
+export function deletePlanStep(id: string): void {
+  const db = getDatabase();
+  db.run(`DELETE FROM planning_steps WHERE id = ?`, [id]);
+}
+
+/**
+ * Add a dependency between two PlanSteps.
+ */
+export function addStepDependency(
+  stepId: string,
+  dependsOnStepId: string,
+): void {
+  const db = getDatabase();
+  const now = new Date().toISOString();
+  db.run(
+    `INSERT OR IGNORE INTO planning_step_dependencies (step_id, depends_on_step_id, created_at)
+     VALUES (?, ?, ?)`,
+    [stepId, dependsOnStepId, now],
+  );
+}
+
+/**
+ * Get the IDs of all steps that a given step depends on.
+ */
+export function getStepDependencies(stepId: string): string[] {
+  const db = getDatabase();
+  const rows = db
+    .query<
+      StepDependencyRow,
+      [string]
+    >(`SELECT * FROM planning_step_dependencies WHERE step_id = ?`)
+    .all(stepId);
+
+  return rows.map((row) => row.depends_on_step_id);
 }
