@@ -18,7 +18,7 @@ import type {
  */
 export const checkpointTools: Tool[] = [
   {
-    name: "checkpoint_workflow_find",
+    name: "wf",
     description:
       "Workflows track progress on issues - phase, commits, actions taken. " +
       "Checking for existing work prevents starting fresh on something already in progress " +
@@ -35,7 +35,7 @@ export const checkpointTools: Tool[] = [
     },
   },
   {
-    name: "checkpoint_recover_tasks",
+    name: "recover",
     description:
       "Rebuilds the task tree from checkpoint state after interruption. " +
       "Tasks, their statuses, and dependencies are restored so work can continue with accurate progress tracking. " +
@@ -65,7 +65,7 @@ export const checkpointTools: Tool[] = [
     },
   },
   {
-    name: "checkpoint_workflow_create",
+    name: "wfnew",
     description:
       "Creates a checkpoint to track work on an issue. " +
       "Enables progress recovery if interrupted and provides a record of actions and commits for the work.",
@@ -93,7 +93,7 @@ export const checkpointTools: Tool[] = [
     },
   },
   {
-    name: "checkpoint_workflow_update",
+    name: "wfupdate",
     description:
       "Records phase transitions (research → implement → review → finalize) and status changes. " +
       "Keeps checkpoint state accurate for recovery and metrics.",
@@ -146,7 +146,7 @@ export async function handleCheckpointToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "checkpoint_workflow_find": {
+      case "wf": {
         const issueNumber = args.issueNumber as number;
         if (issueNumber === undefined) {
           return {
@@ -221,7 +221,7 @@ export async function handleCheckpointToolCall(
         };
       }
 
-      case "checkpoint_workflow_create": {
+      case "wfnew": {
         const issueNumber = args.issueNumber as number;
         const branch = args.branch as string;
 
@@ -285,7 +285,7 @@ export async function handleCheckpointToolCall(
         };
       }
 
-      case "checkpoint_workflow_update": {
+      case "wfupdate": {
         const workflowId = args.workflowId as string;
         if (!workflowId) {
           return {
@@ -369,7 +369,7 @@ export async function handleCheckpointToolCall(
         };
       }
 
-      case "checkpoint_recover_tasks": {
+      case "recover": {
         const issueNumber = args.issueNumber as number | undefined;
         const milestoneName = args.milestoneName as string | undefined;
         const workflowType = args.workflowType as
