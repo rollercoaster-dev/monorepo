@@ -2,10 +2,15 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { didService } from '../services/did'
 import { userService } from '../services/user'
-import { requireAuth, requireSelfOrAdminFromParam, getAuthPayload } from '../middleware/auth'
+import {
+  requireAuth,
+  requireSelfOrAdminFromParam,
+  getAuthPayload,
+  type AuthPayload,
+} from '../middleware/auth'
 import { logger } from '../utils/logger'
 
-const didRoutes = new Hono()
+const didRoutes = new Hono<{ Variables: { authPayload: AuthPayload } }>()
 
 // Schemas
 const generateDIDSchema = z.object({
@@ -15,8 +20,8 @@ const generateDIDSchema = z.object({
 
 // POST /api/did/generate - Generate DID for current user (requires auth)
 didRoutes.post('/generate', requireAuth, async c => {
-  if (!userService || !didService) {
-    return c.json({ error: 'Service unavailable' }, 503)
+  if (!userService) {
+    return c.json({ error: 'User service unavailable' }, 503)
   }
 
   try {
