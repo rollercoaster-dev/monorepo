@@ -16,8 +16,8 @@ The planning stack tracks active goals, paused work, and interrupts across sessi
 
 When a session begins or the user asks "what should I work on?" / "what's next?":
 
-1. **Check `planning_stack_status`** — see what's active, paused, or stale
-2. **Search knowledge** for milestone plans — `knowledge_search_similar("milestone plan")`
+1. **Check `stack`** — see what's active, paused, or stale
+2. **Search knowledge** for milestone plans — `search("milestone plan")`
 3. Only fall back to `gh issue list` / `gh milestone list` if the stack is empty AND no plans exist
 
 ---
@@ -26,12 +26,12 @@ When a session begins or the user asks "what should I work on?" / "what's next?"
 
 | Situation                                     | Tool                        |
 | --------------------------------------------- | --------------------------- |
-| Starting a new work objective                 | `planning_goal_push`        |
-| Unplanned context switch (bug, urgent review) | `planning_interrupt_push`   |
-| Finished current work item                    | `planning_stack_pop`        |
-| Checking what's active / what to resume       | `planning_stack_status`     |
+| Starting a new work objective                 | `goal`                      |
+| Unplanned context switch (bug, urgent review) | `interrupt`                 |
+| Finished current work item                    | `done`                      |
+| Checking what's active / what to resume       | `stack`                     |
 | Browsing full stack as markdown               | `planning://stack` resource |
-| Checking if a milestone has a plan            | `knowledge_search_similar`  |
+| Checking if a milestone has a plan            | `search`                    |
 
 ---
 
@@ -57,4 +57,4 @@ When a session begins or the user asks "what should I work on?" / "what's next?"
 
 ## Storing Plans
 
-When you analyze a milestone or plan execution order for a set of issues, **store it** with `knowledge_store` so future sessions can retrieve it without re-fetching from GitHub.
+When you analyze a milestone or plan execution order for a set of issues, **store it** with `learn` so future sessions can retrieve it without re-fetching from GitHub.
