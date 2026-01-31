@@ -103,7 +103,7 @@ describe('Verification Routes', () => {
         verificationMethod,
         {
           proofType: 'DataIntegrityProof',
-          cryptosuite: 'eddsa-rdfc-2022',
+          cryptosuite: 'eddsa-jcs-2022',
         }
       )
 

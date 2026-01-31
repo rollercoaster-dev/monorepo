@@ -86,13 +86,13 @@ describe('ProofService', () => {
         verificationMethod,
         {
           proofType: 'DataIntegrityProof',
-          cryptosuite: 'eddsa-rdfc-2022',
+          cryptosuite: 'eddsa-jcs-2022',
         }
       )
 
       expect(signedCredential.proof).toBeDefined()
       expect(signedCredential.proof?.type).toBe('DataIntegrityProof')
-      expect(signedCredential.proof?.cryptosuite).toBe('eddsa-rdfc-2022')
+      expect(signedCredential.proof?.cryptosuite).toBe('eddsa-jcs-2022')
       expect(signedCredential.proof?.verificationMethod).toBe(verificationMethod)
       expect(signedCredential.proof?.proofValue).toMatch(/^z/)
     })

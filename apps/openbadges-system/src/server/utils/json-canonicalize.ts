@@ -2,25 +2,11 @@
  * JSON Canonicalization Utilities
  *
  * Provides deterministic JSON serialization for cryptographic operations.
- * Uses simple key-sorting canonicalization (JSON Canonicalization Scheme).
+ * Uses JCS-style key-sorting canonicalization (RFC 8785).
  *
- * IMPORTANT COMPLIANCE NOTE:
- * This implementation uses JCS (RFC 8785) style key-sorting canonicalization,
- * NOT the W3C RDF Dataset Canonicalization (RDFC-1.0) required by the
- * eddsa-rdfc-2022 cryptosuite. Signatures created with this implementation
- * will NOT interoperate with external W3C Data Integrity verifiers that
- * expect RDFC-1.0 canonicalization.
+ * Suitable for Ed25519Signature2020, eddsa-jcs-2022, and JsonWebSignature2020.
+ * RDFC-1.0 canonicalization (for eddsa-rdfc-2022) is tracked in #661.
  *
- * Current limitation: This canonicalization is suitable for:
- * - Internal verification within this system
- * - Ed25519Signature2020 without strict RDFC compliance
- * - JsonWebSignature2020 (uses JCS canonicalization)
- *
- * For full W3C compliance with eddsa-rdfc-2022, implement proper RDF
- * canonicalization using a library like rdf-canonize.
- *
- * @see https://www.w3.org/TR/vc-data-model-2.0/#data-integrity-proofs
- * @see https://www.w3.org/TR/rdf-canon/ (RDFC-1.0 specification)
  * @see https://www.rfc-editor.org/rfc/rfc8785 (JCS specification)
  */
 
