@@ -7,6 +7,7 @@ import { badgesRoutes } from './routes/badges'
 import { oauthRoutes } from './routes/oauth'
 import { publicAuthRoutes } from './routes/public-auth'
 import { didRoutes } from './routes/did'
+import { verificationRoutes } from './routes/verification'
 import { requireAuth } from './middleware/auth'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
@@ -321,6 +322,7 @@ app.route('/api/auth/public', publicAuthRoutes)
 app.route('/api/badges', badgesRoutes)
 app.route('/api/oauth', oauthRoutes)
 app.route('/api/did', didRoutes)
+app.route('/api/verification', verificationRoutes) // Public - credential verification
 
 // Helper function to safely parse JSON
 async function safeJsonResponse(response: Response): Promise<JSONValue> {
