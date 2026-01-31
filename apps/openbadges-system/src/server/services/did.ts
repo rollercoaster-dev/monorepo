@@ -12,6 +12,8 @@ import {
   scryptSync,
   createCipheriv,
   createDecipheriv,
+  sign as cryptoSign,
+  createPrivateKey,
 } from 'crypto'
 import { promisify } from 'util'
 
@@ -353,6 +355,80 @@ export class DIDService {
       publicKey: keyPair.publicKey,
       privateKey: keyPair.privateKey,
       didDocument,
+    }
+  }
+
+  /**
+   * Sign data using Ed25519 private key
+   *
+   * @param data - Data to sign (as Uint8Array)
+   * @param privateKeyPem - Private key in PEM format
+   * @returns Signature as Uint8Array
+   */
+  sign(data: Uint8Array, privateKeyPem: string): Uint8Array {
+    const privateKey = createPrivateKey(privateKeyPem)
+    const signature = cryptoSign(null, data, privateKey)
+    return new Uint8Array(signature)
+  }
+
+  /**
+   * Get signing key for a user
+   *
+   * Fetches the user's encrypted private key from the database,
+   * decrypts it, and returns it along with the verification method IRI.
+   *
+   * @param userId - User ID
+   * @param getUserById - Function to fetch user record
+   * @returns Private key PEM and verification method IRI
+   * @throws Error if user not found, has no DID, or decryption fails
+   */
+  async getSigningKey(
+    userId: string,
+    getUserById: (id: string) => Promise<{
+      did?: string
+      didMethod?: 'key' | 'web'
+      didPrivateKey?: string
+      didDocument?: string
+    } | null>
+  ): Promise<{ privateKey: string; verificationMethod: string }> {
+    // Fetch user record
+    const user = await getUserById(userId)
+    if (!user) {
+      throw new Error(`User not found: ${userId}`)
+    }
+
+    if (!user.did || !user.didPrivateKey || !user.didDocument) {
+      throw new Error(`User ${userId} does not have a DID configured`)
+    }
+
+    // Decrypt private key
+    const encryptionSecret = getEncryptionSecret()
+    const privateKey = decryptPrivateKey(user.didPrivateKey, encryptionSecret)
+
+    // Extract verification method from DID document
+    let didDocument: DIDDocument
+    try {
+      didDocument = JSON.parse(user.didDocument)
+    } catch (error) {
+      throw new Error(`Invalid DID Document JSON for user ${userId}`)
+    }
+
+    // Get verification method ID
+    const verificationMethods = didDocument.verificationMethod
+    if (!verificationMethods || verificationMethods.length === 0) {
+      throw new Error(`DID Document has no verification methods`)
+    }
+
+    const firstMethod = verificationMethods[0]
+    if (!firstMethod) {
+      throw new Error(`DID Document verification method is invalid`)
+    }
+
+    const verificationMethod = firstMethod.id
+
+    return {
+      privateKey,
+      verificationMethod,
     }
   }
 }
