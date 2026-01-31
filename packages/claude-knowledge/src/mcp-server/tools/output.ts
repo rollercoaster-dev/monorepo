@@ -21,7 +21,7 @@ const DEFAULT_OUTPUT_DIR = ".claude/output";
  */
 export const outputTools: Tool[] = [
   {
-    name: "output_save",
+    name: "save",
     description:
       "Long outputs (test runs, build logs) consume context window. " +
       "Saving to file and returning a summary preserves the full content " +
@@ -95,7 +95,7 @@ export async function handleOutputToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "output_save": {
+      case "save": {
         const content = args.content as string;
         const filename = args.filename as string;
 
