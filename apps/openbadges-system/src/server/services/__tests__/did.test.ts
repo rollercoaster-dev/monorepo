@@ -4,7 +4,7 @@
  * Tests for signing and key retrieval methods
  */
 
-import { describe, test, expect, beforeAll } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'vitest'
 import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 import { DIDService, encryptPrivateKey, getEncryptionSecret, type DIDDocument } from '../did'

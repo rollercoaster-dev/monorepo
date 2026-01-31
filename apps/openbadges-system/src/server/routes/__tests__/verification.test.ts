@@ -2,7 +2,7 @@
  * Verification Routes Tests
  */
 
-import { describe, test, expect, beforeAll } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'vitest'
 import { Hono } from 'hono'
 import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'

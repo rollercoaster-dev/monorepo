@@ -2,7 +2,7 @@
  * Proof Service Tests
  */
 
-import { describe, test, expect, beforeAll } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'vitest'
 import { generateKeyPair } from 'crypto'
 import { promisify } from 'util'
 import { ProofService } from '../proof'
