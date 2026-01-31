@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { didService } from '../services/did'
+import { didService, encryptPrivateKey, getEncryptionSecret } from '../services/did'
 import { userService } from '../services/user'
 import {
   requireAuth,
@@ -11,6 +11,19 @@ import {
 import { logger } from '../utils/logger'
 
 const didRoutes = new Hono<{ Variables: { authPayload: AuthPayload } }>()
+
+/**
+ * Safely parses JSON, returning null on failure
+ */
+function safeJsonParse(jsonString: string | undefined, context: { userId: string }): unknown {
+  if (!jsonString) return null
+  try {
+    return JSON.parse(jsonString)
+  } catch {
+    logger.error('Invalid JSON in DID Document', context)
+    return null
+  }
+}
 
 // Schemas
 const generateDIDSchema = z.object({
@@ -54,12 +67,16 @@ didRoutes.post('/generate', requireAuth, async c => {
     // Generate DID data
     const didData = await didService.generateUserDID(payload.sub, method, domain)
 
-    // Store DID data in user record
+    // Encrypt private key before storage
+    const encryptionSecret = getEncryptionSecret()
+    const encryptedPrivateKey = encryptPrivateKey(didData.privateKey, encryptionSecret)
+
+    // Store DID data in user record (with encrypted private key)
     await userService.updateUserDID(payload.sub, {
       did: didData.did,
       didMethod: didData.didMethod,
       publicKey: didData.publicKey,
-      privateKey: didData.privateKey,
+      privateKey: encryptedPrivateKey,
       didDocument: JSON.stringify(didData.didDocument),
     })
 
@@ -96,8 +113,11 @@ didRoutes.get('/', requireAuth, async c => {
       return c.json({ error: 'User does not have a DID' }, 404)
     }
 
-    // Parse DID Document from stored JSON
-    const didDocument = userRecord.didDocument ? JSON.parse(userRecord.didDocument) : null
+    // Parse DID Document from stored JSON (safe parse to handle corrupted data)
+    const didDocument = safeJsonParse(userRecord.didDocument, { userId: payload.sub })
+    if (userRecord.didDocument && !didDocument) {
+      return c.json({ error: 'Corrupted DID Document' }, 500)
+    }
 
     return c.json({
       did: userRecord.did,
@@ -128,8 +148,11 @@ didRoutes.get('/users/:id/did', requireSelfOrAdminFromParam('id'), async c => {
       return c.json({ error: 'User does not have a DID' }, 404)
     }
 
-    // Parse DID Document from stored JSON
-    const didDocument = userRecord.didDocument ? JSON.parse(userRecord.didDocument) : null
+    // Parse DID Document from stored JSON (safe parse to handle corrupted data)
+    const didDocument = safeJsonParse(userRecord.didDocument, { userId })
+    if (userRecord.didDocument && !didDocument) {
+      return c.json({ error: 'Corrupted DID Document' }, 500)
+    }
 
     // Return only public DID information (no private keys)
     return c.json({

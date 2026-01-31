@@ -26,7 +26,6 @@ export interface CreateUserData {
   avatar?: string
   isActive: boolean
   roles: string[]
-  didMethod?: 'key' | 'web'
 }
 
 export interface UpdateUserData {

@@ -299,8 +299,14 @@ app.get('/.well-known/did.json', async c => {
       return c.json({ error: 'DID Document only available for did:web' }, 400)
     }
 
-    // Parse and return DID Document
-    const didDocument = JSON.parse(userRecord.didDocument)
+    // Parse and return DID Document (with safe parsing)
+    let didDocument
+    try {
+      didDocument = JSON.parse(userRecord.didDocument)
+    } catch {
+      logger.error('Invalid DID Document JSON', { userId })
+      return c.json({ error: 'Corrupted DID Document' }, 500)
+    }
     return c.json(didDocument)
   } catch (error) {
     logger.error('Error serving DID Document', { error })

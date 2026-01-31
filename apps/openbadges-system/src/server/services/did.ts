@@ -5,10 +5,99 @@
  * and creates DID Documents following W3C DID Core specification.
  */
 
-import { generateKeyPair, createPublicKey } from 'crypto'
+import {
+  generateKeyPair,
+  createPublicKey,
+  randomBytes,
+  scryptSync,
+  createCipheriv,
+  createDecipheriv,
+} from 'crypto'
 import { promisify } from 'util'
 
 const generateKeyPairAsync = promisify(generateKeyPair)
+
+// =============================================================================
+// Private Key Encryption Utilities
+// =============================================================================
+
+const ENCRYPTION_ALGORITHM = 'aes-256-gcm'
+const KEY_LENGTH = 32 // 256 bits for AES-256
+const SALT_LENGTH = 16
+const IV_LENGTH = 12 // 96 bits recommended for GCM
+const AUTH_TAG_LENGTH = 16
+
+/**
+ * Derives an encryption key from the master secret using scrypt
+ */
+function deriveKey(masterSecret: string, salt: Buffer): Buffer {
+  return scryptSync(masterSecret, salt, KEY_LENGTH)
+}
+
+/**
+ * Encrypts a private key using AES-256-GCM
+ *
+ * Format: base64(salt:iv:authTag:ciphertext)
+ */
+export function encryptPrivateKey(privateKey: string, masterSecret: string): string {
+  const salt = randomBytes(SALT_LENGTH)
+  const iv = randomBytes(IV_LENGTH)
+  const key = deriveKey(masterSecret, salt)
+
+  const cipher = createCipheriv(ENCRYPTION_ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  })
+
+  const encrypted = Buffer.concat([cipher.update(privateKey, 'utf8'), cipher.final()])
+  const authTag = cipher.getAuthTag()
+
+  // Combine salt, iv, authTag, and ciphertext
+  const combined = Buffer.concat([salt, iv, authTag, encrypted])
+  return combined.toString('base64')
+}
+
+/**
+ * Decrypts a private key encrypted with encryptPrivateKey
+ *
+ * @throws Error if decryption fails (wrong key or corrupted data)
+ */
+export function decryptPrivateKey(encryptedData: string, masterSecret: string): string {
+  const combined = Buffer.from(encryptedData, 'base64')
+
+  const salt = combined.subarray(0, SALT_LENGTH)
+  const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
+  const authTag = combined.subarray(
+    SALT_LENGTH + IV_LENGTH,
+    SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
+  )
+  const ciphertext = combined.subarray(SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH)
+
+  const key = deriveKey(masterSecret, salt)
+
+  const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, key, iv, {
+    authTagLength: AUTH_TAG_LENGTH,
+  })
+  decipher.setAuthTag(authTag)
+
+  return decipher.update(ciphertext) + decipher.final('utf8')
+}
+
+/**
+ * Gets the master encryption secret from environment
+ * @throws Error if DID_ENCRYPTION_SECRET is not set
+ */
+export function getEncryptionSecret(): string {
+  const secret = process.env.DID_ENCRYPTION_SECRET
+  if (!secret) {
+    throw new Error(
+      'DID_ENCRYPTION_SECRET environment variable is required for private key encryption'
+    )
+  }
+  if (secret.length < 32) {
+    throw new Error('DID_ENCRYPTION_SECRET must be at least 32 characters')
+  }
+  return secret
+}
 
 // =============================================================================
 // Base58 Encoding Utilities
@@ -125,8 +214,8 @@ export class DIDService {
       x: string
     }
 
-    // The 'x' field in JWK is the base64url-encoded public key
-    const publicKeyBytes = Buffer.from(publicKeyJwk.x, 'base64')
+    // The 'x' field in JWK is base64url-encoded (RFC 7517), not standard base64
+    const publicKeyBytes = Buffer.from(publicKeyJwk.x, 'base64url')
 
     return {
       publicKey,
@@ -198,7 +287,10 @@ export class DIDService {
       x: string
     }
 
-    const verificationMethodId = `${did}#${did.split(':')[2]}`
+    // Extract method-specific identifier from DID (e.g., "z..." for did:key, domain for did:web)
+    const didParts = did.split(':')
+    const methodSpecificId = didParts[2] ?? 'key-1'
+    const verificationMethodId = `${did}#${methodSpecificId}`
 
     const verificationMethod: VerificationMethod = {
       id: verificationMethodId,
