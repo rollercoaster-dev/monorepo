@@ -13,7 +13,7 @@ import { graph } from "../../graph/index.js";
  */
 export const graphTools: Tool[] = [
   {
-    name: "graph_what_calls",
+    name: "callers",
     description:
       "Shows every function that calls a given function, with exact file:line. " +
       "When changing a function's behavior or signature, these are the places that will be affected. " +
@@ -31,7 +31,7 @@ export const graphTools: Tool[] = [
     },
   },
   {
-    name: "graph_blast_radius",
+    name: "blast",
     description:
       "Maps all files that depend on a given file, transitively. " +
       "Before modifying shared code, this shows the full impact - files 3 imports away that will break. " +
@@ -53,7 +53,7 @@ export const graphTools: Tool[] = [
     },
   },
   {
-    name: "graph_find",
+    name: "defs",
     description:
       "The code graph indexes all definitions (functions, classes, types) with file:line locations. " +
       "Returns precise matches - asking for 'store' finds the definition, not every usage of the word. " +
@@ -94,7 +94,7 @@ export async function handleGraphToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "graph_what_calls": {
+      case "callers": {
         const fnName = args.name as string;
         if (!fnName) {
           return {
@@ -133,7 +133,7 @@ export async function handleGraphToolCall(
         };
       }
 
-      case "graph_blast_radius": {
+      case "blast": {
         const file = args.file as string;
         if (!file) {
           return {
@@ -185,7 +185,7 @@ export async function handleGraphToolCall(
         };
       }
 
-      case "graph_find": {
+      case "defs": {
         const entityName = args.name as string;
         if (!entityName) {
           return {
