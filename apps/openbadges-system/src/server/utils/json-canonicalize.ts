@@ -2,14 +2,26 @@
  * JSON Canonicalization Utilities
  *
  * Provides deterministic JSON serialization for cryptographic operations.
- * Uses simple key-sorting canonicalization, which is sufficient for
- * OB3 credentials without complex JSON-LD framing requirements.
+ * Uses simple key-sorting canonicalization (JSON Canonicalization Scheme).
  *
- * NOTE: This is NOT suitable for general JSON-LD documents requiring
- * RDF canonicalization (RDFC-2022). For OB3 credentials with standard
- * structure, simple key sorting provides byte-identical output.
+ * IMPORTANT COMPLIANCE NOTE:
+ * This implementation uses JCS (RFC 8785) style key-sorting canonicalization,
+ * NOT the W3C RDF Dataset Canonicalization (RDFC-1.0) required by the
+ * eddsa-rdfc-2022 cryptosuite. Signatures created with this implementation
+ * will NOT interoperate with external W3C Data Integrity verifiers that
+ * expect RDFC-1.0 canonicalization.
+ *
+ * Current limitation: This canonicalization is suitable for:
+ * - Internal verification within this system
+ * - Ed25519Signature2020 without strict RDFC compliance
+ * - JsonWebSignature2020 (uses JCS canonicalization)
+ *
+ * For full W3C compliance with eddsa-rdfc-2022, implement proper RDF
+ * canonicalization using a library like rdf-canonize.
  *
  * @see https://www.w3.org/TR/vc-data-model-2.0/#data-integrity-proofs
+ * @see https://www.w3.org/TR/rdf-canon/ (RDFC-1.0 specification)
+ * @see https://www.rfc-editor.org/rfc/rfc8785 (JCS specification)
  */
 
 /**

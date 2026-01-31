@@ -12,10 +12,22 @@ import { sign as cryptoSign, createPrivateKey } from 'crypto'
 import type { OB3, Shared } from 'openbadges-types'
 import { encodeMultibase } from '../utils/base58'
 import { canonicalizeDocument } from '../utils/json-canonicalize'
+import { logger } from '../utils/logger'
 
 export interface SignCredentialOptions {
   proofType?: 'Ed25519Signature2020' | 'DataIntegrityProof'
-  cryptosuite?: 'eddsa-rdfc-2022'
+  /**
+   * Cryptosuite for DataIntegrityProof.
+   *
+   * WARNING: The 'eddsa-rdfc-2022' cryptosuite requires RDFC-1.0 (RDF Dataset
+   * Canonicalization) per W3C spec. This implementation uses JCS-style
+   * key-sorting canonicalization instead, which means signatures will NOT
+   * interoperate with external W3C-compliant verifiers.
+   *
+   * Use 'eddsa-jcs-2022' for JCS-based canonicalization (not yet fully standardized),
+   * or implement RDFC-1.0 canonicalization for true eddsa-rdfc-2022 compliance.
+   */
+  cryptosuite?: 'eddsa-rdfc-2022' | 'eddsa-jcs-2022'
   proofPurpose?: 'assertionMethod' | 'authentication'
 }
 
@@ -40,6 +52,14 @@ export class ProofService {
       cryptosuite,
       proofPurpose = 'assertionMethod',
     } = options
+
+    // Warn about RDFC compliance limitation when using eddsa-rdfc-2022
+    if (proofType === 'DataIntegrityProof' && cryptosuite === 'eddsa-rdfc-2022') {
+      logger.warn(
+        'Using eddsa-rdfc-2022 cryptosuite with JCS canonicalization instead of RDFC-1.0. ' +
+          'Signatures may not interoperate with external W3C-compliant verifiers.'
+      )
+    }
 
     // Canonicalize the credential (remove proof if present)
     const canonicalDocument = canonicalizeDocument(credential as Record<string, unknown>)

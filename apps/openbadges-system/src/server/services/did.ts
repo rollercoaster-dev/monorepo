@@ -347,14 +347,18 @@ export class DIDService {
       didDocument?: string
     } | null>
   ): Promise<{ privateKey: string; verificationMethod: string }> {
+    // Mask userId for error messages to avoid PII in logs
+    // Shows only first 4 and last 4 chars: "abc12...xyz89"
+    const maskedId = userId.length > 10 ? `${userId.slice(0, 4)}...${userId.slice(-4)}` : '***'
+
     // Fetch user record
     const user = await getUserById(userId)
     if (!user) {
-      throw new Error(`User not found: ${userId}`)
+      throw new Error(`User not found: ${maskedId}`)
     }
 
     if (!user.did || !user.didPrivateKey || !user.didDocument) {
-      throw new Error(`User ${userId} does not have a DID configured`)
+      throw new Error(`User ${maskedId} does not have a DID configured`)
     }
 
     // Decrypt private key
@@ -366,7 +370,7 @@ export class DIDService {
     try {
       didDocument = JSON.parse(user.didDocument)
     } catch (error) {
-      throw new Error(`Invalid DID Document JSON for user ${userId}`)
+      throw new Error(`Invalid DID Document JSON for user ${maskedId}`)
     }
 
     // Get verification method ID

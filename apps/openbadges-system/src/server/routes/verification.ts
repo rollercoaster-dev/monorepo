@@ -21,9 +21,17 @@ const verificationRoutes = new Hono()
 verificationRoutes.post('/verify-proof', async c => {
   try {
     // Parse and validate request body
-    const body = await c.req.json()
-    const credential = body.credential as Record<string, unknown> | undefined
-    const publicKeyPem = body.publicKeyPem as string | undefined
+    let body: unknown
+    try {
+      body = await c.req.json()
+    } catch {
+      return c.json({ valid: false, error: 'Invalid JSON body' }, 400)
+    }
+
+    const credential = (body as Record<string, unknown>).credential as
+      | Record<string, unknown>
+      | undefined
+    const publicKeyPem = (body as Record<string, unknown>).publicKeyPem as string | undefined
 
     if (!credential || typeof credential !== 'object') {
       return c.json({ valid: false, error: 'Invalid or missing credential' }, 400)
@@ -39,12 +47,12 @@ verificationRoutes.post('/verify-proof', async c => {
       return c.json({ valid: false, error: 'Credential has no proof' }, 400)
     }
 
-    // Validate proof structure
-    if (!proof.type || !proof.proofValue || !proof.verificationMethod) {
+    // Validate proof structure - type and verificationMethod are always required
+    if (!proof.type || !proof.verificationMethod) {
       return c.json({ valid: false, error: 'Invalid proof structure' }, 400)
     }
 
-    // Support Ed25519Signature2020 and DataIntegrityProof
+    // Support Ed25519Signature2020, DataIntegrityProof, and JsonWebSignature2020
     if (
       proof.type !== 'Ed25519Signature2020' &&
       proof.type !== 'DataIntegrityProof' &&
@@ -57,6 +65,21 @@ verificationRoutes.post('/verify-proof', async c => {
         },
         400
       )
+    }
+
+    // Validate signature field based on proof type
+    // JsonWebSignature2020 can use either 'jws' or 'proofValue' field
+    let jwsValue: string | undefined
+    if (proof.type === 'JsonWebSignature2020') {
+      jwsValue = proof.proofValue ?? proof.jws
+      if (!jwsValue) {
+        return c.json(
+          { valid: false, error: 'Invalid proof structure: missing jws or proofValue' },
+          400
+        )
+      }
+    } else if (!proof.proofValue) {
+      return c.json({ valid: false, error: 'Invalid proof structure: missing proofValue' }, 400)
     }
 
     // If publicKeyPem not provided, return error
@@ -80,23 +103,39 @@ verificationRoutes.post('/verify-proof', async c => {
 
     if (proof.type === 'Ed25519Signature2020' || proof.type === 'DataIntegrityProof') {
       // Decode multibase signature
-      const signatureBytes = decodeMultibase(proof.proofValue)
+      let signatureBytes: Uint8Array
+      try {
+        signatureBytes = decodeMultibase(proof.proofValue!)
+      } catch {
+        return c.json({ valid: false, error: 'Invalid proofValue encoding' }, 400)
+      }
 
       // Verify signature
-      const publicKey = createPublicKey(publicKeyPem)
-      signatureValid = cryptoVerify(null, documentBytes, publicKey, Buffer.from(signatureBytes))
+      try {
+        const publicKey = createPublicKey(publicKeyPem)
+        signatureValid = cryptoVerify(null, documentBytes, publicKey, Buffer.from(signatureBytes))
+      } catch (error) {
+        logger.debug('Signature verification failed', { error })
+        signatureValid = false
+      }
     } else if (proof.type === 'JsonWebSignature2020') {
       // JWS verification with detached payload (b64: false)
       const jose = await import('jose')
 
       // Extract header and signature from detached JWS (format: header..signature)
-      const [header, signature] = proof.proofValue.split('..')
+      // jwsValue is guaranteed non-null here due to earlier validation
+      const [header, signature] = jwsValue!.split('..')
       if (!header || !signature) {
         return c.json({ valid: false, error: 'Invalid JWS format' }, 400)
       }
 
       // Import public key
-      const publicKey = await jose.importSPKI(publicKeyPem, 'EdDSA')
+      let publicKey: Awaited<ReturnType<typeof jose.importSPKI>>
+      try {
+        publicKey = await jose.importSPKI(publicKeyPem, 'EdDSA')
+      } catch {
+        return c.json({ valid: false, error: 'Invalid public key format' }, 400)
+      }
 
       // Verify with flattenedVerify - providing payload separately for b64:false JWS
       // The signature was created with b64:false, so payload wasn't base64url encoded

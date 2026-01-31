@@ -130,7 +130,9 @@ describe('DIDService', () => {
         throw new Error('Expected error to be thrown')
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
-        expect((error as Error).message).toContain('User not found: nonexistent')
+        // userId is masked for PII protection: "nonexistent" -> "none...tent"
+        expect((error as Error).message).toContain('User not found:')
+        expect((error as Error).message).not.toContain('nonexistent')
       }
     })
 
@@ -147,9 +149,9 @@ describe('DIDService', () => {
         throw new Error('Expected error to be thrown')
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
-        expect((error as Error).message).toContain(
-          'User no-did-user does not have a DID configured'
-        )
+        // userId is masked for PII protection: "no-did-user" -> "no-d...user"
+        expect((error as Error).message).toContain('does not have a DID configured')
+        expect((error as Error).message).not.toContain('no-did-user')
       }
     })
 
