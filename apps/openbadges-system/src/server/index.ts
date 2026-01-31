@@ -6,11 +6,13 @@ import { authRoutes } from './routes/auth'
 import { badgesRoutes } from './routes/badges'
 import { oauthRoutes } from './routes/oauth'
 import { publicAuthRoutes } from './routes/public-auth'
+import { didRoutes } from './routes/did'
 import { requireAuth } from './middleware/auth'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
 import { openApiConfig } from './openapi'
 import { logger } from './utils/logger'
+import { userService } from './services/user'
 
 // Define a simpler JSON value type to avoid deep type recursion
 type JSONValue =
@@ -269,12 +271,50 @@ app.get('/.well-known/jwks.json', async c => {
   }
 })
 
+// DID Document endpoint for did:web resolution (public endpoint)
+app.get('/.well-known/did.json', async c => {
+  if (!userService) {
+    return c.json({ error: 'User service unavailable' }, 503)
+  }
+
+  try {
+    // Get userId from query parameter
+    const userId = c.req.query('userId')
+    if (!userId) {
+      return c.json({ error: 'userId query parameter is required' }, 400)
+    }
+
+    // Fetch user record
+    const userRecord = await userService.getUserById(userId)
+    if (!userRecord) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+
+    if (!userRecord.did || !userRecord.didDocument) {
+      return c.json({ error: 'User does not have a DID' }, 404)
+    }
+
+    // Only serve DID Document for did:web DIDs
+    if (userRecord.didMethod !== 'web') {
+      return c.json({ error: 'DID Document only available for did:web' }, 400)
+    }
+
+    // Parse and return DID Document
+    const didDocument = JSON.parse(userRecord.didDocument)
+    return c.json(didDocument)
+  } catch (error) {
+    logger.error('Error serving DID Document', { error })
+    return c.json({ error: 'Failed to serve DID Document' }, 500)
+  }
+})
+
 // Mount routes
 app.route('/api/bs/users', userRoutes)
 app.route('/api/auth', authRoutes)
 app.route('/api/auth/public', publicAuthRoutes)
 app.route('/api/badges', badgesRoutes)
 app.route('/api/oauth', oauthRoutes)
+app.route('/api/did', didRoutes)
 
 // Helper function to safely parse JSON
 async function safeJsonResponse(response: Response): Promise<JSONValue> {
