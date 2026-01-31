@@ -68,11 +68,14 @@ export async function searchSimilar(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch all learnings with embeddings
+  // Fetch recent learnings with embeddings (capped to avoid loading thousands
+  // of rows into memory for brute-force cosine similarity)
   const sql = `
     SELECT id, data, embedding, created_at
     FROM entities
     WHERE type = 'Learning' AND embedding IS NOT NULL
+    ORDER BY updated_at DESC
+    LIMIT 200
   `;
 
   const rows = db.query<SearchRow, []>(sql).all();
@@ -247,11 +250,13 @@ export async function searchSimilarTopics(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch all topics with embeddings
+  // Fetch recent topics with embeddings (capped to limit in-memory work)
   const sql = `
     SELECT id, data, embedding, created_at
     FROM entities
     WHERE type = 'Topic' AND embedding IS NOT NULL
+    ORDER BY updated_at DESC
+    LIMIT 200
   `;
 
   const rows = db.query<SearchRow, []>(sql).all();

@@ -26,7 +26,7 @@
           {
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
-            "timeout": 60000,
+            "timeout": 15000,
             "description": "Load relevant knowledge for session context"
           }
         ]
@@ -39,7 +39,7 @@
           {
             "type": "command",
             "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-end",
-            "timeout": 60000,
+            "timeout": 15000,
             "description": "Extract and store learnings via LLM at session end"
           }
         ]
