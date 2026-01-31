@@ -27,7 +27,7 @@ export const tools: Tool[] = [
 
 /**
  * Tool handler dispatch map.
- * Maps tool name prefixes to their handler functions.
+ * Maps tool names to their handler functions.
  */
 const toolHandlers: Record<
   string,
@@ -36,12 +36,39 @@ const toolHandlers: Record<
     args: Record<string, unknown>,
   ) => Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }>
 > = {
-  knowledge_: handleKnowledgeToolCall,
-  graph_: handleGraphToolCall,
-  checkpoint_: handleCheckpointToolCall,
-  output_: handleOutputToolCall,
-  metrics_: handleMetricsToolCall,
-  planning_: handlePlanningToolCall,
+  // Graph
+  callers: handleGraphToolCall,
+  blast: handleGraphToolCall,
+  defs: handleGraphToolCall,
+  // Planning
+  goal: handlePlanningToolCall,
+  interrupt: handlePlanningToolCall,
+  done: handlePlanningToolCall,
+  stack: handlePlanningToolCall,
+  plan: handlePlanningToolCall,
+  steps: handlePlanningToolCall,
+  planget: handlePlanningToolCall,
+  plansteps: handlePlanningToolCall,
+  // Knowledge
+  recall: handleKnowledgeToolCall,
+  learn: handleKnowledgeToolCall,
+  search: handleKnowledgeToolCall,
+  // Checkpoint
+  wf: handleCheckpointToolCall,
+  wfnew: handleCheckpointToolCall,
+  wfupdate: handleCheckpointToolCall,
+  recover: handleCheckpointToolCall,
+  // Output
+  save: handleOutputToolCall,
+  // Metrics
+  mlog: handleMetricsToolCall,
+  mstats: handleMetricsToolCall,
+  magg: handleMetricsToolCall,
+  snaps: handleMetricsToolCall,
+  tasks: handleMetricsToolCall,
+  tree: handleMetricsToolCall,
+  progress: handleMetricsToolCall,
+  children: handleMetricsToolCall,
 };
 
 /**
@@ -55,11 +82,10 @@ export async function handleToolCall(
   name: string,
   args: Record<string, unknown>,
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
-  // Find the handler for this tool based on name prefix
-  for (const [prefix, handler] of Object.entries(toolHandlers)) {
-    if (name.startsWith(prefix)) {
-      return handler(name, args);
-    }
+  // Find the handler for this tool by direct lookup
+  const handler = toolHandlers[name];
+  if (handler) {
+    return handler(name, args);
   }
 
   return {
