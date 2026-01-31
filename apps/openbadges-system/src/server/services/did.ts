@@ -16,6 +16,7 @@ import {
   createPrivateKey,
 } from 'crypto'
 import { promisify } from 'util'
+import { encodeMultibase } from '../utils/base58'
 
 const generateKeyPairAsync = promisify(generateKeyPair)
 
@@ -99,51 +100,6 @@ export function getEncryptionSecret(): string {
     throw new Error('DID_ENCRYPTION_SECRET must be at least 32 characters')
   }
   return secret
-}
-
-// =============================================================================
-// Base58 Encoding Utilities
-// =============================================================================
-
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-/**
- * Encodes bytes to base58-btc format (Bitcoin alphabet)
- */
-function encodeBase58(bytes: Uint8Array): string {
-  if (bytes.length === 0) return ''
-
-  // Convert bytes to a big integer
-  let num = BigInt(0)
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i]
-    if (byte === undefined) break
-    num = num * BigInt(256) + BigInt(byte)
-  }
-
-  // Convert to base58
-  let result = ''
-  while (num > 0) {
-    const remainder = num % BigInt(58)
-    num = num / BigInt(58)
-    result = BASE58_ALPHABET[Number(remainder)] + result
-  }
-
-  // Preserve leading zeros
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i]
-    if (byte === undefined || byte !== 0) break
-    result = BASE58_ALPHABET[0] + result
-  }
-
-  return result
-}
-
-/**
- * Encodes bytes with multibase prefix 'z' (base58-btc)
- */
-function encodeMultibase(bytes: Uint8Array): string {
-  return 'z' + encodeBase58(bytes)
 }
 
 // =============================================================================

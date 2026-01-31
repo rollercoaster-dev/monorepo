@@ -8,69 +8,10 @@ import { Hono } from 'hono'
 import { createPublicKey, verify as cryptoVerify } from 'crypto'
 import type { OB3 } from 'openbadges-types'
 import { logger } from '../utils/logger'
+import { decodeMultibase } from '../utils/base58'
+import { canonicalizeDocument } from '../utils/json-canonicalize'
 
 const verificationRoutes = new Hono()
-
-// Base58 decoding for multibase
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-function decodeBase58(str: string): Uint8Array {
-  let num = BigInt(0)
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i]
-    if (!char) break
-    const digit = BASE58_ALPHABET.indexOf(char)
-    if (digit === -1) throw new Error('Invalid base58 character')
-    num = num * BigInt(58) + BigInt(digit)
-  }
-
-  const bytes: number[] = []
-  while (num > 0) {
-    bytes.unshift(Number(num % BigInt(256)))
-    num = num / BigInt(256)
-  }
-
-  // Preserve leading zeros
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i]
-    if (char !== BASE58_ALPHABET[0]) break
-    bytes.unshift(0)
-  }
-
-  return new Uint8Array(bytes)
-}
-
-function decodeMultibase(encoded: string): Uint8Array {
-  if (!encoded.startsWith('z')) {
-    throw new Error('Only base58-btc multibase encoding is supported (prefix: z)')
-  }
-  return decodeBase58(encoded.slice(1))
-}
-
-// JSON canonicalization (simple key sorting)
-function canonicalizeDocument(document: Record<string, unknown>): string {
-  const { proof: _proof, ...docWithoutProof } = document
-
-  const sortKeys = (obj: unknown): unknown => {
-    if (Array.isArray(obj)) {
-      return obj.map(sortKeys)
-    }
-    if (obj !== null && typeof obj === 'object') {
-      return Object.keys(obj)
-        .sort()
-        .reduce(
-          (result, key) => {
-            result[key] = sortKeys((obj as Record<string, unknown>)[key])
-            return result
-          },
-          {} as Record<string, unknown>
-        )
-    }
-    return obj
-  }
-
-  return JSON.stringify(sortKeys(docWithoutProof))
-}
 
 /**
  * POST /api/verification/verify-proof
