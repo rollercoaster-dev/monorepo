@@ -1,6 +1,10 @@
 import { Hono } from 'hono'
 import { jwtService } from '../services/jwt'
 import { logger } from '../utils/logger'
+import { proofService } from '../services/proof'
+import { didService } from '../services/did'
+import { userService } from '../services/user'
+import type { OB3 } from 'openbadges-types'
 
 const badgesRoutes = new Hono()
 
@@ -339,7 +343,58 @@ badgesRoutes.all('/*', async c => {
                 400
               )
             }
-            bodyToForward = JSON.stringify(result.data)
+
+            // Sign the credential with user's DID if they have one
+            let credentialToForward = result.data as OB3.VerifiableCredential
+
+            try {
+              // Get user ID from JWT payload
+              const userId = payload.platformId
+
+              // Check if userService is available
+              if (!userService) {
+                throw new Error('User service not initialized')
+              }
+
+              // Try to sign the credential (will fail gracefully if user has no DID)
+              const { privateKey, verificationMethod } = await didService.getSigningKey(
+                userId,
+                async (id: string) => {
+                  if (!userService) return null
+                  const user = await userService.getUserById(id)
+                  return user
+                    ? {
+                        did: user.did,
+                        didMethod: user.didMethod,
+                        didPrivateKey: (user as { didPrivateKey?: string }).didPrivateKey,
+                        didDocument: user.didDocument,
+                      }
+                    : null
+                }
+              )
+
+              // Sign the credential
+              credentialToForward = await proofService.signCredential(
+                credentialToForward,
+                privateKey,
+                verificationMethod
+              )
+
+              logger.info('Credential signed with proof', {
+                userId,
+                verificationMethod,
+                credentialId: credentialToForward.id,
+              })
+            } catch (error) {
+              // If user doesn't have a DID or signing fails, continue without proof
+              // This maintains backward compatibility with unsigned credentials
+              logger.debug('Credential not signed (user may not have DID)', {
+                userId: payload.platformId,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              })
+            }
+
+            bodyToForward = JSON.stringify(credentialToForward)
           }
         } catch {
           return c.json({ error: 'Invalid JSON body' }, 400)
