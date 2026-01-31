@@ -12,8 +12,11 @@ import {
   scryptSync,
   createCipheriv,
   createDecipheriv,
+  sign as cryptoSign,
+  createPrivateKey,
 } from 'crypto'
 import { promisify } from 'util'
+import { encodeMultibase } from '../utils/base58'
 
 const generateKeyPairAsync = promisify(generateKeyPair)
 
@@ -97,51 +100,6 @@ export function getEncryptionSecret(): string {
     throw new Error('DID_ENCRYPTION_SECRET must be at least 32 characters')
   }
   return secret
-}
-
-// =============================================================================
-// Base58 Encoding Utilities
-// =============================================================================
-
-const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-/**
- * Encodes bytes to base58-btc format (Bitcoin alphabet)
- */
-function encodeBase58(bytes: Uint8Array): string {
-  if (bytes.length === 0) return ''
-
-  // Convert bytes to a big integer
-  let num = BigInt(0)
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i]
-    if (byte === undefined) break
-    num = num * BigInt(256) + BigInt(byte)
-  }
-
-  // Convert to base58
-  let result = ''
-  while (num > 0) {
-    const remainder = num % BigInt(58)
-    num = num / BigInt(58)
-    result = BASE58_ALPHABET[Number(remainder)] + result
-  }
-
-  // Preserve leading zeros
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i]
-    if (byte === undefined || byte !== 0) break
-    result = BASE58_ALPHABET[0] + result
-  }
-
-  return result
-}
-
-/**
- * Encodes bytes with multibase prefix 'z' (base58-btc)
- */
-function encodeMultibase(bytes: Uint8Array): string {
-  return 'z' + encodeBase58(bytes)
 }
 
 // =============================================================================
@@ -353,6 +311,84 @@ export class DIDService {
       publicKey: keyPair.publicKey,
       privateKey: keyPair.privateKey,
       didDocument,
+    }
+  }
+
+  /**
+   * Sign data using Ed25519 private key
+   *
+   * @param data - Data to sign (as Uint8Array)
+   * @param privateKeyPem - Private key in PEM format
+   * @returns Signature as Uint8Array
+   */
+  sign(data: Uint8Array, privateKeyPem: string): Uint8Array {
+    const privateKey = createPrivateKey(privateKeyPem)
+    const signature = cryptoSign(null, data, privateKey)
+    return new Uint8Array(signature)
+  }
+
+  /**
+   * Get signing key for a user
+   *
+   * Fetches the user's encrypted private key from the database,
+   * decrypts it, and returns it along with the verification method IRI.
+   *
+   * @param userId - User ID
+   * @param getUserById - Function to fetch user record
+   * @returns Private key PEM and verification method IRI
+   * @throws Error if user not found, has no DID, or decryption fails
+   */
+  async getSigningKey(
+    userId: string,
+    getUserById: (id: string) => Promise<{
+      did?: string
+      didMethod?: 'key' | 'web'
+      didPrivateKey?: string
+      didDocument?: string
+    } | null>
+  ): Promise<{ privateKey: string; verificationMethod: string }> {
+    // Mask userId for error messages to avoid PII in logs
+    // Shows only first 4 and last 4 chars: "abc12...xyz89"
+    const maskedId = userId.length > 10 ? `${userId.slice(0, 4)}...${userId.slice(-4)}` : '***'
+
+    // Fetch user record
+    const user = await getUserById(userId)
+    if (!user) {
+      throw new Error(`User not found: ${maskedId}`)
+    }
+
+    if (!user.did || !user.didPrivateKey || !user.didDocument) {
+      throw new Error(`User ${maskedId} does not have a DID configured`)
+    }
+
+    // Decrypt private key
+    const encryptionSecret = getEncryptionSecret()
+    const privateKey = decryptPrivateKey(user.didPrivateKey, encryptionSecret)
+
+    // Extract verification method from DID document
+    let didDocument: DIDDocument
+    try {
+      didDocument = JSON.parse(user.didDocument)
+    } catch (error) {
+      throw new Error(`Invalid DID Document JSON for user ${maskedId}`)
+    }
+
+    // Get verification method ID
+    const verificationMethods = didDocument.verificationMethod
+    if (!verificationMethods || verificationMethods.length === 0) {
+      throw new Error(`DID Document has no verification methods`)
+    }
+
+    const firstMethod = verificationMethods[0]
+    if (!firstMethod) {
+      throw new Error(`DID Document verification method is invalid`)
+    }
+
+    const verificationMethod = firstMethod.id
+
+    return {
+      privateKey,
+      verificationMethod,
     }
   }
 }
