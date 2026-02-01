@@ -26,7 +26,7 @@ import { searchSimilar } from "../knowledge/semantic";
 import { query as queryKnowledge } from "../knowledge/query";
 import { extractKeywords } from "../utils/issue-fetcher";
 import { statSync } from "fs";
-import { relative } from "path";
+import { join, relative } from "path";
 import type { PlanningEntity, Goal } from "../types";
 
 // ============================================================================
@@ -67,6 +67,11 @@ interface LearningsSection {
 /**
  * Run a function with a timeout. Rejects if the function doesn't complete
  * within the specified time.
+ *
+ * NOTE: This only interrupts async I/O waits (network, database queries).
+ * CPU-bound synchronous work (e.g. graph parsing, cosine similarity loops)
+ * cannot be interrupted by this mechanism. Those sections are instead
+ * bounded by design: incremental-only parsing and MAX_CANDIDATE_ROWS cap.
  */
 function withTimeout<T>(
   fn: () => Promise<T>,
@@ -121,7 +126,7 @@ function extractContextKeywords(topItem: PlanningEntity | undefined): string[] {
     });
     const branch = new TextDecoder().decode(result.stdout).trim();
     if (branch && branch !== "main" && branch !== "master") {
-      // Convert branch name to keywords: "feat/issue-84-proof-verification" → ["proof", "verification"]
+      // Convert branch name to keywords: "feat/issue-84-proof-verification" → ["feat", "issue", "proof", "verification"]
       return extractKeywords(branch.replace(/[/\-_]/g, " "), 5);
     }
   } catch {
@@ -227,7 +232,7 @@ async function buildGraphSection(
   const updateNote =
     parseResult.filesChanged > 0
       ? `updated ${parseResult.filesChanged} files`
-      : `indexed ${parseMs}ms ago`;
+      : `up to date (checked in ${parseMs}ms)`;
 
   lines.push(
     `▸ Graph (${pkgCount} pkgs, ${entityCount} entities — ${updateNote})`,
@@ -278,7 +283,8 @@ async function buildLearningsSection(
     return { lines: [] };
   }
 
-  // Try semantic search first
+  // Try semantic search first.
+  // CPU cost is bounded by MAX_CANDIDATE_ROWS (see semantic.ts).
   let results: Array<{ content: string }> = [];
 
   if (keywords.length > 0) {
@@ -386,7 +392,7 @@ async function parsePackagesIncremental(
     // Determine deleted files
     const deletedFiles = Array.from(storedMetadata.keys()).filter(
       (filePath) => {
-        const absolutePath = `${pkg.path}/${filePath}`;
+        const absolutePath = join(pkg.path, filePath);
         return !currentFilesSet.has(absolutePath);
       },
     );
@@ -446,6 +452,11 @@ async function parsePackagesIncremental(
  *
  * Sections run sequentially (graph needs keywords from planning).
  * Each section is independently wrapped in try/catch + timeout.
+ *
+ * Timeout caveat: `withTimeout` protects against slow I/O but cannot
+ * interrupt CPU-bound synchronous work. CPU-intensive sections are bounded
+ * by design: graph parsing is incremental (mtime-based), and semantic
+ * search is capped to MAX_CANDIDATE_ROWS (see semantic.ts).
  */
 export async function buildSessionContext(options?: {
   sectionTimeoutMs?: number;

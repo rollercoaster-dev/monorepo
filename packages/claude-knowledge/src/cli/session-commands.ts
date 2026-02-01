@@ -166,7 +166,10 @@ export async function handleSessionStart(args: string[]): Promise<void> {
     });
   }
 
-  // Build and output session context (planning + graph + knowledge)
+  // Build and output session context (planning + graph + knowledge).
+  // Sections have per-section timeouts for I/O, but CPU-bound work
+  // (graph parsing, cosine similarity) is bounded by design rather than
+  // by timeout — see context-builder.ts withTimeout() docs.
   try {
     const contextBlock = await buildSessionContext({ rootPath: cwd });
     if (contextBlock.output.trim()) {
