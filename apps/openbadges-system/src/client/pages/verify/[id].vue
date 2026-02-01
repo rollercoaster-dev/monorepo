@@ -44,19 +44,19 @@ const formattedVerificationDate = computed(() => {
 
 const formattedIssuedDate = computed(() => {
   if (!verificationResult.value?.assertion.issuedOn) return ''
-  return new Date(verificationResult.value.assertion.issuedOn).toLocaleString()
+  return new Date(verificationResult.value.assertion.issuedOn as string).toLocaleString()
 })
 
 const formattedValidFromDate = computed(() => {
   if (!verificationResult.value?.assertion.validFrom) return ''
-  return new Date(verificationResult.value.assertion.validFrom).toLocaleString()
+  return new Date(verificationResult.value.assertion.validFrom as string).toLocaleString()
 })
 
 const formattedExpiryDate = computed(() => {
   const assertion = verificationResult.value?.assertion
   if (!assertion) return ''
   // OB3 field takes precedence, fallback to OB2 for backward compatibility
-  const expiryDate = assertion.validUntil || assertion.expires
+  const expiryDate = (assertion.validUntil || assertion.expires) as string | undefined
   if (!expiryDate) return ''
   return new Date(expiryDate).toLocaleString()
 })
@@ -204,7 +204,7 @@ const copyVerificationUrl = async () => {
             <div v-if="badgeImageUrl" class="flex justify-center">
               <img
                 :src="badgeImageUrl"
-                :alt="verificationResult.badgeClass.name"
+                :alt="String(verificationResult.badgeClass.name)"
                 class="w-24 h-24 object-contain rounded-lg border border-gray-200"
               />
             </div>
@@ -226,11 +226,11 @@ const copyVerificationUrl = async () => {
                 {{ verificationResult.badgeClass.id }}
               </p>
             </div>
-            <div v-if="verificationResult.badgeClass.tags?.length">
+            <div v-if="(verificationResult.badgeClass.tags as string[] | undefined)?.length">
               <label class="block text-sm font-medium text-gray-700">Tags</label>
               <div class="mt-1 flex flex-wrap gap-2">
                 <span
-                  v-for="tag in verificationResult.badgeClass.tags"
+                  v-for="tag in verificationResult.badgeClass.tags as string[]"
                   :key="tag"
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                 >

@@ -192,7 +192,7 @@ async function loadUserBadges() {
         } else {
           // Badge is already a BadgeClass, add assertion data
           return {
-            ...assertion.badge,
+            ...(assertion.badge as OB2.BadgeClass),
             issuedOn: assertion.issuedOn,
             recipient: assertion.recipient,
             evidence: assertion.evidence,

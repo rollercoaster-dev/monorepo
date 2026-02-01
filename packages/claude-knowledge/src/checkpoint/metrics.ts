@@ -829,17 +829,19 @@ function getChildTasks(parentTaskId: string): TaskSnapshot[] {
   };
 
   // Get the most recent snapshot for each child task
+  // Use MAX(id) instead of MAX(captured_at) to avoid duplicates when
+  // multiple snapshots are inserted within the same millisecond
   const rows = db
     .query<SnapshotRow, [string, string]>(
       `
       SELECT ts.*
       FROM task_snapshots ts
       INNER JOIN (
-        SELECT task_id, MAX(captured_at) as max_captured
+        SELECT task_id, MAX(id) as max_id
         FROM task_snapshots
         WHERE parent_task_id = ?
         GROUP BY task_id
-      ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+      ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
       WHERE ts.parent_task_id = ?
       ORDER BY ts.captured_at DESC
       `,
@@ -970,6 +972,8 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
   };
 
   // Get the most recent snapshot for each task
+  // Use MAX(id) instead of MAX(captured_at) to avoid duplicates when
+  // multiple snapshots are inserted within the same millisecond
   // Use separate queries for filtered vs unfiltered to avoid fragile SQL construction
   const rows = workflowId
     ? db
@@ -978,11 +982,11 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
           SELECT ts.*
           FROM task_snapshots ts
           INNER JOIN (
-            SELECT task_id, MAX(captured_at) as max_captured
+            SELECT task_id, MAX(id) as max_id
             FROM task_snapshots
             WHERE workflow_id = ?
             GROUP BY task_id
-          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
           WHERE ts.workflow_id = ?
           ORDER BY ts.captured_at ASC
           `,
@@ -994,10 +998,10 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
           SELECT ts.*
           FROM task_snapshots ts
           INNER JOIN (
-            SELECT task_id, MAX(captured_at) as max_captured
+            SELECT task_id, MAX(id) as max_id
             FROM task_snapshots
             GROUP BY task_id
-          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
           ORDER BY ts.captured_at ASC
           `,
         )

@@ -110,42 +110,49 @@ onMounted(async () => {
       return
     }
 
-    originalBadge.value = badge
+    // Cast to OB2.BadgeClass — this page operates on OB2 badge data
+    const ob2Badge = badge as OB2.BadgeClass
+    originalBadge.value = ob2Badge
 
     // Initialize form with existing data
+    const badgeName = typeof ob2Badge.name === 'string' ? ob2Badge.name : String(ob2Badge.name)
+    const badgeDescription =
+      typeof ob2Badge.description === 'string' ? ob2Badge.description : String(ob2Badge.description)
     badgeData.value = {
-      name: badge.name,
-      description: badge.description,
-      image: getImageSrc(badge.image) || '',
+      name: badgeName,
+      description: badgeDescription,
+      image: getImageSrc(ob2Badge.image as string | OB2.Image | undefined) || '',
       criteria:
-        typeof badge.criteria === 'string'
-          ? { narrative: '', id: createIRI(badge.criteria) }
+        typeof ob2Badge.criteria === 'string'
+          ? { narrative: '', id: createIRI(ob2Badge.criteria) }
           : {
-              narrative: badge.criteria?.narrative || '',
-              id: (badge.criteria as any)?.id ? createIRI((badge.criteria as any).id) : undefined,
+              narrative: ob2Badge.criteria?.narrative || '',
+              id: (ob2Badge.criteria as any)?.id
+                ? createIRI((ob2Badge.criteria as any).id)
+                : undefined,
             },
-      tags: badge.tags || [],
-      alignment: Array.isArray(badge.alignment)
-        ? badge.alignment
-        : badge.alignment
-          ? [badge.alignment]
+      tags: (ob2Badge.tags as string[] | undefined) || [],
+      alignment: Array.isArray(ob2Badge.alignment)
+        ? ob2Badge.alignment
+        : ob2Badge.alignment
+          ? [ob2Badge.alignment]
           : [],
     }
 
     // Set criteria URL if it exists
-    if (badge.criteria && typeof badge.criteria === 'object' && 'id' in badge.criteria) {
-      criteriaUrl.value = badge.criteria.id as string
+    if (ob2Badge.criteria && typeof ob2Badge.criteria === 'object' && 'id' in ob2Badge.criteria) {
+      criteriaUrl.value = ob2Badge.criteria.id as string
     }
 
     // Initialize form validation fields
-    createField('name', badge.name, [rules.required('Badge name is required'), rules.minLength(3)])
-    createField('description', badge.description, [
+    createField('name', badgeName, [rules.required('Badge name is required'), rules.minLength(3)])
+    createField('description', badgeDescription, [
       rules.required('Badge description is required'),
       rules.minLength(10),
     ])
     createField(
       'criteria',
-      (typeof badge.criteria === 'object' ? badge.criteria?.narrative : '') || '',
+      (typeof ob2Badge.criteria === 'object' ? ob2Badge.criteria?.narrative : '') || '',
       [rules.required('Badge criteria is required'), rules.minLength(10)]
     )
     createField('criteriaUrl', criteriaUrl.value, [rules.url('Please enter a valid URL')])
@@ -216,8 +223,8 @@ const handleSubmit = async (formData: UpdateBadgeData) => {
       successMessage.value = 'Badge updated successfully!'
       isFormDirty.value = false
 
-      // Update original badge reference
-      originalBadge.value = updatedBadge
+      // Update original badge reference (cast to OB2 — this page operates on OB2 data)
+      originalBadge.value = updatedBadge as OB2.BadgeClass
 
       // Redirect to badge detail page after a short delay
       setTimeout(() => {

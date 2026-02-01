@@ -94,7 +94,12 @@ describe("handleSessionEnd --dry-run", () => {
   });
 
   it("should show fallback transcript discovery when no start time", async () => {
-    await handleSessionEnd(["--dry-run"]);
+    // Use a nonexistent session-id to prevent matching real session metadata on disk
+    await handleSessionEnd([
+      "--dry-run",
+      "--session-id",
+      "nonexistent-test-session",
+    ]);
 
     const output = originalOutput.join("\n");
     expect(output).toContain("Fallback time range (last 2h):");
@@ -113,7 +118,12 @@ describe("handleSessionEnd --dry-run", () => {
   });
 
   it("should indicate fallback when start time is missing", async () => {
-    await handleSessionEnd(["--dry-run"]);
+    // Use a nonexistent session-id to prevent matching real session metadata on disk
+    await handleSessionEnd([
+      "--dry-run",
+      "--session-id",
+      "nonexistent-test-session",
+    ]);
 
     const output = originalOutput.join("\n");
     expect(output).toContain("Will use fallback time window (last 2 hours)");
