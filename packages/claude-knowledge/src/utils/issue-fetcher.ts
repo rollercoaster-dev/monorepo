@@ -154,7 +154,7 @@ const STOP_WORDS = new Set([
  * Extract meaningful keywords from text.
  * Filters stop words and returns unique significant terms.
  */
-function extractKeywords(text: string, maxWords = 10): string[] {
+export function extractKeywords(text: string, maxWords = 10): string[] {
   if (!text) return [];
 
   const words = text
