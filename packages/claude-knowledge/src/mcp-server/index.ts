@@ -24,6 +24,7 @@ import {
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { Logger } from "@rollercoaster-dev/rd-logger";
+import { getDatabase } from "../db/sqlite.js";
 import { tools, handleToolCall } from "./tools/index.js";
 import { resources, readResource } from "./resources/index.js";
 
@@ -117,6 +118,23 @@ async function main(): Promise<void> {
     await server.close();
     process.exit(0);
   });
+
+  // Periodically checkpoint WAL to prevent unbounded growth.
+  // The MCP server holds the DB connection open for its entire lifetime,
+  // which prevents automatic WAL checkpointing. PASSIVE mode checkpoints
+  // without blocking readers or writers.
+  const WAL_CHECKPOINT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  const walCheckpointTimer = setInterval(() => {
+    try {
+      const db = getDatabase();
+      db.run("PRAGMA wal_checkpoint(PASSIVE)");
+    } catch (error) {
+      logger.warn("WAL checkpoint failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, WAL_CHECKPOINT_INTERVAL_MS);
+  walCheckpointTimer.unref();
 
   await server.connect(transport);
   logger.info("MCP server connected and ready");
