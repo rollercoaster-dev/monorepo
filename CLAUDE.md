@@ -58,8 +58,6 @@ Keep solutions simple and focused. Only make changes directly requested.
 | Search for a literal string or regex     | Grep (fallback OK) |
 | Find config files by name                | Glob (fallback OK) |
 
-See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for examples and detailed guidance.
-
 ## Workflows
 
 | Command                  | Use Case                         |
@@ -81,6 +79,17 @@ See [docs/development-workflows.md](docs/development-workflows.md) for details.
 - Never: Use `--auto` flag (skips review comment validation)
 
 If merge is blocked, WAIT for CI. If unclear, ASK.
+
+## Planning Stack
+
+The context builder shows the current stack at session start. Use these tools to manage it:
+
+| Tool        | When                          |
+| ----------- | ----------------------------- |
+| `goal`      | Starting a new work objective |
+| `interrupt` | Unplanned context switch      |
+| `done`      | Finished current item         |
+| `stack`     | Check what's active/paused    |
 
 ## Proactive Reviews
 

@@ -3,6 +3,10 @@
  *
  * Provides tools for logging and querying tool usage metrics.
  * Used by PreToolUse hook to track Claude's tool selection patterns.
+ *
+ * Consolidated from 8 tools to 2:
+ * - `metrics` (absorbs mlog/mstats/magg)
+ * - `taskinfo` (absorbs snaps/tasks/tree/progress/children)
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -13,131 +17,68 @@ import { metrics } from "../../checkpoint/metrics.js";
  */
 export const metricsTools: Tool[] = [
   {
-    name: "mlog",
+    name: "metrics",
     description:
-      "Log a tool usage event for metrics tracking. " +
-      "Called by PreToolUse hook to track all tool calls. " +
-      "Categories: graph, search, read, write, other.",
+      "Log tool usage or query usage stats. " +
+      "action=log: log a tool call (requires sessionId, toolName). " +
+      "action=summary: get session stats (requires sessionId). " +
+      "action=aggregate: get stats across all sessions.",
     inputSchema: {
       type: "object" as const,
       properties: {
+        action: {
+          type: "string",
+          enum: ["log", "summary", "aggregate"],
+          description: "Which metrics operation to perform",
+        },
         sessionId: {
           type: "string",
-          description: "Session identifier for grouping tool usage",
+          description:
+            "Session identifier (required for log and summary actions)",
         },
         toolName: {
           type: "string",
-          description: "Name of the tool being used (e.g., 'Grep', 'defs')",
+          description:
+            "Name of the tool being used (required for log action, e.g., 'Grep', 'defs')",
         },
       },
-      required: ["sessionId", "toolName"],
+      required: ["action"],
     },
   },
   {
-    name: "mstats",
+    name: "taskinfo",
     description:
-      "Get tool usage summary for a session. " +
-      "Returns counts by category and graph/search ratio.",
+      "Query task snapshots, metrics, tree, progress, or children. " +
+      "query=snapshots: get task snapshots (optional workflowId). " +
+      "query=metrics: get aggregated task metrics. " +
+      "query=tree: get hierarchical task tree (optional workflowId). " +
+      "query=progress: get task progress (requires taskId). " +
+      "query=children: get child tasks (requires parentTaskId).",
     inputSchema: {
       type: "object" as const,
       properties: {
-        sessionId: {
+        query: {
           type: "string",
-          description: "Session identifier to get stats for",
+          enum: ["snapshots", "metrics", "tree", "progress", "children"],
+          description: "Which task info query to run",
         },
-      },
-      required: ["sessionId"],
-    },
-  },
-  {
-    name: "magg",
-    description:
-      "Get aggregate tool usage stats across all sessions. " +
-      "Useful for analyzing overall tool selection patterns.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "snaps",
-    description:
-      "Get task snapshots for a workflow (or all workflows). " +
-      "Returns task state captured at workflow phase boundaries.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
         workflowId: {
           type: "string",
           description:
-            "Optional workflow ID to filter by. Omit to get all snapshots.",
+            "Optional workflow ID to filter by (for snapshots and tree queries)",
         },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "tasks",
-    description:
-      "Get aggregated task metrics across all workflows. " +
-      "Returns completion rates, duration statistics, and breakdown by phase/workflow.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {},
-      required: [],
-    },
-  },
-  {
-    name: "tree",
-    description:
-      "Get hierarchical task tree for a workflow. " +
-      "Returns tasks with their children nested and progress aggregated. " +
-      "Use to visualize task hierarchy in complex workflows.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        workflowId: {
-          type: "string",
-          description:
-            "Optional workflow ID to filter by. Omit to get all tasks.",
-        },
-      },
-      required: [],
-    },
-  },
-  {
-    name: "progress",
-    description:
-      "Get progress for a specific task, including child task aggregation. " +
-      "Returns total, completed, in-progress, pending counts and percentage. " +
-      "Progress rolls up from children for parent tasks.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
         taskId: {
           type: "string",
-          description: "Task ID to get progress for",
+          description:
+            "Task ID to get progress for (required for progress query)",
         },
-      },
-      required: ["taskId"],
-    },
-  },
-  {
-    name: "children",
-    description:
-      "Get child tasks for a parent task. " +
-      "Returns the most recent snapshot for each child. " +
-      "Use to explore task hierarchy.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
         parentTaskId: {
           type: "string",
-          description: "Parent task ID to get children for",
+          description:
+            "Parent task ID to get children for (required for children query)",
         },
       },
-      required: ["parentTaskId"],
+      required: ["query"],
     },
   },
 ];
@@ -155,185 +96,267 @@ export async function handleMetricsToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "mlog": {
-        const sessionId = args.sessionId as string;
-        const toolName = args.toolName as string;
+      case "metrics": {
+        const action = args.action as string;
 
-        if (!sessionId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "sessionId is required" }),
-              },
-            ],
-            isError: true,
-          };
+        switch (action) {
+          case "log": {
+            const sessionId = args.sessionId as string;
+            const toolName = args.toolName as string;
+
+            if (!sessionId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "sessionId is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            if (!toolName) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "toolName is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            metrics.logToolUsage(sessionId, toolName);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    logged: true,
+                    sessionId,
+                    toolName,
+                    category: metrics.categorizeToolName(toolName),
+                  }),
+                },
+              ],
+            };
+          }
+
+          case "summary": {
+            const sessionId = args.sessionId as string;
+
+            if (!sessionId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "sessionId is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            const summary = metrics.getToolUsageSummary(sessionId);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(summary, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "aggregate": {
+            const aggregate = metrics.getToolUsageAggregate();
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(aggregate, null, 2),
+                },
+              ],
+            };
+          }
+
+          default:
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: `Unknown metrics action: ${action}`,
+                  }),
+                },
+              ],
+              isError: true,
+            };
         }
+      }
 
-        if (!toolName) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "toolName is required" }),
-              },
-            ],
-            isError: true,
-          };
+      case "taskinfo": {
+        const query = args.query as string;
+
+        switch (query) {
+          case "snapshots": {
+            const workflowId = args.workflowId as string | undefined;
+            const snapshots = metrics.getTaskSnapshots(workflowId);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(snapshots, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "metrics": {
+            const taskMetrics = metrics.getTaskMetrics();
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(taskMetrics, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "tree": {
+            const workflowId = args.workflowId as string | undefined;
+            const tree = metrics.getTaskTree(workflowId);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(tree, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "progress": {
+            const taskId = args.taskId as string;
+
+            if (!taskId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "taskId is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            const progress = metrics.getTaskProgress(taskId);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(progress, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "children": {
+            const parentTaskId = args.parentTaskId as string;
+
+            if (!parentTaskId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      error: "parentTaskId is required",
+                    }),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            const children = metrics.getChildTasks(parentTaskId);
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(children, null, 2),
+                },
+              ],
+            };
+          }
+
+          default:
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    error: `Unknown taskinfo query: ${query}`,
+                  }),
+                },
+              ],
+              isError: true,
+            };
         }
-
-        metrics.logToolUsage(sessionId, toolName);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({
-                logged: true,
-                sessionId,
-                toolName,
-                category: metrics.categorizeToolName(toolName),
-              }),
-            },
-          ],
-        };
       }
 
-      case "mstats": {
-        const sessionId = args.sessionId as string;
-
-        if (!sessionId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "sessionId is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        const summary = metrics.getToolUsageSummary(sessionId);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(summary, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "magg": {
-        const aggregate = metrics.getToolUsageAggregate();
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(aggregate, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "snaps": {
-        const workflowId = args.workflowId as string | undefined;
-        const snapshots = metrics.getTaskSnapshots(workflowId);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(snapshots, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "tasks": {
-        const taskMetrics = metrics.getTaskMetrics();
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(taskMetrics, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "tree": {
-        const workflowId = args.workflowId as string | undefined;
-        const tree = metrics.getTaskTree(workflowId);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(tree, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "progress": {
-        const taskId = args.taskId as string;
-
-        if (!taskId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "taskId is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        const progress = metrics.getTaskProgress(taskId);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(progress, null, 2),
-            },
-          ],
-        };
-      }
-
-      case "children": {
-        const parentTaskId = args.parentTaskId as string;
-
-        if (!parentTaskId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "parentTaskId is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        const children = metrics.getChildTasks(parentTaskId);
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(children, null, 2),
-            },
-          ],
-        };
-      }
+      // Backward compatibility aliases
+      case "mlog":
+        return handleMetricsToolCall("metrics", {
+          ...args,
+          action: "log",
+        });
+      case "mstats":
+        return handleMetricsToolCall("metrics", {
+          ...args,
+          action: "summary",
+        });
+      case "magg":
+        return handleMetricsToolCall("metrics", {
+          ...args,
+          action: "aggregate",
+        });
+      case "snaps":
+        return handleMetricsToolCall("taskinfo", {
+          ...args,
+          query: "snapshots",
+        });
+      case "tasks":
+        return handleMetricsToolCall("taskinfo", {
+          ...args,
+          query: "metrics",
+        });
+      case "tree":
+        return handleMetricsToolCall("taskinfo", {
+          ...args,
+          query: "tree",
+        });
+      case "progress":
+        return handleMetricsToolCall("taskinfo", {
+          ...args,
+          query: "progress",
+        });
+      case "children":
+        return handleMetricsToolCall("taskinfo", {
+          ...args,
+          query: "children",
+        });
 
       default:
         return {

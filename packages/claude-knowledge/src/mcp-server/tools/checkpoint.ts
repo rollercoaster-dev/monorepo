@@ -3,6 +3,10 @@
  *
  * Provides tools for managing workflow checkpoints during issue execution.
  * These tools wrap the checkpoint module's core functionality for MCP access.
+ *
+ * Consolidated from 4 tools to 2:
+ * - `wf` (absorbs wf/wfnew/wfupdate via action param)
+ * - `recover` (unchanged — different interface)
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -20,18 +24,62 @@ export const checkpointTools: Tool[] = [
   {
     name: "wf",
     description:
-      "Workflows track progress on issues - phase, commits, actions taken. " +
-      "Checking for existing work prevents starting fresh on something already in progress " +
-      "and surfaces where previous work left off.",
+      "Manage workflow checkpoints. " +
+      "action=find (default): find workflow by issue number. " +
+      "action=create: start tracking a new workflow (requires issueNumber, branch). " +
+      "action=update: update phase/status (requires workflowId, plus phase/status/taskId).",
     inputSchema: {
       type: "object" as const,
       properties: {
+        action: {
+          type: "string",
+          enum: ["find", "create", "update"],
+          description: "Which workflow operation to perform (default: find)",
+        },
         issueNumber: {
           type: "number",
-          description: "GitHub issue number to find workflow for",
+          description:
+            "GitHub issue number (required for find and create actions)",
+        },
+        branch: {
+          type: "string",
+          description: "Git branch name (required for create action)",
+        },
+        worktree: {
+          type: "string",
+          description:
+            "Optional worktree path if using git worktrees (create action)",
+        },
+        taskId: {
+          type: "string",
+          description:
+            "Optional native task ID (create action) or link to task (update action)",
+        },
+        workflowId: {
+          type: "string",
+          description: "Workflow ID to update (required for update action)",
+        },
+        phase: {
+          type: "string",
+          enum: [
+            "research",
+            "implement",
+            "review",
+            "finalize",
+            "planning",
+            "execute",
+            "merge",
+            "cleanup",
+          ],
+          description: "New workflow phase (update action)",
+        },
+        status: {
+          type: "string",
+          enum: ["running", "paused", "completed", "failed"],
+          description: "New workflow status (update action)",
         },
       },
-      required: ["issueNumber"],
+      required: [],
     },
   },
   {
@@ -64,73 +112,6 @@ export const checkpointTools: Tool[] = [
       required: [],
     },
   },
-  {
-    name: "wfnew",
-    description:
-      "Creates a checkpoint to track work on an issue. " +
-      "Enables progress recovery if interrupted and provides a record of actions and commits for the work.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        issueNumber: {
-          type: "number",
-          description: "GitHub issue number",
-        },
-        branch: {
-          type: "string",
-          description: "Git branch name for this workflow",
-        },
-        worktree: {
-          type: "string",
-          description: "Optional worktree path if using git worktrees",
-        },
-        taskId: {
-          type: "string",
-          description: "Optional native task ID for task system integration",
-        },
-      },
-      required: ["issueNumber", "branch"],
-    },
-  },
-  {
-    name: "wfupdate",
-    description:
-      "Records phase transitions (research → implement → review → finalize) and status changes. " +
-      "Keeps checkpoint state accurate for recovery and metrics.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        workflowId: {
-          type: "string",
-          description: "Workflow ID to update",
-        },
-        phase: {
-          type: "string",
-          enum: [
-            "research",
-            "implement",
-            "review",
-            "finalize",
-            "planning",
-            "execute",
-            "merge",
-            "cleanup",
-          ],
-          description: "New workflow phase",
-        },
-        status: {
-          type: "string",
-          enum: ["running", "paused", "completed", "failed"],
-          description: "New workflow status",
-        },
-        taskId: {
-          type: "string",
-          description: "Link workflow to a native task ID",
-        },
-      },
-      required: ["workflowId"],
-    },
-  },
 ];
 
 /**
@@ -147,227 +128,259 @@ export async function handleCheckpointToolCall(
   try {
     switch (name) {
       case "wf": {
-        const issueNumber = args.issueNumber as number;
-        if (issueNumber === undefined) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "issueNumber is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
+        // Default action to "find" for backward compatibility
+        const action = (args.action as string) ?? "find";
 
-        const data = checkpoint.findByIssue(issueNumber);
-
-        if (!data) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(
+        switch (action) {
+          case "find": {
+            const issueNumber = args.issueNumber as number;
+            if (issueNumber === undefined) {
+              return {
+                content: [
                   {
-                    found: false,
-                    message: `No workflow found for issue #${issueNumber}`,
-                    issueNumber,
+                    type: "text",
+                    text: JSON.stringify({ error: "issueNumber is required" }),
                   },
-                  null,
-                  2,
-                ),
-              },
-            ],
-          };
-        }
+                ],
+                isError: true,
+              };
+            }
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
+            const data = checkpoint.findByIssue(issueNumber);
+
+            if (!data) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        found: false,
+                        message: `No workflow found for issue #${issueNumber}`,
+                        issueNumber,
+                      },
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+
+            return {
+              content: [
                 {
-                  found: true,
-                  workflow: {
-                    id: data.workflow.id,
-                    issueNumber: data.workflow.issueNumber,
-                    branch: data.workflow.branch,
-                    worktree: data.workflow.worktree,
-                    phase: data.workflow.phase,
-                    status: data.workflow.status,
-                    retryCount: data.workflow.retryCount,
-                    taskId: data.workflow.taskId ?? null,
-                    createdAt: data.workflow.createdAt,
-                    updatedAt: data.workflow.updatedAt,
-                  },
-                  actionCount: data.actions.length,
-                  commitCount: data.commits.length,
-                  recentActions: data.actions.slice(-5).map((a) => ({
-                    action: a.action,
-                    result: a.result,
-                    createdAt: a.createdAt,
-                  })),
-                  commits: data.commits.map((c) => ({
-                    sha: c.sha.slice(0, 7),
-                    message: c.message,
-                    createdAt: c.createdAt,
-                  })),
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      found: true,
+                      workflow: {
+                        id: data.workflow.id,
+                        issueNumber: data.workflow.issueNumber,
+                        branch: data.workflow.branch,
+                        worktree: data.workflow.worktree,
+                        phase: data.workflow.phase,
+                        status: data.workflow.status,
+                        retryCount: data.workflow.retryCount,
+                        taskId: data.workflow.taskId ?? null,
+                        createdAt: data.workflow.createdAt,
+                        updatedAt: data.workflow.updatedAt,
+                      },
+                      actionCount: data.actions.length,
+                      commitCount: data.commits.length,
+                      recentActions: data.actions.slice(-5).map((a) => ({
+                        action: a.action,
+                        result: a.result,
+                        createdAt: a.createdAt,
+                      })),
+                      commits: data.commits.map((c) => ({
+                        sha: c.sha.slice(0, 7),
+                        message: c.message,
+                        createdAt: c.createdAt,
+                      })),
+                    },
+                    null,
+                    2,
+                  ),
                 },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
+              ],
+            };
+          }
 
-      case "wfnew": {
-        const issueNumber = args.issueNumber as number;
-        const branch = args.branch as string;
+          case "create": {
+            const issueNumber = args.issueNumber as number;
+            const branch = args.branch as string;
 
-        if (issueNumber === undefined) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "issueNumber is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
+            if (issueNumber === undefined) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "issueNumber is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
 
-        if (!branch) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "branch is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
+            if (!branch) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "branch is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
 
-        const worktree = args.worktree as string | undefined;
-        const taskId = args.taskId as string | undefined;
-        const workflow = checkpoint.create(
-          issueNumber,
-          branch,
-          worktree,
-          taskId,
-        );
+            const worktree = args.worktree as string | undefined;
+            const taskId = args.taskId as string | undefined;
+            const workflow = checkpoint.create(
+              issueNumber,
+              branch,
+              worktree,
+              taskId,
+            );
 
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
+            return {
+              content: [
                 {
-                  success: true,
-                  message: "Workflow created successfully",
-                  workflow: {
-                    id: workflow.id,
-                    issueNumber: workflow.issueNumber,
-                    branch: workflow.branch,
-                    worktree: workflow.worktree,
-                    phase: workflow.phase,
-                    status: workflow.status,
-                    taskId: workflow.taskId ?? null,
-                    createdAt: workflow.createdAt,
-                  },
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      success: true,
+                      message: "Workflow created successfully",
+                      workflow: {
+                        id: workflow.id,
+                        issueNumber: workflow.issueNumber,
+                        branch: workflow.branch,
+                        worktree: workflow.worktree,
+                        phase: workflow.phase,
+                        status: workflow.status,
+                        taskId: workflow.taskId ?? null,
+                        createdAt: workflow.createdAt,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
                 },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
+              ],
+            };
+          }
 
-      case "wfupdate": {
-        const workflowId = args.workflowId as string;
-        if (!workflowId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({ error: "workflowId is required" }),
-              },
-            ],
-            isError: true,
-          };
-        }
+          case "update": {
+            const workflowId = args.workflowId as string;
+            if (!workflowId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({ error: "workflowId is required" }),
+                  },
+                ],
+                isError: true,
+              };
+            }
 
-        const phase = args.phase as WorkflowPhase | undefined;
-        const status = args.status as WorkflowStatus | undefined;
-        const taskId = args.taskId as string | undefined;
+            const phase = args.phase as WorkflowPhase | undefined;
+            const status = args.status as WorkflowStatus | undefined;
+            const taskId = args.taskId as string | undefined;
 
-        if (!phase && !status && !taskId) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({
-                  error:
-                    "At least one of phase, status, or taskId must be provided",
-                }),
-              },
-            ],
-            isError: true,
-          };
-        }
+            if (!phase && !status && !taskId) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify({
+                      error:
+                        "At least one of phase, status, or taskId must be provided",
+                    }),
+                  },
+                ],
+                isError: true,
+              };
+            }
 
-        const updates: string[] = [];
+            const updates: string[] = [];
 
-        if (phase) {
-          checkpoint.setPhase(workflowId, phase);
-          updates.push(`phase → ${phase}`);
-        }
+            if (phase) {
+              checkpoint.setPhase(workflowId, phase);
+              updates.push(`phase → ${phase}`);
+            }
 
-        if (status) {
-          checkpoint.setStatus(workflowId, status);
-          updates.push(`status → ${status}`);
-        }
+            if (status) {
+              checkpoint.setStatus(workflowId, status);
+              updates.push(`status → ${status}`);
+            }
 
-        if (taskId) {
-          const data = checkpoint.load(workflowId);
-          if (!data) {
+            if (taskId) {
+              const data = checkpoint.load(workflowId);
+              if (!data) {
+                return {
+                  content: [
+                    {
+                      type: "text",
+                      text: JSON.stringify({
+                        error: `Workflow not found: ${workflowId}`,
+                      }),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
+              data.workflow.taskId = taskId;
+              checkpoint.save(data.workflow);
+              updates.push(`taskId → ${taskId}`);
+            }
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      success: true,
+                      workflowId,
+                      updates,
+                      message: `Workflow updated: ${updates.join(", ")}`,
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          default:
             return {
               content: [
                 {
                   type: "text",
                   text: JSON.stringify({
-                    error: `Workflow not found: ${workflowId}`,
+                    error: `Unknown wf action: ${action}`,
                   }),
                 },
               ],
               isError: true,
             };
-          }
-          data.workflow.taskId = taskId;
-          checkpoint.save(data.workflow);
-          updates.push(`taskId → ${taskId}`);
         }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
-                {
-                  success: true,
-                  workflowId,
-                  updates,
-                  message: `Workflow updated: ${updates.join(", ")}`,
-                },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
       }
+
+      // Backward compatibility aliases
+      case "wfnew":
+        return handleCheckpointToolCall("wf", {
+          ...args,
+          action: "create",
+        });
+      case "wfupdate":
+        return handleCheckpointToolCall("wf", {
+          ...args,
+          action: "update",
+        });
 
       case "recover": {
         const issueNumber = args.issueNumber as number | undefined;
