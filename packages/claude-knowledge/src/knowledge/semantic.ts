@@ -8,6 +8,13 @@ import { cosineSimilarity } from "../embeddings/similarity";
 import { generateEmbedding } from "./helpers";
 
 /**
+ * Maximum rows fetched for brute-force cosine similarity.
+ * Prevents loading thousands of embeddings into memory.
+ * Will be replaced by sqlite-vec indexed search (see #662).
+ */
+const MAX_CANDIDATE_ROWS = 200;
+
+/**
  * Options for semantic similarity search.
  */
 export interface SearchSimilarOptions {
@@ -68,14 +75,15 @@ export async function searchSimilar(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch recent learnings with embeddings (capped to avoid loading thousands
-  // of rows into memory for brute-force cosine similarity)
+  // Fetch recent learnings with embeddings, capped to MAX_CANDIDATE_ROWS.
+  // The caller's limit is clamped so we never promise more than we fetch.
+  const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
   const sql = `
     SELECT id, data, embedding, created_at
     FROM entities
     WHERE type = 'Learning' AND embedding IS NOT NULL
     ORDER BY updated_at DESC
-    LIMIT 200
+    LIMIT ${MAX_CANDIDATE_ROWS}
   `;
 
   const rows = db.query<SearchRow, []>(sql).all();
@@ -113,8 +121,8 @@ export async function searchSimilar(
   // Sort by similarity descending
   scored.sort((a, b) => b.similarity - a.similarity);
 
-  // Take top N
-  const topResults = scored.slice(0, limit);
+  // Take top N (clamped to candidate pool size)
+  const topResults = scored.slice(0, candidateLimit);
 
   // Build QueryResult array
   const results: QueryResult[] = [];
@@ -250,13 +258,14 @@ export async function searchSimilarTopics(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch recent topics with embeddings (capped to limit in-memory work)
+  // Fetch recent topics with embeddings, capped to MAX_CANDIDATE_ROWS.
+  const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
   const sql = `
     SELECT id, data, embedding, created_at
     FROM entities
     WHERE type = 'Topic' AND embedding IS NOT NULL
     ORDER BY updated_at DESC
-    LIMIT 200
+    LIMIT ${MAX_CANDIDATE_ROWS}
   `;
 
   const rows = db.query<SearchRow, []>(sql).all();
@@ -294,8 +303,8 @@ export async function searchSimilarTopics(
   // Sort by similarity descending
   scored.sort((a, b) => b.similarity - a.similarity);
 
-  // Take top N
-  const topResults = scored.slice(0, limit);
+  // Take top N (clamped to candidate pool size)
+  const topResults = scored.slice(0, candidateLimit);
 
   // Build result array
   const results: TopicSearchResult[] = [];
