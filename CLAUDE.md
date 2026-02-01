@@ -58,8 +58,6 @@ Keep solutions simple and focused. Only make changes directly requested.
 | Search for a literal string or regex     | Grep (fallback OK) |
 | Find config files by name                | Glob (fallback OK) |
 
-See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for examples and detailed guidance.
-
 ## Workflows
 
 | Command                  | Use Case                         |
