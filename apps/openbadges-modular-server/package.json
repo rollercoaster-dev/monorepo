@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit --skipLibCheck",
     "type-check": "tsc --noEmit --skipLibCheck",
     "check:all": "bun run lint && bun run typecheck && bun run test",
-    "test": "DB_TYPE=sqlite bun test",
+    "test": "DB_TYPE=sqlite bun test tests/api tests/auth tests/config tests/core tests/domains tests/e2e tests/examples tests/infrastructure tests/integration tests/services tests/unit tests/utils && DB_TYPE=sqlite bun test tests/isolated",
     "test:unit": "DB_TYPE=sqlite bun test tests/unit tests/infrastructure tests/core tests/domains tests/api tests/auth",
     "test:jwt-service": "DB_TYPE=sqlite bun test tests/isolated/jwt.service.test.ts",
     "test:integration": "DB_TYPE=sqlite bun test tests/integration",

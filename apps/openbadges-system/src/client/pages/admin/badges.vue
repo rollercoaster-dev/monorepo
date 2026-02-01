@@ -444,7 +444,11 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="assertion in assertions" :key="assertion.id" class="hover:bg-gray-50">
+              <tr
+                v-for="assertion in assertions as BadgeAssertion[]"
+                :key="assertion.id"
+                class="hover:bg-gray-50"
+              >
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <img
@@ -466,7 +470,7 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900">
-                    {{ formatDate(assertion.issuedOn) }}
+                    {{ formatDate(assertion.issuedOn as string) }}
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -483,14 +487,14 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
                   <div class="flex items-center justify-end space-x-2">
                     <button
                       class="text-blue-600 hover:text-blue-900"
-                      @click="handleViewAssertion(assertion)"
+                      @click="handleViewAssertion(assertion as BadgeAssertion)"
                     >
                       View
                     </button>
                     <button
                       v-if="!assertion.revoked"
                       class="text-red-600 hover:text-red-900"
-                      @click="handleRevokeAssertion(assertion)"
+                      @click="handleRevokeAssertion(assertion as BadgeAssertion)"
                     >
                       Revoke
                     </button>

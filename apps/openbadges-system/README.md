@@ -27,7 +27,7 @@ A full-stack Vue 3 + Bun/Hono application for managing digital credentials using
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) >= 1.3.2
+- [Bun](https://bun.sh) >= 1.3.7
 - [Docker](https://www.docker.com/) (for badge server integration)
 
 ### Installation

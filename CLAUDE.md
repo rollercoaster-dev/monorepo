@@ -4,7 +4,7 @@ Open Badges credentialing system with self-signed badges, local-first architectu
 
 ## Quick Reference
 
-**Stack**: Bun 1.3.2 + Turborepo + TypeScript (strict, no `any`)
+**Stack**: Bun 1.3.7 + Turborepo + TypeScript (strict, no `any`)
 
 ```bash
 bun dev                    # Start all apps

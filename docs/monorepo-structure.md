@@ -1,6 +1,6 @@
 # Monorepo Structure
 
-Bun 1.3.2 + Turborepo + TypeScript (strict, no `any`).
+Bun 1.3.7 + Turborepo + TypeScript (strict, no `any`).
 
 ## Testing
 
