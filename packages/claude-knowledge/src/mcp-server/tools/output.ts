@@ -1,7 +1,7 @@
 /**
  * Output MCP Tools
  *
- * Provides the output_save tool for the "output-to-files" pattern.
+ * Provides the save tool for the "output-to-files" pattern.
  * Long outputs are saved to files and a summary is returned instead,
  * reducing context window usage while preserving full content.
  */

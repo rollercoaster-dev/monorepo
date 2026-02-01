@@ -16,7 +16,7 @@ Tool usage is tracked and reported at session end. Aim for graph/search ratio > 
 
 **`mcp__claude-knowledge__defs`** - Find where something is defined
 
-```
+```text
 # Find a function definition
 defs(name="getTranscriptPath", type="function")
 → Returns: [{name, type, filePath, lineNumber}]
@@ -30,7 +30,7 @@ defs(name="Transcript")  # finds getTranscriptPath, TranscriptParser, etc.
 
 **`mcp__claude-knowledge__callers`** - Find all callers
 
-```
+```text
 # What calls this function?
 callers(name="getTranscriptPath")
 → Returns: [{caller, callerFile, callerLine, callee, calleeFile}]
@@ -40,7 +40,7 @@ callers(name="getTranscriptPath")
 
 **`mcp__claude-knowledge__blast`** - Impact analysis
 
-```
+```text
 # What depends on this file?
 blast(file="src/utils/transcript.ts")
 → Returns: All files that import/depend on this file (transitive)

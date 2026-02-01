@@ -27,8 +27,7 @@ export const metricsTools: Tool[] = [
         },
         toolName: {
           type: "string",
-          description:
-            "Name of the tool being used (e.g., 'Grep', 'graph_find')",
+          description: "Name of the tool being used (e.g., 'Grep', 'defs')",
         },
       },
       required: ["sessionId", "toolName"],
