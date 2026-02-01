@@ -808,3 +808,115 @@ export function resetDatabase(dbPath: string = DEFAULT_DB_PATH): Database {
   closeDatabase();
   return getDatabase(dbPath);
 }
+
+/**
+ * Custom error for timeout operations
+ */
+export class DatabaseTimeoutError extends Error {
+  constructor(
+    message: string,
+    public readonly context: string,
+    public readonly timeoutMs: number,
+  ) {
+    super(message);
+    this.name = "DatabaseTimeoutError";
+  }
+}
+
+/**
+ * Execute a database operation with a timeout.
+ * Returns the result if the operation completes within the timeout.
+ * Throws DatabaseTimeoutError if the operation exceeds the timeout.
+ *
+ * Note: This uses Promise.race with setTimeout. For synchronous SQLite operations,
+ * this will still block the event loop, but provides a way to set an upper bound
+ * on how long callers will wait before giving up.
+ *
+ * @param operation - The database operation to execute
+ * @param timeoutMs - Maximum time to wait in milliseconds
+ * @param context - Description of the operation for error messages
+ */
+export function withTimeout<T>(
+  operation: () => T | Promise<T>,
+  timeoutMs: number,
+  context: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(
+        new DatabaseTimeoutError(
+          `Database operation timed out after ${timeoutMs}ms: ${context}`,
+          context,
+          timeoutMs,
+        ),
+      );
+    }, timeoutMs);
+
+    try {
+      const result = operation();
+      if (result instanceof Promise) {
+        result
+          .then((value) => {
+            clearTimeout(timeoutId);
+            resolve(value);
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId);
+            reject(error);
+          });
+      } else {
+        clearTimeout(timeoutId);
+        resolve(result);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Execute a database operation with retry logic for SQLITE_BUSY errors.
+ * Uses exponential backoff between retries.
+ *
+ * @param operation - The database operation to execute
+ * @param maxRetries - Maximum number of retry attempts (default: 3)
+ * @param context - Description of the operation for error messages
+ * @param baseDelayMs - Base delay between retries in ms (default: 100)
+ */
+export async function executeWithRetry<T>(
+  operation: () => T | Promise<T>,
+  maxRetries: number = 3,
+  context: string = "database operation",
+  baseDelayMs: number = 100,
+): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = operation();
+      if (result instanceof Promise) {
+        return await result;
+      }
+      return result;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Check if this is a SQLITE_BUSY error (code 5)
+      const isBusyError =
+        lastError.message.includes("SQLITE_BUSY") ||
+        lastError.message.includes("database is locked");
+
+      if (!isBusyError || attempt >= maxRetries) {
+        throw lastError;
+      }
+
+      // Exponential backoff: 100ms, 200ms, 400ms, etc.
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  // This should never be reached, but TypeScript needs it
+  throw lastError ?? new Error(`${context} failed after ${maxRetries} retries`);
+}
