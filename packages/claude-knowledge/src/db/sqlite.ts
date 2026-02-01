@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { existsSync, statSync } from "fs";
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
@@ -919,4 +920,79 @@ export async function executeWithRetry<T>(
 
   // This should never be reached, but TypeScript needs it
   throw lastError ?? new Error(`${context} failed after ${maxRetries} retries`);
+}
+
+/**
+ * Database health check result.
+ */
+export interface DatabaseHealthResult {
+  healthy: boolean;
+  responsiveMs: number;
+  walSizeKb: number;
+  shmSizeKb: number;
+  dbSizeKb: number;
+  error?: string;
+}
+
+/**
+ * Check database health by verifying responsiveness and WAL file sizes.
+ *
+ * This function helps diagnose lock contention issues by:
+ * - Testing if the database responds to a simple query within 1 second
+ * - Reporting WAL and SHM file sizes (large WAL indicates checkpoint issues)
+ * - Reporting total database size
+ *
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns Health check result with timing and file size information
+ */
+export function checkDatabaseHealth(dbPath?: string): DatabaseHealthResult {
+  const effectivePath = dbPath ?? DEFAULT_DB_PATH;
+  const walPath = `${effectivePath}-wal`;
+  const shmPath = `${effectivePath}-shm`;
+
+  // Check file sizes
+  let dbSizeKb = 0;
+  let walSizeKb = 0;
+  let shmSizeKb = 0;
+
+  try {
+    if (existsSync(effectivePath)) {
+      dbSizeKb = Math.round(statSync(effectivePath).size / 1024);
+    }
+    if (existsSync(walPath)) {
+      walSizeKb = Math.round(statSync(walPath).size / 1024);
+    }
+    if (existsSync(shmPath)) {
+      shmSizeKb = Math.round(statSync(shmPath).size / 1024);
+    }
+  } catch {
+    // File access errors are non-fatal for health check
+  }
+
+  // Test database responsiveness
+  const startMs = Date.now();
+  try {
+    const database = getDatabase(dbPath);
+    // Simple query to test responsiveness
+    database.query<{ result: number }, []>("SELECT 1 as result").get();
+    const responsiveMs = Date.now() - startMs;
+
+    return {
+      healthy: responsiveMs < 1000, // Healthy if responds within 1 second
+      responsiveMs,
+      walSizeKb,
+      shmSizeKb,
+      dbSizeKb,
+    };
+  } catch (error) {
+    const responsiveMs = Date.now() - startMs;
+    return {
+      healthy: false,
+      responsiveMs,
+      walSizeKb,
+      shmSizeKb,
+      dbSizeKb,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
