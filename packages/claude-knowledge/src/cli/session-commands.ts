@@ -170,8 +170,10 @@ export async function handleSessionStart(args: string[]): Promise<void> {
   // Sections have per-section timeouts for I/O, but CPU-bound work
   // (graph parsing, cosine similarity) is bounded by design rather than
   // by timeout — see context-builder.ts withTimeout() docs.
+  let contextLearningsCount = 0;
   try {
     const contextBlock = await buildSessionContext({ rootPath: cwd });
+    contextLearningsCount = contextBlock.learningsCount;
     if (contextBlock.output.trim()) {
       console.log(contextBlock.output);
     }
@@ -194,6 +196,11 @@ export async function handleSessionStart(args: string[]): Promise<void> {
       };
     }
   )._sessionMetadata;
+
+  // Update learningsInjected with the actual count from context builder
+  if (metadata) {
+    metadata.learningsInjected = contextLearningsCount;
+  }
   if (metadata) {
     console.log(`\n<!-- SESSION_METADATA: ${JSON.stringify(metadata)} -->`);
 
