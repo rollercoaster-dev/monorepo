@@ -805,7 +805,7 @@ async function onSessionEnd(
       // Log guidance if graph/search ratio is low
       if (graphSearchRatio !== null && graphSearchRatio < 1.0) {
         logger.info(
-          "Consider using graph tools (graph_find, graph_what_calls) before Grep/Glob for better context efficiency",
+          "Consider using graph tools (defs, callers) before Grep/Glob for better context efficiency",
           { context: "onSessionEnd" },
         );
       }
