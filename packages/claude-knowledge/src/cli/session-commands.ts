@@ -7,6 +7,7 @@ import { $ } from "bun";
 import { stat, unlink } from "fs/promises";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import { indexMonorepoDocs } from "../docs";
+import { buildSessionContext } from "../session/context-builder";
 import {
   parseIntSafe,
   isValidSessionMetadata,
@@ -165,10 +166,21 @@ export async function handleSessionStart(args: string[]): Promise<void> {
     });
   }
 
-  // Knowledge injection disabled - learnings are queried on-demand via MCP tools
-  // See: https://github.com/rollercoaster-dev/monorepo - session discussing Beads vs claude-knowledge
-  // The session-start context is too early (we don't know what we'll work on yet)
-  // console.log(context.summary);
+  // Build and output session context (planning + graph + knowledge).
+  // Sections have per-section timeouts for I/O, but CPU-bound work
+  // (graph parsing, cosine similarity) is bounded by design rather than
+  // by timeout — see context-builder.ts withTimeout() docs.
+  try {
+    const contextBlock = await buildSessionContext({ rootPath: cwd });
+    if (contextBlock.output.trim()) {
+      console.log(contextBlock.output);
+    }
+  } catch (error) {
+    logger.warn("Could not build session context", {
+      error: error instanceof Error ? error.message : String(error),
+      context: "session-start",
+    });
+  }
 
   // Output session metadata for session-end to consume
   // This is output as a special marker that can be captured
