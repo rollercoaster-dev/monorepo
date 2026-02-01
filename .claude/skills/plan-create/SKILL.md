@@ -144,7 +144,7 @@ gh issue view <number> --json body,title,number,trackedIssues
 
 ```typescript
 // Create Plan entity
-const plan = await planning_plan_create({
+const planResult = await plan({
   title: milestoneName,
   sourceType: "milestone",
   sourceRef: String(milestoneNumber),
@@ -152,7 +152,7 @@ const plan = await planning_plan_create({
 });
 
 // Map execution_waves to PlanSteps
-const steps = executionWaves.flatMap((wave, waveIndex) =>
+const stepsData = executionWaves.flatMap((wave, waveIndex) =>
   wave.issues.map((issueNumber, indexInWave) => ({
     title: dependencyGraph[issueNumber].title,
     wave: waveIndex,
@@ -173,9 +173,9 @@ const steps = executionWaves.flatMap((wave, waveIndex) =>
 );
 
 // Batch create steps
-await planning_plan_add_steps({
-  planId: plan.id,
-  steps,
+await steps({
+  planId: planResult.id,
+  steps: stepsData,
 });
 ```
 

@@ -31,10 +31,10 @@ Push an interrupt onto the planning stack. Interrupts represent unplanned contex
 
 ## Implementation
 
-Use the `planning_interrupt_push` MCP tool:
+Use the `interrupt` MCP tool:
 
 ```typescript
-planning_interrupt_push({
+interrupt({
   title: "<first few words>",
   reason: "<remaining words>",
 });
