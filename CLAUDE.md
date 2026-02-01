@@ -80,6 +80,17 @@ See [docs/development-workflows.md](docs/development-workflows.md) for details.
 
 If merge is blocked, WAIT for CI. If unclear, ASK.
 
+## Planning Stack
+
+The context builder shows the current stack at session start. Use these tools to manage it:
+
+| Tool        | When                          |
+| ----------- | ----------------------------- |
+| `goal`      | Starting a new work objective |
+| `interrupt` | Unplanned context switch      |
+| `done`      | Finished current item         |
+| `stack`     | Check what's active/paused    |
+
 ## Proactive Reviews
 
 Use after completing relevant work:
