@@ -4,40 +4,28 @@ import { knowledge } from "./knowledge";
 import { checkpoint } from "./checkpoint";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
 import { resetDefaultEmbedder } from "./embeddings";
-import { unlinkSync, existsSync } from "fs";
+import { cleanupTestDb } from "./test-utils";
 import { tmpdir } from "os";
 import { join } from "path";
 
 const TEST_DB = join(tmpdir(), "test-hooks.db");
 
-function cleanupTestDb() {
-  // Remove main DB file and WAL journal files (-wal, -shm)
-  // SQLite WAL mode creates these companion files, and orphaned journals
-  // cause "disk I/O error" when creating a fresh database at the same path
-  for (const suffix of ["", "-wal", "-shm"]) {
-    const file = TEST_DB + suffix;
-    if (existsSync(file)) {
-      unlinkSync(file);
-    }
-  }
-}
-
 describe("hooks", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset embedder to ensure clean state (other tests may reset it)
     resetDefaultEmbedder();
     // Clean up and reset test database
-    cleanupTestDb();
+    await cleanupTestDb(TEST_DB);
     resetDatabase(TEST_DB);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Close database after each test
     closeDatabase();
     // Reset embedder to clean up
     resetDefaultEmbedder();
     // Clean up test database file
-    cleanupTestDb();
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("onSessionStart", () => {

@@ -23,10 +23,10 @@ function ensureCriteriaObject(
   if (typeof c === 'string') {
     return { id: createIRI(c), narrative: '' }
   }
-  if (c) {
-    const id = 'id' in c && c.id ? createIRI(c.id) : undefined
-    const narrative =
-      'narrative' in c && typeof (c as any).narrative === 'string' ? (c as any).narrative : ''
+  if (c && typeof c === 'object') {
+    const obj = c as { narrative?: string; id?: string }
+    const narrative = typeof obj.narrative === 'string' ? obj.narrative : ''
+    const id = typeof obj.id === 'string' ? createIRI(obj.id) : undefined
     return { narrative, id }
   }
   return { narrative: 'Badge criteria' }
@@ -127,9 +127,10 @@ onMounted(async () => {
           ? { narrative: '', id: createIRI(ob2Badge.criteria) }
           : {
               narrative: ob2Badge.criteria?.narrative || '',
-              id: (ob2Badge.criteria as any)?.id
-                ? createIRI((ob2Badge.criteria as any).id)
-                : undefined,
+              id:
+                typeof (ob2Badge.criteria as { id?: string })?.id === 'string'
+                  ? createIRI((ob2Badge.criteria as { id?: string }).id!)
+                  : undefined,
             },
       tags: (ob2Badge.tags as string[] | undefined) || [],
       alignment: Array.isArray(ob2Badge.alignment)

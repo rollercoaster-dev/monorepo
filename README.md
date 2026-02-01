@@ -45,7 +45,7 @@ monorepo/
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) >= 1.3.2
+- [Bun](https://bun.sh/) >= 1.3.7
 
 ### Installation
 
