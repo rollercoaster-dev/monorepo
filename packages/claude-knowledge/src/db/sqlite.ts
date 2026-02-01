@@ -746,6 +746,11 @@ export function getDatabase(dbPath?: string): Database {
   // This reduces the risk of DB lock issues when multiple processes access the DB
   db.run("PRAGMA journal_mode = WAL;");
 
+  // Set busy timeout before other operations - allows processes to wait for locks
+  // instead of failing immediately. 5 seconds is aggressive enough to catch real
+  // deadlocks while tolerating normal operation delays with WAL mode.
+  db.run("PRAGMA busy_timeout = 5000;");
+
   // Performance optimizations for bulk indexing operations
   // synchronous=NORMAL: trades some durability for significant write speed gain
   // cache_size=10000: ~40MB cache (10000 pages * 4KB default page size)
