@@ -53,22 +53,24 @@ const toolHandlers: Record<
   recall: handleKnowledgeToolCall,
   learn: handleKnowledgeToolCall,
   search: handleKnowledgeToolCall,
-  // Checkpoint
+  // Checkpoint (consolidated: wf handles find/create/update)
   wf: handleCheckpointToolCall,
-  wfnew: handleCheckpointToolCall,
-  wfupdate: handleCheckpointToolCall,
+  wfnew: handleCheckpointToolCall, // backward compat → wf action=create
+  wfupdate: handleCheckpointToolCall, // backward compat → wf action=update
   recover: handleCheckpointToolCall,
   // Output
   save: handleOutputToolCall,
-  // Metrics
-  mlog: handleMetricsToolCall,
-  mstats: handleMetricsToolCall,
-  magg: handleMetricsToolCall,
-  snaps: handleMetricsToolCall,
-  tasks: handleMetricsToolCall,
-  tree: handleMetricsToolCall,
-  progress: handleMetricsToolCall,
-  children: handleMetricsToolCall,
+  // Metrics (consolidated: metrics handles log/summary/aggregate, taskinfo handles queries)
+  metrics: handleMetricsToolCall,
+  taskinfo: handleMetricsToolCall,
+  mlog: handleMetricsToolCall, // backward compat → metrics action=log
+  mstats: handleMetricsToolCall, // backward compat → metrics action=summary
+  magg: handleMetricsToolCall, // backward compat → metrics action=aggregate
+  snaps: handleMetricsToolCall, // backward compat → taskinfo query=snapshots
+  tasks: handleMetricsToolCall, // backward compat → taskinfo query=metrics
+  tree: handleMetricsToolCall, // backward compat → taskinfo query=tree
+  progress: handleMetricsToolCall, // backward compat → taskinfo query=progress
+  children: handleMetricsToolCall, // backward compat → taskinfo query=children
 };
 
 /**
