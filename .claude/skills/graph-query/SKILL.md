@@ -12,11 +12,11 @@ Query the code graph built from ts-morph static analysis to understand codebase 
 
 When the MCP server is available, use native tools:
 
-| Tool                 | Purpose                                       |
-| -------------------- | --------------------------------------------- |
-| `graph_what_calls`   | Find all callers of a function                |
-| `graph_blast_radius` | Find impact of changes to a file (transitive) |
-| `graph_find`         | Search for entities by name and type          |
+| Tool      | Purpose                                       |
+| --------- | --------------------------------------------- |
+| `callers` | Find all callers of a function                |
+| `blast`   | Find impact of changes to a file (transitive) |
+| `defs`    | Search for entities by name and type          |
 
 **Use graph tools instead of Grep chains. 1 query = 10 greps worth of info.**
 

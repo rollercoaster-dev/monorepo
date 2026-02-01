@@ -45,6 +45,8 @@ export interface SessionContextBlock {
   };
   /** Which sections were successfully built */
   sections: { planning: boolean; graph: boolean; learnings: boolean };
+  /** Number of learnings actually displayed by context builder */
+  learningsCount: number;
 }
 
 interface PlanningSection {
@@ -58,6 +60,7 @@ interface GraphSection {
 
 interface LearningsSection {
   lines: string[];
+  count: number;
 }
 
 // ============================================================================
@@ -280,7 +283,7 @@ async function buildLearningsSection(
   const lines: string[] = [];
 
   if (keywords.length === 0 && !issueNumber) {
-    return { lines: [] };
+    return { lines: [], count: 0 };
   }
 
   // Try semantic search first.
@@ -332,7 +335,7 @@ async function buildLearningsSection(
   }
 
   if (results.length === 0) {
-    return { lines: [] };
+    return { lines: [], count: 0 };
   }
 
   lines.push(`▸ Learnings (${results.length} relevant)`);
@@ -345,7 +348,7 @@ async function buildLearningsSection(
     lines.push(`  • ${content}`);
   }
 
-  return { lines };
+  return { lines, count: results.length };
 }
 
 // ============================================================================
@@ -529,12 +532,15 @@ export async function buildSessionContext(options?: {
 
   // --- Learnings Section ---
   const learningsStart = performance.now();
+  let learningsCount = 0;
   try {
     const learningsSection = await withTimeout(
       () => buildLearningsSection(keywords, issueNumber, maxLearnings),
       sectionTimeoutMs,
       "learnings",
     );
+
+    learningsCount = learningsSection.count;
 
     if (learningsSection.lines.length > 0) {
       if (outputLines.length > 0) outputLines.push("");
@@ -563,5 +569,5 @@ export async function buildSessionContext(options?: {
     ].join("\n");
   }
 
-  return { output, timings, sections };
+  return { output, timings, sections, learningsCount };
 }

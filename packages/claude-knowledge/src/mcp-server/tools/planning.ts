@@ -36,7 +36,7 @@ import type {
  */
 export const planningTools: Tool[] = [
   {
-    name: "planning_goal_push",
+    name: "goal",
     description:
       "Push a new goal onto the planning stack. Goals represent high-level work objectives. " +
       "The current focus (if any) becomes paused. Use when starting new work.",
@@ -61,7 +61,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_interrupt_push",
+    name: "interrupt",
     description:
       "Push an interrupt onto the planning stack. Interrupts represent unplanned context switches " +
       "(bugs, urgent reviews, etc.). Automatically links to what was interrupted.",
@@ -82,7 +82,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_stack_pop",
+    name: "done",
     description:
       "Pop the top item from the planning stack (mark as completed). " +
       "Generates a summary, stores it as a learning, and resumes the previous item.",
@@ -92,7 +92,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_stack_status",
+    name: "stack",
     description:
       "Get the current planning stack state with stale item detection and plan progress. " +
       "Shows what you're working on, what's paused, items that may need attention, " +
@@ -103,7 +103,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_plan_create",
+    name: "plan",
     description:
       "Create a Plan linked to a Goal on the planning stack. " +
       "Plans define structured execution steps for achieving a Goal. " +
@@ -134,7 +134,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_plan_add_steps",
+    name: "steps",
     description:
       "Add multiple PlanSteps to a Plan in a batch operation. " +
       "Steps define concrete units of work with wave-based parallelization and dependency tracking. " +
@@ -199,7 +199,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_plan_get",
+    name: "planget",
     description:
       "Get a Plan and all its PlanSteps for a Goal. " +
       "Returns the plan with embedded steps array including dependencies.",
@@ -215,7 +215,7 @@ export const planningTools: Tool[] = [
     },
   },
   {
-    name: "planning_plan_list_steps",
+    name: "plansteps",
     description:
       "List PlanSteps for a Plan with optional filtering by wave number. " +
       "Returns steps ordered by ordinal with dependencies included. " +
@@ -246,7 +246,7 @@ export async function handlePlanningToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "planning_goal_push": {
+      case "goal": {
         const title = args.title as string;
         if (!title || title.trim().length === 0) {
           return {
@@ -327,7 +327,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_interrupt_push": {
+      case "interrupt": {
         const title = args.title as string;
         const reason = args.reason as string;
         if (
@@ -416,7 +416,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_stack_pop": {
+      case "done": {
         const { completed, resumed, stack } = popStack();
 
         if (!completed) {
@@ -471,7 +471,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_stack_status": {
+      case "stack": {
         const stack = peekStack();
         // Stale detection is now async because it checks plan step completion
         // via external APIs (GitHub, etc.) through the completion resolver
@@ -546,7 +546,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_plan_create": {
+      case "plan": {
         const title = args.title as string;
         const goalId = args.goalId as string;
         const sourceType = args.sourceType as PlanSourceType;
@@ -660,7 +660,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_plan_add_steps": {
+      case "steps": {
         const planId = args.planId as string;
         const stepsInput = args.steps as Array<{
           title: string;
@@ -957,7 +957,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_plan_get": {
+      case "planget": {
         const goalId = args.goalId as string;
 
         // Validate required fields
@@ -1043,7 +1043,7 @@ export async function handlePlanningToolCall(
         };
       }
 
-      case "planning_plan_list_steps": {
+      case "plansteps": {
         const planId = args.planId as string;
         const waveFilter = args.wave as number | undefined;
 

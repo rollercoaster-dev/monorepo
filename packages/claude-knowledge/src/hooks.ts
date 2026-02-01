@@ -11,26 +11,17 @@ import type {
   KnowledgeContext,
   SessionSummary,
   SessionEndResult,
-  QueryResult,
-  Pattern,
-  Mistake,
-  Topic,
   ContextMetrics,
-  DocSearchResult,
+  Topic,
 } from "./types";
-import { knowledge, searchSimilarTopics } from "./knowledge/index";
-import { searchDocs } from "./docs/search";
+import { knowledge } from "./knowledge/index";
 import { checkpoint, metrics } from "./checkpoint";
 import { defaultLogger as logger } from "@rollercoaster-dev/rd-logger";
 import {
   parseIssueNumber,
   parseConventionalCommit,
-  inferCodeAreasFromFiles,
   formatCommitContent,
-  fetchIssueContext,
-  extractBranchKeywords,
   extractLearningsFromTranscript,
-  type IssueContext,
 } from "./utils";
 import type { Learning } from "./types";
 import { randomUUID } from "crypto";
@@ -61,60 +52,25 @@ export interface ExtendedSessionContext extends SessionContext {
   filesRead?: number;
 }
 
-/** Maximum number of learnings to return at session start */
-const MAX_LEARNINGS = 10;
-
-/** Maximum number of patterns to return per code area */
-const MAX_PATTERNS_PER_AREA = 5;
-
-/** Maximum number of mistakes to return per file */
-const MAX_MISTAKES_PER_FILE = 3;
-
-/** Maximum number of topics to return at session start */
-const MAX_TOPICS = 5;
-
 /**
  * Load relevant knowledge for the current session context.
  *
+ * Knowledge queries (learnings, patterns, mistakes, topics, docs) are now
+ * handled by the context builder (context-builder.ts). This function handles:
+ * - JSONL auto-import (knowledge + planning)
+ * - Workflow state loading
+ * - Session metadata generation
+ *
  * @param context - Session context with working directory, branch, and modified files
- * @returns Knowledge context with relevant learnings, patterns, mistakes, and summary
+ * @returns Knowledge context with workflow state and session metadata
  */
 async function onSessionStart(
   context: SessionContext,
 ): Promise<KnowledgeContext> {
-  const learnings: QueryResult[] = [];
-  const patterns: Pattern[] = [];
-  const mistakes: Mistake[] = [];
-  const topics: Topic[] = [];
-  const docs: DocSearchResult[] = [];
-
   // Parse issue number from branch if not provided
   const issueNumber =
     context.issueNumber ??
     (context.branch ? parseIssueNumber(context.branch) : undefined);
-
-  // Fetch issue context for enhanced doc discovery
-  let issueContext: IssueContext | undefined;
-  if (issueNumber) {
-    try {
-      issueContext = await fetchIssueContext(issueNumber);
-      if (issueContext) {
-        logger.debug("Issue context fetched for doc discovery", {
-          issueNumber,
-          keywordCount: issueContext.keywords.length,
-          labelCount: issueContext.labels.length,
-          context: "onSessionStart",
-        });
-      }
-    } catch (error) {
-      // Log but don't fail session - issue context is optional enhancement
-      logger.warn("Failed to fetch issue context", {
-        error: error instanceof Error ? error.message : String(error),
-        issueNumber,
-        context: "onSessionStart",
-      });
-    }
-  }
 
   // Auto-import knowledge from JSONL if file is newer than database
   try {
@@ -167,165 +123,6 @@ async function onSessionStart(
     });
   }
 
-  // Infer code areas from modified files
-  const codeAreas = context.modifiedFiles
-    ? inferCodeAreasFromFiles(context.modifiedFiles)
-    : [];
-  const primaryCodeArea = codeAreas[0];
-
-  // Query learnings based on available context
-  try {
-    // Query by issue number if available
-    if (issueNumber) {
-      const issueResults = await knowledge.query({
-        issueNumber,
-        limit: MAX_LEARNINGS,
-      });
-      learnings.push(...issueResults);
-    }
-
-    // Query by primary code area if available and we haven't hit limit
-    if (primaryCodeArea && learnings.length < MAX_LEARNINGS) {
-      const areaResults = await knowledge.query({
-        codeArea: primaryCodeArea,
-        limit: MAX_LEARNINGS - learnings.length,
-      });
-      // Dedupe by learning ID
-      for (const result of areaResults) {
-        if (!learnings.some((l) => l.learning.id === result.learning.id)) {
-          learnings.push(result);
-        }
-      }
-    }
-
-    // Query by file paths if available
-    if (context.modifiedFiles && learnings.length < MAX_LEARNINGS) {
-      for (const filePath of context.modifiedFiles.slice(0, 5)) {
-        if (learnings.length >= MAX_LEARNINGS) break;
-
-        const fileResults = await knowledge.query({
-          filePath,
-          limit: 2,
-        });
-        for (const result of fileResults) {
-          if (!learnings.some((l) => l.learning.id === result.learning.id)) {
-            learnings.push(result);
-            if (learnings.length >= MAX_LEARNINGS) break;
-          }
-        }
-      }
-    }
-
-    // Get patterns for code areas
-    for (const area of codeAreas.slice(0, 3)) {
-      const areaPatterns = await knowledge.getPatternsForArea(area);
-      for (const pattern of areaPatterns.slice(0, MAX_PATTERNS_PER_AREA)) {
-        if (!patterns.some((p) => p.id === pattern.id)) {
-          patterns.push(pattern);
-        }
-      }
-    }
-
-    // Get mistakes for modified files
-    if (context.modifiedFiles) {
-      for (const filePath of context.modifiedFiles.slice(0, 5)) {
-        const fileMistakes = await knowledge.getMistakesForFile(filePath);
-        for (const mistake of fileMistakes.slice(0, MAX_MISTAKES_PER_FILE)) {
-          if (!mistakes.some((m) => m.id === mistake.id)) {
-            mistakes.push(mistake);
-          }
-        }
-      }
-    }
-
-    // Get relevant conversation topics using semantic search
-    // Build query text from code areas and branch name for conceptual matching
-    const topicKeywords = [...codeAreas, context.branch].filter(
-      (k): k is string => Boolean(k),
-    );
-
-    if (topicKeywords.length > 0) {
-      // Use semantic search for conceptual matching
-      // This enables "auth validation" to match "credential verification"
-      const queryText = topicKeywords.join(" ");
-      const topicResults = await searchSimilarTopics(queryText, {
-        limit: MAX_TOPICS,
-        threshold: 0.3,
-      });
-      topics.push(...topicResults.map((r) => r.topic));
-    } else {
-      // If no keywords, get most recent topics (fallback to keyword query)
-      const recentTopics = await knowledge.queryTopics({
-        limit: MAX_TOPICS,
-      });
-      topics.push(...recentTopics);
-    }
-
-    // Search for relevant documentation based on multiple context signals:
-    // - Code areas from modified files
-    // - File basenames from modified files
-    // - Issue keywords from title/body (via gh CLI)
-    // - Issue labels (e.g., pkg:claude-knowledge → claude-knowledge)
-    // - Branch name keywords (e.g., feat/issue-476-session-context → session, context)
-
-    // Extract file basenames if modified files exist
-    const fileBasenames = context.modifiedFiles
-      ? context.modifiedFiles.map((f) => {
-          const parts = f.split("/");
-          const filename = parts[parts.length - 1];
-          return filename.replace(/\.[^.]+$/, ""); // Remove extension
-        })
-      : [];
-
-    // Get keywords from issue context if available
-    const issueKeywords = issueContext?.keywords ?? [];
-    const labelKeywords = issueContext?.labels ?? [];
-
-    // Extract keywords from branch name (e.g., feat/issue-476-doc-search → doc, search)
-    const branchKeywords = extractBranchKeywords(context.branch);
-
-    // Combine all search terms
-    const searchTerms = [
-      ...codeAreas,
-      ...fileBasenames,
-      ...issueKeywords,
-      ...labelKeywords,
-      ...branchKeywords,
-    ]
-      .filter((term) => term && term.length > 0)
-      .join(" ");
-
-    // Run doc search if we have any search terms (not just when files are modified)
-    if (searchTerms.length > 0) {
-      try {
-        const docResults = await searchDocs(searchTerms, {
-          limit: 5,
-          threshold: 0.4,
-        });
-        docs.push(...docResults);
-
-        logger.debug("Doc search completed", {
-          searchTerms,
-          resultsCount: docResults.length,
-          context: "onSessionStart",
-        });
-      } catch (error) {
-        // Log but don't fail the session
-        logger.warn("Failed to search documentation", {
-          error: error instanceof Error ? error.message : String(error),
-          context: "onSessionStart",
-        });
-      }
-    }
-  } catch (error) {
-    // Log the error so failures are visible, but allow session to continue
-    logger.error("Failed to load session knowledge", {
-      error,
-      context: "onSessionStart",
-    });
-    // Return empty context to allow session to continue
-  }
-
   // Query workflow state from checkpoint DB if available
   let workflowState: KnowledgeContext["_workflowState"];
   try {
@@ -372,34 +169,28 @@ async function onSessionStart(
 
   // Generate session ID and track metrics for dogfooding
   const sessionId = randomUUID();
-  const learningsInjected =
-    learnings.length +
-    patterns.length +
-    mistakes.length +
-    topics.length +
-    docs.length;
   const startTime = new Date().toISOString();
 
   // Log session start with metrics
   logger.debug("Session started with metrics tracking", {
     sessionId,
-    learningsInjected,
     issueNumber,
-    docsFound: docs.length,
     context: "onSessionStart",
   });
 
   return {
-    learnings,
-    patterns,
-    mistakes,
-    topics,
-    docs,
+    learnings: [],
+    patterns: [],
+    mistakes: [],
+    topics: [],
+    docs: [],
     summary,
     // Include session metadata in result for CLI to capture
+    // learningsInjected is set to 0 here; the actual count comes from
+    // the context builder and is wired in session-commands.ts
     _sessionMetadata: {
       sessionId,
-      learningsInjected,
+      learningsInjected: 0,
       startTime,
       issueNumber,
     },
@@ -407,6 +198,9 @@ async function onSessionStart(
     _workflowState: workflowState,
   };
 }
+
+/** Maximum number of topics to extract per session end */
+const MAX_TOPICS = 5;
 
 /** Confidence level for auto-extracted learnings (lower than manual) */
 const AUTO_EXTRACT_CONFIDENCE = 0.6;
@@ -805,7 +599,7 @@ async function onSessionEnd(
       // Log guidance if graph/search ratio is low
       if (graphSearchRatio !== null && graphSearchRatio < 1.0) {
         logger.info(
-          "Consider using graph tools (graph_find, graph_what_calls) before Grep/Glob for better context efficiency",
+          "Consider using graph tools (defs, callers) before Grep/Glob for better context efficiency",
           { context: "onSessionEnd" },
         );
       }

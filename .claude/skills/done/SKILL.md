@@ -26,10 +26,10 @@ No arguments needed - always operates on the top of the stack.
 
 ## Implementation
 
-Use the `planning_stack_pop` MCP tool:
+Use the `done` MCP tool:
 
 ```typescript
-planning_stack_pop({});
+done({});
 ```
 
 After popping, display:

@@ -19,11 +19,11 @@ describe("Plan CRUD MCP tools", () => {
     await cleanupTestDb(TEST_DB);
   });
 
-  describe("planning_plan_create", () => {
+  describe("plan", () => {
     test("creates plan linked to valid goal", async () => {
       const goal = createGoal({ title: "Test Goal" });
 
-      const response = await handlePlanningToolCall("planning_plan_create", {
+      const response = await handlePlanningToolCall("plan", {
         title: "Test Plan",
         goalId: goal.id,
         sourceType: "milestone",
@@ -40,7 +40,7 @@ describe("Plan CRUD MCP tools", () => {
     });
 
     test("rejects invalid goalId", async () => {
-      const response = await handlePlanningToolCall("planning_plan_create", {
+      const response = await handlePlanningToolCall("plan", {
         title: "Test Plan",
         goalId: "invalid-goal-id",
         sourceType: "milestone",
@@ -54,7 +54,7 @@ describe("Plan CRUD MCP tools", () => {
     test("rejects missing title", async () => {
       const goal = createGoal({ title: "Test Goal" });
 
-      const response = await handlePlanningToolCall("planning_plan_create", {
+      const response = await handlePlanningToolCall("plan", {
         title: "",
         goalId: goal.id,
         sourceType: "milestone",
@@ -68,13 +68,13 @@ describe("Plan CRUD MCP tools", () => {
     test("prevents duplicate plans per goal", async () => {
       const goal = createGoal({ title: "Test Goal" });
 
-      await handlePlanningToolCall("planning_plan_create", {
+      await handlePlanningToolCall("plan", {
         title: "First Plan",
         goalId: goal.id,
         sourceType: "milestone",
       });
 
-      const response = await handlePlanningToolCall("planning_plan_create", {
+      const response = await handlePlanningToolCall("plan", {
         title: "Second Plan",
         goalId: goal.id,
         sourceType: "milestone",
@@ -86,20 +86,17 @@ describe("Plan CRUD MCP tools", () => {
     });
   });
 
-  describe("planning_plan_add_steps", () => {
+  describe("steps", () => {
     test("adds multiple steps with waves and ordinals", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      const response = await handlePlanningToolCall("planning_plan_add_steps", {
+      const response = await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -127,17 +124,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("adds steps with dependencies", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      const response = await handlePlanningToolCall("planning_plan_add_steps", {
+      const response = await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -161,7 +155,7 @@ describe("Plan CRUD MCP tools", () => {
       expect(result.success).toBe(true);
 
       // Verify dependencies by querying the plan
-      const getResponse = await handlePlanningToolCall("planning_plan_get", {
+      const getResponse = await handlePlanningToolCall("planget", {
         goalId: goal.id,
       });
       const planData = JSON.parse(getResponse.content[0].text);
@@ -172,7 +166,7 @@ describe("Plan CRUD MCP tools", () => {
     });
 
     test("rejects invalid planId", async () => {
-      const response = await handlePlanningToolCall("planning_plan_add_steps", {
+      const response = await handlePlanningToolCall("steps", {
         planId: "invalid-plan-id",
         steps: [
           {
@@ -191,17 +185,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("rejects invalid externalRef type", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      const response = await handlePlanningToolCall("planning_plan_add_steps", {
+      const response = await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -220,17 +211,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("rejects dependency on non-existent step", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      const response = await handlePlanningToolCall("planning_plan_add_steps", {
+      const response = await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -249,20 +237,17 @@ describe("Plan CRUD MCP tools", () => {
     });
   });
 
-  describe("planning_plan_get", () => {
+  describe("planget", () => {
     test("returns plan with all steps", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -280,7 +265,7 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall("planning_plan_get", {
+      const response = await handlePlanningToolCall("planget", {
         goalId: goal.id,
       });
 
@@ -293,7 +278,7 @@ describe("Plan CRUD MCP tools", () => {
     });
 
     test("returns error for non-existent goalId", async () => {
-      const response = await handlePlanningToolCall("planning_plan_get", {
+      const response = await handlePlanningToolCall("planget", {
         goalId: "non-existent-goal",
       });
 
@@ -304,17 +289,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("returns plan with dependencies correctly populated", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -333,7 +315,7 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall("planning_plan_get", {
+      const response = await handlePlanningToolCall("planget", {
         goalId: goal.id,
       });
 
@@ -345,20 +327,17 @@ describe("Plan CRUD MCP tools", () => {
     });
   });
 
-  describe("planning_plan_list_steps", () => {
+  describe("plansteps", () => {
     test("returns all steps for planId", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -376,12 +355,9 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall(
-        "planning_plan_list_steps",
-        {
-          planId: plan.id,
-        },
-      );
+      const response = await handlePlanningToolCall("plansteps", {
+        planId: plan.id,
+      });
 
       expect(response.isError).toBeUndefined();
       const result = JSON.parse(response.content[0].text);
@@ -391,17 +367,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("filters by wave number correctly", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -425,13 +398,10 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall(
-        "planning_plan_list_steps",
-        {
-          planId: plan.id,
-          wave: 1,
-        },
-      );
+      const response = await handlePlanningToolCall("plansteps", {
+        planId: plan.id,
+        wave: 1,
+      });
 
       expect(response.isError).toBeUndefined();
       const result = JSON.parse(response.content[0].text);
@@ -441,12 +411,9 @@ describe("Plan CRUD MCP tools", () => {
     });
 
     test("returns error for non-existent planId", async () => {
-      const response = await handlePlanningToolCall(
-        "planning_plan_list_steps",
-        {
-          planId: "non-existent-plan",
-        },
-      );
+      const response = await handlePlanningToolCall("plansteps", {
+        planId: "non-existent-plan",
+      });
 
       expect(response.isError).toBe(true);
       const result = JSON.parse(response.content[0].text);
@@ -455,23 +422,17 @@ describe("Plan CRUD MCP tools", () => {
 
     test("rejects invalid wave number", async () => {
       const goal = createGoal({ title: "Test Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Test Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Test Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
-      const response = await handlePlanningToolCall(
-        "planning_plan_list_steps",
-        {
-          planId: plan.id,
-          wave: -1,
-        },
-      );
+      const response = await handlePlanningToolCall("plansteps", {
+        planId: plan.id,
+        wave: -1,
+      });
 
       expect(response.isError).toBe(true);
       const result = JSON.parse(response.content[0].text);
@@ -479,21 +440,18 @@ describe("Plan CRUD MCP tools", () => {
     });
   });
 
-  describe("planning_stack_status with plan progress", () => {
+  describe("stack with plan progress", () => {
     test("includes progress for active goal with plan", async () => {
       const goal = createGoal({ title: "Milestone Goal" });
-      const planResponse = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Milestone Plan",
-          goalId: goal.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse = await handlePlanningToolCall("plan", {
+        title: "Milestone Plan",
+        goalId: goal.id,
+        sourceType: "milestone",
+      });
       const plan = JSON.parse(planResponse.content[0].text).plan;
 
       // Add 3 steps using manual resolver (no external API calls)
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan.id,
         steps: [
           {
@@ -517,10 +475,7 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall(
-        "planning_stack_status",
-        {},
-      );
+      const response = await handlePlanningToolCall("stack", {});
       expect(response.isError).toBeUndefined();
 
       const result = JSON.parse(response.content[0].text);
@@ -539,10 +494,7 @@ describe("Plan CRUD MCP tools", () => {
     test("handles goal without plan gracefully", async () => {
       createGoal({ title: "Goal without plan" });
 
-      const response = await handlePlanningToolCall(
-        "planning_stack_status",
-        {},
-      );
+      const response = await handlePlanningToolCall("stack", {});
       expect(response.isError).toBeUndefined();
 
       const result = JSON.parse(response.content[0].text);
@@ -552,16 +504,13 @@ describe("Plan CRUD MCP tools", () => {
 
     test("handles empty plan gracefully", async () => {
       const goal = createGoal({ title: "Goal with empty plan" });
-      await handlePlanningToolCall("planning_plan_create", {
+      await handlePlanningToolCall("plan", {
         title: "Empty Plan",
         goalId: goal.id,
         sourceType: "manual",
       });
 
-      const response = await handlePlanningToolCall(
-        "planning_stack_status",
-        {},
-      );
+      const response = await handlePlanningToolCall("stack", {});
       expect(response.isError).toBeUndefined();
 
       const result = JSON.parse(response.content[0].text);
@@ -574,17 +523,14 @@ describe("Plan CRUD MCP tools", () => {
 
     test("only computes progress for active goals", async () => {
       const goal1 = createGoal({ title: "Active Goal" });
-      const planResponse1 = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Plan 1",
-          goalId: goal1.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse1 = await handlePlanningToolCall("plan", {
+        title: "Plan 1",
+        goalId: goal1.id,
+        sourceType: "milestone",
+      });
       const plan1 = JSON.parse(planResponse1.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan1.id,
         steps: [
           {
@@ -598,17 +544,14 @@ describe("Plan CRUD MCP tools", () => {
 
       // Push another goal (pauses the first one)
       const goal2 = createGoal({ title: "Second Goal" });
-      const planResponse2 = await handlePlanningToolCall(
-        "planning_plan_create",
-        {
-          title: "Plan 2",
-          goalId: goal2.id,
-          sourceType: "milestone",
-        },
-      );
+      const planResponse2 = await handlePlanningToolCall("plan", {
+        title: "Plan 2",
+        goalId: goal2.id,
+        sourceType: "milestone",
+      });
       const plan2 = JSON.parse(planResponse2.content[0].text).plan;
 
-      await handlePlanningToolCall("planning_plan_add_steps", {
+      await handlePlanningToolCall("steps", {
         planId: plan2.id,
         steps: [
           {
@@ -620,10 +563,7 @@ describe("Plan CRUD MCP tools", () => {
         ],
       });
 
-      const response = await handlePlanningToolCall(
-        "planning_stack_status",
-        {},
-      );
+      const response = await handlePlanningToolCall("stack", {});
       expect(response.isError).toBeUndefined();
 
       const result = JSON.parse(response.content[0].text);

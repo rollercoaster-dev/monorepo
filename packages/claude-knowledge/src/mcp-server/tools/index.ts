@@ -27,7 +27,7 @@ export const tools: Tool[] = [
 
 /**
  * Tool handler dispatch map.
- * Maps tool name prefixes to their handler functions.
+ * Maps tool names to their handler functions.
  */
 const toolHandlers: Record<
   string,
@@ -36,12 +36,41 @@ const toolHandlers: Record<
     args: Record<string, unknown>,
   ) => Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }>
 > = {
-  knowledge_: handleKnowledgeToolCall,
-  graph_: handleGraphToolCall,
-  checkpoint_: handleCheckpointToolCall,
-  output_: handleOutputToolCall,
-  metrics_: handleMetricsToolCall,
-  planning_: handlePlanningToolCall,
+  // Graph
+  callers: handleGraphToolCall,
+  blast: handleGraphToolCall,
+  defs: handleGraphToolCall,
+  // Planning
+  goal: handlePlanningToolCall,
+  interrupt: handlePlanningToolCall,
+  done: handlePlanningToolCall,
+  stack: handlePlanningToolCall,
+  plan: handlePlanningToolCall,
+  steps: handlePlanningToolCall,
+  planget: handlePlanningToolCall,
+  plansteps: handlePlanningToolCall,
+  // Knowledge
+  recall: handleKnowledgeToolCall,
+  learn: handleKnowledgeToolCall,
+  search: handleKnowledgeToolCall,
+  // Checkpoint (consolidated: wf handles find/create/update)
+  wf: handleCheckpointToolCall,
+  wfnew: handleCheckpointToolCall, // backward compat → wf action=create
+  wfupdate: handleCheckpointToolCall, // backward compat → wf action=update
+  recover: handleCheckpointToolCall,
+  // Output
+  save: handleOutputToolCall,
+  // Metrics (consolidated: metrics handles log/summary/aggregate, taskinfo handles queries)
+  metrics: handleMetricsToolCall,
+  taskinfo: handleMetricsToolCall,
+  mlog: handleMetricsToolCall, // backward compat → metrics action=log
+  mstats: handleMetricsToolCall, // backward compat → metrics action=summary
+  magg: handleMetricsToolCall, // backward compat → metrics action=aggregate
+  snaps: handleMetricsToolCall, // backward compat → taskinfo query=snapshots
+  tasks: handleMetricsToolCall, // backward compat → taskinfo query=metrics
+  tree: handleMetricsToolCall, // backward compat → taskinfo query=tree
+  progress: handleMetricsToolCall, // backward compat → taskinfo query=progress
+  children: handleMetricsToolCall, // backward compat → taskinfo query=children
 };
 
 /**
@@ -55,11 +84,10 @@ export async function handleToolCall(
   name: string,
   args: Record<string, unknown>,
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
-  // Find the handler for this tool based on name prefix
-  for (const [prefix, handler] of Object.entries(toolHandlers)) {
-    if (name.startsWith(prefix)) {
-      return handler(name, args);
-    }
+  // Find the handler for this tool by direct lookup
+  const handler = toolHandlers[name];
+  if (handler) {
+    return handler(name, args);
   }
 
   return {

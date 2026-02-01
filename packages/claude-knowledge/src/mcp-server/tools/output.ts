@@ -1,7 +1,7 @@
 /**
  * Output MCP Tools
  *
- * Provides the output_save tool for the "output-to-files" pattern.
+ * Provides the save tool for the "output-to-files" pattern.
  * Long outputs are saved to files and a summary is returned instead,
  * reducing context window usage while preserving full content.
  */
@@ -21,7 +21,7 @@ const DEFAULT_OUTPUT_DIR = ".claude/output";
  */
 export const outputTools: Tool[] = [
   {
-    name: "output_save",
+    name: "save",
     description:
       "Long outputs (test runs, build logs) consume context window. " +
       "Saving to file and returning a summary preserves the full content " +
@@ -95,7 +95,7 @@ export async function handleOutputToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "output_save": {
+      case "save": {
         const content = args.content as string;
         const filename = args.filename as string;
 
