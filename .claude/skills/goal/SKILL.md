@@ -30,10 +30,10 @@ Push a new goal onto the planning stack. Goals represent high-level work objecti
 
 ## Implementation
 
-Use the `planning_goal_push` MCP tool:
+Use the `goal` MCP tool:
 
 ```typescript
-planning_goal_push({
+goal({
   title: "<title from arguments>",
   issueNumber: <number if provided>
 })

@@ -28,7 +28,7 @@ No arguments needed.
 ### Step 1: Get the enhanced stack
 
 ```typescript
-planning_stack_status({});
+stack({});
 ```
 
 The tool now returns progress data for active Goals with Plans. This includes:
@@ -60,7 +60,7 @@ Next action: Start #123 (step description) — use /plan start 123 or /work-on-i
 
 ```
 1. [Goal] Feature work (active, 1d)
-   ⚠️ No plan — create one with planning_plan_create
+   ⚠️ No plan — create one with plan
 ```
 
 ## Example Output

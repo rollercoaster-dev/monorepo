@@ -22,10 +22,10 @@ Semantic search and structured queries over the knowledge graph containing learn
 
 When the MCP server is available, use native tools:
 
-| Tool              | Purpose                                                    |
-| ----------------- | ---------------------------------------------------------- |
-| `knowledge_query` | Query with filters (codeArea, file, keywords, issueNumber) |
-| `knowledge_store` | Store learnings, patterns, mistakes                        |
+| Tool     | Purpose                                                    |
+| -------- | ---------------------------------------------------------- |
+| `recall` | Query with filters (codeArea, file, keywords, issueNumber) |
+| `learn`  | Store learnings, patterns, mistakes                        |
 
 These tools are automatically available when claude-knowledge MCP server is running.
 

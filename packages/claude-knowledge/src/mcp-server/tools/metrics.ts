@@ -13,7 +13,7 @@ import { metrics } from "../../checkpoint/metrics.js";
  */
 export const metricsTools: Tool[] = [
   {
-    name: "metrics_log_tool_usage",
+    name: "mlog",
     description:
       "Log a tool usage event for metrics tracking. " +
       "Called by PreToolUse hook to track all tool calls. " +
@@ -27,15 +27,14 @@ export const metricsTools: Tool[] = [
         },
         toolName: {
           type: "string",
-          description:
-            "Name of the tool being used (e.g., 'Grep', 'graph_find')",
+          description: "Name of the tool being used (e.g., 'Grep', 'defs')",
         },
       },
       required: ["sessionId", "toolName"],
     },
   },
   {
-    name: "metrics_get_tool_usage",
+    name: "mstats",
     description:
       "Get tool usage summary for a session. " +
       "Returns counts by category and graph/search ratio.",
@@ -51,7 +50,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_tool_usage_aggregate",
+    name: "magg",
     description:
       "Get aggregate tool usage stats across all sessions. " +
       "Useful for analyzing overall tool selection patterns.",
@@ -62,7 +61,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_task_snapshots",
+    name: "snaps",
     description:
       "Get task snapshots for a workflow (or all workflows). " +
       "Returns task state captured at workflow phase boundaries.",
@@ -79,7 +78,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_task_metrics",
+    name: "tasks",
     description:
       "Get aggregated task metrics across all workflows. " +
       "Returns completion rates, duration statistics, and breakdown by phase/workflow.",
@@ -90,7 +89,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_task_tree",
+    name: "tree",
     description:
       "Get hierarchical task tree for a workflow. " +
       "Returns tasks with their children nested and progress aggregated. " +
@@ -108,7 +107,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_task_progress",
+    name: "progress",
     description:
       "Get progress for a specific task, including child task aggregation. " +
       "Returns total, completed, in-progress, pending counts and percentage. " +
@@ -125,7 +124,7 @@ export const metricsTools: Tool[] = [
     },
   },
   {
-    name: "metrics_get_child_tasks",
+    name: "children",
     description:
       "Get child tasks for a parent task. " +
       "Returns the most recent snapshot for each child. " +
@@ -156,7 +155,7 @@ export async function handleMetricsToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "metrics_log_tool_usage": {
+      case "mlog": {
         const sessionId = args.sessionId as string;
         const toolName = args.toolName as string;
 
@@ -201,7 +200,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_tool_usage": {
+      case "mstats": {
         const sessionId = args.sessionId as string;
 
         if (!sessionId) {
@@ -228,7 +227,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_tool_usage_aggregate": {
+      case "magg": {
         const aggregate = metrics.getToolUsageAggregate();
 
         return {
@@ -241,7 +240,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_task_snapshots": {
+      case "snaps": {
         const workflowId = args.workflowId as string | undefined;
         const snapshots = metrics.getTaskSnapshots(workflowId);
 
@@ -255,7 +254,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_task_metrics": {
+      case "tasks": {
         const taskMetrics = metrics.getTaskMetrics();
 
         return {
@@ -268,7 +267,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_task_tree": {
+      case "tree": {
         const workflowId = args.workflowId as string | undefined;
         const tree = metrics.getTaskTree(workflowId);
 
@@ -282,7 +281,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_task_progress": {
+      case "progress": {
         const taskId = args.taskId as string;
 
         if (!taskId) {
@@ -309,7 +308,7 @@ export async function handleMetricsToolCall(
         };
       }
 
-      case "metrics_get_child_tasks": {
+      case "children": {
         const parentTaskId = args.parentTaskId as string;
 
         if (!parentTaskId) {

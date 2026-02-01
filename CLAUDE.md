@@ -50,13 +50,13 @@ Keep solutions simple and focused. Only make changes directly requested.
 
 **Always use graph tools first. Grep/Glob are fallback only.**
 
-| If you're about to...                    | Use this instead     |
-| ---------------------------------------- | -------------------- |
-| Grep for a function/class/type name      | `graph_find`         |
-| Find what calls a function               | `graph_what_calls`   |
-| Understand impact before changing a file | `graph_blast_radius` |
-| Search for a literal string or regex     | Grep (fallback OK)   |
-| Find config files by name                | Glob (fallback OK)   |
+| If you're about to...                    | Use this instead   |
+| ---------------------------------------- | ------------------ |
+| Grep for a function/class/type name      | `defs`             |
+| Find what calls a function               | `callers`          |
+| Understand impact before changing a file | `blast`            |
+| Search for a literal string or regex     | Grep (fallback OK) |
+| Find config files by name                | Glob (fallback OK) |
 
 See [.claude/rules/search-priority.md](.claude/rules/search-priority.md) for examples and detailed guidance.
 

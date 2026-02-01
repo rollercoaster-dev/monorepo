@@ -15,7 +15,7 @@ import type { SearchSimilarOptions } from "../../knowledge/semantic.js";
  */
 export const knowledgeTools: Tool[] = [
   {
-    name: "knowledge_query",
+    name: "recall",
     description:
       "Structured lookup of learnings by code area, file, or issue number. " +
       "When working in a specific area (auth, database, API), learnings tagged to that area contain hard-won insights. " +
@@ -50,7 +50,7 @@ export const knowledgeTools: Tool[] = [
     },
   },
   {
-    name: "knowledge_store",
+    name: "learn",
     description:
       "Learnings captured now persist for future work. Gotchas that cost you time, non-obvious solutions, patterns that worked well - " +
       "these become searchable knowledge. What you learn today helps tomorrow. Capture immediately while context is fresh.",
@@ -84,7 +84,7 @@ export const knowledgeTools: Tool[] = [
     },
   },
   {
-    name: "knowledge_search_similar",
+    name: "search",
     description:
       "You have accumulated learnings from past work. This searches them semantically - " +
       "'auth validation' finds 'credential verification' even without exact words. " +
@@ -130,7 +130,7 @@ export async function handleKnowledgeToolCall(
 ): Promise<{ content: { type: "text"; text: string }[]; isError?: boolean }> {
   try {
     switch (name) {
-      case "knowledge_query": {
+      case "recall": {
         const context: QueryContext = {
           codeArea: args.codeArea as string | undefined,
           filePath: args.filePath as string | undefined,
@@ -196,7 +196,7 @@ export async function handleKnowledgeToolCall(
         };
       }
 
-      case "knowledge_store": {
+      case "learn": {
         const content = args.content as string;
         if (!content) {
           return {
@@ -244,7 +244,7 @@ export async function handleKnowledgeToolCall(
         };
       }
 
-      case "knowledge_search_similar": {
+      case "search": {
         const query = args.query as string;
         if (!query) {
           return {

@@ -21,11 +21,12 @@ Manage workflow state persistence for issue-based development workflows.
 
 When the MCP server is available, use native tools:
 
-| Tool                         | Purpose                                   |
-| ---------------------------- | ----------------------------------------- |
-| `checkpoint_workflow_find`   | Check if workflow exists for an issue     |
-| `checkpoint_workflow_create` | Start tracking a new workflow             |
-| `checkpoint_workflow_update` | Update phase, status, log actions/commits |
+| Tool       | Purpose                                   |
+| ---------- | ----------------------------------------- |
+| `wf`       | Check if workflow exists for an issue     |
+| `wfnew`    | Start tracking a new workflow             |
+| `wfupdate` | Update phase, status, log actions/commits |
+| `recover`  | Rebuild task tree from checkpoint state   |
 
 These tools are automatically available when claude-knowledge MCP server is running.
 
