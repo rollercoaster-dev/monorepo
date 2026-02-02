@@ -41,7 +41,7 @@
 
 ## Phase 3 — Design (depends on Phase 1 + 2)
 
-- [ ] `design/user-flows.md` — Screen-by-screen flows for iteration A (create goal → break into steps → complete → earn badge)
+- [x] `design/user-flows.md` — Screen-by-screen flows for iteration A (create goal → break into steps → complete → earn badge)
 - [ ] `design/design-language.md` — Adapt the monorepo's design language for React Native (Anybody font, color system, spacing, character moments)
 - [ ] `design/nd-themes.md` — How each of the 7 themes translates to React Native's StyleSheet system
 - [ ] `architecture/design-token-system.md` — Shared token source of truth, Style Dictionary transforms, how tokens flow to both Vue and RN
@@ -85,9 +85,9 @@
 | Research | 2 docs | Done |
 | Phase 1 — Foundation | 4 docs | Complete |
 | Phase 2 — Architecture | 3 docs | Complete |
-| Phase 3 — Design | 4 docs | Not started |
+| Phase 3 — Design | 4 docs | 1/4 complete |
 | Phase 4 — Decisions | 2 docs + 4 prototypes | Not started |
-| **Total** | **15 docs + 4 prototypes** | **9/15 docs complete** |
+| **Total** | **15 docs + 4 prototypes** | **10/15 docs complete** |
 
 ---
 
