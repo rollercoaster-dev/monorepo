@@ -1,5 +1,24 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install-dependencies.sh",
+            "timeout": 30000,
+            "description": "Install dependencies (web only, skips on local)"
+          },
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
+            "timeout": 15000,
+            "description": "Load relevant knowledge for session context"
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "matcher": "*",
