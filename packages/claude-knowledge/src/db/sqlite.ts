@@ -784,7 +784,8 @@ function runMigrations(database: Database): void {
  * ```
  */
 export function withDatabase<T>(fn: (db: Database) => T, dbPath?: string): T {
-  const effectivePath = dbPath ?? DEFAULT_DB_PATH;
+  // Use provided path, or singleton's path if initialized, or default
+  const effectivePath = dbPath ?? currentDbPath ?? DEFAULT_DB_PATH;
 
   let database: Database;
   try {
