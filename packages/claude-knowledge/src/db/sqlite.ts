@@ -877,52 +877,6 @@ export function withTimeout<T>(
 }
 
 /**
- * Execute a database operation with retry logic for SQLITE_BUSY errors.
- * Uses exponential backoff between retries.
- *
- * @param operation - The database operation to execute
- * @param maxRetries - Maximum number of retry attempts (default: 3)
- * @param context - Description of the operation for error messages
- * @param baseDelayMs - Base delay between retries in ms (default: 100)
- */
-export async function executeWithRetry<T>(
-  operation: () => T | Promise<T>,
-  maxRetries: number = 3,
-  context: string = "database operation",
-  baseDelayMs: number = 100,
-): Promise<T> {
-  let lastError: Error | undefined;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const result = operation();
-      if (result instanceof Promise) {
-        return await result;
-      }
-      return result;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      // Check if this is a SQLITE_BUSY error (code 5)
-      const isBusyError =
-        lastError.message.includes("SQLITE_BUSY") ||
-        lastError.message.includes("database is locked");
-
-      if (!isBusyError || attempt >= maxRetries) {
-        throw lastError;
-      }
-
-      // Exponential backoff: 100ms, 200ms, 400ms, etc.
-      const delay = baseDelayMs * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  // This should never be reached, but TypeScript needs it
-  throw lastError ?? new Error(`${context} failed after ${maxRetries} retries`);
-}
-
-/**
  * Database health check result.
  */
 export interface DatabaseHealthResult {

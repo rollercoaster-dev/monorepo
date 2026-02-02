@@ -197,7 +197,7 @@ rm -f .claude/execution-state.db-wal .claude/execution-state.db-shm
 
 1. **WAL mode enabled** - Allows concurrent readers without blocking writers
 2. **busy_timeout = 5000ms** - Processes wait up to 5 seconds for locks instead of failing immediately
-3. **Metrics timeout protection** - Non-critical operations (tool usage logging) timeout after 3 seconds and skip silently
+3. **Metrics timeout protection** - Non-critical operations (tool usage logging) timeout after 3 seconds and log a warning to stderr
 4. **Error visibility** - Lock contention errors are logged to stderr for debugging
 
 ## Development

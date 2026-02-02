@@ -374,19 +374,23 @@ function setPhase(
     );
   }
 
-  // Log task snapshot if provided
+  // Log task snapshot if provided (fire-and-forget, non-critical)
   if (taskSnapshot) {
     // Lazy import to avoid circular dependency with metrics.ts
-
     const { metrics } = require("./metrics.js");
-    metrics.logTaskSnapshot(
-      workflowId,
-      phase,
-      taskSnapshot.taskId,
-      taskSnapshot.taskSubject,
-      taskSnapshot.taskStatus,
-      taskSnapshot.taskMetadata,
-    );
+    // void operator makes async fire-and-forget intent explicit
+    void metrics
+      .logTaskSnapshot(
+        workflowId,
+        phase,
+        taskSnapshot.taskId,
+        taskSnapshot.taskSubject,
+        taskSnapshot.taskStatus,
+        taskSnapshot.taskMetadata,
+      )
+      .catch(() => {
+        // Silently ignore - task snapshots are non-critical metrics
+      });
   }
 }
 
