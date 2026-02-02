@@ -1,4 +1,4 @@
-import { getDatabase } from "../db/sqlite";
+import { withDatabase } from "../db/sqlite";
 import type { Learning, Pattern, Mistake, Topic } from "../types";
 import { randomUUID } from "crypto";
 // Buffer import needed for ESLint - it's also global in Bun runtime
@@ -65,82 +65,82 @@ export async function store(learnings: Learning[]): Promise<void> {
     return;
   }
 
-  const db = getDatabase();
-
-  // Generate embeddings before starting transaction (async operations)
+  // Generate embeddings before database operation (async)
   const embeddings = await Promise.all(
     learnings.map((learning) => generateEmbedding(learning.content)),
   );
 
-  // Use transaction for batch insert efficiency and atomicity
-  withTransaction(
-    db,
-    () => {
-      for (let i = 0; i < learnings.length; i++) {
-        const learning = learnings[i];
-        const embedding = embeddings[i];
+  // Database operation with automatic connection management
+  withDatabase((db) => {
+    withTransaction(
+      db,
+      () => {
+        for (let i = 0; i < learnings.length; i++) {
+          const learning = learnings[i];
+          const embedding = embeddings[i];
 
-        // Ensure learning has an ID
-        const learningId = learning.id || `learning-${randomUUID()}`;
+          // Ensure learning has an ID
+          const learningId = learning.id || `learning-${randomUUID()}`;
 
-        // Check for duplicate content via hash
-        const contentHash = hashContent(learning.content);
-        const duplicate = db
-          .query<
-            { id: string },
-            [string]
-          >("SELECT id FROM entities WHERE type = 'Learning' AND content_hash = ?")
-          .get(contentHash);
+          // Check for duplicate content via hash
+          const contentHash = hashContent(learning.content);
+          const duplicate = db
+            .query<
+              { id: string },
+              [string]
+            >("SELECT id FROM entities WHERE type = 'Learning' AND content_hash = ?")
+            .get(contentHash);
 
-        if (duplicate) {
-          logger.warn("Duplicate learning detected, skipping", {
-            newId: learningId,
-            existingId: duplicate.id,
+          if (duplicate) {
+            logger.warn("Duplicate learning detected, skipping", {
+              newId: learningId,
+              existingId: duplicate.id,
+              contentHash,
+              context: "knowledge.store",
+            });
+            continue;
+          }
+
+          // Create Learning entity with embedding and content hash
+          createOrMergeEntity(
+            db,
+            "Learning",
+            learningId,
+            {
+              ...learning,
+              id: learningId,
+            },
+            embedding,
             contentHash,
-            context: "knowledge.store",
-          });
-          continue;
+          );
+
+          // Auto-create/merge CodeArea entity if specified
+          if (learning.codeArea) {
+            const codeAreaId = `codearea-${learning.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
+            createOrMergeEntity(db, "CodeArea", codeAreaId, {
+              name: learning.codeArea,
+            });
+
+            // Create ABOUT relationship
+            createRelationship(db, learningId, codeAreaId, "ABOUT");
+          }
+
+          // Auto-create/merge File entity if specified
+          if (learning.filePath) {
+            // Buffer is global in Bun
+            const fileId = `file-${Buffer.from(learning.filePath).toString("base64url")}`;
+            createOrMergeEntity(db, "File", fileId, {
+              path: learning.filePath,
+            });
+
+            // Create IN_FILE relationship
+            createRelationship(db, learningId, fileId, "IN_FILE");
+          }
         }
-
-        // Create Learning entity with embedding and content hash
-        createOrMergeEntity(
-          db,
-          "Learning",
-          learningId,
-          {
-            ...learning,
-            id: learningId,
-          },
-          embedding,
-          contentHash,
-        );
-
-        // Auto-create/merge CodeArea entity if specified
-        if (learning.codeArea) {
-          const codeAreaId = `codearea-${learning.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-          createOrMergeEntity(db, "CodeArea", codeAreaId, {
-            name: learning.codeArea,
-          });
-
-          // Create ABOUT relationship
-          createRelationship(db, learningId, codeAreaId, "ABOUT");
-        }
-
-        // Auto-create/merge File entity if specified
-        if (learning.filePath) {
-          // Buffer is global in Bun
-          const fileId = `file-${Buffer.from(learning.filePath).toString("base64url")}`;
-          createOrMergeEntity(db, "File", fileId, {
-            path: learning.filePath,
-          });
-
-          // Create IN_FILE relationship
-          createRelationship(db, learningId, fileId, "IN_FILE");
-        }
-      }
-    },
-    "knowledge.store",
-  );
+      },
+      "knowledge.store",
+    );
+  });
 }
 
 /**
@@ -158,63 +158,66 @@ export async function storePattern(
   pattern: Pattern,
   learningIds?: string[],
 ): Promise<void> {
-  const db = getDatabase();
-
-  // Generate embedding from pattern name and description
+  // Generate embedding from pattern name and description (async)
   const textToEmbed = [pattern.name, pattern.description]
     .filter(Boolean)
     .join(" ");
   const embedding = await generateEmbedding(textToEmbed);
 
-  withTransaction(
-    db,
-    () => {
-      // Ensure pattern has an ID
-      const patternId = pattern.id || `pattern-${randomUUID()}`;
+  // Database operation with automatic connection management
+  withDatabase((db) => {
+    withTransaction(
+      db,
+      () => {
+        // Ensure pattern has an ID
+        const patternId = pattern.id || `pattern-${randomUUID()}`;
 
-      // Create Pattern entity with embedding
-      createOrMergeEntity(
-        db,
-        "Pattern",
-        patternId,
-        {
-          ...pattern,
-          id: patternId,
-        },
-        embedding,
-      );
+        // Create Pattern entity with embedding
+        createOrMergeEntity(
+          db,
+          "Pattern",
+          patternId,
+          {
+            ...pattern,
+            id: patternId,
+          },
+          embedding,
+        );
 
-      // Link to CodeArea if specified
-      if (pattern.codeArea) {
-        const codeAreaId = `codearea-${pattern.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
-        createOrMergeEntity(db, "CodeArea", codeAreaId, {
-          name: pattern.codeArea,
-        });
+        // Link to CodeArea if specified
+        if (pattern.codeArea) {
+          const codeAreaId = `codearea-${pattern.codeArea.toLowerCase().replace(/\s+/g, "-")}`;
+          createOrMergeEntity(db, "CodeArea", codeAreaId, {
+            name: pattern.codeArea,
+          });
 
-        createRelationship(db, patternId, codeAreaId, "APPLIES_TO");
-      }
-
-      // Link to related learnings (LED_TO: pattern derived from learnings)
-      if (learningIds && learningIds.length > 0) {
-        for (const learningId of learningIds) {
-          // Verify learning exists
-          const exists = db
-            .query<
-              { id: string },
-              [string]
-            >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
-            .get(learningId);
-
-          if (!exists) {
-            throw new Error(`Learning with ID "${learningId}" does not exist`);
-          }
-
-          createRelationship(db, patternId, learningId, "LED_TO");
+          createRelationship(db, patternId, codeAreaId, "APPLIES_TO");
         }
-      }
-    },
-    "knowledge.storePattern",
-  );
+
+        // Link to related learnings (LED_TO: pattern derived from learnings)
+        if (learningIds && learningIds.length > 0) {
+          for (const learningId of learningIds) {
+            // Verify learning exists
+            const exists = db
+              .query<
+                { id: string },
+                [string]
+              >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
+              .get(learningId);
+
+            if (!exists) {
+              throw new Error(
+                `Learning with ID "${learningId}" does not exist`,
+              );
+            }
+
+            createRelationship(db, patternId, learningId, "LED_TO");
+          }
+        }
+      },
+      "knowledge.storePattern",
+    );
+  });
 }
 
 /**
@@ -233,61 +236,62 @@ export async function storeMistake(
   mistake: Mistake,
   learningId?: string,
 ): Promise<void> {
-  const db = getDatabase();
-
-  // Generate embedding from mistake description and how it was fixed
+  // Generate embedding from mistake description and how it was fixed (async)
   const textToEmbed = [mistake.description, mistake.howFixed]
     .filter(Boolean)
     .join(" ");
   const embedding = await generateEmbedding(textToEmbed);
 
-  withTransaction(
-    db,
-    () => {
-      // Ensure mistake has an ID
-      const mistakeId = mistake.id || `mistake-${randomUUID()}`;
+  // Database operation with automatic connection management
+  withDatabase((db) => {
+    withTransaction(
+      db,
+      () => {
+        // Ensure mistake has an ID
+        const mistakeId = mistake.id || `mistake-${randomUUID()}`;
 
-      // Create Mistake entity with embedding
-      createOrMergeEntity(
-        db,
-        "Mistake",
-        mistakeId,
-        {
-          ...mistake,
-          id: mistakeId,
-        },
-        embedding,
-      );
+        // Create Mistake entity with embedding
+        createOrMergeEntity(
+          db,
+          "Mistake",
+          mistakeId,
+          {
+            ...mistake,
+            id: mistakeId,
+          },
+          embedding,
+        );
 
-      // Link to File if specified
-      if (mistake.filePath) {
-        // Buffer is global in Bun
-        const fileId = `file-${Buffer.from(mistake.filePath).toString("base64url")}`;
-        createOrMergeEntity(db, "File", fileId, {
-          path: mistake.filePath,
-        });
+        // Link to File if specified
+        if (mistake.filePath) {
+          // Buffer is global in Bun
+          const fileId = `file-${Buffer.from(mistake.filePath).toString("base64url")}`;
+          createOrMergeEntity(db, "File", fileId, {
+            path: mistake.filePath,
+          });
 
-        createRelationship(db, mistakeId, fileId, "IN_FILE");
-      }
-
-      // Link to learning (LED_TO: mistake led to learning that fixed it)
-      if (learningId) {
-        const exists = db
-          .query<
-            { id: string },
-            [string]
-          >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
-          .get(learningId);
-
-        if (!exists) {
-          throw new Error(`Learning with ID "${learningId}" does not exist`);
+          createRelationship(db, mistakeId, fileId, "IN_FILE");
         }
 
-        createRelationship(db, mistakeId, learningId, "LED_TO");
-      }
-    },
-    "knowledge.storeMistake",
-  );
+        // Link to learning (LED_TO: mistake led to learning that fixed it)
+        if (learningId) {
+          const exists = db
+            .query<
+              { id: string },
+              [string]
+            >("SELECT id FROM entities WHERE id = ? AND type = 'Learning'")
+            .get(learningId);
+
+          if (!exists) {
+            throw new Error(`Learning with ID "${learningId}" does not exist`);
+          }
+
+          createRelationship(db, mistakeId, learningId, "LED_TO");
+        }
+      },
+      "knowledge.storeMistake",
+    );
+  });
 }
 
 /**
@@ -300,12 +304,10 @@ export async function storeMistake(
  * @throws Error if storage fails
  */
 export async function storeTopic(topic: Topic): Promise<void> {
-  const db = getDatabase();
-
   // Normalize topicId at the start for consistent logging and storage
   const topicId = topic.id || `topic-${randomUUID()}`;
 
-  // Generate embedding from topic content and keywords
+  // Generate embedding from topic content and keywords (async)
   const textToEmbed = [topic.content, ...topic.keywords]
     .filter(Boolean)
     .join(" ");
@@ -323,21 +325,24 @@ export async function storeTopic(topic: Topic): Promise<void> {
     );
   }
 
-  withTransaction(
-    db,
-    () => {
-      // Create Topic entity with embedding
-      createOrMergeEntity(
-        db,
-        "Topic",
-        topicId,
-        {
-          ...topic,
-          id: topicId,
-        },
-        embedding,
-      );
-    },
-    "knowledge.storeTopic",
-  );
+  // Database operation with automatic connection management
+  withDatabase((db) => {
+    withTransaction(
+      db,
+      () => {
+        // Create Topic entity with embedding
+        createOrMergeEntity(
+          db,
+          "Topic",
+          topicId,
+          {
+            ...topic,
+            id: topicId,
+          },
+          embedding,
+        );
+      },
+      "knowledge.storeTopic",
+    );
+  });
 }
