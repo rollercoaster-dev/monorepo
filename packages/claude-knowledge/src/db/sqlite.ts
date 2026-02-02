@@ -3,8 +3,46 @@ import { existsSync, statSync } from "fs";
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
+let exitHandlersRegistered = false;
 
 const DEFAULT_DB_PATH = ".claude/execution-state.db";
+
+/**
+ * Register process exit handlers to close any open database connections.
+ * This helps prevent lock contention from orphaned connections when processes
+ * are terminated (e.g., terminal closed without /exit).
+ */
+function registerExitHandlers(): void {
+  if (exitHandlersRegistered) return;
+  exitHandlersRegistered = true;
+
+  const cleanup = () => {
+    if (db) {
+      try {
+        db.close();
+        db = null;
+        currentDbPath = null;
+      } catch {
+        // Ignore errors during cleanup - process is exiting anyway
+      }
+    }
+  };
+
+  // Handle normal exit
+  process.on("exit", cleanup);
+
+  // Handle SIGINT (Ctrl+C)
+  process.on("SIGINT", () => {
+    cleanup();
+    process.exit(130); // Standard exit code for SIGINT
+  });
+
+  // Handle SIGTERM
+  process.on("SIGTERM", () => {
+    cleanup();
+    process.exit(143); // Standard exit code for SIGTERM
+  });
+}
 
 // Embedded schema to avoid runtime file resolution issues
 const SCHEMA = `
@@ -713,7 +751,107 @@ function runMigrations(database: Database): void {
   }
 }
 
+/**
+ * Execute a database operation with automatic connection management.
+ *
+ * Opens a new database connection, executes the callback, and ensures
+ * the connection is closed in a finally block. This prevents connection
+ * leaks and lock contention from orphaned connections.
+ *
+ * **This is the recommended way to access the database.** Unlike `getDatabase()`,
+ * which caches connections forever, `withDatabase` guarantees cleanup even if
+ * the process exits abnormally.
+ *
+ * @param fn - The database operation to execute
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns The result of the callback function
+ *
+ * @example
+ * ```typescript
+ * // Read operation
+ * const results = withDatabase((db) => {
+ *   return db.query("SELECT * FROM entities WHERE type = ?")
+ *     .all("Learning");
+ * });
+ *
+ * // Write operation with transaction
+ * withDatabase((db) => {
+ *   db.transaction(() => {
+ *     db.run("INSERT INTO entities ...");
+ *     db.run("INSERT INTO relationships ...");
+ *   })();
+ * });
+ * ```
+ */
+export function withDatabase<T>(fn: (db: Database) => T, dbPath?: string): T {
+  const effectivePath = dbPath ?? DEFAULT_DB_PATH;
+
+  let database: Database;
+  try {
+    database = new Database(effectivePath, { create: true });
+  } catch (error) {
+    throw new Error(
+      `Failed to create/open database at "${effectivePath}": ${error instanceof Error ? error.message : String(error)}. ` +
+        `Ensure the directory exists and is writable.`,
+    );
+  }
+
+  try {
+    // Enable foreign keys
+    database.run("PRAGMA foreign_keys = ON;");
+
+    // Enable WAL mode for better concurrency
+    database.run("PRAGMA journal_mode = WAL;");
+
+    // Set busy timeout - 5 seconds
+    database.run("PRAGMA busy_timeout = 5000;");
+
+    // Performance optimizations
+    database.run("PRAGMA synchronous = NORMAL;");
+    database.run("PRAGMA cache_size = 10000;");
+    database.run("PRAGMA temp_store = MEMORY;");
+
+    // Run schema initialization
+    for (const statement of SCHEMA.split(";").filter((s) => s.trim())) {
+      database.run(statement);
+    }
+
+    // Run migrations
+    runMigrations(database);
+
+    return fn(database);
+  } catch (error) {
+    // Close on error before re-throwing
+    try {
+      database.close();
+    } catch {
+      // Ignore close errors
+    }
+    throw error;
+  } finally {
+    // Always close the connection
+    try {
+      database.close();
+    } catch {
+      // Ignore close errors - connection may already be closed from catch block
+    }
+  }
+}
+
+/**
+ * Get a cached database connection.
+ *
+ * @deprecated Use `withDatabase()` instead for automatic connection management.
+ * This function caches connections forever, which can cause lock contention
+ * when multiple processes access the database.
+ *
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns The cached Database instance
+ */
 export function getDatabase(dbPath?: string): Database {
+  // Register exit handlers on first access to ensure cleanup
+  registerExitHandlers();
+
   // If database already initialized, return it
   // This allows checkpoint module to work with whatever db was initialized
   if (db) {
