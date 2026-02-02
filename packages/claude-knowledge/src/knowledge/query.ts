@@ -1,4 +1,4 @@
-import { getDatabase } from "../db/sqlite";
+import { withDatabase } from "../db/sqlite";
 import type {
   Learning,
   Pattern,
@@ -36,156 +36,157 @@ interface QueryRow {
  * @returns Array of QueryResult with learnings and related entities
  */
 export async function query(context: QueryContext): Promise<QueryResult[]> {
-  const db = getDatabase();
-  const { codeArea, filePath, keywords, issueNumber, limit = 50 } = context;
+  return withDatabase((db) => {
+    const { codeArea, filePath, keywords, issueNumber, limit = 50 } = context;
 
-  // Build dynamic WHERE conditions and parameters
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
+    // Build dynamic WHERE conditions and parameters
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
 
-  // Base CTE to find target learnings
-  let baseCte = `
-    SELECT DISTINCT e.id, e.data, e.created_at
-    FROM entities e
-  `;
-
-  // Join for code area filter (1-hop)
-  if (codeArea) {
-    baseCte += `
-      JOIN relationships r_ca ON r_ca.from_id = e.id AND r_ca.type = 'ABOUT'
-      JOIN entities ca ON ca.id = r_ca.to_id AND ca.type = 'CodeArea'
+    // Base CTE to find target learnings
+    let baseCte = `
+      SELECT DISTINCT e.id, e.data, e.created_at
+      FROM entities e
     `;
-    conditions.push(`json_extract(ca.data, '$.name') = ?`);
-    params.push(codeArea);
-  }
 
-  // Join for file path filter (1-hop)
-  if (filePath) {
-    baseCte += `
-      JOIN relationships r_f ON r_f.from_id = e.id AND r_f.type = 'IN_FILE'
-      JOIN entities f ON f.id = r_f.to_id AND f.type = 'File'
-    `;
-    conditions.push(`json_extract(f.data, '$.path') = ?`);
-    params.push(filePath);
-  }
-
-  // Base condition: must be a Learning
-  baseCte += ` WHERE e.type = 'Learning'`;
-
-  // Add keyword search conditions
-  if (keywords && keywords.length > 0) {
-    for (const keyword of keywords) {
-      conditions.push(`json_extract(e.data, '$.content') LIKE ? ESCAPE '\\'`);
-      // Escape SQL LIKE special characters to prevent injection
-      const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
-      params.push(`%${escapedKeyword}%`);
-    }
-  }
-
-  // Add issue number filter
-  if (issueNumber !== undefined) {
-    conditions.push(`json_extract(e.data, '$.sourceIssue') = ?`);
-    params.push(issueNumber);
-  }
-
-  // Combine conditions with AND
-  if (conditions.length > 0) {
-    baseCte += ` AND ${conditions.join(" AND ")}`;
-  }
-
-  // Full query with 2-hop traversal for related patterns and mistakes
-  const sql = `
-    WITH target_learnings AS (
-      ${baseCte}
-    ),
-    related_patterns AS (
-      SELECT
-        tl.id as learning_id,
-        GROUP_CONCAT(p.data, '|||') as pattern_data
-      FROM target_learnings tl
-      JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
-      JOIN entities p ON p.id = r.from_id AND p.type = 'Pattern'
-      GROUP BY tl.id
-    ),
-    related_mistakes AS (
-      SELECT
-        tl.id as learning_id,
-        GROUP_CONCAT(m.data, '|||') as mistake_data
-      FROM target_learnings tl
-      JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
-      JOIN entities m ON m.id = r.from_id AND m.type = 'Mistake'
-      GROUP BY tl.id
-    )
-    SELECT
-      tl.id,
-      tl.data,
-      tl.created_at,
-      rp.pattern_data as patterns,
-      rm.mistake_data as mistakes
-    FROM target_learnings tl
-    LEFT JOIN related_patterns rp ON rp.learning_id = tl.id
-    LEFT JOIN related_mistakes rm ON rm.learning_id = tl.id
-    ORDER BY tl.created_at DESC
-    LIMIT ?
-  `;
-
-  params.push(limit);
-
-  const rows = db.query<QueryRow, (string | number)[]>(sql).all(...params);
-
-  // Transform rows to QueryResult, skipping corrupted entries
-  const results: QueryResult[] = [];
-  for (const row of rows) {
-    // Parse learning data - skip entire row if corrupted
-    let learning: Learning;
-    try {
-      learning = JSON.parse(row.data) as Learning;
-    } catch (error) {
-      logger.warn("Skipping corrupted learning data", {
-        id: row.id,
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.query",
-      });
-      continue;
+    // Join for code area filter (1-hop)
+    if (codeArea) {
+      baseCte += `
+        JOIN relationships r_ca ON r_ca.from_id = e.id AND r_ca.type = 'ABOUT'
+        JOIN entities ca ON ca.id = r_ca.to_id AND ca.type = 'CodeArea'
+      `;
+      conditions.push(`json_extract(ca.data, '$.name') = ?`);
+      params.push(codeArea);
     }
 
-    const result: QueryResult = { learning };
+    // Join for file path filter (1-hop)
+    if (filePath) {
+      baseCte += `
+        JOIN relationships r_f ON r_f.from_id = e.id AND r_f.type = 'IN_FILE'
+        JOIN entities f ON f.id = r_f.to_id AND f.type = 'File'
+      `;
+      conditions.push(`json_extract(f.data, '$.path') = ?`);
+      params.push(filePath);
+    }
 
-    // Parse related patterns (separated by |||) - granular error handling
-    if (row.patterns) {
-      try {
-        result.relatedPatterns = row.patterns
-          .split("|||")
-          .map((p) => JSON.parse(p) as Pattern);
-      } catch (error) {
-        logger.warn("Skipping corrupted pattern data for learning", {
-          learningId: row.id,
-          error: error instanceof Error ? error.message : String(error),
-          context: "knowledge.query",
-        });
-        // Continue without patterns - learning is still valid
+    // Base condition: must be a Learning
+    baseCte += ` WHERE e.type = 'Learning'`;
+
+    // Add keyword search conditions
+    if (keywords && keywords.length > 0) {
+      for (const keyword of keywords) {
+        conditions.push(`json_extract(e.data, '$.content') LIKE ? ESCAPE '\\'`);
+        // Escape SQL LIKE special characters to prevent injection
+        const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
+        params.push(`%${escapedKeyword}%`);
       }
     }
 
-    // Parse related mistakes (separated by |||) - granular error handling
-    if (row.mistakes) {
+    // Add issue number filter
+    if (issueNumber !== undefined) {
+      conditions.push(`json_extract(e.data, '$.sourceIssue') = ?`);
+      params.push(issueNumber);
+    }
+
+    // Combine conditions with AND
+    if (conditions.length > 0) {
+      baseCte += ` AND ${conditions.join(" AND ")}`;
+    }
+
+    // Full query with 2-hop traversal for related patterns and mistakes
+    const sql = `
+      WITH target_learnings AS (
+        ${baseCte}
+      ),
+      related_patterns AS (
+        SELECT
+          tl.id as learning_id,
+          GROUP_CONCAT(p.data, char(31)) as pattern_data
+        FROM target_learnings tl
+        JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
+        JOIN entities p ON p.id = r.from_id AND p.type = 'Pattern'
+        GROUP BY tl.id
+      ),
+      related_mistakes AS (
+        SELECT
+          tl.id as learning_id,
+          GROUP_CONCAT(m.data, char(31)) as mistake_data
+        FROM target_learnings tl
+        JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
+        JOIN entities m ON m.id = r.from_id AND m.type = 'Mistake'
+        GROUP BY tl.id
+      )
+      SELECT
+        tl.id,
+        tl.data,
+        tl.created_at,
+        rp.pattern_data as patterns,
+        rm.mistake_data as mistakes
+      FROM target_learnings tl
+      LEFT JOIN related_patterns rp ON rp.learning_id = tl.id
+      LEFT JOIN related_mistakes rm ON rm.learning_id = tl.id
+      ORDER BY tl.created_at DESC
+      LIMIT ?
+    `;
+
+    params.push(limit);
+
+    const rows = db.query<QueryRow, (string | number)[]>(sql).all(...params);
+
+    // Transform rows to QueryResult, skipping corrupted entries
+    const results: QueryResult[] = [];
+    for (const row of rows) {
+      // Parse learning data - skip entire row if corrupted
+      let learning: Learning;
       try {
-        result.relatedMistakes = row.mistakes
-          .split("|||")
-          .map((m) => JSON.parse(m) as Mistake);
+        learning = JSON.parse(row.data) as Learning;
       } catch (error) {
-        logger.warn("Skipping corrupted mistake data for learning", {
-          learningId: row.id,
+        logger.warn("Skipping corrupted learning data", {
+          id: row.id,
           error: error instanceof Error ? error.message : String(error),
           context: "knowledge.query",
         });
-        // Continue without mistakes - learning is still valid
+        continue;
       }
-    }
 
-    results.push(result);
-  }
-  return results;
+      const result: QueryResult = { learning };
+
+      // Parse related patterns (separated by Unit Separator \x1F) - granular error handling
+      if (row.patterns) {
+        try {
+          result.relatedPatterns = row.patterns
+            .split("\x1F")
+            .map((p) => JSON.parse(p) as Pattern);
+        } catch (error) {
+          logger.warn("Skipping corrupted pattern data for learning", {
+            learningId: row.id,
+            error: error instanceof Error ? error.message : String(error),
+            context: "knowledge.query",
+          });
+          // Continue without patterns - learning is still valid
+        }
+      }
+
+      // Parse related mistakes (separated by Unit Separator \x1F) - granular error handling
+      if (row.mistakes) {
+        try {
+          result.relatedMistakes = row.mistakes
+            .split("\x1F")
+            .map((m) => JSON.parse(m) as Mistake);
+        } catch (error) {
+          logger.warn("Skipping corrupted mistake data for learning", {
+            learningId: row.id,
+            error: error instanceof Error ? error.message : String(error),
+            context: "knowledge.query",
+          });
+          // Continue without mistakes - learning is still valid
+        }
+      }
+
+      results.push(result);
+    }
+    return results;
+  });
 }
 
 /**
@@ -197,35 +198,35 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
  * @returns Array of Mistake objects (empty if none found)
  */
 export async function getMistakesForFile(filePath: string): Promise<Mistake[]> {
-  const db = getDatabase();
+  return withDatabase((db) => {
+    const sql = `
+      SELECT m.data
+      FROM entities m
+      JOIN relationships r ON r.from_id = m.id AND r.type = 'IN_FILE'
+      JOIN entities f ON f.id = r.to_id AND f.type = 'File'
+      WHERE m.type = 'Mistake'
+        AND json_extract(f.data, '$.path') = ?
+      ORDER BY m.created_at DESC
+    `;
 
-  const sql = `
-    SELECT m.data
-    FROM entities m
-    JOIN relationships r ON r.from_id = m.id AND r.type = 'IN_FILE'
-    JOIN entities f ON f.id = r.to_id AND f.type = 'File'
-    WHERE m.type = 'Mistake'
-      AND json_extract(f.data, '$.path') = ?
-    ORDER BY m.created_at DESC
-  `;
+    const rows = db.query<{ data: string }, [string]>(sql).all(filePath);
 
-  const rows = db.query<{ data: string }, [string]>(sql).all(filePath);
-
-  // Transform rows to Mistake objects, skipping corrupted entries
-  const mistakes: Mistake[] = [];
-  for (const row of rows) {
-    try {
-      mistakes.push(JSON.parse(row.data) as Mistake);
-    } catch (error) {
-      logger.warn("Skipping corrupted mistake data", {
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.getMistakesForFile",
-        filePath,
-      });
-      // Continue with other rows - don't let one corrupted row break everything
+    // Transform rows to Mistake objects, skipping corrupted entries
+    const mistakes: Mistake[] = [];
+    for (const row of rows) {
+      try {
+        mistakes.push(JSON.parse(row.data) as Mistake);
+      } catch (error) {
+        logger.warn("Skipping corrupted mistake data", {
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.getMistakesForFile",
+          filePath,
+        });
+        // Continue with other rows - don't let one corrupted row break everything
+      }
     }
-  }
-  return mistakes;
+    return mistakes;
+  });
 }
 
 /**
@@ -237,35 +238,35 @@ export async function getMistakesForFile(filePath: string): Promise<Mistake[]> {
  * @returns Array of Pattern objects (empty if none found)
  */
 export async function getPatternsForArea(codeArea: string): Promise<Pattern[]> {
-  const db = getDatabase();
+  return withDatabase((db) => {
+    const sql = `
+      SELECT p.data
+      FROM entities p
+      JOIN relationships r ON r.from_id = p.id AND r.type = 'APPLIES_TO'
+      JOIN entities ca ON ca.id = r.to_id AND ca.type = 'CodeArea'
+      WHERE p.type = 'Pattern'
+        AND json_extract(ca.data, '$.name') = ?
+      ORDER BY p.created_at DESC
+    `;
 
-  const sql = `
-    SELECT p.data
-    FROM entities p
-    JOIN relationships r ON r.from_id = p.id AND r.type = 'APPLIES_TO'
-    JOIN entities ca ON ca.id = r.to_id AND ca.type = 'CodeArea'
-    WHERE p.type = 'Pattern'
-      AND json_extract(ca.data, '$.name') = ?
-    ORDER BY p.created_at DESC
-  `;
+    const rows = db.query<{ data: string }, [string]>(sql).all(codeArea);
 
-  const rows = db.query<{ data: string }, [string]>(sql).all(codeArea);
-
-  // Transform rows to Pattern objects, skipping corrupted entries
-  const patterns: Pattern[] = [];
-  for (const row of rows) {
-    try {
-      patterns.push(JSON.parse(row.data) as Pattern);
-    } catch (error) {
-      logger.warn("Skipping corrupted pattern data", {
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.getPatternsForArea",
-        codeArea,
-      });
-      // Continue with other rows - don't let one corrupted row break everything
+    // Transform rows to Pattern objects, skipping corrupted entries
+    const patterns: Pattern[] = [];
+    for (const row of rows) {
+      try {
+        patterns.push(JSON.parse(row.data) as Pattern);
+      } catch (error) {
+        logger.warn("Skipping corrupted pattern data", {
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.getPatternsForArea",
+          codeArea,
+        });
+        // Continue with other rows - don't let one corrupted row break everything
+      }
     }
-  }
-  return patterns;
+    return patterns;
+  });
 }
 
 /**
@@ -290,68 +291,58 @@ export interface TopicQueryContext {
 export async function queryTopics(
   context: TopicQueryContext = {},
 ): Promise<Topic[]> {
-  const db = getDatabase();
-  const { keywords, limit = 10 } = context;
+  return withDatabase((db) => {
+    const { keywords, limit = 10 } = context;
 
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
+    const conditions: string[] = [];
+    const params: (string | number)[] = [];
 
-  let sql = `
-    SELECT data, created_at
-    FROM entities
-    WHERE type = 'Topic'
-  `;
+    let sql = `
+      SELECT data, created_at
+      FROM entities
+      WHERE type = 'Topic'
+    `;
 
-  // Add keyword search conditions (OR logic - match ANY keyword)
-  if (keywords && keywords.length > 0) {
-    const keywordConditions: string[] = [];
-    for (const keyword of keywords) {
-      // Search in both content and keywords array
-      const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
-      keywordConditions.push(
-        `(json_extract(data, '$.content') LIKE ? ESCAPE '\\' OR data LIKE ? ESCAPE '\\')`,
-      );
-      params.push(`%${escapedKeyword}%`, `%${escapedKeyword}%`);
+    // Add keyword search conditions (OR logic - match ANY keyword)
+    if (keywords && keywords.length > 0) {
+      const keywordConditions: string[] = [];
+      for (const keyword of keywords) {
+        // Search in both content and keywords array
+        const escapedKeyword = keyword.replace(/[%_\\]/g, "\\$&");
+        keywordConditions.push(
+          `(json_extract(data, '$.content') LIKE ? ESCAPE '\\' OR data LIKE ? ESCAPE '\\')`,
+        );
+        params.push(`%${escapedKeyword}%`, `%${escapedKeyword}%`);
+      }
+      // Use OR to match topics with ANY of the keywords
+      conditions.push(`(${keywordConditions.join(" OR ")})`);
     }
-    // Use OR to match topics with ANY of the keywords
-    conditions.push(`(${keywordConditions.join(" OR ")})`);
-  }
 
-  if (conditions.length > 0) {
-    sql += ` AND ${conditions.join(" AND ")}`;
-  }
+    if (conditions.length > 0) {
+      sql += ` AND ${conditions.join(" AND ")}`;
+    }
 
-  // Order by topic's timestamp (from JSON data) for correct recency ordering,
-  // falling back to created_at if timestamp is not present
-  sql += ` ORDER BY COALESCE(json_extract(data, '$.timestamp'), created_at) DESC LIMIT ?`;
-  params.push(limit);
+    // Order by topic's timestamp (from JSON data) for correct recency ordering,
+    // falling back to created_at if timestamp is not present
+    sql += ` ORDER BY COALESCE(json_extract(data, '$.timestamp'), created_at) DESC LIMIT ?`;
+    params.push(limit);
 
-  let rows: Array<{ data: string; created_at: string }>;
-  try {
-    rows = db
+    const rows = db
       .query<{ data: string; created_at: string }, (string | number)[]>(sql)
       .all(...params);
-  } catch (error) {
-    logger.error("Database query failed in queryTopics", {
-      error: error instanceof Error ? error.message : String(error),
-      keywords,
-      limit,
-      context: "knowledge.queryTopics",
-    });
-    return [];
-  }
 
-  // Transform rows to Topic objects, skipping corrupted entries
-  const topics: Topic[] = [];
-  for (const row of rows) {
-    try {
-      topics.push(JSON.parse(row.data) as Topic);
-    } catch (error) {
-      logger.warn("Skipping corrupted topic data", {
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.queryTopics",
-      });
+    // Transform rows to Topic objects, skipping corrupted entries
+    const topics: Topic[] = [];
+    for (const row of rows) {
+      try {
+        topics.push(JSON.parse(row.data) as Topic);
+      } catch (error) {
+        logger.warn("Skipping corrupted topic data", {
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.queryTopics",
+        });
+      }
     }
-  }
-  return topics;
+    return topics;
+  });
 }

@@ -3,8 +3,77 @@ import { existsSync, statSync } from "fs";
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
+let exitHandlersRegistered = false;
+let idleCloseTimeout: ReturnType<typeof setTimeout> | null = null;
+
+/** Tracks which database paths have been initialized this session */
+const initializedPaths = new Set<string>();
 
 const DEFAULT_DB_PATH = ".claude/execution-state.db";
+
+/**
+ * Idle timeout in milliseconds before auto-closing the database connection.
+ * 5 seconds allows normal operation bursts while preventing lock contention
+ * from connections held open across process boundaries (orphaned terminals).
+ */
+const IDLE_CLOSE_TIMEOUT_MS = 5000;
+
+/**
+ * Schedule the database connection to close after idle timeout.
+ * Resets the timer on each access, so rapid operations keep the connection open.
+ */
+function scheduleIdleClose(): void {
+  // Clear any existing timeout
+  if (idleCloseTimeout) {
+    clearTimeout(idleCloseTimeout);
+    idleCloseTimeout = null;
+  }
+
+  // Schedule close after idle period
+  idleCloseTimeout = setTimeout(() => {
+    if (db) {
+      try {
+        db.close();
+      } catch {
+        // Ignore close errors
+      }
+      db = null;
+      currentDbPath = null;
+      idleCloseTimeout = null;
+    }
+  }, IDLE_CLOSE_TIMEOUT_MS);
+}
+
+/**
+ * Register process exit handlers to close any open database connections.
+ * This helps prevent lock contention from orphaned connections when processes
+ * are terminated (e.g., terminal closed without /exit).
+ */
+function registerExitHandlers(): void {
+  if (exitHandlersRegistered) return;
+  exitHandlersRegistered = true;
+
+  const cleanup = () => {
+    if (db) {
+      try {
+        db.close();
+        db = null;
+        currentDbPath = null;
+      } catch {
+        // Ignore errors during cleanup - process is exiting anyway
+      }
+    }
+  };
+
+  // Handle normal exit
+  process.on("exit", cleanup);
+
+  // Handle SIGINT (Ctrl+C) - cleanup only, let caller handle exit
+  process.on("SIGINT", cleanup);
+
+  // Handle SIGTERM - cleanup only, let caller handle exit
+  process.on("SIGTERM", cleanup);
+}
 
 // Embedded schema to avoid runtime file resolution issues
 const SCHEMA = `
@@ -713,7 +782,106 @@ function runMigrations(database: Database): void {
   }
 }
 
+/**
+ * Execute a database operation with automatic connection management.
+ *
+ * Opens a new database connection, executes the callback, and ensures
+ * the connection is closed in a finally block. This prevents connection
+ * leaks and lock contention from orphaned connections.
+ *
+ * **This is the recommended way to access the database.** Unlike `getDatabase()`,
+ * which caches connections forever, `withDatabase` guarantees cleanup even if
+ * the process exits abnormally.
+ *
+ * @param fn - The database operation to execute
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns The result of the callback function
+ *
+ * @example
+ * ```typescript
+ * // Read operation
+ * const results = withDatabase((db) => {
+ *   return db.query("SELECT * FROM entities WHERE type = ?")
+ *     .all("Learning");
+ * });
+ *
+ * // Write operation with transaction
+ * withDatabase((db) => {
+ *   db.transaction(() => {
+ *     db.run("INSERT INTO entities ...");
+ *     db.run("INSERT INTO relationships ...");
+ *   })();
+ * });
+ * ```
+ */
+export function withDatabase<T>(fn: (db: Database) => T, dbPath?: string): T {
+  // Use provided path, or singleton's path if initialized, or default
+  const effectivePath = dbPath ?? currentDbPath ?? DEFAULT_DB_PATH;
+
+  let database: Database;
+  try {
+    database = new Database(effectivePath, { create: true });
+  } catch (error) {
+    throw new Error(
+      `Failed to create/open database at "${effectivePath}": ${error instanceof Error ? error.message : String(error)}. ` +
+        `Ensure the directory exists and is writable.`,
+    );
+  }
+
+  try {
+    // Enable foreign keys
+    database.run("PRAGMA foreign_keys = ON;");
+
+    // Enable WAL mode for better concurrency
+    database.run("PRAGMA journal_mode = WAL;");
+
+    // Set busy timeout - 5 seconds
+    database.run("PRAGMA busy_timeout = 5000;");
+
+    // Performance optimizations
+    database.run("PRAGMA synchronous = NORMAL;");
+    database.run("PRAGMA cache_size = 10000;");
+    database.run("PRAGMA temp_store = MEMORY;");
+
+    // Only run schema/migrations once per path per session
+    if (!initializedPaths.has(effectivePath)) {
+      // Run schema initialization
+      for (const statement of SCHEMA.split(";").filter((s) => s.trim())) {
+        database.run(statement);
+      }
+
+      // Run migrations
+      runMigrations(database);
+
+      // Mark as initialized
+      initializedPaths.add(effectivePath);
+    }
+
+    return fn(database);
+  } finally {
+    // Always close the connection
+    try {
+      database.close();
+    } catch {
+      // Ignore close errors
+    }
+  }
+}
+
+/**
+ * Get a cached database connection.
+ *
+ * @deprecated Use `withDatabase()` instead for automatic connection management.
+ * This function caches connections forever, which can cause lock contention
+ * when multiple processes access the database.
+ *
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns The cached Database instance
+ */
 export function getDatabase(dbPath?: string): Database {
+  // Register exit handlers on first access to ensure cleanup
+  registerExitHandlers();
+
   // If database already initialized, return it
   // This allows checkpoint module to work with whatever db was initialized
   if (db) {
@@ -724,6 +892,8 @@ export function getDatabase(dbPath?: string): Database {
           `Call closeDatabase() first to switch databases.`,
       );
     }
+    // Reset idle timeout on each access
+    scheduleIdleClose();
     return db;
   }
 
@@ -794,10 +964,18 @@ export function getDatabase(dbPath?: string): Database {
     );
   }
 
+  // Schedule auto-close after idle period
+  scheduleIdleClose();
+
   return db;
 }
 
 export function closeDatabase(): void {
+  // Clear any pending idle close timeout
+  if (idleCloseTimeout) {
+    clearTimeout(idleCloseTimeout);
+    idleCloseTimeout = null;
+  }
   if (db) {
     db.close();
     db = null;
@@ -923,12 +1101,13 @@ export function checkDatabaseHealth(dbPath?: string): DatabaseHealthResult {
     // File access errors are non-fatal for health check
   }
 
-  // Test database responsiveness
+  // Test database responsiveness using withDatabase for automatic cleanup
   const startMs = Date.now();
   try {
-    const database = getDatabase(dbPath);
-    // Simple query to test responsiveness
-    database.query<{ result: number }, []>("SELECT 1 as result").get();
+    withDatabase((database) => {
+      // Simple query to test responsiveness
+      database.query<{ result: number }, []>("SELECT 1 as result").get();
+    }, dbPath);
     const responsiveMs = Date.now() - startMs;
 
     return {
