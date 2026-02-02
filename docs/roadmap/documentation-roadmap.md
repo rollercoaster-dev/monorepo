@@ -9,8 +9,8 @@
 
 - [x] `vision/product-vision.md` — What the native app is, how it relates to the monorepo, who it's for, what it's not
 - [x] `vision/user-stories.md` — Adapt Lina, Eva, Malik, Marcus, Sofia stories for the native app context + write new ones specific to goal tracking and skill trees
-- [ ] `vision/design-principles.md` — Codify the principles: ND-first, local-first, game-like progression, data ownership, baby steps
-- [ ] `decisions/ADR-0001-iteration-strategy.md` — Document the A → B → C iteration plan with scope for each
+- [x] `vision/design-principles.md` — Codify the principles: ND-first, local-first, game-like progression, data ownership, baby steps
+- [x] `decisions/ADR-0001-iteration-strategy.md` — Document the A → B → C → D iteration plan with scope for each
 
 ### Open questions to answer in Phase 1
 
@@ -83,11 +83,11 @@
 | Phase | Docs | Status |
 |-------|------|--------|
 | Research | 2 docs | Done |
-| Phase 1 — Foundation | 4 docs | 2/4 complete |
+| Phase 1 — Foundation | 4 docs | Complete |
 | Phase 2 — Architecture | 3 docs | Not started |
 | Phase 3 — Design | 4 docs | Not started |
 | Phase 4 — Decisions | 2 docs + 4 prototypes | Not started |
-| **Total** | **15 docs + 4 prototypes** | **4/15 docs complete** |
+| **Total** | **15 docs + 4 prototypes** | **6/15 docs complete** |
 
 ---
 
