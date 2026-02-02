@@ -26,7 +26,7 @@
 ## Phase 2 — Architecture (depends on Phase 1)
 
 - [x] `architecture/data-model.md` — Define Goals, Plans, Steps, Badges, SkillTree entities and their relationships. Maps learning graph + planning graph concepts to a mobile data model
-- [ ] `architecture/openbadges-core.md` — Plan the extraction from `openbadges-modular-server`. What goes in core vs stays in server. API surface. Migration path.
+- [x] `architecture/openbadges-core.md` — Plan the extraction from `openbadges-modular-server`. What goes in core vs stays in server. API surface. Migration path.
 - [ ] `architecture/local-first-sync.md` — Decide PowerSync vs Evolu (may need prototyping first). Document sync architecture, encryption strategy, self-hosted relay/server setup.
 
 ### Open questions to answer in Phase 2
@@ -84,10 +84,10 @@
 |-------|------|--------|
 | Research | 2 docs | Done |
 | Phase 1 — Foundation | 4 docs | Complete |
-| Phase 2 — Architecture | 3 docs | 1/3 complete |
+| Phase 2 — Architecture | 3 docs | 2/3 complete |
 | Phase 3 — Design | 4 docs | Not started |
 | Phase 4 — Decisions | 2 docs + 4 prototypes | Not started |
-| **Total** | **15 docs + 4 prototypes** | **7/15 docs complete** |
+| **Total** | **15 docs + 4 prototypes** | **8/15 docs complete** |
 
 ---
 
