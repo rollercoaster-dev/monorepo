@@ -1,4 +1,4 @@
-import { getDatabase } from "../db/sqlite";
+import { withDatabase } from "../db/sqlite";
 import type { Learning, Pattern, Mistake, QueryResult, Topic } from "../types";
 // Buffer import needed for ESLint - it's also global in Bun runtime
 import type { Buffer } from "buffer";
@@ -62,9 +62,7 @@ export async function searchSimilar(
 ): Promise<QueryResult[]> {
   const { limit = 10, threshold = 0.3, includeRelated = false } = options;
 
-  const db = getDatabase();
-
-  // Generate query embedding
+  // Generate query embedding BEFORE opening database connection
   const queryEmbedding = await generateEmbedding(queryText);
   if (!queryEmbedding) {
     logger.warn("Failed to generate query embedding, returning empty results", {
@@ -75,124 +73,127 @@ export async function searchSimilar(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch recent learnings with embeddings, capped to MAX_CANDIDATE_ROWS.
-  // The caller's limit is clamped so we never promise more than we fetch.
-  const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
-  const sql = `
-    SELECT id, data, embedding, created_at
-    FROM entities
-    WHERE type = 'Learning' AND embedding IS NOT NULL
-    ORDER BY updated_at DESC
-    LIMIT ${MAX_CANDIDATE_ROWS}
-  `;
+  // Now do all DB operations in a single withDatabase call
+  return withDatabase((db) => {
+    // Fetch recent learnings with embeddings, capped to MAX_CANDIDATE_ROWS.
+    // The caller's limit is clamped so we never promise more than we fetch.
+    const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
+    const sql = `
+      SELECT id, data, embedding, created_at
+      FROM entities
+      WHERE type = 'Learning' AND embedding IS NOT NULL
+      ORDER BY updated_at DESC
+      LIMIT ${MAX_CANDIDATE_ROWS}
+    `;
 
-  const rows = db.query<SearchRow, []>(sql).all();
+    const rows = db.query<SearchRow, []>(sql).all();
 
-  if (rows.length === 0) {
-    logger.info("No learnings with embeddings found", {
-      context: "knowledge.searchSimilar",
-    });
-    return [];
-  }
-
-  // Calculate similarity scores
-  const scored: Array<{ row: SearchRow; similarity: number }> = [];
-
-  for (const row of rows) {
-    if (!row.embedding) continue;
-
-    try {
-      const rowVector = bufferToFloatArray(row.embedding);
-      const similarity = cosineSimilarity(queryVector, rowVector);
-
-      if (similarity >= threshold) {
-        scored.push({ row, similarity });
-      }
-    } catch (error) {
-      logger.warn("Failed to calculate similarity for learning", {
-        id: row.id,
-        error: error instanceof Error ? error.message : String(error),
+    if (rows.length === 0) {
+      logger.info("No learnings with embeddings found", {
         context: "knowledge.searchSimilar",
       });
-      // Continue with other learnings
-    }
-  }
-
-  // Sort by similarity descending
-  scored.sort((a, b) => b.similarity - a.similarity);
-
-  // Take top N (clamped to candidate pool size)
-  const topResults = scored.slice(0, candidateLimit);
-
-  // Build QueryResult array
-  const results: QueryResult[] = [];
-
-  for (const { row, similarity } of topResults) {
-    let learning: Learning;
-    try {
-      learning = JSON.parse(row.data) as Learning;
-    } catch (error) {
-      logger.warn("Skipping corrupted learning data in semantic search", {
-        id: row.id,
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.searchSimilar",
-      });
-      continue;
+      return [];
     }
 
-    const result: QueryResult = {
-      learning,
-      relevanceScore: similarity,
-    };
+    // Calculate similarity scores
+    const scored: Array<{ row: SearchRow; similarity: number }> = [];
 
-    // Optionally fetch related patterns and mistakes
-    if (includeRelated) {
+    for (const row of rows) {
+      if (!row.embedding) continue;
+
       try {
-        // Fetch related patterns (2-hop: Pattern --LED_TO--> Learning)
-        const patternSql = `
-          SELECT p.data
-          FROM entities p
-          JOIN relationships r ON r.from_id = p.id AND r.type = 'LED_TO'
-          WHERE p.type = 'Pattern' AND r.to_id = ?
-        `;
-        const patterns = db
-          .query<{ data: string }, [string]>(patternSql)
-          .all(row.id);
-        if (patterns.length > 0) {
-          result.relatedPatterns = patterns.map(
-            (p) => JSON.parse(p.data) as Pattern,
-          );
-        }
+        const rowVector = bufferToFloatArray(row.embedding);
+        const similarity = cosineSimilarity(queryVector, rowVector);
 
-        // Fetch related mistakes (2-hop: Mistake --LED_TO--> Learning)
-        const mistakeSql = `
-          SELECT m.data
-          FROM entities m
-          JOIN relationships r ON r.from_id = m.id AND r.type = 'LED_TO'
-          WHERE m.type = 'Mistake' AND r.to_id = ?
-        `;
-        const mistakes = db
-          .query<{ data: string }, [string]>(mistakeSql)
-          .all(row.id);
-        if (mistakes.length > 0) {
-          result.relatedMistakes = mistakes.map(
-            (m) => JSON.parse(m.data) as Mistake,
-          );
+        if (similarity >= threshold) {
+          scored.push({ row, similarity });
         }
       } catch (error) {
-        logger.warn("Failed to fetch related entities for learning", {
-          learningId: row.id,
+        logger.warn("Failed to calculate similarity for learning", {
+          id: row.id,
           error: error instanceof Error ? error.message : String(error),
           context: "knowledge.searchSimilar",
         });
-        // Continue without related entities
+        // Continue with other learnings
       }
     }
 
-    results.push(result);
-  }
+    // Sort by similarity descending
+    scored.sort((a, b) => b.similarity - a.similarity);
 
-  return results;
+    // Take top N (clamped to candidate pool size)
+    const topResults = scored.slice(0, candidateLimit);
+
+    // Build QueryResult array
+    const results: QueryResult[] = [];
+
+    for (const { row, similarity } of topResults) {
+      let learning: Learning;
+      try {
+        learning = JSON.parse(row.data) as Learning;
+      } catch (error) {
+        logger.warn("Skipping corrupted learning data in semantic search", {
+          id: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.searchSimilar",
+        });
+        continue;
+      }
+
+      const result: QueryResult = {
+        learning,
+        relevanceScore: similarity,
+      };
+
+      // Optionally fetch related patterns and mistakes
+      if (includeRelated) {
+        try {
+          // Fetch related patterns (2-hop: Pattern --LED_TO--> Learning)
+          const patternSql = `
+            SELECT p.data
+            FROM entities p
+            JOIN relationships r ON r.from_id = p.id AND r.type = 'LED_TO'
+            WHERE p.type = 'Pattern' AND r.to_id = ?
+          `;
+          const patterns = db
+            .query<{ data: string }, [string]>(patternSql)
+            .all(row.id);
+          if (patterns.length > 0) {
+            result.relatedPatterns = patterns.map(
+              (p) => JSON.parse(p.data) as Pattern,
+            );
+          }
+
+          // Fetch related mistakes (2-hop: Mistake --LED_TO--> Learning)
+          const mistakeSql = `
+            SELECT m.data
+            FROM entities m
+            JOIN relationships r ON r.from_id = m.id AND r.type = 'LED_TO'
+            WHERE m.type = 'Mistake' AND r.to_id = ?
+          `;
+          const mistakes = db
+            .query<{ data: string }, [string]>(mistakeSql)
+            .all(row.id);
+          if (mistakes.length > 0) {
+            result.relatedMistakes = mistakes.map(
+              (m) => JSON.parse(m.data) as Mistake,
+            );
+          }
+        } catch (error) {
+          logger.warn("Failed to fetch related entities for learning", {
+            learningId: row.id,
+            error: error instanceof Error ? error.message : String(error),
+            context: "knowledge.searchSimilar",
+          });
+          // Continue without related entities
+        }
+      }
+
+      results.push(result);
+    }
+
+    return results;
+  });
 }
 
 /**
@@ -242,9 +243,7 @@ export async function searchSimilarTopics(
     return [];
   }
 
-  const db = getDatabase();
-
-  // Generate query embedding
+  // Generate query embedding BEFORE opening database connection
   const queryEmbedding = await generateEmbedding(queryText);
   if (!queryEmbedding) {
     logger.warn(
@@ -258,78 +257,81 @@ export async function searchSimilarTopics(
   }
   const queryVector = bufferToFloatArray(queryEmbedding);
 
-  // Fetch recent topics with embeddings, capped to MAX_CANDIDATE_ROWS.
-  const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
-  const sql = `
-    SELECT id, data, embedding, created_at
-    FROM entities
-    WHERE type = 'Topic' AND embedding IS NOT NULL
-    ORDER BY updated_at DESC
-    LIMIT ${MAX_CANDIDATE_ROWS}
-  `;
+  // Now do all DB operations in a single withDatabase call
+  return withDatabase((db) => {
+    // Fetch recent topics with embeddings, capped to MAX_CANDIDATE_ROWS.
+    const candidateLimit = Math.min(limit, MAX_CANDIDATE_ROWS);
+    const sql = `
+      SELECT id, data, embedding, created_at
+      FROM entities
+      WHERE type = 'Topic' AND embedding IS NOT NULL
+      ORDER BY updated_at DESC
+      LIMIT ${MAX_CANDIDATE_ROWS}
+    `;
 
-  const rows = db.query<SearchRow, []>(sql).all();
+    const rows = db.query<SearchRow, []>(sql).all();
 
-  if (rows.length === 0) {
-    logger.debug("No topics with embeddings found", {
+    if (rows.length === 0) {
+      logger.debug("No topics with embeddings found", {
+        context: "knowledge.searchSimilarTopics",
+      });
+      return [];
+    }
+
+    // Calculate similarity scores
+    const scored: Array<{ row: SearchRow; similarity: number }> = [];
+
+    for (const row of rows) {
+      if (!row.embedding) continue;
+
+      try {
+        const rowVector = bufferToFloatArray(row.embedding);
+        const similarity = cosineSimilarity(queryVector, rowVector);
+
+        if (similarity >= threshold) {
+          scored.push({ row, similarity });
+        }
+      } catch (error) {
+        logger.warn("Failed to calculate similarity for topic", {
+          id: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.searchSimilarTopics",
+        });
+        // Continue with other topics
+      }
+    }
+
+    // Sort by similarity descending
+    scored.sort((a, b) => b.similarity - a.similarity);
+
+    // Take top N (clamped to candidate pool size)
+    const topResults = scored.slice(0, candidateLimit);
+
+    // Build result array
+    const results: TopicSearchResult[] = [];
+
+    for (const { row, similarity } of topResults) {
+      try {
+        const topic = JSON.parse(row.data) as Topic;
+        results.push({ topic, similarity });
+      } catch (error) {
+        logger.warn("Skipping corrupted topic data in semantic search", {
+          id: row.id,
+          error: error instanceof Error ? error.message : String(error),
+          context: "knowledge.searchSimilarTopics",
+        });
+        continue;
+      }
+    }
+
+    logger.debug("Topic semantic search completed", {
+      query: queryText.slice(0, 50),
+      totalTopics: rows.length,
+      matchingTopics: results.length,
+      topSimilarity: results[0]?.similarity ?? 0,
       context: "knowledge.searchSimilarTopics",
     });
-    return [];
-  }
 
-  // Calculate similarity scores
-  const scored: Array<{ row: SearchRow; similarity: number }> = [];
-
-  for (const row of rows) {
-    if (!row.embedding) continue;
-
-    try {
-      const rowVector = bufferToFloatArray(row.embedding);
-      const similarity = cosineSimilarity(queryVector, rowVector);
-
-      if (similarity >= threshold) {
-        scored.push({ row, similarity });
-      }
-    } catch (error) {
-      logger.warn("Failed to calculate similarity for topic", {
-        id: row.id,
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.searchSimilarTopics",
-      });
-      // Continue with other topics
-    }
-  }
-
-  // Sort by similarity descending
-  scored.sort((a, b) => b.similarity - a.similarity);
-
-  // Take top N (clamped to candidate pool size)
-  const topResults = scored.slice(0, candidateLimit);
-
-  // Build result array
-  const results: TopicSearchResult[] = [];
-
-  for (const { row, similarity } of topResults) {
-    try {
-      const topic = JSON.parse(row.data) as Topic;
-      results.push({ topic, similarity });
-    } catch (error) {
-      logger.warn("Skipping corrupted topic data in semantic search", {
-        id: row.id,
-        error: error instanceof Error ? error.message : String(error),
-        context: "knowledge.searchSimilarTopics",
-      });
-      continue;
-    }
-  }
-
-  logger.debug("Topic semantic search completed", {
-    query: queryText.slice(0, 50),
-    totalTopics: rows.length,
-    matchingTopics: results.length,
-    topSimilarity: results[0]?.similarity ?? 0,
-    context: "knowledge.searchSimilarTopics",
+    return results;
   });
-
-  return results;
 }
