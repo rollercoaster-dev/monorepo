@@ -128,7 +128,7 @@ export async function handleMetricsToolCall(
               };
             }
 
-            metrics.logToolUsage(sessionId, toolName);
+            await metrics.logToolUsage(sessionId, toolName);
 
             return {
               content: [

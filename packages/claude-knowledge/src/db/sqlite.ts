@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { existsSync, statSync } from "fs";
 
 let db: Database | null = null;
 let currentDbPath: string | null = null;
@@ -746,6 +747,11 @@ export function getDatabase(dbPath?: string): Database {
   // This reduces the risk of DB lock issues when multiple processes access the DB
   db.run("PRAGMA journal_mode = WAL;");
 
+  // Set busy timeout before other operations - allows processes to wait for locks
+  // instead of failing immediately. 5 seconds is aggressive enough to catch real
+  // deadlocks while tolerating normal operation delays with WAL mode.
+  db.run("PRAGMA busy_timeout = 5000;");
+
   // Performance optimizations for bulk indexing operations
   // synchronous=NORMAL: trades some durability for significant write speed gain
   // cache_size=10000: ~40MB cache (10000 pages * 4KB default page size)
@@ -802,4 +808,145 @@ export function closeDatabase(): void {
 export function resetDatabase(dbPath: string = DEFAULT_DB_PATH): Database {
   closeDatabase();
   return getDatabase(dbPath);
+}
+
+/**
+ * Custom error for timeout operations
+ */
+export class DatabaseTimeoutError extends Error {
+  constructor(
+    message: string,
+    public readonly context: string,
+    public readonly timeoutMs: number,
+  ) {
+    super(message);
+    this.name = "DatabaseTimeoutError";
+  }
+}
+
+/**
+ * Execute a database operation with a timeout.
+ * Returns the result if the operation completes within the timeout.
+ * Throws DatabaseTimeoutError if the operation exceeds the timeout.
+ *
+ * Note: This uses Promise.race with setTimeout. For synchronous SQLite operations,
+ * this will still block the event loop, but provides a way to set an upper bound
+ * on how long callers will wait before giving up.
+ *
+ * @param operation - The database operation to execute
+ * @param timeoutMs - Maximum time to wait in milliseconds
+ * @param context - Description of the operation for error messages
+ */
+export function withTimeout<T>(
+  operation: () => T | Promise<T>,
+  timeoutMs: number,
+  context: string,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(
+        new DatabaseTimeoutError(
+          `Database operation timed out after ${timeoutMs}ms: ${context}`,
+          context,
+          timeoutMs,
+        ),
+      );
+    }, timeoutMs);
+
+    try {
+      const result = operation();
+      if (result instanceof Promise) {
+        result
+          .then((value) => {
+            clearTimeout(timeoutId);
+            resolve(value);
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId);
+            reject(error);
+          });
+      } else {
+        clearTimeout(timeoutId);
+        resolve(result);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Database health check result.
+ */
+export interface DatabaseHealthResult {
+  healthy: boolean;
+  responsiveMs: number;
+  walSizeKb: number;
+  shmSizeKb: number;
+  dbSizeKb: number;
+  error?: string;
+}
+
+/**
+ * Check database health by verifying responsiveness and WAL file sizes.
+ *
+ * This function helps diagnose lock contention issues by:
+ * - Testing if the database responds to a simple query within 1 second
+ * - Reporting WAL and SHM file sizes (large WAL indicates checkpoint issues)
+ * - Reporting total database size
+ *
+ * @param dbPath - Optional custom database path (uses default if not provided)
+ * @returns Health check result with timing and file size information
+ */
+export function checkDatabaseHealth(dbPath?: string): DatabaseHealthResult {
+  const effectivePath = dbPath ?? DEFAULT_DB_PATH;
+  const walPath = `${effectivePath}-wal`;
+  const shmPath = `${effectivePath}-shm`;
+
+  // Check file sizes
+  let dbSizeKb = 0;
+  let walSizeKb = 0;
+  let shmSizeKb = 0;
+
+  try {
+    if (existsSync(effectivePath)) {
+      dbSizeKb = Math.round(statSync(effectivePath).size / 1024);
+    }
+    if (existsSync(walPath)) {
+      walSizeKb = Math.round(statSync(walPath).size / 1024);
+    }
+    if (existsSync(shmPath)) {
+      shmSizeKb = Math.round(statSync(shmPath).size / 1024);
+    }
+  } catch {
+    // File access errors are non-fatal for health check
+  }
+
+  // Test database responsiveness
+  const startMs = Date.now();
+  try {
+    const database = getDatabase(dbPath);
+    // Simple query to test responsiveness
+    database.query<{ result: number }, []>("SELECT 1 as result").get();
+    const responsiveMs = Date.now() - startMs;
+
+    return {
+      healthy: responsiveMs < 1000, // Healthy if responds within 1 second
+      responsiveMs,
+      walSizeKb,
+      shmSizeKb,
+      dbSizeKb,
+    };
+  } catch (error) {
+    const responsiveMs = Date.now() - startMs;
+    return {
+      healthy: false,
+      responsiveMs,
+      walSizeKb,
+      shmSizeKb,
+      dbSizeKb,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }

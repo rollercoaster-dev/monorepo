@@ -1,4 +1,25 @@
-import { getDatabase } from "../db/sqlite";
+import { getDatabase, withTimeout, DatabaseTimeoutError } from "../db/sqlite";
+
+/**
+ * Timeout for metrics operations in milliseconds.
+ * Metrics are non-critical - if they can't complete in 3 seconds,
+ * we skip them rather than blocking Claude Code.
+ */
+const METRICS_TIMEOUT_MS = 3000;
+
+/**
+ * Log a metrics timeout warning to stderr.
+ * Makes lock contention visible for debugging without blocking operation.
+ */
+function logMetricsTimeout(operation: string, error: unknown): void {
+  const timestamp = new Date().toISOString();
+  const message =
+    error instanceof DatabaseTimeoutError
+      ? `[${timestamp}] WARN: Metrics operation "${operation}" timed out after ${error.timeoutMs}ms - skipping (non-critical)`
+      : `[${timestamp}] WARN: Metrics operation "${operation}" failed: ${error instanceof Error ? error.message : String(error)} - skipping (non-critical)`;
+  console.error(message);
+}
+
 import type {
   ContextMetrics,
   GraphQueryMetrics,
@@ -287,8 +308,10 @@ function determineQuerySource(): string {
 /**
  * Log a graph query execution for baseline metrics tracking.
  * Called automatically by instrumented graph CLI commands.
+ *
+ * Wrapped with timeout protection - metrics are non-critical.
  */
-function logGraphQuery(params: {
+async function logGraphQuery(params: {
   source: string;
   sessionId?: string;
   workflowId?: string;
@@ -296,27 +319,37 @@ function logGraphQuery(params: {
   queryParams: string;
   resultCount: number;
   durationMs: number;
-}): void {
-  const db = getDatabase();
-
-  db.run(
-    `
-    INSERT INTO graph_queries (
-      source, session_id, workflow_id, query_type, query_params,
-      result_count, duration_ms, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      params.source,
-      params.sessionId ?? null,
-      params.workflowId ?? null,
-      params.queryType,
-      params.queryParams,
-      params.resultCount,
-      params.durationMs,
-      new Date().toISOString(),
-    ],
-  );
+}): Promise<void> {
+  try {
+    await withTimeout(
+      () => {
+        const db = getDatabase();
+        db.run(
+          `
+          INSERT INTO graph_queries (
+            source, session_id, workflow_id, query_type, query_params,
+            result_count, duration_ms, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            params.source,
+            params.sessionId ?? null,
+            params.workflowId ?? null,
+            params.queryType,
+            params.queryParams,
+            params.resultCount,
+            params.durationMs,
+            new Date().toISOString(),
+          ],
+        );
+      },
+      METRICS_TIMEOUT_MS,
+      "logGraphQuery",
+    );
+  } catch (error) {
+    logMetricsTimeout("logGraphQuery", error);
+    // Don't rethrow - metrics are non-critical
+  }
 }
 
 /**
@@ -541,20 +574,38 @@ function categorizeToolName(toolName: string): ToolCategory {
  * Log a tool usage event for the current session.
  * Called by PreToolUse hook to track all tool calls.
  *
+ * This operation is wrapped with timeout protection because it runs on every
+ * tool call. If database lock contention occurs, we skip logging rather than
+ * blocking Claude Code. Metrics are non-critical.
+ *
  * @param sessionId - The session identifier
  * @param toolName - Name of the tool being used
  */
-function logToolUsage(sessionId: string, toolName: string): void {
-  const db = getDatabase();
+async function logToolUsage(
+  sessionId: string,
+  toolName: string,
+): Promise<void> {
   const category = categorizeToolName(toolName);
 
-  db.run(
-    `
-    INSERT INTO tool_usage (session_id, tool_name, tool_category, created_at)
-    VALUES (?, ?, ?, ?)
-    `,
-    [sessionId, toolName, category, new Date().toISOString()],
-  );
+  try {
+    await withTimeout(
+      () => {
+        const db = getDatabase();
+        db.run(
+          `
+          INSERT INTO tool_usage (session_id, tool_name, tool_category, created_at)
+          VALUES (?, ?, ?, ?)
+          `,
+          [sessionId, toolName, category, new Date().toISOString()],
+        );
+      },
+      METRICS_TIMEOUT_MS,
+      "logToolUsage",
+    );
+  } catch (error) {
+    logMetricsTimeout("logToolUsage", error);
+    // Don't rethrow - metrics are non-critical
+  }
 }
 
 /**
@@ -727,6 +778,8 @@ function getToolUsageAggregate(): {
  * Log a task snapshot at a workflow phase boundary.
  * Captures task state for metrics tracking.
  *
+ * Wrapped with timeout protection - metrics are non-critical.
+ *
  * @param workflowId - Workflow ID this snapshot belongs to
  * @param phase - Workflow phase when snapshot was captured
  * @param taskId - Native task system task ID
@@ -735,7 +788,7 @@ function getToolUsageAggregate(): {
  * @param taskMetadata - Optional JSON metadata about the task
  * @param parentTaskId - Optional parent task ID for hierarchical tasks
  */
-function logTaskSnapshot(
+async function logTaskSnapshot(
   workflowId: string,
   phase: string,
   taskId: string,
@@ -743,25 +796,35 @@ function logTaskSnapshot(
   taskStatus: string,
   taskMetadata?: string,
   parentTaskId?: string,
-): void {
-  const db = getDatabase();
-
-  db.run(
-    `
-    INSERT INTO task_snapshots (workflow_id, phase, task_id, task_subject, task_status, task_metadata, parent_task_id, captured_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      workflowId,
-      phase,
-      taskId,
-      taskSubject,
-      taskStatus,
-      taskMetadata ?? null,
-      parentTaskId ?? null,
-      new Date().toISOString(),
-    ],
-  );
+): Promise<void> {
+  try {
+    await withTimeout(
+      () => {
+        const db = getDatabase();
+        db.run(
+          `
+          INSERT INTO task_snapshots (workflow_id, phase, task_id, task_subject, task_status, task_metadata, parent_task_id, captured_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            workflowId,
+            phase,
+            taskId,
+            taskSubject,
+            taskStatus,
+            taskMetadata ?? null,
+            parentTaskId ?? null,
+            new Date().toISOString(),
+          ],
+        );
+      },
+      METRICS_TIMEOUT_MS,
+      "logTaskSnapshot",
+    );
+  } catch (error) {
+    logMetricsTimeout("logTaskSnapshot", error);
+    // Don't rethrow - metrics are non-critical
+  }
 }
 
 /**
@@ -829,17 +892,19 @@ function getChildTasks(parentTaskId: string): TaskSnapshot[] {
   };
 
   // Get the most recent snapshot for each child task
+  // Use MAX(id) instead of MAX(captured_at) to avoid duplicates when
+  // multiple snapshots are inserted within the same millisecond
   const rows = db
     .query<SnapshotRow, [string, string]>(
       `
       SELECT ts.*
       FROM task_snapshots ts
       INNER JOIN (
-        SELECT task_id, MAX(captured_at) as max_captured
+        SELECT task_id, MAX(id) as max_id
         FROM task_snapshots
         WHERE parent_task_id = ?
         GROUP BY task_id
-      ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+      ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
       WHERE ts.parent_task_id = ?
       ORDER BY ts.captured_at DESC
       `,
@@ -970,6 +1035,8 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
   };
 
   // Get the most recent snapshot for each task
+  // Use MAX(id) instead of MAX(captured_at) to avoid duplicates when
+  // multiple snapshots are inserted within the same millisecond
   // Use separate queries for filtered vs unfiltered to avoid fragile SQL construction
   const rows = workflowId
     ? db
@@ -978,11 +1045,11 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
           SELECT ts.*
           FROM task_snapshots ts
           INNER JOIN (
-            SELECT task_id, MAX(captured_at) as max_captured
+            SELECT task_id, MAX(id) as max_id
             FROM task_snapshots
             WHERE workflow_id = ?
             GROUP BY task_id
-          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
           WHERE ts.workflow_id = ?
           ORDER BY ts.captured_at ASC
           `,
@@ -994,10 +1061,10 @@ function getTaskTree(workflowId?: string): TaskTreeNode[] {
           SELECT ts.*
           FROM task_snapshots ts
           INNER JOIN (
-            SELECT task_id, MAX(captured_at) as max_captured
+            SELECT task_id, MAX(id) as max_id
             FROM task_snapshots
             GROUP BY task_id
-          ) latest ON ts.task_id = latest.task_id AND ts.captured_at = latest.max_captured
+          ) latest ON ts.task_id = latest.task_id AND ts.id = latest.max_id
           ORDER BY ts.captured_at ASC
           `,
         )

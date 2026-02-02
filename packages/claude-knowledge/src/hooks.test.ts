@@ -4,32 +4,28 @@ import { knowledge } from "./knowledge";
 import { checkpoint } from "./checkpoint";
 import { resetDatabase, closeDatabase } from "./db/sqlite";
 import { resetDefaultEmbedder } from "./embeddings";
-import { unlinkSync, existsSync } from "fs";
+import { cleanupTestDb } from "./test-utils";
 import { tmpdir } from "os";
 import { join } from "path";
 
 const TEST_DB = join(tmpdir(), "test-hooks.db");
 
 describe("hooks", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset embedder to ensure clean state (other tests may reset it)
     resetDefaultEmbedder();
     // Clean up and reset test database
-    if (existsSync(TEST_DB)) {
-      unlinkSync(TEST_DB);
-    }
+    await cleanupTestDb(TEST_DB);
     resetDatabase(TEST_DB);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Close database after each test
     closeDatabase();
     // Reset embedder to clean up
     resetDefaultEmbedder();
     // Clean up test database file
-    if (existsSync(TEST_DB)) {
-      unlinkSync(TEST_DB);
-    }
+    await cleanupTestDb(TEST_DB);
   });
 
   describe("onSessionStart", () => {

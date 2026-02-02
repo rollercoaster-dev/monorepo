@@ -21,7 +21,7 @@ See [apps/docs/vision/](apps/docs/vision/) for detailed roadmap and principles.
 
 This monorepo uses:
 
-- **Bun 1.3.2** for package management and runtime
+- **Bun 1.3.7** for package management and runtime
 - **Turborepo** for task orchestration and caching
 - **TypeScript project references** for instant type checking
 
@@ -45,7 +45,7 @@ monorepo/
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) >= 1.3.2
+- [Bun](https://bun.sh/) >= 1.3.7
 
 ### Installation
 

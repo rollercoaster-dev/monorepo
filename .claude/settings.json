@@ -1,18 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Glob",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pretooluse-gate.ts",
-            "timeout": 2000,
-            "description": "Log Glob usage metrics"
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "startup",

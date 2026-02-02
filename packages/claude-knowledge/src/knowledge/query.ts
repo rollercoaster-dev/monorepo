@@ -321,7 +321,9 @@ export async function queryTopics(
     sql += ` AND ${conditions.join(" AND ")}`;
   }
 
-  sql += ` ORDER BY created_at DESC LIMIT ?`;
+  // Order by topic's timestamp (from JSON data) for correct recency ordering,
+  // falling back to created_at if timestamp is not present
+  sql += ` ORDER BY COALESCE(json_extract(data, '$.timestamp'), created_at) DESC LIMIT ?`;
   params.push(limit);
 
   let rows: Array<{ data: string; created_at: string }>;

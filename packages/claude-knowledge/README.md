@@ -156,11 +156,49 @@ bun run checkpoint graph what-calls <name>
 # Metrics
 bun run checkpoint metrics list
 bun run checkpoint metrics summary
+
+# Database health
+bun run checkpoint db health
 ```
 
 ## Database Location
 
 All data stored in `.claude/execution-state.db` (gitignored by default).
+
+## Database Troubleshooting
+
+### Lock Contention
+
+If Claude Code freezes during tool usage, it may be due to database lock contention between the MCP server and PreToolUse hooks.
+
+**Check database health:**
+
+```bash
+bun run checkpoint db health
+```
+
+This shows:
+
+- Database responsiveness (healthy if < 1 second)
+- WAL, SHM, and database file sizes
+- Warnings for large WAL files or slow responses
+
+**Quick fix for lock issues:**
+
+```bash
+# Kill any stuck processes
+pkill -f "claude-knowledge"
+
+# Clean up stale lock files
+rm -f .claude/execution-state.db-wal .claude/execution-state.db-shm
+```
+
+### How Lock Contention Is Prevented
+
+1. **WAL mode enabled** - Allows concurrent readers without blocking writers
+2. **busy_timeout = 5000ms** - Processes wait up to 5 seconds for locks instead of failing immediately
+3. **Metrics timeout protection** - Non-critical operations (tool usage logging) timeout after 3 seconds and log a warning to stderr
+4. **Error visibility** - Lock contention errors are logged to stderr for debugging
 
 ## Development
 

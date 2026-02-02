@@ -12,6 +12,7 @@ import { handleGraphCommands } from "./graph-commands";
 import { handleDocsCommands } from "./docs-commands";
 import { handleKnowledgeCommands } from "./knowledge-commands";
 import { handleStatusCommand } from "./status-commands";
+import { handleDbCommands } from "./db-commands";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -86,6 +87,7 @@ if (args.length === 0) {
   console.error("  knowledge list-areas");
   console.error("  knowledge list-files");
   console.error("  knowledge stats");
+  console.error("  db health");
   console.error("  status [--commits <n>] [--issues <n>] [--json]");
   process.exit(1);
 }
@@ -120,6 +122,8 @@ try {
     await handleDocsCommands(command, commandArgs);
   } else if (category === "knowledge") {
     await handleKnowledgeCommands(command, commandArgs);
+  } else if (category === "db") {
+    await handleDbCommands(command, commandArgs);
   } else if (category === "status") {
     // status doesn't use command/commandArgs split the same way
     const allArgs = command ? [command, ...commandArgs] : commandArgs;

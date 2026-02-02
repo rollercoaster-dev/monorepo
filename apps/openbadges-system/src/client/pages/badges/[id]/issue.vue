@@ -155,7 +155,7 @@ const loadBadge = async () => {
   try {
     const badgeData = await getBadgeById(badgeId)
     if (badgeData) {
-      badge.value = badgeData
+      badge.value = badgeData as OB2.BadgeClass
     } else {
       error.value = 'Badge not found'
     }
@@ -217,7 +217,7 @@ const handleIssue = async () => {
     const assertion = await issueBadge(user.value, issueData)
 
     if (assertion) {
-      issuedAssertion.value = assertion
+      issuedAssertion.value = assertion as BadgeAssertion
       successMessage.value = `Badge successfully issued to ${issueForm.value.recipientEmail}`
 
       // Reset form

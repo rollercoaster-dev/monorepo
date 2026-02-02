@@ -2,7 +2,7 @@
   "name": "openbadges-types",
   "version": "3.2.3",
   "type": "module",
-  "packageManager": "bun@1.3.2",
+  "packageManager": "bun@1.3.7",
   "description": "TypeScript type definitions for Open Badges 2.0 and 3.0 specifications",
   "main": "dist/index.js",
   "module": "dist/index.js",

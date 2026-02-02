@@ -6,7 +6,8 @@ import { describe, it, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { handleSessionEnd } from "./session-commands";
 import { resetDatabase, closeDatabase } from "../db/sqlite";
 import { resetDefaultEmbedder } from "../embeddings";
-import { unlinkSync, existsSync, writeFileSync } from "fs";
+import { cleanupTestDb } from "../test-utils";
+import { existsSync, unlinkSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
@@ -17,12 +18,10 @@ describe("handleSessionEnd --dry-run", () => {
   let originalOutput: string[];
   let testDbPath: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     testDbPath = join(tmpdir(), `test-session-commands-${randomUUID()}.db`);
     resetDefaultEmbedder();
-    if (existsSync(testDbPath)) {
-      unlinkSync(testDbPath);
-    }
+    await cleanupTestDb(testDbPath);
     resetDatabase(testDbPath);
 
     // Capture console.log output
@@ -34,12 +33,10 @@ describe("handleSessionEnd --dry-run", () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     closeDatabase();
     resetDefaultEmbedder();
-    if (existsSync(testDbPath)) {
-      unlinkSync(testDbPath);
-    }
+    await cleanupTestDb(testDbPath);
     consoleLogSpy.mockRestore();
   });
 
@@ -94,7 +91,12 @@ describe("handleSessionEnd --dry-run", () => {
   });
 
   it("should show fallback transcript discovery when no start time", async () => {
-    await handleSessionEnd(["--dry-run"]);
+    // Use a nonexistent session-id to prevent matching real session metadata on disk
+    await handleSessionEnd([
+      "--dry-run",
+      "--session-id",
+      "nonexistent-test-session",
+    ]);
 
     const output = originalOutput.join("\n");
     expect(output).toContain("Fallback time range (last 2h):");
@@ -113,7 +115,12 @@ describe("handleSessionEnd --dry-run", () => {
   });
 
   it("should indicate fallback when start time is missing", async () => {
-    await handleSessionEnd(["--dry-run"]);
+    // Use a nonexistent session-id to prevent matching real session metadata on disk
+    await handleSessionEnd([
+      "--dry-run",
+      "--session-id",
+      "nonexistent-test-session",
+    ]);
 
     const output = originalOutput.join("\n");
     expect(output).toContain("Will use fallback time window (last 2 hours)");
