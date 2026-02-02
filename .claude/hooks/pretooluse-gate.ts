@@ -66,11 +66,19 @@ async function main(): Promise<void> {
   const { tool_name } = hookInput;
   const sessionId = getSessionId();
 
-  // Log the tool usage for metrics (non-blocking, fire-and-forget)
+  // Log the tool usage for metrics
+  // logToolUsage has internal timeout protection (3s) and logs errors to stderr
+  // We await it but don't block on errors - metrics are non-critical
   try {
-    metrics.logToolUsage(sessionId, tool_name);
-  } catch {
-    // Non-critical - don't block tool usage if metrics fail
+    await metrics.logToolUsage(sessionId, tool_name);
+  } catch (error) {
+    // Log error to stderr for debugging (visible in Claude Code logs)
+    // This catches any errors not handled by logToolUsage's internal timeout
+    const timestamp = new Date().toISOString();
+    console.error(
+      `[${timestamp}] WARN: PreToolUse hook metrics error for tool="${tool_name}" session="${sessionId}": ${error instanceof Error ? error.message : String(error)}`,
+    );
+    // Don't rethrow - always allow the tool to proceed
   }
 
   // Always allow - we're just observing for metrics

@@ -29,7 +29,7 @@ import { relative } from "path";
 
 /**
  * Log a graph query for metrics tracking.
- * Wrapped in try/catch to ensure logging failures don't break queries.
+ * Fire-and-forget with error handling - logging failures don't break queries.
  */
 function logQuery(
   queryType: string,
@@ -37,8 +37,10 @@ function logQuery(
   resultCount: number,
   durationMs: number,
 ): void {
-  try {
-    metrics.logGraphQuery({
+  // Fire-and-forget: void operator makes async intent explicit
+  // Errors are handled internally by logGraphQuery's timeout protection
+  void metrics
+    .logGraphQuery({
       source: metrics.determineQuerySource(),
       sessionId: process.env.CLAUDE_SESSION_ID,
       workflowId: process.env.WORKFLOW_ID,
@@ -46,13 +48,13 @@ function logQuery(
       queryParams,
       resultCount,
       durationMs,
+    })
+    .catch((error: unknown) => {
+      // Log warning but don't break the query - metrics are non-critical
+      logger.warn(
+        `Failed to log graph query metrics: ${error instanceof Error ? error.message : String(error)}`,
+      );
     });
-  } catch (error) {
-    // Log warning but don't break the query - metrics are non-critical
-    logger.warn(
-      `Failed to log graph query metrics: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
 }
 
 export async function handleGraphCommands(

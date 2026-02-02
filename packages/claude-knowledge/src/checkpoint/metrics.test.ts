@@ -88,8 +88,8 @@ describe("logGraphQuery", () => {
     await cleanupTestDb(TEST_DB);
   });
 
-  test("succeeds without session ID and persists data", () => {
-    metrics.logGraphQuery({
+  test("succeeds without session ID and persists data", async () => {
+    await metrics.logGraphQuery({
       source: "cli",
       queryType: "what-calls",
       queryParams: JSON.stringify({ name: "parsePackage" }),
@@ -105,8 +105,8 @@ describe("logGraphQuery", () => {
     expect(queries[0].durationMs).toBe(42);
   });
 
-  test("succeeds with all optional fields and persists data", () => {
-    metrics.logGraphQuery({
+  test("succeeds with all optional fields and persists data", async () => {
+    await metrics.logGraphQuery({
       source: "agent:atomic-developer",
       sessionId: "test-session-123",
       workflowId: "workflow-456",
@@ -126,8 +126,8 @@ describe("logGraphQuery", () => {
     expect(queries[0].durationMs).toBe(87);
   });
 
-  test("filters by source", () => {
-    metrics.logGraphQuery({
+  test("filters by source", async () => {
+    await metrics.logGraphQuery({
       source: "cli",
       queryType: "what-calls",
       queryParams: JSON.stringify({ name: "foo" }),
@@ -135,7 +135,7 @@ describe("logGraphQuery", () => {
       durationMs: 10,
     });
 
-    metrics.logGraphQuery({
+    await metrics.logGraphQuery({
       source: "agent:test-agent",
       queryType: "find",
       queryParams: JSON.stringify({ name: "bar" }),
@@ -154,8 +154,8 @@ describe("logGraphQuery", () => {
     expect(agentQueries[0].source).toBe("agent:test-agent");
   });
 
-  test("filters by queryType", () => {
-    metrics.logGraphQuery({
+  test("filters by queryType", async () => {
+    await metrics.logGraphQuery({
       source: "cli",
       queryType: "what-calls",
       queryParams: JSON.stringify({ name: "foo" }),
@@ -163,7 +163,7 @@ describe("logGraphQuery", () => {
       durationMs: 10,
     });
 
-    metrics.logGraphQuery({
+    await metrics.logGraphQuery({
       source: "cli",
       queryType: "blast-radius",
       queryParams: JSON.stringify({ file: "test.ts" }),
@@ -198,8 +198,8 @@ describe("getGraphQuerySummary", () => {
     await cleanupTestDb(TEST_DB);
   });
 
-  test("includes queriesBySource in summary", () => {
-    metrics.logGraphQuery({
+  test("includes queriesBySource in summary", async () => {
+    await metrics.logGraphQuery({
       source: "cli",
       queryType: "what-calls",
       queryParams: JSON.stringify({ name: "foo" }),
@@ -207,7 +207,7 @@ describe("getGraphQuerySummary", () => {
       durationMs: 10,
     });
 
-    metrics.logGraphQuery({
+    await metrics.logGraphQuery({
       source: "agent:test-agent",
       queryType: "find",
       queryParams: JSON.stringify({ name: "bar" }),
@@ -250,12 +250,12 @@ describe("Task Hierarchy", () => {
   });
 
   describe("logTaskSnapshot with parentTaskId", () => {
-    test("logs task with parent", () => {
+    test("logs task with parent", async () => {
       // Create workflow first (for foreign key)
       const wf = createTestWorkflow("workflow-1");
 
       // Log parent task first
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "parent-task-1",
@@ -266,7 +266,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Log child task with parent
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-task-1",
@@ -286,11 +286,11 @@ describe("Task Hierarchy", () => {
   });
 
   describe("getChildTasks", () => {
-    test("returns children for a parent task", () => {
+    test("returns children for a parent task", async () => {
       const wf = createTestWorkflow("workflow-2");
 
       // Log parent
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "parent-task-1",
@@ -299,7 +299,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Log children
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-task-1",
@@ -309,7 +309,7 @@ describe("Task Hierarchy", () => {
         "parent-task-1",
       );
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-task-2",
@@ -325,10 +325,10 @@ describe("Task Hierarchy", () => {
       expect(children.map((c) => c.taskId)).toContain("child-task-2");
     });
 
-    test("returns empty array when no children", () => {
+    test("returns empty array when no children", async () => {
       const wf = createTestWorkflow("workflow-3");
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "task-without-children",
@@ -340,11 +340,11 @@ describe("Task Hierarchy", () => {
       expect(children).toHaveLength(0);
     });
 
-    test("returns most recent snapshot for each child", () => {
+    test("returns most recent snapshot for each child", async () => {
       const wf = createTestWorkflow("workflow-4");
 
       // Log parent
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "parent-task-1",
@@ -353,7 +353,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Log child - first snapshot (pending)
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-task-1",
@@ -364,7 +364,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Log child - second snapshot (completed)
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-task-1",
@@ -381,10 +381,10 @@ describe("Task Hierarchy", () => {
   });
 
   describe("getTaskProgress", () => {
-    test("returns progress for leaf task", () => {
+    test("returns progress for leaf task", async () => {
       const wf = createTestWorkflow("workflow-5");
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "leaf-task",
@@ -400,11 +400,11 @@ describe("Task Hierarchy", () => {
       expect(progress.percentage).toBe(100);
     });
 
-    test("aggregates progress from children", () => {
+    test("aggregates progress from children", async () => {
       const wf = createTestWorkflow("workflow-6");
 
       // Parent task
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "parent-task",
@@ -413,7 +413,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Child 1 - completed
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-1",
@@ -424,7 +424,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Child 2 - in progress
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-2",
@@ -435,7 +435,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Child 3 - pending
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-3",
@@ -453,11 +453,11 @@ describe("Task Hierarchy", () => {
       expect(progress.percentage).toBe(33); // 1/3 = 33%
     });
 
-    test("handles nested hierarchy", () => {
+    test("handles nested hierarchy", async () => {
       const wf = createTestWorkflow("workflow-7");
 
       // Root task
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "root",
@@ -466,7 +466,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Middle level
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "middle",
@@ -477,7 +477,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Leaf tasks under middle
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "leaf-1",
@@ -487,7 +487,7 @@ describe("Task Hierarchy", () => {
         "middle",
       );
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "leaf-2",
@@ -512,11 +512,11 @@ describe("Task Hierarchy", () => {
   });
 
   describe("getTaskTree", () => {
-    test("builds tree with root and children", () => {
+    test("builds tree with root and children", async () => {
       const wf = createTestWorkflow("workflow-8");
 
       // Root task
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "root-task",
@@ -525,7 +525,7 @@ describe("Task Hierarchy", () => {
       );
 
       // Children
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-1",
@@ -535,7 +535,7 @@ describe("Task Hierarchy", () => {
         "root-task",
       );
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "child-2",
@@ -553,11 +553,11 @@ describe("Task Hierarchy", () => {
       expect(tree[0].progress.completed).toBe(1);
     });
 
-    test("handles multiple root tasks", () => {
+    test("handles multiple root tasks", async () => {
       const wf = createTestWorkflow("workflow-9");
 
       // Two unrelated root tasks
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "research",
         "root-1",
@@ -565,7 +565,7 @@ describe("Task Hierarchy", () => {
         "completed",
       );
 
-      metrics.logTaskSnapshot(
+      await metrics.logTaskSnapshot(
         wf.id,
         "implement",
         "root-2",
