@@ -7,8 +7,8 @@
 
 ## Phase 1 — Foundation (write first, no dependencies)
 
-- [ ] `vision/product-vision.md` — What the native app is, how it relates to the monorepo, who it's for, what it's not
-- [ ] `vision/user-stories.md` — Adapt Lina, Eva, Malik, Marcus, Sofia stories for the native app context + write new ones specific to goal tracking and skill trees
+- [x] `vision/product-vision.md` — What the native app is, how it relates to the monorepo, who it's for, what it's not
+- [x] `vision/user-stories.md` — Adapt Lina, Eva, Malik, Marcus, Sofia stories for the native app context + write new ones specific to goal tracking and skill trees
 - [ ] `vision/design-principles.md` — Codify the principles: ND-first, local-first, game-like progression, data ownership, baby steps
 - [ ] `decisions/ADR-0001-iteration-strategy.md` — Document the A → B → C iteration plan with scope for each
 
@@ -83,11 +83,11 @@
 | Phase | Docs | Status |
 |-------|------|--------|
 | Research | 2 docs | Done |
-| Phase 1 — Foundation | 4 docs | Not started |
+| Phase 1 — Foundation | 4 docs | 2/4 complete |
 | Phase 2 — Architecture | 3 docs | Not started |
 | Phase 3 — Design | 4 docs | Not started |
 | Phase 4 — Decisions | 2 docs + 4 prototypes | Not started |
-| **Total** | **15 docs + 4 prototypes** | **2/15 docs complete** |
+| **Total** | **15 docs + 4 prototypes** | **4/15 docs complete** |
 
 ---
 
