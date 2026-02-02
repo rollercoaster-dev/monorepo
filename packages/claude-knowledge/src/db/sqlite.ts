@@ -855,20 +855,12 @@ export function withDatabase<T>(fn: (db: Database) => T, dbPath?: string): T {
     runMigrations(database);
 
     return fn(database);
-  } catch (error) {
-    // Close on error before re-throwing
-    try {
-      database.close();
-    } catch {
-      // Ignore close errors
-    }
-    throw error;
   } finally {
     // Always close the connection
     try {
       database.close();
     } catch {
-      // Ignore close errors - connection may already be closed from catch block
+      // Ignore close errors
     }
   }
 }
