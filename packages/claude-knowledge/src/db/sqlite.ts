@@ -68,17 +68,11 @@ function registerExitHandlers(): void {
   // Handle normal exit
   process.on("exit", cleanup);
 
-  // Handle SIGINT (Ctrl+C)
-  process.on("SIGINT", () => {
-    cleanup();
-    process.exit(130); // Standard exit code for SIGINT
-  });
+  // Handle SIGINT (Ctrl+C) - cleanup only, let caller handle exit
+  process.on("SIGINT", cleanup);
 
-  // Handle SIGTERM
-  process.on("SIGTERM", () => {
-    cleanup();
-    process.exit(143); // Standard exit code for SIGTERM
-  });
+  // Handle SIGTERM - cleanup only, let caller handle exit
+  process.on("SIGTERM", cleanup);
 }
 
 // Embedded schema to avoid runtime file resolution issues
@@ -1107,12 +1101,13 @@ export function checkDatabaseHealth(dbPath?: string): DatabaseHealthResult {
     // File access errors are non-fatal for health check
   }
 
-  // Test database responsiveness
+  // Test database responsiveness using withDatabase for automatic cleanup
   const startMs = Date.now();
   try {
-    const database = getDatabase(dbPath);
-    // Simple query to test responsiveness
-    database.query<{ result: number }, []>("SELECT 1 as result").get();
+    withDatabase((database) => {
+      // Simple query to test responsiveness
+      database.query<{ result: number }, []>("SELECT 1 as result").get();
+    }, dbPath);
     const responsiveMs = Date.now() - startMs;
 
     return {

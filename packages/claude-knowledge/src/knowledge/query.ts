@@ -101,7 +101,7 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
       related_patterns AS (
         SELECT
           tl.id as learning_id,
-          GROUP_CONCAT(p.data, '|||') as pattern_data
+          GROUP_CONCAT(p.data, char(31)) as pattern_data
         FROM target_learnings tl
         JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
         JOIN entities p ON p.id = r.from_id AND p.type = 'Pattern'
@@ -110,7 +110,7 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
       related_mistakes AS (
         SELECT
           tl.id as learning_id,
-          GROUP_CONCAT(m.data, '|||') as mistake_data
+          GROUP_CONCAT(m.data, char(31)) as mistake_data
         FROM target_learnings tl
         JOIN relationships r ON r.to_id = tl.id AND r.type = 'LED_TO'
         JOIN entities m ON m.id = r.from_id AND m.type = 'Mistake'
@@ -151,11 +151,11 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
 
       const result: QueryResult = { learning };
 
-      // Parse related patterns (separated by |||) - granular error handling
+      // Parse related patterns (separated by Unit Separator \x1F) - granular error handling
       if (row.patterns) {
         try {
           result.relatedPatterns = row.patterns
-            .split("|||")
+            .split("\x1F")
             .map((p) => JSON.parse(p) as Pattern);
         } catch (error) {
           logger.warn("Skipping corrupted pattern data for learning", {
@@ -167,11 +167,11 @@ export async function query(context: QueryContext): Promise<QueryResult[]> {
         }
       }
 
-      // Parse related mistakes (separated by |||) - granular error handling
+      // Parse related mistakes (separated by Unit Separator \x1F) - granular error handling
       if (row.mistakes) {
         try {
           result.relatedMistakes = row.mistakes
-            .split("|||")
+            .split("\x1F")
             .map((m) => JSON.parse(m) as Mistake);
         } catch (error) {
           logger.warn("Skipping corrupted mistake data for learning", {
@@ -327,20 +327,9 @@ export async function queryTopics(
     sql += ` ORDER BY COALESCE(json_extract(data, '$.timestamp'), created_at) DESC LIMIT ?`;
     params.push(limit);
 
-    let rows: Array<{ data: string; created_at: string }>;
-    try {
-      rows = db
-        .query<{ data: string; created_at: string }, (string | number)[]>(sql)
-        .all(...params);
-    } catch (error) {
-      logger.error("Database query failed in queryTopics", {
-        error: error instanceof Error ? error.message : String(error),
-        keywords,
-        limit,
-        context: "knowledge.queryTopics",
-      });
-      return [];
-    }
+    const rows = db
+      .query<{ data: string; created_at: string }, (string | number)[]>(sql)
+      .all(...params);
 
     // Transform rows to Topic objects, skipping corrupted entries
     const topics: Topic[] = [];
