@@ -15,8 +15,6 @@ Quick assessment of each package's current state, quality, and gaps.
 | openbadges-modular-server | OB API server              | ✓ extensive | ✓ tsc     | ✓ CLAUDE.md, README | Mature          |
 | openbadges-system         | Full-stack Vue+Hono app    | ✓ exists    | ✓ vue-tsc | ✓ CLAUDE.md, README | Functional      |
 | rd-logger                 | Structured logging         | ✓ exists    | ✓ strict  | ✓ CLAUDE.md, README | Published (npm) |
-| claude-knowledge          | Knowledge graph for Claude | ✓ 21 files  | ✓ strict  | ✗ no CLAUDE.md      | Active dev      |
-| claude-workflows          | Workflow automation        | ✓ 1 file    | ✓ strict  | ✗ no docs           | Early stage     |
 | shared-config             | ESLint/TS/Prettier configs | ✗ none      | N/A       | ✓ CLAUDE.md, README | Stable          |
 
 ---
@@ -121,46 +119,6 @@ Quick assessment of each package's current state, quality, and gaps.
 
 ---
 
-### claude-knowledge
-
-**What it does:** Knowledge graph and documentation search for Claude Code. Features: embedding-based search, session hooks, checkpoint system, learning extraction, doc indexing.
-
-**Quality:**
-
-- Tests: ✓ 21 test files covering checkpoint, hooks, knowledge graph, docs, learning
-- Types: ✓ Strict TypeScript
-- Docs: ✓ README (119 lines), ✗ no CLAUDE.md
-
-**Status:** Active development. Core infrastructure for Claude workflows.
-
-**Gaps:**
-
-- Missing CLAUDE.md for package context
-- Session continuity feature (#479)
-- OB spec indexing (#468)
-
----
-
-### claude-workflows
-
-**What it does:** Executable helpers for Claude Code workflow commands and agents. Skills, prompts, and automation scripts.
-
-**Quality:**
-
-- Tests: ✓ 1 test file (minimal coverage)
-- Types: ✓ Strict TypeScript
-- Docs: ✗ No README or CLAUDE.md
-
-**Status:** Early stage, rapid iteration.
-
-**Gaps:**
-
-- Needs more test coverage (only 1 file currently)
-- Needs documentation
-- Tightly coupled to Claude Code patterns
-
----
-
 ### shared-config
 
 **What it does:** Shared ESLint, TypeScript, and Prettier configurations for the monorepo. Base configs that other packages extend.
@@ -191,13 +149,10 @@ Quick assessment of each package's current state, quality, and gaps.
 ### Weaknesses
 
 1. **OB3 migration incomplete** - OB2 is done, OB3 scattered across many issues
-2. **Claude tooling underdocumented** - claude-knowledge and claude-workflows lack CLAUDE.md
-3. **Integration gaps** - rd-logger not integrated in apps
-4. **Test coverage varies** - claude-workflows has minimal tests
+2. **Integration gaps** - rd-logger not integrated in apps
 
 ### Themes Emerging
 
 1. **OB3 Compliance** - Big chunk of work across multiple packages
 2. **Logging Modernization** - rd-logger integration needed
-3. **Claude Tooling** - Active dev but needs stabilization
-4. **Component Library** - Missing pieces for complete badge UI
+3. **Component Library** - Missing pieces for complete badge UI
