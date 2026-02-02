@@ -6,6 +6,9 @@ let currentDbPath: string | null = null;
 let exitHandlersRegistered = false;
 let idleCloseTimeout: ReturnType<typeof setTimeout> | null = null;
 
+/** Tracks which database paths have been initialized this session */
+const initializedPaths = new Set<string>();
+
 const DEFAULT_DB_PATH = ".claude/execution-state.db";
 
 /**
@@ -846,13 +849,19 @@ export function withDatabase<T>(fn: (db: Database) => T, dbPath?: string): T {
     database.run("PRAGMA cache_size = 10000;");
     database.run("PRAGMA temp_store = MEMORY;");
 
-    // Run schema initialization
-    for (const statement of SCHEMA.split(";").filter((s) => s.trim())) {
-      database.run(statement);
-    }
+    // Only run schema/migrations once per path per session
+    if (!initializedPaths.has(effectivePath)) {
+      // Run schema initialization
+      for (const statement of SCHEMA.split(";").filter((s) => s.trim())) {
+        database.run(statement);
+      }
 
-    // Run migrations
-    runMigrations(database);
+      // Run migrations
+      runMigrations(database);
+
+      // Mark as initialized
+      initializedPaths.add(effectivePath);
+    }
 
     return fn(database);
   } finally {
