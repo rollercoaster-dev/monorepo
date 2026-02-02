@@ -4,8 +4,42 @@ import { existsSync, statSync } from "fs";
 let db: Database | null = null;
 let currentDbPath: string | null = null;
 let exitHandlersRegistered = false;
+let idleCloseTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const DEFAULT_DB_PATH = ".claude/execution-state.db";
+
+/**
+ * Idle timeout in milliseconds before auto-closing the database connection.
+ * 5 seconds allows normal operation bursts while preventing lock contention
+ * from connections held open across process boundaries (orphaned terminals).
+ */
+const IDLE_CLOSE_TIMEOUT_MS = 5000;
+
+/**
+ * Schedule the database connection to close after idle timeout.
+ * Resets the timer on each access, so rapid operations keep the connection open.
+ */
+function scheduleIdleClose(): void {
+  // Clear any existing timeout
+  if (idleCloseTimeout) {
+    clearTimeout(idleCloseTimeout);
+    idleCloseTimeout = null;
+  }
+
+  // Schedule close after idle period
+  idleCloseTimeout = setTimeout(() => {
+    if (db) {
+      try {
+        db.close();
+      } catch {
+        // Ignore close errors
+      }
+      db = null;
+      currentDbPath = null;
+      idleCloseTimeout = null;
+    }
+  }, IDLE_CLOSE_TIMEOUT_MS);
+}
 
 /**
  * Register process exit handlers to close any open database connections.
@@ -863,6 +897,8 @@ export function getDatabase(dbPath?: string): Database {
           `Call closeDatabase() first to switch databases.`,
       );
     }
+    // Reset idle timeout on each access
+    scheduleIdleClose();
     return db;
   }
 
@@ -933,10 +969,18 @@ export function getDatabase(dbPath?: string): Database {
     );
   }
 
+  // Schedule auto-close after idle period
+  scheduleIdleClose();
+
   return db;
 }
 
 export function closeDatabase(): void {
+  // Clear any pending idle close timeout
+  if (idleCloseTimeout) {
+    clearTimeout(idleCloseTimeout);
+    idleCloseTimeout = null;
+  }
   if (db) {
     db.close();
     db = null;
