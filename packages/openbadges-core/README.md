@@ -95,7 +95,7 @@ bun test --watch
 
 This package follows a modular structure:
 
-```
+```text
 src/
 ├── baking/        # Badge baking utilities (PNG metadata)
 ├── crypto/        # Cryptographic operations
