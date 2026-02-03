@@ -5,7 +5,7 @@
  * test databases. It uses the postgres-js library to connect to PostgreSQL.
  */
 
-import postgres from "postgres";
+import postgres, { type Sql } from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { logger } from "@utils/logging/logger.service";
 import { SensitiveValue } from "@rollercoaster-dev/rd-logger";
@@ -536,11 +536,14 @@ export async function cleanupTestData(client: postgres.Sql): Promise<void> {
 
     // Wrap the cleanup in a transaction for safety
     await client.begin(async (trx) => {
+      // Cast trx to Sql to satisfy TypeScript (TransactionSql call signature issue)
+      const sql = trx as unknown as Sql;
+
       // Check if user has superuser privileges before setting session_replication_role
       let hasSuperuserPrivileges = false;
       try {
         const [{ rolsuper }] =
-          await trx`SELECT rolsuper FROM pg_roles WHERE rolname = current_user`;
+          await sql`SELECT rolsuper FROM pg_roles WHERE rolname = current_user`;
         hasSuperuserPrivileges = rolsuper;
       } catch (checkError) {
         logger.debug("Could not check superuser privileges", {
@@ -553,7 +556,7 @@ export async function cleanupTestData(client: postgres.Sql): Promise<void> {
 
       // Disable triggers to avoid foreign key constraint issues during cleanup (if superuser)
       if (hasSuperuserPrivileges) {
-        await trx`SET session_replication_role = 'replica';`;
+        await sql`SET session_replication_role = 'replica';`;
       }
 
       // Delete all data from tables in reverse order to handle foreign key constraints
@@ -572,7 +575,7 @@ export async function cleanupTestData(client: postgres.Sql): Promise<void> {
 
       for (const table of tables) {
         try {
-          await trx`DELETE FROM ${trx.unsafe(table)};`;
+          await sql`DELETE FROM ${sql.unsafe(table)};`;
           if (DEBUG_CONNECTION) {
             logger.debug(`Cleaned data from table: ${table}`);
           }
@@ -589,7 +592,7 @@ export async function cleanupTestData(client: postgres.Sql): Promise<void> {
 
       // Re-enable triggers (if superuser)
       if (hasSuperuserPrivileges) {
-        await trx`SET session_replication_role = 'origin';`;
+        await sql`SET session_replication_role = 'origin';`;
       }
     });
 
