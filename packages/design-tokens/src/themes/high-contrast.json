@@ -1,6 +1,6 @@
 {
   "$name": "high-contrast",
-  "$description": "High contrast theme - WCAG AAA compliance with pure black/white",
+  "$description": "High contrast theme - strong black/white contrast with pure colors",
   "theme": {
     "surface": {
       "background": { "$value": "#ffffff" },

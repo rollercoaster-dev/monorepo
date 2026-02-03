@@ -3,7 +3,8 @@
   "$description": "Autism-friendly theme - predictable layouts, muted palette, no shadows, reduced sensory stimulation",
   "theme": {
     "typography": {
-      "font-family": { "$value": "'Arial', sans-serif" }
+      "font-family": { "$value": "'Arial', sans-serif" },
+      "text-primary": { "$value": "#333333" }
     },
     "font": {
       "size": {
@@ -53,9 +54,6 @@
       "border": { "$value": "#dddddd" },
       "input": { "$value": "#eeeeee" },
       "ring": { "$value": "#3d7e9a" }
-    },
-    "typography": {
-      "text-primary": { "$value": "#333333" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f7f7f7" },

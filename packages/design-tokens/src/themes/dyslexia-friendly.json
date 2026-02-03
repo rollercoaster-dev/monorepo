@@ -5,7 +5,9 @@
     "typography": {
       "font-family": {
         "$value": "'OpenDyslexic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-      }
+      },
+      "text-primary": { "$value": "#333333" },
+      "text-secondary": { "$value": "#555555" }
     },
     "font": {
       "size": {
@@ -59,10 +61,6 @@
       "border": { "$value": "#c8c3a9" },
       "input": { "$value": "#f0edd8" },
       "ring": { "$value": "#0066cc" }
-    },
-    "typography": {
-      "text-primary": { "$value": "#333333" },
-      "text-secondary": { "$value": "#555555" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f8f5e4" },

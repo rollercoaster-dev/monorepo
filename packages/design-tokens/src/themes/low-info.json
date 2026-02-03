@@ -5,7 +5,8 @@
     "typography": {
       "font-family": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-      }
+      },
+      "text-primary": { "$value": "#222222" }
     },
     "font": {
       "size": {
@@ -47,9 +48,6 @@
       "border": { "$value": "#dddddd" },
       "input": { "$value": "#f0f0f0" },
       "ring": { "$value": "#0066cc" }
-    },
-    "typography": {
-      "text-primary": { "$value": "#222222" }
     },
     "aliases": {
       "bg-primary": { "$value": "#ffffff" },

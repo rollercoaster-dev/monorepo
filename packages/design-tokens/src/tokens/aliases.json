@@ -84,10 +84,5 @@
   "primary-light": {
     "$value": "{color.primary-light}",
     "$type": "color"
-  },
-  "shadow-focus": {
-    "$value": "0 0 0 3px rgba(49, 130, 206, 0.4)",
-    "$type": "shadow",
-    "$description": "Focus shadow - also defined in shadow.focus but needed here for compatibility"
   }
 }

@@ -1,80 +1,36 @@
 import StyleDictionary from "style-dictionary";
 
-// Custom transform for CSS variable name - handles different token categories
+// Custom transform for CSS variable name
+// All tokens use their full path as the variable name (e.g., color.primary -> --ob-color-primary)
 StyleDictionary.registerTransform({
   name: "name/css/ob",
   type: "name",
   transform: (token) => {
-    const path = token.path;
-
-    // Foundational tokens keep their full path (color.primary -> --ob-color-primary)
-    // Semantic and component tokens use their key directly (background -> --ob-background)
-    const prefix = path[0];
-
-    // These prefixes should be kept in the variable name
-    const foundationalPrefixes = [
-      "color",
-      "font",
-      "space",
-      "radius",
-      "shadow",
-      "transition",
-      "zIndex",
-    ];
-
-    if (foundationalPrefixes.includes(prefix)) {
-      return `--ob-${path.join("-")}`;
-    }
-
-    // For semantic/component tokens, output the flat name
-    return `--ob-${path.join("-")}`;
+    return `--ob-${token.path.join("-")}`;
   },
 });
 
-// Custom transform to convert token references to CSS var() syntax
-// This keeps references intact so theme switching works properly
-StyleDictionary.registerTransform({
-  name: "value/css/ob-references",
-  type: "value",
-  transitive: false, // Don't resolve transitively - keep var() references
-  transform: (token) => {
-    // Access the original value before Style Dictionary resolves it
-    const originalValue = token.original?.$value ?? token.original?.value;
-    if (
-      typeof originalValue === "string" &&
-      originalValue.startsWith("{") &&
-      originalValue.endsWith("}")
-    ) {
-      // Convert {path.to.token} to var(--ob-path-to-token)
-      const refPath = originalValue.slice(1, -1).replace(/\./g, "-");
-      return `var(--ob-${refPath})`;
-    }
-    // Return the resolved value for non-reference tokens
-    return token.$value ?? token.value;
-  },
-});
+// Helper to check if a value is a token reference like {path.to.token}
+function isTokenReference(value) {
+  return (
+    typeof value === "string" && value.startsWith("{") && value.endsWith("}")
+  );
+}
 
-// Helper to convert token reference to CSS var()
+// Convert token reference {path.to.token} to CSS var(--ob-path-to-token)
 function toVarRef(refString) {
-  // Convert {path.to.token} to var(--ob-path-to-token)
   const refPath = refString.slice(1, -1).replace(/\./g, "-");
   return `var(--ob-${refPath})`;
 }
 
-// Helper to get the CSS value for a token (preserving references)
+// Get the CSS value for a token, preserving references as var() calls
 function getCSSValue(token) {
   const originalValue = token.original?.$value ?? token.original?.value;
 
-  // If the original value is a reference, convert to var()
-  if (
-    typeof originalValue === "string" &&
-    originalValue.startsWith("{") &&
-    originalValue.endsWith("}")
-  ) {
+  if (isTokenReference(originalValue)) {
     return toVarRef(originalValue);
   }
 
-  // Otherwise use the resolved value
   return token.$value ?? token.value;
 }
 
@@ -329,7 +285,7 @@ StyleDictionary.registerFormat({
           if (typeof value === "string" && value.endsWith("rem")) {
             tokens.radius[`$${path[1]}`] = parseFloat(value) * 16;
           } else if (typeof value === "string" && value.endsWith("px")) {
-            tokens.radius[`$${path[1]}`] = parseInt(value);
+            tokens.radius[`$${path[1]}`] = parseInt(value, 10);
           } else {
             tokens.radius[`$${path[1]}`] = value;
           }
@@ -344,7 +300,7 @@ StyleDictionary.registerFormat({
           }
           break;
         case "zIndex":
-          tokens.zIndex[`$${path[1]}`] = parseInt(value);
+          tokens.zIndex[`$${path[1]}`] = parseInt(value, 10);
           break;
       }
     });
@@ -382,7 +338,7 @@ export default {
   source: ["src/tokens/**/*.json"],
   platforms: {
     css: {
-      transforms: ["name/css/ob", "value/css/ob-references"],
+      transforms: ["name/css/ob"],
       buildPath: "build/css/",
       files: [
         {
@@ -392,7 +348,7 @@ export default {
       ],
     },
     js: {
-      transforms: [],
+      transforms: ["name/css/ob"],
       buildPath: "build/js/",
       files: [
         {
@@ -402,7 +358,7 @@ export default {
       ],
     },
     tailwind: {
-      transforms: [],
+      transforms: ["name/css/ob"],
       buildPath: "build/tailwind/",
       files: [
         {
@@ -412,7 +368,7 @@ export default {
       ],
     },
     tamagui: {
-      transforms: [],
+      transforms: ["name/css/ob"],
       buildPath: "build/tamagui/",
       files: [
         {

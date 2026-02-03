@@ -3,7 +3,7 @@
  * Build theme CSS files from theme JSON definitions
  */
 import StyleDictionary from "style-dictionary";
-import { readdir } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, basename } from "node:path";
 
 // Mapping from theme JSON structure to original CSS variable names
@@ -48,40 +48,45 @@ const pathMappings = {
   "aliases.border-radius-md": "border-radius-md",
   "aliases.border-radius-lg": "border-radius-lg",
   "aliases.border-radius-xl": "border-radius-xl",
+  "aliases.border-radius-pill": "border-radius-pill",
 };
+
+// Extract CSS variable declarations from nested token objects
+function extractCSSVariables(tokens, prefix = "") {
+  const declarations = [];
+
+  for (const [key, value] of Object.entries(tokens)) {
+    if (key.startsWith("$")) continue; // Skip metadata
+
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (typeof value === "object" && value !== null && !value.$value) {
+      declarations.push(...extractCSSVariables(value, path));
+    } else {
+      const tokenValue = value.$value ?? value;
+
+      if (typeof tokenValue === "object") {
+        console.warn(`Skipping complex token at path: ${path}`);
+        continue;
+      }
+
+      const varName = pathMappings[path] ?? path.replace(/\./g, "-");
+      declarations.push(`  --ob-${varName}: ${tokenValue};`);
+    }
+  }
+
+  return declarations;
+}
 
 // Register theme format
 StyleDictionary.registerFormat({
   name: "css/ob-theme-class",
   format: ({ dictionary, options }) => {
-    const themeName = options.themeName;
-    const className = `.ob-${themeName}-theme`;
+    const { themeName } = options;
+    const themeData = dictionary.tokens.theme ?? dictionary.tokens;
+    const declarations = extractCSSVariables(themeData);
 
-    let output = `/* ${themeName} theme */\n${className} {\n`;
-
-    const processTokens = (tokens, prefix = "") => {
-      Object.entries(tokens).forEach(([key, value]) => {
-        if (key.startsWith("$")) return; // Skip metadata
-
-        const path = prefix ? `${prefix}.${key}` : key;
-
-        if (typeof value === "object" && value !== null && !value.$value) {
-          processTokens(value, path);
-        } else {
-          const tokenValue = value.$value || value;
-          // Use mapping if available, otherwise convert dots to dashes
-          const varName = pathMappings[path] || path.replace(/\./g, "-");
-          output += `  --ob-${varName}: ${tokenValue};\n`;
-        }
-      });
-    };
-
-    // Process the theme object
-    const themeData = dictionary.tokens.theme || dictionary.tokens;
-    processTokens(themeData);
-
-    output += "}\n";
-    return output;
+    return `/* ${themeName} theme */\n.ob-${themeName}-theme {\n${declarations.join("\n")}\n}\n`;
   },
 });
 
@@ -102,7 +107,7 @@ async function buildThemes() {
  *
  * Available themes:
  *   .ob-dark-theme              – Dark mode
- *   .ob-high-contrast-theme     – WCAG AAA contrast
+ *   .ob-high-contrast-theme     – Strong black/white contrast
  *   .ob-large-text-theme        – Larger fonts and line heights
  *   .ob-dyslexia-friendly-theme – OpenDyslexic font, cream bg, extra spacing
  *   .ob-low-vision-theme        – Atkinson Hyperlegible, high contrast, large text
@@ -144,7 +149,6 @@ async function buildThemes() {
     await sd.buildAllPlatforms();
 
     // Read the generated file and append to combined output
-    const { readFile } = await import("node:fs/promises");
     const themeCSS = await readFile(
       join(import.meta.dirname, `build/css/theme-${themeName}.css`),
       "utf-8",
@@ -153,7 +157,6 @@ async function buildThemes() {
   }
 
   // Write combined themes file
-  const { writeFile } = await import("node:fs/promises");
   await writeFile(outputFile, allThemesCSS);
 
   console.log("Built themes.css with all theme variants");
