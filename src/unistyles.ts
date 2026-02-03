@@ -8,6 +8,6 @@ import { themes } from './themes';
 StyleSheet.configure({
   themes,
   settings: {
-    initialTheme: 'light',
+    initialTheme: 'light-default',
   },
 });
