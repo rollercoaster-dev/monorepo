@@ -16,7 +16,6 @@ Completes the workflow by creating PR and cleaning up.
 | Field              | Type    | Required | Description                                            |
 | ------------------ | ------- | -------- | ------------------------------------------------------ |
 | `issue_number`     | number  | Yes      | GitHub issue number                                    |
-| `workflow_id`      | string  | Yes      | Checkpoint workflow ID                                 |
 | `findings_summary` | object  | No       | Summary from review-orchestrator                       |
 | `force`            | boolean | No       | Create PR even with unresolved issues (default: false) |
 | `skip_board`       | boolean | No       | Skip board update (default: false)                     |
@@ -37,20 +36,13 @@ Completes the workflow by creating PR and cleaning up.
 1. Pushes branch to remote
 2. Creates GitHub PR
 3. Updates board to "Blocked" (awaiting review)
-4. Marks checkpoint workflow as completed
-5. Cleans up dev plan file
-6. Sends Telegram notification with PR link
-
-### Checkpoint Actions Logged
-
-- `pr_created`: { prNumber, prUrl }
-- `workflow_completed`: { duration, commitCount, prNumber }
+4. Cleans up dev plan file
+5. Sends Telegram notification with PR link
 
 ## Skills Used
 
 Load these skills for reference:
 
-- `checkpoint-workflow` - CLI commands for workflow state
 - `board-manager` - GraphQL for board operations
 
 ## Workflow
@@ -105,13 +97,7 @@ bun run build
 
 **If validation fails but `force` is true:** Note in PR body, continue.
 
-### Step 3: Clean Up Dev Plan
-
-```bash
-bun run checkpoint workflow log-commit "<workflow_id>" "<sha>" "chore: clean up dev plan for issue #<issue_number>"
-```
-
-### Step 4: Push Branch
+### Step 3: Push Branch
 
 ```bash
 git push -u origin HEAD
@@ -119,7 +105,7 @@ git push -u origin HEAD
 
 **If push fails:** Return error (critical).
 
-### Step 5: Create PR
+### Step 4: Create PR
 
 Determine PR type from branch name or commits:
 
@@ -162,13 +148,7 @@ PRBODY
 
 Extract PR number and URL from output.
 
-### Step 6: Log PR Creation
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "pr_created" "success" '{"prNumber": <pr_number>, "prUrl": "<pr_url>"}'
-```
-
-### Step 7: Update Board (unless skip_board)
+### Step 5: Update Board (unless skip_board)
 
 **Get item ID:**
 
@@ -210,25 +190,7 @@ gh api graphql \
 
 **If board update fails:** Log warning, continue.
 
-### Step 8: Mark Workflow Complete
-
-Get workflow duration:
-
-```bash
-bun run checkpoint workflow get "<workflow_id>"
-```
-
-Calculate duration from `createdAt` to now.
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "workflow_completed" "success" '{"prNumber": <pr_number>, "commitCount": <count>}'
-```
-
-```bash
-bun run checkpoint workflow set-status "<workflow_id>" "completed"
-```
-
-### Step 9: Send Notification (unless skip_notify)
+### Step 6: Send Notification (unless skip_notify)
 
 Use the `telegram` skill (via Skill tool) to send a notification:
 
@@ -242,7 +204,7 @@ Status: Awaiting review
 
 **If notification fails:** Log warning, continue.
 
-### Step 10: Return Output
+### Step 7: Return Output
 
 ```json
 {

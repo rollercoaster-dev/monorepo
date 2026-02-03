@@ -1,6 +1,6 @@
 ---
 name: setup-agent
-description: Prepares environment for issue work - creates branch, checkpoint, adds to board, fetches issue details. Use at the start of any issue workflow.
+description: Prepares environment for issue work - creates branch, adds to board, fetches issue details. Use at the start of any issue workflow.
 tools: Bash, Read
 model: sonnet
 ---
@@ -22,32 +22,24 @@ Prepares everything needed before implementation work begins.
 
 ### Output
 
-| Field          | Type     | Description                                  |
-| -------------- | -------- | -------------------------------------------- |
-| `workflow_id`  | string   | Checkpoint workflow ID for subsequent agents |
-| `branch`       | string   | Git branch name                              |
-| `issue.number` | number   | Issue number                                 |
-| `issue.title`  | string   | Issue title                                  |
-| `issue.body`   | string   | Full issue body                              |
-| `issue.labels` | string[] | Issue labels                                 |
-| `resumed`      | boolean  | Whether this resumed an existing workflow    |
+| Field          | Type     | Description     |
+| -------------- | -------- | --------------- |
+| `branch`       | string   | Git branch name |
+| `issue.number` | number   | Issue number    |
+| `issue.title`  | string   | Issue title     |
+| `issue.body`   | string   | Full issue body |
+| `issue.labels` | string[] | Issue labels    |
 
 ### Side Effects
 
 1. Creates git branch (or checks out existing)
-2. Creates checkpoint workflow record (or finds existing)
-3. Adds issue to project board as "In Progress" (unless skip_board)
-4. Sends Telegram notification (unless skip_notify)
-
-### Checkpoint Actions Logged
-
-- `workflow_started`: { issueNumber, branch }
+2. Adds issue to project board as "In Progress" (unless skip_board)
+3. Sends Telegram notification (unless skip_notify)
 
 ## Skills Used
 
 Load these skills for reference:
 
-- `checkpoint-workflow` - CLI commands for workflow state
 - `board-manager` - GraphQL for board operations
 
 ## Workflow
@@ -67,31 +59,7 @@ Extract and store:
 - `issue.body`
 - `issue.labels` (array of label names)
 
-### Step 2: Check for Existing Workflow
-
-```bash
-bun run checkpoint workflow find <issue_number>
-```
-
-**If workflow exists and status is "running":**
-
-- Store `workflow_id` from response
-- Set `resumed = true`
-- Check out the existing branch:
-  ```bash
-  git checkout <existing_branch>
-  ```
-- Skip to Step 6 (board update)
-
-**If workflow exists but status is "failed" or "completed":**
-
-- Treat as fresh start (will create new workflow)
-
-**If no workflow exists:**
-
-- Continue to Step 3
-
-### Step 3: Generate Branch Name
+### Step 2: Generate Branch Name
 
 If `branch_name` not provided:
 
@@ -100,7 +68,7 @@ If `branch_name` not provided:
 
 Example: Issue "Add user authentication" → `feat/issue-123-add-user-auth`
 
-### Step 4: Create Branch
+### Step 3: Create Branch
 
 Check current branch:
 
@@ -120,29 +88,15 @@ If branch already exists:
 git checkout <branch_name>
 ```
 
-### Step 5: Create Checkpoint Workflow
+### Step 4: Update Board (unless skip_board)
 
-```bash
-bun run checkpoint workflow create <issue_number> "<branch_name>"
-```
-
-Extract `workflow_id` from JSON response (the `id` field).
-
-Log workflow start:
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "workflow_started" "success" '{"issueNumber": <issue_number>, "branch": "<branch_name>"}'
-```
-
-### Step 6: Update Board (unless skip_board)
-
-**6a. Get issue node ID:**
+**4a. Get issue node ID:**
 
 ```bash
 gh issue view <issue_number> --json id -q .id
 ```
 
-**6b. Add to project board:**
+**4b. Add to project board:**
 
 ```bash
 gh api graphql -f query='
@@ -154,7 +108,7 @@ gh api graphql -f query='
   }' -f projectId="PVT_kwDOB1lz3c4BI2yZ" -f contentId="<issue_node_id>"
 ```
 
-**6c. Get item ID:**
+**4c. Get item ID:**
 
 ```bash
 gh api graphql -f query='
@@ -172,7 +126,7 @@ gh api graphql -f query='
   }' | jq -r '.data.organization.projectV2.items.nodes[] | select(.content.number == <issue_number>) | .id'
 ```
 
-**6d. Set status to "In Progress":**
+**4d. Set status to "In Progress":**
 
 ```bash
 gh api graphql \
@@ -192,7 +146,7 @@ gh api graphql \
 
 **If any board operation fails:** Log warning, continue (non-critical).
 
-### Step 7: Send Notification (unless skip_notify)
+### Step 5: Send Notification (unless skip_notify)
 
 Use the `telegram` skill (via Skill tool) to send a notification:
 
@@ -200,38 +154,34 @@ Use the `telegram` skill (via Skill tool) to send a notification:
 Started: Issue #<number>
 Title: <title>
 Branch: <branch>
-Workflow: <workflow_id>
 ```
 
 **If notification fails:** Log warning, continue (non-critical).
 
-### Step 8: Return Output
+### Step 6: Return Output
 
 Return structured output:
 
 ```json
 {
-  "workflow_id": "<workflow_id>",
   "branch": "<branch_name>",
   "issue": {
     "number": <number>,
     "title": "<title>",
     "body": "<body>",
     "labels": ["<label1>", "<label2>"]
-  },
-  "resumed": false
+  }
 }
 ```
 
 ## Error Handling
 
-| Condition               | Behavior                      |
-| ----------------------- | ----------------------------- |
-| Issue not found         | Return error, no side effects |
-| Branch checkout fails   | Return error with git status  |
-| Checkpoint create fails | Return error (critical)       |
-| Board update fails      | Warn, continue                |
-| Notification fails      | Warn, continue                |
+| Condition             | Behavior                      |
+| --------------------- | ----------------------------- |
+| Issue not found       | Return error, no side effects |
+| Branch checkout fails | Return error with git status  |
+| Board update fails    | Warn, continue                |
+| Notification fails    | Warn, continue                |
 
 ## Example
 
@@ -247,15 +197,13 @@ Return structured output:
 
 ```json
 {
-  "workflow_id": "workflow-487-1736500000000-abc123",
   "branch": "feat/issue-487-agent-architecture",
   "issue": {
     "number": 487,
     "title": "refactor(claude-tools): implement robust agent architecture",
     "body": "## Problem\n\nThe current Claude tools architecture...",
     "labels": ["enhancement", "priority:high"]
-  },
-  "resumed": false
+  }
 }
 ```
 
@@ -268,9 +216,7 @@ SETUP COMPLETE
 
 Issue: #<number> - <title>
 Branch: <branch>
-Workflow ID: <workflow_id>
 Board: Updated to "In Progress"
-Resumed: Yes/No
 
 Ready for next phase.
 ```

@@ -54,30 +54,9 @@ This agent uses patterns from [shared/](../shared/):
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
 - **[board-operations.md](../shared/board-operations.md)** - Board status updates
 
-## Knowledge Tools
-
-Use these skills for codebase exploration and workflow tracking:
-
-- `/graph-query` - Find callers, dependencies, blast radius
-- `/knowledge-query` - Search past learnings and patterns
-- `/docs-search` - Search project documentation
-- `/checkpoint-workflow` - Log actions and commits
-
 ## Tool Selection (MANDATORY)
 
-**ALWAYS use graph BEFORE Grep when exploring code.** See [tool-selection.md](../docs/tool-selection.md).
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Before modifying code, check impact with graph:        │
-│                                                         │
-│  graph what-calls <fn>      → Who calls this?          │
-│  graph what-depends-on <t>  → Who uses this type?      │
-│  graph blast-radius <file>  → What breaks if I change? │
-│                                                         │
-│  1 query vs 10 greps. Use the graph.                   │
-└─────────────────────────────────────────────────────────┘
-```
+See [tool-selection.md](../docs/tool-selection.md) for tool priority guidelines.
 
 ## Purpose
 
@@ -309,23 +288,6 @@ For each step in the development plan:
    git commit -m "<type>(<scope>): <message>"
    ```
 
-   **Log commit to checkpoint (if WORKFLOW_ID provided):**
-
-   First, get the commit SHA (separate command):
-
-   ```bash
-   git rev-parse HEAD
-   ```
-
-   Then log to checkpoint using the literal SHA from the output:
-
-   ```bash
-   bun run checkpoint workflow log-commit "<workflow-id>" "<sha-from-above>" "<type>(<scope>): <message>"
-   ```
-
-   **IMPORTANT:** Never combine these into one command with `&&` or shell variables.
-   Each command is a separate Bash tool call. Use the actual SHA value, not `$COMMIT_SHA`.
-
 7. **Report progress:**
    - Confirm commit made
    - Show files changed
@@ -555,22 +517,3 @@ This agent is successful when:
 - All validations pass
 - Branch is ready for PR
 - Code follows project conventions
-
-## Learning Capture
-
-Before completing, consider storing learnings discovered during this workflow:
-
-```bash
-# Store a learning via MCP (preferred)
-Use knowledge_store tool with content, codeArea, confidence
-
-# Or via CLI
-bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
-```
-
-Capture:
-
-- Patterns discovered in the codebase
-- Mistakes made and how they were resolved
-- Non-obvious solutions that worked
-- Gotchas for future reference

@@ -80,12 +80,8 @@ Skills provide shared knowledge that agents can reference. They are NOT executor
 
 ```
 .claude/skills/
-├── checkpoint-workflow/
-│   └── SKILL.md          # CLI commands for workflow state
 ├── board-manager/
 │   └── SKILL.md          # GraphQL for board operations
-├── graph-query/
-│   └── SKILL.md          # Code graph query commands
 └── ...
 ```
 
@@ -96,27 +92,24 @@ Skills are loaded into an agent's context via the Skill tool. The agent then use
 ```markdown
 # In agent prompt:
 
-"Use the `checkpoint-workflow` skill for CLI reference when logging actions."
+"Use the `board-manager` skill for GraphQL reference when updating the board."
 
 # Agent's behavior:
 
 1. Loads skill via Skill tool (gets documentation)
-2. Reads CLI syntax from loaded content
+2. Reads GraphQL syntax from loaded content
 3. Executes appropriate commands via Bash tool
 ```
 
 ### Current Skills
 
-| Skill                 | Purpose                     | Used By                     |
-| --------------------- | --------------------------- | --------------------------- |
-| `checkpoint-workflow` | Workflow state CLI commands | All agents                  |
-| `checkpoint-session`  | Session lifecycle commands  | Session hooks               |
-| `board-manager`       | Board mutation GraphQL      | setup-agent, finalize-agent |
-| `board-status`        | Board query GraphQL         | milestone-planner           |
-| `graph-query`         | Code graph queries          | issue-researcher            |
-| `issue-fetcher`       | Issue fetch patterns        | setup-agent                 |
-| `milestone-tracker`   | Milestone query patterns    | auto-milestone              |
-| `pr-review-checker`   | PR review query patterns    | review-handler              |
+| Skill               | Purpose                  | Used By                     |
+| ------------------- | ------------------------ | --------------------------- |
+| `board-manager`     | Board mutation GraphQL   | setup-agent, finalize-agent |
+| `board-status`      | Board query GraphQL      | milestone-planner           |
+| `issue-fetcher`     | Issue fetch patterns     | setup-agent                 |
+| `milestone-tracker` | Milestone query patterns | auto-milestone              |
+| `pr-review-checker` | PR review query patterns | review-handler              |
 
 ### Skill Design Rules
 
@@ -153,9 +146,6 @@ SIDE_EFFECTS:
 
 SKILLS_USED:
   - skill-name # Skills loaded for reference
-
-CHECKPOINT_ACTIONS:
-  - action_name # What gets logged to checkpoint
 
 ERROR_HANDLING:
   - condition: behavior # How errors are handled
@@ -221,11 +211,10 @@ Support operations.
 
 ### Agent Design Rules
 
-1. **Self-checkpoint**: Agent logs its own actions to checkpoint
-2. **Idempotent**: Safe to re-run (checks existing state first)
-3. **Clear boundaries**: Does one phase, returns control to orchestrator
-4. **Error isolation**: Agent failures don't corrupt other agents
-5. **Skill-based**: Uses skills for reference, not hardcoded commands
+1. **Idempotent**: Safe to re-run (checks existing state first)
+2. **Clear boundaries**: Does one phase, returns control to orchestrator
+3. **Error isolation**: Agent failures don't corrupt other agents
+4. **Skill-based**: Uses skills for reference, not hardcoded commands
 
 ### Agent File Structure
 
@@ -368,7 +357,6 @@ Single-purpose operations.
 
 | Workflow | Description |
 |----------|-------------|
-| `/checkpoint` | Manual checkpoint operations |
 | `/worktree` | Worktree management |
 
 ---
@@ -379,7 +367,7 @@ Single-purpose operations.
 
 ```yaml
 name: setup-agent
-description: Prepares environment for issue work - branch, checkpoint, board
+description: Prepares environment for issue work - branch, board
 
 INPUT:
   required:
@@ -390,7 +378,6 @@ INPUT:
     - notify: boolean           # Default: true
 
 OUTPUT:
-  - workflow_id: string
   - branch: string
   - issue:
       number: number
@@ -400,23 +387,17 @@ OUTPUT:
 
 SIDE_EFFECTS:
   - Creates git branch (or checks out existing)
-  - Creates checkpoint workflow record
   - Adds issue to board as "In Progress"
   - Sends Telegram notification (if notify=true)
 
 SKILLS_USED:
-  - checkpoint-workflow: for workflow CLI commands
   - board-manager: for board GraphQL mutations
   - issue-fetcher: for issue query patterns
 
-CHECKPOINT_ACTIONS:
-  - workflow_started: { issueNumber, branch }
-
 ERROR_HANDLING:
-  - Branch exists: checkout existing, find existing workflow_id
+  - Branch exists: checkout existing
   - Issue not found: return error, no side effects
   - Board update fails: warn and continue (non-critical)
-  - Checkpoint exists: return existing workflow_id
 ````
 
 ### issue-researcher
@@ -428,7 +409,6 @@ description: Analyzes codebase and creates detailed development plan
 INPUT:
   required:
     - issue_number: number
-    - workflow_id: string
   optional:
     - issue_body: string # If already fetched by setup-agent
 
@@ -441,19 +421,10 @@ OUTPUT:
 
 SIDE_EFFECTS:
   - Creates dev plan at .claude/dev-plans/issue-{N}.md
-  - Updates checkpoint with plan metadata
-
-SKILLS_USED:
-  - graph-query: for codebase analysis
-  - checkpoint-workflow: for logging
-
-CHECKPOINT_ACTIONS:
-  - dev_plan_created: { planPath, complexity, commitCount }
 
 ERROR_HANDLING:
   - Scope too large: flag in output, suggest splitting
   - Dependencies unmet: warn in plan, continue
-  - Graph not populated: fall back to Glob/Grep search
 ```
 
 ### atomic-developer
@@ -465,7 +436,6 @@ description: Implements development plan with atomic commits
 INPUT:
   required:
     - issue_number: number
-    - workflow_id: string
     - plan_path: string
   optional:
     - start_step: number        # Resume from specific step
@@ -485,14 +455,6 @@ OUTPUT:
 SIDE_EFFECTS:
   - Creates/modifies files per plan
   - Makes git commits
-  - Logs each commit to checkpoint
-
-SKILLS_USED:
-  - checkpoint-workflow: for commit logging
-
-CHECKPOINT_ACTIONS:
-  - commit_created: { sha, message } (per commit)
-  - implementation_complete: { commitCount }
 
 ERROR_HANDLING:
   - Validation fails: attempt fix, report in output
@@ -507,8 +469,6 @@ name: review-orchestrator
 description: Coordinates review agents and manages auto-fix loop
 
 INPUT:
-  required:
-    - workflow_id: string
   optional:
     - skip_agents: string[]     # Agents to skip
     - max_retry: number         # Default: 3
@@ -531,16 +491,6 @@ OUTPUT:
 SIDE_EFFECTS:
   - Spawns review agents
   - Spawns auto-fixer for critical findings
-  - Logs findings and fix attempts to checkpoint
-
-SKILLS_USED:
-  - checkpoint-workflow: for logging
-
-CHECKPOINT_ACTIONS:
-  - review_started: { agents: [] }
-  - finding_detected: { agent, severity, file }
-  - fix_attempted: { finding, attempt, result }
-  - review_complete: { summary }
 
 ERROR_HANDLING:
   - Agent fails: log, continue with others
@@ -557,7 +507,6 @@ description: Creates PR, updates board, completes workflow
 INPUT:
   required:
     - issue_number: number
-    - workflow_id: string
   optional:
     - findings_summary: object # From review-orchestrator
     - force: boolean # Create PR even with issues
@@ -573,16 +522,10 @@ SIDE_EFFECTS:
   - Pushes branch to remote
   - Creates GitHub PR
   - Updates board to "Blocked" (awaiting review)
-  - Marks workflow as completed
   - Sends Telegram notification with PR link
 
 SKILLS_USED:
-  - checkpoint-workflow: for completion logging
   - board-manager: for status update
-
-CHECKPOINT_ACTIONS:
-  - pr_created: { prNumber, prUrl }
-  - workflow_completed: { duration, commitCount }
 
 ERROR_HANDLING:
   - Push fails: return error (critical)
@@ -608,12 +551,12 @@ Fully autonomous issue-to-PR workflow.
 
 Task(setup-agent):
 Input: { issue_number: <N> }
-Output: { workflow_id, branch, issue }
+Output: { branch, issue }
 
 ### Phase 2: Research
 
 Task(issue-researcher):
-Input: { issue_number: <N>, workflow_id: <from-phase-1> }
+Input: { issue_number: <N> }
 Output: { plan_path, complexity, commit_count }
 
 If --dry-run: STOP, show plan, exit.
@@ -621,13 +564,13 @@ If --dry-run: STOP, show plan, exit.
 ### Phase 3: Implement
 
 Task(atomic-developer):
-Input: { issue_number: <N>, workflow_id, plan_path: <from-phase-2> }
+Input: { issue_number: <N>, plan_path: <from-phase-2> }
 Output: { commits, validation }
 
 ### Phase 4: Review
 
 Task(review-orchestrator):
-Input: { workflow_id }
+Input: { }
 Output: { findings, summary }
 
 If summary.unresolved > 0: ESCALATE
@@ -635,7 +578,7 @@ If summary.unresolved > 0: ESCALATE
 ### Phase 5: Finalize
 
 Task(finalize-agent):
-Input: { issue_number: <N>, workflow_id, findings_summary: <from-phase-4> }
+Input: { issue_number: <N>, findings_summary: <from-phase-4> }
 Output: { pr }
 
 ## Escalation
@@ -662,7 +605,7 @@ Gated workflow requiring human approval at each phase.
 
 Task(setup-agent):
 Input: { issue_number: <N>, notify: true }
-Output: { workflow_id, branch, issue }
+Output: { branch, issue }
 
 **GATE 1: Issue Review**
 Show: Full issue content
@@ -671,7 +614,7 @@ Wait for: "proceed"
 ### Phase 2: Research
 
 Task(issue-researcher):
-Input: { issue_number: <N>, workflow_id }
+Input: { issue_number: <N> }
 Output: { plan_path, complexity }
 
 **GATE 2: Plan Review**
@@ -692,7 +635,7 @@ Commit changes
 ### Phase 4: Review
 
 Task(review-orchestrator):
-Input: { workflow_id }
+Input: { }
 Output: { findings, summary }
 
 **GATE 4: Pre-PR Review**
@@ -702,7 +645,7 @@ Wait for: "proceed"
 ### Phase 5: Finalize
 
 Task(finalize-agent):
-Input: { issue_number: <N>, workflow_id }
+Input: { issue_number: <N> }
 Output: { pr }
 ```
 
@@ -745,25 +688,20 @@ Rewrite workflows to use agent composition:
 
 Remove from workflows:
 
-- Direct CLI commands (`bun run checkpoint ...`)
 - Direct `gh` commands
 - Inline GraphQL
-- Manual checkpoint logging
 - Manual board updates
 
 ---
 
 ## Appendix: Anti-Patterns
 
-### Don't: CLI Commands in Workflows
+### Don't: Complex Logic in Workflows
 
 ```markdown
-# BAD - workflow has CLI commands
+# BAD - workflow has complex logic
 
-3b. Create workflow checkpoint:
-`bash
-    bun run checkpoint workflow create 485 "feat/issue-485"
-    `
+3b. If branch exists, skip. Otherwise create...
 ```
 
 ```markdown

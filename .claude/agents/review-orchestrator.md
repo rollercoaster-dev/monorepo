@@ -51,15 +51,6 @@ Coordinates code review and manages the auto-fix cycle.
 - `fix_attempted`: { file, line, attempt, result }
 - `review_complete`: { summary }
 
-## Knowledge Tools
-
-Use these skills for codebase exploration and workflow tracking:
-
-- `/graph-query` - Find callers, dependencies, blast radius
-- `/knowledge-query` - Search past learnings and patterns
-- `/docs-search` - Search project documentation
-- `/checkpoint-workflow` - Log actions and commits
-
 ## Review Agents
 
 | Agent                                     | Purpose                | Critical Threshold                   |
@@ -91,13 +82,7 @@ git diff main --name-only | grep -iE "(badge|credential|issuer|assertion|ob2|ob3
 
 If matches found and `include_ob_compliance` not explicitly false → enable OB compliance review.
 
-### Step 2: Log Review Start
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "review_started" "success" '{"agents": ["code-reviewer", "test-analyzer", "silent-failure-hunter"]}'
-```
-
-### Step 3: Spawn Review Agents
+### Step 2: Spawn Review Agents
 
 **If parallel mode (default):**
 
@@ -114,7 +99,7 @@ Task(openbadges-compliance-reviewer): "Check OB spec compliance" (if badge code)
 
 Spawn each agent one at a time, collecting results.
 
-### Step 4: Collect and Normalize Findings
+### Step 3: Collect and Normalize Findings
 
 Each agent returns findings in different formats. Normalize to:
 
@@ -138,15 +123,7 @@ Each agent returns findings in different formats. Normalize to:
 | pr-test-analyzer       | Gap rating >= 8                      | Gap rating >= 5    | Gap rating < 5          |
 | ob-compliance-reviewer | "MUST violation"                     | "SHOULD violation" | "MAY" / warnings        |
 
-### Step 5: Log Agent Results
-
-For each agent that completes:
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "agent_completed" "success" '{"agent": "<name>", "findingCount": <count>}'
-```
-
-### Step 6: Auto-Fix Loop
+### Step 4: Auto-Fix Loop
 
 **For each CRITICAL finding:**
 
@@ -155,22 +132,16 @@ attempt = 0
 while not fixed AND attempt < max_retry:
     attempt++
 
-    Log attempt:
-    bun run checkpoint workflow log-action "<workflow_id>" "fix_attempted" "pending" '{"file": "<file>", "line": <line>, "attempt": <attempt>}'
-
     Spawn auto-fixer:
     Task(auto-fixer): "Fix: <finding.message> in <finding.file>:<finding.line>"
 
     If fix successful:
         finding.fixed = true
-        Log success:
-        bun run checkpoint workflow log-action "<workflow_id>" "fix_attempted" "success" '{"file": "<file>", "attempt": <attempt>}'
     Else:
-        Log failure:
-        bun run checkpoint workflow log-action "<workflow_id>" "fix_attempted" "failed" '{"file": "<file>", "attempt": <attempt>, "reason": "<error>"}'
+        Continue to next attempt
 ```
 
-### Step 7: Re-Review After Fixes
+### Step 5: Re-Review After Fixes
 
 If any fixes were made:
 
@@ -194,7 +165,7 @@ If any fixes were made:
 
 3. Optionally re-run review agents to verify fixes (if time permits).
 
-### Step 8: Calculate Summary
+### Step 6: Calculate Summary
 
 ```json
 {
@@ -205,13 +176,7 @@ If any fixes were made:
 }
 ```
 
-### Step 9: Log Completion
-
-```bash
-bun run checkpoint workflow log-action "<workflow_id>" "review_complete" "success" '{"total": <total>, "critical": <critical>, "fixed": <fixed>, "unresolved": <unresolved>}'
-```
-
-### Step 10: Return Output
+### Step 7: Return Output
 
 ```json
 {
@@ -273,22 +238,3 @@ This agent is successful when:
 - Auto-fix attempted for all CRITICAL findings
 - Clear summary returned to orchestrator
 - Escalation triggered when appropriate
-
-## Learning Capture
-
-Before completing, consider storing learnings discovered during this workflow:
-
-```bash
-# Store a learning via MCP (preferred)
-Use knowledge_store tool with content, codeArea, confidence
-
-# Or via CLI
-bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
-```
-
-Capture:
-
-- Patterns discovered in the codebase
-- Mistakes made and how they were resolved
-- Non-obvious solutions that worked
-- Gotchas for future reference

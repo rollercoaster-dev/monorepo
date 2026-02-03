@@ -54,29 +54,9 @@ This agent uses patterns from [shared/](../shared/):
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Fix commit format
 - **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Fix attempt logging
 
-## Knowledge Tools
-
-Use these skills for codebase exploration and workflow tracking:
-
-- `/graph-query` - Find callers, dependencies, blast radius
-- `/knowledge-query` - Search past learnings and patterns
-- `/docs-search` - Search project documentation
-- `/checkpoint-workflow` - Log actions and commits
-
 ## Tool Selection (MANDATORY)
 
-**Before fixing code, check impact with graph.** See [tool-selection.md](../docs/tool-selection.md).
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  BEFORE applying any fix:                               │
-│                                                         │
-│  graph what-calls <fn>      → Who else uses this?      │
-│  graph blast-radius <file>  → What might break?        │
-│                                                         │
-│  Fixes without impact analysis cause cascading bugs.   │
-└─────────────────────────────────────────────────────────┘
-```
+See [tool-selection.md](../docs/tool-selection.md) for tool priority guidelines.
 
 ## Purpose
 
@@ -152,14 +132,6 @@ If either fails, rollback and report failure.
 
 ### Step 2: Apply Fix
 
-0. **Log fix attempt to checkpoint:**
-
-   ```bash
-   bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "pending" '{"findingAgent": "<agent>", "file": "<file>", "line": <line>, "description": "<desc>", "attemptNumber": <n>}'
-   ```
-
-   Replace placeholders with actual literal values.
-
 1. **Make the edit:**
    - Use Edit tool for surgical changes
    - Use Write tool only if creating new file (rare)
@@ -206,24 +178,6 @@ git add <file>
 git commit -m "fix(<scope>): address review - <description>"
 ```
 
-Get the commit SHA (separate command):
-
-```bash
-git rev-parse HEAD
-```
-
-Log success to checkpoint using the literal SHA from above:
-
-```bash
-bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "success" '{"file": "<file>", "commitSha": "<sha-from-above>"}'
-```
-
-```bash
-bun run checkpoint workflow log-commit "<workflow-id>" "<sha-from-above>" "fix(<scope>): address review - <description>"
-```
-
-**IMPORTANT:** Never use `$COMMIT_SHA` or combine commands with `&&`. Each is a separate Bash tool call with literal values.
-
 Commit message format:
 
 - Type: Always `fix`
@@ -236,12 +190,6 @@ Rollback the change:
 
 ```bash
 git checkout -- <file>
-```
-
-Log failure to checkpoint:
-
-```bash
-bun run checkpoint workflow log-action "<workflow-id>" "auto_fix_attempt" "failed" '{"file": "<file>", "reason": "validation_failed", "attemptNumber": <n>}'
 ```
 
 Report the failure with details.
@@ -514,22 +462,3 @@ This agent is successful when:
 - Fixes that fail validation are rolled back cleanly
 - Clear, structured results returned to orchestrator
 - No unintended side effects introduced
-
-## Learning Capture
-
-Before completing, consider storing learnings discovered during this workflow:
-
-```bash
-# Store a learning via MCP (preferred)
-Use knowledge_store tool with content, codeArea, confidence
-
-# Or via CLI
-bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
-```
-
-Capture:
-
-- Patterns discovered in the codebase
-- Mistakes made and how they were resolved
-- Non-obvious solutions that worked
-- Gotchas for future reference
