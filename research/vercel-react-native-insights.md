@@ -142,28 +142,56 @@ const data = await fetchData();
 
 ---
 
-## Relevance to native-rd
+## Decision: react-native-unistyles
 
-### High Priority Recommendations
+**Date:** 2026-02-03
+**Status:** Decided
 
-1. **Evaluate react-native-unistyles** - May outperform Tamagui/NativeWind for 7-theme accessibility system due to zero re-render theming
+After evaluating Tamagui and NativeWind prototypes, and reviewing Vercel's v0 iOS app architecture, we're choosing **react-native-unistyles** for native-rd's styling layer.
 
-2. **Use Reanimated shared values for theme state** - Prevents re-renders on theme switch while enabling smooth transitions
+### Why react-native-unistyles wins
 
-3. **Adopt LegendList** - If badge lists grow, virtualization is critical
+| Requirement | Tamagui | NativeWind | Unistyles |
+|-------------|---------|------------|-----------|
+| Theme switching without re-renders | ❌ Context-based | ❌ Context-based | ✅ No Context needed |
+| 7 accessibility themes | ⚠️ Works but re-renders | ⚠️ Works but re-renders | ✅ Zero re-render switching |
+| Bundle size | ⚠️ Large | ✅ Small | ✅ Small |
+| Learning curve | ⚠️ Complex API | ✅ Tailwind familiar | ✅ Simple API |
+| v0 production proven | ❌ | ❌ | ✅ Vercel's choice |
 
-4. **Consider Tanstack Query** - For badge data fetching with automatic caching/deduplication
+### The core insight
 
-5. **Profile theme switching** - Measure actual re-render cost with current Context approach
+> "Shared values let us update state without triggering re-renders."
 
-### Libraries to Evaluate
+With 7 neurodiversity-focused themes that users may switch frequently, avoiding Context-based re-renders is critical. Unistyles provides theming at the native layer, not through React Context.
+
+### Recommended stack (from v0)
+
+| Layer | Library |
+|-------|---------|
+| Styling | react-native-unistyles |
+| Lists | LegendList |
+| Animation | React Native Reanimated |
+| Menus | Zeego (native) |
+| Data fetching | Tanstack Query |
+
+### What happens to the prototypes
+
+The Tamagui and NativeWind prototypes served their purpose—they validated that:
+1. The 7-theme system works conceptually
+2. The component structure (BadgeCard, ThemeSwitcher) is sound
+3. Accessibility patterns are correct
+
+The prototype code can be adapted to Unistyles. The theme tokens and component logic transfer directly.
+
+### Libraries to adopt
 
 | Library | Purpose | Link |
 |---------|---------|------|
 | react-native-unistyles | Zero re-render theming | [GitHub](https://github.com/jpudysz/react-native-unistyles) |
 | LegendList | Virtualized lists | [GitHub](https://github.com/LegendApp/legend-list) |
 | Zeego | Native menus | [GitHub](https://github.com/nandorojo/zeego) |
-| @callstack/liquid-glass | Morphing effects | [npm](https://www.npmjs.com/package/@callstack/liquid-glass) |
+| Tanstack Query | Data fetching/caching | [tanstack.com](https://tanstack.com/query) |
 
 ---
 

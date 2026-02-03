@@ -165,7 +165,7 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 | Iteration | Depends on |
 |-----------|-----------|
 | A | `openbadges-core` extraction from monorepo |
-| A | UI library decision (Tamagui or Gluestack) |
+| A | UI library decision — [ADR-0002](./ADR-0002-ui-styling-library.md): react-native-unistyles |
 | A | Sync layer decision (PowerSync or Evolu) — chosen in A, sync ships in B |
 | B | Iteration A complete |
 | C | Iteration B complete |
@@ -178,7 +178,8 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 - [Product Vision](../vision/product-vision.md)
 - [User Stories](../vision/user-stories.md)
 - [Design Principles](../vision/design-principles.md)
-- [UI Library Comparison](../research/ui-library-comparison.md)
+- [ADR-0002: UI Styling Library](./ADR-0002-ui-styling-library.md)
+- [Vercel React Native Insights](../../research/vercel-react-native-insights.md)
 - [Local-First Sync Comparison](../research/local-first-sync-comparison.md)
 - [Learning Graph Vision (monorepo)](https://github.com/rollercoaster-dev/monorepo/blob/main/docs/vision/learning-graph.md)
 - [Planning Graph Phase 2 (monorepo)](https://github.com/rollercoaster-dev/monorepo/blob/main/docs/plans/2026-01-29-planning-graph-phase2-design.md)
