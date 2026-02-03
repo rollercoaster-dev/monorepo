@@ -74,6 +74,17 @@ export const lineHeight = {
   '3xl': 40,
 } as const;
 
+/** Increased line heights for accessibility fonts (1.4x multiplier) */
+export const lineHeightL = {
+  xs: 22,
+  sm: 28,
+  md: 34,
+  lg: 36,
+  xl: 40,
+  '2xl': 44,
+  '3xl': 56,
+} as const;
+
 export type Space = typeof space;
 export type Size = typeof size;
 export type Radius = typeof radius;

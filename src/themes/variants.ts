@@ -4,7 +4,7 @@
  */
 
 import { palette } from './palette';
-import { size, sizeL } from './tokens';
+import { size, sizeL, lineHeight, lineHeightL } from './tokens';
 import type { Colors } from './colorModes';
 
 export type Variant =
@@ -33,6 +33,7 @@ interface VariantOverride {
   };
   shadows?: { opacity: number };
   size?: typeof size | typeof sizeL;
+  lineHeight?: typeof lineHeight | typeof lineHeightL;
   fontFamily?: string;
 }
 
@@ -118,6 +119,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
         focusRing: palette.cream100,
       },
     },
+    lineHeight: lineHeightL,
     fontFamily: 'OpenDyslexic',
   },
 

@@ -5,10 +5,13 @@
 
 import { colorModes, type ColorMode, type Colors } from './colorModes';
 import { variantOverrides, type Variant } from './variants';
-import { space, size, sizeL, radius, zIndex, fontWeight, lineHeight } from './tokens';
+import { space, size, sizeL, radius, zIndex, fontWeight, lineHeight, lineHeightL } from './tokens';
 
 /** Size scale type - either normal or large */
 export type SizeScale = typeof size | typeof sizeL;
+
+/** Line height scale type - either normal or large */
+export type LineHeightScale = typeof lineHeight | typeof lineHeightL;
 
 export interface ComposedTheme {
   colors: Colors;
@@ -18,7 +21,7 @@ export interface ComposedTheme {
   radius: typeof radius;
   zIndex: typeof zIndex;
   fontWeight: typeof fontWeight;
-  lineHeight: typeof lineHeight;
+  lineHeight: LineHeightScale;
   fontFamily?: string;
 }
 
@@ -73,6 +76,9 @@ export function composeTheme(
   // Determine size scale
   const sizeScale = variantDef.size ?? size;
 
+  // Determine line height scale
+  const lineHeightScale = variantDef.lineHeight ?? lineHeight;
+
   const theme: ComposedTheme = {
     colors,
     shadows: { opacity: shadowOpacity },
@@ -81,7 +87,7 @@ export function composeTheme(
     radius,
     zIndex,
     fontWeight,
-    lineHeight,
+    lineHeight: lineHeightScale,
   };
 
   // Add fontFamily if specified
