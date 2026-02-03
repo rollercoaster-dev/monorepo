@@ -1,6 +1,9 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [vue()],
@@ -18,7 +21,7 @@ export default defineConfig({
     // Use single-threaded mode for Bun compatibility in CI
     // Bun doesn't fully support Node.js worker_threads APIs used by vitest pools
     threads: false,
-    environment: "jsdom",
+    environment: "happy-dom",
     globals: true,
     include: ["tests/**/*.{test,spec}.{js,ts,vue}"],
     setupFiles: ["tests/integration/setup.ts"],
@@ -37,8 +40,10 @@ export default defineConfig({
         "**/histoire.{js,ts}",
       ],
     },
-    deps: {
-      inline: ["vue", "primevue", "@vue/test-utils"],
+    server: {
+      deps: {
+        inline: ["vue", "primevue", "@vue/test-utils"],
+      },
     },
   },
 });
