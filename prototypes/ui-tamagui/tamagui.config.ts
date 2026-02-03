@@ -131,6 +131,135 @@ const animations = createAnimations({
   },
 });
 
+// Theme token definitions (from nd-themes.md)
+const themes = {
+  // Light theme (default base)
+  light: {
+    background: palette.white,
+    backgroundSecondary: palette.gray100,
+    backgroundTertiary: palette.gray200,
+    color: palette.gray900,
+    colorSecondary: palette.gray600,
+    colorMuted: palette.gray500,
+    accentPrimary: palette.gray900,
+    accentPurple: palette.purple400,
+    accentMint: palette.mint200,
+    accentYellow: palette.yellow300,
+    borderColor: palette.gray200,
+    shadowColor: palette.black,
+    shadowOpacity: 0.04,
+    focusRingColor: palette.gray900,
+  },
+
+  // Dark theme
+  dark: {
+    background: palette.gray900,
+    backgroundSecondary: palette.gray800,
+    backgroundTertiary: palette.gray700,
+    color: palette.gray50,
+    colorSecondary: palette.gray400,
+    colorMuted: palette.gray600,
+    accentPrimary: palette.gray50,
+    accentPurple: palette.purple400,
+    accentMint: palette.mint600,
+    accentYellow: palette.yellow300,
+    borderColor: palette.gray700,
+    shadowColor: palette.black,
+    shadowOpacity: 0.2,
+    focusRingColor: palette.gray50,
+  },
+
+  // High Contrast theme
+  highContrast: {
+    background: palette.black,
+    backgroundSecondary: palette.gray900,
+    backgroundTertiary: palette.gray700,
+    color: palette.white,
+    colorSecondary: palette.white,
+    colorMuted: palette.gray300,
+    accentPrimary: palette.white,
+    accentPurple: palette.purple300,
+    accentMint: palette.mint200,
+    accentYellow: palette.yellow300,
+    borderColor: palette.white,
+    shadowColor: palette.black,
+    shadowOpacity: 0,
+    focusRingColor: palette.blue600,
+  },
+
+  // Large Text theme (colors same as light, sizes handled by components)
+  largeText: {
+    background: palette.white,
+    backgroundSecondary: palette.gray100,
+    backgroundTertiary: palette.gray200,
+    color: palette.gray900,
+    colorSecondary: palette.gray600,
+    colorMuted: palette.gray500,
+    accentPrimary: palette.gray900,
+    accentPurple: palette.purple400,
+    accentMint: palette.mint200,
+    accentYellow: palette.yellow300,
+    borderColor: palette.gray200,
+    shadowColor: palette.black,
+    shadowOpacity: 0.04,
+    focusRingColor: palette.gray900,
+  },
+
+  // Dyslexia-Friendly theme
+  dyslexia: {
+    background: palette.cream100,
+    backgroundSecondary: palette.cream200,
+    backgroundTertiary: palette.gray200,
+    color: palette.gray700,
+    colorSecondary: palette.gray600,
+    colorMuted: palette.gray500,
+    accentPrimary: palette.gray700,
+    accentPurple: palette.purple400,
+    accentMint: palette.mint200,
+    accentYellow: palette.yellow300,
+    borderColor: palette.gray300,
+    shadowColor: palette.black,
+    shadowOpacity: 0.04,
+    focusRingColor: palette.gray700,
+  },
+
+  // Low Vision theme
+  lowVision: {
+    background: palette.black,
+    backgroundSecondary: palette.gray900,
+    backgroundTertiary: palette.gray700,
+    color: palette.white,
+    colorSecondary: palette.gray200,
+    colorMuted: palette.gray300,
+    accentPrimary: palette.white,
+    accentPurple: palette.purple300,
+    accentMint: palette.mint200,
+    accentYellow: palette.yellow300,
+    borderColor: palette.white,
+    shadowColor: palette.black,
+    shadowOpacity: 0,
+    focusRingColor: palette.blue600,
+  },
+
+  // Autism-Friendly theme
+  autismFriendly: {
+    background: palette.gray100,
+    backgroundSecondary: palette.gray200,
+    backgroundTertiary: palette.gray300,
+    color: palette.gray700,
+    colorSecondary: palette.gray600,
+    colorMuted: palette.gray500,
+    accentPrimary: palette.gray700,
+    accentPurple: '#b4a7d6', // desaturated purple
+    accentMint: '#c8e6d4', // desaturated mint
+    accentYellow: palette.yellow200,
+    borderColor: palette.gray300,
+    shadowColor: palette.black,
+    shadowOpacity: 0,
+    focusRingColor: palette.gray700,
+  },
+};
+
 export const config = createTamagui({
   tokens,
   fonts: {
@@ -138,7 +267,7 @@ export const config = createTamagui({
     heading: bodyFont, // Will be replaced with Anybody font
   },
   animations,
-  themes: {}, // Themes added in next task
+  themes,
 });
 
 export type Conf = typeof config;
