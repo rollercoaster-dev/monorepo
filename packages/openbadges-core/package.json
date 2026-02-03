@@ -32,7 +32,7 @@
     "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
     "type-check": "tsc --noEmit",
     "test": "bun test",
-    "test:unit": "bun test src/",
+    "test:unit": "bun test tests/",
     "test:integration": "echo 'No integration tests yet'",
     "test:e2e": "echo 'No E2E tests'",
     "test:watch": "bun test --watch",
