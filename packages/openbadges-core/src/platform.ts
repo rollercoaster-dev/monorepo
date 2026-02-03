@@ -11,20 +11,34 @@
 export type Platform = "node" | "bun" | "unknown";
 
 /**
+ * Cached platform result to avoid repeated detection in hot paths
+ */
+let cachedPlatform: Platform | null = null;
+
+/**
  * Detect the current runtime platform
+ *
+ * Results are memoized for performance since platform cannot change at runtime.
  *
  * @returns The detected platform type
  */
 export function detectPlatform(): Platform {
+  if (cachedPlatform !== null) {
+    return cachedPlatform;
+  }
+
   if (typeof process !== "undefined" && process.versions) {
     if (process.versions.bun) {
-      return "bun";
+      cachedPlatform = "bun";
+      return cachedPlatform;
     }
     if (process.versions.node) {
-      return "node";
+      cachedPlatform = "node";
+      return cachedPlatform;
     }
   }
-  return "unknown";
+  cachedPlatform = "unknown";
+  return cachedPlatform;
 }
 
 /**
