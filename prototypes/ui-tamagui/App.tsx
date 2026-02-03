@@ -1,16 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { TamaguiProvider } from './src/TamaguiProvider';
-import { View, Text } from '@tamagui/core';
+import { TamaguiProvider, useThemeName } from './src/TamaguiProvider';
+import { TestScreen } from './src/screens/TestScreen';
+
+function AppContent() {
+  const { theme } = useThemeName();
+  const isDark = theme === 'dark' || theme === 'highContrast' || theme === 'lowVision';
+
+  return (
+    <>
+      <TestScreen />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+}
 
 export default function App() {
   return (
     <TamaguiProvider>
-      <View flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
-        <Text color="$color" fontSize="$6">
-          Tamagui Prototype
-        </Text>
-        <StatusBar style="auto" />
-      </View>
+      <AppContent />
     </TamaguiProvider>
   );
 }
