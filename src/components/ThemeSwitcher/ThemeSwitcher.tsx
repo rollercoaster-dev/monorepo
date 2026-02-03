@@ -1,8 +1,8 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
-import { variantOptions, type Variant } from '../../themes/variants';
+import { variantOptions, variantOverrides, type Variant } from '../../themes/variants';
 import type { ColorMode } from '../../themes/colorModes';
-import { styles } from './ThemeSwitcher.styles';
+import { styles, variantPreviewStyles } from './ThemeSwitcher.styles';
 
 const colorModeOptions: Array<{ id: ColorMode; label: string }> = [
   { id: 'light', label: 'Light' },
@@ -40,6 +40,8 @@ export function ThemeSwitcher() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {variantOptions.map((option) => {
           const isSelected = variant === option.id;
+          const variantDef = variantOverrides[option.id];
+
           return (
             <Pressable
               key={option.id}
@@ -50,8 +52,12 @@ export function ThemeSwitcher() {
               accessibilityLabel={`${option.label}. ${option.description}`}
             >
               <View style={styles.variantButton(isSelected)}>
-                <Text style={styles.label}>{option.label}</Text>
-                <Text style={styles.description}>{option.description}</Text>
+                <Text style={variantPreviewStyles.label(option.id, variantDef)}>
+                  {option.label}
+                </Text>
+                <Text style={variantPreviewStyles.description(option.id, variantDef)}>
+                  {option.description}
+                </Text>
               </View>
             </Pressable>
           );

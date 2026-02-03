@@ -1,4 +1,6 @@
 import { StyleSheet } from 'react-native-unistyles';
+import { size, sizeL, lineHeight, lineHeightL } from '../../themes/tokens';
+import type { Variant } from '../../themes/variants';
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -6,13 +8,17 @@ export const styles = StyleSheet.create((theme) => ({
   },
   title: {
     fontSize: theme.size['2xl'],
+    lineHeight: theme.lineHeight['2xl'],
     fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily,
     color: theme.colors.text,
     marginBottom: theme.space[4],
   },
   sectionTitle: {
     fontSize: theme.size.lg,
+    lineHeight: theme.lineHeight.lg,
     fontWeight: theme.fontWeight.semibold,
+    fontFamily: theme.fontFamily,
     color: theme.colors.textSecondary,
     marginBottom: theme.space[2],
     marginTop: theme.space[2],
@@ -33,7 +39,9 @@ export const styles = StyleSheet.create((theme) => ({
   }),
   colorModeLabel: (selected: boolean) => ({
     fontSize: theme.size.md,
+    lineHeight: theme.lineHeight.md,
     fontWeight: selected ? theme.fontWeight.bold : theme.fontWeight.normal,
+    fontFamily: theme.fontFamily,
     color: theme.colors.text,
   }),
   variantButton: (selected: boolean) => ({
@@ -46,12 +54,48 @@ export const styles = StyleSheet.create((theme) => ({
   }),
   label: {
     fontSize: theme.size.lg,
+    lineHeight: theme.lineHeight.lg,
     fontWeight: theme.fontWeight.semibold,
+    fontFamily: theme.fontFamily,
     color: theme.colors.text,
   },
   description: {
     fontSize: theme.size.sm,
+    lineHeight: theme.lineHeight.sm,
+    fontFamily: theme.fontFamily,
     color: theme.colors.textSecondary,
     marginTop: theme.space[1],
   },
 }));
+
+// Variant-specific preview styles for each button
+interface VariantDef {
+  size?: typeof size | typeof sizeL;
+  lineHeight?: typeof lineHeight | typeof lineHeightL;
+  fontFamily?: string;
+}
+
+export const variantPreviewStyles = {
+  label: (variantId: Variant, variantDef: VariantDef) => {
+    const sizeScale = variantDef.size ?? size;
+    const lineHeightScale = variantDef.lineHeight ?? lineHeight;
+
+    return {
+      fontSize: sizeScale.lg,
+      lineHeight: lineHeightScale.lg,
+      fontWeight: '600' as const,
+      fontFamily: variantDef.fontFamily,
+    };
+  },
+  description: (variantId: Variant, variantDef: VariantDef) => {
+    const sizeScale = variantDef.size ?? size;
+    const lineHeightScale = variantDef.lineHeight ?? lineHeight;
+
+    return {
+      fontSize: sizeScale.sm,
+      lineHeight: lineHeightScale.sm,
+      fontFamily: variantDef.fontFamily,
+      marginTop: 4,
+    };
+  },
+};
