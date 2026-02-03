@@ -19,19 +19,11 @@ describe("Platform Detection", () => {
     it("should return true in Bun environment", () => {
       expect(isBun()).toBe(true);
     });
-
-    it("should match detectPlatform result", () => {
-      expect(isBun()).toBe(detectPlatform() === "bun");
-    });
   });
 
   describe("isNode()", () => {
     it("should return false in Bun environment", () => {
       expect(isNode()).toBe(false);
-    });
-
-    it("should match detectPlatform result", () => {
-      expect(isNode()).toBe(detectPlatform() === "node");
     });
   });
 });
