@@ -1,12 +1,12 @@
 import { View, Text, ScrollView } from 'react-native';
-import { useStyles, UnistylesRuntime } from 'react-native-unistyles';
+import { UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BadgeCard } from '../../components/BadgeCard';
 import { ThemeSwitcher } from '../../components/ThemeSwitcher';
-import { stylesheet } from './TestScreen.styles';
+import { styles } from './TestScreen.styles';
 
 export function TestScreen() {
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
 
   return (
     <SafeAreaView style={styles.container}>

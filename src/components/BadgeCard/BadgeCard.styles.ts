@@ -8,7 +8,7 @@ const sizeMap: Record<CardSize, number> = {
   spacious: 5,
 } as const;
 
-export const stylesheet = StyleSheet.create((theme) => ({
+export const styles = StyleSheet.create((theme) => ({
   pressable: {
     minHeight: 48,
   },

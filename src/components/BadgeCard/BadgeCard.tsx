@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
-import { useStyles } from 'react-native-unistyles';
-import { stylesheet } from './BadgeCard.styles';
+import { styles } from './BadgeCard.styles';
 
 export type BadgeCardSize = 'compact' | 'normal' | 'spacious';
 
@@ -19,8 +18,6 @@ export function BadgeCard({
   size = 'normal',
   onPress,
 }: BadgeCardProps) {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <Pressable
       onPress={onPress}
