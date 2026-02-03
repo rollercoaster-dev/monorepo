@@ -14,6 +14,7 @@
     "@tamagui/core": "^2.0.0-rc.0",
     "@tamagui/font-inter": "^2.0.0-rc.0",
     "@tamagui/themes": "^2.0.0-rc.0",
+    "babel-preset-expo": "^54.0.10",
     "expo": "~54.0.33",
     "expo-font": "~14.0.11",
     "expo-status-bar": "~3.0.9",
