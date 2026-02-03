@@ -46,36 +46,6 @@ This agent uses patterns from [shared/](../shared/):
 - **[tool-selection.md](../docs/tool-selection.md)** - **REQUIRED: Tool priority order**
 - **[dependency-checking.md](../shared/dependency-checking.md)** - Blocker detection and handling
 - **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message planning
-- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Plan logging for orchestrator
-
-## Knowledge Tools
-
-Use these skills for codebase exploration and workflow tracking:
-
-- `/graph-query` - Find callers, dependencies, blast radius
-- `/knowledge-query` - Search past learnings and patterns
-- `/docs-search` - Search project documentation
-- `/checkpoint-workflow` - Log actions and commits
-
-## Tool Selection (MANDATORY)
-
-**ALWAYS use graph/docs BEFORE Grep.** See [tool-selection.md](../docs/tool-selection.md).
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  STOP: Before using Grep, try these first:             │
-│                                                         │
-│  graph what-calls <fn>      → Find all callers         │
-│  graph what-depends-on <t>  → Find all usages          │
-│  graph blast-radius <file>  → Impact analysis          │
-│  graph find <name>          → Locate entity            │
-│  docs search "<query>"      → Find documentation       │
-│                                                         │
-│  Grep is LAST RESORT for literal text search only.     │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Why:** 1 graph query = 1 tool call. Grep chains = 5-15 tool calls. Graph is 10x more efficient.
 
 ## Purpose
 
@@ -178,17 +148,15 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
    - Search for keywords from the issue
    - Find relevant files and directories
    - Understand the existing code structure
-   - Use `/graph-query` skill to locate entities
 
 2. **Map dependencies:**
-   - Use `/graph-query` skill to find callers, dependencies, and blast radius
    - Identify any shared utilities or types
+   - Use Grep/Glob to find callers and usages
 
 3. **Review existing patterns:**
    - How are similar features implemented?
    - What conventions does the codebase follow?
    - Any relevant tests to reference?
-   - Use `/graph-query` skill to check public API surface
 
 4. **Check for related code:**
    - Similar implementations
@@ -198,14 +166,12 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
 ### Phase 3: Estimate Scope
 
 1. **Get codebase context:**
-   - Use `/graph-query` skill for package stats and blast radius analysis
+   - Use Grep/Glob for codebase exploration
 
 2. **Count affected files:**
    - New files to create
    - Existing files to modify
    - Test files needed
-   - Files in blast radius (from graph query)
-
 3. **Estimate lines of code:**
    - Implementation code
    - Test code
@@ -322,25 +288,7 @@ See `.claude/skills/board-manager/SKILL.md` for command reference and IDs.
    - Write to `.claude/dev-plans/issue-<number>.md`
    - Or return inline for user review
 
-2. **Log plan creation to checkpoint (if WORKFLOW_ID provided):**
-
-   ```typescript
-   if (WORKFLOW_ID) {
-     import { checkpoint } from "claude-knowledge";
-
-     checkpoint.logAction(WORKFLOW_ID, "dev_plan_created", "success", {
-       planPath: `.claude/dev-plans/issue-${issueNumber}.md`,
-       complexity: complexity, // e.g., "SMALL", "MEDIUM"
-       estimatedLines: estimatedLines,
-       commitCount: plannedCommits.length,
-       affectedFiles: affectedFiles.length,
-     });
-
-     console.log(`[ISSUE-RESEARCHER] Logged dev plan creation to checkpoint`);
-   }
-   ```
-
-3. **Report summary:**
+2. **Report summary:**
    - Key findings
    - Recommended approach
    - Any blockers or questions
@@ -412,22 +360,3 @@ This agent is successful when:
 - Plan has clear, atomic commits
 - Scope is appropriate for single PR
 - User can proceed confidently with implementation
-
-## Learning Capture
-
-Before completing, consider storing learnings discovered during this workflow:
-
-```bash
-# Store a learning via MCP (preferred)
-Use knowledge_store tool with content, codeArea, confidence
-
-# Or via CLI
-bun run checkpoint knowledge store "<learning>" --area "<code-area>" --confidence 0.8
-```
-
-Capture:
-
-- Patterns discovered in the codebase
-- Mistakes made and how they were resolved
-- Non-obvious solutions that worked
-- Gotchas for future reference

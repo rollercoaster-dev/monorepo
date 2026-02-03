@@ -11,43 +11,6 @@
             "description": "Install dependencies (web only, skips on local)"
           }
         ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-start",
-            "timeout": 15000,
-            "description": "Load relevant knowledge for session context"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-end",
-            "timeout": 15000,
-            "description": "Extract and store learnings via LLM at session end"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun \"$CLAUDE_PROJECT_DIR\"/packages/claude-knowledge/src/cli/index.ts session-end --interrupted",
-            "timeout": 5000,
-            "description": "Extract and store learnings before compaction (quick, non-blocking)"
-          }
-        ]
       }
     ]
   },
@@ -74,9 +37,6 @@
       "Bash(bun build:*)",
       "Bash(bun dev:*)",
       "Bash(bun run:*)",
-      "Bash(bun scripts/checkpoint-cli.ts:*)",
-      "Bash(bun packages/claude-knowledge/src/cli/index.ts:*)",
-      "Bash(bun packages/claude-workflows/src/cli.ts:*)",
       "Bash(./scripts/worktree-manager.sh:*)",
       "Bash(git checkout:*)",
       "Bash(git branch:*)",
@@ -100,9 +60,6 @@
       "Bash(rm -f .claude/dev-plans/:*)",
       "Bash(rm .claude/dev-plans/:*)",
       "Skill(board-manager)",
-      "Skill(graph-query)",
-      "Skill(docs-search)",
-      "Skill(knowledge-query)",
       "Edit",
       "Write"
     ],

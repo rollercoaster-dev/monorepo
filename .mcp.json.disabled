@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "claude-knowledge": {
-      "command": "bun",
-      "args": ["run", "packages/claude-knowledge/src/mcp-server/index.ts"]
-    }
-  }
-}

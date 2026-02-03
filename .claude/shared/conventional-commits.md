@@ -38,7 +38,6 @@ Package-specific scopes:
 | `openbadges-ui`     | packages/openbadges-ui         |
 | `openbadges-server` | apps/openbadges-modular-server |
 | `openbadges-system` | apps/openbadges-system         |
-| `claude-knowledge`  | packages/claude-knowledge      |
 | `deps`              | Dependency updates             |
 | `config`            | Configuration changes          |
 
@@ -94,24 +93,6 @@ Covers:
 
 ```
 chore: clean up dev-plan for issue #365
-```
-
-### Multi-line with Issue Reference
-
-```
-feat(claude-knowledge): implement knowledge.store() API
-
-Adds the ability to persist learnings to SQLite:
-- Learning entity creation
-- CodeArea auto-linking
-- Duplicate detection via content hash
-
-Acceptance criteria:
-- [x] Creates Learning entities
-- [x] Auto-creates CodeArea relationships
-- [x] Handles duplicates gracefully
-
-Related to #365
 ```
 
 ## Footer Formats
