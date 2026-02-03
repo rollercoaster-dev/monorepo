@@ -1,32 +1,55 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
-import { useStyles, UnistylesRuntime } from 'react-native-unistyles';
-import { themeOptions, ThemeName } from '../../themes';
-import { stylesheet } from './ThemeSwitcher.styles';
+import { useTheme } from '../../hooks/useTheme';
+import { variantOptions, type Variant } from '../../themes/variants';
+import type { ColorMode } from '../../themes/colorModes';
+import { styles } from './ThemeSwitcher.styles';
+
+const colorModeOptions: Array<{ id: ColorMode; label: string }> = [
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
 
 export function ThemeSwitcher() {
-  const { styles } = useStyles(stylesheet);
-  const currentTheme = UnistylesRuntime.themeName as ThemeName;
-
-  const handleThemeChange = (themeName: ThemeName) => {
-    UnistylesRuntime.setTheme(themeName);
-  };
+  const { colorMode, variant, setColorMode, setVariant } = useTheme();
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pick what feels right</Text>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {themeOptions.map((option) => {
-          const isSelected = currentTheme === option.id;
+
+      <Text style={styles.sectionTitle}>Color Mode</Text>
+      <View style={styles.colorModeRow}>
+        {colorModeOptions.map((option) => {
+          const isSelected = colorMode === option.id;
           return (
             <Pressable
               key={option.id}
-              onPress={() => handleThemeChange(option.id)}
+              onPress={() => setColorMode(option.id)}
               accessible
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${option.label} theme. ${option.description}`}
+              accessibilityLabel={`${option.label} mode`}
+              style={styles.colorModeButton(isSelected)}
             >
-              <View style={styles.button(isSelected)}>
+              <Text style={styles.colorModeLabel(isSelected)}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sectionTitle}>Accessibility</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {variantOptions.map((option) => {
+          const isSelected = variant === option.id;
+          return (
+            <Pressable
+              key={option.id}
+              onPress={() => setVariant(option.id)}
+              accessible
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${option.label}. ${option.description}`}
+            >
+              <View style={styles.variantButton(isSelected)}>
                 <Text style={styles.label}>{option.label}</Text>
                 <Text style={styles.description}>{option.description}</Text>
               </View>
