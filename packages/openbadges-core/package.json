@@ -1,0 +1,62 @@
+{
+  "name": "@rollercoaster-dev/openbadges-core",
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "bun@1.3.7",
+  "description": "Core Open Badges functionality for baking, crypto, and credentials",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write '{src,tests}/**/*.ts'",
+    "format:check": "prettier --check '{src,tests}/**/*.ts'",
+    "type-check": "tsc --noEmit",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rollercoaster-dev/monorepo.git",
+    "directory": "packages/openbadges-core"
+  },
+  "keywords": [
+    "open-badges",
+    "badges",
+    "baking",
+    "crypto",
+    "credentials",
+    "typescript"
+  ],
+  "author": "Rollercoaster.dev <team@rollercoaster.dev>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rollercoaster-dev/monorepo/issues"
+  },
+  "homepage": "https://github.com/rollercoaster-dev/monorepo/tree/main/packages/openbadges-core#readme",
+  "devDependencies": {
+    "@rollercoaster-dev/shared-config": "workspace:*",
+    "tsup": "^8.4.0"
+  },
+  "private": true
+}
