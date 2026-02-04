@@ -49,8 +49,9 @@ export interface DataIntegrityProof {
 export function detectKeyType(key: JWK): KeyType {
   if (key.kty === "OKP" && key.crv === "Ed25519") return KeyType.Ed25519;
   if (key.kty === "RSA") return KeyType.RSA;
-  // Default to RSA for unknown types
-  return KeyType.RSA;
+  throw new Error(
+    `Unsupported key type: ${key.kty}${key.crv ? ` (curve: ${key.crv})` : ""}. Only Ed25519 and RSA are supported.`,
+  );
 }
 
 /**
@@ -160,7 +161,9 @@ export async function verifyDataIntegrityProof(
       keyType = KeyType.Ed25519;
       break;
     default:
-      keyType = KeyType.RSA;
+      throw new Error(
+        `Unsupported cryptosuite: ${proof.cryptosuite}. Supported: ${Object.values(Cryptosuite).join(", ")}`,
+      );
   }
 
   return verifySignature(dataToVerify, proof.proofValue, publicKey, keyType);

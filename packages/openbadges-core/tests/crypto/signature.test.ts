@@ -91,8 +91,10 @@ describe("detectKeyType", () => {
     );
   });
 
-  test("defaults to RSA for unknown kty", () => {
-    expect(detectKeyType({ kty: "unknown" })).toBe(KeyType.RSA);
+  test("throws for unsupported key type", () => {
+    expect(() => detectKeyType({ kty: "unknown" })).toThrow(
+      "Unsupported key type",
+    );
   });
 });
 
