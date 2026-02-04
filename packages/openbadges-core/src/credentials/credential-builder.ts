@@ -4,7 +4,7 @@
  * @module credentials/credential-builder
  */
 
-import { BadgeSerializerFactory } from "./serializer.js";
+import { createSerializer } from "./serializer.js";
 import { BadgeVersion } from "./version.js";
 import type {
   IssuerData,
@@ -30,7 +30,7 @@ export function buildCredential(
   | (AssertionData & { "@context": string | string[]; type: string | string[] })
   | VerifiableCredentialData {
   const version = options.version ?? BadgeVersion.V3;
-  const serializer = BadgeSerializerFactory.createSerializer(version);
+  const serializer = createSerializer(version);
   return serializer.serializeAssertion(
     options.assertion,
     options.badgeClass,
@@ -46,7 +46,7 @@ export function serializeOB3(
   badgeClass: BadgeClassData,
   issuer: IssuerData,
 ): VerifiableCredentialData {
-  const serializer = BadgeSerializerFactory.createSerializer(BadgeVersion.V3);
+  const serializer = createSerializer(BadgeVersion.V3);
   return serializer.serializeAssertion(
     assertion,
     badgeClass,

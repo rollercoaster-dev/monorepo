@@ -25,7 +25,7 @@ export type { BadgeSerializer } from "./serializer.js";
 export {
   OpenBadges2Serializer,
   OpenBadges3Serializer,
-  BadgeSerializerFactory,
+  createSerializer,
 } from "./serializer.js";
 
 export {

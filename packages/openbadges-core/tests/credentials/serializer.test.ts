@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   OpenBadges2Serializer,
   OpenBadges3Serializer,
-  BadgeSerializerFactory,
+  createSerializer,
 } from "../../src/credentials/serializer";
 import {
   BadgeVersion,
@@ -173,20 +173,20 @@ describe("OpenBadges2Serializer", () => {
   });
 });
 
-describe("BadgeSerializerFactory", () => {
+describe("createSerializer", () => {
   it("should create OB2 serializer", () => {
-    const serializer = BadgeSerializerFactory.createSerializer(BadgeVersion.V2);
+    const serializer = createSerializer(BadgeVersion.V2);
     expect(serializer.getVersion()).toBe(BadgeVersion.V2);
   });
 
   it("should create OB3 serializer", () => {
-    const serializer = BadgeSerializerFactory.createSerializer(BadgeVersion.V3);
+    const serializer = createSerializer(BadgeVersion.V3);
     expect(serializer.getVersion()).toBe(BadgeVersion.V3);
   });
 
   it("should throw for unsupported version", () => {
-    expect(() =>
-      BadgeSerializerFactory.createSerializer("1.0" as BadgeVersion),
-    ).toThrow("Unsupported badge version");
+    expect(() => createSerializer("1.0" as BadgeVersion)).toThrow(
+      "Unsupported badge version",
+    );
   });
 });

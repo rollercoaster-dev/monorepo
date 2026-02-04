@@ -48,10 +48,10 @@ export function detectBadgeVersion(
 
   // Handle array context
   if (Array.isArray(context)) {
-    const v3Contexts = BADGE_VERSION_CONTEXTS[BadgeVersion.V3];
     if (
-      Array.isArray(v3Contexts) &&
-      v3Contexts.some((url) => context.includes(url))
+      BADGE_VERSION_CONTEXTS[BadgeVersion.V3].some((url) =>
+        context.includes(url),
+      )
     ) {
       return BadgeVersion.V3;
     }
@@ -66,26 +66,8 @@ export function detectBadgeVersion(
     if (context === BADGE_VERSION_CONTEXTS[BadgeVersion.V2]) {
       return BadgeVersion.V2;
     }
-    if (
-      Array.isArray(BADGE_VERSION_CONTEXTS[BadgeVersion.V3]) &&
-      BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(context)
-    ) {
+    if (BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(context)) {
       return BadgeVersion.V3;
-    }
-  }
-
-  // Handle object context
-  if (typeof context === "object") {
-    const contextValues = Object.values(context);
-    const v3Contexts = BADGE_VERSION_CONTEXTS[BadgeVersion.V3];
-    if (
-      Array.isArray(v3Contexts) &&
-      v3Contexts.some((url) => contextValues.includes(url))
-    ) {
-      return BadgeVersion.V3;
-    }
-    if (contextValues.includes(BADGE_VERSION_CONTEXTS[BadgeVersion.V2])) {
-      return BadgeVersion.V2;
     }
   }
 

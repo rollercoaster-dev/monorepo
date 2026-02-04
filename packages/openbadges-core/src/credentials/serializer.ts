@@ -7,11 +7,7 @@
  * @module credentials/serializer
  */
 
-import {
-  BadgeVersion,
-  BADGE_VERSION_CONTEXTS,
-  VC_V2_CONTEXT_URL,
-} from "./version.js";
+import { BadgeVersion, BADGE_VERSION_CONTEXTS } from "./version.js";
 import type { Shared } from "openbadges-types";
 import type {
   IssuerData,
@@ -136,12 +132,6 @@ export class OpenBadges2Serializer implements BadgeSerializer {
   }
 }
 
-function getV3Contexts(): string[] {
-  return Array.isArray(BADGE_VERSION_CONTEXTS[BadgeVersion.V3])
-    ? BADGE_VERSION_CONTEXTS[BadgeVersion.V3]
-    : [BADGE_VERSION_CONTEXTS[BadgeVersion.V3], VC_V2_CONTEXT_URL];
-}
-
 /**
  * Serializer for Open Badges 3.0
  */
@@ -150,7 +140,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     issuer: IssuerData,
   ): IssuerData & { "@context": string | string[]; type: string | string[] } {
     const result: Record<string, unknown> = {
-      "@context": getV3Contexts(),
+      "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: issuer.id,
       type: ["Profile"],
       name: issuer.name,
@@ -174,7 +164,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     type: string | string[];
   } {
     const result: Record<string, unknown> = {
-      "@context": getV3Contexts(),
+      "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: badgeClass.id,
       type: ["Achievement"],
       issuer: badgeClass.issuer,
@@ -215,7 +205,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     }
 
     const result: Record<string, unknown> = {
-      "@context": getV3Contexts(),
+      "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: assertion.id,
       type: ["Assertion"],
       badgeClass: (assertion.badgeClass || badgeClass?.id) as Shared.IRI,
@@ -242,10 +232,6 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     badgeClass: BadgeClassData,
     issuer: IssuerData,
   ): VerifiableCredentialData {
-    const contextList = Array.isArray(BADGE_VERSION_CONTEXTS[BadgeVersion.V3])
-      ? BADGE_VERSION_CONTEXTS[BadgeVersion.V3]
-      : [BADGE_VERSION_CONTEXTS[BadgeVersion.V3]];
-
     // Build issuer object (OB3 Section 8.4: type MUST include "Profile")
     const issuerObj: Record<string, unknown> = {
       id: issuer.id,
@@ -279,7 +265,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     // BADGE_VERSION_CONTEXTS[V3] already has correct order: VC 2.0 first, OB3 second
     // Per VC Data Model 2.0 spec: https://www.w3.org/TR/vc-data-model-2.0/#contexts
     const result: Record<string, unknown> = {
-      "@context": contextList,
+      "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: assertion.id,
       type: ["VerifiableCredential", "OpenBadgeCredential"],
       issuer: issuerObj,
@@ -313,17 +299,15 @@ export class OpenBadges3Serializer implements BadgeSerializer {
 }
 
 /**
- * Factory for creating badge serializers
+ * Creates a badge serializer for the specified version
  */
-export class BadgeSerializerFactory {
-  static createSerializer(version: BadgeVersion): BadgeSerializer {
-    switch (version) {
-      case BadgeVersion.V2:
-        return new OpenBadges2Serializer();
-      case BadgeVersion.V3:
-        return new OpenBadges3Serializer();
-      default:
-        throw new Error(`Unsupported badge version: ${version}`);
-    }
+export function createSerializer(version: BadgeVersion): BadgeSerializer {
+  switch (version) {
+    case BadgeVersion.V2:
+      return new OpenBadges2Serializer();
+    case BadgeVersion.V3:
+      return new OpenBadges3Serializer();
+    default:
+      throw new Error(`Unsupported badge version: ${version}`);
   }
 }
