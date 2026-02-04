@@ -100,6 +100,8 @@ export async function verifySignature(
 
     return decoded === data;
   } catch {
+    // Signature verification failures are expected (invalid/tampered signatures).
+    // Returns false rather than throwing to provide a clean boolean API.
     return false;
   }
 }

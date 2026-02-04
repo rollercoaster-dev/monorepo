@@ -70,4 +70,36 @@ describe("InMemoryKeyProvider", () => {
 
     expect(k1.keyId).not.toBe(k2.keyId);
   });
+
+  test("imports existing key pair", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { publicKey, privateKey } = await provider.generateKeyPair("Ed25519");
+
+    const importProvider = new InMemoryKeyProvider();
+    await importProvider.importKeyPair(
+      "imported-key",
+      publicKey,
+      privateKey,
+      "Ed25519",
+    );
+
+    const retrieved = await importProvider.getPublicKey("imported-key");
+    expect(retrieved).toEqual(publicKey);
+
+    const retrievedPrivate = await importProvider.getPrivateKey("imported-key");
+    expect(retrievedPrivate).toEqual(privateKey);
+  });
+
+  test("importKeyPair rejects invalid keys", async () => {
+    const provider = new InMemoryKeyProvider();
+
+    await expect(
+      provider.importKeyPair(
+        "bad-key",
+        { kty: "OKP" },
+        { kty: "OKP" },
+        "Ed25519",
+      ),
+    ).rejects.toThrow();
+  });
 });

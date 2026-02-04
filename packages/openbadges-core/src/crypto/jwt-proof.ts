@@ -130,7 +130,8 @@ export interface JWTProofVerificationOptions {
 
 /**
  * Import a private key (JWK or PEM) for signing.
- * Returns a CryptoKey suitable for jose signing operations.
+ * @returns CryptoKey when Web Crypto API is available (Node.js 15+, Bun, browsers),
+ *          or Uint8Array for symmetric keys / raw key material.
  */
 async function importPrivateKeyForSigning(
   key: JWK | string,
@@ -144,7 +145,8 @@ async function importPrivateKeyForSigning(
 
 /**
  * Import a public key (JWK or PEM) for verification.
- * Returns a CryptoKey suitable for jose verification operations.
+ * @returns CryptoKey when Web Crypto API is available (Node.js 15+, Bun, browsers),
+ *          or Uint8Array for symmetric keys / raw key material.
  */
 async function importPublicKeyForVerification(
   key: JWK | string,
@@ -267,7 +269,9 @@ export function getRecommendedAlgorithm(
     case "eddsa":
       return "EdDSA";
     default:
-      return "RS256";
+      throw new Error(
+        `Unknown key type: ${keyType}. Supported: rsa, ec, ecdsa, ed25519, eddsa`,
+      );
   }
 }
 

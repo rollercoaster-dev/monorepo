@@ -125,6 +125,27 @@ describe("DataIntegrityProof", () => {
     expect(valid).toBe(true);
   });
 
+  test("creates and verifies RSA proof", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { keyId } = await provider.generateKeyPair("RSA");
+    const privateKey = await provider.getPrivateKey(keyId);
+    const publicKey = await provider.getPublicKey(keyId);
+
+    const data = JSON.stringify({ name: "Test Badge" });
+    const verificationMethod = "https://example.com/keys/1" as Shared.IRI;
+
+    const proof = await createDataIntegrityProof(
+      data,
+      privateKey,
+      verificationMethod,
+      KeyType.RSA,
+    );
+
+    expect(proof.cryptosuite).toBe(Cryptosuite.RsaSha256);
+    const valid = await verifyDataIntegrityProof(data, proof, publicKey);
+    expect(valid).toBe(true);
+  });
+
   test("verification fails with tampered data", async () => {
     const provider = new InMemoryKeyProvider();
     const { keyId } = await provider.generateKeyPair("Ed25519");

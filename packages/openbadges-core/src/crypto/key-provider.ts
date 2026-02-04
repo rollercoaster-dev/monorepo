@@ -74,6 +74,12 @@ export class InMemoryKeyProvider implements KeyProvider {
   private keys = new Map<string, StoredKeyPair>();
   private counter = 0;
 
+  /**
+   * Retrieve a public key by its identifier.
+   * @param keyId - The unique identifier of the key pair
+   * @returns The public key in JWK format
+   * @throws Error if the key is not found
+   */
   async getPublicKey(keyId: string): Promise<JWK> {
     const stored = this.keys.get(keyId);
     if (!stored) {
@@ -82,6 +88,12 @@ export class InMemoryKeyProvider implements KeyProvider {
     return stored.publicKey;
   }
 
+  /**
+   * Retrieve a private key by its identifier.
+   * @param keyId - The unique identifier of the key pair
+   * @returns The private key in JWK format
+   * @throws Error if the key is not found
+   */
   async getPrivateKey(keyId: string): Promise<JWK> {
     const stored = this.keys.get(keyId);
     if (!stored) {
@@ -135,6 +147,10 @@ export class InMemoryKeyProvider implements KeyProvider {
 
   /**
    * Import an existing JWK key pair (useful for test fixtures).
+   *
+   * Note: This method does not verify that the public and private keys
+   * form a matching cryptographic pair. Callers must ensure key consistency.
+   * Importing with an existing keyId will overwrite the previous key pair.
    */
   async importKeyPair(
     keyId: string,

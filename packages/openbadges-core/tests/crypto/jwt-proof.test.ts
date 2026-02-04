@@ -106,6 +106,12 @@ describe("getRecommendedAlgorithm", () => {
   test("returns ES256 for ec", () => {
     expect(getRecommendedAlgorithm("ec")).toBe("ES256");
   });
+
+  test("throws for unknown key type", () => {
+    expect(() => getRecommendedAlgorithm("unknown")).toThrow(
+      "Unknown key type",
+    );
+  });
 });
 
 describe("isJWTProof", () => {
