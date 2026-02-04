@@ -21,3 +21,6 @@ export * from "./credentials/index.js";
 
 // Crypto module
 export * from "./crypto/index.js";
+
+// Baking module
+export * from "./baking/index.js";
