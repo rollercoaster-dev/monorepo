@@ -1,6 +1,6 @@
 # Telegram Skill Helpers
 
-> **Architecture:** Used by setup-agent and finalize-agent for notifications. See [agent-architecture.md](../docs/agent-architecture.md).
+> **Architecture:** Used by setup and finalize skills for notifications. See [agent-architecture.md](../docs/agent-architecture.md).
 
 Shared notification patterns for workflow commands.
 

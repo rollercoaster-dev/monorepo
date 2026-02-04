@@ -118,31 +118,28 @@ Tasks for Issue #123:
 ## Workflow
 
 ```
-Phase 1: Setup     → setup-agent     → GATE 1 (Issue Review)
-Phase 2: Research  → issue-researcher → GATE 2 (Plan Review)
-Phase 3: Implement → (manual commits) → GATE 3 (per commit)
-Phase 4: Review    → review agents    → GATE 4 (Pre-PR Review)
-Phase 5: Finalize  → finalize-agent
+Phase 1: Setup     → Skill(setup)           → GATE 1 (Issue Review)
+Phase 2: Research  → Task(issue-researcher)  → GATE 2 (Plan Review)
+Phase 3: Implement → (orchestrator inline)   → GATE 3 (per commit)
+Phase 4: Review    → Skill(review)           → GATE 4 (Pre-PR Review)
+Phase 5: Finalize  → Skill(finalize)
 ```
 
 ---
 
 ## Phase 1: Setup
 
-**Agent:** `setup-agent`
-
 ```
-Task(setup-agent):
+Skill(setup):
   Input:  { issue_number: <N> }
-  Output: { workflow_id, branch, issue }
+  Output: { branch, issue }
 ```
 
-The setup-agent will:
+The setup skill will:
 
 - Check for existing workflow (offer resume if found)
 - Fetch issue details
 - Create feature branch
-- Create checkpoint workflow
 - Add issue to board as "In Progress"
 - Send notification via `telegram` skill
 
@@ -175,20 +172,17 @@ The setup-agent will:
 
 ## Phase 2: Research
 
-**Agent:** `issue-researcher`
-
 ```
 Task(issue-researcher):
-  Input:  { issue_number: <N>, workflow_id: <from-phase-1> }
+  Input:  { issue_number: <N> }
   Output: { plan_path, complexity, commit_count }
 ```
 
 The issue-researcher will:
 
-- Analyze codebase using graph queries
+- Analyze codebase using Glob, Grep, Read
 - Check dependencies
 - Create dev plan at `.claude/dev-plans/issue-<N>.md`
-- Log plan creation to checkpoint
 
 ---
 
@@ -218,7 +212,6 @@ The issue-researcher will:
 
 ## Phase 3: Implement
 
-**Note:** Unlike /auto-issue, this phase does NOT use atomic-developer agent.
 The orchestrator handles implementation directly with per-commit gates.
 
 For each commit in the plan:
@@ -250,7 +243,7 @@ For each commit in the plan:
 
 **Wait for:** "proceed", "yes", "approved"
 
-4. **If approved:** Commit changes, log to checkpoint
+4. **If approved:** Commit changes
 5. **If rejected:** Ask for guidance, modify, re-show
 
 ---
@@ -259,13 +252,18 @@ For each commit in the plan:
 
 **If `--skip-review`:** Skip to Phase 5.
 
-Run review agents (can be parallel):
+```
+Skill(review):
+  Input:  { workflow_id }
+  Output: { findings, summary }
+```
 
-- `pr-review-toolkit:code-reviewer`
-- `pr-review-toolkit:pr-test-analyzer`
-- `pr-review-toolkit:silent-failure-hunter`
+The review skill will:
 
-Collect and classify findings by severity.
+- Spawn review agents in parallel
+- Classify findings by severity
+- Auto-fix critical findings
+- Return summary
 
 ---
 
@@ -297,22 +295,19 @@ Collect and classify findings by severity.
 
 ## Phase 5: Finalize
 
-**Agent:** `finalize-agent`
-
 ```
-Task(finalize-agent):
-  Input:  { issue_number: <N>, workflow_id, findings_summary: <from-phase-4> }
+Skill(finalize):
+  Input:  { issue_number: <N>, findings_summary: <from-phase-4> }
   Output: { pr }
 ```
 
-The finalize-agent will:
+The finalize skill will:
 
 - Run final validation
 - Clean up dev plan file
 - Push branch
 - Create PR
 - Update board to "Blocked"
-- Mark workflow complete
 - Send notification via `telegram` skill with PR link
 
 ---
@@ -358,17 +353,3 @@ Workflow succeeds when:
 - PR is created
 - Board updated to "Blocked"
 - Workflow marked complete
-
----
-
-## Agents Summary
-
-| Phase | Agent              | Gate After                   |
-| ----- | ------------------ | ---------------------------- |
-| 1     | `setup-agent`      | GATE 1: Issue Review         |
-| 2     | `issue-researcher` | GATE 2: Plan Review          |
-| 3     | (orchestrator)     | GATE 3: Commit Review (each) |
-| 4     | review agents      | GATE 4: Pre-PR Review        |
-| 5     | `finalize-agent`   | -                            |
-
-See `.claude/docs/agent-architecture.md` for full agent contracts.

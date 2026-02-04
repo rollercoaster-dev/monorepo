@@ -1,11 +1,10 @@
 ---
-name: atomic-developer
+name: implement
 description: Implements code changes following a development plan with atomic commits. Each commit is self-contained and the PR focuses on a single change. Use after issue-researcher creates a plan.
-tools: Bash, Read, Write, Edit, Glob, Grep, Skill
-model: sonnet
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill
 ---
 
-# Atomic Developer Agent
+# Implement Skill
 
 ## Contract
 
@@ -44,50 +43,13 @@ model: sonnet
 
 ---
 
-## Shared Patterns
-
-This agent uses patterns from [shared/](../shared/):
-
-- **[tool-selection.md](../docs/tool-selection.md)** - **REQUIRED: Tool priority order**
-- **[conventional-commits.md](../shared/conventional-commits.md)** - Commit message format
-- **[validation-commands.md](../shared/validation-commands.md)** - Type-check, lint commands
-- **[checkpoint-patterns.md](../shared/checkpoint-patterns.md)** - Commit logging for orchestrator
-- **[board-operations.md](../shared/board-operations.md)** - Board status updates
-
 ## Tool Selection (MANDATORY)
 
-See [tool-selection.md](../docs/tool-selection.md) for tool priority guidelines.
+See [tool-selection.md](../../docs/tool-selection.md) for tool priority guidelines.
 
 ## Purpose
 
 Implements code changes following a development plan, making atomic commits that each represent a single logical change. Follows trunk-based development practices with small, focused changes.
-
-## When to Use This Agent
-
-- After issue-researcher creates a development plan
-- When implementing a planned feature or fix
-- To ensure atomic, well-structured commits
-- For disciplined trunk-based development
-
-## Trigger Phrases
-
-- "implement issue #123"
-- "develop issue #123"
-- "code the plan for issue #123"
-- "atomic develop"
-
-## Inputs
-
-The user should provide:
-
-- **Issue number**: The GitHub issue being implemented
-- **Development plan**: From issue-researcher (or path to it)
-- **WORKFLOW_ID**: From orchestrator for checkpoint tracking (if running under /auto-issue)
-
-Optional:
-
-- **Start from step**: If resuming partial work
-- **Skip tests**: For draft implementations
 
 ## Core Principles
 
@@ -138,31 +100,6 @@ RIGHT (minimal):
 - Complex function: 5-8 tests
 - Full service: 8-15 tests
 
-**WRONG (over-tested):**
-
-```typescript
-// 33 tests for a storage service that has 3 functions
-it("should handle empty string");
-it("should handle null");
-it("should handle undefined");
-it("should handle whitespace-only string");
-it("should handle very long string");
-// ... 28 more tests
-```
-
-**RIGHT (focused):**
-
-```typescript
-// 8 tests covering real behavior
-it("should return null when no env vars set");
-it("should throw when only private key set");
-it("should load valid PEM keys");
-it("should load base64-encoded keys");
-it("should cache the loaded key");
-it("should auto-generate when enabled");
-it("should throw when no key available");
-```
-
 ### Atomic Commits
 
 Each commit must be:
@@ -190,8 +127,6 @@ feat(keys): add types, implement generation, add tests
 feat: various improvements to key management
 wip: work in progress
 ```
-
-**Grouping Rule**: Related changes that MUST be together (e.g., type definition + its tests) can share a commit. Separate concerns that COULD work independently should be separate commits.
 
 ### Commit Message Format
 
@@ -221,27 +156,9 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
    git status
    ```
 
-2. **Create feature branch:**
-
-   ```bash
-   git checkout -b <type>/issue-<number>-<short-description>
-   ```
-
-   Example: `feat/issue-15-jwks-endpoint`
-
-3. **Load development plan:**
+2. **Load development plan:**
    - Read from `.claude/dev-plans/issue-<number>.md`
-   - Or receive from user
-
-4. **Update GitHub Project Board - Set "In Progress":**
-
-   Use the `board-manager` skill to update status:
-
-   ```
-   Move issue #<number> to "In Progress"
-   ```
-
-   See `.claude/skills/board-manager/SKILL.md` for command reference.
+   - Or receive from caller
 
 ### Phase 2: Execute Plan Step by Step
 
@@ -273,12 +190,6 @@ For each step in the development plan:
 
    ```bash
    bun run format
-   ```
-
-   Verify formatting passes:
-
-   ```bash
-   bun run lint
    ```
 
 6. **Stage and commit:**
@@ -352,56 +263,13 @@ After all commits:
    - Lines added/removed
    - Tests added/passing
 
-2. **Ready for PR:**
+2. **Ready for review:**
    - Branch name
    - Base branch
    - Suggested PR title
 
 3. **Next step:**
-   - "Ready for pr-creator agent"
-
-## Commit Templates
-
-### Feature commit
-
-```
-feat(<scope>): add <feature>
-
-- Implement <component/function>
-- Add types for <entity>
-- Wire up to <integration point>
-```
-
-### Test commit
-
-```
-test(<scope>): add tests for <feature>
-
-- Unit tests for <function>
-- Edge cases for <scenario>
-- Coverage: <percentage>%
-```
-
-### Fix commit
-
-```
-fix(<scope>): resolve <issue>
-
-- Root cause: <explanation>
-- Solution: <approach>
-
-Closes #<issue-number>
-```
-
-### Refactor commit
-
-```
-refactor(<scope>): <change>
-
-- Extract <component>
-- Simplify <logic>
-- No functional changes
-```
+   - "Ready for review phase"
 
 ## Error Handling
 
@@ -470,50 +338,15 @@ After completion:
 - Build: PASS
 
 ### Next Step
-Ready for pr-creator. Run: "create pr for issue #<number>"
-```
-
-## Tools Required
-
-**Required:**
-
-- Bash (git commands, validation)
-- Read (examine existing code)
-- Write (create new files)
-- Edit (modify existing files)
-
-**Optional:**
-
-- Glob (find files)
-- Grep (search code)
-
-## Example Usage
-
-```
-User: "implement issue #15" (with plan loaded)
-
-Agent:
-1. Creates branch: feat/issue-15-jwks-endpoint
-2. Step 1: Adds key management types
-   - Creates src/services/key-management/types.ts
-   - Commits: "feat(keys): add key management type definitions"
-3. Step 2: Implements key generator
-   - Creates src/services/key-management/key-generator.ts
-   - Creates tests/services/key-management/key-generator.test.ts
-   - Commits: "feat(keys): implement RSA key pair generation"
-4. Step 3: Adds JWKS endpoint
-   - Creates src/api/controllers/well-known.controller.ts
-   - Commits: "feat(api): add JWKS endpoint"
-5. Runs full validation: all passing
-6. Reports: "3 commits, 145 lines. Ready for pr-creator."
+Ready for review phase.
 ```
 
 ## Success Criteria
 
-This agent is successful when:
+This skill is successful when:
 
 - All planned commits are made
 - Each commit is atomic and buildable
 - All validations pass
-- Branch is ready for PR
+- Branch is ready for review
 - Code follows project conventions

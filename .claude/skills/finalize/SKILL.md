@@ -1,11 +1,10 @@
 ---
-name: finalize-agent
+name: finalize
 description: Completes issue workflow - pushes branch, creates PR, updates board, marks workflow complete. Use at the end of any issue workflow.
-tools: Bash, Read
-model: sonnet
+allowed-tools: Bash, Read, Skill
 ---
 
-# Finalize Agent
+# Finalize Skill
 
 Completes the workflow by creating PR and cleaning up.
 
@@ -16,7 +15,7 @@ Completes the workflow by creating PR and cleaning up.
 | Field              | Type    | Required | Description                                            |
 | ------------------ | ------- | -------- | ------------------------------------------------------ |
 | `issue_number`     | number  | Yes      | GitHub issue number                                    |
-| `findings_summary` | object  | No       | Summary from review-orchestrator                       |
+| `findings_summary` | object  | No       | Summary from review phase                              |
 | `force`            | boolean | No       | Create PR even with unresolved issues (default: false) |
 | `skip_board`       | boolean | No       | Skip board update (default: false)                     |
 | `skip_notify`      | boolean | No       | Skip Telegram notification (default: false)            |
@@ -268,7 +267,6 @@ Board: Updated to "Blocked" (awaiting review)
 Workflow: Marked as completed
 
 Commits: <count>
-Duration: <time>
 
 Next: PR will be reviewed by CodeRabbit and team.
 ```

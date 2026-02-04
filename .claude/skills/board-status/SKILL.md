@@ -102,4 +102,4 @@ Status Option IDs:
 
 ## Note
 
-This skill is **read-only**. To update board status, use the `atomic-developer`, `pr-creator`, or `review-handler` agents which have write permissions.
+This skill is **read-only**. To update board status, use the `setup` skill, `finalize` skill, `pr-creator`, or `review-handler` agents which have write permissions.

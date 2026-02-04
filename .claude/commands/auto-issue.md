@@ -1,6 +1,6 @@
 # /auto-issue <issue-number>
 
-Fully autonomous issue-to-PR workflow. Delegates to specialized agents.
+Fully autonomous issue-to-PR workflow.
 
 **Mode:** Autonomous - no gates, auto-fix enabled, escalation only on unresolved critical findings.
 
@@ -52,37 +52,12 @@ WRONG understanding:
 ## Workflow
 
 ```text
-Phase 1: Setup     → setup-agent
-Phase 2: Research  → issue-researcher
-Phase 3: Implement → atomic-developer
-Phase 4: Review    → review-orchestrator
-Phase 5: Finalize  → finalize-agent
+Phase 1: Setup     → Skill(setup)
+Phase 2: Research  → Task(issue-researcher)
+Phase 3: Implement → Skill(implement)
+Phase 4: Review    → Skill(review)
+Phase 5: Finalize  → Skill(finalize)
 ```
-
-### Why Each Phase is Required
-
-| Phase     | Purpose                                          | What It Produces                    |
-| --------- | ------------------------------------------------ | ----------------------------------- |
-| Setup     | Create isolated branch for this issue's work     | Branch `feat/issue-N-...`           |
-| Research  | Understand before acting; plan before coding     | Dev plan in `.claude/dev-plans/`    |
-| Implement | Execute the plan with atomic, reviewable commits | Commits on the feature branch       |
-| Review    | Catch bugs, security issues, style problems      | Findings report, auto-fixes applied |
-| Finalize  | Create PR for user review before merge           | PR ready for human approval         |
-
-### Why This Saves Tokens (and Time)
-
-Following the workflow actually **reduces** total token usage:
-
-1. **Research phase** - Understanding the codebase first prevents trial-and-error coding
-2. **Atomic commits** - Small commits are easier to review and fix than large diffs
-3. **Review phase** - Catching bugs here is cheaper than fixing after merge
-4. **PR creation** - Async review by CI/humans doesn't block your context
-
-**Skipping phases costs more:**
-
-- No research → wrong implementation → rewrite everything
-- No review → bugs in production → emergency fixes
-- No PR → direct commits → manual reverts when things break
 
 ---
 
@@ -189,19 +164,16 @@ Issue #123 Progress:
 
 ## Phase 1: Setup
 
-**Agent:** `setup-agent`
-
 ```text
-Task(setup-agent):
+Skill(setup):
   Input:  { issue_number: <N> }
-  Output: { workflow_id, branch, issue }
+  Output: { branch, issue }
 ```
 
-The setup-agent will:
+The setup skill will:
 
 - Fetch issue details
 - Create feature branch
-- Create checkpoint workflow
 - Add issue to board as "In Progress"
 - Send notification via `telegram` skill
 
@@ -211,20 +183,17 @@ The setup-agent will:
 
 ## Phase 2: Research
 
-**Agent:** `issue-researcher`
-
 ```text
 Task(issue-researcher):
-  Input:  { issue_number: <N>, workflow_id: <from-phase-1> }
+  Input:  { issue_number: <N> }
   Output: { plan_path, complexity, commit_count }
 ```
 
 The issue-researcher will:
 
-- Analyze codebase using graph queries
+- Analyze codebase using Glob, Grep, Read
 - Check dependencies
 - Create dev plan at `.claude/dev-plans/issue-<N>.md`
-- Log plan creation to checkpoint
 
 **If `--dry-run`:** Stop here, display plan, exit.
 
@@ -234,20 +203,18 @@ The issue-researcher will:
 
 ## Phase 3: Implement
 
-**Agent:** `atomic-developer`
-
 ```text
-Task(atomic-developer):
-  Input:  { issue_number: <N>, workflow_id, plan_path: <from-phase-2> }
+Skill(implement):
+  Input:  { issue_number: <N>, plan_path: <from-phase-2> }
   Output: { commits, validation }
 ```
 
-The atomic-developer will:
+The implement skill will:
 
+- Read the dev plan
 - Implement each step in the plan
 - Make atomic commits
 - Run validation after each commit
-- Log commits to checkpoint
 
 **On validation failure:** Attempt inline fix, continue.
 
@@ -255,19 +222,17 @@ The atomic-developer will:
 
 ## Phase 4: Review
 
-**Agent:** `review-orchestrator`
-
 ```text
-Task(review-orchestrator):
+Skill(review):
   Input:  { workflow_id }
   Output: { findings, summary }
 ```
 
 **If `--skip-review`:** Skip to Phase 5.
 
-The review-orchestrator will:
+The review skill will:
 
-- Spawn review agents in parallel
+- Spawn review agents in parallel (as Task subagents)
 - Classify findings by severity
 - Auto-fix critical findings (up to 3 attempts each)
 - Return summary with unresolved findings
@@ -278,31 +243,26 @@ The review-orchestrator will:
 
 ## Phase 5: Finalize
 
-**Agent:** `finalize-agent`
-
 ```text
-Task(finalize-agent):
-  Input:  { issue_number: <N>, workflow_id, findings_summary: <from-phase-4> }
+Skill(finalize):
+  Input:  { issue_number: <N>, findings_summary: <from-phase-4> }
   Output: { pr }
 ```
 
-The finalize-agent will:
+The finalize skill will:
 
 - Run final validation
 - Clean up dev plan file
 - Push branch
 - Create PR
 - Update board to "Blocked"
-- Mark workflow complete
 - Send notification via `telegram` skill with PR link
 
 ---
 
 ## Escalation
 
-Triggered when `review-orchestrator` returns unresolved critical findings.
-
-**Notify user via `telegram` skill:**
+When Phase 4 returns unresolved critical findings, notify user via `telegram` skill:
 
 ```text
 ESCALATION: Issue #<N>
@@ -341,7 +301,7 @@ Options:
 | ------------------ | ----------------------------------------- |
 | Issue not found    | Report error, exit                        |
 | Branch conflict    | Checkout existing, find existing workflow |
-| Agent failure      | Report error, exit (critical)             |
+| Skill failure      | Report error, exit (critical)             |
 | Validation failure | Attempt fix, continue if possible         |
 
 ---
@@ -354,17 +314,3 @@ Workflow succeeds when:
 - Board updated to "Blocked"
 - Notification sent via `telegram` skill
 - Workflow marked complete
-
----
-
-## Agents Summary
-
-| Phase | Agent                 | Purpose                   |
-| ----- | --------------------- | ------------------------- |
-| 1     | `setup-agent`         | Branch, checkpoint, board |
-| 2     | `issue-researcher`    | Analyze, plan             |
-| 3     | `atomic-developer`    | Implement, commit         |
-| 4     | `review-orchestrator` | Review, fix               |
-| 5     | `finalize-agent`      | PR, cleanup               |
-
-See `.claude/docs/agent-architecture.md` for full agent contracts.

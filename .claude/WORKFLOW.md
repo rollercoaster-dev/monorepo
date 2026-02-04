@@ -17,7 +17,7 @@ Issue → Research → Plan → Implement → PR → Review → Merge
 | Skill | milestone-tracker | Track milestone progress   | Auto (ask about milestone)     |
 | Skill | pr-review-checker | Check PR review status     | Auto (ask about reviews)       |
 | Agent | issue-researcher  | Research and plan          | `"research issue #123"`        |
-| Agent | atomic-developer  | Implement with commits     | `"implement issue #123"`       |
+| Skill | implement         | Implement with commits     | `Skill(implement)`             |
 | Agent | pr-creator        | Create PR, trigger reviews | `"create pr for issue #123"`   |
 | Agent | review-handler    | Address review feedback    | `"handle reviews for pr #123"` |
 | Agent | milestone-planner | Analyze milestone deps     | (used by /auto-milestone)      |
@@ -50,7 +50,7 @@ The `issue-researcher` agent:
 
 **Command:** `"implement issue #108"`
 
-The `atomic-developer` agent:
+The `implement` skill:
 
 1. Creates feature branch: `feat/issue-108-description`
 2. Follows the development plan
@@ -194,13 +194,13 @@ Phase 5: Cleanup
 Backlog → Next → In Progress → Blocked → Done
 ```
 
-| Status      | When                            | Who Updates      |
-| ----------- | ------------------------------- | ---------------- |
-| Backlog     | Issue created, not ready        | Manual           |
-| Next        | Dependencies met, ready to work | Manual           |
-| In Progress | Work started                    | atomic-developer |
-| Blocked     | PR created, awaiting review     | pr-creator       |
-| Done        | PR merged                       | review-handler   |
+| Status      | When                            | Who Updates    |
+| ----------- | ------------------------------- | -------------- |
+| Backlog     | Issue created, not ready        | Manual         |
+| Next        | Dependencies met, ready to work | Manual         |
+| In Progress | Work started                    | setup skill    |
+| Blocked     | PR created, awaiting review     | pr-creator     |
+| Done        | PR merged                       | review-handler |
 
 ### Branch Naming
 
@@ -246,12 +246,17 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 
 ```
 .claude/
-├── agents/              # Agent definitions
-│   ├── atomic-developer.md
+├── agents/              # Agent definitions (subagents)
 │   ├── issue-researcher.md
 │   ├── milestone-planner.md
 │   ├── pr-creator.md
+│   ├── auto-fixer.md
 │   └── review-handler.md
+├── skills/              # Skill definitions (inline)
+│   ├── setup/SKILL.md
+│   ├── implement/SKILL.md
+│   ├── review/SKILL.md
+│   └── finalize/SKILL.md
 ├── commands/            # Slash commands
 │   ├── auto-issue.md
 │   ├── auto-milestone.md

@@ -1,6 +1,6 @@
 # Escalation Patterns
 
-> **Architecture:** Used by review-orchestrator for escalation handling. See [agent-architecture.md](../docs/agent-architecture.md).
+> **Architecture:** Used by review skill for escalation handling. See [agent-architecture.md](../docs/agent-architecture.md).
 
 Shared patterns for handling workflow failures and user intervention.
 
