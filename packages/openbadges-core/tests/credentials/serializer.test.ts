@@ -86,7 +86,7 @@ describe("OpenBadges3Serializer", () => {
       const result = serializer.serializeIssuer(mockIssuer);
       expect(Array.isArray(result["@context"])).toBe(true);
       expect(result["@context"] as string[]).toContain(VC_V2_CONTEXT_URL);
-      expect(result.type).toBe("Issuer");
+      expect(result.type).toEqual(["Profile"]);
       expect(result.name).toBe("Example University");
     });
   });
@@ -134,7 +134,7 @@ describe("OpenBadges3Serializer", () => {
         mockIssuer,
       );
       const subject = result["credentialSubject"] as Record<string, unknown>;
-      expect(subject.type).toBe("AchievementSubject");
+      expect(subject.type).toEqual(["AchievementSubject"]);
       expect(subject.id).toBe("student@example.edu");
     });
   });

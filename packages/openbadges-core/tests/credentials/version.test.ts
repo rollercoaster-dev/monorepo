@@ -58,6 +58,13 @@ describe("detectBadgeVersion", () => {
     expect(result).toBe(BadgeVersion.V3);
   });
 
+  it("should detect OB3 from standard array context", () => {
+    const result = detectBadgeVersion({
+      "@context": [VC_V2_CONTEXT_URL, OBV3_CONTEXT_URL],
+    });
+    expect(result).toBe(BadgeVersion.V3);
+  });
+
   it("should return undefined for missing context", () => {
     expect(detectBadgeVersion({})).toBeUndefined();
   });

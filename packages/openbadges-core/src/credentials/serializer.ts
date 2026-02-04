@@ -152,7 +152,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     const result: Record<string, unknown> = {
       "@context": getV3Contexts(),
       id: issuer.id,
-      type: "Issuer",
+      type: ["Profile"],
       name: issuer.name,
       url: issuer.url,
     };
@@ -246,10 +246,10 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       ? BADGE_VERSION_CONTEXTS[BadgeVersion.V3]
       : [BADGE_VERSION_CONTEXTS[BadgeVersion.V3]];
 
-    // Build issuer object
+    // Build issuer object (OB3 Section 8.4: type MUST include "Profile")
     const issuerObj: Record<string, unknown> = {
       id: issuer.id,
-      type: "Issuer",
+      type: ["Profile"],
       name: issuer.name,
       url: issuer.url,
     };
@@ -286,7 +286,7 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       validFrom: assertion.issuedOn,
       credentialSubject: {
         id: assertion.recipient.identity,
-        type: "AchievementSubject",
+        type: ["AchievementSubject"],
         achievement,
       },
     };

@@ -76,6 +76,6 @@ describe("serializeOB3", () => {
       "OpenBadgeCredential",
     ]);
     expect(result.validFrom).toBe("2024-01-15T10:00:00Z");
-    expect(result.credentialSubject.type).toBe("AchievementSubject");
+    expect(result.credentialSubject.type).toEqual(["AchievementSubject"]);
   });
 });
