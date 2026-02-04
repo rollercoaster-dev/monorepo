@@ -317,7 +317,7 @@ Phase 5: Skill(finalize)        → Done
 
 ## Anti-Patterns
 
-### Don't: Use Subagents for Small Scoped Work
+### Don't: Use Subagents for Small-Scoped Work
 
 ```markdown
 # BAD - subagent for simple branch creation
