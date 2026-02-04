@@ -122,9 +122,10 @@ describe("OpenBadges3Serializer", () => {
       expect(result["validUntil"]).toBe("2025-01-15T10:00:00Z");
     });
 
-    it("should create basic assertion when only assertion provided", () => {
-      const result = serializer.serializeAssertion(mockAssertion);
-      expect(result.type).toEqual(["Assertion"]);
+    it("should throw when badgeClass and issuer are missing", () => {
+      expect(() => serializer.serializeAssertion(mockAssertion)).toThrow(
+        "OB3 VerifiableCredential requires both badgeClass and issuer",
+      );
     });
 
     it("should include credentialSubject with AchievementSubject", () => {

@@ -11,7 +11,10 @@ export enum BadgeVersion {
   V3 = "3.0",
 }
 
+/** W3C Verifiable Credentials Data Model 2.0 context URL — required as first context in OB3 credentials */
 export const VC_V2_CONTEXT_URL = "https://www.w3.org/ns/credentials/v2";
+
+/** Open Badges 3.0 context URL — required as second context in OB3 credentials */
 export const OBV3_CONTEXT_URL =
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json";
 
@@ -61,12 +64,29 @@ export function detectBadgeVersion(
     return undefined;
   }
 
+  // Handle object context (extract values and check for known URLs)
+  if (typeof context === "object" && !Array.isArray(context)) {
+    const values = Object.values(context as Record<string, unknown>);
+    if (
+      values.some((v) =>
+        BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(v as string),
+      )
+    ) {
+      return BadgeVersion.V3;
+    }
+    if (values.includes(BADGE_VERSION_CONTEXTS[BadgeVersion.V2])) {
+      return BadgeVersion.V2;
+    }
+    return undefined;
+  }
+
   // Handle string context
   if (typeof context === "string") {
     if (context === BADGE_VERSION_CONTEXTS[BadgeVersion.V2]) {
       return BadgeVersion.V2;
     }
-    if (BADGE_VERSION_CONTEXTS[BadgeVersion.V3].includes(context)) {
+    // Only detect V3 from the OB3-specific context, not VC 2.0 alone
+    if (context === OBV3_CONTEXT_URL) {
       return BadgeVersion.V3;
     }
   }

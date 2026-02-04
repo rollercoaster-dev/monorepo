@@ -200,31 +200,13 @@ export class OpenBadges3Serializer implements BadgeSerializer {
         type: string | string[];
       })
     | VerifiableCredentialData {
-    if (badgeClass && issuer) {
-      return this.createVerifiableCredential(assertion, badgeClass, issuer);
+    if (!badgeClass || !issuer) {
+      throw new Error(
+        "OB3 VerifiableCredential requires both badgeClass and issuer",
+      );
     }
 
-    const result: Record<string, unknown> = {
-      "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
-      id: assertion.id,
-      type: ["Assertion"],
-      badgeClass: (assertion.badgeClass || badgeClass?.id) as Shared.IRI,
-      recipient: assertion.recipient,
-      issuedOn: assertion.issuedOn,
-    };
-    if (assertion.expires) result.expires = assertion.expires;
-    if (assertion.evidence) result.evidence = assertion.evidence;
-    if (assertion.verification) result.verification = assertion.verification;
-    if (assertion.revoked !== undefined) result.revoked = assertion.revoked;
-    if (assertion.revocationReason)
-      result.revocationReason = assertion.revocationReason;
-    if (assertion.credentialStatus)
-      result.credentialStatus = assertion.credentialStatus;
-
-    return result as AssertionData & {
-      "@context": string | string[];
-      type: string | string[];
-    };
+    return this.createVerifiableCredential(assertion, badgeClass, issuer);
   }
 
   private createVerifiableCredential(
@@ -279,13 +261,16 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     if (assertion.expires) result.validUntil = assertion.expires;
     if (assertion.evidence) result.evidence = assertion.evidence;
     if (assertion.verification) {
-      result.proof = {
-        type: assertion.verification.type,
-        created: assertion.verification.created,
-        verificationMethod: assertion.verification.creator,
-        proofPurpose: "assertionMethod",
-        proofValue: assertion.verification.signatureValue,
-      };
+      const v = assertion.verification;
+      if (v.type && v.creator && v.signatureValue) {
+        result.proof = {
+          type: v.type,
+          ...(v.created && { created: v.created }),
+          verificationMethod: v.creator,
+          proofPurpose: "assertionMethod",
+          proofValue: v.signatureValue,
+        };
+      }
     }
     if (assertion.credentialStatus)
       result.credentialStatus = assertion.credentialStatus;

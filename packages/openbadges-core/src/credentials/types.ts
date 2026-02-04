@@ -93,7 +93,7 @@ export interface VerifiableCredentialData {
   validFrom: string;
   validUntil?: string;
   credentialSubject: {
-    id: string;
+    id: Shared.IRI;
     type: string | string[];
     achievement: {
       id: Shared.IRI;
@@ -113,7 +113,7 @@ export interface VerifiableCredentialData {
   evidence?: unknown;
   proof?: {
     type: string;
-    created: string;
+    created?: string;
     verificationMethod: string;
     proofPurpose: string;
     proofValue: string;

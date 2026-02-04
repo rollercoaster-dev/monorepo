@@ -13,6 +13,13 @@ import type {
   VerifiableCredentialData,
 } from "./types.js";
 
+/**
+ * Options for building an Open Badges credential.
+ * @property assertion - The assertion data containing recipient and issuance info
+ * @property badgeClass - The badge class/achievement definition
+ * @property issuer - The issuer profile data
+ * @property version - Target badge version (defaults to V3/OB3)
+ */
 export interface CredentialOptions {
   assertion: AssertionData;
   badgeClass: BadgeClassData;
@@ -23,6 +30,9 @@ export interface CredentialOptions {
 /**
  * Builds an Open Badges credential from component data.
  * Defaults to OB3 (VerifiableCredential) format.
+ *
+ * @param options - Configuration containing assertion, badgeClass, issuer, and optional version
+ * @returns An OB2 Assertion or OB3 VerifiableCredential based on the specified version
  */
 export function buildCredential(
   options: CredentialOptions,

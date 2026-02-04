@@ -3,12 +3,14 @@ import {
   buildCredential,
   serializeOB3,
 } from "../../src/credentials/credential-builder";
+import { OpenBadges3Serializer } from "../../src/credentials/serializer";
 import { BadgeVersion, VC_V2_CONTEXT_URL } from "../../src/credentials/version";
 import type { Shared } from "openbadges-types";
 import type {
   IssuerData,
   BadgeClassData,
   AssertionData,
+  VerifiableCredentialData,
 } from "../../src/credentials/types";
 
 const mockIssuer: IssuerData = {
@@ -77,5 +79,57 @@ describe("serializeOB3", () => {
     ]);
     expect(result.validFrom).toBe("2024-01-15T10:00:00Z");
     expect(result.credentialSubject.type).toEqual(["AchievementSubject"]);
+  });
+});
+
+describe("OB3 serializer error handling", () => {
+  const serializer = new OpenBadges3Serializer();
+
+  it("should throw when badgeClass is missing", () => {
+    expect(() =>
+      serializer.serializeAssertion(mockAssertion, undefined, mockIssuer),
+    ).toThrow("OB3 VerifiableCredential requires both badgeClass and issuer");
+  });
+
+  it("should throw when issuer is missing", () => {
+    expect(() =>
+      serializer.serializeAssertion(mockAssertion, mockBadgeClass, undefined),
+    ).toThrow("OB3 VerifiableCredential requires both badgeClass and issuer");
+  });
+
+  it("should include proof only when required verification fields are present", () => {
+    const assertionWithVerification: AssertionData = {
+      ...mockAssertion,
+      verification: {
+        type: "Ed25519Signature2020",
+        creator: "https://example.edu/keys/1",
+        signatureValue: "abc123",
+        created: "2024-01-15T10:00:00Z",
+      },
+    };
+    const result = serializer.serializeAssertion(
+      assertionWithVerification,
+      mockBadgeClass,
+      mockIssuer,
+    ) as VerifiableCredentialData;
+    expect(result.proof).toBeDefined();
+    expect(result.proof!.type).toBe("Ed25519Signature2020");
+    expect(result.proof!.proofValue).toBe("abc123");
+  });
+
+  it("should skip proof when verification fields are incomplete", () => {
+    const assertionWithPartialVerification: AssertionData = {
+      ...mockAssertion,
+      verification: {
+        type: "Ed25519Signature2020",
+        // missing creator and signatureValue
+      },
+    };
+    const result = serializer.serializeAssertion(
+      assertionWithPartialVerification,
+      mockBadgeClass,
+      mockIssuer,
+    ) as VerifiableCredentialData;
+    expect(result.proof).toBeUndefined();
   });
 });
