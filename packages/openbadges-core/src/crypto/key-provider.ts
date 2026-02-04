@@ -93,7 +93,9 @@ export class InMemoryKeyProvider implements KeyProvider {
   async generateKeyPair(algorithm: KeyAlgorithm): Promise<KeyPairResult> {
     const alg = algorithm === "Ed25519" ? "EdDSA" : "RS256";
     const options =
-      algorithm === "Ed25519" ? { crv: "Ed25519" } : { modulusLength: 2048 };
+      algorithm === "Ed25519"
+        ? { crv: "Ed25519" as const, extractable: true }
+        : { modulusLength: 2048, extractable: true };
 
     const { publicKey, privateKey } = await generateKeyPair(alg, options);
 
