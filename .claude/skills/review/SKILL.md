@@ -1,11 +1,10 @@
 ---
-name: review-orchestrator
+name: review
 description: Coordinates review agents and manages auto-fix loop. Spawns code-reviewer, test-analyzer, silent-failure-hunter in parallel, classifies findings, and attempts fixes for critical issues.
-tools: Bash, Read, Glob, Grep, Skill
-model: sonnet
+allowed-tools: Bash, Read, Glob, Grep, Skill, Task
 ---
 
-# Review Orchestrator Agent
+# Review Skill
 
 Coordinates code review and manages the auto-fix cycle.
 
@@ -231,7 +230,7 @@ The calling workflow should escalate to user with:
 
 ## Success Criteria
 
-This agent is successful when:
+This skill is successful when:
 
 - All review agents run (or gracefully skip on failure)
 - Findings are correctly classified by severity

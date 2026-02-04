@@ -348,7 +348,7 @@ Agent:
 6. Creates dev plan with 3 atomic commits
 7. Returns: "Issue #15 requires adding /.well-known/jwks.json endpoint.
    Complexity: SMALL (~150 lines). 3 commits planned.
-   Ready to proceed with atomic-developer."
+   Ready to proceed with implement skill."
 ```
 
 ## Success Criteria

@@ -1,6 +1,6 @@
 ---
 name: pr-creator
-description: Creates a GitHub PR from a feature branch with proper description and triggers CodeRabbit + Claude reviews. Use after atomic-developer completes implementation.
+description: Creates a GitHub PR from a feature branch with proper description and triggers CodeRabbit + Claude reviews. Use after implement skill completes implementation.
 tools: Bash, Read, Glob, Grep
 model: sonnet
 ---
@@ -21,7 +21,7 @@ Creates a well-formatted GitHub Pull Request from a feature branch, triggers Cod
 
 ## When to Use This Agent
 
-- After atomic-developer completes implementation
+- After implement skill completes implementation
 - When a feature branch is ready for review
 - To create a PR with proper formatting
 - To trigger CodeRabbit review

@@ -1,11 +1,10 @@
 ---
-name: setup-agent
+name: setup
 description: Prepares environment for issue work - creates branch, adds to board, fetches issue details. Use at the start of any issue workflow.
-tools: Bash, Read
-model: sonnet
+allowed-tools: Bash, Read, Skill
 ---
 
-# Setup Agent
+# Setup Skill
 
 Prepares everything needed before implementation work begins.
 
