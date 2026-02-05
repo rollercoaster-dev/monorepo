@@ -295,9 +295,7 @@ describe("PNG Baking Service", () => {
       ]);
       const credential = createMockOB2Assertion();
 
-      expect(() => bakePNG(truncatedPNG, credential)).toThrow(
-        "no IEND header was found",
-      );
+      expect(() => bakePNG(truncatedPNG, credential)).toThrow(/IEND/i);
     });
 
     it("should return false for isPNG with empty buffer", () => {
