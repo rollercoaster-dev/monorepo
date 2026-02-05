@@ -28,10 +28,8 @@ export function detectPlatform(): Platform {
   }
 
   // React Native detection (check before Node.js since RN may polyfill process)
-  if (
-    typeof navigator !== "undefined" &&
-    (navigator as { product?: string }).product === "ReactNative"
-  ) {
+  const nav = globalThis.navigator as { product?: string } | undefined;
+  if (nav?.product === "ReactNative") {
     cachedPlatform = "react-native";
     return cachedPlatform;
   }
