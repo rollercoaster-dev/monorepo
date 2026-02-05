@@ -89,12 +89,17 @@ export async function verifySignature(
   publicKey: JWK,
   keyType?: KeyType,
 ): Promise<boolean> {
+  // Configuration and key detection errors must propagate (not be swallowed).
+  // Only verification failures are expected and returned as false.
+  const actualKeyType = keyType ?? detectKeyType(publicKey);
+  const alg = getAlgorithm(actualKeyType);
+  const { crypto } = getPlatformConfig();
+
   try {
-    const actualKeyType = keyType ?? detectKeyType(publicKey);
-    const alg = getAlgorithm(actualKeyType);
-    const { crypto } = getPlatformConfig();
     return await crypto.verify(data, signature, publicKey, alg);
   } catch {
+    // Signature verification failures are expected (invalid/tampered signatures).
+    // Returns false rather than throwing to provide a clean boolean API.
     return false;
   }
 }

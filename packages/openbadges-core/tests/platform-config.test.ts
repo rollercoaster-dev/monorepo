@@ -138,7 +138,7 @@ describe("Custom CryptoProvider integration", () => {
     resetPlatformConfig();
   });
 
-  test("crypto operations use the configured provider", async () => {
+  test("signData uses the configured provider", async () => {
     const signCalls: string[] = [];
     const mockCrypto: CryptoProvider = {
       sign: async (data) => {
@@ -151,11 +151,33 @@ describe("Custom CryptoProvider integration", () => {
 
     configure({ crypto: mockCrypto, keyProvider: new InMemoryKeyProvider() });
 
-    // Import signData dynamically so it uses our configured provider
     const { signData } = await import("../src/crypto/signature.js");
     const result = await signData("hello", { kty: "OKP", crv: "Ed25519" });
 
     expect(result).toBe("mock-jws");
     expect(signCalls).toEqual(["hello"]);
+  });
+
+  test("verifySignature uses the configured provider", async () => {
+    const verifyCalls: string[] = [];
+    const mockCrypto: CryptoProvider = {
+      sign: async () => "mock-jws",
+      verify: async (data) => {
+        verifyCalls.push(data);
+        return true;
+      },
+      generateKeyPair: async () => ({ publicKey: {}, privateKey: {} }),
+    };
+
+    configure({ crypto: mockCrypto, keyProvider: new InMemoryKeyProvider() });
+
+    const { verifySignature } = await import("../src/crypto/signature.js");
+    const result = await verifySignature("hello", "sig", {
+      kty: "OKP",
+      crv: "Ed25519",
+    });
+
+    expect(result).toBe(true);
+    expect(verifyCalls).toEqual(["hello"]);
   });
 });
