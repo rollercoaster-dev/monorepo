@@ -13,7 +13,15 @@ This package provides shared utilities and core functionality for working with O
 
 ## Installation
 
-This package is part of the monorepo workspace and used internally by other packages:
+### From npm
+
+```bash
+npm install @rollercoaster-dev/openbadges-core
+# or
+bun add @rollercoaster-dev/openbadges-core
+```
+
+### In monorepo workspace
 
 ```json
 {
@@ -45,32 +53,30 @@ if (isNode()) {
 }
 ```
 
-## API Overview (Planned Structure)
+## API Overview
 
-### Platform Detection (✅ Implemented)
+### Platform Detection
 
 - `detectPlatform()` - Detect current runtime environment
 - `isBun()` - Check if running in Bun
 - `isNode()` - Check if running in Node.js
 
-### Badge Baking (🚧 Coming Soon)
+### Badge Baking
 
 - PNG metadata embedding
 - Baked badge extraction
 - Image validation
 
-### Crypto Utilities (🚧 Coming Soon)
+### Crypto Utilities
 
-- RSA key pair generation
-- JWT signing and verification
-- JWKS endpoint support
-- Key management
+- Key pair generation (Ed25519, RSA)
+- Data signing and verification
+- Key management via `KeyProvider` interface
 
-### Credential Generation (🚧 Coming Soon)
+### Credential Generation
 
-- Open Badges 2.0 assertion generation
-- Open Badges 3.0 credential generation
-- Validation and verification
+- Open Badges 3.0 credential building
+- Credential signing with linked data proofs
 
 ## Development
 
