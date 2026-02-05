@@ -13,7 +13,13 @@
  */
 
 // Platform utilities
-export { detectPlatform, isBun, isNode } from "./platform.js";
+export {
+  detectPlatform,
+  isBun,
+  isNode,
+  isReactNative,
+  assertBufferAvailable,
+} from "./platform.js";
 export type { Platform } from "./platform.js";
 
 // Credentials module

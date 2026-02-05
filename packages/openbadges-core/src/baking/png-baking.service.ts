@@ -9,12 +9,16 @@
  */
 
 import type { OB2, OB3 } from "openbadges-types";
+import { Logger } from "@rollercoaster-dev/rd-logger";
+import { assertBufferAvailable } from "../platform.js";
 import {
   extractChunks,
   encodeChunks,
   findiTXtChunk,
   createiTXtChunk,
 } from "./png-chunk-utils.js";
+
+const logger = new Logger({ level: "debug" });
 
 /**
  * Check if a buffer is a valid PNG image
@@ -49,10 +53,16 @@ export function bakePNG(
   imageBuffer: Buffer,
   credential: OB2.Assertion | OB3.VerifiableCredential,
 ): Buffer {
+  assertBufferAvailable("PNG baking");
+
   // Validate PNG signature
   if (!isPNG(imageBuffer)) {
     throw new Error("Invalid PNG image: missing PNG signature");
   }
+
+  logger.debug("Starting PNG bake operation", {
+    imageSize: imageBuffer.length,
+  });
 
   // Extract existing chunks
   const chunks = extractChunks(imageBuffer);
@@ -90,7 +100,14 @@ export function bakePNG(
   filteredChunks.splice(newIendIndex, 0, iTxtChunk);
 
   // Encode chunks back to PNG buffer
-  return encodeChunks(filteredChunks);
+  const result = encodeChunks(filteredChunks);
+
+  logger.debug("PNG bake completed", {
+    resultSize: result.length,
+    credentialSize: credentialJSON.length,
+  });
+
+  return result;
 }
 
 /**
@@ -103,10 +120,16 @@ export function bakePNG(
 export function unbakePNG(
   imageBuffer: Buffer,
 ): (OB2.Assertion | OB3.VerifiableCredential) | null {
+  assertBufferAvailable("PNG unbaking");
+
   // Validate PNG signature
   if (!isPNG(imageBuffer)) {
     throw new Error("Invalid PNG image: missing PNG signature");
   }
+
+  logger.debug("Starting PNG unbake operation", {
+    imageSize: imageBuffer.length,
+  });
 
   // Extract chunks
   const chunks = extractChunks(imageBuffer);
@@ -156,9 +179,15 @@ export function unbakePNG(
 
   // Parse and return the credential
   try {
-    return JSON.parse(credentialJSON) as
+    const credential = JSON.parse(credentialJSON) as
       | OB2.Assertion
       | OB3.VerifiableCredential;
+
+    logger.debug("PNG unbake completed", {
+      credentialSize: credentialJSON.length,
+    });
+
+    return credential;
   } catch (error) {
     throw new Error(
       `Failed to parse credential JSON: ${error instanceof Error ? error.message : String(error)}`,
