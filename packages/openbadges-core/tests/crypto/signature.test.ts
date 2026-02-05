@@ -167,6 +167,43 @@ describe("DataIntegrityProof", () => {
     expect(valid).toBe(false);
   });
 
+  test("returns false for proof with empty proofValue", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { keyId } = await provider.generateKeyPair("Ed25519");
+    const publicKey = await provider.getPublicKey(keyId);
+
+    const emptyProof = {
+      type: "DataIntegrityProof" as const,
+      cryptosuite: Cryptosuite.EddsaRdfc2022,
+      created: new Date().toISOString() as Shared.DateTime,
+      proofPurpose: "assertionMethod" as const,
+      verificationMethod: "https://example.com/keys/1" as Shared.IRI,
+      proofValue: "",
+    };
+
+    expect(await verifyDataIntegrityProof("data", emptyProof, publicKey)).toBe(
+      false,
+    );
+  });
+
+  test("throws for unsupported cryptosuite", async () => {
+    const proof = {
+      type: "DataIntegrityProof" as const,
+      cryptosuite: "unknown-suite",
+      created: new Date().toISOString() as Shared.DateTime,
+      proofPurpose: "assertionMethod" as const,
+      verificationMethod: "https://example.com/keys/1" as Shared.IRI,
+      proofValue: "some-value",
+    };
+
+    await expect(
+      verifyDataIntegrityProof("data", proof, {
+        kty: "OKP",
+        crv: "Ed25519",
+      }),
+    ).rejects.toThrow("Unsupported cryptosuite");
+  });
+
   test("signs credential with multiple proofs using different keys", async () => {
     const provider = new InMemoryKeyProvider();
     const { keyId: keyId1 } = await provider.generateKeyPair("Ed25519");

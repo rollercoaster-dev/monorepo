@@ -343,7 +343,7 @@ describe("Credential Lifecycle Integration", () => {
         publicKey,
         "https://example.com/keys/1" as Shared.IRI,
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/key/i);
   });
 
   test("@context ordering matches OB3 spec", () => {
