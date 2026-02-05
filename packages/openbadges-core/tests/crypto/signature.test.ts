@@ -166,4 +166,38 @@ describe("DataIntegrityProof", () => {
     );
     expect(valid).toBe(false);
   });
+
+  test("signs credential with multiple proofs using different keys", async () => {
+    const provider = new InMemoryKeyProvider();
+    const { keyId: keyId1 } = await provider.generateKeyPair("Ed25519");
+    const { keyId: keyId2 } = await provider.generateKeyPair("Ed25519");
+
+    const privateKey1 = await provider.getPrivateKey(keyId1);
+    const publicKey1 = await provider.getPublicKey(keyId1);
+    const privateKey2 = await provider.getPrivateKey(keyId2);
+    const publicKey2 = await provider.getPublicKey(keyId2);
+
+    const data = JSON.stringify({ name: "Multi-signed Badge" });
+    const method1 = "https://example.com/keys/1" as Shared.IRI;
+    const method2 = "https://example.com/keys/2" as Shared.IRI;
+
+    const proof1 = await createDataIntegrityProof(data, privateKey1, method1);
+    const proof2 = await createDataIntegrityProof(data, privateKey2, method2);
+
+    // Both proofs should be independently verifiable
+    expect(await verifyDataIntegrityProof(data, proof1, publicKey1)).toBe(true);
+    expect(await verifyDataIntegrityProof(data, proof2, publicKey2)).toBe(true);
+
+    // Cross-key verification should fail
+    expect(await verifyDataIntegrityProof(data, proof1, publicKey2)).toBe(
+      false,
+    );
+    expect(await verifyDataIntegrityProof(data, proof2, publicKey1)).toBe(
+      false,
+    );
+
+    // Each proof has its own verificationMethod
+    expect(proof1.verificationMethod).toBe(method1);
+    expect(proof2.verificationMethod).toBe(method2);
+  });
 });
