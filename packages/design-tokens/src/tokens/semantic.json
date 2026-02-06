@@ -65,7 +65,7 @@
   "stroke": {
     "$value": "{color.black}",
     "$type": "color",
-    "$description": "Primary stroke for neo-brutalist borders"
+    "$description": "Primary stroke color"
   },
   "stroke-muted": {
     "$value": "{color.gray.300}",
@@ -75,12 +75,12 @@
   "highlight": {
     "$value": "{color.accent-yellow}",
     "$type": "color",
-    "$description": "Sticker highlight background"
+    "$description": "Highlight background"
   },
   "highlight-foreground": {
     "$value": "{color.black}",
     "$type": "color",
-    "$description": "Text color on highlight"
+    "$description": "Text on highlight"
   },
   "destructive": {
     "$value": "{color.error}",
@@ -172,7 +172,7 @@
   "border-width": {
     "$value": "{borderWidth.default}",
     "$type": "dimension",
-    "$description": "Default border width - 2px for neo-brutalist aesthetic"
+    "$description": "Default border width"
   },
   "border-style": {
     "$value": "{borderStyle.solid}",
@@ -182,7 +182,7 @@
   "border-offset": {
     "$value": "{borderOffset.sm}",
     "$type": "dimension",
-    "$description": "Offset for sticker-style borders"
+    "$description": "Border offset (legacy)"
   },
   "border-radius-sm": {
     "$value": "{radius.sm}",
@@ -219,5 +219,45 @@
   "z-index-tooltip": {
     "$value": "{z-tooltip}",
     "$type": "number"
+  },
+  "section-climb-bg": {
+    "$value": "{narrative.climb.bg}",
+    "$type": "color",
+    "$description": "Section background — The Climb"
+  },
+  "section-climb-text": {
+    "$value": "{narrative.climb.text}",
+    "$type": "color",
+    "$description": "Section text — The Climb"
+  },
+  "section-drop-bg": {
+    "$value": "{narrative.drop.bg}",
+    "$type": "color",
+    "$description": "Section background — The Drop"
+  },
+  "section-drop-text": {
+    "$value": "{narrative.drop.text}",
+    "$type": "color",
+    "$description": "Section text — The Drop"
+  },
+  "section-stories-bg": {
+    "$value": "{narrative.stories.bg}",
+    "$type": "color",
+    "$description": "Section background — The Stories"
+  },
+  "section-stories-text": {
+    "$value": "{narrative.stories.text}",
+    "$type": "color",
+    "$description": "Section text — The Stories"
+  },
+  "section-relief-bg": {
+    "$value": "{narrative.relief.bg}",
+    "$type": "color",
+    "$description": "Section background — The Relief"
+  },
+  "section-relief-text": {
+    "$value": "{narrative.relief.text}",
+    "$type": "color",
+    "$description": "Section text — The Relief"
   }
 }
