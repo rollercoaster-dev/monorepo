@@ -60,6 +60,8 @@ StyleDictionary.registerFormat({
     const foundational = {
       color: [],
       font: [],
+      narrative: [],
+      mood: [],
       space: [],
       radius: [],
       shadow: [],
