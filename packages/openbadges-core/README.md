@@ -57,26 +57,37 @@ if (isNode()) {
 
 ### Platform Detection
 
-- `detectPlatform()` - Detect current runtime environment
-- `isBun()` - Check if running in Bun
-- `isNode()` - Check if running in Node.js
+- `detectPlatform()` - Detect current runtime environment (`"node"` | `"bun"` | `"unknown"`)
+- `isBun()` / `isNode()` / `isReactNative()` - Check specific platforms
+- `configure()` - Set platform adapters (crypto, key provider) for React Native
+- `getPlatformConfig()` / `resetPlatformConfig()` - Read or reset configuration
+- `assertBufferAvailable()` - Guard for Buffer-dependent features (PNG baking)
 
 ### Badge Baking
 
-- PNG metadata embedding
-- Baked badge extraction
-- Image validation
+- `bakePNG(image, credential)` - Embed credential into PNG via iTXt chunk
+- `unbakePNG(image)` - Extract credential from a baked PNG
+- `isPNG(buffer)` - Check if a buffer is a valid PNG image
+- Types: `ImageFormat`, `BakeOptions`, `BakedImage`, `UnbakeResult`, `BakingService`, `Chunk`
 
 ### Crypto Utilities
 
-- Key pair generation (Ed25519, RSA)
-- Data signing and verification
-- Key management via `KeyProvider` interface
+- **Signing**: `signData()`, `verifySignature()` - Raw data signing/verification
+- **Data Integrity Proofs**: `createDataIntegrityProof()`, `verifyDataIntegrityProof()`
+- **JWT Proofs**: `generateJWTProof()`, `verifyJWTProof()`, `isJWTProof()`, `getRecommendedAlgorithm()`
+- **Key Management**: `KeyProvider` interface, `InMemoryKeyProvider`, `KeyStatus`
+- **Key Detection**: `detectKeyType()`, `KeyType`, `Cryptosuite`
+- **Platform Adapters**: `CryptoProvider`, `CompressionProvider`, `NodeCryptoAdapter`
+- Types: `KeyAlgorithm`, `KeyMetadata`, `KeyPairResult`, `DataIntegrityProof`, `JWTProof`, `JWTProofPayload`, `ProofVerificationResult`, `SupportedJWTAlgorithm`, `PlatformConfig`
 
 ### Credential Generation
 
-- Open Badges 3.0 credential building
-- Credential signing with linked data proofs
+- `buildCredential(options)` - Build an OB3 verifiable credential
+- `serializeOB3(credential)` - Serialize credential to OB3 format
+- `createSerializer(version)` - Factory for version-specific serializers
+- **Serializers**: `OpenBadges2Serializer`, `OpenBadges3Serializer`
+- **Version Detection**: `detectBadgeVersion()`, `BadgeVersion`
+- Types: `IssuerData`, `BadgeClassData`, `AssertionData`, `RecipientData`, `VerificationData`, `VerifiableCredentialData`, `CredentialOptions`, `BadgeSerializer`
 
 ## Development
 
