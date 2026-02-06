@@ -98,7 +98,9 @@ describe("verifyJWTProof error handling", () => {
   test("returns error for JWT with missing alg header", async () => {
     // A JWT with no alg in protected header should produce an error result
     // Manually construct a JWT without alg: base64url('{}') . base64url('{"vc":{}}') . fake-sig
-    const fakeJWT = `${btoa("{}").replace(/=/g, "")}.${btoa('{"vc":{}}').replace(/=/g, "")}.fakesig`;
+    const header = Buffer.from("{}").toString("base64url");
+    const payload = Buffer.from('{"vc":{}}').toString("base64url");
+    const fakeJWT = `${header}.${payload}.fakesig`;
 
     const result = await verifyJWTProof(
       {
