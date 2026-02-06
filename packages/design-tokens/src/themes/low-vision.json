@@ -1,7 +1,11 @@
 {
   "$name": "low-vision",
-  "$description": "Low vision theme - Atkinson Hyperlegible font, large sizes, high contrast (minimum 7:1)",
+  "$description": "Loud & Clear — Atkinson Hyperlegible, 7:1+ contrast, extra-large display sizes, aggressive contrast narrative",
   "theme": {
+    "mood": {
+      "name": { "$value": "loud-and-clear" },
+      "label": { "$value": "Loud & Clear" }
+    },
     "typography": {
       "font-family": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
@@ -17,7 +21,12 @@
         "lg": { "$value": "1.5rem" },
         "xl": { "$value": "1.75rem" },
         "2xl": { "$value": "2rem" },
-        "3xl": { "$value": "2.5rem" }
+        "3xl": { "$value": "2.5rem" },
+        "4xl": { "$value": "3.25rem" },
+        "5xl": { "$value": "4rem" },
+        "6xl": { "$value": "5rem" },
+        "7xl": { "$value": "6rem" },
+        "display": { "$value": "8rem" }
       },
       "lineHeight": {
         "tight": { "$value": "1.5" },
@@ -57,6 +66,31 @@
       "success": { "$value": "#006400" },
       "error": { "$value": "#b30000" },
       "warning": { "$value": "#995500" }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffe50c" },
+        "text": { "$value": "#000000" }
+      },
+      "drop": {
+        "bg": { "$value": "#000000" },
+        "bg-end": { "$value": "#000000" },
+        "text": { "$value": "#ffffff" },
+        "accent": { "$value": "#6699ff" }
+      },
+      "stories": {
+        "bg": { "$value": "#000000" },
+        "text": { "$value": "#ffffff" },
+        "accent-1": { "$value": "#00aa66" },
+        "accent-2": { "$value": "#cc5500" },
+        "accent-3": { "$value": "#7733cc" },
+        "accent-4": { "$value": "#0066cc" }
+      },
+      "relief": {
+        "bg": { "$value": "#e0f0e0" },
+        "text": { "$value": "#000000" },
+        "accent": { "$value": "#006400" }
+      }
     },
     "feedback": {
       "destructive": { "$value": "#b30000" },

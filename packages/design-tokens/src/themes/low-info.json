@@ -1,7 +1,11 @@
 {
   "$name": "low-info",
-  "$description": "Low info theme - simplified palette (2-3 accents max), reduced distractions, clear hierarchy",
+  "$description": "Clean Signal — simplified palette, single accent, maximum signal-to-noise ratio, reduced distractions",
   "theme": {
+    "mood": {
+      "name": { "$value": "clean-signal" },
+      "label": { "$value": "Clean Signal" }
+    },
     "typography": {
       "font-family": {
         "$value": "'Atkinson Hyperlegible', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
@@ -64,6 +68,31 @@
         "700": { "$value": "#444444" },
         "800": { "$value": "#222222" },
         "900": { "$value": "#111111" }
+      }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffffff" },
+        "text": { "$value": "#222222" }
+      },
+      "drop": {
+        "bg": { "$value": "#222222" },
+        "bg-end": { "$value": "#222222" },
+        "text": { "$value": "#ffffff" },
+        "accent": { "$value": "#003d99" }
+      },
+      "stories": {
+        "bg": { "$value": "#222222" },
+        "text": { "$value": "#ffffff" },
+        "accent-1": { "$value": "#003d99" },
+        "accent-2": { "$value": "#003d99" },
+        "accent-3": { "$value": "#003d99" },
+        "accent-4": { "$value": "#003d99" }
+      },
+      "relief": {
+        "bg": { "$value": "#f0f0f0" },
+        "text": { "$value": "#222222" },
+        "accent": { "$value": "#003d99" }
       }
     },
     "form": {

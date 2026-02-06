@@ -1,15 +1,19 @@
 {
   "$name": "dark",
-  "$description": "Dark mode theme - inverted neutral palette with lightened accents",
+  "$description": "Night Ride — deep indigo tones instead of neutral gray, the ride after sunset",
   "theme": {
+    "mood": {
+      "name": { "$value": "night-ride" },
+      "label": { "$value": "Night Ride" }
+    },
     "surface": {
-      "background": { "$value": "#1a1a1a" },
+      "background": { "$value": "#1a1033" },
       "foreground": { "$value": "#fafafa" },
-      "card": { "$value": "#262626" },
+      "card": { "$value": "#241845" },
       "card-foreground": { "$value": "#fafafa" },
-      "popover": { "$value": "#262626" },
+      "popover": { "$value": "#241845" },
       "popover-foreground": { "$value": "#fafafa" },
-      "muted": { "$value": "#262626" },
+      "muted": { "$value": "#2d1f52" },
       "muted-foreground": { "$value": "#e5e5e5" }
     },
     "interactive": {
@@ -17,7 +21,7 @@
       "primary-foreground": { "$value": "#0a0a0a" },
       "secondary": { "$value": "#c4b5fd" },
       "secondary-foreground": { "$value": "#0a0a0a" },
-      "accent": { "$value": "#404040" },
+      "accent": { "$value": "#3a2d5c" },
       "accent-foreground": { "$value": "#fafafa" }
     },
     "color": {
@@ -45,16 +49,41 @@
       "accent-orange": { "$value": "#fb923c" },
       "accent-sky": { "$value": "#7dd3fc" },
       "gray": {
-        "50": { "$value": "#262626" },
-        "100": { "$value": "#262626" },
-        "200": { "$value": "#404040" },
-        "300": { "$value": "#525252" },
+        "50": { "$value": "#241845" },
+        "100": { "$value": "#2d1f52" },
+        "200": { "$value": "#3a2d5c" },
+        "300": { "$value": "#524573" },
         "400": { "$value": "#737373" },
         "500": { "$value": "#a3a3a3" },
         "600": { "$value": "#d4d4d4" },
         "700": { "$value": "#e5e5e5" },
         "800": { "$value": "#fafafa" },
         "900": { "$value": "#ffffff" }
+      }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#ffe50c" },
+        "text": { "$value": "#1a1033" }
+      },
+      "drop": {
+        "bg": { "$value": "#0d0820" },
+        "bg-end": { "$value": "#1a1033" },
+        "text": { "$value": "#fafafa" },
+        "accent": { "$value": "#c4b5fd" }
+      },
+      "stories": {
+        "bg": { "$value": "#1a1033" },
+        "text": { "$value": "#fafafa" },
+        "accent-1": { "$value": "#2dd4bf" },
+        "accent-2": { "$value": "#fb923c" },
+        "accent-3": { "$value": "#c084fc" },
+        "accent-4": { "$value": "#7dd3fc" }
+      },
+      "relief": {
+        "bg": { "$value": "#1a3a2a" },
+        "text": { "$value": "#d4f4e7" },
+        "accent": { "$value": "#34d399" }
       }
     },
     "feedback": {
@@ -64,8 +93,8 @@
       "info": { "$value": "#60a5fa" }
     },
     "form": {
-      "border": { "$value": "#404040" },
-      "input": { "$value": "#262626" },
+      "border": { "$value": "#3a2d5c" },
+      "input": { "$value": "#241845" },
       "ring": { "$value": "#fafafa" }
     },
     "typography": {
@@ -75,10 +104,10 @@
       "text-inverse": { "$value": "#0a0a0a" }
     },
     "aliases": {
-      "bg-primary": { "$value": "#1a1a1a" },
-      "bg-secondary": { "$value": "#262626" },
-      "bg-disabled": { "$value": "#404040" },
-      "border-color": { "$value": "#404040" }
+      "bg-primary": { "$value": "#1a1033" },
+      "bg-secondary": { "$value": "#241845" },
+      "bg-disabled": { "$value": "#3a2d5c" },
+      "border-color": { "$value": "#3a2d5c" }
     },
     "shadow": {
       "sm": { "$value": "none" },

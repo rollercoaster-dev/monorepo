@@ -1,7 +1,11 @@
 {
   "$name": "autism-friendly",
-  "$description": "Autism-friendly theme - predictable layouts, muted palette, no shadows, reduced sensory stimulation",
+  "$description": "Still Water — predictable layouts, muted desaturated palette, no shadows, zero motion, reduced sensory stimulation",
   "theme": {
+    "mood": {
+      "name": { "$value": "still-water" },
+      "label": { "$value": "Still Water" }
+    },
     "typography": {
       "font-family": { "$value": "'Arial', sans-serif" },
       "text-primary": { "$value": "#333333" }
@@ -58,6 +62,31 @@
         "700": { "$value": "#444444" },
         "800": { "$value": "#333333" },
         "900": { "$value": "#222222" }
+      }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#f5f0d0" },
+        "text": { "$value": "#444444" }
+      },
+      "drop": {
+        "bg": { "$value": "#4a5a6a" },
+        "bg-end": { "$value": "#3d4d5d" },
+        "text": { "$value": "#eeeeee" },
+        "accent": { "$value": "#8a9aaa" }
+      },
+      "stories": {
+        "bg": { "$value": "#3d4d5d" },
+        "text": { "$value": "#eeeeee" },
+        "accent-1": { "$value": "#6a9a8a" },
+        "accent-2": { "$value": "#aa8a6a" },
+        "accent-3": { "$value": "#8a7a9a" },
+        "accent-4": { "$value": "#6a8aaa" }
+      },
+      "relief": {
+        "bg": { "$value": "#e8f0e8" },
+        "text": { "$value": "#444444" },
+        "accent": { "$value": "#5a8a6a" }
       }
     },
     "form": {

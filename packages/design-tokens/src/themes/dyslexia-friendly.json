@@ -1,7 +1,11 @@
 {
   "$name": "dyslexia-friendly",
-  "$description": "Dyslexia-friendly theme - OpenDyslexic font, cream background, increased spacing",
+  "$description": "Warm Studio — OpenDyslexic font, cream background, warm gold/brown tones, increased spacing",
   "theme": {
+    "mood": {
+      "name": { "$value": "warm-studio" },
+      "label": { "$value": "Warm Studio" }
+    },
     "typography": {
       "font-family": {
         "$value": "'OpenDyslexic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
@@ -55,6 +59,31 @@
       "success": { "$value": "#2e7d52" },
       "error": { "$value": "#b54942" },
       "warning": { "$value": "#b5913a" }
+    },
+    "narrative": {
+      "climb": {
+        "bg": { "$value": "#f5e6a0" },
+        "text": { "$value": "#333333" }
+      },
+      "drop": {
+        "bg": { "$value": "#4a3d2e" },
+        "bg-end": { "$value": "#3d3328" },
+        "text": { "$value": "#f8f5e4" },
+        "accent": { "$value": "#a08fc4" }
+      },
+      "stories": {
+        "bg": { "$value": "#3d3328" },
+        "text": { "$value": "#f8f5e4" },
+        "accent-1": { "$value": "#5a9a7a" },
+        "accent-2": { "$value": "#c87a45" },
+        "accent-3": { "$value": "#8a7aaa" },
+        "accent-4": { "$value": "#5a8aaa" }
+      },
+      "relief": {
+        "bg": { "$value": "#e8f0e0" },
+        "text": { "$value": "#333333" },
+        "accent": { "$value": "#2e7d52" }
+      }
     },
     "feedback": {
       "destructive": { "$value": "#b54942" },
