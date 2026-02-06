@@ -113,16 +113,6 @@
     "$value": "{font-sans}",
     "$type": "fontFamily"
   },
-  "font-headline": {
-    "$value": "{font-headline}",
-    "$type": "fontFamily",
-    "$description": "Headline/display font family"
-  },
-  "font-mono": {
-    "$value": "{font-mono}",
-    "$type": "fontFamily",
-    "$description": "Monospace font family"
-  },
   "text-primary": {
     "$value": "{foreground}",
     "$type": "color"
