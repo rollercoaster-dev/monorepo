@@ -88,8 +88,7 @@ Based on v0 architecture research:
 
 - [Vercel React Native Insights](../../research/vercel-react-native-insights.md)
 - [ADR-0001: Iteration Strategy](./ADR-0001-iteration-strategy.md)
-- [Tamagui Prototype](../../prototypes/ui-tamagui/)
-- [NativeWind Prototype](../../prototypes/ui-nativewind/)
+- [UI Library Comparison](../research/ui-library-comparison.md)
 
 ---
 
