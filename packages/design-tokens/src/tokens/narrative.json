@@ -65,6 +65,11 @@
         "$value": "#38bdf8",
         "$type": "color",
         "$description": "Stories accent sky blue"
+      },
+      "accent-foreground": {
+        "$value": "#0a0a0a",
+        "$type": "color",
+        "$description": "Text on stories accent backgrounds"
       }
     },
     "relief": {

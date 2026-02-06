@@ -44,7 +44,7 @@ Design for focus, not distraction. Build for users who need clarity.
 | **Headlines**       | Anybody         | Character, from landing page DNA  |
 | **Body**            | system-ui stack | Familiar, fast, accessible        |
 | **Mono/code**       | DM Mono         | Personality in technical contexts |
-| **Dyslexia option** | OpenDyslexic    | User-selectable accessibility     |
+| **Dyslexia option** | Lexend          | Research-backed readability       |
 
 ### Scale (Base: 16px)
 
@@ -323,14 +323,14 @@ The landing page has "voice moments" like `(noted.)` and `(still here? good.)`. 
 
 Users can switch themes via Settings. Available themes:
 
-| Theme             | Description            | Primary Use Case      |
-| ----------------- | ---------------------- | --------------------- |
-| Light             | Default, clean         | General use           |
-| Dark              | Reduced eye strain     | Low light, preference |
-| Dyslexia-Friendly | Cream bg, OpenDyslexic | Reading difficulties  |
-| Autism-Friendly   | Muted, predictable     | Sensory sensitivities |
-| High Contrast     | Maximum contrast       | Low vision            |
-| Large Text        | Increased font sizes   | Vision support        |
+| Theme             | Description          | Primary Use Case      |
+| ----------------- | -------------------- | --------------------- |
+| Light             | Default, clean       | General use           |
+| Dark              | Reduced eye strain   | Low light, preference |
+| Dyslexia-Friendly | Cream bg, Lexend     | Reading difficulties  |
+| Autism-Friendly   | Muted, predictable   | Sensory sensitivities |
+| High Contrast     | Maximum contrast     | Low vision            |
+| Large Text        | Increased font sizes | Vision support        |
 
 Theme preference persists in localStorage and syncs with user account when logged in.
 
@@ -338,19 +338,36 @@ Theme preference persists in localStorage and syncs with user account when logge
 
 ## Implementation Notes
 
+### Design Tokens Package
+
+All tokens live in `packages/design-tokens/` as JSON sources. The build pipeline generates multiple output formats:
+
+```bash
+# Import paths
+@rollercoaster-dev/design-tokens/css           # CSS custom properties (:root)
+@rollercoaster-dev/design-tokens/css/themes     # Theme class overrides (.ob-*-theme)
+@rollercoaster-dev/design-tokens/css/narrative   # Narrative section + badge label classes
+@rollercoaster-dev/design-tokens/unistyles       # JS theme objects for React Native (Unistyles)
+@rollercoaster-dev/design-tokens/tailwind        # Tailwind config preset
+```
+
+The Unistyles target generates palette constants, spacing/sizing tokens (rem converted to px), light/dark color modes, and accessibility variant overrides — matching the `native-rd` theme architecture.
+
+See `packages/design-tokens/CLAUDE.md` for full details.
+
 ### CSS Variables
 
-All design tokens are CSS custom properties, making theme switching trivial:
+All design tokens are CSS custom properties (prefixed `--ob-`), making theme switching trivial:
 
 ```css
 :root {
-  /* light theme defaults */
+  /* light theme defaults — from tokens.css */
 }
-.dark-theme {
-  /* dark overrides */
+.ob-dark-theme {
+  /* dark overrides — from themes.css */
 }
-.dyslexia-theme {
-  /* dyslexia overrides */
+.ob-dyslexia-friendly-theme {
+  /* dyslexia overrides — from themes.css */
 }
 ```
 
@@ -378,6 +395,7 @@ AccessibilityService.setAnimationLevel("minimal");
 
 ## Related Documents
 
+- [design-tokens CLAUDE.md](../../packages/design-tokens/CLAUDE.md) - Token architecture, exports, build pipeline
 - [openbadges-ui DESIGN_PHILOSOPHY.md](../../packages/openbadges-ui/docs/DESIGN_PHILOSOPHY.md)
 - [openbadges-ui neurodiversity.md](../../packages/openbadges-ui/docs/neurodiversity.md)
 - [Landing page DESIGN_DIRECTION.md](https://github.com/rollercoaster-dev/landing/blob/main/docs/DESIGN_DIRECTION.md)

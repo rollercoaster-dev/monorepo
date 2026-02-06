@@ -63,6 +63,7 @@ const pathMappings = {
   "narrative.stories.accent-2": "narrative-stories-accent-2",
   "narrative.stories.accent-3": "narrative-stories-accent-3",
   "narrative.stories.accent-4": "narrative-stories-accent-4",
+  "narrative.stories.accent-foreground": "narrative-stories-accent-foreground",
   "narrative.relief.bg": "narrative-relief-bg",
   "narrative.relief.text": "narrative-relief-text",
   "narrative.relief.accent": "narrative-relief-accent",

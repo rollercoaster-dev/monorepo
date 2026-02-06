@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="../build/css/tokens.css" />
   <link rel="stylesheet" href="../build/css/themes.css" />
+  <link rel="stylesheet" href="./shared.css" />
 </head>
 <body class="ob-dark-theme">
   <div class="layout">
@@ -41,19 +42,43 @@
       <div class="playful-row" style="grid-template-columns: 1fr 1fr;">
         <div class="section-block climb">
           <span class="badge-label">Climb</span>
-          <p style="margin-top: 0.5rem;">Energy builds. Yellow warmth.</p>
+          <p style="margin-top: var(--ob-space-2);">Energy builds. Yellow warmth.</p>
         </div>
         <div class="section-block drop">
           <span class="badge-label">Drop</span>
-          <p style="margin-top: 0.5rem;">Deep void. The moment of impact.</p>
+          <p style="margin-top: var(--ob-space-2);">Deep void. The moment of impact.</p>
         </div>
         <div class="section-block stories">
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: #0a0a0a;">Stories</span>
-          <p style="margin-top: 0.5rem;">Deep indigo with glowing accents.</p>
+          <div style="display: flex; gap: var(--ob-space-2); flex-wrap: wrap;">
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: var(--ob-narrative-stories-accent-foreground);">Luminous Teal</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-2); color: var(--ob-narrative-stories-accent-foreground);">Warm Coral</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-3); color: var(--ob-narrative-stories-accent-foreground);">Soft Violet</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-4); color: var(--ob-narrative-stories-accent-foreground);">Electric Blue</span>
+          </div>
+          <p style="margin-top: var(--ob-space-2);">Deep indigo with glowing accents.</p>
         </div>
         <div class="section-block relief">
-          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: #0a0a0a;">Relief</span>
-          <p style="margin-top: 0.5rem;">Dark mint calm. Resolution.</p>
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: var(--ob-color-black);">Relief</span>
+          <p style="margin-top: var(--ob-space-2);">Dark mint calm. Resolution.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Accent Palette</h2>
+      <p class="section-desc">Four accent colors derived from the Night Ride theme.</p>
+      <div class="accent-palette">
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-1);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Luminous Teal</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-2);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Warm Coral</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-3);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Soft Violet</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-4);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Electric Blue</span>
         </div>
       </div>
     </section>

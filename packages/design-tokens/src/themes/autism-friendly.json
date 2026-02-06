@@ -81,7 +81,8 @@
         "accent-1": { "$value": "#6a9a8a" },
         "accent-2": { "$value": "#a08a70" },
         "accent-3": { "$value": "#887a96" },
-        "accent-4": { "$value": "#6a8a9e" }
+        "accent-4": { "$value": "#6a8a9e" },
+        "accent-foreground": { "$value": "#fafafa" }
       },
       "relief": {
         "bg": { "$value": "#e8f0e8" },

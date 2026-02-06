@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="../build/css/tokens.css" />
   <link rel="stylesheet" href="../build/css/themes.css" />
+  <link rel="stylesheet" href="./shared.css" />
 </head>
 <body>
   <div class="layout">
@@ -39,10 +40,10 @@
     <section>
       <h2>The Climb</h2>
       <p class="section-desc">Energy builds. The opening statement.</p>
-      <div class="section-block climb" style="padding: 3rem 2rem;">
+      <div class="section-block climb" style="padding: var(--ob-space-12) var(--ob-space-8);">
         <div class="display-text" style="font-size: var(--ob-font-size-7xl);">Badges<br>with bite.</div>
-        <p style="margin-top: 1rem; font-size: var(--ob-font-size-lg);">Open Badges credentialing for the neurodivergent-first web.</p>
-        <div style="margin-top: 1.5rem; display: inline-flex; gap: 0.75rem;">
+        <p style="margin-top: var(--ob-space-4); font-size: var(--ob-font-size-lg);">Open Badges credentialing for the neurodivergent-first web.</p>
+        <div style="margin-top: var(--ob-space-6); display: inline-flex; gap: var(--ob-space-3);">
           <span class="badge-label">Get started</span>
           <span class="badge-label" style="background: var(--ob-narrative-climb-text); color: var(--ob-narrative-climb-bg);">Watch demo</span>
         </div>
@@ -53,10 +54,10 @@
     <section>
       <h2>The Drop</h2>
       <p class="section-desc">Deep black to indigo. The moment of impact.</p>
-      <div class="section-block drop" style="padding: 3rem 2rem;">
+      <div class="section-block drop" style="padding: var(--ob-space-12) var(--ob-space-8);">
         <div class="display-text" style="font-size: var(--ob-font-size-6xl); color: var(--ob-narrative-drop-accent);">Make it<br>official.</div>
-        <p style="margin-top: 1rem;">Issue, verify, and manage credentials with a system built for clarity.</p>
-        <div style="margin-top: 1.5rem; display: inline-flex; gap: 0.75rem;">
+        <p style="margin-top: var(--ob-space-4);">Issue, verify, and manage credentials with a system built for clarity.</p>
+        <div style="margin-top: var(--ob-space-6); display: inline-flex; gap: var(--ob-space-3);">
           <span class="badge-label">Self-signed badges</span>
           <span class="badge-label" style="background: var(--ob-narrative-drop-accent); color: var(--ob-narrative-drop-bg);">Local-first</span>
         </div>
@@ -67,13 +68,13 @@
     <section>
       <h2>The Stories</h2>
       <p class="section-desc">Multi-color accents on deep indigo. Individual badge narratives.</p>
-      <div class="section-block stories" style="padding: 3rem 2rem;">
+      <div class="section-block stories" style="padding: var(--ob-space-12) var(--ob-space-8);">
         <div class="display-text" style="font-size: var(--ob-font-size-5xl);">Every badge<br>tells a story.</div>
-        <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: #0a0a0a;">Teal</span>
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-2); color: #0a0a0a;">Orange</span>
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-3); color: #fafafa;">Purple</span>
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-4); color: #0a0a0a;">Sky</span>
+        <div style="margin-top: var(--ob-space-6); display: flex; gap: var(--ob-space-3); flex-wrap: wrap;">
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: var(--ob-narrative-stories-accent-foreground);">Teal</span>
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-2); color: var(--ob-narrative-stories-accent-foreground);">Orange</span>
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-3); color: var(--ob-narrative-stories-accent-foreground);">Purple</span>
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-4); color: var(--ob-narrative-stories-accent-foreground);">Sky</span>
         </div>
       </div>
     </section>
@@ -82,11 +83,11 @@
     <section>
       <h2>The Relief</h2>
       <p class="section-desc">Mint calm. The landing zone.</p>
-      <div class="section-block relief" style="padding: 3rem 2rem;">
+      <div class="section-block relief" style="padding: var(--ob-space-12) var(--ob-space-8);">
         <div class="display-text" style="font-size: var(--ob-font-size-5xl);">Start<br>building.</div>
-        <p style="margin-top: 1rem;">Open source. Accessible by default. Ready when you are.</p>
-        <div style="margin-top: 1.5rem;">
-          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: #fafafa;">View on GitHub</span>
+        <p style="margin-top: var(--ob-space-4);">Open source. Accessible by default. Ready when you are.</p>
+        <div style="margin-top: var(--ob-space-6);">
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: var(--ob-color-white);">View on GitHub</span>
         </div>
       </div>
     </section>

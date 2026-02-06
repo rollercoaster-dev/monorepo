@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Atkinson+Hyperlegible:wght@400;700&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="../build/css/tokens.css" />
   <link rel="stylesheet" href="../build/css/themes.css" />
+  <link rel="stylesheet" href="./shared.css" />
 </head>
 <body class="ob-low-info-theme">
   <div class="layout">
@@ -41,19 +42,29 @@
       <div class="playful-row" style="grid-template-columns: 1fr 1fr;">
         <div class="section-block climb">
           <span class="badge-label">Climb</span>
-          <p style="margin-top: 0.5rem;">White. Clean, no noise.</p>
+          <p style="margin-top: var(--ob-space-2);">White. Clean, no noise.</p>
         </div>
         <div class="section-block drop">
           <span class="badge-label">Drop</span>
-          <p style="margin-top: 0.5rem;">Dark gray. Minimal contrast shift.</p>
+          <p style="margin-top: var(--ob-space-2);">Dark gray. Minimal contrast shift.</p>
         </div>
         <div class="section-block stories">
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: #ffffff;">Stories</span>
-          <p style="margin-top: 0.5rem;">Dark canvas. Single accent color.</p>
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: var(--ob-narrative-stories-accent-foreground);">Signal Blue</span>
+          <p style="margin-top: var(--ob-space-2);">Dark canvas. Single accent color.</p>
         </div>
         <div class="section-block relief">
-          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: #ffffff;">Relief</span>
-          <p style="margin-top: 0.5rem;">Light gray. Quiet end.</p>
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: var(--ob-color-white);">Relief</span>
+          <p style="margin-top: var(--ob-space-2);">Light gray. Quiet end.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Accent Palette</h2>
+      <p class="section-desc">Single accent color — intentionally reduced for minimal cognitive load.</p>
+      <div class="accent-palette" style="grid-template-columns: 1fr;">
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-1); aspect-ratio: 4/1;">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Signal Blue</span>
         </div>
       </div>
     </section>

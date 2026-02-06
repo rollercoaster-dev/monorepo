@@ -7,8 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lexend:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./shared.css" />
+  <link rel="stylesheet" href="../build/css/tokens.css" />
   <link rel="stylesheet" href="../build/css/themes.css" />
+  <link rel="stylesheet" href="./shared.css" />
 </head>
 <body class="ob-dyslexia-friendly-theme">
   <div class="layout">
@@ -41,19 +42,43 @@
       <div class="playful-row" style="grid-template-columns: 1fr 1fr;">
         <div class="section-block climb">
           <span class="badge-label">Climb</span>
-          <p style="margin-top: 0.5rem;">Warm cream-gold. Gentle energy.</p>
+          <p style="margin-top: var(--ob-space-2);">Warm cream-gold. Gentle energy.</p>
         </div>
         <div class="section-block drop">
           <span class="badge-label">Drop</span>
-          <p style="margin-top: 0.5rem;">Warm brown depth. Soft impact.</p>
+          <p style="margin-top: var(--ob-space-2);">Warm brown depth. Soft impact.</p>
         </div>
         <div class="section-block stories">
-          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: #0a0a0a;">Stories</span>
-          <p style="margin-top: 0.5rem;">Warm dark canvas with muted accents.</p>
+          <div style="display: flex; gap: var(--ob-space-2); flex-wrap: wrap;">
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: var(--ob-narrative-stories-accent-foreground);">Sage</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-2); color: var(--ob-narrative-stories-accent-foreground);">Terracotta</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-3); color: var(--ob-narrative-stories-accent-foreground);">Dusty Plum</span>
+            <span class="badge-label" style="background: var(--ob-narrative-stories-accent-4); color: var(--ob-narrative-stories-accent-foreground);">Warm Denim</span>
+          </div>
+          <p style="margin-top: var(--ob-space-2);">Warm dark canvas with muted accents.</p>
         </div>
         <div class="section-block relief">
-          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: #fafafa;">Relief</span>
-          <p style="margin-top: 0.5rem;">Soft green calm. Easy on the eyes.</p>
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: var(--ob-color-white);">Relief</span>
+          <p style="margin-top: var(--ob-space-2);">Soft green calm. Easy on the eyes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Accent Palette</h2>
+      <p class="section-desc">Four accent colors derived from the Warm Studio theme.</p>
+      <div class="accent-palette">
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-1);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Sage</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-2);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Terracotta</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-3);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Dusty Plum</span>
+        </div>
+        <div class="accent-swatch" style="background: var(--ob-narrative-stories-accent-4);">
+          <span class="accent-name" style="color: var(--ob-narrative-stories-accent-foreground);">Warm Denim</span>
         </div>
       </div>
     </section>
