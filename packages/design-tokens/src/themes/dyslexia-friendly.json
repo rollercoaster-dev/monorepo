@@ -1,6 +1,6 @@
 {
   "$name": "dyslexia-friendly",
-  "$description": "Warm Studio — OpenDyslexic font, cream background, warm gold/brown tones, increased spacing",
+  "$description": "Warm Studio — Lexend font (research-backed), cream background, warm gold/brown tones, increased spacing",
   "theme": {
     "mood": {
       "name": { "$value": "warm-studio" },
@@ -8,7 +8,7 @@
     },
     "typography": {
       "font-family": {
-        "$value": "'OpenDyslexic', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+        "$value": "'Lexend', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
       },
       "text-primary": { "$value": "#333333" },
       "text-secondary": { "$value": "#555555" }
