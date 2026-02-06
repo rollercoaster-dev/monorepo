@@ -77,7 +77,7 @@ if (isNode()) {
 - **JWT Proofs**: `generateJWTProof()`, `verifyJWTProof()`, `isJWTProof()`, `getRecommendedAlgorithm()`
 - **Key Management**: `KeyProvider` interface, `InMemoryKeyProvider`, `KeyStatus`
 - **Key Detection**: `detectKeyType()`, `KeyType`, `Cryptosuite`
-- **Platform Adapters**: `CryptoProvider`, `CompressionProvider`, `NodeCryptoAdapter`
+- **Platform Adapters**: `CryptoProvider`, `NodeCryptoAdapter`
 - Types: `KeyAlgorithm`, `KeyMetadata`, `KeyPairResult`, `DataIntegrityProof`, `JWTProof`, `JWTProofPayload`, `ProofVerificationResult`, `SupportedJWTAlgorithm`, `PlatformConfig`
 
 ### Credential Generation

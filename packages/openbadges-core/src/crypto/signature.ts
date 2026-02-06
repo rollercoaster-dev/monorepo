@@ -38,7 +38,12 @@ export interface DataIntegrityProof {
   type: "DataIntegrityProof";
   cryptosuite: string;
   created: Shared.DateTime;
-  proofPurpose: "assertionMethod" | string;
+  proofPurpose:
+    | "assertionMethod"
+    | "authentication"
+    | "keyAgreement"
+    | "capabilityInvocation"
+    | "capabilityDelegation";
   verificationMethod: Shared.IRI;
   proofValue: string;
 }
