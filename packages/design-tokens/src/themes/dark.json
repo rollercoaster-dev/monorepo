@@ -44,10 +44,10 @@
       "accent-purple": { "$value": "#c4b5fd" },
       "accent-mint": { "$value": "#1a3a2a" },
       "accent-yellow": { "$value": "#ffe50c" },
-      "accent-emerald": { "$value": "#34d399" },
-      "accent-teal": { "$value": "#2dd4bf" },
-      "accent-orange": { "$value": "#fb923c" },
-      "accent-sky": { "$value": "#7dd3fc" },
+      "accent-emerald": { "$value": "#20e8be" },
+      "accent-teal": { "$value": "#20e8be" },
+      "accent-orange": { "$value": "#ff8050" },
+      "accent-sky": { "$value": "#5cc8ff" },
       "gray": {
         "50": { "$value": "#241845" },
         "100": { "$value": "#2d1f52" },
@@ -73,12 +73,12 @@
         "accent": { "$value": "#c4b5fd" }
       },
       "stories": {
-        "bg": { "$value": "#1a1033" },
+        "bg": { "$value": "#142244" },
         "text": { "$value": "#fafafa" },
-        "accent-1": { "$value": "#2dd4bf" },
-        "accent-2": { "$value": "#fb923c" },
-        "accent-3": { "$value": "#c084fc" },
-        "accent-4": { "$value": "#7dd3fc" }
+        "accent-1": { "$value": "#20e8be" },
+        "accent-2": { "$value": "#ff8050" },
+        "accent-3": { "$value": "#c080ff" },
+        "accent-4": { "$value": "#5cc8ff" }
       },
       "relief": {
         "bg": { "$value": "#1a3a2a" },

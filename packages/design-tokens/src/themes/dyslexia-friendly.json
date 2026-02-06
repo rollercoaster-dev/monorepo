@@ -46,17 +46,17 @@
       "muted-foreground": { "$value": "#555555" }
     },
     "interactive": {
-      "primary": { "$value": "#1b5e8a" },
+      "primary": { "$value": "#4e7d9e" },
       "primary-foreground": { "$value": "#ffffff" }
     },
     "color": {
-      "primary": { "$value": "#1b5e8a" },
-      "primary-dark": { "$value": "#144a6e" },
-      "primary-light": { "$value": "#4a8ab5" },
-      "secondary": { "$value": "#7b6ba5" },
-      "secondary-dark": { "$value": "#5e4f87" },
-      "secondary-light": { "$value": "#a08fc4" },
-      "success": { "$value": "#2e7d52" },
+      "primary": { "$value": "#4e7d9e" },
+      "primary-dark": { "$value": "#3a6280" },
+      "primary-light": { "$value": "#6a97b5" },
+      "secondary": { "$value": "#8860a0" },
+      "secondary-dark": { "$value": "#6d4a85" },
+      "secondary-light": { "$value": "#a080b8" },
+      "success": { "$value": "#4a8a62" },
       "error": { "$value": "#b54942" },
       "warning": { "$value": "#b5913a" }
     },
@@ -72,34 +72,34 @@
         "accent": { "$value": "#c4a8e0" }
       },
       "stories": {
-        "bg": { "$value": "#332244" },
+        "bg": { "$value": "#2a3d3d" },
         "text": { "$value": "#f8f5e4" },
-        "accent-1": { "$value": "#6aaa8a" },
-        "accent-2": { "$value": "#d4946a" },
-        "accent-3": { "$value": "#b89ad8" },
-        "accent-4": { "$value": "#7aaac4" }
+        "accent-1": { "$value": "#4a8a62" },
+        "accent-2": { "$value": "#b86840" },
+        "accent-3": { "$value": "#8860a0" },
+        "accent-4": { "$value": "#4e7d9e" }
       },
       "relief": {
         "bg": { "$value": "#e8f0e0" },
         "text": { "$value": "#333333" },
-        "accent": { "$value": "#2e7d52" }
+        "accent": { "$value": "#4a8a62" }
       }
     },
     "feedback": {
       "destructive": { "$value": "#b54942" },
-      "success": { "$value": "#2e7d52" },
+      "success": { "$value": "#4a8a62" },
       "warning": { "$value": "#b5913a" }
     },
     "form": {
       "border": { "$value": "#c8c3a9" },
       "input": { "$value": "#f0edd8" },
-      "ring": { "$value": "#1b5e8a" }
+      "ring": { "$value": "#4e7d9e" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f8f5e4" },
       "bg-secondary": { "$value": "#f0edd8" },
       "border-color": { "$value": "#c8c3a9" },
-      "border-color-focus": { "$value": "#1b5e8a" },
+      "border-color-focus": { "$value": "#4e7d9e" },
       "border-width": { "$value": "2px" },
       "border-radius-sm": { "$value": "4px" },
       "border-radius-md": { "$value": "6px" },
@@ -116,7 +116,7 @@
       "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
       "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
       "lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
-      "focus": { "$value": "0 0 0 4px rgba(27, 94, 138, 0.4)" }
+      "focus": { "$value": "0 0 0 4px rgba(78, 125, 158, 0.4)" }
     },
     "transition": {
       "fast": { "$value": "0ms" },

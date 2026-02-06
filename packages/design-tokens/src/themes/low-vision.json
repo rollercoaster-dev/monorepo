@@ -79,9 +79,9 @@
         "accent": { "$value": "#6699ff" }
       },
       "stories": {
-        "bg": { "$value": "#000000" },
+        "bg": { "$value": "#1a2d4d" },
         "text": { "$value": "#ffffff" },
-        "accent-1": { "$value": "#00aa66" },
+        "accent-1": { "$value": "#00aa77" },
         "accent-2": { "$value": "#cc5500" },
         "accent-3": { "$value": "#7733cc" },
         "accent-4": { "$value": "#0066cc" }

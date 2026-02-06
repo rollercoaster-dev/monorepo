@@ -76,12 +76,12 @@
         "accent": { "$value": "#8a9aaa" }
       },
       "stories": {
-        "bg": { "$value": "#3d4d5d" },
+        "bg": { "$value": "#2d4d47" },
         "text": { "$value": "#eeeeee" },
         "accent-1": { "$value": "#6a9a8a" },
-        "accent-2": { "$value": "#aa8a6a" },
-        "accent-3": { "$value": "#8a7a9a" },
-        "accent-4": { "$value": "#6a8aaa" }
+        "accent-2": { "$value": "#a08a70" },
+        "accent-3": { "$value": "#887a96" },
+        "accent-4": { "$value": "#6a8a9e" }
       },
       "relief": {
         "bg": { "$value": "#e8f0e8" },
