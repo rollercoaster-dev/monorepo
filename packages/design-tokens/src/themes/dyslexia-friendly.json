@@ -42,32 +42,37 @@
       "muted-foreground": { "$value": "#555555" }
     },
     "interactive": {
-      "primary": { "$value": "#1b70b6" },
+      "primary": { "$value": "#1b5e8a" },
       "primary-foreground": { "$value": "#ffffff" }
     },
     "color": {
-      "primary-dark": { "$value": "#155a92" },
-      "primary-light": { "$value": "#5a9bd5" },
-      "success": { "$value": "#2e8b57" },
+      "primary": { "$value": "#1b5e8a" },
+      "primary-dark": { "$value": "#144a6e" },
+      "primary-light": { "$value": "#4a8ab5" },
+      "secondary": { "$value": "#7b6ba5" },
+      "secondary-dark": { "$value": "#5e4f87" },
+      "secondary-light": { "$value": "#a08fc4" },
+      "success": { "$value": "#2e7d52" },
       "error": { "$value": "#b54942" },
       "warning": { "$value": "#b5913a" }
     },
     "feedback": {
       "destructive": { "$value": "#b54942" },
-      "success": { "$value": "#2e8b57" },
+      "success": { "$value": "#2e7d52" },
       "warning": { "$value": "#b5913a" }
     },
     "form": {
       "border": { "$value": "#c8c3a9" },
       "input": { "$value": "#f0edd8" },
-      "ring": { "$value": "#0066cc" }
+      "ring": { "$value": "#1b5e8a" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f8f5e4" },
       "bg-secondary": { "$value": "#f0edd8" },
       "border-color": { "$value": "#c8c3a9" },
-      "border-color-focus": { "$value": "#0066cc" },
+      "border-color-focus": { "$value": "#1b5e8a" },
       "border-width": { "$value": "2px" },
+      "border-radius-sm": { "$value": "4px" },
       "border-radius-md": { "$value": "6px" },
       "border-radius-lg": { "$value": "8px" }
     },
@@ -82,7 +87,7 @@
       "sm": { "$value": "0 1px 2px rgba(0, 0, 0, 0.1)" },
       "md": { "$value": "0 2px 4px rgba(0, 0, 0, 0.1)" },
       "lg": { "$value": "0 3px 6px rgba(0, 0, 0, 0.1)" },
-      "focus": { "$value": "0 0 0 4px rgba(0, 102, 204, 0.4)" }
+      "focus": { "$value": "0 0 0 4px rgba(27, 94, 138, 0.4)" }
     },
     "component": {
       "badge": {

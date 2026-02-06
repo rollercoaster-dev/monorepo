@@ -1,20 +1,21 @@
 {
   "$name": "large-text",
-  "$description": "Large text theme - increased font sizes for better readability",
+  "$description": "Large text theme - increased font sizes (+25%) for better readability",
   "theme": {
     "font": {
       "size": {
-        "xs": { "$value": "0.875rem" },
-        "sm": { "$value": "1rem" },
-        "md": { "$value": "1.125rem" },
-        "lg": { "$value": "1.25rem" },
-        "xl": { "$value": "1.5rem" },
-        "2xl": { "$value": "1.75rem" }
+        "xs": { "$value": "0.9375rem" },
+        "sm": { "$value": "1.09375rem" },
+        "md": { "$value": "1.25rem" },
+        "lg": { "$value": "1.40625rem" },
+        "xl": { "$value": "1.5625rem" },
+        "2xl": { "$value": "1.875rem" },
+        "3xl": { "$value": "2.5rem" }
       },
       "lineHeight": {
-        "tight": { "$value": "1.4" },
-        "normal": { "$value": "1.6" },
-        "relaxed": { "$value": "1.8" }
+        "tight": { "$value": "1.2" },
+        "normal": { "$value": "1.7" },
+        "relaxed": { "$value": "1.9" }
       }
     },
     "space": {
