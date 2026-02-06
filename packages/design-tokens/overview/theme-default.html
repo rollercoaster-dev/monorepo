@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenBadges Tokens - Default Theme</title>
+  <title>OpenBadges Tokens - The Full Ride (Default)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -13,37 +13,46 @@
   <div class="layout">
   <div class="sidebar">
     <h1>Design Tokens</h1>
-    <p>Playful neo-brutalism, accessibility first.</p>
+    <p>Drama from scale and color. Accessibility without compromise.</p>
     <nav>
       <a href="./index.html">Overview</a>
-      <a href="./theme-landing.html">Landing</a>
-      <a class="active" href="./theme-default.html">Default</a>
-      <a href="./theme-dark.html">Dark</a>
-      <a href="./theme-high-contrast.html">High Contrast</a>
-      <a href="./theme-dyslexia-friendly.html">Dyslexia Friendly</a>
-      <a href="./theme-autism-friendly.html">Autism Friendly</a>
-      <a href="./theme-large-text.html">Large Text</a>
-      <a href="./theme-low-vision.html">Low Vision</a>
-      <a href="./theme-low-info.html">Low Info</a>
+      <a href="./theme-landing.html">The Full Ride (Landing)</a>
+      <a class="active" href="./theme-default.html">The Full Ride (Default)</a>
+      <a href="./theme-dark.html">Night Ride (Dark)</a>
+      <a href="./theme-high-contrast.html">Bold Ink (High Contrast)</a>
+      <a href="./theme-dyslexia-friendly.html">Warm Studio (Dyslexia)</a>
+      <a href="./theme-autism-friendly.html">Still Water (Autism)</a>
+      <a href="./theme-large-text.html">Bigger Seat (Large Text)</a>
+      <a href="./theme-low-vision.html">Loud &amp; Clear (Low Vision)</a>
+      <a href="./theme-low-info.html">Clean Signal (Low Info)</a>
     </nav>
   </div>
 
   <main class="main">
     <header class="page-header">
-      <h1>Default Theme</h1>
+      <h1>The Full Ride (Default)</h1>
       <p>Baseline palette and motion defaults.</p>
     </header>
 
     <section>
-      <h2>Playful Motifs</h2>
-      <div class="playful-row">
-        <div class="offset-card">
-          <span class="sticker">Sticker</span>
-          <p>Offset border + highlight.</p>
+      <h2>Narrative Arc</h2>
+      <p class="section-desc">The four narrative sections as they render in the default mood.</p>
+      <div class="playful-row" style="grid-template-columns: 1fr 1fr;">
+        <div class="section-block climb">
+          <span class="badge-label">Climb</span>
+          <p style="margin-top: 0.5rem;">Energy builds. Yellow warmth.</p>
         </div>
-        <div class="stroke-demo">
-          <strong>Muted stroke</strong>
-          <p>Secondary outlines for calm emphasis.</p>
+        <div class="section-block drop">
+          <span class="badge-label">Drop</span>
+          <p style="margin-top: 0.5rem;">Deep black. The moment of impact.</p>
+        </div>
+        <div class="section-block stories">
+          <span class="badge-label" style="background: var(--ob-narrative-stories-accent-1); color: #0a0a0a;">Stories</span>
+          <p style="margin-top: 0.5rem;">Deep indigo with multi-color accents.</p>
+        </div>
+        <div class="section-block relief">
+          <span class="badge-label" style="background: var(--ob-narrative-relief-accent); color: #fafafa;">Relief</span>
+          <p style="margin-top: 0.5rem;">Mint calm. Resolution.</p>
         </div>
       </div>
     </section>
