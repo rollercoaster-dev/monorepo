@@ -43,11 +43,11 @@
     }
   },
   "radius": {
-    "$description": "Border radius scale - sharper for neo-brutalist aesthetic",
+    "$description": "Border radius scale",
     "sm": {
-      "$value": "0",
+      "$value": "0.125rem",
       "$type": "dimension",
-      "$description": "Sharp edges by default"
+      "$description": "Slight rounding"
     },
     "md": {
       "$value": "0.25rem",
@@ -67,7 +67,7 @@
     }
   },
   "shadow": {
-    "$description": "Box shadow scale - neo-brutalist: borders over shadows",
+    "$description": "Box shadow scale",
     "sm": {
       "$value": "none",
       "$type": "shadow"
@@ -87,13 +87,13 @@
     }
   },
   "borderWidth": {
-    "$description": "Border width scale - bolder for neo-brutalist aesthetic",
+    "$description": "Border width scale",
     "thin": {
       "$value": "1px",
       "$type": "dimension"
     },
     "default": {
-      "$value": "2px",
+      "$value": "1px",
       "$type": "dimension"
     },
     "thick": {
@@ -102,7 +102,7 @@
     }
   },
   "borderStyle": {
-    "$description": "Border styles for playful neo-brutalist accents",
+    "$description": "Border styles",
     "solid": {
       "$value": "solid",
       "$type": "string"
@@ -117,17 +117,17 @@
     }
   },
   "borderOffset": {
-    "$description": "Offset values for sticker-style outlines",
+    "$description": "Offset values (legacy, zeroed out)",
     "sm": {
-      "$value": "2px",
+      "$value": "0px",
       "$type": "dimension"
     },
     "md": {
-      "$value": "4px",
+      "$value": "0px",
       "$type": "dimension"
     },
     "lg": {
-      "$value": "6px",
+      "$value": "0px",
       "$type": "dimension"
     }
   },

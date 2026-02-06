@@ -67,6 +67,31 @@
       "3xl": {
         "$value": "2rem",
         "$type": "dimension"
+      },
+      "4xl": {
+        "$value": "2.5rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "5xl": {
+        "$value": "3rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "6xl": {
+        "$value": "3.75rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "7xl": {
+        "$value": "4.5rem",
+        "$type": "dimension",
+        "$description": "Display size"
+      },
+      "display": {
+        "$value": "6rem",
+        "$type": "dimension",
+        "$description": "Maximum display size for hero sections"
       }
     },
     "weight": {
@@ -89,7 +114,7 @@
       "black": {
         "$value": "900",
         "$type": "fontWeight",
-        "$description": "Extra bold for neo-brutalist headlines"
+        "$description": "Extra bold for display headlines"
       }
     },
     "lineHeight": {

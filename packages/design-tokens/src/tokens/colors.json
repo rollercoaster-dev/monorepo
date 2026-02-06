@@ -1,6 +1,6 @@
 {
   "color": {
-    "$description": "Foundational color palette - landing page design language with neo-brutalist aesthetic",
+    "$description": "Foundational color palette - rollercoaster.dev design language",
     "primary": {
       "$value": "#0a0a0a",
       "$type": "color",
@@ -99,8 +99,18 @@
       "$value": "#38bdf8",
       "$type": "color"
     },
+    "accent-purple-vivid": {
+      "$value": "#a855f7",
+      "$type": "color",
+      "$description": "Vivid purple from stories section — distinct from accent-purple"
+    },
+    "deep-indigo": {
+      "$value": "#1a1033",
+      "$type": "color",
+      "$description": "Deep indigo from drop gradient end and stories background"
+    },
     "highlight": {
-      "$description": "Playful highlight colors for stickers and callouts",
+      "$description": "Highlight colors for labels and callouts",
       "yellow": {
         "$value": "{color.accent-yellow}",
         "$type": "color"
@@ -117,12 +127,12 @@
     "ink": {
       "$value": "{color.black}",
       "$type": "color",
-      "$description": "Playful alias for near-black"
+      "$description": "Alias for near-black"
     },
     "paper": {
       "$value": "{color.white}",
       "$type": "color",
-      "$description": "Playful alias for off-white"
+      "$description": "Alias for off-white"
     },
     "gray": {
       "50": {
