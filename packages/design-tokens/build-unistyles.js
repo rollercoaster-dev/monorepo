@@ -57,9 +57,10 @@ function val(token) {
   return token.$value ?? token;
 }
 
-/** Format object entries as TypeScript literal properties */
+/** Format object entries as TypeScript literal properties, filtering out undefined */
 function toTSObject(entries) {
   return entries
+    .filter(([, v]) => v !== undefined && v !== null)
     .map(([k, v]) => `  ${k}: ${typeof v === "string" ? `'${v}'` : v},`)
     .join("\n");
 }

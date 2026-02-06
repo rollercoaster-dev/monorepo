@@ -32,12 +32,12 @@
       "muted-foreground": { "$value": "#666666" }
     },
     "interactive": {
-      "primary": { "$value": "#5a7a8a" },
+      "primary": { "$value": "#4d6d7d" },
       "primary-foreground": { "$value": "#ffffff" },
       "secondary": { "$value": "#8a7a9a" }
     },
     "color": {
-      "primary": { "$value": "#5a7a8a" },
+      "primary": { "$value": "#4d6d7d" },
       "primary-dark": { "$value": "#3d5d6d" },
       "primary-light": { "$value": "#7a9aaa" },
       "secondary": { "$value": "#8a7a9a" },
@@ -93,12 +93,12 @@
     "form": {
       "border": { "$value": "#dddddd" },
       "input": { "$value": "#eeeeee" },
-      "ring": { "$value": "#5a7a8a" }
+      "ring": { "$value": "#4d6d7d" }
     },
     "aliases": {
       "bg-primary": { "$value": "#f7f7f7" },
       "border-color": { "$value": "#dddddd" },
-      "border-color-focus": { "$value": "#5a7a8a" },
+      "border-color-focus": { "$value": "#4d6d7d" },
       "border-width": { "$value": "1px" },
       "border-radius-sm": { "$value": "2px" },
       "border-radius-md": { "$value": "4px" }
@@ -112,7 +112,7 @@
       "sm": { "$value": "none" },
       "md": { "$value": "none" },
       "lg": { "$value": "none" },
-      "focus": { "$value": "0 0 0 2px rgba(90, 122, 138, 0.4)" }
+      "focus": { "$value": "0 0 0 2px rgba(77, 109, 125, 0.4)" }
     },
     "transition": {
       "fast": { "$value": "0ms" },
@@ -128,9 +128,9 @@
       },
       "form": {
         "input-border": { "$value": "#cccccc" },
-        "input-focus": { "$value": "#5a7a8a" },
+        "input-focus": { "$value": "#4d6d7d" },
         "background": { "$value": "#f7f7f7" },
-        "button-primary-bg": { "$value": "#5a7a8a" },
+        "button-primary-bg": { "$value": "#4d6d7d" },
         "button-primary-color": { "$value": "#ffffff" }
       }
     }

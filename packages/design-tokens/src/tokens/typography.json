@@ -43,7 +43,7 @@
       "2xs": {
         "$value": "0.625rem",
         "$type": "dimension",
-        "$description": "Extra small metadata text"
+        "$description": "10px — below 12px minimum, use only for non-essential decorative metadata"
       },
       "xs": {
         "$value": "0.75rem",
@@ -126,7 +126,7 @@
       "tight": {
         "$value": "1.05",
         "$type": "number",
-        "$description": "Landing page headline line-height"
+        "$description": "Single-line display headlines only — not for wrapping text"
       },
       "compact": {
         "$value": "1.3",

@@ -10,7 +10,7 @@
 .section-block {
   background: var(--ob-card);
   color: var(--ob-foreground);
-  border: var(--ob-borderWidth-medium) solid var(--ob-border);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   padding: var(--ob-space-6);
   border-radius: var(--ob-border-radius-sm);
   box-shadow: var(--ob-shadow-hard-lg);
