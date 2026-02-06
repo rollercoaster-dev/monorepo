@@ -94,6 +94,28 @@ describe("generateJWTProof and verifyJWTProof", () => {
   });
 });
 
+describe("verifyJWTProof error handling", () => {
+  test("returns error for JWT with missing alg header", async () => {
+    // A JWT with no alg in protected header should produce an error result
+    // Manually construct a JWT without alg: base64url('{}') . base64url('{"vc":{}}') . fake-sig
+    const fakeJWT = `${btoa("{}").replace(/=/g, "")}.${btoa('{"vc":{}}').replace(/=/g, "")}.fakesig`;
+
+    const result = await verifyJWTProof(
+      {
+        type: "JwtProof2020",
+        created: "2024-01-01T00:00:00Z" as Shared.DateTime,
+        verificationMethod: "https://example.com/keys/1" as Shared.IRI,
+        proofPurpose: "assertionMethod",
+        jws: fakeJWT,
+      },
+      { publicKey: { kty: "OKP", crv: "Ed25519", x: "abc" } },
+    );
+
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+});
+
 describe("getRecommendedAlgorithm", () => {
   test("returns EdDSA for ed25519", () => {
     expect(getRecommendedAlgorithm("ed25519")).toBe("EdDSA");
