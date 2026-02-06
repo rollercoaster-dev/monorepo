@@ -23,17 +23,17 @@
         "2xl": { "$value": "1.75rem" }
       },
       "lineHeight": {
-        "tight": { "$value": "1.5" },
+        "tight": { "$value": "1.6" },
         "normal": { "$value": "1.7" },
         "relaxed": { "$value": "1.9" }
       },
       "weight": {
         "normal": { "$value": "400" },
-        "medium": { "$value": "500" },
+        "medium": { "$value": "600" },
         "bold": { "$value": "700" }
       },
-      "letterSpacing": { "$value": "0.05em" },
-      "wordSpacing": { "$value": "0.1em" }
+      "letterSpacing": { "$value": "0.12em" },
+      "wordSpacing": { "$value": "0.16em" }
     },
     "surface": {
       "background": { "$value": "#f8f5e4" },
@@ -66,18 +66,18 @@
         "text": { "$value": "#333333" }
       },
       "drop": {
-        "bg": { "$value": "#4a3d2e" },
-        "bg-end": { "$value": "#3d3328" },
+        "bg": { "$value": "#3b2a4a" },
+        "bg-end": { "$value": "#332244" },
         "text": { "$value": "#f8f5e4" },
-        "accent": { "$value": "#a08fc4" }
+        "accent": { "$value": "#c4a8e0" }
       },
       "stories": {
-        "bg": { "$value": "#3d3328" },
+        "bg": { "$value": "#332244" },
         "text": { "$value": "#f8f5e4" },
-        "accent-1": { "$value": "#5a9a7a" },
-        "accent-2": { "$value": "#c87a45" },
-        "accent-3": { "$value": "#8a7aaa" },
-        "accent-4": { "$value": "#5a8aaa" }
+        "accent-1": { "$value": "#6aaa8a" },
+        "accent-2": { "$value": "#d4946a" },
+        "accent-3": { "$value": "#b89ad8" },
+        "accent-4": { "$value": "#7aaac4" }
       },
       "relief": {
         "bg": { "$value": "#e8f0e0" },
