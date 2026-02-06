@@ -1397,6 +1397,10 @@ h3 {
   color: var(--ob-narrative-relief-text);
   border-color: var(--ob-narrative-relief-accent);
 }
+.section-block h3,
+.section-block code {
+  color: inherit;
+}
 .badge-label {
   display: inline-block;
   background: var(--ob-highlight);
