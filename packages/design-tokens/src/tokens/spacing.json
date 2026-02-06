@@ -101,6 +101,36 @@
       "$type": "dimension"
     }
   },
+  "borderStyle": {
+    "$description": "Border styles for playful neo-brutalist accents",
+    "solid": {
+      "$value": "solid",
+      "$type": "string"
+    },
+    "dashed": {
+      "$value": "dashed",
+      "$type": "string"
+    },
+    "dotted": {
+      "$value": "dotted",
+      "$type": "string"
+    }
+  },
+  "borderOffset": {
+    "$description": "Offset values for sticker-style outlines",
+    "sm": {
+      "$value": "2px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "4px",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "6px",
+      "$type": "dimension"
+    }
+  },
   "transition": {
     "$description": "Animation timing",
     "fast": {

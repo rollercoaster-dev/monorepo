@@ -99,6 +99,31 @@
       "$value": "#38bdf8",
       "$type": "color"
     },
+    "highlight": {
+      "$description": "Playful highlight colors for stickers and callouts",
+      "yellow": {
+        "$value": "{color.accent-yellow}",
+        "$type": "color"
+      },
+      "mint": {
+        "$value": "{color.accent-mint}",
+        "$type": "color"
+      },
+      "purple": {
+        "$value": "{color.accent-purple}",
+        "$type": "color"
+      }
+    },
+    "ink": {
+      "$value": "{color.black}",
+      "$type": "color",
+      "$description": "Playful alias for near-black"
+    },
+    "paper": {
+      "$value": "{color.white}",
+      "$type": "color",
+      "$description": "Playful alias for off-white"
+    },
     "gray": {
       "50": {
         "$value": "#fafafa",

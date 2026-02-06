@@ -84,6 +84,11 @@
       "lg": { "$value": "none" },
       "focus": { "$value": "0 0 0 4px rgba(0, 61, 153, 0.5)" }
     },
+    "transition": {
+      "fast": { "$value": "0ms" },
+      "normal": { "$value": "0ms" },
+      "slow": { "$value": "0ms" }
+    },
     "component": {
       "badge": {
         "border-color": { "$value": "#555555" },

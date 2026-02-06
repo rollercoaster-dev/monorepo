@@ -65,6 +65,9 @@ StyleDictionary.registerFormat({
       shadow: [],
       transition: [],
       zIndex: [],
+      borderWidth: [],
+      borderStyle: [],
+      borderOffset: [],
     };
     const semantic = [];
     const component = [];
