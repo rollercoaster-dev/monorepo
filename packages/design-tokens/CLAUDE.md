@@ -30,14 +30,14 @@ css/
 
 ## Exports
 
-| Import path                       | What                                    | Consumer                 |
-| --------------------------------- | --------------------------------------- | ------------------------ |
-| `@rd/design-tokens/css`           | CSS custom properties (`:root`)         | Web apps                 |
-| `@rd/design-tokens/css/themes`    | Theme class overrides                   | Web apps                 |
-| `@rd/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page   |
-| `@rd/design-tokens/unistyles`     | Palette, tokens, colorModes, variants   | native-rd (React Native) |
-| `@rd/design-tokens/tailwind`      | Tailwind config preset                  | Tailwind projects        |
-| `@rd/design-tokens/tamagui`       | Tamagui token config                    | Tamagui projects         |
+| Import path                                      | What                                    | Consumer                 |
+| ------------------------------------------------ | --------------------------------------- | ------------------------ |
+| `@rollercoaster-dev/design-tokens/css`           | CSS custom properties (`:root`)         | Web apps                 |
+| `@rollercoaster-dev/design-tokens/css/themes`    | Theme class overrides                   | Web apps                 |
+| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page   |
+| `@rollercoaster-dev/design-tokens/unistyles`     | Palette, tokens, colorModes, variants   | native-rd (React Native) |
+| `@rollercoaster-dev/design-tokens/tailwind`      | Tailwind config preset                  | Tailwind projects        |
+| `@rollercoaster-dev/design-tokens/tamagui`       | Tamagui token config                    | Tamagui projects         |
 
 ## Build
 

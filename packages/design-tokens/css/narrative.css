@@ -78,7 +78,7 @@
   font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-sm);
   background: var(--ob-bg-secondary);
-  padding: var(--ob-space-1) var(--ob-space-1);
+  padding: var(--ob-space-1);
   border: var(--ob-border-width-medium) var(--ob-border-style)
     var(--ob-stroke-muted);
   border-radius: var(--ob-border-radius-sm);

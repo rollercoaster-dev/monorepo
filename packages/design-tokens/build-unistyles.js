@@ -42,13 +42,80 @@ function camel(s) {
 
 /** Read a JSON file relative to src/ */
 async function readJSON(relPath) {
-  return JSON.parse(await readFile(join(SRC, relPath), "utf-8"));
+  const fullPath = join(SRC, relPath);
+  const raw = await readFile(fullPath, "utf-8");
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Failed to parse ${fullPath}: ${err.message}`);
+  }
 }
 
 /** Extract $value from token, handling nested objects */
 function val(token) {
   if (!token) return undefined;
   return token.$value ?? token;
+}
+
+/** Format object entries as TypeScript literal properties */
+function toTSObject(entries) {
+  return entries
+    .map(([k, v]) => `  ${k}: ${typeof v === "string" ? `'${v}'` : v},`)
+    .join("\n");
+}
+
+/**
+ * Build the canonical light-mode color map from semantic.json + colors.json.
+ * Shared by buildColorModes (as the light mode) and buildVariants (as the diff baseline).
+ */
+function buildLightColorMap(semantic, colorData) {
+  return {
+    background: resolveRef(val(semantic.background), colorData, semantic),
+    backgroundSecondary: resolveRef(val(semantic.muted), colorData, semantic),
+    backgroundTertiary: resolveRef(val(semantic.border), colorData, semantic),
+    text: resolveRef(val(semantic.foreground), colorData, semantic),
+    textSecondary: resolveRef(
+      val(semantic["text-secondary"]),
+      colorData,
+      semantic,
+    ),
+    textMuted: resolveRef(
+      val(semantic["muted-foreground"]),
+      colorData,
+      semantic,
+    ),
+    accentPrimary: resolveRef(val(semantic.primary), colorData, semantic),
+    accentPurple: resolveRef(val(semantic.secondary), colorData, semantic),
+    accentMint: val(colorData.color["accent-mint"]),
+    accentYellow: val(colorData.color["accent-yellow"]),
+    border: resolveRef(val(semantic.border), colorData, semantic),
+    shadow: val(colorData.color.black),
+    focusRing: resolveRef(val(semantic.ring), colorData, semantic),
+  };
+}
+
+/**
+ * Extract a theme file's color values into the Colors interface shape.
+ * Used for dark mode and all accessibility variant themes.
+ */
+function extractThemeColors(theme) {
+  return {
+    background: val(theme.surface?.background),
+    backgroundSecondary: val(theme.surface?.muted),
+    backgroundTertiary:
+      val(theme.color?.gray?.["200"]) ?? val(theme.form?.border),
+    text: val(theme.surface?.foreground),
+    textSecondary: val(theme.typography?.["text-secondary"]),
+    textMuted: val(theme.surface?.["muted-foreground"]),
+    accentPrimary: val(theme.interactive?.primary),
+    accentPurple:
+      val(theme.color?.secondary) ?? val(theme.interactive?.secondary),
+    accentMint: val(theme.color?.["accent-mint"]),
+    accentYellow: val(theme.color?.["accent-yellow"]),
+    border: val(theme.form?.border),
+    shadow: val(theme.color?.black),
+    focusRing: val(theme.form?.ring),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -137,49 +204,48 @@ async function buildTokens() {
     sizeLEntries = Object.entries(ltSizes)
       .filter(([k]) => !k.startsWith("$"))
       .map(([k, t]) => [camel(k), remToPx(val(t))]);
-  } catch {
-    sizeLEntries = null;
-  }
-
-  function obj(entries) {
-    return entries
-      .map(([k, v]) => `  ${k}: ${typeof v === "string" ? `'${v}'` : v},`)
-      .join("\n");
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      console.warn("themes/large-text.json not found, skipping sizeL");
+      sizeLEntries = null;
+    } else {
+      throw err;
+    }
   }
 
   let out = `// Auto-generated from design-tokens. DO NOT EDIT.
 export const space = {
-${obj(spaceEntries)}
+${toTSObject(spaceEntries)}
 } as const;
 
 export const size = {
-${obj(sizeEntries)}
+${toTSObject(sizeEntries)}
 } as const;
 `;
 
   if (sizeLEntries) {
     out += `
 export const sizeL = {
-${obj(sizeLEntries)}
+${toTSObject(sizeLEntries)}
 } as const;
 `;
   }
 
   out += `
 export const radius = {
-${obj(radiusEntries)}
+${toTSObject(radiusEntries)}
 } as const;
 
 export const zIndex = {
-${obj(zIndexEntries)}
+${toTSObject(zIndexEntries)}
 } as const;
 
 export const fontWeight = {
-${obj(weightEntries)}
+${toTSObject(weightEntries)}
 } as const;
 
 export const lineHeight = {
-${obj(lineHeightEntries)}
+${toTSObject(lineHeightEntries)}
 } as const;
 
 export type Space = typeof space;
@@ -201,15 +267,22 @@ export type LineHeight = typeof lineHeight;
  * Resolve a token value from the flat light-mode sources.
  * Handles {reference} syntax by looking up in the token maps.
  */
-function resolveRef(ref, colorMap, semanticMap) {
+function resolveRef(ref, colorMap, semanticMap, _seen = new Set()) {
   if (!ref || !ref.startsWith("{")) return ref;
+
+  if (_seen.has(ref)) {
+    console.warn(
+      `Circular token reference detected: ${[..._seen, ref].join(" → ")}`,
+    );
+    return ref;
+  }
+  _seen.add(ref);
 
   const path = ref.slice(1, -1); // strip { }
 
   // Direct color.* references
   if (path.startsWith("color.")) {
     const rest = path.slice(6);
-    // Handle nested gray references like color.gray.200
     const parts = rest.split(".");
     let cursor = colorMap.color;
     for (const p of parts) {
@@ -223,7 +296,7 @@ function resolveRef(ref, colorMap, semanticMap) {
   if (semanticMap[path]) {
     const resolved = val(semanticMap[path]);
     if (resolved && resolved.startsWith("{")) {
-      return resolveRef(resolved, colorMap, semanticMap);
+      return resolveRef(resolved, colorMap, semanticMap, _seen);
     }
     return resolved;
   }
@@ -236,55 +309,9 @@ async function buildColorModes() {
   const colorData = await readJSON("tokens/colors.json");
   const semantic = await readJSON("tokens/semantic.json");
   const dark = await readJSON("themes/dark.json");
-  const darkTheme = dark.theme;
 
-  // Build light mode Colors from semantic.json + colors.json
-  const lightMap = {
-    background: resolveRef(val(semantic.background), colorData, semantic),
-    backgroundSecondary: resolveRef(val(semantic.muted), colorData, semantic),
-    backgroundTertiary: resolveRef(val(semantic.border), colorData, semantic),
-    text: resolveRef(val(semantic.foreground), colorData, semantic),
-    textSecondary: resolveRef(
-      val(semantic["text-secondary"]),
-      colorData,
-      semantic,
-    ),
-    textMuted: resolveRef(
-      val(semantic["muted-foreground"]),
-      colorData,
-      semantic,
-    ),
-    accentPrimary: resolveRef(val(semantic.primary), colorData, semantic),
-    accentPurple: resolveRef(val(semantic.secondary), colorData, semantic),
-    accentMint: val(colorData.color["accent-mint"]),
-    accentYellow: val(colorData.color["accent-yellow"]),
-    border: resolveRef(val(semantic.border), colorData, semantic),
-    shadow: val(colorData.color.black),
-    focusRing: resolveRef(val(semantic.ring), colorData, semantic),
-  };
-
-  // Build dark mode Colors from dark.json theme
-  const darkMap = {
-    background: val(darkTheme.surface.background),
-    backgroundSecondary: val(darkTheme.surface.muted),
-    backgroundTertiary: val(darkTheme.color.gray["200"]),
-    text: val(darkTheme.surface.foreground),
-    textSecondary: val(darkTheme.typography["text-secondary"]),
-    textMuted: val(darkTheme.surface["muted-foreground"]),
-    accentPrimary: val(darkTheme.interactive.primary),
-    accentPurple: val(darkTheme.color.secondary),
-    accentMint: val(darkTheme.color["accent-mint"]),
-    accentYellow: val(darkTheme.color["accent-yellow"]),
-    border: val(darkTheme.form.border),
-    shadow: val(darkTheme.color.black),
-    focusRing: val(darkTheme.form.ring),
-  };
-
-  function colorObj(map, indent = "  ") {
-    return Object.entries(map)
-      .map(([k, v]) => `${indent}${k}: '${v}',`)
-      .join("\n");
-  }
+  const lightMap = buildLightColorMap(semantic, colorData);
+  const darkMap = extractThemeColors(dark.theme);
 
   return `// Auto-generated from design-tokens. DO NOT EDIT.
 export interface Colors {
@@ -304,11 +331,11 @@ export interface Colors {
 }
 
 export const lightColors: Colors = {
-${colorObj(lightMap)}
+${toTSObject(Object.entries(lightMap))}
 };
 
 export const darkColors: Colors = {
-${colorObj(darkMap)}
+${toTSObject(Object.entries(darkMap))}
 };
 
 export const colorModes = {
@@ -326,30 +353,7 @@ async function buildVariants() {
   const colorData = await readJSON("tokens/colors.json");
   const semantic = await readJSON("tokens/semantic.json");
 
-  // Resolve the base light values for comparison
-  const baseLightColors = {
-    background: resolveRef(val(semantic.background), colorData, semantic),
-    backgroundSecondary: resolveRef(val(semantic.muted), colorData, semantic),
-    backgroundTertiary: resolveRef(val(semantic.border), colorData, semantic),
-    text: resolveRef(val(semantic.foreground), colorData, semantic),
-    textSecondary: resolveRef(
-      val(semantic["text-secondary"]),
-      colorData,
-      semantic,
-    ),
-    textMuted: resolveRef(
-      val(semantic["muted-foreground"]),
-      colorData,
-      semantic,
-    ),
-    accentPrimary: resolveRef(val(semantic.primary), colorData, semantic),
-    accentPurple: resolveRef(val(semantic.secondary), colorData, semantic),
-    accentMint: val(colorData.color["accent-mint"]),
-    accentYellow: val(colorData.color["accent-yellow"]),
-    border: resolveRef(val(semantic.border), colorData, semantic),
-    shadow: val(colorData.color.black),
-    focusRing: resolveRef(val(semantic.ring), colorData, semantic),
-  };
+  const baseLightColors = buildLightColorMap(semantic, colorData);
 
   const variantFiles = [
     { file: "high-contrast", name: "highContrast" },
@@ -363,26 +367,7 @@ async function buildVariants() {
 
   for (const { file, name } of variantFiles) {
     const data = await readJSON(`themes/${file}.json`);
-    const t = data.theme;
-
-    // Map this theme's values to the Colors interface
-    const themeColors = {
-      background: t.surface?.background?.$value,
-      backgroundSecondary: t.surface?.muted?.$value,
-      backgroundTertiary:
-        t.color?.gray?.["200"]?.$value ?? t.form?.border?.$value,
-      text: t.surface?.foreground?.$value,
-      textSecondary: t.typography?.["text-secondary"]?.$value,
-      textMuted: t.surface?.["muted-foreground"]?.$value,
-      accentPrimary: t.interactive?.primary?.$value,
-      accentPurple:
-        t.color?.secondary?.$value ?? t.interactive?.secondary?.$value,
-      accentMint: t.color?.["accent-mint"]?.$value,
-      accentYellow: t.color?.["accent-yellow"]?.$value,
-      border: t.form?.border?.$value,
-      shadow: t.color?.black?.$value,
-      focusRing: t.form?.ring?.$value,
-    };
+    const themeColors = extractThemeColors(data.theme);
 
     // Only emit properties that differ from base light
     const overrides = {};
@@ -397,12 +382,6 @@ async function buildVariants() {
     }
   }
 
-  function overrideObj(map, indent = "  ") {
-    return Object.entries(map)
-      .map(([k, v]) => `${indent}${k}: '${v}',`)
-      .join("\n");
-  }
-
   let out = `// Auto-generated from design-tokens. DO NOT EDIT.
 import type { Colors } from './colorModes';
 
@@ -412,7 +391,7 @@ export type VariantOverride = Partial<Colors>;
 
   for (const { name, overrides } of variants) {
     out += `export const ${name}: VariantOverride = {
-${overrideObj(overrides)}
+${toTSObject(Object.entries(overrides))}
 };
 
 `;
@@ -430,12 +409,16 @@ ${variants.map(({ name }) => `  ${name},`).join("\n")}
 // index.ts — barrel export
 // ---------------------------------------------------------------------------
 
-function buildIndex() {
+function buildIndex(hasSizeL) {
+  const sizeExports = hasSizeL
+    ? "space, size, sizeL, radius, zIndex, fontWeight, lineHeight"
+    : "space, size, radius, zIndex, fontWeight, lineHeight";
+
   return `// Auto-generated from design-tokens. DO NOT EDIT.
 export { palette } from './palette';
 export type { Palette } from './palette';
 
-export { space, size, sizeL, radius, zIndex, fontWeight, lineHeight } from './tokens';
+export { ${sizeExports} } from './tokens';
 export type { Space, Size, Radius, ZIndex, FontWeight, LineHeight } from './tokens';
 
 export { lightColors, darkColors, colorModes } from './colorModes';
@@ -460,12 +443,14 @@ async function main() {
     buildVariants(),
   ]);
 
+  const hasSizeL = tokens.includes("export const sizeL");
+
   await Promise.all([
     writeFile(join(OUT, "palette.ts"), palette),
     writeFile(join(OUT, "tokens.ts"), tokens),
     writeFile(join(OUT, "colorModes.ts"), colorModes),
     writeFile(join(OUT, "variants.ts"), variantsContent),
-    writeFile(join(OUT, "index.ts"), buildIndex()),
+    writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL)),
   ]);
 
   console.log(
@@ -473,4 +458,7 @@ async function main() {
   );
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error("build-unistyles failed:", err);
+  process.exit(1);
+});

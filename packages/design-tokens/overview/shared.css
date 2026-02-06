@@ -80,7 +80,7 @@ body {
 }
 .sidebar .theme-control select {
   width: 100%;
-  padding: var(--ob-space-2) var(--ob-space-2);
+  padding: var(--ob-space-2);
   font-size: var(--ob-font-size-sm);
   border: var(--ob-borderWidth-thin) solid var(--ob-border);
   border-radius: var(--ob-border-radius-md);
