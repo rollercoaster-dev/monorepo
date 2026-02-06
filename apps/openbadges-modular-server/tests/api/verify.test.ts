@@ -427,6 +427,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -451,6 +452,7 @@ describe("Verify Credential Endpoint", () => {
             type: ["VerifiableCredential"],
             issuanceDate: "2024-01-01T00:00:00Z",
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -468,6 +470,7 @@ describe("Verify Credential Endpoint", () => {
             issuer: "did:web:example.com",
             issuanceDate: "2024-01-01T00:00:00Z",
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -491,6 +494,7 @@ describe("Verify Credential Endpoint", () => {
           },
           options: {
             skipTemporalValidation: true, // Should skip the future issuance date check
+            skipIssuerVerification: true,
           },
         };
 
@@ -524,6 +528,7 @@ describe("Verify Credential Endpoint", () => {
 
         const request = {
           credential: jwt,
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -536,6 +541,7 @@ describe("Verify Credential Endpoint", () => {
       it("should reject invalid JWT format", async () => {
         const request = {
           credential: "invalid.jwt.format.with.four.parts",
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -561,6 +567,7 @@ describe("Verify Credential Endpoint", () => {
               verificationMethod: "did:web:example.com#key-1",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -590,6 +597,7 @@ describe("Verify Credential Endpoint", () => {
           },
           options: {
             allowExpired: true,
+            skipIssuerVerification: true,
           },
         };
 
@@ -614,6 +622,7 @@ describe("Verify Credential Endpoint", () => {
               verificationMethod: "did:web:example.com#key-1",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -650,6 +659,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -676,6 +686,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -701,6 +712,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -726,6 +738,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -751,6 +764,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -775,6 +789,7 @@ describe("Verify Credential Endpoint", () => {
               proofValue: "test-proof-value",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
@@ -796,6 +811,7 @@ describe("Verify Credential Endpoint", () => {
               verificationMethod: "did:web:example.com#key-1",
             },
           },
+          options: { skipIssuerVerification: true },
         };
 
         const result = await controller.verifyCredential(request);
