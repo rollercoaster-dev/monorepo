@@ -1,8 +1,8 @@
 {
   "background": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
-    "$description": "Page background"
+    "$description": "Page background - off-white (#fafafa)"
   },
   "foreground": {
     "$value": "{color.gray.800}",
@@ -10,7 +10,7 @@
     "$description": "Primary text on page background"
   },
   "card": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
     "$description": "Card/panel background"
   },
@@ -19,7 +19,7 @@
     "$type": "color"
   },
   "popover": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color",
     "$description": "Popover/dropdown background"
   },
@@ -43,7 +43,7 @@
     "$description": "Primary action color"
   },
   "primary-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "secondary": {
@@ -51,7 +51,7 @@
     "$type": "color"
   },
   "secondary-foreground": {
-    "$value": "{color.gray.800}",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "accent": {
@@ -67,7 +67,7 @@
     "$type": "color"
   },
   "destructive-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "success": {
@@ -75,7 +75,7 @@
     "$type": "color"
   },
   "success-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "warning": {
@@ -91,7 +91,7 @@
     "$type": "color"
   },
   "info-foreground": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "border": {
@@ -113,6 +113,16 @@
     "$value": "{font-sans}",
     "$type": "fontFamily"
   },
+  "font-headline": {
+    "$value": "{font-headline}",
+    "$type": "fontFamily",
+    "$description": "Headline/display font family"
+  },
+  "font-mono": {
+    "$value": "{font-mono}",
+    "$type": "fontFamily",
+    "$description": "Monospace font family"
+  },
   "text-primary": {
     "$value": "{foreground}",
     "$type": "color"
@@ -126,7 +136,7 @@
     "$type": "color"
   },
   "text-inverse": {
-    "$value": "white",
+    "$value": "{color.white}",
     "$type": "color"
   },
   "bg-primary": {
@@ -150,8 +160,9 @@
     "$type": "color"
   },
   "border-width": {
-    "$value": "1px",
-    "$type": "dimension"
+    "$value": "{borderWidth.default}",
+    "$type": "dimension",
+    "$description": "Default border width - 2px for neo-brutalist aesthetic"
   },
   "border-radius-sm": {
     "$value": "{radius.sm}",
