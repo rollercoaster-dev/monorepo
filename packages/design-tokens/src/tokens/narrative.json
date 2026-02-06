@@ -37,9 +37,9 @@
     },
     "stories": {
       "bg": {
-        "$value": "#1a1033",
+        "$value": "#2b1f4b",
         "$type": "color",
-        "$description": "The Stories background — deep indigo"
+        "$description": "The Stories background — elevated purple"
       },
       "text": {
         "$value": "#fafafa",
