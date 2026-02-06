@@ -64,7 +64,7 @@ export const darkColors: Colors = {
   focusRing: palette.gray50,
 };
 
-interface ColorModeConfig {
+export interface ColorModeConfig {
   colors: Colors;
   shadows: { opacity: number };
 }

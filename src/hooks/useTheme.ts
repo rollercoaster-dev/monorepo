@@ -12,16 +12,16 @@ import { getThemeName, parseThemeName, type ThemeName } from '../themes/compose'
  * their preferred accessibility settings.
  */
 export function useTheme() {
-  const [colorMode, setColorModeState] = useState<ColorMode>('light');
-  const [variant, setVariantState] = useState<Variant>('default');
+  const [colorMode, setColorMode] = useState<ColorMode>('light');
+  const [variant, setVariant] = useState<Variant>('default');
 
   // Sync state with UnistylesRuntime on mount
   useEffect(() => {
     const currentTheme = UnistylesRuntime.themeName as ThemeName;
     if (currentTheme) {
       const parsed = parseThemeName(currentTheme);
-      setColorModeState(parsed.colorMode);
-      setVariantState(parsed.variant);
+      setColorMode(parsed.colorMode);
+      setVariant(parsed.variant);
     }
   }, []);
 
@@ -33,16 +33,8 @@ export function useTheme() {
     }
   }, [colorMode, variant]);
 
-  const setColorMode = useCallback((mode: ColorMode) => {
-    setColorModeState(mode);
-  }, []);
-
-  const setVariant = useCallback((v: Variant) => {
-    setVariantState(v);
-  }, []);
-
   const toggleColorMode = useCallback(() => {
-    setColorModeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setColorMode((prev) => (prev === 'light' ? 'dark' : 'light'));
   }, []);
 
   return {

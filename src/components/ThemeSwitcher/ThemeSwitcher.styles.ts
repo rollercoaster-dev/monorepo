@@ -76,7 +76,7 @@ interface VariantDef {
 }
 
 export const variantPreviewStyles = {
-  label: (variantId: Variant, variantDef: VariantDef) => {
+  label: (_variantId: Variant, variantDef: VariantDef) => {
     const sizeScale = variantDef.size ?? size;
     const lineHeightScale = variantDef.lineHeight ?? lineHeight;
 
@@ -87,7 +87,7 @@ export const variantPreviewStyles = {
       fontFamily: variantDef.fontFamily,
     };
   },
-  description: (variantId: Variant, variantDef: VariantDef) => {
+  description: (_variantId: Variant, variantDef: VariantDef) => {
     const sizeScale = variantDef.size ?? size;
     const lineHeightScale = variantDef.lineHeight ?? lineHeight;
 

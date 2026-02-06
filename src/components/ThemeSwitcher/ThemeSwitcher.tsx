@@ -1,6 +1,6 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
-import { variantOptions, variantOverrides, type Variant } from '../../themes/variants';
+import { variantOptions, variantOverrides } from '../../themes/variants';
 import type { ColorMode } from '../../themes/colorModes';
 import { styles, variantPreviewStyles } from './ThemeSwitcher.styles';
 
@@ -17,7 +17,7 @@ export function ThemeSwitcher() {
       <Text style={styles.title}>Pick what feels right</Text>
 
       <Text style={styles.sectionTitle}>Color Mode</Text>
-      <View style={styles.colorModeRow}>
+      <View style={styles.colorModeRow} accessibilityRole="radiogroup">
         {colorModeOptions.map((option) => {
           const isSelected = colorMode === option.id;
           return (
@@ -25,8 +25,8 @@ export function ThemeSwitcher() {
               key={option.id}
               onPress={() => setColorMode(option.id)}
               accessible
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected }}
               accessibilityLabel={`${option.label} mode`}
               style={styles.colorModeButton(isSelected)}
             >
@@ -37,7 +37,8 @@ export function ThemeSwitcher() {
       </View>
 
       <Text style={styles.sectionTitle}>Accessibility</Text>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView>
+        <View accessibilityRole="radiogroup">
         {variantOptions.map((option) => {
           const isSelected = variant === option.id;
           const variantDef = variantOverrides[option.id];
@@ -47,8 +48,8 @@ export function ThemeSwitcher() {
               key={option.id}
               onPress={() => setVariant(option.id)}
               accessible
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isSelected }}
               accessibilityLabel={`${option.label}. ${option.description}`}
             >
               <View style={styles.variantButton(isSelected)}>
@@ -62,6 +63,7 @@ export function ThemeSwitcher() {
             </Pressable>
           );
         })}
+        </View>
       </ScrollView>
     </View>
   );

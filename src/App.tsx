@@ -10,8 +10,9 @@ import { useFonts } from './hooks/useFonts';
  * Unistyles handles theming globally via StyleSheet.configure()
  */
 export function App() {
-  // Load accessibility fonts (OpenDyslexic, Atkinson Hyperlegible)
-  useFonts();
+  const { isReady } = useFonts();
+
+  if (!isReady) return null;
 
   return (
     <SafeAreaProvider>

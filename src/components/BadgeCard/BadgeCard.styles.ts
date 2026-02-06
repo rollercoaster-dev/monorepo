@@ -1,12 +1,14 @@
 import { StyleSheet } from 'react-native-unistyles';
+import { palette } from '../../themes/palette';
+import type { space } from '../../themes/tokens';
 
 type CardSize = 'compact' | 'normal' | 'spacious';
 
-const sizeMap: Record<CardSize, number> = {
+const sizeMap: Record<CardSize, keyof typeof space> = {
   compact: 3,
   normal: 4,
   spacious: 5,
-} as const;
+};
 
 export const styles = StyleSheet.create((theme) => ({
   pressable: {
@@ -17,7 +19,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
-    padding: theme.space[sizeMap[size] as keyof typeof theme.space],
+    padding: theme.space[sizeMap[size]],
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: theme.shadows.opacity,
@@ -34,7 +36,7 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[3],
   },
   imageText: {
-    color: '#ffffff',
+    color: palette.white,
     fontSize: theme.size['3xl'],
     fontWeight: theme.fontWeight.bold,
   },

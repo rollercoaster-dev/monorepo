@@ -22,14 +22,14 @@ export function BadgeCard({
     <Pressable
       onPress={onPress}
       accessible
-      accessibilityRole="button"
+      accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={`Badge: ${title}, earned ${earnedDate}`}
       style={styles.pressable}
     >
       <View style={styles.container(size)}>
         <View style={styles.image}>
           <Text style={styles.imageText}>
-            {title.charAt(0).toUpperCase()}
+            {(title.charAt(0) || '?').toUpperCase()}
           </Text>
         </View>
         <Text style={styles.title}>{title}</Text>

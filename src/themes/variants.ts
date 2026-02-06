@@ -213,7 +213,7 @@ export const variantOptions: Array<{
     label: 'Dyslexia-Friendly',
     description: 'Cream background',
   },
-  { id: 'lowVision', label: 'Low Vision', description: 'High contrast + large' },
+  { id: 'lowVision', label: 'Low Vision', description: 'High contrast + large text' },
   {
     id: 'autismFriendly',
     label: 'Autism-Friendly',

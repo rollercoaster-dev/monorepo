@@ -34,7 +34,7 @@ export const palette = {
   cream200: '#f0edd6',
 
   // Semantic colors
-  blue600: '#0000ff',
+  blue600: '#2563eb',
   red600: '#dc2626',
   green600: '#16a34a',
 

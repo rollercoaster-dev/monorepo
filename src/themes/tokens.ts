@@ -87,5 +87,9 @@ export const lineHeightL = {
 
 export type Space = typeof space;
 export type Size = typeof size;
+export type SizeL = typeof sizeL;
 export type Radius = typeof radius;
 export type ZIndex = typeof zIndex;
+export type FontWeight = typeof fontWeight;
+export type LineHeight = typeof lineHeight;
+export type LineHeightL = typeof lineHeightL;

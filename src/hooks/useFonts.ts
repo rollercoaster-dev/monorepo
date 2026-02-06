@@ -25,7 +25,6 @@ export function useFonts() {
   return {
     fontsLoaded,
     fontError,
-    // Don't block rendering - fonts will load async
-    isReady: true,
+    isReady: fontsLoaded || !!fontError,
   };
 }
