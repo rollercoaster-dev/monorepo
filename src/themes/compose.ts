@@ -6,6 +6,7 @@
 import { colorModes, type ColorMode, type Colors } from './colorModes';
 import { variantOverrides, variants, type Variant } from './variants';
 import { space, size, sizeL, radius, zIndex, fontWeight, lineHeight, lineHeightL } from './tokens';
+import { narrativeModes, type Narrative } from './adapter';
 
 /** Size scale type - either normal or large */
 export type SizeScale = typeof size | typeof sizeL;
@@ -15,6 +16,7 @@ export type LineHeightScale = typeof lineHeight | typeof lineHeightL;
 
 export interface ComposedTheme {
   colors: Colors;
+  narrative: Narrative;
   shadows: { opacity: number };
   space: typeof space;
   size: SizeScale;
@@ -33,14 +35,26 @@ export function composeTheme(
   variant: Variant
 ): ComposedTheme {
   const base = colorModes[colorMode];
+  const baseNarrative = narrativeModes[colorMode];
   const variantDef = variantOverrides[variant];
 
   // Start with base colors from colorMode
   let colors = { ...base.colors };
 
-  // Apply variant color overrides if they exist
-  if (variantDef.colors?.[colorMode]) {
-    colors = { ...colors, ...variantDef.colors[colorMode] };
+  // Apply variant color overrides (variants are defined as light-based diffs)
+  if (variantDef.colors) {
+    colors = { ...colors, ...variantDef.colors };
+  }
+
+  // Apply variant narrative overrides
+  let narrative = baseNarrative;
+  if (variantDef.narrative) {
+    narrative = {
+      climb: { ...baseNarrative.climb, ...variantDef.narrative.climb },
+      drop: { ...baseNarrative.drop, ...variantDef.narrative.drop },
+      stories: { ...baseNarrative.stories, ...variantDef.narrative.stories },
+      relief: { ...baseNarrative.relief, ...variantDef.narrative.relief },
+    };
   }
 
   // Determine shadow opacity
@@ -54,6 +68,7 @@ export function composeTheme(
 
   const theme: ComposedTheme = {
     colors,
+    narrative,
     shadows: { opacity: shadowOpacity },
     space,
     size: sizeScale,

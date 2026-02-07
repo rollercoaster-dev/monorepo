@@ -5,9 +5,9 @@ import type { space } from '../../themes/tokens';
 type CardSize = 'compact' | 'normal' | 'spacious';
 
 const sizeMap: Record<CardSize, keyof typeof space> = {
-  compact: 3,
-  normal: 4,
-  spacious: 5,
+  compact: '3',
+  normal: '4',
+  spacious: '5',
 };
 
 export const styles = StyleSheet.create((theme) => ({

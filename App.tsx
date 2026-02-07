@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { TestScreen } from './screens/TestScreen';
-import { useFonts } from './hooks/useFonts';
+import { TestScreen } from './src/screens/TestScreen';
+import { useFonts } from './src/hooks/useFonts';
 
 /**
  * Root App component

@@ -3,9 +3,13 @@
  * Each variant defines what it changes from the base colorMode
  */
 
-import { palette } from './palette';
 import { size, sizeL, lineHeight, lineHeightL } from './tokens';
-import type { Colors } from './colorModes';
+import {
+  variantColors,
+  narrativeVariants,
+  type VariantOverride as TokenVariantOverride,
+  type NarrativeOverride,
+} from './adapter';
 
 export type Variant =
   | 'default'
@@ -13,7 +17,8 @@ export type Variant =
   | 'largeText'
   | 'dyslexia'
   | 'lowVision'
-  | 'autismFriendly';
+  | 'autismFriendly'
+  | 'lowInfo';
 
 export const variants: Variant[] = [
   'default',
@@ -22,15 +27,12 @@ export const variants: Variant[] = [
   'dyslexia',
   'lowVision',
   'autismFriendly',
+  'lowInfo',
 ];
 
-type VariantColorOverrides = Partial<Colors>;
-
 interface VariantOverride {
-  colors?: {
-    light?: VariantColorOverrides;
-    dark?: VariantColorOverrides;
-  };
+  colors?: TokenVariantOverride;
+  narrative?: NarrativeOverride;
   shadows?: { opacity: number };
   size?: typeof size | typeof sizeL;
   lineHeight?: typeof lineHeight | typeof lineHeightL;
@@ -49,36 +51,11 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
 
   /**
    * High Contrast - maximum contrast for WCAG AAA compliance
-   * Light: black text on white
-   * Dark: white text on black
+   * Values are sourced from design-tokens
    */
   highContrast: {
-    colors: {
-      light: {
-        background: palette.white,
-        backgroundSecondary: palette.gray100,
-        backgroundTertiary: palette.gray200,
-        text: palette.black,
-        textSecondary: palette.black,
-        textMuted: palette.gray700,
-        accentPrimary: palette.black,
-        accentPurple: palette.purple400,
-        border: palette.black,
-        focusRing: palette.blue600,
-      },
-      dark: {
-        background: palette.black,
-        backgroundSecondary: palette.gray900,
-        backgroundTertiary: palette.gray700,
-        text: palette.white,
-        textSecondary: palette.white,
-        textMuted: palette.gray300,
-        accentPrimary: palette.white,
-        accentPurple: palette.purple300,
-        border: palette.white,
-        focusRing: palette.blue600,
-      },
-    },
+    colors: variantColors.highContrast,
+    narrative: narrativeVariants.highContrast,
     shadows: { opacity: 0 },
   },
 
@@ -91,68 +68,22 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
 
   /**
    * Dyslexia-Friendly - cream background reduces visual stress
-   * Uses OpenDyslexic font (set separately)
+   * Values are sourced from design-tokens; font is app-owned
    */
   dyslexia: {
-    colors: {
-      light: {
-        background: palette.cream100,
-        backgroundSecondary: palette.cream200,
-        backgroundTertiary: palette.gray200,
-        text: palette.gray700,
-        textSecondary: palette.gray600,
-        textMuted: palette.gray500,
-        accentPrimary: palette.gray700,
-        border: palette.gray300,
-        focusRing: palette.gray700,
-      },
-      dark: {
-        // Warm dark background for dark mode dyslexia
-        background: palette.gray800,
-        backgroundSecondary: palette.gray700,
-        backgroundTertiary: palette.gray600,
-        text: palette.cream100,
-        textSecondary: palette.cream200,
-        textMuted: palette.gray400,
-        accentPrimary: palette.cream100,
-        border: palette.gray600,
-        focusRing: palette.cream100,
-      },
-    },
+    colors: variantColors.dyslexiaFriendly,
+    narrative: narrativeVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
     fontFamily: 'OpenDyslexic',
   },
 
   /**
    * Low Vision - high contrast + large text + clear focus indicators
-   * Uses Atkinson Hyperlegible font (set separately)
+   * Values are sourced from design-tokens; font is app-owned
    */
   lowVision: {
-    colors: {
-      light: {
-        background: palette.white,
-        backgroundSecondary: palette.gray100,
-        backgroundTertiary: palette.gray200,
-        text: palette.black,
-        textSecondary: palette.black,
-        textMuted: palette.gray700,
-        accentPrimary: palette.black,
-        border: palette.black,
-        focusRing: palette.blue600,
-      },
-      dark: {
-        background: palette.black,
-        backgroundSecondary: palette.gray900,
-        backgroundTertiary: palette.gray700,
-        text: palette.white,
-        textSecondary: palette.gray200,
-        textMuted: palette.gray300,
-        accentPrimary: palette.white,
-        accentPurple: palette.purple300,
-        border: palette.white,
-        focusRing: palette.blue600,
-      },
-    },
+    colors: variantColors.lowVision,
+    narrative: narrativeVariants.lowVision,
     shadows: { opacity: 0 },
     size: sizeL,
     fontFamily: 'AtkinsonHyperlegible',
@@ -162,37 +93,18 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
    * Autism-Friendly - muted/desaturated colors to reduce sensory overload
    */
   autismFriendly: {
-    colors: {
-      light: {
-        background: palette.gray100,
-        backgroundSecondary: palette.gray200,
-        backgroundTertiary: palette.gray300,
-        text: palette.gray700,
-        textSecondary: palette.gray600,
-        textMuted: palette.gray500,
-        accentPrimary: palette.gray700,
-        accentPurple: palette.purpleDesaturated,
-        accentMint: palette.mintDesaturated,
-        accentYellow: palette.yellow200,
-        border: palette.gray300,
-        focusRing: palette.gray700,
-      },
-      dark: {
-        background: palette.gray800,
-        backgroundSecondary: palette.gray700,
-        backgroundTertiary: palette.gray600,
-        text: palette.gray200,
-        textSecondary: palette.gray300,
-        textMuted: palette.gray400,
-        accentPrimary: palette.gray200,
-        accentPurple: palette.purpleDesaturated,
-        accentMint: palette.mintDesaturated,
-        accentYellow: palette.yellow200,
-        border: palette.gray600,
-        focusRing: palette.gray200,
-      },
-    },
+    colors: variantColors.autismFriendly,
+    narrative: narrativeVariants.autismFriendly,
     shadows: { opacity: 0 },
+  },
+
+  /**
+   * Low Info - reduced visual noise
+   * Values are sourced from design-tokens
+   */
+  lowInfo: {
+    colors: variantColors.lowInfo,
+    narrative: narrativeVariants.lowInfo,
   },
 };
 
@@ -201,22 +113,35 @@ export const variantOptions: Array<{
   label: string;
   description: string;
 }> = [
-  { id: 'default', label: 'Default', description: 'Standard theme' },
+  { id: 'default', label: 'The Full Ride', description: 'Standard theme' },
   {
     id: 'highContrast',
-    label: 'High Contrast',
-    description: 'WCAG AAA compliant',
+    label: 'Bold Ink',
+    description: 'High contrast (WCAG AAA)',
   },
-  { id: 'largeText', label: 'Large Text', description: '1.25x text size' },
+  {
+    id: 'largeText',
+    label: 'Same Ride, Bigger Seat',
+    description: '1.25x text size',
+  },
   {
     id: 'dyslexia',
-    label: 'Dyslexia-Friendly',
-    description: 'Cream background',
+    label: 'Warm Studio',
+    description: 'Dyslexia-friendly',
   },
-  { id: 'lowVision', label: 'Low Vision', description: 'High contrast + large text' },
+  {
+    id: 'lowVision',
+    label: 'Loud & Clear',
+    description: 'Low vision support',
+  },
   {
     id: 'autismFriendly',
-    label: 'Autism-Friendly',
-    description: 'Muted colors',
+    label: 'Still Water',
+    description: 'Autism-friendly',
+  },
+  {
+    id: 'lowInfo',
+    label: 'Clean Signal',
+    description: 'Reduced visual noise',
   },
 ];
