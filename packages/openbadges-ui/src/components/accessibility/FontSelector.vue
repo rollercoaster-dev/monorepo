@@ -68,6 +68,19 @@ const props = withDefaults(defineProps<FontSelectorProps>(), {
       className: "ob-font-system",
     },
     {
+      id: "instrument-sans",
+      name: "Instrument Sans",
+      description: "Modern body font from the landing page design language",
+      className: "ob-font-instrument-sans",
+    },
+    {
+      id: "anybody",
+      name: "Anybody",
+      description:
+        "Display font for headlines from the landing page design language",
+      className: "ob-font-anybody",
+    },
+    {
       id: "atkinson",
       name: "Atkinson Hyperlegible",
       description: "Designed for low vision readers",
