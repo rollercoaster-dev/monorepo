@@ -484,18 +484,16 @@ const handleDensityChange = (event: Event) => {
 
 .badge-summary {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ob-space-2);
   cursor: pointer;
   outline: none;
 }
 
-/* In grid layout, stack summary content and stretch to fill equal-height cells */
+/* In grid layout, stretch to fill equal-height cells */
 .ob-badge-list.ob-badge-list--grid-layout .badge-summary {
   flex: 1;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--ob-space-2);
 }
 
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-display {
@@ -503,7 +501,6 @@ const handleDensityChange = (event: Event) => {
 }
 
 .badge-expand-btn {
-  margin-left: var(--ob-space-4);
   padding: var(--ob-space-1) var(--ob-space-3);
   border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
@@ -514,7 +511,7 @@ const handleDensityChange = (event: Event) => {
   text-transform: uppercase;
   letter-spacing: var(--ob-font-letterSpacing-wide);
   cursor: pointer;
-  align-self: flex-end;
+  align-self: flex-start;
   box-shadow: var(--ob-shadow-hard-sm);
 }
 

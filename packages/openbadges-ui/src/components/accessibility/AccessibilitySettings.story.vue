@@ -89,7 +89,7 @@ function onResetSettings() {
 <template>
   <Story
     title="Components/Accessibility/AccessibilitySettings"
-    :layout="{ type: 'single', iframe: true, iframeHeight: 600 }"
+    :layout="{ type: 'single', iframe: true, iframeHeight: 1000 }"
   >
     <template #docs>
       <div class="histoire-docs">
