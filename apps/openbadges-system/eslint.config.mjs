@@ -21,7 +21,7 @@ export default [
       'vitest.config.ts',
       'vitest.client.config.ts',
       'vitest.server.config.ts',
-      'tailwind.config.js',
+      'tailwind.config.cjs',
       'postcss.config.cjs',
       'commitlint.config.js',
       // Auto-generated files
