@@ -12,6 +12,11 @@ import {
   fontWeight as pkgFontWeight,
   lineHeight as pkgLineHeight,
   lineHeightL as pkgLineHeightL,
+  borderWidth as pkgBorderWidth,
+  letterSpacing as pkgLetterSpacing,
+  fontFamily as pkgFontFamily,
+  transition as pkgTransition,
+  shadow as pkgShadow,
   lightColors as pkgLightColors,
   darkColors as pkgDarkColors,
   variants as pkgVariants,
@@ -148,3 +153,13 @@ export const narrativeModes = pkgNarrativeModes;
 export const narrativeVariants = pkgNarrativeVariants;
 export type Narrative = PkgNarrative;
 export type NarrativeOverride = PkgNarrativeOverride;
+
+// ---------------------------------------------------------------------------
+// New token categories — pass through
+// ---------------------------------------------------------------------------
+
+export const borderWidth = pkgBorderWidth;
+export const letterSpacing = pkgLetterSpacing;
+export const fontFamily = pkgFontFamily;
+export const transition = pkgTransition;
+export const shadow = pkgShadow;
