@@ -265,8 +265,8 @@ const truncatedCriteria = computed(() => {
   --badge-class-text-color: var(--ob-muted-foreground);
   --badge-class-hover-shadow: var(--ob-shadow-hard-lg);
   --badge-class-focus-outline-color: var(--ob-primary);
-  --badge-class-tag-bg: var(--ob-highlight);
-  --badge-class-tag-color: var(--ob-highlight-foreground);
+  --badge-class-tag-bg: var(--ob-badge-sticker-bg);
+  --badge-class-tag-color: var(--ob-badge-sticker-foreground);
   --badge-class-fallback-bg: var(--ob-highlight);
 
   display: flex;
@@ -290,7 +290,7 @@ const truncatedCriteria = computed(() => {
   box-shadow: var(--badge-class-hover-shadow);
 }
 
-.ob-badge-class-card.is-interactive:focus {
+.ob-badge-class-card.is-interactive:focus-visible {
   outline: var(--ob-border-width-medium) solid
     var(--badge-class-focus-outline-color);
   outline-offset: var(--ob-space-1);
