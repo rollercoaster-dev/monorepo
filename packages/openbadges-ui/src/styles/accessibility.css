@@ -39,9 +39,16 @@ textarea:focus-visible,
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--ob-primary);
-  color: var(--ob-text-inverse);
-  padding: var(--ob-space-2);
+  background: var(--ob-highlight);
+  color: var(--ob-highlight-foreground);
+  padding: var(--ob-space-2) var(--ob-space-4);
+  border: var(--ob-border-width-medium) solid currentColor;
+  border-radius: var(--ob-border-radius-sm);
+  font-weight: var(--ob-font-weight-bold);
+  font-size: var(--ob-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   z-index: var(--ob-z-index-modal);
   transition: top var(--ob-transition-fast);
 }
@@ -69,11 +76,11 @@ textarea:focus-visible,
   .ob-profile-viewer,
   .ob-badge-issuer-form,
   .ob-issuer-dashboard {
-    border: var(--ob-border-width) solid CanvasText;
+    border: var(--ob-border-width-medium) solid CanvasText;
   }
 
   .ob-button {
-    border: var(--ob-border-width) solid CanvasText;
+    border: var(--ob-border-width-medium) solid CanvasText;
   }
 
   .ob-tab-button.active {
@@ -92,12 +99,12 @@ textarea:focus-visible,
 /* Ensure sufficient color contrast */
 .ob-form-error {
   color: var(--ob-error);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
 }
 
 .ob-form-success {
   color: var(--ob-success);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
 }
 
 /* Ensure form fields have sufficient spacing for touch targets */
@@ -112,30 +119,34 @@ textarea:focus-visible,
 .ob-form-input:focus,
 .ob-form-textarea:focus {
   outline: none;
-  border-color: var(--ob-form-input-focus);
+  border-color: var(--ob-border-color-focus);
   box-shadow: var(--ob-shadow-focus);
 }
 
 /* Status messages for screen readers */
 .ob-status {
-  border-radius: var(--ob-border-radius-md);
-  padding: var(--ob-space-2) var(--ob-space-3);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-3) var(--ob-space-4);
   margin-top: var(--ob-space-4);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-status[aria-live="polite"] {
-  background-color: var(--ob-info-light);
-  color: var(--ob-text-primary);
+  background-color: var(--ob-card);
+  color: var(--ob-foreground);
 }
 
 .ob-status[role="alert"] {
-  background-color: var(--ob-error-light);
-  color: var(--ob-text-primary);
+  background-color: var(--ob-card);
+  color: var(--ob-foreground);
+  border-color: var(--ob-error);
 }
 
 .ob-status[role="status"] {
-  background-color: var(--ob-success-light);
-  color: var(--ob-text-primary);
+  background-color: var(--ob-card);
+  color: var(--ob-foreground);
+  border-color: var(--ob-success);
 }
 
 /* Neurodiversity-specific styles */
