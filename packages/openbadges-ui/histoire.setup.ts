@@ -9,9 +9,8 @@ import "./src/styles/accessibility.css";
 import "@rollercoaster-dev/design-tokens/css";
 import "@rollercoaster-dev/design-tokens/css/themes";
 
-// Force-load design fonts so they're available in story iframes.
-// Without this, @font-face rules in the parent document don't trigger
-// font downloads for usage inside same-origin iframes.
+// Preload all @font-face variants so they're available in story iframes.
+// Keep this list in sync with the @font-face declarations in fonts.css.
 if (typeof document !== "undefined" && document.fonts) {
   const fontsToLoad = [
     "400 16px 'Instrument Sans'",
@@ -23,6 +22,10 @@ if (typeof document !== "undefined" && document.fonts) {
     "900 16px 'Anybody'",
     "400 16px 'DM Mono'",
     "500 16px 'DM Mono'",
+    "400 16px 'Inter'",
+    "500 16px 'Inter'",
+    "600 16px 'Inter'",
+    "700 16px 'Inter'",
     "400 16px 'Atkinson Hyperlegible'",
     "700 16px 'Atkinson Hyperlegible'",
     "400 16px 'Lexend'",
@@ -32,7 +35,19 @@ if (typeof document !== "undefined" && document.fonts) {
     "400 16px 'OpenDyslexic'",
     "700 16px 'OpenDyslexic'",
   ];
-  fontsToLoad.forEach((spec) => document.fonts.load(spec));
+  Promise.allSettled(fontsToLoad.map((spec) => document.fonts.load(spec))).then(
+    (results) => {
+      const failures = results
+        .map((r, i) => (r.status === "rejected" ? fontsToLoad[i] : null))
+        .filter(Boolean);
+      if (failures.length > 0) {
+        console.warn(
+          `[histoire.setup] Failed to load ${failures.length} font(s):`,
+          failures,
+        );
+      }
+    },
+  );
 }
 
 export function setupVue3(): object {

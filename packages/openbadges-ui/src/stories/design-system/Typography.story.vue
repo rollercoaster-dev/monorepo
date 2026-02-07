@@ -284,8 +284,8 @@ const usageExamples = [
       <div class="histoire-docs">
         <h1>Typography Tokens</h1>
         <p>
-          Seven font families (including three accessibility-optimized options),
-          a 13-step type scale from 2xs to display, five font weights, and
+          Six font families (including three accessibility-optimized options), a
+          13-step type scale from 2xs to display, five font weights, and
           line-height/letter-spacing presets.
         </p>
         <p>Click any token name to copy its CSS variable reference.</p>
