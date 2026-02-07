@@ -94,6 +94,8 @@ export class AccessibilityService {
       | "high-contrast"
       | "large-text"
       | "dyslexia-friendly"
+      | "low-vision"
+      | "low-info"
       | "autism-friendly",
   ): void {
     if (!isBrowser) {
@@ -106,6 +108,8 @@ export class AccessibilityService {
       "ob-high-contrast-theme",
       "ob-large-text-theme",
       "ob-dyslexia-friendly-theme",
+      "ob-low-vision-theme",
+      "ob-low-info-theme",
       "ob-autism-friendly-theme",
     );
 

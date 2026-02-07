@@ -44,7 +44,7 @@ const customThemes = ref([
     className: "ob-default-theme",
   },
   {
-    id: "dyslexia",
+    id: "dyslexia-friendly",
     name: "Dyslexia-Friendly",
     description: "Optimized for readers with dyslexia",
     className: "ob-dyslexia-friendly-theme",
@@ -237,37 +237,41 @@ const customThemes = ref([
 
         <h2>Available Themes</h2>
         <p>
-          The component includes the following accessibility-focused themes by
-          default:
+          The component includes 8 accessibility-focused themes by default, each
+          with a mood name for a more engaging experience:
         </p>
         <ul>
           <li>
-            <strong>Default Theme</strong>: Standard theme with balanced colors
-            and spacing
+            <strong>The Full Ride</strong> (Default): Standard theme with
+            balanced colors and spacing
           </li>
           <li>
-            <strong>Dyslexia-Friendly</strong>: Optimized for readers with
-            dyslexia, with improved spacing and readability
+            <strong>Night Ride</strong> (Dark): Reduced light emission for
+            comfortable viewing in low light
           </li>
           <li>
-            <strong>Low Vision</strong>: High contrast theme with larger text
-            for low vision users
+            <strong>Bold Ink</strong> (High Contrast): Maximum contrast for
+            better visibility
           </li>
           <li>
-            <strong>Low Information Density</strong>: Reduced visual complexity
+            <strong>Same Ride, Bigger Seat</strong> (Large Text): Larger text
+            sizes for improved readability
+          </li>
+          <li>
+            <strong>Warm Studio</strong> (Dyslexia-Friendly): Optimized for
+            readers with dyslexia, with improved spacing and readability
+          </li>
+          <li>
+            <strong>Loud &amp; Clear</strong> (Low Vision): High contrast theme
+            with larger text for low vision users
+          </li>
+          <li>
+            <strong>Clean Signal</strong> (Low Info): Reduced visual complexity
             for easier focus
           </li>
           <li>
-            <strong>Autism-Friendly</strong>: Predictable layouts with reduced
-            sensory stimulation
-          </li>
-          <li>
-            <strong>Dark Theme</strong>: Reduced light emission for comfortable
-            viewing in low light
-          </li>
-          <li>
-            <strong>High Contrast</strong>: Maximum contrast for better
-            visibility
+            <strong>Still Water</strong> (Autism-Friendly): Predictable layouts
+            with reduced sensory stimulation
           </li>
         </ul>
       </div>
