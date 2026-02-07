@@ -192,6 +192,35 @@ function onReset() {
             </tr>
           </tbody>
         </table>
+        <h2>Design Tokens</h2>
+        <p>
+          This component follows the neo-brutalist design language using
+          <code>@rollercoaster-dev/design-tokens</code>. Key visual traits:
+        </p>
+        <ul>
+          <li>
+            <strong>2px borders</strong> via
+            <code>--ob-border-width-medium</code> on inputs and buttons
+          </li>
+          <li>
+            <strong>Hard offset shadows</strong> via
+            <code>--ob-shadow-hard-md</code> on the form card,
+            <code>--ob-shadow-hard-sm</code> on buttons
+          </li>
+          <li>
+            <strong>Anybody font</strong> for section titles via
+            <code>--ob-font-headline</code>
+          </li>
+          <li>
+            <strong>Focus ring</strong> via
+            <code>--ob-shadow-focus</code> (keyboard only) on inputs and buttons
+          </li>
+        </ul>
+        <p>
+          All 8 accessibility themes are supported. Use Histoire's theme
+          switcher to preview each theme.
+        </p>
+
         <h2>Accessibility</h2>
         <ul>
           <li>Form fields have associated labels and ARIA attributes</li>

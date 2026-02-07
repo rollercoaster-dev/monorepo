@@ -34,6 +34,15 @@ import { mockAssertions, mockOB3Credential } from "../../services/mockData";
  * |------|---------|-------------|
  * | `verified` | `boolean` | Emitted when verification is complete, with the verification result |
  *
+ * ## Design Tokens
+ *
+ * This component follows the neo-brutalist design language:
+ * - **2px borders** via `--ob-border-width-medium`
+ * - **Hard offset shadows** via `--ob-shadow-hard-sm`
+ * - **Semantic status colors**: `--ob-narrative-relief-accent` (valid), `--ob-error` (invalid), `--ob-warning` (warnings)
+ * - **Focus ring** via `--ob-shadow-focus` (keyboard only)
+ * - All 8 accessibility themes are supported
+ *
  * ## Accessibility
  *
  * - The verification button is a proper button element with clear text
