@@ -35,47 +35,53 @@ const props = withDefaults(defineProps<ThemeSelectorProps>(), {
   availableThemes: () => [
     {
       id: "default",
-      name: "Default Theme",
+      name: "The Full Ride",
       description: "Standard theme with balanced colors and spacing",
       className: "ob-default-theme",
     },
     {
-      id: "dyslexia",
-      name: "Dyslexia-Friendly",
-      description:
-        "Optimized for readers with dyslexia, with improved spacing and readability",
-      className: "ob-dyslexia-friendly-theme",
-    },
-    {
-      id: "low-vision",
-      name: "Low Vision",
-      description: "High contrast theme with larger text for low vision users",
-      className: "ob-low-vision-theme",
-    },
-    {
-      id: "low-info",
-      name: "Low Information Density",
-      description: "Reduced visual complexity for easier focus",
-      className: "ob-low-info-theme",
-    },
-    {
-      id: "autism",
-      name: "Autism-Friendly",
-      description: "Predictable layouts with reduced sensory stimulation",
-      className: "ob-autism-friendly-theme",
-    },
-    {
       id: "dark",
-      name: "Dark Theme",
+      name: "Night Ride",
       description:
         "Reduced light emission for comfortable viewing in low light",
       className: "ob-dark-theme",
     },
     {
       id: "high-contrast",
-      name: "High Contrast",
+      name: "Bold Ink",
       description: "Maximum contrast for better visibility",
       className: "ob-high-contrast-theme",
+    },
+    {
+      id: "large-text",
+      name: "Same Ride, Bigger Seat",
+      description: "Larger text sizes for improved readability",
+      className: "ob-large-text-theme",
+    },
+    {
+      id: "dyslexia",
+      name: "Warm Studio",
+      description:
+        "Optimized for readers with dyslexia, with improved spacing and readability",
+      className: "ob-dyslexia-friendly-theme",
+    },
+    {
+      id: "low-vision",
+      name: "Loud & Clear",
+      description: "High contrast theme with larger text for low vision users",
+      className: "ob-low-vision-theme",
+    },
+    {
+      id: "low-info",
+      name: "Clean Signal",
+      description: "Reduced visual complexity for easier focus",
+      className: "ob-low-info-theme",
+    },
+    {
+      id: "autism",
+      name: "Still Water",
+      description: "Predictable layouts with reduced sensory stimulation",
+      className: "ob-autism-friendly-theme",
     },
   ],
 });
