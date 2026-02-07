@@ -539,6 +539,7 @@ const handleDensityChange = (event: Event) => {
 .ob-badge-list__item:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .badge-details {

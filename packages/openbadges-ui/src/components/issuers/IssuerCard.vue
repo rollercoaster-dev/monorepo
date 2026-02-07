@@ -341,8 +341,8 @@ const truncatedDescription = computed(() => {
 
 .ob-issuer-card__url a:focus-visible,
 .ob-issuer-card__email a:focus-visible {
-  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
-  background: var(--ob-warning-light);
+  box-shadow: var(--ob-shadow-focus);
 }
 </style>

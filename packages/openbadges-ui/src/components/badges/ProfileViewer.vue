@@ -247,9 +247,9 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 }
 
 .ob-profile-viewer__detail-value:focus-visible {
-  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
-  background: var(--ob-warning-light);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-profile-viewer__section-title {
