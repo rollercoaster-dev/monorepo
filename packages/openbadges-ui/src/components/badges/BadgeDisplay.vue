@@ -220,11 +220,6 @@ const densityClass = computed(() => {
   box-shadow: var(--badge-hover-shadow);
 }
 
-.ob-badge-display.is-interactive:focus {
-  outline: var(--ob-border-width-medium) solid var(--badge-focus-outline-color);
-  outline-offset: var(--ob-border-offset);
-}
-
 .ob-badge-display__image {
   display: flex;
   justify-content: center;

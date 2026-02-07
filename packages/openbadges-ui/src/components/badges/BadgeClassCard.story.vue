@@ -246,13 +246,45 @@ function onBadgeClassClick(
           showing all achievements would break the visual consistency.
         </p>
 
+        <h2>Design Tokens</h2>
+        <p>
+          This component follows the neo-brutalist design language using
+          <code>@rollercoaster-dev/design-tokens</code>. Key visual traits:
+        </p>
+        <ul>
+          <li>
+            <strong>2px borders</strong> via
+            <code>--ob-border-width-medium</code>
+          </li>
+          <li>
+            <strong>Hard offset shadows</strong> via
+            <code>--ob-shadow-hard-md</code> (hover:
+            <code>--ob-shadow-hard-lg</code>)
+          </li>
+          <li>
+            <strong>Anybody font</strong> for titles via
+            <code>--ob-font-headline</code>
+          </li>
+          <li>
+            <strong>Sticker-style tags</strong> via
+            <code>--ob-badge-sticker-bg/foreground</code>
+          </li>
+        </ul>
+        <p>
+          All 8 accessibility themes are supported. Use Histoire's theme
+          switcher to preview each theme.
+        </p>
+
         <h2>Accessibility</h2>
         <ul>
           <li>Uses semantic HTML with appropriate ARIA attributes</li>
           <li>Interactive cards receive <code>tabindex="0"</code></li>
           <li>Responds to keyboard events (Enter/Space) when interactive</li>
           <li>Provides emoji fallback when image is missing</li>
-          <li>Focus states are clearly indicated</li>
+          <li>
+            Focus states use <code>:focus-visible</code> (keyboard only, not
+            mouse clicks)
+          </li>
         </ul>
       </div>
     </template>

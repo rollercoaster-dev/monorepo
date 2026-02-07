@@ -176,7 +176,7 @@ const truncatedCriteria = computed(() => {
     class="ob-badge-class-card"
     :class="[densityClass, { 'is-interactive': interactive }]"
     :tabindex="interactive ? 0 : undefined"
-    role="article"
+    :role="interactive ? 'button' : 'article'"
     :aria-label="`Badge: ${normalizedBadgeClass.name}`"
     @click="handleClick"
     @keydown.enter.prevent="handleClick"
@@ -265,8 +265,8 @@ const truncatedCriteria = computed(() => {
   --badge-class-text-color: var(--ob-muted-foreground);
   --badge-class-hover-shadow: var(--ob-shadow-hard-lg);
   --badge-class-focus-outline-color: var(--ob-primary);
-  --badge-class-tag-bg: var(--ob-highlight);
-  --badge-class-tag-color: var(--ob-highlight-foreground);
+  --badge-class-tag-bg: var(--ob-badge-sticker-bg);
+  --badge-class-tag-color: var(--ob-badge-sticker-foreground);
   --badge-class-fallback-bg: var(--ob-highlight);
 
   display: flex;
@@ -288,12 +288,6 @@ const truncatedCriteria = computed(() => {
 
 .ob-badge-class-card.is-interactive:hover {
   box-shadow: var(--badge-class-hover-shadow);
-}
-
-.ob-badge-class-card.is-interactive:focus {
-  outline: var(--ob-border-width-medium) solid
-    var(--badge-class-focus-outline-color);
-  outline-offset: var(--ob-space-1);
 }
 
 .ob-badge-class-card__image {
@@ -478,8 +472,8 @@ const truncatedCriteria = computed(() => {
 .ob-badge-class-card__multi-badge {
   display: inline-block;
   padding: var(--ob-space-1) var(--ob-space-3);
-  background: var(--ob-highlight);
-  color: var(--ob-highlight-foreground);
+  background: var(--ob-badge-sticker-bg);
+  color: var(--ob-badge-sticker-foreground);
   border: var(--ob-border-width-medium) var(--ob-border-style) currentColor;
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-xs);
