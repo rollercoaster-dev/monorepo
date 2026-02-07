@@ -18,7 +18,10 @@ export {
   getThemeName,
   parseThemeName,
 } from './compose';
-export type { ThemeName, ComposedTheme, Themes } from './compose';
+export type {
+  ThemeName, ComposedTheme, Themes,
+  FontFamilyConfig, TextStyle, TextStyles,
+} from './compose';
 
 // Convenience: export AppTheme as an alias for ComposedTheme
 import type { ComposedTheme, ThemeName } from './compose';

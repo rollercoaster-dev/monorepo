@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const { withStorybook } = require('@storybook/react-native/metro/withStorybook');
 const path = require('path');
 
 const designTokensPath = path.resolve(
@@ -17,4 +18,7 @@ config.resolver.nodeModulesPaths = [path.resolve(__dirname, 'node_modules')];
 config.resolver.unstable_enablePackageExports = true;
 config.resolver.unstable_enableSymlinks = true;
 
-module.exports = config;
+module.exports = withStorybook(config, {
+  configPath: path.resolve(__dirname, './.storybook'),
+  enabled: process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true',
+});
