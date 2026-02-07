@@ -115,9 +115,9 @@ const isOpen = ref(true);
             spacing and shapes.
           </li>
           <li>
-            <strong>Inter</strong>: A modern, highly legible sans-serif font
-            designed for computer screens. It features a tall x-height and open
-            forms, making it highly readable at small sizes.
+            <strong>Instrument Sans</strong>: Primary body font from the
+            neo-brutalist design language. Highly legible with a modern,
+            geometric character.
           </li>
         </ul>
 
@@ -157,8 +157,8 @@ const isOpen = ref(true);
             <p>The quick brown fox jumps over the lazy dog. 1234567890</p>
           </div>
 
-          <div class="font-example ob-font-standard">
-            <h3>Inter</h3>
+          <div class="font-example ob-font-instrument-sans">
+            <h3>Instrument Sans</h3>
             <p>The quick brown fox jumps over the lazy dog. 1234567890</p>
           </div>
         </div>

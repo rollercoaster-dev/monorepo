@@ -97,42 +97,6 @@
 }
 
 /*
- * Inter
- * A modern, highly legible sans-serif font designed for computer screens.
- */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("../assets/fonts/inter/Inter-Regular.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("../assets/fonts/inter/Inter-Medium.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("../assets/fonts/inter/Inter-SemiBold.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("../assets/fonts/inter/Inter-Bold.woff2") format("woff2");
-}
-
-/*
  * Atkinson Hyperlegible
  * A highly accessible font designed specifically for low vision readers
  * by the Braille Institute. It features distinct letterforms that are
@@ -266,7 +230,6 @@
   --ob-font-atkinson: "Atkinson Hyperlegible", var(--ob-font-system);
   --ob-font-lexend: "Lexend", var(--ob-font-system);
   --ob-font-opendyslexic: "OpenDyslexic", var(--ob-font-system);
-  --ob-font-inter: "Inter", var(--ob-font-system);
   --ob-font-instrument-sans: "Instrument Sans", var(--ob-font-system);
   --ob-font-anybody: "Anybody", var(--ob-font-system);
 }
@@ -312,10 +275,6 @@
 
 .ob-font-opendyslexic {
   font-family: var(--ob-font-opendyslexic);
-}
-
-.ob-font-inter {
-  font-family: var(--ob-font-inter);
 }
 
 .ob-font-system {

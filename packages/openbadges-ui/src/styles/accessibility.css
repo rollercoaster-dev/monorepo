@@ -284,10 +284,6 @@ textarea:focus-visible,
   letter-spacing: 0.01em;
 }
 
-.ob-font-standard {
-  font-family: var(--ob-font-inter);
-}
-
 /* Text Spacing Adjustments for Cognitive Accessibility */
 .ob-text-spacing-enhanced {
   line-height: var(--ob-line-height-relaxed);
