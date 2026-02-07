@@ -58,13 +58,24 @@ function val(token) {
   return token.$value ?? token;
 }
 
+/** Quote a key if it's not a valid JS identifier */
+function safeKey(k) {
+  return /^\d/.test(k) || /[^a-zA-Z0-9_$]/.test(k) ? `'${k}'` : k;
+}
+
+/** Filter out undefined values from an object */
+function defined(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  );
+}
+
 /** Format object entries as TypeScript literal properties, filtering out undefined */
 function toTSObject(entries) {
   return entries
     .filter(([, v]) => v !== undefined && v !== null)
     .map(([k, v]) => {
-      const safeKey = /^\d/.test(k) || /[^a-zA-Z0-9_$]/.test(k) ? `'${k}'` : k;
-      return `  ${safeKey}: ${typeof v === "string" ? `'${v}'` : v},`;
+      return `  ${safeKey(k)}: ${typeof v === "string" ? `'${v}'` : v},`;
     })
     .join("\n");
 }
@@ -158,10 +169,10 @@ function extractThemeNarrative(theme) {
 
 function mergeNarrative(base, override) {
   return {
-    climb: { ...base.climb, ...override.climb },
-    drop: { ...base.drop, ...override.drop },
-    stories: { ...base.stories, ...override.stories },
-    relief: { ...base.relief, ...override.relief },
+    climb: { ...base.climb, ...defined(override.climb) },
+    drop: { ...base.drop, ...defined(override.drop) },
+    stories: { ...base.stories, ...defined(override.stories) },
+    relief: { ...base.relief, ...defined(override.relief) },
   };
 }
 
@@ -446,8 +457,7 @@ ${toTSObject(transitionEntries)}
   // shadow — needs special formatting (nested objects)
   const shadowLines = shadowEntries
     .map(([k, v]) => {
-      const safeKey = /^\d/.test(k) || /[^a-zA-Z0-9_$]/.test(k) ? `'${k}'` : k;
-      return `  ${safeKey}: { offsetX: ${v.offsetX}, offsetY: ${v.offsetY}, radius: ${v.radius}, opacity: ${v.opacity} },`;
+      return `  ${safeKey(k)}: { offsetX: ${v.offsetX}, offsetY: ${v.offsetY}, radius: ${v.radius}, opacity: ${v.opacity} },`;
     })
     .join("\n");
   out += `
@@ -790,7 +800,7 @@ async function main() {
   ]);
 
   console.log(
-    "Built build/unistyles/ with palette, tokens, colorModes, variants, index",
+    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, index",
   );
 }
 
