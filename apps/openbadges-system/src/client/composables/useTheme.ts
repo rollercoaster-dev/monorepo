@@ -58,7 +58,7 @@ const themes: readonly ThemeOption[] = [
     moodName: 'still-water',
     className: 'ob-autism-friendly-theme',
   },
-] as const
+]
 
 const currentTheme = ref('default')
 
