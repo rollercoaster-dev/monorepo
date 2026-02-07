@@ -1,19 +1,27 @@
 const { obTokens } = require('@rollercoaster-dev/design-tokens/tailwind')
 
+const preset = obTokens.theme.extend
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      // Spread design-tokens preset (spacing, fontSize, fontWeight, lineHeight,
-      // borderRadius, boxShadow, transitionDuration, zIndex)
-      ...obTokens.theme.extend,
+      // --- Safe to import from preset (static, non-themeable) ---
+      spacing: preset.spacing,
+      fontWeight: preset.fontWeight,
+      transitionDuration: preset.transitionDuration,
+      zIndex: preset.zIndex,
 
-      // Override colors with CSS variable references for runtime theme switching.
-      // The preset provides static palette values, but the app needs dynamic
-      // theme colors that change via CSS custom properties.
+      // Named font families from preset + runtime CSS variable for theme switching
+      fontFamily: {
+        ...preset.fontFamily,
+        sans: ['var(--ob-font-family)'],
+      },
+
+      // --- CSS variable references for runtime theme switching ---
+      // Colors must use CSS variables so accessibility themes can swap them.
       colors: {
-        ...obTokens.theme.extend.colors,
         background: 'var(--ob-background)',
         foreground: 'var(--ob-foreground)',
         card: {
@@ -63,12 +71,27 @@ module.exports = {
         ring: 'var(--ob-ring)',
       },
 
-      // Override font-family: keep CSS variable for runtime theme switching
-      // (accessibility themes swap fonts), plus preset's named families
-      fontFamily: {
-        ...obTokens.theme.extend.fontFamily,
-        sans: ['var(--ob-font-family)'],
+      // Shadows use CSS variables so focus rings adapt to accessibility themes.
+      // Preset defines shadow-sm/md as "none" which would break Tailwind defaults.
+      boxShadow: {
+        'hard-sm': 'var(--ob-shadow-hard-sm)',
+        'hard-md': 'var(--ob-shadow-hard-md)',
+        'hard-lg': 'var(--ob-shadow-hard-lg)',
+        focus: 'var(--ob-shadow-focus)',
       },
+
+      // Border radius uses CSS variables for theme-aware rounding.
+      borderRadius: {
+        sm: 'var(--ob-radius-sm)',
+        md: 'var(--ob-radius-md)',
+        lg: 'var(--ob-radius-lg)',
+        xl: 'var(--ob-radius-xl)',
+      },
+
+      // NOTE: fontSize and lineHeight are intentionally NOT imported from preset.
+      // The preset provides bare strings (e.g. "0.875rem") but Tailwind expects
+      // tuples with line-height (e.g. ["0.875rem", { lineHeight: "1.25rem" }]).
+      // Importing would strip all paired line-heights from 383 usages.
     },
   },
   plugins: [],
