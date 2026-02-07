@@ -1,8 +1,29 @@
+const { obTokens } = require('@rollercoaster-dev/design-tokens/tailwind')
+
+// Bun's require() of ESM modules returns frozen objects. Tailwind's resolveConfig
+// mutates config in-place, so we must clone values into mutable plain objects.
+const preset = obTokens.theme.extend
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      // --- Safe to import from preset (static, non-themeable) ---
+      // Spread into new objects to avoid "assign to readonly property" errors.
+      spacing: { ...preset.spacing },
+      fontWeight: { ...preset.fontWeight },
+      transitionDuration: { ...preset.transitionDuration },
+      zIndex: { ...preset.zIndex },
+
+      // Named font families from preset + runtime CSS variable for theme switching
+      fontFamily: {
+        ...preset.fontFamily,
+        sans: ['var(--ob-font-family)'],
+      },
+
+      // --- CSS variable references for runtime theme switching ---
+      // Colors must use CSS variables so accessibility themes can swap them.
       colors: {
         background: 'var(--ob-background)',
         foreground: 'var(--ob-foreground)',
@@ -52,21 +73,28 @@ module.exports = {
         input: 'var(--ob-input)',
         ring: 'var(--ob-ring)',
       },
-      fontFamily: {
-        sans: ['var(--ob-font-family)'],
-      },
+
+      // Shadows use CSS variables so focus rings adapt to accessibility themes.
+      // Preset defines shadow-sm/md as "none" which would break Tailwind defaults.
       boxShadow: {
         'hard-sm': 'var(--ob-shadow-hard-sm)',
         'hard-md': 'var(--ob-shadow-hard-md)',
         'hard-lg': 'var(--ob-shadow-hard-lg)',
         focus: 'var(--ob-shadow-focus)',
       },
+
+      // Border radius uses CSS variables for theme-aware rounding.
       borderRadius: {
         sm: 'var(--ob-radius-sm)',
         md: 'var(--ob-radius-md)',
         lg: 'var(--ob-radius-lg)',
         xl: 'var(--ob-radius-xl)',
       },
+
+      // NOTE: fontSize and lineHeight are intentionally NOT imported from preset.
+      // The preset provides bare strings (e.g. "0.875rem") but Tailwind expects
+      // tuples with line-height (e.g. ["0.875rem", { lineHeight: "1.25rem" }]).
+      // Importing would strip all paired line-heights from 383 usages.
     },
   },
   plugins: [],
