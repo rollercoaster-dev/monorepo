@@ -18,6 +18,19 @@ config.resolver.nodeModulesPaths = [path.resolve(__dirname, 'node_modules')];
 config.resolver.unstable_enablePackageExports = true;
 config.resolver.unstable_enableSymlinks = true;
 
+// Evolu: allow .wasm assets to be bundled
+config.resolver.assetExts = [...(config.resolver.assetExts ?? []), 'wasm'];
+
+// Evolu: COOP/COEP headers required for SharedArrayBuffer (web only)
+config.server = {
+  ...config.server,
+  enhanceMiddleware: (middleware) => (req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    return middleware(req, res, next);
+  },
+};
+
 module.exports = withStorybook(config, {
   configPath: path.resolve(__dirname, './.storybook'),
   enabled: process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true',

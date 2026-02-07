@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { TestScreen } from './src/screens/TestScreen';
+import { EvoluAppProvider } from './src/db';
+import { GoalScreen } from './src/screens/GoalScreen';
 import { useFonts } from './src/hooks/useFonts';
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true';
@@ -27,9 +28,11 @@ export function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="auto" />
-      <TestScreen />
-    </SafeAreaProvider>
+    <EvoluAppProvider>
+      <SafeAreaProvider>
+        <StatusBar style="auto" />
+        <GoalScreen />
+      </SafeAreaProvider>
+    </EvoluAppProvider>
   );
 }

@@ -9,6 +9,9 @@ module.exports = function (api) {
           root: 'src',
         },
       ],
+      '@babel/plugin-transform-dynamic-import',
+      '@babel/plugin-transform-modules-commonjs',
+      '@babel/plugin-transform-explicit-resource-management',
     ],
   };
 };
