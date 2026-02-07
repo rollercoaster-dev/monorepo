@@ -279,7 +279,8 @@ function onTextSpacingChange(value: boolean) {
             improve reading fluency
           </li>
           <li>
-            <strong>Inter</strong>: Modern, highly legible sans-serif font
+            <strong>Instrument Sans</strong>: Primary body font from the
+            neo-brutalist design language
           </li>
         </ul>
       </div>
