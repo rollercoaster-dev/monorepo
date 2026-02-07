@@ -4,9 +4,6 @@
  * This file provides additional CSS to enhance accessibility across components.
  */
 
-/* Import font definitions */
-@import "./fonts.css";
-
 /* Visually hidden content (for screen readers) */
 .ob-visually-hidden {
   position: absolute;
