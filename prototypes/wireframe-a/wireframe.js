@@ -1,4 +1,4 @@
-/* wireframe.js — navigation, modals, basic interactivity */
+/* wireframe.js — navigation, modals, theme switching, basic interactivity */
 
 (function () {
   'use strict';
@@ -7,6 +7,18 @@
   const screenStack = ['welcome'];
   let activeTab = 'goals';
   let populated = false;
+  let currentColorMode = 'light';
+
+  // Theme class mapping (from design-tokens package)
+  const themeClasses = {
+    dark: 'ob-dark-theme',
+    highContrast: 'ob-high-contrast-theme',
+    largeText: 'ob-large-text-theme',
+    dyslexia: 'ob-dyslexia-friendly-theme',
+    lowVision: 'ob-low-vision-theme',
+    autismFriendly: 'ob-autism-friendly-theme',
+    lowInfo: 'ob-low-info-theme',
+  };
 
   // Demo data
   const goals = [
@@ -40,6 +52,7 @@
   // --- DOM helpers ---
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
   const $$ = (sel, ctx) => [...(ctx || document).querySelectorAll(sel)];
+  const frame = () => $('.mobile-frame');
 
   // --- Screen navigation ---
   function showScreen(id) {
@@ -83,7 +96,6 @@
     } else {
       back.classList.add('visible');
     }
-    // hide settings gear on non-home screens
     const gear = $('.header-settings');
     gear.style.visibility = (id === 'welcome') ? 'hidden' : 'visible';
   }
@@ -120,6 +132,47 @@
     $$('.modal-overlay').forEach(m => m.classList.remove('active'));
   }
 
+  // --- Theme switching ---
+  let currentVariant = 'default';
+
+  function setColorMode(mode) {
+    currentColorMode = mode;
+    if (mode === 'dark') {
+      frame().classList.add(themeClasses.dark);
+    } else {
+      frame().classList.remove(themeClasses.dark);
+    }
+    $$('.color-mode-toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+  }
+
+  function setVariant(variant) {
+    currentVariant = variant;
+    // Remove all variant classes (but not dark — handled separately)
+    Object.entries(themeClasses).forEach(([key, cls]) => {
+      if (key !== 'dark') frame().classList.remove(cls);
+    });
+    // Re-add dark if needed
+    if (currentColorMode === 'dark') {
+      frame().classList.add(themeClasses.dark);
+    }
+    // Add the selected variant class
+    if (variant !== 'default' && themeClasses[variant]) {
+      frame().classList.add(themeClasses[variant]);
+    }
+    $$('.theme-swatch').forEach(s => {
+      s.classList.toggle('active', s.dataset.variant === variant);
+    });
+  }
+
+  function setDensity(density) {
+    frame().dataset.density = density;
+    $$('.density-toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.density === density);
+    });
+  }
+
   // --- Goal detail rendering ---
   let currentGoal = null;
 
@@ -139,7 +192,7 @@
       const li = document.createElement('li');
       li.className = 'step-item';
       li.innerHTML = `
-        <div class="step-checkbox ${step.done ? 'checked' : ''}" data-index="${i}">${step.done ? '✓' : ''}</div>
+        <div class="step-checkbox ${step.done ? 'checked' : ''}" data-index="${i}">${step.done ? '\u2713' : ''}</div>
         <span class="step-title">${step.title}</span>
       `;
       list.appendChild(li);
@@ -171,7 +224,6 @@
     if (!currentGoal || !title.trim()) return;
     currentGoal.steps.push({ title: title.trim(), done: false });
     renderSteps(currentGoal);
-    // Keep input visible for rapid entry
     const input = $('#add-step-input');
     input.value = '';
     input.focus();
@@ -184,9 +236,16 @@
     goals.forEach(goal => {
       const done = goal.steps.filter(s => s.done).length;
       const total = goal.steps.length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
       const div = document.createElement('div');
       div.className = 'card';
-      div.innerHTML = `<div class="card-title">${goal.title}</div><div class="card-subtitle">${done}/${total} steps</div>`;
+      div.innerHTML = `
+        <div class="card-title">${goal.title}</div>
+        <div class="card-subtitle">${done}/${total} steps</div>
+        <div class="card-progress">
+          <div class="card-progress-fill" style="width: ${pct}%"></div>
+        </div>
+      `;
       div.addEventListener('click', () => renderGoalDetail(goal));
       list.appendChild(div);
     });
@@ -199,7 +258,7 @@
       const div = document.createElement('div');
       div.className = 'badge-card';
       div.innerHTML = `
-        <div class="badge-placeholder">★</div>
+        <div class="badge-placeholder">\u2605</div>
         <div class="badge-card-title">${badge.title}</div>
         <div class="badge-card-date">${badge.date}</div>
       `;
@@ -236,17 +295,24 @@
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    // Welcome → Home
+    // Welcome -> Home
     $('#btn-get-started').addEventListener('click', () => {
       switchTab('goals');
     });
 
-    // Density toggle on welcome
+    // Color mode toggle
+    $$('.color-mode-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => setColorMode(btn.dataset.mode));
+    });
+
+    // Theme swatch selection
+    $$('.theme-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => setVariant(swatch.dataset.variant));
+    });
+
+    // Density toggle
     $$('.density-toggle button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        $$('.density-toggle button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
+      btn.addEventListener('click', () => setDensity(btn.dataset.density));
     });
 
     // New Goal button (empty state)
@@ -305,7 +371,6 @@
       item.addEventListener('click', () => {
         closeModal('evidence-picker');
         const type = item.dataset.type;
-        // Show appropriate evidence capture
         $$('.evidence-capture-type').forEach(el => el.style.display = 'none');
         const typeEl = $(`#evidence-capture-${type}`);
         if (typeEl) typeEl.style.display = 'block';
@@ -316,7 +381,6 @@
     // Evidence capture — Attach button
     $('#btn-attach-evidence').addEventListener('click', () => {
       closeModal('evidence-capture');
-      // Could add a thumbnail to goal detail here
     });
 
     // Evidence viewer open (delegated from evidence thumbnails)
@@ -358,7 +422,7 @@
       const content = $('#collapsed-content');
       content.classList.toggle('open');
       const btn = $('#collapsed-toggle');
-      btn.textContent = content.classList.contains('open') ? '▾ 4 completed' : '▸ 4 completed';
+      btn.textContent = content.classList.contains('open') ? '\u25BE 4 completed' : '\u25B8 4 completed';
     });
 
     // Close modals on backdrop click
