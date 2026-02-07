@@ -8,6 +8,7 @@ import "./src/styles/accessibility.css";
 // Import design-tokens CSS (target design system for migration)
 import "@rollercoaster-dev/design-tokens/css";
 import "@rollercoaster-dev/design-tokens/css/themes";
+import "@rollercoaster-dev/design-tokens/css/narrative";
 
 // Preload all @font-face variants so they're available in story iframes.
 // Keep this list in sync with the @font-face declarations in fonts.css.

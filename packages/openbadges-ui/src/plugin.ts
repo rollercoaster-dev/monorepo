@@ -1,7 +1,6 @@
 // src/plugin.ts
 // OpenBadges UI Vue Plugin
 import type { App, Plugin } from "vue";
-import PrimeVue from "primevue/config";
 
 // Import components
 import BadgeDisplay from "@components/badges/BadgeDisplay.vue";
@@ -17,13 +16,7 @@ import ThemeSelector from "@components/accessibility/ThemeSelector.vue";
 import AccessibilitySettings from "@components/accessibility/AccessibilitySettings.vue";
 
 const OpenBadgesUIPlugin: Plugin = {
-  install: (app: App, options: Record<string, unknown> = {}): void => {
-    // Configure PrimeVue in unstyled mode
-    app.use(PrimeVue, {
-      unstyled: true,
-      ...options,
-    });
-
+  install: (app: App): void => {
     // Register components globally
     app.component("BadgeDisplay", BadgeDisplay);
     app.component("BadgeList", BadgeList);
