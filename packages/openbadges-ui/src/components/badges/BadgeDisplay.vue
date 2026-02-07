@@ -188,21 +188,15 @@ const densityClass = computed(() => {
 
 <style>
 .ob-badge-display {
-  --badge-border-color: var(--ob-badge-border-color, var(--ob-border));
-  --badge-border-radius: var(
-    --ob-badge-border-radius,
-    var(--ob-border-radius-sm)
-  );
-  --badge-padding: var(--ob-badge-padding, var(--ob-space-4));
-  --badge-background: var(--ob-badge-background, var(--ob-card));
-  --badge-shadow: var(--ob-badge-shadow, var(--ob-shadow-hard-md));
-  --badge-title-color: var(--ob-badge-title-color, var(--ob-foreground));
-  --badge-text-color: var(--ob-badge-text-color, var(--ob-muted-foreground));
-  --badge-hover-shadow: var(--ob-badge-hover-shadow, var(--ob-shadow-hard-lg));
-  --badge-focus-outline-color: var(
-    --ob-badge-focus-outline-color,
-    var(--ob-primary)
-  );
+  --badge-border-color: var(--ob-border);
+  --badge-border-radius: var(--ob-border-radius-sm);
+  --badge-padding: var(--ob-space-4);
+  --badge-background: var(--ob-card);
+  --badge-shadow: var(--ob-shadow-hard-md);
+  --badge-title-color: var(--ob-foreground);
+  --badge-text-color: var(--ob-muted-foreground);
+  --badge-hover-shadow: var(--ob-shadow-hard-lg);
+  --badge-focus-outline-color: var(--ob-primary);
 
   display: flex;
   flex-direction: column;
