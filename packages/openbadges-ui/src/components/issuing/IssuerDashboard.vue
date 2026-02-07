@@ -357,6 +357,8 @@ onMounted(() => {
 }
 
 .ob-issuer-dashboard__tab-panel:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
   border-radius: var(--ob-border-radius-sm);
 }

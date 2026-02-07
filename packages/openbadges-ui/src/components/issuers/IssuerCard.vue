@@ -167,7 +167,6 @@ const truncatedDescription = computed(() => {
   --issuer-text-color: var(--ob-muted-foreground);
   --issuer-link-color: var(--ob-primary);
   --issuer-hover-shadow: var(--ob-shadow-hard-lg);
-  --issuer-focus-outline-color: var(--ob-primary);
   --issuer-fallback-bg: var(--ob-highlight);
   --issuer-fallback-color: var(--ob-highlight-foreground);
 
