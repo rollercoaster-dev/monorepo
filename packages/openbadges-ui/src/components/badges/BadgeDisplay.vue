@@ -233,13 +233,13 @@ const densityClass = computed(() => {
 .ob-badge-display__image {
   display: flex;
   justify-content: center;
+  align-self: start;
   margin-bottom: var(--ob-space-3);
 }
 
 .ob-badge-display__img {
-  max-width: 100%;
+  width: 100%;
   height: auto;
-  max-height: 150px;
   border-radius: var(--ob-border-radius-sm);
   border: var(--ob-border-width-medium) solid var(--ob-border);
   box-shadow: var(--ob-shadow-hard-sm);

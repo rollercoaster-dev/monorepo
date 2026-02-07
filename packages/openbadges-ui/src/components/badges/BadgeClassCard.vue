@@ -300,6 +300,8 @@ const truncatedCriteria = computed(() => {
   display: flex;
   justify-content: center;
   margin-bottom: var(--ob-space-3);
+  width: fit-content;
+  margin-inline: auto;
 }
 
 .ob-badge-class-card__img {
