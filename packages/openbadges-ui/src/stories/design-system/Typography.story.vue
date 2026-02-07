@@ -1,18 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
 // Import fonts CSS directly so @font-face rules are injected into the iframe
 import "../../styles/fonts.css";
+import { useCopyVar } from "./useCopyVar";
 
-const copiedVar = ref("");
-
-function copyVar(varName: string) {
-  navigator.clipboard.writeText(`var(${varName})`);
-  copiedVar.value = varName;
-  setTimeout(() => {
-    copiedVar.value = "";
-  }, 1500);
-}
+const { copiedVar, copyVar } = useCopyVar();
 
 const fontFamilies = [
   {
@@ -520,6 +511,11 @@ const usageExamples = [
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+}
+
+.ds-var-btn:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
+  border-radius: var(--ob-border-radius-sm, 0.125rem);
 }
 
 .ds-var-btn code {

@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { useCopyVar } from "./useCopyVar";
 
-const copiedVar = ref("");
-
-function copyVar(varName: string) {
-  navigator.clipboard.writeText(`var(${varName})`);
-  copiedVar.value = varName;
-  setTimeout(() => {
-    copiedVar.value = "";
-  }, 1500);
-}
+const { copiedVar, copyVar } = useCopyVar();
 
 const accentColors = [
   { name: "--ob-color-accent-purple", hex: "#a78bfa", label: "Purple" },
@@ -519,6 +511,11 @@ function isLight(hex: string): boolean {
   align-items: center;
 }
 
+.ds-var-btn:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
+  border-radius: var(--ob-border-radius-sm, 0.125rem);
+}
+
 .ds-var-btn code {
   font-size: var(--ob-font-size-2xs, 0.625rem);
   font-family: var(--ob-font-mono, monospace);
@@ -568,6 +565,11 @@ function isLight(hex: string): boolean {
   opacity: 0.85;
 }
 
+.ds-narrative-token:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
+  border-radius: var(--ob-border-radius-sm, 0.125rem);
+}
+
 .ds-narrative-token:hover {
   opacity: 1;
 }
@@ -610,6 +612,11 @@ function isLight(hex: string): boolean {
 .ds-badge-label:hover {
   transform: translate(-1px, -1px);
   box-shadow: var(--ob-shadow-hard-md, 3px 3px 0 rgba(0, 0, 0, 0.15));
+}
+
+.ds-badge-label:focus-visible {
+  outline: 2px solid var(--ob-primary, #0a0a0a);
+  outline-offset: 2px;
 }
 
 .ds-badge-label code {

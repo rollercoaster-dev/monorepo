@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { useCopyVar } from "./useCopyVar";
 
-const copiedVar = ref("");
-
-function copyVar(varName: string) {
-  navigator.clipboard.writeText(`var(${varName})`);
-  copiedVar.value = varName;
-  setTimeout(() => {
-    copiedVar.value = "";
-  }, 1500);
-}
+const { copiedVar, copyVar } = useCopyVar();
 
 const spaceScale = [
   { label: "1", varName: "--ob-space-1", rem: "0.25rem", px: "4px" },
@@ -262,6 +254,11 @@ const shadows = [
   transition: opacity var(--ob-transition-fast, 150ms);
 }
 
+.ds-space-item:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
+  border-radius: var(--ob-border-radius-sm, 0.125rem);
+}
+
 .ds-space-item:hover {
   opacity: 0.8;
 }
@@ -315,6 +312,10 @@ const shadows = [
   transition: transform var(--ob-transition-fast, 150ms);
 }
 
+.ds-radius-box:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
+}
+
 .ds-radius-box:hover {
   transform: translate(-1px, -1px);
 }
@@ -365,6 +366,10 @@ const shadows = [
   border: var(--ob-borderWidth-thin, 1px) solid var(--ob-border, #e5e5e5);
   border-radius: var(--ob-border-radius-lg, 0.5rem);
   transition: transform var(--ob-transition-fast, 150ms);
+}
+
+.ds-border-card:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
 }
 
 .ds-border-card:hover {
@@ -424,6 +429,10 @@ const shadows = [
   background: var(--ob-card, #fff);
   border-radius: var(--ob-border-radius-xl, 0.75rem);
   transition: transform var(--ob-transition-fast, 150ms);
+}
+
+.ds-shadow-box:focus-visible {
+  box-shadow: var(--ob-shadow-focus, 0 0 0 3px rgba(10, 10, 10, 0.4));
 }
 
 .ds-shadow-box:hover {
