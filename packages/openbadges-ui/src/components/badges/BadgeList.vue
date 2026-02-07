@@ -490,11 +490,16 @@ const handleDensityChange = (event: Event) => {
   outline: none;
 }
 
-/* In grid layout, stack summary content to keep expand button from squashing */
+/* In grid layout, stack summary content and stretch to fill equal-height cells */
 .ob-badge-list.ob-badge-list--grid-layout .badge-summary {
+  flex: 1;
   flex-direction: column;
   align-items: stretch;
   gap: var(--ob-space-2);
+}
+
+.ob-badge-list.ob-badge-list--grid-layout .ob-badge-display {
+  flex: 1;
 }
 
 .badge-expand-btn {
