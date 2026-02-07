@@ -74,7 +74,7 @@ export const variantOverrides: Record<Variant, VariantOverride> = {
     colors: variantColors.dyslexiaFriendly,
     narrative: narrativeVariants.dyslexiaFriendly,
     lineHeight: lineHeightL,
-    fontFamily: 'OpenDyslexic',
+    fontFamily: 'Lexend',
   },
 
   /**

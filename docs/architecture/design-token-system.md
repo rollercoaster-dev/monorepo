@@ -1,284 +1,216 @@
 # Architecture: Design Token System
 
-**Date:** 2026-02-02
-**Status:** Draft
-**Owner:** Joe
+**Status:** Current
+**Source of Truth:** `@rollercoaster-dev/design-tokens` v0.1.1
 
 ---
 
 ## Purpose
 
-Share design tokens between the Vue monorepo (`openbadges-ui`) and the React Native app. One source of truth, platform-specific outputs.
+Single source of truth for the rollercoaster.dev design language across web and mobile. JSON token definitions produce CSS variables, JS objects, Tailwind config, and Unistyles theme objects for React Native.
 
 ---
 
-## Architecture
+## Package
 
-```
-┌──────────────────────────────┐
-│  tokens/                     │
-│  ├── colors.json             │
-│  ├── typography.json         │  Single source of truth
-│  ├── spacing.json            │  (JSON token files)
-│  ├── themes/                 │
-│  │   ├── light.json          │
-│  │   ├── dark.json           │
-│  │   ├── high-contrast.json  │
-│  │   ├── large-text.json     │
-│  │   ├── dyslexia.json       │
-│  │   ├── low-vision.json     │
-│  │   └── autism-friendly.json│
-│  └── index.json              │
-└──────────────┬───────────────┘
-               │
-        Style Dictionary
-        (or similar transform tool)
-               │
-        ┌──────┴──────┐
-        ▼             ▼
-  CSS Custom      JS Theme
-  Properties      Objects
-  (Vue/web)       (React Native)
-        │             │
-        ▼             ▼
-  openbadges-ui   native app
-```
+**npm:** `@rollercoaster-dev/design-tokens`
+**Repo:** `packages/design-tokens/` in [openbadges-monorepo](https://github.com/rollercoaster-dev/openbadges-monorepo)
+**Version:** 0.1.1
 
 ---
 
-## Token Format (Source)
+## Token Format
 
-Tokens are defined in JSON using a flat, platform-agnostic format:
+Tokens use the [DTCG](https://design-tokens.github.io/community-group/format/) `$value`/`$type` format:
 
 ```json
+// src/tokens/colors.json
 {
   "color": {
-    "bg": {
-      "primary": { "value": "#ffffff" },
-      "secondary": { "value": "#f5f5f5" },
-      "tertiary": { "value": "#e5e5e5" }
+    "primary": {
+      "$value": "#0a0a0a",
+      "$type": "color",
+      "$description": "Primary brand color - confident black"
     },
-    "text": {
-      "primary": { "value": "#1a1a1a" },
-      "secondary": { "value": "#666666" },
-      "muted": { "value": "#999999" }
-    },
-    "accent": {
-      "primary": { "value": "#1a1a1a" },
-      "purple": { "value": "#a78bfa" },
-      "mint": { "value": "#d4f4e7" },
-      "yellow": { "value": "#ffe50c" }
-    }
-  },
-  "spacing": {
-    "1": { "value": 4 },
-    "2": { "value": 8 },
-    "3": { "value": 12 },
-    "4": { "value": 16 },
-    "5": { "value": 20 },
-    "6": { "value": 24 },
-    "8": { "value": 32 },
-    "12": { "value": 48 }
-  },
-  "typography": {
-    "size": {
-      "xs": { "value": 12 },
-      "sm": { "value": 14 },
-      "md": { "value": 16 },
-      "lg": { "value": 18 },
-      "xl": { "value": 20 },
-      "2xl": { "value": 24 },
-      "3xl": { "value": 30 }
+    "secondary": {
+      "$value": "#a78bfa",
+      "$type": "color",
+      "$description": "Purple accent"
     }
   }
 }
 ```
-
-Theme files override base values:
 
 ```json
+// src/tokens/narrative.json
 {
-  "theme": "dark",
-  "overrides": {
-    "color.bg.primary": "#1a1a1a",
-    "color.bg.secondary": "#262626",
-    "color.text.primary": "#fafafa"
+  "narrative": {
+    "climb": {
+      "bg": {
+        "$value": "#ffe50c",
+        "$type": "color",
+        "$description": "The Climb background — bold yellow energy"
+      }
+    }
   }
 }
 ```
 
 ---
 
-## Transform Outputs
+## Source Structure
 
-### CSS Custom Properties (for Vue / openbadges-ui)
+### `src/tokens/` — 8 primitive token files
 
-```css
-:root {
-  --ob-bg-primary: #ffffff;
-  --ob-bg-secondary: #f5f5f5;
-  --ob-text-primary: #1a1a1a;
-  --ob-accent-purple: #a78bfa;
-  --ob-space-4: 1rem;
-  --ob-text-md: 1rem;
-}
+| File | Contents |
+|------|----------|
+| `colors.json` | Palette primitives (primary, secondary, accents, grays) |
+| `typography.json` | Font families, size scale, weights, line heights, letter spacing |
+| `spacing.json` | Space scale, border radius, z-index, shadows |
+| `semantic.json` | Semantic mappings (surface, interactive, form colors) |
+| `narrative.json` | Four-section color narrative (climb, drop, stories, relief) |
+| `mood.json` | Theme mood names and descriptions |
+| `aliases.json` | Convenience aliases (ink, paper, highlight) |
+| `components.json` | Component-level token compositions |
 
-.ob-dark-theme {
-  --ob-bg-primary: #1a1a1a;
-  --ob-bg-secondary: #262626;
-  --ob-text-primary: #fafafa;
-}
+### `src/themes/` — 8 theme override files
+
+| File | Theme |
+|------|-------|
+| `light.json` | Default (light) base |
+| `dark.json` | Dark mode |
+| `high-contrast.json` | WCAG AAA high contrast |
+| `large-text.json` | 1.25x size scale |
+| `dyslexia-friendly.json` | Cream bg, relaxed spacing |
+| `low-vision.json` | High contrast + large text |
+| `low-info.json` | Reduced visual noise |
+| `autism-friendly.json` | Muted/desaturated colors |
+
+---
+
+## Build Pipeline
+
+```text
+src/tokens/          JSON primitives (colors, spacing, typography, narrative)
+src/themes/          JSON theme overrides (dark, high-contrast, dyslexia, etc.)
+        |
+        v
+style-dictionary     build-themes.js     build-unistyles.js
+        |                  |                     |
+        v                  v                     v
+build/css/           build/css/           build/unistyles/
+  tokens.css           themes.css           palette.ts
+build/js/                                    tokens.ts
+build/tailwind/                              colorModes.ts
+build/tamagui/                               variants.ts
+                                             narrative.ts
+                                             index.ts
+css/
+  narrative.css      (hand-authored, exportable design language classes)
 ```
 
-### JS Theme Objects (for React Native)
+Build commands:
+
+```bash
+bun run build           # Full pipeline: style-dictionary + themes + unistyles
+bun run build:tokens    # Style Dictionary only
+bun run build:themes    # Theme CSS only
+bun run build:unistyles # Unistyles JS only
+```
+
+---
+
+## Exports
+
+| Import path | What | Consumer |
+|-------------|------|----------|
+| `@rollercoaster-dev/design-tokens/css` | CSS custom properties (`:root`) | Web apps |
+| `@rollercoaster-dev/design-tokens/css/themes` | Theme class overrides | Web apps |
+| `@rollercoaster-dev/design-tokens/css/narrative` | Narrative section + badge label classes | Web apps, landing page |
+| `@rollercoaster-dev/design-tokens/unistyles` | Palette, tokens, colorModes, variants | native-rd (React Native) |
+| `@rollercoaster-dev/design-tokens/tailwind` | Tailwind config preset | Tailwind projects |
+| `@rollercoaster-dev/design-tokens/tamagui` | Tamagui token config | Tamagui projects |
+
+---
+
+## Unistyles Output
+
+The `build/unistyles/` directory contains auto-generated TypeScript consumed by native-rd:
+
+| File | Exports |
+|------|---------|
+| `palette.ts` | `palette` — 30+ raw color constants |
+| `tokens.ts` | `space`, `size`, `sizeL`, `radius`, `zIndex`, `fontWeight`, `lineHeight`, `lineHeightL` |
+| `colorModes.ts` | `Colors` interface, `lightColors`, `darkColors`, `colorModes` |
+| `variants.ts` | `VariantOverride` type, 5 variant color override objects |
+| `narrative.ts` | `Narrative` interface, light/dark narrative modes, 5 variant narrative overrides |
+| `index.ts` | Re-exports everything above |
+
+---
+
+## Adapter Layer
+
+`src/themes/adapter.ts` is the **only file** in native-rd that imports from the design-tokens package. It:
+
+1. **Re-exports** all package tokens (palette, space, size, radius, etc.)
+2. **Adds app-specific colors** not in the package (cream tones, desaturated variants)
+3. **Adds backward-compat aliases** (e.g., `purple300` → `secondaryLight`)
+4. **Computes absolute line heights** for React Native (RN needs px, not multipliers) by multiplying the size scale by the line height multiplier
+
+```
+design-tokens package
+        |
+        v
+  src/themes/adapter.ts    ← single import boundary
+        |
+        v
+  src/themes/tokens.ts     ← re-exports space, size, radius, etc.
+  src/themes/colorModes.ts ← wraps colors into ColorModeConfig shape
+  src/themes/variants.ts   ← variant overrides + mood labels
+  src/themes/compose.ts    ← composeTheme() → 14 ComposedThemes
+```
+
+---
+
+## Theme Composition
+
+native-rd composes **2 color modes × 7 variants = 14 themes** via `compose.ts`:
 
 ```typescript
-export const lightTheme = {
-  colors: {
-    bgPrimary: '#ffffff',
-    bgSecondary: '#f5f5f5',
-    textPrimary: '#1a1a1a',
-    accentPurple: '#a78bfa',
-  },
-  spacing: {
-    1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 12: 48,
-  },
-  typography: {
-    xs: 12, sm: 14, md: 16, lg: 18, xl: 20, '2xl': 24, '3xl': 30,
-  },
-};
-
-export const darkTheme = {
-  ...lightTheme,
-  colors: {
-    ...lightTheme.colors,
-    bgPrimary: '#1a1a1a',
-    bgSecondary: '#262626',
-    textPrimary: '#fafafa',
-  },
-};
+// compose.ts
+const themes = Object.fromEntries(
+  colorModeList.flatMap((cm) =>
+    variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)])
+  )
+) as Record<ThemeName, ComposedTheme>;
 ```
 
-### Tailwind Config (if using NativeWind)
+Theme names follow the pattern `{colorMode}-{variant}`:
+`light-default`, `light-highContrast`, `dark-dyslexia`, `dark-lowVision`, etc.
 
-```javascript
-module.exports = {
-  theme: {
-    colors: {
-      bg: { primary: '#ffffff', secondary: '#f5f5f5' },
-      text: { primary: '#1a1a1a', secondary: '#666666' },
-      accent: { purple: '#a78bfa', mint: '#d4f4e7' },
-    },
-    spacing: { 1: '4px', 2: '8px', 3: '12px', 4: '16px' },
-  },
-};
-```
+See [ND Themes](../design/nd-themes.md) for the full theme reference.
 
 ---
 
-## Transform Tool
+## Overview Pages
 
-[Style Dictionary](https://amzn.github.io/style-dictionary/) is the standard tool for multi-platform token transforms. It:
-
-- Reads JSON token files
-- Applies platform-specific transforms
-- Outputs CSS, JS, TypeScript, JSON, etc.
-- Supports custom transforms for edge cases
-
-Alternatives: [Tokens Studio](https://tokens.studio/), [Theo](https://github.com/salesforce-ux/theo). Style Dictionary is the most widely used and actively maintained.
+The package includes HTML visual reference pages at `overview/` that render all themes side-by-side. These can be viewed locally to verify theme appearance.
 
 ---
 
-## Package Location
+## Conventions
 
-The token source files live in a shared package in the monorepo:
-
-```
-packages/design-tokens/
-├── tokens/
-│   ├── colors.json
-│   ├── typography.json
-│   ├── spacing.json
-│   ├── borders.json
-│   └── themes/
-│       ├── dark.json
-│       ├── high-contrast.json
-│       ├── large-text.json
-│       ├── dyslexia.json
-│       ├── low-vision.json
-│       └── autism-friendly.json
-├── build/               # Generated outputs
-│   ├── css/             # For openbadges-ui
-│   ├── js/              # For React Native
-│   └── tailwind/        # For NativeWind (if chosen)
-├── style-dictionary.config.js
-├── package.json
-└── README.md
-```
-
-Published as `@rollercoaster-dev/design-tokens` on npm.
-
----
-
-## Migration Path
-
-### Current State
-
-`openbadges-ui` defines tokens directly in CSS (`tokens.css`, `themes.css`). These files total ~33KB of CSS custom properties and theme overrides.
-
-### Migration Steps
-
-1. **Extract** — Parse existing `tokens.css` and `themes.css` into JSON token files
-2. **Generate** — Set up Style Dictionary to produce CSS custom properties matching current output
-3. **Verify** — Confirm generated CSS matches existing CSS (diff should be zero)
-4. **Add RN output** — Add JS theme object generation for React Native
-5. **Replace** — Point `openbadges-ui` at generated CSS instead of hand-written tokens
-6. **Publish** — Publish `@rollercoaster-dev/design-tokens` to npm
-7. **Consume** — Native app imports the JS theme objects
-
-### Risk Mitigation
-
-The migration is safe because:
-- Step 3 verifies the generated CSS matches the existing CSS before replacing anything
-- `openbadges-ui` has 195/195 tests passing — any token regression will be caught
-- The native app is new code — it consumes the generated JS objects from the start
-
----
-
-## Content Density
-
-Content density is a multiplier applied to spacing tokens at runtime, not a separate set of tokens:
-
-```typescript
-function spacing(token: number, density: 'compact' | 'normal' | 'spacious'): number {
-  const multipliers = { compact: 0.75, normal: 1, spacious: 1.25 };
-  return baseSpacing[token] * multipliers[density];
-}
-```
-
-This keeps the token source clean (one set of spacing values) while supporting three density levels.
-
----
-
-## Open Questions
-
-1. **Existing token extraction** — How closely do the current CSS tokens map to a clean JSON structure? May need manual cleanup.
-2. **Font tokens** — Fonts aren't simple values (family + weight + style). How does Style Dictionary handle font stacks?
-3. **Theme composition** — If we support Large Text + Dark in the future, how do composed themes work in the token system?
-4. **Animation tokens** — Should animation durations and easings be in the token system, or are they implementation-specific?
-5. **Tamagui vs NativeWind** — The UI library choice affects the output format. Tamagui has its own token system; NativeWind uses Tailwind config. May need to generate both during prototyping.
+- Token JSON uses DTCG `$value`/`$type` format
+- CSS vars prefixed `--ob-`
+- Theme JSON uses structured groups: `surface`, `interactive`, `color`, `narrative`, `form`, `typography`, `aliases`
+- `narrative.css` is hand-authored — reusable CSS classes referencing token vars
+- `build/unistyles/` files are auto-generated — never edit directly
+- All token additions require running `bun run build` to regenerate outputs
 
 ---
 
 ## Related Documents
 
 - [Design Language](../design/design-language.md) — how tokens translate to React Native
-- [ND Themes](../design/nd-themes.md) — all 7 theme token values
-- [Design Principles](../vision/design-principles.md) — the 7 themes as day-one requirements
-- [UI Library Comparison](../research/ui-library-comparison.md) — token system compatibility per library
-- [Monorepo tokens.css](https://github.com/rollercoaster-dev/monorepo/blob/main/packages/openbadges-ui/src/styles/tokens.css)
-- [Monorepo themes.css](https://github.com/rollercoaster-dev/monorepo/blob/main/packages/openbadges-ui/src/styles/themes.css)
-
----
-
-_Draft created 2026-02-02. One source of truth, many platforms._
+- [ND Themes](../design/nd-themes.md) — all 14 composed theme definitions
+- [Design Principles](../vision/design-principles.md) — the themes as day-one requirements

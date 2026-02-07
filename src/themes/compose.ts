@@ -1,6 +1,6 @@
 /**
  * Theme composition - combines colorModes with variants
- * Generates all 12 theme combinations
+ * Generates all 14 theme combinations (2 colorModes × 7 variants)
  */
 
 import { colorModes, type ColorMode, type Colors } from './colorModes';
@@ -115,7 +115,7 @@ export const themeNames: ThemeName[] = colorModeList.flatMap(
   (cm) => variants.map((v) => `${cm}-${v}` as ThemeName)
 );
 
-/** All 12 composed themes - derived from colorMode × variant */
+/** All 14 composed themes - derived from colorMode × variant */
 export const themes = Object.fromEntries(
   colorModeList.flatMap((cm) =>
     variants.map((v) => [`${cm}-${v}`, composeTheme(cm, v)])
