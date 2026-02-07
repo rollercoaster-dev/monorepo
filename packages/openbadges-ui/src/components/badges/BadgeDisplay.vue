@@ -206,7 +206,8 @@ const densityClass = computed(() => {
   background-color: var(--badge-background);
   box-shadow: var(--badge-shadow);
   transition: box-shadow var(--ob-transition-fast) ease;
-  max-width: 300px;
+  min-width: 280px;
+  max-width: 500px;
   font-family: var(--ob-font-family);
   color: var(--badge-text-color);
 }
@@ -322,7 +323,6 @@ const densityClass = computed(() => {
 @media (min-width: 640px) {
   .ob-badge-display {
     flex-direction: row;
-    max-width: 500px;
   }
 
   .ob-badge-display__image {

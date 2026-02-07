@@ -432,20 +432,15 @@ const handleDensityChange = (event: Event) => {
 
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--badge-list-gap);
   align-items: stretch;
 }
 
-/* Make grid items look like cards and avoid content squashing */
+/* Grid items just need flex layout — BadgeDisplay provides its own card styling */
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__item {
   display: flex;
   flex-direction: column;
-  background: var(--ob-card);
-  border: var(--ob-border-width-medium) solid var(--ob-border);
-  border-radius: var(--ob-border-radius-sm);
-  padding: var(--ob-space-3);
-  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-list__pagination {
