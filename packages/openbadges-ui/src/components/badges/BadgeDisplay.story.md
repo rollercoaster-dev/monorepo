@@ -71,17 +71,17 @@ Use the controls in the right panel to customize the component behavior.
 | --------------- | ----------------------------------------------------- |
 | `badge-actions` | Additional actions to display below the badge content |
 
-## CSS Variables
+## Design Tokens
 
-The component uses CSS variables for styling, which can be overridden to customize its appearance:
+This component follows the neo-brutalist design language using `@rollercoaster-dev/design-tokens`. Key visual traits:
 
-| Name                    | Default   | Description                       |
-| ----------------------- | --------- | --------------------------------- |
-| `--badge-border-color`  | `#e2e8f0` | The color of the badge border     |
-| `--badge-border-radius` | `8px`     | The border radius of the badge    |
-| `--badge-background`    | `#ffffff` | The background color of the badge |
-| `--badge-title-color`   | `#1a202c` | The color of the badge title      |
-| `--badge-text-color`    | `#4a5568` | The color of the badge text       |
+- **2px borders** via `--ob-border-width-medium`
+- **Hard offset shadows** via `--ob-shadow-hard-md` (hover: `--ob-shadow-hard-lg`)
+- **Anybody font** for titles via `--ob-font-headline`
+- **Theme-adaptive radii** via `--ob-border-radius-sm`
+- **Focus ring** via `--ob-shadow-focus` (keyboard only)
+
+All 8 accessibility themes are supported. Use Histoire's theme switcher to preview each theme.
 
 ## Accessibility
 
@@ -91,4 +91,4 @@ The component includes several accessibility features:
 - The component responds to both click and Enter key events when interactive
 - Badge images have descriptive alt text
 - Dates are formatted in a readable format
-- Focus states are visually indicated with an outline
+- Focus states use `:focus-visible` (keyboard only, not mouse clicks)
