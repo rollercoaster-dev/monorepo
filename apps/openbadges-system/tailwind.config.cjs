@@ -1,9 +1,19 @@
+const { obTokens } = require('@rollercoaster-dev/design-tokens/tailwind')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      // Spread design-tokens preset (spacing, fontSize, fontWeight, lineHeight,
+      // borderRadius, boxShadow, transitionDuration, zIndex)
+      ...obTokens.theme.extend,
+
+      // Override colors with CSS variable references for runtime theme switching.
+      // The preset provides static palette values, but the app needs dynamic
+      // theme colors that change via CSS custom properties.
       colors: {
+        ...obTokens.theme.extend.colors,
         background: 'var(--ob-background)',
         foreground: 'var(--ob-foreground)',
         card: {
@@ -52,20 +62,12 @@ module.exports = {
         input: 'var(--ob-input)',
         ring: 'var(--ob-ring)',
       },
+
+      // Override font-family: keep CSS variable for runtime theme switching
+      // (accessibility themes swap fonts), plus preset's named families
       fontFamily: {
+        ...obTokens.theme.extend.fontFamily,
         sans: ['var(--ob-font-family)'],
-      },
-      boxShadow: {
-        'hard-sm': 'var(--ob-shadow-hard-sm)',
-        'hard-md': 'var(--ob-shadow-hard-md)',
-        'hard-lg': 'var(--ob-shadow-hard-lg)',
-        focus: 'var(--ob-shadow-focus)',
-      },
-      borderRadius: {
-        sm: 'var(--ob-radius-sm)',
-        md: 'var(--ob-radius-md)',
-        lg: 'var(--ob-radius-lg)',
-        xl: 'var(--ob-radius-xl)',
       },
     },
   },
