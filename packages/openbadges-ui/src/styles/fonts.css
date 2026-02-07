@@ -267,6 +267,8 @@
   --ob-font-lexend: "Lexend", var(--ob-font-system);
   --ob-font-opendyslexic: "OpenDyslexic", var(--ob-font-system);
   --ob-font-inter: "Inter", var(--ob-font-system);
+  --ob-font-instrument-sans: "Instrument Sans", var(--ob-font-system);
+  --ob-font-anybody: "Anybody", var(--ob-font-system);
 
   /* Default font family (can be overridden by themes) */
   --ob-font-family: var(--ob-font-system);
@@ -321,4 +323,12 @@
 
 .ob-font-system {
   font-family: var(--ob-font-system);
+}
+
+.ob-font-instrument-sans {
+  font-family: var(--ob-font-instrument-sans);
+}
+
+.ob-font-anybody {
+  font-family: var(--ob-font-anybody);
 }
