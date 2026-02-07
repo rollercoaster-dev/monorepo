@@ -288,6 +288,12 @@ watch(
   cursor: not-allowed;
 }
 
+.ob-badge-verification-button:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .ob-badge-verification-details {
   margin-top: var(--ob-space-4);
   border-top: var(--ob-border-width-medium) solid

@@ -193,9 +193,10 @@ const truncatedDescription = computed(() => {
   box-shadow: var(--issuer-hover-shadow);
 }
 
-.ob-issuer-card.is-interactive:focus {
-  outline: var(--ob-border-width-medium) solid var(--issuer-focus-outline-color);
+.ob-issuer-card.is-interactive:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-card__image {
