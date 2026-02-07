@@ -347,11 +347,26 @@ const handleDensityChange = (event: Event) => {
   display: flex;
 }
 
+/* List layout: full-width cards */
+.ob-issuer-list:not(.ob-issuer-list--grid-layout) .ob-issuer-list__item {
+  width: 100%;
+}
+
+.ob-issuer-list:not(.ob-issuer-list--grid-layout)
+  .ob-issuer-list__item
+  .ob-issuer-card {
+  max-width: none;
+  width: 100%;
+}
+
 /* Make cards stretch to fill grid cell */
+.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__item {
+  display: grid;
+}
+
 .ob-issuer-list.ob-issuer-list--grid-layout
   .ob-issuer-list__item
-  :deep(.ob-issuer-card) {
-  width: 100%;
+  .ob-issuer-card {
   max-width: none;
 }
 

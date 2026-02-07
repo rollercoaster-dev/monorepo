@@ -463,6 +463,35 @@ const hasActiveFilters = computed(() => {
   display: flex;
 }
 
+/* List layout: horizontal card (image left, content right) */
+.ob-badge-class-list:not(.ob-badge-class-list--grid-layout)
+  .ob-badge-class-list__item {
+  width: 100%;
+}
+
+.ob-badge-class-list:not(.ob-badge-class-list--grid-layout)
+  .ob-badge-class-list__item
+  .ob-badge-class-card {
+  flex-direction: row;
+  max-width: none;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.ob-badge-class-list:not(.ob-badge-class-list--grid-layout)
+  .ob-badge-class-list__item
+  .ob-badge-class-card__image {
+  margin-bottom: 0;
+  margin-right: var(--ob-space-4);
+  flex-shrink: 0;
+}
+
+.ob-badge-class-list:not(.ob-badge-class-list--grid-layout)
+  .ob-badge-class-list__item
+  .ob-badge-class-card__content {
+  flex: 1;
+}
+
 /* Make cards stretch to fill grid cell */
 .ob-badge-class-list.ob-badge-class-list--grid-layout
   .ob-badge-class-list__item {
