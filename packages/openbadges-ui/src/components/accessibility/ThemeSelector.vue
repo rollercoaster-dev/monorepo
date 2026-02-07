@@ -173,7 +173,7 @@ const handleThemeChange = (event: Event) => {
   flex-direction: column;
   gap: var(--ob-space-4);
   padding: var(--ob-space-4);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-md);
   background-color: var(--ob-bg-secondary);
 }
@@ -191,7 +191,7 @@ const handleThemeChange = (event: Event) => {
 
 .ob-theme-selector-select {
   padding: var(--ob-space-2);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-md);
   background-color: var(--ob-bg-primary);
   min-height: 44px; /* Minimum touch target size */
@@ -205,7 +205,7 @@ const handleThemeChange = (event: Event) => {
 
 .ob-theme-selector-preview {
   margin-top: var(--ob-space-2);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-md);
   overflow: hidden;
 }

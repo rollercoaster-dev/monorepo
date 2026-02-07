@@ -174,7 +174,7 @@ const truncatedDescription = computed(() => {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  border: 1px solid var(--issuer-border-color);
+  border: var(--ob-border-width) solid var(--issuer-border-color);
   border-radius: var(--issuer-border-radius);
   padding: var(--issuer-padding);
   background-color: var(--issuer-background);
@@ -194,7 +194,7 @@ const truncatedDescription = computed(() => {
 }
 
 .ob-issuer-card.is-interactive:focus {
-  outline: 2px solid var(--issuer-focus-outline-color);
+  outline: var(--ob-border-width-medium) solid var(--issuer-focus-outline-color);
   outline-offset: var(--ob-space-1);
 }
 
@@ -332,14 +332,14 @@ const truncatedDescription = computed(() => {
 /* Accessibility focus styles */
 .ob-issuer-card:focus-visible,
 .ob-issuer-card.is-interactive:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-card__url a:focus-visible,
 .ob-issuer-card__email a:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus);
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
   background: var(--ob-warning-light);
 }

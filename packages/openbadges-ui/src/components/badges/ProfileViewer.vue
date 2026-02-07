@@ -160,7 +160,7 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   gap: var(--profile-gap);
   padding: var(--profile-padding);
   background-color: var(--profile-background);
-  border: 1px solid var(--profile-border-color);
+  border: var(--ob-border-width) solid var(--profile-border-color);
   border-radius: var(--ob-border-radius-lg);
   box-shadow: var(--profile-shadow);
   font-family: var(--ob-font-family);

@@ -372,7 +372,7 @@ const handleDensityChange = (event: Event) => {
 .ob-badge-list__filter-select,
 .ob-badge-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
   color: var(--ob-text-primary);
@@ -407,7 +407,7 @@ const handleDensityChange = (event: Event) => {
   display: flex;
   flex-direction: column;
   background: var(--ob-bg-primary);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-lg);
   padding: var(--ob-space-3);
 }
@@ -477,7 +477,7 @@ const handleDensityChange = (event: Event) => {
 
 .badge-summary:focus-visible,
 .ob-badge-list__item:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 

@@ -302,7 +302,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background-color: var(--dashboard-background);
-  border: 1px solid var(--dashboard-border-color);
+  border: var(--ob-border-width) solid var(--dashboard-border-color);
   border-radius: var(--ob-border-radius-lg);
   overflow: hidden;
   color: var(--dashboard-text-color);
@@ -311,7 +311,7 @@ onMounted(() => {
 
 .ob-issuer-dashboard__header {
   padding: var(--ob-space-6);
-  border-bottom: 1px solid var(--dashboard-border-color);
+  border-bottom: var(--ob-border-width) solid var(--dashboard-border-color);
 }
 
 .ob-issuer-dashboard__title {
@@ -323,7 +323,7 @@ onMounted(() => {
 .ob-issuer-dashboard__tabs {
   display: flex;
   gap: var(--ob-space-1);
-  border-bottom: 1px solid var(--dashboard-border-color);
+  border-bottom: var(--ob-border-width) solid var(--dashboard-border-color);
   margin: 0 calc(var(--ob-space-6) * -1) -1px;
 }
 
@@ -331,7 +331,7 @@ onMounted(() => {
   padding: var(--ob-space-3) var(--ob-space-6);
   background: none;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--ob-border-width-medium) solid transparent;
   font-size: var(--ob-font-size-md);
   font-weight: var(--ob-font-weight-medium);
   color: var(--dashboard-secondary-color);
@@ -384,7 +384,7 @@ onMounted(() => {
 .ob-issuer-dashboard__filter-input,
 .ob-issuer-dashboard__sort-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--dashboard-border-color);
+  border: var(--ob-border-width) solid var(--dashboard-border-color);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-sm);
   color: var(--dashboard-text-color);

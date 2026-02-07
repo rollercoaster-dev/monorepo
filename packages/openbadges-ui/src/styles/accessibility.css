@@ -19,8 +19,8 @@
 
 /* Focus styles */
 .ob-focus-visible:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #0a0a0a);
-  outline-offset: 2px;
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-border-offset);
 }
 
 /* Ensure all interactive elements have visible focus states */
@@ -30,8 +30,8 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #0a0a0a);
-  outline-offset: 2px;
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-border-offset);
 }
 
 /* Skip link for keyboard users */
@@ -39,11 +39,11 @@ textarea:focus-visible,
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--ob-primary, #0a0a0a);
-  color: white;
-  padding: 8px;
-  z-index: var(--ob-z-index-modal, 1300);
-  transition: top 0.2s;
+  background: var(--ob-primary);
+  color: var(--ob-text-inverse);
+  padding: var(--ob-space-2);
+  z-index: var(--ob-z-index-modal);
+  transition: top var(--ob-transition-fast);
 }
 
 .ob-skip-link:focus {
@@ -69,15 +69,15 @@ textarea:focus-visible,
   .ob-profile-viewer,
   .ob-badge-issuer-form,
   .ob-issuer-dashboard {
-    border: 1px solid CanvasText;
+    border: var(--ob-border-width) solid CanvasText;
   }
 
   .ob-button {
-    border: 1px solid CanvasText;
+    border: var(--ob-border-width) solid CanvasText;
   }
 
   .ob-tab-button.active {
-    border-bottom: 3px solid CanvasText;
+    border-bottom: var(--ob-borderWidth-thick) solid CanvasText;
   }
 }
 
@@ -91,13 +91,13 @@ textarea:focus-visible,
 
 /* Ensure sufficient color contrast */
 .ob-form-error {
-  color: var(--ob-error, #dc2626);
-  font-weight: var(--ob-font-weight-medium, 500);
+  color: var(--ob-error);
+  font-weight: var(--ob-font-weight-medium);
 }
 
 .ob-form-success {
-  color: var(--ob-success, #059669);
-  font-weight: var(--ob-font-weight-medium, 500);
+  color: var(--ob-success);
+  font-weight: var(--ob-font-weight-medium);
 }
 
 /* Ensure form fields have sufficient spacing for touch targets */
@@ -112,30 +112,30 @@ textarea:focus-visible,
 .ob-form-input:focus,
 .ob-form-textarea:focus {
   outline: none;
-  border-color: var(--ob-form-input-focus, #0a0a0a);
-  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.3);
+  border-color: var(--ob-form-input-focus);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 /* Status messages for screen readers */
 .ob-status {
-  border-radius: 4px;
-  padding: 8px 12px;
-  margin-top: 16px;
+  border-radius: var(--ob-border-radius-md);
+  padding: var(--ob-space-2) var(--ob-space-3);
+  margin-top: var(--ob-space-4);
 }
 
 .ob-status[aria-live="polite"] {
-  background-color: var(--ob-info-light, #dbeafe);
-  color: var(--ob-text-primary, #1a202c);
+  background-color: var(--ob-info-light);
+  color: var(--ob-text-primary);
 }
 
 .ob-status[role="alert"] {
-  background-color: var(--ob-error-light, #fecaca);
-  color: var(--ob-text-primary, #1a202c);
+  background-color: var(--ob-error-light);
+  color: var(--ob-text-primary);
 }
 
 .ob-status[role="status"] {
-  background-color: var(--ob-success-light, #d4f4e7);
-  color: var(--ob-text-primary, #1a202c);
+  background-color: var(--ob-success-light);
+  color: var(--ob-text-primary);
 }
 
 /* Neurodiversity-specific styles */
@@ -173,7 +173,7 @@ textarea:focus-visible,
 .ob-focus-mode {
   /* Dim non-focused content */
   --ob-focus-mode-opacity: 0.7;
-  --ob-focus-mode-transition: opacity 0.3s ease;
+  --ob-focus-mode-transition: opacity var(--ob-transition-normal) ease;
 }
 
 .ob-focus-mode .ob-badge-list-item:not(:hover):not(:focus-within),
@@ -187,7 +187,7 @@ textarea:focus-visible,
 .ob-focus-mode .ob-form-group:focus-within {
   opacity: 1;
   transition: var(--ob-focus-mode-transition);
-  box-shadow: 0 0 0 2px var(--ob-primary);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 /* Animation control for vestibular disorders and sensory sensitivities */
@@ -198,8 +198,8 @@ textarea:focus-visible,
 }
 
 .ob-animations-minimal * {
-  animation-duration: 0.3s !important;
-  transition-duration: 0.3s !important;
+  animation-duration: var(--ob-transition-normal) !important;
+  transition-duration: var(--ob-transition-normal) !important;
 }
 
 /* Reading modes for dyslexia and visual processing */
@@ -213,7 +213,7 @@ textarea:focus-visible,
 .ob-reading-bionic h4,
 .ob-reading-bionic h5,
 .ob-reading-bionic h6 {
-  font-weight: 400;
+  font-weight: var(--ob-font-weight-normal);
 }
 
 .ob-reading-bionic p span.ob-bionic-highlight,
@@ -224,7 +224,7 @@ textarea:focus-visible,
 .ob-reading-bionic h4 span.ob-bionic-highlight,
 .ob-reading-bionic h5 span.ob-bionic-highlight,
 .ob-reading-bionic h6 span.ob-bionic-highlight {
-  font-weight: 700;
+  font-weight: var(--ob-font-weight-bold);
 }
 
 /* Reading ruler - helps track lines of text */
@@ -241,8 +241,8 @@ textarea:focus-visible,
 .ob-reading-paragraph-focus p:hover,
 .ob-reading-paragraph-focus li:hover {
   background-color: rgba(255, 255, 0, 0.1);
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+  border-radius: var(--ob-border-radius-md);
+  transition: background-color var(--ob-transition-normal) ease;
 }
 
 /* Number formatting for dyscalculia */
@@ -260,8 +260,8 @@ textarea:focus-visible,
 /* Font Family Utility Classes */
 .ob-font-dyslexic {
   font-family: var(--ob-font-opendyslexic);
-  letter-spacing: var(--ob-letter-spacing, 0.05em);
-  word-spacing: var(--ob-word-spacing, 0.1em);
+  letter-spacing: var(--ob-letter-spacing);
+  word-spacing: var(--ob-word-spacing);
 }
 
 .ob-font-accessible {
@@ -279,22 +279,22 @@ textarea:focus-visible,
 
 /* Text Spacing Adjustments for Cognitive Accessibility */
 .ob-text-spacing-enhanced {
-  line-height: var(--ob-line-height-relaxed, 1.8);
-  letter-spacing: var(--ob-letter-spacing, 0.05em);
-  word-spacing: var(--ob-word-spacing, 0.1em);
+  line-height: var(--ob-line-height-relaxed);
+  letter-spacing: var(--ob-letter-spacing);
+  word-spacing: var(--ob-word-spacing);
 }
 
 /* Font Size Adjustments */
 .ob-text-size-base {
-  font-size: var(--ob-font-size-md, 1rem);
+  font-size: var(--ob-font-size-md);
 }
 
 .ob-text-size-large {
-  font-size: var(--ob-font-size-lg, 1.25rem);
+  font-size: var(--ob-font-size-lg);
 }
 
 .ob-text-size-xl {
-  font-size: var(--ob-font-size-xl, 1.5rem);
+  font-size: var(--ob-font-size-xl);
 }
 
 /* Ensure sufficient touch target size for mobile */

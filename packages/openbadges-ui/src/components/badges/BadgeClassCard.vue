@@ -271,7 +271,7 @@ const truncatedCriteria = computed(() => {
 
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--badge-class-border-color);
+  border: var(--ob-border-width) solid var(--badge-class-border-color);
   border-radius: var(--badge-class-border-radius);
   padding: var(--badge-class-padding);
   background-color: var(--badge-class-background);
@@ -291,7 +291,8 @@ const truncatedCriteria = computed(() => {
 }
 
 .ob-badge-class-card.is-interactive:focus {
-  outline: 2px solid var(--badge-class-focus-outline-color);
+  outline: var(--ob-border-width-medium) solid
+    var(--badge-class-focus-outline-color);
   outline-offset: var(--ob-space-1);
 }
 
@@ -466,13 +467,13 @@ const truncatedCriteria = computed(() => {
   border-radius: var(--ob-border-radius-pill);
   font-size: var(--ob-font-size-xs);
   font-weight: var(--ob-font-weight-medium);
-  border: 1px dashed var(--ob-border-color-muted);
+  border: var(--ob-border-width) dashed var(--ob-border-color-muted);
 }
 
 /* Accessibility focus styles */
 .ob-badge-class-card:focus-visible,
 .ob-badge-class-card.is-interactive:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
 }

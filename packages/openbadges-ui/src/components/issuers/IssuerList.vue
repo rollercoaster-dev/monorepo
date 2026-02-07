@@ -303,7 +303,7 @@ const handleDensityChange = (event: Event) => {
 .ob-issuer-list__search,
 .ob-issuer-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
 }
@@ -379,7 +379,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 .ob-issuer-list__pagination-button:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 

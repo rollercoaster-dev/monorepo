@@ -368,7 +368,7 @@ onUnmounted(() => {
 }
 
 .ob-accessibility-toggle:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 
@@ -384,7 +384,7 @@ onUnmounted(() => {
   right: 0;
   width: 350px;
   background-color: var(--ob-bg-primary);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-lg);
   box-shadow: var(--ob-shadow-lg);
   z-index: var(--ob-z-index-modal);
@@ -397,7 +397,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--ob-space-3) var(--ob-space-4);
-  border-bottom: 1px solid var(--ob-border-color);
+  border-bottom: var(--ob-border-width) solid var(--ob-border-color);
 }
 
 .ob-accessibility-panel-title {
@@ -424,7 +424,7 @@ onUnmounted(() => {
 }
 
 .ob-accessibility-panel-close:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus);
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 
@@ -440,7 +440,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--ob-space-4);
   padding: var(--ob-space-4);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-md);
   background-color: var(--ob-bg-secondary);
 }
@@ -490,7 +490,7 @@ onUnmounted(() => {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--ob-bg-secondary);
   color: var(--ob-text-primary);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width) solid var(--ob-border-color);
   border-radius: var(--ob-border-radius-md);
   cursor: pointer;
   font-weight: var(--ob-font-weight-medium);
@@ -502,7 +502,7 @@ onUnmounted(() => {
 }
 
 .ob-accessibility-reset-button:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus);
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 

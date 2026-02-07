@@ -474,7 +474,7 @@ const resetForm = () => {
   margin: 0 auto;
   padding: var(--ob-space-6);
   background-color: var(--form-background);
-  border: 1px solid var(--form-border-color);
+  border: var(--ob-border-width) solid var(--form-border-color);
   border-radius: var(--ob-border-radius-lg);
   color: var(--form-text-color);
   font-family: var(--ob-font-family);
@@ -491,7 +491,7 @@ const resetForm = () => {
   font-weight: var(--ob-font-weight-semibold);
   margin-bottom: var(--ob-space-4);
   padding-bottom: var(--ob-space-2);
-  border-bottom: 1px solid var(--form-border-color);
+  border-bottom: var(--ob-border-width) solid var(--form-border-color);
 }
 
 .ob-badge-issuer-form__field {
@@ -509,7 +509,7 @@ const resetForm = () => {
 .ob-badge-issuer-form__textarea {
   width: 100%;
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--form-input-border);
+  border: var(--ob-border-width) solid var(--form-input-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
   line-height: var(--ob-line-height-normal);
@@ -586,7 +586,7 @@ const resetForm = () => {
   margin-top: var(--ob-space-6);
   padding: var(--ob-space-3);
   background-color: var(--ob-error-light);
-  border: 1px solid var(--ob-error-light);
+  border: var(--ob-border-width) solid var(--ob-error-light);
   border-radius: var(--ob-border-radius-sm);
   color: var(--form-error-color);
 }
@@ -600,7 +600,7 @@ const resetForm = () => {
   margin-top: var(--ob-space-6);
   padding: var(--ob-space-3);
   background-color: var(--ob-success-light);
-  border: 1px solid var(--ob-success-light);
+  border: var(--ob-border-width) solid var(--ob-success-light);
   border-radius: var(--ob-border-radius-sm);
   color: var(--form-success-color);
   font-weight: var(--ob-font-weight-medium);

@@ -195,20 +195,20 @@ watch(
   --verification-button-disabled-bg: var(--ob-verification-button-disabled-bg);
   --verification-label-color: var(--ob-verification-label-color);
 
-  margin-top: var(--ob-space-4, 1rem);
-  padding: var(--ob-space-4, 1rem);
-  border: 1px solid var(--verification-border-color);
-  border-radius: var(--ob-border-radius-md, 0.375rem);
+  margin-top: var(--ob-space-4);
+  padding: var(--ob-space-4);
+  border: var(--ob-border-width) solid var(--verification-border-color);
+  border-radius: var(--ob-border-radius-md);
   background-color: var(--verification-background);
   color: var(--verification-text-color);
-  font-family: var(--ob-font-family, inherit);
+  font-family: var(--ob-font-family);
 }
 
 .ob-badge-verification-status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--ob-space-2, 0.5rem);
+  margin-bottom: var(--ob-space-2);
 }
 
 .ob-badge-verification-result {
@@ -229,7 +229,7 @@ watch(
 }
 
 .ob-badge-verification-icon {
-  margin-right: var(--ob-space-1, 0.25rem);
+  margin-right: var(--ob-space-1);
   font-weight: bold;
 }
 
@@ -237,12 +237,12 @@ watch(
   background-color: var(--verification-button-bg);
   color: var(--verification-button-color);
   border: none;
-  border-radius: var(--ob-border-radius-sm, 0.25rem);
-  padding: var(--ob-space-2, 0.5rem) var(--ob-space-4, 1rem);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-2) var(--ob-space-4);
   cursor: pointer;
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  font-weight: var(--ob-font-weight-medium, 500);
-  transition: background-color var(--ob-transition-fast, 0.2s);
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-medium);
+  transition: background-color var(--ob-transition-fast);
 }
 
 .ob-badge-verification-button:hover:not(:disabled) {
@@ -255,28 +255,28 @@ watch(
 }
 
 .ob-badge-verification-details {
-  margin-top: var(--ob-space-4, 1rem);
-  border-top: 1px solid var(--verification-border-color);
-  padding-top: var(--ob-space-4, 1rem);
+  margin-top: var(--ob-space-4);
+  border-top: var(--ob-border-width) solid var(--verification-border-color);
+  padding-top: var(--ob-space-4);
 }
 
 .ob-badge-verification-method,
 .ob-badge-verification-expiration,
 .ob-badge-verification-revocation,
 .ob-badge-verification-timestamp {
-  margin-bottom: var(--ob-space-2, 0.5rem);
+  margin-bottom: var(--ob-space-2);
 }
 
 .ob-badge-verification-label {
   color: var(--verification-label-color);
-  margin-right: var(--ob-space-2, 0.5rem);
-  font-weight: var(--ob-font-weight-medium, 500);
+  margin-right: var(--ob-space-2);
+  font-weight: var(--ob-font-weight-medium);
 }
 
 .ob-badge-verification-errors,
 .ob-badge-verification-warnings {
-  margin-top: var(--ob-space-3, 0.75rem);
-  margin-bottom: var(--ob-space-3, 0.75rem);
+  margin-top: var(--ob-space-3);
+  margin-bottom: var(--ob-space-3);
 }
 
 .ob-badge-verification-errors {
@@ -289,17 +289,17 @@ watch(
 
 .ob-badge-verification-section-title {
   margin-top: 0;
-  margin-bottom: var(--ob-space-2, 0.5rem);
-  font-size: var(--ob-font-size-sm, 0.875rem);
-  font-weight: var(--ob-font-weight-semibold, 600);
+  margin-bottom: var(--ob-space-2);
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-semibold);
 }
 
 .ob-badge-verification-errors ul,
 .ob-badge-verification-warnings ul {
-  margin-top: var(--ob-space-1, 0.25rem);
-  margin-bottom: var(--ob-space-1, 0.25rem);
-  padding-left: var(--ob-space-6, 1.5rem);
-  font-size: var(--ob-font-size-sm, 0.875rem);
+  margin-top: var(--ob-space-1);
+  margin-bottom: var(--ob-space-1);
+  padding-left: var(--ob-space-6);
+  font-size: var(--ob-font-size-sm);
 }
 
 .ob-badge-verification-loading {
@@ -310,10 +310,10 @@ watch(
 .ob-badge-verification-spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid var(--verification-button-bg);
+  border: var(--ob-border-width-medium) solid var(--verification-button-bg);
   border-top-color: transparent;
   border-radius: 50%;
-  animation: spinner 0.8s linear infinite;
+  animation: spinner var(--ob-transition-slow) linear infinite;
 }
 
 .is-expired .ob-badge-verification-value {

@@ -206,7 +206,7 @@ const densityClass = computed(() => {
 
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--badge-border-color);
+  border: var(--ob-border-width) solid var(--badge-border-color);
   border-radius: var(--badge-border-radius);
   padding: var(--badge-padding);
   background-color: var(--badge-background);
@@ -226,8 +226,8 @@ const densityClass = computed(() => {
 }
 
 .ob-badge-display.is-interactive:focus {
-  outline: 2px solid var(--badge-focus-outline-color);
-  outline-offset: 2px;
+  outline: var(--ob-border-width-medium) solid var(--badge-focus-outline-color);
+  outline-offset: var(--ob-border-offset);
 }
 
 .ob-badge-display__image {
@@ -278,7 +278,7 @@ const densityClass = computed(() => {
   padding: var(--ob-space-2);
   background-color: var(--ob-bg-secondary);
   border-radius: var(--ob-border-radius-sm);
-  border: 1px solid var(--badge-border-color);
+  border: var(--ob-border-width) solid var(--badge-border-color);
 }
 
 .ob-badge-display__recipient-name,
@@ -304,7 +304,7 @@ const densityClass = computed(() => {
 
 .ob-badge-display__verification-container {
   margin-top: var(--ob-space-3);
-  border-top: 1px solid var(--badge-border-color);
+  border-top: var(--ob-border-width) solid var(--badge-border-color);
   padding-top: var(--ob-space-3);
 }
 
@@ -350,7 +350,7 @@ const densityClass = computed(() => {
 
 .ob-badge-display__verification-toggle-button:focus-visible,
 .ob-badge-display__verification-toggle-button:active {
-  outline: 2px solid var(--ob-border-color-focus);
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
   background: var(--ob-warning-light);
 }
 
