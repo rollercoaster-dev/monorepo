@@ -125,7 +125,7 @@ const shouldShowBreadcrumbs = computed(() => breadcrumbs.value.length > 0)
       <li>
         <RouterLink
           to="/"
-          class="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+          class="text-muted-foreground hover:text-foreground transition-colors duration-200"
           aria-label="Home"
         >
           <HomeIcon class="w-4 h-4" aria-hidden="true" />
@@ -134,12 +134,12 @@ const shouldShowBreadcrumbs = computed(() => breadcrumbs.value.length > 0)
       </li>
 
       <li v-for="(crumb, index) in breadcrumbs" :key="index" class="flex items-center">
-        <ChevronRightIcon class="w-4 h-4 text-gray-400 mx-2" aria-hidden="true" />
+        <ChevronRightIcon class="w-4 h-4 text-muted-foreground mx-2" aria-hidden="true" />
 
         <RouterLink
           v-if="crumb.to && index < breadcrumbs.length - 1"
           :to="crumb.to"
-          class="text-gray-500 hover:text-gray-700 transition-colors duration-200 max-w-[200px] truncate"
+          class="text-muted-foreground hover:text-foreground transition-colors duration-200 max-w-[200px] truncate"
           :title="crumb.label"
         >
           {{ crumb.label }}
@@ -147,7 +147,7 @@ const shouldShowBreadcrumbs = computed(() => breadcrumbs.value.length > 0)
 
         <span
           v-else
-          class="text-gray-900 font-medium max-w-[200px] truncate"
+          class="text-foreground font-medium max-w-[200px] truncate"
           :title="crumb.label"
           aria-current="page"
         >

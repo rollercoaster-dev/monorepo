@@ -105,8 +105,8 @@ const getNavItemClass = (item: any) => {
     ? isActiveRoute(item.to)
     : item.children?.some((child: any) => isActiveRoute(child.to))
   return {
-    'text-blue-600 bg-blue-50': isActive,
-    'text-gray-700': !isActive,
+    'text-primary bg-primary-light': isActive,
+    'text-foreground': !isActive,
   }
 }
 
@@ -115,8 +115,8 @@ const getMobileNavItemClass = (item: any) => {
     ? isActiveRoute(item.to)
     : item.children?.some((child: any) => isActiveRoute(child.to))
   return {
-    'text-blue-600 bg-blue-50': isActive,
-    'text-gray-700': !isActive,
+    'text-primary bg-primary-light': isActive,
+    'text-foreground': !isActive,
   }
 }
 
@@ -165,7 +165,7 @@ onUnmounted(() => {
 
 <template>
   <nav
-    class="bg-white shadow-sm border-b border-gray-200"
+    class="bg-card shadow-sm border-b border-border"
     role="navigation"
     aria-label="Main navigation"
   >
@@ -179,9 +179,14 @@ onUnmounted(() => {
             aria-label="OpenBadges Demo - Home"
           >
             <div
-              class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+              class="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center"
             >
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="w-5 h-5 text-primary-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -190,7 +195,7 @@ onUnmounted(() => {
                 />
               </svg>
             </div>
-            <span class="text-xl font-bold text-gray-900">OpenBadges</span>
+            <span class="text-xl font-bold text-foreground">OpenBadges</span>
           </RouterLink>
         </div>
 
@@ -201,7 +206,7 @@ onUnmounted(() => {
             <RouterLink
               v-if="!item.children"
               :to="item.to"
-              class="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+              class="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
               :class="getNavItemClass(item)"
               :aria-current="isActiveRoute(item.to) ? 'page' : undefined"
             >
@@ -213,7 +218,7 @@ onUnmounted(() => {
             <div v-else class="relative">
               <button
                 :id="`menu-button-${item.id}`"
-                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+                class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
                 :class="getNavItemClass(item)"
                 :aria-expanded="openDropdowns.has(item.id)"
                 :aria-haspopup="true"
@@ -239,7 +244,7 @@ onUnmounted(() => {
               >
                 <div
                   v-if="openDropdowns.has(item.id)"
-                  class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
+                  class="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-hard-lg py-1 z-50 border border-border"
                   role="menu"
                   :aria-labelledby="`menu-button-${item.id}`"
                   @click="closeDropdown(item.id)"
@@ -248,8 +253,8 @@ onUnmounted(() => {
                     v-for="child in item.children"
                     :key="child.id"
                     :to="child.to"
-                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
-                    :class="{ 'bg-gray-50 text-gray-900': isActiveRoute(child.to) }"
+                    class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                    :class="{ 'bg-muted text-foreground': isActiveRoute(child.to) }"
                     role="menuitem"
                     :aria-current="isActiveRoute(child.to) ? 'page' : undefined"
                   >
@@ -269,7 +274,7 @@ onUnmounted(() => {
 
           <!-- Mobile menu button -->
           <button
-            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-200"
+            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors duration-200"
             :aria-expanded="isMobileMenuOpen"
             aria-controls="mobile-menu"
             aria-label="Toggle navigation menu"
@@ -293,13 +298,13 @@ onUnmounted(() => {
       leave-to-class="transform opacity-0 scale-95"
     >
       <div v-if="isMobileMenuOpen" id="mobile-menu" class="md:hidden">
-        <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-card border-t border-border">
           <template v-for="item in navigationItems" :key="`mobile-${item.id}`">
             <!-- Simple mobile link -->
             <RouterLink
               v-if="!item.children"
               :to="item.to"
-              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
               :class="getMobileNavItemClass(item)"
               :aria-current="isActiveRoute(item.to) ? 'page' : undefined"
               @click="closeMobileMenu"
@@ -311,7 +316,7 @@ onUnmounted(() => {
             <!-- Mobile dropdown section -->
             <div v-else class="space-y-1">
               <button
-                class="flex items-center justify-between w-full px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+                class="flex items-center justify-between w-full px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
                 :class="getMobileNavItemClass(item)"
                 :aria-expanded="openMobileDropdowns.has(item.id)"
                 @click="toggleMobileDropdown(item.id)"
@@ -340,10 +345,10 @@ onUnmounted(() => {
                     v-for="child in item.children"
                     :key="`mobile-${child.id}`"
                     :to="child.to"
-                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900"
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
                     :class="{
-                      'bg-gray-50 text-gray-900': isActiveRoute(child.to),
-                      'text-gray-700': !isActiveRoute(child.to),
+                      'bg-muted text-foreground': isActiveRoute(child.to),
+                      'text-foreground': !isActiveRoute(child.to),
                     }"
                     :aria-current="isActiveRoute(child.to) ? 'page' : undefined"
                     @click="closeMobileMenu"
@@ -357,7 +362,7 @@ onUnmounted(() => {
           </template>
 
           <!-- Mobile User Menu -->
-          <div class="pt-4 pb-3 border-t border-gray-200">
+          <div class="pt-4 pb-3 border-t border-border">
             <UserMenu :is-mobile="true" @close="closeMobileMenu" />
           </div>
         </div>

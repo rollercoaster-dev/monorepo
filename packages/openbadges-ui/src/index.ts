@@ -31,6 +31,11 @@ export { default as IssuerList } from "@components/issuers/IssuerList.vue";
 export { default as BadgeIssuerForm } from "@components/issuing/BadgeIssuerForm.vue";
 export { default as IssuerDashboard } from "@components/issuing/IssuerDashboard.vue";
 
+// Export components - Accessibility
+export { default as AccessibilitySettings } from "@components/accessibility/AccessibilitySettings.vue";
+export { default as ThemeSelector } from "@components/accessibility/ThemeSelector.vue";
+export { default as FontSelector } from "@components/accessibility/FontSelector.vue";
+
 // Export services
 export { BadgeService } from "@services/BadgeService";
 export { BadgeVerificationService } from "@services/BadgeVerificationService";
