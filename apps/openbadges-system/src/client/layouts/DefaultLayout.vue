@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { AccessibilitySettings } from 'openbadges-ui'
 import MainNavigation from '@/components/Navigation/MainNavigation.vue'
 import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { currentTheme, setTheme } = useTheme()
 </script>
 
 <template>
@@ -11,9 +15,10 @@ import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
     <!-- Main content -->
     <main class="flex-grow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Breadcrumb Navigation -->
-        <div class="py-4">
+        <!-- Breadcrumb Navigation & Accessibility Settings -->
+        <div class="py-4 flex items-center justify-between">
           <Breadcrumb />
+          <AccessibilitySettings :theme="currentTheme" @update:theme="setTheme" />
         </div>
 
         <!-- Page Content -->
