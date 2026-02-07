@@ -69,6 +69,7 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
+    "@rollercoaster-dev/design-tokens": "workspace:*",
     "openbadges-types": "workspace:*",
     "uuid": "^9.0.0"
   },
