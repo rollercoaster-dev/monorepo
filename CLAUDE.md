@@ -46,18 +46,6 @@ Keep solutions simple and focused. Only make changes directly requested.
 - Reuse existing patterns; minimum complexity needed
 - **Fix issues now** - When reviews identify problems, fix immediately. No tech debt.
 
-## Search: Graph First
-
-**Always use graph tools first. Grep/Glob are fallback only.**
-
-| If you're about to...                    | Use this instead   |
-| ---------------------------------------- | ------------------ |
-| Grep for a function/class/type name      | `defs`             |
-| Find what calls a function               | `callers`          |
-| Understand impact before changing a file | `blast`            |
-| Search for a literal string or regex     | Grep (fallback OK) |
-| Find config files by name                | Glob (fallback OK) |
-
 ## Workflows
 
 | Command                  | Use Case                         |
@@ -79,17 +67,6 @@ See [docs/development-workflows.md](docs/development-workflows.md) for details.
 - Never: Use `--auto` flag (skips review comment validation)
 
 If merge is blocked, WAIT for CI. If unclear, ASK.
-
-## Planning Stack
-
-The context builder shows the current stack at session start. Use these tools to manage it:
-
-| Tool        | When                          |
-| ----------- | ----------------------------- |
-| `goal`      | Starting a new work objective |
-| `interrupt` | Unplanned context switch      |
-| `done`      | Finished current item         |
-| `stack`     | Check what's active/paused    |
 
 ## Proactive Reviews
 

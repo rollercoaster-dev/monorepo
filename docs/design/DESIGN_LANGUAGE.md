@@ -44,7 +44,7 @@ Design for focus, not distraction. Build for users who need clarity.
 | **Headlines**       | Anybody         | Character, from landing page DNA  |
 | **Body**            | system-ui stack | Familiar, fast, accessible        |
 | **Mono/code**       | DM Mono         | Personality in technical contexts |
-| **Dyslexia option** | OpenDyslexic    | User-selectable accessibility     |
+| **Dyslexia option** | Lexend          | Research-backed readability       |
 
 ### Scale (Base: 16px)
 
@@ -56,7 +56,7 @@ Design for focus, not distraction. Build for users who need clarity.
 | `--text-lg`  | 1.125rem (18px) | Emphasized body       |
 | `--text-xl`  | 1.25rem (20px)  | Card titles           |
 | `--text-2xl` | 1.5rem (24px)   | Section headers       |
-| `--text-3xl` | 1.875rem (30px) | Page titles           |
+| `--text-3xl` | 2rem (32px)     | Page titles           |
 
 **Note:** Minimum 14px for any readable text. 12px only for non-essential metadata.
 
@@ -64,9 +64,10 @@ Design for focus, not distraction. Build for users who need clarity.
 
 | Context | Value | Why                    |
 | ------- | ----- | ---------------------- |
-| Tight   | 1.3   | Headlines only         |
-| Normal  | 1.5   | Body text minimum      |
-| Relaxed | 1.7   | Dyslexia-friendly mode |
+| Tight   | 1.05  | Display headlines only |
+| Compact | 1.3   | Headlines, metadata    |
+| Normal  | 1.6   | Body text minimum      |
+| Relaxed | 1.8   | Dyslexia-friendly mode |
 
 ### Weight
 
@@ -88,43 +89,43 @@ The landing page uses extreme contrast (electric yellow, deep purple, black). Th
 ### Base Palette (Light Mode)
 
 ```css
-/* Backgrounds */
---bg-primary: #ffffff; /* Main content */
---bg-secondary: #f5f5f5; /* Sidebar, cards */
---bg-tertiary: #e5e5e5; /* Hover states, dividers */
+/* Backgrounds — from color tokens */
+--ob-background: #fafafa; /* Main content (color.white) */
+--ob-muted: #f5f5f5; /* Sidebar, cards (color.gray.100) */
+--ob-border: #e5e5e5; /* Dividers (color.gray.200) */
 
-/* Text */
---text-primary: #1a1a1a; /* Headings, important */
---text-secondary: #666666; /* Body, descriptions */
---text-muted: #999999; /* Hints, timestamps */
+/* Text — from semantic tokens */
+--ob-foreground: #262626; /* Primary text (color.gray.800) */
+--ob-text-secondary: #525252; /* Body, descriptions (color.gray.600) */
+--ob-muted-foreground: #737373; /* Hints, timestamps (color.gray.500) */
 
 /* Accents (from landing page DNA) */
---accent-primary: #1a1a1a; /* Buttons, focus - confident black */
---accent-purple: #a78bfa; /* Highlight, badges */
---accent-mint: #d4f4e7; /* Success backgrounds */
---accent-yellow: #ffe50c; /* Attention (sparingly) */
+--ob-primary: #0a0a0a; /* Buttons, focus - confident black */
+--ob-secondary: #a78bfa; /* Purple highlight, badges */
+--ob-accent-mint: #d4f4e7; /* Success backgrounds */
+--ob-accent-yellow: #ffe50c; /* Attention (sparingly) */
 
 /* Semantic */
---success: #16a34a;
---error: #dc2626;
---warning: #d97706;
---info: #2563eb;
+--ob-success: #059669;
+--ob-error: #dc2626;
+--ob-warning: #d97706;
+--ob-info: #2563eb;
 ```
 
 ### Dark Mode
 
 ```css
---bg-primary: #1a1a1a;
---bg-secondary: #262626;
---bg-tertiary: #333333;
+/* Night Ride — deep indigo tones, not neutral gray */
+--ob-background: #1a1033; /* Deep indigo */
+--ob-muted: #2d1f52; /* Muted indigo */
+--ob-border: #3a2d5c; /* Accent indigo */
 
---text-primary: #fafafa;
---text-secondary: #a0a0a0;
---text-muted: #666666;
+--ob-foreground: #fafafa;
+--ob-muted-foreground: #e5e5e5;
 
---accent-primary: #fafafa;
---accent-purple: #a78bfa;
---accent-mint: #059669;
+--ob-primary: #fafafa;
+--ob-secondary: #c4b5fd; /* Lighter purple for dark bg */
+--ob-accent-mint: #059669;
 ```
 
 ### ND Theme Variations
@@ -323,14 +324,14 @@ The landing page has "voice moments" like `(noted.)` and `(still here? good.)`. 
 
 Users can switch themes via Settings. Available themes:
 
-| Theme             | Description            | Primary Use Case      |
-| ----------------- | ---------------------- | --------------------- |
-| Light             | Default, clean         | General use           |
-| Dark              | Reduced eye strain     | Low light, preference |
-| Dyslexia-Friendly | Cream bg, OpenDyslexic | Reading difficulties  |
-| Autism-Friendly   | Muted, predictable     | Sensory sensitivities |
-| High Contrast     | Maximum contrast       | Low vision            |
-| Large Text        | Increased font sizes   | Vision support        |
+| Theme             | Description          | Primary Use Case      |
+| ----------------- | -------------------- | --------------------- |
+| Light             | Default, clean       | General use           |
+| Dark              | Reduced eye strain   | Low light, preference |
+| Dyslexia-Friendly | Cream bg, Lexend     | Reading difficulties  |
+| Autism-Friendly   | Muted, predictable   | Sensory sensitivities |
+| High Contrast     | Maximum contrast     | Low vision            |
+| Large Text        | Increased font sizes | Vision support        |
 
 Theme preference persists in localStorage and syncs with user account when logged in.
 
@@ -338,19 +339,36 @@ Theme preference persists in localStorage and syncs with user account when logge
 
 ## Implementation Notes
 
+### Design Tokens Package
+
+All tokens live in `packages/design-tokens/` as JSON sources. The build pipeline generates multiple output formats:
+
+```bash
+# Import paths
+@rollercoaster-dev/design-tokens/css           # CSS custom properties (:root)
+@rollercoaster-dev/design-tokens/css/themes     # Theme class overrides (.ob-*-theme)
+@rollercoaster-dev/design-tokens/css/narrative   # Narrative section + badge label classes
+@rollercoaster-dev/design-tokens/unistyles       # JS theme objects for React Native (Unistyles)
+@rollercoaster-dev/design-tokens/tailwind        # Tailwind config preset
+```
+
+The Unistyles target generates palette constants, spacing/sizing tokens (rem converted to px), light/dark color modes, and accessibility variant overrides — matching the `native-rd` theme architecture.
+
+See `packages/design-tokens/CLAUDE.md` for full details.
+
 ### CSS Variables
 
-All design tokens are CSS custom properties, making theme switching trivial:
+All design tokens are CSS custom properties (prefixed `--ob-`), making theme switching trivial:
 
 ```css
 :root {
-  /* light theme defaults */
+  /* light theme defaults — from tokens.css */
 }
-.dark-theme {
-  /* dark overrides */
+.ob-dark-theme {
+  /* dark overrides — from themes.css */
 }
-.dyslexia-theme {
-  /* dyslexia overrides */
+.ob-dyslexia-friendly-theme {
+  /* dyslexia overrides — from themes.css */
 }
 ```
 
@@ -378,6 +396,7 @@ AccessibilityService.setAnimationLevel("minimal");
 
 ## Related Documents
 
+- [design-tokens CLAUDE.md](../../packages/design-tokens/CLAUDE.md) - Token architecture, exports, build pipeline
 - [openbadges-ui DESIGN_PHILOSOPHY.md](../../packages/openbadges-ui/docs/DESIGN_PHILOSOPHY.md)
 - [openbadges-ui neurodiversity.md](../../packages/openbadges-ui/docs/neurodiversity.md)
 - [Landing page DESIGN_DIRECTION.md](https://github.com/rollercoaster-dev/landing/blob/main/docs/DESIGN_DIRECTION.md)

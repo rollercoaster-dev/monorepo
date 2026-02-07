@@ -1,119 +1,76 @@
-# Claude Code Agents
+# Claude Code Agents & Skills
 
-Custom agents for domain-specific tasks. General workflows use [official plugins](https://github.com/anthropics/claude-code).
+Custom agents and skills for domain-specific tasks. General workflows use [official plugins](https://github.com/anthropics/claude-code).
 
-## Key Insight: Orchestrator-Worker Pattern
+## Key Insight: Skills over Subagents
 
-**Claude (main) is the orchestrator.** Worker agents handle focused tasks.
+**Skills run inline** in the orchestrator context, avoiding context duplication that causes OOM with subagents. Subagents are only used when isolation is needed (broad codebase search, parallel review).
 
-Subagents CANNOT stop mid-task and wait for approval. They complete their task and return.
+### Architecture
 
-Therefore: **Claude (main) handles ALL gates**, worker agents do focused work and return.
+```
+WORKFLOWS (Layer 3)
+    │
+    ├── Skill(setup)           ← inline, no context copy
+    ├── Task(issue-researcher) ← subagent, returns compact plan
+    ├── Skill(implement)       ← inline, no context copy
+    ├── Skill(review)          ← inline, spawns review subagents
+    │     ├── Task(code-reviewer)         ← parallel
+    │     ├── Task(pr-test-analyzer)      ← parallel
+    │     ├── Task(silent-failure-hunter)  ← parallel
+    │     └── Task(auto-fixer)            ← for critical findings
+    └── Skill(finalize)        ← inline, no context copy
+```
 
 ### Roles
 
-- **Human**: Approves at each gate
-- **Claude (Main)**: Orchestrates workflow, handles gates, spawns workers
-- **Worker Agents**: Execute focused tasks and return results
+- **Human**: Approves at gates (gated workflows only)
+- **Claude (Main)**: Orchestrates workflow, invokes skills inline, handles gates
+- **Skills (Inline)**: Execute focused phases within orchestrator context
+- **Agents (Subagents)**: Execute isolated tasks and return compact results
 
-### Architecture Diagram
+## Executor Skills (4)
 
-**Gated Workflow (`/work-on-issue`):**
-
-```
-Human (You) - approves at each gate
-    │
-    ▼
-Claude (Main) - THE ORCHESTRATOR - handles gates
-    │
-    ├── /work-on-issue 123
-    │       │
-    │       ▼
-    │   ╔═══════════════════╗
-    │   ║  GATE 1: Issue    ║ ← Claude shows full issue
-    │   ╚═════════╤═════════╝
-    │             ▼
-    │   [issue-researcher] → returns plan
-    │             │
-    │             ▼
-    │   ╔═══════════════════╗
-    │   ║  GATE 2: Plan     ║ ← Claude shows full plan
-    │   ╚═════════╤═════════╝
-    │             ▼
-    │   For each commit:
-    │     [atomic-developer] → returns diff
-    │             │
-    │             ▼
-    │     ╔═══════════════════╗
-    │     ║  GATE 3: Commit   ║ ← Claude shows diff
-    │     ╚═══════════════════╝
-    │             ▼
-    │   [pr-review-toolkit]
-    │             │
-    │             ▼
-    │   ╔═══════════════════╗
-    │   ║  GATE 4: Review   ║ ← Claude shows findings
-    │   ╚═════════╤═════════╝
-    │             ▼
-    └── [pr-creator] → PR created
-```
-
-**Autonomous Workflow (`/auto-issue`):**
+These run **inline** via `Skill()` tool — no context duplication.
 
 ```
-Human (You) - intervenes only on escalation
-    │
-    ▼
-Claude (Main) - AUTONOMOUS ORCHESTRATOR
-    │
-    ├── /auto-issue 123
-    │       │
-    │       ▼
-    │   [issue-researcher] → plan (NO GATE)
-    │             │
-    │             ▼
-    │   [atomic-developer] → commits (NO GATE)
-    │             │
-    │             ▼
-    │   [pr-review-toolkit] (parallel)
-    │             │
-    │             ▼
-    │   ┌─────────────────────┐
-    │   │ Critical findings?  │
-    │   └─────────┬───────────┘
-    │         yes │ no
-    │             │  └──────────────┐
-    │             ▼                 │
-    │   [auto-fixer] ◄──────┐      │
-    │             │         │      │
-    │             ▼         │      │
-    │   ┌─────────────────┐ │      │
-    │   │ Still critical? │─┘      │
-    │   └─────────┬───────┘        │
-    │         yes │ no             │
-    │             │  └─────────────┤
-    │             ▼                │
-    │   ╔═══════════════════╗      │
-    │   ║   ESCALATION      ║      │
-    │   ║ (only gate)       ║      │
-    │   ╚═════════╤═════════╝      │
-    │             │                │
-    │             ◄────────────────┘
-    │             ▼
-    └── [pr-creator] → PR created
+EXECUTOR SKILLS
+──────────────────────────────────
+setup      - Branch, board, notify
+implement  - Atomic commits per plan
+review     - Coordinate reviewers + auto-fix
+finalize   - PR, board, notify
 ```
 
-## Agent Inventory (10 Total)
+### setup (SKILL.md)
+
+Prepares environment: fetches issue, creates branch, updates board, sends notification.
+
+### implement (SKILL.md)
+
+Executes dev plan with atomic commits. Minimal implementation philosophy - no over-engineering.
+
+### review (SKILL.md)
+
+Coordinates review agents (spawns as Task subagents), classifies findings, auto-fixes critical issues.
+
+### finalize (SKILL.md)
+
+Pushes branch, creates PR, updates board to "Blocked", sends notification.
+
+## Custom Agents (10 Total)
+
+These run as **subagents** via `Task()` tool — isolated context.
 
 ```
 PLUGINS (Official)                    CUSTOM AGENTS (10 total)
 ──────────────────                    ────────────────────────────
 feature-dev (exploration)             WORKFLOW (5):
 pr-review-toolkit (pre-PR review)       issue-researcher
-hookify (behavioral hooks)              atomic-developer
-context7 (library docs)                 pr-creator
-playwright (E2E testing)                review-handler
-frontend-design (UI)                    auto-fixer
+hookify (behavioral hooks)              pr-creator
+context7 (library docs)                 review-handler
+playwright (E2E testing)                auto-fixer
+frontend-design (UI)                    milestone-planner
 security-guidance
                                       DOMAIN (5):
                                         openbadges-expert
@@ -127,15 +84,11 @@ security-guidance
 
 ### issue-researcher.md
 
-Creates atomic commit plans from GitHub issues. Checks dependencies, assesses complexity, updates board.
-
-### atomic-developer.md
-
-Executes plans with atomic commits. Minimal implementation philosophy - no over-engineering. Handles both small and large work.
+Creates atomic commit plans from GitHub issues. Checks dependencies, assesses complexity, updates board. **Runs as subagent** because broad codebase search would bloat orchestrator context.
 
 ### pr-creator.md
 
-Creates structured PRs. Triggers CodeRabbit, links issues. Handles both simple and complex PRs.
+Creates structured PRs. Triggers CodeRabbit, links issues. Can be used standalone.
 
 ### review-handler.md
 
@@ -143,7 +96,11 @@ Handles POST-PR review feedback from CodeRabbit, Claude, or humans. Implements f
 
 ### auto-fixer.md
 
-Applies fixes for critical findings from review agents. Used by `/auto-issue` during auto-fix loop. Makes minimal, targeted fixes and validates before committing.
+Applies fixes for critical findings from review agents. Spawned by review skill during auto-fix loop. Makes minimal, targeted fixes and validates before committing.
+
+### milestone-planner.md
+
+Analyzes GitHub milestones, builds dependency graphs, identifies parallelizable issues.
 
 ## Domain Agents
 
@@ -172,10 +129,11 @@ GitHub project board management.
 ```
 LOCAL (pre-PR)                    CI (post-PR)
 ────────────────────────          ─────────────────
-pr-review-toolkit                 CodeRabbit
-openbadges-compliance-reviewer    Claude review
+Skill(review) spawns:             CodeRabbit
+  pr-review-toolkit               Claude review
+  openbadges-compliance-reviewer
         ↓
-    pr-creator
+    Skill(finalize)
         ↓
     review-handler (handles feedback)
 ```
@@ -184,9 +142,13 @@ openbadges-compliance-reviewer    Claude review
 
 | Agent                   | Replaced By                          |
 | ----------------------- | ------------------------------------ |
+| setup-agent             | Skill(setup)                         |
+| atomic-developer        | Skill(implement)                     |
+| review-orchestrator     | Skill(review)                        |
+| finalize-agent          | Skill(finalize)                      |
 | dev-orchestrator        | Claude (main) handles orchestration  |
-| feature-executor        | atomic-developer (handles all sizes) |
-| pr-finalizer            | pr-creator (handles all complexity)  |
+| feature-executor        | Skill(implement) (handles all sizes) |
+| pr-finalizer            | Skill(finalize) (handles all cases)  |
 | test-coverage-validator | Manual + pr-review-toolkit           |
 | dependency-analyzer     | bun install + manual                 |
 | documentation-updater   | docs-assistant (absorbed)            |

@@ -166,9 +166,9 @@ bun run build 2>&1 | tail -100
 
 ### Agents
 
-| Agent               | Validation Level    |
-| ------------------- | ------------------- |
-| atomic-developer    | Basic (each commit) |
-| auto-fixer          | Basic (after fix)   |
-| finalize-agent      | Full (pre-PR)       |
-| review-orchestrator | Full (after fixes)  |
+| Component        | Validation Level    |
+| ---------------- | ------------------- |
+| implement skill  | Basic (each commit) |
+| auto-fixer agent | Basic (after fix)   |
+| finalize skill   | Full (pre-PR)       |
+| review skill     | Full (after fixes)  |

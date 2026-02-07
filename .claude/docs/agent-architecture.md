@@ -4,23 +4,24 @@ A robust and flexible architecture for multi-agent workflows in Claude Code.
 
 ## Overview
 
-This document defines the architecture for Claude Code tooling in this monorepo. It establishes clear boundaries between components, explicit contracts for agents, and patterns for building reliable workflows.
+This document defines the architecture for Claude Code tooling in this monorepo. It establishes clear boundaries between components, explicit contracts, and patterns for building reliable workflows.
 
 ### Design Goals
 
-| Goal           | Description                                                                       |
-| -------------- | --------------------------------------------------------------------------------- |
-| **Robust**     | Handles failures gracefully, resumes from interruptions, clear state management   |
-| **Flexible**   | Easy to add workflows, agents composable in different orders, not tightly coupled |
-| **Simple**     | Minimal orchestrator complexity, agents are self-sufficient, clear contracts      |
-| **Debuggable** | State is traceable, each component is isolated, easy to identify failures         |
+| Goal           | Description                                                                           |
+| -------------- | ------------------------------------------------------------------------------------- |
+| **Robust**     | Handles failures gracefully, resumes from interruptions, clear state management       |
+| **Flexible**   | Easy to add workflows, components composable in different orders, not tightly coupled |
+| **Simple**     | Minimal orchestrator complexity, clear contracts                                      |
+| **Debuggable** | State is traceable, each component is isolated, easy to identify failures             |
+| **Efficient**  | Skills run inline to avoid context duplication; subagents only for isolated work      |
 
 ### Core Principles
 
 1. **Single Responsibility**: Each component does ONE thing well
-2. **Self-Sufficiency**: Agents manage their own state and checkpointing
-3. **Composability**: Agents can be combined in any order to create workflows
-4. **Explicit Contracts**: Clear inputs, outputs, and side effects for each agent
+2. **Inline by Default**: Use skills (inline) unless isolation is needed
+3. **Composability**: Components can be combined in any order to create workflows
+4. **Explicit Contracts**: Clear inputs, outputs, and side effects for each component
 5. **Graceful Degradation**: Non-critical failures don't block progress
 
 ---
@@ -30,818 +31,352 @@ This document defines the architecture for Claude Code tooling in this monorepo.
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    LAYER 3: WORKFLOWS                           │
-│         Entry points that compose agents                        │
+│         Entry points that compose skills and agents             │
 │                                                                 │
 │  /auto-issue    /work-on-issue    /auto-milestone               │
 │                                                                 │
-│  Workflows are SIMPLE:                                          │
-│  • Spawn agents via Task tool                                   │
+│  Workflows:                                                     │
+│  • Invoke skills inline via Skill tool                          │
+│  • Spawn isolated agents via Task tool (research only)          │
 │  • Handle gates (if gated workflow)                             │
 │  • Handle escalation                                            │
-│  • NO direct CLI commands                                       │
+│  • Pass data between phases                                     │
 └─────────────────────────────────────────────────────────────────┘
                         │
-                        │ Task(agent, input)
-                        ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    LAYER 2: AGENTS                              │
-│         Self-contained phase executors                          │
-│                                                                 │
-│  Each agent:                                                    │
-│  • Has explicit INPUT contract                                  │
-│  • Has explicit OUTPUT contract                                 │
-│  • Manages own checkpointing                                    │
-│  • Handles own errors                                           │
-│  • Uses skills for reference                                    │
-│  • Is idempotent (safe to re-run)                               │
-└─────────────────────────────────────────────────────────────────┘
+                        │ Skill(name) inline  │  Task(agent) isolated
+                        ▼                     ▼
+┌────────────────────────────────┐ ┌──────────────────────────────┐
+│       LAYER 2a: SKILLS         │ │     LAYER 2b: AGENTS         │
+│    Inline phase executors      │ │   Isolated phase executors   │
+│                                │ │                              │
+│  Run in orchestrator context:  │ │  Run in separate context:    │
+│  • No context duplication      │ │  • Own context window        │
+│  • Direct tool access          │ │  • Returns compact result    │
+│  • Orchestrator sees all state │ │  • Good for broad search     │
+│                                │ │                              │
+│  setup, implement, review,     │ │  issue-researcher,           │
+│  finalize                      │ │  auto-fixer                  │
+└────────────────────────────────┘ └──────────────────────────────┘
                         │
                         │ Skill(name) for reference
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    LAYER 1: SKILLS                              │
+│                    LAYER 1: REFERENCE SKILLS                    │
 │         Shared knowledge and reference                          │
 │                                                                 │
 │  Skills are:                                                    │
 │  • Reference documentation for CLI commands                     │
 │  • IDs, patterns, and conventions                               │
-│  • Loaded into agent context on-demand                          │
+│  • Loaded into context on-demand                                │
 │  • NOT executors - just knowledge                               │
+│                                                                 │
+│  board-manager, board-status, issue-fetcher,                    │
+│  milestone-tracker, pr-review-checker, telegram                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Skills vs Agents: When to Use Which
 
-## Layer 1: Skills
-
-Skills provide shared knowledge that agents can reference. They are NOT executors.
-
-### Skill Structure
-
-```
-.claude/skills/
-├── checkpoint-workflow/
-│   └── SKILL.md          # CLI commands for workflow state
-├── board-manager/
-│   └── SKILL.md          # GraphQL for board operations
-├── graph-query/
-│   └── SKILL.md          # Code graph query commands
-└── ...
-```
-
-### Skill Usage Pattern
-
-Skills are loaded into an agent's context via the Skill tool. The agent then uses the information to execute commands.
-
-```markdown
-# In agent prompt:
-
-"Use the `checkpoint-workflow` skill for CLI reference when logging actions."
-
-# Agent's behavior:
-
-1. Loads skill via Skill tool (gets documentation)
-2. Reads CLI syntax from loaded content
-3. Executes appropriate commands via Bash tool
-```
-
-### Current Skills
-
-| Skill                 | Purpose                     | Used By                     |
-| --------------------- | --------------------------- | --------------------------- |
-| `checkpoint-workflow` | Workflow state CLI commands | All agents                  |
-| `checkpoint-session`  | Session lifecycle commands  | Session hooks               |
-| `board-manager`       | Board mutation GraphQL      | setup-agent, finalize-agent |
-| `board-status`        | Board query GraphQL         | milestone-planner           |
-| `graph-query`         | Code graph queries          | issue-researcher            |
-| `issue-fetcher`       | Issue fetch patterns        | setup-agent                 |
-| `milestone-tracker`   | Milestone query patterns    | auto-milestone              |
-| `pr-review-checker`   | PR review query patterns    | review-handler              |
-
-### Skill Design Rules
-
-1. **Documentation only**: Skills provide reference, not execution
-2. **Complete examples**: Include full CLI syntax with placeholders
-3. **ID references**: Include all relevant IDs (board, fields, options)
-4. **Error patterns**: Document common errors and handling
+| Use Case                     | Mechanism            | Why                                                   |
+| ---------------------------- | -------------------- | ----------------------------------------------------- |
+| Setup (branch, board)        | **Skill** (inline)   | Small scope, no search bloat                          |
+| Research (codebase analysis) | **Agent** (subagent) | Broad search would bloat orchestrator context         |
+| Implementation               | **Skill** (inline)   | Orchestrator needs to see commits, handle errors      |
+| Review coordination          | **Skill** (inline)   | But spawns review agents as Task subagents internally |
+| Individual reviewers         | **Agent** (subagent) | Independent, parallel, isolated results               |
+| Finalization (PR, board)     | **Skill** (inline)   | Small scope, no search bloat                          |
+| Auto-fix                     | **Agent** (subagent) | Isolated fix attempts, safe to retry                  |
 
 ---
 
-## Layer 2: Agents
+## Layer 1: Reference Skills
 
-Agents are self-contained executors that own an entire phase of work.
+Reference skills provide shared knowledge that other skills and agents can load. They are NOT executors.
 
-### Agent Contract
+### Current Reference Skills
 
-Every agent MUST define:
+| Skill               | Purpose                  | Used By                     |
+| ------------------- | ------------------------ | --------------------------- |
+| `board-manager`     | Board mutation GraphQL   | setup skill, finalize skill |
+| `board-status`      | Board query GraphQL      | milestone-planner           |
+| `issue-fetcher`     | Issue fetch patterns     | setup skill                 |
+| `milestone-tracker` | Milestone query patterns | auto-milestone              |
+| `pr-review-checker` | PR review query patterns | review-handler              |
+| `telegram`          | Telegram notifications   | setup skill, finalize skill |
+
+---
+
+## Layer 2a: Executor Skills (Inline)
+
+Executor skills run inline in the orchestrator's context. They do NOT create subagents (except review, which spawns Task subagents for reviewers).
+
+### setup
 
 ```yaml
-name: agent-name
-description: What this agent does (one sentence)
-
-INPUT:
-  required:
-    - field_name: type # What the agent needs
-  optional:
-    - field_name: type # Optional parameters
-
-OUTPUT:
-  - field_name: type # What the agent returns
-
-SIDE_EFFECTS:
-  - Description of side effect # What changes in the world
-
-SKILLS_USED:
-  - skill-name # Skills loaded for reference
-
-CHECKPOINT_ACTIONS:
-  - action_name # What gets logged to checkpoint
-
-ERROR_HANDLING:
-  - condition: behavior # How errors are handled
-```
-
-### Agent Categories
-
-#### Setup Agents
-
-Prepare environment for work.
-
-| Agent         | Purpose                                 |
-| ------------- | --------------------------------------- |
-| `setup-agent` | Create branch, checkpoint, add to board |
-
-#### Research Agents
-
-Analyze and plan work.
-
-| Agent               | Purpose                                   |
-| ------------------- | ----------------------------------------- |
-| `issue-researcher`  | Analyze codebase, create dev plan         |
-| `milestone-planner` | Analyze milestone, build dependency graph |
-
-#### Implementation Agents
-
-Execute planned work.
-
-| Agent              | Purpose                            |
-| ------------------ | ---------------------------------- |
-| `atomic-developer` | Implement plan with atomic commits |
-| `auto-fixer`       | Apply fixes for review findings    |
-
-#### Review Agents
-
-Validate work quality.
-
-| Agent                            | Purpose                                     |
-| -------------------------------- | ------------------------------------------- |
-| `review-orchestrator`            | Coordinate review agents, classify findings |
-| `code-reviewer`                  | Code quality and patterns                   |
-| `test-analyzer`                  | Test coverage gaps                          |
-| `silent-failure-hunter`          | Error handling issues                       |
-| `openbadges-compliance-reviewer` | OB spec compliance                          |
-
-#### Finalization Agents
-
-Complete and publish work.
-
-| Agent            | Purpose                         |
-| ---------------- | ------------------------------- |
-| `finalize-agent` | Create PR, update board, notify |
-| `review-handler` | Process PR review comments      |
-
-#### Utility Agents
-
-Support operations.
-
-| Agent            | Purpose                                   |
-| ---------------- | ----------------------------------------- |
-| `github-master`  | GitHub operations (issues, PRs, branches) |
-| `docs-assistant` | Documentation operations                  |
-
-### Agent Design Rules
-
-1. **Self-checkpoint**: Agent logs its own actions to checkpoint
-2. **Idempotent**: Safe to re-run (checks existing state first)
-3. **Clear boundaries**: Does one phase, returns control to orchestrator
-4. **Error isolation**: Agent failures don't corrupt other agents
-5. **Skill-based**: Uses skills for reference, not hardcoded commands
-
-### Agent File Structure
-
-```markdown
----
-name: agent-name
-description: Brief description for Task tool
-tools: Bash, Read, Write, Edit, Glob, Grep
-model: sonnet
----
-
-# Agent Name
-
-## Contract
-
-### Input
-
-- `field`: type - description
-
-### Output
-
-- `field`: type - description
-
-### Side Effects
-
-- What changes in the world
-
-## Workflow
-
-### Phase 1: Name
-
-1. Step description
-2. Step description
-
-### Phase 2: Name
-
-...
-
-## Skills Used
-
-- `skill-name`: what for
-
-## Error Handling
-
-- Condition → Behavior
-
-## Example
-```
-
-Input: { ... }
-Output: { ... }
-
-```
-
-```
-
----
-
-## Layer 3: Workflows
-
-Workflows are simple orchestrators that compose agents.
-
-### Workflow Structure
-
-````markdown
-# /command-name <arguments>
-
-Brief description of workflow.
-
-## Quick Reference
-
-```bash
-/command-name 123              # Basic usage
-/command-name 123 --flag       # With options
-```
-````
-
-## Configuration
-
-| Flag | Default | Description |
-| ---- | ------- | ----------- |
-
-## Workflow
-
-### Phase 1: Name
-
-Task(agent-name):
-Input: { field: value }
-Output: { field: value }
-
-### Phase 2: Name
-
-Task(agent-name):
-Input: { field: <from-phase-1> }
-Output: { field: value }
-
-## Gates (if gated)
-
-GATE N: Description
-
-- Show: what to display
-- Wait for: "proceed" | "stop"
-
-## Escalation
-
-Condition → Behavior
-
-## Flags
-
---flag: Description
-
-````
-
-### Workflow Design Rules
-
-1. **No direct CLI**: Workflows only spawn agents via Task tool
-2. **Clear phases**: Each phase maps to one agent
-3. **Explicit data flow**: Show what passes between phases
-4. **Minimal logic**: Gates and escalation only, no implementation
-
-### Workflow Categories
-
-#### Autonomous Workflows
-No human gates, proceed until completion or escalation.
-
-| Workflow | Description |
-|----------|-------------|
-| `/auto-issue` | Issue to PR, fully autonomous |
-| `/auto-milestone` | Milestone to PRs, parallel execution |
-
-#### Gated Workflows
-Require human approval at checkpoints.
-
-| Workflow | Description |
-|----------|-------------|
-| `/work-on-issue` | Issue to PR with approval gates |
-
-#### Utility Workflows
-Single-purpose operations.
-
-| Workflow | Description |
-|----------|-------------|
-| `/checkpoint` | Manual checkpoint operations |
-| `/worktree` | Worktree management |
-
----
-
-## Agent Contracts (Detailed)
-
-### setup-agent
-
-```yaml
-name: setup-agent
-description: Prepares environment for issue work - branch, checkpoint, board
+name: setup
+description: Prepares environment for issue work - branch, board
 
 INPUT:
   required:
     - issue_number: number
   optional:
-    - branch_name: string       # Auto-generated if not provided
-    - skip_board: boolean       # Default: false
-    - notify: boolean           # Default: true
+    - branch_name: string
+    - skip_board: boolean
+    - skip_notify: boolean
 
 OUTPUT:
-  - workflow_id: string
   - branch: string
-  - issue:
-      number: number
-      title: string
-      body: string
-      labels: string[]
+  - issue: { number, title, body, labels }
 
 SIDE_EFFECTS:
   - Creates git branch (or checks out existing)
-  - Creates checkpoint workflow record
   - Adds issue to board as "In Progress"
-  - Sends Telegram notification (if notify=true)
-
-SKILLS_USED:
-  - checkpoint-workflow: for workflow CLI commands
-  - board-manager: for board GraphQL mutations
-  - issue-fetcher: for issue query patterns
-
-CHECKPOINT_ACTIONS:
-  - workflow_started: { issueNumber, branch }
-
-ERROR_HANDLING:
-  - Branch exists: checkout existing, find existing workflow_id
-  - Issue not found: return error, no side effects
-  - Board update fails: warn and continue (non-critical)
-  - Checkpoint exists: return existing workflow_id
-````
-
-### issue-researcher
-
-```yaml
-name: issue-researcher
-description: Analyzes codebase and creates detailed development plan
-
-INPUT:
-  required:
-    - issue_number: number
-    - workflow_id: string
-  optional:
-    - issue_body: string # If already fetched by setup-agent
-
-OUTPUT:
-  - plan_path: string # Path to dev plan file
-  - complexity: enum # TRIVIAL | SMALL | MEDIUM | LARGE
-  - estimated_lines: number
-  - commit_count: number
-  - affected_files: string[]
-
-SIDE_EFFECTS:
-  - Creates dev plan at .claude/dev-plans/issue-{N}.md
-  - Updates checkpoint with plan metadata
-
-SKILLS_USED:
-  - graph-query: for codebase analysis
-  - checkpoint-workflow: for logging
-
-CHECKPOINT_ACTIONS:
-  - dev_plan_created: { planPath, complexity, commitCount }
-
-ERROR_HANDLING:
-  - Scope too large: flag in output, suggest splitting
-  - Dependencies unmet: warn in plan, continue
-  - Graph not populated: fall back to Glob/Grep search
+  - Sends Telegram notification
 ```
 
-### atomic-developer
+### implement
 
 ```yaml
-name: atomic-developer
+name: implement
 description: Implements development plan with atomic commits
 
 INPUT:
   required:
     - issue_number: number
-    - workflow_id: string
     - plan_path: string
   optional:
-    - start_step: number        # Resume from specific step
-    - skip_validation: boolean  # Default: false
+    - workflow_id: string
+    - start_step: number
 
 OUTPUT:
-  - commits: array
-      - sha: string
-      - message: string
-      - files: string[]
-  - validation:
-      type_check: boolean
-      lint: boolean
-      tests: boolean
-      build: boolean
+  - commits: [{ sha, message, files }]
+  - validation: { type_check, lint, tests, build }
 
 SIDE_EFFECTS:
   - Creates/modifies files per plan
   - Makes git commits
-  - Logs each commit to checkpoint
-
-SKILLS_USED:
-  - checkpoint-workflow: for commit logging
-
-CHECKPOINT_ACTIONS:
-  - commit_created: { sha, message } (per commit)
-  - implementation_complete: { commitCount }
-
-ERROR_HANDLING:
-  - Validation fails: attempt fix, report in output
-  - Merge conflict: stop immediately, return error
-  - Plan deviation: note in output, continue if minor
 ```
 
-### review-orchestrator
+### review
 
 ```yaml
-name: review-orchestrator
+name: review
 description: Coordinates review agents and manages auto-fix loop
 
 INPUT:
   required:
     - workflow_id: string
   optional:
-    - skip_agents: string[]     # Agents to skip
-    - max_retry: number         # Default: 3
-    - parallel: boolean         # Default: true
+    - skip_agents: string[]
+    - max_retry: number # Default: 3
+    - parallel: boolean # Default: true
 
 OUTPUT:
-  - findings: array
-      - agent: string
-      - severity: enum          # CRITICAL | HIGH | MEDIUM | LOW
-      - file: string
-      - line: number
-      - message: string
-      - fixed: boolean
-  - summary:
-      total: number
-      critical: number
-      fixed: number
-      unresolved: number
+  - findings: [{ agent, severity, file, line, message, fixed }]
+  - summary: { total, critical, fixed, unresolved }
 
 SIDE_EFFECTS:
-  - Spawns review agents
+  - Spawns review agents (as Task subagents)
   - Spawns auto-fixer for critical findings
-  - Logs findings and fix attempts to checkpoint
+  - Creates fix commits
 
-SKILLS_USED:
-  - checkpoint-workflow: for logging
-
-CHECKPOINT_ACTIONS:
-  - review_started: { agents: [] }
-  - finding_detected: { agent, severity, file }
-  - fix_attempted: { finding, attempt, result }
-  - review_complete: { summary }
-
-ERROR_HANDLING:
-  - Agent fails: log, continue with others
-  - All agents fail: escalate
-  - Fix fails MAX_RETRY: add to unresolved
+INTERNAL_SUBAGENTS:
+  - pr-review-toolkit:code-reviewer
+  - pr-review-toolkit:pr-test-analyzer
+  - pr-review-toolkit:silent-failure-hunter
+  - openbadges-compliance-reviewer (if badge code detected)
+  - auto-fixer (for critical findings)
 ```
 
-### finalize-agent
+### finalize
 
 ```yaml
-name: finalize-agent
+name: finalize
 description: Creates PR, updates board, completes workflow
 
 INPUT:
   required:
     - issue_number: number
-    - workflow_id: string
   optional:
-    - findings_summary: object # From review-orchestrator
-    - force: boolean # Create PR even with issues
+    - findings_summary: object
+    - force: boolean
+    - skip_board: boolean
+    - skip_notify: boolean
 
 OUTPUT:
-  - pr:
-      number: number
-      url: string
-      title: string
+  - pr: { number, url, title }
   - board_status: string
 
 SIDE_EFFECTS:
   - Pushes branch to remote
   - Creates GitHub PR
   - Updates board to "Blocked" (awaiting review)
-  - Marks workflow as completed
   - Sends Telegram notification with PR link
-
-SKILLS_USED:
-  - checkpoint-workflow: for completion logging
-  - board-manager: for status update
-
-CHECKPOINT_ACTIONS:
-  - pr_created: { prNumber, prUrl }
-  - workflow_completed: { duration, commitCount }
-
-ERROR_HANDLING:
-  - Push fails: return error (critical)
-  - PR create fails: return error (critical)
-  - Board update fails: warn, continue
-  - Telegram fails: warn, continue
 ```
+
+---
+
+## Layer 2b: Agents (Isolated Subagents)
+
+Agents run in isolated contexts via the Task tool. Used when broad search or isolation is needed.
+
+### Research Agents
+
+| Agent               | Purpose                                   |
+| ------------------- | ----------------------------------------- |
+| `issue-researcher`  | Analyze codebase, create dev plan         |
+| `milestone-planner` | Analyze milestone, build dependency graph |
+
+### Review Agents (spawned by review skill)
+
+| Agent                            | Purpose                   |
+| -------------------------------- | ------------------------- |
+| `code-reviewer`                  | Code quality and patterns |
+| `pr-test-analyzer`               | Test coverage gaps        |
+| `silent-failure-hunter`          | Error handling issues     |
+| `openbadges-compliance-reviewer` | OB spec compliance        |
+
+### Utility Agents
+
+| Agent            | Purpose                                   |
+| ---------------- | ----------------------------------------- |
+| `auto-fixer`     | Apply fixes for review findings           |
+| `pr-creator`     | Create structured PRs (standalone use)    |
+| `review-handler` | Process PR review comments                |
+| `github-master`  | GitHub operations (issues, PRs, branches) |
+| `docs-assistant` | Documentation operations                  |
+
+### Domain Agents
+
+| Agent                            | Purpose                    |
+| -------------------------------- | -------------------------- |
+| `openbadges-expert`              | OB2/OB3 specification help |
+| `openbadges-compliance-reviewer` | OB spec compliance review  |
+| `vue-hono-expert`                | Vue 3 + Bun/Hono patterns  |
+
+---
+
+## Layer 3: Workflows
+
+Workflows are orchestrators that compose skills and agents.
+
+### Workflow Categories
+
+#### Autonomous Workflows
+
+No human gates, proceed until completion or escalation.
+
+| Workflow          | Description                          |
+| ----------------- | ------------------------------------ |
+| `/auto-issue`     | Issue to PR, fully autonomous        |
+| `/auto-milestone` | Milestone to PRs, parallel execution |
+
+#### Gated Workflows
+
+Require human approval at checkpoints.
+
+| Workflow         | Description                     |
+| ---------------- | ------------------------------- |
+| `/work-on-issue` | Issue to PR with approval gates |
+
+### Workflow Design Rules
+
+1. **Skills inline**: Use `Skill(name)` for phases that don't need isolation
+2. **Agents for isolation**: Use `Task(agent)` only when broad search or parallelism is needed
+3. **Clear phases**: Each phase maps to one skill or agent
+4. **Explicit data flow**: Show what passes between phases
+5. **Minimal logic**: Gates and escalation only, no implementation detail
 
 ---
 
 ## Workflow Examples
 
-### /auto-issue (Simplified)
+### /auto-issue (Autonomous)
 
-```markdown
-# /auto-issue <issue-number>
+```text
+Phase 1: Skill(setup)           → { branch, issue }
+Phase 2: Task(issue-researcher) → { plan_path }      ← subagent
+Phase 3: Skill(implement)       → { commits }
+Phase 4: Skill(review)          → { findings }        ← spawns Task subagents internally
+Phase 5: Skill(finalize)        → { pr }
 
-Fully autonomous issue-to-PR workflow.
-
-## Workflow
-
-### Phase 1: Setup
-
-Task(setup-agent):
-Input: { issue_number: <N> }
-Output: { workflow_id, branch, issue }
-
-### Phase 2: Research
-
-Task(issue-researcher):
-Input: { issue_number: <N>, workflow_id: <from-phase-1> }
-Output: { plan_path, complexity, commit_count }
-
-If --dry-run: STOP, show plan, exit.
-
-### Phase 3: Implement
-
-Task(atomic-developer):
-Input: { issue_number: <N>, workflow_id, plan_path: <from-phase-2> }
-Output: { commits, validation }
-
-### Phase 4: Review
-
-Task(review-orchestrator):
-Input: { workflow_id }
-Output: { findings, summary }
-
-If summary.unresolved > 0: ESCALATE
-
-### Phase 5: Finalize
-
-Task(finalize-agent):
-Input: { issue_number: <N>, workflow_id, findings_summary: <from-phase-4> }
-Output: { pr }
-
-## Escalation
-
-When review-orchestrator returns unresolved critical findings:
-
-1. Notify user via Telegram with findings list
-2. Wait for response:
-   - "continue": manual fix expected, re-run Phase 4
-   - "force-pr": proceed to Phase 5 with issues flagged
-   - "abort": delete branch, mark workflow failed
+If Phase 4 has unresolved criticals → ESCALATE
 ```
 
 ### /work-on-issue (Gated)
 
-```markdown
-# /work-on-issue <issue-number>
-
-Gated workflow requiring human approval at each phase.
-
-## Workflow
-
-### Phase 1: Setup
-
-Task(setup-agent):
-Input: { issue_number: <N>, notify: true }
-Output: { workflow_id, branch, issue }
-
-**GATE 1: Issue Review**
-Show: Full issue content
-Wait for: "proceed"
-
-### Phase 2: Research
-
-Task(issue-researcher):
-Input: { issue_number: <N>, workflow_id }
-Output: { plan_path, complexity }
-
-**GATE 2: Plan Review**
-Show: Full development plan
-Wait for: "proceed"
-
-### Phase 3: Implement
-
-For each commit in plan:
-Make changes per plan step
-
-**GATE 3: Commit Review** (per commit)
-Show: git diff
-Wait for: "proceed"
-
-Commit changes
-
-### Phase 4: Review
-
-Task(review-orchestrator):
-Input: { workflow_id }
-Output: { findings, summary }
-
-**GATE 4: Pre-PR Review**
-Show: Findings summary
-Wait for: "proceed"
-
-### Phase 5: Finalize
-
-Task(finalize-agent):
-Input: { issue_number: <N>, workflow_id }
-Output: { pr }
+```text
+Phase 1: Skill(setup)           → GATE 1 (Issue Review)
+Phase 2: Task(issue-researcher) → GATE 2 (Plan Review)   ← subagent
+Phase 3: (orchestrator inline)  → GATE 3 (per Commit)
+Phase 4: Skill(review)          → GATE 4 (Pre-PR Review)  ← spawns Task subagents
+Phase 5: Skill(finalize)        → Done
 ```
 
 ---
 
-## Migration Guide
+## Anti-Patterns
 
-### Phase 1: Create New Agents
-
-Create these new agents that don't exist yet:
-
-| Agent                 | Purpose                               | Priority |
-| --------------------- | ------------------------------------- | -------- |
-| `setup-agent`         | Extract setup logic from workflows    | HIGH     |
-| `finalize-agent`      | Extract finalize logic from workflows | HIGH     |
-| `review-orchestrator` | Coordinate reviews + auto-fix         | MEDIUM   |
-
-### Phase 2: Enhance Existing Agents
-
-Update existing agents to follow contracts:
-
-| Agent              | Changes Needed                          |
-| ------------------ | --------------------------------------- |
-| `issue-researcher` | Add contract header, self-checkpoint    |
-| `atomic-developer` | Add contract header, self-checkpoint    |
-| `auto-fixer`       | Add contract header, log fix attempts   |
-| `github-master`    | Split into setup-agent + finalize-agent |
-
-### Phase 3: Simplify Workflows
-
-Rewrite workflows to use agent composition:
-
-| Workflow            | From       | To         |
-| ------------------- | ---------- | ---------- |
-| `auto-issue.md`     | 740 lines  | ~80 lines  |
-| `work-on-issue.md`  | 474 lines  | ~100 lines |
-| `auto-milestone.md` | 300+ lines | ~120 lines |
-
-### Phase 4: Deprecate Old Patterns
-
-Remove from workflows:
-
-- Direct CLI commands (`bun run checkpoint ...`)
-- Direct `gh` commands
-- Inline GraphQL
-- Manual checkpoint logging
-- Manual board updates
-
----
-
-## Appendix: Anti-Patterns
-
-### Don't: CLI Commands in Workflows
+### Don't: Use Subagents for Small-Scoped Work
 
 ```markdown
-# BAD - workflow has CLI commands
+# BAD - subagent for simple branch creation
 
-3b. Create workflow checkpoint:
-`bash
-    bun run checkpoint workflow create 485 "feat/issue-485"
-    `
+Task(setup-agent): "Create branch for issue 123"
+
+# GOOD - inline skill
+
+Skill(setup): "Create branch for issue 123"
 ```
 
+### Don't: Run Broad Search Inline
+
 ```markdown
-# GOOD - workflow spawns agent
+# BAD - search bloats orchestrator context
 
-### Phase 1: Setup
+Read 50 files, Grep 30 patterns inline
 
-Task(setup-agent):
-Input: { issue_number: 485 }
+# GOOD - isolated subagent returns compact result
+
+Task(issue-researcher): "Analyze issue 123"
+→ Returns: { plan_path: ".claude/dev-plans/issue-123.md" }
 ```
 
-### Don't: Agents Without Contracts
+### Don't: Shared State Between Components
 
 ```markdown
-# BAD - no clear contract
+# BAD - components share mutable state
 
-## Purpose
-
-Does stuff with issues.
-
-## Workflow
-
-1. Do things
-2. Do more things
-```
-
-```markdown
-# GOOD - explicit contract
-
-## Contract
-
-### Input
-
-- `issue_number`: number - The GitHub issue to process
-
-### Output
-
-- `plan_path`: string - Path to created dev plan
-
-### Side Effects
-
-- Creates file at .claude/dev-plans/issue-{N}.md
-```
-
-### Don't: Shared State Between Agents
-
-```markdown
-# BAD - agents share mutable state
-
-Agent A writes to global variable
+Skill A writes to global variable
 Agent B reads from global variable
-```
 
-```markdown
 # GOOD - explicit data passing
 
-Agent A returns { result: value }
+Skill A returns { result: value }
 Orchestrator passes to Agent B: { input: <from-A> }
 ```
 
-### Don't: Silent Failures
+---
 
-```markdown
-# BAD - failure not communicated
+## Deleted Agents (Replaced by Skills)
 
-if (error) {
-// ignore
-}
-```
+| Former Agent          | Replaced By        | Why                               |
+| --------------------- | ------------------ | --------------------------------- |
+| `setup-agent`         | `Skill(setup)`     | Small scope, no context bloat     |
+| `atomic-developer`    | `Skill(implement)` | Orchestrator needs to see commits |
+| `review-orchestrator` | `Skill(review)`    | Orchestrator handles escalation   |
+| `finalize-agent`      | `Skill(finalize)`  | Small scope, no context bloat     |
 
-```markdown
-# GOOD - explicit error handling
+Previously deleted agents:
 
-ERROR_HANDLING:
-
-- Board update fails: warn and continue (non-critical)
-- Issue not found: return error, no side effects
-```
+| Agent                   | Replaced By                         |
+| ----------------------- | ----------------------------------- |
+| dev-orchestrator        | Claude (main) handles orchestration |
+| feature-executor        | implement skill (handles all sizes) |
+| pr-finalizer            | finalize skill (handles all cases)  |
+| test-coverage-validator | Manual + pr-review-toolkit          |
+| dependency-analyzer     | bun install + manual                |
+| documentation-updater   | docs-assistant (absorbed)           |
 
 ---
 

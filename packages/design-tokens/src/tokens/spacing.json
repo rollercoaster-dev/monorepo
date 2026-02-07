@@ -1,0 +1,188 @@
+{
+  "space": {
+    "$description": "Spacing scale for margins, padding, and gaps",
+    "1": {
+      "$value": "0.25rem",
+      "$type": "dimension"
+    },
+    "2": {
+      "$value": "0.5rem",
+      "$type": "dimension"
+    },
+    "3": {
+      "$value": "0.75rem",
+      "$type": "dimension"
+    },
+    "4": {
+      "$value": "1rem",
+      "$type": "dimension"
+    },
+    "5": {
+      "$value": "1.25rem",
+      "$type": "dimension"
+    },
+    "6": {
+      "$value": "1.5rem",
+      "$type": "dimension"
+    },
+    "8": {
+      "$value": "2rem",
+      "$type": "dimension"
+    },
+    "10": {
+      "$value": "2.5rem",
+      "$type": "dimension"
+    },
+    "12": {
+      "$value": "3rem",
+      "$type": "dimension"
+    },
+    "16": {
+      "$value": "4rem",
+      "$type": "dimension"
+    }
+  },
+  "radius": {
+    "$description": "Border radius scale",
+    "sm": {
+      "$value": "0.125rem",
+      "$type": "dimension",
+      "$description": "Slight rounding"
+    },
+    "md": {
+      "$value": "0.25rem",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "0.5rem",
+      "$type": "dimension"
+    },
+    "xl": {
+      "$value": "0.75rem",
+      "$type": "dimension"
+    },
+    "pill": {
+      "$value": "9999px",
+      "$type": "dimension"
+    }
+  },
+  "shadow": {
+    "$description": "Box shadow scale",
+    "sm": {
+      "$value": "none",
+      "$type": "shadow"
+    },
+    "md": {
+      "$value": "none",
+      "$type": "shadow"
+    },
+    "lg": {
+      "$value": "0 4px 12px rgba(0, 0, 0, 0.08)",
+      "$type": "shadow",
+      "$description": "Subtle shadow for special use only"
+    },
+    "hard-sm": {
+      "$value": "2px 2px 0 rgba(0, 0, 0, 0.15)",
+      "$type": "shadow",
+      "$description": "Small hard offset"
+    },
+    "hard-md": {
+      "$value": "3px 3px 0 rgba(0, 0, 0, 0.15)",
+      "$type": "shadow",
+      "$description": "Medium hard offset"
+    },
+    "hard-lg": {
+      "$value": "4px 4px 0 rgba(0, 0, 0, 0.15)",
+      "$type": "shadow",
+      "$description": "Large hard offset"
+    },
+    "focus": {
+      "$value": "0 0 0 3px rgba(10, 10, 10, 0.4)",
+      "$type": "shadow"
+    }
+  },
+  "borderWidth": {
+    "$description": "Border width scale",
+    "thin": {
+      "$value": "1px",
+      "$type": "dimension"
+    },
+    "default": {
+      "$value": "1px",
+      "$type": "dimension"
+    },
+    "medium": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "Neo-brutalist standard border"
+    },
+    "thick": {
+      "$value": "3px",
+      "$type": "dimension"
+    }
+  },
+  "borderStyle": {
+    "$description": "Border styles",
+    "solid": {
+      "$value": "solid",
+      "$type": "string"
+    },
+    "dashed": {
+      "$value": "dashed",
+      "$type": "string"
+    },
+    "dotted": {
+      "$value": "dotted",
+      "$type": "string"
+    }
+  },
+  "borderOffset": {
+    "$description": "Offset values (legacy, zeroed out)",
+    "sm": {
+      "$value": "0px",
+      "$type": "dimension"
+    },
+    "md": {
+      "$value": "0px",
+      "$type": "dimension"
+    },
+    "lg": {
+      "$value": "0px",
+      "$type": "dimension"
+    }
+  },
+  "transition": {
+    "$description": "Animation timing",
+    "fast": {
+      "$value": "150ms",
+      "$type": "duration"
+    },
+    "normal": {
+      "$value": "300ms",
+      "$type": "duration"
+    },
+    "slow": {
+      "$value": "500ms",
+      "$type": "duration"
+    }
+  },
+  "zIndex": {
+    "$description": "Z-index layering scale",
+    "dropdown": {
+      "$value": "1000",
+      "$type": "number"
+    },
+    "sticky": {
+      "$value": "1100",
+      "$type": "number"
+    },
+    "modal": {
+      "$value": "1300",
+      "$type": "number"
+    },
+    "tooltip": {
+      "$value": "1400",
+      "$type": "number"
+    }
+  }
+}

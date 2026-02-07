@@ -83,14 +83,12 @@ Open Badges 3.0 and W3C Verifiable Credentials. Not proprietary extensions.
 - **Component Library**: Vue 3 components for badge display (openbadges-ui)
 - **Full-Stack App**: Vue 3 + Hono application (openbadges-system)
 - **Logging**: Published neurodivergent-friendly logger (rd-logger)
-- **Claude Integration**: Knowledge graph and workflow tooling (claude-knowledge)
 
 ### What's In Progress
 
 - **OB3 Migration**: Types exist, server/UI/system need updates
 - **Badge Baking**: PNG/SVG embedding pipeline
 - **Verification**: Proof and issuer verification services
-- **Claude Tooling**: Session continuity, workflow automation
 
 ### What's Missing
 

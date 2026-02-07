@@ -355,7 +355,7 @@ Completed: "JSONL git sync" (Goal)
   → Summary stored as Learning in knowledge graph
 ```
 
-**Done**: Beads summarization implemented. See `.claude/research/beads-summarization.md` for research.
+**TODO**: Research Beads summarization pattern for implementation details.
 
 ### Reminder Pattern
 
@@ -375,13 +375,13 @@ User controls the stack, Claude provides reminders.
 ## Next Steps
 
 1. [x] Document vision
-2. [x] Research Beads summarization approach (`.claude/research/beads-summarization.md`)
-3. [x] Implement minimal schema (Goal, Interrupt entities) - `planning_entities` + `planning_relationships` tables
-4. [x] Implement `/goal`, `/interrupt`, `/done` commands - MCP tools + skills
-5. [x] Implement `/plan status` with git integration - stale detection via `gh` CLI
-6. [x] Add stale detection + reminder pattern - closed issue + paused duration checks
+2. [ ] Research Beads summarization approach
+3. [ ] Implement minimal schema (Goal, Interrupt entities)
+4. [ ] Implement `/goal`, `/interrupt`, `/done` commands
+5. [ ] Implement `/plan status` with git integration
+6. [ ] Add stale detection + reminder pattern
 7. [ ] Iterate: add Decision, Sprint, etc. only if needed
 
 ---
 
-_Vision documented Jan 25, 2026. Phase 1 implemented Jan 28, 2026 (#625). Start minimal, evolve based on real usage._
+_Vision documented Jan 25, 2026. Start minimal, evolve based on real usage._
