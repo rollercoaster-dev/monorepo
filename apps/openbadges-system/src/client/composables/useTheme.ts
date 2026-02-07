@@ -9,7 +9,7 @@ export interface ThemeOption {
 
 const STORAGE_KEY = 'ob-theme'
 
-const themes: ThemeOption[] = [
+const themes: readonly ThemeOption[] = [
   {
     value: 'default',
     label: 'The Full Ride',
@@ -43,7 +43,7 @@ const themes: ThemeOption[] = [
   {
     value: 'low-vision',
     label: 'Loud & Clear',
-    moodName: 'loud-clear',
+    moodName: 'loud-and-clear',
     className: 'ob-low-vision-theme',
   },
   {
@@ -58,11 +58,12 @@ const themes: ThemeOption[] = [
     moodName: 'still-water',
     className: 'ob-autism-friendly-theme',
   },
-]
+] as const
 
 const currentTheme = ref('default')
 
 function applyThemeClass(themeName: string) {
+  if (typeof document === 'undefined') return
   const el = document.documentElement
   themes.forEach(t => {
     if (t.className) el.classList.remove(t.className)
@@ -75,17 +76,34 @@ function applyThemeClass(themeName: string) {
 
 function setTheme(themeName: string) {
   const theme = themes.find(t => t.value === themeName)
-  if (!theme) return
+  if (!theme) {
+    console.warn(
+      `[useTheme] Unknown theme "${themeName}". Available: ${themes.map(t => t.value).join(', ')}`
+    )
+    return
+  }
   applyThemeClass(themeName)
   currentTheme.value = themeName
-  localStorage.setItem(STORAGE_KEY, themeName)
+  try {
+    localStorage.setItem(STORAGE_KEY, themeName)
+  } catch {
+    // Theme is applied for this session but won't persist (quota, security, etc.)
+  }
 }
 
 export function useTheme() {
   onMounted(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved && themes.some(t => t.value === saved)) {
-      setTheme(saved)
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        if (themes.some(t => t.value === saved)) {
+          setTheme(saved)
+        } else {
+          localStorage.removeItem(STORAGE_KEY)
+        }
+      }
+    } catch {
+      // localStorage unavailable — use default theme
     }
   })
 

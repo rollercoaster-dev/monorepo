@@ -8,8 +8,8 @@
 /* Base styles */
 body {
   @apply bg-background text-foreground antialiased;
-  font-family: var(--ob-font-family);
-  line-height: var(--ob-line-height-normal);
+  font-family: var(--ob-font-family, 'Instrument Sans', system-ui, sans-serif);
+  line-height: var(--ob-line-height-normal, 1.6);
 }
 
 /* Container */
