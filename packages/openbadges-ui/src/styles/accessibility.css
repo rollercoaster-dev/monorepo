@@ -1,4 +1,3 @@
-
 /**
  * Rollercoaster.dev Open Badges Component Library - Accessibility Styles
  *
@@ -6,7 +5,7 @@
  */
 
 /* Import font definitions */
-@import './fonts.css';
+@import "./fonts.css";
 
 /* Visually hidden content (for screen readers) */
 .ob-visually-hidden {
@@ -23,7 +22,7 @@
 
 /* Focus styles */
 .ob-focus-visible:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #3182ce);
+  outline: 2px solid var(--ob-border-color-focus, #0a0a0a);
   outline-offset: 2px;
 }
 
@@ -34,7 +33,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--ob-border-color-focus, #3182ce);
+  outline: 2px solid var(--ob-border-color-focus, #0a0a0a);
   outline-offset: 2px;
 }
 
@@ -43,7 +42,7 @@ textarea:focus-visible,
   position: absolute;
   top: -40px;
   left: 0;
-  background: var(--ob-primary, #3182ce);
+  background: var(--ob-primary, #0a0a0a);
   color: white;
   padding: 8px;
   z-index: var(--ob-z-index-modal, 1300);
@@ -95,12 +94,12 @@ textarea:focus-visible,
 
 /* Ensure sufficient color contrast */
 .ob-form-error {
-  color: var(--ob-error, #e53e3e);
+  color: var(--ob-error, #dc2626);
   font-weight: var(--ob-font-weight-medium, 500);
 }
 
 .ob-form-success {
-  color: var(--ob-success, #38a169);
+  color: var(--ob-success, #059669);
   font-weight: var(--ob-font-weight-medium, 500);
 }
 
@@ -116,8 +115,8 @@ textarea:focus-visible,
 .ob-form-input:focus,
 .ob-form-textarea:focus {
   outline: none;
-  border-color: var(--ob-form-input-focus, #3182ce);
-  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.3);
+  border-color: var(--ob-form-input-focus, #0a0a0a);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.3);
 }
 
 /* Status messages for screen readers */
@@ -128,17 +127,17 @@ textarea:focus-visible,
 }
 
 .ob-status[aria-live="polite"] {
-  background-color: var(--ob-info-light, #bee3f8);
+  background-color: var(--ob-info-light, #dbeafe);
   color: var(--ob-text-primary, #1a202c);
 }
 
 .ob-status[role="alert"] {
-  background-color: var(--ob-error-light, #fed7d7);
+  background-color: var(--ob-error-light, #fecaca);
   color: var(--ob-text-primary, #1a202c);
 }
 
 .ob-status[role="status"] {
-  background-color: var(--ob-success-light, #c6f6d5);
+  background-color: var(--ob-success-light, #d4f4e7);
   color: var(--ob-text-primary, #1a202c);
 }
 
@@ -236,7 +235,9 @@ textarea:focus-visible,
   --ob-ruler-height: 2.5em;
   --ob-ruler-color: rgba(255, 255, 0, 0.1);
   --ob-ruler-border: rgba(0, 0, 0, 0.1);
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect x="0" y="14" width="32" height="4" fill="yellow" opacity="0.3"/></svg>'), auto;
+  cursor:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect x="0" y="14" width="32" height="4" fill="yellow" opacity="0.3"/></svg>'),
+    auto;
 }
 
 /* Paragraph focus - highlights the paragraph being read */
@@ -277,6 +278,14 @@ textarea:focus-visible,
 
 .ob-font-standard {
   font-family: var(--ob-font-inter);
+}
+
+.ob-font-instrument-sans {
+  font-family: var(--ob-font-instrument-sans);
+}
+
+.ob-font-anybody {
+  font-family: var(--ob-font-anybody);
 }
 
 /* Text Spacing Adjustments for Cognitive Accessibility */
