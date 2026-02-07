@@ -334,6 +334,7 @@ const truncatedCriteria = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--ob-space-2);
+  flex: 1;
 }
 
 .ob-badge-class-card__name {
@@ -374,7 +375,8 @@ const truncatedCriteria = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ob-space-1);
-  margin-top: var(--ob-space-1);
+  margin-top: auto;
+  padding-top: var(--ob-space-2);
 }
 
 .ob-badge-class-card__tag {

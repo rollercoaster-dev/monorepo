@@ -465,9 +465,13 @@ const hasActiveFilters = computed(() => {
 
 /* Make cards stretch to fill grid cell */
 .ob-badge-class-list.ob-badge-class-list--grid-layout
+  .ob-badge-class-list__item {
+  display: grid;
+}
+
+.ob-badge-class-list.ob-badge-class-list--grid-layout
   .ob-badge-class-list__item
-  :deep(.ob-badge-class-card) {
-  width: 100%;
+  .ob-badge-class-card {
   max-width: none;
 }
 
