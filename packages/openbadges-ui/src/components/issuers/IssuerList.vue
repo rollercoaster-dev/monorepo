@@ -414,6 +414,7 @@ const handleDensityChange = (event: Event) => {
 .ob-issuer-list__pagination-button:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-list__pagination-info {

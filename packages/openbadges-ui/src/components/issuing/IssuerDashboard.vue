@@ -402,12 +402,7 @@ onMounted(() => {
 }
 
 .ob-issuer-dashboard__filter-input:focus-visible,
-.ob-issuer-dashboard__sort-select:focus-visible {
-  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
-  outline-offset: var(--ob-space-1);
-  box-shadow: var(--ob-shadow-focus);
-}
-
+.ob-issuer-dashboard__sort-select:focus-visible,
 .ob-issuer-dashboard__button:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
