@@ -42,7 +42,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        inline: ["vue", "primevue", "@vue/test-utils"],
+        inline: ["vue", "@vue/test-utils"],
       },
     },
   },

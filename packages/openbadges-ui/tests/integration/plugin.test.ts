@@ -3,13 +3,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createApp } from "vue";
 import OpenBadgesUIPlugin from "@/plugin";
 
-// Mock PrimeVue with install function
-vi.mock("primevue/config", () => ({
-  default: {
-    install: vi.fn(),
-  },
-}));
-
 describe("OpenBadgesUIPlugin", () => {
   let app: ReturnType<typeof createApp>;
   // Use any type for the spy to avoid TypeScript errors

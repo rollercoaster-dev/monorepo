@@ -65,10 +65,10 @@
     "node": ">=20.8.1"
   },
   "peerDependencies": {
-    "primevue": "^3.0.0",
     "vue": "^3.0.0"
   },
   "dependencies": {
+    "@rollercoaster-dev/design-tokens": "workspace:*",
     "openbadges-types": "workspace:*",
     "uuid": "^9.0.0"
   },
@@ -78,7 +78,6 @@
   ],
   "devDependencies": {
     "@histoire/plugin-vue": "^0.17.6",
-    "@rollercoaster-dev/design-tokens": "workspace:*",
     "@rollercoaster-dev/shared-config": "workspace:*",
     "@types/uuid": "^9.0.0",
     "@vitejs/plugin-vue": "^4.0.0",
@@ -87,8 +86,6 @@
     "happy-dom": "20.5.0",
     "histoire": "^0.17.6",
     "jsdom": "^22.1.0",
-    "primeicons": "^6.0.0",
-    "primevue": "^3.0.0",
     "terser": "^5.39.0",
     "vite": "^4.5.14",
     "vitest": "^0.34.0",

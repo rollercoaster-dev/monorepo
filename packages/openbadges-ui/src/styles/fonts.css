@@ -269,9 +269,6 @@
   --ob-font-inter: "Inter", var(--ob-font-system);
   --ob-font-instrument-sans: "Instrument Sans", var(--ob-font-system);
   --ob-font-anybody: "Anybody", var(--ob-font-system);
-
-  /* Default font family (can be overridden by themes) */
-  --ob-font-family: var(--ob-font-system);
 }
 
 /* 

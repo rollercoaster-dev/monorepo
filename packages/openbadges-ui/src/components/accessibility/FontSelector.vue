@@ -271,9 +271,10 @@ const handleSpacingChange = (event: Event) => {
   flex-direction: column;
   gap: var(--ob-space-4);
   padding: var(--ob-space-4);
-  border: 1px solid var(--ob-border-color);
-  border-radius: var(--ob-border-radius-md);
-  background-color: var(--ob-bg-secondary);
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-md);
 }
 
 .ob-font-selector-group {
@@ -283,21 +284,24 @@ const handleSpacingChange = (event: Event) => {
 }
 
 .ob-font-selector-label {
-  font-weight: var(--ob-font-weight-medium);
-  color: var(--ob-text-primary);
+  font-family: var(--ob-font-headline);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  color: var(--ob-foreground);
 }
 
 .ob-font-selector-select {
   padding: var(--ob-space-2);
-  border: 1px solid var(--ob-border-color);
-  border-radius: var(--ob-border-radius-md);
-  background-color: var(--ob-bg-primary);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  background-color: var(--ob-background);
+  color: var(--ob-foreground);
   min-height: 44px; /* Minimum touch target size */
 }
 
 .ob-font-selector-description {
   font-size: var(--ob-font-size-sm);
-  color: var(--ob-text-secondary);
+  color: var(--ob-muted-foreground);
   margin: 0;
 }
 
@@ -314,15 +318,16 @@ const handleSpacingChange = (event: Event) => {
 
 .ob-font-selector-checkbox-label {
   font-weight: var(--ob-font-weight-medium);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-font-selector-preview {
   margin-top: var(--ob-space-4);
   padding: var(--ob-space-4);
-  border: 1px solid var(--ob-border-color);
-  border-radius: var(--ob-border-radius-md);
-  background-color: var(--ob-bg-primary);
+  border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
+  border-radius: var(--ob-border-radius-sm);
+  background-color: var(--ob-background);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-font-selector-preview p {

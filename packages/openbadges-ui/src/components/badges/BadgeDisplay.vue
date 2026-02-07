@@ -188,31 +188,26 @@ const densityClass = computed(() => {
 
 <style>
 .ob-badge-display {
-  --badge-border-color: var(--ob-badge-border-color, var(--ob-border-color));
-  --badge-border-radius: var(
-    --ob-badge-border-radius,
-    var(--ob-border-radius-lg)
-  );
-  --badge-padding: var(--ob-badge-padding, var(--ob-space-4));
-  --badge-background: var(--ob-badge-background, var(--ob-bg-primary));
-  --badge-shadow: var(--ob-badge-shadow, var(--ob-shadow-sm));
-  --badge-title-color: var(--ob-badge-title-color, var(--ob-text-primary));
-  --badge-text-color: var(--ob-badge-text-color, var(--ob-text-secondary));
-  --badge-hover-shadow: var(--ob-badge-hover-shadow, var(--ob-shadow-md));
-  --badge-focus-outline-color: var(
-    --ob-badge-focus-outline-color,
-    var(--ob-primary)
-  );
+  --badge-border-color: var(--ob-border);
+  --badge-border-radius: var(--ob-border-radius-sm);
+  --badge-padding: var(--ob-space-4);
+  --badge-background: var(--ob-card);
+  --badge-shadow: var(--ob-shadow-hard-md);
+  --badge-title-color: var(--ob-foreground);
+  --badge-text-color: var(--ob-muted-foreground);
+  --badge-hover-shadow: var(--ob-shadow-hard-lg);
+  --badge-focus-outline-color: var(--ob-primary);
 
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--badge-border-color);
+  border: var(--ob-border-width-medium) solid var(--badge-border-color);
   border-radius: var(--badge-border-radius);
   padding: var(--badge-padding);
   background-color: var(--badge-background);
   box-shadow: var(--badge-shadow);
   transition: box-shadow var(--ob-transition-fast) ease;
-  max-width: 300px;
+  min-width: 280px;
+  max-width: 500px;
   font-family: var(--ob-font-family);
   color: var(--badge-text-color);
 }
@@ -226,21 +221,23 @@ const densityClass = computed(() => {
 }
 
 .ob-badge-display.is-interactive:focus {
-  outline: 2px solid var(--badge-focus-outline-color);
-  outline-offset: 2px;
+  outline: var(--ob-border-width-medium) solid var(--badge-focus-outline-color);
+  outline-offset: var(--ob-border-offset);
 }
 
 .ob-badge-display__image {
   display: flex;
   justify-content: center;
+  align-self: start;
   margin-bottom: var(--ob-space-3);
 }
 
 .ob-badge-display__img {
-  max-width: 100%;
+  width: 100%;
   height: auto;
-  max-height: 150px;
   border-radius: var(--ob-border-radius-sm);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-display__content {
@@ -251,8 +248,11 @@ const densityClass = computed(() => {
 
 .ob-badge-display__title {
   margin: 0;
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   color: var(--badge-title-color);
 }
 
@@ -263,9 +263,19 @@ const densityClass = computed(() => {
   line-height: var(--ob-line-height-normal);
 }
 
-.ob-badge-display__issuer,
+.ob-badge-display__issuer {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
+  color: var(--ob-muted-foreground);
+}
+
 .ob-badge-display__date,
-.ob-badge-display__expiry,
+.ob-badge-display__expiry {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
+  color: var(--ob-muted-foreground);
+}
+
 .ob-badge-display__verification-toggle {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-text-color);
@@ -278,14 +288,15 @@ const densityClass = computed(() => {
   padding: var(--ob-space-2);
   background-color: var(--ob-bg-secondary);
   border-radius: var(--ob-border-radius-sm);
-  border: 1px solid var(--badge-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
 }
 
 .ob-badge-display__recipient-name,
 .ob-badge-display__recipient-email,
 .ob-badge-display__recipient-role {
+  font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-xs);
-  color: var(--badge-text-color);
+  color: var(--ob-muted-foreground);
 }
 
 .ob-badge-display__verification-toggle-button {
@@ -304,7 +315,7 @@ const densityClass = computed(() => {
 
 .ob-badge-display__verification-container {
   margin-top: var(--ob-space-3);
-  border-top: 1px solid var(--badge-border-color);
+  border-top: var(--ob-border-width-medium) solid var(--badge-border-color);
   padding-top: var(--ob-space-3);
 }
 
@@ -312,7 +323,6 @@ const densityClass = computed(() => {
 @media (min-width: 640px) {
   .ob-badge-display {
     flex-direction: row;
-    max-width: 500px;
   }
 
   .ob-badge-display__image {
@@ -350,7 +360,7 @@ const densityClass = computed(() => {
 
 .ob-badge-display__verification-toggle-button:focus-visible,
 .ob-badge-display__verification-toggle-button:active {
-  outline: 2px solid var(--ob-border-color-focus);
+  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
   background: var(--ob-warning-light);
 }
 

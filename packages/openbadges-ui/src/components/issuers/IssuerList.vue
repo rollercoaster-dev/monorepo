@@ -266,19 +266,19 @@ const handleDensityChange = (event: Event) => {
 <style>
 .ob-issuer-list {
   --issuer-list-gap: var(--ob-space-4);
-  --issuer-list-empty-color: var(--ob-text-secondary);
+  --issuer-list-empty-color: var(--ob-muted-foreground);
   --issuer-list-pagination-gap: var(--ob-space-2);
-  --issuer-list-button-bg: var(--ob-gray-200);
-  --issuer-list-button-color: var(--ob-text-secondary);
-  --issuer-list-button-hover-bg: var(--ob-gray-300);
-  --issuer-list-button-disabled-bg: var(--ob-gray-100);
+  --issuer-list-button-bg: var(--ob-muted);
+  --issuer-list-button-color: var(--ob-foreground);
+  --issuer-list-button-hover-bg: var(--ob-highlight);
+  --issuer-list-button-disabled-bg: var(--ob-muted);
   --issuer-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
   gap: var(--ob-space-6);
   font-family: var(--ob-font-family);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-issuer-list.ob-issuer-list--density-compact {
@@ -298,14 +298,21 @@ const handleDensityChange = (event: Event) => {
   gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-3);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-issuer-list__search,
 .ob-issuer-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
+  color: var(--ob-foreground);
+  background: var(--ob-background);
 }
 
 .ob-issuer-list__search {
@@ -340,11 +347,26 @@ const handleDensityChange = (event: Event) => {
   display: flex;
 }
 
+/* List layout: full-width cards */
+.ob-issuer-list:not(.ob-issuer-list--grid-layout) .ob-issuer-list__item {
+  width: 100%;
+}
+
+.ob-issuer-list:not(.ob-issuer-list--grid-layout)
+  .ob-issuer-list__item
+  .ob-issuer-card {
+  max-width: none;
+  width: 100%;
+}
+
 /* Make cards stretch to fill grid cell */
+.ob-issuer-list.ob-issuer-list--grid-layout .ob-issuer-list__item {
+  display: grid;
+}
+
 .ob-issuer-list.ob-issuer-list--grid-layout
   .ob-issuer-list__item
-  :deep(.ob-issuer-card) {
-  width: 100%;
+  .ob-issuer-card {
   max-width: none;
 }
 
@@ -361,10 +383,14 @@ const handleDensityChange = (event: Event) => {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--issuer-list-button-bg);
   color: var(--issuer-list-button-color);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
   font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast) ease;
 }
 
@@ -379,7 +405,7 @@ const handleDensityChange = (event: Event) => {
 }
 
 .ob-issuer-list__pagination-button:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 

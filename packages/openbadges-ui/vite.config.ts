@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
-import { resolve } from "path";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,12 +27,11 @@ export default defineConfig({
     },
     rollupOptions: {
       // Make sure to externalize deps that shouldn't be bundled
-      external: ["vue", "primevue"],
+      external: ["vue"],
       output: {
         // Provide global variables to use in the UMD build
         globals: {
           vue: "Vue",
-          primevue: "PrimeVue",
         },
         // Generate sourcemaps
         sourcemap: true,

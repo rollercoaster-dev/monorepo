@@ -167,6 +167,35 @@ const handlePageChange = (page: number) => {
   emit("page-change", page);
 };
 
+// Escape HTML entities to prevent XSS in v-html
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+};
+
+// Syntax-highlight JSON for display
+const highlightJson = (obj: unknown): string => {
+  const raw = JSON.stringify(obj, null, 2);
+  const escaped = escapeHtml(raw);
+  return escaped.replace(
+    /(&quot;(\\u[\da-fA-F]{4}|\\[^u]|[^\\&])*?&quot;)(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?/g,
+    (match, _str, _inner, colon) => {
+      let cls = "json-number";
+      if (match.startsWith("&quot;")) {
+        cls = colon ? "json-key" : "json-string";
+      } else if (/^(true|false)$/.test(match)) {
+        cls = "json-boolean";
+      } else if (match === "null") {
+        cls = "json-null";
+      }
+      return `<span class="${cls}">${match}</span>`;
+    },
+  );
+};
+
 // Handle density change
 const handleDensityChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
@@ -274,7 +303,8 @@ const handleDensityChange = (event: Event) => {
           class="badge-details"
           tabindex="0"
         >
-          <pre>{{ badge }}</pre>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <pre v-html="highlightJson(badge)" />
         </div>
       </li>
     </ul>
@@ -317,24 +347,24 @@ const handleDensityChange = (event: Event) => {
   --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4));
   --badge-list-empty-color: var(
     --ob-badge-list-empty-color,
-    var(--ob-text-secondary)
+    var(--ob-muted-foreground)
   );
   --badge-list-pagination-gap: var(
     --ob-badge-list-pagination-gap,
     var(--ob-space-2)
   );
-  --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-gray-200));
+  --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-muted));
   --badge-list-button-color: var(
     --ob-badge-list-button-color,
-    var(--ob-text-secondary)
+    var(--ob-foreground)
   );
   --badge-list-button-hover-bg: var(
     --ob-badge-list-button-hover-bg,
-    var(--ob-gray-300)
+    var(--ob-highlight)
   );
   --badge-list-button-disabled-bg: var(
     --ob-badge-list-button-disabled-bg,
-    var(--ob-gray-100)
+    var(--ob-muted)
   );
   --badge-list-button-disabled-color: var(
     --ob-badge-list-button-disabled-color,
@@ -345,7 +375,7 @@ const handleDensityChange = (event: Event) => {
   flex-direction: column;
   gap: var(--badge-list-gap);
   font-family: var(--ob-font-family);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-badge-list.ob-badge-list--density-compact {
@@ -366,17 +396,22 @@ const handleDensityChange = (event: Event) => {
   align-items: center;
   margin-bottom: var(--ob-space-3);
   flex-wrap: wrap;
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-3);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-list__filter-input,
 .ob-badge-list__filter-select,
 .ob-badge-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: 1px solid var(--ob-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
-  color: var(--ob-text-primary);
-  background: var(--ob-bg-primary);
+  color: var(--ob-foreground);
+  background: var(--ob-background);
 }
 
 .ob-badge-list__loading,
@@ -397,19 +432,15 @@ const handleDensityChange = (event: Event) => {
 
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--badge-list-gap);
   align-items: stretch;
 }
 
-/* Make grid items look like cards and avoid content squashing */
+/* Grid items just need flex layout — BadgeDisplay provides its own card styling */
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__item {
   display: flex;
   flex-direction: column;
-  background: var(--ob-bg-primary);
-  border: 1px solid var(--ob-border-color);
-  border-radius: var(--ob-border-radius-lg);
-  padding: var(--ob-space-3);
 }
 
 .ob-badge-list__pagination {
@@ -425,11 +456,14 @@ const handleDensityChange = (event: Event) => {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
   font-size: var(--ob-font-size-sm);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast);
 }
 
@@ -450,49 +484,84 @@ const handleDensityChange = (event: Event) => {
 
 .badge-summary {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ob-space-2);
   cursor: pointer;
   outline: none;
 }
 
-/* In grid layout, stack summary content to keep expand button from squashing */
+/* In grid layout, stretch to fill equal-height cells */
 .ob-badge-list.ob-badge-list--grid-layout .badge-summary {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--ob-space-2);
+  flex: 1;
+}
+
+.ob-badge-list.ob-badge-list--grid-layout .ob-badge-display {
+  flex: 1;
 }
 
 .badge-expand-btn {
-  margin-left: var(--ob-space-4);
   padding: var(--ob-space-1) var(--ob-space-3);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   background: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  font-size: var(--ob-font-size-sm);
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
   cursor: pointer;
-  align-self: flex-end;
+  align-self: flex-start;
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .badge-summary:focus-visible,
 .ob-badge-list__item:focus-visible {
-  outline: 3px solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
 }
 
 .badge-details {
-  background: var(--ob-bg-secondary);
+  background: #1e1e2e;
+  border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
   border-radius: var(--ob-border-radius-sm);
   margin-top: var(--ob-space-2);
   padding: var(--ob-space-3);
-  font-size: var(--ob-font-size-sm);
-  color: var(--ob-text-primary);
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
+  color: #cdd6f4;
+  overflow-x: auto;
+}
+
+.badge-details pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.badge-details .json-key {
+  color: #89b4fa;
+}
+
+.badge-details .json-string {
+  color: #a6e3a1;
+}
+
+.badge-details .json-number {
+  color: #fab387;
+}
+
+.badge-details .json-boolean {
+  color: #cba6f7;
+}
+
+.badge-details .json-null {
+  color: #f38ba8;
 }
 
 .ob-badge-list__item.is-expanded {
   background: var(--ob-bg-secondary);
-  border-radius: var(--ob-border-radius-md);
+  border-radius: var(--ob-border-radius-sm);
 }
 
 /* Responsive adjustments */
