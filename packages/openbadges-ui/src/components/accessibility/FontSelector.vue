@@ -98,12 +98,6 @@ const props = withDefaults(defineProps<FontSelectorProps>(), {
       description: "Designed for improved reading fluency",
       className: "ob-font-readable",
     },
-    {
-      id: "inter",
-      name: "Inter",
-      description: "Modern, highly legible sans-serif",
-      className: "ob-font-standard",
-    },
   ],
 });
 

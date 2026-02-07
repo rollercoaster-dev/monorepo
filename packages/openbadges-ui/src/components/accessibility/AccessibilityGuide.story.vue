@@ -157,8 +157,8 @@ const isOpen = ref(true);
             <p>The quick brown fox jumps over the lazy dog. 1234567890</p>
           </div>
 
-          <div class="font-example ob-font-standard">
-            <h3>Inter</h3>
+          <div class="font-example ob-font-instrument-sans">
+            <h3>Instrument Sans</h3>
             <p>The quick brown fox jumps over the lazy dog. 1234567890</p>
           </div>
         </div>
