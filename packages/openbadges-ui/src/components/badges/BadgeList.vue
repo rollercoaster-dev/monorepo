@@ -477,6 +477,20 @@ const handleDensityChange = (event: Event) => {
   cursor: not-allowed;
 }
 
+.ob-badge-list__pagination-button:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
+.ob-badge-list__filter-input:focus-visible,
+.ob-badge-list__filter-select:focus-visible,
+.ob-badge-list__density-select:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .ob-badge-list__pagination-info {
   font-size: var(--ob-font-size-sm);
   color: var(--badge-list-button-color);
@@ -515,6 +529,12 @@ const handleDensityChange = (event: Event) => {
   box-shadow: var(--ob-shadow-hard-sm);
 }
 
+.badge-expand-btn:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .badge-summary:focus-visible,
 .ob-badge-list__item:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
@@ -522,14 +542,14 @@ const handleDensityChange = (event: Event) => {
 }
 
 .badge-details {
-  background: #1e1e2e;
+  background: var(--ob-bg-secondary);
   border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
   border-radius: var(--ob-border-radius-sm);
   margin-top: var(--ob-space-2);
   padding: var(--ob-space-3);
   font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-xs);
-  color: #cdd6f4;
+  color: var(--ob-foreground);
   overflow-x: auto;
 }
 
@@ -540,23 +560,23 @@ const handleDensityChange = (event: Event) => {
 }
 
 .badge-details .json-key {
-  color: #89b4fa;
+  color: var(--ob-primary);
 }
 
 .badge-details .json-string {
-  color: #a6e3a1;
+  color: var(--ob-success);
 }
 
 .badge-details .json-number {
-  color: #fab387;
+  color: var(--ob-warning);
 }
 
 .badge-details .json-boolean {
-  color: #cba6f7;
+  color: var(--ob-accent);
 }
 
 .badge-details .json-null {
-  color: #f38ba8;
+  color: var(--ob-error);
 }
 
 .ob-badge-list__item.is-expanded {
