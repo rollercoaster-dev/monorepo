@@ -272,18 +272,12 @@ onMounted(() => {
 
 <style>
 .ob-issuer-dashboard {
-  --dashboard-border-color: var(
-    --ob-dashboard-border-color,
-    var(--ob-border-color)
-  );
-  --dashboard-background: var(--ob-dashboard-background, var(--ob-bg-primary));
-  --dashboard-text-color: var(
-    --ob-dashboard-text-color,
-    var(--ob-text-primary)
-  );
+  --dashboard-border-color: var(--ob-dashboard-border-color, var(--ob-border));
+  --dashboard-background: var(--ob-dashboard-background, var(--ob-card));
+  --dashboard-text-color: var(--ob-dashboard-text-color, var(--ob-foreground));
   --dashboard-secondary-color: var(
     --ob-dashboard-secondary-color,
-    var(--ob-text-secondary)
+    var(--ob-muted-foreground)
   );
   --dashboard-accent-color: var(--ob-dashboard-accent-color, var(--ob-primary));
   --dashboard-tab-active-border: var(
@@ -296,14 +290,15 @@ onMounted(() => {
   );
   --dashboard-empty-color: var(
     --ob-dashboard-empty-color,
-    var(--ob-text-secondary)
+    var(--ob-muted-foreground)
   );
 
   display: flex;
   flex-direction: column;
   background-color: var(--dashboard-background);
-  border: var(--ob-border-width) solid var(--dashboard-border-color);
-  border-radius: var(--ob-border-radius-lg);
+  border: var(--ob-border-width-medium) solid var(--dashboard-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-lg);
   overflow: hidden;
   color: var(--dashboard-text-color);
   font-family: var(--ob-font-family);
@@ -316,8 +311,11 @@ onMounted(() => {
 
 .ob-issuer-dashboard__title {
   margin: 0 0 var(--ob-space-4);
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-2xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
 }
 
 .ob-issuer-dashboard__tabs {
@@ -332,8 +330,10 @@ onMounted(() => {
   background: none;
   border: none;
   border-bottom: var(--ob-border-width-medium) solid transparent;
-  font-size: var(--ob-font-size-md);
-  font-weight: var(--ob-font-weight-medium);
+  font-size: var(--ob-font-size-sm);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-label);
   color: var(--dashboard-secondary-color);
   cursor: pointer;
   transition: all var(--ob-transition-fast) ease;
@@ -384,11 +384,11 @@ onMounted(() => {
 .ob-issuer-dashboard__filter-input,
 .ob-issuer-dashboard__sort-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: var(--ob-border-width) solid var(--dashboard-border-color);
+  border: var(--ob-border-width-medium) solid var(--dashboard-border-color);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-sm);
   color: var(--dashboard-text-color);
-  background: var(--dashboard-background);
+  background: var(--ob-background);
 }
 
 .ob-issuer-dashboard__filter-input {
@@ -408,10 +408,13 @@ onMounted(() => {
 
 .ob-issuer-dashboard__button {
   padding: var(--ob-space-2) var(--ob-space-4);
-  border: none;
+  border: var(--ob-border-width-medium) solid currentColor;
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   cursor: pointer;
   transition: background-color var(--ob-transition-fast) ease;
 }

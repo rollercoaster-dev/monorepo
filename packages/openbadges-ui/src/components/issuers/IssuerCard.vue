@@ -158,23 +158,23 @@ const truncatedDescription = computed(() => {
 
 <style>
 .ob-issuer-card {
-  --issuer-border-color: var(--ob-border-color);
-  --issuer-border-radius: var(--ob-border-radius-lg);
+  --issuer-border-color: var(--ob-border);
+  --issuer-border-radius: var(--ob-border-radius-sm);
   --issuer-padding: var(--ob-space-4);
-  --issuer-background: var(--ob-bg-primary);
-  --issuer-shadow: var(--ob-shadow-sm);
-  --issuer-name-color: var(--ob-text-primary);
-  --issuer-text-color: var(--ob-text-secondary);
+  --issuer-background: var(--ob-card);
+  --issuer-shadow: var(--ob-shadow-hard-md);
+  --issuer-name-color: var(--ob-foreground);
+  --issuer-text-color: var(--ob-muted-foreground);
   --issuer-link-color: var(--ob-primary);
-  --issuer-hover-shadow: var(--ob-shadow-md);
+  --issuer-hover-shadow: var(--ob-shadow-hard-lg);
   --issuer-focus-outline-color: var(--ob-primary);
-  --issuer-fallback-bg: var(--ob-gray-200);
-  --issuer-fallback-color: var(--ob-text-secondary);
+  --issuer-fallback-bg: var(--ob-highlight);
+  --issuer-fallback-color: var(--ob-highlight-foreground);
 
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  border: var(--ob-border-width) solid var(--issuer-border-color);
+  border: var(--ob-border-width-medium) solid var(--issuer-border-color);
   border-radius: var(--issuer-border-radius);
   padding: var(--issuer-padding);
   background-color: var(--issuer-background);
@@ -236,8 +236,11 @@ const truncatedDescription = computed(() => {
 
 .ob-issuer-card__name {
   margin: 0;
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-lg);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   color: var(--issuer-name-color);
   white-space: nowrap;
   overflow: hidden;
@@ -258,6 +261,7 @@ const truncatedDescription = computed(() => {
 
 .ob-issuer-card__url a,
 .ob-issuer-card__email a {
+  font-family: var(--ob-font-mono);
   color: var(--issuer-link-color);
   text-decoration: none;
   word-break: break-all;

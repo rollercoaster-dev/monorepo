@@ -256,22 +256,22 @@ const truncatedCriteria = computed(() => {
 
 <style>
 .ob-badge-class-card {
-  --badge-class-border-color: var(--ob-border-color);
-  --badge-class-border-radius: var(--ob-border-radius-lg);
+  --badge-class-border-color: var(--ob-border);
+  --badge-class-border-radius: var(--ob-border-radius-sm);
   --badge-class-padding: var(--ob-space-4);
-  --badge-class-background: var(--ob-bg-primary);
-  --badge-class-shadow: var(--ob-shadow-sm);
-  --badge-class-name-color: var(--ob-text-primary);
-  --badge-class-text-color: var(--ob-text-secondary);
-  --badge-class-hover-shadow: var(--ob-shadow-md);
+  --badge-class-background: var(--ob-card);
+  --badge-class-shadow: var(--ob-shadow-hard-md);
+  --badge-class-name-color: var(--ob-foreground);
+  --badge-class-text-color: var(--ob-muted-foreground);
+  --badge-class-hover-shadow: var(--ob-shadow-hard-lg);
   --badge-class-focus-outline-color: var(--ob-primary);
-  --badge-class-tag-bg: var(--ob-gray-200);
-  --badge-class-tag-color: var(--ob-text-secondary);
-  --badge-class-fallback-bg: var(--ob-bg-secondary);
+  --badge-class-tag-bg: var(--ob-highlight);
+  --badge-class-tag-color: var(--ob-highlight-foreground);
+  --badge-class-fallback-bg: var(--ob-highlight);
 
   display: flex;
   flex-direction: column;
-  border: var(--ob-border-width) solid var(--badge-class-border-color);
+  border: var(--ob-border-width-medium) solid var(--badge-class-border-color);
   border-radius: var(--badge-class-border-radius);
   padding: var(--badge-class-padding);
   background-color: var(--badge-class-background);
@@ -313,7 +313,7 @@ const truncatedCriteria = computed(() => {
 .ob-badge-class-card__img-fallback {
   width: 80px;
   height: 80px;
-  border-radius: var(--ob-border-radius-lg);
+  border-radius: var(--ob-border-radius-sm);
   background-color: var(--badge-class-fallback-bg);
   display: flex;
   align-items: center;
@@ -332,10 +332,12 @@ const truncatedCriteria = computed(() => {
 
 .ob-badge-class-card__name {
   margin: 0;
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-lg);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   color: var(--badge-class-name-color);
-  line-height: var(--ob-line-height-tight);
 }
 
 .ob-badge-class-card__description {
@@ -346,8 +348,9 @@ const truncatedCriteria = computed(() => {
 }
 
 .ob-badge-class-card__issuer {
+  font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-xs);
-  color: var(--badge-class-text-color);
+  color: var(--ob-muted-foreground);
 }
 
 .ob-badge-class-card__criteria {
@@ -373,13 +376,18 @@ const truncatedCriteria = computed(() => {
   padding: var(--ob-space-1) var(--ob-space-2);
   background-color: var(--badge-class-tag-bg);
   color: var(--badge-class-tag-color);
-  border-radius: var(--ob-border-radius-pill);
+  border: var(--ob-border-width-medium) var(--ob-border-style) currentColor;
+  border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-xs);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-class-card__tag--more {
-  background-color: var(--ob-gray-300);
+  background-color: var(--ob-muted);
+  color: var(--ob-muted-foreground);
 }
 
 /* Content density styles */
@@ -461,13 +469,16 @@ const truncatedCriteria = computed(() => {
 
 .ob-badge-class-card__multi-badge {
   display: inline-block;
-  padding: var(--ob-space-1) var(--ob-space-2);
-  background-color: var(--ob-gray-100);
-  color: var(--ob-text-secondary);
-  border-radius: var(--ob-border-radius-pill);
+  padding: var(--ob-space-1) var(--ob-space-3);
+  background: var(--ob-highlight);
+  color: var(--ob-highlight-foreground);
+  border: var(--ob-border-width-medium) var(--ob-border-style) currentColor;
+  border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-xs);
-  font-weight: var(--ob-font-weight-medium);
-  border: var(--ob-border-width) dashed var(--ob-border-color-muted);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 /* Accessibility focus styles */

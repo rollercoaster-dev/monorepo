@@ -188,17 +188,17 @@ const densityClass = computed(() => {
 
 <style>
 .ob-badge-display {
-  --badge-border-color: var(--ob-badge-border-color, var(--ob-border-color));
+  --badge-border-color: var(--ob-badge-border-color, var(--ob-border));
   --badge-border-radius: var(
     --ob-badge-border-radius,
-    var(--ob-border-radius-lg)
+    var(--ob-border-radius-sm)
   );
   --badge-padding: var(--ob-badge-padding, var(--ob-space-4));
-  --badge-background: var(--ob-badge-background, var(--ob-bg-primary));
-  --badge-shadow: var(--ob-badge-shadow, var(--ob-shadow-sm));
-  --badge-title-color: var(--ob-badge-title-color, var(--ob-text-primary));
-  --badge-text-color: var(--ob-badge-text-color, var(--ob-text-secondary));
-  --badge-hover-shadow: var(--ob-badge-hover-shadow, var(--ob-shadow-md));
+  --badge-background: var(--ob-badge-background, var(--ob-card));
+  --badge-shadow: var(--ob-badge-shadow, var(--ob-shadow-hard-md));
+  --badge-title-color: var(--ob-badge-title-color, var(--ob-foreground));
+  --badge-text-color: var(--ob-badge-text-color, var(--ob-muted-foreground));
+  --badge-hover-shadow: var(--ob-badge-hover-shadow, var(--ob-shadow-hard-lg));
   --badge-focus-outline-color: var(
     --ob-badge-focus-outline-color,
     var(--ob-primary)
@@ -206,7 +206,7 @@ const densityClass = computed(() => {
 
   display: flex;
   flex-direction: column;
-  border: var(--ob-border-width) solid var(--badge-border-color);
+  border: var(--ob-border-width-medium) solid var(--badge-border-color);
   border-radius: var(--badge-border-radius);
   padding: var(--badge-padding);
   background-color: var(--badge-background);
@@ -251,8 +251,11 @@ const densityClass = computed(() => {
 
 .ob-badge-display__title {
   margin: 0;
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   color: var(--badge-title-color);
 }
 
@@ -263,9 +266,19 @@ const densityClass = computed(() => {
   line-height: var(--ob-line-height-normal);
 }
 
-.ob-badge-display__issuer,
+.ob-badge-display__issuer {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
+  color: var(--ob-muted-foreground);
+}
+
 .ob-badge-display__date,
-.ob-badge-display__expiry,
+.ob-badge-display__expiry {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
+  color: var(--ob-muted-foreground);
+}
+
 .ob-badge-display__verification-toggle {
   font-size: var(--ob-font-size-xs);
   color: var(--badge-text-color);
@@ -278,14 +291,15 @@ const densityClass = computed(() => {
   padding: var(--ob-space-2);
   background-color: var(--ob-bg-secondary);
   border-radius: var(--ob-border-radius-sm);
-  border: var(--ob-border-width) solid var(--badge-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
 }
 
 .ob-badge-display__recipient-name,
 .ob-badge-display__recipient-email,
 .ob-badge-display__recipient-role {
+  font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-xs);
-  color: var(--badge-text-color);
+  color: var(--ob-muted-foreground);
 }
 
 .ob-badge-display__verification-toggle-button {
@@ -304,7 +318,7 @@ const densityClass = computed(() => {
 
 .ob-badge-display__verification-container {
   margin-top: var(--ob-space-3);
-  border-top: var(--ob-border-width) solid var(--badge-border-color);
+  border-top: var(--ob-border-width-medium) solid var(--badge-border-color);
   padding-top: var(--ob-space-3);
 }
 

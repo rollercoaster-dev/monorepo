@@ -439,32 +439,32 @@ const resetForm = () => {
 
 <style>
 .ob-badge-issuer-form {
-  --form-border-color: var(--ob-form-border-color, var(--ob-border-color));
-  --form-background: var(--ob-form-background, var(--ob-bg-primary));
-  --form-text-color: var(--ob-form-text-color, var(--ob-text-primary));
-  --form-label-color: var(--ob-form-label-color, var(--ob-text-secondary));
-  --form-input-border: var(--ob-form-input-border, var(--ob-gray-300));
+  --form-border-color: var(--ob-form-border-color, var(--ob-border));
+  --form-background: var(--ob-form-background, var(--ob-card));
+  --form-text-color: var(--ob-form-text-color, var(--ob-foreground));
+  --form-label-color: var(--ob-form-label-color, var(--ob-muted-foreground));
+  --form-input-border: var(--ob-form-input-border, var(--ob-border));
   --form-input-focus: var(--ob-form-input-focus, var(--ob-primary));
   --form-error-color: var(--ob-form-error-color, var(--ob-error));
   --form-success-color: var(--ob-form-success-color, var(--ob-success));
-  --form-help-color: var(--ob-form-help-color, var(--ob-text-secondary));
-  --form-button-primary-bg: var(--ob-form-button-primary-bg, var(--ob-primary));
+  --form-help-color: var(--ob-form-help-color, var(--ob-muted-foreground));
+  --form-button-primary-bg: var(
+    --ob-form-button-primary-bg,
+    var(--ob-highlight)
+  );
   --form-button-primary-color: var(
     --ob-form-button-primary-color,
-    var(--ob-text-inverse)
+    var(--ob-highlight-foreground)
   );
   --form-button-secondary-bg: var(
     --ob-form-button-secondary-bg,
-    var(--ob-gray-200)
+    var(--ob-muted)
   );
   --form-button-secondary-color: var(
     --ob-form-button-secondary-color,
-    var(--ob-text-secondary)
+    var(--ob-foreground)
   );
-  --form-button-disabled-bg: var(
-    --ob-form-button-disabled-bg,
-    var(--ob-gray-100)
-  );
+  --form-button-disabled-bg: var(--ob-form-button-disabled-bg, var(--ob-muted));
   --form-button-disabled-color: var(
     --ob-form-button-disabled-color,
     var(--ob-text-disabled)
@@ -474,8 +474,9 @@ const resetForm = () => {
   margin: 0 auto;
   padding: var(--ob-space-6);
   background-color: var(--form-background);
-  border: var(--ob-border-width) solid var(--form-border-color);
-  border-radius: var(--ob-border-radius-lg);
+  border: var(--ob-border-width-medium) solid var(--form-border-color);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-md);
   color: var(--form-text-color);
   font-family: var(--ob-font-family);
 }
@@ -487,11 +488,14 @@ const resetForm = () => {
 }
 
 .ob-badge-issuer-form__section-title {
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   margin-bottom: var(--ob-space-4);
   padding-bottom: var(--ob-space-2);
-  border-bottom: var(--ob-border-width) solid var(--form-border-color);
+  border-bottom: var(--ob-border-width-medium) solid var(--form-border-color);
 }
 
 .ob-badge-issuer-form__field {
@@ -509,13 +513,13 @@ const resetForm = () => {
 .ob-badge-issuer-form__textarea {
   width: 100%;
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: var(--ob-border-width) solid var(--form-input-border);
+  border: var(--ob-border-width-medium) solid var(--form-input-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
   line-height: var(--ob-line-height-normal);
   transition: border-color var(--ob-transition-fast) ease;
   color: var(--form-text-color);
-  background: var(--form-background);
+  background: var(--ob-background);
 }
 
 .ob-badge-issuer-form__input:focus,
@@ -550,11 +554,14 @@ const resetForm = () => {
 
 .ob-badge-issuer-form__button {
   padding: var(--ob-space-2) var(--ob-space-4);
-  border: none;
+  border: var(--ob-border-width-medium) solid currentColor;
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
   cursor: pointer;
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast) ease;
 }
 

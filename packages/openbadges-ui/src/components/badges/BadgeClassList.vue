@@ -361,19 +361,19 @@ const hasActiveFilters = computed(() => {
 <style>
 .ob-badge-class-list {
   --ob-badge-class-list-gap: var(--ob-space-4);
-  --ob-badge-class-list-empty-color: var(--ob-text-secondary);
+  --ob-badge-class-list-empty-color: var(--ob-muted-foreground);
   --ob-badge-class-list-pagination-gap: var(--ob-space-2);
-  --ob-badge-class-list-button-bg: var(--ob-gray-200);
-  --ob-badge-class-list-button-color: var(--ob-text-secondary);
-  --ob-badge-class-list-button-hover-bg: var(--ob-gray-300);
-  --ob-badge-class-list-button-disabled-bg: var(--ob-gray-100);
+  --ob-badge-class-list-button-bg: var(--ob-muted);
+  --ob-badge-class-list-button-color: var(--ob-foreground);
+  --ob-badge-class-list-button-hover-bg: var(--ob-highlight);
+  --ob-badge-class-list-button-disabled-bg: var(--ob-muted);
   --ob-badge-class-list-button-disabled-color: var(--ob-text-disabled);
 
   display: flex;
   flex-direction: column;
   gap: var(--ob-badge-class-list-gap);
   font-family: var(--ob-font-family);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-badge-class-list.ob-badge-class-list--density-compact {
@@ -393,17 +393,22 @@ const hasActiveFilters = computed(() => {
   gap: var(--ob-space-3);
   align-items: center;
   flex-wrap: wrap;
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-3);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-class-list__search,
 .ob-badge-class-list__filter,
 .ob-badge-class-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: var(--ob-border-width) solid var(--ob-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
-  color: var(--ob-text-primary);
-  background: var(--ob-bg-primary);
+  color: var(--ob-foreground);
+  background: var(--ob-background);
 }
 
 .ob-badge-class-list__search {
@@ -414,12 +419,16 @@ const hasActiveFilters = computed(() => {
 .ob-badge-class-list__clear-btn {
   padding: var(--ob-space-2) var(--ob-space-3);
   background-color: transparent;
-  border: var(--ob-border-width) solid var(--ob-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
-  font-size: var(--ob-font-size-sm);
-  color: var(--ob-text-secondary);
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  color: var(--ob-muted-foreground);
   cursor: pointer;
   transition: background-color var(--ob-transition-fast) ease;
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-class-list__clear-btn:hover {
@@ -475,11 +484,14 @@ const hasActiveFilters = computed(() => {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--ob-badge-class-list-button-bg);
   color: var(--ob-badge-class-list-button-color);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
   font-size: var(--ob-font-size-sm);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast) ease;
 }
 

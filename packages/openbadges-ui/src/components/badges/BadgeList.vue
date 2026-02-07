@@ -317,24 +317,24 @@ const handleDensityChange = (event: Event) => {
   --badge-list-gap: var(--ob-badge-list-gap, var(--ob-space-4));
   --badge-list-empty-color: var(
     --ob-badge-list-empty-color,
-    var(--ob-text-secondary)
+    var(--ob-muted-foreground)
   );
   --badge-list-pagination-gap: var(
     --ob-badge-list-pagination-gap,
     var(--ob-space-2)
   );
-  --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-gray-200));
+  --badge-list-button-bg: var(--ob-badge-list-button-bg, var(--ob-muted));
   --badge-list-button-color: var(
     --ob-badge-list-button-color,
-    var(--ob-text-secondary)
+    var(--ob-foreground)
   );
   --badge-list-button-hover-bg: var(
     --ob-badge-list-button-hover-bg,
-    var(--ob-gray-300)
+    var(--ob-highlight)
   );
   --badge-list-button-disabled-bg: var(
     --ob-badge-list-button-disabled-bg,
-    var(--ob-gray-100)
+    var(--ob-muted)
   );
   --badge-list-button-disabled-color: var(
     --ob-badge-list-button-disabled-color,
@@ -345,7 +345,7 @@ const handleDensityChange = (event: Event) => {
   flex-direction: column;
   gap: var(--badge-list-gap);
   font-family: var(--ob-font-family);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-badge-list.ob-badge-list--density-compact {
@@ -366,17 +366,22 @@ const handleDensityChange = (event: Event) => {
   align-items: center;
   margin-bottom: var(--ob-space-3);
   flex-wrap: wrap;
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  padding: var(--ob-space-3);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-list__filter-input,
 .ob-badge-list__filter-select,
 .ob-badge-list__density-select {
   padding: var(--ob-space-2) var(--ob-space-3);
-  border: var(--ob-border-width) solid var(--ob-border-color);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   font-size: var(--ob-font-size-md);
-  color: var(--ob-text-primary);
-  background: var(--ob-bg-primary);
+  color: var(--ob-foreground);
+  background: var(--ob-background);
 }
 
 .ob-badge-list__loading,
@@ -406,10 +411,11 @@ const handleDensityChange = (event: Event) => {
 .ob-badge-list.ob-badge-list--grid-layout .ob-badge-list__item {
   display: flex;
   flex-direction: column;
-  background: var(--ob-bg-primary);
-  border: var(--ob-border-width) solid var(--ob-border-color);
-  border-radius: var(--ob-border-radius-lg);
+  background: var(--ob-card);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
   padding: var(--ob-space-3);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-list__pagination {
@@ -425,11 +431,14 @@ const handleDensityChange = (event: Event) => {
   padding: var(--ob-space-2) var(--ob-space-4);
   background-color: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   cursor: pointer;
   font-size: var(--ob-font-size-sm);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast);
 }
 
@@ -466,13 +475,17 @@ const handleDensityChange = (event: Event) => {
 .badge-expand-btn {
   margin-left: var(--ob-space-4);
   padding: var(--ob-space-1) var(--ob-space-3);
-  border: none;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
   border-radius: var(--ob-border-radius-sm);
   background: var(--badge-list-button-bg);
   color: var(--badge-list-button-color);
-  font-size: var(--ob-font-size-sm);
+  font-size: var(--ob-font-size-xs);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
   cursor: pointer;
   align-self: flex-end;
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .badge-summary:focus-visible,
@@ -483,16 +496,18 @@ const handleDensityChange = (event: Event) => {
 
 .badge-details {
   background: var(--ob-bg-secondary);
+  border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
   border-radius: var(--ob-border-radius-sm);
   margin-top: var(--ob-space-2);
   padding: var(--ob-space-3);
+  font-family: var(--ob-font-mono);
   font-size: var(--ob-font-size-sm);
-  color: var(--ob-text-primary);
+  color: var(--ob-foreground);
 }
 
 .ob-badge-list__item.is-expanded {
   background: var(--ob-bg-secondary);
-  border-radius: var(--ob-border-radius-md);
+  border-radius: var(--ob-border-radius-sm);
 }
 
 /* Responsive adjustments */

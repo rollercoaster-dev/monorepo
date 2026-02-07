@@ -148,11 +148,11 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 .ob-profile-viewer {
   --profile-padding: var(--ob-profile-padding, var(--ob-space-6));
   --profile-gap: var(--ob-profile-gap, var(--ob-space-8));
-  --profile-border-color: var(--ob-border-color);
-  --profile-background: var(--ob-bg-primary);
-  --profile-shadow: var(--ob-shadow-sm);
-  --profile-title-color: var(--ob-text-primary);
-  --profile-text-color: var(--ob-text-secondary);
+  --profile-border-color: var(--ob-border);
+  --profile-background: var(--ob-card);
+  --profile-shadow: var(--ob-shadow-hard-md);
+  --profile-title-color: var(--ob-foreground);
+  --profile-text-color: var(--ob-muted-foreground);
   --profile-link-color: var(--ob-primary);
 
   display: flex;
@@ -160,8 +160,8 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   gap: var(--profile-gap);
   padding: var(--profile-padding);
   background-color: var(--profile-background);
-  border: var(--ob-border-width) solid var(--profile-border-color);
-  border-radius: var(--ob-border-radius-lg);
+  border: var(--ob-border-width-medium) solid var(--profile-border-color);
+  border-radius: var(--ob-border-radius-sm);
   box-shadow: var(--profile-shadow);
   font-family: var(--ob-font-family);
   color: var(--profile-text-color);
@@ -202,8 +202,11 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 
 .ob-profile-viewer__name {
   margin: 0;
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-2xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
+  line-height: var(--ob-font-lineHeight-tight);
   color: var(--profile-title-color);
 }
 
@@ -232,6 +235,7 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 }
 
 .ob-profile-viewer__detail-value {
+  font-family: var(--ob-font-mono);
   color: var(--profile-link-color);
   text-decoration: none;
 }
@@ -242,8 +246,10 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
 
 .ob-profile-viewer__section-title {
   margin: 0 0 var(--ob-space-4);
+  font-family: var(--ob-font-headline);
   font-size: var(--ob-font-size-xl);
-  font-weight: var(--ob-font-weight-semibold);
+  font-weight: var(--ob-font-weight-bold);
+  letter-spacing: var(--ob-font-letterSpacing-tight);
   color: var(--profile-title-color);
 }
 

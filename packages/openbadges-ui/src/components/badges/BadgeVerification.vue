@@ -183,23 +183,54 @@ watch(
 
 <style>
 .ob-badge-verification {
-  --verification-border-color: var(--ob-verification-border-color);
-  --verification-background: var(--ob-verification-background);
-  --verification-text-color: var(--ob-verification-text-color);
-  --verification-valid-color: var(--ob-verification-valid-color);
-  --verification-invalid-color: var(--ob-verification-invalid-color);
-  --verification-warning-color: var(--ob-verification-warning-color);
-  --verification-button-bg: var(--ob-verification-button-bg);
-  --verification-button-color: var(--ob-verification-button-color);
-  --verification-button-hover-bg: var(--ob-verification-button-hover-bg);
-  --verification-button-disabled-bg: var(--ob-verification-button-disabled-bg);
-  --verification-label-color: var(--ob-verification-label-color);
+  --verification-border-color: var(
+    --ob-verification-border-color,
+    var(--ob-border)
+  );
+  --verification-background: var(--ob-verification-background, var(--ob-card));
+  --verification-text-color: var(
+    --ob-verification-text-color,
+    var(--ob-foreground)
+  );
+  --verification-valid-color: var(
+    --ob-verification-valid-color,
+    var(--ob-narrative-relief-accent)
+  );
+  --verification-invalid-color: var(
+    --ob-verification-invalid-color,
+    var(--ob-error)
+  );
+  --verification-warning-color: var(
+    --ob-verification-warning-color,
+    var(--ob-warning)
+  );
+  --verification-button-bg: var(
+    --ob-verification-button-bg,
+    var(--ob-highlight)
+  );
+  --verification-button-color: var(
+    --ob-verification-button-color,
+    var(--ob-highlight-foreground)
+  );
+  --verification-button-hover-bg: var(
+    --ob-verification-button-hover-bg,
+    var(--ob-primary)
+  );
+  --verification-button-disabled-bg: var(
+    --ob-verification-button-disabled-bg,
+    var(--ob-muted)
+  );
+  --verification-label-color: var(
+    --ob-verification-label-color,
+    var(--ob-muted-foreground)
+  );
 
   margin-top: var(--ob-space-4);
   padding: var(--ob-space-4);
-  border: var(--ob-border-width) solid var(--verification-border-color);
-  border-radius: var(--ob-border-radius-md);
+  border: var(--ob-border-width-medium) solid var(--verification-border-color);
+  border-radius: var(--ob-border-radius-sm);
   background-color: var(--verification-background);
+  box-shadow: var(--ob-shadow-hard-sm);
   color: var(--verification-text-color);
   font-family: var(--ob-font-family);
 }
@@ -236,12 +267,15 @@ watch(
 .ob-badge-verification-button {
   background-color: var(--verification-button-bg);
   color: var(--verification-button-color);
-  border: none;
+  border: var(--ob-border-width-medium) solid currentColor;
   border-radius: var(--ob-border-radius-sm);
   padding: var(--ob-space-2) var(--ob-space-4);
   cursor: pointer;
   font-size: var(--ob-font-size-sm);
-  font-weight: var(--ob-font-weight-medium);
+  font-weight: var(--ob-font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ob-font-letterSpacing-wide);
+  box-shadow: var(--ob-shadow-hard-sm);
   transition: background-color var(--ob-transition-fast);
 }
 
@@ -256,7 +290,8 @@ watch(
 
 .ob-badge-verification-details {
   margin-top: var(--ob-space-4);
-  border-top: var(--ob-border-width) solid var(--verification-border-color);
+  border-top: var(--ob-border-width-medium) solid
+    var(--verification-border-color);
   padding-top: var(--ob-space-4);
 }
 
@@ -268,6 +303,8 @@ watch(
 }
 
 .ob-badge-verification-label {
+  font-family: var(--ob-font-mono);
+  font-size: var(--ob-font-size-xs);
   color: var(--verification-label-color);
   margin-right: var(--ob-space-2);
   font-weight: var(--ob-font-weight-medium);
