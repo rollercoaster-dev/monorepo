@@ -6,6 +6,97 @@
  */
 
 /*
+ * Instrument Sans
+ * Primary body font from the landing page design language.
+ * Used for all UI text: headings, body, labels, buttons.
+ */
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/instrument-sans/instrument-sans-400.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/instrument-sans/instrument-sans-500.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/instrument-sans/instrument-sans-600.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/instrument-sans/instrument-sans-700.woff2")
+    format("woff2");
+}
+
+/*
+ * Anybody
+ * Display/headline font from the landing page design language.
+ * Used only for hero/splash display text, not regular headings.
+ */
+@font-face {
+  font-family: "Anybody";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/anybody/anybody-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Anybody";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/anybody/anybody-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Anybody";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("../assets/fonts/anybody/anybody-900.woff2") format("woff2");
+}
+
+/*
+ * DM Mono
+ * Monospace font from the landing page design language.
+ * Used for code blocks, token names, and technical metadata.
+ */
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/dm-mono/dm-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/dm-mono/dm-mono-500.woff2") format("woff2");
+}
+
+/*
  * Inter
  * A modern, highly legible sans-serif font designed for computer screens.
  */

@@ -78,6 +78,7 @@
   ],
   "devDependencies": {
     "@histoire/plugin-vue": "^0.17.6",
+    "@rollercoaster-dev/design-tokens": "workspace:*",
     "@rollercoaster-dev/shared-config": "workspace:*",
     "@types/uuid": "^9.0.0",
     "@vitejs/plugin-vue": "^4.0.0",

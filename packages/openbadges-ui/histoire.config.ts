@@ -54,6 +54,11 @@ export default defineConfig({
   tree: {
     groups: [
       {
+        id: "design-system",
+        title: "Design System",
+        include: (file) => file.title?.startsWith("Design System/"),
+      },
+      {
         id: "components",
         title: "Components",
       },
