@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-gray-50">
+  <div class="min-h-screen flex flex-col bg-background">
     <!-- Main Navigation -->
     <MainNavigation />
 
@@ -28,11 +28,11 @@ import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-8">
+    <footer class="bg-card border-t border-border mt-8">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="text-center md:text-left mb-4 md:mb-0">
-            <p class="text-sm text-gray-500">
+            <p class="text-sm text-muted-foreground">
               &copy; {{ new Date().getFullYear() }} OpenBadges Demo. All rights reserved.
             </p>
           </div>
@@ -41,7 +41,7 @@ import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
               href="https://github.com/rollercoaster-dev/monorepo/tree/main/apps/openbadges-system"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-400 hover:text-gray-500 transition-colors duration-200"
+              class="text-muted-foreground hover:text-foreground transition-colors duration-200"
               aria-label="View source code on GitHub"
             >
               <span class="sr-only">GitHub</span>
@@ -57,7 +57,7 @@ import Breadcrumb from '@/components/Navigation/Breadcrumb.vue'
               href="https://openbadges.org/"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-400 hover:text-gray-500 transition-colors duration-200"
+              class="text-muted-foreground hover:text-foreground transition-colors duration-200"
               aria-label="Learn more about OpenBadges"
             >
               <span class="sr-only">OpenBadges</span>
