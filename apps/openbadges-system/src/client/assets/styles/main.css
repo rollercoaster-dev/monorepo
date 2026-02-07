@@ -1,25 +1,15 @@
+@import '@rollercoaster-dev/design-tokens/css';
+@import '@rollercoaster-dev/design-tokens/css/themes';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Base styles */
-:root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --secondary: #6b7280;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  --light: #f9fafb;
-  --dark: #111827;
-}
-
-/* Base styles */
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.5;
+  @apply bg-background text-foreground antialiased;
+  font-family: var(--ob-font-family);
+  line-height: var(--ob-line-height-normal);
 }
 
 /* Container */
@@ -29,47 +19,64 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
-  @apply font-bold leading-tight text-slate-900;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-bold leading-tight text-foreground;
 }
 
-h1 { @apply text-4xl md:text-5xl; }
-h2 { @apply text-3xl md:text-4xl; }
-h3 { @apply text-2xl md:text-3xl; }
-h4 { @apply text-xl md:text-2xl; }
-h5 { @apply text-lg md:text-xl; }
-h6 { @apply text-base md:text-lg; }
+h1 {
+  @apply text-4xl md:text-5xl;
+}
+h2 {
+  @apply text-3xl md:text-4xl;
+}
+h3 {
+  @apply text-2xl md:text-3xl;
+}
+h4 {
+  @apply text-xl md:text-2xl;
+}
+h5 {
+  @apply text-lg md:text-xl;
+}
+h6 {
+  @apply text-base md:text-lg;
+}
 
 /* Links */
 a {
-  @apply text-primary-600 hover:text-primary-800 transition-colors duration-200;
+  @apply text-primary hover:text-primary-dark transition-colors duration-200;
 }
 
 /* Buttons */
 .btn {
-  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-hard-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
 }
 
 .btn-primary {
-  @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  @apply bg-primary text-primary-foreground hover:bg-primary-dark focus:ring-ring;
 }
 
 .btn-secondary {
-  @apply bg-white text-slate-700 border-slate-300 hover:bg-slate-50 focus:ring-primary-500;
+  @apply bg-card text-card-foreground border-border hover:bg-muted focus:ring-ring;
 }
 
 /* Forms */
 .form-input {
-  @apply block w-full rounded-md border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+  @apply block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring sm:text-sm;
 }
 
 /* Cards */
 .card {
-  @apply bg-white overflow-hidden shadow rounded-lg;
+  @apply bg-card overflow-hidden shadow-hard-md rounded-lg border border-border;
 }
 
 .card-header {
-  @apply px-4 py-5 sm:px-6 border-b border-slate-200;
+  @apply px-4 py-5 sm:px-6 border-b border-border;
 }
 
 .card-body {
@@ -77,7 +84,7 @@ a {
 }
 
 .card-footer {
-  @apply px-4 py-4 sm:px-6 bg-slate-50 border-t border-slate-200;
+  @apply px-4 py-4 sm:px-6 bg-muted border-t border-border;
 }
 
 /* Alerts */
@@ -86,24 +93,30 @@ a {
 }
 
 .alert-success {
-  @apply bg-green-50 text-green-800;
+  background-color: var(--ob-color-success-light);
+  color: var(--ob-success);
 }
 
 .alert-error {
-  @apply bg-red-50 text-red-800;
+  background-color: var(--ob-color-error-light);
+  color: var(--ob-destructive);
 }
 
 .alert-warning {
-  @apply bg-yellow-50 text-yellow-800;
+  background-color: var(--ob-color-warning-light);
+  color: var(--ob-warning);
 }
 
 .alert-info {
-  @apply bg-blue-50 text-blue-800;
+  background-color: var(--ob-color-info-light);
+  color: var(--ob-info);
 }
 
 /* Animations */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-spin {
@@ -113,7 +126,7 @@ a {
 /* Transitions */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity var(--ob-transition-normal) ease;
 }
 
 .fade-enter-from,
