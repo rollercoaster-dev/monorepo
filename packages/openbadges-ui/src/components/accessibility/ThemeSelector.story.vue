@@ -44,7 +44,7 @@ const customThemes = ref([
     className: "ob-default-theme",
   },
   {
-    id: "dyslexia",
+    id: "dyslexia-friendly",
     name: "Dyslexia-Friendly",
     description: "Optimized for readers with dyslexia",
     className: "ob-dyslexia-friendly-theme",

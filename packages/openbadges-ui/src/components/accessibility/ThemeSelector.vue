@@ -59,7 +59,7 @@ const props = withDefaults(defineProps<ThemeSelectorProps>(), {
       className: "ob-large-text-theme",
     },
     {
-      id: "dyslexia",
+      id: "dyslexia-friendly",
       name: "Warm Studio",
       description:
         "Optimized for readers with dyslexia, with improved spacing and readability",
@@ -78,7 +78,7 @@ const props = withDefaults(defineProps<ThemeSelectorProps>(), {
       className: "ob-low-info-theme",
     },
     {
-      id: "autism",
+      id: "autism-friendly",
       name: "Still Water",
       description: "Predictable layouts with reduced sensory stimulation",
       className: "ob-autism-friendly-theme",
