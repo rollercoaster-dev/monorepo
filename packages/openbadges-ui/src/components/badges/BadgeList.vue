@@ -167,6 +167,35 @@ const handlePageChange = (page: number) => {
   emit("page-change", page);
 };
 
+// Escape HTML entities to prevent XSS in v-html
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+};
+
+// Syntax-highlight JSON for display
+const highlightJson = (obj: unknown): string => {
+  const raw = JSON.stringify(obj, null, 2);
+  const escaped = escapeHtml(raw);
+  return escaped.replace(
+    /(&quot;(\\u[\da-fA-F]{4}|\\[^u]|[^\\&])*?&quot;)(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?/g,
+    (match, _str, _inner, colon) => {
+      let cls = "json-number";
+      if (match.startsWith("&quot;")) {
+        cls = colon ? "json-key" : "json-string";
+      } else if (/^(true|false)$/.test(match)) {
+        cls = "json-boolean";
+      } else if (match === "null") {
+        cls = "json-null";
+      }
+      return `<span class="${cls}">${match}</span>`;
+    },
+  );
+};
+
 // Handle density change
 const handleDensityChange = (event: Event) => {
   const target = event.target as HTMLSelectElement;
@@ -274,7 +303,8 @@ const handleDensityChange = (event: Event) => {
           class="badge-details"
           tabindex="0"
         >
-          <pre>{{ badge }}</pre>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <pre v-html="highlightJson(badge)" />
         </div>
       </li>
     </ul>
@@ -495,14 +525,41 @@ const handleDensityChange = (event: Event) => {
 }
 
 .badge-details {
-  background: var(--ob-bg-secondary);
+  background: #1e1e2e;
   border: var(--ob-border-width-medium) solid var(--ob-stroke-muted);
   border-radius: var(--ob-border-radius-sm);
   margin-top: var(--ob-space-2);
   padding: var(--ob-space-3);
   font-family: var(--ob-font-mono);
-  font-size: var(--ob-font-size-sm);
-  color: var(--ob-foreground);
+  font-size: var(--ob-font-size-xs);
+  color: #cdd6f4;
+  overflow-x: auto;
+}
+
+.badge-details pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.badge-details .json-key {
+  color: #89b4fa;
+}
+
+.badge-details .json-string {
+  color: #a6e3a1;
+}
+
+.badge-details .json-number {
+  color: #fab387;
+}
+
+.badge-details .json-boolean {
+  color: #cba6f7;
+}
+
+.badge-details .json-null {
+  color: #f38ba8;
 }
 
 .ob-badge-list__item.is-expanded {
