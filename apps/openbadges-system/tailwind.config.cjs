@@ -1,5 +1,7 @@
 const { obTokens } = require('@rollercoaster-dev/design-tokens/tailwind')
 
+// Bun's require() of ESM modules returns frozen objects. Tailwind's resolveConfig
+// mutates config in-place, so we must clone values into mutable plain objects.
 const preset = obTokens.theme.extend
 
 /** @type {import('tailwindcss').Config} */
@@ -8,10 +10,11 @@ module.exports = {
   theme: {
     extend: {
       // --- Safe to import from preset (static, non-themeable) ---
-      spacing: preset.spacing,
-      fontWeight: preset.fontWeight,
-      transitionDuration: preset.transitionDuration,
-      zIndex: preset.zIndex,
+      // Spread into new objects to avoid "assign to readonly property" errors.
+      spacing: { ...preset.spacing },
+      fontWeight: { ...preset.fontWeight },
+      transitionDuration: { ...preset.transitionDuration },
+      zIndex: { ...preset.zIndex },
 
       // Named font families from preset + runtime CSS variable for theme switching
       fontFamily: {
