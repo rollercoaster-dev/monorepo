@@ -231,47 +231,38 @@ function onVerified(isValid: boolean): void {
           </tbody>
         </table>
 
-        <h2>CSS Variables</h2>
+        <h2>Design Tokens</h2>
         <p>
-          The component uses CSS variables for styling, which can be overridden
-          to customize its appearance:
+          This component follows the neo-brutalist design language using
+          <code>@rollercoaster-dev/design-tokens</code>. Key visual traits:
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Default</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>--badge-border-color</code></td>
-              <td><code>#e2e8f0</code></td>
-              <td>The color of the badge border</td>
-            </tr>
-            <tr>
-              <td><code>--badge-border-radius</code></td>
-              <td><code>8px</code></td>
-              <td>The border radius of the badge</td>
-            </tr>
-            <tr>
-              <td><code>--badge-background</code></td>
-              <td><code>#ffffff</code></td>
-              <td>The background color of the badge</td>
-            </tr>
-            <tr>
-              <td><code>--badge-title-color</code></td>
-              <td><code>#1a202c</code></td>
-              <td>The color of the badge title</td>
-            </tr>
-            <tr>
-              <td><code>--badge-text-color</code></td>
-              <td><code>#4a5568</code></td>
-              <td>The color of the badge text</td>
-            </tr>
-          </tbody>
-        </table>
+        <ul>
+          <li>
+            <strong>2px borders</strong> via
+            <code>--ob-border-width-medium</code>
+          </li>
+          <li>
+            <strong>Hard offset shadows</strong> via
+            <code>--ob-shadow-hard-md</code> (hover:
+            <code>--ob-shadow-hard-lg</code>)
+          </li>
+          <li>
+            <strong>Anybody font</strong> for titles via
+            <code>--ob-font-headline</code>
+          </li>
+          <li>
+            <strong>Theme-adaptive radii</strong> via
+            <code>--ob-border-radius-sm</code>
+          </li>
+          <li>
+            <strong>Focus ring</strong> via
+            <code>--ob-shadow-focus</code> (keyboard only)
+          </li>
+        </ul>
+        <p>
+          All 8 accessibility themes are supported. Use Histoire's theme
+          switcher to preview each theme.
+        </p>
 
         <h2>Accessibility</h2>
         <p>The component includes several accessibility features:</p>
