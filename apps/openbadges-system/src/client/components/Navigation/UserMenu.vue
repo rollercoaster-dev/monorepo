@@ -101,7 +101,7 @@ onUnmounted(() => {
       <div v-if="!isAuthenticated" class="flex items-center space-x-2">
         <RouterLink
           to="/auth/login"
-          class="text-foreground hover:text-foreground px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted"
+          class="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted"
         >
           Sign In
         </RouterLink>
@@ -117,7 +117,7 @@ onUnmounted(() => {
       <div v-else class="flex items-center space-x-3">
         <!-- Notifications -->
         <button
-          class="relative p-2 text-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+          class="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Notifications"
         >
           <BellIcon class="w-5 h-5" aria-hidden="true" />

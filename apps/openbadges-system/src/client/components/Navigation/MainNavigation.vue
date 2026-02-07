@@ -105,7 +105,7 @@ const getNavItemClass = (item: any) => {
     ? isActiveRoute(item.to)
     : item.children?.some((child: any) => isActiveRoute(child.to))
   return {
-    'text-primary bg-primary/10': isActive,
+    'text-primary bg-primary-light': isActive,
     'text-foreground': !isActive,
   }
 }
@@ -115,7 +115,7 @@ const getMobileNavItemClass = (item: any) => {
     ? isActiveRoute(item.to)
     : item.children?.some((child: any) => isActiveRoute(child.to))
   return {
-    'text-primary bg-primary/10': isActive,
+    'text-primary bg-primary-light': isActive,
     'text-foreground': !isActive,
   }
 }

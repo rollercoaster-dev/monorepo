@@ -18,7 +18,7 @@ const { currentTheme, setTheme } = useTheme()
         <!-- Breadcrumb Navigation & Accessibility Settings -->
         <div class="py-4 flex items-center justify-between">
           <Breadcrumb />
-          <AccessibilitySettings :theme="currentTheme" @update:theme="setTheme" />
+          <AccessibilitySettings class="ml-auto" :theme="currentTheme" @update:theme="setTheme" />
         </div>
 
         <!-- Page Content -->
