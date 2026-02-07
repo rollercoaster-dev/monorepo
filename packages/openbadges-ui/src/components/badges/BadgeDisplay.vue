@@ -241,6 +241,8 @@ const densityClass = computed(() => {
   height: auto;
   max-height: 150px;
   border-radius: var(--ob-border-radius-sm);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .ob-badge-display__content {

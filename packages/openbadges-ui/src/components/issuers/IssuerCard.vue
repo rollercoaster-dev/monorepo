@@ -207,6 +207,8 @@ const truncatedDescription = computed(() => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
   object-fit: cover;
 }
 
@@ -214,6 +216,8 @@ const truncatedDescription = computed(() => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
   background-color: var(--issuer-fallback-bg);
   display: flex;
   align-items: center;

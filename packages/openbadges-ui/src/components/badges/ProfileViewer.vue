@@ -179,6 +179,8 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   width: 100px;
   height: 100px;
   border-radius: 50%;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
   overflow: hidden;
 }
 
@@ -194,8 +196,8 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--ob-gray-700);
-  color: var(--ob-text-inverse);
+  background-color: var(--ob-highlight);
+  color: var(--ob-highlight-foreground);
   font-size: var(--ob-font-size-2xl);
   font-weight: var(--ob-font-weight-bold);
 }

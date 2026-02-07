@@ -307,6 +307,8 @@ const truncatedCriteria = computed(() => {
   height: auto;
   max-height: 120px;
   border-radius: var(--ob-border-radius-sm);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
   object-fit: contain;
 }
 
@@ -314,6 +316,8 @@ const truncatedCriteria = computed(() => {
   width: 80px;
   height: 80px;
   border-radius: var(--ob-border-radius-sm);
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  box-shadow: var(--ob-shadow-hard-sm);
   background-color: var(--badge-class-fallback-bg);
   display: flex;
   align-items: center;
