@@ -68,7 +68,7 @@ a {
 
 .btn-primary {
   @apply bg-primary text-primary-foreground hover:bg-primary-dark;
-  border-color: var(--ob-border);
+  border-color: var(--ob-primary);
 }
 
 .btn-secondary {
