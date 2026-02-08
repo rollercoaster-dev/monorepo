@@ -522,9 +522,10 @@ const resetForm = () => {
   background: var(--ob-background);
 }
 
-.ob-badge-issuer-form__input:focus,
-.ob-badge-issuer-form__textarea:focus {
-  outline: none;
+.ob-badge-issuer-form__input:focus-visible,
+.ob-badge-issuer-form__textarea:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
   border-color: var(--form-input-focus);
   box-shadow: var(--ob-shadow-focus);
 }
@@ -587,6 +588,12 @@ const resetForm = () => {
   background-color: var(--form-button-disabled-bg);
   color: var(--form-button-disabled-color);
   cursor: not-allowed;
+}
+
+.ob-badge-issuer-form__button:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-badge-issuer-form__errors {

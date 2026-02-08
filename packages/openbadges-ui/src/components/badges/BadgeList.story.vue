@@ -285,6 +285,36 @@ function onPageChange(page) {
           </tbody>
         </table>
 
+        <h2>Design Tokens</h2>
+        <p>
+          This component follows the neo-brutalist design language using
+          <code>@rollercoaster-dev/design-tokens</code>. Key visual traits:
+        </p>
+        <ul>
+          <li>
+            <strong>2px borders</strong> via
+            <code>--ob-border-width-medium</code>
+          </li>
+          <li>
+            <strong>Hard offset shadows</strong> via
+            <code>--ob-shadow-hard-sm</code> on controls and buttons
+          </li>
+          <li>
+            <strong>Theme-adaptive JSON highlighting</strong> using semantic
+            tokens (<code>--ob-primary</code>, <code>--ob-success</code>,
+            <code>--ob-warning</code>, <code>--ob-accent</code>,
+            <code>--ob-error</code>)
+          </li>
+          <li>
+            <strong>Focus ring</strong> via
+            <code>--ob-shadow-focus</code> (keyboard only)
+          </li>
+        </ul>
+        <p>
+          All 8 accessibility themes are supported. Use Histoire's theme
+          switcher to preview each theme.
+        </p>
+
         <h2>Accessibility</h2>
         <p>The component includes several accessibility features:</p>
         <ul>

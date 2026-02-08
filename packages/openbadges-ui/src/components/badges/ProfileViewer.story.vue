@@ -142,6 +142,37 @@ function onBadgeClick(badge) {
             </tr>
           </tbody>
         </table>
+        <h2>Design Tokens</h2>
+        <p>
+          This component follows the neo-brutalist design language using
+          <code>@rollercoaster-dev/design-tokens</code>. Key visual traits:
+        </p>
+        <ul>
+          <li>
+            <strong>2px borders</strong> via
+            <code>--ob-border-width-medium</code>
+          </li>
+          <li>
+            <strong>Hard offset shadows</strong> via
+            <code>--ob-shadow-hard-md</code>
+          </li>
+          <li>
+            <strong>Anybody font</strong> for titles via
+            <code>--ob-font-headline</code>
+          </li>
+          <li>
+            <strong>Circular avatar</strong> with hard shadow and thick border
+          </li>
+          <li>
+            <strong>Focus ring</strong> via
+            <code>--ob-shadow-focus</code> (keyboard only) on links
+          </li>
+        </ul>
+        <p>
+          All 8 accessibility themes are supported. Use Histoire's theme
+          switcher to preview each theme.
+        </p>
+
         <h2>Accessibility</h2>
         <ul>
           <li>Profile and badges are grouped with appropriate ARIA roles</li>

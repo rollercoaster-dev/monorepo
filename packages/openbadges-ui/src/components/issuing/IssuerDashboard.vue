@@ -356,9 +356,17 @@ onMounted(() => {
   outline: none;
 }
 
-.ob-issuer-dashboard__tab-panel:focus {
+.ob-issuer-dashboard__tab-panel:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
   border-radius: var(--ob-border-radius-sm);
+}
+
+.ob-issuer-dashboard__tab-button:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-dashboard__controls {
@@ -393,6 +401,14 @@ onMounted(() => {
 
 .ob-issuer-dashboard__filter-input {
   width: var(--ob-input-width-md, 12.5rem);
+}
+
+.ob-issuer-dashboard__filter-input:focus-visible,
+.ob-issuer-dashboard__sort-select:focus-visible,
+.ob-issuer-dashboard__button:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-dashboard__loading,

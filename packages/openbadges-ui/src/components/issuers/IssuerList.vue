@@ -320,6 +320,13 @@ const handleDensityChange = (event: Event) => {
   min-width: 200px;
 }
 
+.ob-issuer-list__search:focus-visible,
+.ob-issuer-list__density-select:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .ob-issuer-list__loading,
 .ob-issuer-list__empty {
   padding: var(--ob-space-6);
@@ -407,6 +414,7 @@ const handleDensityChange = (event: Event) => {
 .ob-issuer-list__pagination-button:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-issuer-list__pagination-info {

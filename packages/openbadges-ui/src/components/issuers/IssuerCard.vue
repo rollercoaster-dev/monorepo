@@ -167,7 +167,6 @@ const truncatedDescription = computed(() => {
   --issuer-text-color: var(--ob-muted-foreground);
   --issuer-link-color: var(--ob-primary);
   --issuer-hover-shadow: var(--ob-shadow-hard-lg);
-  --issuer-focus-outline-color: var(--ob-primary);
   --issuer-fallback-bg: var(--ob-highlight);
   --issuer-fallback-color: var(--ob-highlight-foreground);
 
@@ -191,11 +190,6 @@ const truncatedDescription = computed(() => {
 
 .ob-issuer-card.is-interactive:hover {
   box-shadow: var(--issuer-hover-shadow);
-}
-
-.ob-issuer-card.is-interactive:focus {
-  outline: var(--ob-border-width-medium) solid var(--issuer-focus-outline-color);
-  outline-offset: var(--ob-space-1);
 }
 
 .ob-issuer-card__image {
@@ -347,8 +341,8 @@ const truncatedDescription = computed(() => {
 
 .ob-issuer-card__url a:focus-visible,
 .ob-issuer-card__email a:focus-visible {
-  outline: var(--ob-border-width-medium) solid var(--ob-border-color-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
-  background: var(--ob-warning-light);
+  box-shadow: var(--ob-shadow-focus);
 }
 </style>

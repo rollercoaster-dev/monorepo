@@ -246,6 +246,12 @@ const handleBadgeClick = (badge: OB2.Assertion | OB3.VerifiableCredential) => {
   text-decoration: underline;
 }
 
+.ob-profile-viewer__detail-value:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .ob-profile-viewer__section-title {
   margin: 0 0 var(--ob-space-4);
   font-family: var(--ob-font-headline);

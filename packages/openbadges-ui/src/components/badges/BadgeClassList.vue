@@ -435,6 +435,15 @@ const hasActiveFilters = computed(() => {
   background-color: var(--ob-bg-secondary);
 }
 
+.ob-badge-class-list__clear-btn:focus-visible,
+.ob-badge-class-list__search:focus-visible,
+.ob-badge-class-list__filter:focus-visible,
+.ob-badge-class-list__density-select:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
+}
+
 .ob-badge-class-list__loading,
 .ob-badge-class-list__empty {
   padding: var(--ob-space-6);
@@ -541,6 +550,7 @@ const hasActiveFilters = computed(() => {
 .ob-badge-class-list__pagination-button:focus-visible {
   outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
   outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .ob-badge-class-list__pagination-info {
