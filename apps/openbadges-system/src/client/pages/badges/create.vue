@@ -162,7 +162,7 @@ const handleCancel = () => {
 
 <template>
   <div class="max-w-4xl mx-auto mt-8 card card-body">
-    <h1 class="text-2xl font-bold mb-6">Create New Badge Class</h1>
+    <h1 class="font-headline text-2xl font-bold text-foreground mb-6">Create New Badge Class</h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Badge Creation Form -->

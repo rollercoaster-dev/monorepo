@@ -300,7 +300,7 @@ onMounted(() => {
 
 <template>
   <div class="max-w-4xl mx-auto mt-8 card card-body">
-    <h1 class="text-2xl font-bold mb-6">Issue Badge</h1>
+    <h1 class="font-headline text-2xl font-bold text-foreground mb-6">Issue Badge</h1>
 
     <!-- Badge Display -->
     <div v-if="badge" class="mb-8 bg-muted rounded-md p-6">
