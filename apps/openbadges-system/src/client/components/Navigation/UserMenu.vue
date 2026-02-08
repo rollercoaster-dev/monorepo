@@ -164,12 +164,12 @@ onUnmounted(() => {
           >
             <div
               v-if="isUserDropdownOpen"
-              class="absolute right-0 mt-2 w-56 bg-card rounded-md shadow-hard-lg py-1 z-50 border border-border"
+              class="absolute right-0 mt-2 w-56 bg-card rounded-md shadow-hard-lg py-1 z-50 border-2 border-border"
               role="menu"
               aria-labelledby="user-menu-button"
             >
               <!-- User info -->
-              <div class="px-4 py-3 border-b border-border">
+              <div class="px-4 py-3 border-b-2 border-border">
                 <p class="text-sm font-medium text-foreground">
                   {{ user?.firstName }} {{ user?.lastName }}
                 </p>
@@ -196,7 +196,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Admin section (if user is admin) -->
-              <div v-if="isAdmin" class="border-t border-border py-1">
+              <div v-if="isAdmin" class="border-t-2 border-border py-1">
                 <div
                   class="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                 >
@@ -218,7 +218,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Logout -->
-              <div class="border-t border-border py-1">
+              <div class="border-t-2 border-border py-1">
                 <button
                   class="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
                   role="menuitem"
@@ -295,7 +295,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Admin section (if user is admin) -->
-        <div v-if="isAdmin" class="border-t border-border pt-2 space-y-1">
+        <div v-if="isAdmin" class="border-t-2 border-border pt-2 space-y-1">
           <div
             class="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
           >
@@ -319,7 +319,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Logout -->
-        <div class="border-t border-border pt-2">
+        <div class="border-t-2 border-border pt-2">
           <button
             class="flex items-center w-full px-3 py-2 text-sm font-medium text-foreground rounded-md hover:bg-muted hover:text-foreground transition-colors duration-200"
             @click="handleLogout"
