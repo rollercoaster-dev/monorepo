@@ -3,8 +3,6 @@
  * Ensures WCAG AA compliance across all 12 themes
  */
 
-// @ts-expect-error - bun:test is available at runtime
-import { describe, test, expect } from 'bun:test';
 import { getContrastRatio, meetsWCAG } from '../../utils/accessibility';
 import { lightColors, darkColors } from '../adapter';
 

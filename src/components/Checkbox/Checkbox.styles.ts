@@ -25,8 +25,10 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.background,
     fontWeight: theme.fontWeight.bold,
   },
-  label: {
+  labelContainer: {
     flex: 1,
+  },
+  label: {
     fontSize: theme.size.md,
     lineHeight: theme.lineHeight.md,
     fontFamily: theme.fontFamily.body,

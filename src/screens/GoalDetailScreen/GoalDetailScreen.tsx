@@ -10,6 +10,7 @@ import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { StatusBadge } from '../../components/StatusBadge';
 import { Divider } from '../../components/Divider';
+import { StepList, type Step } from '../../components/StepList';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import {
   goalsQuery,
@@ -17,7 +18,15 @@ import {
   uncompleteGoal,
   deleteGoal,
   GoalStatus,
+  stepsByGoalQuery,
+  createStep,
+  updateStep,
+  deleteStep,
+  completeStep,
+  uncompleteStep,
+  StepStatus,
 } from '../../db';
+import type { GoalId, StepId } from '../../db';
 import type { GoalDetailScreenProps } from '../../navigation/types';
 import { styles } from './GoalDetailScreen.styles';
 
@@ -25,7 +34,9 @@ function GoalContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
+  const [deleteStepTarget, setDeleteStepTarget] = useState<{ id: string; title: string } | null>(null);
 
   if (!goal) {
     return (
@@ -38,6 +49,12 @@ function GoalContent({ goalId }: { goalId: string }) {
   const { id, title, description } = goal;
   const isCompleted = goal.status === GoalStatus.completed;
 
+  const steps: Step[] = stepRows.map((row) => ({
+    id: row.id,
+    title: row.title ?? '',
+    completed: row.status === StepStatus.completed,
+  }));
+
   function handleToggleStatus() {
     if (isCompleted) {
       uncompleteGoal(id);
@@ -46,14 +63,52 @@ function GoalContent({ goalId }: { goalId: string }) {
     }
   }
 
-  function handleDelete() {
-    setShowDeleteModal(true);
+  function handleDeleteGoal() {
+    setShowDeleteGoalModal(true);
   }
 
-  function confirmDelete() {
-    deleteGoal(id);
-    setShowDeleteModal(false);
-    navigation.goBack();
+  function confirmDeleteGoal() {
+    try {
+      deleteGoal(id);
+      setShowDeleteGoalModal(false);
+      navigation.goBack();
+    } catch {
+      setShowDeleteGoalModal(false);
+    }
+  }
+
+  function handleToggleStep(stepId: string) {
+    const step = stepRows.find((s) => s.id === stepId);
+    if (!step) return;
+    if (step.status === StepStatus.completed) {
+      uncompleteStep(stepId as StepId);
+    } else {
+      completeStep(stepId as StepId);
+    }
+  }
+
+  function handleCreateStep(stepTitle: string) {
+    const maxOrdinal = stepRows.reduce(
+      (max, s) => Math.max(max, s.ordinal ?? -1),
+      -1,
+    );
+    createStep(goalId as GoalId, stepTitle, maxOrdinal + 1);
+  }
+
+  function handleUpdateStep(stepId: string, newTitle: string) {
+    updateStep(stepId as StepId, { title: newTitle });
+  }
+
+  function handleDeleteStep(stepId: string) {
+    const step = stepRows.find((s) => s.id === stepId);
+    setDeleteStepTarget(step ? { id: step.id, title: step.title ?? '' } : null);
+  }
+
+  function confirmDeleteStep() {
+    if (deleteStepTarget) {
+      deleteStep(deleteStepTarget.id as StepId);
+      setDeleteStepTarget(null);
+    }
   }
 
   return (
@@ -73,6 +128,16 @@ function GoalContent({ goalId }: { goalId: string }) {
         </Card>
 
         <Card>
+          <StepList
+            steps={steps}
+            onToggleStep={handleToggleStep}
+            onCreateStep={handleCreateStep}
+            onUpdateStep={handleUpdateStep}
+            onDeleteStep={handleDeleteStep}
+          />
+        </Card>
+
+        <Card>
           <Text variant="label">Actions</Text>
           <View style={styles.actions}>
             <View style={styles.actionButton}>
@@ -86,18 +151,26 @@ function GoalContent({ goalId }: { goalId: string }) {
               <Button
                 label="Delete"
                 variant="destructive"
-                onPress={handleDelete}
+                onPress={handleDeleteGoal}
               />
             </View>
           </View>
         </Card>
       </ScrollView>
+
       <ConfirmDeleteModal
-        visible={showDeleteModal}
-        onCancel={() => setShowDeleteModal(false)}
-        onConfirm={confirmDelete}
+        visible={showDeleteGoalModal}
+        onCancel={() => setShowDeleteGoalModal(false)}
+        onConfirm={confirmDeleteGoal}
         title="Delete this goal?"
         message={`"${title}" and all progress will be permanently deleted.`}
+      />
+      <ConfirmDeleteModal
+        visible={deleteStepTarget !== null}
+        onCancel={() => setDeleteStepTarget(null)}
+        onConfirm={confirmDeleteStep}
+        title="Delete this step?"
+        message={deleteStepTarget ? `"${deleteStepTarget.title}" will be permanently deleted.` : ''}
       />
     </>
   );
@@ -105,7 +178,6 @@ function GoalContent({ goalId }: { goalId: string }) {
 
 export function GoalDetailScreen({ route }: GoalDetailScreenProps) {
   const navigation = useNavigation();
-  // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
 
   return (

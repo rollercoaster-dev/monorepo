@@ -7,6 +7,9 @@ module.exports = {
     '../shims/rd-logger': '<rootDir>/src/db/__tests__/mocks/rd-logger.ts',
     '^react-native-reanimated$': '<rootDir>/src/__tests__/mocks/reanimated.ts',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@rollercoaster-dev/design-tokens)/)',
+  ],
   setupFiles: ['./src/db/__tests__/setup.ts'],
   testMatch: ['**/src/**/__tests__/**/*.test.ts'],
 };
