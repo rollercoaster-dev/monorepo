@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, View, Text } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { styles } from './Checkbox.styles';
 
 export interface CheckboxProps {
@@ -10,10 +11,15 @@ export interface CheckboxProps {
 }
 
 export function Checkbox({ checked, onToggle, label, onLabelPress }: CheckboxProps) {
+  function handleToggle() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onToggle();
+  }
+
   return (
     <View style={styles.container}>
       <Pressable
-        onPress={onToggle}
+        onPress={handleToggle}
         hitSlop={10}
         accessible
         accessibilityRole="checkbox"
@@ -25,7 +31,7 @@ export function Checkbox({ checked, onToggle, label, onLabelPress }: CheckboxPro
         </View>
       </Pressable>
       <Pressable
-        onPress={onLabelPress ?? onToggle}
+        onPress={onLabelPress ?? handleToggle}
         style={styles.labelContainer}
         accessibilityLabel={onLabelPress ? `Edit ${label}` : label}
         accessibilityHint={onLabelPress ? 'Tap to edit step title' : undefined}

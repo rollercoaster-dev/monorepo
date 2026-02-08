@@ -50,12 +50,11 @@ export const styles = StyleSheet.create((theme) => ({
   editInput: {
     flex: 1,
     fontSize: theme.size.md,
-    lineHeight: theme.lineHeight.md,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
     borderBottomWidth: theme.borderWidth.medium,
     borderBottomColor: theme.colors.accentPrimary,
-    paddingVertical: theme.space[1],
+    paddingVertical: theme.space[2],
   },
   addStepRow: {
     flexDirection: 'row',
@@ -77,9 +76,8 @@ export const styles = StyleSheet.create((theme) => ({
   addStepInput: {
     flex: 1,
     fontSize: theme.size.md,
-    lineHeight: theme.lineHeight.md,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
-    paddingVertical: theme.space[1],
+    paddingVertical: theme.space[2],
   },
 }));

@@ -61,8 +61,11 @@ export function StepList({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerLabel}>Steps</Text>
-        <Text style={styles.count}>
+        <Text style={styles.headerLabel} accessibilityRole="header">Steps</Text>
+        <Text
+          style={styles.count}
+          accessibilityLabel={`${completedCount} of ${steps.length} steps completed`}
+        >
           {completedCount}/{steps.length}
         </Text>
       </View>

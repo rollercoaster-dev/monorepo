@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { View, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,21 +11,39 @@ import { GoalCard, type GoalCardGoal } from '../../components/GoalCard';
 import { EmptyState } from '../../components/EmptyState';
 import { Divider } from '../../components/Divider';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
-import { goalsQuery, deleteGoal, GoalStatus } from '../../db';
+import { goalsQuery, stepsByGoalQuery, deleteGoal, GoalStatus, StepStatus } from '../../db';
+import type { GoalId } from '../../db';
 import { GoalsStackParamList } from '../../navigation/types';
 import { styles } from './GoalsScreen.styles';
 
 type GoalRow = typeof goalsQuery.Row;
 type Nav = NativeStackNavigationProp<GoalsStackParamList>;
 
-function toGoalCardGoal(row: GoalRow): GoalCardGoal {
-  return {
-    id: row.id,
-    title: row.title ?? '',
-    status: row.status === GoalStatus.completed ? 'completed' : 'active',
-    stepsTotal: 0,
-    stepsCompleted: 0,
+function GoalCardWithSteps({
+  goalRow,
+  onPress,
+  onLongPress,
+}: {
+  goalRow: GoalRow;
+  onPress: () => void;
+  onLongPress: () => void;
+}) {
+  const query = useMemo(() => stepsByGoalQuery(goalRow.id as GoalId), [goalRow.id]);
+  const stepRows = useQuery(query);
+  const stepsTotal = stepRows.length;
+  const stepsCompleted = stepRows.filter(
+    (s) => s.status === StepStatus.completed,
+  ).length;
+
+  const goal: GoalCardGoal = {
+    id: goalRow.id,
+    title: goalRow.title ?? '',
+    status: goalRow.status === GoalStatus.completed ? 'completed' : 'active',
+    stepsTotal,
+    stepsCompleted,
   };
+
+  return <GoalCard goal={goal} onPress={onPress} onLongPress={onLongPress} />;
 }
 
 function GoalList() {
@@ -66,8 +84,8 @@ function GoalList() {
         style={{ overflow: 'visible' }}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <GoalCard
-            goal={toGoalCardGoal(item)}
+          <GoalCardWithSteps
+            goalRow={item}
             onPress={() => navigation.navigate('GoalDetail', { goalId: item.id })}
             onLongPress={() => handleDelete(item)}
           />

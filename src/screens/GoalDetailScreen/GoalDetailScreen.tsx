@@ -1,5 +1,5 @@
 import React, { Suspense, useState } from 'react';
-import { View, ScrollView, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ActivityIndicator, AccessibilityInfo, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
@@ -91,11 +91,23 @@ function GoalContent({ goalId }: { goalId: string }) {
 
   function handleToggleStep(stepId: string) {
     const step = stepRows.find((s) => s.id === stepId);
-    if (!step) return;
-    if (step.status === StepStatus.completed) {
-      uncompleteStep(stepId as StepId);
-    } else {
-      completeStep(stepId as StepId);
+    if (!step) {
+      console.warn(`[GoalDetailScreen] handleToggleStep: step not found for id "${stepId}"`);
+      return;
+    }
+    const isCurrentlyCompleted = step.status === StepStatus.completed;
+    try {
+      if (isCurrentlyCompleted) {
+        uncompleteStep(stepId as StepId);
+      } else {
+        completeStep(stepId as StepId);
+      }
+      AccessibilityInfo.announceForAccessibility(
+        `Step "${step.title}" marked as ${isCurrentlyCompleted ? 'incomplete' : 'completed'}`,
+      );
+    } catch (error) {
+      console.error('[GoalDetailScreen] Failed to toggle step completion', { stepId, error });
+      Alert.alert('Could not update step', 'Something went wrong. Please try again.');
     }
   }
 
