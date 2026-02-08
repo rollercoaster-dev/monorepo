@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Issuer creation logic will go here
+definePage({ meta: { requiresAuth: true } })
 </script>
 
 <template>

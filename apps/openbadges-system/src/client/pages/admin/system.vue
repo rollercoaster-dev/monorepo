@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// System settings logic will go here
+definePage({ meta: { requiresAuth: true, requiresAdmin: true } })
 </script>
 
 <template>

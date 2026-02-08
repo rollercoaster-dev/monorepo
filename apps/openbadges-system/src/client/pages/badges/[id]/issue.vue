@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ meta: { requiresAuth: true } })
+
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { BadgeDisplay } from 'openbadges-ui'

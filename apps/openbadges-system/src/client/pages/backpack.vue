@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ meta: { requiresAuth: true } })
+
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import {
   TrophyIcon,
