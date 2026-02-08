@@ -6,6 +6,7 @@ import { EvoluAppProvider } from './src/db';
 import { TabNavigator } from './src/navigation';
 import { useFonts } from './src/hooks/useFonts';
 import { useTheme, ThemeProvider, useThemeContext } from './src/hooks/useTheme';
+import { useDensity } from './src/hooks/useDensity';
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true';
 
@@ -20,6 +21,7 @@ if (STORYBOOK_ENABLED) {
  */
 function ThemedApp() {
   const { theme, isDark } = useThemeContext();
+  useDensity(); // Apply saved density to all themes on mount
 
   const navTheme: Theme = {
     ...DefaultTheme,

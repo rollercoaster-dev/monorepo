@@ -7,5 +7,5 @@ module.exports = {
     '../shims/rd-logger': '<rootDir>/src/db/__tests__/mocks/rd-logger.ts',
   },
   setupFiles: ['./src/db/__tests__/setup.ts'],
-  testMatch: ['**/src/db/__tests__/**/*.test.ts'],
+  testMatch: ['**/src/**/__tests__/**/*.test.ts'],
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, View } from 'react-native';
+import React, { Suspense } from 'react';
+import { ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
@@ -7,10 +7,28 @@ import { Divider } from '../../components/Divider';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsRow } from '../../components/SettingsRow';
 import { ThemeSwitcher } from '../../components/ThemeSwitcher';
+import { useDensity } from '../../hooks/useDensity';
+import { densityOptions } from '../../utils/density';
 import { styles } from './SettingsScreen.styles';
 
+function DensityPicker() {
+  const { densityLevel, setDensity } = useDensity();
+
+  return (
+    <SettingsSection title="Content Density">
+      {densityOptions.map((option) => (
+        <SettingsRow
+          key={option.id}
+          label={option.label}
+          value={densityLevel === option.id ? '✓' : option.description}
+          onPress={() => setDensity(option.id)}
+        />
+      ))}
+    </SettingsSection>
+  );
+}
+
 export function SettingsScreen() {
-  // Subscribe to theme changes to trigger re-renders
   const { theme } = useUnistyles();
 
   return (
@@ -22,6 +40,10 @@ export function SettingsScreen() {
         <Divider />
 
         <ThemeSwitcher />
+
+        <Suspense fallback={<ActivityIndicator />}>
+          <DensityPicker />
+        </Suspense>
 
         <SettingsSection title="About">
           <SettingsRow label="App" value="rollercoaster.dev" />

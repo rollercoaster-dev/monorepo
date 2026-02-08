@@ -135,7 +135,7 @@ export const Schema = {
   userSettings: {
     id: UserSettingsId,
     theme: nullOr(NonEmptyString1000), // Theme name
-    density: nullOr(NonEmptyString1000), // 'compact' | 'comfortable' | 'spacious'
+    density: nullOr(NonEmptyString1000), // 'compact' | 'default' | 'comfortable'
     animationPref: nullOr(NonEmptyString1000), // 'full' | 'reduced' | 'none'
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
   },
