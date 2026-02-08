@@ -140,8 +140,11 @@ oauthRoutes.get('/github/callback', async c => {
         })
       }
     } else {
-      // Check if user exists with same email
+      // Check if user exists with same email or username
       user = (await userService?.getUserByEmail(profile.email)) || null
+      if (!user && profile.login) {
+        user = (await userService?.getUserByUsername(profile.login)) || null
+      }
 
       if (user) {
         // Link OAuth provider to existing user
