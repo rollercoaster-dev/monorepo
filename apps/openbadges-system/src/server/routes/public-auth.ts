@@ -104,11 +104,11 @@ publicAuthRoutes.get('/users/lookup', async c => {
           avatar: user.avatar,
           createdAt: user.createdAt,
           hasCredentials: userCredentials.length > 0,
-          credentials: userCredentials.map(c => ({
-            id: c.id,
-            transports: c.transports,
-            name: c.name,
-            type: c.type,
+          credentials: userCredentials.map(cred => ({
+            id: cred.id,
+            transports: cred.transports,
+            name: cred.name,
+            type: cred.type,
           })),
         },
       })
