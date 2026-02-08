@@ -122,7 +122,7 @@ function formatDate(dateString: string): string {
     </div>
 
     <div v-else-if="users.length === 0" class="p-8 text-center">
-      <UserGroupIcon class="w-16 h-16 text-muted mx-auto mb-4" />
+      <UserGroupIcon class="w-16 h-16 text-muted-foreground mx-auto mb-4" />
       <p class="text-muted-foreground">No users found</p>
     </div>
 
@@ -245,10 +245,7 @@ function formatDate(dateString: string): string {
                   <button class="text-primary hover:text-primary-dark" @click="$emit('edit', user)">
                     Edit
                   </button>
-                  <button
-                    class="text-destructive hover:text-destructive"
-                    @click="$emit('delete', user)"
-                  >
+                  <button class="text-destructive hover:opacity-80" @click="$emit('delete', user)">
                     Delete
                   </button>
                 </div>

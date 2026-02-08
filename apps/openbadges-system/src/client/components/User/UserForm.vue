@@ -230,7 +230,7 @@ function formatDate(dateString: string): string {
             <input
               v-model="formData.isAdmin"
               type="checkbox"
-              class="rounded border-input text-primary focus-visible:ring-ring"
+              class="rounded border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"
             />
             <span class="ml-2 text-sm text-foreground">Administrator</span>
           </label>
@@ -261,7 +261,7 @@ function formatDate(dateString: string): string {
             </div>
             <button
               type="button"
-              class="text-destructive hover:text-destructive"
+              class="text-destructive hover:opacity-80"
               @click="removeCredential(credential.id)"
             >
               <TrashIcon class="w-4 h-4" />

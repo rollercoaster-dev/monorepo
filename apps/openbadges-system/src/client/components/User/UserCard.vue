@@ -58,7 +58,7 @@ function formatDate(dateString: string): string {
 </script>
 
 <template>
-  <div class="card p-6 transition-shadow">
+  <div class="card p-6">
     <div class="flex items-start justify-between">
       <div class="flex items-center space-x-4">
         <div class="flex-shrink-0">
