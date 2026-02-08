@@ -10,7 +10,7 @@
  * - All errors logged with rd-logger for debugging and monitoring
  */
 import { NonEmptyString1000, NonEmptyString, dateToDateIso, sqliteTrue, Int } from '@evolu/common';
-import { Logger } from '@rollercoaster-dev/rd-logger';
+import { Logger } from '../shims/rd-logger';
 import { evolu } from './evolu';
 import {
   GoalId,

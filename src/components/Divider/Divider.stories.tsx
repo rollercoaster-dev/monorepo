@@ -27,13 +27,13 @@ export const Default: Story = {
 export const Spacings: Story = {
   render: () => (
     <View style={storyStyles.container}>
-      <Text variant="label">spacing="1"</Text>
+      <Text variant="label">{'spacing="1"'}</Text>
       <Divider spacing="1" />
-      <Text variant="label">spacing="3"</Text>
+      <Text variant="label">{'spacing="3"'}</Text>
       <Divider spacing="3" />
-      <Text variant="label">spacing="5"</Text>
+      <Text variant="label">{'spacing="5"'}</Text>
       <Divider spacing="5" />
-      <Text variant="label">spacing="8"</Text>
+      <Text variant="label">{'spacing="8"'}</Text>
       <Divider spacing="8" />
     </View>
   ),
