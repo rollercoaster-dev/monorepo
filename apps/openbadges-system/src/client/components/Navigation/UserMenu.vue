@@ -101,23 +101,18 @@ onUnmounted(() => {
       <div v-if="!isAuthenticated" class="flex items-center space-x-2">
         <RouterLink
           to="/auth/login"
-          class="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted"
+          class="text-muted-foreground hover:text-foreground px-3 py-2.5 text-sm font-medium rounded-sm transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Sign In
         </RouterLink>
-        <RouterLink
-          to="/auth/register"
-          class="bg-primary hover:bg-primary-dark text-primary-foreground px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200"
-        >
-          Sign Up
-        </RouterLink>
+        <RouterLink to="/auth/register" class="btn btn-primary text-sm">Sign Up</RouterLink>
       </div>
 
       <!-- Authentication state - logged in -->
       <div v-else class="flex items-center space-x-3">
         <!-- Notifications -->
         <button
-          class="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+          class="relative p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-sm border-2 border-border transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Notifications"
         >
           <BellIcon class="w-5 h-5" aria-hidden="true" />
@@ -133,7 +128,7 @@ onUnmounted(() => {
         <div class="relative">
           <button
             id="user-menu-button"
-            class="flex items-center space-x-2 p-1 rounded-full hover:bg-muted transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+            class="flex items-center space-x-2 px-2 py-1.5 rounded-sm border-2 border-transparent hover:border-border hover:bg-muted transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             :aria-expanded="isUserDropdownOpen"
             aria-haspopup="true"
             aria-label="User menu"
@@ -164,12 +159,12 @@ onUnmounted(() => {
           >
             <div
               v-if="isUserDropdownOpen"
-              class="absolute right-0 mt-2 w-56 bg-card rounded-md shadow-hard-lg py-1 z-50 border border-border"
+              class="absolute right-0 mt-2 w-56 bg-card rounded-sm shadow-hard-lg py-1 z-50 border-2 border-border"
               role="menu"
               aria-labelledby="user-menu-button"
             >
               <!-- User info -->
-              <div class="px-4 py-3 border-b border-border">
+              <div class="px-4 py-3 border-b-2 border-border">
                 <p class="text-sm font-medium text-foreground">
                   {{ user?.firstName }} {{ user?.lastName }}
                 </p>
@@ -184,7 +179,7 @@ onUnmounted(() => {
                   v-for="item in userMenuItems"
                   :key="item.id"
                   :to="item.to"
-                  class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                  class="flex items-center px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   role="menuitem"
                   :class="{ 'bg-muted text-foreground': isActiveRoute(item.to) }"
                   :aria-current="isActiveRoute(item.to) ? 'page' : undefined"
@@ -196,7 +191,7 @@ onUnmounted(() => {
               </div>
 
               <!-- Admin section (if user is admin) -->
-              <div v-if="isAdmin" class="border-t border-border py-1">
+              <div v-if="isAdmin" class="border-t-2 border-border py-1">
                 <div
                   class="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                 >
@@ -206,7 +201,7 @@ onUnmounted(() => {
                   v-for="item in adminMenuItems"
                   :key="item.id"
                   :to="item.to"
-                  class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                  class="flex items-center px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   role="menuitem"
                   :class="{ 'bg-muted text-foreground': isActiveRoute(item.to) }"
                   :aria-current="isActiveRoute(item.to) ? 'page' : undefined"
@@ -218,9 +213,9 @@ onUnmounted(() => {
               </div>
 
               <!-- Logout -->
-              <div class="border-t border-border py-1">
+              <div class="border-t-2 border-border py-1">
                 <button
-                  class="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                  class="flex items-center w-full px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-foreground transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   role="menuitem"
                   @click="handleLogout"
                 >
@@ -240,7 +235,7 @@ onUnmounted(() => {
       <div v-if="!isAuthenticated" class="space-y-2">
         <RouterLink
           to="/auth/login"
-          class="flex items-center px-3 py-2 text-base font-medium text-foreground rounded-md hover:bg-muted hover:text-foreground transition-colors duration-200"
+          class="flex items-center px-3 py-3 text-base font-medium text-foreground rounded-sm hover:bg-muted hover:text-foreground transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           @click="$emit('close')"
         >
           <ArrowRightOnRectangleIcon class="w-5 h-5 mr-3" aria-hidden="true" />
@@ -248,7 +243,7 @@ onUnmounted(() => {
         </RouterLink>
         <RouterLink
           to="/auth/register"
-          class="flex items-center px-3 py-2 text-base font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary-dark transition-colors duration-200"
+          class="btn btn-primary flex items-center text-base font-medium w-full"
           @click="$emit('close')"
         >
           <UserPlusIcon class="w-5 h-5 mr-3" aria-hidden="true" />
@@ -259,7 +254,7 @@ onUnmounted(() => {
       <!-- Authentication state - logged in -->
       <div v-else class="space-y-2">
         <!-- User info -->
-        <div class="flex items-center px-3 py-2 bg-muted rounded-md">
+        <div class="flex items-center px-3 py-3 bg-muted rounded-sm border-2 border-border">
           <img
             :src="user?.avatar || '/api/placeholder/40/40'"
             :alt="`${user?.firstName} ${user?.lastName} avatar`"
@@ -281,7 +276,7 @@ onUnmounted(() => {
             v-for="item in userMenuItems"
             :key="item.id"
             :to="item.to"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
+            class="flex items-center px-3 py-3 text-sm font-medium rounded-sm transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             :class="{
               'bg-muted text-foreground': isActiveRoute(item.to),
               'text-foreground': !isActiveRoute(item.to),
@@ -295,7 +290,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Admin section (if user is admin) -->
-        <div v-if="isAdmin" class="border-t border-border pt-2 space-y-1">
+        <div v-if="isAdmin" class="border-t-2 border-border pt-2 space-y-1">
           <div
             class="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
           >
@@ -305,7 +300,7 @@ onUnmounted(() => {
             v-for="item in adminMenuItems"
             :key="item.id"
             :to="item.to"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 hover:bg-muted hover:text-foreground"
+            class="flex items-center px-3 py-3 text-sm font-medium rounded-sm transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             :class="{
               'bg-muted text-foreground': isActiveRoute(item.to),
               'text-foreground': !isActiveRoute(item.to),
@@ -319,9 +314,9 @@ onUnmounted(() => {
         </div>
 
         <!-- Logout -->
-        <div class="border-t border-border pt-2">
+        <div class="border-t-2 border-border pt-2">
           <button
-            class="flex items-center w-full px-3 py-2 text-sm font-medium text-foreground rounded-md hover:bg-muted hover:text-foreground transition-colors duration-200"
+            class="flex items-center w-full px-3 py-3 text-sm font-medium text-foreground rounded-sm hover:bg-muted hover:text-foreground transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             @click="handleLogout"
           >
             <ArrowRightOnRectangleIcon class="w-4 h-4 mr-3" aria-hidden="true" />
