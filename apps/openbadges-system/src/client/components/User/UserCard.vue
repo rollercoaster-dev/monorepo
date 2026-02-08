@@ -44,7 +44,7 @@ function getInitials(firstName: string, lastName: string): string {
 }
 
 function getStatusClasses(active: boolean): string {
-  return active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+  return active ? 'bg-success-light text-success' : 'bg-destructive-light text-destructive'
 }
 
 function formatDate(dateString: string): string {
@@ -58,7 +58,7 @@ function formatDate(dateString: string): string {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+  <div class="card p-6">
     <div class="flex items-start justify-between">
       <div class="flex items-center space-x-4">
         <div class="flex-shrink-0">
@@ -69,18 +69,18 @@ function formatDate(dateString: string): string {
           ></div>
           <div
             v-else
-            class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg"
+            class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-lg"
           >
             {{ getInitials(user.firstName, user.lastName) }}
           </div>
         </div>
 
         <div class="flex-1">
-          <h3 class="text-lg font-semibold text-gray-900">
+          <h3 class="text-lg font-semibold text-foreground">
             {{ user.firstName }} {{ user.lastName }}
           </h3>
-          <p class="text-sm text-gray-600">@{{ user.username }}</p>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-muted-foreground">@{{ user.username }}</p>
+          <p class="text-sm text-muted-foreground">
             {{ user.email }}
           </p>
         </div>
@@ -90,7 +90,7 @@ function formatDate(dateString: string): string {
         <div class="flex items-center space-x-2">
           <span
             v-if="user.isAdmin"
-            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent text-accent-foreground"
           >
             Admin
           </span>
@@ -104,21 +104,21 @@ function formatDate(dateString: string): string {
 
         <div class="flex items-center space-x-1">
           <button
-            class="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+            class="p-1 text-muted-foreground hover:text-primary transition-colors"
             title="Edit user"
             @click="$emit('edit', user)"
           >
             <PencilIcon class="w-4 h-4" />
           </button>
           <button
-            class="p-1 text-gray-400 hover:text-green-600 transition-colors"
+            class="p-1 text-muted-foreground hover:text-success transition-colors"
             title="View user"
             @click="$emit('view', user)"
           >
             <EyeIcon class="w-4 h-4" />
           </button>
           <button
-            class="p-1 text-gray-400 hover:text-red-600 transition-colors"
+            class="p-1 text-muted-foreground hover:text-destructive transition-colors"
             title="Delete user"
             @click="$emit('delete', user)"
           >
@@ -128,8 +128,8 @@ function formatDate(dateString: string): string {
       </div>
     </div>
 
-    <div class="mt-4 pt-4 border-t border-gray-200">
-      <div class="flex items-center justify-between text-sm text-gray-600">
+    <div class="mt-4 pt-4 border-t-2 border-border">
+      <div class="flex items-center justify-between text-sm text-muted-foreground">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-1">
             <KeyIcon class="w-4 h-4" />
@@ -141,7 +141,7 @@ function formatDate(dateString: string): string {
           </div>
         </div>
 
-        <div v-if="lastLoginText" class="text-xs text-gray-500">
+        <div v-if="lastLoginText" class="text-xs text-muted-foreground">
           Last login: {{ lastLoginText }}
         </div>
       </div>
