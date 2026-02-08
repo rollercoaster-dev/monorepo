@@ -64,6 +64,7 @@ vi.mock('../../services/user', () => ({
     getOAuthProvidersByUser: vi.fn(),
     getUserById: vi.fn(),
     getUserByEmail: vi.fn(),
+    getUserByUsername: vi.fn(),
     getOAuthProvider: vi.fn(),
     updateOAuthProvider: vi.fn(),
     removeOAuthProvider: vi.fn(),
@@ -95,6 +96,28 @@ vi.mock('../../utils/logger', () => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
+}))
+
+// Mock oauthConfig as enabled with a clientId so route guards pass
+vi.mock('../../config/oauth', () => ({
+  oauthConfig: {
+    enabled: true,
+    providers: {
+      github: {
+        enabled: true,
+        clientId: 'test-client-id',
+        clientSecret: 'test-client-secret',
+        callbackUrl: 'http://localhost:8888/api/oauth/github/callback',
+        scope: ['user:email', 'read:user'],
+      },
+    },
+    session: {
+      secret: 'test-secret',
+      maxAge: 86400000,
+    },
+  },
+  validateOAuthConfig: vi.fn(),
+  getOAuthProviderConfig: vi.fn(),
 }))
 
 import { oauthRoutes } from '../oauth'
@@ -305,6 +328,7 @@ describe('OAuth Routes', () => {
       vi.mocked(oauthService.getUserProfile).mockResolvedValue(mockProfile)
       vi.mocked(oauthService.findUserByOAuthProvider).mockResolvedValue(null)
       vi.mocked(userService!.getUserByEmail).mockResolvedValue(null)
+      vi.mocked(userService!.getUserByUsername).mockResolvedValue(null)
       vi.mocked(oauthService.createUserFromOAuth).mockResolvedValue({
         user: mockNewUser as any,
         oauthProvider: {} as any,
