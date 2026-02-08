@@ -1,3 +1,4 @@
+/* global RequestInit */
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { jwtDecode } from 'jwt-decode'
@@ -41,41 +42,42 @@ const error = ref<string | null>(null)
 const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
 const isPlatformAuthAvailable = ref(false)
 
+// Token validation helpers — module-level so they can be used by the navigation guard
+const LOCAL_SESSION_PREFIX = 'local-session-'
+const LOCAL_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+const isLocalSession = (tokenValue: string | null): boolean => {
+  return tokenValue !== null && tokenValue.startsWith(LOCAL_SESSION_PREFIX)
+}
+
+const isLocalSessionValid = (tokenValue: string | null): boolean => {
+  if (!tokenValue || !isLocalSession(tokenValue)) return false
+  const timestamp = parseInt(tokenValue.replace(LOCAL_SESSION_PREFIX, ''), 10)
+  if (isNaN(timestamp)) return false
+  return Date.now() - timestamp < LOCAL_SESSION_MAX_AGE_MS
+}
+
+const isTokenValid = (tokenValue: string | null): boolean => {
+  if (!tokenValue) return false
+  if (isLocalSession(tokenValue)) {
+    return isLocalSessionValid(tokenValue)
+  }
+  try {
+    const decoded = jwtDecode<{ exp: number }>(tokenValue)
+    return decoded.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
+// Auth state accessor for use outside Vue component context (e.g., navigation guards)
+export const getAuthState = () => ({
+  isAuthenticated: !!user.value && !!token.value && isTokenValid(token.value),
+  isAdmin: user.value?.isAdmin || false,
+})
+
 export const useAuth = () => {
   const router = useRouter()
-
-  // Local session marker prefix for offline-first support
-  const LOCAL_SESSION_PREFIX = 'local-session-'
-  // Maximum age for local sessions (24 hours) before requiring re-authentication
-  const LOCAL_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
-
-  // Helper function to check if this is a local-only session marker
-  const isLocalSession = (tokenValue: string | null): boolean => {
-    return tokenValue !== null && tokenValue.startsWith(LOCAL_SESSION_PREFIX)
-  }
-
-  // Helper function to check if a local session is still valid (not too old)
-  const isLocalSessionValid = (tokenValue: string | null): boolean => {
-    if (!tokenValue || !isLocalSession(tokenValue)) return false
-    const timestamp = parseInt(tokenValue.replace(LOCAL_SESSION_PREFIX, ''), 10)
-    if (isNaN(timestamp)) return false
-    return Date.now() - timestamp < LOCAL_SESSION_MAX_AGE_MS
-  }
-
-  // Helper function to check if JWT token is valid and not expired
-  const isTokenValid = (tokenValue: string | null): boolean => {
-    if (!tokenValue) return false
-    // Allow local session markers (limited functionality, offline-first)
-    if (isLocalSession(tokenValue)) {
-      return isLocalSessionValid(tokenValue)
-    }
-    try {
-      const decoded = jwtDecode<{ exp: number }>(tokenValue)
-      return decoded.exp * 1000 > Date.now()
-    } catch {
-      return false
-    }
-  }
 
   // Computed
   const isAuthenticated = computed(() => !!user.value && !!token.value && isTokenValid(token.value))
