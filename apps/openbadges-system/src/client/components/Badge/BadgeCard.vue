@@ -70,7 +70,7 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
             v-else
             class="w-16 h-16 rounded-md bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center"
           >
-            <TrophyIcon class="w-8 h-8 text-white" />
+            <TrophyIcon class="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
 

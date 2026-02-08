@@ -196,7 +196,7 @@ const handleCancel = () => {
     </div>
 
     <!-- Loading State -->
-    <div v-if="isSubmitting" class="mt-6 alert alert-info">
+    <div v-if="isSubmitting" class="mt-6 alert alert-info" role="status" aria-live="polite">
       <div class="flex items-center">
         <svg class="w-5 h-5 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle
