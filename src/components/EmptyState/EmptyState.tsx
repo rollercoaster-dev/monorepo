@@ -14,7 +14,9 @@ export function EmptyState({ title, body, icon, action }: EmptyStateProps) {
   return (
     <View style={styles.container}>
       {icon && <Text style={styles.icon}>{icon}</Text>}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        {title}
+      </Text>
       <Text style={styles.body}>{body}</Text>
       {action && (
         <View style={styles.action}>

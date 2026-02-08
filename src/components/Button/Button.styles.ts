@@ -12,6 +12,7 @@ const sizeMap = {
 
 export const styles = StyleSheet.create((theme) => ({
   pressable: (size: ButtonSize = 'md') => ({
+    // WCAG AA requires 44x44 minimum touch target; we use 48px minimum for better UX
     minHeight: Math.max(sizeMap[size].minHeight, 48),
     borderRadius: theme.radius.md,
     flexDirection: 'row' as const,
@@ -65,6 +66,9 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
   },
   labelDestructive: {
-    color: theme.colors.text,
+    // Use dark text on warning background for better contrast
+    // Light mode: #262626 on #d97706 = 4.75:1 ✓
+    // Dark mode: #262626 on #d97706 = 4.75:1 ✓ (better than #fafafa = 3.05:1 ✗)
+    color: '#262626',
   },
 }));

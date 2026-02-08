@@ -34,7 +34,12 @@ export function StatusBadge({ variant, label }: StatusBadgeProps) {
   const displayLabel = label ?? defaultLabels[variant];
 
   return (
-    <View style={[styles.badge, variantBgMap[variant]]}>
+    <View
+      style={[styles.badge, variantBgMap[variant]]}
+      accessible
+      accessibilityLabel={`Status: ${displayLabel}`}
+      accessibilityRole="text"
+    >
       <Text style={[styles.text, variantTextMap[variant]]}>
         {displayLabel}
       </Text>

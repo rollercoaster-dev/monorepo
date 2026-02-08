@@ -34,15 +34,24 @@ export function CelebrationModal({
       transparent
       animationType="fade"
       onRequestClose={onDismiss}
+      accessibilityViewIsModal
     >
       <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
         <SafeAreaView edges={['bottom']} style={styles.container}>
           <Card size="normal">
-            <View style={styles.content}>
+            <View
+              style={styles.content}
+              accessible
+              accessibilityLiveRegion="polite"
+            >
               <Text variant="display" style={styles.icon}>
                 {icon}
               </Text>
-              <Text variant="headline" style={styles.title}>
+              <Text
+                variant="headline"
+                style={styles.title}
+                accessibilityRole="header"
+              >
                 {title}
               </Text>
               {message && (

@@ -9,6 +9,8 @@ export interface CardProps {
   size?: CardSize;
   onPress?: () => void;
   onLongPress?: () => void;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 export function Card({
@@ -16,6 +18,8 @@ export function Card({
   size = 'normal',
   onPress,
   onLongPress,
+  accessibilityLabel,
+  accessibilityHint,
 }: CardProps) {
   if (onPress || onLongPress) {
     return (
@@ -24,6 +28,8 @@ export function Card({
         onLongPress={onLongPress}
         accessible
         accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
         style={({ pressed }) => [
           styles.pressable(size),
           pressed && styles.pressed,

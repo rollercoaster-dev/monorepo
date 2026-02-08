@@ -27,8 +27,15 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
   const statusVariant: StatusBadgeVariant =
     goal.status === 'completed' ? 'completed' : 'active';
 
+  const accessibilityLabel = `${goal.title}, ${goal.stepsCompleted} of ${goal.stepsTotal} steps completed, ${goal.status}`;
+
   return (
-    <Card onPress={onPress} onLongPress={onLongPress}>
+    <Card
+      onPress={onPress}
+      onLongPress={onLongPress}
+      accessibilityLabel={onPress ? accessibilityLabel : undefined}
+      accessibilityHint={onPress ? 'Double-tap to view details' : undefined}
+    >
       <View style={styles.header}>
         <Text
           style={styles.title}

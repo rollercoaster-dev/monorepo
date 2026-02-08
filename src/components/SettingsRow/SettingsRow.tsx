@@ -24,6 +24,8 @@ export function SettingsRow({ label, value, onPress, toggle }: SettingsRowProps)
         <Switch
           value={toggle.value}
           onValueChange={toggle.onValueChange}
+          accessibilityLabel={label}
+          accessibilityRole="switch"
           trackColor={{
             false: theme.colors.backgroundTertiary,
             true: theme.colors.accentPrimary,

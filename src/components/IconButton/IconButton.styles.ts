@@ -12,6 +12,7 @@ const sizeValues = {
 
 export const styles = StyleSheet.create((theme) => ({
   pressable: (size: IconButtonSize = 'md') => ({
+    // WCAG AA requires 44x44 minimum touch target; we use 48px minimum for better UX
     width: Math.max(sizeValues[size], 48),
     height: Math.max(sizeValues[size], 48),
     borderRadius: theme.radius.pill,

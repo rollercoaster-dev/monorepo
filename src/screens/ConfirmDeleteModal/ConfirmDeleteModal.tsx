@@ -34,12 +34,21 @@ export function ConfirmDeleteModal({
       transparent
       animationType="fade"
       onRequestClose={onCancel}
+      accessibilityViewIsModal
     >
       <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
         <SafeAreaView edges={['bottom']} style={styles.container}>
           <Card size="normal">
-            <View style={styles.content}>
-              <Text variant="headline" style={styles.title}>
+            <View
+              style={styles.content}
+              accessible
+              accessibilityLiveRegion="polite"
+            >
+              <Text
+                variant="headline"
+                style={styles.title}
+                accessibilityRole="header"
+              >
                 {title}
               </Text>
               {message && (
