@@ -182,38 +182,58 @@ publicAuthRoutes.post('/users/register', async c => {
 
 // Generate a challenge for WebAuthn authentication
 publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
+  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  if (!checkRateLimit(clientIP)) {
+    return c.json({ error: 'Too many requests. Please try again later.' }, 429)
+  }
+
   if (!userService) {
     return c.json({ error: 'User service unavailable' }, 503)
   }
 
-  const userId = c.req.param('id')
-  const user = await userService.getUserById(userId)
-  if (!user) {
-    return c.json({ error: 'User not found' }, 404)
+  try {
+    const userId = c.req.param('id')
+    const user = await userService.getUserById(userId)
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+
+    const { rpId } = getRpConfig()
+    const challenge = generateChallenge(userId, 'authentication')
+
+    return c.json({ challenge, rpId, timeout: 60000 })
+  } catch (err) {
+    logger.error('Error generating authentication challenge', { error: err })
+    return c.json({ error: 'Failed to generate challenge' }, 500)
   }
-
-  const { rpId } = getRpConfig()
-  const challenge = generateChallenge(userId, 'authentication')
-
-  return c.json({ challenge, rpId, timeout: 60000 })
 })
 
 // Generate a challenge for WebAuthn registration
 publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
+  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  if (!checkRateLimit(clientIP)) {
+    return c.json({ error: 'Too many requests. Please try again later.' }, 429)
+  }
+
   if (!userService) {
     return c.json({ error: 'User service unavailable' }, 503)
   }
 
-  const userId = c.req.param('id')
-  const user = await userService.getUserById(userId)
-  if (!user) {
-    return c.json({ error: 'User not found' }, 404)
+  try {
+    const userId = c.req.param('id')
+    const user = await userService.getUserById(userId)
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+
+    const { rpId } = getRpConfig()
+    const challenge = generateChallenge(userId, 'registration')
+
+    return c.json({ challenge, rpId, timeout: 60000 })
+  } catch (err) {
+    logger.error('Error generating registration challenge', { error: err })
+    return c.json({ error: 'Failed to generate challenge' }, 500)
   }
-
-  const { rpId } = getRpConfig()
-  const challenge = generateChallenge(userId, 'registration')
-
-  return c.json({ challenge, rpId, timeout: 60000 })
 })
 
 // --- Credential registration (secured with server challenge) ---
@@ -303,47 +323,6 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
   } catch (err) {
     logger.error('Error registering credential', { error: err })
     return c.json({ error: 'Failed to register credential' }, 500)
-  }
-})
-
-// Public endpoint to update credential last used time (for WebAuthn authentication)
-publicAuthRoutes.patch('/users/:userId/credentials/:credentialId', async c => {
-  if (!userService) {
-    return c.json({ error: 'User service unavailable' }, 503)
-  }
-
-  try {
-    const userId = c.req.param('userId')
-    const credentialId = c.req.param('credentialId')
-
-    // Verify user exists
-    const user = await userService.getUserById(userId)
-    if (!user) {
-      return c.json({ error: 'User not found' }, 404)
-    }
-
-    let body: unknown
-    try {
-      body = await c.req.json()
-    } catch {
-      return c.json({ error: 'Invalid JSON body' }, 400)
-    }
-
-    const updateSchema = z.object({
-      lastUsed: z.string(),
-    })
-
-    const parsed = updateSchema.safeParse(body)
-    if (!parsed.success) {
-      return c.json({ error: 'Invalid update data' }, 400)
-    }
-
-    // Update credential last used time
-    await userService.updateUserCredential(userId, credentialId, { lastUsed: parsed.data.lastUsed })
-    return c.json({ success: true })
-  } catch (err) {
-    logger.error('Error updating credential', { error: err })
-    return c.json({ error: 'Failed to update credential' }, 500)
   }
 })
 

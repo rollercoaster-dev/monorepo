@@ -111,8 +111,8 @@ export const useAuth = () => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
-      throw new Error(errorData.message || `API call failed: ${response.status}`)
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      throw new Error(errorData.error || errorData.message || `API call failed: ${response.status}`)
     }
 
     return response.json()
@@ -350,42 +350,33 @@ export const useAuth = () => {
       newUser.credentials = [credential]
 
       // Now authenticate: request auth challenge and sign it to get a JWT
-      try {
-        const authChallenge = await requestChallenge(newUser.id, 'authentication')
-        const authOptions = WebAuthnUtils.createAuthenticationOptions(
-          [credential],
-          authChallenge.challenge,
-          authChallenge.rpId,
-          authChallenge.timeout
-        )
-        const assertion = await WebAuthnUtils.authenticate(authOptions)
+      const authChallenge = await requestChallenge(newUser.id, 'authentication')
+      const authOptions = WebAuthnUtils.createAuthenticationOptions(
+        [credential],
+        authChallenge.challenge,
+        authChallenge.rpId,
+        authChallenge.timeout
+      )
+      const assertion = await WebAuthnUtils.authenticate(authOptions)
 
-        const platformRes = await publicApiCall(`/users/${newUser.id}/token`, {
-          method: 'POST',
-          body: JSON.stringify({
-            credentialId: assertion.id,
-            authenticatorData: assertion.authenticatorData,
-            clientDataJSON: assertion.clientDataJSON,
-            signature: assertion.signature,
-            challenge: authChallenge.challenge,
-          }),
-        })
-        if (platformRes && platformRes.success) {
-          token.value = platformRes.token
-        } else {
-          console.warn('Platform token unavailable, using local session marker')
-          token.value = `local-session-${Date.now()}`
-        }
-      } catch (err) {
-        console.warn('Failed to get platform token:', err)
-        token.value = `local-session-${Date.now()}`
+      const platformRes = await publicApiCall(`/users/${newUser.id}/token`, {
+        method: 'POST',
+        body: JSON.stringify({
+          credentialId: assertion.id,
+          authenticatorData: assertion.authenticatorData,
+          clientDataJSON: assertion.clientDataJSON,
+          signature: assertion.signature,
+          challenge: authChallenge.challenge,
+        }),
+      })
+      if (!platformRes?.success || !platformRes?.token) {
+        error.value = 'Registration succeeded but login failed. Please log in manually.'
+        return false
       }
+      token.value = platformRes.token
 
-      // Persist session regardless of token source
       user.value = newUser
-      if (token.value !== null) {
-        localStorage.setItem('auth_token', token.value)
-      }
+      localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(newUser))
 
       return true
@@ -442,31 +433,24 @@ export const useAuth = () => {
       const credentialData = await WebAuthnUtils.authenticate(authenticationOptions)
 
       // Exchange assertion for JWT token (server verifies the signature)
-      try {
-        const platformRes = await publicApiCall(`/users/${foundUser.id}/token`, {
-          method: 'POST',
-          body: JSON.stringify({
-            credentialId: credentialData.id,
-            authenticatorData: credentialData.authenticatorData,
-            clientDataJSON: credentialData.clientDataJSON,
-            signature: credentialData.signature,
-            challenge,
-          }),
-        })
-        if (platformRes && platformRes.success) {
-          token.value = platformRes.token
-        } else {
-          token.value = `local-session-${Date.now()}`
-        }
-      } catch (e) {
-        console.error('Token exchange failed:', e)
-        token.value = `local-session-${Date.now()}`
+      const platformRes = await publicApiCall(`/users/${foundUser.id}/token`, {
+        method: 'POST',
+        body: JSON.stringify({
+          credentialId: credentialData.id,
+          authenticatorData: credentialData.authenticatorData,
+          clientDataJSON: credentialData.clientDataJSON,
+          signature: credentialData.signature,
+          challenge,
+        }),
+      })
+      if (!platformRes?.success || !platformRes?.token) {
+        error.value = 'Server authentication failed. Please try again.'
+        return false
       }
+      token.value = platformRes.token
 
       user.value = foundUser
-      if (token.value !== null) {
-        localStorage.setItem('auth_token', token.value)
-      }
+      localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(foundUser))
 
       return true
@@ -542,43 +526,36 @@ export const useAuth = () => {
       }
 
       // Authenticate to get a JWT - request auth challenge and sign it
-      try {
-        const authChallenge = await requestChallenge(existingUser.id, 'authentication')
-        const authOptions = WebAuthnUtils.createAuthenticationOptions(
-          [...(existingUser.credentials || []), newCredential],
-          authChallenge.challenge,
-          authChallenge.rpId,
-          authChallenge.timeout
-        )
-        const assertion = await WebAuthnUtils.authenticate(authOptions)
+      const authChallenge = await requestChallenge(existingUser.id, 'authentication')
+      const authOptions = WebAuthnUtils.createAuthenticationOptions(
+        [...(existingUser.credentials || []), newCredential],
+        authChallenge.challenge,
+        authChallenge.rpId,
+        authChallenge.timeout
+      )
+      const assertion = await WebAuthnUtils.authenticate(authOptions)
 
-        const platformRes = await publicApiCall(`/users/${existingUser.id}/token`, {
-          method: 'POST',
-          body: JSON.stringify({
-            credentialId: assertion.id,
-            authenticatorData: assertion.authenticatorData,
-            clientDataJSON: assertion.clientDataJSON,
-            signature: assertion.signature,
-            challenge: authChallenge.challenge,
-          }),
-        })
-        if (platformRes && platformRes.success) {
-          token.value = platformRes.token
-        } else {
-          token.value = `local-session-${Date.now()}`
-        }
-      } catch (e) {
-        console.error('Token exchange failed:', e)
-        token.value = `local-session-${Date.now()}`
+      const platformRes = await publicApiCall(`/users/${existingUser.id}/token`, {
+        method: 'POST',
+        body: JSON.stringify({
+          credentialId: assertion.id,
+          authenticatorData: assertion.authenticatorData,
+          clientDataJSON: assertion.clientDataJSON,
+          signature: assertion.signature,
+          challenge: authChallenge.challenge,
+        }),
+      })
+      if (!platformRes?.success || !platformRes?.token) {
+        error.value = 'Passkey added but login failed. Please log in manually.'
+        return false
       }
+      token.value = platformRes.token
 
       user.value = {
         ...existingUser,
         credentials: [...(existingUser.credentials || []), newCredential],
       }
-      if (token.value !== null) {
-        localStorage.setItem('auth_token', token.value)
-      }
+      localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(user.value))
 
       return true
