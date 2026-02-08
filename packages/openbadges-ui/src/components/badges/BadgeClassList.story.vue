@@ -350,7 +350,7 @@ function onDensityChange(density: "compact" | "normal" | "spacious"): void {
             <p style="font-size: 1.25rem; margin-bottom: 1rem">
               No badges available
             </p>
-            <p style="color: #666">
+            <p style="color: var(--ob-muted-foreground)">
               Check back later or explore other categories!
             </p>
           </div>

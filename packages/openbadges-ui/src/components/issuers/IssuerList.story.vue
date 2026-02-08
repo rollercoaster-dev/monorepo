@@ -317,7 +317,7 @@ function onDensityChange(density: "compact" | "normal" | "spacious"): void {
             <p style="font-size: 1.25rem; margin-bottom: 1rem">
               No issuers found
             </p>
-            <p style="color: #666">
+            <p style="color: var(--ob-muted-foreground)">
               Try adjusting your search or become an issuer yourself!
             </p>
           </div>
