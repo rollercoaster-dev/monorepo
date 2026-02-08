@@ -91,13 +91,14 @@ export const useUsers = () => {
   // eslint-disable-next-line no-undef
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+    const { headers: optionHeaders, ...restOptions } = options
     const response = await fetch(`/api/bs${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
+        ...optionHeaders,
       },
-      ...options,
+      ...restOptions,
     })
 
     if (!response.ok) {
