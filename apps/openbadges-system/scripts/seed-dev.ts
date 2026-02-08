@@ -21,8 +21,8 @@ import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
 import { jwtService } from '../src/server/services/jwt'
 
-const DATA_DIR = join(import.meta.dir, '..', 'data')
-const DB_PATH = join(DATA_DIR, 'users.sqlite')
+// Match the default path from database/factory.ts (SQLITE_PATH || './database/app.db')
+const DB_PATH = process.env.SQLITE_PATH || join(import.meta.dir, '..', 'database', 'app.db')
 
 const SEED_USERS = [
   {
@@ -81,19 +81,16 @@ const SEED_USERS = [
   },
 ]
 
-// Admin user to generate token for
+// Derive admin user from seed data to avoid duplication
 const ADMIN_USER = {
-  id: 'user_seed_admin_001',
-  username: 'admin_test',
-  email: 'admin@test.dev',
-  firstName: 'Admin',
-  lastName: 'Tester',
+  ...SEED_USERS[0],
   isAdmin: true,
 }
 
 function seedDatabase() {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true })
+  const dbDir = join(DB_PATH, '..')
+  if (!existsSync(dbDir)) {
+    mkdirSync(dbDir, { recursive: true })
   }
 
   const db = new Database(DB_PATH)
