@@ -151,9 +151,10 @@ oauthRoutes.get('/github/callback', async c => {
       } else {
         // Create new user — disambiguate username if it already exists
         let username = profile.login
-        const existingByUsername = await userService?.getUserByUsername(username)
-        if (existingByUsername) {
-          username = `${profile.login}_gh`
+        let suffix = 0
+        while (await userService?.getUserByUsername(username)) {
+          suffix++
+          username = suffix === 1 ? `${profile.login}_gh` : `${profile.login}_gh_${suffix}`
         }
         const result = await oauthService.createUserFromOAuth('github', profile.id, tokens, {
           ...profile,

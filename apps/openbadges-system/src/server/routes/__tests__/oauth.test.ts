@@ -346,6 +346,61 @@ describe('OAuth Routes', () => {
       expect(data.user.id).toBe('user-456')
     })
 
+    it('should disambiguate username when it already exists', async () => {
+      const mockSession = {
+        id: '1',
+        state: 'test-state',
+        provider: 'github',
+        redirect_uri: '/dashboard',
+        code_verifier: 'test-verifier',
+      }
+      const mockProfile = {
+        id: '12345',
+        login: 'taken',
+        email: 'new@example.com',
+        name: 'New User',
+        avatar_url: 'https://avatar.url',
+      }
+
+      vi.mocked(oauthService.getOAuthSession).mockResolvedValue(mockSession as any)
+      vi.mocked(oauthService.exchangeCodeForToken).mockResolvedValue({
+        access_token: 'github-token',
+      })
+      vi.mocked(oauthService.getUserProfile).mockResolvedValue(mockProfile)
+      vi.mocked(oauthService.findUserByOAuthProvider).mockResolvedValue(null)
+      vi.mocked(userService!.getUserByEmail).mockResolvedValue(null)
+      // First two usernames are taken, third is available
+      vi.mocked(userService!.getUserByUsername)
+        .mockResolvedValueOnce({ id: 'u1', username: 'taken' } as any) // 'taken'
+        .mockResolvedValueOnce({ id: 'u2', username: 'taken_gh' } as any) // 'taken_gh'
+        .mockResolvedValueOnce(null) // 'taken_gh_2' is free
+      vi.mocked(oauthService.createUserFromOAuth).mockResolvedValue({
+        user: {
+          id: 'new-user',
+          username: 'taken_gh_2',
+          email: 'new@example.com',
+          roles: ['USER'],
+        } as any,
+        oauthProvider: {} as any,
+      })
+      vi.mocked(userSyncService.syncUser).mockResolvedValue({ success: true, created: true } as any)
+
+      const app = createApp()
+      const res = await app.request('/oauth/github/callback?code=test-code&state=test-state', {
+        headers: { Accept: 'application/json' },
+      })
+
+      const data = await res.json()
+      expect(data).toMatchObject({ success: true })
+      expect(res.status).toBe(200)
+      expect(oauthService.createUserFromOAuth).toHaveBeenCalledWith(
+        'github',
+        '12345',
+        expect.anything(),
+        expect.objectContaining({ login: 'taken_gh_2' })
+      )
+    })
+
     it('should link OAuth to existing user with same email', async () => {
       const mockSession = {
         id: '1',
