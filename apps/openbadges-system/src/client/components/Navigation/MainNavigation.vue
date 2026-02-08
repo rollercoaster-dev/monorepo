@@ -165,7 +165,7 @@ onUnmounted(() => {
 
 <template>
   <nav
-    class="bg-card shadow-sm border-b border-border"
+    class="bg-card shadow-hard-sm border-b-2 border-border"
     role="navigation"
     aria-label="Main navigation"
   >
@@ -195,7 +195,7 @@ onUnmounted(() => {
                 />
               </svg>
             </div>
-            <span class="text-xl font-bold text-foreground">OpenBadges</span>
+            <span class="text-xl font-bold text-foreground font-headline">OpenBadges</span>
           </RouterLink>
         </div>
 
@@ -244,7 +244,7 @@ onUnmounted(() => {
               >
                 <div
                   v-if="openDropdowns.has(item.id)"
-                  class="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-hard-lg py-1 z-50 border border-border"
+                  class="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-hard-lg py-1 z-50 border-2 border-border"
                   role="menu"
                   :aria-labelledby="`menu-button-${item.id}`"
                   @click="closeDropdown(item.id)"
@@ -298,7 +298,7 @@ onUnmounted(() => {
       leave-to-class="transform opacity-0 scale-95"
     >
       <div v-if="isMobileMenuOpen" id="mobile-menu" class="md:hidden">
-        <div class="px-2 pt-2 pb-3 space-y-1 bg-card border-t border-border">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-card border-t-2 border-border">
           <template v-for="item in navigationItems" :key="`mobile-${item.id}`">
             <!-- Simple mobile link -->
             <RouterLink
@@ -362,7 +362,7 @@ onUnmounted(() => {
           </template>
 
           <!-- Mobile User Menu -->
-          <div class="pt-4 pb-3 border-t border-border">
+          <div class="pt-4 pb-3 border-t-2 border-border">
             <UserMenu :is-mobile="true" @close="closeMobileMenu" />
           </div>
         </div>
