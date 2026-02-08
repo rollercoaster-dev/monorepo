@@ -184,51 +184,47 @@ export const useAuth = () => {
   }
 
   // Find user by username/email
+  // Throws on server errors (500, 429, network) — callers catch and show the real error.
+  // Returns null only when the user genuinely doesn't exist (exists: false response).
   const findUser = async (usernameOrEmail: string): Promise<User | null> => {
-    try {
-      // Check if it's an email or username
-      const isEmail = usernameOrEmail.includes('@')
-      const queryParam = isEmail
-        ? `email=${encodeURIComponent(usernameOrEmail)}`
-        : `username=${encodeURIComponent(usernameOrEmail)}`
+    const isEmail = usernameOrEmail.includes('@')
+    const queryParam = isEmail
+      ? `email=${encodeURIComponent(usernameOrEmail)}`
+      : `username=${encodeURIComponent(usernameOrEmail)}`
 
-      const response = await publicApiCall(`/users/lookup?${queryParam}`)
+    const response = await publicApiCall(`/users/lookup?${queryParam}`)
 
-      if (response.exists && response.user) {
-        const backendUser = response.user
-        // Lookup returns credential metadata (id, transports, name, type)
-        // without sensitive fields (publicKey, counter). Fill defaults for
-        // fields required by the WebAuthnCredential type but unused during auth.
-        const credentials: WebAuthnCredential[] = (backendUser.credentials || []).map(
-          (c: Pick<WebAuthnCredential, 'id' | 'transports' | 'name' | 'type'>) => ({
-            id: c.id,
-            transports: c.transports,
-            name: c.name,
-            type: c.type,
-            publicKey: '',
-            counter: 0,
-            createdAt: '',
-            lastUsed: '',
-          })
-        )
-        return {
-          id: backendUser.id,
-          username: backendUser.username,
-          email: backendUser.email,
-          firstName: backendUser.firstName || '',
-          lastName: backendUser.lastName || '',
-          avatar: backendUser.avatar,
-          isAdmin: backendUser.isAdmin || false,
-          createdAt: backendUser.createdAt,
-          credentials,
-        }
+    if (response.exists && response.user) {
+      const backendUser = response.user
+      // Lookup returns credential metadata (id, transports, name, type)
+      // without sensitive fields (publicKey, counter). Fill defaults for
+      // fields required by the WebAuthnCredential type but unused during auth.
+      const credentials: WebAuthnCredential[] = (backendUser.credentials || []).map(
+        (c: Pick<WebAuthnCredential, 'id' | 'transports' | 'name' | 'type'>) => ({
+          id: c.id,
+          transports: c.transports,
+          name: c.name,
+          type: c.type,
+          publicKey: '',
+          counter: 0,
+          createdAt: '',
+          lastUsed: '',
+        })
+      )
+      return {
+        id: backendUser.id,
+        username: backendUser.username,
+        email: backendUser.email,
+        firstName: backendUser.firstName || '',
+        lastName: backendUser.lastName || '',
+        avatar: backendUser.avatar,
+        isAdmin: backendUser.isAdmin || false,
+        createdAt: backendUser.createdAt,
+        credentials,
       }
-
-      return null
-    } catch (error) {
-      console.error('Error finding user:', error)
-      return null
     }
+
+    return null
   }
 
   // Request a server-issued challenge for WebAuthn operations
@@ -278,26 +274,20 @@ export const useAuth = () => {
 
     try {
       // Check if user already exists
-      console.log('Checking for existing user:', data.username)
       const existingUser = await findUser(data.username)
       if (existingUser) {
-        console.log('User already exists:', existingUser)
         error.value = 'Username already exists'
         return false
       }
 
-      console.log('Checking for existing email:', data.email)
       const existingEmail = await findUser(data.email)
       if (existingEmail) {
-        console.log('Email already exists:', existingEmail)
         error.value = 'Email already exists'
         return false
       }
 
       // Create user in backend first
-      console.log('Creating new user in backend:', data)
       const newUser = await registerUser(data)
-      console.log('New user created:', newUser)
 
       // Request server challenge for registration
       const { challenge, rpId, timeout } = await requestChallenge(newUser.id, 'registration')
@@ -402,15 +392,11 @@ export const useAuth = () => {
       const normalized = username.trim()
 
       // Find user in backend
-      console.log('Looking for user:', normalized)
       const foundUser = await findUser(normalized)
       if (!foundUser) {
         error.value = 'User not found'
         return false
       }
-
-      console.log('Found user:', foundUser)
-      console.log('User credentials:', foundUser.credentials)
 
       // Check if user has credentials
       if (!foundUser.credentials || foundUser.credentials.length === 0) {

@@ -26,15 +26,21 @@ export function generateChallenge(userId: string, type: 'registration' | 'authen
   return challenge
 }
 
+export type ChallengeResult =
+  | { valid: true }
+  | { valid: false; reason: 'not_found' | 'expired' | 'user_mismatch' | 'type_mismatch' }
+
 export function consumeChallenge(
   challenge: string,
   userId: string,
   type: 'registration' | 'authentication'
-): boolean {
+): ChallengeResult {
   const entry = challenges.get(challenge)
-  if (!entry) return false
+  if (!entry) return { valid: false, reason: 'not_found' }
   // Always delete so the challenge is single-use
   challenges.delete(challenge)
-  if (Date.now() - entry.createdAt > CHALLENGE_TTL_MS) return false
-  return entry.userId === userId && entry.type === type
+  if (Date.now() - entry.createdAt > CHALLENGE_TTL_MS) return { valid: false, reason: 'expired' }
+  if (entry.userId !== userId) return { valid: false, reason: 'user_mismatch' }
+  if (entry.type !== type) return { valid: false, reason: 'type_mismatch' }
+  return { valid: true }
 }

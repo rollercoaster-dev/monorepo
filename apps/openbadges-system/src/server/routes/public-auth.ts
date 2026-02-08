@@ -280,26 +280,40 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
     }
 
     // Validate the challenge was issued by us
-    if (!consumeChallenge(parsed.data.challenge, userId, 'registration')) {
-      return c.json({ error: 'Invalid or expired challenge' }, 403)
+    const challengeResult = consumeChallenge(parsed.data.challenge, userId, 'registration')
+    if (!challengeResult.valid) {
+      if (challengeResult.reason !== 'expired') {
+        logger.warn('Registration challenge rejected', { userId, reason: challengeResult.reason })
+      }
+      const message =
+        challengeResult.reason === 'expired'
+          ? 'Challenge expired. Please try again.'
+          : 'Invalid or expired challenge'
+      return c.json({ error: message }, 403)
     }
 
     const { rpId, origin } = getRpConfig()
 
     // Verify the registration response using @simplewebauthn/server
-    const verification = await verifyRegistrationResponse({
-      response: {
-        id: parsed.data.id,
-        rawId: parsed.data.rawId,
-        type: parsed.data.type,
-        response: parsed.data.response,
-        clientExtensionResults: {},
-        authenticatorAttachment: parsed.data.authenticatorAttachment ?? 'platform',
-      },
-      expectedChallenge: parsed.data.challenge,
-      expectedOrigin: origin,
-      expectedRPID: rpId,
-    })
+    let verification
+    try {
+      verification = await verifyRegistrationResponse({
+        response: {
+          id: parsed.data.id,
+          rawId: parsed.data.rawId,
+          type: parsed.data.type,
+          response: parsed.data.response,
+          clientExtensionResults: {},
+          authenticatorAttachment: parsed.data.authenticatorAttachment ?? 'platform',
+        },
+        expectedChallenge: parsed.data.challenge,
+        expectedOrigin: origin,
+        expectedRPID: rpId,
+      })
+    } catch (verifyErr) {
+      logger.warn('Registration attestation verification failed', { userId, error: verifyErr })
+      return c.json({ error: 'Registration verification failed' }, 403)
+    }
 
     if (!verification.verified || !verification.registrationInfo) {
       return c.json({ error: 'Registration verification failed' }, 403)
@@ -362,8 +376,16 @@ publicAuthRoutes.post('/users/:id/token', async c => {
     }
 
     // Validate the challenge was issued by us and is single-use
-    if (!consumeChallenge(parsed.data.challenge, userId, 'authentication')) {
-      return c.json({ error: 'Invalid or expired challenge' }, 403)
+    const challengeResult = consumeChallenge(parsed.data.challenge, userId, 'authentication')
+    if (!challengeResult.valid) {
+      if (challengeResult.reason !== 'expired') {
+        logger.warn('Authentication challenge rejected', { userId, reason: challengeResult.reason })
+      }
+      const message =
+        challengeResult.reason === 'expired'
+          ? 'Challenge expired. Please try again.'
+          : 'Invalid or expired challenge'
+      return c.json({ error: message }, 403)
     }
 
     // Look up the credential's public key from the database
@@ -376,29 +398,35 @@ publicAuthRoutes.post('/users/:id/token', async c => {
     const { rpId, origin } = getRpConfig()
 
     // Verify the authentication response
-    const verification = await verifyAuthenticationResponse({
-      response: {
-        id: parsed.data.credentialId,
-        rawId: parsed.data.credentialId,
-        type: 'public-key',
+    let verification
+    try {
+      verification = await verifyAuthenticationResponse({
         response: {
-          authenticatorData: parsed.data.authenticatorData,
-          clientDataJSON: parsed.data.clientDataJSON,
-          signature: parsed.data.signature,
+          id: parsed.data.credentialId,
+          rawId: parsed.data.credentialId,
+          type: 'public-key',
+          response: {
+            authenticatorData: parsed.data.authenticatorData,
+            clientDataJSON: parsed.data.clientDataJSON,
+            signature: parsed.data.signature,
+          },
+          clientExtensionResults: {},
+          authenticatorAttachment: credential.type,
         },
-        clientExtensionResults: {},
-        authenticatorAttachment: credential.type,
-      },
-      expectedChallenge: parsed.data.challenge,
-      expectedOrigin: origin,
-      expectedRPID: rpId,
-      credential: {
-        id: credential.id,
-        publicKey: Uint8Array.from(Buffer.from(credential.publicKey, 'base64url')),
-        counter: credential.counter,
-        transports: credential.transports as AuthenticatorTransportFuture[],
-      },
-    })
+        expectedChallenge: parsed.data.challenge,
+        expectedOrigin: origin,
+        expectedRPID: rpId,
+        credential: {
+          id: credential.id,
+          publicKey: Uint8Array.from(Buffer.from(credential.publicKey, 'base64url')),
+          counter: credential.counter,
+          transports: credential.transports as AuthenticatorTransportFuture[],
+        },
+      })
+    } catch (verifyErr) {
+      logger.warn('Authentication assertion verification failed', { userId, error: verifyErr })
+      return c.json({ error: 'Authentication verification failed' }, 403)
+    }
 
     if (!verification.verified) {
       return c.json({ error: 'Authentication verification failed' }, 403)

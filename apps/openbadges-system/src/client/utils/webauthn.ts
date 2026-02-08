@@ -245,10 +245,19 @@ export class WebAuthnUtils {
       const response = credential.response as AuthenticatorAttestationResponse
       const transports = response.getTransports?.() || []
 
+      const publicKey = response.getPublicKey()
+      if (!publicKey) {
+        throw new WebAuthnError(
+          'No public key returned',
+          'NO_PUBLIC_KEY',
+          'Your authenticator did not return a public key. Please try a different authentication method.'
+        )
+      }
+
       return {
         id: this.arrayBufferToBase64Url(credential.rawId),
         rawId: this.arrayBufferToBase64Url(credential.rawId),
-        publicKey: this.arrayBufferToBase64Url(response.getPublicKey()!),
+        publicKey: this.arrayBufferToBase64Url(publicKey),
         transports: transports as AuthenticatorTransport[],
         authenticatorAttachment:
           credential.authenticatorAttachment as AuthenticatorAttachment | null,
