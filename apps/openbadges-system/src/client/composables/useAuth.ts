@@ -34,7 +34,16 @@ export interface AuthResponse {
 }
 
 // Shared reactive state — module-level so all useAuth() callers share the same refs
-const user = ref<User | null>(null)
+// Eagerly restore user from localStorage so the navigation guard can read auth
+// state before any component calls useAuth() / initializeAuth().
+let restoredUser: User | null = null
+try {
+  const storedUser = localStorage.getItem('user_data')
+  if (storedUser) restoredUser = JSON.parse(storedUser) as User
+} catch {
+  // Invalid JSON — leave as null; initializeAuth() will clean up later
+}
+const user = ref<User | null>(restoredUser)
 const token = ref<string | null>(localStorage.getItem('auth_token'))
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -78,9 +87,9 @@ export const getAuthState = () => ({
 export const useAuth = () => {
   const router = useRouter()
 
-  // Computed
-  const isAuthenticated = computed(() => !!user.value && !!token.value && isTokenValid(token.value))
-  const isAdmin = computed(() => user.value?.isAdmin || false)
+  // Computed — derived from getAuthState() so logic lives in one place
+  const isAuthenticated = computed(() => getAuthState().isAuthenticated)
+  const isAdmin = computed(() => getAuthState().isAdmin)
   // Indicates if user is in offline/local-only mode (limited backend functionality)
   const hasLocalSession = computed(() => isLocalSession(token.value))
 
