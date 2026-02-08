@@ -231,11 +231,43 @@ export const useAuth = () => {
     }
   }
 
-  // Store WebAuthn credential in backend
-  const storeCredential = async (userId: string, credential: WebAuthnCredential): Promise<void> => {
+  // Request a server-issued challenge for WebAuthn operations
+  const requestChallenge = async (
+    userId: string,
+    type: 'registration' | 'authentication'
+  ): Promise<{ challenge: string; rpId: string; timeout: number }> => {
+    return await publicApiCall(`/users/${userId}/challenge/${type}`)
+  }
+
+  // Store WebAuthn credential in backend (sends attestation data for server verification)
+  const storeCredential = async (
+    userId: string,
+    credentialData: {
+      id: string
+      rawId: string
+      attestationObject: string
+      clientDataJSON: string
+      challenge: string
+      name: string
+      authenticatorAttachment?: string
+      transports: string[]
+    }
+  ): Promise<void> => {
     await publicApiCall(`/users/${userId}/credentials`, {
       method: 'POST',
-      body: JSON.stringify(credential),
+      body: JSON.stringify({
+        id: credentialData.id,
+        rawId: credentialData.rawId,
+        type: 'public-key',
+        response: {
+          attestationObject: credentialData.attestationObject,
+          clientDataJSON: credentialData.clientDataJSON,
+        },
+        challenge: credentialData.challenge,
+        name: credentialData.name,
+        authenticatorAttachment: credentialData.authenticatorAttachment,
+        transports: credentialData.transports,
+      }),
     })
   }
 
@@ -267,18 +299,42 @@ export const useAuth = () => {
       const newUser = await registerUser(data)
       console.log('New user created:', newUser)
 
-      // Create WebAuthn registration options
+      // Request server challenge for registration
+      const { challenge, rpId, timeout } = await requestChallenge(newUser.id, 'registration')
+
+      // Create WebAuthn registration options with server challenge
       const registrationOptions = WebAuthnUtils.createRegistrationOptions(
         newUser.id,
         newUser.username,
         `${newUser.firstName} ${newUser.lastName}`,
-        []
+        [],
+        challenge,
+        rpId,
+        timeout
       )
 
       // Use WebAuthn to create credential
       const credentialData = await WebAuthnUtils.register(registrationOptions)
 
-      // Create credential object
+      const credentialName = WebAuthnUtils.getAuthenticatorName(
+        credentialData.authenticatorAttachment,
+        credentialData.transports
+      )
+
+      // Store credential in backend with attestation data for server verification
+      await storeCredential(newUser.id, {
+        id: credentialData.id,
+        rawId: credentialData.rawId,
+        attestationObject: credentialData.attestationObject,
+        clientDataJSON: credentialData.clientDataJSON,
+        challenge,
+        name: credentialName,
+        authenticatorAttachment:
+          credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
+        transports: credentialData.transports,
+      })
+
+      // Build local credential object for state
       const credential: WebAuthnCredential = {
         id: credentialData.id,
         publicKey: credentialData.publicKey,
@@ -286,34 +342,41 @@ export const useAuth = () => {
         counter: 0,
         createdAt: new Date().toISOString(),
         lastUsed: new Date().toISOString(),
-        name: WebAuthnUtils.getAuthenticatorName(
-          credentialData.authenticatorAttachment,
-          credentialData.transports
-        ),
+        name: credentialName,
         type: credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
       }
-
-      // Store credential in backend
-      await storeCredential(newUser.id, credential)
 
       // Update user with credential
       newUser.credentials = [credential]
 
-      // Request real platform token from backend for this user
+      // Now authenticate: request auth challenge and sign it to get a JWT
       try {
+        const authChallenge = await requestChallenge(newUser.id, 'authentication')
+        const authOptions = WebAuthnUtils.createAuthenticationOptions(
+          [credential],
+          authChallenge.challenge,
+          authChallenge.rpId,
+          authChallenge.timeout
+        )
+        const assertion = await WebAuthnUtils.authenticate(authOptions)
+
         const platformRes = await publicApiCall(`/users/${newUser.id}/token`, {
           method: 'POST',
+          body: JSON.stringify({
+            credentialId: assertion.id,
+            authenticatorData: assertion.authenticatorData,
+            clientDataJSON: assertion.clientDataJSON,
+            signature: assertion.signature,
+            challenge: authChallenge.challenge,
+          }),
         })
         if (platformRes && platformRes.success) {
           token.value = platformRes.token
         } else {
-          // Fallback: create a local-only session marker (not a valid JWT)
-          // This allows offline-first usage but won't authenticate with backend
           console.warn('Platform token unavailable, using local session marker')
           token.value = `local-session-${Date.now()}`
         }
       } catch (err) {
-        // Network error: create a local-only session marker
         console.warn('Failed to get platform token:', err)
         token.value = `local-session-${Date.now()}`
       }
@@ -364,29 +427,31 @@ export const useAuth = () => {
         return false
       }
 
-      // Create authentication options
-      const authenticationOptions = WebAuthnUtils.createAuthenticationOptions(foundUser.credentials)
+      // Request server challenge for authentication
+      const { challenge, rpId, timeout } = await requestChallenge(foundUser.id, 'authentication')
 
-      // Use WebAuthn to authenticate
+      // Create authentication options with server challenge
+      const authenticationOptions = WebAuthnUtils.createAuthenticationOptions(
+        foundUser.credentials,
+        challenge,
+        rpId,
+        timeout
+      )
+
+      // Use WebAuthn to authenticate (signs the server challenge)
       const credentialData = await WebAuthnUtils.authenticate(authenticationOptions)
 
-      // Verify credential exists
-      const credential = foundUser.credentials.find(c => c.id === credentialData.id)
-      if (!credential) {
-        error.value = 'Invalid credential'
-        return false
-      }
-
-      // Update credential last used time in backend
-      await publicApiCall(`/users/${foundUser.id}/credentials/${credential.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ lastUsed: new Date().toISOString() }),
-      })
-
-      // Exchange for real platform token
+      // Exchange assertion for JWT token (server verifies the signature)
       try {
         const platformRes = await publicApiCall(`/users/${foundUser.id}/token`, {
           method: 'POST',
+          body: JSON.stringify({
+            credentialId: credentialData.id,
+            authenticatorData: credentialData.authenticatorData,
+            clientDataJSON: credentialData.clientDataJSON,
+            signature: credentialData.signature,
+            challenge,
+          }),
         })
         if (platformRes && platformRes.success) {
           token.value = platformRes.token
@@ -432,14 +497,38 @@ export const useAuth = () => {
         return false
       }
 
+      // Request server challenge for registration
+      const { challenge, rpId, timeout } = await requestChallenge(existingUser.id, 'registration')
+
       const registrationOptions = WebAuthnUtils.createRegistrationOptions(
         existingUser.id,
         existingUser.username,
         `${existingUser.firstName} ${existingUser.lastName}`,
-        existingUser.credentials
+        existingUser.credentials,
+        challenge,
+        rpId,
+        timeout
       )
 
       const credentialData = await WebAuthnUtils.register(registrationOptions)
+
+      const credentialName = WebAuthnUtils.getAuthenticatorName(
+        credentialData.authenticatorAttachment,
+        credentialData.transports
+      )
+
+      // Store credential with attestation data for server verification
+      await storeCredential(existingUser.id, {
+        id: credentialData.id,
+        rawId: credentialData.rawId,
+        attestationObject: credentialData.attestationObject,
+        clientDataJSON: credentialData.clientDataJSON,
+        challenge,
+        name: credentialName,
+        authenticatorAttachment:
+          credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
+        transports: credentialData.transports,
+      })
 
       const newCredential: WebAuthnCredential = {
         id: credentialData.id,
@@ -448,19 +537,30 @@ export const useAuth = () => {
         counter: 0,
         createdAt: new Date().toISOString(),
         lastUsed: new Date().toISOString(),
-        name: WebAuthnUtils.getAuthenticatorName(
-          credentialData.authenticatorAttachment,
-          credentialData.transports
-        ),
+        name: credentialName,
         type: credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
       }
 
-      await storeCredential(existingUser.id, newCredential)
-
-      // Try to exchange for a platform token
+      // Authenticate to get a JWT - request auth challenge and sign it
       try {
+        const authChallenge = await requestChallenge(existingUser.id, 'authentication')
+        const authOptions = WebAuthnUtils.createAuthenticationOptions(
+          [...(existingUser.credentials || []), newCredential],
+          authChallenge.challenge,
+          authChallenge.rpId,
+          authChallenge.timeout
+        )
+        const assertion = await WebAuthnUtils.authenticate(authOptions)
+
         const platformRes = await publicApiCall(`/users/${existingUser.id}/token`, {
           method: 'POST',
+          body: JSON.stringify({
+            credentialId: assertion.id,
+            authenticatorData: assertion.authenticatorData,
+            clientDataJSON: assertion.clientDataJSON,
+            signature: assertion.signature,
+            challenge: authChallenge.challenge,
+          }),
         })
         if (platformRes && platformRes.success) {
           token.value = platformRes.token
@@ -620,14 +720,40 @@ export const useAuth = () => {
     error.value = null
 
     try {
+      // Request server challenge for registration
+      const { challenge, rpId, timeout } = await requestChallenge(user.value.id, 'registration')
+
       const registrationOptions = WebAuthnUtils.createRegistrationOptions(
         user.value.id,
         user.value.username,
         `${user.value.firstName} ${user.value.lastName}`,
-        user.value.credentials
+        user.value.credentials,
+        challenge,
+        rpId,
+        timeout
       )
 
       const credentialData = await WebAuthnUtils.register(registrationOptions)
+
+      const name =
+        credentialName ||
+        WebAuthnUtils.getAuthenticatorName(
+          credentialData.authenticatorAttachment,
+          credentialData.transports
+        )
+
+      // Store credential with attestation data for server verification
+      await storeCredential(user.value.id, {
+        id: credentialData.id,
+        rawId: credentialData.rawId,
+        attestationObject: credentialData.attestationObject,
+        clientDataJSON: credentialData.clientDataJSON,
+        challenge,
+        name,
+        authenticatorAttachment:
+          credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
+        transports: credentialData.transports,
+      })
 
       const newCredential: WebAuthnCredential = {
         id: credentialData.id,
@@ -636,17 +762,9 @@ export const useAuth = () => {
         counter: 0,
         createdAt: new Date().toISOString(),
         lastUsed: new Date().toISOString(),
-        name:
-          credentialName ||
-          WebAuthnUtils.getAuthenticatorName(
-            credentialData.authenticatorAttachment,
-            credentialData.transports
-          ),
+        name,
         type: credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
       }
-
-      // Store credential in backend
-      await storeCredential(user.value.id, newCredential)
 
       // Update local user state
       user.value.credentials.push(newCredential)

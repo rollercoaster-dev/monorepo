@@ -130,13 +130,16 @@ export class WebAuthnUtils {
     userId: string,
     username: string,
     displayName: string,
-    existingCredentials: WebAuthnCredential[] = []
+    existingCredentials: WebAuthnCredential[] = [],
+    serverChallenge?: string,
+    rpId?: string,
+    timeout?: number
   ): RegistrationOptions {
-    const challenge = this.generateChallenge()
+    const challenge = serverChallenge ?? this.arrayBufferToBase64Url(this.generateChallenge())
     const userIdBuffer = new TextEncoder().encode(userId)
 
     return {
-      challenge: this.arrayBufferToBase64Url(challenge),
+      challenge,
       user: {
         id: this.arrayBufferToBase64Url(userIdBuffer.slice().buffer),
         name: username,
@@ -144,7 +147,7 @@ export class WebAuthnUtils {
       },
       rp: {
         name: this.RP_NAME,
-        id: this.RP_ID,
+        id: rpId ?? this.RP_ID,
       },
       pubKeyCredParams: [
         { alg: -7, type: 'public-key' }, // ES256
@@ -152,7 +155,7 @@ export class WebAuthnUtils {
         { alg: -36, type: 'public-key' }, // ES512
         { alg: -257, type: 'public-key' }, // RS256
       ],
-      timeout: this.TIMEOUT,
+      timeout: timeout ?? this.TIMEOUT,
       attestation: 'direct',
       excludeCredentials: existingCredentials.map(cred => ({
         id: this.base64UrlToArrayBuffer(cred.id),
@@ -171,14 +174,17 @@ export class WebAuthnUtils {
    * Create authentication options for WebAuthn
    */
   static createAuthenticationOptions(
-    credentials: WebAuthnCredential[] = []
+    credentials: WebAuthnCredential[] = [],
+    serverChallenge?: string,
+    rpId?: string,
+    timeout?: number
   ): AuthenticationOptions {
-    const challenge = this.generateChallenge()
+    const challenge = serverChallenge ?? this.arrayBufferToBase64Url(this.generateChallenge())
 
     return {
-      challenge: this.arrayBufferToBase64Url(challenge),
-      timeout: this.TIMEOUT,
-      rpId: this.RP_ID,
+      challenge,
+      timeout: timeout ?? this.TIMEOUT,
+      rpId: rpId ?? this.RP_ID,
       allowCredentials: credentials.map(cred => ({
         id: this.base64UrlToArrayBuffer(cred.id),
         type: 'public-key' as const,
@@ -193,9 +199,12 @@ export class WebAuthnUtils {
    */
   static async register(options: RegistrationOptions): Promise<{
     id: string
+    rawId: string
     publicKey: string
     transports: AuthenticatorTransport[]
     authenticatorAttachment: AuthenticatorAttachment | null
+    attestationObject: string
+    clientDataJSON: string
   }> {
     if (!this.isSupported()) {
       throw new WebAuthnError(
@@ -238,10 +247,13 @@ export class WebAuthnUtils {
 
       return {
         id: this.arrayBufferToBase64Url(credential.rawId),
+        rawId: this.arrayBufferToBase64Url(credential.rawId),
         publicKey: this.arrayBufferToBase64Url(response.getPublicKey()!),
         transports: transports as AuthenticatorTransport[],
         authenticatorAttachment:
           credential.authenticatorAttachment as AuthenticatorAttachment | null,
+        attestationObject: this.arrayBufferToBase64Url(response.attestationObject),
+        clientDataJSON: this.arrayBufferToBase64Url(response.clientDataJSON),
       }
     } catch (error: unknown) {
       if (error instanceof WebAuthnError) {
