@@ -90,7 +90,8 @@ publicAuthRoutes.get('/users/lookup', async c => {
     }
 
     if (user) {
-      // Return minimal user info for lookup (removed sensitive fields for security)
+      // Return user info with credential metadata for WebAuthn authentication
+      // Only include id/transports/name/type — never expose publicKey or counter
       const userCredentials = await userService.getUserCredentials(user.id)
       return c.json({
         exists: true,
@@ -103,6 +104,12 @@ publicAuthRoutes.get('/users/lookup', async c => {
           avatar: user.avatar,
           createdAt: user.createdAt,
           hasCredentials: userCredentials.length > 0,
+          credentials: userCredentials.map(c => ({
+            id: c.id,
+            transports: c.transports,
+            name: c.name,
+            type: c.type,
+          })),
         },
       })
     } else {
