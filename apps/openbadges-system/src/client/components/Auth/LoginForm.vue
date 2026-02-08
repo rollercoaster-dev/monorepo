@@ -117,12 +117,12 @@ const handleSetupPasskey = async () => {
       </div>
 
       <!-- WebAuthn Support Info -->
-      <div class="mb-6 p-4 bg-success/10 border border-success rounded-md">
+      <div class="mb-6 p-4 bg-success-light border border-success rounded-md">
         <div class="flex items-center">
           <ShieldCheckIcon class="w-5 h-5 text-success mr-2" />
           <div>
             <h3 class="text-sm font-medium text-foreground">Passwordless Sign In</h3>
-            <p class="text-sm text-success-foreground">
+            <p class="text-sm text-success">
               {{
                 isPlatformAuthAvailable
                   ? "Use your device's built-in security (Face ID, Touch ID, or Windows Hello)"
@@ -134,18 +134,21 @@ const handleSetupPasskey = async () => {
       </div>
 
       <!-- Error Message / Recovery CTA -->
-      <div v-if="authError" class="mb-6 p-4 bg-destructive/10 border border-destructive rounded-md">
+      <div
+        v-if="authError"
+        class="mb-6 p-4 bg-destructive-light border border-destructive rounded-md"
+      >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-destructive mr-2 flex-shrink-0" />
-            <p class="text-sm text-destructive-foreground">
+            <p class="text-sm text-destructive">
               {{ authError }}
             </p>
           </div>
           <button
             v-if="authError.includes('No credentials found')"
             type="button"
-            class="text-sm font-medium text-destructive-foreground underline hover:text-destructive"
+            class="text-sm font-medium text-destructive underline hover:text-destructive"
             @click="handleSetupPasskey"
           >
             Set up a passkey
@@ -169,7 +172,7 @@ const handleSetupPasskey = async () => {
               :class="[
                 'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
                 getFieldError('usernameOrEmail')
-                  ? 'border-destructive text-destructive-foreground'
+                  ? 'border-destructive text-foreground'
                   : 'border-input',
               ]"
               placeholder="Enter your username or email"
@@ -192,12 +195,15 @@ const handleSetupPasskey = async () => {
         </div>
 
         <!-- WebAuthn Status -->
-        <div v-if="!isWebAuthnSupported" class="p-4 bg-warning/10 border border-warning rounded-md">
+        <div
+          v-if="!isWebAuthnSupported"
+          class="p-4 bg-warning-light border border-warning rounded-md"
+        >
           <div class="flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning mr-2 flex-shrink-0" />
             <div>
               <h3 class="text-sm font-medium text-foreground">Browser Not Supported</h3>
-              <p class="text-sm text-warning-foreground mt-1">
+              <p class="text-sm text-warning mt-1">
                 Your browser doesn't support secure authentication. Please use a modern browser like
                 Chrome, Firefox, Safari, or Edge.
               </p>
@@ -245,7 +251,7 @@ const handleSetupPasskey = async () => {
         >
           <span v-if="isLoading" class="flex items-center">
             <svg
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"

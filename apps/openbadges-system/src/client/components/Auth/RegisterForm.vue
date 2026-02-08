@@ -115,12 +115,12 @@ const handleSubmit = async () => {
       </div>
 
       <!-- WebAuthn Support Info -->
-      <div class="mb-6 p-4 bg-info/10 border border-info rounded-md">
+      <div class="mb-6 p-4 bg-info-light border border-info rounded-md">
         <div class="flex items-center">
           <ShieldCheckIcon class="w-5 h-5 text-info mr-2" />
           <div>
             <h3 class="text-sm font-medium text-foreground">Passwordless Authentication</h3>
-            <p class="text-sm text-info-foreground">
+            <p class="text-sm text-info">
               {{
                 isPlatformAuthAvailable
                   ? "Use your device's built-in security (Face ID, Touch ID, or Windows Hello)"
@@ -132,10 +132,13 @@ const handleSubmit = async () => {
       </div>
 
       <!-- Error Message -->
-      <div v-if="authError" class="mb-6 p-4 bg-destructive/10 border border-destructive rounded-md">
+      <div
+        v-if="authError"
+        class="mb-6 p-4 bg-destructive-light border border-destructive rounded-md"
+      >
         <div class="flex">
           <ExclamationTriangleIcon class="w-5 h-5 text-destructive mr-2 flex-shrink-0" />
-          <p class="text-sm text-destructive-foreground">
+          <p class="text-sm text-destructive">
             {{ authError }}
           </p>
         </div>
@@ -156,9 +159,7 @@ const handleSubmit = async () => {
               autocomplete="given-name"
               :class="[
                 'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('firstName')
-                  ? 'border-destructive text-destructive-foreground'
-                  : 'border-input',
+                getFieldError('firstName') ? 'border-destructive text-foreground' : 'border-input',
               ]"
               placeholder="John"
               :aria-invalid="!!getFieldError('firstName')"
@@ -186,9 +187,7 @@ const handleSubmit = async () => {
               autocomplete="family-name"
               :class="[
                 'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('lastName')
-                  ? 'border-destructive text-destructive-foreground'
-                  : 'border-input',
+                getFieldError('lastName') ? 'border-destructive text-foreground' : 'border-input',
               ]"
               placeholder="Doe"
               :aria-invalid="!!getFieldError('lastName')"
@@ -219,9 +218,7 @@ const handleSubmit = async () => {
               autocomplete="username"
               :class="[
                 'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('username')
-                  ? 'border-destructive text-destructive-foreground'
-                  : 'border-input',
+                getFieldError('username') ? 'border-destructive text-foreground' : 'border-input',
               ]"
               placeholder="johndoe"
               :aria-invalid="!!getFieldError('username')"
@@ -253,9 +250,7 @@ const handleSubmit = async () => {
               autocomplete="email"
               :class="[
                 'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('email')
-                  ? 'border-destructive text-destructive-foreground'
-                  : 'border-input',
+                getFieldError('email') ? 'border-destructive text-foreground' : 'border-input',
               ]"
               placeholder="john@example.com"
               :aria-invalid="!!getFieldError('email')"
@@ -271,12 +266,15 @@ const handleSubmit = async () => {
         </div>
 
         <!-- WebAuthn Status -->
-        <div v-if="!isWebAuthnSupported" class="p-4 bg-warning/10 border border-warning rounded-md">
+        <div
+          v-if="!isWebAuthnSupported"
+          class="p-4 bg-warning-light border border-warning rounded-md"
+        >
           <div class="flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning mr-2 flex-shrink-0" />
             <div>
               <h3 class="text-sm font-medium text-foreground">Browser Not Supported</h3>
-              <p class="text-sm text-warning-foreground mt-1">
+              <p class="text-sm text-warning mt-1">
                 Your browser doesn't support secure authentication. Please use a modern browser like
                 Chrome, Firefox, Safari, or Edge.
               </p>
@@ -324,7 +322,7 @@ const handleSubmit = async () => {
         >
           <span v-if="isLoading" class="flex items-center">
             <svg
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-primary-foreground"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
