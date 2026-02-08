@@ -171,73 +171,77 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
-export const FontUsageGuide: Story = {
-  render: () => {
-    const { theme } = useUnistyles();
-    const { copiedToken, copyToken } = useCopyToken();
-    return (
-      <View>
-        <SectionHeader
-          title="When to Use What"
-          description="Anybody is reserved for display/hero text only. All UI headings (h1-h3) use Instrument Sans. DM Mono handles code and metadata. Accessibility fonts replace the body font via theme."
-        />
-        <View style={styles.usageList}>
-          {usageExamples.map((ex) => (
-            <View key={ex.context} style={styles.usageCard}>
-              <View style={styles.previewBox}>
-                <Text style={getUsageStyle(ex.styleKey, theme)} numberOfLines={2}>{ex.text}</Text>
-              </View>
-              <View style={styles.usageInfo}>
-                <View style={styles.usageHeaderRow}>
-                  <Text style={styles.usageContext}>{ex.context}</Text>
-                  <Text style={styles.usageFont}>{ex.font}</Text>
-                </View>
-                <CopyableToken path={ex.tokens} copiedToken={copiedToken} onCopy={copyToken} />
-                {ex.note ? <Text style={styles.usageNote}>{ex.note}</Text> : null}
-              </View>
+function FontUsageGuideContent() {
+  const { theme } = useUnistyles();
+  const { copiedToken, copyToken } = useCopyToken();
+  return (
+    <View>
+      <SectionHeader
+        title="When to Use What"
+        description="Anybody is reserved for display/hero text only. All UI headings (h1-h3) use Instrument Sans. DM Mono handles code and metadata. Accessibility fonts replace the body font via theme."
+      />
+      <View style={styles.usageList}>
+        {usageExamples.map((ex) => (
+          <View key={ex.context} style={styles.usageCard}>
+            <View style={styles.previewBox}>
+              <Text style={getUsageStyle(ex.styleKey, theme)} numberOfLines={2}>{ex.text}</Text>
             </View>
-          ))}
-        </View>
+            <View style={styles.usageInfo}>
+              <View style={styles.usageHeaderRow}>
+                <Text style={styles.usageContext}>{ex.context}</Text>
+                <Text style={styles.usageFont}>{ex.font}</Text>
+              </View>
+              <CopyableToken path={ex.tokens} copiedToken={copiedToken} onCopy={copyToken} />
+              {ex.note ? <Text style={styles.usageNote}>{ex.note}</Text> : null}
+            </View>
+          </View>
+        ))}
       </View>
-    );
-  },
+    </View>
+  );
+}
+
+export const FontUsageGuide: Story = {
+  render: () => <FontUsageGuideContent />,
 };
 
-export const FontFamilies: Story = {
-  render: () => {
-    const { theme } = useUnistyles();
-    const { copiedToken, copyToken } = useCopyToken();
-    return (
-      <View>
-        <SectionHeader
-          title="Font Families"
-          description="Three design fonts and three accessibility-optimized alternatives."
-        />
-        <View style={styles.sampleList}>
-          {fontFamilyData.map((f) => {
-            const fontName = f.familyKey
-              ? theme.fontFamily[f.familyKey]
-              : f.rawFont;
-            return (
-              <View key={f.token} style={styles.sampleRow}>
-                <Text
-                  style={[styles.sampleText, { fontFamily: fontName, fontWeight: f.weight }]}
-                  numberOfLines={1}
-                >
-                  {SAMPLE_TEXT}
-                </Text>
-                <View style={styles.sampleMeta}>
-                  <Text style={styles.metaName}>{f.name}</Text>
-                  <Text style={sharedStyles.metaRole}>{f.role}</Text>
-                  <CopyableToken path={f.token} copiedToken={copiedToken} onCopy={copyToken} />
-                </View>
+function FontFamiliesContent() {
+  const { theme } = useUnistyles();
+  const { copiedToken, copyToken } = useCopyToken();
+  return (
+    <View>
+      <SectionHeader
+        title="Font Families"
+        description="Three design fonts and three accessibility-optimized alternatives."
+      />
+      <View style={styles.sampleList}>
+        {fontFamilyData.map((f) => {
+          const fontName = f.familyKey
+            ? theme.fontFamily[f.familyKey]
+            : f.rawFont;
+          return (
+            <View key={f.token} style={styles.sampleRow}>
+              <Text
+                style={[styles.sampleText, { fontFamily: fontName, fontWeight: f.weight }]}
+                numberOfLines={1}
+              >
+                {SAMPLE_TEXT}
+              </Text>
+              <View style={styles.sampleMeta}>
+                <Text style={styles.metaName}>{f.name}</Text>
+                <Text style={sharedStyles.metaRole}>{f.role}</Text>
+                <CopyableToken path={f.token} copiedToken={copiedToken} onCopy={copyToken} />
               </View>
-            );
-          })}
-        </View>
+            </View>
+          );
+        })}
       </View>
-    );
-  },
+    </View>
+  );
+}
+
+export const FontFamilies: Story = {
+  render: () => <FontFamiliesContent />,
 };
 
 function TypeScaleRow({ scaleKey }: { scaleKey: string }) {

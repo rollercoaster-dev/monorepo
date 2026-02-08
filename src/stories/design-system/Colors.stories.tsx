@@ -94,68 +94,72 @@ export default meta;
 
 type Story = StoryObj;
 
+function AccentColorsContent() {
+  const { copiedToken, copyToken } = useCopyToken();
+  return (
+    <View>
+      <SectionHeader
+        title="Accent Colors"
+        description="Vibrant accents drawn from the landing page design language."
+      />
+      <View style={styles.swatchGrid}>
+        {accentColors.map((color) => (
+          <Pressable
+            key={color.key}
+            onPress={() => copyToken(`palette.${color.key}`)}
+            style={styles.swatchCard}
+          >
+            <View style={[styles.swatchColor, { backgroundColor: color.hex }]}>
+              <CopiedBadge visible={copiedToken === `palette.${color.key}`} />
+            </View>
+            <View style={styles.swatchInfo}>
+              <Text style={sharedStyles.mono}>{`palette.${color.key}`}</Text>
+              <Text style={styles.hexValue}>{color.hex}</Text>
+            </View>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export const AccentColors: Story = {
-  render: () => {
-    const { copiedToken, copyToken } = useCopyToken();
-    return (
-      <View>
-        <SectionHeader
-          title="Accent Colors"
-          description="Vibrant accents drawn from the landing page design language."
-        />
-        <View style={styles.swatchGrid}>
-          {accentColors.map((color) => (
+  render: () => <AccentColorsContent />,
+};
+
+function GrayScaleContent() {
+  const { copiedToken, copyToken } = useCopyToken();
+  return (
+    <View>
+      <SectionHeader
+        title="Gray Scale"
+        description="Neutral gray palette from 50 (lightest) to 900 (darkest)."
+      />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.grayStrip}>
+          {grayScale.map((gray) => (
             <Pressable
-              key={color.key}
-              onPress={() => copyToken(`palette.${color.key}`)}
-              style={styles.swatchCard}
+              key={gray.key}
+              onPress={() => copyToken(`palette.${gray.key}`)}
+              style={styles.grayCell}
             >
-              <View style={[styles.swatchColor, { backgroundColor: color.hex }]}>
-                <CopiedBadge visible={copiedToken === `palette.${color.key}`} />
+              <View style={[styles.grayFill, { backgroundColor: gray.hex }]}>
+                <CopiedBadge visible={copiedToken === `palette.${gray.key}`} />
               </View>
-              <View style={styles.swatchInfo}>
-                <Text style={sharedStyles.mono}>{`palette.${color.key}`}</Text>
-                <Text style={styles.hexValue}>{color.hex}</Text>
+              <View style={styles.grayMeta}>
+                <Text style={styles.grayLabel}>{gray.label}</Text>
+                <Text style={styles.grayHex}>{gray.hex}</Text>
               </View>
             </Pressable>
           ))}
         </View>
-      </View>
-    );
-  },
-};
+      </ScrollView>
+    </View>
+  );
+}
 
 export const GrayScale: Story = {
-  render: () => {
-    const { copiedToken, copyToken } = useCopyToken();
-    return (
-      <View>
-        <SectionHeader
-          title="Gray Scale"
-          description="Neutral gray palette from 50 (lightest) to 900 (darkest)."
-        />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.grayStrip}>
-            {grayScale.map((gray) => (
-              <Pressable
-                key={gray.key}
-                onPress={() => copyToken(`palette.${gray.key}`)}
-                style={styles.grayCell}
-              >
-                <View style={[styles.grayFill, { backgroundColor: gray.hex }]}>
-                  <CopiedBadge visible={copiedToken === `palette.${gray.key}`} />
-                </View>
-                <View style={styles.grayMeta}>
-                  <Text style={styles.grayLabel}>{gray.label}</Text>
-                  <Text style={styles.grayHex}>{gray.hex}</Text>
-                </View>
-              </Pressable>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-    );
-  },
+  render: () => <GrayScaleContent />,
 };
 
 function SemanticCard({ pair }: { pair: SemanticPair }) {
