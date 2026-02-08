@@ -88,10 +88,13 @@ export const useUsers = () => {
   })
 
   // API calls
+  // eslint-disable-next-line no-undef
   const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
     const response = await fetch(`/api/bs${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -373,7 +376,12 @@ export const useUsers = () => {
         sortOrder: searchFilters.sortOrder,
       })
 
-      const response = await fetch(`/api/bs/users/export?${params}`)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const response = await fetch(`/api/bs/users/export?${params}`, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      })
       if (!response.ok) {
         throw new Error('Export failed')
       }
