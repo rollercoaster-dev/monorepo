@@ -56,18 +56,22 @@ module.exports = {
         destructive: {
           DEFAULT: 'var(--ob-destructive)',
           foreground: 'var(--ob-destructive-foreground)',
+          light: 'var(--ob-color-error-light)',
         },
         success: {
           DEFAULT: 'var(--ob-success)',
           foreground: 'var(--ob-success-foreground)',
+          light: 'var(--ob-color-success-light)',
         },
         warning: {
           DEFAULT: 'var(--ob-warning)',
           foreground: 'var(--ob-warning-foreground)',
+          light: 'var(--ob-color-warning-light)',
         },
         info: {
           DEFAULT: 'var(--ob-info)',
           foreground: 'var(--ob-info-foreground)',
+          light: 'var(--ob-color-info-light)',
         },
         border: 'var(--ob-border)',
         input: 'var(--ob-input)',
