@@ -1,8 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
 import { EvoluAppProvider } from './src/db';
-import { GoalScreen } from './src/screens/GoalScreen';
+import { TabNavigator } from './src/navigation';
 import { useFonts } from './src/hooks/useFonts';
+import { useTheme, ThemeProvider, useThemeContext } from './src/hooks/useTheme';
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true';
 
@@ -13,6 +16,36 @@ if (STORYBOOK_ENABLED) {
 }
 
 /**
+ * Inner app that consumes the theme context and re-renders when theme changes
+ */
+function ThemedApp() {
+  const { theme, isDark } = useThemeContext();
+
+  const navTheme: Theme = {
+    ...DefaultTheme,
+    dark: isDark,
+    colors: {
+      ...DefaultTheme.colors,
+      background: theme.colors.background,
+      card: theme.colors.backgroundSecondary,
+      text: theme.colors.text,
+      border: theme.colors.border,
+      primary: theme.colors.accentPrimary,
+      notification: theme.colors.accentPrimary,
+    },
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <NavigationContainer theme={navTheme}>
+        <TabNavigator />
+      </NavigationContainer>
+    </View>
+  );
+}
+
+/**
  * Root App component
  *
  * Set EXPO_PUBLIC_STORYBOOK_ENABLED=true to launch Storybook instead of the app.
@@ -20,6 +53,7 @@ if (STORYBOOK_ENABLED) {
  */
 export function App() {
   const { isReady } = useFonts();
+  const themeState = useTheme();
 
   if (!isReady) return null;
 
@@ -28,11 +62,12 @@ export function App() {
   }
 
   return (
-    <EvoluAppProvider>
-      <SafeAreaProvider>
-        <StatusBar style="auto" />
-        <GoalScreen />
-      </SafeAreaProvider>
-    </EvoluAppProvider>
+    <ThemeProvider value={themeState}>
+      <EvoluAppProvider>
+        <SafeAreaProvider>
+          <ThemedApp />
+        </SafeAreaProvider>
+      </EvoluAppProvider>
+    </ThemeProvider>
   );
 }

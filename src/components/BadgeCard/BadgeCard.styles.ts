@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { palette } from '../../themes/palette';
 import type { space } from '../../themes/tokens';
+import { shadowStyle } from '../../styles/shadows';
 
 type CardSize = 'compact' | 'normal' | 'spacious';
 
@@ -15,21 +16,19 @@ export const styles = StyleSheet.create((theme) => ({
     minHeight: 48,
   },
   container: (size: CardSize = 'normal') => ({
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.sm,
     padding: theme.space[sizeMap[size]],
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: theme.shadows.opacity,
-    shadowRadius: 2,
-    elevation: 1,
+    ...shadowStyle(theme, 'hardMd'),
   }),
   image: {
     width: 80,
     height: 80,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
     backgroundColor: theme.colors.accentPurple,
     alignItems: 'center',
     justifyContent: 'center',
@@ -38,20 +37,20 @@ export const styles = StyleSheet.create((theme) => ({
   imageText: {
     color: palette.white,
     fontSize: theme.size['3xl'],
-    fontWeight: theme.fontWeight.bold,
+    fontWeight: theme.fontWeight.black,
+    fontFamily: theme.fontFamily.headline,
   },
   title: {
-    fontSize: theme.size.xl,
-    fontWeight: theme.fontWeight.semibold,
+    ...theme.textStyles.title,
     color: theme.colors.text,
     marginBottom: theme.space[1],
   },
   date: {
-    fontSize: theme.size.sm,
+    ...theme.textStyles.caption,
     color: theme.colors.textMuted,
   },
   evidenceCount: {
-    fontSize: theme.size.sm,
+    ...theme.textStyles.caption,
     color: theme.colors.textSecondary,
     marginTop: theme.space[2],
   },

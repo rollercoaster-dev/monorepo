@@ -7,10 +7,14 @@
  * interleaved statements.
  */
 
-// 1. Install crypto globals before anything else
+// 1. Install crypto globals before anything else (native only — no web support)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { install } = require('react-native-quick-crypto');
-install();
+const { Platform } = require('react-native');
+if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { install } = require('react-native-quick-crypto');
+  install();
+}
 
 // 2. Hermes polyfills (Set methods, AbortSignal, Promise.withResolvers)
 require('./polyfills');

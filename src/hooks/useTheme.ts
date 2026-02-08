@@ -1,48 +1,93 @@
-import { useState, useEffect, useCallback } from 'react';
-import { UnistylesRuntime } from 'react-native-unistyles';
-import type { ColorMode } from '../themes/colorModes';
-import type { Variant } from '../themes/variants';
-import { getThemeName, parseThemeName, type ThemeName } from '../themes/compose';
+import { createContext, useContext, useCallback, useState } from 'react';
+import { useUnistyles, UnistylesRuntime } from 'react-native-unistyles';
+import { themes, type ThemeName, type ComposedTheme } from '../themes/compose';
 
 /**
- * Two-dimension theme management hook
+ * The 7 peer themes from @rollercoaster-dev/design-tokens.
+ * Dark mode ("Night Ride") is one of the 7 — not a separate axis.
+ */
+export const themeOptions: Array<{
+  id: ThemeName;
+  label: string;
+  description: string;
+}> = [
+  { id: 'light-default', label: 'The Full Ride', description: 'Standard theme' },
+  { id: 'dark-default', label: 'Night Ride', description: 'Dark mode' },
+  {
+    id: 'light-highContrast',
+    label: 'Bold Ink',
+    description: 'High contrast (WCAG AAA)',
+  },
+  {
+    id: 'light-dyslexia',
+    label: 'Warm Studio',
+    description: 'Dyslexia-friendly',
+  },
+  {
+    id: 'light-autismFriendly',
+    label: 'Still Water',
+    description: 'Autism-friendly',
+  },
+  {
+    id: 'light-lowVision',
+    label: 'Loud & Clear',
+    description: 'Low vision support',
+  },
+  {
+    id: 'light-lowInfo',
+    label: 'Clean Signal',
+    description: 'Reduced visual noise',
+  },
+];
+
+interface ThemeContextValue {
+  themeName: ThemeName;
+  theme: ComposedTheme;
+  isDark: boolean;
+  setTheme: (name: ThemeName) => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export const ThemeProvider = ThemeContext.Provider;
+
+export function useThemeContext(): ThemeContextValue {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) {
+    throw new Error('useThemeContext must be used within a ThemeProvider');
+  }
+  return ctx;
+}
+
+/**
+ * Single-dimension theme hook.
  *
- * Separates color mode (light/dark) from accessibility variant.
- * This allows users to toggle light/dark mode while maintaining
- * their preferred accessibility settings.
+ * Uses useUnistyles() as the re-render trigger (proven reactive in Unistyles v3),
+ * then reads UnistylesRuntime.themeName and looks up the static themes map
+ * for plain-string color values (not C++ proxies).
+ *
+ * A useState counter is kept as a belt-and-suspenders fallback to guarantee
+ * a React re-render even if useUnistyles() doesn't fire synchronously.
+ *
+ * Call once at App root, then share via ThemeProvider.
  */
 export function useTheme() {
-  const [colorMode, setColorMode] = useState<ColorMode>('light');
-  const [variant, setVariant] = useState<Variant>('default');
+  // Primary re-render trigger: Unistyles v3 reactive hook
+  useUnistyles();
 
-  // Sync state with UnistylesRuntime on mount
-  useEffect(() => {
-    const currentTheme = UnistylesRuntime.themeName as ThemeName;
-    if (currentTheme) {
-      const parsed = parseThemeName(currentTheme);
-      setColorMode(parsed.colorMode);
-      setVariant(parsed.variant);
-    }
+  // Fallback re-render trigger
+  const [, bump] = useState(0);
+
+  // Read current theme from Unistyles runtime (always fresh after re-render)
+  const themeName = (UnistylesRuntime.themeName as ThemeName) || 'light-default';
+  const theme = themes[themeName];
+  const isDark = themeName.startsWith('dark');
+
+  const setTheme = useCallback((name: ThemeName) => {
+    UnistylesRuntime.setTheme(name);
+    // Force React re-render in case useUnistyles() doesn't fire synchronously
+    bump((n) => n + 1);
   }, []);
 
-  // Update Unistyles when colorMode or variant changes
-  useEffect(() => {
-    const themeName = getThemeName(colorMode, variant);
-    if (UnistylesRuntime.themeName !== themeName) {
-      UnistylesRuntime.setTheme(themeName);
-    }
-  }, [colorMode, variant]);
-
-  const toggleColorMode = useCallback(() => {
-    setColorMode((prev) => (prev === 'light' ? 'dark' : 'light'));
-  }, []);
-
-  return {
-    colorMode,
-    variant,
-    setColorMode,
-    setVariant,
-    toggleColorMode,
-    themeName: getThemeName(colorMode, variant),
-  };
+  return { themeName, theme, isDark, setTheme };
 }

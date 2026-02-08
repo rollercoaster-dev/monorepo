@@ -28,6 +28,10 @@ export interface Colors {
   border: string;
   shadow: string;
   focusRing: string;
+  error: string;
+  warning: string;
+  success: string;
+  info: string;
 }
 
 export const lightColors: Colors = _lightColors;

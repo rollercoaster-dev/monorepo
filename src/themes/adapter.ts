@@ -126,18 +126,32 @@ export const lineHeightL = computeLineHeights(
 
 // ---------------------------------------------------------------------------
 // Color modes — wrap package colors into ColorModeConfig shape
+// Add semantic colors to both modes
 // ---------------------------------------------------------------------------
 
-export const lightColors = pkgLightColors;
-export const darkColors = pkgDarkColors;
+export const lightColors = {
+  ...pkgLightColors,
+  error: pkgPalette.error,
+  warning: pkgPalette.warning,
+  success: pkgPalette.success,
+  info: pkgPalette.info,
+};
+
+export const darkColors = {
+  ...pkgDarkColors,
+  error: pkgPalette.error,
+  warning: pkgPalette.warning,
+  success: pkgPalette.success,
+  info: pkgPalette.info,
+};
 
 export const colorModeConfigs = {
   light: {
-    colors: pkgLightColors,
+    colors: lightColors,
     shadows: { opacity: 0.04 },
   },
   dark: {
-    colors: pkgDarkColors,
+    colors: darkColors,
     shadows: { opacity: 0.2 },
   },
 } as const;
