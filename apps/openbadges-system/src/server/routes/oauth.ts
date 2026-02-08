@@ -5,13 +5,21 @@ import { userSyncService } from '../services/userSync'
 import { jwtService } from '../services/jwt'
 import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
+import { oauthConfig } from '../config/oauth'
 
 const oauthRoutes = new Hono()
 
 // Get available OAuth providers
 oauthRoutes.get('/providers', async c => {
   try {
-    const providers = ['github'] // Add more providers as they are implemented
+    const providers: string[] = []
+    if (
+      oauthConfig.enabled &&
+      oauthConfig.providers.github.enabled &&
+      oauthConfig.providers.github.clientId
+    ) {
+      providers.push('github')
+    }
 
     return c.json({
       success: true,
@@ -31,6 +39,14 @@ oauthRoutes.get('/providers', async c => {
 
 // Initialize GitHub OAuth flow
 oauthRoutes.get('/github', async c => {
+  if (
+    !oauthConfig.enabled ||
+    !oauthConfig.providers.github.enabled ||
+    !oauthConfig.providers.github.clientId
+  ) {
+    return c.json({ success: false, error: 'GitHub OAuth is not configured' }, 404)
+  }
+
   try {
     const redirectUri = c.req.query('redirect_uri') || '/'
 
