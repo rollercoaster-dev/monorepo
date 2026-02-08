@@ -179,7 +179,7 @@ onUnmounted(() => {
             aria-label="OpenBadges Demo - Home"
           >
             <div
-              class="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center"
+              class="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-sm flex items-center justify-center border-2 border-border"
             >
               <svg
                 class="w-5 h-5 text-primary-foreground"
@@ -244,7 +244,7 @@ onUnmounted(() => {
               >
                 <div
                   v-if="openDropdowns.has(item.id)"
-                  class="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-hard-lg py-1 z-50 border-2 border-border"
+                  class="absolute right-0 mt-2 w-48 bg-card rounded-sm shadow-hard-lg py-1 z-50 border-2 border-border"
                   role="menu"
                   :aria-labelledby="`menu-button-${item.id}`"
                   @click="closeDropdown(item.id)"
@@ -274,7 +274,7 @@ onUnmounted(() => {
 
           <!-- Mobile menu button -->
           <button
-            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring transition-colors duration-200"
+            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring transition-colors duration-200"
             :aria-expanded="isMobileMenuOpen"
             aria-controls="mobile-menu"
             aria-label="Toggle navigation menu"
