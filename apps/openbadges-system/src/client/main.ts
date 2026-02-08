@@ -5,6 +5,8 @@ import { createPinia } from 'pinia'
 import App from '@/App.vue'
 import 'openbadges-ui/dist/style.css'
 import { routes } from 'vue-router/auto-routes'
+import { setupAuthGuard } from '@/router/guards'
+import '@/router/types'
 
 // Import global styles
 import '@/assets/styles/main.css'
@@ -30,6 +32,9 @@ const pinia = createPinia()
 
 // Add head management
 const head = createHead()
+
+// Set up authentication navigation guard
+setupAuthGuard(router)
 
 // Use plugins
 app.use(router)

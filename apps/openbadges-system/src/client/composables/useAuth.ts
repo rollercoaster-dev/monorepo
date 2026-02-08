@@ -34,52 +34,62 @@ export interface AuthResponse {
 }
 
 // Shared reactive state — module-level so all useAuth() callers share the same refs
-const user = ref<User | null>(null)
+// Eagerly restore user from localStorage so the navigation guard can read auth
+// state before any component calls useAuth() / initializeAuth().
+let restoredUser: User | null = null
+try {
+  const storedUser = localStorage.getItem('user_data')
+  if (storedUser) restoredUser = JSON.parse(storedUser) as User
+} catch {
+  // Invalid JSON — leave as null; initializeAuth() will clean up later
+}
+const user = ref<User | null>(restoredUser)
 const token = ref<string | null>(localStorage.getItem('auth_token'))
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
 const isPlatformAuthAvailable = ref(false)
 
+// Token validation helpers — module-level so they can be used by the navigation guard
+const LOCAL_SESSION_PREFIX = 'local-session-'
+const LOCAL_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+const isLocalSession = (tokenValue: string | null): boolean => {
+  return tokenValue !== null && tokenValue.startsWith(LOCAL_SESSION_PREFIX)
+}
+
+const isLocalSessionValid = (tokenValue: string | null): boolean => {
+  if (!tokenValue || !isLocalSession(tokenValue)) return false
+  const timestamp = parseInt(tokenValue.replace(LOCAL_SESSION_PREFIX, ''), 10)
+  if (isNaN(timestamp)) return false
+  return Date.now() - timestamp < LOCAL_SESSION_MAX_AGE_MS
+}
+
+const isTokenValid = (tokenValue: string | null): boolean => {
+  if (!tokenValue) return false
+  if (isLocalSession(tokenValue)) {
+    return isLocalSessionValid(tokenValue)
+  }
+  try {
+    const decoded = jwtDecode<{ exp: number }>(tokenValue)
+    return decoded.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
+// Auth state accessor for use outside Vue component context (e.g., navigation guards)
+export const getAuthState = () => ({
+  isAuthenticated: !!user.value && !!token.value && isTokenValid(token.value),
+  isAdmin: user.value?.isAdmin || false,
+})
+
 export const useAuth = () => {
   const router = useRouter()
 
-  // Local session marker prefix for offline-first support
-  const LOCAL_SESSION_PREFIX = 'local-session-'
-  // Maximum age for local sessions (24 hours) before requiring re-authentication
-  const LOCAL_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000
-
-  // Helper function to check if this is a local-only session marker
-  const isLocalSession = (tokenValue: string | null): boolean => {
-    return tokenValue !== null && tokenValue.startsWith(LOCAL_SESSION_PREFIX)
-  }
-
-  // Helper function to check if a local session is still valid (not too old)
-  const isLocalSessionValid = (tokenValue: string | null): boolean => {
-    if (!tokenValue || !isLocalSession(tokenValue)) return false
-    const timestamp = parseInt(tokenValue.replace(LOCAL_SESSION_PREFIX, ''), 10)
-    if (isNaN(timestamp)) return false
-    return Date.now() - timestamp < LOCAL_SESSION_MAX_AGE_MS
-  }
-
-  // Helper function to check if JWT token is valid and not expired
-  const isTokenValid = (tokenValue: string | null): boolean => {
-    if (!tokenValue) return false
-    // Allow local session markers (limited functionality, offline-first)
-    if (isLocalSession(tokenValue)) {
-      return isLocalSessionValid(tokenValue)
-    }
-    try {
-      const decoded = jwtDecode<{ exp: number }>(tokenValue)
-      return decoded.exp * 1000 > Date.now()
-    } catch {
-      return false
-    }
-  }
-
-  // Computed
-  const isAuthenticated = computed(() => !!user.value && !!token.value && isTokenValid(token.value))
-  const isAdmin = computed(() => user.value?.isAdmin || false)
+  // Computed — derived from getAuthState() so logic lives in one place
+  const isAuthenticated = computed(() => getAuthState().isAuthenticated)
+  const isAdmin = computed(() => getAuthState().isAdmin)
   // Indicates if user is in offline/local-only mode (limited backend functionality)
   const hasLocalSession = computed(() => isLocalSession(token.value))
 

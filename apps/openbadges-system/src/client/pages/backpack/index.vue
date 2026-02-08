@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Backpack logic will go here
+definePage({ meta: { requiresAuth: true } })
 </script>
 
 <template>

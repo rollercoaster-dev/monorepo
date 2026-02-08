@@ -137,7 +137,16 @@ export default [
   // Vue files override - use script-first block order (matches Prettier)
   {
     files: ['**/*.vue'],
+    languageOptions: {
+      globals: {
+        // unplugin-vue-router compiler macro
+        definePage: 'readonly',
+      },
+    },
     rules: {
+      // Disable no-undef for Vue files — TypeScript handles this more accurately,
+      // and vue-eslint-parser doesn't recognize custom compiler macros like definePage
+      'no-undef': 'off',
       // Disable deprecated rule, use vue/block-order instead
       'vue/component-tags-order': 'off',
       // Script-first order matches Prettier and Vue 3 Composition API convention

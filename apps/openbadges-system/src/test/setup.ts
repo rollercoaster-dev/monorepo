@@ -1,5 +1,8 @@
 import { beforeEach, vi } from 'vitest'
 
+// Stub unplugin-vue-router compiler macro (transformed away by Vite, not available in Vitest)
+;(globalThis as Record<string, unknown>).definePage = () => {}
+
 // Mock localStorage in a jsdom-friendly way
 const localStorageMock = {
   getItem: vi.fn(),

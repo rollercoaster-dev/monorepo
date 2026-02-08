@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// Issuer editing logic will go here
-// const route = useRoute() - will be added when implementing editing
+definePage({ meta: { requiresAuth: true } })
 </script>
 
 <template>

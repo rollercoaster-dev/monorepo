@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePage({ meta: { requiresAuth: true, requiresAdmin: true } })
+
 import { ref, onMounted, watch } from 'vue'
 import {
   PlusIcon,
