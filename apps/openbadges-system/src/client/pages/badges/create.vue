@@ -161,8 +161,8 @@ const handleCancel = () => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Create New Badge Class</h1>
+  <div class="max-w-4xl mx-auto mt-8 card card-body">
+    <h1 class="text-2xl font-bold mb-6">Create New Badge Class</h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Badge Creation Form -->
@@ -179,8 +179,8 @@ const handleCancel = () => {
 
       <!-- Badge Preview -->
       <div class="space-y-6">
-        <h2 class="text-lg font-semibold text-gray-900">Preview</h2>
-        <div class="bg-gray-50 rounded-lg p-4">
+        <h2 class="text-lg font-semibold">Preview</h2>
+        <div class="bg-muted rounded-md p-4">
           <BadgeDisplay
             v-if="badgeData.name || badgeData.description"
             :badge="previewBadge"
@@ -188,7 +188,7 @@ const handleCancel = () => {
             :accessible="true"
             :show-details="true"
           />
-          <div v-else class="text-center text-gray-500 py-8">
+          <div v-else class="text-center text-muted-foreground py-8">
             <p>Badge preview will appear here as you fill out the form</p>
           </div>
         </div>
@@ -196,9 +196,9 @@ const handleCancel = () => {
     </div>
 
     <!-- Loading State -->
-    <div v-if="isSubmitting" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div v-if="isSubmitting" class="mt-6 alert alert-info" role="status" aria-live="polite">
       <div class="flex items-center">
-        <svg class="w-5 h-5 mr-3 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
           <circle
             class="opacity-25"
             cx="12"
@@ -213,19 +213,14 @@ const handleCancel = () => {
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           />
         </svg>
-        <p class="text-blue-800">Creating badge...</p>
+        <p>Creating badge...</p>
       </div>
     </div>
 
     <!-- Error Display -->
-    <div v-if="error" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+    <div v-if="error" class="mt-6 alert alert-error" role="alert">
       <div class="flex items-center">
-        <svg
-          class="w-5 h-5 mr-3 text-red-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -234,27 +229,16 @@ const handleCancel = () => {
           />
         </svg>
         <div>
-          <p class="text-red-800 font-medium">Error</p>
-          <p class="text-red-700">
-            {{ error }}
-          </p>
+          <p class="font-medium">Error</p>
+          <p>{{ error }}</p>
         </div>
       </div>
     </div>
 
     <!-- Success Message -->
-    <div
-      v-if="successMessage"
-      class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg"
-      role="alert"
-    >
+    <div v-if="successMessage" class="mt-6 alert alert-success" role="alert">
       <div class="flex items-center">
-        <svg
-          class="w-5 h-5 mr-3 text-green-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -263,10 +247,8 @@ const handleCancel = () => {
           />
         </svg>
         <div>
-          <p class="text-green-800 font-medium">Success</p>
-          <p class="text-green-700">
-            {{ successMessage }}
-          </p>
+          <p class="font-medium">Success</p>
+          <p>{{ successMessage }}</p>
         </div>
       </div>
     </div>

@@ -51,7 +51,7 @@ describe('Badge Issuance Validation', () => {
     expect(errorElement.exists()).toBe(true)
     expect(errorElement.text()).toBe('Please enter a valid email address')
     expect(emailInput.attributes('aria-describedby')).toContain('recipient-email-error')
-    expect(emailInput.classes()).toContain('border-red-300')
+    expect(emailInput.classes()).toContain('border-destructive')
   })
 
   it('should show validation error for invalid URL', async () => {

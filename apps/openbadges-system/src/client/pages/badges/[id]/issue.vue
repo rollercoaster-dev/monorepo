@@ -299,34 +299,25 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Issue Badge</h1>
+  <div class="max-w-4xl mx-auto mt-8 card card-body">
+    <h1 class="text-2xl font-bold mb-6">Issue Badge</h1>
 
     <!-- Badge Display -->
-    <div v-if="badge" class="mb-8 bg-gray-50 rounded-lg p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Badge to Issue</h2>
+    <div v-if="badge" class="mb-8 bg-muted rounded-md p-6">
+      <h2 class="text-lg font-semibold mb-4">Badge to Issue</h2>
       <BadgeDisplay :badge="badge" :theme="'default'" :accessible="true" :show-details="true" />
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading && !badge" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-      <p class="mt-2 text-gray-600">Loading badge...</p>
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+      <p class="mt-2 text-muted-foreground">Loading badge...</p>
     </div>
 
     <!-- Error State -->
-    <div
-      v-if="error && !badge"
-      class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
-      role="alert"
-    >
+    <div v-if="error && !badge" class="alert alert-error mb-6" role="alert">
       <div class="flex items-center">
-        <svg
-          class="w-5 h-5 mr-3 text-red-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -335,8 +326,8 @@ onMounted(() => {
           />
         </svg>
         <div>
-          <p class="text-red-800 font-medium">Error</p>
-          <p class="text-red-700">{{ error }}</p>
+          <p class="font-medium">Error</p>
+          <p>{{ error }}</p>
         </div>
       </div>
     </div>
@@ -345,7 +336,7 @@ onMounted(() => {
     <form v-if="badge" class="space-y-6" @submit.prevent="handleIssue">
       <!-- Recipient Email -->
       <div>
-        <label for="recipient-email" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="recipient-email" class="block text-sm font-medium text-foreground mb-2">
           Recipient Email *
         </label>
         <input
@@ -353,12 +344,8 @@ onMounted(() => {
           v-model="issueForm.recipientEmail"
           type="email"
           required
-          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          :class="
-            getFieldError('recipientEmail')
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          "
+          class="form-input px-3 py-2"
+          :class="getFieldError('recipientEmail') ? 'border-destructive' : ''"
           placeholder="recipient@example.com"
           aria-describedby="recipient-email-help recipient-email-error"
           @blur="validateField('recipientEmail')"
@@ -367,30 +354,26 @@ onMounted(() => {
         <p
           v-if="getFieldError('recipientEmail')"
           id="recipient-email-error"
-          class="mt-1 text-sm text-red-600"
+          class="mt-1 text-sm text-destructive"
         >
           {{ getFieldError('recipientEmail') }}
         </p>
-        <p id="recipient-email-help" class="mt-1 text-sm text-gray-500">
+        <p id="recipient-email-help" class="mt-1 text-sm text-muted-foreground">
           The email address of the person receiving this badge.
         </p>
       </div>
 
       <!-- Evidence URL -->
       <div>
-        <label for="evidence-url" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="evidence-url" class="block text-sm font-medium text-foreground mb-2">
           Evidence URL (optional)
         </label>
         <input
           id="evidence-url"
           v-model="issueForm.evidence"
           type="url"
-          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          :class="
-            getFieldError('evidence')
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          "
+          class="form-input px-3 py-2"
+          :class="getFieldError('evidence') ? 'border-destructive' : ''"
           placeholder="https://example.com/evidence"
           aria-describedby="evidence-url-help evidence-url-error"
           @blur="validateField('evidence')"
@@ -399,85 +382,81 @@ onMounted(() => {
         <p
           v-if="getFieldError('evidence')"
           id="evidence-url-error"
-          class="mt-1 text-sm text-red-600"
+          class="mt-1 text-sm text-destructive"
         >
           {{ getFieldError('evidence') }}
         </p>
-        <p id="evidence-url-help" class="mt-1 text-sm text-gray-500">
+        <p id="evidence-url-help" class="mt-1 text-sm text-muted-foreground">
           Link to evidence supporting this badge award (portfolio, project, etc.).
         </p>
       </div>
 
       <!-- Narrative -->
       <div>
-        <label for="narrative" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="narrative" class="block text-sm font-medium text-foreground mb-2">
           Narrative (optional)
         </label>
         <textarea
           id="narrative"
           v-model="issueForm.narrative"
           rows="4"
-          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          :class="
-            getFieldError('narrative')
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          "
+          class="form-input px-3 py-2"
+          :class="getFieldError('narrative') ? 'border-destructive' : ''"
           placeholder="Describe why this badge is being awarded..."
           aria-describedby="narrative-help narrative-error"
           @blur="validateField('narrative')"
           @input="clearFieldError('narrative')"
         ></textarea>
-        <p v-if="getFieldError('narrative')" id="narrative-error" class="mt-1 text-sm text-red-600">
+        <p
+          v-if="getFieldError('narrative')"
+          id="narrative-error"
+          class="mt-1 text-sm text-destructive"
+        >
           {{ getFieldError('narrative') }}
         </p>
-        <p id="narrative-help" class="mt-1 text-sm text-gray-500">
+        <p id="narrative-help" class="mt-1 text-sm text-muted-foreground">
           Additional context or explanation for why this badge is being awarded.
         </p>
       </div>
 
       <!-- Valid From -->
       <div>
-        <label for="validFrom" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="validFrom" class="block text-sm font-medium text-foreground mb-2">
           Valid From (optional)
         </label>
         <input
           id="validFrom"
           v-model="issueForm.validFrom"
           type="date"
-          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          :class="
-            getFieldError('validFrom')
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          "
+          class="form-input px-3 py-2"
+          :class="getFieldError('validFrom') ? 'border-destructive' : ''"
           aria-describedby="validFrom-help validFrom-error"
           @blur="validateField('validFrom')"
           @input="clearFieldError('validFrom')"
         />
-        <p v-if="getFieldError('validFrom')" id="validFrom-error" class="mt-1 text-sm text-red-600">
+        <p
+          v-if="getFieldError('validFrom')"
+          id="validFrom-error"
+          class="mt-1 text-sm text-destructive"
+        >
           {{ getFieldError('validFrom') }}
         </p>
-        <p id="validFrom-help" class="mt-1 text-sm text-gray-500">
+        <p id="validFrom-help" class="mt-1 text-sm text-muted-foreground">
           When this credential becomes valid (defaults to issuance date if not specified).
         </p>
       </div>
 
       <!-- Valid Until -->
       <div>
-        <label for="validUntil" class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="validUntil" class="block text-sm font-medium text-foreground mb-2">
           Valid Until (optional)
         </label>
         <input
           id="validUntil"
           v-model="issueForm.validUntil"
           type="date"
-          class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          :class="
-            getFieldError('validUntil')
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300'
-          "
+          class="form-input px-3 py-2"
+          :class="getFieldError('validUntil') ? 'border-destructive' : ''"
           :min="issueForm.validFrom || today"
           aria-describedby="validUntil-help validUntil-error"
           @blur="validateField('validUntil')"
@@ -486,27 +465,21 @@ onMounted(() => {
         <p
           v-if="getFieldError('validUntil')"
           id="validUntil-error"
-          class="mt-1 text-sm text-red-600"
+          class="mt-1 text-sm text-destructive"
         >
           {{ getFieldError('validUntil') }}
         </p>
-        <p id="validUntil-help" class="mt-1 text-sm text-gray-500">
+        <p id="validUntil-help" class="mt-1 text-sm text-muted-foreground">
           When this credential expires (leave blank for no expiration).
         </p>
       </div>
 
       <!-- Form Actions -->
-      <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          @click="handleCancel"
-        >
-          Cancel
-        </button>
+      <div class="flex items-center justify-end space-x-4 pt-6 border-t-2 border-border">
+        <button type="button" class="btn btn-secondary" @click="handleCancel">Cancel</button>
         <button
           type="submit"
-          class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="isSubmitting || !isFormValid"
         >
           <span v-if="isSubmitting" class="flex items-center">
@@ -533,18 +506,9 @@ onMounted(() => {
     </form>
 
     <!-- Success Message -->
-    <div
-      v-if="successMessage"
-      class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg"
-      role="alert"
-    >
+    <div v-if="successMessage" class="mt-6 alert alert-success" role="alert">
       <div class="flex items-center">
-        <svg
-          class="w-5 h-5 mr-3 text-green-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -553,21 +517,16 @@ onMounted(() => {
           />
         </svg>
         <div>
-          <p class="text-green-800 font-medium">Success</p>
-          <p class="text-green-700">{{ successMessage }}</p>
-          <p v-if="issuedAssertion" class="text-green-700 text-sm mt-1">
-            Assertion ID: {{ issuedAssertion.id }}
-          </p>
+          <p class="font-medium">Success</p>
+          <p>{{ successMessage }}</p>
+          <p v-if="issuedAssertion" class="text-sm mt-1">Assertion ID: {{ issuedAssertion.id }}</p>
           <div v-if="issuedAssertion" class="mt-3 flex space-x-3">
-            <router-link
-              :to="`/backpack`"
-              class="text-sm text-green-700 hover:text-green-800 underline"
-            >
+            <router-link :to="`/backpack`" class="text-sm hover:opacity-80 underline">
               View in Backpack
             </router-link>
             <button
               type="button"
-              class="text-sm text-green-700 hover:text-green-800 underline"
+              class="text-sm hover:opacity-80 underline"
               :disabled="isVerifying"
               @click="verifyIssuedBadge"
             >
@@ -592,7 +551,7 @@ onMounted(() => {
               <span v-else>Verify Badge</span>
             </button>
           </div>
-          <p v-if="verificationStatus" class="text-green-700 text-sm mt-2">
+          <p v-if="verificationStatus" class="text-success text-sm mt-2">
             ✓ Badge verified and retrievable from backpack
           </p>
         </div>
@@ -600,14 +559,9 @@ onMounted(() => {
     </div>
 
     <!-- Error Message -->
-    <div v-if="issueError" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+    <div v-if="issueError" class="mt-6 alert alert-error" role="alert">
       <div class="flex items-center">
-        <svg
-          class="w-5 h-5 mr-3 text-red-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -616,8 +570,8 @@ onMounted(() => {
           />
         </svg>
         <div>
-          <p class="text-red-800 font-medium">Error</p>
-          <p class="text-red-700">{{ issueError }}</p>
+          <p class="font-medium">Error</p>
+          <p>{{ issueError }}</p>
         </div>
       </div>
     </div>

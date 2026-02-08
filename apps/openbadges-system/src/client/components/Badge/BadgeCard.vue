@@ -54,7 +54,9 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+  <div
+    class="bg-card rounded-md border-2 border-border shadow-hard-md p-6 hover:shadow-hard-lg transition-shadow"
+  >
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center space-x-4">
         <div class="flex-shrink-0">
@@ -62,21 +64,21 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
             v-if="badge.image"
             :src="getImageSrc(badge.image)"
             :alt="badge.name"
-            class="w-16 h-16 rounded-lg object-cover"
+            class="w-16 h-16 rounded-md object-cover"
           />
           <div
             v-else
-            class="w-16 h-16 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center"
+            class="w-16 h-16 rounded-md bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center"
           >
-            <TrophyIcon class="w-8 h-8 text-white" />
+            <TrophyIcon class="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
 
         <div class="flex-1 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-900 truncate">
+          <h3 class="text-lg font-semibold text-foreground truncate">
             {{ badge.name }}
           </h3>
-          <p class="text-sm text-gray-600 line-clamp-2">
+          <p class="text-sm text-muted-foreground line-clamp-2">
             {{ badge.description }}
           </p>
         </div>
@@ -84,21 +86,21 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
 
       <div class="flex items-center space-x-2">
         <button
-          class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+          class="p-2 text-muted-foreground hover:text-primary transition-colors"
           title="Edit badge"
           @click="$emit('edit', badge)"
         >
           <PencilIcon class="w-4 h-4" />
         </button>
         <button
-          class="p-2 text-gray-400 hover:text-green-600 transition-colors"
+          class="p-2 text-muted-foreground hover:text-success transition-colors"
           title="View badge"
           @click="$emit('view', badge)"
         >
           <EyeIcon class="w-4 h-4" />
         </button>
         <button
-          class="p-2 text-gray-400 hover:text-red-600 transition-colors"
+          class="p-2 text-muted-foreground hover:text-destructive transition-colors"
           title="Delete badge"
           @click="$emit('delete', badge)"
         >
@@ -109,33 +111,33 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
 
     <div class="space-y-3">
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-500">Issuer:</span>
-        <span class="font-medium text-gray-900">{{ getIssuerName(badge.issuer) }}</span>
+        <span class="text-muted-foreground">Issuer:</span>
+        <span class="font-medium text-foreground">{{ getIssuerName(badge.issuer) }}</span>
       </div>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-500">Created:</span>
-        <span class="text-gray-700">{{ formatDate(badge.createdAt) }}</span>
+        <span class="text-muted-foreground">Created:</span>
+        <span class="text-foreground">{{ formatDate(badge.createdAt) }}</span>
       </div>
 
       <div v-if="badge.tags && badge.tags.length > 0" class="flex flex-wrap gap-1">
         <span
           v-for="tag in badge.tags.slice(0, 3)"
           :key="tag"
-          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
         >
           {{ tag }}
         </span>
         <span
           v-if="badge.tags.length > 3"
-          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+          class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground"
         >
           +{{ badge.tags.length - 3 }} more
         </span>
       </div>
 
-      <div class="flex items-center justify-between pt-2 border-t border-gray-200">
-        <div class="flex items-center space-x-4 text-sm text-gray-600">
+      <div class="flex items-center justify-between pt-2 border-t-2 border-border">
+        <div class="flex items-center space-x-4 text-sm text-muted-foreground">
           <div class="flex items-center space-x-1">
             <UserGroupIcon class="w-4 h-4" />
             <span>{{ badge.issuedCount || 0 }} issued</span>
@@ -148,13 +150,13 @@ function getImageSrc(image: string | OB2.Image | undefined): string | undefined 
 
         <div class="flex items-center space-x-2">
           <button
-            class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            class="text-xs text-primary hover:text-primary-dark font-medium"
             @click="$emit('issue', badge)"
           >
             Issue
           </button>
           <button
-            class="text-xs text-gray-600 hover:text-gray-800 font-medium"
+            class="text-xs text-muted-foreground hover:text-foreground font-medium"
             @click="$emit('duplicate', badge)"
           >
             Duplicate

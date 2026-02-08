@@ -40,22 +40,14 @@ onMounted(() => {
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Badge Directory</h1>
-      <RouterLink
-        to="/badges/create"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-      >
-        Create Badge
-      </RouterLink>
+      <h1 class="text-2xl font-bold">Badge Directory</h1>
+      <RouterLink to="/badges/create" class="btn btn-primary">Create Badge</RouterLink>
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
-      <p class="text-red-800">{{ error }}</p>
-      <button
-        class="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-        @click="loadBadgeClasses"
-      >
+    <div v-if="error" class="alert alert-error mb-6" role="alert">
+      <p>{{ error }}</p>
+      <button class="mt-2 text-sm underline hover:opacity-80" @click="loadBadgeClasses">
         Try again
       </button>
     </div>
@@ -72,8 +64,8 @@ onMounted(() => {
     >
       <template #empty>
         <div class="text-center py-8">
-          <p class="text-gray-500 mb-4">No badges found.</p>
-          <RouterLink to="/badges/create" class="text-blue-600 hover:text-blue-800 underline">
+          <p class="text-muted-foreground mb-4">No badges found.</p>
+          <RouterLink to="/badges/create" class="text-primary hover:text-primary-dark underline">
             Create your first badge
           </RouterLink>
         </div>
