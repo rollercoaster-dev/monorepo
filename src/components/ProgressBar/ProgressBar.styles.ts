@@ -9,9 +9,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     overflow: 'hidden' as const,
   },
-  fill: (progress: number) => ({
+  fillBase: {
     height: '100%' as const,
     backgroundColor: theme.colors.accentPrimary,
-    width: `${Math.max(0, Math.min(100, progress * 100))}%` as const,
-  }),
+  },
 }));

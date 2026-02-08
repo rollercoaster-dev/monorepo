@@ -1,6 +1,7 @@
 import { createContext, useContext, useCallback, useState } from 'react';
 import { useUnistyles, UnistylesRuntime } from 'react-native-unistyles';
-import { themes, type ThemeName, type ComposedTheme } from '../themes/compose';
+import { themes, parseThemeName, type ThemeName, type ComposedTheme } from '../themes/compose';
+import type { Variant } from '../themes/variants';
 
 /**
  * The 7 peer themes from @rollercoaster-dev/design-tokens.
@@ -44,6 +45,7 @@ interface ThemeContextValue {
   themeName: ThemeName;
   theme: ComposedTheme;
   isDark: boolean;
+  variant: Variant;
   setTheme: (name: ThemeName) => void;
 }
 
@@ -82,6 +84,7 @@ export function useTheme() {
   const themeName = (UnistylesRuntime.themeName as ThemeName) || 'light-default';
   const theme = themes[themeName];
   const isDark = themeName.startsWith('dark');
+  const { variant } = parseThemeName(themeName);
 
   const setTheme = useCallback((name: ThemeName) => {
     UnistylesRuntime.setTheme(name);
@@ -89,5 +92,5 @@ export function useTheme() {
     bump((n) => n + 1);
   }, []);
 
-  return { themeName, theme, isDark, setTheme };
+  return { themeName, theme, isDark, variant, setTheme };
 }
