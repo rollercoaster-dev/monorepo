@@ -6,11 +6,26 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 // Stack param lists
 // ---------------------------------------------------------------------------
 
+/** Shared params for all evidence capture screens */
+export type CaptureParams = { goalId: string; stepId?: string };
+
+/** Evidence capture routes — single source of truth */
+type CaptureRoutes = {
+  CapturePhoto: CaptureParams;
+  CaptureVoiceMemo: CaptureParams;
+  CaptureTextNote: CaptureParams;
+  CaptureLink: CaptureParams;
+  CaptureFile: CaptureParams;
+};
+
+/** Screen names that accept CaptureParams (derived from CaptureRoutes) */
+export type CaptureScreenName = keyof CaptureRoutes;
+
 export type GoalsStackParamList = {
   Goals: undefined;
   GoalDetail: { goalId: string };
   NewGoal: undefined;
-};
+} & CaptureRoutes;
 
 export type BadgesStackParamList = {
   Badges: undefined;
@@ -43,5 +58,11 @@ export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Ba
 export type BadgeDetailScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDetail'>;
 
 export type SettingsScreenProps = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
+
+export type CapturePhotoScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CapturePhoto'>;
+export type CaptureVoiceMemoScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureVoiceMemo'>;
+export type CaptureTextNoteScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureTextNote'>;
+export type CaptureLinkScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureLink'>;
+export type CaptureFileScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureFile'>;
 
 export type RootTabProps = BottomTabScreenProps<RootTabParamList>;

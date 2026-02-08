@@ -1,7 +1,7 @@
 import React, { Suspense, useState } from 'react';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
@@ -12,6 +12,7 @@ import { StatusBadge } from '../../components/StatusBadge';
 import { Divider } from '../../components/Divider';
 import { StepList, type Step } from '../../components/StepList';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
+import { EvidenceActionSheet } from '../EvidenceActionSheet';
 import {
   goalsQuery,
   completeGoal,
@@ -25,18 +26,29 @@ import {
   completeStep,
   uncompleteStep,
   StepStatus,
+  EvidenceType,
 } from '../../db';
 import type { GoalId, StepId } from '../../db';
-import type { GoalDetailScreenProps } from '../../navigation/types';
+import type { GoalDetailScreenProps, GoalsStackParamList, CaptureScreenName } from '../../navigation/types';
+import type { EvidenceTypeValue } from '../EvidenceActionSheet';
 import { styles } from './GoalDetailScreen.styles';
 
+const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
+  [EvidenceType.photo]: 'CapturePhoto',
+  [EvidenceType.voice_memo]: 'CaptureVoiceMemo',
+  [EvidenceType.text]: 'CaptureTextNote',
+  [EvidenceType.link]: 'CaptureLink',
+  [EvidenceType.file]: 'CaptureFile',
+};
+
 function GoalContent({ goalId }: { goalId: string }) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
   const [deleteStepTarget, setDeleteStepTarget] = useState<{ id: string; title: string } | null>(null);
+  const [showEvidenceSheet, setShowEvidenceSheet] = useState(false);
 
   if (!goal) {
     return (
@@ -99,6 +111,16 @@ function GoalContent({ goalId }: { goalId: string }) {
     updateStep(stepId as StepId, { title: newTitle });
   }
 
+  function handleSelectEvidenceType(type: EvidenceTypeValue) {
+    setShowEvidenceSheet(false);
+    const route = EVIDENCE_ROUTE_MAP[type];
+    if (!route) {
+      console.warn(`[GoalDetailScreen] No route for evidence type "${type}"`);
+      return;
+    }
+    navigation.navigate(route, { goalId });
+  }
+
   function handleDeleteStep(stepId: string) {
     const step = stepRows.find((s) => s.id === stepId);
     setDeleteStepTarget(step ? { id: step.id, title: step.title ?? '' } : null);
@@ -138,6 +160,15 @@ function GoalContent({ goalId }: { goalId: string }) {
         </Card>
 
         <Card>
+          <Text variant="label">Evidence</Text>
+          <Button
+            label="Add Evidence"
+            variant="secondary"
+            onPress={() => setShowEvidenceSheet(true)}
+          />
+        </Card>
+
+        <Card>
           <Text variant="label">Actions</Text>
           <View style={styles.actions}>
             <View style={styles.actionButton}>
@@ -158,6 +189,11 @@ function GoalContent({ goalId }: { goalId: string }) {
         </Card>
       </ScrollView>
 
+      <EvidenceActionSheet
+        visible={showEvidenceSheet}
+        onClose={() => setShowEvidenceSheet(false)}
+        onSelectType={handleSelectEvidenceType}
+      />
       <ConfirmDeleteModal
         visible={showDeleteGoalModal}
         onCancel={() => setShowDeleteGoalModal(false)}
