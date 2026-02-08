@@ -44,3 +44,8 @@ export function consumeChallenge(
   if (entry.type !== type) return { valid: false, reason: 'type_mismatch' }
   return { valid: true }
 }
+
+// Exported for test cleanup only
+export function _resetForTesting(): void {
+  challenges.clear()
+}
