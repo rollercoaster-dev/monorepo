@@ -387,10 +387,14 @@ function handleCriteriaUrlInput(event: any) {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto mt-8 bg-white shadow rounded-lg p-6">
+  <div class="max-w-4xl mx-auto mt-8 card card-body">
     <!-- Loading state -->
     <div v-if="!isInitialized" class="text-center py-8">
-      <svg class="w-8 h-8 mx-auto mb-4 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+      <svg
+        class="w-8 h-8 mx-auto mb-4 animate-spin text-muted-foreground"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
         <path
           class="opacity-75"
@@ -398,17 +402,17 @@ function handleCriteriaUrlInput(event: any) {
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         />
       </svg>
-      <p class="text-gray-600">Loading badge...</p>
+      <p class="text-muted-foreground">Loading badge...</p>
     </div>
 
     <!-- Main content -->
     <div v-else>
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Badge Class</h1>
+        <h1 class="text-2xl font-bold">Edit Badge Class</h1>
         <div class="flex items-center space-x-2">
-          <span v-if="isFormDirty" class="text-sm text-yellow-600">Unsaved changes</span>
+          <span v-if="isFormDirty" class="text-sm text-warning">Unsaved changes</span>
           <button
-            class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+            class="px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
             @click="router.push(`/badges/${badgeId}`)"
           >
             View Badge
@@ -420,18 +424,18 @@ function handleCriteriaUrlInput(event: any) {
         <!-- Badge Edit Form -->
         <div class="space-y-6">
           <!-- Image Upload Section -->
-          <div class="bg-gray-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Badge Image</h3>
+          <div class="bg-muted rounded-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Badge Image</h3>
 
             <!-- Image Preview -->
             <div v-if="badgeData.image" class="mb-4">
               <img
                 :src="badgeData.image"
                 :alt="badgeData.name || 'Badge image preview'"
-                class="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                class="w-32 h-32 object-cover rounded-md border-2 border-border"
               />
               <button
-                class="mt-2 mr-2 text-sm text-blue-600 hover:text-blue-800"
+                class="mt-2 mr-2 text-sm text-primary hover:text-primary-dark"
                 aria-label="Reset to original image"
                 @click="resetImage"
               >
@@ -441,13 +445,13 @@ function handleCriteriaUrlInput(event: any) {
 
             <!-- Upload Area -->
             <div
-              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors"
-              :class="{ 'border-blue-400 bg-blue-50': isUploading }"
+              class="border-2 border-dashed border-border rounded-md p-8 text-center hover:border-primary transition-colors"
+              :class="{ 'border-primary bg-primary/10': isUploading }"
               @drop="handleImageDrop"
               @dragover="handleDragOver"
               @dragenter="handleDragOver"
             >
-              <div v-if="isUploading" class="text-blue-600">
+              <div v-if="isUploading" class="text-primary">
                 <svg class="w-8 h-8 mx-auto mb-2 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle
                     class="opacity-25"
@@ -467,7 +471,7 @@ function handleCriteriaUrlInput(event: any) {
               </div>
               <div v-else>
                 <svg
-                  class="w-8 h-8 mx-auto mb-2 text-gray-400"
+                  class="w-8 h-8 mx-auto mb-2 text-muted-foreground"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -479,8 +483,8 @@ function handleCriteriaUrlInput(event: any) {
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p class="text-gray-600 mb-2">Drop an image here or click to browse</p>
-                <p class="text-sm text-gray-500">PNG, JPG, GIF, WebP up to 2MB</p>
+                <p class="text-foreground mb-2">Drop an image here or click to browse</p>
+                <p class="text-sm text-muted-foreground">PNG, JPG, GIF, WebP up to 2MB</p>
               </div>
             </div>
 
@@ -495,10 +499,7 @@ function handleCriteriaUrlInput(event: any) {
             />
 
             <!-- Upload button -->
-            <label
-              for="badge-image-upload"
-              class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-            >
+            <label for="badge-image-upload" class="btn btn-secondary mt-4 cursor-pointer">
               <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -512,15 +513,15 @@ function handleCriteriaUrlInput(event: any) {
           </div>
 
           <!-- Criteria Definition Section -->
-          <div class="bg-gray-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Badge Criteria</h3>
+          <div class="bg-muted rounded-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Badge Criteria</h3>
 
             <div class="space-y-4">
               <!-- Criteria Narrative -->
               <div>
                 <label
                   for="criteria-narrative"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium text-foreground mb-2"
                 >
                   Criteria Description *
                 </label>
@@ -528,12 +529,8 @@ function handleCriteriaUrlInput(event: any) {
                   id="criteria-narrative"
                   :value="badgeData.criteria?.narrative"
                   rows="4"
-                  class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  :class="
-                    getFieldError('criteria')
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300'
-                  "
+                  class="form-input px-3 py-2"
+                  :class="getFieldError('criteria') ? 'border-destructive' : ''"
                   placeholder="Describe what someone needs to do to earn this badge..."
                   aria-describedby="criteria-help criteria-error"
                   required
@@ -543,11 +540,11 @@ function handleCriteriaUrlInput(event: any) {
                 <p
                   v-if="getFieldError('criteria')"
                   id="criteria-error"
-                  class="mt-1 text-sm text-red-600"
+                  class="mt-1 text-sm text-destructive"
                 >
                   {{ getFieldError('criteria') }}
                 </p>
-                <p id="criteria-help" class="mt-1 text-sm text-gray-500">
+                <p id="criteria-help" class="mt-1 text-sm text-muted-foreground">
                   Clearly describe the requirements, skills, or achievements needed to earn this
                   badge.
                 </p>
@@ -555,19 +552,15 @@ function handleCriteriaUrlInput(event: any) {
 
               <!-- Criteria URL (optional) -->
               <div>
-                <label for="criteria-url" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="criteria-url" class="block text-sm font-medium text-foreground mb-2">
                   Criteria URL (optional)
                 </label>
                 <input
                   id="criteria-url"
                   :value="criteriaUrl"
                   type="url"
-                  class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  :class="
-                    getFieldError('criteriaUrl')
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      : 'border-gray-300'
-                  "
+                  class="form-input px-3 py-2"
+                  :class="getFieldError('criteriaUrl') ? 'border-destructive' : ''"
                   placeholder="https://example.com/badge-criteria"
                   aria-describedby="criteria-url-help criteria-url-error"
                   @input="handleCriteriaUrlInput"
@@ -576,18 +569,18 @@ function handleCriteriaUrlInput(event: any) {
                 <p
                   v-if="getFieldError('criteriaUrl')"
                   id="criteria-url-error"
-                  class="mt-1 text-sm text-red-600"
+                  class="mt-1 text-sm text-destructive"
                 >
                   {{ getFieldError('criteriaUrl') }}
                 </p>
-                <p id="criteria-url-help" class="mt-1 text-sm text-gray-500">
+                <p id="criteria-url-help" class="mt-1 text-sm text-muted-foreground">
                   Optional link to detailed criteria documentation.
                 </p>
               </div>
 
               <!-- Alignment Objects -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium text-foreground mb-2">
                   Educational Alignment (optional)
                 </label>
                 <div class="space-y-3">
@@ -600,7 +593,7 @@ function handleCriteriaUrlInput(event: any) {
                       <input
                         v-model="alignment.targetName"
                         type="text"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        class="form-input px-3 py-2"
                         placeholder="Standard or skill name"
                         :aria-label="`Alignment ${index + 1} name`"
                         @input="handleAlignmentInput"
@@ -610,7 +603,7 @@ function handleCriteriaUrlInput(event: any) {
                       <input
                         v-model="alignment.targetUrl"
                         type="url"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        class="form-input px-3 py-2"
                         placeholder="https://example.com/standard"
                         :aria-label="`Alignment ${index + 1} URL`"
                         @input="handleAlignmentInput"
@@ -618,7 +611,7 @@ function handleCriteriaUrlInput(event: any) {
                     </div>
                     <button
                       type="button"
-                      class="p-2 text-red-600 hover:text-red-800"
+                      class="p-2 text-destructive hover:text-destructive-light"
                       :aria-label="`Remove alignment ${index + 1}`"
                       @click="removeAlignment(index)"
                     >
@@ -634,7 +627,7 @@ function handleCriteriaUrlInput(event: any) {
                   </div>
                   <button
                     type="button"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    class="btn btn-secondary"
                     aria-label="Add new alignment"
                     @click="addAlignment"
                   >
@@ -649,7 +642,7 @@ function handleCriteriaUrlInput(event: any) {
                     Add Alignment
                   </button>
                 </div>
-                <p class="mt-1 text-sm text-gray-500">
+                <p class="mt-1 text-sm text-muted-foreground">
                   Link this badge to educational standards or competency frameworks.
                 </p>
               </div>
@@ -668,8 +661,8 @@ function handleCriteriaUrlInput(event: any) {
 
         <!-- Badge Preview -->
         <div class="space-y-6">
-          <h2 class="text-lg font-semibold text-gray-900">Preview</h2>
-          <div class="bg-gray-50 rounded-lg p-4">
+          <h2 class="text-lg font-semibold">Preview</h2>
+          <div class="bg-muted rounded-md p-4">
             <BadgeDisplay
               :badge="previewBadge"
               :theme="'default'"
@@ -681,9 +674,9 @@ function handleCriteriaUrlInput(event: any) {
       </div>
 
       <!-- Loading State -->
-      <div v-if="isSubmitting" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div v-if="isSubmitting" class="mt-6 alert alert-info">
         <div class="flex items-center">
-          <svg class="w-5 h-5 mr-3 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle
               class="opacity-25"
               cx="12"
@@ -698,19 +691,14 @@ function handleCriteriaUrlInput(event: any) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          <p class="text-blue-800">Updating badge...</p>
+          <p>Updating badge...</p>
         </div>
       </div>
 
       <!-- Error Display -->
-      <div v-if="error" class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+      <div v-if="error" class="mt-6 alert alert-error" role="alert">
         <div class="flex items-center">
-          <svg
-            class="w-5 h-5 mr-3 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -719,27 +707,16 @@ function handleCriteriaUrlInput(event: any) {
             />
           </svg>
           <div>
-            <p class="text-red-800 font-medium">Error</p>
-            <p class="text-red-700">
-              {{ error }}
-            </p>
+            <p class="font-medium">Error</p>
+            <p>{{ error }}</p>
           </div>
         </div>
       </div>
 
       <!-- Success Message -->
-      <div
-        v-if="successMessage"
-        class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg"
-        role="alert"
-      >
+      <div v-if="successMessage" class="mt-6 alert alert-success" role="alert">
         <div class="flex items-center">
-          <svg
-            class="w-5 h-5 mr-3 text-green-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -748,27 +725,16 @@ function handleCriteriaUrlInput(event: any) {
             />
           </svg>
           <div>
-            <p class="text-green-800 font-medium">Success</p>
-            <p class="text-green-700">
-              {{ successMessage }}
-            </p>
+            <p class="font-medium">Success</p>
+            <p>{{ successMessage }}</p>
           </div>
         </div>
       </div>
 
       <!-- Upload Error Display -->
-      <div
-        v-if="uploadError"
-        class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
-        role="alert"
-      >
+      <div v-if="uploadError" class="mt-6 alert alert-warning" role="alert">
         <div class="flex items-center">
-          <svg
-            class="w-5 h-5 mr-3 text-yellow-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -777,10 +743,8 @@ function handleCriteriaUrlInput(event: any) {
             />
           </svg>
           <div>
-            <p class="text-yellow-800 font-medium">Upload Error</p>
-            <p class="text-yellow-700">
-              {{ uploadError }}
-            </p>
+            <p class="font-medium">Upload Error</p>
+            <p>{{ uploadError }}</p>
           </div>
         </div>
       </div>
