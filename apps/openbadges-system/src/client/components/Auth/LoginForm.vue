@@ -96,13 +96,11 @@ const handleSetupPasskey = async () => {
 
 <template>
   <div class="max-w-md mx-auto">
-    <div class="bg-card shadow-sm rounded-lg p-6 border border-border">
+    <div class="card p-6">
       <!-- Header -->
       <div class="text-center mb-8">
-        <div
-          class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4"
-        >
-          <ShieldCheckIcon class="w-6 h-6 text-white" />
+        <div class="w-12 h-12 bg-primary rounded-sm flex items-center justify-center mx-auto mb-4">
+          <ShieldCheckIcon class="w-6 h-6 text-primary-foreground" />
         </div>
         <h2 class="text-2xl font-bold text-foreground">Sign in to your account</h2>
         <p class="mt-2 text-sm text-muted-foreground">
@@ -117,7 +115,7 @@ const handleSetupPasskey = async () => {
       </div>
 
       <!-- WebAuthn Support Info -->
-      <div class="mb-6 p-4 bg-success-light border border-success rounded-md">
+      <div class="alert alert-success mb-6">
         <div class="flex items-center">
           <ShieldCheckIcon class="w-5 h-5 text-success mr-2" />
           <div>
@@ -134,10 +132,7 @@ const handleSetupPasskey = async () => {
       </div>
 
       <!-- Error Message / Recovery CTA -->
-      <div
-        v-if="authError"
-        class="mb-6 p-4 bg-destructive-light border border-destructive rounded-md"
-      >
+      <div v-if="authError" class="alert alert-error mb-6">
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-destructive mr-2 flex-shrink-0" />
@@ -170,10 +165,8 @@ const handleSetupPasskey = async () => {
               type="text"
               autocomplete="username"
               :class="[
-                'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('usernameOrEmail')
-                  ? 'border-destructive text-foreground'
-                  : 'border-input',
+                'form-input px-3 py-2 placeholder-muted-foreground transition-colors',
+                getFieldError('usernameOrEmail') ? 'border-destructive' : '',
               ]"
               placeholder="Enter your username or email"
               :aria-invalid="!!getFieldError('usernameOrEmail')"
@@ -195,10 +188,7 @@ const handleSetupPasskey = async () => {
         </div>
 
         <!-- WebAuthn Status -->
-        <div
-          v-if="!isWebAuthnSupported"
-          class="p-4 bg-warning-light border border-warning rounded-md"
-        >
+        <div v-if="!isWebAuthnSupported" class="alert alert-warning">
           <div class="flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning mr-2 flex-shrink-0" />
             <div>
@@ -215,7 +205,7 @@ const handleSetupPasskey = async () => {
         <div class="space-y-3">
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-border"></div>
+              <div class="w-full border-t-2 border-border"></div>
             </div>
             <div class="relative flex justify-center text-sm">
               <span class="px-2 bg-card text-muted-foreground">Or continue with</span>
@@ -236,7 +226,7 @@ const handleSetupPasskey = async () => {
         <!-- WebAuthn Divider -->
         <div class="relative">
           <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-border"></div>
+            <div class="w-full border-t-2 border-border"></div>
           </div>
           <div class="relative flex justify-center text-sm">
             <span class="px-2 bg-card text-muted-foreground">Or use passwordless</span>
@@ -247,7 +237,7 @@ const handleSetupPasskey = async () => {
         <button
           type="submit"
           :disabled="isLoading || !isFormValid || !isWebAuthnSupported"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="btn btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span v-if="isLoading" class="flex items-center">
             <svg
@@ -280,7 +270,7 @@ const handleSetupPasskey = async () => {
       </form>
 
       <!-- Demo Instructions -->
-      <div class="mt-8 pt-6 border-t border-border">
+      <div class="mt-8 pt-6 border-t-2 border-border">
         <div class="bg-muted rounded-md p-4">
           <h3 class="text-sm font-medium text-foreground mb-2">Demo Instructions</h3>
           <div class="space-y-2 text-sm text-muted-foreground">

@@ -29,7 +29,6 @@ const providerConfigs = {
   github: {
     text: 'Continue with GitHub',
     icon: GitHubIcon,
-    class: 'text-foreground bg-card border-border hover:bg-muted',
   },
 }
 
@@ -38,7 +37,6 @@ const providerConfig = computed(() => {
     providerConfigs[props.provider as keyof typeof providerConfigs] || {
       text: `Continue with ${props.provider}`,
       icon: 'div',
-      class: 'text-foreground bg-card border-border hover:bg-muted',
     }
   )
 })
@@ -54,9 +52,8 @@ const handleClick = () => {
   <button
     :disabled="isLoading"
     :class="[
-      'w-full flex items-center justify-center px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium transition-colors',
-      isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-muted',
-      providerConfig.class,
+      'btn btn-secondary w-full justify-center',
+      isLoading ? 'opacity-50 cursor-not-allowed' : '',
     ]"
     @click="handleClick"
   >

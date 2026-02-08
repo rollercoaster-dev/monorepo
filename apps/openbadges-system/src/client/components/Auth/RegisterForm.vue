@@ -94,13 +94,11 @@ const handleSubmit = async () => {
 
 <template>
   <div class="max-w-md mx-auto">
-    <div class="bg-card shadow-sm rounded-lg p-6 border border-border">
+    <div class="card p-6">
       <!-- Header -->
       <div class="text-center mb-8">
-        <div
-          class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4"
-        >
-          <UserPlusIcon class="w-6 h-6 text-white" />
+        <div class="w-12 h-12 bg-primary rounded-sm flex items-center justify-center mx-auto mb-4">
+          <UserPlusIcon class="w-6 h-6 text-primary-foreground" />
         </div>
         <h2 class="text-2xl font-bold text-foreground">Create your account</h2>
         <p class="mt-2 text-sm text-muted-foreground">
@@ -115,7 +113,7 @@ const handleSubmit = async () => {
       </div>
 
       <!-- WebAuthn Support Info -->
-      <div class="mb-6 p-4 bg-info-light border border-info rounded-md">
+      <div class="alert alert-info mb-6">
         <div class="flex items-center">
           <ShieldCheckIcon class="w-5 h-5 text-info mr-2" />
           <div>
@@ -132,10 +130,7 @@ const handleSubmit = async () => {
       </div>
 
       <!-- Error Message -->
-      <div
-        v-if="authError"
-        class="mb-6 p-4 bg-destructive-light border border-destructive rounded-md"
-      >
+      <div v-if="authError" class="alert alert-error mb-6">
         <div class="flex">
           <ExclamationTriangleIcon class="w-5 h-5 text-destructive mr-2 flex-shrink-0" />
           <p class="text-sm text-destructive">
@@ -158,8 +153,8 @@ const handleSubmit = async () => {
               type="text"
               autocomplete="given-name"
               :class="[
-                'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('firstName') ? 'border-destructive text-foreground' : 'border-input',
+                'form-input px-3 py-2 placeholder-muted-foreground transition-colors',
+                getFieldError('firstName') ? 'border-destructive' : '',
               ]"
               placeholder="John"
               :aria-invalid="!!getFieldError('firstName')"
@@ -186,8 +181,8 @@ const handleSubmit = async () => {
               type="text"
               autocomplete="family-name"
               :class="[
-                'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('lastName') ? 'border-destructive text-foreground' : 'border-input',
+                'form-input px-3 py-2 placeholder-muted-foreground transition-colors',
+                getFieldError('lastName') ? 'border-destructive' : '',
               ]"
               placeholder="Doe"
               :aria-invalid="!!getFieldError('lastName')"
@@ -217,8 +212,8 @@ const handleSubmit = async () => {
               type="text"
               autocomplete="username"
               :class="[
-                'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('username') ? 'border-destructive text-foreground' : 'border-input',
+                'form-input px-3 py-2 placeholder-muted-foreground transition-colors',
+                getFieldError('username') ? 'border-destructive' : '',
               ]"
               placeholder="johndoe"
               :aria-invalid="!!getFieldError('username')"
@@ -249,8 +244,8 @@ const handleSubmit = async () => {
               type="email"
               autocomplete="email"
               :class="[
-                'block w-full px-3 py-2 border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors',
-                getFieldError('email') ? 'border-destructive text-foreground' : 'border-input',
+                'form-input px-3 py-2 placeholder-muted-foreground transition-colors',
+                getFieldError('email') ? 'border-destructive' : '',
               ]"
               placeholder="john@example.com"
               :aria-invalid="!!getFieldError('email')"
@@ -266,10 +261,7 @@ const handleSubmit = async () => {
         </div>
 
         <!-- WebAuthn Status -->
-        <div
-          v-if="!isWebAuthnSupported"
-          class="p-4 bg-warning-light border border-warning rounded-md"
-        >
+        <div v-if="!isWebAuthnSupported" class="alert alert-warning">
           <div class="flex">
             <ExclamationTriangleIcon class="w-5 h-5 text-warning mr-2 flex-shrink-0" />
             <div>
@@ -318,7 +310,7 @@ const handleSubmit = async () => {
         <button
           type="submit"
           :disabled="isLoading || !isFormValid || !acceptTerms || !isWebAuthnSupported"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="btn btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span v-if="isLoading" class="flex items-center">
             <svg
