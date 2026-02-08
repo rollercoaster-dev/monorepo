@@ -75,7 +75,7 @@ a {
   border: var(--ob-border-width) solid var(--ob-form-input-border);
 }
 
-.form-input:focus {
+.form-input:focus-visible {
   border-color: var(--ob-form-input-focus);
   box-shadow: var(--ob-shadow-focus);
   outline: none;
