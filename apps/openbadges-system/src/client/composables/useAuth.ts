@@ -33,16 +33,16 @@ export interface AuthResponse {
   message?: string
 }
 
+// Shared reactive state — module-level so all useAuth() callers share the same refs
+const user = ref<User | null>(null)
+const token = ref<string | null>(localStorage.getItem('auth_token'))
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
+const isPlatformAuthAvailable = ref(false)
+
 export const useAuth = () => {
   const router = useRouter()
-
-  // State
-  const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('auth_token'))
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
-  const isPlatformAuthAvailable = ref(false)
 
   // Local session marker prefix for offline-first support
   const LOCAL_SESSION_PREFIX = 'local-session-'
