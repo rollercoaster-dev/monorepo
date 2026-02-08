@@ -33,16 +33,16 @@ export interface AuthResponse {
   message?: string
 }
 
+// Shared reactive state — module-level so all useAuth() callers share the same refs
+const user = ref<User | null>(null)
+const token = ref<string | null>(localStorage.getItem('auth_token'))
+const isLoading = ref(false)
+const error = ref<string | null>(null)
+const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
+const isPlatformAuthAvailable = ref(false)
+
 export const useAuth = () => {
   const router = useRouter()
-
-  // State
-  const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('auth_token'))
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
-  const isPlatformAuthAvailable = ref(false)
 
   // Local session marker prefix for offline-first support
   const LOCAL_SESSION_PREFIX = 'local-session-'
@@ -186,6 +186,21 @@ export const useAuth = () => {
 
       if (response.exists && response.user) {
         const backendUser = response.user
+        // Lookup returns credential metadata (id, transports, name, type)
+        // without sensitive fields (publicKey, counter). Fill defaults for
+        // fields required by the WebAuthnCredential type but unused during auth.
+        const credentials: WebAuthnCredential[] = (backendUser.credentials || []).map(
+          (c: Pick<WebAuthnCredential, 'id' | 'transports' | 'name' | 'type'>) => ({
+            id: c.id,
+            transports: c.transports,
+            name: c.name,
+            type: c.type,
+            publicKey: '',
+            counter: 0,
+            createdAt: '',
+            lastUsed: '',
+          })
+        )
         return {
           id: backendUser.id,
           username: backendUser.username,
@@ -195,7 +210,7 @@ export const useAuth = () => {
           avatar: backendUser.avatar,
           isAdmin: backendUser.isAdmin || false,
           createdAt: backendUser.createdAt,
-          credentials: backendUser.credentials || [],
+          credentials,
         }
       }
 

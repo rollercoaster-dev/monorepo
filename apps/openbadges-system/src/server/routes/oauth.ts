@@ -5,13 +5,21 @@ import { userSyncService } from '../services/userSync'
 import { jwtService } from '../services/jwt'
 import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
+import { oauthConfig } from '../config/oauth'
 
 const oauthRoutes = new Hono()
 
 // Get available OAuth providers
 oauthRoutes.get('/providers', async c => {
   try {
-    const providers = ['github'] // Add more providers as they are implemented
+    const providers: string[] = []
+    if (
+      oauthConfig.enabled &&
+      oauthConfig.providers.github.enabled &&
+      oauthConfig.providers.github.clientId
+    ) {
+      providers.push('github')
+    }
 
     return c.json({
       success: true,
@@ -31,6 +39,14 @@ oauthRoutes.get('/providers', async c => {
 
 // Initialize GitHub OAuth flow
 oauthRoutes.get('/github', async c => {
+  if (
+    !oauthConfig.enabled ||
+    !oauthConfig.providers.github.enabled ||
+    !oauthConfig.providers.github.clientId
+  ) {
+    return c.json({ success: false, error: 'GitHub OAuth is not configured' }, 404)
+  }
+
   try {
     const redirectUri = c.req.query('redirect_uri') || '/'
 
@@ -124,17 +140,27 @@ oauthRoutes.get('/github/callback', async c => {
         })
       }
     } else {
-      // Check if user exists with same email
+      // Match by email only — never by username (username matching is an
+      // account takeover vector: attacker registers local account with
+      // victim's GitHub username, then victim's OAuth links to attacker).
       user = (await userService?.getUserByEmail(profile.email)) || null
 
       if (user) {
-        // Link OAuth provider to existing user
+        // Link OAuth provider to existing user with matching email
         await oauthService.linkOAuthProvider(user.id, 'github', profile.id, tokens, profile)
       } else {
-        // Create new user from OAuth profile
-        const result = await oauthService.createUserFromOAuth('github', profile.id, tokens, profile)
+        // Create new user — disambiguate username if it already exists
+        let username = profile.login
+        let suffix = 0
+        while (await userService?.getUserByUsername(username)) {
+          suffix++
+          username = suffix === 1 ? `${profile.login}_gh` : `${profile.login}_gh_${suffix}`
+        }
+        const result = await oauthService.createUserFromOAuth('github', profile.id, tokens, {
+          ...profile,
+          login: username,
+        })
         user = result.user
-        // OAuth provider is created within the service, no need to store reference
       }
     }
 

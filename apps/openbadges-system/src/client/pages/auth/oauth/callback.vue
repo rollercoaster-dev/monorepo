@@ -11,7 +11,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
-const { processOAuthCallback } = useAuth()
+const { processOAuthCallback, initializeAuth } = useAuth()
 
 // State
 const isProcessing = ref(true)
@@ -54,6 +54,9 @@ const processCallback = async () => {
         // Store auth data in localStorage
         localStorage.setItem('auth_token', tokenParam)
         localStorage.setItem('user_data', JSON.stringify(authUser))
+
+        // Re-initialize shared auth state from localStorage
+        await initializeAuth()
 
         isSuccess.value = true
         isProcessing.value = false

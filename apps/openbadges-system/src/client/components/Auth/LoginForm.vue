@@ -202,7 +202,7 @@ const handleSetupPasskey = async () => {
         </div>
 
         <!-- OAuth Options -->
-        <div class="space-y-3">
+        <div v-if="availableProviders.length > 0" class="space-y-3">
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
               <div class="w-full border-t-2 border-border"></div>
