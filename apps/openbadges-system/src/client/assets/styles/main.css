@@ -52,44 +52,56 @@ a {
   @apply text-primary hover:text-primary-dark transition-colors duration-200;
 }
 
-/* Buttons — tokens: --ob-primary, --ob-primary-foreground, --ob-stroke, --ob-shadow-hard-sm */
+/* Buttons — matches openbadges-ui: --ob-border, --ob-border-radius-sm, --ob-shadow-hard-sm */
 .btn {
-  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md shadow-hard-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors duration-200;
   border: var(--ob-border-width-medium) solid transparent;
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-sm);
+}
+
+.btn:focus-visible {
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
+  box-shadow: var(--ob-shadow-focus);
 }
 
 .btn-primary {
-  @apply bg-primary text-primary-foreground hover:bg-primary-dark focus:ring-ring;
-  border-color: var(--ob-stroke);
+  @apply bg-primary text-primary-foreground hover:bg-primary-dark;
+  border-color: var(--ob-border);
 }
 
 .btn-secondary {
-  @apply bg-card text-card-foreground hover:bg-muted focus:ring-ring;
-  border-color: var(--ob-stroke);
+  @apply bg-card text-card-foreground hover:bg-muted;
+  border-color: var(--ob-border);
 }
 
-/* Forms — tokens: --ob-form-input-border, --ob-form-input-focus, --ob-form-background */
+/* Forms — matches openbadges-ui: --ob-form-input-border, --ob-border-radius-sm */
 .form-input {
-  @apply block w-full rounded-md shadow-hard-sm sm:text-sm;
+  @apply block w-full sm:text-sm;
   background-color: var(--ob-form-background);
   border: var(--ob-border-width-medium) solid var(--ob-form-input-border);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-sm);
 }
 
 .form-input:focus-visible {
-  border-color: var(--ob-form-input-focus);
+  outline: var(--ob-borderWidth-thick) solid var(--ob-border-color-focus);
+  outline-offset: var(--ob-space-1);
   box-shadow: var(--ob-shadow-focus);
-  outline: none;
 }
 
-/* Cards — tokens: --ob-card, --ob-stroke, --ob-shadow-hard-md */
+/* Cards — matches openbadges-ui: --ob-border, --ob-border-radius-sm, --ob-shadow-hard-md */
 .card {
-  @apply bg-card overflow-hidden shadow-hard-md rounded-sm;
-  border: var(--ob-border-width-medium) solid var(--ob-stroke);
+  @apply bg-card overflow-hidden;
+  border: var(--ob-border-width-medium) solid var(--ob-border);
+  border-radius: var(--ob-border-radius-sm);
+  box-shadow: var(--ob-shadow-hard-md);
 }
 
 .card-header {
   @apply px-4 py-5 sm:px-6;
-  border-bottom: var(--ob-border-width) solid var(--ob-stroke);
+  border-bottom: var(--ob-border-width-medium) solid var(--ob-border);
 }
 
 .card-body {
@@ -98,13 +110,14 @@ a {
 
 .card-footer {
   @apply px-4 py-4 sm:px-6 bg-muted;
-  border-top: var(--ob-border-width) solid var(--ob-stroke);
+  border-top: var(--ob-border-width-medium) solid var(--ob-border);
 }
 
 /* Alerts — tokens: --ob-success, --ob-error, --ob-warning, --ob-info */
 .alert {
-  @apply p-4 rounded-sm;
+  @apply p-4;
   border: var(--ob-border-width-medium) solid transparent;
+  border-radius: var(--ob-border-radius-sm);
 }
 
 .alert-success {
