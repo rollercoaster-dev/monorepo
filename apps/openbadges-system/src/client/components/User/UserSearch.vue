@@ -94,10 +94,10 @@ function exportUsers() {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow-md p-6">
+  <div class="card p-6">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-lg font-semibold text-gray-900">Search & Filter Users</h2>
-      <button class="text-sm text-gray-600 hover:text-gray-900" @click="clearFilters">
+      <h2 class="text-lg font-semibold text-foreground">Search & Filter Users</h2>
+      <button class="text-sm text-muted-foreground hover:text-foreground" @click="clearFilters">
         Clear Filters
       </button>
     </div>
@@ -105,16 +105,16 @@ function exportUsers() {
     <div class="space-y-4">
       <!-- Search Input -->
       <div>
-        <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+        <label for="search" class="block text-sm font-medium text-foreground mb-2">Search</label>
         <div class="relative">
           <input
             id="search"
             v-model="searchQuery"
             type="text"
             placeholder="Search by name, username, or email..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="form-input pl-10 pr-4 py-2"
           />
-          <MagnifyingGlassIcon class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          <MagnifyingGlassIcon class="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
         </div>
       </div>
 
@@ -122,12 +122,8 @@ function exportUsers() {
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <!-- Role Filter -->
         <div>
-          <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-          <select
-            id="role"
-            v-model="filters.role"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
+          <label for="role" class="block text-sm font-medium text-foreground mb-2">Role</label>
+          <select id="role" v-model="filters.role" class="form-input px-3 py-2">
             <option value="">All Roles</option>
             <option value="admin">Admin</option>
             <option value="user">User</option>
@@ -136,12 +132,8 @@ function exportUsers() {
 
         <!-- Status Filter -->
         <div>
-          <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <select
-            id="status"
-            v-model="filters.status"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
+          <label for="status" class="block text-sm font-medium text-foreground mb-2">Status</label>
+          <select id="status" v-model="filters.status" class="form-input px-3 py-2">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
@@ -150,34 +142,29 @@ function exportUsers() {
 
         <!-- Registration Date Filter -->
         <div>
-          <label for="dateFrom" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="dateFrom" class="block text-sm font-medium text-foreground mb-2">
             Registered From
           </label>
           <input
             id="dateFrom"
             v-model="filters.dateFrom"
             type="date"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="form-input px-3 py-2"
           />
         </div>
 
         <div>
-          <label for="dateTo" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="dateTo" class="block text-sm font-medium text-foreground mb-2">
             Registered To
           </label>
-          <input
-            id="dateTo"
-            v-model="filters.dateTo"
-            type="date"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <input id="dateTo" v-model="filters.dateTo" type="date" class="form-input px-3 py-2" />
         </div>
       </div>
 
       <!-- Advanced Filters (Collapsible) -->
-      <div class="border-t pt-4">
+      <div class="border-t-2 border-border pt-4">
         <button
-          class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
+          class="flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground"
           @click="showAdvanced = !showAdvanced"
         >
           <span>Advanced Filters</span>
@@ -190,14 +177,10 @@ function exportUsers() {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Credentials Filter -->
             <div>
-              <label for="credentials" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="credentials" class="block text-sm font-medium text-foreground mb-2">
                 Credentials
               </label>
-              <select
-                id="credentials"
-                v-model="filters.credentials"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
+              <select id="credentials" v-model="filters.credentials" class="form-input px-3 py-2">
                 <option value="">Any</option>
                 <option value="none">No Credentials</option>
                 <option value="platform">Platform Authenticator</option>
@@ -207,14 +190,10 @@ function exportUsers() {
 
             <!-- Last Login Filter -->
             <div>
-              <label for="lastLogin" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="lastLogin" class="block text-sm font-medium text-foreground mb-2">
                 Last Login
               </label>
-              <select
-                id="lastLogin"
-                v-model="filters.lastLogin"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
+              <select id="lastLogin" v-model="filters.lastLogin" class="form-input px-3 py-2">
                 <option value="">Any Time</option>
                 <option value="today">Today</option>
                 <option value="week">This Week</option>
@@ -227,14 +206,10 @@ function exportUsers() {
           <!-- Sort Options -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="sortBy" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="sortBy" class="block text-sm font-medium text-foreground mb-2">
                 Sort By
               </label>
-              <select
-                id="sortBy"
-                v-model="filters.sortBy"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
+              <select id="sortBy" v-model="filters.sortBy" class="form-input px-3 py-2">
                 <option value="createdAt">Registration Date</option>
                 <option value="firstName">First Name</option>
                 <option value="lastName">Last Name</option>
@@ -245,14 +220,10 @@ function exportUsers() {
             </div>
 
             <div>
-              <label for="sortOrder" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="sortOrder" class="block text-sm font-medium text-foreground mb-2">
                 Sort Order
               </label>
-              <select
-                id="sortOrder"
-                v-model="filters.sortOrder"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
+              <select id="sortOrder" v-model="filters.sortOrder" class="form-input px-3 py-2">
                 <option value="desc">Newest First</option>
                 <option value="asc">Oldest First</option>
               </select>
@@ -262,22 +233,14 @@ function exportUsers() {
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex justify-end space-x-3 pt-4 border-t">
-        <button
-          class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-          @click="exportUsers"
-        >
+      <div class="flex justify-end space-x-3 pt-4 border-t-2 border-border">
+        <button class="btn btn-secondary" @click="exportUsers">
           <div class="flex items-center space-x-2">
             <ArrowDownTrayIcon class="w-4 h-4" />
             <span>Export</span>
           </div>
         </button>
-        <button
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          @click="applyFilters"
-        >
-          Apply Filters
-        </button>
+        <button class="btn btn-primary" @click="applyFilters">Apply Filters</button>
       </div>
     </div>
   </div>
