@@ -113,7 +113,7 @@ a {
   border-top: var(--ob-border-width-medium) solid var(--ob-border);
 }
 
-/* Alerts — tokens: --ob-success, --ob-error, --ob-warning, --ob-info */
+/* Alerts — tokens: --ob-success, --ob-destructive, --ob-warning, --ob-info */
 .alert {
   @apply p-4;
   border: var(--ob-border-width-medium) solid transparent;
