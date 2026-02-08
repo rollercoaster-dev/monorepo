@@ -30,7 +30,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,vue,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,vue,js,json}\"",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "seed": "bun run scripts/seed-dev.ts",
+    "seed:token": "bun run scripts/seed-dev.ts --token"
   },
   "devDependencies": {
     "@rollercoaster-dev/shared-config": "workspace:*",
