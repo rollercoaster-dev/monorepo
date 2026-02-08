@@ -137,28 +137,30 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-2xl font-semibold text-slate-900 mb-4">Welcome to OpenBadges Demo</h2>
+  <div class="card card-body">
+    <h2 class="font-headline text-2xl font-semibold text-foreground mb-4">
+      Welcome to OpenBadges Demo
+    </h2>
 
     <div class="prose max-w-none">
-      <p class="text-slate-600 mb-4">
+      <p class="text-muted-foreground mb-4">
         This is a demonstration of the OpenBadges system using Bun, Hono, and Vue 3.
       </p>
 
       <div v-if="loading" class="text-center py-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        <p class="mt-2 text-slate-600">Loading data from the server...</p>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-2 text-muted-foreground">Loading data from the server...</p>
       </div>
 
       <div v-else class="mt-6">
-        <h3 class="text-lg font-medium text-slate-900 mb-2">Server Status</h3>
-        <div class="bg-slate-50 p-4 rounded-md">
+        <h3 class="text-lg font-medium text-foreground mb-2">Server Status</h3>
+        <div class="bg-muted p-4 rounded-md border-2 border-border">
           <p v-if="serverStatus">
             <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-sm border-2 border-success text-xs font-medium bg-success/10 text-success"
             >
               <svg
-                class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400"
+                class="-ml-0.5 mr-1.5 h-2 w-2 text-success"
                 fill="currentColor"
                 viewBox="0 0 8 8"
               >
@@ -168,28 +170,26 @@ onMounted(async () => {
             </span>
             <span class="ml-2">Server is up and running</span>
           </p>
-          <p v-else class="text-red-600">
+          <p v-else class="text-destructive">
             Unable to connect to the server. Please make sure the backend is running.
           </p>
         </div>
 
         <div class="mt-6">
-          <h3 class="text-lg font-medium text-slate-900 mb-2">
+          <h3 class="text-lg font-medium text-foreground mb-2">
             OpenBadges Modular Server Status (via Proxy)
           </h3>
           <div v-if="modularServerLoading" class="text-center py-4">
-            <div
-              class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"
-            ></div>
-            <p class="mt-2 text-sm text-slate-600">Checking status...</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
+            <p class="mt-2 text-sm text-muted-foreground">Checking status...</p>
           </div>
-          <div v-else class="bg-slate-50 p-4 rounded-md">
+          <div v-else class="bg-muted p-4 rounded-md border-2 border-border">
             <p v-if="modularServerStatus && modularServerStatus.startsWith('Connected')">
               <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-sm border-2 border-success text-xs font-medium bg-success/10 text-success"
               >
                 <svg
-                  class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400"
+                  class="-ml-0.5 mr-1.5 h-2 w-2 text-success"
                   fill="currentColor"
                   viewBox="0 0 8 8"
                 >
@@ -199,74 +199,74 @@ onMounted(async () => {
               </span>
               <span class="ml-2">{{ modularServerStatus }}</span>
             </p>
-            <p v-else class="text-red-600">
+            <p v-else class="text-destructive">
               {{ modularServerStatus || 'Failed to get status from OpenBadges Modular Server.' }}
             </p>
           </div>
         </div>
 
         <div class="mt-6">
-          <h3 class="text-lg font-medium text-slate-900 mb-2">Featured Badge</h3>
-          <div class="bg-slate-50 p-4 rounded-md">
+          <h3 class="text-lg font-medium text-foreground mb-2">Featured Badge</h3>
+          <div class="bg-muted p-4 rounded-md border-2 border-border">
             <div v-if="featuredBadge">
               <BadgeDisplay :badge="featuredBadge" />
-              <p v-if="badgeError" class="text-sm text-orange-600 mt-2">
+              <p v-if="badgeError" class="text-sm text-warning mt-2">
                 Note: {{ badgeError }}. Showing fallback data.
               </p>
             </div>
             <div v-else class="text-center py-4">
               <div
-                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"
               ></div>
-              <p class="mt-2 text-sm text-slate-600">Loading badge data...</p>
+              <p class="mt-2 text-sm text-muted-foreground">Loading badge data...</p>
             </div>
           </div>
         </div>
 
         <div class="mt-6">
-          <h3 class="text-lg font-medium text-slate-900 mb-2">Quick Actions</h3>
+          <h3 class="text-lg font-medium text-foreground mb-2">Quick Actions</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <RouterLink
               to="/badges"
-              class="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-blue-900">Browse Badges</h4>
-              <p class="text-sm text-blue-700">View all available badge classes</p>
+              <h4 class="font-semibold text-foreground">Browse Badges</h4>
+              <p class="text-sm text-muted-foreground">View all available badge classes</p>
             </RouterLink>
             <RouterLink
               to="/badges/create"
-              class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-green-900">Create Badge</h4>
-              <p class="text-sm text-green-700">Design a new badge class</p>
+              <h4 class="font-semibold text-foreground">Create Badge</h4>
+              <p class="text-sm text-muted-foreground">Design a new badge class</p>
             </RouterLink>
             <RouterLink
               to="/backpack"
-              class="block p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-purple-900">My Backpack</h4>
-              <p class="text-sm text-purple-700">View earned badges</p>
+              <h4 class="font-semibold text-foreground">My Backpack</h4>
+              <p class="text-sm text-muted-foreground">View earned badges</p>
             </RouterLink>
             <RouterLink
               to="/issuers"
-              class="block p-4 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-orange-900">Issuers</h4>
-              <p class="text-sm text-orange-700">Browse badge issuers</p>
+              <h4 class="font-semibold text-foreground">Issuers</h4>
+              <p class="text-sm text-muted-foreground">Browse badge issuers</p>
             </RouterLink>
             <RouterLink
               to="/badges/issued"
-              class="block p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-indigo-900">Issued Badges</h4>
-              <p class="text-sm text-indigo-700">Manage issued badges</p>
+              <h4 class="font-semibold text-foreground">Issued Badges</h4>
+              <p class="text-sm text-muted-foreground">Manage issued badges</p>
             </RouterLink>
             <RouterLink
               to="/auth/profile"
-              class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200"
+              class="block p-4 bg-card border-2 border-border rounded-md shadow-hard-sm hover:shadow-hard-lg transition-shadow"
             >
-              <h4 class="font-semibold text-gray-900">Profile</h4>
-              <p class="text-sm text-gray-700">Manage your account</p>
+              <h4 class="font-semibold text-foreground">Profile</h4>
+              <p class="text-sm text-muted-foreground">Manage your account</p>
             </RouterLink>
           </div>
         </div>
