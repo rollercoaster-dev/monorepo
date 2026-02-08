@@ -328,31 +328,28 @@ onUnmounted(() => {
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">My Badge Backpack</h1>
-        <p class="text-gray-600 mt-1">Your earned badges and achievements</p>
+        <h1 class="font-headline text-3xl font-bold text-foreground">My Badge Backpack</h1>
+        <p class="text-muted-foreground mt-1">Your earned badges and achievements</p>
       </div>
 
       <div class="flex items-center space-x-3">
-        <div class="bg-white rounded-lg shadow-md px-4 py-2">
+        <div class="bg-card rounded-md border-2 border-border shadow-hard-sm px-4 py-2">
           <div class="flex items-center space-x-2">
-            <TrophyIcon class="w-5 h-5 text-yellow-500" />
-            <span class="text-sm font-medium text-gray-700">
+            <TrophyIcon class="w-5 h-5 text-warning" />
+            <span class="text-sm font-medium text-foreground">
               {{ totalBadges }} {{ totalBadges === 1 ? 'Badge' : 'Badges' }}
             </span>
           </div>
         </div>
 
-        <button
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
-          @click="showShareModal = true"
-        >
+        <button class="btn btn-primary flex items-center space-x-2" @click="showShareModal = true">
           <ShareIcon class="w-5 h-5" />
           <span>Share Backpack</span>
         </button>
 
         <div ref="exportMenuRef" class="relative">
           <button
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md flex items-center space-x-2"
+            class="btn btn-secondary flex items-center space-x-2"
             @click="showExportMenu = !showExportMenu"
           >
             <ArrowDownTrayIcon class="w-5 h-5" />
@@ -362,23 +359,23 @@ onUnmounted(() => {
 
           <div
             v-if="showExportMenu"
-            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50"
+            class="absolute right-0 mt-2 w-48 bg-card rounded-md border-2 border-border shadow-hard-lg z-50"
           >
             <div class="py-1">
               <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                class="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
                 @click="exportBadges('json')"
               >
                 Export as JSON
               </button>
               <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                class="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
                 @click="exportBadges('pdf')"
               >
                 Export as PDF
               </button>
               <button
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                class="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted"
                 @click="exportBadges('png')"
               >
                 Export as Images
@@ -390,27 +387,24 @@ onUnmounted(() => {
     </div>
 
     <!-- Filter and Search -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="card card-body mb-6">
       <div class="flex flex-col md:flex-row gap-4">
         <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search Badges</label>
+          <label class="block text-sm font-medium text-foreground mb-2">Search Badges</label>
           <div class="relative">
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search by badge name, issuer, or description..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="form-input w-full pl-10"
             />
-            <MagnifyingGlassIcon class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon class="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           </div>
         </div>
 
         <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Issuer</label>
-          <select
-            v-model="selectedIssuer"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+          <label class="block text-sm font-medium text-foreground mb-2">Filter by Issuer</label>
+          <select v-model="selectedIssuer" class="form-input w-full">
             <option value="">All Issuers</option>
             <option v-for="issuer in availableIssuers" :key="issuer" :value="issuer">
               {{ issuer }}
@@ -419,11 +413,8 @@ onUnmounted(() => {
         </div>
 
         <div class="w-full md:w-48">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
-          <select
-            v-model="sortBy"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+          <label class="block text-sm font-medium text-foreground mb-2">Sort by</label>
+          <select v-model="sortBy" class="form-input w-full">
             <option value="issuedOn">Date Earned</option>
             <option value="name">Badge Name</option>
             <option value="issuer">Issuer</option>
@@ -431,11 +422,8 @@ onUnmounted(() => {
         </div>
 
         <div class="w-full md:w-32">
-          <label class="block text-sm font-medium text-gray-700 mb-2">View</label>
-          <select
-            v-model="layout"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+          <label class="block text-sm font-medium text-foreground mb-2">View</label>
+          <select v-model="layout" class="form-input w-full">
             <option value="grid">Grid</option>
             <option value="list">List</option>
           </select>
@@ -445,56 +433,56 @@ onUnmounted(() => {
 
     <!-- Badge Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="card card-body">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <TrophyIcon class="w-8 h-8 text-yellow-500" />
+            <TrophyIcon class="w-8 h-8 text-warning" />
           </div>
           <div class="ml-3">
-            <p class="text-sm font-medium text-gray-500">Total Badges</p>
-            <p class="text-2xl font-semibold text-gray-900">
+            <p class="text-sm font-medium text-muted-foreground">Total Badges</p>
+            <p class="text-2xl font-semibold text-foreground">
               {{ totalBadges }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="card card-body">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <CalendarDaysIcon class="w-8 h-8 text-blue-500" />
+            <CalendarDaysIcon class="w-8 h-8 text-primary" />
           </div>
           <div class="ml-3">
-            <p class="text-sm font-medium text-gray-500">This Month</p>
-            <p class="text-2xl font-semibold text-gray-900">
+            <p class="text-sm font-medium text-muted-foreground">This Month</p>
+            <p class="text-2xl font-semibold text-foreground">
               {{ badgesThisMonth }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="card card-body">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <BuildingOfficeIcon class="w-8 h-8 text-green-500" />
+            <BuildingOfficeIcon class="w-8 h-8 text-success" />
           </div>
           <div class="ml-3">
-            <p class="text-sm font-medium text-gray-500">Issuers</p>
-            <p class="text-2xl font-semibold text-gray-900">
+            <p class="text-sm font-medium text-muted-foreground">Issuers</p>
+            <p class="text-2xl font-semibold text-foreground">
               {{ availableIssuers.length }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-4">
+      <div class="card card-body">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <CheckBadgeIcon class="w-8 h-8 text-purple-500" />
+            <CheckBadgeIcon class="w-8 h-8 text-accent" />
           </div>
           <div class="ml-3">
-            <p class="text-sm font-medium text-gray-500">Verified</p>
-            <p class="text-2xl font-semibold text-gray-900">
+            <p class="text-sm font-medium text-muted-foreground">Verified</p>
+            <p class="text-2xl font-semibold text-foreground">
               {{ verifiedBadges }}
             </p>
           </div>
@@ -503,17 +491,23 @@ onUnmounted(() => {
     </div>
 
     <!-- Badges Display -->
-    <div class="bg-white rounded-lg shadow-md">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="card">
+      <div class="card-header">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900">
+          <h2 class="text-lg font-semibold text-foreground">
             Your Badges {{ filteredBadges.length > 0 ? `(${filteredBadges.length})` : '' }}
           </h2>
           <div class="flex items-center space-x-2">
-            <button class="text-sm text-gray-600 hover:text-gray-900" @click="toggleSelectMode">
+            <button
+              class="text-sm text-muted-foreground hover:text-foreground"
+              @click="toggleSelectMode"
+            >
               {{ selectMode ? 'Done' : 'Select' }}
             </button>
-            <span v-if="selectMode && selectedBadges.length > 0" class="text-sm text-gray-600">
+            <span
+              v-if="selectMode && selectedBadges.length > 0"
+              class="text-sm text-muted-foreground"
+            >
               {{ selectedBadges.length }} selected
             </span>
           </div>
@@ -521,14 +515,14 @@ onUnmounted(() => {
       </div>
 
       <div v-if="isLoading" class="p-12 text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        <p class="mt-4 text-gray-600">Loading your badges...</p>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-4 text-muted-foreground">Loading your badges...</p>
       </div>
 
       <div v-else-if="filteredBadges.length === 0" class="p-12 text-center">
-        <TrophyIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No badges found</h3>
-        <p class="text-gray-600">
+        <TrophyIcon class="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+        <h3 class="text-lg font-medium text-foreground mb-2">No badges found</h3>
+        <p class="text-muted-foreground">
           {{
             searchQuery || selectedIssuer
               ? 'Try adjusting your search or filter.'
@@ -558,21 +552,21 @@ onUnmounted(() => {
                 <input
                   :checked="selectedBadges.includes(badge.id)"
                   type="checkbox"
-                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  class="w-4 h-4 text-primary border-border rounded-sm"
                   @change="toggleBadgeSelection(badge.id)"
                 />
               </div>
 
               <div class="absolute top-2 right-2 flex items-center space-x-1">
                 <button
-                  class="p-1 text-gray-400 hover:text-blue-600 bg-white rounded-full shadow-sm"
+                  class="p-1 text-muted-foreground hover:text-primary bg-card rounded-md border-2 border-border shadow-hard-sm"
                   title="Share badge"
                   @click.stop="handleShareBadge(badge)"
                 >
                   <ShareIcon class="w-4 h-4" />
                 </button>
                 <button
-                  class="p-1 text-gray-400 hover:text-green-600 bg-white rounded-full shadow-sm"
+                  class="p-1 text-muted-foreground hover:text-success bg-card rounded-md border-2 border-border shadow-hard-sm"
                   title="Download badge"
                   @click.stop="handleDownloadBadge(badge)"
                 >
@@ -581,7 +575,9 @@ onUnmounted(() => {
               </div>
 
               <div v-if="badge.issuedOn" class="absolute bottom-2 right-2">
-                <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                <span
+                  class="text-xs text-muted-foreground bg-card border-2 border-border px-2 py-1 rounded-sm"
+                >
                   {{ formatDate(badge.issuedOn) }}
                 </span>
               </div>
@@ -594,30 +590,32 @@ onUnmounted(() => {
     <!-- Share Modal -->
     <div
       v-if="showShareModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
+      <div class="card max-w-md w-full mx-4">
+        <div class="card-body">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900">Share Your Backpack</h3>
-            <button class="text-gray-400 hover:text-gray-600" @click="showShareModal = false">
+            <h3 class="text-lg font-medium text-foreground">Share Your Backpack</h3>
+            <button
+              class="text-muted-foreground hover:text-foreground"
+              @click="showShareModal = false"
+            >
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
 
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Public Profile URL</label>
+              <label class="block text-sm font-medium text-foreground mb-2">
+                Public Profile URL
+              </label>
               <div class="flex">
                 <input
                   :value="shareUrl"
                   readonly
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-sm"
+                  class="form-input flex-1 rounded-r-none text-sm"
                 />
-                <button
-                  class="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
-                  @click="copyToClipboard(shareUrl)"
-                >
+                <button class="btn btn-primary rounded-l-none" @click="copyToClipboard(shareUrl)">
                   Copy
                 </button>
               </div>
@@ -625,19 +623,19 @@ onUnmounted(() => {
 
             <div class="flex justify-center space-x-4">
               <button
-                class="flex items-center space-x-2 px-4 py-2 bg-blue-400 text-white rounded-md hover:bg-blue-500"
+                class="btn btn-primary flex items-center space-x-2"
                 @click="shareToSocial('twitter')"
               >
                 <span>Twitter</span>
               </button>
               <button
-                class="flex items-center space-x-2 px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800"
+                class="btn btn-primary flex items-center space-x-2"
                 @click="shareToSocial('linkedin')"
               >
                 <span>LinkedIn</span>
               </button>
               <button
-                class="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                class="btn btn-primary flex items-center space-x-2"
                 @click="shareToSocial('facebook')"
               >
                 <span>Facebook</span>
@@ -651,13 +649,16 @@ onUnmounted(() => {
     <!-- Badge Detail Modal -->
     <div
       v-if="showDetailModal && selectedBadge"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
+      <div class="card max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="card-body">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Badge Details</h3>
-            <button class="text-gray-400 hover:text-gray-600" @click="showDetailModal = false">
+            <h3 class="text-xl font-semibold text-foreground">Badge Details</h3>
+            <button
+              class="text-muted-foreground hover:text-foreground"
+              @click="showDetailModal = false"
+            >
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -673,16 +674,10 @@ onUnmounted(() => {
           />
 
           <div class="mt-6 flex justify-end space-x-3">
-            <button
-              class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-              @click="handleShareBadge(selectedBadge)"
-            >
+            <button class="btn btn-secondary" @click="handleShareBadge(selectedBadge)">
               Share
             </button>
-            <button
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              @click="handleDownloadBadge(selectedBadge)"
-            >
+            <button class="btn btn-primary" @click="handleDownloadBadge(selectedBadge)">
               Download
             </button>
           </div>
@@ -693,12 +688,12 @@ onUnmounted(() => {
     <!-- Success/Error Messages -->
     <div
       v-if="error"
-      class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <ExclamationTriangleIcon class="w-5 h-5" />
         <span>{{ error }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="error = null">
+        <button class="ml-2 hover:text-muted-foreground" @click="error = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
@@ -706,12 +701,12 @@ onUnmounted(() => {
 
     <div
       v-if="successMessage"
-      class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-success text-success-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <CheckCircleIcon class="w-5 h-5" />
         <span>{{ successMessage }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="successMessage = null">
+        <button class="ml-2 hover:text-muted-foreground" @click="successMessage = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
