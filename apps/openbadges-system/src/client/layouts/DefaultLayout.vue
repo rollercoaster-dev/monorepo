@@ -33,7 +33,7 @@ const { currentTheme, setTheme } = useTheme()
     </main>
 
     <!-- Footer -->
-    <footer class="bg-card border-t border-border mt-8">
+    <footer class="bg-card border-t-2 border-border mt-8">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="text-center md:text-left mb-4 md:mb-0">
