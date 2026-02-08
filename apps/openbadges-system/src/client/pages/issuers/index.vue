@@ -40,19 +40,17 @@ onMounted(() => {
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Issuer Directory</h1>
-      <RouterLink
-        to="/issuers/create"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-      >
-        Create Issuer
-      </RouterLink>
+      <h1 class="font-headline text-2xl font-bold text-foreground">Issuer Directory</h1>
+      <RouterLink to="/issuers/create" class="btn btn-primary">Create Issuer</RouterLink>
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
-      <p class="text-red-800">{{ error }}</p>
-      <button class="mt-2 text-sm text-red-600 hover:text-red-800 underline" @click="loadIssuers">
+    <div v-if="error" class="alert alert-error mb-6" role="alert">
+      <p class="text-destructive">{{ error }}</p>
+      <button
+        class="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
+        @click="loadIssuers"
+      >
         Try again
       </button>
     </div>
@@ -69,8 +67,8 @@ onMounted(() => {
     >
       <template #empty>
         <div class="text-center py-8">
-          <p class="text-gray-500 mb-4">No issuers found.</p>
-          <RouterLink to="/issuers/create" class="text-blue-600 hover:text-blue-800 underline">
+          <p class="text-muted-foreground mb-4">No issuers found.</p>
+          <RouterLink to="/issuers/create" class="text-primary hover:text-primary-dark underline">
             Register as an issuer
           </RouterLink>
         </div>

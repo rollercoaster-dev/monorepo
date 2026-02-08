@@ -152,11 +152,8 @@ function formatDate(dateString: string): string {
 <template>
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
-      <button
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-        @click="showCreateForm = true"
-      >
+      <h1 class="font-headline text-2xl font-bold text-foreground">User Management</h1>
+      <button class="btn btn-primary flex items-center space-x-2" @click="showCreateForm = true">
         <PlusIcon class="w-5 h-5" />
         <span>Create User</span>
       </button>
@@ -189,9 +186,9 @@ function formatDate(dateString: string): string {
     <!-- Create/Edit User Modal -->
     <div
       v-if="showCreateForm || showEditForm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="card max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <UserForm
           :user="selectedUser || undefined"
           :is-submitting="isLoading"
@@ -205,13 +202,13 @@ function formatDate(dateString: string): string {
     <!-- View User Modal -->
     <div
       v-if="showViewModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
+      <div class="card max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="card-body">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">User Details</h2>
-            <button class="text-gray-400 hover:text-gray-600" @click="closeViewModal">
+            <h2 class="text-xl font-semibold text-foreground">User Details</h2>
+            <button class="text-muted-foreground hover:text-foreground" @click="closeViewModal">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -221,23 +218,23 @@ function formatDate(dateString: string): string {
               <div class="flex-shrink-0">
                 <div
                   v-if="selectedUser.avatar"
-                  class="w-20 h-20 rounded-full bg-cover bg-center"
+                  class="w-20 h-20 rounded-md border-2 border-border bg-cover bg-center"
                   :style="{ backgroundImage: `url(${selectedUser.avatar})` }"
                 ></div>
                 <div
                   v-else
-                  class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-2xl"
+                  class="w-20 h-20 rounded-md border-2 border-border bg-primary flex items-center justify-center text-primary-foreground font-semibold text-2xl"
                 >
                   {{ getInitials(selectedUser.firstName, selectedUser.lastName) }}
                 </div>
               </div>
 
               <div>
-                <h3 class="text-2xl font-bold text-gray-900">
+                <h3 class="text-2xl font-bold text-foreground">
                   {{ selectedUser.firstName }} {{ selectedUser.lastName }}
                 </h3>
-                <p class="text-gray-600">@{{ selectedUser.username }}</p>
-                <p class="text-gray-500">
+                <p class="text-muted-foreground">@{{ selectedUser.username }}</p>
+                <p class="text-muted-foreground">
                   {{ selectedUser.email }}
                 </p>
               </div>
@@ -245,59 +242,61 @@ function formatDate(dateString: string): string {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 class="font-semibold text-gray-900 mb-2">Role</h4>
+                <h4 class="font-semibold text-foreground mb-2">Role</h4>
                 <span
                   v-if="selectedUser.isAdmin"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800"
+                  class="inline-flex items-center px-3 py-1 rounded-sm border-2 border-accent text-sm font-medium bg-accent/10 text-accent"
                 >
                   Administrator
                 </span>
                 <span
                   v-else
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                  class="inline-flex items-center px-3 py-1 rounded-sm border-2 border-border text-sm font-medium bg-muted text-foreground"
                 >
                   User
                 </span>
               </div>
 
               <div>
-                <h4 class="font-semibold text-gray-900 mb-2">Status</h4>
+                <h4 class="font-semibold text-foreground mb-2">Status</h4>
                 <span
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                  class="inline-flex items-center px-3 py-1 rounded-sm border-2 border-success text-sm font-medium bg-success/10 text-success"
                 >
                   Active
                 </span>
               </div>
 
               <div>
-                <h4 class="font-semibold text-gray-900 mb-2">Registration Date</h4>
-                <p class="text-gray-600">
+                <h4 class="font-semibold text-foreground mb-2">Registration Date</h4>
+                <p class="text-muted-foreground">
                   {{ formatDate(selectedUser.createdAt) }}
                 </p>
               </div>
 
               <div>
-                <h4 class="font-semibold text-gray-900 mb-2">Credentials</h4>
-                <p class="text-gray-600">{{ selectedUser.credentials?.length || 0 }} registered</p>
+                <h4 class="font-semibold text-foreground mb-2">Credentials</h4>
+                <p class="text-muted-foreground">
+                  {{ selectedUser.credentials?.length || 0 }} registered
+                </p>
               </div>
             </div>
 
             <div v-if="selectedUser.credentials && selectedUser.credentials.length > 0">
-              <h4 class="font-semibold text-gray-900 mb-4">WebAuthn Credentials</h4>
+              <h4 class="font-semibold text-foreground mb-4">WebAuthn Credentials</h4>
               <div class="space-y-3">
                 <div
                   v-for="credential in selectedUser.credentials"
                   :key="credential.id"
-                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  class="flex items-center justify-between p-3 bg-muted rounded-md border-2 border-border"
                 >
                   <div>
-                    <p class="font-medium text-gray-900">
+                    <p class="font-medium text-foreground">
                       {{ credential.name }}
                     </p>
-                    <p class="text-sm text-gray-600">
+                    <p class="text-sm text-muted-foreground">
                       {{ credential.type }}
                     </p>
-                    <p class="text-xs text-gray-500">
+                    <p class="text-xs text-muted-foreground">
                       Last used: {{ formatDate(credential.lastUsed) }}
                     </p>
                   </div>
@@ -312,12 +311,12 @@ function formatDate(dateString: string): string {
     <!-- Error Message -->
     <div
       v-if="error"
-      class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <ExclamationTriangleIcon class="w-5 h-5" />
         <span>{{ error }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="clearError">
+        <button class="ml-2 hover:opacity-80" @click="clearError">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
@@ -326,12 +325,12 @@ function formatDate(dateString: string): string {
     <!-- Success Message -->
     <div
       v-if="successMessage"
-      class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-success text-success-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <CheckCircleIcon class="w-5 h-5" />
         <span>{{ successMessage }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="successMessage = null">
+        <button class="ml-2 hover:opacity-80" @click="successMessage = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>

@@ -408,7 +408,7 @@ function handleCriteriaUrlInput(event: any) {
     <!-- Main content -->
     <div v-else>
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">Edit Badge Class</h1>
+        <h1 class="font-headline text-2xl font-bold text-foreground">Edit Badge Class</h1>
         <div class="flex items-center space-x-2">
           <span v-if="isFormDirty" class="text-sm text-warning">Unsaved changes</span>
           <button

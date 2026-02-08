@@ -234,14 +234,12 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
 <template>
   <div class="max-w-7xl mx-auto mt-8">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Badge Management</h1>
+      <h1 class="font-headline text-2xl font-bold text-foreground">Badge Management</h1>
       <div class="flex items-center space-x-3">
         <button
           :class="[
-            'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-            activeTab === 'classes'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+            'btn text-sm font-medium transition-colors',
+            activeTab === 'classes' ? 'btn-primary' : 'btn-secondary',
           ]"
           @click="activeTab = 'classes'"
         >
@@ -249,19 +247,14 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
         </button>
         <button
           :class="[
-            'px-4 py-2 rounded-md text-sm font-medium transition-colors',
-            activeTab === 'assertions'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+            'btn text-sm font-medium transition-colors',
+            activeTab === 'assertions' ? 'btn-primary' : 'btn-secondary',
           ]"
           @click="activeTab = 'assertions'"
         >
           Issued Badges
         </button>
-        <button
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
-          @click="showCreateForm = true"
-        >
+        <button class="btn btn-primary flex items-center space-x-2" @click="showCreateForm = true">
           <PlusIcon class="w-5 h-5" />
           <span>Create Badge</span>
         </button>
@@ -271,30 +264,27 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
     <!-- Badge Classes Tab -->
     <div v-if="activeTab === 'classes'" class="space-y-6">
       <!-- Search and Filters -->
-      <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="card card-body">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-gray-900">Search & Filter Badge Classes</h2>
-          <button class="text-sm text-gray-600 hover:text-gray-900" @click="clearFilters">
+          <h2 class="text-lg font-semibold text-foreground">Search & Filter Badge Classes</h2>
+          <button class="text-sm text-muted-foreground hover:text-foreground" @click="clearFilters">
             Clear Filters
           </button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label class="block text-sm font-medium text-foreground mb-2">Search</label>
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Search badges..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="form-input w-full"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Issuer</label>
-            <select
-              v-model="filters.issuer"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <label class="block text-sm font-medium text-foreground mb-2">Issuer</label>
+            <select v-model="filters.issuer" class="form-input w-full">
               <option value="">All Issuers</option>
               <option v-for="issuer in availableIssuers" :key="issuer" :value="issuer">
                 {{ issuer }}
@@ -302,11 +292,8 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-            <select
-              v-model="filters.sortBy"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <label class="block text-sm font-medium text-foreground mb-2">Sort By</label>
+            <select v-model="filters.sortBy" class="form-input w-full">
               <option value="createdAt">Created Date</option>
               <option value="name">Name</option>
               <option value="issuer">Issuer</option>
@@ -316,24 +303,21 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
       </div>
 
       <!-- Badge Classes List -->
-      <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
+      <div class="card">
+        <div class="card-header">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900">Badge Classes ({{ totalBadges }})</h2>
+            <h2 class="text-lg font-semibold text-foreground">Badge Classes ({{ totalBadges }})</h2>
             <div class="flex items-center space-x-2">
               <select
                 v-model="itemsPerPage"
-                class="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                class="form-input px-3 py-1 text-sm"
                 @change="changeItemsPerPage(itemsPerPage)"
               >
                 <option value="10">10 per page</option>
                 <option value="25">25 per page</option>
                 <option value="50">50 per page</option>
               </select>
-              <button
-                class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md"
-                @click="toggleLayout"
-              >
+              <button class="btn btn-secondary px-3 py-1 text-sm" @click="toggleLayout">
                 {{ layout === 'grid' ? 'List View' : 'Grid View' }}
               </button>
             </div>
@@ -341,13 +325,13 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
         </div>
 
         <div v-if="isLoading" class="p-8 text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p class="mt-2 text-gray-600">Loading badges...</p>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p class="mt-2 text-muted-foreground">Loading badges...</p>
         </div>
 
         <div v-else-if="badges.length === 0" class="p-8 text-center">
-          <TrophyIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p class="text-gray-600">No badge classes found</p>
+          <TrophyIcon class="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+          <p class="text-muted-foreground">No badge classes found</p>
         </div>
 
         <div v-else class="p-6">
@@ -366,21 +350,21 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
               <div class="relative">
                 <div class="absolute top-2 right-2 flex items-center space-x-1">
                   <button
-                    class="p-1 text-gray-400 hover:text-blue-600 bg-white rounded-full shadow-sm"
+                    class="p-1 text-muted-foreground hover:text-primary bg-card rounded-md border-2 border-border shadow-hard-sm"
                     title="Edit badge"
                     @click.stop="handleEditBadge(badge)"
                   >
                     <PencilIcon class="w-4 h-4" />
                   </button>
                   <button
-                    class="p-1 text-gray-400 hover:text-green-600 bg-white rounded-full shadow-sm"
+                    class="p-1 text-muted-foreground hover:text-success bg-card rounded-md border-2 border-border shadow-hard-sm"
                     title="Issue badge"
                     @click.stop="handleIssueBadge(badge)"
                   >
                     <ShareIcon class="w-4 h-4" />
                   </button>
                   <button
-                    class="p-1 text-gray-400 hover:text-red-600 bg-white rounded-full shadow-sm"
+                    class="p-1 text-muted-foreground hover:text-destructive bg-card rounded-md border-2 border-border shadow-hard-sm"
                     title="Delete badge"
                     @click.stop="handleDeleteBadge(badge)"
                   >
@@ -397,87 +381,91 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
     <!-- Badge Assertions Tab -->
     <div v-if="activeTab === 'assertions'" class="space-y-6">
       <!-- Assertions List -->
-      <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Issued Badges ({{ totalAssertions }})</h2>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-lg font-semibold text-foreground">
+            Issued Badges ({{ totalAssertions }})
+          </h2>
         </div>
 
         <div v-if="isLoading" class="p-8 text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p class="mt-2 text-gray-600">Loading assertions...</p>
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p class="mt-2 text-muted-foreground">Loading assertions...</p>
         </div>
 
         <div v-else-if="assertions.length === 0" class="p-8 text-center">
-          <CheckBadgeIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p class="text-gray-600">No badge assertions found</p>
+          <CheckBadgeIcon class="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+          <p class="text-muted-foreground">No badge assertions found</p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full">
-            <thead class="bg-gray-50">
+            <thead class="bg-muted">
               <tr>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   Badge
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   Recipient
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   Issued Date
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   Status
                 </th>
                 <th
-                  class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider"
                 >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-card divide-y divide-border">
               <tr
                 v-for="assertion in assertions as BadgeAssertion[]"
                 :key="assertion.id"
-                class="hover:bg-gray-50"
+                class="hover:bg-muted"
               >
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <img
                       :src="getBadgeImage(assertion.badge)"
                       :alt="getBadgeName(assertion.badge)"
-                      class="w-10 h-10 rounded-lg object-cover"
+                      class="w-10 h-10 rounded-md border-2 border-border object-cover"
                     />
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">
+                      <div class="text-sm font-medium text-foreground">
                         {{ getBadgeName(assertion.badge) }}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">
+                  <div class="text-sm text-foreground">
                     {{ assertion.recipient.identity }}
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">
+                  <div class="text-sm text-foreground">
                     {{ formatDate(assertion.issuedOn as string) }}
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span
                     :class="[
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                      assertion.revoked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-sm border-2 text-xs font-medium',
+                      assertion.revoked
+                        ? 'bg-destructive/10 text-destructive border-destructive'
+                        : 'bg-success/10 text-success border-success',
                     ]"
                   >
                     {{ assertion.revoked ? 'Revoked' : 'Active' }}
@@ -486,14 +474,14 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div class="flex items-center justify-end space-x-2">
                     <button
-                      class="text-blue-600 hover:text-blue-900"
+                      class="text-primary hover:text-primary-dark"
                       @click="handleViewAssertion(assertion as BadgeAssertion)"
                     >
                       View
                     </button>
                     <button
                       v-if="!assertion.revoked"
-                      class="text-red-600 hover:text-red-900"
+                      class="text-destructive hover:opacity-80"
                       @click="handleRevokeAssertion(assertion as BadgeAssertion)"
                     >
                       Revoke
@@ -510,13 +498,16 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
     <!-- Create Badge Modal -->
     <div
       v-if="showCreateForm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
+      <div class="card max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="card-body">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Create New Badge</h2>
-            <button class="text-gray-400 hover:text-gray-600" @click="showCreateForm = false">
+            <h2 class="text-xl font-semibold text-foreground">Create New Badge</h2>
+            <button
+              class="text-muted-foreground hover:text-foreground"
+              @click="showCreateForm = false"
+            >
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -529,13 +520,16 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
     <!-- Issue Badge Modal -->
     <div
       v-if="showIssueForm && selectedBadge"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
+      <div class="card max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="card-body">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Issue Badge</h2>
-            <button class="text-gray-400 hover:text-gray-600" @click="showIssueForm = false">
+            <h2 class="text-xl font-semibold text-foreground">Issue Badge</h2>
+            <button
+              class="text-muted-foreground hover:text-foreground"
+              @click="showIssueForm = false"
+            >
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
@@ -546,51 +540,49 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
 
           <form class="space-y-4" @submit.prevent="handleSubmitIssue">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Recipient Email *</label>
+              <label class="block text-sm font-medium text-foreground mb-2">
+                Recipient Email *
+              </label>
               <input
                 v-model="issueForm.recipientEmail"
                 type="email"
                 required
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="form-input w-full"
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-foreground mb-2">
                 Evidence (Optional)
               </label>
               <textarea
                 v-model="issueForm.evidence"
                 rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="form-input w-full"
                 placeholder="URL or description of evidence"
               ></textarea>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-foreground mb-2">
                 Narrative (Optional)
               </label>
               <textarea
                 v-model="issueForm.narrative"
                 rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="form-input w-full"
                 placeholder="Additional context or narrative"
               ></textarea>
             </div>
 
             <div class="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-                @click="showIssueForm = false"
-              >
+              <button type="button" class="btn btn-secondary" @click="showIssueForm = false">
                 Cancel
               </button>
               <button
                 type="submit"
                 :disabled="isLoading"
-                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                class="btn btn-primary disabled:opacity-50"
               >
                 {{ isLoading ? 'Issuing...' : 'Issue Badge' }}
               </button>
@@ -603,12 +595,12 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
     <!-- Success/Error Messages -->
     <div
       v-if="error"
-      class="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-destructive text-destructive-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <ExclamationTriangleIcon class="w-5 h-5" />
         <span>{{ error }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="clearError">
+        <button class="ml-2 hover:opacity-80" @click="clearError">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
@@ -616,12 +608,12 @@ function getBadgeName(badge: string | OB2.BadgeClass): string {
 
     <div
       v-if="successMessage"
-      class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50"
+      class="fixed bottom-4 right-4 bg-success text-success-foreground px-4 py-3 border-2 border-border rounded-md shadow-hard-md z-50"
     >
       <div class="flex items-center space-x-2">
         <CheckCircleIcon class="w-5 h-5" />
         <span>{{ successMessage }}</span>
-        <button class="ml-2 hover:text-gray-200" @click="successMessage = null">
+        <button class="ml-2 hover:opacity-80" @click="successMessage = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>

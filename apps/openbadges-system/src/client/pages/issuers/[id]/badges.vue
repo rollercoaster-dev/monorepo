@@ -62,33 +62,31 @@ onMounted(() => {
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Badges by Issuer</h1>
-      <RouterLink
-        to="/badges/create"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-      >
-        Create Badge
-      </RouterLink>
+      <h1 class="font-headline text-2xl font-bold text-foreground">Badges by Issuer</h1>
+      <RouterLink to="/badges/create" class="btn btn-primary">Create Badge</RouterLink>
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" role="alert">
-      <p class="text-red-800">{{ error }}</p>
-      <button class="mt-2 text-sm text-red-600 hover:text-red-800 underline" @click="loadData">
+    <div v-if="error" class="alert alert-error mb-6" role="alert">
+      <p class="text-destructive">{{ error }}</p>
+      <button
+        class="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
+        @click="loadData"
+      >
         Try again
       </button>
     </div>
 
     <div class="space-y-6">
       <!-- Issuer info section -->
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 class="text-lg font-semibold mb-4 text-gray-700">Issuer Information</h2>
+      <div class="card card-body">
+        <h2 class="text-lg font-semibold mb-4 text-foreground">Issuer Information</h2>
         <div v-if="issuerLoading" class="animate-pulse">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gray-200 rounded-full"></div>
+            <div class="w-16 h-16 bg-muted rounded-md border-2 border-border"></div>
             <div class="flex-1">
-              <div class="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div class="h-5 bg-muted rounded-sm w-1/3 mb-2"></div>
+              <div class="h-4 bg-muted rounded-sm w-2/3"></div>
             </div>
           </div>
         </div>
@@ -100,12 +98,12 @@ onMounted(() => {
           density="spacious"
           :interactive="false"
         />
-        <p v-else class="text-gray-500">Issuer not found</p>
+        <p v-else class="text-muted-foreground">Issuer not found</p>
       </div>
 
       <!-- Badge Classes Grid -->
       <div>
-        <h2 class="text-lg font-semibold mb-4 text-gray-700">Badge Classes</h2>
+        <h2 class="text-lg font-semibold mb-4 text-foreground">Badge Classes</h2>
         <BadgeClassList
           :badge-classes="badgeClasses"
           :loading="badgesLoading"
@@ -117,8 +115,11 @@ onMounted(() => {
         >
           <template #empty>
             <div class="text-center py-8">
-              <p class="text-gray-500 mb-4">No badge classes found for this issuer.</p>
-              <RouterLink to="/badges/create" class="text-blue-600 hover:text-blue-800 underline">
+              <p class="text-muted-foreground mb-4">No badge classes found for this issuer.</p>
+              <RouterLink
+                to="/badges/create"
+                class="text-primary hover:text-primary-dark underline"
+              >
                 Create a badge class
               </RouterLink>
             </div>

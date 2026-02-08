@@ -40,7 +40,7 @@ onMounted(() => {
 <template>
   <div class="max-w-6xl mx-auto mt-8 px-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Badge Directory</h1>
+      <h1 class="font-headline text-2xl font-bold text-foreground">Badge Directory</h1>
       <RouterLink to="/badges/create" class="btn btn-primary">Create Badge</RouterLink>
     </div>
 
