@@ -30,11 +30,26 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-// RP configuration — derive from environment or fall back to sensible defaults
-function getRpConfig() {
+// RP configuration — derive from environment, request origin, or sensible defaults.
+// When WEBAUTHN_ORIGIN is set, that takes precedence (production).
+// Otherwise, use the request's Origin header if it matches a known dev pattern.
+const ALLOWED_DEV_ORIGINS = [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/]
+
+function getRpConfig(requestOrigin?: string | null) {
   const rpId = process.env.WEBAUTHN_RP_ID || 'localhost'
-  const origin = process.env.WEBAUTHN_ORIGIN || `http://${rpId}:7777`
-  return { rpId, origin }
+
+  // Explicit env var always wins (production)
+  if (process.env.WEBAUTHN_ORIGIN) {
+    return { rpId, origin: process.env.WEBAUTHN_ORIGIN }
+  }
+
+  // In dev, use the request Origin header if it matches an allowed pattern
+  if (requestOrigin && ALLOWED_DEV_ORIGINS.some(re => re.test(requestOrigin))) {
+    return { rpId, origin: requestOrigin }
+  }
+
+  // Fallback
+  return { rpId, origin: `http://${rpId}:7777` }
 }
 
 const publicAuthRoutes = new Hono()
@@ -198,7 +213,7 @@ publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
       return c.json({ error: 'User not found' }, 404)
     }
 
-    const { rpId } = getRpConfig()
+    const { rpId } = getRpConfig(c.req.header('origin'))
     const challenge = generateChallenge(userId, 'authentication')
 
     return c.json({ challenge, rpId, timeout: 60000 })
@@ -226,7 +241,7 @@ publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
       return c.json({ error: 'User not found' }, 404)
     }
 
-    const { rpId } = getRpConfig()
+    const { rpId } = getRpConfig(c.req.header('origin'))
     const challenge = generateChallenge(userId, 'registration')
 
     return c.json({ challenge, rpId, timeout: 60000 })
@@ -237,6 +252,8 @@ publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
 })
 
 // --- Credential registration (secured with server challenge) ---
+// Bootstrap case (no existing credentials): unauthenticated — allows first passkey setup
+// Existing credentials: requires valid JWT belonging to this user — prevents account takeover
 
 publicAuthRoutes.post('/users/:id/credentials', async c => {
   if (!userService) {
@@ -249,6 +266,19 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
     const user = await userService.getUserById(userId)
     if (!user) {
       return c.json({ error: 'User not found' }, 404)
+    }
+
+    // If user already has credentials, require authentication to add new ones
+    const existingCredentials = await userService.getUserCredentials(userId)
+    if (existingCredentials.length > 0) {
+      const authHeader = c.req.header('authorization')
+      if (!authHeader?.startsWith('Bearer ')) {
+        return c.json({ error: 'Authentication required to add credentials' }, 401)
+      }
+      const payload = jwtService.verifyToken(authHeader.slice(7))
+      if (!payload || payload.sub !== userId) {
+        return c.json({ error: 'Unauthorized' }, 403)
+      }
     }
 
     let body: unknown
@@ -292,7 +322,7 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
       return c.json({ error: message }, 403)
     }
 
-    const { rpId, origin } = getRpConfig()
+    const { rpId, origin } = getRpConfig(c.req.header('origin'))
 
     // Verify the registration response using @simplewebauthn/server
     let verification
@@ -395,7 +425,7 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       return c.json({ error: 'Credential not found' }, 404)
     }
 
-    const { rpId, origin } = getRpConfig()
+    const { rpId, origin } = getRpConfig(c.req.header('origin'))
 
     // Verify the authentication response
     let verification

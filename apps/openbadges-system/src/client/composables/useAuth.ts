@@ -236,6 +236,7 @@ export const useAuth = () => {
   }
 
   // Store WebAuthn credential in backend (sends attestation data for server verification)
+  // When adding credentials to a user who already has some, pass authToken for auth gate.
   const storeCredential = async (
     userId: string,
     credentialData: {
@@ -247,10 +248,19 @@ export const useAuth = () => {
       name: string
       authenticatorAttachment?: string
       transports: string[]
-    }
+    },
+    authToken?: string
   ): Promise<void> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`
+    }
+
     await publicApiCall(`/users/${userId}/credentials`, {
       method: 'POST',
+      headers,
       body: JSON.stringify({
         id: credentialData.id,
         rawId: credentialData.rawId,
@@ -706,17 +716,22 @@ export const useAuth = () => {
         )
 
       // Store credential with attestation data for server verification
-      await storeCredential(user.value.id, {
-        id: credentialData.id,
-        rawId: credentialData.rawId,
-        attestationObject: credentialData.attestationObject,
-        clientDataJSON: credentialData.clientDataJSON,
-        challenge,
-        name,
-        authenticatorAttachment:
-          credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
-        transports: credentialData.transports,
-      })
+      // User is authenticated — pass token for auth gate (existing credentials require auth)
+      await storeCredential(
+        user.value.id,
+        {
+          id: credentialData.id,
+          rawId: credentialData.rawId,
+          attestationObject: credentialData.attestationObject,
+          clientDataJSON: credentialData.clientDataJSON,
+          challenge,
+          name,
+          authenticatorAttachment:
+            credentialData.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
+          transports: credentialData.transports,
+        },
+        token.value ?? undefined
+      )
 
       const newCredential: WebAuthnCredential = {
         id: credentialData.id,

@@ -11,6 +11,7 @@ vi.mock('../../services/challenge', () => ({
 vi.mock('../../services/jwt', () => ({
   jwtService: {
     generatePlatformToken: vi.fn(() => 'mock-jwt-token'),
+    verifyToken: vi.fn(),
   },
 }))
 
@@ -46,6 +47,7 @@ vi.mock('../../utils/logger', () => ({
 import { publicAuthRoutes } from '../public-auth'
 import { userService } from '../../services/user'
 import { consumeChallenge } from '../../services/challenge'
+import { jwtService } from '../../services/jwt'
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 
 const mockUser = {
@@ -84,7 +86,7 @@ function jsonPost(body: unknown) {
 
 describe('Public Auth Routes', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   // --- Challenge Endpoints ---
@@ -355,8 +357,9 @@ describe('Public Auth Routes', () => {
       expect(data.error).toBe('User not found')
     })
 
-    it('returns 400 for invalid registration data', async () => {
+    it('returns 400 for invalid registration data (bootstrap)', async () => {
       vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([] as never)
 
       const app = createApp()
       const res = await app.request(
@@ -369,8 +372,9 @@ describe('Public Auth Routes', () => {
       expect(data.error).toBe('Invalid registration data')
     })
 
-    it('returns 403 when challenge is invalid', async () => {
+    it('returns 403 when challenge is invalid (bootstrap)', async () => {
       vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([] as never)
       vi.mocked(consumeChallenge).mockReturnValue({ valid: false, reason: 'not_found' })
 
       const app = createApp()
@@ -384,8 +388,9 @@ describe('Public Auth Routes', () => {
       expect(data.error).toBe('Invalid or expired challenge')
     })
 
-    it('returns 403 when verifyRegistrationResponse throws', async () => {
+    it('returns 403 when verifyRegistrationResponse throws (bootstrap)', async () => {
       vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([] as never)
       vi.mocked(consumeChallenge).mockReturnValue({ valid: true })
       vi.mocked(verifyRegistrationResponse).mockRejectedValue(new Error('Attestation invalid'))
 
@@ -400,8 +405,9 @@ describe('Public Auth Routes', () => {
       expect(data.error).toBe('Registration verification failed')
     })
 
-    it('returns 403 when verification returns verified: false', async () => {
+    it('returns 403 when verification returns verified: false (bootstrap)', async () => {
       vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([] as never)
       vi.mocked(consumeChallenge).mockReturnValue({ valid: true })
       vi.mocked(verifyRegistrationResponse).mockResolvedValue({
         verified: false,
@@ -419,8 +425,9 @@ describe('Public Auth Routes', () => {
       expect(data.error).toBe('Registration verification failed')
     })
 
-    it('stores credential and returns success when verification passes', async () => {
+    it('stores credential and returns success when verification passes (bootstrap)', async () => {
       vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([] as never)
       vi.mocked(consumeChallenge).mockReturnValue({ valid: true })
       vi.mocked(verifyRegistrationResponse).mockResolvedValue({
         verified: true,
@@ -451,6 +458,73 @@ describe('Public Auth Routes', () => {
           counter: 0,
         })
       )
+    })
+
+    // --- Auth gate: existing credentials require JWT ---
+
+    it('returns 401 when user has credentials but no auth header', async () => {
+      vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([mockCredential] as never)
+
+      const app = createApp()
+      const res = await app.request(
+        '/auth/public/users/user-123/credentials',
+        jsonPost(validRegistrationBody)
+      )
+
+      expect(res.status).toBe(401)
+      const data = await res.json()
+      expect(data.error).toBe('Authentication required to add credentials')
+    })
+
+    it('returns 403 when JWT sub does not match userId', async () => {
+      vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([mockCredential] as never)
+      vi.mocked(jwtService.verifyToken).mockReturnValue({ sub: 'other-user' } as never)
+
+      const app = createApp()
+      const res = await app.request('/auth/public/users/user-123/credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer valid-token-wrong-user',
+        },
+        body: JSON.stringify(validRegistrationBody),
+      })
+
+      expect(res.status).toBe(403)
+      const data = await res.json()
+      expect(data.error).toBe('Unauthorized')
+    })
+
+    it('allows registration with valid JWT when user has existing credentials', async () => {
+      vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([mockCredential] as never)
+      vi.mocked(jwtService.verifyToken).mockReturnValue({ sub: 'user-123' } as never)
+      vi.mocked(consumeChallenge).mockReturnValue({ valid: true })
+      vi.mocked(verifyRegistrationResponse).mockResolvedValue({
+        verified: true,
+        registrationInfo: {
+          credential: {
+            publicKey: new Uint8Array([4, 5, 6]),
+            counter: 0,
+          },
+        },
+      } as never)
+
+      const app = createApp()
+      const res = await app.request('/auth/public/users/user-123/credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer valid-token',
+        },
+        body: JSON.stringify(validRegistrationBody),
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
     })
   })
 })
