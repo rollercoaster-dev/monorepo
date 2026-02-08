@@ -87,7 +87,7 @@ Present the suggestion to the user via AskUserQuestion and let them confirm or o
 Write a changeset file:
 
 ```bash
-# Generate a short random name
+RANDOM_NAME=$(openssl rand -hex 4)
 ```
 
 Write to `.changeset/<package-shorthand>-<random>.md`:
@@ -147,7 +147,7 @@ PRBODY
 
 ### Step 7: Report
 
-```
+```text
 PUBLISH INITIATED
 
 Package: <full-package-name>
@@ -174,19 +174,19 @@ Next steps:
 
 **Simple:**
 
-```
+```bash
 /publish design-tokens
 ```
 
 **With bump type:**
 
-```
+```bash
 /publish design-tokens --bump minor
 ```
 
 **Auto-detect:**
 
-```
+```bash
 /publish
 ```
 

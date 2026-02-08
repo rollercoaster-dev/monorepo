@@ -188,8 +188,9 @@ Every card, input, button, badge chip, and container uses `medium` (2px). Use `t
 ### 2. Hard Offset Shadows (Zero Blur)
 
 ```ts
-// Import from shared.tsx:
-import { shadowStyle } from '../stories/design-system/shared';
+// Canonical source: src/styles/shadows.ts
+// (shared.tsx re-exports from shadows.ts for story convenience)
+import { shadowStyle } from '../../styles/shadows';
 
 // Usage in StyleSheet.create:
 ...shadowStyle(theme, 'hardSm')  // 2px offset — chips, badges, small elements
