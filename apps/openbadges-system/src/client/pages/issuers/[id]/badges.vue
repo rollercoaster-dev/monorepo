@@ -69,10 +69,7 @@ onMounted(() => {
     <!-- Error state -->
     <div v-if="error" class="alert alert-error mb-6" role="alert">
       <p class="text-destructive">{{ error }}</p>
-      <button
-        class="mt-2 text-sm text-destructive hover:text-destructive/80 underline"
-        @click="loadData"
-      >
+      <button class="mt-2 text-sm text-destructive hover:opacity-80 underline" @click="loadData">
         Try again
       </button>
     </div>

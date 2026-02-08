@@ -181,9 +181,9 @@ function getActivityColor(type: Activity['type']): string {
     case 'user_updated':
       return 'bg-accent'
     case 'system_event':
-      return 'bg-muted-foreground'
+      return 'bg-muted'
     default:
-      return 'bg-muted-foreground'
+      return 'bg-muted'
   }
 }
 

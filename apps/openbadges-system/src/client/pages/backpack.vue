@@ -693,7 +693,7 @@ onUnmounted(() => {
       <div class="flex items-center space-x-2">
         <ExclamationTriangleIcon class="w-5 h-5" />
         <span>{{ error }}</span>
-        <button class="ml-2 hover:text-muted-foreground" @click="error = null">
+        <button class="ml-2 hover:opacity-80" @click="error = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
@@ -706,7 +706,7 @@ onUnmounted(() => {
       <div class="flex items-center space-x-2">
         <CheckCircleIcon class="w-5 h-5" />
         <span>{{ successMessage }}</span>
-        <button class="ml-2 hover:text-muted-foreground" @click="successMessage = null">
+        <button class="ml-2 hover:opacity-80" @click="successMessage = null">
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
