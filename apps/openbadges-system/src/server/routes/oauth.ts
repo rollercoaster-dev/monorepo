@@ -155,12 +155,10 @@ oauthRoutes.get('/github/callback', async c => {
         if (existingByUsername) {
           username = `${profile.login}_gh`
         }
-        const result = await oauthService.createUserFromOAuth(
-          'github',
-          profile.id,
-          tokens,
-          { ...profile, login: username }
-        )
+        const result = await oauthService.createUserFromOAuth('github', profile.id, tokens, {
+          ...profile,
+          login: username,
+        })
         user = result.user
       }
     }
