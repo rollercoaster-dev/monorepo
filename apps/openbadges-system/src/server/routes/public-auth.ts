@@ -1,7 +1,10 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
+import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
+import type { AuthenticatorTransportFuture } from '@simplewebauthn/server'
 import { userService } from '../services/user'
 import { jwtService } from '../services/jwt'
+import { generateChallenge, consumeChallenge } from '../services/challenge'
 import { logger } from '../utils/logger'
 
 // Simple rate limiting for user enumeration protection
@@ -27,6 +30,13 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+// RP configuration — derive from environment or fall back to sensible defaults
+function getRpConfig() {
+  const rpId = process.env.WEBAUTHN_RP_ID || 'localhost'
+  const origin = process.env.WEBAUTHN_ORIGIN || `http://${rpId}:7777`
+  return { rpId, origin }
+}
+
 const publicAuthRoutes = new Hono()
 
 // Schemas
@@ -47,17 +57,6 @@ const userCreateSchema = z.object({
   avatar: z.string().url().optional(),
   isActive: z.boolean().default(true),
   roles: z.array(z.string()).default(['USER']),
-})
-
-const credentialSchema = z.object({
-  id: z.string().min(1),
-  publicKey: z.string().min(1),
-  transports: z.array(z.string()).default([]),
-  counter: z.number().int().nonnegative().default(0),
-  createdAt: z.string().default(() => new Date().toISOString()),
-  lastUsed: z.string().default(() => new Date().toISOString()),
-  name: z.string().min(1),
-  type: z.enum(['platform', 'cross-platform']),
 })
 
 // Public endpoint to check if user exists (for WebAuthn registration)
@@ -179,7 +178,46 @@ publicAuthRoutes.post('/users/register', async c => {
   }
 })
 
-// Public endpoint to add credential to user (for WebAuthn registration)
+// --- Challenge endpoints ---
+
+// Generate a challenge for WebAuthn authentication
+publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
+  if (!userService) {
+    return c.json({ error: 'User service unavailable' }, 503)
+  }
+
+  const userId = c.req.param('id')
+  const user = await userService.getUserById(userId)
+  if (!user) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+
+  const { rpId } = getRpConfig()
+  const challenge = generateChallenge(userId, 'authentication')
+
+  return c.json({ challenge, rpId, timeout: 60000 })
+})
+
+// Generate a challenge for WebAuthn registration
+publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
+  if (!userService) {
+    return c.json({ error: 'User service unavailable' }, 503)
+  }
+
+  const userId = c.req.param('id')
+  const user = await userService.getUserById(userId)
+  if (!user) {
+    return c.json({ error: 'User not found' }, 404)
+  }
+
+  const { rpId } = getRpConfig()
+  const challenge = generateChallenge(userId, 'registration')
+
+  return c.json({ challenge, rpId, timeout: 60000 })
+})
+
+// --- Credential registration (secured with server challenge) ---
+
 publicAuthRoutes.post('/users/:id/credentials', async c => {
   if (!userService) {
     return c.json({ error: 'User service unavailable' }, 503)
@@ -188,7 +226,6 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
   try {
     const userId = c.req.param('id')
 
-    // Verify user exists
     const user = await userService.getUserById(userId)
     if (!user) {
       return c.json({ error: 'User not found' }, 404)
@@ -201,16 +238,71 @@ publicAuthRoutes.post('/users/:id/credentials', async c => {
       return c.json({ error: 'Invalid JSON body' }, 400)
     }
 
-    const parsed = credentialSchema.safeParse(body)
+    const registrationSchema = z.object({
+      // Fields from navigator.credentials.create() response
+      id: z.string().min(1),
+      rawId: z.string().min(1),
+      type: z.literal('public-key'),
+      response: z.object({
+        attestationObject: z.string().min(1),
+        clientDataJSON: z.string().min(1),
+      }),
+      challenge: z.string().min(1),
+      // Metadata for credential storage
+      name: z.string().min(1),
+      authenticatorAttachment: z.enum(['platform', 'cross-platform']).optional(),
+      transports: z.array(z.string()).default([]),
+    })
+
+    const parsed = registrationSchema.safeParse(body)
     if (!parsed.success) {
-      return c.json({ error: 'Invalid credential data', details: parsed.error.issues }, 400)
+      return c.json({ error: 'Invalid registration data', details: parsed.error.issues }, 400)
     }
 
-    await userService.addUserCredential(userId, parsed.data)
+    // Validate the challenge was issued by us
+    if (!consumeChallenge(parsed.data.challenge, userId, 'registration')) {
+      return c.json({ error: 'Invalid or expired challenge' }, 403)
+    }
+
+    const { rpId, origin } = getRpConfig()
+
+    // Verify the registration response using @simplewebauthn/server
+    const verification = await verifyRegistrationResponse({
+      response: {
+        id: parsed.data.id,
+        rawId: parsed.data.rawId,
+        type: parsed.data.type,
+        response: parsed.data.response,
+        clientExtensionResults: {},
+        authenticatorAttachment: parsed.data.authenticatorAttachment ?? 'platform',
+      },
+      expectedChallenge: parsed.data.challenge,
+      expectedOrigin: origin,
+      expectedRPID: rpId,
+    })
+
+    if (!verification.verified || !verification.registrationInfo) {
+      return c.json({ error: 'Registration verification failed' }, 403)
+    }
+
+    const { credential } = verification.registrationInfo
+
+    // Store the verified credential
+    await userService.addUserCredential(userId, {
+      id: parsed.data.id,
+      publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+      transports: parsed.data.transports,
+      counter: credential.counter,
+      createdAt: new Date().toISOString(),
+      lastUsed: new Date().toISOString(),
+      name: parsed.data.name,
+      type: parsed.data.authenticatorAttachment === 'platform' ? 'platform' : 'cross-platform',
+    })
+
     return c.json({ success: true })
   } catch (err) {
-    logger.error('Error adding user credential', { error: err })
-    return c.json({ error: 'Failed to add credential' }, 500)
+    logger.error('Error registering credential', { error: err })
+    return c.json({ error: 'Failed to register credential' }, 500)
   }
 })
 
@@ -255,7 +347,16 @@ publicAuthRoutes.patch('/users/:userId/credentials/:credentialId', async c => {
   }
 })
 
-// Public endpoint to generate JWT token for WebAuthn authenticated users
+// --- Token endpoint (secured with WebAuthn assertion verification) ---
+
+const tokenRequestSchema = z.object({
+  credentialId: z.string().min(1),
+  authenticatorData: z.string().min(1),
+  clientDataJSON: z.string().min(1),
+  signature: z.string().min(1),
+  challenge: z.string().min(1),
+})
+
 publicAuthRoutes.post('/users/:id/token', async c => {
   if (!userService) {
     return c.json({ error: 'User service unavailable' }, 503)
@@ -264,13 +365,74 @@ publicAuthRoutes.post('/users/:id/token', async c => {
   try {
     const userId = c.req.param('id')
 
-    // Verify user exists
     const user = await userService.getUserById(userId)
     if (!user) {
       return c.json({ error: 'User not found' }, 404)
     }
 
-    // Generate JWT token for this user
+    let body: unknown
+    try {
+      body = await c.req.json()
+    } catch {
+      return c.json({ error: 'Assertion data required' }, 400)
+    }
+
+    const parsed = tokenRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'Invalid assertion data', details: parsed.error.issues }, 400)
+    }
+
+    // Validate the challenge was issued by us and is single-use
+    if (!consumeChallenge(parsed.data.challenge, userId, 'authentication')) {
+      return c.json({ error: 'Invalid or expired challenge' }, 403)
+    }
+
+    // Look up the credential's public key from the database
+    const credentials = await userService.getUserCredentials(userId)
+    const credential = credentials.find(c => c.id === parsed.data.credentialId)
+    if (!credential) {
+      return c.json({ error: 'Credential not found' }, 404)
+    }
+
+    const { rpId, origin } = getRpConfig()
+
+    // Verify the authentication response
+    const verification = await verifyAuthenticationResponse({
+      response: {
+        id: parsed.data.credentialId,
+        rawId: parsed.data.credentialId,
+        type: 'public-key',
+        response: {
+          authenticatorData: parsed.data.authenticatorData,
+          clientDataJSON: parsed.data.clientDataJSON,
+          signature: parsed.data.signature,
+        },
+        clientExtensionResults: {},
+        authenticatorAttachment: credential.type,
+      },
+      expectedChallenge: parsed.data.challenge,
+      expectedOrigin: origin,
+      expectedRPID: rpId,
+      credential: {
+        id: credential.id,
+        publicKey: Uint8Array.from(Buffer.from(credential.publicKey, 'base64url')),
+        counter: credential.counter,
+        transports: credential.transports as AuthenticatorTransportFuture[],
+      },
+    })
+
+    if (!verification.verified) {
+      return c.json({ error: 'Authentication verification failed' }, 403)
+    }
+
+    // Update counter for replay protection
+    const { authenticationInfo } = verification
+    await userService.updateUserCredential(userId, credential.id, {
+      counter: authenticationInfo.newCounter,
+      lastUsed: new Date().toISOString(),
+    })
+
+    // Generate JWT token
     const platformUser = {
       id: user.id,
       username: user.username,
