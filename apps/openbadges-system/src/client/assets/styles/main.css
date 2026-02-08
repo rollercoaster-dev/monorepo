@@ -70,9 +70,9 @@ a {
 
 /* Forms — tokens: --ob-form-input-border, --ob-form-input-focus, --ob-form-background */
 .form-input {
-  @apply block w-full rounded-md shadow-sm sm:text-sm;
+  @apply block w-full rounded-md shadow-hard-sm sm:text-sm;
   background-color: var(--ob-form-background);
-  border: var(--ob-border-width) solid var(--ob-form-input-border);
+  border: var(--ob-border-width-medium) solid var(--ob-form-input-border);
 }
 
 .form-input:focus-visible {
@@ -83,7 +83,7 @@ a {
 
 /* Cards — tokens: --ob-card, --ob-stroke, --ob-shadow-hard-md */
 .card {
-  @apply bg-card overflow-hidden shadow-hard-md rounded-lg;
+  @apply bg-card overflow-hidden shadow-hard-md rounded-sm;
   border: var(--ob-border-width-medium) solid var(--ob-stroke);
 }
 
@@ -103,7 +103,7 @@ a {
 
 /* Alerts — tokens: --ob-success, --ob-error, --ob-warning, --ob-info */
 .alert {
-  @apply p-4 rounded-md;
+  @apply p-4 rounded-sm;
   border: var(--ob-border-width-medium) solid transparent;
 }
 
