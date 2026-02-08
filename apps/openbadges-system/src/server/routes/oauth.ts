@@ -140,20 +140,28 @@ oauthRoutes.get('/github/callback', async c => {
         })
       }
     } else {
-      // Check if user exists with same email or username
+      // Match by email only — never by username (username matching is an
+      // account takeover vector: attacker registers local account with
+      // victim's GitHub username, then victim's OAuth links to attacker).
       user = (await userService?.getUserByEmail(profile.email)) || null
-      if (!user && profile.login) {
-        user = (await userService?.getUserByUsername(profile.login)) || null
-      }
 
       if (user) {
-        // Link OAuth provider to existing user
+        // Link OAuth provider to existing user with matching email
         await oauthService.linkOAuthProvider(user.id, 'github', profile.id, tokens, profile)
       } else {
-        // Create new user from OAuth profile
-        const result = await oauthService.createUserFromOAuth('github', profile.id, tokens, profile)
+        // Create new user — disambiguate username if it already exists
+        let username = profile.login
+        const existingByUsername = await userService?.getUserByUsername(username)
+        if (existingByUsername) {
+          username = `${profile.login}_gh`
+        }
+        const result = await oauthService.createUserFromOAuth(
+          'github',
+          profile.id,
+          tokens,
+          { ...profile, login: username }
+        )
         user = result.user
-        // OAuth provider is created within the service, no need to store reference
       }
     }
 
