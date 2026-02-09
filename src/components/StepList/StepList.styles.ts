@@ -1,7 +1,33 @@
 import { StyleSheet } from 'react-native-unistyles';
+import { shadowStyle } from '../../styles/shadows';
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
+    gap: theme.space[1],
+  },
+  draggableItem: {
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[2],
+    paddingVertical: theme.space[1],
+  },
+  draggingItem: {
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.accentPrimary,
+    ...shadowStyle(theme, 'hardLg'),
+    elevation: 4,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepContent: {
+    flex: 1,
+  },
+  reorderButtons: {
+    flexDirection: 'row',
     gap: theme.space[1],
   },
   header: {

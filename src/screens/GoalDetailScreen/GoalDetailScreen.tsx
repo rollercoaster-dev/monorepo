@@ -25,6 +25,7 @@ import {
   deleteStep,
   completeStep,
   uncompleteStep,
+  reorderSteps,
   StepStatus,
   EvidenceType,
 } from '../../db';
@@ -133,6 +134,15 @@ function GoalContent({ goalId }: { goalId: string }) {
     navigation.navigate(route, { goalId });
   }
 
+  function handleReorderSteps(stepIds: string[]) {
+    try {
+      reorderSteps(goalId as GoalId, stepIds as StepId[]);
+    } catch (error) {
+      console.error('[GoalDetailScreen] Failed to reorder steps', { error });
+      Alert.alert('Could not reorder steps', 'Something went wrong. Please try again.');
+    }
+  }
+
   function handleDeleteStep(stepId: string) {
     const step = stepRows.find((s) => s.id === stepId);
     setDeleteStepTarget(step ? { id: step.id, title: step.title ?? '' } : null);
@@ -168,6 +178,7 @@ function GoalContent({ goalId }: { goalId: string }) {
             onCreateStep={handleCreateStep}
             onUpdateStep={handleUpdateStep}
             onDeleteStep={handleDeleteStep}
+            onReorderSteps={handleReorderSteps}
           />
         </Card>
 
