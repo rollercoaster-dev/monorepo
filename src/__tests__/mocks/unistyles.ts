@@ -12,15 +12,25 @@ import { composeTheme, type ComposedTheme } from '../../themes/compose';
 export const mockTheme: ComposedTheme = composeTheme('light', 'default');
 
 /**
+ * Adds a no-op useVariants to the returned stylesheet, matching Unistyles v3
+ * behavior where each stylesheet gets a useVariants hook for variant selection.
+ */
+function addUseVariants<T>(styles: T): T & { useVariants: (variants: Record<string, string>) => void } {
+  return Object.assign(styles as object, {
+    useVariants: jest.fn(),
+  }) as unknown as T & { useVariants: (variants: Record<string, string>) => void };
+}
+
+/**
  * StyleSheet.create mock — if given a function, calls it with mockTheme;
- * if given an object, returns it as-is.
+ * if given an object, returns it as-is. Adds useVariants to the result.
  */
 const StyleSheet = {
   create: <T>(fnOrObj: ((theme: ComposedTheme) => T) | T): T => {
-    if (typeof fnOrObj === 'function') {
-      return (fnOrObj as (theme: ComposedTheme) => T)(mockTheme);
-    }
-    return fnOrObj;
+    const result = typeof fnOrObj === 'function'
+      ? (fnOrObj as (theme: ComposedTheme) => T)(mockTheme)
+      : fnOrObj;
+    return addUseVariants(result) as T;
   },
   configure: jest.fn(),
 };
