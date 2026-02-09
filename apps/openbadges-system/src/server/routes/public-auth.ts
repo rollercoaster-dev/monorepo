@@ -501,6 +501,11 @@ const refreshRequestSchema = z.object({
 })
 
 publicAuthRoutes.post('/refresh', async c => {
+  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  if (!checkRateLimit(clientIP)) {
+    return c.json({ error: 'Too many requests. Please try again later.' }, 429)
+  }
+
   try {
     let body: unknown
     try {
