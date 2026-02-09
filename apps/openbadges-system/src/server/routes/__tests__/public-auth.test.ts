@@ -34,6 +34,15 @@ vi.mock('@simplewebauthn/server', () => ({
   verifyRegistrationResponse: vi.fn(),
 }))
 
+// Mock refresh token service
+vi.mock('../../services/refresh-token', () => ({
+  issueTokenPair: vi.fn(() =>
+    Promise.resolve({ accessToken: 'mock-jwt-token', refreshToken: 'mock-refresh-token' })
+  ),
+  rotateRefreshToken: vi.fn(),
+  revokeRefreshToken: vi.fn(() => Promise.resolve()),
+}))
+
 // Mock logger
 vi.mock('../../utils/logger', () => ({
   logger: {
@@ -48,6 +57,7 @@ import { publicAuthRoutes } from '../public-auth'
 import { userService } from '../../services/user'
 import { consumeChallenge } from '../../services/challenge'
 import { jwtService } from '../../services/jwt'
+import { rotateRefreshToken, revokeRefreshToken } from '../../services/refresh-token'
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 
 const mockUser = {
@@ -525,6 +535,129 @@ describe('Public Auth Routes', () => {
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.success).toBe(true)
+    })
+  })
+
+  // --- Token endpoint returns refresh token ---
+
+  describe('POST /users/:id/token (refresh token in response)', () => {
+    const validAssertionBody = {
+      credentialId: 'cred-abc',
+      authenticatorData: 'mock-auth-data',
+      clientDataJSON: 'mock-client-data',
+      signature: 'mock-signature',
+      challenge: 'mock-challenge',
+    }
+
+    it('returns refreshToken alongside access token on success', async () => {
+      vi.mocked(userService!.getUserById).mockResolvedValue(mockUser as never)
+      vi.mocked(consumeChallenge).mockReturnValue({ valid: true })
+      vi.mocked(userService!.getUserCredentials).mockResolvedValue([mockCredential] as never)
+      vi.mocked(verifyAuthenticationResponse).mockResolvedValue({
+        verified: true,
+        authenticationInfo: { newCounter: 6 },
+      } as never)
+
+      const app = createApp()
+      const res = await app.request(
+        '/auth/public/users/user-123/token',
+        jsonPost(validAssertionBody)
+      )
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.token).toBe('mock-jwt-token')
+      expect(data.refreshToken).toBe('mock-refresh-token')
+    })
+  })
+
+  // --- Refresh Endpoint ---
+
+  describe('POST /refresh', () => {
+    it('returns 400 when no body is sent', async () => {
+      const app = createApp()
+      const res = await app.request('/auth/public/refresh', { method: 'POST' })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 400 when refreshToken is missing', async () => {
+      const app = createApp()
+      const res = await app.request('/auth/public/refresh', jsonPost({}))
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toBe('Refresh token required')
+    })
+
+    it('returns 401 when refresh token is invalid', async () => {
+      vi.mocked(rotateRefreshToken).mockResolvedValue(null)
+
+      const app = createApp()
+      const res = await app.request(
+        '/auth/public/refresh',
+        jsonPost({ refreshToken: 'invalid-token' })
+      )
+
+      expect(res.status).toBe(401)
+      const data = await res.json()
+      expect(data.error).toBe('Invalid or expired refresh token')
+    })
+
+    it('returns new token pair on successful refresh', async () => {
+      vi.mocked(rotateRefreshToken).mockResolvedValue({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      })
+
+      const app = createApp()
+      const res = await app.request(
+        '/auth/public/refresh',
+        jsonPost({ refreshToken: 'valid-refresh-token' })
+      )
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.token).toBe('new-access-token')
+      expect(data.refreshToken).toBe('new-refresh-token')
+    })
+  })
+
+  // --- Logout Endpoint ---
+
+  describe('POST /logout', () => {
+    it('returns success even with no body', async () => {
+      const app = createApp()
+      const res = await app.request('/auth/public/logout', { method: 'POST' })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+    })
+
+    it('revokes refresh token when provided', async () => {
+      const app = createApp()
+      const res = await app.request(
+        '/auth/public/logout',
+        jsonPost({ refreshToken: 'token-to-revoke' })
+      )
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(revokeRefreshToken).toHaveBeenCalledWith('token-to-revoke')
+    })
+
+    it('returns success even without refresh token in body', async () => {
+      const app = createApp()
+      const res = await app.request('/auth/public/logout', jsonPost({}))
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(revokeRefreshToken).not.toHaveBeenCalled()
     })
   })
 })
