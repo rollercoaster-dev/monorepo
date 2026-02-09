@@ -45,10 +45,12 @@ try {
 }
 const user = ref<User | null>(restoredUser)
 const token = ref<string | null>(localStorage.getItem('auth_token'))
+const refreshTokenValue = ref<string | null>(localStorage.getItem('refresh_token'))
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
 const isPlatformAuthAvailable = ref(false)
+let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
 // Token validation helpers — module-level so they can be used by the navigation guard
 const LOCAL_SESSION_PREFIX = 'local-session-'
@@ -75,6 +77,74 @@ const isTokenValid = (tokenValue: string | null): boolean => {
     return decoded.exp * 1000 > Date.now()
   } catch {
     return false
+  }
+}
+
+// Refresh the access token using the stored refresh token.
+// Returns true if refresh succeeded, false otherwise.
+async function performTokenRefresh(): Promise<boolean> {
+  const currentRefreshToken = refreshTokenValue.value
+  if (!currentRefreshToken) return false
+
+  try {
+    const response = await fetch('/api/auth/public/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: currentRefreshToken }),
+    })
+
+    if (!response.ok) {
+      // Refresh token is invalid/expired — clear auth state
+      return false
+    }
+
+    const data = await response.json()
+    if (data.success && data.token && data.refreshToken) {
+      token.value = data.token
+      refreshTokenValue.value = data.refreshToken
+      localStorage.setItem('auth_token', data.token)
+      localStorage.setItem('refresh_token', data.refreshToken)
+      scheduleTokenRefresh(data.token)
+      return true
+    }
+    return false
+  } catch {
+    // Network error — don't clear state (offline-first)
+    return false
+  }
+}
+
+// Schedule a proactive refresh 5 minutes before the access token expires
+function scheduleTokenRefresh(accessToken: string) {
+  if (refreshTimer) clearTimeout(refreshTimer)
+  if (isLocalSession(accessToken)) return
+
+  try {
+    const decoded = jwtDecode<{ exp: number }>(accessToken)
+    const expiresInMs = decoded.exp * 1000 - Date.now()
+    // Refresh 5 minutes before expiry, or immediately if less than 5 minutes remain
+    const refreshInMs = Math.max(expiresInMs - 5 * 60 * 1000, 0)
+    refreshTimer = setTimeout(async () => {
+      const success = await performTokenRefresh()
+      if (!success) {
+        // Refresh failed — clear auth state
+        token.value = null
+        refreshTokenValue.value = null
+        user.value = null
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('user_data')
+      }
+    }, refreshInMs)
+  } catch {
+    // Invalid token — skip scheduling
+  }
+}
+
+function clearRefreshTimer() {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+    refreshTimer = null
   }
 }
 
@@ -374,10 +444,15 @@ export const useAuth = () => {
         return false
       }
       token.value = platformRes.token
+      if (platformRes.refreshToken) {
+        refreshTokenValue.value = platformRes.refreshToken
+        localStorage.setItem('refresh_token', platformRes.refreshToken)
+      }
 
       user.value = newUser
       localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(newUser))
+      scheduleTokenRefresh(token.value!)
 
       return true
     } catch (err) {
@@ -444,10 +519,15 @@ export const useAuth = () => {
         return false
       }
       token.value = platformRes.token
+      if (platformRes.refreshToken) {
+        refreshTokenValue.value = platformRes.refreshToken
+        localStorage.setItem('refresh_token', platformRes.refreshToken)
+      }
 
       user.value = foundUser
       localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(foundUser))
+      scheduleTokenRefresh(token.value!)
 
       return true
     } catch (err) {
@@ -546,6 +626,10 @@ export const useAuth = () => {
         return false
       }
       token.value = platformRes.token
+      if (platformRes.refreshToken) {
+        refreshTokenValue.value = platformRes.refreshToken
+        localStorage.setItem('refresh_token', platformRes.refreshToken)
+      }
 
       user.value = {
         ...existingUser,
@@ -553,6 +637,7 @@ export const useAuth = () => {
       }
       localStorage.setItem('auth_token', token.value!)
       localStorage.setItem('user_data', JSON.stringify(user.value))
+      scheduleTokenRefresh(token.value!)
 
       return true
     } catch (err) {
@@ -580,9 +665,22 @@ export const useAuth = () => {
 
   // Logout function
   const logout = () => {
+    clearRefreshTimer()
+    // Best-effort server-side revocation
+    if (refreshTokenValue.value) {
+      fetch('/api/auth/public/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: refreshTokenValue.value }),
+      }).catch(() => {
+        // Ignore network errors during logout
+      })
+    }
     user.value = null
     token.value = null
+    refreshTokenValue.value = null
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('refresh_token')
     localStorage.removeItem('user_data')
     router.push('/auth/login')
   }
@@ -598,10 +696,19 @@ export const useAuth = () => {
 
         // First check if token is locally valid (handles both JWT expiration and local session age)
         if (!isTokenValid(storedToken)) {
-          console.warn('Stored session expired, clearing local state')
+          // Access token expired — attempt refresh before clearing state
+          const refreshed = await performTokenRefresh()
+          if (refreshed) {
+            user.value = parsedUser
+            await checkPlatformAuth()
+            return
+          }
+          console.warn('Stored session expired and refresh failed, clearing local state')
           localStorage.removeItem('auth_token')
+          localStorage.removeItem('refresh_token')
           localStorage.removeItem('user_data')
           token.value = null
+          refreshTokenValue.value = null
           user.value = null
           await checkPlatformAuth()
           return
@@ -616,6 +723,9 @@ export const useAuth = () => {
           await checkPlatformAuth()
           return
         }
+
+        // Schedule proactive refresh for valid JWT tokens
+        scheduleTokenRefresh(storedToken)
 
         // Best-effort validation for JWT tokens; only clear on explicit unauthorized
         try {
@@ -633,8 +743,10 @@ export const useAuth = () => {
       } catch {
         // Clear invalid JSON storage
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem('user_data')
         token.value = null
+        refreshTokenValue.value = null
         user.value = null
       }
     }
@@ -939,6 +1051,11 @@ export const useAuth = () => {
         token.value = result.token
         localStorage.setItem('auth_token', result.token)
         localStorage.setItem('user_data', JSON.stringify(userData))
+        if (result.refreshToken) {
+          refreshTokenValue.value = result.refreshToken
+          localStorage.setItem('refresh_token', result.refreshToken)
+        }
+        scheduleTokenRefresh(result.token)
 
         return true
       } else {

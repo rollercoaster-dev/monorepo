@@ -106,6 +106,15 @@ interface UserCredentialRow {
   type: string
 }
 
+export interface RefreshToken {
+  id: string
+  userId: string
+  tokenHash: string
+  expiresAt: string
+  revokedAt: string | null
+  createdAt: string
+}
+
 export interface OAuthSession {
   id: string
   state: string
@@ -241,6 +250,19 @@ export class UserService {
         );
       `)
 
+      // Create refresh tokens table
+      this.getDb().exec(`
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          id TEXT PRIMARY KEY,
+          userId TEXT NOT NULL,
+          tokenHash TEXT NOT NULL UNIQUE,
+          expiresAt TEXT NOT NULL,
+          revokedAt TEXT,
+          createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+        );
+      `)
+
       // Create indexes for better performance
       this.getDb().exec(`
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -249,6 +271,8 @@ export class UserService {
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_user_id ON oauth_providers(user_id);
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_provider ON oauth_providers(provider);
         CREATE INDEX IF NOT EXISTS idx_oauth_sessions_state ON oauth_sessions(state);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_tokenHash ON refresh_tokens(tokenHash);
       `)
 
       console.log('Database initialized successfully')
@@ -585,6 +609,47 @@ export class UserService {
     this.runQuery(sql, params)
 
     return true
+  }
+
+  // Refresh token management
+  async storeRefreshToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: string
+  ): Promise<RefreshToken> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+
+    this.runQuery(
+      `INSERT INTO refresh_tokens (id, userId, tokenHash, expiresAt, createdAt) VALUES (?, ?, ?, ?, ?)`,
+      [id, userId, tokenHash, expiresAt, now]
+    )
+
+    return { id, userId, tokenHash, expiresAt, revokedAt: null, createdAt: now }
+  }
+
+  async getRefreshTokenByHash(tokenHash: string): Promise<RefreshToken | null> {
+    const row = this.getQuery('SELECT * FROM refresh_tokens WHERE tokenHash = ?', [tokenHash])
+    return row ? (row as RefreshToken) : null
+  }
+
+  async revokeRefreshToken(tokenHash: string): Promise<void> {
+    this.runQuery('UPDATE refresh_tokens SET revokedAt = ? WHERE tokenHash = ?', [
+      new Date().toISOString(),
+      tokenHash,
+    ])
+  }
+
+  async revokeAllUserRefreshTokens(userId: string): Promise<void> {
+    this.runQuery(
+      'UPDATE refresh_tokens SET revokedAt = ? WHERE userId = ? AND revokedAt IS NULL',
+      [new Date().toISOString(), userId]
+    )
+  }
+
+  async cleanupExpiredRefreshTokens(): Promise<void> {
+    const now = new Date().toISOString()
+    this.runQuery('DELETE FROM refresh_tokens WHERE expiresAt < ?', [now])
   }
 
   // OAuth provider management

@@ -4,6 +4,7 @@ import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simpl
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/server'
 import { userService } from '../services/user'
 import { jwtService } from '../services/jwt'
+import { issueTokenPair, rotateRefreshToken, revokeRefreshToken } from '../services/refresh-token'
 import { generateChallenge, consumeChallenge } from '../services/challenge'
 import { logger } from '../utils/logger'
 
@@ -469,7 +470,7 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       lastUsed: new Date().toISOString(),
     })
 
-    // Generate JWT token
+    // Issue access + refresh token pair
     const platformUser = {
       id: user.id,
       username: user.username,
@@ -479,16 +480,76 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       isAdmin: user.roles.includes('ADMIN'),
     }
 
-    const token = jwtService.generatePlatformToken(platformUser)
+    const { accessToken, refreshToken } = await issueTokenPair(platformUser)
 
     return c.json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (err) {
     logger.error('Error generating token', { error: err })
     return c.json({ error: 'Failed to generate token' }, 500)
+  }
+})
+
+// --- Refresh token endpoint ---
+
+const refreshRequestSchema = z.object({
+  refreshToken: z.string().min(1),
+})
+
+publicAuthRoutes.post('/refresh', async c => {
+  try {
+    let body: unknown
+    try {
+      body = await c.req.json()
+    } catch {
+      return c.json({ error: 'Invalid JSON body' }, 400)
+    }
+
+    const parsed = refreshRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'Refresh token required' }, 400)
+    }
+
+    const result = await rotateRefreshToken(parsed.data.refreshToken)
+    if (!result) {
+      return c.json({ error: 'Invalid or expired refresh token' }, 401)
+    }
+
+    return c.json({
+      success: true,
+      token: result.accessToken,
+      refreshToken: result.refreshToken,
+    })
+  } catch (err) {
+    logger.error('Error refreshing token', { error: err })
+    return c.json({ error: 'Failed to refresh token' }, 500)
+  }
+})
+
+// --- Logout endpoint (revoke refresh token) ---
+
+publicAuthRoutes.post('/logout', async c => {
+  try {
+    let body: unknown
+    try {
+      body = await c.req.json()
+    } catch {
+      return c.json({ success: true })
+    }
+
+    const parsed = z.object({ refreshToken: z.string().optional() }).safeParse(body)
+    if (parsed.success && parsed.data.refreshToken) {
+      await revokeRefreshToken(parsed.data.refreshToken)
+    }
+
+    return c.json({ success: true })
+  } catch (err) {
+    logger.error('Error during logout', { error: err })
+    return c.json({ success: true })
   }
 })
 
