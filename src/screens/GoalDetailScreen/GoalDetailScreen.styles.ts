@@ -55,4 +55,35 @@ export const styles = StyleSheet.create((theme) => ({
   loadingIndicator: {
     marginTop: theme.space[8],
   },
+  completionCue: {
+    color: theme.colors.success,
+    marginTop: theme.space[2],
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.space[4],
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalContent: {
+    alignItems: 'center',
+    gap: theme.space[3],
+    marginBottom: theme.space[4],
+  },
+  modalTitle: {
+    textAlign: 'center',
+  },
+  modalMessage: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+  },
+  modalActions: {
+    gap: theme.space[2],
+  },
 }));

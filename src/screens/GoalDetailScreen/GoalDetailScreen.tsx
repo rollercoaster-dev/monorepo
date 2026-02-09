@@ -1,5 +1,5 @@
-import React, { Suspense, useState } from 'react';
-import { View, ScrollView, ActivityIndicator, AccessibilityInfo, Alert } from 'react-native';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
+import { View, ScrollView, Modal, ActivityIndicator, AccessibilityInfo, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
@@ -12,7 +12,9 @@ import { StatusBadge } from '../../components/StatusBadge';
 import { Divider } from '../../components/Divider';
 import { StepList, type Step } from '../../components/StepList';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
+import { CelebrationModal } from '../CelebrationModal';
 import { EvidenceActionSheet } from '../EvidenceActionSheet';
+import { useAnimationPref } from '../../hooks/useAnimationPref';
 import {
   goalsQuery,
   completeGoal,
@@ -47,9 +49,31 @@ function GoalContent({ goalId }: { goalId: string }) {
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  const { animationPref } = useAnimationPref();
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
   const [deleteStepTarget, setDeleteStepTarget] = useState<{ id: string; title: string } | null>(null);
   const [showEvidenceSheet, setShowEvidenceSheet] = useState(false);
+  const [showCompletionConfirm, setShowCompletionConfirm] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const hasAnnouncedReady = useRef(false);
+
+  const isCompleted = goal?.status === GoalStatus.completed;
+  const allStepsComplete = stepRows.length > 0 && stepRows.every(
+    (s) => s.status === StepStatus.completed,
+  );
+
+  // Announce when all steps become complete (once per transition)
+  useEffect(() => {
+    if (!goal) return;
+    if (allStepsComplete && !isCompleted && !hasAnnouncedReady.current) {
+      hasAnnouncedReady.current = true;
+      AccessibilityInfo.announceForAccessibility(
+        `All steps completed for "${goal.title}". Ready to complete goal.`,
+      );
+    } else if (!allStepsComplete) {
+      hasAnnouncedReady.current = false;
+    }
+  }, [goal, allStepsComplete, isCompleted]);
 
   if (!goal) {
     return (
@@ -60,7 +84,6 @@ function GoalContent({ goalId }: { goalId: string }) {
   }
 
   const { id, title, description } = goal;
-  const isCompleted = goal.status === GoalStatus.completed;
 
   const steps: Step[] = stepRows.map((row) => ({
     id: row.id,
@@ -68,11 +91,28 @@ function GoalContent({ goalId }: { goalId: string }) {
     completed: row.status === StepStatus.completed,
   }));
 
+  function handleCompleteGoal() {
+    try {
+      completeGoal(id);
+      setShowCompletionConfirm(false);
+      setShowCelebration(true);
+      AccessibilityInfo.announceForAccessibility(
+        `Goal "${title}" completed!`,
+      );
+      // TODO(A.3 #59): Replace with actual badge creation
+      console.log('[GoalDetailScreen] Badge creation stub for goal:', id);
+    } catch (error) {
+      console.error('[GoalDetailScreen] Failed to complete goal', { goalId: id, error });
+      setShowCompletionConfirm(false);
+      Alert.alert('Could not complete goal', 'Something went wrong. Please try again.');
+    }
+  }
+
   function handleToggleStatus() {
     if (isCompleted) {
       uncompleteGoal(id);
     } else {
-      completeGoal(id);
+      setShowCompletionConfirm(true);
     }
   }
 
@@ -180,6 +220,15 @@ function GoalContent({ goalId }: { goalId: string }) {
             onDeleteStep={handleDeleteStep}
             onReorderSteps={handleReorderSteps}
           />
+          {allStepsComplete && !isCompleted && (
+            <Text
+              variant="caption"
+              style={styles.completionCue}
+              accessibilityRole="text"
+            >
+              All steps done!
+            </Text>
+          )}
         </Card>
 
         <Card>
@@ -196,8 +245,8 @@ function GoalContent({ goalId }: { goalId: string }) {
           <View style={styles.actions}>
             <View style={styles.actionButton}>
               <Button
-                label={isCompleted ? 'Reopen' : 'Complete'}
-                variant="primary"
+                label={isCompleted ? 'Reopen' : 'Complete Goal'}
+                variant={allStepsComplete && !isCompleted ? 'primary' : 'secondary'}
                 onPress={handleToggleStatus}
               />
             </View>
@@ -230,6 +279,58 @@ function GoalContent({ goalId }: { goalId: string }) {
         onConfirm={confirmDeleteStep}
         title="Delete this step?"
         message={deleteStepTarget ? `"${deleteStepTarget.title}" will be permanently deleted.` : ''}
+      />
+      <Modal
+        visible={showCompletionConfirm}
+        transparent
+        animationType={animationPref === 'none' ? 'none' : 'fade'}
+        onRequestClose={() => setShowCompletionConfirm(false)}
+        accessibilityViewIsModal
+      >
+        <View style={styles.modalOverlay}>
+          <SafeAreaView edges={['bottom']} style={styles.modalContainer}>
+            <Card size="normal">
+              <View
+                style={styles.modalContent}
+                accessible
+                accessibilityLiveRegion="polite"
+              >
+                <Text
+                  variant="headline"
+                  style={styles.modalTitle}
+                  accessibilityRole="header"
+                >
+                  Complete this goal?
+                </Text>
+                <Text variant="body" style={styles.modalMessage}>
+                  {allStepsComplete
+                    ? 'All steps done! Ready to earn your badge?'
+                    : 'Some steps are still incomplete. Complete this goal anyway?'}
+                </Text>
+              </View>
+              <View style={styles.modalActions}>
+                <Button
+                  label="Complete Goal"
+                  onPress={handleCompleteGoal}
+                  variant="primary"
+                />
+                <Button
+                  label="Not Yet"
+                  onPress={() => setShowCompletionConfirm(false)}
+                  variant="secondary"
+                />
+              </View>
+            </Card>
+          </SafeAreaView>
+        </View>
+      </Modal>
+      <CelebrationModal
+        visible={showCelebration}
+        onDismiss={() => setShowCelebration(false)}
+        title="Goal completed!"
+        message="You did it. Badge coming soon."
+        icon="🎯"
+        animationType={animationPref === 'none' ? 'none' : 'fade'}
       />
     </>
   );

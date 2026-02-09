@@ -15,6 +15,7 @@ export interface CelebrationModalProps {
   icon?: string;
   actionLabel?: string;
   onAction?: () => void;
+  animationType?: 'none' | 'slide' | 'fade';
 }
 
 export function CelebrationModal({
@@ -25,6 +26,7 @@ export function CelebrationModal({
   icon = '⭐',
   actionLabel,
   onAction,
+  animationType = 'fade',
 }: CelebrationModalProps) {
   const { theme } = useUnistyles();
 
@@ -32,7 +34,7 @@ export function CelebrationModal({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType={animationType}
       onRequestClose={onDismiss}
       accessibilityViewIsModal
     >
