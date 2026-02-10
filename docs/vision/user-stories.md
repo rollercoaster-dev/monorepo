@@ -68,6 +68,52 @@ Three months later, he's completed two more steps. The app doesn't remind him ho
 
 ---
 
+### Sam's Tuesday Meeting
+
+**User:** Sam, 28, ADHD + anxiety — In early recovery, works in a warehouse
+
+Sam's been clean for three weeks. His sponsor told him to "take it one day at a time" but his brain doesn't work like that — it's either catastrophizing about the whole year ahead or forgetting he has a meeting tonight.
+
+He opens the app. The task view shows him one line:
+
+> Go to Tuesday meeting (7pm, community center)
+
+That's it. Not the 90-meetings-in-90-days goal. Not the steps he hasn't done yet. Just the next thing.
+
+He goes. Afterward, he opens the app, marks the step done, and types a quick note: "Hard day but I went. Talked to Marcus after." He doesn't take a photo — a text note is enough. The step is done.
+
+Over weeks, the steps accumulate. He doesn't think about streaks — the app doesn't count them. But when his sponsor asks how it's been going, he can scroll back and see: he went more weeks than he didn't. The evidence is there, quiet and factual.
+
+After 90 days he marks the goal complete. The badge is private — it lives on his phone, encrypted, visible to nobody. But he knows it's real because the evidence is real. Weeks of showing up, captured one step at a time.
+
+Six months later, he shares the badge with his sponsor through the app. His sponsor — who has his own "2 Years Clean" badge — taps verify. The verification is cryptographic. It means something. But it's still private. Sam decides who sees it, if anyone ever does.
+
+**Features used:** Task view (next best step), create goal, step-by-step progress, text evidence, private badge, selective sharing (Iteration D)
+**Evidence:** Dated text notes, attendance self-reports
+**ND pattern:** One thing at a time defeats overwhelm, no streaks or shame, privacy as a core feature not an afterthought
+
+---
+
+### Ava Navigates the System
+
+**User:** Ava, 33, suspected autistic + ADHD — Software tester, lives in Germany
+
+Ava's been reading about autism for two years and everything clicks. Her therapist agrees she should pursue formal assessment, but in Germany that means the PIA — the psychiatric outpatient clinic — and the waiting lists, referrals, and paperwork feel impossible.
+
+She creates a goal: "Get assessed at the PIA." Then she breaks it down: "Ask therapist for referral letter," "Call PIA for appointment," "Fill out intake questionnaires," "Attend diagnostic sessions," "Receive and review report."
+
+The first step sits there for two weeks. Calling is hard. Then one morning she does it — gets the appointment, four months out. She marks the step done and writes: "They were actually nice on the phone. Appointment is June 12th."
+
+Over the months she adds evidence as it comes — a photo of the completed questionnaire packet, a note after the first session ("She asked about childhood. I cried. Felt seen."), a screenshot of the follow-up appointment confirmation. The app doesn't care that months pass between steps. It just shows: here's where you are, here's what's next.
+
+When the report comes back and she has her diagnosis, she adds a photo of the cover page (not the full report — that's hers) and marks the goal complete. The badge reads "Self-Advocated: Pursued and Completed Diagnostic Assessment." It's the most private badge she'll ever earn. It means everything.
+
+**Features used:** Task view (next best step), create goal, break into steps, evidence over time, private badge
+**Evidence:** Appointment confirmations, completed forms, dated reflections, partial document photos
+**ND pattern:** Breaking bureaucratic overwhelm into steps, capturing a process that takes months, honouring the emotional weight of self-advocacy
+
+---
+
 ## Iteration B — Learning Journey
 
 Add the learning graph: track interrupts and context switches, reorganize goals, see paused work persist through life's chaos.
@@ -162,11 +208,13 @@ Evidence is what makes a badge more than a checkbox. Every badge should have at 
 
 | Feature | A | B | C | D |
 |---------|---|---|---|---|
+| Task view (next best step) | x | | | |
 | Create goals | x | | | |
 | Break into steps | x | | | |
 | Attach evidence | x | | | |
 | Complete steps/goals | x | | | |
 | Earn self-signed badge | x | | | |
+| Private/encrypted badges | x | | | |
 | Multiple concurrent goals | | x | | |
 | Reorganize steps between goals | | x | | |
 | Pause/resume goals | | x | | |
@@ -177,20 +225,25 @@ Evidence is what makes a badge more than a checkbox. Every badge should have at 
 | User-drawn connections | | | x | |
 | Visual states (earned/active/planned) | | | x | |
 | Badge sharing (device-to-device) | | | | x |
+| Selective disclosure (you choose who sees) | | | | x |
 | Peer verification | | | | x |
-| Mentor verification | | | | x |
+| Mentor/sponsor verification | | | | x |
+| Verification chains (verifier's badges add weight) | | | | x |
 
 ---
 
 ## Design Principles Confirmed by Stories
 
 1. **Evidence is non-negotiable** — every story includes concrete proof of work
-2. **No time pressure** — Malik's weeks of gaps, Eva's months of silence, Tomás's three-month stretch
+2. **No time pressure** — Malik's weeks of gaps, Eva's months of silence, Tomás's three-month stretch, Ava's months between appointments
 3. **No judgment** — the app shows state, not score
 4. **Scope is fluid** — Eva's big goal becomes a small goal, and that's a win
-5. **The phone is the context** — Lina on the bus, Tomás on the weekend, Carmen with Kayla in the garden
+5. **The phone is the context** — Lina on the bus, Tomás on the weekend, Carmen with Kayla in the garden, Sam after a meeting
 6. **Local-first is freedom** — Carmen and Kayla verify without internet
 7. **The tree is yours** — Kai builds it by hand, it looks like their brain
+8. **Privacy is structural** — Sam's recovery badge is encrypted by default, not "made private" after the fact. You choose who sees what, if anyone ever does
+9. **One thing at a time** — the task view shows the next step, not the whole mountain. This is how Sam gets to his meeting and Ava makes her phone call
+10. **Process is worth honouring** — not every badge is about mastery. Showing up, navigating bureaucracy, and persisting through hard things deserve recognition too
 
 ---
 

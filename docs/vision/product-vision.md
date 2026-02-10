@@ -87,9 +87,25 @@ The native app and the monorepo are two products built on shared foundations:
 
 The app is built in three iterations, each adding a layer on top of the last:
 
+### The Task View — Next Best Step
+
+Before getting into iterations, there's a fundamental UX concept that runs through all of them: **the task view**.
+
+Most goal trackers show you everything — all your goals, all your steps, all your progress (or lack of it). For executive dysfunction, this is paralyzing. The task view inverts this. It's a single screen that shows **one next step per active goal.** That's it.
+
+> - "Call PIA to schedule follow-up" (diagnostic journey)
+> - "Go to Tuesday meeting" (recovery)
+> - "Practice panel wiring" (apprenticeship)
+
+No goal trees, no progress bars, no weight. Just: here's what's next. Tap when done.
+
+The depth is always there — you can drill into any goal to see all steps, evidence, and history. But the daily surface is one action per goal. This is the screen you see when you open the app on the bus for 30 seconds. It answers the only question that matters when you're overwhelmed: *what's the one thing I could do right now?*
+
+This isn't a feature of a particular iteration — it's the primary interaction pattern. It shapes how goals feel from Iteration A onward.
+
 ### Iteration A — Quiet Victory
 
-The core loop. Create a goal, break it into steps, complete steps, earn a self-signed badge. Private, personal, no verification needed. This is Lina's story — a small way to honour something only you understand the weight of.
+The core loop. Create a goal, break it into steps, complete steps, earn a self-signed badge. Private, personal, no verification needed. This is Lina's story — a small way to honour something only you understand the weight of. It's Sam's story — showing up to a meeting and writing one line about it. It's Ava's story — navigating a months-long diagnostic process one phone call at a time.
 
 ### Iteration B — Learning Journey
 
