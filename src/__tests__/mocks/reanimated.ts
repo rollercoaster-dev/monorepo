@@ -4,14 +4,20 @@ const Easing = {
   cubic: (t: number) => t,
 };
 
-module.exports = {
+const named = {
   Easing,
   useSharedValue: (initial: number) => ({ value: initial }),
   useAnimatedStyle: (fn: () => object) => fn(),
   useDerivedValue: (fn: () => unknown) => ({ value: fn() }),
   withTiming: (toValue: number) => toValue,
   withSpring: (toValue: number) => toValue,
-  default: {
-    View: 'Animated.View',
-  },
+  runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+};
+
+// default import (import Animated from ...) needs View at top level
+// because without __esModule the default import IS module.exports
+module.exports = {
+  ...named,
+  View: 'Animated.View',
+  default: { View: 'Animated.View', ...named },
 };

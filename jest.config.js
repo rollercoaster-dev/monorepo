@@ -3,7 +3,7 @@ module.exports = {
     '^.+\\.[jt]sx?$': 'babel-jest',
   },
   testEnvironment: 'react-native/jest/react-native-env.js',
-  resolver: 'react-native/jest/resolver.js',
+  resolver: './jest.resolver.js',
   haste: {
     defaultPlatform: 'ios',
     platforms: ['android', 'ios', 'native'],
