@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.joe.rd.native-rd"
+      "bundleIdentifier": "com.joe.rd.native-rd",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,6 +33,12 @@
       "react-native-edge-to-edge",
       "expo-sqlite",
       "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals."
+        }
+      ],
       [
         "expo-image-picker",
         {

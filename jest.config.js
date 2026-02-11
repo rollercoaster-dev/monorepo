@@ -16,6 +16,7 @@ module.exports = {
     '^react-native-reanimated$': '<rootDir>/src/__tests__/mocks/reanimated.ts',
     '^react-native-unistyles$': '<rootDir>/src/__tests__/mocks/unistyles.ts',
     '^react-native-safe-area-context$': '<rootDir>/src/__tests__/mocks/safe-area-context.ts',
+    '^expo-audio$': '<rootDir>/src/__tests__/mocks/expo-audio.ts',
     '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
   },
   transformIgnorePatterns: [
