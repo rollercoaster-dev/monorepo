@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Alert, Pressable, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useUnistyles } from 'react-native-unistyles';
 import { useNavigation } from '@react-navigation/native';
 import { Text } from '../../components/Text';
 import { Card } from '../../components/Card';
@@ -28,6 +29,7 @@ function formatDuration(ms: number): string {
 
 export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const navigation = useNavigation();
+  const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
   const [caption, setCaption] = useState('');
 
@@ -289,7 +291,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               <TextInput
                 style={styles.captionInput}
                 placeholder="Add a caption (optional)"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.textMuted}
                 value={caption}
                 onChangeText={setCaption}
                 maxLength={200}

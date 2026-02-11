@@ -65,7 +65,7 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.space[4],
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: `${theme.colors.shadow}80`,
   },
   modalContainer: {
     width: '100%',

@@ -67,13 +67,13 @@ export const styles = StyleSheet.create((theme) => ({
     width: 28,
     height: 28,
     borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background,
   },
   recordButtonIdle: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background,
   },
   recordButtonPressed: {
     opacity: 0.7,

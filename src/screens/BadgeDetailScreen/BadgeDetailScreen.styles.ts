@@ -41,7 +41,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size['5xl'],
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,
-    color: '#ffffff',
+    color: theme.colors.background,
   },
   infoSection: {
     width: '100%',

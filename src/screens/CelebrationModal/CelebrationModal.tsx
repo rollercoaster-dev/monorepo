@@ -38,7 +38,7 @@ export function CelebrationModal({
       onRequestClose={onDismiss}
       accessibilityViewIsModal
     >
-      <View style={[styles.overlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+      <View style={[styles.overlay, { backgroundColor: `${theme.colors.shadow}80` }]}>
         <SafeAreaView edges={['bottom']} style={styles.container}>
           <Card size="normal">
             <View
