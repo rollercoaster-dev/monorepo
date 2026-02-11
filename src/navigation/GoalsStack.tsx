@@ -5,6 +5,7 @@ import { GoalDetailScreen } from '../screens/GoalDetailScreen';
 import { NewGoalModal } from '../screens/NewGoalModal';
 import { CapturePhoto } from '../screens/CapturePhoto';
 import { CapturePlaceholder } from '../screens/CapturePlaceholder';
+import { CaptureVideoScreen } from '../screens/CaptureVideoScreen';
 import { VoiceMemoScreen } from '../screens/VoiceMemoScreen';
 import { CaptureFile } from '../screens/CaptureFile';
 import { CaptureLinkScreen } from '../screens/CaptureLinkScreen';
@@ -24,6 +25,7 @@ export function GoalsStack() {
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="CapturePhoto" component={CapturePhoto} />
+      <Stack.Screen name="CaptureVideo" component={CaptureVideoScreen} />
       <Stack.Screen name="CaptureVoiceMemo" component={VoiceMemoScreen} />
       <Stack.Screen name="CaptureTextNote" component={CaptureTextNote} />
       <Stack.Screen name="CaptureLink" component={CaptureLinkScreen} />

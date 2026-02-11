@@ -38,6 +38,7 @@ import { styles } from './GoalDetailScreen.styles';
 
 const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
   [EvidenceType.photo]: 'CapturePhoto',
+  [EvidenceType.video]: 'CaptureVideo',
   [EvidenceType.voice_memo]: 'CaptureVoiceMemo',
   [EvidenceType.text]: 'CaptureTextNote',
   [EvidenceType.link]: 'CaptureLink',

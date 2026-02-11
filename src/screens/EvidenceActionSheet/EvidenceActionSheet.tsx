@@ -21,6 +21,7 @@ export const EVIDENCE_OPTIONS: {
   icon: string;
 }[] = [
   { type: EvidenceType.photo, label: 'Take Photo', icon: '\u{1F4F7}' },
+  { type: EvidenceType.video, label: 'Record Video', icon: '\u{1F3AC}' },
   { type: EvidenceType.voice_memo, label: 'Record Voice Memo', icon: '\u{1F3A4}' },
   { type: EvidenceType.text, label: 'Write a Note', icon: '\u{1F4DD}' },
   { type: EvidenceType.link, label: 'Add Link', icon: '\u{1F517}' },

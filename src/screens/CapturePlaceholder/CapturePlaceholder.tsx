@@ -10,6 +10,7 @@ import { styles } from './CapturePlaceholder.styles';
 
 const LABELS: Record<string, string> = {
   CapturePhoto: 'Photo Capture',
+  CaptureVideo: 'Record Video',
   CaptureVoiceMemo: 'Voice Memo',
   CaptureTextNote: 'Text Note',
   CaptureFile: 'Attach File',

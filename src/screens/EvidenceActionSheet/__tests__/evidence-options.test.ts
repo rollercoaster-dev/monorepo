@@ -3,6 +3,7 @@ import { EvidenceType } from '../../../db';
 /** Evidence types presented in the action sheet — must match EVIDENCE_OPTIONS in EvidenceActionSheet.tsx */
 const ACTION_SHEET_TYPES = [
   EvidenceType.photo,
+  EvidenceType.video,
   EvidenceType.voice_memo,
   EvidenceType.text,
   EvidenceType.link,
@@ -15,6 +16,7 @@ const ACTION_SHEET_TYPES = [
  */
 const EVIDENCE_ROUTE_MAP: Record<string, string> = {
   [EvidenceType.photo]: 'CapturePhoto',
+  [EvidenceType.video]: 'CaptureVideo',
   [EvidenceType.voice_memo]: 'CaptureVoiceMemo',
   [EvidenceType.text]: 'CaptureTextNote',
   [EvidenceType.link]: 'CaptureLink',
@@ -23,8 +25,8 @@ const EVIDENCE_ROUTE_MAP: Record<string, string> = {
 
 describe('EvidenceActionSheet options', () => {
   it('covers all user-facing evidence types', () => {
-    // screenshot and video are not user-selectable from the action sheet
-    const excludedTypes: string[] = [EvidenceType.screenshot, EvidenceType.video];
+    // screenshot is not user-selectable from the action sheet
+    const excludedTypes: string[] = [EvidenceType.screenshot];
     const userFacingTypes = Object.values(EvidenceType).filter(
       (t) => !excludedTypes.includes(t),
     );

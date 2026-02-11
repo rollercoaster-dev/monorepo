@@ -12,6 +12,7 @@ export type CaptureParams = { goalId: string; stepId?: string };
 /** Evidence capture routes — single source of truth */
 type CaptureRoutes = {
   CapturePhoto: CaptureParams;
+  CaptureVideo: CaptureParams;
   CaptureVoiceMemo: CaptureParams;
   CaptureTextNote: CaptureParams;
   CaptureLink: CaptureParams;
@@ -63,6 +64,7 @@ export type CapturePhotoScreenProps = NativeStackScreenProps<GoalsStackParamList
 export type CaptureVoiceMemoScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureVoiceMemo'>;
 export type CaptureTextNoteScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureTextNote'>;
 export type CaptureLinkScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureLink'>;
+export type CaptureVideoScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureVideo'>;
 export type CaptureFileScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CaptureFile'>;
 
 export type RootTabProps = BottomTabScreenProps<RootTabParamList>;
