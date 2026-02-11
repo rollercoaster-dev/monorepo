@@ -5,6 +5,7 @@ import { GoalDetailScreen } from '../screens/GoalDetailScreen';
 import { NewGoalModal } from '../screens/NewGoalModal';
 import { CapturePhoto } from '../screens/CapturePhoto';
 import { CapturePlaceholder } from '../screens/CapturePlaceholder';
+import { CaptureFile } from '../screens/CaptureFile';
 import { CaptureLinkScreen } from '../screens/CaptureLinkScreen';
 import { CaptureTextNote } from '../screens/CaptureTextNote';
 import type { GoalsStackParamList } from './types';
@@ -25,7 +26,7 @@ export function GoalsStack() {
       <Stack.Screen name="CaptureVoiceMemo" component={CapturePlaceholder} />
       <Stack.Screen name="CaptureTextNote" component={CaptureTextNote} />
       <Stack.Screen name="CaptureLink" component={CaptureLinkScreen} />
-      <Stack.Screen name="CaptureFile" component={CapturePlaceholder} />
+      <Stack.Screen name="CaptureFile" component={CaptureFile} />
     </Stack.Navigator>
   );
 }
