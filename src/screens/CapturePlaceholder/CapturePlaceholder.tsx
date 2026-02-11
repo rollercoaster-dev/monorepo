@@ -12,7 +12,6 @@ const LABELS: Record<string, string> = {
   CapturePhoto: 'Photo Capture',
   CaptureVoiceMemo: 'Voice Memo',
   CaptureTextNote: 'Text Note',
-  CaptureLink: 'Add Link',
   CaptureFile: 'Attach File',
 };
 

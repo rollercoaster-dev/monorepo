@@ -16,7 +16,7 @@ type Story = StoryObj<typeof EvidenceGrid>;
 
 const evidences: Evidence[] = [
   { id: '1', title: 'Screenshot of progress', type: 'photo' },
-  { id: '2', title: 'Voice memo reflection', type: 'voice' },
+  { id: '2', title: 'Voice memo reflection', type: 'voice_memo' },
   { id: '3', title: 'Written notes', type: 'text' },
   { id: '4', title: 'Tutorial reference', type: 'link' },
 ];

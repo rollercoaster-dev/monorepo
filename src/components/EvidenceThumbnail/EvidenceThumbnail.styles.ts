@@ -38,6 +38,12 @@ export const styles = StyleSheet.create((theme) => ({
     letterSpacing: theme.letterSpacing.label,
     marginTop: 2,
   },
+  linkUrl: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.accentPrimary,
+    marginTop: 2,
+  },
   pressed: {
     opacity: 0.8,
   },
