@@ -29,7 +29,14 @@
     "plugins": [
       "react-native-edge-to-edge",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos for evidence capture.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to take photos as evidence."
+        }
+      ]
     ]
   }
 }
