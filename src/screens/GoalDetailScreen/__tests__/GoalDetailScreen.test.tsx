@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { renderWithProviders, screen, fireEvent } from '../../../__tests__/test-utils';
 import { GoalDetailScreen } from '../GoalDetailScreen';
 
@@ -38,6 +39,44 @@ jest.mock('expo-haptics', () => ({
 jest.mock('../../../utils/haptics', () => ({
   triggerDragStart: jest.fn(),
   triggerDragDrop: jest.fn(),
+}));
+
+jest.mock('expo-video', () => {
+  const { View } = require('react-native');
+  return {
+    useVideoPlayer: jest.fn(() => ({ play: jest.fn(), pause: jest.fn(), loop: false })),
+    VideoView: (props: Record<string, unknown>) => <View testID="video-player" {...props} />,
+  };
+});
+
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    seekTo: jest.fn(),
+  })),
+  useAudioPlayerStatus: jest.fn(() => ({
+    playing: false,
+    currentTime: 0,
+    duration: 0,
+    didJustFinish: false,
+  })),
+}));
+
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn().mockResolvedValue(true),
+  shareAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
+let mockFileExists = true;
+jest.mock('expo-file-system', () => ({
+  File: jest.fn().mockImplementation(() => ({
+    get exists() {
+      return mockFileExists;
+    },
+  })),
+  Directory: jest.fn(),
+  Paths: { document: '/mock/document' },
 }));
 
 jest.mock('../../../hooks/useAnimationPref', () => ({
@@ -82,6 +121,8 @@ jest.mock('../../../db', () => ({
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
+  evidenceByGoalQuery: jest.fn(() => 'evidenceByGoalQuery'),
+  deleteEvidence: jest.fn(),
 }));
 
 // useQuery mock that returns different data based on the query argument
@@ -124,10 +165,13 @@ const routeProps = {
   navigation: {} as any,
 };
 
-function setupQueries(goal: object | null = GOAL_ACTIVE, steps = STEPS_MIXED) {
+function setupQueries(goal: object | null = GOAL_ACTIVE, steps = STEPS_MIXED, evidence: object[] = []) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === 'goalsQuery') {
       return goal ? [goal] : [];
+    }
+    if (query === 'evidenceByGoalQuery') {
+      return evidence;
     }
     // stepsByGoalQuery
     return steps;
@@ -198,5 +242,141 @@ describe('GoalDetailScreen', () => {
     setupQueries();
     renderWithProviders(<GoalDetailScreen {...routeProps} />);
     expect(screen.getByText('Add Evidence')).toBeOnTheScreen();
+  });
+
+  // --- Evidence display ---
+
+  it('renders evidence items from query', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'photo', uri: '/photo.jpg', description: 'Progress photo' },
+      { id: 'ev-2', type: 'text', description: 'My notes' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    expect(screen.getByText('Evidence (2)')).toBeOnTheScreen();
+  });
+
+  it('shows empty state when no evidence exists', () => {
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, []);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    expect(screen.getByText('No evidence yet')).toBeOnTheScreen();
+  });
+
+  // --- Evidence viewer routing ---
+
+  it('opens photo viewer when photo evidence is pressed', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'photo', uri: '/photo.jpg', description: 'Progress photo' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('photo evidence: Progress photo'));
+    expect(screen.getByLabelText('Close photo viewer')).toBeOnTheScreen();
+  });
+
+  it('opens text viewer when text evidence is pressed', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'text', description: 'My detailed notes' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('text evidence: My detailed notes'));
+    expect(screen.getByLabelText('Close text note viewer')).toBeOnTheScreen();
+  });
+
+  it('extracts text content from uri with content:text; prefix', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'text', uri: 'content:text;This is the actual note', description: null },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    // Without description, title falls back to type string "text"
+    fireEvent.press(screen.getByLabelText('text evidence: text'));
+    expect(screen.getByLabelText('Close text note viewer')).toBeOnTheScreen();
+    expect(screen.getByText('This is the actual note')).toBeOnTheScreen();
+  });
+
+  it('shows caption as createdAt when text has both uri content and description', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'text', uri: 'content:text;My important thought', description: 'Daily reflection' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('text evidence: Daily reflection'));
+    expect(screen.getByText('My important thought')).toBeOnTheScreen();
+    expect(screen.getByText('Daily reflection')).toBeOnTheScreen();
+  });
+
+  it('opens audio player modal when voice memo evidence is pressed', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'voice_memo', uri: '/audio.m4a', description: 'Voice memo' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('voice_memo evidence: Voice memo'));
+    expect(screen.getByLabelText('Close audio player')).toBeOnTheScreen();
+  });
+
+  it('closes audio player modal when close is pressed', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'voice_memo', uri: '/audio.m4a', description: 'Voice memo' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('voice_memo evidence: Voice memo'));
+    expect(screen.getByLabelText('Close audio player')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByLabelText('Close audio player'));
+    expect(screen.queryByLabelText('Close audio player')).not.toBeOnTheScreen();
+  });
+
+  it('opens share sheet when file evidence is pressed', async () => {
+    const Sharing = require('expo-sharing');
+    const evidence = [
+      { id: 'ev-1', type: 'file', uri: '/doc.pdf', description: 'Document' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('file evidence: Document'));
+    // Wait for the async openFile to complete
+    await screen.findByText('Evidence (1)');
+    expect(Sharing.isAvailableAsync).toHaveBeenCalled();
+    expect(Sharing.shareAsync).toHaveBeenCalledWith('/doc.pdf', {});
+  });
+
+  it('passes UTI option when file evidence has mimeType metadata', async () => {
+    const Sharing = require('expo-sharing');
+    const evidence = [
+      {
+        id: 'ev-1',
+        type: 'file',
+        uri: '/doc.pdf',
+        description: 'PDF Document',
+        metadata: JSON.stringify({ mimeType: 'application/pdf', fileName: 'doc.pdf' }),
+      },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('file evidence: PDF Document'));
+    await screen.findByText('Evidence (1)');
+    expect(Sharing.shareAsync).toHaveBeenCalledWith('/doc.pdf', { UTI: 'com.adobe.pdf' });
+  });
+
+  it('shows alert when file does not exist', async () => {
+    mockFileExists = false;
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    try {
+      const evidence = [
+        { id: 'ev-1', type: 'file', uri: '/missing.pdf', description: 'Missing file' },
+      ];
+      setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+      renderWithProviders(<GoalDetailScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText('file evidence: Missing file'));
+      await screen.findByText('Evidence (1)');
+      expect(alertSpy).toHaveBeenCalledWith('File not found', 'The file may have been deleted.');
+    } finally {
+      mockFileExists = true;
+      alertSpy.mockRestore();
+    }
   });
 });

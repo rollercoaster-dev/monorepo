@@ -25,4 +25,12 @@ export const styles = StyleSheet.create((theme) => ({
   item: {
     width: '48%',
   },
+  emptyText: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: theme.space[4],
+  },
 }));

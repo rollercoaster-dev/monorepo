@@ -1,6 +1,7 @@
-import React from 'react';
-import { Pressable, View, Text, Linking, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, View, Text, Image, Linking, Alert } from 'react-native';
 import { EvidenceType } from '../../db';
+import { formatDuration } from '../../utils/format';
 import { styles } from './EvidenceThumbnail.styles';
 
 type EvidenceTypeValue = (typeof EvidenceType)[keyof typeof EvidenceType];
@@ -9,13 +10,16 @@ export interface Evidence {
   id: string;
   title: string;
   type: EvidenceTypeValue;
-  /** URI for the evidence (file path or URL). Used for link-type evidence to open in browser. */
+  /** URI for the evidence (file path or URL). */
   uri?: string;
+  /** JSON metadata string (e.g., durationMs for audio). */
+  metadata?: string;
 }
 
 export interface EvidenceThumbnailProps {
   evidence: Evidence;
   onPress?: () => void;
+  onLongPress?: () => void;
 }
 
 const typeIcons: Record<EvidenceTypeValue, string> = {
@@ -28,10 +32,15 @@ const typeIcons: Record<EvidenceTypeValue, string> = {
   video: '\u{1F3AC}',
 };
 
-/**
- * Opens a link evidence URI in the system browser.
- * Shows an alert if the URL cannot be opened.
- */
+function parseMetadata(metadata?: string): Record<string, unknown> | null {
+  if (!metadata) return null;
+  try {
+    return JSON.parse(metadata);
+  } catch {
+    return null;
+  }
+}
+
 async function openLinkInBrowser(uri: string): Promise<void> {
   try {
     const canOpen = await Linking.canOpenURL(uri);
@@ -45,7 +54,53 @@ async function openLinkInBrowser(uri: string): Promise<void> {
   }
 }
 
-export function EvidenceThumbnail({ evidence, onPress }: EvidenceThumbnailProps) {
+function PreviewContent({ evidence }: { evidence: Evidence }) {
+  const [imageError, setImageError] = useState(false);
+  const isImageType = evidence.type === 'photo' || evidence.type === 'screenshot' || evidence.type === 'video';
+
+  if (isImageType && evidence.uri && !imageError) {
+    return (
+      <Image
+        source={{ uri: evidence.uri }}
+        style={styles.previewImage}
+        resizeMode="cover"
+        onError={() => setImageError(true)}
+        accessibilityElementsHidden
+      />
+    );
+  }
+
+  if (evidence.type === 'text' && evidence.title) {
+    return (
+      <View style={styles.textPreview}>
+        <Text style={styles.textSnippet} numberOfLines={3}>
+          {evidence.title}
+        </Text>
+      </View>
+    );
+  }
+
+  if (evidence.type === 'voice_memo') {
+    const meta = parseMetadata(evidence.metadata);
+    const durationMs = meta?.durationMs as number | undefined;
+    return (
+      <View style={styles.preview}>
+        <Text style={styles.previewIcon}>{typeIcons.voice_memo}</Text>
+        {durationMs ? (
+          <Text style={styles.durationBadge}>{formatDuration(durationMs)}</Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.preview}>
+      <Text style={styles.previewIcon}>{typeIcons[evidence.type]}</Text>
+    </View>
+  );
+}
+
+export function EvidenceThumbnail({ evidence, onPress, onLongPress }: EvidenceThumbnailProps) {
   const isLink = evidence.type === 'link' && evidence.uri;
 
   function handlePress() {
@@ -62,17 +117,16 @@ export function EvidenceThumbnail({ evidence, onPress }: EvidenceThumbnailProps)
   return (
     <Pressable
       onPress={handlePress}
-      disabled={!isInteractive}
+      onLongPress={onLongPress}
+      disabled={!isInteractive && !onLongPress}
       accessible
       accessibilityRole={isInteractive ? 'button' : undefined}
       accessibilityLabel={`${evidence.type} evidence: ${evidence.title}`}
       accessibilityHint={accessibilityHint}
-      style={({ pressed }) => [pressed && isInteractive && styles.pressed]}
+      style={({ pressed }) => [pressed && (isInteractive || onLongPress) && styles.pressed]}
     >
       <View style={styles.container}>
-        <View style={styles.preview}>
-          <Text style={styles.previewIcon}>{typeIcons[evidence.type]}</Text>
-        </View>
+        <PreviewContent evidence={evidence} />
         <View style={styles.info}>
           <Text style={styles.title} numberOfLines={1}>{evidence.title}</Text>
           {isLink ? (

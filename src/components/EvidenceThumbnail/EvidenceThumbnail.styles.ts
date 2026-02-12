@@ -17,8 +17,30 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  previewImage: {
+    height: 80,
+    width: '100%',
+  },
   previewIcon: {
     fontSize: 24,
+  },
+  textPreview: {
+    height: 80,
+    backgroundColor: theme.colors.backgroundTertiary,
+    padding: theme.space[2],
+    justifyContent: 'center',
+  },
+  textSnippet: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.textSecondary,
+    lineHeight: 16,
+  },
+  durationBadge: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.textMuted,
+    marginTop: 4,
   },
   info: {
     padding: theme.space[2],

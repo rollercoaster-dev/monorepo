@@ -1,34 +1,18 @@
 import React from 'react';
 import { View, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useVideoPlayer, VideoView } from 'expo-video';
+import { AudioPlayer } from '../../components/AudioPlayer';
 import { Text } from '../../components/Text';
-import { styles } from './VideoPlayerModal.styles';
+import { styles } from './AudioPlayerModal.styles';
 
-export interface VideoPlayerModalProps {
+export interface AudioPlayerModalProps {
   visible: boolean;
   uri: string | null;
+  durationMs?: number;
   onClose: () => void;
 }
 
-function PlayerContent({ uri }: { uri: string }) {
-  const player = useVideoPlayer(uri, (p) => {
-    p.loop = false;
-    p.play();
-  });
-  return (
-    <VideoView
-      player={player}
-      style={styles.video}
-      fullscreenOptions={{ enable: true }}
-      nativeControls
-      contentFit="contain"
-      accessibilityLabel="Video evidence playback"
-    />
-  );
-}
-
-export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProps) {
+export function AudioPlayerModal({ visible, uri, durationMs, onClose }: AudioPlayerModalProps) {
   const insets = useSafeAreaInsets();
 
   if (!uri) return null;
@@ -39,24 +23,24 @@ export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProp
       transparent={false}
       animationType="slide"
       onRequestClose={onClose}
-      supportedOrientations={['portrait', 'landscape']}
       accessibilityViewIsModal
     >
       <View style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={styles.container}>
           <View style={styles.topBar}>
+            <Text style={styles.heading}>Voice Memo</Text>
             <Pressable
               onPress={onClose}
               accessible
               accessibilityRole="button"
-              accessibilityLabel="Close video player"
+              accessibilityLabel="Close audio player"
               hitSlop={16}
             >
-              <Text style={styles.closeText}>{'✕'}</Text>
+              <Text style={styles.closeText}>{'\u2715'}</Text>
             </Pressable>
           </View>
-          <View style={styles.videoContainer}>
-            <PlayerContent uri={uri} />
+          <View style={styles.playerContainer}>
+            <AudioPlayer uri={uri} durationMs={durationMs} />
           </View>
         </View>
       </View>
