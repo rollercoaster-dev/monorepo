@@ -48,6 +48,9 @@ export const EvidenceType = {
   file: 'file',
 } as const;
 
+/** URI prefix for inline text evidence (text content stored in the URI field) */
+export const TEXT_EVIDENCE_PREFIX = 'content:text;';
+
 /** Badge ULID identifier */
 export const BadgeId = id('Badge');
 export type BadgeId = typeof BadgeId.Type;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -12,10 +12,26 @@ export interface VideoPlayerModalProps {
 }
 
 function PlayerContent({ uri }: { uri: string }) {
+  const [error, setError] = useState(false);
   const player = useVideoPlayer(uri, (p) => {
     p.loop = false;
     p.play();
   });
+
+  useEffect(() => {
+    const subscription = player.addListener('statusChange', (payload) => {
+      if (payload.status === 'error') {
+        console.error('[VideoPlayerModal] Playback error', { uri, payload });
+        setError(true);
+      }
+    });
+    return () => subscription.remove();
+  }, [player]);
+
+  if (error) {
+    return <Text style={styles.errorText}>Failed to load video</Text>;
+  }
+
   return (
     <VideoView
       player={player}
@@ -31,7 +47,7 @@ function PlayerContent({ uri }: { uri: string }) {
 export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProps) {
   const insets = useSafeAreaInsets();
 
-  if (!uri) return null;
+  if (!visible) return null;
 
   return (
     <Modal
@@ -56,7 +72,11 @@ export function VideoPlayerModal({ visible, uri, onClose }: VideoPlayerModalProp
             </Pressable>
           </View>
           <View style={styles.videoContainer}>
-            <PlayerContent uri={uri} />
+            {uri ? (
+              <PlayerContent uri={uri} />
+            ) : (
+              <Text style={styles.errorText}>Failed to load video</Text>
+            )}
           </View>
         </View>
       </View>

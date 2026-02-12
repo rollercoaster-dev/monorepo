@@ -36,6 +36,7 @@ import {
   reorderSteps,
   StepStatus,
   EvidenceType,
+  TEXT_EVIDENCE_PREFIX,
   evidenceByGoalQuery,
   deleteEvidence,
 } from '../../db';
@@ -43,7 +44,14 @@ import type { GoalId, StepId, EvidenceId } from '../../db';
 import type { GoalDetailScreenProps, GoalsStackParamList, CaptureScreenName } from '../../navigation/types';
 import type { EvidenceTypeValue } from '../EvidenceActionSheet';
 import type { Evidence } from '../../components/EvidenceThumbnail';
+import { deleteEvidenceFile } from '../../utils/evidenceCleanup';
 import { styles } from './GoalDetailScreen.styles';
+
+const VALID_EVIDENCE_TYPES: Set<string> = new Set(Object.values(EvidenceType));
+
+function isValidEvidenceType(value: string | null): value is Evidence['type'] {
+  return value !== null && VALID_EVIDENCE_TYPES.has(value);
+}
 
 const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
   [EvidenceType.photo]: 'CapturePhoto',
@@ -109,7 +117,10 @@ function GoalContent({ goalId }: { goalId: string }) {
   const evidences: Evidence[] = evidenceRows.map((row) => ({
     id: row.id,
     title: row.description ?? row.type ?? 'Evidence',
-    type: (row.type as Evidence['type']) ?? 'file',
+    type: isValidEvidenceType(row.type) ? row.type : (() => {
+      console.warn('[GoalDetailScreen] Unknown evidence type, defaulting to file', { id: row.id, type: row.type });
+      return 'file' as const;
+    })(),
     uri: row.uri ?? undefined,
     metadata: row.metadata ?? undefined,
   }));
@@ -240,8 +251,8 @@ function GoalContent({ goalId }: { goalId: string }) {
         }
         break;
       case 'text': {
-        const textContent = evidence.uri?.startsWith('content:text;')
-          ? evidence.uri.slice('content:text;'.length)
+        const textContent = evidence.uri?.startsWith(TEXT_EVIDENCE_PREFIX)
+          ? evidence.uri.slice(TEXT_EVIDENCE_PREFIX.length)
           : evidence.title;
         setTextViewer({
           text: textContent,
@@ -253,7 +264,7 @@ function GoalContent({ goalId }: { goalId: string }) {
         if (evidence.uri) {
           setAudioPlayer({
             uri: evidence.uri,
-            durationMs: (meta?.durationMs as number) ?? undefined,
+            durationMs: typeof meta?.durationMs === 'number' ? meta.durationMs : undefined,
           });
         } else {
           Alert.alert('Cannot play', 'Audio file is missing.');
@@ -279,6 +290,7 @@ function GoalContent({ goalId }: { goalId: string }) {
   function handleDeleteEvidence(evidence: Evidence) {
     try {
       deleteEvidence(evidence.id as EvidenceId);
+      deleteEvidenceFile(evidence.uri, evidence.type);
     } catch (error) {
       console.error('[GoalDetailScreen] Failed to delete evidence', { evidenceId: evidence.id, error });
       Alert.alert('Could not delete evidence', 'Something went wrong. Please try again.');
@@ -503,7 +515,8 @@ async function openFile(uri: string, metadata?: string) {
 function tryParseJSON(str: string): Record<string, unknown> | null {
   try {
     return JSON.parse(str);
-  } catch {
+  } catch (error) {
+    console.warn('[GoalDetailScreen] Failed to parse metadata JSON', { str, error });
     return null;
   }
 }

@@ -5,6 +5,7 @@ export {
   StepStatus,
   EvidenceId,
   EvidenceType,
+  TEXT_EVIDENCE_PREFIX,
   BadgeId,
   UserSettingsId,
   Schema,

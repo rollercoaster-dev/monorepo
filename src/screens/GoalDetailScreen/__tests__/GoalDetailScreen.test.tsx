@@ -44,7 +44,12 @@ jest.mock('../../../utils/haptics', () => ({
 jest.mock('expo-video', () => {
   const { View } = require('react-native');
   return {
-    useVideoPlayer: jest.fn(() => ({ play: jest.fn(), pause: jest.fn(), loop: false })),
+    useVideoPlayer: jest.fn(() => ({
+      play: jest.fn(),
+      pause: jest.fn(),
+      loop: false,
+      addListener: jest.fn(() => ({ remove: jest.fn() })),
+    })),
     VideoView: (props: Record<string, unknown>) => <View testID="video-player" {...props} />,
   };
 });
@@ -98,6 +103,10 @@ const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
 
+jest.mock('../../../utils/evidenceCleanup', () => ({
+  deleteEvidenceFile: jest.fn(),
+}));
+
 jest.mock('../../../db', () => ({
   GoalStatus: { active: 'active', completed: 'completed' },
   StepStatus: { pending: 'pending', completed: 'completed' },
@@ -110,6 +119,7 @@ jest.mock('../../../db', () => ({
     link: 'link',
     file: 'file',
   },
+  TEXT_EVIDENCE_PREFIX: 'content:text;',
   goalsQuery: 'goalsQuery',
   stepsByGoalQuery: jest.fn(() => 'stepsByGoalQuery'),
   completeGoal: (...args: unknown[]) => mockCompleteGoal(...args),
@@ -360,6 +370,58 @@ describe('GoalDetailScreen', () => {
     fireEvent.press(screen.getByLabelText('file evidence: PDF Document'));
     await screen.findByText('Evidence (1)');
     expect(Sharing.shareAsync).toHaveBeenCalledWith('/doc.pdf', { UTI: 'com.adobe.pdf' });
+  });
+
+  // --- Evidence deletion ---
+
+  it('calls deleteEvidence and deleteEvidenceFile when evidence is deleted', () => {
+    const { deleteEvidence } = require('../../../db');
+    const { deleteEvidenceFile } = require('../../../utils/evidenceCleanup');
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    const evidence = [
+      { id: 'ev-1', type: 'photo', uri: '/photo.jpg', description: 'Progress photo' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+
+    // Long-press triggers delete confirmation Alert
+    fireEvent(screen.getByLabelText('photo evidence: Progress photo'), 'onLongPress');
+    // Simulate pressing "Delete" in the Alert
+    const alertButtons = alertSpy.mock.calls[0]?.[2] as Array<{ text: string; onPress?: () => void }>;
+    const deleteButton = alertButtons?.find((b) => b.text === 'Delete');
+    deleteButton?.onPress?.();
+
+    expect(deleteEvidence).toHaveBeenCalledWith('ev-1');
+    expect(deleteEvidenceFile).toHaveBeenCalledWith('/photo.jpg', 'photo');
+  });
+
+  // --- Type guards ---
+
+  it('falls back to file type for unrecognized evidence type', () => {
+    const evidence = [
+      { id: 'ev-1', type: 'unknown_type', uri: '/mystery', description: 'Unknown' },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    // Falls back to 'file' type — evidence should render with file label
+    expect(screen.getByLabelText('file evidence: Unknown')).toBeOnTheScreen();
+  });
+
+  it('handles non-number durationMs in voice memo metadata', () => {
+    const evidence = [
+      {
+        id: 'ev-1',
+        type: 'voice_memo',
+        uri: '/audio.m4a',
+        description: 'Memo',
+        metadata: JSON.stringify({ durationMs: 'not a number' }),
+      },
+    ];
+    setupQueries(GOAL_ACTIVE, STEPS_MIXED, evidence);
+    renderWithProviders(<GoalDetailScreen {...routeProps} />);
+    // Should render without crashing — durationMs guard filters out the string
+    fireEvent.press(screen.getByLabelText('voice_memo evidence: Memo'));
+    expect(screen.getByLabelText('Close audio player')).toBeOnTheScreen();
   });
 
   it('shows alert when file does not exist', async () => {

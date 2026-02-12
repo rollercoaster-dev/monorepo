@@ -29,6 +29,7 @@ jest.mock('../../../db', () => ({
     link: 'link',
     file: 'file',
   },
+  TEXT_EVIDENCE_PREFIX: 'content:text;',
 }));
 
 const { createEvidence } = require('../../../db');
