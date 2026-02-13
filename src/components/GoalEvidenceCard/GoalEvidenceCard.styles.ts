@@ -1,0 +1,50 @@
+import { StyleSheet } from 'react-native-unistyles';
+import { palette } from '../../themes/palette';
+
+export const styles = StyleSheet.create((theme) => ({
+  wrapper: {
+    borderTopWidth: 6,
+    borderTopColor: palette.yellow300,
+  },
+  container: {
+    gap: theme.space[3],
+  },
+  goalLabel: {
+    fontSize: theme.size.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.warning,
+    textTransform: 'uppercase',
+    letterSpacing: theme.letterSpacing.wide,
+    fontFamily: theme.fontFamily.body,
+  },
+  title: {
+    fontSize: theme.size['2xl'],
+    fontWeight: theme.fontWeight.black,
+    color: theme.colors.text,
+    fontFamily: theme.fontFamily.headline,
+  },
+  description: {
+    fontSize: theme.size.sm,
+    color: theme.colors.textMuted,
+    fontFamily: theme.fontFamily.body,
+    lineHeight: theme.lineHeight.sm,
+  },
+  evidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: theme.space[1],
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[1],
+    minHeight: 44,
+    minWidth: 44,
+  },
+  evidenceText: {
+    fontSize: theme.size.xs,
+    fontFamily: theme.fontFamily.mono,
+    color: theme.colors.textSecondary,
+  },
+}));
