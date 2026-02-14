@@ -25,6 +25,7 @@ export type CaptureScreenName = keyof CaptureRoutes;
 export type GoalsStackParamList = {
   Goals: undefined;
   GoalDetail: { goalId: string };
+  FocusMode: { goalId: string };
   NewGoal: undefined;
 } & CaptureRoutes;
 
@@ -53,6 +54,7 @@ export type RootTabParamList = {
 
 export type GoalsScreenProps = NativeStackScreenProps<GoalsStackParamList, 'Goals'>;
 export type GoalDetailScreenProps = NativeStackScreenProps<GoalsStackParamList, 'GoalDetail'>;
+export type FocusModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'FocusMode'>;
 export type NewGoalScreenProps = NativeStackScreenProps<GoalsStackParamList, 'NewGoal'>;
 
 export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Badges'>;
