@@ -27,6 +27,7 @@ export type GoalsStackParamList = {
   GoalDetail: { goalId: string };
   FocusMode: { goalId: string };
   NewGoal: undefined;
+  EditMode: { goalId: string; cameFromFocus?: boolean };
 } & CaptureRoutes;
 
 export type BadgesStackParamList = {
@@ -56,6 +57,7 @@ export type GoalsScreenProps = NativeStackScreenProps<GoalsStackParamList, 'Goal
 export type GoalDetailScreenProps = NativeStackScreenProps<GoalsStackParamList, 'GoalDetail'>;
 export type FocusModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'FocusMode'>;
 export type NewGoalScreenProps = NativeStackScreenProps<GoalsStackParamList, 'NewGoal'>;
+export type EditModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'EditMode'>;
 
 export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Badges'>;
 export type BadgeDetailScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDetail'>;

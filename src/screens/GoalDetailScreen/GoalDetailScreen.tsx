@@ -347,6 +347,20 @@ function GoalContent({ goalId }: { goalId: string }) {
           <View style={styles.actions}>
             <View style={styles.actionButton}>
               <Button
+                label="Edit Goal"
+                variant="secondary"
+                onPress={() => navigation.navigate('EditMode', { goalId })}
+              />
+            </View>
+            <View style={styles.actionButton}>
+              <Button
+                label="Focus Mode"
+                variant="secondary"
+                onPress={() => navigation.navigate('FocusMode', { goalId })}
+              />
+            </View>
+            <View style={styles.actionButton}>
+              <Button
                 label={isCompleted ? 'Reopen' : 'Complete Goal'}
                 variant={allStepsComplete && !isCompleted ? 'primary' : 'secondary'}
                 onPress={handleToggleStatus}

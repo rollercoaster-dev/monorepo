@@ -40,9 +40,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: theme.space[4],
+    bottom: 56,
     right: theme.space[4],
     alignItems: 'flex-end',
     gap: theme.space[2],
+    zIndex: 30,
   },
 }));

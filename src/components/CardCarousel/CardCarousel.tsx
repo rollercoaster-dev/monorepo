@@ -41,7 +41,8 @@ function AnimatedCard({ children, position, containerWidth, animationPref }: Ani
 
   useEffect(() => {
     const config = getTimingConfig(animationPref, 'normal');
-    const offsetX = containerWidth * 0.85;
+    const cardWidth = containerWidth - 64; // matches left: 32 + right: 32 inset
+    const offsetX = cardWidth * 0.85;
 
     switch (position) {
       case 'center':
@@ -69,7 +70,11 @@ function AnimatedCard({ children, position, containerWidth, animationPref }: Ani
 
   const animatedStyle = useAnimatedStyle(() => ({
     position: 'absolute' as const,
-    width: '100%' as const,
+    top: 0,
+    bottom: 0,
+    left: 32,
+    right: 32,
+    justifyContent: 'center' as const,
     transform: [{ translateX: translateX.value }, { scale: scale.value }],
     opacity: opacity.value,
     zIndex: position === 'center' ? 2 : position === 'hidden' ? 0 : 1,
@@ -180,46 +185,58 @@ export function CardCarousel({
         }
       }}
     >
-      <View style={styles.track} {...panResponder.panHandlers}>
-        {cards.map(({ child, position }, index) => (
-          <AnimatedCard
-            key={index}
-            position={position}
-            containerWidth={width}
-            animationPref={animationPref}
+      {/* Track + overlay arrows */}
+      <View style={styles.trackWrapper}>
+        <View style={styles.track} {...panResponder.panHandlers}>
+          {cards.map(({ child, position }, index) => (
+            <AnimatedCard
+              key={index}
+              position={position}
+              containerWidth={width}
+              animationPref={animationPref}
+            >
+              {child}
+            </AnimatedCard>
+          ))}
+        </View>
+
+        {/* Prev arrow — overlays left edge */}
+        <View style={[styles.arrowContainer, styles.arrowLeft]}>
+          <Pressable
+            onPress={goLeft}
+            disabled={isFirst}
+            style={[styles.arrow, isFirst && styles.arrowDisabled]}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Previous card"
+            accessibilityState={{ disabled: isFirst }}
           >
-            {child}
-          </AnimatedCard>
-        ))}
+            <Text style={styles.arrowText}>&#8249;</Text>
+          </Pressable>
+        </View>
+
+        {/* Next arrow — overlays right edge */}
+        <View style={[styles.arrowContainer, styles.arrowRight]}>
+          <Pressable
+            onPress={goRight}
+            disabled={isLast}
+            style={[styles.arrow, isLast && styles.arrowDisabled]}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Next card"
+            accessibilityState={{ disabled: isLast }}
+          >
+            <Text style={styles.arrowText}>&#8250;</Text>
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.navRow}>
-        <Pressable
-          onPress={goLeft}
-          disabled={isFirst}
-          style={[styles.arrow, isFirst && styles.arrowDisabled]}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel="Previous card"
-          accessibilityState={{ disabled: isFirst }}
-        >
-          <Text style={styles.arrowText}>&#8249;</Text>
-        </Pressable>
-
-        {renderIndicator?.(safeIndex, children.length)}
-
-        <Pressable
-          onPress={goRight}
-          disabled={isLast}
-          style={[styles.arrow, isLast && styles.arrowDisabled]}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel="Next card"
-          accessibilityState={{ disabled: isLast }}
-        >
-          <Text style={styles.arrowText}>&#8250;</Text>
-        </Pressable>
-      </View>
+      {/* Indicator (ProgressDots) below the track */}
+      {renderIndicator && (
+        <View style={styles.indicatorRow}>
+          {renderIndicator(safeIndex, children.length)}
+        </View>
+      )}
     </View>
   );
 }

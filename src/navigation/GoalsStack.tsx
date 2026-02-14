@@ -11,6 +11,7 @@ import { VoiceMemoScreen } from '../screens/VoiceMemoScreen';
 import { CaptureFile } from '../screens/CaptureFile';
 import { CaptureLinkScreen } from '../screens/CaptureLinkScreen';
 import { CaptureTextNote } from '../screens/CaptureTextNote';
+import { EditModeScreen } from '../screens/EditModeScreen';
 import type { GoalsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<GoalsStackParamList>();
@@ -32,6 +33,7 @@ export function GoalsStack() {
       <Stack.Screen name="CaptureTextNote" component={CaptureTextNote} />
       <Stack.Screen name="CaptureLink" component={CaptureLinkScreen} />
       <Stack.Screen name="CaptureFile" component={CaptureFile} />
+      <Stack.Screen name="EditMode" component={EditModeScreen} />
     </Stack.Navigator>
   );
 }
