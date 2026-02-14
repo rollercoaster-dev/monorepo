@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Pressable, Text } from 'react-native';
 import { styles } from './MiniTimeline.styles';
+import type { StepStatus } from '../../types/steps';
 
-export type StepStatus = 'completed' | 'in-progress' | 'pending';
+export type { StepStatus };
 
 export interface MiniTimelineStep {
   status: StepStatus;
