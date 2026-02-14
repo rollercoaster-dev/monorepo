@@ -234,4 +234,29 @@ describe('FocusModeScreen', () => {
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     expect(screen.getByText('Focus Mode')).toBeOnTheScreen();
   });
+
+  it('auto-navigates to CompletionFlow when all steps are completed', () => {
+    jest.useFakeTimers();
+    setupQueries({
+      steps: [
+        { id: 'step-1', title: 'Read docs', status: 'completed', ordinal: 0 },
+        { id: 'step-2', title: 'Practice', status: 'completed', ordinal: 1 },
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    jest.advanceTimersByTime(400);
+    expect(mockNavigate).toHaveBeenCalledWith('CompletionFlow', { goalId: 'goal-1' });
+    jest.useRealTimers();
+  });
+
+  it('does not auto-navigate when steps are still pending', () => {
+    jest.useFakeTimers();
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    jest.advanceTimersByTime(500);
+    expect(mockNavigate).not.toHaveBeenCalledWith('CompletionFlow', expect.anything());
+    jest.useRealTimers();
+  });
 });

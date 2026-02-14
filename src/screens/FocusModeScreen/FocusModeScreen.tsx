@@ -52,6 +52,12 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
   const hasAnnouncedComplete = useRef(false);
+  const hasTriggeredCompletion = useRef(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => { isMounted.current = false; };
+  }, []);
 
   const isGoalCard = currentCardIndex >= stepRows.length;
 
@@ -103,7 +109,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   const allStepsComplete =
     stepRows.length > 0 && stepRows.every((s) => s.status === StepStatus.completed);
 
-  // Announce when all steps become complete
+  // Announce when all steps become complete and auto-navigate to completion flow
   useEffect(() => {
     if (!goal) return;
     if (allStepsComplete && !hasAnnouncedComplete.current) {
@@ -111,10 +117,22 @@ function FocusContent({ goalId }: { goalId: string }) {
       AccessibilityInfo.announceForAccessibility(
         `All steps completed for "${goal.title}". Goal is ready to complete!`,
       );
+
+      // Auto-navigate to completion flow after brief delay
+      if (!hasTriggeredCompletion.current) {
+        hasTriggeredCompletion.current = true;
+        const timer = setTimeout(() => {
+          if (isMounted.current) {
+            navigation.navigate('CompletionFlow', { goalId });
+          }
+        }, 400);
+        return () => clearTimeout(timer);
+      }
     } else if (!allStepsComplete) {
       hasAnnouncedComplete.current = false;
+      hasTriggeredCompletion.current = false;
     }
-  }, [goal, allStepsComplete]);
+  }, [goal, allStepsComplete, goalId, navigation]);
 
   if (!goal) {
     return (

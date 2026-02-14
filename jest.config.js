@@ -9,6 +9,7 @@ module.exports = {
     platforms: ['android', 'ios', 'native'],
   },
   moduleNameMapper: {
+    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/src/__tests__/mocks/fileMock.js',
     '^@evolu/common$': '<rootDir>/src/db/__tests__/mocks/evolu-common.ts',
     '^@evolu/react$': '<rootDir>/src/__tests__/mocks/evolu-react.ts',
     '^@evolu/react-native/expo-sqlite$': '<rootDir>/src/__tests__/mocks/evolu-react-native.ts',
