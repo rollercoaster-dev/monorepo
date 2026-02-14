@@ -22,10 +22,16 @@ require('./polyfills');
 // 3. Unistyles theme configuration
 require('./unistyles');
 
-// 4. Register the app
+// 4. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { registerRootComponent } = require('expo');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { App } = require('./App');
 
-registerRootComponent(App);
+if (process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const StorybookUI = require('./.storybook').default;
+  registerRootComponent(StorybookUI);
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { App } = require('./App');
+  registerRootComponent(App);
+}

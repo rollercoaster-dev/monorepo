@@ -3,6 +3,7 @@ import React from 'react';
 import { Platform, ScrollView } from 'react-native';
 import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
 import { themeNames, type ThemeName } from '../src/themes';
+import { EvoluAppProvider } from '../src/db/evolu';
 
 const FONT_FACE_CSS = `
 @font-face { font-family: 'Anybody'; font-weight: 400; font-display: swap; src: url('/fonts/anybody-400.woff2') format('woff2'); }
@@ -41,9 +42,11 @@ const themeDecorator = (Story: React.ComponentType, context: any) => {
   }, [selectedTheme]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Story />
-    </ScrollView>
+    <EvoluAppProvider>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Story />
+      </ScrollView>
+    </EvoluAppProvider>
   );
 };
 
