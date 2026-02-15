@@ -46,6 +46,10 @@ export const styles = StyleSheet.create((theme) => ({
     width: '100%',
     height: '100%',
   },
+  iconEmoji: {
+    fontSize: 72,
+    textAlign: 'center' as const,
+  },
   headline: {
     textAlign: 'center',
     marginBottom: theme.space[2],

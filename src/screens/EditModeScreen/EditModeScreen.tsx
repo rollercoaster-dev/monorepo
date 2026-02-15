@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { View, ScrollView, TextInput, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { View, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
@@ -7,6 +7,7 @@ import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
+import { StepList } from '../../components/StepList';
 import {
   goalsQuery,
   updateGoal,
@@ -14,9 +15,14 @@ import {
   createStep,
   updateStep,
   deleteStep,
+  completeStep,
+  uncompleteStep,
+  reorderSteps,
+  StepStatus,
 } from '../../db';
 import type { GoalId, StepId } from '../../db';
 import type { EditModeScreenProps, GoalsStackParamList } from '../../navigation/types';
+import { ModeIndicator } from '../../components/ModeIndicator';
 import { styles } from './EditModeScreen.styles';
 
 const DEBOUNCE_MS = 500;
@@ -31,7 +37,6 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
   const [title, setTitle] = useState(goal?.title ?? '');
   const [description, setDescription] = useState(goal?.description ?? '');
   const [titleError, setTitleError] = useState('');
-  const [newStepTitle, setNewStepTitle] = useState('');
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,19 +122,40 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
     }
   }
 
-  function handleAddStep() {
-    const trimmed = newStepTitle.trim();
-    if (!trimmed) return;
+  function handleCreateStep(stepTitle: string) {
     const maxOrdinal = stepRows.reduce(
       (max, s) => Math.max(max, s.ordinal ?? -1),
       -1,
     );
     try {
-      createStep(goalId as GoalId, trimmed, maxOrdinal + 1);
-      setNewStepTitle('');
+      createStep(goalId as GoalId, stepTitle, maxOrdinal + 1);
     } catch (error) {
-      console.error('[EditModeScreen] Failed to create step', { goalId, stepTitle: trimmed, error });
+      console.error('[EditModeScreen] Failed to create step', { goalId, stepTitle, error });
       Alert.alert('Error', 'Could not create step.');
+    }
+  }
+
+  function handleToggleStep(stepId: string) {
+    const step = stepRows.find((s) => s.id === stepId);
+    if (!step) return;
+    try {
+      if (step.status === StepStatus.completed) {
+        uncompleteStep(stepId as StepId);
+      } else {
+        completeStep(stepId as StepId);
+      }
+    } catch (error) {
+      console.error('[EditModeScreen] Failed to toggle step', { stepId, error });
+      Alert.alert('Error', 'Could not update step.');
+    }
+  }
+
+  function handleReorderSteps(stepIds: string[]) {
+    try {
+      reorderSteps(goalId as GoalId, stepIds as StepId[]);
+    } catch (error) {
+      console.error('[EditModeScreen] Failed to reorder steps', { goalId, error });
+      Alert.alert('Error', 'Could not reorder steps.');
     }
   }
 
@@ -176,51 +202,19 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
         />
       </View>
 
-      {/* Steps */}
-      <View style={styles.section}>
-        <View style={styles.stepListHeader}>
-          <Text variant="body" style={styles.stepListTitle}>Steps</Text>
-          <Text style={styles.stepCount}>
-            {stepRows.length} step{stepRows.length !== 1 ? 's' : ''}
-          </Text>
-        </View>
-
-        <View style={{ gap: 8 }}>
-          {stepRows.map((step) => (
-            <EditStepItem
-              key={step.id}
-              stepId={step.id}
-              title={step.title ?? ''}
-              canDelete={canDelete}
-              onUpdate={handleUpdateStep}
-              onDelete={handleDeleteStep}
-            />
-          ))}
-        </View>
-
-        {/* Add step row */}
-        <View style={styles.addStepRow}>
-          <TextInput
-            style={styles.addStepInput}
-            value={newStepTitle}
-            onChangeText={setNewStepTitle}
-            onSubmitEditing={handleAddStep}
-            placeholder="Add a step..."
-            placeholderTextColor={theme.colors.textMuted}
-            returnKeyType="done"
-            accessibilityLabel="Add a new step"
-            accessibilityHint="Type a step title and press return to add"
-          />
-          <Pressable
-            style={styles.addStepBtn}
-            onPress={handleAddStep}
-            accessibilityLabel="Add step"
-            accessibilityRole="button"
-          >
-            <Text style={styles.addStepBtnText}>+</Text>
-          </Pressable>
-        </View>
-      </View>
+      {/* Steps — reuses StepList with drag-and-drop support */}
+      <StepList
+        steps={stepRows.map((s) => ({
+          id: s.id,
+          title: s.title ?? '',
+          completed: s.status === StepStatus.completed,
+        }))}
+        onToggleStep={handleToggleStep}
+        onCreateStep={handleCreateStep}
+        onUpdateStep={handleUpdateStep}
+        onDeleteStep={canDelete ? handleDeleteStep : undefined}
+        onReorderSteps={handleReorderSteps}
+      />
 
       {/* Navigate button */}
       <View style={styles.buttonSection}>
@@ -230,59 +224,6 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
         />
       </View>
     </ScrollView>
-  );
-}
-
-/** Single step row: ≡ drag handle | editable title input | × delete */
-function EditStepItem({
-  stepId,
-  title: initialTitle,
-  canDelete,
-  onUpdate,
-  onDelete,
-}: {
-  stepId: string;
-  title: string;
-  canDelete: boolean;
-  onUpdate: (id: string, title: string) => void;
-  onDelete: (id: string) => void;
-}) {
-  const { theme } = useUnistyles();
-  const [value, setValue] = useState(initialTitle);
-
-  function handleBlur() {
-    const trimmed = value.trim();
-    if (trimmed && trimmed !== initialTitle) {
-      onUpdate(stepId, trimmed);
-    } else if (!trimmed) {
-      setValue(initialTitle);
-    }
-  }
-
-  return (
-    <View style={styles.stepItem}>
-      <Text style={styles.dragHandle} accessibilityLabel="Step position indicator">≡</Text>
-      <TextInput
-        style={styles.stepTitleInput}
-        value={value}
-        onChangeText={setValue}
-        onBlur={handleBlur}
-        onSubmitEditing={handleBlur}
-        returnKeyType="done"
-        placeholderTextColor={theme.colors.textMuted}
-        accessibilityLabel={`Step title: ${initialTitle}`}
-      />
-      {canDelete && (
-        <Pressable
-          style={styles.deleteStepBtn}
-          onPress={() => onDelete(stepId)}
-          accessibilityLabel={`Delete step: ${initialTitle}`}
-          accessibilityRole="button"
-        >
-          <Text style={styles.deleteStepText}>×</Text>
-        </Pressable>
-      )}
-    </View>
   );
 }
 
@@ -310,6 +251,7 @@ export function EditModeScreen({ route }: EditModeScreenProps) {
       >
         <EditContent goalId={goalId} cameFromFocus={cameFromFocus} />
       </Suspense>
+      <ModeIndicator mode="edit" />
     </SafeAreaView>
   );
 }

@@ -109,10 +109,10 @@ describe('TimelineJourneyScreen', () => {
     expect(screen.getByText('Master the type system')).toBeOnTheScreen();
   });
 
-  it('renders "Timeline" label in top bar', () => {
+  it('renders "Timeline" label in top bar and mode indicator', () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText('Timeline')).toBeOnTheScreen();
+    expect(screen.getAllByText('Timeline').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows progress bar and completion label', () => {

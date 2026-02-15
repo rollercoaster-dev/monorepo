@@ -29,10 +29,13 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     lineHeight: theme.lineHeight.sm,
   },
+  evidenceBadgeWrapper: {
+    position: 'relative' as const,
+    alignSelf: 'flex-start' as const,
+  },
   evidenceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     gap: theme.space[1],
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,
@@ -41,6 +44,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
+  },
+  evidenceFlash: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.accentYellow,
   },
   evidenceText: {
     fontSize: theme.size.xs,

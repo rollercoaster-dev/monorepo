@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, AccessibilityInfo, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
@@ -14,6 +14,8 @@ import { GoalEvidenceCard } from '../../components/GoalEvidenceCard';
 import { EvidenceDrawer, type EvidenceItemData } from '../../components/EvidenceDrawer';
 import { FAB } from '../../components/FAB';
 import { FABMenu } from '../../components/FABMenu';
+import { ModeIndicator } from '../../components/ModeIndicator';
+import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -22,10 +24,12 @@ import {
   completeStep,
   uncompleteStep,
   deleteEvidence,
+  restoreEvidence,
   EvidenceType,
   StepStatus,
 } from '../../db';
 import type { GoalId, StepId, EvidenceId } from '../../db';
+import { useToast } from '../../components/Toast';
 import type { GoalsStackParamList, FocusModeScreenProps as FocusModeNavProps, CaptureScreenName } from '../../navigation/types';
 import type { EvidenceTypeValue } from '../EvidenceActionSheet';
 import type { StepStatus as UIStepStatus } from '../../types/steps';
@@ -43,6 +47,7 @@ const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> 
 
 function FocusContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const { showToast, hideToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -51,12 +56,24 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const hasAnnouncedComplete = useRef(false);
   const hasTriggeredCompletion = useRef(false);
   const isMounted = useRef(true);
+  const pendingFileDeletionRef = useRef<{
+    id: string;
+    uri: string | null;
+    type: string | null;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
 
   useEffect(() => {
-    return () => { isMounted.current = false; };
+    return () => {
+      isMounted.current = false;
+      if (pendingFileDeletionRef.current) {
+        clearTimeout(pendingFileDeletionRef.current.timer);
+      }
+    };
   }, []);
 
   const isGoalCard = currentCardIndex >= stepRows.length;
@@ -134,6 +151,19 @@ function FocusContent({ goalId }: { goalId: string }) {
     }
   }, [goal, allStepsComplete, goalId, navigation]);
 
+  const handleUndoDelete = useCallback(() => {
+    const pending = pendingFileDeletionRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    try {
+      restoreEvidence(pending.id as EvidenceId);
+    } catch (error) {
+      console.error('[FocusModeScreen] Failed to restore evidence', { evidenceId: pending.id, error });
+    }
+    pendingFileDeletionRef.current = null;
+    hideToast();
+  }, [hideToast]);
+
   if (!goal) {
     return (
       <View style={styles.centered}>
@@ -194,14 +224,39 @@ function FocusContent({ goalId }: { goalId: string }) {
     });
   };
 
-  const handleDeleteEvidence = (id: string) => {
+  const handleRequestDeleteEvidence = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const handleConfirmDeleteEvidence = () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    setPendingDeleteId(null);
     const row = currentStepEvidenceRows.find((r) => r.id === id) ??
       goalEvidenceRows.find((r) => r.id === id);
     try {
       deleteEvidence(id as EvidenceId);
-      if (row?.uri && row.type) {
-        deleteEvidenceFile(row.uri, row.type);
-      }
+
+      // Delay file deletion — allow undo via toast
+      const timer = setTimeout(() => {
+        if (row?.uri && row.type) {
+          deleteEvidenceFile(row.uri, row.type);
+        }
+        pendingFileDeletionRef.current = null;
+      }, 5000);
+
+      pendingFileDeletionRef.current = {
+        id,
+        uri: row?.uri ?? null,
+        type: row?.type ?? null,
+        timer,
+      };
+
+      showToast({
+        message: 'Evidence deleted',
+        action: { label: 'Undo', onPress: handleUndoDelete },
+        duration: 5000,
+      });
     } catch (error) {
       console.error('[FocusModeScreen] Failed to delete evidence', { evidenceId: id, error });
       Alert.alert('Could not delete evidence', 'Something went wrong. Please try again.');
@@ -292,7 +347,16 @@ function FocusContent({ goalId }: { goalId: string }) {
         isGoal={isGoalCard}
         isOpen={isDrawerOpen}
         onToggle={handleToggleDrawer}
-        onDeleteEvidence={handleDeleteEvidence}
+        onDeleteEvidence={handleRequestDeleteEvidence}
+      />
+
+      {/* Confirm delete evidence modal */}
+      <ConfirmDeleteModal
+        visible={!!pendingDeleteId}
+        title="Delete evidence?"
+        message="You can undo this briefly after deleting."
+        onConfirm={handleConfirmDeleteEvidence}
+        onCancel={() => setPendingDeleteId(null)}
       />
 
       {/* FAB + Menu */}
@@ -345,6 +409,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
       >
         <FocusContent goalId={route.params.goalId} />
       </Suspense>
+      <ModeIndicator mode="focus" />
     </SafeAreaView>
   );
 }

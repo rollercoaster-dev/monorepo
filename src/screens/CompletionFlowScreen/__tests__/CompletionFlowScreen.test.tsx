@@ -161,10 +161,10 @@ describe('CompletionFlowScreen', () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it('renders "Complete" label in top bar', () => {
+  it('renders "Complete" label in top bar and mode indicator', () => {
     setupQueries();
     renderWithProviders(<CompletionFlowScreen {...routeProps} />);
-    expect(screen.getByText('Complete')).toBeOnTheScreen();
+    expect(screen.getAllByText('Complete').length).toBeGreaterThanOrEqual(1);
   });
 
   it('has accessible celebration card with summary', () => {

@@ -40,6 +40,7 @@ jest.mock('../../../hooks/useAnimationPref', () => ({
 const mockCompleteStep = jest.fn();
 const mockUncompleteStep = jest.fn();
 const mockDeleteEvidence = jest.fn();
+const mockRestoreEvidence = jest.fn();
 
 jest.mock('../../../utils/evidenceCleanup', () => ({
   deleteEvidenceFile: jest.fn(),
@@ -63,6 +64,7 @@ jest.mock('../../../db', () => ({
   completeStep: (...args: unknown[]) => mockCompleteStep(...args),
   uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
   deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
+  restoreEvidence: (...args: unknown[]) => mockRestoreEvidence(...args),
 }));
 
 const mockUseQuery = jest.fn();
@@ -258,5 +260,68 @@ describe('FocusModeScreen', () => {
     jest.advanceTimersByTime(500);
     expect(mockNavigate).not.toHaveBeenCalledWith('CompletionFlow', expect.anything());
     jest.useRealTimers();
+  });
+
+  it('shows confirm dialog on evidence long-press and deletes on confirm', () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    // Open the evidence drawer first
+    fireEvent.press(screen.getByLabelText('Toggle evidence drawer'));
+
+    // Long press on evidence item to trigger delete
+    const evidenceItem = screen.getByLabelText(/text evidence:/);
+    fireEvent(evidenceItem, 'longPress');
+
+    // Confirm dialog should appear
+    expect(screen.getByText('Delete evidence?')).toBeOnTheScreen();
+
+    // Confirm the deletion
+    fireEvent.press(screen.getByText('Delete'));
+    expect(mockDeleteEvidence).toHaveBeenCalledWith('ev-s1');
+  });
+
+  it('cancels evidence deletion when cancel is pressed', () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    // Open the evidence drawer first
+    fireEvent.press(screen.getByLabelText('Toggle evidence drawer'));
+
+    // Long press to open confirm dialog
+    const evidenceItem = screen.getByLabelText(/text evidence:/);
+    fireEvent(evidenceItem, 'longPress');
+
+    // Cancel the deletion
+    fireEvent.press(screen.getByText('Cancel'));
+    expect(mockDeleteEvidence).not.toHaveBeenCalled();
+  });
+
+  it('shows undo toast after confirming evidence deletion', () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    // Open drawer → long-press → confirm
+    fireEvent.press(screen.getByLabelText('Toggle evidence drawer'));
+    fireEvent(screen.getByLabelText(/text evidence:/), 'longPress');
+    fireEvent.press(screen.getByText('Delete'));
+
+    // Toast should appear with undo action
+    expect(screen.getByText('Evidence deleted')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Undo')).toBeOnTheScreen();
+  });
+
+  it('restores evidence when undo is pressed in toast', () => {
+    setupQueries();
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    // Open drawer → long-press → confirm
+    fireEvent.press(screen.getByLabelText('Toggle evidence drawer'));
+    fireEvent(screen.getByLabelText(/text evidence:/), 'longPress');
+    fireEvent.press(screen.getByText('Delete'));
+
+    // Press undo
+    fireEvent.press(screen.getByLabelText('Undo'));
+    expect(mockRestoreEvidence).toHaveBeenCalledWith('ev-s1');
   });
 });

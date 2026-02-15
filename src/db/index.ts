@@ -33,6 +33,7 @@ export {
   createEvidence,
   updateEvidence,
   deleteEvidence,
+  restoreEvidence,
   // Badge
   badgesQuery,
   badgeByGoalQuery,

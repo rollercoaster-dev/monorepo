@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Card } from '../Card';
 import { StatusBadge, type StatusBadgeVariant } from '../StatusBadge';
 import { Checkbox } from '../Checkbox';
+import { useFlashOnIncrease } from '../../hooks/useFlashOnIncrease';
 import { formatEvidenceLabel } from '../../utils/formatEvidenceLabel';
 import { styles } from './StepCard.styles';
 
@@ -44,6 +46,7 @@ export function StepCard({
 }: StepCardProps) {
   const isCompleted = step.status === 'completed';
   const evidenceLabel = formatEvidenceLabel(step.evidenceCount);
+  const flashStyle = useFlashOnIncrease(step.evidenceCount);
 
   return (
     <Card>
@@ -64,15 +67,23 @@ export function StepCard({
             variant={statusToVariant[step.status]}
             label={statusToLabel[step.status]}
           />
-          <Pressable
-            onPress={onEvidenceTap}
-            style={styles.evidenceBadge}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
-          >
-            <Text style={styles.evidenceText}>{evidenceLabel}</Text>
-          </Pressable>
+          <View style={styles.evidenceBadgeWrapper}>
+            <Pressable
+              onPress={onEvidenceTap}
+              style={styles.evidenceBadge}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={`${step.evidenceCount} evidence items, tap to view`}
+            >
+              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+            </Pressable>
+            <Animated.View
+              style={[styles.evidenceFlash, flashStyle]}
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
+          </View>
         </View>
         <View style={styles.checkboxRow}>
           <Checkbox

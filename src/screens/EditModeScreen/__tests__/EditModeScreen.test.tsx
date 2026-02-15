@@ -20,16 +20,34 @@ jest.mock('@react-navigation/native', () => {
   };
 });
 
+jest.mock('react-native-gesture-handler', () => {
+  const chainable = () => new Proxy({}, { get: () => chainable });
+  return {
+    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) => children,
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    Gesture: {
+      Pan: chainable,
+      LongPress: chainable,
+      Simultaneous: chainable,
+    },
+  };
+});
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
 }));
 
+jest.mock('../../../utils/haptics', () => ({
+  triggerDragStart: jest.fn(),
+  triggerDragDrop: jest.fn(),
+}));
+
 jest.mock('../../../hooks/useAnimationPref', () => ({
   useAnimationPref: () => ({
-    animationPref: 'full',
-    shouldAnimate: true,
-    shouldReduceMotion: false,
+    animationPref: 'none',
+    shouldAnimate: false,
+    shouldReduceMotion: true,
     setAnimationPref: jest.fn(),
   }),
 }));
@@ -38,6 +56,9 @@ const mockUpdateGoal = jest.fn();
 const mockCreateStep = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
+const mockCompleteStep = jest.fn();
+const mockUncompleteStep = jest.fn();
+const mockReorderSteps = jest.fn();
 
 jest.mock('../../../db', () => ({
   GoalStatus: { active: 'active', completed: 'completed' },
@@ -48,6 +69,9 @@ jest.mock('../../../db', () => ({
   createStep: (...args: unknown[]) => mockCreateStep(...args),
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
+  completeStep: (...args: unknown[]) => mockCompleteStep(...args),
+  uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
+  reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
 }));
 
 const mockUseQuery = jest.fn();
@@ -123,25 +147,19 @@ describe('EditModeScreen', () => {
       expect(descInput.props.value).toBe('Master the type system');
     });
 
-    it('renders step titles as editable inputs', () => {
+    it('renders step titles', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByLabelText('Step title: Read docs')).toBeOnTheScreen();
-      expect(screen.getByLabelText('Step title: Practice')).toBeOnTheScreen();
-      expect(screen.getByLabelText('Step title: Build project')).toBeOnTheScreen();
+      expect(screen.getByText('Read docs')).toBeOnTheScreen();
+      expect(screen.getByText('Practice')).toBeOnTheScreen();
+      expect(screen.getByText('Build project')).toBeOnTheScreen();
     });
 
-    it('renders drag handles for each step', () => {
+    it('renders step completion count', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const handles = screen.getAllByLabelText('Step position indicator');
-      expect(handles).toHaveLength(3);
-    });
-
-    it('renders step count', () => {
-      setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByText('3 steps')).toBeOnTheScreen();
+      // StepList shows completed/total format
+      expect(screen.getByText('1/3')).toBeOnTheScreen();
     });
 
     it('renders "Start Working" when cameFromFocus is false', () => {
@@ -204,15 +222,6 @@ describe('EditModeScreen', () => {
       expect(mockUpdateGoal).toHaveBeenCalledWith('goal-1', { description: 'New description' });
     });
 
-    it('calls createStep when adding via + button', () => {
-      setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const addInput = screen.getByLabelText('Add a new step');
-      fireEvent.changeText(addInput, 'New step');
-      fireEvent.press(screen.getByLabelText('Add step'));
-      expect(mockCreateStep).toHaveBeenCalledWith('goal-1', 'New step', 3);
-    });
-
     it('calls createStep when submitting add step input', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
@@ -225,7 +234,7 @@ describe('EditModeScreen', () => {
     it('calls deleteStep when delete button pressed', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.press(screen.getByLabelText('Delete step: Read docs'));
+      fireEvent.press(screen.getByLabelText('Delete "Read docs"'));
       expect(mockDeleteStep).toHaveBeenCalledWith('step-1');
     });
 
@@ -248,13 +257,13 @@ describe('EditModeScreen', () => {
     it('does not show delete buttons when only 1 step exists', () => {
       setupQueries(GOAL, SINGLE_STEP);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.queryByLabelText('Delete step: Only step')).toBeNull();
+      expect(screen.queryByLabelText('Delete "Only step"')).toBeNull();
     });
 
     it('shows delete buttons when multiple steps exist', () => {
       setupQueries(GOAL, STEPS);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByLabelText('Delete step: Read docs')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Delete "Read docs"')).toBeOnTheScreen();
     });
   });
 
@@ -266,7 +275,6 @@ describe('EditModeScreen', () => {
       expect(screen.getByLabelText('Goal description')).toBeOnTheScreen();
       expect(screen.getByLabelText('Go back')).toBeOnTheScreen();
       expect(screen.getByLabelText('Add a new step')).toBeOnTheScreen();
-      expect(screen.getByLabelText('Add step')).toBeOnTheScreen();
     });
 
     it('button has correct accessibility role', () => {
@@ -285,7 +293,7 @@ describe('EditModeScreen', () => {
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       const addInput = screen.getByLabelText('Add a new step');
       fireEvent.changeText(addInput, 'Bad step');
-      fireEvent.press(screen.getByLabelText('Add step'));
+      fireEvent(addInput, 'submitEditing');
 
       expect(alertSpy).toHaveBeenCalledWith('Error', 'Could not create step.');
     });

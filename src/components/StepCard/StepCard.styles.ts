@@ -24,6 +24,9 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'space-between',
     gap: theme.space[2],
   },
+  evidenceBadgeWrapper: {
+    position: 'relative' as const,
+  },
   evidenceBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -35,6 +38,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
+  },
+  evidenceFlash: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.accentYellow,
   },
   evidenceText: {
     fontSize: theme.size.xs,

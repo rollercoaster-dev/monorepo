@@ -1,5 +1,6 @@
 import { Suspense, useState } from 'react';
 import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
@@ -8,6 +9,7 @@ import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { Confetti } from '../../components/Confetti';
+import { ModeIndicator } from '../../components/ModeIndicator';
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -24,6 +26,14 @@ import type { EvidenceTypeValue } from '../EvidenceActionSheet';
 import { EVIDENCE_OPTIONS } from '../EvidenceActionSheet';
 import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
 import { styles } from './CompletionFlowScreen.styles';
+
+/**
+ * Optional image override for the completion icon.
+ * Set to an image source (e.g. require('../../../assets/icon.png')) to use an image,
+ * or leave as undefined to use the default 🎯 emoji.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const COMPLETION_ICON: ImageSourcePropType | undefined = undefined;
 
 const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
   [EvidenceType.photo]: 'CapturePhoto',
@@ -76,11 +86,15 @@ function CompletionContent({ goalId }: { goalId: string }) {
           accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
-            <Image
-              source={require('../../../assets/icon.png')}
-              style={styles.iconImage}
-              resizeMode="contain"
-            />
+            {COMPLETION_ICON ? (
+              <Image
+                source={COMPLETION_ICON}
+                style={styles.iconImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={styles.iconEmoji}>🎯</Text>
+            )}
           </View>
           <Text
             variant="headline"
@@ -158,6 +172,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
       >
         <CompletionContent goalId={route.params.goalId} />
       </Suspense>
+      <ModeIndicator mode="complete" />
     </SafeAreaView>
   );
 }

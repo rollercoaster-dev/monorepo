@@ -10,6 +10,7 @@ import { IconButton } from '../../components/IconButton';
 import { ProgressBar } from '../../components/ProgressBar';
 import { TimelineStep } from '../../components/TimelineStep';
 import { FinishLine } from '../../components/FinishLine';
+import { ModeIndicator } from '../../components/ModeIndicator';
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -174,6 +175,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
       >
         <TimelineContent goalId={route.params.goalId} />
       </Suspense>
+      <ModeIndicator mode="timeline" />
     </SafeAreaView>
   );
 }
