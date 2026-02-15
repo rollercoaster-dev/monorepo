@@ -9,7 +9,6 @@ import { Text } from '../../components/Text';
 import { IconButton } from '../../components/IconButton';
 import { GoalCard, type GoalCardGoal } from '../../components/GoalCard';
 import { EmptyState } from '../../components/EmptyState';
-import { Divider } from '../../components/Divider';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import { goalsQuery, stepsByGoalQuery, deleteGoal, GoalStatus, StepStatus } from '../../db';
 import type { GoalId } from '../../db';
@@ -108,17 +107,16 @@ export function GoalsScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="display">Goals</Text>
-          <IconButton
-            icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
-            onPress={() => navigation.navigate('NewGoal')}
-            accessibilityLabel="Create new goal"
-          />
-        </View>
-        <Divider />
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+      <View style={styles.header}>
+        <Text variant="display">Goals</Text>
+        <IconButton
+          icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
+          onPress={() => navigation.navigate('NewGoal')}
+          accessibilityLabel="Create new goal"
+        />
+      </View>
+      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.accentMint }]}>
         <Suspense
           fallback={
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
