@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native-unistyles';
-import { shadowStyle } from '../../styles/shadows';
 import { palette } from '../../themes/palette';
 
 export const styles = StyleSheet.create((theme) => ({
@@ -11,6 +10,9 @@ export const styles = StyleSheet.create((theme) => ({
     bottom: 0,
     backgroundColor: `${theme.colors.shadow}cc`,
     zIndex: 20,
+  },
+  overlayPressable: {
+    flex: 1,
   },
   drawer: (isGoal: boolean) => ({
     position: 'absolute' as const,
@@ -28,15 +30,20 @@ export const styles = StyleSheet.create((theme) => ({
     borderTopRightRadius: 12,
     zIndex: 21,
     overflow: 'hidden' as const,
-    ...shadowStyle(theme, 'hardLg'),
   }),
   handleArea: {
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
-    minHeight: 44,
-    gap: theme.space[2],
+    minHeight: 56,
+  },
+  handleLeft: {
+    flexDirection: 'column' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    gap: theme.space[1],
   },
   handleBar: (isGoal: boolean) => ({
     width: 40,
@@ -72,5 +79,10 @@ export const styles = StyleSheet.create((theme) => ({
     textAlign: 'center',
     width: '100%',
     paddingVertical: theme.space[4],
+  },
+  fabMenuContainer: {
+    alignItems: 'flex-end' as const,
+    paddingHorizontal: theme.space[4],
+    paddingBottom: theme.space[2],
   },
 }));

@@ -85,11 +85,10 @@ describe('EvidenceDrawer', () => {
     ).toBeOnTheScreen();
   });
 
-  it('does not show overlay when closed', () => {
+  it('overlay is not accessible when closed', () => {
     renderWithProviders(<EvidenceDrawer {...defaultProps} />);
-    expect(
-      screen.queryByLabelText('Close evidence drawer'),
-    ).not.toBeOnTheScreen();
+    const overlay = screen.queryByLabelText('Close evidence drawer');
+    expect(overlay).toHaveProp('accessible', false);
   });
 
   it('calls onDeleteEvidence with correct id on item long-press', () => {
@@ -113,5 +112,60 @@ describe('EvidenceDrawer', () => {
       <EvidenceDrawer {...defaultProps} evidence={[]} />,
     );
     expect(screen.getByText('0 evidence items')).toBeOnTheScreen();
+  });
+
+  describe('inline FAB', () => {
+    it('renders add evidence button when onAddEvidence is provided', () => {
+      renderWithProviders(
+        <EvidenceDrawer
+          {...defaultProps}
+          onAddEvidence={jest.fn()}
+          onSelectEvidenceType={jest.fn()}
+        />,
+      );
+      expect(screen.getByLabelText('Add evidence')).toBeOnTheScreen();
+    });
+
+    it('does not render add evidence button when onAddEvidence is omitted', () => {
+      renderWithProviders(<EvidenceDrawer {...defaultProps} />);
+      expect(screen.queryByLabelText('Add evidence')).not.toBeOnTheScreen();
+    });
+
+    it('calls onAddEvidence when FAB is pressed', () => {
+      const onAddEvidence = jest.fn();
+      renderWithProviders(
+        <EvidenceDrawer
+          {...defaultProps}
+          onAddEvidence={onAddEvidence}
+          onSelectEvidenceType={jest.fn()}
+        />,
+      );
+      fireEvent.press(screen.getByLabelText('Add evidence'));
+      expect(onAddEvidence).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows FABMenu when isFABMenuOpen is true', () => {
+      renderWithProviders(
+        <EvidenceDrawer
+          {...defaultProps}
+          isFABMenuOpen
+          onAddEvidence={jest.fn()}
+          onSelectEvidenceType={jest.fn()}
+        />,
+      );
+      expect(screen.getByLabelText('Add evidence menu')).toBeOnTheScreen();
+    });
+
+    it('does not show FABMenu when isFABMenuOpen is false', () => {
+      renderWithProviders(
+        <EvidenceDrawer
+          {...defaultProps}
+          isFABMenuOpen={false}
+          onAddEvidence={jest.fn()}
+          onSelectEvidenceType={jest.fn()}
+        />,
+      );
+      expect(screen.queryByLabelText('Add evidence menu')).not.toBeOnTheScreen();
+    });
   });
 });

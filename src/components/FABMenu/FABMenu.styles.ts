@@ -3,11 +3,7 @@ import { shadowStyle } from '../../styles/shadows';
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
-    position: 'absolute',
-    bottom: 120,
-    right: 8,
     minWidth: 200,
-    zIndex: 10,
     ...shadowStyle(theme, 'hardMd'),
   },
   itemList: {

@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Pressable, ScrollView, Text, useWindowDimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { useUnistyles } from 'react-native-unistyles';
+import { useAnimationPref } from '../../hooks/useAnimationPref';
+import { getTimingConfig } from '../../utils/animation';
 import type { EvidenceTypeValue } from '../../types/evidence';
 import { EvidenceItem } from '../EvidenceItem';
+import { FAB } from '../FAB';
+import { FABMenu } from '../FABMenu';
 import { styles } from './EvidenceDrawer.styles';
 
 export interface EvidenceItemData {
@@ -18,9 +27,12 @@ export interface EvidenceDrawerProps {
   onToggle: () => void;
   onViewEvidence?: (id: string) => void;
   onDeleteEvidence: (id: string) => void;
+  isFABMenuOpen?: boolean;
+  onAddEvidence?: () => void;
+  onSelectEvidenceType?: (type: EvidenceTypeValue) => void;
 }
 
-const PEEK_HEIGHT = 44;
+const PEEK_HEIGHT = 56;
 
 export function EvidenceDrawer({
   evidence,
@@ -29,11 +41,33 @@ export function EvidenceDrawer({
   onToggle,
   onViewEvidence,
   onDeleteEvidence,
+  isFABMenuOpen = false,
+  onAddEvidence,
+  onSelectEvidenceType,
 }: EvidenceDrawerProps) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { theme } = useUnistyles();
+  const { animationPref } = useAnimationPref();
   const maxHeight = windowHeight * 0.6;
   const items = evidence ?? [];
+
+  // Animate drawer height and overlay opacity together
+  const heightValue = useSharedValue(PEEK_HEIGHT);
+  const overlayOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    const config = getTimingConfig(animationPref, 'normal');
+    heightValue.value = withTiming(isOpen ? maxHeight : PEEK_HEIGHT, config);
+    overlayOpacity.value = withTiming(isOpen ? 1 : 0, config);
+  }, [isOpen, maxHeight, animationPref, heightValue, overlayOpacity]);
+
+  const drawerAnimStyle = useAnimatedStyle(() => ({
+    height: heightValue.value,
+  }));
+
+  const overlayAnimStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
 
   // Calculate equal-width tiles for 3-column grid
   const COLUMNS = 3;
@@ -48,67 +82,75 @@ export function EvidenceDrawer({
   return (
     <>
       {/* Overlay */}
-      {isOpen && (
+      <Animated.View
+        style={[styles.overlay, overlayAnimStyle]}
+        pointerEvents={isOpen ? 'auto' : 'none'}
+      >
         <Pressable
           onPress={onToggle}
-          style={styles.overlay}
-          accessible
+          style={styles.overlayPressable}
+          accessible={isOpen}
           accessibilityRole="button"
           accessibilityLabel="Close evidence drawer"
         />
-      )}
+      </Animated.View>
 
       {/* Drawer */}
-      <View
-        style={[
-          styles.drawer(isGoal),
-          isOpen
-            ? { height: maxHeight }
-            : { height: PEEK_HEIGHT },
-        ]}
+      <Animated.View
+        style={[styles.drawer(isGoal), drawerAnimStyle]}
         accessible
         accessibilityRole="summary"
         accessibilityLabel={isGoal ? 'Goal evidence drawer' : 'Evidence drawer'}
       >
         {/* Handle bar */}
-        <Pressable
-          onPress={onToggle}
-          style={styles.handleArea}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel="Toggle evidence drawer"
-        >
-          <View style={styles.handleBar(isGoal)} />
-          <Text style={styles.handleLabel}>{drawerLabel}</Text>
-        </Pressable>
-
-        {/* Content */}
-        {isOpen && (
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.grid}
+        <View style={styles.handleArea}>
+          <Pressable
+            onPress={onToggle}
+            style={styles.handleLeft}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Toggle evidence drawer"
           >
-            {items.length === 0 ? (
-              <Text style={styles.emptyText}>
-                No evidence yet — tap + to add
-              </Text>
-            ) : (
-              items.map((item) => (
-                <View key={item.id} style={styles.gridItem(itemWidth)}>
-                  <EvidenceItem
-                    id={item.id}
-                    type={item.type}
-                    label={item.label}
-                    isGoal={isGoal}
-                    onPress={onViewEvidence}
-                    onLongPress={onDeleteEvidence}
-                  />
-                </View>
-              ))
-            )}
-          </ScrollView>
+            <View style={styles.handleBar(isGoal)} />
+            <Text style={styles.handleLabel}>{drawerLabel}</Text>
+          </Pressable>
+          {onAddEvidence && (
+            <FAB isOpen={isFABMenuOpen} onToggle={onAddEvidence} />
+          )}
+        </View>
+
+        {/* FAB Menu */}
+        {onSelectEvidenceType && (
+          <View style={styles.fabMenuContainer}>
+            <FABMenu isOpen={isFABMenuOpen} onSelectType={onSelectEvidenceType} />
+          </View>
         )}
-      </View>
+
+        {/* Content — always rendered, clipped by animated height + overflow: hidden */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.grid}
+        >
+          {items.length === 0 ? (
+            <Text style={styles.emptyText}>
+              No evidence yet — tap + to add
+            </Text>
+          ) : (
+            items.map((item) => (
+              <View key={item.id} style={styles.gridItem(itemWidth)}>
+                <EvidenceItem
+                  id={item.id}
+                  type={item.type}
+                  label={item.label}
+                  isGoal={isGoal}
+                  onPress={onViewEvidence}
+                  onLongPress={onDeleteEvidence}
+                />
+              </View>
+            ))
+          )}
+        </ScrollView>
+      </Animated.View>
     </>
   );
 }

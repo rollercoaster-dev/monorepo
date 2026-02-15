@@ -12,8 +12,6 @@ import { ProgressDots, type ProgressDotsStep } from '../../components/ProgressDo
 import { StepCard, type StepCardStatus } from '../../components/StepCard';
 import { GoalEvidenceCard } from '../../components/GoalEvidenceCard';
 import { EvidenceDrawer, type EvidenceItemData } from '../../components/EvidenceDrawer';
-import { FAB } from '../../components/FAB';
-import { FABMenu } from '../../components/FABMenu';
 import { ModeIndicator } from '../../components/ModeIndicator';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import {
@@ -364,6 +362,9 @@ function FocusContent({ goalId }: { goalId: string }) {
         onToggle={handleToggleDrawer}
         onViewEvidence={handleViewEvidence}
         onDeleteEvidence={handleRequestDeleteEvidence}
+        isFABMenuOpen={isFABMenuOpen}
+        onAddEvidence={handleToggleFABMenu}
+        onSelectEvidenceType={handleSelectEvidenceType}
       />
 
       {/* Confirm delete evidence modal */}
@@ -374,15 +375,6 @@ function FocusContent({ goalId }: { goalId: string }) {
         onConfirm={handleConfirmDeleteEvidence}
         onCancel={() => setPendingDeleteId(null)}
       />
-
-      {/* FAB + Menu */}
-      <View style={styles.fabContainer}>
-        <FABMenu
-          isOpen={isFABMenuOpen}
-          onSelectType={handleSelectEvidenceType}
-        />
-        <FAB isOpen={isFABMenuOpen} onToggle={handleToggleFABMenu} />
-      </View>
 
       {/* Evidence viewer modals */}
       {viewerModals}

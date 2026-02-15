@@ -38,12 +38,4 @@ export const styles = StyleSheet.create((theme) => ({
   title: {
     flex: 1,
   },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 56,
-    right: theme.space[4],
-    alignItems: 'flex-end',
-    gap: theme.space[2],
-    zIndex: 30,
-  },
 }));
