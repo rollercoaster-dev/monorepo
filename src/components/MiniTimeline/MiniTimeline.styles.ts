@@ -26,15 +26,15 @@ export const styles = StyleSheet.create((theme) => ({
     zIndex: 1,
   },
   nodeCompleted: {
-    backgroundColor: theme.colors.info,
-    borderColor: theme.colors.info,
+    backgroundColor: theme.colors.accentPrimary,
+    borderColor: theme.colors.accentPrimary,
   },
   nodeCurrent: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 3,
-    borderColor: theme.colors.info,
+    borderColor: theme.colors.accentPrimary,
   },
   nodeGoal: {
     width: 14,
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create((theme) => ({
     height: 3,
   },
   segmentCompleted: {
-    backgroundColor: theme.colors.info,
+    backgroundColor: theme.colors.accentPrimary,
   },
   segmentPending: {
     backgroundColor: 'transparent' as const,

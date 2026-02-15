@@ -23,8 +23,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.success,
   },
   dotInProgress: {
-    backgroundColor: theme.colors.info,
-    borderColor: theme.colors.info,
+    backgroundColor: theme.colors.accentPrimary,
+    borderColor: theme.colors.accentPrimary,
   },
   dotCurrent: {
     transform: [{ scale: 1.3 }],

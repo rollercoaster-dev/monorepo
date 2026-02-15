@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native-unistyles';
+import { shadowStyle } from '../../styles/shadows';
 import { palette } from '../../themes/palette';
 
 export const styles = StyleSheet.create((theme) => ({
@@ -37,6 +38,7 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.space[1],
+    backgroundColor: theme.colors.accentPurpleLight,
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.pill,
@@ -44,6 +46,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[1],
     minHeight: 44,
     minWidth: 44,
+    ...shadowStyle(theme, 'hardSm'),
   },
   evidenceFlash: {
     position: 'absolute' as const,
@@ -57,6 +60,6 @@ export const styles = StyleSheet.create((theme) => ({
   evidenceText: {
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
-    color: theme.colors.textSecondary,
+    color: theme.colors.text,
   },
 }));

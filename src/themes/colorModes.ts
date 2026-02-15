@@ -22,7 +22,9 @@ export interface Colors {
   textSecondary: string;
   textMuted: string;
   accentPrimary: string;
+  accentSecondary: string;
   accentPurple: string;
+  accentPurpleLight: string;
   accentMint: string;
   accentYellow: string;
   border: string;
