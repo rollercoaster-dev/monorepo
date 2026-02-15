@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
 import { Card } from '../../components/Card';
@@ -9,10 +10,11 @@ import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { createGoal } from '../../db';
+import type { GoalsStackParamList } from '../../navigation/types';
 import { styles } from './NewGoalModal.styles';
 
 export function NewGoalModal() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<GoalsStackParamList, 'NewGoal'>>();
   const [title, setTitle] = useState('');
   const [titleError, setTitleError] = useState('');
   // Subscribe to theme changes to trigger re-renders
@@ -25,8 +27,10 @@ export function NewGoalModal() {
       return;
     }
 
-    createGoal(trimmed);
-    navigation.goBack();
+    const result = createGoal(trimmed);
+    if (result.ok) {
+      navigation.replace('EditMode', { goalId: result.value.id });
+    }
   }
 
   return (
