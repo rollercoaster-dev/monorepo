@@ -1,18 +1,8 @@
 import React from 'react';
 import { Pressable, Text } from 'react-native';
 import type { EvidenceTypeValue } from '../../screens/EvidenceActionSheet';
+import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
 import { styles } from './EvidenceItem.styles';
-
-/** Map evidence types to display icons */
-const EVIDENCE_TYPE_ICONS: Record<EvidenceTypeValue, string> = {
-  photo: '\u{1F4F7}',
-  screenshot: '\u{1F4F8}',
-  video: '\u{1F3AC}',
-  text: '\u{1F4DD}',
-  voice_memo: '\u{1F3A4}',
-  link: '\u{1F517}',
-  file: '\u{1F4CE}',
-};
 
 export interface EvidenceItemProps {
   id: string;

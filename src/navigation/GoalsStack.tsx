@@ -13,6 +13,7 @@ import { CaptureLinkScreen } from '../screens/CaptureLinkScreen';
 import { CaptureTextNote } from '../screens/CaptureTextNote';
 import { EditModeScreen } from '../screens/EditModeScreen';
 import { CompletionFlowScreen } from '../screens/CompletionFlowScreen';
+import { TimelineJourneyScreen } from '../screens/TimelineJourneyScreen';
 import type { GoalsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<GoalsStackParamList>();
@@ -24,6 +25,7 @@ export function GoalsStack() {
       <Stack.Screen name="GoalDetail" component={GoalDetailScreen} />
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />
       <Stack.Screen name="CompletionFlow" component={CompletionFlowScreen} />
+      <Stack.Screen name="TimelineJourney" component={TimelineJourneyScreen} />
       <Stack.Screen
         name="NewGoal"
         component={NewGoalModal}

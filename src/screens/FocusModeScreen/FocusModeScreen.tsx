@@ -209,7 +209,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   };
 
   const handleTimelineTap = () => {
-    // Timeline view not yet implemented — stub for future navigation
+    navigation.navigate('TimelineJourney', { goalId });
   };
 
   const handleEditPress = () => {

@@ -141,11 +141,11 @@ describe('CompletionFlowScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('CapturePhoto', { goalId: 'goal-1' });
   });
 
-  it('navigates back when "View Your Journey" is tapped', () => {
+  it('navigates to TimelineJourney when "View Your Journey" is tapped', () => {
     setupQueries();
     renderWithProviders(<CompletionFlowScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText(/View Your Journey/));
-    expect(mockGoBack).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('TimelineJourney', { goalId: 'goal-1' });
   });
 
   it('shows "Goal not found" when goal does not exist', () => {

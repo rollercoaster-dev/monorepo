@@ -27,6 +27,7 @@ export type GoalsStackParamList = {
   GoalDetail: { goalId: string };
   FocusMode: { goalId: string };
   CompletionFlow: { goalId: string };
+  TimelineJourney: { goalId: string };
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };
 } & CaptureRoutes;
@@ -60,6 +61,7 @@ export type FocusModeScreenProps = NativeStackScreenProps<GoalsStackParamList, '
 export type NewGoalScreenProps = NativeStackScreenProps<GoalsStackParamList, 'NewGoal'>;
 export type EditModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'EditMode'>;
 export type CompletionFlowScreenProps = NativeStackScreenProps<GoalsStackParamList, 'CompletionFlow'>;
+export type TimelineJourneyScreenProps = NativeStackScreenProps<GoalsStackParamList, 'TimelineJourney'>;
 
 export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Badges'>;
 export type BadgeDetailScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDetail'>;

@@ -22,17 +22,8 @@ import type {
 } from '../../navigation/types';
 import type { EvidenceTypeValue } from '../EvidenceActionSheet';
 import { EVIDENCE_OPTIONS } from '../EvidenceActionSheet';
+import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
 import { styles } from './CompletionFlowScreen.styles';
-
-const EVIDENCE_TYPE_ICONS: Record<string, string> = {
-  photo: '\u{1F4F7}',
-  screenshot: '\u{1F4F8}',
-  video: '\u{1F3AC}',
-  text: '\u{1F4DD}',
-  voice_memo: '\u{1F3A4}',
-  link: '\u{1F517}',
-  file: '\u{1F4CE}',
-};
 
 const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
   [EvidenceType.photo]: 'CapturePhoto',
@@ -71,8 +62,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
   };
 
   const handleViewJourney = () => {
-    // Timeline view is issue #130 — navigate back for now
-    navigation.goBack();
+    navigation.navigate('TimelineJourney', { goalId });
   };
 
   return (
@@ -122,7 +112,8 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 Goal Evidence Added
               </Text>
               {goalEvidenceRows.map((ev) => {
-                const icon = EVIDENCE_TYPE_ICONS[ev.type ?? 'file'] ?? '\u{1F4C4}';
+                const evType = (ev.type ?? 'file') as EvidenceTypeValue;
+                const icon = EVIDENCE_TYPE_ICONS[evType] ?? '\u{1F4C4}';
                 return (
                   <View
                     key={ev.id}
