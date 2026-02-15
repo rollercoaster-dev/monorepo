@@ -116,7 +116,7 @@ export function GoalsScreen() {
           accessibilityLabel="Create new goal"
         />
       </View>
-      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.accentMint }]}>
+      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>
         <Suspense
           fallback={
             <ActivityIndicator style={styles.loadingIndicator} size="large" />

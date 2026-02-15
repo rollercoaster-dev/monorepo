@@ -3,7 +3,6 @@ import { ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
-import { Divider } from '../../components/Divider';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsRow } from '../../components/SettingsRow';
 import { ThemeSwitcher } from '../../components/ThemeSwitcher';
@@ -32,13 +31,11 @@ export function SettingsScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="display">Settings</Text>
-        </View>
-        <Divider />
-
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+      <View style={styles.header}>
+        <Text variant="display">Settings</Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} style={{ backgroundColor: theme.colors.background }}>
         <ThemeSwitcher />
 
         <Suspense fallback={<ActivityIndicator />}>

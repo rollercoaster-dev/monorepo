@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native-unistyles';
+import { shadowStyle } from '../../styles/shadows';
 
 export const styles = StyleSheet.create((theme) => ({
   topBar: {
@@ -7,6 +8,10 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'space-between',
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
+    paddingBottom: theme.space[4],
+    backgroundColor: theme.colors.accentYellow,
+    zIndex: 1,
+    ...shadowStyle(theme, 'hardMd'),
   },
   backIcon: {
     fontSize: 18,

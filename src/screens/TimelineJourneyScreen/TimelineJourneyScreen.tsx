@@ -10,7 +10,6 @@ import { IconButton } from '../../components/IconButton';
 import { ProgressBar } from '../../components/ProgressBar';
 import { TimelineStep } from '../../components/TimelineStep';
 import { FinishLine } from '../../components/FinishLine';
-import { ModeIndicator } from '../../components/ModeIndicator';
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -165,7 +164,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
       <View style={styles.topBar}>
         <IconButton
           icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
@@ -176,12 +175,13 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
         <Text variant="label">Timeline</Text>
         <View style={styles.spacer} />
       </View>
-      <Suspense
-        fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
-      >
-        <TimelineContent goalId={route.params.goalId} />
-      </Suspense>
-      <ModeIndicator mode="timeline" />
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <Suspense
+          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+        >
+          <TimelineContent goalId={route.params.goalId} />
+        </Suspense>
+      </View>
     </SafeAreaView>
   );
 }

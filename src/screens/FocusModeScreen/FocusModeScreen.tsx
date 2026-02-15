@@ -212,6 +212,7 @@ function FocusContent({ goalId }: { goalId: string }) {
 
   const handleToggleFABMenu = () => {
     setIsFABMenuOpen((prev) => !prev);
+    if (!isDrawerOpen) setIsDrawerOpen(true);
   };
 
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
@@ -406,7 +407,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
       <View style={styles.topBar}>
         <IconButton
           icon={<Text variant="body" style={styles.backIcon}>{'<'}</Text>}
@@ -417,12 +418,14 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         <Text variant="label">Focus Mode</Text>
         <View style={styles.spacer} />
       </View>
-      <Suspense
-        fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
-      >
-        <FocusContent goalId={route.params.goalId} />
-      </Suspense>
-      <ModeIndicator mode="focus" />
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <Suspense
+          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+        >
+          <FocusContent goalId={route.params.goalId} />
+        </Suspense>
+        <ModeIndicator mode="focus" />
+      </View>
     </SafeAreaView>
   );
 }
