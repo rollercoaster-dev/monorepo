@@ -1,6 +1,7 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Pressable, Text as RNText } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useUnistyles } from 'react-native-unistyles';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,7 +10,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { AnimationPref } from '../../hooks/useAnimationPref';
 import { getTimingConfig } from '../../utils/animation';
-import { Checkbox } from '../Checkbox';
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
 import { styles } from './StepList.styles';
@@ -19,7 +19,6 @@ export interface DraggableStepItemProps {
   step: Step;
   index: number;
   isBeingDragged: boolean;
-  onToggleStep: (id: string) => void;
   onLabelPress?: (step: Step) => void;
   onDragStart: (index: number) => void;
   onDragMove: (translationY: number) => void;
@@ -38,7 +37,6 @@ export function DraggableStepItem({
   step,
   index,
   isBeingDragged,
-  onToggleStep,
   onLabelPress,
   onDragStart,
   onDragMove,
@@ -52,6 +50,7 @@ export function DraggableStepItem({
   isLast,
   editContent,
 }: DraggableStepItemProps) {
+  const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
@@ -116,14 +115,25 @@ export function DraggableStepItem({
           editContent
         ) : (
           <View style={styles.stepRow}>
-            <View style={styles.stepContent}>
-              <Checkbox
-                checked={step.completed}
-                onToggle={() => onToggleStep(step.id)}
-                label={step.title}
-                onLabelPress={onLabelPress ? () => onLabelPress(step) : undefined}
+            <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+            <Pressable
+              style={styles.stepContent}
+              onPress={onLabelPress ? () => onLabelPress(step) : undefined}
+              accessibilityRole="button"
+              accessibilityLabel={step.title}
+              accessibilityHint={onLabelPress ? 'Tap to edit step title' : undefined}
+            >
+              <RNText style={styles.stepTitleText}>{step.title}</RNText>
+            </Pressable>
+            {onDeleteStep && (
+              <IconButton
+                icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                onPress={onDeleteStep}
+                size="sm"
+                variant="ghost"
+                accessibilityLabel={`Delete "${step.title}"`}
               />
-            </View>
+            )}
             {showAccessibleControls && (
               <View style={styles.reorderButtons}>
                 {onMoveUp && !isFirst && (
@@ -140,15 +150,6 @@ export function DraggableStepItem({
                     onPress={onMoveDown}
                     size="sm"
                     accessibilityLabel={`Move "${step.title}" down`}
-                  />
-                )}
-                {onDeleteStep && (
-                  <IconButton
-                    icon={<Text variant="body">✕</Text>}
-                    onPress={onDeleteStep}
-                    size="sm"
-                    variant="destructive"
-                    accessibilityLabel={`Delete "${step.title}"`}
                   />
                 )}
               </View>

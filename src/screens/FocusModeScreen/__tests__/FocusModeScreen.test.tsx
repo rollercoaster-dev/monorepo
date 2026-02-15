@@ -61,6 +61,7 @@ jest.mock('../../../db', () => ({
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
   evidenceByStepQuery: jest.fn((id: string) => `evidenceByStepQuery-${id}`),
+  stepEvidenceByGoalQuery: jest.fn((id: string) => `stepEvidenceByGoalQuery-${id}`),
   completeStep: (...args: unknown[]) => mockCompleteStep(...args),
   uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
   deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
@@ -92,7 +93,7 @@ const GOAL_EVIDENCE = [
 ];
 
 const STEP_EVIDENCE = [
-  { id: 'ev-s1', type: 'text', uri: 'content:text;My notes', description: 'Step notes' },
+  { id: 'ev-s1', type: 'text', uri: 'content:text;My notes', description: 'Step notes', stepId: 'step-1' },
 ];
 
 const routeProps = {
@@ -118,6 +119,7 @@ function setupQueries({
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === 'goalsQuery') return goal ? [goal] : [];
     if (typeof query === 'string' && query.startsWith('evidenceByGoalQuery')) return goalEvidence;
+    if (typeof query === 'string' && query.startsWith('stepEvidenceByGoalQuery')) return stepEvidence;
     if (typeof query === 'string' && query.startsWith('evidenceByStepQuery')) return stepEvidence;
     if (typeof query === 'string' && query.startsWith('stepsByGoalQuery')) return steps;
     return [];
@@ -224,11 +226,11 @@ describe('FocusModeScreen', () => {
     expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it('navigates to GoalDetail when edit button is pressed', () => {
+  it('navigates to EditMode when edit button is pressed', () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText('Edit goal'));
-    expect(mockNavigate).toHaveBeenCalledWith('GoalDetail', { goalId: 'goal-1' });
+    expect(mockNavigate).toHaveBeenCalledWith('EditMode', { goalId: 'goal-1', cameFromFocus: true });
   });
 
   it('renders "Focus Mode" label in top bar', () => {

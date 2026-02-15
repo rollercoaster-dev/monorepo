@@ -56,8 +56,6 @@ const mockUpdateGoal = jest.fn();
 const mockCreateStep = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockDeleteStep = jest.fn();
-const mockCompleteStep = jest.fn();
-const mockUncompleteStep = jest.fn();
 const mockReorderSteps = jest.fn();
 
 jest.mock('../../../db', () => ({
@@ -69,8 +67,6 @@ jest.mock('../../../db', () => ({
   createStep: (...args: unknown[]) => mockCreateStep(...args),
   updateStep: (...args: unknown[]) => mockUpdateStep(...args),
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
-  completeStep: (...args: unknown[]) => mockCompleteStep(...args),
-  uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
 }));
 
@@ -155,11 +151,10 @@ describe('EditModeScreen', () => {
       expect(screen.getByText('Build project')).toBeOnTheScreen();
     });
 
-    it('renders step completion count', () => {
+    it('renders step count', () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      // StepList shows completed/total format
-      expect(screen.getByText('1/3')).toBeOnTheScreen();
+      expect(screen.getByText('3 steps')).toBeOnTheScreen();
     });
 
     it('renders "Start Working" when cameFromFocus is false', () => {

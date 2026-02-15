@@ -419,6 +419,25 @@ export const evidenceByStepQuery = (stepId: StepId) =>
   );
 
 /**
+ * Query all non-deleted step-level evidence for a goal via join.
+ * Returns all evidence rows whose step belongs to the given goal.
+ * Used to avoid hooks-in-loop when counting/grouping evidence per step.
+ * @param goalId - Goal ID
+ * @returns Query for step evidence ordered by creation date descending
+ */
+export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom('evidence')
+      .innerJoin('step', 'step.id', 'evidence.stepId')
+      .selectAll('evidence')
+      .where('step.goalId', '=', goalId)
+      .where('evidence.isDeleted', 'is', null)
+      .where('step.isDeleted', 'is', null)
+      .orderBy('evidence.createdAt', 'desc'),
+  );
+
+/**
  * Create evidence attached to either a goal or a step
  * @param params - Evidence parameters
  * @param params.goalId - Goal ID (exactly one of goalId/stepId required)

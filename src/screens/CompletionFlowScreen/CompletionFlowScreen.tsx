@@ -14,7 +14,9 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
+  uncompleteGoal,
   EvidenceType,
+  GoalStatus,
 } from '../../db';
 import type { GoalId } from '../../db';
 import type {
@@ -22,8 +24,7 @@ import type {
   CompletionFlowScreenProps,
   CaptureScreenName,
 } from '../../navigation/types';
-import type { EvidenceTypeValue } from '../EvidenceActionSheet';
-import { EVIDENCE_OPTIONS } from '../EvidenceActionSheet';
+import { EVIDENCE_OPTIONS, validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
 import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
 import { styles } from './CompletionFlowScreen.styles';
 
@@ -75,6 +76,13 @@ function CompletionContent({ goalId }: { goalId: string }) {
     navigation.navigate('TimelineJourney', { goalId });
   };
 
+  const isCompleted = goal?.status === GoalStatus.completed;
+
+  const handleReopenGoal = () => {
+    uncompleteGoal(goalId as GoalId);
+    navigation.navigate('FocusMode', { goalId });
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Confetti visible={showConfetti} onComplete={() => setShowConfetti(false)} />
@@ -118,6 +126,13 @@ function CompletionContent({ goalId }: { goalId: string }) {
               onPress={handleViewJourney}
               variant={hasGoalEvidence ? 'primary' : 'secondary'}
             />
+            {isCompleted && (
+              <Button
+                label="Reopen Goal"
+                onPress={handleReopenGoal}
+                variant="secondary"
+              />
+            )}
           </View>
 
           {hasGoalEvidence && (
@@ -126,7 +141,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 Goal Evidence Added
               </Text>
               {goalEvidenceRows.map((ev) => {
-                const evType = (ev.type ?? 'file') as EvidenceTypeValue;
+                const evType = validateEvidenceType(ev.type ?? 'file');
                 const icon = EVIDENCE_TYPE_ICONS[evType] ?? '\u{1F4C4}';
                 return (
                   <View

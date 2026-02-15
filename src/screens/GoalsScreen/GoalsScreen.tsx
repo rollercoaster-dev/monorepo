@@ -86,7 +86,7 @@ function GoalList() {
         renderItem={({ item }) => (
           <GoalCardWithSteps
             goalRow={item}
-            onPress={() => navigation.navigate('GoalDetail', { goalId: item.id })}
+            onPress={() => navigation.navigate('FocusMode', { goalId: item.id })}
             onLongPress={() => handleDelete(item)}
           />
         )}

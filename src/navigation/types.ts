@@ -24,7 +24,6 @@ export type CaptureScreenName = keyof CaptureRoutes;
 
 export type GoalsStackParamList = {
   Goals: undefined;
-  GoalDetail: { goalId: string };
   FocusMode: { goalId: string };
   CompletionFlow: { goalId: string };
   TimelineJourney: { goalId: string };
@@ -56,7 +55,6 @@ export type RootTabParamList = {
 // ---------------------------------------------------------------------------
 
 export type GoalsScreenProps = NativeStackScreenProps<GoalsStackParamList, 'Goals'>;
-export type GoalDetailScreenProps = NativeStackScreenProps<GoalsStackParamList, 'GoalDetail'>;
 export type FocusModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'FocusMode'>;
 export type NewGoalScreenProps = NativeStackScreenProps<GoalsStackParamList, 'NewGoal'>;
 export type EditModeScreenProps = NativeStackScreenProps<GoalsStackParamList, 'EditMode'>;

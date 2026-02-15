@@ -22,24 +22,44 @@ const initialSteps: Step[] = [
 function InteractiveStepList() {
   const [steps, setSteps] = useState(initialSteps);
 
-  function handleToggle(id: string) {
+  function handleCreate(title: string) {
+    setSteps((prev) => [
+      ...prev,
+      { id: String(prev.length + 1), title, completed: false },
+    ]);
+  }
+
+  function handleUpdate(id: string, title: string) {
     setSteps((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s))
+      prev.map((s) => (s.id === id ? { ...s, title } : s)),
     );
   }
 
-  return <StepList steps={steps} onToggleStep={handleToggle} />;
+  function handleDelete(id: string) {
+    setSteps((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function handleReorder(stepIds: string[]) {
+    setSteps((prev) => stepIds.map((id) => prev.find((s) => s.id === id)!));
+  }
+
+  return (
+    <StepList
+      steps={steps}
+      onCreateStep={handleCreate}
+      onUpdateStep={handleUpdate}
+      onDeleteStep={handleDelete}
+      onReorderSteps={handleReorder}
+    />
+  );
 }
 
 export const Interactive: Story = {
   render: () => <InteractiveStepList />,
 };
 
-export const AllCompleted: Story = {
+export const ReadOnly: Story = {
   render: () => (
-    <StepList
-      steps={initialSteps.map((s) => ({ ...s, completed: true }))}
-      onToggleStep={() => {}}
-    />
+    <StepList steps={initialSteps} />
   ),
 };

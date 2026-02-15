@@ -1,20 +1,29 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { shadowStyle } from '../../styles/shadows';
 
-export const styles = StyleSheet.create((theme) => ({
-  container: {
-    gap: theme.space[1],
-  },
-  draggableItem: {
-    borderWidth: theme.borderWidth.thin,
+export const styles = StyleSheet.create((theme) => {
+  const cardBase = {
+    borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.space[2],
-    paddingVertical: theme.space[1],
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    ...shadowStyle(theme, 'hardSm'),
+  } as const;
+
+  return {
+  container: {
+    gap: theme.space[2],
+  },
+  stepItems: {
+    gap: theme.space[2],
+  },
+  draggableItem: {
+    ...cardBase,
   },
   draggingItem: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.accentPrimary,
     ...shadowStyle(theme, 'hardLg'),
     elevation: 4,
@@ -22,9 +31,24 @@ export const styles = StyleSheet.create((theme) => ({
   stepRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.space[2],
+  },
+  dragHandle: {
+    minWidth: 24,
+    fontSize: 18,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
   },
   stepContent: {
     flex: 1,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  stepTitleText: {
+    fontSize: theme.size.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    paddingVertical: theme.space[1],
   },
   reorderButtons: {
     flexDirection: 'row',
@@ -52,26 +76,8 @@ export const styles = StyleSheet.create((theme) => ({
   editRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space[3],
+    gap: theme.space[2],
     minHeight: 48,
-  },
-  editBox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.radius.sm,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editBoxChecked: {
-    backgroundColor: theme.colors.accentPrimary,
-    borderColor: theme.colors.accentPrimary,
-  },
-  editCheckmark: {
-    fontSize: 14,
-    color: theme.colors.background,
-    fontWeight: theme.fontWeight.bold,
   },
   editInput: {
     flex: 1,
@@ -85,25 +91,34 @@ export const styles = StyleSheet.create((theme) => ({
   addStepRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space[3],
+    gap: theme.space[2],
     minHeight: 48,
     marginTop: theme.space[2],
-    borderTopWidth: theme.borderWidth.thin,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.space[2],
   },
-  addStepPlus: {
-    width: 24,
-    textAlign: 'center',
-    fontSize: theme.size.lg,
-    color: theme.colors.textMuted,
-    fontWeight: theme.fontWeight.bold,
+  addStepInputCard: {
+    flex: 1,
+    ...cardBase,
   },
   addStepInput: {
-    flex: 1,
     fontSize: theme.size.md,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
-    paddingVertical: theme.space[2],
   },
-}));
+  addStepButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: theme.colors.accentPrimary,
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadowStyle(theme, 'hardSm'),
+  },
+  addStepButtonText: {
+    fontSize: 22,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.background,
+  },
+  };
+});

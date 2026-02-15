@@ -27,6 +27,7 @@ jest.mock('../../../hooks/useAnimationPref', () => ({
   })),
 }));
 
+const mockUncompleteGoal = jest.fn();
 jest.mock('../../../db', () => ({
   EvidenceType: {
     photo: 'photo',
@@ -37,9 +38,11 @@ jest.mock('../../../db', () => ({
     link: 'link',
     file: 'file',
   },
+  GoalStatus: { active: 'active', completed: 'completed' },
   goalsQuery: 'goalsQuery',
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
+  uncompleteGoal: (...args: unknown[]) => mockUncompleteGoal(...args),
 }));
 
 const mockUseQuery = jest.fn();
@@ -175,5 +178,25 @@ describe('CompletionFlowScreen', () => {
         'Congratulations! All 3 steps completed for Learn TypeScript',
       ),
     ).toBeOnTheScreen();
+  });
+
+  it('shows Reopen Goal button when goal is completed', () => {
+    setupQueries({ goal: { ...GOAL, status: 'completed' } });
+    renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+    expect(screen.getByLabelText('Reopen Goal')).toBeOnTheScreen();
+  });
+
+  it('does not show Reopen Goal button when goal is active', () => {
+    setupQueries();
+    renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+    expect(screen.queryByLabelText('Reopen Goal')).not.toBeOnTheScreen();
+  });
+
+  it('calls uncompleteGoal and navigates to FocusMode on reopen', () => {
+    setupQueries({ goal: { ...GOAL, status: 'completed' } });
+    renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+    fireEvent.press(screen.getByLabelText('Reopen Goal'));
+    expect(mockUncompleteGoal).toHaveBeenCalledWith('goal-1');
+    expect(mockNavigate).toHaveBeenCalledWith('FocusMode', { goalId: 'goal-1' });
   });
 });

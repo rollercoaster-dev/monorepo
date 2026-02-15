@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, AccessibilityInfo } from 'react-native';
+import { View, Text as RNText, TextInput, Pressable, AccessibilityInfo } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUnistyles } from 'react-native-unistyles';
 import { useAnimationPref } from '../../hooks/useAnimationPref';
 import { triggerDragStart, triggerDragDrop } from '../../utils/haptics';
-import { Checkbox } from '../Checkbox';
+import { IconButton } from '../IconButton';
+import { Text } from '../Text';
 import { DraggableStepItem } from './DraggableStepItem';
 import { styles } from './StepList.styles';
 
@@ -16,7 +17,6 @@ export interface Step {
 
 export interface StepListProps {
   steps: Step[];
-  onToggleStep: (id: string) => void;
   onCreateStep?: (title: string) => void;
   onUpdateStep?: (id: string, title: string) => void;
   onDeleteStep?: (id: string) => void;
@@ -27,7 +27,6 @@ const ITEM_HEIGHT = 48;
 
 export function StepList({
   steps,
-  onToggleStep,
   onCreateStep,
   onUpdateStep,
   onDeleteStep,
@@ -35,7 +34,6 @@ export function StepList({
 }: StepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
-  const completedCount = steps.filter((s) => s.completed).length;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -139,26 +137,25 @@ export function StepList({
   }
 
   const canDrag = onReorderSteps && steps.length > 1 && editingId === null;
+  const stepCountLabel = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerLabel} accessibilityRole="header">Steps</Text>
-        <Text
+        <RNText style={styles.headerLabel} accessibilityRole="header">Steps</RNText>
+        <RNText
           style={styles.count}
-          accessibilityLabel={`${completedCount} of ${steps.length} steps completed`}
+          accessibilityLabel={stepCountLabel}
         >
-          {completedCount}/{steps.length}
-        </Text>
+          {stepCountLabel}
+        </RNText>
       </View>
 
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={styles.stepItems}>
         {steps.map((step, index) => {
           const editContent = editingId === step.id ? (
             <View style={styles.editRow}>
-              <View style={[styles.editBox, step.completed && styles.editBoxChecked]}>
-                {step.completed && <Text style={styles.editCheckmark}>✓</Text>}
-              </View>
+              <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
               <TextInput
                 style={styles.editInput}
                 value={editText}
@@ -169,7 +166,17 @@ export function StepList({
                 returnKeyType="done"
                 placeholderTextColor={theme.colors.textMuted}
                 selectTextOnFocus
+                accessibilityLabel={`Edit step: ${step.title}`}
               />
+              {onDeleteStep && (
+                <IconButton
+                  icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                  onPress={() => onDeleteStep(step.id)}
+                  size="sm"
+                  variant="ghost"
+                  accessibilityLabel={`Delete "${step.title}"`}
+                />
+              )}
             </View>
           ) : null;
 
@@ -180,7 +187,6 @@ export function StepList({
                 step={step}
                 index={index}
                 isBeingDragged={draggedIndex === index}
-                onToggleStep={onToggleStep}
                 onLabelPress={onUpdateStep ? startEditing : undefined}
                 onDeleteStep={onDeleteStep ? () => onDeleteStep(step.id) : undefined}
                 onDragStart={handleDragStart}
@@ -198,42 +204,62 @@ export function StepList({
           }
 
           return (
-            <Pressable
-              key={step.id}
-              onLongPress={onDeleteStep ? () => onDeleteStep(step.id) : undefined}
-              accessibilityHint={onDeleteStep ? 'Long press to delete' : undefined}
-            >
+            <View key={step.id} style={styles.draggableItem}>
               {editingId === step.id ? (
                 editContent
               ) : (
-                <Checkbox
-                  checked={step.completed}
-                  onToggle={() => onToggleStep(step.id)}
-                  label={step.title}
-                  onLabelPress={onUpdateStep ? () => startEditing(step) : undefined}
-                />
+                <View style={styles.stepRow}>
+                  <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+                  <Pressable
+                    style={styles.stepContent}
+                    onPress={onUpdateStep ? () => startEditing(step) : undefined}
+                    accessibilityRole="button"
+                    accessibilityLabel={step.title}
+                    accessibilityHint={onUpdateStep ? 'Tap to edit step title' : undefined}
+                  >
+                    <RNText style={styles.stepTitleText}>{step.title}</RNText>
+                  </Pressable>
+                  {onDeleteStep && (
+                    <IconButton
+                      icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                      onPress={() => onDeleteStep(step.id)}
+                      size="sm"
+                      variant="ghost"
+                      accessibilityLabel={`Delete "${step.title}"`}
+                    />
+                  )}
+                </View>
               )}
-            </Pressable>
+            </View>
           );
         })}
       </GestureHandlerRootView>
 
       {onCreateStep && (
         <View style={styles.addStepRow}>
-          <Text style={styles.addStepPlus} accessibilityElementsHidden importantForAccessibility="no">+</Text>
-          <TextInput
-            ref={newStepInputRef}
-            style={styles.addStepInput}
-            placeholder="Add step..."
-            placeholderTextColor={theme.colors.textMuted}
-            value={newStepTitle}
-            onChangeText={setNewStepTitle}
-            onSubmitEditing={handleNewStepSubmit}
-            returnKeyType="done"
-            blurOnSubmit={false}
-            accessibilityLabel="Add a new step"
-            accessibilityHint="Type a step title and press return to add"
-          />
+          <View style={styles.addStepInputCard}>
+            <TextInput
+              ref={newStepInputRef}
+              style={styles.addStepInput}
+              placeholder="Add step..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={newStepTitle}
+              onChangeText={setNewStepTitle}
+              onSubmitEditing={handleNewStepSubmit}
+              returnKeyType="done"
+              blurOnSubmit={false}
+              accessibilityLabel="Add a new step"
+              accessibilityHint="Type a step title and press return to add"
+            />
+          </View>
+          <Pressable
+            style={styles.addStepButton}
+            onPress={handleNewStepSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Add step"
+          >
+            <RNText style={styles.addStepButtonText}>+</RNText>
+          </Pressable>
         </View>
       )}
     </View>

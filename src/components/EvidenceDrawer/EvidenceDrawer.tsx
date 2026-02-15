@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Pressable, ScrollView, Text, useWindowDimensions } from 'react-native';
-import type { EvidenceTypeValue } from '../../screens/EvidenceActionSheet';
+import { useUnistyles } from 'react-native-unistyles';
+import type { EvidenceTypeValue } from '../../types/evidence';
 import { EvidenceItem } from '../EvidenceItem';
 import { styles } from './EvidenceDrawer.styles';
 
@@ -15,6 +16,7 @@ export interface EvidenceDrawerProps {
   isGoal?: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onViewEvidence?: (id: string) => void;
   onDeleteEvidence: (id: string) => void;
 }
 
@@ -25,14 +27,23 @@ export function EvidenceDrawer({
   isGoal = false,
   isOpen,
   onToggle,
+  onViewEvidence,
   onDeleteEvidence,
 }: EvidenceDrawerProps) {
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { theme } = useUnistyles();
   const maxHeight = windowHeight * 0.6;
+  const items = evidence ?? [];
+
+  // Calculate equal-width tiles for 3-column grid
+  const COLUMNS = 3;
+  const horizontalPadding = theme.space[4] * 2;
+  const totalGap = theme.space[2] * (COLUMNS - 1);
+  const itemWidth = Math.floor((windowWidth - horizontalPadding - totalGap) / COLUMNS);
 
   const drawerLabel = isGoal
-    ? `Goal evidence: ${evidence.length} item${evidence.length !== 1 ? 's' : ''}`
-    : `${evidence.length} evidence item${evidence.length !== 1 ? 's' : ''}`;
+    ? `Goal evidence: ${items.length} item${items.length !== 1 ? 's' : ''}`
+    : `${items.length} evidence item${items.length !== 1 ? 's' : ''}`;
 
   return (
     <>
@@ -77,20 +88,22 @@ export function EvidenceDrawer({
             style={styles.scrollView}
             contentContainerStyle={styles.grid}
           >
-            {evidence.length === 0 ? (
+            {items.length === 0 ? (
               <Text style={styles.emptyText}>
                 No evidence yet — tap + to add
               </Text>
             ) : (
-              evidence.map((item) => (
-                <EvidenceItem
-                  key={item.id}
-                  id={item.id}
-                  type={item.type}
-                  label={item.label}
-                  isGoal={isGoal}
-                  onLongPress={onDeleteEvidence}
-                />
+              items.map((item) => (
+                <View key={item.id} style={styles.gridItem(itemWidth)}>
+                  <EvidenceItem
+                    id={item.id}
+                    type={item.type}
+                    label={item.label}
+                    isGoal={isGoal}
+                    onPress={onViewEvidence}
+                    onLongPress={onDeleteEvidence}
+                  />
+                </View>
               ))
             )}
           </ScrollView>

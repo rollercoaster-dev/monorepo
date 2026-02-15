@@ -11,7 +11,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[2],
     minHeight: 80,
-    minWidth: 100,
+    width: '100%' as const,
     backgroundColor: theme.colors.backgroundSecondary,
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,

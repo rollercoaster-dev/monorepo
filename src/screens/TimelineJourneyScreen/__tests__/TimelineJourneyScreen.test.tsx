@@ -29,10 +29,20 @@ jest.mock('../../../hooks/useAnimationPref', () => ({
 
 jest.mock('../../../db', () => ({
   StepStatus: { pending: 'pending', completed: 'completed' },
+  EvidenceType: {
+    photo: 'photo',
+    screenshot: 'screenshot',
+    text: 'text',
+    voice_memo: 'voice_memo',
+    video: 'video',
+    link: 'link',
+    file: 'file',
+  },
   goalsQuery: 'goalsQuery',
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
   evidenceByStepQuery: jest.fn((id: string) => `evidenceByStepQuery-${id}`),
+  stepEvidenceByGoalQuery: jest.fn((id: string) => `stepEvidenceByGoalQuery-${id}`),
 }));
 
 const mockUseQuery = jest.fn();
@@ -58,7 +68,7 @@ const MIXED_STEPS = [
 ];
 
 const STEP_EVIDENCE = [
-  { id: 'ev-1', type: 'photo', description: 'Screenshot', uri: '/photo.jpg' },
+  { id: 'ev-1', type: 'photo', description: 'Screenshot', uri: '/photo.jpg', stepId: 'step-1' },
 ];
 
 const GOAL_EVIDENCE = [
@@ -89,6 +99,7 @@ function setupQueries({
     if (query === 'goalsQuery') return goal ? [goal] : [];
     if (typeof query === 'string' && query.startsWith('stepsByGoalQuery')) return steps;
     if (typeof query === 'string' && query.startsWith('evidenceByGoalQuery')) return goalEvidence;
+    if (typeof query === 'string' && query.startsWith('stepEvidenceByGoalQuery')) return stepEvidence;
     if (typeof query === 'string' && query.startsWith('evidenceByStepQuery')) return stepEvidence;
     return [];
   });

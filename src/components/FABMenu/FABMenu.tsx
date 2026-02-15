@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable, Text } from 'react-native';
 import { EvidenceType } from '../../db';
-import type { EvidenceTypeValue } from '../../screens/EvidenceActionSheet';
+import type { EvidenceTypeValue } from '../../types/evidence';
 import { Card } from '../Card';
 import { styles } from './FABMenu.styles';
 

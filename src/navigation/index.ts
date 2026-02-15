@@ -8,7 +8,6 @@ export type {
   BadgesStackParamList,
   SettingsStackParamList,
   GoalsScreenProps,
-  GoalDetailScreenProps,
   NewGoalScreenProps,
   BadgesScreenProps,
   BadgeDetailScreenProps,

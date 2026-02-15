@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { View, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
@@ -15,14 +15,14 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
-  evidenceByStepQuery,
+  stepEvidenceByGoalQuery,
   StepStatus,
 } from '../../db';
-import type { GoalId, StepId } from '../../db';
+import type { GoalId } from '../../db';
 import type { GoalsStackParamList, TimelineJourneyScreenProps } from '../../navigation/types';
 import type { StepStatus as UIStepStatus } from '../../types/steps';
 import type { EvidenceItemData } from '../../components/EvidenceDrawer';
-import type { EvidenceTypeValue } from '../EvidenceActionSheet';
+import { validateEvidenceType } from '../../types/evidence';
 import { styles } from './TimelineJourneyScreen.styles';
 
 function TimelineContent({ goalId }: { goalId: string }) {
@@ -48,7 +48,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
     }));
 
   // Query evidence per step
-  const stepEvidenceData = useStepEvidence(stepRows);
+  const stepEvidenceData = useStepEvidence(goalId as GoalId, stepRows);
 
   // Enrich counts
   const stepsWithEvidence = uiSteps.map((step, i) => ({
@@ -59,7 +59,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   // Goal evidence for FinishLine
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
     id: row.id,
-    type: (row.type ?? 'file') as EvidenceTypeValue,
+    type: validateEvidenceType(row.type ?? 'file'),
     label: row.description ?? row.type ?? 'Evidence',
   }));
 
@@ -135,23 +135,29 @@ function TimelineContent({ goalId }: { goalId: string }) {
 }
 
 /**
- * Query evidence per step, returning EvidenceItemData arrays.
- * Uses hooks-in-loop pattern (same as FocusModeScreen.useStepEvidenceCounts).
- * Safe because stepRows length is stable while this screen is mounted —
- * steps cannot be added/removed without navigating away.
+ * Hook to get evidence grouped per step using a single joined query.
+ * Avoids hooks-in-loop by fetching all step evidence for the goal at once,
+ * then grouping into EvidenceItemData[][] with useMemo.
  */
 function useStepEvidence(
+  goalId: GoalId,
   stepRows: readonly { id: string }[],
 ): EvidenceItemData[][] {
-  return stepRows.map((step) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const rows = useQuery(evidenceByStepQuery(step.id as StepId));
-    return rows.map((row) => ({
-      id: row.id,
-      type: (row.type ?? 'file') as EvidenceTypeValue,
-      label: row.description ?? row.type ?? 'Evidence',
-    }));
-  });
+  const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
+  return useMemo(() => {
+    const grouped = new Map<string, EvidenceItemData[]>();
+    for (const ev of allStepEvidence) {
+      if (!ev.stepId) continue;
+      const list = grouped.get(ev.stepId) ?? [];
+      list.push({
+        id: ev.id as string,
+        type: validateEvidenceType((ev.type ?? 'file') as string),
+        label: (ev.description ?? ev.type ?? 'Evidence') as string,
+      });
+      grouped.set(ev.stepId, list);
+    }
+    return stepRows.map((s) => grouped.get(s.id) ?? []);
+  }, [allStepEvidence, stepRows]);
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {

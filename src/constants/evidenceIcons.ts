@@ -1,4 +1,4 @@
-import type { EvidenceTypeValue } from '../screens/EvidenceActionSheet';
+import type { EvidenceTypeValue } from '../types/evidence';
 
 /** Map evidence types to display emoji icons. Shared across all evidence UIs. */
 export const EVIDENCE_TYPE_ICONS: Record<EvidenceTypeValue, string> = {

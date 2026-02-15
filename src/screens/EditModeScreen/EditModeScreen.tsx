@@ -8,15 +8,15 @@ import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { StepList } from '../../components/StepList';
+import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import {
   goalsQuery,
   updateGoal,
+  deleteGoal,
   stepsByGoalQuery,
   createStep,
   updateStep,
   deleteStep,
-  completeStep,
-  uncompleteStep,
   reorderSteps,
   StepStatus,
 } from '../../db';
@@ -37,6 +37,7 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
   const [title, setTitle] = useState(goal?.title ?? '');
   const [description, setDescription] = useState(goal?.description ?? '');
   const [titleError, setTitleError] = useState('');
+  const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -135,27 +136,24 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
     }
   }
 
-  function handleToggleStep(stepId: string) {
-    const step = stepRows.find((s) => s.id === stepId);
-    if (!step) return;
-    try {
-      if (step.status === StepStatus.completed) {
-        uncompleteStep(stepId as StepId);
-      } else {
-        completeStep(stepId as StepId);
-      }
-    } catch (error) {
-      console.error('[EditModeScreen] Failed to toggle step', { stepId, error });
-      Alert.alert('Error', 'Could not update step.');
-    }
-  }
-
   function handleReorderSteps(stepIds: string[]) {
     try {
       reorderSteps(goalId as GoalId, stepIds as StepId[]);
     } catch (error) {
       console.error('[EditModeScreen] Failed to reorder steps', { goalId, error });
       Alert.alert('Error', 'Could not reorder steps.');
+    }
+  }
+
+  function handleDeleteGoal() {
+    try {
+      deleteGoal(goalId as GoalId);
+      setShowDeleteGoalModal(false);
+      navigation.navigate('Goals');
+    } catch (error) {
+      console.error('[EditModeScreen] Failed to delete goal', { goalId, error });
+      setShowDeleteGoalModal(false);
+      Alert.alert('Could not delete goal', 'Something went wrong. Please try again.');
     }
   }
 
@@ -168,6 +166,7 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
   const canDelete = stepRows.length > 1;
 
   return (
+    <>
     <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* Title */}
       <View style={styles.section}>
@@ -209,7 +208,6 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
           title: s.title ?? '',
           completed: s.status === StepStatus.completed,
         }))}
-        onToggleStep={handleToggleStep}
         onCreateStep={handleCreateStep}
         onUpdateStep={handleUpdateStep}
         onDeleteStep={canDelete ? handleDeleteStep : undefined}
@@ -223,7 +221,24 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
           onPress={handleNavigate}
         />
       </View>
+
+      {/* Delete goal */}
+      <View style={styles.buttonSection}>
+        <Button
+          label="Delete Goal"
+          variant="destructive"
+          onPress={() => setShowDeleteGoalModal(true)}
+        />
+      </View>
     </ScrollView>
+    <ConfirmDeleteModal
+      visible={showDeleteGoalModal}
+      onCancel={() => setShowDeleteGoalModal(false)}
+      onConfirm={handleDeleteGoal}
+      title="Delete this goal?"
+      message={`"${goal.title}" and all progress will be permanently deleted.`}
+    />
+    </>
   );
 }
 

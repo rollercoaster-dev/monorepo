@@ -1,17 +1,11 @@
-import { EvidenceType } from '../../../db';
+import { EvidenceType } from '../../db';
+import { EVIDENCE_OPTIONS } from '../evidence';
 
-/** Evidence types presented in the action sheet — must match EVIDENCE_OPTIONS in EvidenceActionSheet.tsx */
-const ACTION_SHEET_TYPES = [
-  EvidenceType.photo,
-  EvidenceType.video,
-  EvidenceType.voice_memo,
-  EvidenceType.text,
-  EvidenceType.link,
-  EvidenceType.file,
-];
+/** Evidence types presented to the user — must match EVIDENCE_OPTIONS */
+const ACTION_SHEET_TYPES = EVIDENCE_OPTIONS.map((o) => o.type);
 
 /**
- * Evidence route map — mirrors the one in GoalDetailScreen.
+ * Evidence route map — mirrors the one in FocusModeScreen/CompletionFlowScreen.
  * Kept in sync via this test.
  */
 const EVIDENCE_ROUTE_MAP: Record<string, string> = {
@@ -23,7 +17,7 @@ const EVIDENCE_ROUTE_MAP: Record<string, string> = {
   [EvidenceType.file]: 'CaptureFile',
 };
 
-describe('EvidenceActionSheet options', () => {
+describe('Evidence options', () => {
   it('covers all user-facing evidence types', () => {
     // screenshot is not user-selectable from the action sheet
     const excludedTypes: string[] = [EvidenceType.screenshot];
@@ -34,7 +28,7 @@ describe('EvidenceActionSheet options', () => {
     expect([...ACTION_SHEET_TYPES].sort()).toEqual([...userFacingTypes].sort());
   });
 
-  it('has a route for every action sheet type', () => {
+  it('has a route for every evidence option type', () => {
     for (const type of ACTION_SHEET_TYPES) {
       expect(EVIDENCE_ROUTE_MAP[type]).toBeDefined();
       expect(EVIDENCE_ROUTE_MAP[type]).toMatch(/^Capture/);

@@ -2,7 +2,7 @@
  * Consolidated accessibility contract tests
  *
  * Covers sole a11y coverage for: GoalCard, ProgressBar, Checkbox,
- * CollapsibleSection, CelebrationModal, ConfirmDeleteModal.
+ * CollapsibleSection, ConfirmDeleteModal.
  *
  * These tests verify screen-reader-facing props (roles, labels, states, values)
  * that no other test file covers.
@@ -23,7 +23,6 @@ import { GoalCard, type GoalCardGoal } from '../components/GoalCard';
 import { ProgressBar } from '../components/ProgressBar';
 import { Checkbox } from '../components/Checkbox';
 import { CollapsibleSection } from '../components/CollapsibleSection';
-import { CelebrationModal } from '../screens/CelebrationModal/CelebrationModal';
 import { ConfirmDeleteModal } from '../screens/ConfirmDeleteModal/ConfirmDeleteModal';
 
 jest.mock('expo-haptics', () => ({
@@ -175,29 +174,11 @@ describe('Accessibility Contracts', () => {
       expectLiveRegion(liveViews[0]!, 'polite');
     }
 
-    it('CelebrationModal has accessibilityViewIsModal and liveRegion', () => {
-      renderWithProviders(
-        <CelebrationModal visible onDismiss={jest.fn()} title="Goal Complete!" />,
-      );
-      assertModalA11y();
-    });
-
     it('ConfirmDeleteModal has accessibilityViewIsModal and liveRegion', () => {
       renderWithProviders(
         <ConfirmDeleteModal visible onCancel={jest.fn()} onConfirm={jest.fn()} />,
       );
       assertModalA11y();
-    });
-
-    it('CelebrationModal title has header role', () => {
-      renderWithProviders(
-        <CelebrationModal
-          visible
-          onDismiss={jest.fn()}
-          title="Goal Complete!"
-        />,
-      );
-      screen.getByRole('header', { name: 'Goal Complete!' });
     });
 
     it('ConfirmDeleteModal title has header role', () => {

@@ -19,9 +19,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.space[4],
+    paddingTop: theme.space[8],
+    paddingHorizontal: theme.space[4],
+    paddingBottom: theme.space[12],
   },
   card: {
     backgroundColor: theme.colors.backgroundSecondary,

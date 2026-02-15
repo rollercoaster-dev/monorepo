@@ -30,6 +30,7 @@ export {
   // Evidence
   evidenceByGoalQuery,
   evidenceByStepQuery,
+  stepEvidenceByGoalQuery,
   createEvidence,
   updateEvidence,
   deleteEvidence,

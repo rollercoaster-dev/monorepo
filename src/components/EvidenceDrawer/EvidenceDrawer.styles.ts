@@ -61,6 +61,9 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingBottom: theme.space[6],
   },
+  gridItem: (width: number) => ({
+    width,
+  }),
   emptyText: {
     fontSize: theme.size.sm,
     color: theme.colors.textMuted,

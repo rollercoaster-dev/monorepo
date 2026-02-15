@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, ActivityIndicator, AccessibilityInfo, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
@@ -21,6 +21,7 @@ import {
   stepsByGoalQuery,
   evidenceByGoalQuery,
   evidenceByStepQuery,
+  stepEvidenceByGoalQuery,
   completeStep,
   uncompleteStep,
   deleteEvidence,
@@ -31,9 +32,10 @@ import {
 import type { GoalId, StepId, EvidenceId } from '../../db';
 import { useToast } from '../../components/Toast';
 import type { GoalsStackParamList, FocusModeScreenProps as FocusModeNavProps, CaptureScreenName } from '../../navigation/types';
-import type { EvidenceTypeValue } from '../EvidenceActionSheet';
+import { validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
 import type { StepStatus as UIStepStatus } from '../../types/steps';
 import { deleteEvidenceFile } from '../../utils/evidenceCleanup';
+import { useEvidenceViewer } from '../../utils/evidenceViewers';
 import { styles } from './FocusModeScreen.styles';
 
 const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> = {
@@ -57,6 +59,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const { viewEvidence, viewerModals } = useEvidenceViewer();
   const hasAnnouncedComplete = useRef(false);
   const hasTriggeredCompletion = useRef(false);
   const isMounted = useRef(true);
@@ -93,7 +96,7 @@ function FocusContent({ goalId }: { goalId: string }) {
     }));
 
   // Query evidence per step for counts
-  const stepEvidenceCounts = useStepEvidenceCounts(stepRows);
+  const stepEvidenceCounts = useStepEvidenceCounts(goalId as GoalId, stepRows);
 
   // Enrich step evidence counts
   const stepsWithEvidence = uiSteps.map((step, i) => ({
@@ -116,7 +119,7 @@ function FocusContent({ goalId }: { goalId: string }) {
   const drawerEvidence: EvidenceItemData[] = (isGoalCard ? goalEvidenceRows : currentStepEvidenceRows).map(
     (row) => ({
       id: row.id,
-      type: (row.type ?? 'file') as EvidenceTypeValue,
+      type: validateEvidenceType(row.type ?? 'file'),
       label: row.description ?? row.type ?? 'Evidence',
     }),
   );
@@ -263,13 +266,25 @@ function FocusContent({ goalId }: { goalId: string }) {
     }
   };
 
+  const handleViewEvidence = (id: string) => {
+    const row = currentStepEvidenceRows.find((r) => r.id === id) ??
+      goalEvidenceRows.find((r) => r.id === id);
+    if (!row) return;
+    viewEvidence({
+      id: row.id,
+      title: row.description ?? row.type ?? 'Evidence',
+      type: validateEvidenceType(row.type ?? 'file'),
+      uri: row.uri ?? undefined,
+      metadata: row.metadata ?? undefined,
+    });
+  };
+
   const handleTimelineTap = () => {
     navigation.navigate('TimelineJourney', { goalId });
   };
 
   const handleEditPress = () => {
-    // Edit mode not yet implemented — navigate back to GoalDetail for now
-    navigation.navigate('GoalDetail', { goalId });
+    navigation.navigate('EditMode', { goalId, cameFromFocus: true });
   };
 
   // --- Render ---
@@ -347,6 +362,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         isGoal={isGoalCard}
         isOpen={isDrawerOpen}
         onToggle={handleToggleDrawer}
+        onViewEvidence={handleViewEvidence}
         onDeleteEvidence={handleRequestDeleteEvidence}
       />
 
@@ -367,25 +383,30 @@ function FocusContent({ goalId }: { goalId: string }) {
         />
         <FAB isOpen={isFABMenuOpen} onToggle={handleToggleFABMenu} />
       </View>
+
+      {/* Evidence viewer modals */}
+      {viewerModals}
     </View>
   );
 }
 
 /**
- * Hook to get evidence counts per step.
- * Uses individual queries per step (Evolu auto-caches these).
+ * Hook to get evidence counts per step using a single joined query.
+ * Avoids hooks-in-loop by fetching all step evidence for the goal at once,
+ * then grouping counts client-side with useMemo.
  */
 function useStepEvidenceCounts(
+  goalId: GoalId,
   stepRows: readonly { id: string }[],
 ): number[] {
-  // Query each step's evidence — Evolu deduplicates identical queries
-  const counts: number[] = [];
-  for (const step of stepRows) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const rows = useQuery(evidenceByStepQuery(step.id as StepId));
-    counts.push(rows.length);
-  }
-  return counts;
+  const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
+  return useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const ev of allStepEvidence) {
+      if (ev.stepId) counts.set(ev.stepId, (counts.get(ev.stepId) ?? 0) + 1);
+    }
+    return stepRows.map((s) => counts.get(s.id) ?? 0);
+  }, [allStepEvidence, stepRows]);
 }
 
 export function FocusModeScreen({ route }: FocusModeNavProps) {
