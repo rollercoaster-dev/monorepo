@@ -6,6 +6,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { Confetti } from '../../components/Confetti';
@@ -182,11 +183,13 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
         <Text variant="label">Complete</Text>
         <View style={styles.spacer} />
       </View>
-      <Suspense
-        fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
-      >
-        <CompletionContent goalId={route.params.goalId} />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense
+          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+        >
+          <CompletionContent goalId={route.params.goalId} />
+        </Suspense>
+      </ErrorBoundary>
       <ModeIndicator mode="complete" />
     </SafeAreaView>
   );

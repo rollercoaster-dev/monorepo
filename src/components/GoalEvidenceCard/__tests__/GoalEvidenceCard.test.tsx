@@ -41,9 +41,9 @@ describe('GoalEvidenceCard', () => {
     expect(screen.getByText('1 item')).toBeOnTheScreen();
   });
 
-  it('displays "No evidence yet" when count is 0', () => {
+  it('displays "add evidence" prompt when count is 0', () => {
     renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
-    expect(screen.getByText('No evidence yet')).toBeOnTheScreen();
+    expect(screen.getByText('+ add evidence')).toBeOnTheScreen();
   });
 
   it('calls onEvidenceTap when evidence badge is pressed', () => {

@@ -5,6 +5,8 @@ import { NewGoalModal } from '../NewGoalModal';
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 
+const mockReplace = jest.fn();
+
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual('@react-navigation/native');
   return {
@@ -12,6 +14,7 @@ jest.mock('@react-navigation/native', () => {
     useNavigation: () => ({
       navigate: mockNavigate,
       goBack: mockGoBack,
+      replace: mockReplace,
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
@@ -73,19 +76,31 @@ describe('NewGoalModal', () => {
     expect(createGoal).not.toHaveBeenCalled();
   });
 
-  it('creates goal and navigates back on valid submit', () => {
+  it('creates goal and navigates to EditMode on valid submit', () => {
+    createGoal.mockReturnValue({ ok: true, value: { id: 'goal-123' } });
     renderWithProviders(<NewGoalModal />);
     fireEvent.changeText(screen.getByLabelText('Title'), 'Learn TypeScript');
     fireEvent.press(screen.getByText('Create Goal'));
     expect(createGoal).toHaveBeenCalledWith('Learn TypeScript');
-    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledWith('EditMode', { goalId: 'goal-123' });
   });
 
   it('trims title before creating goal', () => {
+    createGoal.mockReturnValue({ ok: true, value: { id: 'goal-456' } });
     renderWithProviders(<NewGoalModal />);
     fireEvent.changeText(screen.getByLabelText('Title'), '  Learn Rust  ');
     fireEvent.press(screen.getByText('Create Goal'));
     expect(createGoal).toHaveBeenCalledWith('Learn Rust');
+  });
+
+  it('shows error when createGoal fails', () => {
+    createGoal.mockReturnValue({ ok: false });
+    renderWithProviders(<NewGoalModal />);
+    fireEvent.changeText(screen.getByLabelText('Title'), 'Learn Go');
+    fireEvent.press(screen.getByText('Create Goal'));
+    expect(createGoal).toHaveBeenCalledWith('Learn Go');
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(screen.getByText('Failed to create goal')).toBeOnTheScreen();
   });
 
   it('clears validation error when typing after failed submit', () => {

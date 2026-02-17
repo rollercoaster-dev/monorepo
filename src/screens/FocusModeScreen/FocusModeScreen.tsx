@@ -5,6 +5,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { IconButton } from '../../components/IconButton';
 import { CardCarousel } from '../../components/CardCarousel';
 import { MiniTimeline, type MiniTimelineStep } from '../../components/MiniTimeline';
@@ -419,11 +420,13 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         <View style={styles.spacer} />
       </View>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <Suspense
-          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
-        >
-          <FocusContent goalId={route.params.goalId} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense
+            fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+          >
+            <FocusContent goalId={route.params.goalId} />
+          </Suspense>
+        </ErrorBoundary>
         <ModeIndicator mode="focus" />
       </View>
     </SafeAreaView>

@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { IconButton } from '../../components/IconButton';
 import { GoalCard, type GoalCardGoal } from '../../components/GoalCard';
 import { EmptyState } from '../../components/EmptyState';
@@ -117,13 +118,15 @@ export function GoalsScreen() {
         />
       </View>
       <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>
-        <Suspense
-          fallback={
-            <ActivityIndicator style={styles.loadingIndicator} size="large" />
-          }
-        >
-          <GoalList />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <ActivityIndicator style={styles.loadingIndicator} size="large" />
+            }
+          >
+            <GoalList />
+          </Suspense>
+        </ErrorBoundary>
       </View>
     </SafeAreaView>
   );

@@ -5,7 +5,6 @@ import type { EvidenceTypeValue } from '../../types/evidence';
 import { Card } from '../Card';
 import { styles } from './FABMenu.styles';
 
-// Includes screenshot (unlike EvidenceActionSheet) per issue #125 spec
 const EVIDENCE_MENU_ITEMS: {
   type: EvidenceTypeValue;
   icon: string;

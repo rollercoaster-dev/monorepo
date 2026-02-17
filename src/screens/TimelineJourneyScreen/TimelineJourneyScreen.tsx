@@ -5,6 +5,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { ProgressBar } from '../../components/ProgressBar';
@@ -176,11 +177,13 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
         <View style={styles.spacer} />
       </View>
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <Suspense
-          fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
-        >
-          <TimelineContent goalId={route.params.goalId} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense
+            fallback={<ActivityIndicator style={styles.loadingIndicator} size="large" />}
+          >
+            <TimelineContent goalId={route.params.goalId} />
+          </Suspense>
+        </ErrorBoundary>
       </View>
     </SafeAreaView>
   );

@@ -3,6 +3,7 @@ import { ScrollView, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsRow } from '../../components/SettingsRow';
 import { ThemeSwitcher } from '../../components/ThemeSwitcher';
@@ -38,9 +39,11 @@ export function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} style={{ backgroundColor: theme.colors.background }}>
         <ThemeSwitcher />
 
-        <Suspense fallback={<ActivityIndicator />}>
-          <DensityPicker />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<ActivityIndicator />}>
+            <DensityPicker />
+          </Suspense>
+        </ErrorBoundary>
 
         <SettingsSection title="About">
           <SettingsRow label="App" value="rollercoaster.dev" />

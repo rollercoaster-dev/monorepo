@@ -5,6 +5,7 @@ import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { StepList } from '../../components/StepList';
@@ -158,9 +159,7 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
   }
 
   function handleNavigate() {
-    // FocusMode route will be added by issue #127 — navigate safely
-    (navigation as { navigate: (name: string, params: object) => void })
-      .navigate('FocusMode', { goalId });
+    navigation.navigate('FocusMode', { goalId });
   }
 
   const canDelete = stepRows.length > 1;
@@ -259,13 +258,15 @@ export function EditModeScreen({ route }: EditModeScreenProps) {
         <Text variant="label">Edit Goal</Text>
         <View style={styles.spacer} />
       </View>
-      <Suspense
-        fallback={
-          <ActivityIndicator style={styles.loadingIndicator} size="large" />
-        }
-      >
-        <EditContent goalId={goalId} cameFromFocus={cameFromFocus} />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <ActivityIndicator style={styles.loadingIndicator} size="large" />
+          }
+        >
+          <EditContent goalId={goalId} cameFromFocus={cameFromFocus} />
+        </Suspense>
+      </ErrorBoundary>
       <ModeIndicator mode="edit" />
     </SafeAreaView>
   );

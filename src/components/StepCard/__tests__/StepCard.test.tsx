@@ -63,11 +63,11 @@ describe('StepCard', () => {
     expect(screen.getByText('1 item')).toBeOnTheScreen();
   });
 
-  it('displays "No evidence yet" when count is 0', () => {
+  it('displays "add evidence" prompt when count is 0', () => {
     renderWithProviders(
       <StepCard step={makeStep({ evidenceCount: 0 })} {...defaultProps} />,
     );
-    expect(screen.getByText('No evidence yet')).toBeOnTheScreen();
+    expect(screen.getByText('+ add evidence')).toBeOnTheScreen();
   });
 
   it('calls onToggleComplete when checkbox is pressed', () => {
