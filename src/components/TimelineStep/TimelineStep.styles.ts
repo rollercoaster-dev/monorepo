@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { shadowStyle } from '../../styles/shadows';
+import { GOAL_NODE_SIZE } from '../TimelineNode/TimelineNode.styles';
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -7,7 +8,7 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[4],
   },
   nodeColumn: {
-    width: 40,
+    width: GOAL_NODE_SIZE,
     alignItems: 'center',
     marginRight: theme.space[3],
   },
@@ -32,12 +33,12 @@ export const styles = StyleSheet.create((theme) => ({
     marginLeft: theme.space[2],
   },
   title: {
-    fontSize: 15,
+    fontSize: theme.size.md,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },
   chevron: {
-    fontSize: 14,
+    fontSize: theme.size.sm,
     color: theme.colors.textSecondary,
   },
   chevronExpanded: {
@@ -62,15 +63,15 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[1],
   },
   evidenceIcon: {
-    fontSize: 14,
+    fontSize: theme.size.sm,
   },
   evidenceLabel: {
     flex: 1,
-    fontSize: 13,
+    fontSize: theme.size.xs,
     color: theme.colors.text,
   },
   noEvidence: {
-    fontSize: 13,
+    fontSize: theme.size.xs,
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
   },

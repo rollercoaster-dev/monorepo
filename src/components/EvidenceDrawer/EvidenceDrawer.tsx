@@ -12,7 +12,7 @@ import type { EvidenceTypeValue } from '../../types/evidence';
 import { EvidenceItem } from '../EvidenceItem';
 import { FAB } from '../FAB';
 import { FABMenu } from '../FABMenu';
-import { styles } from './EvidenceDrawer.styles';
+import { styles, PEEK_HEIGHT } from './EvidenceDrawer.styles';
 
 export interface EvidenceItemData {
   id: string;
@@ -31,8 +31,6 @@ export interface EvidenceDrawerProps {
   onAddEvidence?: () => void;
   onSelectEvidenceType?: (type: EvidenceTypeValue) => void;
 }
-
-const PEEK_HEIGHT = 56;
 
 export function EvidenceDrawer({
   evidence,

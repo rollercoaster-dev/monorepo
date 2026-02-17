@@ -33,7 +33,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: palette.blue600,
   },
   nodeText: {
-    fontSize: 14,
+    fontSize: theme.size.sm,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },
@@ -44,7 +44,7 @@ export const styles = StyleSheet.create((theme) => ({
     color: palette.blue600,
   },
   goalText: {
-    fontSize: 18,
+    fontSize: theme.size.lg,
     color: theme.colors.text,
   },
   pressed: {

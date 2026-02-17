@@ -1,6 +1,13 @@
 import { StyleSheet } from 'react-native-unistyles';
 import { palette } from '../../themes/palette';
 
+/**
+ * Collapsed height of the EvidenceDrawer in points.
+ * Used as both the CSS minHeight for the handle area and the
+ * Reanimated shared value initial/collapsed target — keep them in sync.
+ */
+export const PEEK_HEIGHT = 56;
+
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
     position: 'absolute',
@@ -26,8 +33,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderRightWidth: theme.borderWidth.thin,
     borderLeftColor: theme.colors.border,
     borderRightColor: theme.colors.border,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: theme.radius.xl,
+    borderTopRightRadius: theme.radius.xl,
     zIndex: 21,
     overflow: 'hidden' as const,
   }),
@@ -37,7 +44,7 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'space-between' as const,
     paddingVertical: theme.space[3],
     paddingHorizontal: theme.space[4],
-    minHeight: 56,
+    minHeight: PEEK_HEIGHT,
   },
   handleLeft: {
     flexDirection: 'column' as const,
