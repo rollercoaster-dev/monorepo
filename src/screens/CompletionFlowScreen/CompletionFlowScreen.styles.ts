@@ -103,4 +103,14 @@ export const styles = StyleSheet.create((theme) => ({
   loadingIndicator: {
     marginTop: theme.space[8],
   },
+  badgeStatus: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: theme.space[2],
+    marginTop: theme.space[3],
+    width: '100%',
+  },
+  badgeStatusText: {
+    color: theme.colors.textSecondary,
+  },
 }));

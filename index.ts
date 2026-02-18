@@ -7,7 +7,8 @@
  * interleaved statements.
  */
 
-// 1. Install crypto globals before anything else (native only — no web support)
+// 1. Install crypto globals (native only — no web support).
+// v1.0.10+ adds OKP/Ed25519 JWK export support.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Platform } = require('react-native');
 if (Platform.OS !== 'web') {

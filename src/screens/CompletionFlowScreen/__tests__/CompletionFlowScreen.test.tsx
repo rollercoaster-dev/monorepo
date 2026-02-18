@@ -27,6 +27,14 @@ jest.mock('../../../hooks/useAnimationPref', () => ({
   })),
 }));
 
+const mockUseCreateBadge = jest.fn<{ status: string; error: string | null }, [string]>(
+  () => ({ status: 'done', error: null }),
+);
+jest.mock('../../../hooks/useCreateBadge', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useCreateBadge: (goalId: any) => mockUseCreateBadge(goalId),
+}));
+
 const mockUncompleteGoal = jest.fn();
 jest.mock('../../../db', () => ({
   EvidenceType: {
@@ -98,6 +106,7 @@ describe('CompletionFlowScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseQuery.mockReturnValue([]);
+    mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
   });
 
   it('renders celebration headline', () => {
@@ -198,5 +207,69 @@ describe('CompletionFlowScreen', () => {
     fireEvent.press(screen.getByLabelText('Reopen Goal'));
     expect(mockUncompleteGoal).toHaveBeenCalledWith('goal-1');
     expect(mockNavigate).toHaveBeenCalledWith('FocusMode', { goalId: 'goal-1' });
+  });
+
+  describe('badge creation lifecycle', () => {
+    it('shows loading indicator while badge is being created', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'building', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Creating your badge...')).toBeOnTheScreen();
+    });
+
+    it('shows loading indicator during signing phase', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'signing', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Creating your badge...')).toBeOnTheScreen();
+    });
+
+    it('does not show loading indicator when done', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.queryByLabelText('Creating your badge...')).not.toBeOnTheScreen();
+    });
+
+    it('shows error message when badge creation fails', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'error', error: 'crypto unavailable' });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Badge creation failed: crypto unavailable')).toBeOnTheScreen();
+    });
+
+    it('shows loading indicator during storing phase', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'storing', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Creating your badge...')).toBeOnTheScreen();
+    });
+
+    it('shows key unavailable message when status is no-key', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'no-key', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Badge could not be created: signing key unavailable')).toBeOnTheScreen();
+    });
+
+    it('still renders celebration content during badge creation', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'building', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText('You did it!')).toBeOnTheScreen();
+    });
+
+    it('still renders celebration content when status is no-key', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'no-key', error: null });
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText('You did it!')).toBeOnTheScreen();
+    });
+
+    it('calls useCreateBadge with the correct goalId', () => {
+      setupQueries();
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(mockUseCreateBadge).toHaveBeenCalledWith('goal-1');
+    });
   });
 });

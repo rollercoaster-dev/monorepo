@@ -9,6 +9,22 @@ const config = getDefaultConfig(__dirname);
 // @rollercoaster-dev/design-tokens/unistyles
 config.resolver.unstable_enablePackageExports = true;
 
+// jose (a dependency of @rollercoaster-dev/openbadges-core) ships only ESM
+// output with no CJS fallback. Metro can't bundle it statically.
+// We stub it out because we only call serializeOB3 at runtime — the signing
+// functions that use jose are never invoked in native code (keyProvider handles
+// signing via Expo SecureStore).
+const originalResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'jose') {
+    return { type: 'empty' };
+  }
+  if (originalResolveRequest) {
+    return originalResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 
 // Evolu: allow .wasm assets to be bundled
 config.resolver.assetExts = [...(config.resolver.assetExts ?? []), 'wasm'];

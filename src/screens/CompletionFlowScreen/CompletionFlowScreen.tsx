@@ -20,6 +20,7 @@ import {
   GoalStatus,
 } from '../../db';
 import type { GoalId } from '../../db';
+import { useCreateBadge } from '../../hooks/useCreateBadge';
 import type {
   GoalsStackParamList,
   CompletionFlowScreenProps,
@@ -52,6 +53,9 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
+
+  const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId);
+  const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing';
 
   const [showConfetti, setShowConfetti] = useState(true);
   const hasGoalEvidence = goalEvidenceRows.length > 0;
@@ -135,6 +139,41 @@ function CompletionContent({ goalId }: { goalId: string }) {
               />
             )}
           </View>
+
+          {isBadgeCreating && (
+            <View
+              style={styles.badgeStatus}
+              accessible
+              accessibilityRole="none"
+              accessibilityLiveRegion="polite"
+              accessibilityLabel="Creating your badge..."
+            >
+              <ActivityIndicator size="small" />
+              <Text variant="label" style={styles.badgeStatusText}>Creating your badge…</Text>
+            </View>
+          )}
+
+          {badgeStatus === 'no-key' && (
+            <View
+              style={styles.badgeStatus}
+              accessible
+              accessibilityRole="alert"
+              accessibilityLabel="Badge could not be created: signing key unavailable"
+            >
+              <Text variant="label" style={styles.badgeStatusText}>Badge signing key unavailable</Text>
+            </View>
+          )}
+
+          {badgeStatus === 'error' && badgeError && (
+            <View
+              style={styles.badgeStatus}
+              accessible
+              accessibilityRole="alert"
+              accessibilityLabel={`Badge creation failed: ${badgeError}`}
+            >
+              <Text variant="label" style={styles.badgeStatusText}>Badge creation failed: {badgeError}</Text>
+            </View>
+          )}
 
           {hasGoalEvidence && (
             <View style={styles.evidenceSection}>
