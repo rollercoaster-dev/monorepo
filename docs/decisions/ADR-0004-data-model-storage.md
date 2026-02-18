@@ -167,9 +167,12 @@ Validation uses `.from()`, `.orThrow()`, or `.orNull()` — not Zod's `.safePars
 
 ### Current Implementation
 
-As of 2026-02-08, Iteration A schema is partially implemented:
+As of 2026-02-18, Iteration A schema is fully implemented:
 - ✅ **Goal table** — Defined in `src/db/schema.ts` with full CRUD operations in `src/db/queries.ts`
-- 🚧 **Step, Evidence, Badge tables** — Not yet implemented (tracked in Issues #49-#64)
+- ✅ **Step table** — Full CRUD operations including reorder support
+- ✅ **Evidence table** — All 7 evidence types (photo, screenshot, text, voice_memo, video, link, file)
+- ✅ **Badge table** — OB3 Verifiable Credential JSON + baked image URI
+- ✅ **UserSettings table** — Singleton pattern for theme, density, animation preferences
 
 ## Consequences
 

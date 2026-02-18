@@ -1,7 +1,7 @@
 # Data Model: rollercoaster.dev (native)
 
 **Date:** 2026-02-02
-**Status:** Draft
+**Status:** Draft — Iteration A fully implemented; B/C/D planned
 **Owner:** Joe
 
 ---
@@ -280,6 +280,23 @@ All entities use ULIDs (Universally Unique Lexicographically Sortable Identifier
 - Sortable by creation time (useful for display ordering)
 - Work well with SQLite and CRDTs
 - Compatible with both PowerSync and Evolu
+
+---
+
+## Implementation Status (Iteration A)
+
+| Entity | Status | Notes |
+|--------|--------|-------|
+| **Goal** | ✅ Implemented | `src/db/schema.ts`, full CRUD in `src/db/queries.ts` |
+| **Step** | ✅ Implemented | Full CRUD including reorder support |
+| **Evidence** | ✅ Implemented | All 7 types (photo, screenshot, text, voice_memo, video, link, file) |
+| **Badge** | ✅ Implemented | OB3 Verifiable Credential JSON + baked image URI |
+| **UserSettings** | ✅ Implemented | Singleton pattern; not in original Iteration A spec but added for theme/density/animation prefs |
+| JournalEntry | — | Iteration B |
+| GoalLink | — | Iteration B |
+| LearningStack | — | Iteration B |
+| SkillTreeNode/Edge | — | Iteration C |
+| Verification/ShareRecord | — | Iteration D |
 
 ---
 

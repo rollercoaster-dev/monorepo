@@ -85,7 +85,7 @@ If we make changes to this policy, the updated version will be posted at this UR
 If you have questions about this privacy policy:
 
 - GitHub: https://github.com/rollercoaster-dev
-- Email: [TODO: add contact email]
+- Email: [TODO: add contact email before App Store submission]
 
 ## Jurisdiction
 

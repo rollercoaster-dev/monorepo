@@ -59,15 +59,14 @@
 
 ## Phase 4 — Decisions (depends on prototyping)
 
-- [ ] `decisions/ADR-0003-ui-foundation.md` — After prototyping Tamagui and Gluestack, document the choice with evidence
-- [ ] `decisions/ADR-0004-sync-layer.md` — After prototyping PowerSync and Evolu, document the choice with evidence
+- [x] `decisions/ADR-0002-ui-styling-library.md` — Unistyles chosen over Tamagui/NativeWind, validated by Vercel v0 research
+- [x] `decisions/ADR-0003-sync-layer-decision.md` — Evolu chosen over PowerSync/RxDB, validated by prototype
+- [x] `decisions/ADR-0004-data-model-storage.md` — Iterative data model adopted, ULID strategy, soft-delete, OB3 badge
 
-### Prerequisites for Phase 4
+### Prototypes Completed
 
-- [ ] Build prototype: badge card + theme switching in Tamagui
-- [ ] Build prototype: badge card + theme switching in Gluestack + NativeWind
-- [ ] Build prototype: goal + badge CRUD with sync in PowerSync
-- [ ] Build prototype: goal + badge CRUD with sync in Evolu
+- [x] Build prototype: badge card + theme switching in Tamagui / Unistyles (Unistyles selected)
+- [x] Build prototype: goal + badge CRUD with sync in Evolu (Evolu selected, see `research/evolu-prototype-findings.md`)
 
 ---
 
@@ -86,8 +85,8 @@
 | Phase 1 — Foundation | 4 docs | Complete |
 | Phase 2 — Architecture | 3 docs | Complete |
 | Phase 3 — Design | 4 docs | Complete |
-| Phase 4 — Decisions | 2 docs + 4 prototypes | Not started |
-| **Total** | **15 docs + 4 prototypes** | **13/15 docs complete** |
+| Phase 4 — Decisions | 3 docs + 2 prototypes | Complete |
+| **Total** | **16 docs + 2 prototypes** | **All complete** |
 
 ---
 

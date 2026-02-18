@@ -309,7 +309,7 @@ Future work: Integrate `@testing-library/react-native` with `jest-native` for au
 
 ## Theme Considerations
 
-The app supports 12 theme variants (2 color modes × 6 accessibility variants):
+The app supports 14 theme variants (2 color modes × 7 accessibility variants):
 
 ### Theme Variants
 
@@ -318,7 +318,8 @@ The app supports 12 theme variants (2 color modes × 6 accessibility variants):
 3. **Large Text** - Increased font sizes for better readability
 4. **Dyslexia Friendly** - Optimized font and spacing
 5. **Low Vision** - Maximum contrast and clarity
-6. **Autism Friendly** - Reduced visual complexity, calming colors
+6. **Autism Friendly** - Muted/desaturated colors, no shadows, calming palette
+7. **Low Info** - Stripped-back UI, minimal decorative elements, text-first
 
 ### Testing Across Themes
 
