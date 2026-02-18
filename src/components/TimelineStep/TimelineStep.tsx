@@ -19,6 +19,7 @@ export interface TimelineStepProps {
   stepIndex: number;
   evidence: EvidenceItemData[];
   onNodePress: (stepIndex: number) => void;
+  defaultExpanded?: boolean;
 }
 
 const statusToVariant: Record<StepStatus, StatusBadgeVariant> = {
@@ -38,8 +39,9 @@ export function TimelineStep({
   stepIndex,
   evidence,
   onNodePress,
+  defaultExpanded = false,
 }: TimelineStepProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
     <View style={styles.container} accessibilityRole="none">
