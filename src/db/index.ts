@@ -45,4 +45,5 @@ export {
   userSettingsQuery,
   createUserSettings,
   updateUserSettings,
+  updateUserSettingsKey,
 } from './queries';

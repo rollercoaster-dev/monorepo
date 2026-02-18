@@ -141,5 +141,6 @@ export const Schema = {
     density: nullOr(NonEmptyString1000), // 'compact' | 'default' | 'comfortable'
     animationPref: nullOr(NonEmptyString1000), // 'full' | 'reduced' | 'none'
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
+    keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
   },
 };
