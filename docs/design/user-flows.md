@@ -1,7 +1,7 @@
 # User Flows: Iteration A
 
-**Date:** 2026-02-02
-**Status:** Draft
+**Date:** 2026-02-02 (updated 2026-02-18)
+**Status:** Iteration A — current
 **Owner:** Joe
 
 ---
@@ -15,25 +15,26 @@ Iteration A is the core loop: create a goal, break it into steps, attach evidenc
 ```
 Welcome (first launch only)
     ↓
-Home (Goals tab)  ←→  Badges tab
-    ↓                    ↓
-Goal Detail          Badge Detail
+Goals (tab) ←→ Badges (tab) ←→ Settings (tab)
+    ↓                ↓
+[goal card tap]   Badge Detail
     ↓
-Add Evidence
+Focus Mode  ←→  Timeline Journey
+    ↑  ↓edit
+    └── Edit Mode
+    ↓ (all steps done, auto)
+Completion Flow
     ↓
-Badge Earned
-
-Settings (accessible from any screen)
+Timeline Journey  (or back to Goals)
 ```
 
 ### Navigation
 
-Two bottom tabs. That's it.
+Three bottom tabs.
 
-- **Goals** — active goals with progress. The default screen.
+- **Goals** — active goals list. The default tab.
 - **Badges** — earned badges. The backpack.
-
-Settings is a gear icon in the top corner, not a tab.
+- **Settings** — theme, accessibility, data export.
 
 ---
 
@@ -42,7 +43,7 @@ Settings is a gear icon in the top corner, not a tab.
 The user opens the app for the first time.
 
 ```
-Splash → Welcome Screen → Home (empty state)
+Splash → Welcome Screen → Goals (empty state)
 ```
 
 ### Welcome Screen
@@ -61,10 +62,10 @@ Brief — one or two screens max, not a tutorial carousel.
 - Create local database
 - Apply chosen theme
 
-### Home (empty state)
+### Goals (empty state)
 
 - "No badges yet. What have you been up to?"
-- Single prominent button: "New Goal"
+- Single prominent FAB/button: "New Goal"
 
 ### ND Considerations
 
@@ -74,110 +75,251 @@ Brief — one or two screens max, not a tutorial carousel.
 
 ---
 
-## Flow 2: Create a Goal and Add Steps
+## Flow 2: Create a Goal
 
 ```
-Home → New Goal → Goal Detail → Add Steps
+Goals → New Goal (modal) → Focus Mode
 ```
 
-### New Goal
+### New Goal (modal)
 
 - Title field (required, autofocused)
-- Description field (optional, collapsed by default — tap to expand)
+- Description field (optional)
 - "Create" button
 - That's it. No category picker, no due date, no priority level. Just a title.
 
-### Goal Detail
+### After Creation
 
-- Goal title and description at top
-- "Add Step" button
-- Empty step list: "Break it down. What's the first small piece?"
-- "Add Evidence" button (for goal-level evidence)
-
-### Add Step
-
-- Inline — tap "Add Step," a text field appears in the list, type the title, press enter
-- Next step field appears immediately (rapid entry for when you're in the zone)
-- Tap away or press done to stop adding
-- Steps are reorderable by drag
-
-### ND Considerations
-
-- Minimal required fields — just a title to get started
-- Rapid step entry for the ADHD hyperfocus moment when you're breaking things down
-- No forced categorization or metadata upfront
-- Description is collapsed so the screen isn't overwhelming
-- Steps can always be added, reordered, or removed later
+- Goal appears in the Goals list
+- Tap it immediately → Focus Mode (the primary way to work on a goal)
 
 ---
 
-## Flow 3: Attach Evidence
+## Flow 3: The 3-Mode Goal System
+
+Every goal has three modes, accessible from Focus Mode. The modes are not equal — **Focus Mode is the primary mode** where you actually do the work.
 
 ```
-Goal Detail or Step → Add Evidence → Choose Type → Capture/Select → Done
+Goals list
+  └─ [tap goal] → Focus Mode (primary)
+                      ├─ [✏️ header icon] → Edit Mode
+                      ├─ [tap MiniTimeline] → Timeline Journey
+                      └─ [all steps done, auto] → Completion Flow
 ```
 
-### Add Evidence (action sheet)
+---
 
-- "Take Photo" (opens camera directly)
-- "Choose from Library" (photo/video picker)
-- "Voice Memo" (starts recording immediately)
-- "Write a Note" (text editor)
-- "Add Link" (URL field)
-- "Attach File" (document picker)
+### Focus Mode
+
+The main screen for working through a goal. You spend most of your time here.
+
+**Layout:**
+
+```
+┌──────────────────────────────┐
+│  [Goal Title]        [✏️]    │  ← title + edit icon button
+│  ●──●──●──●  ────────────   │  ← MiniTimeline (tap → Timeline Journey)
+│                              │
+│  ┌────────────────────────┐  │
+│  │   Step 2 of 4          │  │  ← StepCard (swipe left/right)
+│  │   "Write the tests"    │  │
+│  │                        │  │
+│  │   [ ] Mark complete    │  │
+│  └────────────────────────┘  │
+│         ● ● ◉ ●  ●+         │  ← ProgressDots
+│                              │
+│  [Evidence ▾]  [+ Add] [FAB] │  ← EvidenceDrawer handle + FABMenu
+└──────────────────────────────┘
+```
+
+**Interactions:**
+
+| Action | How |
+|--------|-----|
+| Move between steps | Swipe left/right on the card |
+| Jump to a step | Tap the corresponding dot in ProgressDots |
+| Complete/uncomplete a step | Tap the checkbox on the StepCard |
+| View current evidence | Pull up the EvidenceDrawer |
+| Add evidence | Tap the FAB → pick evidence type |
+| Go to Edit Mode | Tap the ✏️ edit button in the header |
+| See the full journey | Tap anywhere on the MiniTimeline |
+
+**The goal card:** After all step cards, there's a final "goal card" (GoalEvidenceCard) for attaching evidence directly to the goal rather than a specific step.
+
+**Auto-completion:** When every step is marked complete, the screen automatically navigates to Completion Flow after a short delay (400ms). The user doesn't need to find a "Complete Goal" button.
+
+---
+
+### Timeline Journey
+
+A read-only visual overview of the whole goal. Good for seeing the big picture or reviewing what you've done.
+
+**Layout:**
+
+```
+┌──────────────────────────────┐
+│  [Goal Title]  [Back to Focus│
+│  [description]               │
+│  ████████░░░░░ 3/5 steps     │  ← ProgressBar
+│                              │
+│  ● Step 1 ✓ (2 evidence)     │
+│  │                           │
+│  ● Step 2 ✓ (1 evidence)     │
+│  │                           │
+│  ◉ Step 3 (current)          │
+│  │                           │
+│  ○ Step 4                    │
+│  │                           │
+│  ─── Finish Line ───         │  ← FinishLine component
+└──────────────────────────────┘
+```
+
+**Interactions:**
+
+| Action | How |
+|--------|-----|
+| Return to Focus Mode | Tap "Back to Focus" button in header |
+| Jump to Focus Mode on a step | Tap any step node |
+
+---
+
+### Edit Mode
+
+For managing the structure of the goal — title, description, steps. Not for doing the work.
+
+**Layout:**
+
+- Title field (editable, autosaves with debounce)
+- Description field (optional)
+- Step list with drag-to-reorder
+- Delete goal option
+- Back button → returns to Focus Mode
+
+**Interactions:**
+
+| Action | How |
+|--------|-----|
+| Edit goal title | Tap title field, type |
+| Edit description | Tap description field, type |
+| Add a step | Tap "Add Step" button |
+| Reorder steps | Drag handle on each step row |
+| Delete a step | Swipe or trash icon |
+| Delete the goal | "Delete Goal" button (with confirmation) |
+
+**Autosave:** Title and description save automatically after 500ms of inactivity. No "Save" button needed.
+
+---
+
+## Flow 4: Add Evidence
+
+Evidence can be attached to any step (to prove it was done) or to the goal itself (for overall progress or final results).
+
+```
+Focus Mode (any card) → FABMenu → pick type → Capture screen → back to Focus Mode
+```
+
+### Evidence Types
+
+| Type | Capture Screen | What happens |
+|------|---------------|--------------|
+| Photo | CapturePhoto | Opens camera directly |
+| Video | CaptureVideo | Opens camera in video mode |
+| Voice Memo | CaptureVoiceMemo | Starts recording immediately |
+| Text Note | CaptureTextNote | Text editor |
+| Link | CaptureLink | URL field |
+| File | CaptureFile | Document picker |
+| Screenshot | CapturePhoto¹ | Captured via the photo route |
+
+_¹ No dedicated CaptureScreenshot route — screenshots are stored as `EvidenceType.screenshot` but captured through CapturePhoto._
 
 ### After Capture
 
 - Preview of what you just captured
 - Optional caption field (one line, not required)
-- "Attach" button
-- Evidence appears as a thumbnail/card on the goal or step
+- "Attach" button → evidence appears in the EvidenceDrawer on that step or goal card
 
-### Evidence Display on Goal/Step
+### Viewing Evidence
 
-- Thumbnails for photos/videos
-- Waveform or play button for voice memos
-- Text preview for notes
-- URL preview for links
-- Tap any evidence to view full screen
+- Tap any evidence item in the EvidenceDrawer → full-screen viewer
+- Photo/screenshot → PhotoViewerModal
+- Video → VideoPlayerModal
+- Voice memo → AudioPlayerModal
+- Text note → TextNoteViewerModal
 
 ### ND Considerations
 
-- Camera and voice memo open directly — fewest taps possible between "I want to capture this" and recording
+- Camera and voice memo open directly — fewest taps between "I want to capture this" and recording
 - Voice memo is equal to text, not hidden behind "more options"
-- Caption is optional — the evidence speaks for itself if you don't want to write
+- Caption is optional — the evidence speaks for itself
 - No mandatory metadata. Timestamp is automatic.
 
 ---
 
-## Flow 4: Complete a Goal and Earn a Badge
+## Flow 5: Complete a Goal and Earn a Badge
 
 ```
-Goal Detail → Mark Steps Complete → Complete Goal → Badge Earned → Badge Detail
+Focus Mode (all steps done, auto) → Completion Flow → Timeline Journey → Goals list
 ```
 
-### Mark Steps Complete
+### Completion Flow
 
-- Tap a step to toggle complete (checkbox or swipe)
-- Step shows as done with a subtle visual change (not crossed out — the work matters, don't strike through it)
-- Progress indicator updates: "3/5 steps"
+This is a character moment. Arrives automatically when all steps are checked off.
 
-### Complete Goal
+- Badge image shown (generated from goal title and accent color)
+- Goal evidence can still be added here: "Add Final Evidence" button
+- "View Your Journey →" — shows Timeline Journey with the full arc
+- "Reopen Goal" — if you're not done yet, go back to Focus Mode with the goal active again
 
-- When all steps are complete, a "Complete Goal" button appears
-- Also available at any time — you can complete a goal before all steps are done (scope adjustment is valid, some steps might not matter anymore)
-- Tap to complete
+### Behind the Scenes
 
-### Badge Earned
+- OB3 Verifiable Credential created with all evidence references
+- Credential signed with the user's local Ed25519 key
+- Badge image baked (credential embedded in PNG)
+- Badge record written to database
 
-The moment of celebration. This is a character moment.
+### ND Considerations
 
-- Badge image appears (generated from goal title and accent color)
-- "First one. (noted.)" for the very first badge
-- Badge is signed with the user's local Ed25519 key
-- OB3 credential is created with all evidence references
-- Badge image is baked (credential embedded in PNG)
-- Brief, not overwhelming. A beat of recognition, then you move on.
+- Completion arrives automatically — no hunting for a "Complete" button
+- "Reopen Goal" is always available — scope change is a feature, not a failure
+- The moment is warm, not overwhelming. No confetti explosion.
+- No forced sharing prompt, no "tell your friends"
+
+---
+
+## Flow 6: Home Screen (Goals tab)
+
+```
+┌─────────────────────────┐
+│  ⚙️                       │
+│                           │
+│  [Active Goal 1]          │  ← tap → Focus Mode
+│    3/5 steps              │
+│                           │
+│  [Active Goal 2]          │  ← tap → Focus Mode
+│    1/3 steps              │
+│                           │
+│         [+ New Goal]      │
+│                           │
+│  ▸ 4 completed            │  ← tap to expand
+│                           │
+├───────────────────────────┤
+│   Goals   Badges  Settings│
+└───────────────────────────┘
+```
+
+- Active goals listed with title and step progress
+- Completed goals hidden by default, expandable
+- Tap any goal → Focus Mode directly (no intermediate "goal detail" screen)
+- "New Goal" button always visible
+
+---
+
+## Flow 7: Badges tab
+
+- Badge images in a grid or list
+- Tap for Badge Detail
+- Most recent first
+- Empty state: "No badges yet" with link to Goals tab
 
 ### Badge Detail
 
@@ -187,61 +329,9 @@ The moment of celebration. This is a character moment.
 - All evidence (from goal and steps) listed and viewable
 - Export options: "Save Image," "Export Credential (JSON)"
 
-### ND Considerations
-
-- Completing before all steps are done is intentional — scope change is a feature
-- Completed steps aren't struck through — they're celebrated, not deleted
-- The badge moment is brief and warm, not a confetti explosion that demands attention
-- You can leave immediately after earning — no forced sharing prompt, no "tell your friends"
-
 ---
 
-## Flow 5: Home Screen
-
-### Goals Tab (default)
-
-```
-┌─────────────────────────┐
-│  ⚙️                      │
-│                          │
-│  [Active Goal 1]         │  ← tap → Goal Detail
-│    3/5 steps             │
-│                          │
-│  [Active Goal 2]         │  ← tap → Goal Detail
-│    1/3 steps             │
-│                          │
-│         + New Goal       │
-│                          │
-│  ▸ 4 completed           │  ← tap to expand
-│                          │
-├──────────────────────────┤
-│   Goals      Badges      │
-└──────────────────────────┘
-```
-
-- Active goals listed with title and step progress
-- Completed goals hidden by default, expandable: "4 completed" tap to show
-- Single "New Goal" button, always visible
-
-### Badges Tab
-
-- Badge images in a grid or list (user preference)
-- Tap for badge detail
-- Most recent first
-- Empty state: "No badges yet" with link to goals tab
-
-### ND Considerations
-
-- Two tabs, not five. Minimum navigation decisions.
-- Active goals are the default view — the thing you're working on right now
-- Completed goals aren't deleted or archived, just tucked away to reduce visual noise
-- No hamburger menus, no deep navigation hierarchies
-
----
-
-## Flow 6: Settings
-
-Accessible from the gear icon in the top corner of any screen.
+## Flow 8: Settings
 
 ```
 Settings
@@ -252,7 +342,7 @@ Settings
 │   └── Animation (none / minimal / full)
 │
 ├── Accessibility
-│   ├── Font (system / OpenDyslexic / Atkinson Hyperlegible)
+│   ├── Font (system / Lexend / Atkinson Hyperlegible)
 │   ├── Text Size (slider, respects OS Dynamic Type)
 │   └── Spacing (letter / line / word spacing adjustments)
 │
@@ -266,47 +356,54 @@ Settings
     └── Open Source Licenses
 ```
 
-### ND Considerations
-
-- Theme switching is instant preview — tap a swatch, see it immediately, no "apply" button
-- Font choice is three options, not a font browser. Each one serves a clear purpose.
-- Export is always available — your data, your way out
-- No account section in iteration A. No login, no profile, no sync settings yet.
-- Settings are flat, not nested. One scroll, everything visible.
+- Theme switching is instant preview — no "apply" button
+- No account section in Iteration A
 
 ---
 
-## Screen Count
+## Screen Inventory
 
-Iteration A has 7 distinct screens:
+| Screen | Type | Route |
+|--------|------|-------|
+| WelcomeScreen | Full screen (first launch only) | — |
+| GoalsScreen | Tab root | `Goals` |
+| NewGoalModal | Modal | `NewGoal` |
+| FocusModeScreen | Stack screen | `FocusMode` |
+| EditModeScreen | Stack screen | `EditMode` |
+| TimelineJourneyScreen | Stack screen | `TimelineJourney` |
+| CompletionFlowScreen | Stack screen | `CompletionFlow` |
+| CapturePhoto | Stack screen | `CapturePhoto` |
+| CaptureVideo | Stack screen | `CaptureVideo` |
+| CaptureVoiceMemo | Stack screen | `CaptureVoiceMemo` |
+| CaptureTextNote | Stack screen | `CaptureTextNote` |
+| CaptureLink | Stack screen | `CaptureLink` |
+| CaptureFile | Stack screen | `CaptureFile` |
+| BadgesScreen | Tab root | `Badges` |
+| BadgeDetailScreen | Stack screen | `BadgeDetail` |
+| SettingsScreen | Tab root | `Settings` |
 
-| Screen | Purpose |
-|--------|---------|
-| Welcome | First launch only — theme picker, brief intro |
-| Home (Goals) | Active goals list, primary screen |
-| Home (Badges) | Earned badges grid/list |
-| Goal Detail | Steps, evidence, progress, complete button |
-| Badge Detail | Badge image, evidence, export |
-| Badge Earned | Celebration moment (transient/modal) |
-| Settings | Theme, accessibility, data export |
+Plus modals/overlays (not stack routes): PhotoViewerModal, VideoPlayerModal, AudioPlayerModal, TextNoteViewerModal, ConfirmDeleteModal.
 
-Plus action sheets (not full screens): New Goal, Add Step (inline), Add Evidence, Evidence Viewer.
+Note: `VoiceMemoScreen` is a standalone screen directory but voice memo capture is routed via `CaptureVoiceMemo` in the GoalsStack.
 
 ---
 
 ## Interaction Summary
 
-| Action | Gesture | Where |
-|--------|---------|-------|
-| Create goal | Tap "New Goal" | Home |
-| Add step | Tap "Add Step," type, enter | Goal Detail |
-| Reorder steps | Drag | Goal Detail |
-| Add evidence | Tap "Add Evidence," choose type | Goal Detail or Step |
-| Complete step | Tap checkbox or swipe | Goal Detail |
-| Complete goal | Tap "Complete Goal" | Goal Detail |
-| View badge | Tap badge | Badges tab or Badge Earned |
-| Switch theme | Tap swatch | Settings or Welcome |
+| Action | Gesture/Control | Where |
+|--------|-----------------|-------|
+| Open a goal | Tap goal card | Goals list |
+| Create a goal | Tap "New Goal" button | Goals list |
+| Move between steps | Swipe left/right | Focus Mode |
+| Jump to step | Tap dot in ProgressDots or MiniTimeline | Focus Mode |
+| Complete a step | Tap checkbox on StepCard | Focus Mode |
+| Add evidence | Tap FAB → pick type | Focus Mode |
+| View full timeline | Tap MiniTimeline | Focus Mode |
+| Edit goal/steps | Tap ✏️ header icon | Focus Mode |
+| Complete goal | Automatic when all steps done | Focus Mode → Completion Flow |
+| View badge | Tap badge | Badges tab |
 | Export badge | Tap export option | Badge Detail |
+| Switch theme | Tap swatch | Settings or Welcome |
 
 ---
 
@@ -316,7 +413,8 @@ Plus action sheets (not full screens): New Goal, Add Step (inline), Add Evidence
 - [User Stories](../vision/user-stories.md) — Lina, Malik, Tomás
 - [Design Principles](../vision/design-principles.md) — ND rules and visual identity
 - [Data Model](../architecture/data-model.md) — Goal, Step, Evidence, Badge entities
+- [Navigation types](../../src/navigation/types.ts) — authoritative route/param definitions
 
 ---
 
-_Draft created 2026-02-02. Seven screens, two tabs, one clear loop._
+_Updated 2026-02-18. Three modes, one goal, one loop._

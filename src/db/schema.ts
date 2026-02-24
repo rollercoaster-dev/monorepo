@@ -48,6 +48,9 @@ export const EvidenceType = {
   file: 'file',
 } as const;
 
+/** URI prefix for inline text evidence (text content stored in the URI field) */
+export const TEXT_EVIDENCE_PREFIX = 'content:text;';
+
 /** Badge ULID identifier */
 export const BadgeId = id('Badge');
 export type BadgeId = typeof BadgeId.Type;
@@ -138,5 +141,6 @@ export const Schema = {
     density: nullOr(NonEmptyString1000), // 'compact' | 'default' | 'comfortable'
     animationPref: nullOr(NonEmptyString1000), // 'full' | 'reduced' | 'none'
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
+    keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
   },
 };

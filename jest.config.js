@@ -9,6 +9,7 @@ module.exports = {
     platforms: ['android', 'ios', 'native'],
   },
   moduleNameMapper: {
+    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/src/__tests__/mocks/fileMock.js',
     '^@evolu/common$': '<rootDir>/src/db/__tests__/mocks/evolu-common.ts',
     '^@evolu/react$': '<rootDir>/src/__tests__/mocks/evolu-react.ts',
     '^@evolu/react-native/expo-sqlite$': '<rootDir>/src/__tests__/mocks/evolu-react-native.ts',
@@ -17,7 +18,10 @@ module.exports = {
     '^react-native-unistyles$': '<rootDir>/src/__tests__/mocks/unistyles.ts',
     '^react-native-safe-area-context$': '<rootDir>/src/__tests__/mocks/safe-area-context.ts',
     '^expo-audio$': '<rootDir>/src/__tests__/mocks/expo-audio.ts',
+    '^expo-sharing$': '<rootDir>/src/__tests__/mocks/expo-sharing.ts',
+    '^expo-video$': '<rootDir>/src/__tests__/mocks/expo-video.ts',
     '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
+    '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
   },
   transformIgnorePatterns: [
     '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native)/)',

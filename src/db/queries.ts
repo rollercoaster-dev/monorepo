@@ -346,7 +346,7 @@ export function deleteStep(id: StepId) {
  * @throws Error if any ordinal update fails
  */
 export function reorderSteps(goalId: GoalId, stepIds: StepId[]) {
-  const failures: Array<{ index: number; stepId: string }> = [];
+  const failures: { index: number; stepId: string }[] = [];
 
   stepIds.forEach((stepId, index) => {
     const ordinal = Int.orNull(index);
@@ -416,6 +416,25 @@ export const evidenceByStepQuery = (stepId: StepId) =>
       .where('isDeleted', 'is', null)
       .where('stepId', '=', stepId)
       .orderBy('createdAt', 'desc'),
+  );
+
+/**
+ * Query all non-deleted step-level evidence for a goal via join.
+ * Returns all evidence rows whose step belongs to the given goal.
+ * Used to avoid hooks-in-loop when counting/grouping evidence per step.
+ * @param goalId - Goal ID
+ * @returns Query for step evidence ordered by creation date descending
+ */
+export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom('evidence')
+      .innerJoin('step', 'step.id', 'evidence.stepId')
+      .selectAll('evidence')
+      .where('step.goalId', '=', goalId)
+      .where('evidence.isDeleted', 'is', null)
+      .where('step.isDeleted', 'is', null)
+      .orderBy('evidence.createdAt', 'desc'),
   );
 
 /**
@@ -589,6 +608,22 @@ export function deleteEvidence(id: EvidenceId) {
   } catch (error) {
     logger.error('Failed to delete evidence', { evidenceId: id, error });
     throw new Error('Failed to delete evidence. Please try again.');
+  }
+}
+
+/**
+ * Restore soft-deleted evidence (clears isDeleted flag).
+ * Evolu's update type doesn't expose null for isDeleted, but the DB column
+ * is nullOr(SqliteBoolean) and all queries filter on `isDeleted IS NULL`.
+ * @param id - Evidence ID
+ * @returns Update command
+ */
+export function restoreEvidence(id: EvidenceId) {
+  try {
+    return evolu.update('evidence', { id, isDeleted: null as never });
+  } catch (error) {
+    logger.error('Failed to restore evidence', { evidenceId: id, error });
+    throw new Error('Failed to restore evidence. Please try again.');
   }
 }
 
@@ -856,5 +891,25 @@ export function updateUserSettings(
   } catch (error) {
     logger.error('Failed to update user settings', { settingsId: id, fields, error });
     throw new Error('Failed to update settings. Please try again.');
+  }
+}
+
+/**
+ * Store the keyId for the user's Ed25519 keypair
+ * Called once after key generation — keyId references the key in SecureStore
+ */
+export function updateUserSettingsKey(id: UserSettingsId, keyId: string) {
+  const parsed = NonEmptyString1000.orNull(keyId);
+  if (!parsed) {
+    throw new Error(`Key ID must be 1-1000 characters (received ${keyId.length})`);
+  }
+  try {
+    return evolu.update('userSettings', {
+      id,
+      keyId: parsed,
+    } as Parameters<typeof evolu.update>[1]);
+  } catch (error) {
+    logger.error('Failed to store keyId in user settings', { settingsId: id, error });
+    throw new Error('Failed to save key reference. Please try again.');
   }
 }

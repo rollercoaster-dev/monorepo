@@ -35,31 +35,62 @@ const mockSteps: Step[] = [
 describe('StepList', () => {
   it('renders steps with header and count', () => {
     renderWithProviders(
-      <StepList steps={mockSteps} onToggleStep={jest.fn()} />,
+      <StepList steps={mockSteps} />,
     );
     expect(screen.getByText('Steps')).toBeOnTheScreen();
-    expect(screen.getByText('1/2')).toBeOnTheScreen();
+    expect(screen.getByText('2 steps')).toBeOnTheScreen();
     expect(screen.getByText('Step one')).toBeOnTheScreen();
     expect(screen.getByText('Step two')).toBeOnTheScreen();
   });
 
-  it('calls onToggleStep when a checkbox is pressed', () => {
-    const onToggle = jest.fn();
+  it('renders singular step count for one step', () => {
     renderWithProviders(
-      <StepList steps={mockSteps} onToggleStep={onToggle} />,
+      <StepList steps={[{ id: '1', title: 'Only step', completed: false }]} />,
     );
-    fireEvent.press(screen.getByRole('checkbox', { name: 'Step one' }));
-    expect(onToggle).toHaveBeenCalledWith('1');
+    expect(screen.getByText('1 step')).toBeOnTheScreen();
   });
 
-  it('shows add step input when onCreateStep is provided', () => {
+  it('renders drag handles for each step', () => {
+    renderWithProviders(
+      <StepList steps={mockSteps} />,
+    );
+    const handles = screen.getAllByText('≡', { includeHiddenElements: true });
+    expect(handles).toHaveLength(mockSteps.length);
+  });
+
+  it('shows add step input and button when onCreateStep is provided', () => {
     renderWithProviders(
       <StepList
         steps={mockSteps}
-        onToggleStep={jest.fn()}
         onCreateStep={jest.fn()}
       />,
     );
     expect(screen.getByLabelText('Add a new step')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Add step')).toBeOnTheScreen();
+  });
+
+  it('calls onCreateStep when add step button is pressed', () => {
+    const onCreate = jest.fn();
+    renderWithProviders(
+      <StepList
+        steps={mockSteps}
+        onCreateStep={onCreate}
+      />,
+    );
+    const addInput = screen.getByLabelText('Add a new step');
+    fireEvent.changeText(addInput, 'New step');
+    fireEvent.press(screen.getByLabelText('Add step'));
+    expect(onCreate).toHaveBeenCalledWith('New step');
+  });
+
+  it('renders delete buttons when onDeleteStep is provided', () => {
+    renderWithProviders(
+      <StepList
+        steps={mockSteps}
+        onDeleteStep={jest.fn()}
+      />,
+    );
+    expect(screen.getByLabelText('Delete "Step one"')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Delete "Step two"')).toBeOnTheScreen();
   });
 });

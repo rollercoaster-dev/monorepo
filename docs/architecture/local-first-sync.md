@@ -1,8 +1,10 @@
 # Architecture: Local-First Sync
 
 **Date:** 2026-02-02
-**Status:** Draft, pending prototyping
+**Status:** Superseded — decision made 2026-02-08
 **Owner:** Joe
+
+> ⚠️ **Decision made:** Evolu was selected as the sync layer. See [ADR-0003: Sync Layer Decision](../decisions/ADR-0003-sync-layer-decision.md) and [Evolu Prototype Findings](../research/evolu-prototype-findings.md). The sections below are historical research context.
 
 ---
 

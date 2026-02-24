@@ -107,7 +107,7 @@ describe('GoalsScreen', () => {
       expect(screen.getByText('Learn Rust')).toBeOnTheScreen();
     });
 
-    it('navigates to GoalDetail when a goal card is pressed', () => {
+    it('navigates to FocusMode when a goal card is pressed', () => {
       const goals = [makeGoalRow({ id: 'goal-1', title: 'Learn TypeScript' })];
       mockUseQuery.mockImplementation((query: { __brand?: string }) => {
         if (query?.__brand === 'goalsQuery') return goals;
@@ -116,7 +116,7 @@ describe('GoalsScreen', () => {
 
       renderWithProviders(<GoalsScreen />);
       fireEvent.press(screen.getByText('Learn TypeScript'));
-      expect(mockNavigate).toHaveBeenCalledWith('GoalDetail', { goalId: 'goal-1' });
+      expect(mockNavigate).toHaveBeenCalledWith('FocusMode', { goalId: 'goal-1' });
     });
   });
 

@@ -6,10 +6,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { IconButton } from '../../components/IconButton';
 import { GoalCard, type GoalCardGoal } from '../../components/GoalCard';
 import { EmptyState } from '../../components/EmptyState';
-import { Divider } from '../../components/Divider';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import { goalsQuery, stepsByGoalQuery, deleteGoal, GoalStatus, StepStatus } from '../../db';
 import type { GoalId } from '../../db';
@@ -86,7 +86,7 @@ function GoalList() {
         renderItem={({ item }) => (
           <GoalCardWithSteps
             goalRow={item}
-            onPress={() => navigation.navigate('GoalDetail', { goalId: item.id })}
+            onPress={() => navigation.navigate('FocusMode', { goalId: item.id })}
             onLongPress={() => handleDelete(item)}
           />
         )}
@@ -108,24 +108,25 @@ export function GoalsScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="display">Goals</Text>
-          <IconButton
-            icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
-            onPress={() => navigation.navigate('NewGoal')}
-            accessibilityLabel="Create new goal"
-          />
-        </View>
-        <Divider />
-        <Suspense
-          fallback={
-            <ActivityIndicator style={styles.loadingIndicator} size="large" />
-          }
-        >
-          <GoalList />
-        </Suspense>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
+      <View style={styles.header}>
+        <Text variant="display">Goals</Text>
+        <IconButton
+          icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
+          onPress={() => navigation.navigate('NewGoal')}
+          accessibilityLabel="Create new goal"
+        />
+      </View>
+      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <ActivityIndicator style={styles.loadingIndicator} size="large" />
+            }
+          >
+            <GoalList />
+          </Suspense>
+        </ErrorBoundary>
       </View>
     </SafeAreaView>
   );

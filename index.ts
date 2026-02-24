@@ -7,7 +7,8 @@
  * interleaved statements.
  */
 
-// 1. Install crypto globals before anything else (native only — no web support)
+// 1. Install crypto globals (native only — no web support).
+// v1.0.10+ adds OKP/Ed25519 JWK export support.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Platform } = require('react-native');
 if (Platform.OS !== 'web') {
@@ -22,10 +23,16 @@ require('./polyfills');
 // 3. Unistyles theme configuration
 require('./unistyles');
 
-// 4. Register the app
+// 4. Register the app (or Storybook when EXPO_PUBLIC_STORYBOOK_ENABLED is set)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { registerRootComponent } = require('expo');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { App } = require('./App');
 
-registerRootComponent(App);
+if (process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const StorybookUI = require('./.storybook').default;
+  registerRootComponent(StorybookUI);
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { App } = require('./App');
+  registerRootComponent(App);
+}

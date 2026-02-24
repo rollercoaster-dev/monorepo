@@ -24,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
   progressLabel: {
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
-    color: theme.colors.textSecondary,
+    color: theme.colors.text,
     minWidth: 60,
     textAlign: 'right',
   },

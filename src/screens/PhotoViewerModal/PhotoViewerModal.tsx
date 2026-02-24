@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Modal, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/Text';
@@ -15,7 +15,11 @@ export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoVi
   const [imageError, setImageError] = useState(false);
   const insets = useSafeAreaInsets();
 
-  if (!uri) return null;
+  useEffect(() => {
+    setImageError(false);
+  }, [uri]);
+
+  if (!visible) return null;
 
   return (
     <Modal
@@ -40,7 +44,7 @@ export function PhotoViewerModal({ visible, uri, description, onClose }: PhotoVi
             </Pressable>
           </View>
           <View style={styles.imageContainer}>
-            {imageError ? (
+            {!uri || imageError ? (
               <Text style={styles.errorText}>Failed to load image</Text>
             ) : (
               <Image

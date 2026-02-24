@@ -14,7 +14,7 @@ import { Text } from '../../components/Text';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
-import { createEvidence, EvidenceType } from '../../db';
+import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from '../../db';
 import type { GoalId, StepId } from '../../db';
 import type { CaptureTextNoteScreenProps } from '../../navigation/types';
 import { styles } from './CaptureTextNote.styles';
@@ -51,7 +51,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         goalId: stepId ? undefined : (goalId as GoalId),
         stepId: stepId ? (stepId as StepId) : undefined,
         type: EvidenceType.text,
-        uri: `content:text;${trimmedContent}`,
+        uri: `${TEXT_EVIDENCE_PREFIX}${trimmedContent}`,
         description: caption.trim() || undefined,
       });
 
@@ -119,6 +119,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             placeholder="Add a short caption"
             value={caption}
             onChangeText={setCaption}
+            maxLength={1000}
             returnKeyType="done"
           />
         </View>

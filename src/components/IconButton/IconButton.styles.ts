@@ -10,14 +10,21 @@ const sizeValues = {
   lg: 52,
 } as const;
 
+// hitSlop expands touch target to 44pt minimum without inflating visual size
+const hitSlopValues: Record<IconButtonSize, number> = {
+  sm: 4,
+  md: 0,
+  lg: 0,
+};
+
 export const styles = StyleSheet.create((theme) => ({
   pressable: (size: IconButtonSize = 'md') => ({
-    // WCAG AA requires 44x44 minimum touch target; we use 48px minimum for better UX
-    width: Math.max(sizeValues[size], 48),
-    height: Math.max(sizeValues[size], 48),
-    borderRadius: theme.radius.pill,
+    width: sizeValues[size],
+    height: sizeValues[size],
+    borderRadius: theme.radius.sm,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    hitSlop: hitSlopValues[size],
   }),
   variantDefault: {
     backgroundColor: theme.colors.backgroundSecondary,

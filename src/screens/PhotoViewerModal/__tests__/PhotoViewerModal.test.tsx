@@ -4,11 +4,19 @@ import { Image, Modal } from 'react-native';
 import { PhotoViewerModal } from '../PhotoViewerModal';
 
 describe('PhotoViewerModal', () => {
-  it('renders nothing when uri is null', () => {
+  it('renders nothing when not visible', () => {
     const { toJSON } = render(
-      <PhotoViewerModal visible={true} uri={null} onClose={jest.fn()} />,
+      <PhotoViewerModal visible={false} uri={null} onClose={jest.fn()} />,
     );
     expect(toJSON()).toBeNull();
+  });
+
+  it('shows error state when visible with null uri', () => {
+    render(
+      <PhotoViewerModal visible={true} uri={null} onClose={jest.fn()} />,
+    );
+    expect(screen.getByText('Failed to load image')).toBeTruthy();
+    expect(screen.getByLabelText('Close photo viewer')).toBeTruthy();
   });
 
   it('renders image when visible with uri', () => {

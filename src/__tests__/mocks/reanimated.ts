@@ -1,7 +1,9 @@
 const Easing = {
   linear: (t: number) => t,
   out: () => (t: number) => t,
+  in: () => (t: number) => t,
   cubic: (t: number) => t,
+  quad: (t: number) => t * t,
 };
 
 const named = {
@@ -10,6 +12,7 @@ const named = {
   useAnimatedStyle: (fn: () => object) => fn(),
   useDerivedValue: (fn: () => unknown) => ({ value: fn() }),
   withTiming: (toValue: number) => toValue,
+  withDelay: (_delay: number, value: number) => value,
   withSpring: (toValue: number) => toValue,
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
 };

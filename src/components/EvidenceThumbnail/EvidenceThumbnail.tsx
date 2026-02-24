@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, View, Text, Image, Linking, Alert } from 'react-native';
-import { EvidenceType } from '../../db';
+import { EvidenceType, TEXT_EVIDENCE_PREFIX } from '../../db';
 import { formatDuration } from '../../utils/format';
 import { styles } from './EvidenceThumbnail.styles';
 
@@ -49,7 +49,8 @@ async function openLinkInBrowser(uri: string): Promise<void> {
     } else {
       Alert.alert('Cannot open link', `Unable to open: ${uri}`);
     }
-  } catch {
+  } catch (error) {
+    console.error('[EvidenceThumbnail] Failed to open link', { uri, error });
     Alert.alert('Cannot open link', `Failed to open: ${uri}`);
   }
 }
@@ -70,14 +71,19 @@ function PreviewContent({ evidence }: { evidence: Evidence }) {
     );
   }
 
-  if (evidence.type === 'text' && evidence.title) {
-    return (
-      <View style={styles.textPreview}>
-        <Text style={styles.textSnippet} numberOfLines={3}>
-          {evidence.title}
-        </Text>
-      </View>
-    );
+  if (evidence.type === 'text') {
+    const textContent = evidence.uri?.startsWith(TEXT_EVIDENCE_PREFIX)
+      ? evidence.uri.slice(TEXT_EVIDENCE_PREFIX.length)
+      : evidence.title;
+    if (textContent) {
+      return (
+        <View style={styles.textPreview}>
+          <Text style={styles.textSnippet} numberOfLines={3}>
+            {textContent}
+          </Text>
+        </View>
+      );
+    }
   }
 
   if (evidence.type === 'voice_memo') {

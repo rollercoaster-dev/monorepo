@@ -5,6 +5,7 @@ export {
   StepStatus,
   EvidenceId,
   EvidenceType,
+  TEXT_EVIDENCE_PREFIX,
   BadgeId,
   UserSettingsId,
   Schema,
@@ -29,9 +30,11 @@ export {
   // Evidence
   evidenceByGoalQuery,
   evidenceByStepQuery,
+  stepEvidenceByGoalQuery,
   createEvidence,
   updateEvidence,
   deleteEvidence,
+  restoreEvidence,
   // Badge
   badgesQuery,
   badgeByGoalQuery,
@@ -42,4 +45,5 @@ export {
   userSettingsQuery,
   createUserSettings,
   updateUserSettings,
+  updateUserSettingsKey,
 } from './queries';

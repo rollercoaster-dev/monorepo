@@ -99,6 +99,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             placeholder="What is this link about?"
             value={caption}
             onChangeText={setCaption}
+            maxLength={1000}
             returnKeyType="done"
           />
         </View>

@@ -131,6 +131,8 @@ export const lineHeightL = computeLineHeights(
 
 export const lightColors = {
   ...pkgLightColors,
+  accentPrimary: pkgPalette.primaryDark,
+  accentSecondary: pkgLightColors.accentMint,
   error: pkgPalette.error,
   warning: pkgPalette.warning,
   success: pkgPalette.success,
@@ -139,6 +141,7 @@ export const lightColors = {
 
 export const darkColors = {
   ...pkgDarkColors,
+  accentSecondary: pkgDarkColors.accentMint,
   error: pkgPalette.error,
   warning: pkgPalette.warning,
   success: pkgPalette.success,
@@ -148,11 +151,11 @@ export const darkColors = {
 export const colorModeConfigs = {
   light: {
     colors: lightColors,
-    shadows: { opacity: 0.04 },
+    shadows: { opacity: 1.0 },
   },
   dark: {
     colors: darkColors,
-    shadows: { opacity: 0.2 },
+    shadows: { opacity: 0.6 },
   },
 } as const;
 

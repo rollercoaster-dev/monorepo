@@ -6,7 +6,7 @@ export type StatusBadgeVariant = 'active' | 'completed' | 'locked' | 'earned';
 export const styles = StyleSheet.create((theme) => ({
   badge: {
     alignSelf: 'flex-start',
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.pill,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.colors.border,
     paddingHorizontal: theme.space[3],
@@ -14,20 +14,16 @@ export const styles = StyleSheet.create((theme) => ({
     ...shadowStyle(theme, 'hardSm'),
   },
   variantActive: {
-    backgroundColor: theme.narrative.climb.bg,
-    borderColor: theme.narrative.climb.text,
+    backgroundColor: theme.colors.accentYellow,
   },
   variantCompleted: {
-    backgroundColor: theme.narrative.relief.bg,
-    borderColor: theme.narrative.relief.text,
+    backgroundColor: theme.colors.accentSecondary,
   },
   variantLocked: {
     backgroundColor: theme.colors.backgroundTertiary,
-    borderColor: theme.colors.border,
   },
   variantEarned: {
     backgroundColor: theme.narrative.stories.bg,
-    borderColor: theme.narrative.stories.text,
   },
   text: {
     fontSize: theme.size.xs,

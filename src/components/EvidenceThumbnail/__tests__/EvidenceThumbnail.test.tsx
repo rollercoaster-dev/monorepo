@@ -12,6 +12,7 @@ jest.mock('../../../db', () => ({
     link: 'link',
     file: 'file',
   },
+  TEXT_EVIDENCE_PREFIX: 'content:text;',
 }));
 
 import { EvidenceThumbnail } from '../EvidenceThumbnail';
@@ -35,6 +36,17 @@ describe('EvidenceThumbnail', () => {
     render(<EvidenceThumbnail evidence={evidence} />);
     // Text appears both in the snippet preview and the title below
     expect(screen.getAllByText('My progress notes').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('extracts text content from URI with content:text; prefix for preview', () => {
+    const evidence: Evidence = {
+      id: '1',
+      title: 'Daily reflection',
+      type: 'text',
+      uri: 'content:text;This is the actual note content',
+    };
+    render(<EvidenceThumbnail evidence={evidence} />);
+    expect(screen.getByText('This is the actual note content')).toBeTruthy();
   });
 
   it('renders voice memo with icon', () => {

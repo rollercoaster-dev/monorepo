@@ -7,75 +7,58 @@ import {
 import type { AnimationPref } from '../../hooks/useAnimationPref';
 
 describe('animation utilities', () => {
-  describe('ANIMATION_DURATIONS', () => {
-    it('has entries for all preference levels', () => {
-      const prefs: AnimationPref[] = ['full', 'reduced', 'none'];
-      for (const pref of prefs) {
-        expect(ANIMATION_DURATIONS[pref]).toBeDefined();
-        expect(ANIMATION_DURATIONS[pref].quick).toBeDefined();
-        expect(ANIMATION_DURATIONS[pref].normal).toBeDefined();
-        expect(ANIMATION_DURATIONS[pref].slow).toBeDefined();
-      }
-    });
-
-    it('none has all zero durations', () => {
-      expect(ANIMATION_DURATIONS.none.quick).toBe(0);
-      expect(ANIMATION_DURATIONS.none.normal).toBe(0);
-      expect(ANIMATION_DURATIONS.none.slow).toBe(0);
-    });
-
-    it('reduced durations are shorter than full', () => {
-      expect(ANIMATION_DURATIONS.reduced.quick).toBeLessThan(ANIMATION_DURATIONS.full.quick);
-      expect(ANIMATION_DURATIONS.reduced.normal).toBeLessThan(ANIMATION_DURATIONS.full.normal);
-      expect(ANIMATION_DURATIONS.reduced.slow).toBeLessThan(ANIMATION_DURATIONS.full.slow);
-    });
+  test('ANIMATION_DURATIONS has structure for all prefs', () => {
+    const prefs: AnimationPref[] = ['full', 'reduced', 'none'];
+    for (const pref of prefs) {
+      expect(ANIMATION_DURATIONS[pref]).toBeDefined();
+      expect(ANIMATION_DURATIONS[pref].quick).toBeDefined();
+      expect(ANIMATION_DURATIONS[pref].normal).toBeDefined();
+      expect(ANIMATION_DURATIONS[pref].slow).toBeDefined();
+    }
   });
 
-  describe('getAnimationDuration', () => {
-    it('returns correct duration for pref and speed', () => {
-      expect(getAnimationDuration('full', 'quick')).toBe(200);
-      expect(getAnimationDuration('reduced', 'normal')).toBe(150);
-      expect(getAnimationDuration('none', 'slow')).toBe(0);
-    });
-
-    it('defaults to normal speed', () => {
-      expect(getAnimationDuration('full')).toBe(300);
-    });
+  test('none has all zero durations', () => {
+    expect(ANIMATION_DURATIONS.none.quick).toBe(0);
+    expect(ANIMATION_DURATIONS.none.normal).toBe(0);
+    expect(ANIMATION_DURATIONS.none.slow).toBe(0);
   });
 
-  describe('getTimingConfig', () => {
-    it('returns config with correct duration', () => {
-      const config = getTimingConfig('full', 'normal');
-      expect(config.duration).toBe(300);
-    });
-
-    it('returns zero duration for none', () => {
-      const config = getTimingConfig('none');
-      expect(config.duration).toBe(0);
-    });
-
-    it('includes easing', () => {
-      const config = getTimingConfig('full');
-      expect(config.easing).toBeDefined();
-    });
+  test('reduced durations are shorter than full', () => {
+    expect(ANIMATION_DURATIONS.reduced.quick).toBeLessThan(ANIMATION_DURATIONS.full.quick);
+    expect(ANIMATION_DURATIONS.reduced.normal).toBeLessThan(ANIMATION_DURATIONS.full.normal);
+    expect(ANIMATION_DURATIONS.reduced.slow).toBeLessThan(ANIMATION_DURATIONS.full.slow);
   });
 
-  describe('getSpringConfig', () => {
-    it('returns zero duration for none', () => {
-      const config = getSpringConfig('none');
-      expect(config.duration).toBe(0);
-    });
+  test.each([
+    ['full', 'quick', 200],
+    ['reduced', 'normal', 150],
+    ['none', 'slow', 0],
+  ] as const)('getAnimationDuration(%s, %s) = %i', (pref, speed, expected) => {
+    expect(getAnimationDuration(pref, speed)).toBe(expected);
+  });
 
-    it('returns damping/stiffness for reduced', () => {
-      const config = getSpringConfig('reduced');
-      expect(config.damping).toBeDefined();
-      expect(config.stiffness).toBeDefined();
-    });
+  test('getAnimationDuration defaults to normal speed', () => {
+    expect(getAnimationDuration('full')).toBe(300);
+  });
 
-    it('returns bouncy config for full', () => {
-      const full = getSpringConfig('full');
-      const reduced = getSpringConfig('reduced');
-      expect(full.damping).toBeLessThan(reduced.damping!);
-    });
+  test('getTimingConfig returns correct duration and includes easing', () => {
+    const full = getTimingConfig('full', 'normal');
+    expect(full.duration).toBe(300);
+    expect(full.easing).toBeDefined();
+
+    const none = getTimingConfig('none');
+    expect(none.duration).toBe(0);
+  });
+
+  test('getSpringConfig varies by pref', () => {
+    const none = getSpringConfig('none');
+    expect(none.duration).toBe(0);
+
+    const reduced = getSpringConfig('reduced');
+    expect(reduced.damping).toBeDefined();
+    expect(reduced.stiffness).toBeDefined();
+
+    const full = getSpringConfig('full');
+    expect(full.damping).toBeLessThan(reduced.damping!);
   });
 });

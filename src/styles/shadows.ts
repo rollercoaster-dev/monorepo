@@ -9,9 +9,9 @@ type ShadowKey = keyof ComposedTheme['shadow'];
 export function shadowStyle(theme: ComposedTheme, key: ShadowKey) {
   const s = theme.shadow[key];
   return {
-    shadowColor: '#000000',
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: s.offsetX, height: s.offsetY },
-    shadowOpacity: s.opacity,
+    shadowOpacity: s.opacity * theme.shadows.opacity,
     shadowRadius: s.radius,
   } as const;
 }

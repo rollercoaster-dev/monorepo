@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
 import { EvoluAppProvider } from './src/db';
 import { TabNavigator } from './src/navigation';
+import { ToastProvider } from './src/components/Toast';
 import { useFonts } from './src/hooks/useFonts';
 import { useTheme, ThemeProvider, useThemeContext } from './src/hooks/useTheme';
 import { useDensity } from './src/hooks/useDensity';
@@ -43,7 +44,9 @@ function ThemedApp() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <NavigationContainer theme={navTheme}>
-        <TabNavigator />
+        <ToastProvider>
+          <TabNavigator />
+        </ToastProvider>
       </NavigationContainer>
     </View>
   );

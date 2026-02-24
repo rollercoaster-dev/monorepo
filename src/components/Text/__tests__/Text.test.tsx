@@ -1,20 +1,26 @@
 import React from 'react';
 import { renderWithProviders, screen } from '../../../__tests__/test-utils';
-import { Text } from '../Text';
+import { Text, type TextVariant } from '../Text';
 
 describe('Text', () => {
-  it('renders children', () => {
-    renderWithProviders(<Text>Hello world</Text>);
-    expect(screen.getByText('Hello world')).toBeOnTheScreen();
+  const variants: TextVariant[] = ['display', 'headline', 'title', 'body', 'caption', 'label', 'mono'];
+
+  test.each(variants)('renders variant "%s" without crashing', (variant) => {
+    renderWithProviders(<Text variant={variant}>Sample</Text>);
+    expect(screen.getByText('Sample')).toBeOnTheScreen();
   });
 
-  it('defaults to body variant', () => {
-    renderWithProviders(<Text>Body text</Text>);
-    expect(screen.getByText('Body text')).toBeOnTheScreen();
+  it('passes additional TextProps through (testID, numberOfLines)', () => {
+    renderWithProviders(
+      <Text testID="my-text" numberOfLines={2}>
+        Truncated
+      </Text>,
+    );
+    expect(screen.getByTestId('my-text')).toBeOnTheScreen();
   });
 
-  it('accepts a variant prop', () => {
-    renderWithProviders(<Text variant="headline">Headline</Text>);
-    expect(screen.getByText('Headline')).toBeOnTheScreen();
+  it('allows style override without throwing', () => {
+    renderWithProviders(<Text style={{ color: 'red' }}>Styled</Text>);
+    expect(screen.getByText('Styled')).toBeOnTheScreen();
   });
 });

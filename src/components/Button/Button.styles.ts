@@ -24,36 +24,37 @@ export const styles = StyleSheet.create((theme) => ({
   }),
   variantPrimary: {
     backgroundColor: theme.colors.accentPrimary,
-    borderWidth: theme.borderWidth.medium,
+    borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.accentPrimary,
     ...shadowStyle(theme, 'hardMd'),
   },
   variantSecondary: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium,
+    borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
     ...shadowStyle(theme, 'hardMd'),
   },
   variantGhost: {
     backgroundColor: 'transparent',
-    borderWidth: theme.borderWidth.medium,
+    borderWidth: theme.borderWidth.thick,
     borderColor: 'transparent',
   },
   variantDestructive: {
     backgroundColor: theme.colors.warning,
-    borderWidth: theme.borderWidth.medium,
+    borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.text,
     ...shadowStyle(theme, 'hardMd'),
   },
   pressed: {
-    opacity: 0.8,
+    transform: [{ translateX: 2 }, { translateY: 2 }],
+    shadowOffset: { width: 1, height: 1 },
   },
   disabled: {
     opacity: 0.4,
   },
   label: (size: ButtonSize = 'md') => ({
     fontSize: theme.size[sizeMap[size].fontSize],
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
   }),
   labelPrimary: {

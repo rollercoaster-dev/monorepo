@@ -12,6 +12,7 @@ import { ThemeProvider } from '../hooks/useTheme';
 const EvoluProvider = require('@evolu/react').EvoluProvider as React.FC<{ children: React.ReactNode }>;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+import { ToastProvider } from '../components/Toast';
 import { mockTheme } from './mocks/unistyles';
 import type { ThemeName } from '../themes/compose';
 import type { Variant } from '../themes/variants';
@@ -29,7 +30,9 @@ function AllProviders({ children }: { children: React.ReactNode }) {
     <ThemeProvider value={defaultThemeContext}>
       <EvoluProvider>
         <SafeAreaProvider>
-          <NavigationContainer>{children}</NavigationContainer>
+          <NavigationContainer>
+            <ToastProvider>{children}</ToastProvider>
+          </NavigationContainer>
         </SafeAreaProvider>
       </EvoluProvider>
     </ThemeProvider>

@@ -29,4 +29,10 @@ export const styles = StyleSheet.create((theme) => ({
     width: '100%',
     height: '100%',
   },
+  errorText: {
+    color: 'white',
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    textAlign: 'center',
+  },
 }));
