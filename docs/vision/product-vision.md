@@ -128,20 +128,23 @@ Each iteration ships as a usable product. A is useful without B. B is useful wit
 | Layer | Choice | Status |
 |-------|--------|--------|
 | **Runtime** | Expo / React Native | Decided |
-| **UI library** | Tamagui or Gluestack + NativeWind | Research complete, prototyping needed |
-| **Local storage** | SQLite (on-device) | Decided |
-| **Sync layer** | PowerSync or Evolu | Research complete, prototyping needed |
-| **Badge logic** | `openbadges-core` (extracted from server) | Decided, extraction needed |
+| **UI styling** | react-native-unistyles v3 | Decided (ADR-0002) |
+| **Local storage** | Evolu (SQLite + CRDT) | Decided (ADR-0003, ADR-0004) |
+| **Sync layer** | Evolu built-in sync | Decided (ADR-0003) |
+| **Badge logic** | `openbadges-core` (extracted from server) | Decided, extraction in progress |
 | **Types** | `openbadges-types` (shared with monorepo) | Existing, published on npm |
-| **Design tokens** | Shared JSON source → platform-specific transforms | Planned |
+| **Design tokens** | Unistyles theme system (14 themes) | Implemented |
 
 ---
 
 ## Related Documents
 
 - [Documentation Roadmap](../roadmap/documentation-roadmap.md) — what to write next
-- [UI Library Comparison](../research/ui-library-comparison.md) — Tamagui vs Gluestack research
-- [Local-First Sync Comparison](../research/local-first-sync-comparison.md) — PowerSync vs Evolu research
+- [ADR-0002: UI Styling](../decisions/ADR-0002-ui-styling-library.md) — react-native-unistyles v3 decision
+- [ADR-0003: Sync Layer](../decisions/ADR-0003-sync-layer-decision.md) — Evolu sync decision
+- [ADR-0004: Data Model](../decisions/ADR-0004-data-model-storage.md) — Evolu-native data model decision
+- [UI Library Comparison](../research/ui-library-comparison.md) — original Tamagui vs NativeWind vs Unistyles research
+- [Local-First Sync Comparison](../research/local-first-sync-comparison.md) — original PowerSync vs Evolu research
 - [Learning Graph Vision](https://github.com/rollercoaster-dev/monorepo/blob/main/docs/vision/learning-graph.md) — journey management concepts (monorepo)
 - [Planning Graph Vision](https://github.com/rollercoaster-dev/monorepo/blob/main/docs/vision/planning-graph.md) — project management concepts (monorepo)
 - [User Stories](https://github.com/rollercoaster-dev/monorepo/blob/main/apps/docs/product/user-stories.md) — Lina, Eva, Malik, Marcus, Sofia (monorepo)
