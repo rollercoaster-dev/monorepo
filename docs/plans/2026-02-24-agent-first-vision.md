@@ -1,7 +1,7 @@
 # Agent-First Development: A Vision for native-rd
 
 **Date:** 2026-02-24
-**Status:** Draft
+**Status:** Active (Phase 1 complete)
 **Owner:** Joe
 
 ---
@@ -20,7 +20,7 @@ This document maps the capability layers needed to reach that goal, inspired by 
 
 | Capability | Today | Target |
 |---|---|---|
-| **Repository legibility** | No root AGENTS.md, no in-repo CLAUDE.md, docs exist but aren't indexed or cross-linked | Structured knowledge base with progressive disclosure, freshness tracking, mechanical validation |
+| **Repository legibility** | AGENTS.md, CLAUDE.md, 6 directory indexes, cross-linked docs, freshness metadata | **Complete.** Structured knowledge base with progressive disclosure. |
 | **Code enforcement** | ESLint + TypeScript, manual architectural review | Custom lint rules for architectural boundaries, structural tests, agent-readable error messages |
 | **App legibility** | Agents can't see or drive the running app | Maestro E2E, simulator screenshots via MCP, per-worktree app boot, agent-readable logs |
 | **Feedback loops** | CodeRabbit + Claude review on PRs, graph-flow workflow | Self-review before external review, quality scoring per domain, review comments become tasks |
@@ -102,7 +102,7 @@ This document maps the capability layers needed to reach that goal, inspired by 
 
 - **Golden principles as lint rules** — Not prose in a doc, but enforced rules. "Use shared components, not hand-rolled helpers." "Validate at boundaries." "Theme tokens, not raw colors." Each principle that matters enough to write down matters enough to enforce mechanically.
 - **Recurring cleanup agents** — Scheduled tasks (or skills triggered periodically) that scan for: stale documentation, dead code, pattern drift (e.g., three components doing the same thing differently), unused exports, test coverage gaps.
-- **Doc gardening** — An agent that compares documentation claims against actual code behavior and opens fix-up PRs when they diverge. `docs/vision/product-vision.md` says "UI library: Tamagui or Gluestack" but we chose Unistyles — a gardening agent catches this.
+- **Doc gardening** — An agent that compares documentation claims against actual code behavior and opens fix-up PRs when they diverge. (Example: product-vision.md previously said "Tamagui or Gluestack" — fixed manually in Phase 1, but a gardening agent would catch this automatically.)
 - **Versioned tech debt tracker** — A `docs/quality/tech-debt.md` file that lists known debt, its severity, and its status. Agents consult this before making changes in affected areas.
 - **Quality grade dashboard** — A single file (`docs/quality/grades.md`) with current quality grades across all domains. Agents read this to prioritize cleanup work. Humans read it to see where attention is needed.
 
@@ -126,13 +126,14 @@ Everything else — implementation, testing, review, documentation, cleanup — 
 
 Each phase builds on the previous. Phase 1 is prerequisite for everything.
 
-### Phase 1: Repository Legibility (Immediate)
+### Phase 1: Repository Legibility — COMPLETE (2026-02-24)
 
-- Create root `AGENTS.md`
-- Move project instructions into in-repo `CLAUDE.md`
-- Add index files to each `docs/` subdirectory
-- Add freshness metadata to existing docs
-- Fix stale references (product-vision.md still references Tamagui/Gluestack)
+- [x] Create root `AGENTS.md` (84 lines)
+- [x] Move project instructions into in-repo `CLAUDE.md` (merged with rich domain content)
+- [x] Add index files to 6 `docs/` subdirectories (vision, architecture, design, decisions, research, plans)
+- [x] Add freshness metadata (Last Verified dates) to all index entries
+- [x] Fix stale references in product-vision.md (Tamagui/Gluestack -> Unistyles, PowerSync -> Evolu)
+- [x] Update documentation roadmap (Phase 4 marked complete)
 
 ### Phase 2: Code Enforcement (Short-term)
 
