@@ -1,0 +1,16 @@
+# Plans
+
+Implementation plans and vision documents. Active plans are in progress; completed plans are historical record.
+
+## Active
+
+| Document | Summary | Last Verified |
+|---|---|---|
+| [2026-02-24-agent-first-vision.md](./2026-02-24-agent-first-vision.md) | Vision for agent-first development across 5 capability layers | 2026-02-24 |
+| [2026-02-24-phase1-repo-legibility.md](./2026-02-24-phase1-repo-legibility.md) | Implementation plan for Phase 1: Repository Legibility | 2026-02-24 |
+
+## Reference
+
+| Document | Summary |
+|---|---|
+| [../roadmap/documentation-roadmap.md](../roadmap/documentation-roadmap.md) | Documentation phase tracking (Phases 1-4) |
