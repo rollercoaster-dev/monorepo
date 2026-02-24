@@ -70,6 +70,7 @@ export const styles = StyleSheet.create((theme) => ({
     // Use dark text on warning background for better contrast
     // Light mode: #262626 on #d97706 = 4.75:1 ✓
     // Dark mode: #262626 on #d97706 = 4.75:1 ✓ (better than #fafafa = 3.05:1 ✗)
+    // eslint-disable-next-line local/no-raw-colors -- contrast-verified exception, see ratios above
     color: '#262626',
   },
 }));
