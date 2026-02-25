@@ -1,7 +1,7 @@
 # Agent-First Development: A Vision for native-rd
 
 **Date:** 2026-02-24
-**Status:** Active (Phase 1 complete)
+**Status:** Active (Phase 1-3 complete)
 **Owner:** Joe
 
 ---
@@ -142,12 +142,13 @@ Each phase builds on the previous. Phase 1 is prerequisite for everything.
 - Naming convention enforcement
 - Agent-readable lint error messages
 
-### Phase 3: App Legibility (Medium-term)
+### Phase 3: App Legibility — COMPLETE (2026-02-24)
 
-- Maestro E2E test setup and initial flow coverage
-- Simulator screenshot MCP tool
-- Structured logging for agent consumption
-- Per-worktree Expo dev client boot
+- [x] Maestro E2E test setup and initial flow coverage
+- [x] Simulator screenshot CLI skill
+- [x] Structured logging for agent consumption
+- [x] Per-worktree Expo dev client boot
+- [x] Accessibility audit automation (structured JSON output)
 
 ### Phase 4: Feedback Loops (Medium-term)
 

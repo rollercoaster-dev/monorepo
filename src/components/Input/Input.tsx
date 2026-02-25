@@ -6,6 +6,7 @@ import { styles } from './Input.styles';
 export interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
   error?: string;
+  testID?: string;
 }
 
 export function Input({
@@ -14,6 +15,7 @@ export function Input({
   value,
   onChangeText,
   error,
+  testID,
   ...rest
 }: InputProps) {
   const { theme } = useUnistyles();
@@ -34,6 +36,7 @@ export function Input({
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        testID={testID}
         accessible
         accessibilityLabel={label ?? placeholder}
         accessibilityState={{ disabled: rest.editable === false }}

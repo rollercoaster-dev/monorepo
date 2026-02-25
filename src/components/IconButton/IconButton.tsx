@@ -11,6 +11,7 @@ export interface IconButtonProps {
   variant?: IconButtonVariant;
   disabled?: boolean;
   accessibilityLabel: string;
+  testID?: string;
 }
 
 const variantStyleMap = {
@@ -26,11 +27,13 @@ export function IconButton({
   variant = 'default',
   disabled = false,
   accessibilityLabel,
+  testID,
 }: IconButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      testID={testID}
       accessible
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}

@@ -115,6 +115,7 @@ export function GoalsScreen() {
           icon={<Text variant="headline" style={styles.addIcon}>+</Text>}
           onPress={() => navigation.navigate('NewGoal')}
           accessibilityLabel="Create new goal"
+          testID="create-new-goal"
         />
       </View>
       <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>

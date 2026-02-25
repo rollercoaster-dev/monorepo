@@ -56,6 +56,17 @@ src/
 | `bun run test:ci` | CI test run |
 | `npx expo run:ios` | Build and run on iOS (NEVER use `expo start`) |
 
+## App Legibility Commands
+
+| Command | Purpose |
+|---|---|
+| `bun run test:e2e` | Run all Maestro E2E flows |
+| `bun run test:e2e:single e2e/flows/<flow>.yaml` | Run single Maestro flow |
+| `bash .claude/skills/simulator-screenshot/screenshot.sh` | Capture simulator screenshot |
+| `bun run logs:agent` | Tail RN/Metro logs as JSON lines |
+| `bun run start:worktree` | Boot Metro on worktree-unique port |
+| `bun run test:a11y:json` | Run a11y suite, structured JSON output |
+
 ## Architectural Rules
 
 1. **Components don't import from screens.** Shared components are in `src/components/`, screens consume them.
