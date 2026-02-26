@@ -37,6 +37,17 @@ jest.mock('../../../hooks/useCreateBadge', () => ({
   PLACEHOLDER_IMAGE_URI: 'pending:baked-image',
 }));
 
+const mockExportImage = jest.fn();
+const mockExportJSON = jest.fn();
+jest.mock('../../../hooks/useBadgeExport', () => ({
+  useBadgeExport: () => ({
+    exportImage: mockExportImage,
+    exportJSON: mockExportJSON,
+    isExportingImage: false,
+    isExportingJSON: false,
+  }),
+}));
+
 /** Helper to create a joined badge+goal row matching badgeWithGoalQuery shape */
 const makeRow = (overrides: Record<string, unknown> = {}) => ({
   id: 'badge-1',
@@ -105,5 +116,51 @@ describe('BadgeDetailScreen', () => {
     renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
     fireEvent.press(screen.getByLabelText('Go back'));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  describe('export buttons', () => {
+    it('renders export buttons when badge exists', () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
+      expect(screen.getByLabelText('Save Image')).toBeOnTheScreen();
+      expect(screen.getByLabelText('Export Credential (JSON)')).toBeOnTheScreen();
+    });
+
+    it('disables "Save Image" when image is placeholder', () => {
+      mockUseQuery.mockReturnValue([makeRow({ imageUri: 'pending:baked-image' })]);
+
+      renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
+      const saveImageBtn = screen.getByLabelText('Save Image');
+      expect(saveImageBtn.props.accessibilityState).toEqual(
+        expect.objectContaining({ disabled: true }),
+      );
+    });
+
+    it('enables "Save Image" when badge has a real image', () => {
+      mockUseQuery.mockReturnValue([makeRow({ imageUri: 'file:///badges/badge.png' })]);
+
+      renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
+      const saveImageBtn = screen.getByLabelText('Save Image');
+      expect(saveImageBtn.props.accessibilityState).toEqual(
+        expect.objectContaining({ disabled: false }),
+      );
+    });
+
+    it('calls exportImage when "Save Image" is pressed', () => {
+      mockUseQuery.mockReturnValue([makeRow({ imageUri: 'file:///badges/badge.png' })]);
+
+      renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
+      fireEvent.press(screen.getByLabelText('Save Image'));
+      expect(mockExportImage).toHaveBeenCalledWith('file:///badges/badge.png');
+    });
+
+    it('calls exportJSON when "Export Credential (JSON)" is pressed', () => {
+      mockUseQuery.mockReturnValue([makeRow({ credential: '{"type":"VC"}' })]);
+
+      renderWithProviders(<BadgeDetailScreen route={mockRoute} navigation={{} as never} />);
+      fireEvent.press(screen.getByLabelText('Export Credential (JSON)'));
+      expect(mockExportJSON).toHaveBeenCalledWith('{"type":"VC"}', 'Learn TypeScript');
+    });
   });
 });

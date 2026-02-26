@@ -42,10 +42,10 @@ function BadgeList() {
   return (
     <FlatList
       data={rows}
-      scrollEnabled={false}
       keyExtractor={(item) => item.id}
-      style={{ overflow: 'visible' }}
-      contentContainerStyle={styles.listContent}
+      style={{ flex: 1 }}
+      contentContainerStyle={[styles.scrollContent, styles.listContent]}
+      scrollIndicatorInsets={{ right: 1 }}
       renderItem={({ item }: { item: BadgeRow }) => (
         <BadgeCard
           title={(item.goalTitle as string) ?? 'Untitled'}
@@ -65,7 +65,7 @@ export function BadgesScreen() {
       <View style={styles.header}>
         <Text variant="display">Badges</Text>
       </View>
-      <View style={[styles.scrollContent, { flex: 1, backgroundColor: theme.colors.background }]}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <ErrorBoundary>
           <Suspense
             fallback={

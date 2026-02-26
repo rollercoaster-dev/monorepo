@@ -1,26 +1,48 @@
 import React, { Suspense, useMemo, useState } from 'react';
-import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/IconButton';
+import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { badgeWithGoalQuery } from '../../db';
+import { badgeWithGoalQuery, deleteBadge } from '../../db';
 import type { BadgeId } from '../../db';
 import { PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
+import { useBadgeExport } from '../../hooks/useBadgeExport';
 import { formatDate } from '../../utils/format';
 import type { BadgeDetailScreenProps } from '../../navigation/types';
 import { styles } from './BadgeDetailScreen.styles';
 
 function BadgeDetailContent({ badgeId }: { badgeId: string }) {
+  const navigation = useNavigation();
   const query = useMemo(() => badgeWithGoalQuery(badgeId as BadgeId), [badgeId]);
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const { exportImage, exportJSON, isExportingImage, isExportingJSON } = useBadgeExport();
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Badge',
+      'This will permanently remove this badge. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteBadge(badgeId as BadgeId);
+            navigation.goBack();
+          },
+        },
+      ],
+    );
+  };
 
   if (!badge) {
     return (
@@ -66,6 +88,32 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           </Text>
         </View>
       </Card>
+
+      <Card>
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionLabel}>Export</Text>
+          <Button
+            label="Save Image"
+            variant="secondary"
+            onPress={() => exportImage(imageUri)}
+            loading={isExportingImage}
+            disabled={!hasRealImage}
+          />
+          <Button
+            label="Export Credential (JSON)"
+            variant="secondary"
+            onPress={() => exportJSON(badge.credential as string | null, goalTitle)}
+            loading={isExportingJSON}
+            disabled={!badge.credential}
+          />
+        </View>
+      </Card>
+
+      <Button
+        label="Delete Badge"
+        variant="destructive"
+        onPress={handleDelete}
+      />
     </ScrollView>
   );
 }
@@ -88,15 +136,17 @@ export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
         <View style={styles.spacer} />
       </View>
 
-      <ErrorBoundary>
-        <Suspense
-          fallback={
-            <ActivityIndicator style={styles.loadingIndicator} size="large" />
-          }
-        >
-          <BadgeDetailContent badgeId={badgeId} />
-        </Suspense>
-      </ErrorBoundary>
+      <View style={{ flex: 1 }}>
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <ActivityIndicator style={styles.loadingIndicator} size="large" />
+            }
+          >
+            <BadgeDetailContent badgeId={badgeId} />
+          </Suspense>
+        </ErrorBoundary>
+      </View>
     </SafeAreaView>
   );
 }

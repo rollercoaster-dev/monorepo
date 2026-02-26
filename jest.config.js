@@ -19,6 +19,8 @@ module.exports = {
     '^react-native-safe-area-context$': '<rootDir>/src/__tests__/mocks/safe-area-context.ts',
     '^expo-audio$': '<rootDir>/src/__tests__/mocks/expo-audio.ts',
     '^expo-sharing$': '<rootDir>/src/__tests__/mocks/expo-sharing.ts',
+    '^expo-file-system$': '<rootDir>/src/__tests__/mocks/expo-file-system.ts',
+    '^expo-file-system/legacy$': '<rootDir>/src/__tests__/mocks/expo-file-system.ts',
     '^expo-video$': '<rootDir>/src/__tests__/mocks/expo-video.ts',
     '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
     '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
