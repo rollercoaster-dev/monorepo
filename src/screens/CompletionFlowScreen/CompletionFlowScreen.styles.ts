@@ -37,18 +37,17 @@ export const styles = StyleSheet.create((theme) => ({
     ...shadowStyle(theme, 'hardMd'),
   },
   iconContainer: {
-    width: '25%',
-    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: theme.space[3],
   },
   iconImage: {
-    width: '100%',
-    height: '100%',
+    width: 80,
+    height: 80,
   },
   iconEmoji: {
     fontSize: 72,
+    lineHeight: 96,
     textAlign: 'center' as const,
   },
   headline: {

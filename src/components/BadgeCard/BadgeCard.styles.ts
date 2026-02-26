@@ -37,6 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
   imageText: {
     color: palette.white,
     fontSize: theme.size['3xl'],
+    lineHeight: theme.size['3xl'] * 1.3,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,
   },

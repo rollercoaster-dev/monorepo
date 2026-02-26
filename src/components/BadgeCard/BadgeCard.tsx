@@ -6,7 +6,7 @@ export type BadgeCardSize = 'compact' | 'normal' | 'spacious';
 export interface BadgeCardProps {
   title: string;
   earnedDate: string;
-  evidenceCount: number;
+  evidenceCount?: number;
   size?: BadgeCardSize;
   onPress?: () => void;
 }
@@ -34,9 +34,11 @@ export function BadgeCard({
         </View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.date}>{earnedDate}</Text>
-        <Text style={styles.evidenceCount}>
-          {evidenceCount} {evidenceCount === 1 ? 'piece' : 'pieces'} of evidence
-        </Text>
+        {evidenceCount !== undefined && (
+          <Text style={styles.evidenceCount}>
+            {evidenceCount} {evidenceCount === 1 ? 'piece' : 'pieces'} of evidence
+          </Text>
+        )}
       </View>
     </Pressable>
   );

@@ -657,6 +657,76 @@ export const badgeByGoalQuery = (goalId: GoalId) =>
   );
 
 /**
+ * Query a single badge by its ID
+ * @param badgeId - Badge ID
+ * @returns Query for single badge
+ */
+export const badgeByIdQuery = (badgeId: BadgeId) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom('badge')
+      .selectAll()
+      .where('isDeleted', 'is', null)
+      .where('id', '=', badgeId)
+      .limit(1),
+  );
+
+/**
+ * Query a single badge by ID joined with its goal data.
+ * Returns badge fields plus goal title and completedAt in one query,
+ * avoiding the need to load all goals.
+ * @param badgeId - Badge ID
+ * @returns Query for single badge with goal data
+ */
+export const badgeWithGoalQuery = (badgeId: BadgeId) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom('badge')
+      .leftJoin('goal', (join) =>
+        join
+          .onRef('goal.id', '=', 'badge.goalId')
+          .on('goal.isDeleted', 'is', null),
+      )
+      .select([
+        'badge.id',
+        'badge.goalId',
+        'badge.credential',
+        'badge.imageUri',
+        'badge.createdAt',
+        'goal.title as goalTitle',
+        'goal.completedAt',
+      ])
+      .where('badge.isDeleted', 'is', null)
+      .where('badge.id', '=', badgeId)
+      .limit(1),
+  );
+
+/**
+ * Query all non-deleted badges joined with their goal title,
+ * ordered by badge creation date descending (most recent first).
+ * Used by the Badges tab list.
+ */
+export const badgesWithGoalsQuery = evolu.createQuery((db) =>
+  db
+    .selectFrom('badge')
+    .leftJoin('goal', (join) =>
+      join
+        .onRef('goal.id', '=', 'badge.goalId')
+        .on('goal.isDeleted', 'is', null),
+    )
+    .select([
+      'badge.id',
+      'badge.goalId',
+      'badge.imageUri',
+      'badge.createdAt',
+      'goal.title as goalTitle',
+      'goal.completedAt',
+    ])
+    .where('badge.isDeleted', 'is', null)
+    .orderBy('badge.createdAt', 'desc'),
+);
+
+/**
  * Create a badge for a completed goal
  * @param params - Badge parameters
  * @param params.goalId - Goal ID

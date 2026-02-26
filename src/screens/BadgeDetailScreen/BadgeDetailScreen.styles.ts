@@ -39,6 +39,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
   badgeInitial: {
     fontSize: theme.size['5xl'],
+    lineHeight: theme.size['5xl'] * 1.3,
     fontWeight: theme.fontWeight.black,
     fontFamily: theme.fontFamily.headline,
     color: theme.colors.background,
@@ -77,5 +78,8 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     padding: theme.space[4],
+  },
+  loadingIndicator: {
+    marginTop: theme.space[8],
   },
 }));
