@@ -66,19 +66,20 @@ export function buildUnsignedCredential(input: CredentialInput): Record<string, 
   // NOTE (Iteration A): Appending a path segment to a did:key: identifier produces
   // an invalid DID URL — did:key: DIDs do not support path components per the spec.
   // A proper achievementId should be a separate HTTPS URI. Fixed in Iteration D.
-  const achievementId = iri(`${input.issuerDid}/achievements/${input.goal.id}`);
+  const achievementId = iri(`${input.issuerDid}/achievements/${encodeURIComponent(input.goal.id)}`);
 
-  const badgeClass: BadgeClassData = {
+  // image is intentionally omitted — OB3 Achievement.image is OPTIONAL per spec.
+  // A local file:// URI is not a valid or shareable IRI; a hosted URL would be
+  // needed here. BadgeClassData requires image but the OB3 spec does not — cast
+  // to suppress the type error until openbadges-core relaxes its type definition.
+  // When the app gains a hosted badge image endpoint, add: image: iri(hostedUrl).
+  const badgeClass = {
     id: achievementId,
     issuer: iri(input.issuerDid),
     name: input.goal.title,
     description: input.goal.description ?? `Achievement: ${input.goal.title}`,
-    // NOTE (Iteration A): 'pending:baked-image' is not a valid IRI — it's a sentinel
-    // value indicating PNG baking has not yet run. The image field should be omitted
-    // or set to a real URI once PNG baking is implemented (follow-up issue).
-    image: iri('pending:baked-image'),
     criteria: { narrative: `Complete all steps for: ${input.goal.title}` },
-  };
+  } as unknown as BadgeClassData;
 
   const assertion: AssertionData = {
     id: iri(input.credentialId),

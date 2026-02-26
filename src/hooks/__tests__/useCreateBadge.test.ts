@@ -46,6 +46,10 @@ jest.mock('../../badges', () => ({
     type: ['VerifiableCredential'],
   })),
   buildDid: jest.fn(() => 'did:key:testkey'),
+  generateBadgeImagePNG: jest.fn(() => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])),
+  bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+  saveBadgePNG: jest.fn(() => Promise.resolve('file:///app/badges/test-badge.png')),
+  DEFAULT_BADGE_COLOR: '#4B7BE5',
 }));
 
 const mockUseQuery = useQuery as jest.Mock;
@@ -55,14 +59,18 @@ const mockCreateBadge = createBadge as jest.Mock;
 const { keyProvider: mockKeyProvider } = require('../../crypto');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { useUserKey: mockUseUserKey } = require('../useUserKey');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mockBadges = require('../../badges');
 
 const GOAL_ID = 'goal-01' as GoalId;
-const MOCK_GOAL = { id: GOAL_ID, title: 'My Goal', description: null, status: 'active' };
-
+const MOCK_GOAL = { id: GOAL_ID, title: 'My Goal', description: null, color: '#FF5733', status: 'active' };
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockUseUserKey.mockReturnValue({ keyId: 'key-001', isReady: true, error: null });
+  mockBadges.generateBadgeImagePNG.mockReturnValue(new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]));
+  mockBadges.bakePNG.mockReturnValue(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  mockBadges.saveBadgePNG.mockResolvedValue('file:///app/badges/test-badge.png');
   // Default: configure mockUseQuery to return values in sequence per render
   mockUseQuery.mockImplementation((query: string) => {
     if (query === 'mock-goals-query') return [MOCK_GOAL];
@@ -123,14 +131,14 @@ describe('useCreateBadge', () => {
       expect(callOrder).toEqual(['createBadge', 'completeGoal']);
     });
 
-    it('calls createBadge with goalId and placeholder imageUri', async () => {
+    it('calls createBadge with the real image URI from saveBadgePNG (not the placeholder)', async () => {
       renderHook(() => useCreateBadge(GOAL_ID));
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledWith(
         expect.objectContaining({
           goalId: GOAL_ID,
-          imageUri: 'pending:baked-image',
+          imageUri: 'file:///app/badges/test-badge.png',
         }),
       );
     });
@@ -152,6 +160,27 @@ describe('useCreateBadge', () => {
 
       expect(result.current.status).toBe('done');
       expect(result.current.error).toBeNull();
+    });
+
+    it('passes the goal color to generateBadgeImagePNG', async () => {
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(mockBadges.generateBadgeImagePNG).toHaveBeenCalledWith('#FF5733');
+    });
+
+    it('falls back to DEFAULT_BADGE_COLOR when goal.color is null', async () => {
+      const goalWithoutColor = { ...MOCK_GOAL, color: null };
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === 'mock-goals-query') return [goalWithoutColor];
+        if (query === 'mock-badge-query') return [];
+        return [];
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(mockBadges.generateBadgeImagePNG).toHaveBeenCalledWith('#4B7BE5');
     });
   });
 
@@ -189,6 +218,56 @@ describe('useCreateBadge', () => {
 
       expect(result.current.status).toBe('error');
       expect(result.current.error).toContain('crypto unavailable');
+    });
+  });
+
+  describe('when image generation fails (generateBadgeImagePNG throws)', () => {
+    it('sets status: error — PNG generation failure is a code defect, not recoverable', async () => {
+      mockBadges.generateBadgeImagePNG.mockImplementationOnce(() => {
+        throw new Error('PNG generation failed');
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      // generateBadgeImagePNG is pure computation — any throw is a code defect
+      // and must propagate to the outer error handler, not degrade gracefully.
+      expect(result.current.status).toBe('error');
+      expect(result.current.error).toContain('PNG generation failed');
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when bakePNG fails', () => {
+    it('sets status: error — corrupt PNG is a code defect, not recoverable', async () => {
+      mockBadges.bakePNG.mockImplementationOnce(() => {
+        throw new Error('corrupt PNG chunk');
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      // bakePNG throwing means the PNG we generated is corrupt — a code defect.
+      // Must propagate to the outer error handler, not degrade gracefully.
+      expect(result.current.status).toBe('error');
+      expect(result.current.error).toContain('corrupt PNG chunk');
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when saveBadgePNG fails', () => {
+    it('still calls createBadge with the placeholder URI (graceful degradation)', async () => {
+      mockBadges.saveBadgePNG.mockRejectedValueOnce(new Error('disk full'));
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(result.current.status).toBe('done');
+      expect(mockCreateBadge).toHaveBeenCalledWith(
+        expect.objectContaining({
+          imageUri: 'pending:baked-image',
+        }),
+      );
     });
   });
 

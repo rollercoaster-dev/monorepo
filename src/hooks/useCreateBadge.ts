@@ -5,8 +5,14 @@
  * On first call (when no badge exists yet):
  *   1. Builds unsigned credential via buildUnsignedCredential
  *   2. Signs the JSON with the user's Ed25519 key via keyProvider.sign
- *   3. Calls completeGoal (marks goal as completed)
- *   4. Persists the signed credential via createBadge
+ *   3. Generates a badge PNG from the goal color
+ *   4. Bakes the signed credential into the PNG (OB3 iTXt chunk)
+ *   5. Persists the PNG to disk and records the URI
+ *   6. Calls createBadge (persists credential + image URI)
+ *   7. Calls completeGoal (marks goal as completed)
+ *
+ * If image generation or baking fails, falls back to the placeholder URI
+ * so badge creation still succeeds even without a baked image.
  *
  * Idempotent — returns 'done' immediately if a badge already exists.
  * Race-condition safe — once triggered, the ref guard is never reset,
@@ -30,7 +36,15 @@ import {
 } from '../db';
 import type { GoalId } from '../db';
 import { keyProvider } from '../crypto';
-import { buildUnsignedCredential, buildDid } from '../badges';
+import {
+  buildUnsignedCredential,
+  buildDid,
+  generateBadgeImagePNG,
+  bakePNG,
+  saveBadgePNG,
+  DEFAULT_BADGE_COLOR,
+} from '../badges';
+import { Buffer } from 'buffer';
 import { useUserKey } from './useUserKey';
 import { Logger } from '../shims/rd-logger';
 
@@ -43,6 +57,7 @@ export type BadgeCreationStatus =
   | 'loading'   // key not ready yet — transient, not a user-visible error
   | 'building'
   | 'signing'
+  | 'baking'    // generating + baking the PNG image
   | 'storing'
   | 'done'
   | 'error'
@@ -167,13 +182,35 @@ export function useCreateBadge(goalId: GoalId): UseCreateBadgeResult {
           ...unsignedCredential,
           proof: {
             type: 'DataIntegrityProof',
-            cryptosuite: 'eddsa-rdfc-2022',
+            cryptosuite: 'eddsa-raw-json-iteration-a',
             created: issuedOn,
             proofPurpose: 'assertionMethod',
             verificationMethod: `${issuerDid}#key-1`,
             proofValue,
           },
         };
+
+        setStatus('baking');
+
+        // Generate PNG and bake credential — pure computation. Any throw is a
+        // code defect and must propagate to the outer error handler.
+        const hexColor = (goal.color as string | null) ?? DEFAULT_BADGE_COLOR;
+        const pngData = generateBadgeImagePNG(hexColor);
+        // Pass as JSON string — bakePNG accepts string | OB2.Assertion | OB3.VerifiableCredential.
+        // String and object paths produce identical iTXt content; string avoids a type cast.
+        const bakedPng = bakePNG(Buffer.from(pngData), JSON.stringify(signedCredential));
+
+        // Save to disk — legitimately recoverable (filesystem errors). Fall back
+        // to placeholder so badge creation still succeeds without a baked image.
+        let imageUri = PLACEHOLDER_IMAGE_URI;
+        try {
+          imageUri = await saveBadgePNG(bakedPng);
+        } catch (imageErr) {
+          logger.error('Badge image save failed, using placeholder', {
+            goalId,
+            error: imageErr,
+          });
+        }
 
         setStatus('storing');
 
@@ -183,7 +220,7 @@ export function useCreateBadge(goalId: GoalId): UseCreateBadgeResult {
         createBadge({
           goalId,
           credential: JSON.stringify(signedCredential),
-          imageUri: PLACEHOLDER_IMAGE_URI,
+          imageUri,
         });
         completeGoal(goalId);
 
