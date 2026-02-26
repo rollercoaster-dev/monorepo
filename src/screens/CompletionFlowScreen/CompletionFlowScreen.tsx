@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,18 +11,22 @@ import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { Confetti } from '../../components/Confetti';
 import { ModeIndicator } from '../../components/ModeIndicator';
+import { BadgeEarnedModal } from '../BadgeEarnedModal';
 import {
   goalsQuery,
   stepsByGoalQuery,
   evidenceByGoalQuery,
+  badgeByGoalQuery,
+  badgesQuery,
   uncompleteGoal,
   EvidenceType,
   GoalStatus,
 } from '../../db';
 import type { GoalId } from '../../db';
-import { useCreateBadge } from '../../hooks/useCreateBadge';
+import { useCreateBadge, PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
 import type {
   GoalsStackParamList,
+  RootTabParamList,
   CompletionFlowScreenProps,
   CaptureScreenName,
 } from '../../navigation/types';
@@ -54,11 +58,26 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
+  const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
+  const badgeRow = badgeRows[0] ?? null;
+  const allBadges = useQuery(badgesQuery);
+
   const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId);
   const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing';
 
   const [showConfetti, setShowConfetti] = useState(true);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const hasShownModal = useRef(false);
+  const capturedIsFirstBadge = useRef(false);
   const hasGoalEvidence = goalEvidenceRows.length > 0;
+
+  useEffect(() => {
+    if (badgeStatus === 'done' && badgeRow && !hasShownModal.current) {
+      hasShownModal.current = true;
+      capturedIsFirstBadge.current = allBadges.length === 1;
+      setShowBadgeModal(true);
+    }
+  }, [badgeStatus, badgeRow, allBadges.length]);
 
   if (!goal) {
     return (
@@ -86,6 +105,24 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const handleReopenGoal = () => {
     uncompleteGoal(goalId as GoalId);
     navigation.navigate('FocusMode', { goalId });
+  };
+
+  const handleViewBadge = () => {
+    setShowBadgeModal(false);
+    if (!badgeRow) return;
+    const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
+    if (parentNav) {
+      parentNav.navigate('BadgesTab', {
+        screen: 'BadgeDetail',
+        params: { badgeId: String(badgeRow.id) },
+      });
+    } else {
+      console.warn('BadgeEarnedModal: could not navigate — parent tab navigator not found');
+    }
+  };
+
+  const handleDismissBadgeModal = () => {
+    setShowBadgeModal(false);
   };
 
   return (
@@ -202,6 +239,15 @@ function CompletionContent({ goalId }: { goalId: string }) {
           )}
         </View>
       </ScrollView>
+      {badgeRow && (
+        <BadgeEarnedModal
+          visible={showBadgeModal}
+          imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
+          isFirstBadge={capturedIsFirstBadge.current}
+          onViewBadge={handleViewBadge}
+          onContinue={handleDismissBadgeModal}
+        />
+      )}
     </View>
   );
 }

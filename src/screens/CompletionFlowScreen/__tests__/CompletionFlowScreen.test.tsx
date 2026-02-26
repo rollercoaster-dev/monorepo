@@ -6,6 +6,8 @@ import { CompletionFlowScreen } from '../CompletionFlowScreen';
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+const mockParentNavigate = jest.fn();
+const mockGetParent = jest.fn(() => ({ navigate: mockParentNavigate }));
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual('../../../__tests__/mocks/navigation');
   return {
@@ -14,6 +16,7 @@ jest.mock('@react-navigation/native', () => {
       ...actual.useNavigation(),
       goBack: mockGoBack,
       navigate: mockNavigate,
+      getParent: mockGetParent,
     })),
   };
 });
@@ -31,6 +34,7 @@ const mockUseCreateBadge = jest.fn<{ status: string; error: string | null }, [st
   () => ({ status: 'done', error: null }),
 );
 jest.mock('../../../hooks/useCreateBadge', () => ({
+  PLACEHOLDER_IMAGE_URI: 'pending:baked-image',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   useCreateBadge: (goalId: any) => mockUseCreateBadge(goalId),
 }));
@@ -50,6 +54,8 @@ jest.mock('../../../db', () => ({
   goalsQuery: 'goalsQuery',
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
+  badgeByGoalQuery: jest.fn((id: string) => `badgeByGoalQuery-${id}`),
+  badgesQuery: 'badgesQuery',
   uncompleteGoal: (...args: unknown[]) => mockUncompleteGoal(...args),
 }));
 
@@ -83,19 +89,33 @@ const routeProps = {
   navigation: {} as any,
 };
 
+const BADGE_ROW = {
+  id: 'badge-1',
+  goalId: 'goal-1',
+  credential: '{"@context":"..."}',
+  imageUri: 'file:///badges/test-badge.png',
+  createdAt: '2026-01-01T00:00:00Z',
+};
+
 function setupQueries({
   goal = GOAL,
   steps = COMPLETED_STEPS,
   goalEvidence = [] as object[],
+  badge = null as object | null,
+  allBadges = [] as object[],
 }: {
   goal?: object | null;
   steps?: object[];
   goalEvidence?: object[];
+  badge?: object | null;
+  allBadges?: object[];
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === 'goalsQuery') return goal ? [goal] : [];
     if (typeof query === 'string' && query.startsWith('stepsByGoalQuery')) return steps;
     if (typeof query === 'string' && query.startsWith('evidenceByGoalQuery')) return goalEvidence;
+    if (typeof query === 'string' && query.startsWith('badgeByGoalQuery')) return badge ? [badge] : [];
+    if (query === 'badgesQuery') return allBadges;
     return [];
   });
 }
@@ -270,6 +290,73 @@ describe('CompletionFlowScreen', () => {
       setupQueries();
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       expect(mockUseCreateBadge).toHaveBeenCalledWith('goal-1');
+    });
+  });
+
+  describe('BadgeEarnedModal integration', () => {
+    it('shows BadgeEarnedModal when badgeStatus is done and badge exists', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByLabelText('Badge earned')).toBeOnTheScreen();
+    });
+
+    it('does not show BadgeEarnedModal when badgeStatus is building', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'building', error: null });
+      setupQueries({ badge: null, allBadges: [] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.queryByLabelText('Badge earned')).not.toBeOnTheScreen();
+    });
+
+    it('does not show BadgeEarnedModal when no badge row yet', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: null, allBadges: [] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.queryByLabelText('Badge earned')).not.toBeOnTheScreen();
+    });
+
+    it('shows first-badge microcopy when only one badge exists', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText('First one. (noted.)')).toBeOnTheScreen();
+    });
+
+    it('shows neutral microcopy when multiple badges exist', () => {
+      const otherBadge = { ...BADGE_ROW, id: 'badge-2', goalId: 'goal-2' };
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW, otherBadge] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.getByText('Badge earned.')).toBeOnTheScreen();
+    });
+
+    it('dismisses modal on "Keep going"', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText('Keep going'));
+      expect(screen.queryByText('First one. (noted.)')).not.toBeOnTheScreen();
+    });
+
+    it('navigates to BadgeDetail via parent tab navigator on "View Badge"', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText('View Badge'));
+      expect(mockParentNavigate).toHaveBeenCalledWith('BadgesTab', {
+        screen: 'BadgeDetail',
+        params: { badgeId: 'badge-1' },
+      });
+    });
+
+    it('does not re-show BadgeEarnedModal after dismissal and re-render', () => {
+      mockUseCreateBadge.mockReturnValue({ status: 'done', error: null });
+      setupQueries({ badge: BADGE_ROW, allBadges: [BADGE_ROW] });
+      const { rerender } = renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText('Keep going'));
+      expect(screen.queryByLabelText('Badge earned')).not.toBeOnTheScreen();
+      rerender(<CompletionFlowScreen {...routeProps} />);
+      expect(screen.queryByLabelText('Badge earned')).not.toBeOnTheScreen();
     });
   });
 });

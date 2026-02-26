@@ -50,7 +50,7 @@ import { Logger } from '../shims/rd-logger';
 
 const logger = new Logger('useCreateBadge');
 
-const PLACEHOLDER_IMAGE_URI = 'pending:baked-image';
+export const PLACEHOLDER_IMAGE_URI = 'pending:baked-image';
 
 export type BadgeCreationStatus =
   | 'idle'
