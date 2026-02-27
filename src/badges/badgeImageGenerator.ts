@@ -60,6 +60,9 @@ function adler32(data: Buffer): number {
 /**
  * Generate a 64×64 solid-color PNG from a hex color string.
  *
+ * @deprecated Use `captureBadge()` from `./captureBadge` for high-res designer badge export.
+ * This function remains as a fallback for callers that don't have a mounted BadgeRenderer.
+ *
  * @param hexColor - Hex color string (e.g. "#FF5733"). Falls back to DEFAULT_BADGE_COLOR if invalid.
  * @returns PNG image as Uint8Array
  */

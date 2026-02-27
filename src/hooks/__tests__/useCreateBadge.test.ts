@@ -48,6 +48,7 @@ jest.mock('../../badges', () => ({
   buildDid: jest.fn(() => 'did:key:testkey'),
   generateBadgeImagePNG: jest.fn(() => new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10])),
   bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+  isPNG: jest.fn((buf: Buffer) => buf.length >= 8 && buf[0] === 137 && buf[1] === 80),
   saveBadgePNG: jest.fn(() => Promise.resolve('file:///app/badges/test-badge.png')),
   DEFAULT_BADGE_COLOR: '#4B7BE5',
 }));
@@ -181,6 +182,24 @@ describe('useCreateBadge', () => {
       await act(async () => {});
 
       expect(mockBadges.generateBadgeImagePNG).toHaveBeenCalledWith('#4B7BE5');
+    });
+  });
+
+  describe('when capturedPng is provided', () => {
+    it('passes the captured PNG to bakePNG instead of generating one', async () => {
+      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+      renderHook(() => useCreateBadge(GOAL_ID, { capturedPng: fakePng }));
+      await act(async () => {});
+
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(fakePng, expect.any(String));
+    });
+
+    it('does NOT call generateBadgeImagePNG', async () => {
+      const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+      renderHook(() => useCreateBadge(GOAL_ID, { capturedPng: fakePng }));
+      await act(async () => {});
+
+      expect(mockBadges.generateBadgeImagePNG).not.toHaveBeenCalled();
     });
   });
 

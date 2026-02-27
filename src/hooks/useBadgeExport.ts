@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PLACEHOLDER_IMAGE_URI } from './useCreateBadge';
+import { captureBadge } from '../badges/captureBadge';
 
 export function useBadgeExport() {
   const [isExportingImage, setIsExportingImage] = useState(false);
@@ -30,6 +31,43 @@ export function useBadgeExport() {
       console.error('[useBadgeExport] Failed to export image', { imageUri, error });
       Alert.alert('Export failed', 'Something went wrong exporting the badge image.');
     } finally {
+      setIsExportingImage(false);
+    }
+  }, []);
+
+  const exportDesignImage = useCallback(async (ref: React.RefObject<unknown>) => {
+    const cacheDir = FileSystem.cacheDirectory;
+    if (!cacheDir) {
+      Alert.alert('Export failed', 'Cannot access the device cache directory.');
+      return;
+    }
+
+    setIsExportingImage(true);
+    const tempUri = `${cacheDir}badge-export-${Date.now()}.png`;
+    try {
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert('Sharing unavailable', 'Sharing is not available on this device.');
+        return;
+      }
+
+      const pngBuffer = await captureBadge(ref, { width: 512, height: 512 });
+      await FileSystem.writeAsStringAsync(tempUri, pngBuffer.toString('base64'), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(tempUri, {
+        UTI: 'public.png',
+        mimeType: 'image/png',
+        dialogTitle: 'Save Badge Image',
+      });
+    } catch (error) {
+      console.error('[useBadgeExport] Failed to export design image', { error });
+      Alert.alert('Export failed', 'Something went wrong exporting the badge image.');
+    } finally {
+      await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch((cleanupErr) => {
+        console.warn('[useBadgeExport] Failed to clean up temp file', { tempUri, cleanupErr });
+      });
       setIsExportingImage(false);
     }
   }, []);
@@ -76,5 +114,5 @@ export function useBadgeExport() {
     }
   }, []);
 
-  return { exportImage, exportJSON, isExportingImage, isExportingJSON };
+  return { exportImage, exportDesignImage, exportJSON, isExportingImage, isExportingJSON };
 }

@@ -9,6 +9,7 @@ import { Text } from '../../components/Text';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { BadgeCard } from '../../components/BadgeCard';
 import { EmptyState } from '../../components/EmptyState';
+import { parseBadgeDesign } from '../../badges/types';
 import { badgesWithGoalsQuery } from '../../db';
 import { formatDate } from '../../utils/format';
 import type { BadgesStackParamList, RootTabParamList } from '../../navigation/types';
@@ -50,6 +51,7 @@ function BadgeList() {
         <BadgeCard
           title={(item.goalTitle as string) ?? 'Untitled'}
           earnedDate={formatDate((item.completedAt ?? item.createdAt) as string | null)}
+          design={parseBadgeDesign(item.design as string | null)}
           onPress={() => navigation.navigate('BadgeDetail', { badgeId: item.id })}
         />
       )}

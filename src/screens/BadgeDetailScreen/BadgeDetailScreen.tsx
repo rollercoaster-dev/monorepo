@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +14,8 @@ import { badgeWithGoalQuery, deleteBadge } from '../../db';
 import type { BadgeId } from '../../db';
 import { PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
 import { useBadgeExport } from '../../hooks/useBadgeExport';
+import { BadgeRenderer } from '../../badges/BadgeRenderer';
+import { parseBadgeDesign } from '../../badges/types';
 import { formatDate } from '../../utils/format';
 import type { BadgeDetailScreenProps, BadgesStackParamList } from '../../navigation/types';
 import { styles } from './BadgeDetailScreen.styles';
@@ -25,7 +27,8 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const badge = rows[0] ?? null;
 
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
-  const { exportImage, exportJSON, isExportingImage, isExportingJSON } = useBadgeExport();
+  const { exportImage, exportDesignImage, exportJSON, isExportingImage, isExportingJSON } = useBadgeExport();
+  const badgeRendererRef = useRef<View>(null);
 
   const handleDelete = () => {
     Alert.alert(
@@ -57,10 +60,15 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const hasRealImage = imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
   const goalTitle = (badge.goalTitle as string) ?? 'Untitled';
   const earnedDate = formatDate((badge.completedAt ?? badge.createdAt) as string | null);
+  const design = parseBadgeDesign(badge.design as string | null);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
-      {hasRealImage ? (
+      {design ? (
+        <View ref={badgeRendererRef} collapsable={false}>
+          <BadgeRenderer design={design} size={160} />
+        </View>
+      ) : hasRealImage ? (
         <Image
           source={{ uri: imageUri }}
           style={styles.badgeImage}
@@ -102,9 +110,13 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           <Button
             label="Save Image"
             variant="secondary"
-            onPress={() => exportImage(imageUri)}
+            onPress={() =>
+              design
+                ? exportDesignImage(badgeRendererRef)
+                : exportImage(imageUri)
+            }
             loading={isExportingImage}
-            disabled={!hasRealImage}
+            disabled={!design && !hasRealImage}
           />
           <Button
             label="Export Credential (JSON)"

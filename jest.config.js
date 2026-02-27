@@ -24,6 +24,7 @@ module.exports = {
     '^expo-video$': '<rootDir>/src/__tests__/mocks/expo-video.ts',
     '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
     '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
+    '^react-native-view-shot$': '<rootDir>/src/__tests__/mocks/react-native-view-shot.ts',
   },
   transformIgnorePatterns: [
     '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native)/)',

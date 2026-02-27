@@ -41,6 +41,7 @@ import {
   buildDid,
   generateBadgeImagePNG,
   bakePNG,
+  isPNG,
   saveBadgePNG,
   DEFAULT_BADGE_COLOR,
 } from '../badges';
@@ -77,7 +78,12 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-export function useCreateBadge(goalId: GoalId): UseCreateBadgeResult {
+export interface UseCreateBadgeOptions {
+  /** Pre-captured 512x512 PNG from captureBadge(). When provided, replaces the solid-color fallback. */
+  capturedPng?: Buffer;
+}
+
+export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions): UseCreateBadgeResult {
   const { keyId, isReady } = useUserKey();
 
   const goals = useQuery(goalsQuery);
@@ -95,6 +101,10 @@ export function useCreateBadge(goalId: GoalId): UseCreateBadgeResult {
   // listing the arrays as deps (Evolu returns new refs every render).
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
+
+  // Same pattern for capturedPng — read latest value without adding to deps.
+  const capturedPngRef = useRef(options?.capturedPng);
+  capturedPngRef.current = options?.capturedPng;
 
   // Once triggered, never reset — prevents re-entry after status state updates
   // or after existingBadge reactively updates from null to a badge object.
@@ -192,13 +202,23 @@ export function useCreateBadge(goalId: GoalId): UseCreateBadgeResult {
 
         setStatus('baking');
 
-        // Generate PNG and bake credential — pure computation. Any throw is a
-        // code defect and must propagate to the outer error handler.
+        // Use pre-captured designer PNG when available, otherwise fall back to
+        // the solid-color generator (with a warning so silent downgrades are visible).
         const hexColor = (goal.color as string | null) ?? DEFAULT_BADGE_COLOR;
-        const pngData = generateBadgeImagePNG(hexColor);
-        // Pass as JSON string — bakePNG accepts string | OB2.Assertion | OB3.VerifiableCredential.
-        // String and object paths produce identical iTXt content; string avoids a type cast.
-        const bakedPng = bakePNG(Buffer.from(pngData), JSON.stringify(signedCredential));
+        let pngBuffer: Buffer;
+        if (capturedPngRef.current) {
+          if (!isPNG(capturedPngRef.current)) {
+            throw new Error('useCreateBadge: capturedPng is not a valid PNG buffer');
+          }
+          pngBuffer = capturedPngRef.current;
+        } else {
+          logger.warn(
+            'No captured PNG provided — falling back to solid-color badge image',
+            { goalId },
+          );
+          pngBuffer = Buffer.from(generateBadgeImagePNG(hexColor));
+        }
+        const bakedPng = bakePNG(pngBuffer, JSON.stringify(signedCredential));
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
         // to placeholder so badge creation still succeeds without a baked image.
