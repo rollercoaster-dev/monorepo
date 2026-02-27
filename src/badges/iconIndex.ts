@@ -258,6 +258,21 @@ export const CATEGORY_ORDER: IconCategory[] = [
   'travel',
 ];
 
+/** Representative Phosphor icon name for each category (used in category tab icons) */
+export const CATEGORY_ICONS: Record<IconCategory, string> = {
+  popular: 'Star',
+  achievement: 'Trophy',
+  learning: 'GraduationCap',
+  coding: 'Code',
+  health: 'Heart',
+  creativity: 'PaintBrush',
+  nature: 'Leaf',
+  communication: 'ChatCircle',
+  finance: 'Coin',
+  sport: 'SoccerBall',
+  travel: 'Airplane',
+};
+
 // ---------------------------------------------------------------------------
 // Search index
 // ---------------------------------------------------------------------------

@@ -1,36 +1,21 @@
 /**
  * Icon picker for badge design
  *
- * Provides keyword search, category browsing, weight selection, and
- * a grid of Phosphor icons. Selected icon is highlighted with a
- * neo-brutalist accent border.
- *
- * All icons are curated badge-relevant icons from the Phosphor set.
- * Search is instant and local (no network calls).
+ * Renders a trigger button that shows the currently selected icon and its name.
+ * Pressing the button opens a full-screen IconPickerModal for browsing and
+ * selecting icons with category tabs, search, and weight selection.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  FlatList,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-  type ListRenderItemInfo,
-} from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import type { IconWeight } from 'phosphor-react-native';
 
 import { getIconComponent } from './iconRegistry';
-import {
-  searchIcons,
-  getIconsByCategory,
-  iconNameToLabel,
-  CATEGORY_ORDER,
-  CATEGORY_LABELS,
-  type IconCategory,
-} from './iconIndex';
+import { iconNameToLabel } from './iconIndex';
+import { IconPickerModal } from './IconPickerModal';
 import type { BadgeIconWeight } from './types';
+import { shadowStyle } from '../styles/shadows';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,67 +40,7 @@ export interface IconPickerProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const ICON_SIZE = 28;
-const GRID_COLUMNS = 5;
-const WEIGHTS: { value: BadgeIconWeight; label: string }[] = [
-  { value: 'thin', label: 'Thin' },
-  { value: 'light', label: 'Light' },
-  { value: 'regular', label: 'Regular' },
-  { value: 'bold', label: 'Bold' },
-  { value: 'fill', label: 'Fill' },
-  { value: 'duotone', label: 'Duotone' },
-];
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-interface IconCellProps {
-  name: string;
-  weight: IconWeight;
-  isSelected: boolean;
-  accentColor: string;
-  onPress: (name: string) => void;
-  iconColor: string;
-  selectedIconColor: string;
-  borderColor: string;
-}
-
-const IconCell = React.memo(function IconCell({
-  name,
-  weight,
-  isSelected,
-  accentColor,
-  onPress,
-  iconColor,
-  selectedIconColor,
-  borderColor,
-}: IconCellProps) {
-  const IconComponent = getIconComponent(name);
-  if (!IconComponent) return null;
-
-  const label = iconNameToLabel(name);
-
-  return (
-    <Pressable
-      onPress={() => onPress(name)}
-      accessibilityRole="button"
-      accessibilityLabel={`${label} icon${isSelected ? ', selected' : ''}`}
-      accessibilityState={{ selected: isSelected }}
-      style={[
-        styles.iconCell,
-        { borderColor: isSelected ? borderColor : 'transparent' },
-        isSelected && { backgroundColor: accentColor },
-      ]}
-    >
-      <IconComponent
-        size={ICON_SIZE}
-        weight={weight}
-        color={isSelected ? selectedIconColor : iconColor}
-      />
-    </Pressable>
-  );
-});
+const TRIGGER_ICON_SIZE = 32;
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -130,206 +55,66 @@ export function IconPicker({
   testID = 'icon-picker',
 }: IconPickerProps) {
   const { theme } = useUnistyles();
-  const [query, setQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<IconCategory | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Resolve colors from theme
   const resolvedAccent = accentColor ?? theme.colors.accentPrimary;
-  const iconColor = theme.colors.text;
   const selectedIconColor = theme.colors.background;
-  const borderColor = theme.colors.border;
 
-  // Compute visible icons
-  const visibleIcons = useMemo(() => {
-    if (query.trim()) {
-      return searchIcons(query);
-    }
-    if (activeCategory) {
-      return getIconsByCategory(activeCategory);
-    }
-    return searchIcons(''); // returns popular icons
-  }, [query, activeCategory]);
+  const handleOpen = useCallback(() => setModalVisible(true), []);
+  const handleClose = useCallback(() => setModalVisible(false), []);
 
-  const handleCategoryPress = useCallback(
-    (category: IconCategory) => {
-      setQuery('');
-      setActiveCategory((prev) => (prev === category ? null : category));
-    },
-    [],
-  );
-
-  const handleSearchChange = useCallback((text: string) => {
-    setQuery(text);
-    if (text.trim()) {
-      setActiveCategory(null);
-    }
-  }, []);
-
-  const renderCategory = useCallback(
-    ({ item: category }: ListRenderItemInfo<IconCategory>) => {
-      const isActive = activeCategory === category && !query.trim();
-      return (
-        <Pressable
-          onPress={() => handleCategoryPress(category)}
-          accessibilityRole="button"
-          accessibilityLabel={`${CATEGORY_LABELS[category]} category${isActive ? ', active' : ''}`}
-          accessibilityState={{ selected: isActive }}
-          style={[
-            styles.categoryChip,
-            {
-              backgroundColor: isActive
-                ? resolvedAccent
-                : theme.colors.backgroundSecondary,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.categoryLabel,
-              {
-                color: isActive
-                  ? selectedIconColor
-                  : theme.colors.text,
-              },
-            ]}
-          >
-            {CATEGORY_LABELS[category]}
-          </Text>
-        </Pressable>
-      );
-    },
-    [activeCategory, query, handleCategoryPress, resolvedAccent, selectedIconColor, theme],
-  );
-
-  const renderIcon = useCallback(
-    ({ item }: ListRenderItemInfo<string>) => (
-      <IconCell
-        name={item}
-        weight={selectedWeight as IconWeight}
-        isSelected={item === selectedIcon}
-        accentColor={resolvedAccent}
-        onPress={onSelectIcon}
-        iconColor={iconColor}
-        selectedIconColor={selectedIconColor}
-        borderColor={borderColor}
-      />
-    ),
-    [
-      selectedWeight,
-      selectedIcon,
-      resolvedAccent,
-      onSelectIcon,
-      iconColor,
-      selectedIconColor,
-      borderColor,
-    ],
-  );
-
-  const keyExtractor = useCallback((item: string) => item, []);
+  const IconComponent = getIconComponent(selectedIcon);
+  const label = iconNameToLabel(selectedIcon);
 
   return (
-    <View testID={testID} style={styles.container}>
-      {/* Search input */}
-      <TextInput
-        testID={`${testID}-search`}
-        accessibilityRole="search"
-        accessibilityLabel="Search icons"
-        placeholder="Search icons..."
-        placeholderTextColor={theme.colors.textSecondary}
-        value={query}
-        onChangeText={handleSearchChange}
+    <View testID={testID}>
+      {/* Trigger button */}
+      <Pressable
+        onPress={handleOpen}
+        accessibilityRole="button"
+        accessibilityLabel={`Selected icon: ${label}. Tap to change`}
         style={[
-          styles.searchInput,
+          styles.trigger,
           {
-            color: theme.colors.text,
-            backgroundColor: theme.colors.backgroundSecondary,
             borderColor: theme.colors.border,
+            backgroundColor: theme.colors.backgroundSecondary,
           },
         ]}
-        autoCapitalize="none"
-        autoCorrect={false}
-        returnKeyType="search"
-      />
-
-      {/* Weight selector */}
-      <View
-        style={styles.weightRow}
-        accessibilityRole="radiogroup"
-        accessibilityLabel="Icon weight"
       >
-        {WEIGHTS.map((w) => {
-          const isActive = w.value === selectedWeight;
-          return (
-            <Pressable
-              key={w.value}
-              onPress={() => onSelectWeight(w.value)}
-              accessibilityRole="radio"
-              accessibilityLabel={`${w.label} weight`}
-              accessibilityState={{ checked: isActive }}
-              style={[
-                styles.weightChip,
-                {
-                  backgroundColor: isActive
-                    ? resolvedAccent
-                    : theme.colors.backgroundSecondary,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.weightLabel,
-                  {
-                    color: isActive
-                      ? selectedIconColor
-                      : theme.colors.text,
-                  },
-                ]}
-              >
-                {w.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+        <View style={[styles.triggerIconBox, { backgroundColor: resolvedAccent }]}>
+          {IconComponent && (
+            <IconComponent
+              size={TRIGGER_ICON_SIZE}
+              weight={selectedWeight as IconWeight}
+              color={selectedIconColor}
+            />
+          )}
+        </View>
+        <View style={styles.triggerTextContainer}>
+          <Text
+            style={[styles.triggerLabel, { color: theme.colors.text }]}
+            numberOfLines={1}
+          >
+            {label}
+          </Text>
+          <Text
+            style={[styles.triggerHint, { color: theme.colors.textSecondary }]}
+          >
+            Tap to change icon
+          </Text>
+        </View>
+      </Pressable>
 
-      {/* Category chips */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={CATEGORY_ORDER}
-        keyExtractor={(item) => item}
-        style={styles.categoryRow}
-        contentContainerStyle={styles.categoryContent}
-        renderItem={renderCategory}
-      />
-
-      {/* Icon grid */}
-      <FlatList
-        data={visibleIcons}
-        keyExtractor={keyExtractor}
-        renderItem={renderIcon}
-        numColumns={GRID_COLUMNS}
-        contentContainerStyle={styles.gridContent}
-        style={styles.grid}
-        initialNumToRender={20}
-        maxToRenderPerBatch={30}
-        windowSize={5}
-        getItemLayout={(_data, index) => ({
-          length: ROW_HEIGHT,
-          offset: ROW_HEIGHT * Math.floor(index / GRID_COLUMNS),
-          index,
-        })}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text
-              style={[styles.emptyText, { color: theme.colors.textSecondary }]}
-            >
-              No icons found
-            </Text>
-          </View>
-        }
+      {/* Modal */}
+      <IconPickerModal
+        visible={modalVisible}
+        selectedIcon={selectedIcon}
+        selectedWeight={selectedWeight}
+        onSelectIcon={onSelectIcon}
+        onSelectWeight={onSelectWeight}
+        onClose={handleClose}
+        accentColor={accentColor}
+        testID={`${testID}-modal`}
       />
     </View>
   );
@@ -339,88 +124,34 @@ export function IconPicker({
 // Styles
 // ---------------------------------------------------------------------------
 
-/** Cell size includes padding for 44x44pt touch target */
-const CELL_SIZE = 52;
-/** Effective row height = CELL_SIZE + vertical margin (2px top + 2px bottom) */
-const ROW_HEIGHT = CELL_SIZE + 4;
-
 const styles = StyleSheet.create((theme) => ({
-  container: {
-    flex: 1,
-  },
-  searchInput: {
-    height: 44,
-    borderWidth: 2,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    fontFamily: theme.fontFamily.body,
-    marginBottom: 8,
-  },
-  weightRow: {
+  trigger: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
-  },
-  weightChip: {
-    minHeight: 44,
-    minWidth: 44,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 2,
+    alignItems: 'center',
+    gap: theme.space[3],
+    padding: theme.space[3],
+    borderWidth: theme.borderWidth.thick,
     borderRadius: 0,
+    ...shadowStyle(theme, 'hardSm'),
+  },
+  triggerIconBox: {
+    width: 52,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: 0,
   },
-  weightLabel: {
-    fontSize: 12,
-    fontFamily: theme.fontFamily.body,
+  triggerTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  triggerLabel: {
+    ...theme.textStyles.body,
     fontWeight: '600',
   },
-  categoryRow: {
-    maxHeight: 40,
-    marginBottom: 8,
-  },
-  categoryContent: {
-    gap: 6,
-    paddingRight: 8,
-  },
-  categoryChip: {
-    minHeight: 32,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderWidth: 2,
-    borderRadius: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoryLabel: {
-    fontSize: 13,
-    fontFamily: theme.fontFamily.body,
-    fontWeight: '500',
-  },
-  grid: {
-    flex: 1,
-  },
-  gridContent: {
-    paddingVertical: 4,
-  },
-  iconCell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderRadius: 0,
-    margin: 2,
-  },
-  emptyContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: theme.fontFamily.body,
+  triggerHint: {
+    ...theme.textStyles.caption,
   },
 }));

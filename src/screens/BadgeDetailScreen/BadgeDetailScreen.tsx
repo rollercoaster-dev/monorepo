@@ -2,6 +2,7 @@ import React, { Suspense, useMemo, useState } from 'react';
 import { View, ScrollView, Image, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@evolu/react';
 import { useUnistyles } from 'react-native-unistyles';
 import { Text } from '../../components/Text';
@@ -14,11 +15,11 @@ import type { BadgeId } from '../../db';
 import { PLACEHOLDER_IMAGE_URI } from '../../hooks/useCreateBadge';
 import { useBadgeExport } from '../../hooks/useBadgeExport';
 import { formatDate } from '../../utils/format';
-import type { BadgeDetailScreenProps } from '../../navigation/types';
+import type { BadgeDetailScreenProps, BadgesStackParamList } from '../../navigation/types';
 import { styles } from './BadgeDetailScreen.styles';
 
 function BadgeDetailContent({ badgeId }: { badgeId: string }) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
   const query = useMemo(() => badgeWithGoalQuery(badgeId as BadgeId), [badgeId]);
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
@@ -79,6 +80,12 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
       {earnedDate ? (
         <Text style={styles.description}>Earned {earnedDate}</Text>
       ) : null}
+
+      <Button
+        label="Customize Badge"
+        variant="secondary"
+        onPress={() => navigation.navigate('BadgeDesigner', { badgeId })}
+      />
 
       <Card>
         <View style={styles.infoSection}>

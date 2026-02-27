@@ -165,6 +165,7 @@ import {
   House,
   RocketLaunch,
   Rocket,
+  X,
 } from 'phosphor-react-native';
 
 /**
@@ -344,6 +345,9 @@ export const ICON_REGISTRY: Record<string, Icon> = {
   House,
   RocketLaunch,
   Rocket,
+
+  // UI
+  X,
 };
 
 /**

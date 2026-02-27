@@ -696,6 +696,7 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
         'badge.createdAt',
         'goal.title as goalTitle',
         'goal.completedAt',
+        'goal.color as goalColor',
       ])
       .where('badge.isDeleted', 'is', null)
       .where('badge.id', '=', badgeId)

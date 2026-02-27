@@ -34,6 +34,7 @@ export type GoalsStackParamList = {
 export type BadgesStackParamList = {
   Badges: undefined;
   BadgeDetail: { badgeId: string };
+  BadgeDesigner: { badgeId: string };
 };
 
 export type SettingsStackParamList = {
@@ -63,6 +64,7 @@ export type TimelineJourneyScreenProps = NativeStackScreenProps<GoalsStackParamL
 
 export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Badges'>;
 export type BadgeDetailScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDetail'>;
+export type BadgeDesignerScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDesigner'>;
 
 export type SettingsScreenProps = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 
