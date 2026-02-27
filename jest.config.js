@@ -26,7 +26,7 @@ module.exports = {
     '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native)/)',
+    '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native)/)',
   ],
   setupFiles: ['./node_modules/react-native/jest/setup.js', './src/db/__tests__/setup.ts'],
   testMatch: ['**/src/**/__tests__/**/*.test.{ts,tsx}'],

@@ -17,3 +17,19 @@ export type { BadgeDesign } from './types';
 
 export { BadgeShapeView, generateShapePath } from './shapes';
 export type { BadgeShapeViewProps } from './shapes';
+
+export { IconPicker } from './IconPicker';
+export type { IconPickerProps } from './IconPicker';
+
+export { getIconComponent, getRegisteredIconNames, ICON_REGISTRY } from './iconRegistry';
+
+export {
+  searchIcons,
+  getIconsByCategory,
+  getAllCuratedIcons,
+  iconNameToLabel,
+  POPULAR_ICON_NAMES,
+  CATEGORY_ORDER,
+  CATEGORY_LABELS,
+} from './iconIndex';
+export type { IconCategory, IconEntry } from './iconIndex';
