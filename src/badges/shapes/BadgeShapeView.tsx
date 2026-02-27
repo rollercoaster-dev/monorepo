@@ -48,22 +48,23 @@ export function BadgeShapeView({
   // Derive shadow visibility from theme when not explicitly set
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
 
-  // High contrast / lowVision: thicker borders
-  const isHighContrast = theme.shadows.opacity === 0;
+  // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
+  const isHighContrast = theme.variant === 'highContrast' || theme.variant === 'lowVision';
   const resolvedStrokeWidth = strokeWidthProp ?? (isHighContrast ? 4 : 3);
 
-  // Inset shapes by half the stroke width so the stroke doesn't clip the viewBox.
-  // The viewBox already extends by SHADOW_OFFSET when shadow is shown.
+  // Inset shapes by half the stroke width so the stroke doesn't clip
   const inset = resolvedStrokeWidth / 2;
-  const viewBoxSize = size + (hasShadow ? SHADOW_OFFSET : 0);
+
+  // Expand the SVG to include shadow offset so shape doesn't scale down
+  const totalSize = size + (hasShadow ? SHADOW_OFFSET : 0);
 
   const pathD = generateShapePath(shape, size, inset);
 
   return (
     <Svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
+      width={totalSize}
+      height={totalSize}
+      viewBox={`0 0 ${totalSize} ${totalSize}`}
       accessibilityRole="image"
       accessibilityLabel={`${shape} badge shape`}
     >
@@ -72,8 +73,6 @@ export function BadgeShapeView({
         <Path
           d={pathD}
           fill="#000000"
-          stroke="#000000"
-          strokeWidth={resolvedStrokeWidth}
           strokeLinejoin="round"
           translateX={SHADOW_OFFSET}
           translateY={SHADOW_OFFSET}
@@ -84,7 +83,7 @@ export function BadgeShapeView({
       <Path
         d={pathD}
         fill={fillColor}
-        stroke="#000000"
+        stroke={theme.colors.border}
         strokeWidth={resolvedStrokeWidth}
         strokeLinejoin="round"
       />

@@ -1,0 +1,145 @@
+/**
+ * BadgeRenderer — renders a full badge from a BadgeDesign configuration.
+ *
+ * Composes three layers (bottom to top):
+ * 1. Shadow layer — solid black duplicate of the shape, offset down-right
+ * 2. Shape layer — filled background shape with thick border
+ * 3. Icon layer — Phosphor icon centered at ~45% of badge diameter
+ *
+ * The icon color is auto-calculated for WCAG AA contrast against the shape
+ * fill color using the existing accessibility utility.
+ *
+ * Theme variants are respected:
+ *  - highContrast / lowVision: thicker borders, no shadow
+ *  - autismFriendly: no shadow
+ */
+
+import React, { useMemo } from 'react';
+import Svg, { G, Path } from 'react-native-svg';
+import { useUnistyles } from 'react-native-unistyles';
+import type { IconWeight } from 'phosphor-react-native';
+
+import type { BadgeDesign } from './types';
+import { generateShapePath } from './shapes/paths';
+import { getIconComponent } from './iconRegistry';
+import { getRecommendedTextColor } from '../utils/accessibility';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface BadgeRendererProps {
+  /** Badge design configuration to render */
+  design: BadgeDesign;
+  /** Rendering size in logical pixels. Default 256. */
+  size?: number;
+  /** Override shadow visibility (default: derived from theme) */
+  showShadow?: boolean;
+  /** Test ID for testing */
+  testID?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Shadow offset in logical pixels (down-right) */
+const SHADOW_OFFSET = 5;
+
+/** Icon size as a fraction of badge size */
+const ICON_SIZE_RATIO = 0.45;
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function BadgeRenderer({
+  design,
+  size = 256,
+  showShadow: showShadowProp,
+  testID = 'badge-renderer',
+}: BadgeRendererProps) {
+  const { theme } = useUnistyles();
+
+  // Derive shadow visibility from theme when not explicitly set
+  const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
+
+  // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
+  const isHighContrast = theme.variant === 'highContrast' || theme.variant === 'lowVision';
+  const strokeWidth = isHighContrast ? 4 : 3;
+
+  // Inset shapes by half the stroke width so the stroke doesn't clip
+  const inset = strokeWidth / 2;
+
+  // Expand the SVG to include shadow offset so badge doesn't scale down
+  const totalSize = size + (hasShadow ? SHADOW_OFFSET : 0);
+
+  // Generate the shape path
+  const pathD = useMemo(
+    () => generateShapePath(design.shape, size, inset),
+    [design.shape, size, inset],
+  );
+
+  // Calculate icon color for WCAG AA contrast against fill
+  const iconColor = useMemo(
+    () => {
+      try {
+        return getRecommendedTextColor(design.color);
+      } catch {
+        return '#000000';
+      }
+    },
+    [design.color],
+  );
+
+  // Icon sizing — centered at ~45% of badge diameter
+  const iconSize = Math.round(size * ICON_SIZE_RATIO);
+  const iconOffset = (size - iconSize) / 2;
+
+  // Resolve icon component
+  const IconComponent = getIconComponent(design.iconName);
+
+  return (
+    <Svg
+      width={totalSize}
+      height={totalSize}
+      viewBox={`0 0 ${totalSize} ${totalSize}`}
+      accessibilityRole="image"
+      accessibilityLabel={`${design.title} badge, ${design.shape} shape`}
+      testID={testID}
+    >
+      {/* Layer 1: Shadow — solid black duplicate offset down-right */}
+      {hasShadow && (
+        <Path
+          d={pathD}
+          fill="#000000"
+          strokeLinejoin="round"
+          translateX={SHADOW_OFFSET}
+          translateY={SHADOW_OFFSET}
+        />
+      )}
+
+      {/* Layer 2: Shape — filled background with border */}
+      <Path
+        d={pathD}
+        fill={design.color}
+        stroke={theme.colors.border}
+        strokeWidth={strokeWidth}
+        strokeLinejoin="round"
+      />
+
+      {/* Layer 3: Frame — not yet implemented (Phase 2). design.frame is accepted but ignored. */}
+
+      {/* Layer 4: Icon — centered within the shape */}
+      {IconComponent && (
+        <G x={iconOffset} y={iconOffset}>
+          <IconComponent
+            size={iconSize}
+            weight={(design.iconWeight ?? 'regular') as IconWeight}
+            color={iconColor}
+          />
+        </G>
+      )}
+    </Svg>
+  );
+}

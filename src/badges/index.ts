@@ -18,6 +18,9 @@ export type { BadgeDesign } from './types';
 export { BadgeShapeView, generateShapePath } from './shapes';
 export type { BadgeShapeViewProps } from './shapes';
 
+export { BadgeRenderer } from './BadgeRenderer';
+export type { BadgeRendererProps } from './BadgeRenderer';
+
 export { IconPicker } from './IconPicker';
 export type { IconPickerProps } from './IconPicker';
 

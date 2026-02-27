@@ -63,6 +63,7 @@ export interface ComposedTheme {
   transition: typeof transition;
   shadow: typeof shadow;
   textStyles: TextStyles;
+  variant: Variant;
 }
 
 /**
@@ -180,6 +181,7 @@ export function composeTheme(
     transition,
     shadow,
     textStyles,
+    variant,
   };
 }
 
