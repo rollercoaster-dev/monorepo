@@ -14,3 +14,6 @@ export {
   parseBadgeDesign,
 } from './types';
 export type { BadgeDesign } from './types';
+
+export { BadgeShapeView, generateShapePath } from './shapes';
+export type { BadgeShapeViewProps } from './shapes';
