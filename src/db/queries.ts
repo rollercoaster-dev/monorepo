@@ -692,6 +692,7 @@ export const badgeWithGoalQuery = (badgeId: BadgeId) =>
         'badge.goalId',
         'badge.credential',
         'badge.imageUri',
+        'badge.design',
         'badge.createdAt',
         'goal.title as goalTitle',
         'goal.completedAt',
@@ -718,6 +719,7 @@ export const badgesWithGoalsQuery = evolu.createQuery((db) =>
       'badge.id',
       'badge.goalId',
       'badge.imageUri',
+      'badge.design',
       'badge.createdAt',
       'goal.title as goalTitle',
       'goal.completedAt',
@@ -739,6 +741,7 @@ export function createBadge(params: {
   goalId: GoalId;
   credential: string;
   imageUri: string;
+  design?: string;
 }) {
   const parsedCredential = NonEmptyString.orNull(params.credential);
   const parsedImageUri = NonEmptyString1000.orNull(params.imageUri);
@@ -761,11 +764,14 @@ export function createBadge(params: {
     );
   }
 
+  const parsedDesign = params.design ? NonEmptyString.orNull(params.design) : null;
+
   try {
     return evolu.insert('badge', {
       goalId: params.goalId,
       credential: parsedCredential,
       imageUri: parsedImageUri,
+      design: parsedDesign,
     });
   } catch (error) {
     logger.error('Failed to insert badge', {
@@ -785,7 +791,7 @@ export function createBadge(params: {
  */
 export function updateBadge(
   id: BadgeId,
-  fields: { credential?: string; imageUri?: string },
+  fields: { credential?: string; imageUri?: string; design?: string | null },
 ) {
   const update: Record<string, unknown> = { id };
 
@@ -815,6 +821,24 @@ export function updateBadge(
       );
     }
     update.imageUri = parsed;
+  }
+
+  if (fields.design !== undefined) {
+    if (fields.design !== null) {
+      const parsed = NonEmptyString.orNull(fields.design);
+      if (!parsed) {
+        logger.error('Badge design validation failed during update', {
+          badgeId: id,
+          designLength: fields.design?.length,
+        });
+        throw new Error(
+          `Badge design must not be empty (received ${fields.design?.length || 0} characters)`,
+        );
+      }
+      update.design = parsed;
+    } else {
+      update.design = null;
+    }
   }
 
   try {

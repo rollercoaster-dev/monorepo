@@ -127,6 +127,7 @@ export const Schema = {
     goalId: GoalId, // One badge per goal
     credential: NonEmptyString, // Full OB3 Verifiable Credential JSON (typically 1500-10000+ chars)
     imageUri: NonEmptyString1000, // Local file path to baked badge image
+    design: nullOr(NonEmptyString), // BadgeDesign JSON — visual configuration for the badge designer
   },
 
   /**

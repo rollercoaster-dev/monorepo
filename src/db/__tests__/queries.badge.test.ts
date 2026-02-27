@@ -79,4 +79,59 @@ describe('Badge CRUD Operations', () => {
   test('deleteBadge should succeed', () => {
     expect(() => deleteBadge(mockBadgeId)).not.toThrow();
   });
+
+  // Design field tests
+  test('createBadge accepts optional design JSON', () => {
+    const design = JSON.stringify({
+      shape: 'circle',
+      frame: 'none',
+      color: '#a78bfa',
+      iconName: 'Trophy',
+      iconWeight: 'regular',
+      title: 'Test Badge',
+    });
+    expect(() =>
+      createBadge({
+        goalId: mockGoalId,
+        credential: '{"valid": "json"}',
+        imageUri: 'file://badge.png',
+        design,
+      }),
+    ).not.toThrow();
+  });
+
+  test('createBadge accepts any non-empty string as design (no JSON validation)', () => {
+    expect(() =>
+      createBadge({
+        goalId: mockGoalId,
+        credential: '{"valid": "json"}',
+        imageUri: 'file://badge.png',
+        design: 'not-json',
+      }),
+    ).not.toThrow();
+  });
+
+  test('createBadge works without design (backward compat)', () => {
+    expect(() =>
+      createBadge({
+        goalId: mockGoalId,
+        credential: '{"valid": "json"}',
+        imageUri: 'file://badge.png',
+      }),
+    ).not.toThrow();
+  });
+
+  test.each([
+    ['valid design JSON', { design: '{"shape":"circle"}' }, false],
+    ['null design (clear)', { design: null }, false],
+    ['empty design string', { design: '' }, true],
+  ])('updateBadge design field: %s', (_label, fields, shouldThrow) => {
+    if (shouldThrow) {
+      expect(() => updateBadge(mockBadgeId, fields)).toThrow(
+        'Badge design must not be empty',
+      );
+    } else {
+      expect(() => updateBadge(mockBadgeId, fields)).not.toThrow();
+    }
+  });
 });
