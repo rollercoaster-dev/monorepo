@@ -12,8 +12,11 @@ import type { BadgeDesign } from '../types';
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from '../types';
 import { getRecommendedTextColor } from '../../utils/accessibility';
 
-// Mock phosphor-react-native — each icon is a simple View with testID
-jest.mock('phosphor-react-native', () => {
+// Mock the icon registry instead of phosphor-react-native directly.
+// phosphor-react-native v3 changed its export structure, so mocking the
+// library module can fail on CI while passing locally. Mocking the registry
+// gives us a stable seam that works regardless of the library internals.
+jest.mock('../iconRegistry', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
 
@@ -27,7 +30,6 @@ jest.mock('phosphor-react-native', () => {
       <View
         testID={testID ?? `icon-${name}`}
         accessibilityLabel={`${name} icon`}
-        // Store props for inspection
         accessibilityHint={`size=${size} weight=${weight} color=${color}`}
       >
         <Text>{name}</Text>
@@ -42,15 +44,16 @@ jest.mock('phosphor-react-native', () => {
     'Code', 'Brain', 'Rocket', 'Fire',
   ];
 
-  const exports: Record<string, unknown> = {
-    IconContext: React.createContext({}),
-  };
-
+  const registry: Record<string, unknown> = {};
   for (const name of iconNames) {
-    exports[name] = createMockIcon(name);
+    registry[name] = createMockIcon(name);
   }
 
-  return exports;
+  return {
+    ICON_REGISTRY: registry,
+    getIconComponent: (name: string) => registry[name],
+    getRegisteredIconNames: () => Object.keys(registry),
+  };
 });
 
 // ---------------------------------------------------------------------------

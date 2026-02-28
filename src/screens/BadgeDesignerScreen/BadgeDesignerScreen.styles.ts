@@ -58,6 +58,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingBottom: theme.space[4],
     paddingHorizontal: theme.space[4],
     width: '100%',
+    gap: theme.space[3],
   },
   centered: {
     flex: 1,

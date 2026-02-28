@@ -29,7 +29,7 @@ export function NewGoalModal() {
 
     const result = createGoal(trimmed);
     if (result.ok) {
-      navigation.replace('EditMode', { goalId: result.value.id });
+      navigation.replace('BadgeDesigner', { mode: 'new-goal', goalId: result.value.id });
     } else {
       setTitleError('Failed to create goal');
     }

@@ -32,7 +32,11 @@ import type {
 } from '../../navigation/types';
 import { EVIDENCE_OPTIONS, validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
 import { EVIDENCE_TYPE_ICONS } from '../../constants/evidenceIcons';
+import { pendingDesignStore } from '../../stores/pendingDesignStore';
+import { Logger } from '../../shims/rd-logger';
 import { styles } from './CompletionFlowScreen.styles';
+
+const logger = new Logger('CompletionFlowScreen');
 
 /**
  * Optional image override for the completion icon.
@@ -62,7 +66,12 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const badgeRow = badgeRows[0] ?? null;
   const allBadges = useQuery(badgesQuery);
 
-  const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId);
+  // consume() reads and deletes — prevents accumulation in the in-memory Map
+  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
+  const pendingDesign = pendingDesignRef.current;
+  const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId, {
+    ...(pendingDesign ? { design: pendingDesign } : {}),
+  });
   const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing';
 
   const [showConfetti, setShowConfetti] = useState(true);
@@ -117,8 +126,20 @@ function CompletionContent({ goalId }: { goalId: string }) {
         params: { badgeId: String(badgeRow.id) },
       });
     } else {
-      console.warn('BadgeEarnedModal: could not navigate — parent tab navigator not found');
+      logger.warn('Could not navigate to badge detail — parent tab navigator not found');
     }
+  };
+
+  const handleCustomizeBadge = () => {
+    setShowBadgeModal(false);
+    if (!badgeRow) {
+      logger.warn('handleCustomizeBadge: badgeRow is null — cannot navigate to designer');
+      return;
+    }
+    navigation.navigate('BadgeDesigner', {
+      mode: 'redesign',
+      badgeId: String(badgeRow.id),
+    });
   };
 
   const handleDismissBadgeModal = () => {
@@ -245,6 +266,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
           imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
           isFirstBadge={capturedIsFirstBadge.current}
           onViewBadge={handleViewBadge}
+          onCustomize={handleCustomizeBadge}
           onContinue={handleDismissBadgeModal}
         />
       )}

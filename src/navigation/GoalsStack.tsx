@@ -14,6 +14,7 @@ import { CaptureTextNote } from '../screens/CaptureTextNote';
 import { EditModeScreen } from '../screens/EditModeScreen';
 import { CompletionFlowScreen } from '../screens/CompletionFlowScreen';
 import { TimelineJourneyScreen } from '../screens/TimelineJourneyScreen';
+import { BadgeDesignerScreen } from '../screens/BadgeDesignerScreen';
 import type { GoalsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<GoalsStackParamList>();
@@ -37,6 +38,8 @@ export function GoalsStack() {
       <Stack.Screen name="CaptureLink" component={CaptureLinkScreen} />
       <Stack.Screen name="CaptureFile" component={CaptureFile} />
       <Stack.Screen name="EditMode" component={EditModeScreen} />
+      {/* BadgeDesignerScreen handles GoalsStack params (mode: 'new-goal'|'redesign') via runtime check */}
+      <Stack.Screen name="BadgeDesigner" component={BadgeDesignerScreen as React.ComponentType<unknown>} />
     </Stack.Navigator>
   );
 }

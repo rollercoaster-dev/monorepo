@@ -185,6 +185,26 @@ describe('useCreateBadge', () => {
     });
   });
 
+  describe('when design option is provided', () => {
+    it('passes design to createBadge', async () => {
+      const designJson = '{"shape":"circle","color":"#FF0000","iconName":"Trophy","iconWeight":"regular","frame":"none","title":"Test"}';
+      renderHook(() => useCreateBadge(GOAL_ID, { design: designJson }));
+      await act(async () => {});
+
+      expect(mockCreateBadge).toHaveBeenCalledWith(
+        expect.objectContaining({ design: designJson }),
+      );
+    });
+
+    it('does not include design key when option is not provided', async () => {
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const callArg = mockCreateBadge.mock.calls[0][0] as Record<string, unknown>;
+      expect(callArg).not.toHaveProperty('design');
+    });
+  });
+
   describe('when capturedPng is provided', () => {
     it('passes the captured PNG to bakePNG instead of generating one', async () => {
       const fakePng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);

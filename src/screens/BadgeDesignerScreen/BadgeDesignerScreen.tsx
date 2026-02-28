@@ -2,6 +2,7 @@ import React, { Suspense, useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUnistyles } from 'react-native-unistyles';
 import { useQuery } from '@evolu/react';
 
@@ -15,22 +16,117 @@ import { ColorPicker } from '../../badges/ColorPicker';
 import { IconPicker } from '../../badges/IconPicker';
 import { parseBadgeDesign, createDefaultBadgeDesign } from '../../badges/types';
 import type { BadgeDesign, BadgeShape, BadgeIconWeight } from '../../badges/types';
-import { badgeWithGoalQuery, updateBadge } from '../../db';
+import { badgeWithGoalQuery, goalsQuery, updateBadge } from '../../db';
 import type { BadgeId } from '../../db';
-import type { BadgeDesignerScreenProps } from '../../navigation/types';
+import { pendingDesignStore } from '../../stores/pendingDesignStore';
+import { Logger } from '../../shims/rd-logger';
+import type {
+  BadgeDesignerScreenProps,
+  GoalsStackParamList,
+} from '../../navigation/types';
 import { styles } from './BadgeDesignerScreen.styles';
 
+const logger = new Logger('BadgeDesignerScreen');
+
 // ---------------------------------------------------------------------------
-// Inner content (uses Evolu query, must be inside Suspense)
+// Shared design editor UI (stateless — receives design + callbacks)
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerContent({ badgeId }: { badgeId: string }) {
+interface DesignEditorProps {
+  currentDesign: BadgeDesign;
+  goalColor?: string | null;
+  onDesignChange: (design: BadgeDesign) => void;
+  onSave: () => void;
+  saveLabel?: string;
+  extraFooter?: React.ReactNode;
+}
+
+function DesignEditor({
+  currentDesign,
+  goalColor,
+  onDesignChange,
+  onSave,
+  saveLabel = 'Save Design',
+  extraFooter,
+}: DesignEditorProps) {
+  const handleShapeChange = useCallback((shape: BadgeShape) => {
+    onDesignChange({ ...currentDesign, shape });
+  }, [currentDesign, onDesignChange]);
+
+  const handleColorChange = useCallback((color: string) => {
+    onDesignChange({ ...currentDesign, color });
+  }, [currentDesign, onDesignChange]);
+
+  const handleIconChange = useCallback((iconName: string) => {
+    onDesignChange({ ...currentDesign, iconName });
+  }, [currentDesign, onDesignChange]);
+
+  const handleWeightChange = useCallback((iconWeight: BadgeIconWeight) => {
+    onDesignChange({ ...currentDesign, iconWeight });
+  }, [currentDesign, onDesignChange]);
+
+  const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} with ${currentDesign.iconName} icon`;
+
+  return (
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View
+        style={styles.previewContainer}
+        accessibilityRole="image"
+        accessibilityLabel={previewLabel}
+      >
+        <BadgeRenderer design={currentDesign} size={160} />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Shape</Text>
+        <ShapeSelector
+          selectedShape={currentDesign.shape}
+          onSelectShape={handleShapeChange}
+          accentColor={currentDesign.color}
+        />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Color</Text>
+        <ColorPicker
+          selectedColor={currentDesign.color}
+          onSelectColor={handleColorChange}
+          goalColor={goalColor ?? undefined}
+        />
+      </View>
+
+      <View style={styles.iconSection}>
+        <Text style={styles.sectionLabel}>Icon</Text>
+        <IconPicker
+          selectedIcon={currentDesign.iconName}
+          selectedWeight={currentDesign.iconWeight}
+          onSelectIcon={handleIconChange}
+          onSelectWeight={handleWeightChange}
+          accentColor={currentDesign.color}
+        />
+      </View>
+
+      <View style={styles.footer}>
+        <Button label={saveLabel} onPress={onSave} />
+        {extraFooter}
+      </View>
+    </ScrollView>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Badge editing content — used by both BadgesStack and GoalsStack redesign
+// ---------------------------------------------------------------------------
+
+function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const navigation = useNavigation();
   const query = useMemo(() => badgeWithGoalQuery(badgeId as BadgeId), [badgeId]);
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
-  // Parse existing design or create default
   const initialDesign = useMemo(() => {
     if (!badge) return null;
     const goalTitle = (badge.goalTitle as string) ?? 'Untitled';
@@ -40,52 +136,19 @@ function BadgeDesignerContent({ badgeId }: { badgeId: string }) {
   }, [badge]);
 
   const [design, setDesign] = useState<BadgeDesign | null>(null);
-
-  // Use initialDesign as starting point once available
   const currentDesign = design ?? initialDesign;
-
   const goalColor = badge?.goalColor as string | null | undefined;
-
-  const handleShapeChange = useCallback((shape: BadgeShape) => {
-    setDesign((prev) => {
-      const base = prev ?? initialDesign;
-      if (!base) return prev;
-      return { ...base, shape };
-    });
-  }, [initialDesign]);
-
-  const handleColorChange = useCallback((color: string) => {
-    setDesign((prev) => {
-      const base = prev ?? initialDesign;
-      if (!base) return prev;
-      return { ...base, color };
-    });
-  }, [initialDesign]);
-
-  const handleIconChange = useCallback((iconName: string) => {
-    setDesign((prev) => {
-      const base = prev ?? initialDesign;
-      if (!base) return prev;
-      return { ...base, iconName };
-    });
-  }, [initialDesign]);
-
-  const handleWeightChange = useCallback((iconWeight: BadgeIconWeight) => {
-    setDesign((prev) => {
-      const base = prev ?? initialDesign;
-      if (!base) return prev;
-      return { ...base, iconWeight };
-    });
-  }, [initialDesign]);
 
   const handleSave = useCallback(() => {
     if (!currentDesign) return;
     try {
       updateBadge(badgeId as BadgeId, { design: JSON.stringify(currentDesign) });
-      navigation.goBack();
-    } catch {
+    } catch (err) {
+      logger.error('Failed to save badge design', { badgeId, error: err });
       Alert.alert('Save Failed', 'Could not save your badge design. Please try again.');
+      return;
     }
+    navigation.goBack();
   }, [badgeId, currentDesign, navigation]);
 
   if (!badge || !currentDesign) {
@@ -101,73 +164,108 @@ function BadgeDesignerContent({ badgeId }: { badgeId: string }) {
     );
   }
 
-  const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} with ${currentDesign.iconName} icon`;
-
   return (
-    <ScrollView
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Live preview */}
-      <View
-        style={styles.previewContainer}
-        accessibilityRole="image"
-        accessibilityLabel={previewLabel}
-      >
-        <BadgeRenderer design={currentDesign} size={160} />
-      </View>
-
-      {/* Shape selector */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Shape</Text>
-        <ShapeSelector
-          selectedShape={currentDesign.shape}
-          onSelectShape={handleShapeChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      {/* Color picker */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionLabel}>Color</Text>
-        <ColorPicker
-          selectedColor={currentDesign.color}
-          onSelectColor={handleColorChange}
-          goalColor={goalColor ?? undefined}
-        />
-      </View>
-
-      {/* Icon picker — trigger button opens full-screen modal */}
-      <View style={styles.iconSection}>
-        <Text style={styles.sectionLabel}>Icon</Text>
-        <IconPicker
-          selectedIcon={currentDesign.iconName}
-          selectedWeight={currentDesign.iconWeight}
-          onSelectIcon={handleIconChange}
-          onSelectWeight={handleWeightChange}
-          accentColor={currentDesign.color}
-        />
-      </View>
-
-      {/* Save button */}
-      <View style={styles.footer}>
-        <Button
-          label="Save Design"
-          onPress={handleSave}
-        />
-      </View>
-    </ScrollView>
+    <DesignEditor
+      currentDesign={currentDesign}
+      goalColor={goalColor}
+      onDesignChange={setDesign}
+      onSave={handleSave}
+    />
   );
 }
 
 // ---------------------------------------------------------------------------
-// Screen wrapper
+// GoalsStack: new-goal mode — no badge exists yet, design saved to store
 // ---------------------------------------------------------------------------
 
-export function BadgeDesignerScreen({ route }: BadgeDesignerScreenProps) {
+function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
+  const navigation = useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
+  const goals = useQuery(goalsQuery);
+  const goal = goals.find((g) => g.id === goalId) ?? null;
+
+  const initialDesign = useMemo(() => {
+    const title = (goal?.title as string) ?? 'Untitled';
+    const color = (goal?.color as string | null) ?? null;
+    return createDefaultBadgeDesign(title, color);
+  }, [goal]);
+
+  const [design, setDesign] = useState<BadgeDesign | null>(null);
+  const currentDesign = design ?? initialDesign;
+
+  const goalColor = (goal?.color as string | null) ?? null;
+
+  const saveAndNavigate = useCallback((designToSave: BadgeDesign) => {
+    try {
+      pendingDesignStore.set(goalId, JSON.stringify(designToSave));
+      navigation.replace('EditMode', { goalId });
+    } catch (err) {
+      logger.error('Failed to save design and navigate', { goalId, error: err });
+      Alert.alert('Save Failed', 'Could not save your badge design. Please try again.');
+    }
+  }, [goalId, navigation]);
+
+  const handleSave = useCallback(() => {
+    saveAndNavigate(currentDesign);
+  }, [currentDesign, saveAndNavigate]);
+
+  const handleSkip = useCallback(() => {
+    saveAndNavigate(initialDesign);
+  }, [initialDesign, saveAndNavigate]);
+
+  if (!goal) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <DesignEditor
+      currentDesign={currentDesign}
+      goalColor={goalColor}
+      onDesignChange={setDesign}
+      onSave={handleSave}
+      saveLabel="Use This Design"
+      extraFooter={
+        <Button
+          label="Skip — Use Default"
+          variant="secondary"
+          onPress={handleSkip}
+        />
+      }
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Screen wrapper — detects mode from route params
+// ---------------------------------------------------------------------------
+
+type ScreenParams =
+  | { badgeId: string; mode?: undefined }
+  | { mode: 'new-goal'; goalId: string }
+  | { mode: 'redesign'; badgeId: string };
+
+export function BadgeDesignerScreen({ route }: BadgeDesignerScreenProps | { route: { params: ScreenParams } }) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { badgeId } = route.params;
+  const params = route.params as ScreenParams;
+
+  let content: React.ReactNode;
+  if ('mode' in params && params.mode === 'new-goal') {
+    content = <BadgeDesignerContentNewGoal goalId={params.goalId} />;
+  } else if ('badgeId' in params && params.badgeId) {
+    content = <BadgeDesignerContentBadge badgeId={params.badgeId} />;
+  } else {
+    logger.error('BadgeDesignerScreen: unrecognized params', { params });
+    content = (
+      <View style={styles.centered}>
+        <Text variant="body">Invalid badge designer parameters</Text>
+        <Button label="Go Back" variant="secondary" onPress={() => navigation.goBack()} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}>
@@ -189,7 +287,7 @@ export function BadgeDesignerScreen({ route }: BadgeDesignerScreenProps) {
               <ActivityIndicator style={styles.loadingIndicator} size="large" />
             }
           >
-            <BadgeDesignerContent badgeId={badgeId} />
+            {content}
           </Suspense>
         </ErrorBoundary>
       </View>

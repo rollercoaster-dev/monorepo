@@ -4,6 +4,7 @@ import { BadgeDesignerScreen } from '../BadgeDesignerScreen';
 import type { BadgeDesignerScreenProps } from '../../../navigation/types';
 
 const mockGoBack = jest.fn();
+const mockReplace = jest.fn();
 
 jest.mock('@react-navigation/native', () => {
   const actual = jest.requireActual('@react-navigation/native');
@@ -12,6 +13,7 @@ jest.mock('@react-navigation/native', () => {
     useNavigation: () => ({
       navigate: jest.fn(),
       goBack: mockGoBack,
+      replace: mockReplace,
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
       canGoBack: jest.fn(() => true),
@@ -31,7 +33,23 @@ jest.mock('@evolu/react', () => {
 const mockUpdateBadge = jest.fn();
 jest.mock('../../../db', () => ({
   badgeWithGoalQuery: jest.fn(() => ({ __brand: 'badgeWithGoalQuery' })),
+  goalsQuery: { __brand: 'goalsQuery' },
   updateBadge: (...args: unknown[]) => mockUpdateBadge(...args),
+}));
+
+const mockPendingDesignStore = {
+  set: jest.fn(),
+  get: jest.fn(),
+  consume: jest.fn(),
+  clear: jest.fn(),
+};
+jest.mock('../../../stores/pendingDesignStore', () => ({
+  pendingDesignStore: {
+    set: (...args: unknown[]) => mockPendingDesignStore.set(...args),
+    get: (...args: unknown[]) => mockPendingDesignStore.get(...args),
+    consume: (...args: unknown[]) => mockPendingDesignStore.consume(...args),
+    clear: (...args: unknown[]) => mockPendingDesignStore.clear(...args),
+  },
 }));
 
 // Mock react-native-svg
@@ -252,5 +270,78 @@ describe('BadgeDesignerScreen', () => {
       screen.getByLabelText(/Badge preview:/),
     ).toBeOnTheScreen();
     expect(screen.getByLabelText('Save Design')).toBeOnTheScreen();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// New-goal mode tests
+// ---------------------------------------------------------------------------
+
+const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
+  id: 'goal-1',
+  title: 'Learn TypeScript',
+  color: '#06b6d4',
+  status: 'active',
+  ...overrides,
+});
+
+const newGoalRoute = {
+  params: { mode: 'new-goal' as const, goalId: 'goal-1' },
+  key: 'BadgeDesigner-new',
+  name: 'BadgeDesigner' as const,
+} as unknown as BadgeDesignerScreenProps['route'];
+
+describe('BadgeDesignerScreen — new-goal mode', () => {
+  it('renders design editor with "Use This Design" button', () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByText('Use This Design')).toBeOnTheScreen();
+  });
+
+  it('renders "Skip — Use Default" button', () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByText('Skip — Use Default')).toBeOnTheScreen();
+  });
+
+  it('saves design to pendingDesignStore and navigates on save', () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText('Use This Design'));
+    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
+      'goal-1',
+      expect.stringContaining('"shape"'),
+    );
+    expect(mockReplace).toHaveBeenCalledWith('EditMode', { goalId: 'goal-1' });
+  });
+
+  it('saves default design and navigates on skip', () => {
+    mockUseQuery.mockReturnValue([makeGoalRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByText('Skip — Use Default'));
+    expect(mockPendingDesignStore.set).toHaveBeenCalledWith(
+      'goal-1',
+      expect.stringContaining('"shape"'),
+    );
+    expect(mockReplace).toHaveBeenCalledWith('EditMode', { goalId: 'goal-1' });
+  });
+
+  it('shows loading indicator when goal data is not yet available', () => {
+    mockUseQuery.mockReturnValue([]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={newGoalRoute} navigation={{} as never} />,
+    );
+    // ActivityIndicator should render (no "Use This Design" button visible)
+    expect(screen.queryByText('Use This Design')).toBeNull();
   });
 });

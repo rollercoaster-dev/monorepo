@@ -76,13 +76,16 @@ describe('NewGoalModal', () => {
     expect(createGoal).not.toHaveBeenCalled();
   });
 
-  it('creates goal and navigates to EditMode on valid submit', () => {
+  it('creates goal and navigates to BadgeDesigner on valid submit', () => {
     createGoal.mockReturnValue({ ok: true, value: { id: 'goal-123' } });
     renderWithProviders(<NewGoalModal />);
     fireEvent.changeText(screen.getByLabelText('Title'), 'Learn TypeScript');
     fireEvent.press(screen.getByText('Create Goal'));
     expect(createGoal).toHaveBeenCalledWith('Learn TypeScript');
-    expect(mockReplace).toHaveBeenCalledWith('EditMode', { goalId: 'goal-123' });
+    expect(mockReplace).toHaveBeenCalledWith('BadgeDesigner', {
+      mode: 'new-goal',
+      goalId: 'goal-123',
+    });
   });
 
   it('trims title before creating goal', () => {

@@ -29,6 +29,9 @@ export type GoalsStackParamList = {
   TimelineJourney: { goalId: string };
   NewGoal: undefined;
   EditMode: { goalId: string; cameFromFocus?: boolean };
+  BadgeDesigner:
+    | { mode: 'new-goal'; goalId: string }
+    | { mode: 'redesign'; badgeId: string };
 } & CaptureRoutes;
 
 export type BadgesStackParamList = {
@@ -65,6 +68,7 @@ export type TimelineJourneyScreenProps = NativeStackScreenProps<GoalsStackParamL
 export type BadgesScreenProps = NativeStackScreenProps<BadgesStackParamList, 'Badges'>;
 export type BadgeDetailScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDetail'>;
 export type BadgeDesignerScreenProps = NativeStackScreenProps<BadgesStackParamList, 'BadgeDesigner'>;
+export type GoalsBadgeDesignerScreenProps = NativeStackScreenProps<GoalsStackParamList, 'BadgeDesigner'>;
 
 export type SettingsScreenProps = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
 

@@ -81,6 +81,8 @@ function toBase64Url(bytes: Uint8Array): string {
 export interface UseCreateBadgeOptions {
   /** Pre-captured 512x512 PNG from captureBadge(). When provided, replaces the solid-color fallback. */
   capturedPng?: Buffer;
+  /** Serialized BadgeDesign JSON to persist on the badge record. */
+  design?: string;
 }
 
 export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions): UseCreateBadgeResult {
@@ -102,9 +104,11 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
   const evidenceRef = useRef({ goalEvidence, stepEvidence });
   evidenceRef.current = { goalEvidence, stepEvidence };
 
-  // Same pattern for capturedPng — read latest value without adding to deps.
+  // Same pattern for capturedPng and design — read latest value without adding to deps.
   const capturedPngRef = useRef(options?.capturedPng);
   capturedPngRef.current = options?.capturedPng;
+  const designRef = useRef(options?.design);
+  designRef.current = options?.design;
 
   // Once triggered, never reset — prevents re-entry after status state updates
   // or after existingBadge reactively updates from null to a badge object.
@@ -241,6 +245,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
           goalId,
           credential: JSON.stringify(signedCredential),
           imageUri,
+          ...(designRef.current ? { design: designRef.current } : {}),
         });
         completeGoal(goalId);
 
