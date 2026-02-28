@@ -88,6 +88,10 @@ Badge logic comes from `openbadges-modular-server` in the [rollercoaster-dev mon
 | `/work-on-issue <#>` | Creates branch, sets up board, fetches issue |
 | `/implement` | Implements code from a dev plan with atomic commits |
 | `/review` | Runs code-reviewer, test-analyzer, silent-failure-hunter in parallel |
+| `/self-review` | Pre-PR gate: runs local validation + CodeRabbit + Claude agents, auto-fixes critical issues |
+| `/accept-check` | Validates PR diff against issue acceptance criteria |
+| `/quality-score` | Grades codebase domains, updates docs/quality/grades.md |
+| `/review-to-task <pr>` | Converts unresolved PR comments to tracked issues |
 | `/finalize` | Pushes branch, creates PR, updates board |
 | `/auto-issue` | Creates a new GitHub issue |
 | `/board-status` | Shows project board state |

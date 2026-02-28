@@ -91,5 +91,18 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 - **Planning**: graph-flow planning stack (`mcp__graph-flow__p-*`)
 - **Issue tracking**: GitHub Issues + GitHub Project board
 - **Code review**: CodeRabbit + Claude review on every PR
-- **Skills**: See `skills/` directory and `.agents/skills/`
+- **Skills**: See `.claude/skills/` (project skills) and `.agents/skills/` (shared agent skills)
 - **Dev plans**: `.claude/dev-plans/` for issue-specific implementation plans
+
+### Recommended Pre-PR Cycle
+
+```
+/implement  -->  /self-review  -->  /accept-check  -->  /finalize
+```
+
+1. `/implement` — execute the dev plan with atomic commits
+2. `/self-review` — pre-PR gate: local validation + CodeRabbit CLI + Claude agents. Blocks if unresolved critical findings.
+3. `/accept-check` — validate diff against issue acceptance criteria. Flags gaps.
+4. `/finalize` — push branch, create PR, update board
+
+After merge: `/review-to-task <pr-number>` to convert unresolved review comments into tracked issues.
