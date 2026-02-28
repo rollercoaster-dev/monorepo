@@ -5,15 +5,10 @@ import { COMPONENTS_DIR, getComponentDirs } from './utils';
 // Components known to lack test files — tracked debt, not masked failures.
 // Remove entries as tests are added. See issue #155 for context.
 const KNOWN_UNTESTED: Set<string> = new Set([
-  'BadgeCard',
-  'CollapsibleSection',
   'Divider',
   'EmptyState',
-  'GoalCard',
   'ProgressBar',
-  'SettingsRow',
   'SettingsSection',
-  'ThemeSwitcher',
 ]);
 
 describe('Component structural requirements', () => {

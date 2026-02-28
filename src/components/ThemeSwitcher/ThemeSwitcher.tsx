@@ -43,7 +43,7 @@ export function ThemeSwitcher() {
     <View style={styles.container}>
       <Text style={styles.title}>Pick what feels right</Text>
 
-      <View accessibilityRole="radiogroup">
+      <View accessible accessibilityRole="radiogroup" accessibilityLabel="Theme selection">
         {themeOptions.map((option) => {
           const isSelected = themeName === option.id;
           const cardTheme = themes[option.id];

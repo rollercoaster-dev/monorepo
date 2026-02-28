@@ -18,7 +18,8 @@ const COLORS = [
   palette.yellow300,  // #ffe50c
   palette.green600,   // #16a34a
   palette.purple400,  // #a78bfa
-  '#f97316',          // orange (decorative, not in palette)
+  // eslint-disable-next-line local/no-raw-colors -- decorative confetti particle, not themed UI
+  '#f97316',          // orange
   palette.red600,     // #dc2626
 ];
 
