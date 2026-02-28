@@ -16,12 +16,10 @@ describe('ProgressBar', () => {
     { input: 0.5, expected: 50 },
     { input: 0, expected: 0 },
     { input: 1, expected: 100 },
-  ])('sets accessibilityValue.now to $expected for progress=$input', ({ input, expected }) => {
+  ])('sets accessibilityValue to {min:0, max:100, now:$expected} for progress=$input', ({ input, expected }) => {
     renderWithProviders(<ProgressBar progress={input} />);
     const bar = screen.getByRole('progressbar');
-    expect(bar.props.accessibilityValue).toEqual(
-      expect.objectContaining({ now: expected }),
-    );
+    expect(bar.props.accessibilityValue).toEqual({ min: 0, max: 100, now: expected });
   });
 
   it.each([
@@ -32,8 +30,6 @@ describe('ProgressBar', () => {
   ])('clamps out-of-range progress=$input to $expected', ({ input, expected }) => {
     renderWithProviders(<ProgressBar progress={input} />);
     const bar = screen.getByRole('progressbar');
-    expect(bar.props.accessibilityValue).toEqual(
-      expect.objectContaining({ now: expected }),
-    );
+    expect(bar.props.accessibilityValue).toEqual({ min: 0, max: 100, now: expected });
   });
 });
