@@ -7,6 +7,7 @@ Agent-maintained quality tracking for the native-rd codebase.
 | File | Purpose | Updated By |
 |------|---------|-----------|
 | `grades.md` | Current quality grades per domain | quality-scorer skill |
+| `tech-debt.md` | Versioned tech debt tracker with severity and status | cleanup-agent, doc-gardener, quality-scorer |
 
 ## How Grades Work
 
