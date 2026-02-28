@@ -85,11 +85,11 @@ The native app and the monorepo are two products built on shared foundations:
 
 ## Iteration Strategy
 
-The app is built in three iterations, each adding a layer on top of the last:
+The app is built in four iterations, each adding a layer on top of the last. See [ADR-0001](../decisions/ADR-0001-iteration-strategy.md) for full scope definitions, acceptance criteria, and current implementation status.
 
 ### The Task View — Next Best Step
 
-Before getting into iterations, there's a fundamental UX concept that runs through all of them: **the task view**.
+A fundamental UX concept that runs through all iterations: **the task view**.
 
 Most goal trackers show you everything — all your goals, all your steps, all your progress (or lack of it). For executive dysfunction, this is paralyzing. The task view inverts this. It's a single screen that shows **one next step per active goal.** That's it.
 
@@ -101,23 +101,33 @@ No goal trees, no progress bars, no weight. Just: here's what's next. Tap when d
 
 The depth is always there — you can drill into any goal to see all steps, evidence, and history. But the daily surface is one action per goal. This is the screen you see when you open the app on the bus for 30 seconds. It answers the only question that matters when you're overwhelmed: *what's the one thing I could do right now?*
 
-This isn't a feature of a particular iteration — it's the primary interaction pattern. It shapes how goals feel from Iteration A onward.
+This isn't a feature of a particular iteration — it's the primary interaction pattern. **Not yet implemented as of 2026-02-28** — currently the app opens to the goals list, not a task view.
 
-### Iteration A — Quiet Victory
+### Iteration A — Quiet Victory (~90% complete)
 
 The core loop. Create a goal, break it into steps, complete steps, earn a self-signed badge. Private, personal, no verification needed. This is Lina's story — a small way to honour something only you understand the weight of. It's Sam's story — showing up to a meeting and writing one line about it. It's Ava's story — navigating a months-long diagnostic process one phone call at a time.
 
-### Iteration B — Learning Journey
+**What's done:** Goal creation, ordered steps with drag-and-drop, 6/7 evidence types (photo, text, voice memo, video, link, file), step/goal completion, Ed25519-signed OB3 badges with PNG baking, badge designer (shape/color/icon/weight), 14 themes, JSON + image export, fully offline.
+
+**Gaps:** Screenshot evidence (broken — route silently fails), badge detail doesn't surface evidence, task view not built, Welcome screen (#65), batch export (#67), character moments (#68). Badge designer Phase 2 (A.6, 14 issues) adds frame generators and text components.
+
+### Iteration B — Learning Journey (not started)
 
 Add the learning graph. Set learning goals, track interrupts and context switches, see your stack, link badges to goals, get factual nudges when activity drifts from stated priorities. This is Eva's story — the platform keeps your work organized through the chaos.
 
-### Iteration C — Skill Tree
+**Data model seeds:** `goal.sortOrder` field exists but is unused. `uncompleteGoal()` exists with "Reopen Goal" UI. Badges already reference goals via `goalId` FK. Evolu chosen as sync layer (ADR-0003) but not enabled.
+
+### Iteration C — Skill Tree (not started)
 
 Add the visual layer. Your badges become nodes in a skill tree you design. Plan where you want to go, see where you've been, identify gaps. Earned badges are solid, in-progress badges glow, planned badges are ghosts. This is the video game progression system for real life.
 
-### Iteration D — Community
+**No code or data model exists for this iteration.**
 
-Add peer verification and badge sharing. Share a badge with a mentor or peer device-to-device. They review your evidence and verify with a tap. Their name and credentials attach to your badge cryptographically. No server needed — phones talk directly. This is where the personal tool connects to other people.
+### Iteration D — Community (not started)
+
+Add peer verification and badge sharing. Share a badge with a mentor or peer device-to-device. They review your evidence and verify with a tap. Their name and credentials attach to your badge cryptographically. No server needed — phones talk directly. This is where the personal tool connects to other people. Also upgrades OB3 signing from the current `eddsa-raw-json-iteration-a` to spec-compliant `eddsa-rdfc-2022`.
+
+**No code or data model exists for this iteration.**
 
 Each iteration ships as a usable product. A is useful without B. B is useful without C or D. No iteration is a throwaway prototype.
 
