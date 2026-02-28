@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AudioPlayer } from '../../components/AudioPlayer';
-import { Text } from '../../components/Text';
+import { AudioPlayer } from '../AudioPlayer';
+import { Text } from '../Text';
 import { styles } from './AudioPlayerModal.styles';
 
 export interface AudioPlayerModalProps {

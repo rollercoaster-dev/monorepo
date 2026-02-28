@@ -16,7 +16,7 @@ export function SettingsSection({ title, children }: SettingsSectionProps) {
       <View style={styles.rows}>
         {childArray.map((child, i) => (
           <React.Fragment key={i}>
-            {i > 0 && <View style={styles.separator} />}
+            {i > 0 && <View testID="settings-separator" style={styles.separator} />}
             {child}
           </React.Fragment>
         ))}

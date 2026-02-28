@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import { PhotoViewerModal } from '../screens/PhotoViewerModal';
-import { TextNoteViewerModal } from '../screens/TextNoteViewerModal';
-import { VideoPlayerModal } from '../screens/VideoPlayerModal';
-import { AudioPlayerModal } from '../screens/AudioPlayerModal';
+import { PhotoViewerModal } from '../components/PhotoViewerModal';
+import { TextNoteViewerModal } from '../components/TextNoteViewerModal';
+import { VideoPlayerModal } from '../components/VideoPlayerModal';
+import { AudioPlayerModal } from '../components/AudioPlayerModal';
 import { TEXT_EVIDENCE_PREFIX } from '../db';
 import type { Evidence } from '../components/EvidenceThumbnail';
 

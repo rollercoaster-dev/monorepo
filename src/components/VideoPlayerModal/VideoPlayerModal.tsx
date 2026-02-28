@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Text } from '../../components/Text';
+import { Text } from '../Text';
 import { styles } from './VideoPlayerModal.styles';
 
 export interface VideoPlayerModalProps {

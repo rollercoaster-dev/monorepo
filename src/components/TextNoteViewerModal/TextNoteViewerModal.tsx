@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Modal, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../../components/Text';
+import { Text } from '../Text';
 import { styles } from './TextNoteViewerModal.styles';
 
 export interface TextNoteViewerModalProps {

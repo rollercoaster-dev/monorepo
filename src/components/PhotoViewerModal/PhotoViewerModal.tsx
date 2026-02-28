@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Modal, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../../components/Text';
+import { Text } from '../Text';
 import { styles } from './PhotoViewerModal.styles';
 
 export interface PhotoViewerModalProps {

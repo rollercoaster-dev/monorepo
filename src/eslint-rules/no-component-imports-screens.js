@@ -3,12 +3,12 @@ module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Disallow components from importing screens — enforces dependency direction',
+      description: 'Disallow components and utils from importing screens — enforces dependency direction',
     },
     messages: {
       noScreenImport: [
         "Import '{{ path }}' crosses an architectural boundary. ",
-        'Components in src/components/ must not import from src/screens/. ',
+        'Files in src/components/ and src/utils/ must not import from src/screens/. ',
         'If you need shared logic, extract it to src/utils/ or src/hooks/. ',
         "See AGENTS.md 'Architectural Rules' for the dependency direction.",
       ].join(''),
@@ -19,7 +19,7 @@ module.exports = {
   create(context) {
     const filename = context.filename || context.getFilename();
     const normalized = filename.replace(/\\/g, '/');
-    if (!normalized.includes('/components/')) {
+    if (!normalized.includes('/components/') && !normalized.includes('/utils/')) {
       return {};
     }
 
