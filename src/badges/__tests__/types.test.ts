@@ -5,11 +5,14 @@ import {
   BadgeShape,
   BadgeFrame,
   BadgeIconWeight,
+  BadgeCenterMode,
+  PathTextPosition,
+  BannerPosition,
   createDefaultBadgeDesign,
   isValidHexColor,
   parseBadgeDesign,
 } from '../types';
-import type { BadgeDesign } from '../types';
+import type { BadgeDesign, FrameDataParams } from '../types';
 
 describe('BadgeDesign enums', () => {
   test('BadgeShape has all 6 shapes', () => {
@@ -54,6 +57,7 @@ describe('createDefaultBadgeDesign', () => {
       iconName: 'Trophy',
       iconWeight: 'regular',
       title: 'Learn TypeScript',
+      centerMode: 'icon',
     });
   });
 
@@ -89,6 +93,17 @@ describe('createDefaultBadgeDesign', () => {
     const design = createDefaultBadgeDesign('Test');
     expect(design.label).toBeUndefined();
     expect(design.frameParams).toBeUndefined();
+    expect(design.monogram).toBeUndefined();
+    expect(design.centerLabel).toBeUndefined();
+    expect(design.pathText).toBeUndefined();
+    expect(design.pathTextPosition).toBeUndefined();
+    expect(design.pathTextBottom).toBeUndefined();
+    expect(design.banner).toBeUndefined();
+  });
+
+  test('defaults to icon centerMode', () => {
+    const design = createDefaultBadgeDesign('Test');
+    expect(design.centerMode).toBe('icon');
   });
 
   test('result is JSON-serializable', () => {
@@ -131,5 +146,131 @@ describe('parseBadgeDesign', () => {
   test('returns null for invalid JSON', () => {
     expect(parseBadgeDesign('not-json')).toBeNull();
     expect(parseBadgeDesign('{broken')).toBeNull();
+  });
+
+  test('parses legacy design without new fields (backward compat)', () => {
+    const legacyJson = JSON.stringify({
+      shape: 'circle',
+      frame: 'none',
+      color: '#a78bfa',
+      iconName: 'Trophy',
+      iconWeight: 'regular',
+      title: 'Old Badge',
+    });
+    const result = parseBadgeDesign(legacyJson);
+    expect(result).not.toBeNull();
+    // Legacy JSON has no centerMode — parseBadgeDesign applies default
+    expect(result!.centerMode).toBe('icon');
+    expect(result!.monogram).toBeUndefined();
+    expect(result!.banner).toBeUndefined();
+  });
+
+  test('parses design with all new fields', () => {
+    const fullDesign: BadgeDesign = {
+      shape: 'circle',
+      frame: 'guilloche',
+      color: '#a78bfa',
+      iconName: 'Trophy',
+      iconWeight: 'regular',
+      title: 'Full Badge',
+      centerMode: 'monogram',
+      monogram: 'ABC',
+      centerLabel: 'Level 5',
+      pathText: 'ACHIEVEMENT UNLOCKED',
+      pathTextPosition: 'top',
+      pathTextBottom: 'EARNED 2026',
+      banner: { text: 'CERTIFIED', position: 'center' },
+      frameParams: {
+        variant: 2,
+        stepCount: 5,
+        evidenceCount: 12,
+        daysToComplete: 30,
+        evidenceTypes: 3,
+        stepNames: ['Step 1', 'Step 2'],
+      },
+    };
+    const result = parseBadgeDesign(JSON.stringify(fullDesign));
+    expect(result).toEqual(fullDesign);
+  });
+
+  test('falls back to icon for invalid centerMode value', () => {
+    const json = JSON.stringify({
+      shape: 'circle', frame: 'none', color: '#a78bfa',
+      iconName: 'Trophy', iconWeight: 'regular', title: 'Bad Mode',
+      centerMode: 'invalid_value',
+    });
+    const result = parseBadgeDesign(json);
+    expect(result!.centerMode).toBe('icon');
+  });
+
+  test('sanitizes frameParams with invalid numeric fields', () => {
+    const json = JSON.stringify({
+      shape: 'circle', frame: 'none', color: '#a78bfa',
+      iconName: 'Trophy', iconWeight: 'regular', title: 'Bad Params',
+      centerMode: 'icon',
+      frameParams: {
+        variant: 1,
+        stepCount: 'not-a-number',
+        evidenceCount: NaN,
+        daysToComplete: Infinity,
+        evidenceTypes: 3,
+      },
+    });
+    const result = parseBadgeDesign(json);
+    expect(result!.frameParams).toEqual({
+      variant: 1,
+      stepCount: 0, // invalid → default 0
+      evidenceCount: 0, // NaN → default 0
+      daysToComplete: 0, // Infinity → default 0
+      evidenceTypes: 3,
+      stepNames: undefined,
+    });
+  });
+
+  test('strips frameParams when variant is missing', () => {
+    const json = JSON.stringify({
+      shape: 'circle', frame: 'none', color: '#a78bfa',
+      iconName: 'Trophy', iconWeight: 'regular', title: 'No Variant',
+      centerMode: 'icon',
+      frameParams: { stepCount: 5 },
+    });
+    const result = parseBadgeDesign(json);
+    expect(result!.frameParams).toBeUndefined();
+  });
+
+  test('filters non-string values from stepNames', () => {
+    const json = JSON.stringify({
+      shape: 'circle', frame: 'none', color: '#a78bfa',
+      iconName: 'Trophy', iconWeight: 'regular', title: 'Mixed Names',
+      centerMode: 'icon',
+      frameParams: {
+        variant: 0, stepCount: 2, evidenceCount: 1,
+        daysToComplete: 7, evidenceTypes: 1,
+        stepNames: ['Valid', 42, null, 'Also Valid'],
+      },
+    });
+    const result = parseBadgeDesign(json);
+    expect(result!.frameParams!.stepNames).toEqual(['Valid', 'Also Valid']);
+  });
+});
+
+describe('BadgeDesign new type enums', () => {
+  test('BadgeCenterMode has icon and monogram', () => {
+    expect(BadgeCenterMode.icon).toBe('icon');
+    expect(BadgeCenterMode.monogram).toBe('monogram');
+    expect(Object.keys(BadgeCenterMode)).toHaveLength(2);
+  });
+
+  test('PathTextPosition has top, bottom, both', () => {
+    expect(PathTextPosition.top).toBe('top');
+    expect(PathTextPosition.bottom).toBe('bottom');
+    expect(PathTextPosition.both).toBe('both');
+    expect(Object.keys(PathTextPosition)).toHaveLength(3);
+  });
+
+  test('BannerPosition has center and bottom', () => {
+    expect(BannerPosition.center).toBe('center');
+    expect(BannerPosition.bottom).toBe('bottom');
+    expect(Object.keys(BannerPosition)).toHaveLength(2);
   });
 });

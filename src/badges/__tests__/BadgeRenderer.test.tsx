@@ -68,6 +68,7 @@ function createDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
     iconName: 'Trophy',
     iconWeight: BadgeIconWeight.regular,
     title: 'Test Badge',
+    centerMode: 'icon' as const,
     ...overrides,
   };
 }

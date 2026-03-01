@@ -28,6 +28,7 @@ describe('BadgeCard', () => {
       iconName: 'Trophy',
       iconWeight: 'regular',
       title: 'First Steps',
+      centerMode: 'icon',
     };
     renderWithProviders(<BadgeCard {...baseProps} design={design} />);
     // Initials fallback should NOT be present when design is provided

@@ -25,9 +25,10 @@ module.exports = {
     '^@react-navigation/native$': '<rootDir>/src/__tests__/mocks/navigation.ts',
     '^expo-secure-store$': '<rootDir>/src/__tests__/mocks/expo-secure-store.ts',
     '^react-native-view-shot$': '<rootDir>/src/__tests__/mocks/react-native-view-shot.ts',
+    '^react-native-keyboard-controller$': '<rootDir>/src/__tests__/mocks/keyboard-controller.ts',
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native)/)',
+    '/node_modules/(?!(@rollercoaster-dev/design-tokens|@testing-library/react-native|react-native|@react-native|phosphor-react-native|react-native-keyboard-controller)/)',
   ],
   setupFiles: ['./node_modules/react-native/jest/setup.js', './src/db/__tests__/setup.ts'],
   testMatch: ['**/src/**/__tests__/**/*.test.{ts,tsx}'],
