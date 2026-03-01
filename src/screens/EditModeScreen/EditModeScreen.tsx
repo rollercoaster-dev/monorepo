@@ -1,5 +1,9 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { View, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, TextInput, ActivityIndicator, Alert } from 'react-native';
+import {
+  KeyboardProvider,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useQuery } from '@evolu/react';
@@ -165,79 +169,79 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
   const canDelete = stepRows.length > 1;
 
   return (
-    <>
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      {/* Title */}
-      <View style={styles.section}>
-        <Text variant="label" style={styles.label}>Goal Title</Text>
-        <TextInput
-          style={[styles.titleInput, titleError ? styles.inputError : undefined]}
-          value={title}
-          onChangeText={handleTitleChange}
-          placeholder="Goal title"
-          placeholderTextColor={theme.colors.textMuted}
-          accessibilityLabel="Goal title"
-          accessibilityHint="Edit the goal title"
-          returnKeyType="next"
-        />
-        {titleError ? (
-          <Text variant="caption" style={styles.errorText}>{titleError}</Text>
-        ) : null}
-      </View>
+    <KeyboardProvider>
+      <KeyboardAwareScrollView contentContainerStyle={styles.scrollContent} bottomOffset={40}>
+        {/* Title */}
+        <View style={styles.section}>
+          <Text variant="label" style={styles.label}>Goal Title</Text>
+          <TextInput
+            style={[styles.titleInput, titleError ? styles.inputError : undefined]}
+            value={title}
+            onChangeText={handleTitleChange}
+            placeholder="Goal title"
+            placeholderTextColor={theme.colors.textMuted}
+            accessibilityLabel="Goal title"
+            accessibilityHint="Edit the goal title"
+            returnKeyType="next"
+          />
+          {titleError ? (
+            <Text variant="caption" style={styles.errorText}>{titleError}</Text>
+          ) : null}
+        </View>
 
-      {/* Description */}
-      <View style={styles.section}>
-        <Text variant="label" style={styles.label}>Description</Text>
-        <TextInput
-          style={styles.descriptionInput}
-          value={description}
-          onChangeText={handleDescriptionChange}
-          placeholder="Add a description..."
-          placeholderTextColor={theme.colors.textMuted}
-          multiline
-          accessibilityLabel="Goal description"
-          accessibilityHint="Edit the goal description"
-        />
-      </View>
+        {/* Description */}
+        <View style={styles.section}>
+          <Text variant="label" style={styles.label}>Description</Text>
+          <TextInput
+            style={styles.descriptionInput}
+            value={description}
+            onChangeText={handleDescriptionChange}
+            placeholder="Add a description..."
+            placeholderTextColor={theme.colors.textMuted}
+            multiline
+            accessibilityLabel="Goal description"
+            accessibilityHint="Edit the goal description"
+          />
+        </View>
 
-      {/* Steps — reuses StepList with drag-and-drop support */}
-      <StepList
-        steps={stepRows.map((s) => ({
-          id: s.id,
-          title: s.title ?? '',
-          completed: s.status === StepStatus.completed,
-        }))}
-        onCreateStep={handleCreateStep}
-        onUpdateStep={handleUpdateStep}
-        onDeleteStep={canDelete ? handleDeleteStep : undefined}
-        onReorderSteps={handleReorderSteps}
+        {/* Steps — reuses StepList with drag-and-drop support */}
+        <StepList
+          steps={stepRows.map((s) => ({
+            id: s.id,
+            title: s.title ?? '',
+            completed: s.status === StepStatus.completed,
+          }))}
+          onCreateStep={handleCreateStep}
+          onUpdateStep={handleUpdateStep}
+          onDeleteStep={canDelete ? handleDeleteStep : undefined}
+          onReorderSteps={handleReorderSteps}
+        />
+
+        {/* Navigate button */}
+        <View style={styles.buttonSection}>
+          <Button
+            label={cameFromFocus ? 'Back to Focus' : 'Start Working'}
+            onPress={handleNavigate}
+          />
+        </View>
+
+        {/* Delete goal */}
+        <View style={styles.buttonSection}>
+          <Button
+            label="Delete Goal"
+            variant="destructive"
+            onPress={() => setShowDeleteGoalModal(true)}
+          />
+        </View>
+      </KeyboardAwareScrollView>
+      <ConfirmDeleteModal
+        visible={showDeleteGoalModal}
+        onCancel={() => setShowDeleteGoalModal(false)}
+        onConfirm={handleDeleteGoal}
+        title="Delete this goal?"
+        message={`"${goal.title}" and all progress will be permanently deleted.`}
       />
-
-      {/* Navigate button */}
-      <View style={styles.buttonSection}>
-        <Button
-          label={cameFromFocus ? 'Back to Focus' : 'Start Working'}
-          onPress={handleNavigate}
-        />
-      </View>
-
-      {/* Delete goal */}
-      <View style={styles.buttonSection}>
-        <Button
-          label="Delete Goal"
-          variant="destructive"
-          onPress={() => setShowDeleteGoalModal(true)}
-        />
-      </View>
-    </ScrollView>
-    <ConfirmDeleteModal
-      visible={showDeleteGoalModal}
-      onCancel={() => setShowDeleteGoalModal(false)}
-      onConfirm={handleDeleteGoal}
-      title="Delete this goal?"
-      message={`"${goal.title}" and all progress will be permanently deleted.`}
-    />
-    </>
+    </KeyboardProvider>
   );
 }
 
