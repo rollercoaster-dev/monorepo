@@ -68,8 +68,12 @@ describe('Goal CRUD Operations', () => {
     });
   });
 
-  test('completeGoal should succeed', () => {
-    expect(() => completeGoal(mockGoalId)).not.toThrow();
+  test('completeGoal should succeed with evidence', () => {
+    expect(() => completeGoal(mockGoalId, [{ type: 'photo' }])).not.toThrow();
+  });
+
+  test('completeGoal should throw without evidence', () => {
+    expect(() => completeGoal(mockGoalId, [])).toThrow('Cannot complete goal');
   });
 
   test('uncompleteGoal should succeed', () => {

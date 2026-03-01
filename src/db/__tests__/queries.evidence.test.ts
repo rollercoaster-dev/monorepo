@@ -5,7 +5,7 @@
  * Tests the exactly-one-parent constraint and validation logic
  */
 
-import { createEvidence, updateEvidence, deleteEvidence } from '../queries';
+import { createEvidence, updateEvidence, deleteEvidence, canCompleteGoal } from '../queries';
 import type { GoalId, StepId, EvidenceId } from '../schema';
 
 const mockGoalId = 'goal_test_123' as GoalId;
@@ -98,5 +98,23 @@ describe('Evidence CRUD Operations', () => {
 
   test('deleteEvidence should succeed', () => {
     expect(() => deleteEvidence(mockEvidenceId)).not.toThrow();
+  });
+
+  describe('canCompleteGoal', () => {
+    test('empty evidence array → false', () => {
+      expect(canCompleteGoal([])).toBe(false);
+    });
+
+    test('one evidence item → true', () => {
+      expect(canCompleteGoal([{ type: 'photo' }])).toBe(true);
+    });
+
+    test('multiple evidence items → true', () => {
+      expect(canCompleteGoal([{ type: 'photo' }, { type: 'text' }])).toBe(true);
+    });
+
+    test('only null-type evidence → false (consistent with canCompleteStep)', () => {
+      expect(canCompleteGoal([{ type: null }])).toBe(false);
+    });
   });
 });

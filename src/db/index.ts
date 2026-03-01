@@ -23,10 +23,13 @@ export {
   stepsByGoalQuery,
   createStep,
   updateStep,
+  canCompleteStep,
   completeStep,
   uncompleteStep,
   deleteStep,
   reorderSteps,
+  // Evidence gating
+  canCompleteGoal,
   // Evidence
   evidenceByGoalQuery,
   evidenceByStepQuery,

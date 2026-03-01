@@ -96,6 +96,7 @@ export const Schema = {
     ordinal: nullOr(Int), // Ordering within goal
     status: NonEmptyString1000, // 'pending' | 'completed'
     completedAt: nullOr(DateIso),
+    plannedEvidenceTypes: nullOr(NonEmptyString1000), // JSON-encoded string[] of EvidenceType values, null = any type
   },
 
   /**

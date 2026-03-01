@@ -31,6 +31,7 @@ import {
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
   badgeByGoalQuery,
+  canCompleteGoal,
   completeGoal,
   createBadge,
 } from '../db';
@@ -238,6 +239,13 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
 
         setStatus('storing');
 
+        // Validate evidence gating BEFORE any mutations to prevent partial state
+        // (badge created but goal not completed).
+        const goalEvidenceForGating = gev.map((e) => ({ type: (e.type as string | null) ?? null }));
+        if (!canCompleteGoal(goalEvidenceForGating)) {
+          throw new Error('Cannot complete goal: no evidence attached. Add at least one evidence item first.');
+        }
+
         // createBadge first — it validates and can throw (non-empty credential required).
         // If it throws, completeGoal has not yet fired, so no partial state occurs.
         // Both are synchronous Evolu CRDT mutations — no await needed.
@@ -247,7 +255,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
           imageUri,
           ...(designRef.current ? { design: designRef.current } : {}),
         });
-        completeGoal(goalId);
+        completeGoal(goalId, goalEvidenceForGating);
 
         setStatus('done');
         logger.info('Badge credential created', { goalId, credentialId });

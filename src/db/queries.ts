@@ -126,7 +126,16 @@ export function updateGoal(
  * @returns Update command
  * @throws Error if timestamp generation fails
  */
-export function completeGoal(id: GoalId) {
+export function completeGoal(
+  id: GoalId,
+  goalEvidence: Array<{ type: string | null }>,
+) {
+  if (!canCompleteGoal(goalEvidence)) {
+    throw new Error(
+      'Cannot complete goal: no evidence attached. Add at least one evidence item first.',
+    );
+  }
+
   const parsedStatus = NonEmptyString1000.orThrow(GoalStatus.completed);
   const now = dateToDateIso(new Date());
 
@@ -184,6 +193,83 @@ export function deleteGoal(id: GoalId) {
   }
 }
 
+// Evidence gating helpers
+
+/**
+ * Serialize a planned evidence types array to a JSON string for storage.
+ * Returns undefined when the value should not be updated (pass-through),
+ * null to clear the field, or a validated NonEmptyString1000 JSON string.
+ */
+function serializePlannedTypes(
+  types: readonly string[] | null | undefined,
+): ReturnType<typeof NonEmptyString1000.orNull> | null | undefined {
+  if (types === undefined) return undefined;
+  if (types === null || types.length === 0) return null;
+  const json = JSON.stringify(types);
+  const result = NonEmptyString1000.orNull(json);
+  if (!result) {
+    logger.error('Serialized plannedEvidenceTypes exceeds 1000 chars', {
+      typeCount: types.length,
+      jsonLength: json.length,
+    });
+    throw new Error(
+      `Planned evidence types are too long to store (${json.length} chars). Reduce the number of types.`,
+    );
+  }
+  return result;
+}
+
+/**
+ * Check if a step has sufficient evidence to be completed.
+ *
+ * If plannedEvidenceTypes is set (non-null JSON array), at least one
+ * evidence item must match a planned type. If null, any evidence suffices.
+ *
+ * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
+ * @param stepEvidence - All non-deleted evidence rows for this step
+ * @returns true if the step can be completed
+ */
+export function canCompleteStep(
+  plannedEvidenceTypesJson: string | null,
+  stepEvidence: Array<{ type: string | null }>,
+): boolean {
+  const validEvidence = stepEvidence.filter((e) => e.type !== null);
+  if (validEvidence.length === 0) return false;
+
+  if (plannedEvidenceTypesJson === null) return true;
+
+  let plannedTypes: string[];
+  try {
+    plannedTypes = JSON.parse(plannedEvidenceTypesJson);
+    if (!Array.isArray(plannedTypes)) {
+      logger.warn('plannedEvidenceTypes is valid JSON but not an array, treating as any-type', {
+        json: plannedEvidenceTypesJson,
+        parsedType: typeof plannedTypes,
+      });
+      return true;
+    }
+  } catch {
+    logger.warn('Failed to parse plannedEvidenceTypes JSON, treating as any-type', {
+      json: plannedEvidenceTypesJson,
+    });
+    return true;
+  }
+
+  return validEvidence.some((e) => plannedTypes.includes(e.type!));
+}
+
+/**
+ * Check if a goal has at least one goal-level evidence item.
+ *
+ * @param goalEvidence - All non-deleted evidence rows attached directly to the goal
+ * @returns true if the goal can be completed
+ */
+export function canCompleteGoal(
+  goalEvidence: Array<{ type: string | null }>,
+): boolean {
+  return goalEvidence.some((e) => e.type !== null);
+}
+
 // Step CRUD
 
 /**
@@ -209,7 +295,12 @@ export const stepsByGoalQuery = (goalId: GoalId) =>
  * @returns Insert command
  * @throws Error if validation fails
  */
-export function createStep(goalId: GoalId, title: string, ordinal?: number) {
+export function createStep(
+  goalId: GoalId,
+  title: string,
+  ordinal?: number,
+  plannedEvidenceTypes?: readonly string[] | null,
+) {
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
     logger.error('Step title validation failed', {
@@ -222,6 +313,7 @@ export function createStep(goalId: GoalId, title: string, ordinal?: number) {
   }
 
   const parsedStatus = NonEmptyString1000.orThrow(StepStatus.pending);
+  const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
 
   try {
     return evolu.insert('step', {
@@ -229,6 +321,7 @@ export function createStep(goalId: GoalId, title: string, ordinal?: number) {
       title: parsedTitle,
       status: parsedStatus,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
+      plannedEvidenceTypes: serializedTypes === undefined ? null : serializedTypes,
     });
   } catch (error) {
     logger.error('Failed to insert step', { goalId, title: parsedTitle, error });
@@ -245,7 +338,7 @@ export function createStep(goalId: GoalId, title: string, ordinal?: number) {
  */
 export function updateStep(
   id: StepId,
-  fields: { title?: string; ordinal?: number | null },
+  fields: { title?: string; ordinal?: number | null; plannedEvidenceTypes?: readonly string[] | null },
 ) {
   const update: Record<string, unknown> = { id };
 
@@ -267,6 +360,11 @@ export function updateStep(
     update.ordinal = fields.ordinal !== null ? Int.orNull(fields.ordinal) : null;
   }
 
+  const serializedTypes = serializePlannedTypes(fields.plannedEvidenceTypes);
+  if (serializedTypes !== undefined) {
+    update.plannedEvidenceTypes = serializedTypes;
+  }
+
   try {
     return evolu.update('step', update as Parameters<typeof evolu.update>[1]);
   } catch (error) {
@@ -281,7 +379,20 @@ export function updateStep(
  * @returns Update command
  * @throws Error if timestamp generation fails
  */
-export function completeStep(id: StepId) {
+export function completeStep(
+  id: StepId,
+  plannedEvidenceTypesJson: string | null,
+  stepEvidence: Array<{ type: string | null }>,
+) {
+  if (!canCompleteStep(plannedEvidenceTypesJson, stepEvidence)) {
+    const hasAnyEvidence = stepEvidence.some((e) => e.type !== null);
+    throw new Error(
+      hasAnyEvidence
+        ? 'Cannot complete step: no evidence matching the planned types. Add a matching evidence item first.'
+        : 'Cannot complete step: no evidence attached. Add at least one evidence item first.',
+    );
+  }
+
   const parsedStatus = NonEmptyString1000.orThrow(StepStatus.completed);
   const now = dateToDateIso(new Date());
 

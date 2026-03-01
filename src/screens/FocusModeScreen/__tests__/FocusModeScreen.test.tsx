@@ -174,7 +174,7 @@ describe('FocusModeScreen', () => {
     setupQueries();
     renderWithProviders(<FocusModeScreen {...routeProps} />);
     fireEvent.press(screen.getByText('Mark complete'));
-    expect(mockCompleteStep).toHaveBeenCalledWith('step-1');
+    expect(mockCompleteStep).toHaveBeenCalledWith('step-1', null, [{ type: 'text' }]);
   });
 
   it('calls uncompleteStep when completed step checkbox is toggled', () => {

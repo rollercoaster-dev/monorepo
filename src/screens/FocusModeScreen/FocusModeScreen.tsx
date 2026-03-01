@@ -54,6 +54,8 @@ function FocusContent({ goalId }: { goalId: string }) {
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
 
+  const allStepEvidenceRows = useQuery(stepEvidenceByGoalQuery(goalId as GoalId));
+
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFABMenuOpen, setIsFABMenuOpen] = useState(false);
@@ -94,8 +96,8 @@ function FocusContent({ goalId }: { goalId: string }) {
       evidenceCount: 0, // Will be enriched below
     }));
 
-  // Query evidence per step for counts
-  const stepEvidenceCounts = useStepEvidenceCounts(goalId as GoalId, stepRows);
+  // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)
+  const stepEvidenceCounts = useStepEvidenceCounts(allStepEvidenceRows, stepRows);
 
   // Enrich step evidence counts
   const stepsWithEvidence = uiSteps.map((step, i) => ({
@@ -194,12 +196,17 @@ function FocusContent({ goalId }: { goalId: string }) {
         uncompleteStep(stepId as StepId);
         AccessibilityInfo.announceForAccessibility(`Step "${step.title}" marked as incomplete`);
       } else {
-        completeStep(stepId as StepId);
+        const stepEvidence = allStepEvidenceRows
+          .filter((e) => e.stepId === stepId)
+          .map((e) => ({ type: (e.type as string | null) ?? null }));
+        const plannedTypes = step.plannedEvidenceTypes ?? null;
+        completeStep(stepId as StepId, plannedTypes, stepEvidence);
         AccessibilityInfo.announceForAccessibility(`Step "${step.title}" completed`);
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       console.error('[FocusModeScreen] Failed to toggle step completion', { stepId, error });
-      Alert.alert('Could not update step', 'Something went wrong. Please try again.');
+      Alert.alert('Could not update step', message);
     }
   };
 
@@ -390,10 +397,9 @@ function FocusContent({ goalId }: { goalId: string }) {
  * then grouping counts client-side with useMemo.
  */
 function useStepEvidenceCounts(
-  goalId: GoalId,
+  allStepEvidence: readonly { stepId: string | null }[],
   stepRows: readonly { id: string }[],
 ): number[] {
-  const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
   return useMemo(() => {
     const counts = new Map<string, number>();
     for (const ev of allStepEvidence) {

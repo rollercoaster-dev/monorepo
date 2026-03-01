@@ -35,6 +35,8 @@ jest.mock('../../db', () => ({
   evidenceByGoalQuery: jest.fn(() => 'mock-evidence-query'),
   stepEvidenceByGoalQuery: jest.fn(() => 'mock-step-evidence-query'),
   badgeByGoalQuery: jest.fn(() => 'mock-badge-query'),
+  canCompleteGoal: (evidence: Array<{ type: string | null }>) =>
+    evidence.some((e) => e.type !== null),
   completeGoal: jest.fn(),
   createBadge: jest.fn(),
 }));
@@ -75,7 +77,7 @@ beforeEach(() => {
   // Default: configure mockUseQuery to return values in sequence per render
   mockUseQuery.mockImplementation((query: string) => {
     if (query === 'mock-goals-query') return [MOCK_GOAL];
-    if (query === 'mock-evidence-query') return [];
+    if (query === 'mock-evidence-query') return [{ id: 'ev-1', type: 'photo', goalId: GOAL_ID }];
     if (query === 'mock-step-evidence-query') return [];
     if (query === 'mock-badge-query') return [];
     return [];
