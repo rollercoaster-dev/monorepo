@@ -9,6 +9,8 @@ import { useFonts } from './src/hooks/useFonts';
 import { useTheme, ThemeProvider, useThemeContext } from './src/hooks/useTheme';
 import { useDensity } from './src/hooks/useDensity';
 import { useAnimationPref } from './src/hooks/useAnimationPref';
+import { useFirstLaunch } from './src/hooks/useFirstLaunch';
+import { WelcomeScreen } from './src/screens/WelcomeScreen';
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === 'true';
 
@@ -23,8 +25,19 @@ if (STORYBOOK_ENABLED) {
  */
 function ThemedApp() {
   const { theme, isDark } = useThemeContext();
+  const { isFirstLaunch, markSeen } = useFirstLaunch();
   useDensity(); // Apply saved density to all themes on mount
   useAnimationPref(); // Initialize OS reduceMotion listener
+
+  // Loading: Evolu hasn't read settings from SQLite yet
+  if (isFirstLaunch === null) {
+    return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+  }
+
+  // First launch — show WelcomeScreen above NavigationContainer
+  if (isFirstLaunch) {
+    return <WelcomeScreen onGetStarted={markSeen} />;
+  }
 
   const navTheme: Theme = {
     ...DefaultTheme,

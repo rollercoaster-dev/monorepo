@@ -10,13 +10,9 @@ import { styles } from './WelcomeScreen.styles';
 
 export interface WelcomeScreenProps {
   onGetStarted: () => void;
-  showThemeSelector?: boolean;
 }
 
-export function WelcomeScreen({
-  onGetStarted,
-  showThemeSelector = true,
-}: WelcomeScreenProps) {
+export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
   const { theme } = useUnistyles();
 
   return (
@@ -30,24 +26,19 @@ export function WelcomeScreen({
             rollercoaster.dev
           </Text>
           <Text variant="body" style={styles.tagline}>
-            Learn anything. Track progress. Earn badges.
+            Track your goals. Earn your badges. Everything stays on your phone.
           </Text>
         </View>
 
-        {showThemeSelector && (
-          <Card size="normal">
-            <View style={styles.themeSection}>
-              <Text variant="label" style={styles.sectionLabel}>
-                Choose your theme
-              </Text>
-              <ThemeSwitcher />
-            </View>
-          </Card>
-        )}
+        <Card size="normal">
+          <View style={styles.themeSection}>
+            <ThemeSwitcher />
+          </View>
+        </Card>
 
         <View style={styles.intro}>
           <Text variant="body" style={styles.introText}>
-            Set goals, break them into steps, collect evidence, and earn badges for your learning journey.
+            You can always change it in Settings.
           </Text>
         </View>
       </View>

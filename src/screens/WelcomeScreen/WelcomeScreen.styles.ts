@@ -24,9 +24,6 @@ export const styles = StyleSheet.create((theme) => ({
   themeSection: {
     gap: theme.space[3],
   },
-  sectionLabel: {
-    textAlign: 'center',
-  },
   intro: {
     paddingHorizontal: theme.space[2],
   },

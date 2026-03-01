@@ -13,12 +13,3 @@ export function Default() {
     />
   );
 }
-
-export function WithoutThemeSelector() {
-  return (
-    <WelcomeScreen
-      onGetStarted={() => console.log('Get started')}
-      showThemeSelector={false}
-    />
-  );
-}

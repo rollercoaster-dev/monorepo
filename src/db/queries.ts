@@ -990,6 +990,18 @@ export function updateUserSettings(
 }
 
 /**
+ * Mark the welcome screen as seen.
+ * Called once after the user taps "Get Started".
+ * Idempotent — safe to call if already set.
+ */
+export function markWelcomeSeen(id: UserSettingsId) {
+  return evolu.update('userSettings', {
+    id,
+    hasSeenWelcome: Int.orThrow(1),
+  } as Parameters<typeof evolu.update>[1]);
+}
+
+/**
  * Store the keyId for the user's Ed25519 keypair
  * Called once after key generation — keyId references the key in SecureStore
  */

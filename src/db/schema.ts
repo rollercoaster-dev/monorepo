@@ -143,5 +143,6 @@ export const Schema = {
     animationPref: nullOr(NonEmptyString1000), // 'full' | 'reduced' | 'none'
     fontScale: nullOr(Int), // Integer percentage: 100 = default, 80-150 range
     keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
+    hasSeenWelcome: nullOr(Int), // 1 = seen, null = first launch
   },
 };

@@ -49,4 +49,5 @@ export {
   createUserSettings,
   updateUserSettings,
   updateUserSettingsKey,
+  markWelcomeSeen,
 } from './queries';
