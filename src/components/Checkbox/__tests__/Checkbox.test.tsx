@@ -61,7 +61,7 @@ describe('Checkbox', () => {
     'sets accessibilityState.checked=%s when checked=%s',
     (checked) => {
       renderWithProviders(<Checkbox checked={checked} onToggle={jest.fn()} label="Done" />);
-      expect(screen.getByRole('checkbox')).toHaveProp('accessibilityState', { checked });
+      expect(screen.getByRole('checkbox')).toHaveProp('accessibilityState', { checked, disabled: false });
     },
   );
 

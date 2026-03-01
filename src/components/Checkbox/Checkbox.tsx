@@ -8,9 +8,10 @@ export interface CheckboxProps {
   onToggle: () => void;
   label: string;
   onLabelPress?: () => void;
+  disabled?: boolean;
 }
 
-export function Checkbox({ checked, onToggle, label, onLabelPress }: CheckboxProps) {
+export function Checkbox({ checked, onToggle, label, onLabelPress, disabled = false }: CheckboxProps) {
   function handleToggle() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onToggle();
@@ -24,9 +25,9 @@ export function Checkbox({ checked, onToggle, label, onLabelPress }: CheckboxPro
         accessible
         accessibilityRole="checkbox"
         accessibilityLabel={label}
-        accessibilityState={{ checked }}
+        accessibilityState={{ checked, disabled }}
       >
-        <View style={[styles.box, checked && styles.boxChecked]}>
+        <View style={[styles.box, checked && styles.boxChecked, disabled && styles.boxDisabled]}>
           {checked && <Text style={styles.checkmark}>✓</Text>}
         </View>
       </Pressable>

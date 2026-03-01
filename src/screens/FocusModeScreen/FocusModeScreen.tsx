@@ -25,8 +25,11 @@ import {
   uncompleteStep,
   deleteEvidence,
   restoreEvidence,
+  createEvidence,
+  canCompleteStep,
   EvidenceType,
   StepStatus,
+  TEXT_EVIDENCE_PREFIX,
 } from '../../db';
 import type { GoalId, StepId, EvidenceId } from '../../db';
 import { useToast } from '../../components/Toast';
@@ -83,31 +86,60 @@ function FocusContent({ goalId }: { goalId: string }) {
   const isGoalCard = currentCardIndex >= stepRows.length;
 
   // Derive UI step status: current step is 'in-progress', others are mapped from DB
-  const uiSteps: { id: string; title: string; status: UIStepStatus; evidenceCount: number }[] =
+  const uiSteps = useMemo(() =>
     stepRows.map((row, index) => ({
       id: row.id,
       title: row.title ?? '',
       status:
         row.status === StepStatus.completed
-          ? 'completed'
+          ? ('completed' as UIStepStatus)
           : index === currentCardIndex
-            ? 'in-progress'
-            : 'pending',
+            ? ('in-progress' as UIStepStatus)
+            : ('pending' as UIStepStatus),
       evidenceCount: 0, // Will be enriched below
-    }));
+      plannedEvidenceTypesJson: (row.plannedEvidenceTypes as string | null) ?? null,
+    })),
+  [stepRows, currentCardIndex]);
 
   // Evidence counts per step (reuses allStepEvidenceRows to avoid duplicate query)
   const stepEvidenceCounts = useStepEvidenceCounts(allStepEvidenceRows, stepRows);
 
-  // Enrich step evidence counts
-  const stepsWithEvidence = uiSteps.map((step, i) => ({
-    ...step,
-    evidenceCount: stepEvidenceCounts[i] ?? 0,
-  }));
+  // Enrich step evidence counts and evidence type info
+  const stepsWithEvidence = useMemo(() =>
+    uiSteps.map((step, i) => {
+      const stepEvidence = allStepEvidenceRows.filter((e) => e.stepId === step.id);
+      const capturedTypes = [...new Set(stepEvidence.map((e) => e.type).filter(Boolean) as string[])];
+      let plannedTypes: string[] | null = null;
+      if (step.plannedEvidenceTypesJson) {
+        try {
+          const parsed = JSON.parse(step.plannedEvidenceTypesJson);
+          if (Array.isArray(parsed)) {
+            plannedTypes = parsed;
+          } else {
+            console.warn('[FocusModeScreen] plannedEvidenceTypes is not an array', { stepId: step.id, raw: step.plannedEvidenceTypesJson });
+          }
+        } catch (error) {
+          console.error('[FocusModeScreen] Failed to parse plannedEvidenceTypes JSON', { stepId: step.id, raw: step.plannedEvidenceTypesJson, error });
+        }
+      }
+      return {
+        ...step,
+        evidenceCount: stepEvidenceCounts[i] ?? 0,
+        plannedEvidenceTypes: plannedTypes,
+        capturedEvidenceTypes: capturedTypes,
+      };
+    }),
+  [uiSteps, allStepEvidenceRows, stepEvidenceCounts]);
 
-  // Timeline + dot steps
-  const timelineSteps: MiniTimelineStep[] = stepsWithEvidence.map((s) => ({ status: s.status }));
-  const dotSteps: ProgressDotsStep[] = stepsWithEvidence.map((s) => ({ status: s.status }));
+  // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
+  const timelineSteps = useMemo<MiniTimelineStep[]>(
+    () => stepsWithEvidence.map((s) => ({ status: s.status })),
+    [stepsWithEvidence],
+  );
+  const dotSteps = useMemo<ProgressDotsStep[]>(
+    () => stepsWithEvidence.map((s) => ({ status: s.status })),
+    [stepsWithEvidence],
+  );
 
   // Current evidence for the drawer
   const currentStepId = isGoalCard ? null : stepRows[currentCardIndex]?.id;
@@ -199,14 +231,38 @@ function FocusContent({ goalId }: { goalId: string }) {
         const stepEvidence = allStepEvidenceRows
           .filter((e) => e.stepId === stepId)
           .map((e) => ({ type: (e.type as string | null) ?? null }));
-        const plannedTypes = step.plannedEvidenceTypes ?? null;
+        const plannedTypes = (step.plannedEvidenceTypes as string | null) ?? null;
+
+        // Gate: only check evidence when step has planned types configured.
+        // canCompleteStep rejects zero-evidence steps regardless of planned types,
+        // which would be a regression for steps without evidence requirements.
+        if (plannedTypes !== null && !canCompleteStep(plannedTypes, stepEvidence)) {
+          showToast({ message: 'Add evidence before completing this step', duration: 3000 });
+          return;
+        }
+
         completeStep(stepId as StepId, plannedTypes, stepEvidence);
         AccessibilityInfo.announceForAccessibility(`Step "${step.title}" completed`);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       console.error('[FocusModeScreen] Failed to toggle step completion', { stepId, error });
-      Alert.alert('Could not update step', message);
+      showToast({ message: `Could not update step: ${message}`, duration: 3000 });
+    }
+  };
+
+  const handleQuickNote = (stepId: string, text: string) => {
+    try {
+      createEvidence({
+        stepId: stepId as StepId,
+        goalId: goalId as GoalId,
+        type: EvidenceType.text,
+        uri: TEXT_EVIDENCE_PREFIX + text,
+        description: text.length > 50 ? text.slice(0, 50) + '...' : text,
+      });
+    } catch (error) {
+      console.error('[FocusModeScreen] Failed to create quick note', { stepId, error });
+      showToast({ message: 'Could not save note', duration: 3000 });
     }
   };
 
@@ -348,11 +404,14 @@ function FocusContent({ goalId }: { goalId: string }) {
                 title: step.title,
                 status: step.status as StepCardStatus,
                 evidenceCount: step.evidenceCount,
+                plannedEvidenceTypes: step.plannedEvidenceTypes,
+                capturedEvidenceTypes: step.capturedEvidenceTypes,
               }}
               stepIndex={index}
               totalSteps={stepRows.length}
               onToggleComplete={() => handleToggleStep(step.id)}
               onEvidenceTap={handleEvidenceTap}
+              onQuickNote={(text) => handleQuickNote(step.id, text)}
             />
           )),
           <GoalEvidenceCard

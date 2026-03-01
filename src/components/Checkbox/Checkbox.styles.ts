@@ -38,4 +38,8 @@ export const styles = StyleSheet.create((theme) => ({
     textDecorationLine: 'line-through',
     color: theme.colors.textSecondary,
   },
+  boxDisabled: {
+    opacity: 0.4,
+    borderColor: theme.colors.textMuted,
+  },
 }));
