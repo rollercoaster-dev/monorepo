@@ -18,6 +18,7 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
     iconName: 'Trophy',
     iconWeight: BadgeIconWeight.regular,
     title: 'Sample Badge',
+    centerMode: 'icon' as const,
     ...overrides,
   };
 }

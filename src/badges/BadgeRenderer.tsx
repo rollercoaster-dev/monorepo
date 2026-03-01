@@ -85,7 +85,13 @@ export function BadgeRenderer({
     () => {
       try {
         return getRecommendedTextColor(design.color);
-      } catch {
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[BadgeRenderer] Icon color contrast failed, falling back to black', {
+            color: design.color,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
         return '#000000';
       }
     },
@@ -128,9 +134,9 @@ export function BadgeRenderer({
         strokeLinejoin="round"
       />
 
-      {/* Layer 3: Frame — not yet implemented (Phase 2). design.frame is accepted but ignored. */}
+      {/* Layer 3: Frame — not yet implemented (A.6). design.frame is accepted but ignored. */}
 
-      {/* Layer 4: Icon — centered within the shape */}
+      {/* Layer 4: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
       {IconComponent && (
         <G x={iconOffset} y={iconOffset}>
           <IconComponent

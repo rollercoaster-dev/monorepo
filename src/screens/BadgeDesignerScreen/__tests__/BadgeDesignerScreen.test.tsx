@@ -109,6 +109,7 @@ const makeRow = (overrides: Record<string, unknown> = {}) => ({
     iconName: 'Trophy',
     iconWeight: 'regular',
     title: 'Learn TypeScript',
+    centerMode: 'icon',
   }),
   createdAt: '2026-01-28T00:00:00.000Z',
   goalTitle: 'Learn TypeScript',

@@ -11,11 +11,14 @@ export {
   BadgeShape,
   BadgeFrame,
   BadgeIconWeight,
+  BadgeCenterMode,
+  PathTextPosition,
+  BannerPosition,
   createDefaultBadgeDesign,
   isValidHexColor,
   parseBadgeDesign,
 } from './types';
-export type { BadgeDesign } from './types';
+export type { BadgeDesign, FrameDataParams, BannerData } from './types';
 
 export { BadgeShapeView, generateShapePath } from './shapes';
 export type { BadgeShapeViewProps } from './shapes';
