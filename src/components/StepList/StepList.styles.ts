@@ -120,5 +120,18 @@ export const styles = StyleSheet.create((theme) => {
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.background,
   },
+  addStepSection: {
+    gap: theme.space[2],
+    marginTop: theme.space[2],
+  },
+  evidencePickerRow: {
+    paddingLeft: 36,
+    paddingTop: theme.space[2],
+    paddingBottom: theme.space[1],
+  },
+  evidenceIconsRow: {
+    paddingLeft: 36,
+    paddingTop: theme.space[1],
+  },
   };
 });

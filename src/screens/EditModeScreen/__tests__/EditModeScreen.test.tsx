@@ -61,6 +61,15 @@ const mockReorderSteps = jest.fn();
 jest.mock('../../../db', () => ({
   GoalStatus: { active: 'active', completed: 'completed' },
   StepStatus: { pending: 'pending', completed: 'completed' },
+  EvidenceType: {
+    photo: 'photo',
+    screenshot: 'screenshot',
+    text: 'text',
+    voice_memo: 'voice_memo',
+    video: 'video',
+    link: 'link',
+    file: 'file',
+  },
   goalsQuery: 'goalsQuery',
   stepsByGoalQuery: jest.fn(() => 'stepsByGoalQuery'),
   updateGoal: (...args: unknown[]) => mockUpdateGoal(...args),
@@ -223,7 +232,7 @@ describe('EditModeScreen', () => {
       const addInput = screen.getByLabelText('Add a new step');
       fireEvent.changeText(addInput, 'New step');
       fireEvent(addInput, 'submitEditing');
-      expect(mockCreateStep).toHaveBeenCalledWith('goal-1', 'New step', 3);
+      expect(mockCreateStep).toHaveBeenCalledWith('goal-1', 'New step', 3, ['text']);
     });
 
     it('calls deleteStep when delete button pressed', () => {

@@ -6,6 +6,9 @@ import { useAnimationPref } from '../../hooks/useAnimationPref';
 import { triggerDragStart, triggerDragDrop } from '../../utils/haptics';
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
+import { EvidenceTypePicker } from '../EvidenceTypePicker';
+import { EvidenceType } from '../../db';
+import type { EvidenceTypeValue } from '../../types/evidence';
 import { DraggableStepItem } from './DraggableStepItem';
 import { styles } from './StepList.styles';
 
@@ -13,12 +16,13 @@ export interface Step {
   id: string;
   title: string;
   completed: boolean;
+  plannedEvidenceTypes?: EvidenceTypeValue[] | null;
 }
 
 export interface StepListProps {
   steps: Step[];
-  onCreateStep?: (title: string) => void;
-  onUpdateStep?: (id: string, title: string) => void;
+  onCreateStep?: (title: string, plannedEvidenceTypes: EvidenceTypeValue[]) => void;
+  onUpdateStep?: (id: string, title: string, plannedEvidenceTypes?: EvidenceTypeValue[]) => void;
   onDeleteStep?: (id: string) => void;
   onReorderSteps?: (stepIds: string[]) => void;
 }
@@ -37,7 +41,10 @@ export function StepList({
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [editPlannedTypes, setEditPlannedTypes] = useState<EvidenceTypeValue[]>([]);
+  const editPlannedTypesRef = useRef<EvidenceTypeValue[]>([]);
   const [newStepTitle, setNewStepTitle] = useState('');
+  const [newStepTypes, setNewStepTypes] = useState<EvidenceTypeValue[]>([EvidenceType.text as EvidenceTypeValue]);
   const newStepInputRef = useRef<TextInput>(null);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -63,26 +70,56 @@ export function StepList({
 
   function startEditing(step: Step) {
     if (!onUpdateStep) return;
+    const types = step.plannedEvidenceTypes ?? [EvidenceType.text as EvidenceTypeValue];
     setEditingId(step.id);
     setEditText(step.title);
+    setEditPlannedTypes(types);
+    editPlannedTypesRef.current = types;
   }
 
   function commitEdit() {
     if (editingId && onUpdateStep) {
       const trimmed = editText.trim();
-      if (trimmed && trimmed !== steps.find((s) => s.id === editingId)?.title) {
-        onUpdateStep(editingId, trimmed);
+      const currentStep = steps.find((s) => s.id === editingId);
+      // Read from ref to get the latest value, even if onBlur fires before a pending setState
+      const latestTypes = editPlannedTypesRef.current;
+      const titleChanged = trimmed && trimmed !== currentStep?.title;
+      const typesChanged = JSON.stringify(latestTypes) !== JSON.stringify(currentStep?.plannedEvidenceTypes ?? []);
+      if (titleChanged || typesChanged) {
+        onUpdateStep(editingId, trimmed || currentStep?.title || '', typesChanged ? latestTypes : undefined);
       }
     }
     setEditingId(null);
     setEditText('');
+    setEditPlannedTypes([]);
+    editPlannedTypesRef.current = [];
+  }
+
+  function toggleEditType(type: EvidenceTypeValue) {
+    setEditPlannedTypes((prev) => {
+      const next = prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type];
+      editPlannedTypesRef.current = next;
+      return next;
+    });
+  }
+
+  function toggleNewStepType(type: EvidenceTypeValue) {
+    setNewStepTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type],
+    );
   }
 
   function handleNewStepSubmit() {
     const trimmed = newStepTitle.trim();
     if (trimmed && onCreateStep) {
-      onCreateStep(trimmed);
+      const types = newStepTypes.length > 0 ? newStepTypes : [EvidenceType.text as EvidenceTypeValue];
+      onCreateStep(trimmed, types);
       setNewStepTitle('');
+      setNewStepTypes([EvidenceType.text as EvidenceTypeValue]);
     }
   }
 
@@ -154,29 +191,38 @@ export function StepList({
       <GestureHandlerRootView style={styles.stepItems}>
         {steps.map((step, index) => {
           const editContent = editingId === step.id ? (
-            <View style={styles.editRow}>
-              <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
-              <TextInput
-                style={styles.editInput}
-                value={editText}
-                onChangeText={setEditText}
-                onSubmitEditing={commitEdit}
-                onBlur={commitEdit}
-                autoFocus
-                returnKeyType="done"
-                placeholderTextColor={theme.colors.textMuted}
-                selectTextOnFocus
-                accessibilityLabel={`Edit step: ${step.title}`}
-              />
-              {onDeleteStep && (
-                <IconButton
-                  icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
-                  onPress={() => onDeleteStep(step.id)}
-                  size="sm"
-                  variant="ghost"
-                  accessibilityLabel={`Delete "${step.title}"`}
+            <View>
+              <View style={styles.editRow}>
+                <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+                <TextInput
+                  style={styles.editInput}
+                  value={editText}
+                  onChangeText={setEditText}
+                  onSubmitEditing={commitEdit}
+                  onBlur={commitEdit}
+                  autoFocus
+                  returnKeyType="done"
+                  placeholderTextColor={theme.colors.textMuted}
+                  selectTextOnFocus
+                  accessibilityLabel={`Edit step: ${step.title}`}
                 />
-              )}
+                {onDeleteStep && (
+                  <IconButton
+                    icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                    onPress={() => onDeleteStep(step.id)}
+                    size="sm"
+                    variant="ghost"
+                    accessibilityLabel={`Delete "${step.title}"`}
+                  />
+                )}
+              </View>
+              <View style={styles.evidencePickerRow}>
+                <EvidenceTypePicker
+                  selectedTypes={editPlannedTypes}
+                  onToggleType={toggleEditType}
+                  label="Evidence types"
+                />
+              </View>
             </View>
           ) : null;
 
@@ -208,25 +254,35 @@ export function StepList({
               {editingId === step.id ? (
                 editContent
               ) : (
-                <View style={styles.stepRow}>
-                  <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
-                  <Pressable
-                    style={styles.stepContent}
-                    onPress={onUpdateStep ? () => startEditing(step) : undefined}
-                    accessibilityRole="button"
-                    accessibilityLabel={step.title}
-                    accessibilityHint={onUpdateStep ? 'Tap to edit step title' : undefined}
-                  >
-                    <RNText style={styles.stepTitleText}>{step.title}</RNText>
-                  </Pressable>
-                  {onDeleteStep && (
-                    <IconButton
-                      icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
-                      onPress={() => onDeleteStep(step.id)}
-                      size="sm"
-                      variant="ghost"
-                      accessibilityLabel={`Delete "${step.title}"`}
-                    />
+                <View>
+                  <View style={styles.stepRow}>
+                    <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+                    <Pressable
+                      style={styles.stepContent}
+                      onPress={onUpdateStep ? () => startEditing(step) : undefined}
+                      accessibilityRole="button"
+                      accessibilityLabel={step.title}
+                      accessibilityHint={onUpdateStep ? 'Tap to edit step title' : undefined}
+                    >
+                      <RNText style={styles.stepTitleText}>{step.title}</RNText>
+                    </Pressable>
+                    {onDeleteStep && (
+                      <IconButton
+                        icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                        onPress={() => onDeleteStep(step.id)}
+                        size="sm"
+                        variant="ghost"
+                        accessibilityLabel={`Delete "${step.title}"`}
+                      />
+                    )}
+                  </View>
+                  {step.plannedEvidenceTypes && step.plannedEvidenceTypes.length > 0 && (
+                    <View style={styles.evidenceIconsRow}>
+                      <EvidenceTypePicker
+                        selectedTypes={step.plannedEvidenceTypes}
+                        compact
+                      />
+                    </View>
                   )}
                 </View>
               )}
@@ -236,30 +292,37 @@ export function StepList({
       </GestureHandlerRootView>
 
       {onCreateStep && (
-        <View style={styles.addStepRow}>
-          <View style={styles.addStepInputCard}>
-            <TextInput
-              ref={newStepInputRef}
-              style={styles.addStepInput}
-              placeholder="Add step..."
-              placeholderTextColor={theme.colors.textMuted}
-              value={newStepTitle}
-              onChangeText={setNewStepTitle}
-              onSubmitEditing={handleNewStepSubmit}
-              returnKeyType="done"
-              blurOnSubmit={false}
-              accessibilityLabel="Add a new step"
-              accessibilityHint="Type a step title and press return to add"
-            />
+        <View style={styles.addStepSection}>
+          <View style={styles.addStepRow}>
+            <View style={styles.addStepInputCard}>
+              <TextInput
+                ref={newStepInputRef}
+                style={styles.addStepInput}
+                placeholder="Add step..."
+                placeholderTextColor={theme.colors.textMuted}
+                value={newStepTitle}
+                onChangeText={setNewStepTitle}
+                onSubmitEditing={handleNewStepSubmit}
+                returnKeyType="done"
+                blurOnSubmit={false}
+                accessibilityLabel="Add a new step"
+                accessibilityHint="Type a step title and press return to add"
+              />
+            </View>
+            <Pressable
+              style={styles.addStepButton}
+              onPress={handleNewStepSubmit}
+              accessibilityRole="button"
+              accessibilityLabel="Add step"
+            >
+              <RNText style={styles.addStepButtonText}>+</RNText>
+            </Pressable>
           </View>
-          <Pressable
-            style={styles.addStepButton}
-            onPress={handleNewStepSubmit}
-            accessibilityRole="button"
-            accessibilityLabel="Add step"
-          >
-            <RNText style={styles.addStepButtonText}>+</RNText>
-          </Pressable>
+          <EvidenceTypePicker
+            selectedTypes={newStepTypes}
+            onToggleType={toggleNewStepType}
+            label="Evidence types for new step"
+          />
         </View>
       )}
     </View>

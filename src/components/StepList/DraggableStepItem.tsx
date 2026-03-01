@@ -12,6 +12,7 @@ import type { AnimationPref } from '../../hooks/useAnimationPref';
 import { getTimingConfig } from '../../utils/animation';
 import { IconButton } from '../IconButton';
 import { Text } from '../Text';
+import { EvidenceTypePicker } from '../EvidenceTypePicker';
 import { styles } from './StepList.styles';
 import type { Step } from './StepList';
 
@@ -114,44 +115,54 @@ export function DraggableStepItem({
         {editContent ? (
           editContent
         ) : (
-          <View style={styles.stepRow}>
-            <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
-            <Pressable
-              style={styles.stepContent}
-              onPress={onLabelPress ? () => onLabelPress(step) : undefined}
-              accessibilityRole="button"
-              accessibilityLabel={step.title}
-              accessibilityHint={onLabelPress ? 'Tap to edit step title' : undefined}
-            >
-              <RNText style={styles.stepTitleText}>{step.title}</RNText>
-            </Pressable>
-            {onDeleteStep && (
-              <IconButton
-                icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
-                onPress={onDeleteStep}
-                size="sm"
-                variant="ghost"
-                accessibilityLabel={`Delete "${step.title}"`}
-              />
-            )}
-            {showAccessibleControls && (
-              <View style={styles.reorderButtons}>
-                {onMoveUp && !isFirst && (
-                  <IconButton
-                    icon={<Text variant="body">↑</Text>}
-                    onPress={onMoveUp}
-                    size="sm"
-                    accessibilityLabel={`Move "${step.title}" up`}
-                  />
-                )}
-                {onMoveDown && !isLast && (
-                  <IconButton
-                    icon={<Text variant="body">↓</Text>}
-                    onPress={onMoveDown}
-                    size="sm"
-                    accessibilityLabel={`Move "${step.title}" down`}
-                  />
-                )}
+          <View>
+            <View style={styles.stepRow}>
+              <RNText style={styles.dragHandle} accessibilityElementsHidden importantForAccessibility="no">≡</RNText>
+              <Pressable
+                style={styles.stepContent}
+                onPress={onLabelPress ? () => onLabelPress(step) : undefined}
+                accessibilityRole="button"
+                accessibilityLabel={step.title}
+                accessibilityHint={onLabelPress ? 'Tap to edit step title' : undefined}
+              >
+                <RNText style={styles.stepTitleText}>{step.title}</RNText>
+              </Pressable>
+              {onDeleteStep && (
+                <IconButton
+                  icon={<Text variant="body" style={{ color: theme.colors.textMuted }}>✕</Text>}
+                  onPress={onDeleteStep}
+                  size="sm"
+                  variant="ghost"
+                  accessibilityLabel={`Delete "${step.title}"`}
+                />
+              )}
+              {showAccessibleControls && (
+                <View style={styles.reorderButtons}>
+                  {onMoveUp && !isFirst && (
+                    <IconButton
+                      icon={<Text variant="body">↑</Text>}
+                      onPress={onMoveUp}
+                      size="sm"
+                      accessibilityLabel={`Move "${step.title}" up`}
+                    />
+                  )}
+                  {onMoveDown && !isLast && (
+                    <IconButton
+                      icon={<Text variant="body">↓</Text>}
+                      onPress={onMoveDown}
+                      size="sm"
+                      accessibilityLabel={`Move "${step.title}" down`}
+                    />
+                  )}
+                </View>
+              )}
+            </View>
+            {step.plannedEvidenceTypes && step.plannedEvidenceTypes.length > 0 && (
+              <View style={styles.evidenceIconsRow}>
+                <EvidenceTypePicker
+                  selectedTypes={step.plannedEvidenceTypes}
+                  compact
+                />
               </View>
             )}
           </View>

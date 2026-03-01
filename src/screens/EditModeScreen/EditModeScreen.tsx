@@ -26,6 +26,7 @@ import {
   StepStatus,
 } from '../../db';
 import type { GoalId, StepId } from '../../db';
+import type { EvidenceTypeValue } from '../../types/evidence';
 import type { EditModeScreenProps, GoalsStackParamList } from '../../navigation/types';
 import { ModeIndicator } from '../../components/ModeIndicator';
 import { styles } from './EditModeScreen.styles';
@@ -109,9 +110,12 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
     debouncedUpdateDescription(text);
   }
 
-  function handleUpdateStep(stepId: string, newTitle: string) {
+  function handleUpdateStep(stepId: string, newTitle: string, plannedEvidenceTypes?: EvidenceTypeValue[]) {
     try {
-      updateStep(stepId as StepId, { title: newTitle });
+      updateStep(stepId as StepId, {
+        title: newTitle,
+        ...(plannedEvidenceTypes !== undefined ? { plannedEvidenceTypes } : {}),
+      });
     } catch (error) {
       console.error('[EditModeScreen] Failed to update step', { stepId, newTitle, error });
       Alert.alert('Error', 'Could not update step.');
@@ -128,13 +132,13 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
     }
   }
 
-  function handleCreateStep(stepTitle: string) {
+  function handleCreateStep(stepTitle: string, plannedEvidenceTypes: EvidenceTypeValue[]) {
     const maxOrdinal = stepRows.reduce(
       (max, s) => Math.max(max, s.ordinal ?? -1),
       -1,
     );
     try {
-      createStep(goalId as GoalId, stepTitle, maxOrdinal + 1);
+      createStep(goalId as GoalId, stepTitle, maxOrdinal + 1, plannedEvidenceTypes);
     } catch (error) {
       console.error('[EditModeScreen] Failed to create step', { goalId, stepTitle, error });
       Alert.alert('Error', 'Could not create step.');
@@ -206,11 +210,22 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
 
         {/* Steps — reuses StepList with drag-and-drop support */}
         <StepList
-          steps={stepRows.map((s) => ({
-            id: s.id,
-            title: s.title ?? '',
-            completed: s.status === StepStatus.completed,
-          }))}
+          steps={stepRows.map((s) => {
+            let plannedTypes: EvidenceTypeValue[] | null = null;
+            if (s.plannedEvidenceTypes) {
+              try {
+                plannedTypes = JSON.parse(s.plannedEvidenceTypes as string);
+              } catch {
+                plannedTypes = null;
+              }
+            }
+            return {
+              id: s.id,
+              title: s.title ?? '',
+              completed: s.status === StepStatus.completed,
+              plannedEvidenceTypes: plannedTypes,
+            };
+          })}
           onCreateStep={handleCreateStep}
           onUpdateStep={handleUpdateStep}
           onDeleteStep={canDelete ? handleDeleteStep : undefined}

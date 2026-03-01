@@ -80,7 +80,7 @@ describe('StepList', () => {
     const addInput = screen.getByLabelText('Add a new step');
     fireEvent.changeText(addInput, 'New step');
     fireEvent.press(screen.getByLabelText('Add step'));
-    expect(onCreate).toHaveBeenCalledWith('New step');
+    expect(onCreate).toHaveBeenCalledWith('New step', ['text']);
   });
 
   it('renders delete buttons when onDeleteStep is provided', () => {
