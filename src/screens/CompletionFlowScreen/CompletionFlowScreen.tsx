@@ -1,5 +1,14 @@
-import { Suspense, useState, useRef, useEffect } from 'react';
-import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  AccessibilityInfo,
+} from 'react-native';
 import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
@@ -19,7 +28,9 @@ import {
   badgeByGoalQuery,
   badgesQuery,
   uncompleteGoal,
+  createEvidence,
   EvidenceType,
+  TEXT_EVIDENCE_PREFIX,
   GoalStatus,
 } from '../../db';
 import type { GoalId } from '../../db';
@@ -41,7 +52,7 @@ const logger = new Logger('CompletionFlowScreen');
 /**
  * Optional image override for the completion icon.
  * Set to an image source (e.g. require('../../../assets/icon.png')) to use an image,
- * or leave as undefined to use the default 🎯 emoji.
+ * or leave as undefined to use the default emoji.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const COMPLETION_ICON: ImageSourcePropType | undefined = undefined;
@@ -54,6 +65,11 @@ const EVIDENCE_ROUTE_MAP: Partial<Record<EvidenceTypeValue, CaptureScreenName>> 
   [EvidenceType.link]: 'CaptureLink',
   [EvidenceType.file]: 'CaptureFile',
 };
+
+/** Max chars for inline text note (matches CaptureTextNote constraint) */
+const MAX_NOTE_LENGTH = 1000;
+
+type CompletionPhase = 'evidence-prompt' | 'celebration';
 
 function CompletionContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
@@ -69,16 +85,40 @@ function CompletionContent({ goalId }: { goalId: string }) {
   // consume() reads and deletes — prevents accumulation in the in-memory Map
   const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
   const pendingDesign = pendingDesignRef.current;
+
+  const hasGoalEvidence = goalEvidenceRows.length > 0;
+
+  // Phase: start in celebration if evidence already exists, otherwise show prompt
+  const [phase, setPhase] = useState<CompletionPhase>(
+    hasGoalEvidence ? 'celebration' : 'evidence-prompt',
+  );
+
+  // Transition to celebration when evidence appears (e.g. after inline save or returning from capture screen)
+  useEffect(() => {
+    if (hasGoalEvidence && phase === 'evidence-prompt') {
+      setPhase('celebration');
+      AccessibilityInfo.announceForAccessibility('Evidence added! Generating your badge.');
+    }
+  }, [hasGoalEvidence, phase]);
+
+  // Only create badge when in celebration phase (evidence exists)
   const { status: badgeStatus, error: badgeError } = useCreateBadge(goalId as GoalId, {
     ...(pendingDesign ? { design: pendingDesign } : {}),
+    enabled: phase === 'celebration',
   });
-  const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing';
+  const isBadgeCreating = badgeStatus === 'building' || badgeStatus === 'signing' || badgeStatus === 'storing' || badgeStatus === 'baking';
 
-  const [showConfetti, setShowConfetti] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const hasShownModal = useRef(false);
   const capturedIsFirstBadge = useRef(false);
-  const hasGoalEvidence = goalEvidenceRows.length > 0;
+
+  // Start confetti when entering celebration phase
+  useEffect(() => {
+    if (phase === 'celebration') {
+      setShowConfetti(true);
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (badgeStatus === 'done' && badgeRow && !hasShownModal.current) {
@@ -87,6 +127,33 @@ function CompletionContent({ goalId }: { goalId: string }) {
       setShowBadgeModal(true);
     }
   }, [badgeStatus, badgeRow, allBadges.length]);
+
+  // Inline text note state
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const textInputRef = useRef<TextInput>(null);
+
+  const trimmedNote = noteText.trim();
+  const canSaveNote = trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
+
+  const handleSaveInlineNote = useCallback(() => {
+    if (!canSaveNote || savingNote) return;
+
+    setSavingNote(true);
+    try {
+      createEvidence({
+        goalId: goalId as GoalId,
+        type: EvidenceType.text,
+        uri: `${TEXT_EVIDENCE_PREFIX}${trimmedNote}`,
+        description: undefined,
+      });
+      AccessibilityInfo.announceForAccessibility('Text note saved');
+    } catch (error) {
+      logger.error('Failed to save inline text note', { goalId, error });
+    } finally {
+      setSavingNote(false);
+    }
+  }, [canSaveNote, savingNote, goalId, trimmedNote]);
 
   if (!goal) {
     return (
@@ -97,10 +164,13 @@ function CompletionContent({ goalId }: { goalId: string }) {
   }
 
   const handleAddEvidence = () => {
-    // Navigate to a random evidence capture type (like prototype) or first available
-    const firstType = EVIDENCE_OPTIONS[0];
-    if (!firstType) return;
-    const routeName = EVIDENCE_ROUTE_MAP[firstType.type];
+    const routeName = EVIDENCE_ROUTE_MAP[EvidenceType.photo];
+    if (!routeName) return;
+    navigation.navigate(routeName, { goalId });
+  };
+
+  const handleEvidenceTypePress = (evType: EvidenceTypeValue) => {
+    const routeName = EVIDENCE_ROUTE_MAP[evType];
     if (!routeName) return;
     navigation.navigate(routeName, { goalId });
   };
@@ -146,6 +216,89 @@ function CompletionContent({ goalId }: { goalId: string }) {
     setShowBadgeModal(false);
   };
 
+  // Evidence prompt phase — capture evidence before celebration
+  if (phase === 'evidence-prompt') {
+    return (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View
+            style={styles.card}
+            accessible
+            accessibilityRole="summary"
+            accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
+          >
+            <View style={styles.iconContainer} accessibilityElementsHidden>
+              <Text style={styles.iconEmoji}>{'\u{1F3C6}'}</Text>
+            </View>
+            <Text
+              variant="headline"
+              style={styles.headline}
+              accessibilityRole="header"
+            >
+              One last thing!
+            </Text>
+            <Text variant="body" style={styles.summary}>
+              Capture your achievement for {goal.title}
+            </Text>
+
+            {/* Inline text input — one-tap accessible */}
+            <View
+              style={styles.inlineNoteContainer}
+              accessible={false}
+            >
+              <Text variant="label" style={styles.inlineNoteLabel}>
+                Write about what you accomplished
+              </Text>
+              <TextInput
+                ref={textInputRef}
+                style={styles.inlineNoteInput}
+                placeholder="What did you accomplish?"
+                value={noteText}
+                onChangeText={setNoteText}
+                multiline
+                textAlignVertical="top"
+                maxLength={MAX_NOTE_LENGTH}
+                accessible
+                accessibilityLabel="Write about your achievement"
+                accessibilityHint="Type a reflection about what you accomplished"
+              />
+              <Button
+                label="Save Note"
+                onPress={handleSaveInlineNote}
+                disabled={!canSaveNote}
+                loading={savingNote}
+                variant="primary"
+              />
+            </View>
+
+            {/* Evidence type chips for other capture methods */}
+            <View style={styles.evidenceChips}>
+              <Text variant="label" style={styles.evidenceChipsLabel}>
+                Or capture another way
+              </Text>
+              <View style={styles.evidenceChipRow}>
+                {EVIDENCE_OPTIONS.filter((opt) => opt.type !== EvidenceType.text).map((opt) => (
+                  <Button
+                    key={opt.type}
+                    label={`${opt.icon} ${opt.label}`}
+                    onPress={() => handleEvidenceTypePress(opt.type)}
+                    variant="secondary"
+                    size="sm"
+                  />
+                ))}
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // Celebration phase — evidence exists, badge being created
   return (
     <View style={{ flex: 1 }}>
       <Confetti visible={showConfetti} onComplete={() => setShowConfetti(false)} />
@@ -164,7 +317,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 resizeMode="contain"
               />
             ) : (
-              <Text style={styles.iconEmoji}>🎯</Text>
+              <Text style={styles.iconEmoji}>{'\u{1F3AF}'}</Text>
             )}
           </View>
           <Text

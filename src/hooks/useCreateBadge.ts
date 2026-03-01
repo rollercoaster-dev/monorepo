@@ -84,9 +84,12 @@ export interface UseCreateBadgeOptions {
   capturedPng?: Buffer;
   /** Serialized BadgeDesign JSON to persist on the badge record. */
   design?: string;
+  /** When false, delays badge creation until enabled. Defaults to true. */
+  enabled?: boolean;
 }
 
 export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions): UseCreateBadgeResult {
+  const enabled = options?.enabled !== false;
   const { keyId, isReady } = useUserKey();
 
   const goals = useQuery(goalsQuery);
@@ -136,6 +139,9 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
 
     // Goal data not loaded yet
     if (!goal) return;
+
+    // Caller requested to delay badge creation (e.g. waiting for evidence)
+    if (!enabled) return;
 
     // Guard against re-entry
     if (hasTriggered.current) return;
@@ -267,7 +273,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();
-  }, [existingBadge, isReady, keyId, goal, goalId]); // evidence read via ref, not deps
+  }, [existingBadge, isReady, keyId, goal, goalId, enabled]); // evidence read via ref, not deps
 
   return { status, error };
 }

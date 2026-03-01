@@ -112,4 +112,39 @@ export const styles = StyleSheet.create((theme) => ({
   badgeStatusText: {
     color: theme.colors.textSecondary,
   },
+  // Evidence prompt phase styles
+  inlineNoteContainer: {
+    width: '100%',
+    gap: theme.space[3],
+    marginBottom: theme.space[4],
+  },
+  inlineNoteLabel: {
+    color: theme.colors.textSecondary,
+  },
+  inlineNoteInput: {
+    width: '100%',
+    minHeight: 100,
+    maxHeight: 200,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    padding: theme.space[3],
+    fontSize: theme.textStyles.body.fontSize,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
+    textAlignVertical: 'top' as const,
+  },
+  evidenceChips: {
+    width: '100%',
+    gap: theme.space[2],
+  },
+  evidenceChipsLabel: {
+    color: theme.colors.textSecondary,
+  },
+  evidenceChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.space[2],
+  },
 }));
