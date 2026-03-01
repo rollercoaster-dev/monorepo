@@ -20,6 +20,9 @@ export {
 } from './types';
 export type { BadgeDesign, FrameDataParams, BannerData } from './types';
 
+export { computeFrameParams, useFrameParamsForGoal } from './frames';
+export type { ComputeFrameParamsInput } from './frames';
+
 export { BadgeShapeView, generateShapePath } from './shapes';
 export type { BadgeShapeViewProps } from './shapes';
 
