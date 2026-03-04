@@ -26,7 +26,8 @@ import {
   StepStatus,
 } from '../../db';
 import type { GoalId, StepId } from '../../db';
-import type { EvidenceTypeValue } from '../../types/evidence';
+import { validateEvidenceType, type EvidenceTypeValue } from '../../types/evidence';
+import { parsePlannedEvidenceTypes } from '../../utils/parsePlannedEvidenceTypes';
 import type { EditModeScreenProps, GoalsStackParamList } from '../../navigation/types';
 import { ModeIndicator } from '../../components/ModeIndicator';
 import { styles } from './EditModeScreen.styles';
@@ -210,22 +211,12 @@ function EditContent({ goalId, cameFromFocus }: { goalId: string; cameFromFocus:
 
         {/* Steps — reuses StepList with drag-and-drop support */}
         <StepList
-          steps={stepRows.map((s) => {
-            let plannedTypes: EvidenceTypeValue[] | null = null;
-            if (s.plannedEvidenceTypes) {
-              try {
-                plannedTypes = JSON.parse(s.plannedEvidenceTypes as string);
-              } catch {
-                plannedTypes = null;
-              }
-            }
-            return {
-              id: s.id,
-              title: s.title ?? '',
-              completed: s.status === StepStatus.completed,
-              plannedEvidenceTypes: plannedTypes,
-            };
-          })}
+          steps={stepRows.map((s) => ({
+            id: s.id,
+            title: s.title ?? '',
+            completed: s.status === StepStatus.completed,
+            plannedEvidenceTypes: parsePlannedEvidenceTypes(s.plannedEvidenceTypes as string | null)?.map(validateEvidenceType) ?? null,
+          }))}
           onCreateStep={handleCreateStep}
           onUpdateStep={handleUpdateStep}
           onDeleteStep={canDelete ? handleDeleteStep : undefined}

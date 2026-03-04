@@ -14,6 +14,7 @@ import { StepCard, type StepCardStatus } from '../../components/StepCard';
 import { GoalEvidenceCard } from '../../components/GoalEvidenceCard';
 import { EvidenceDrawer, type EvidenceItemData } from '../../components/EvidenceDrawer';
 import { ModeIndicator } from '../../components/ModeIndicator';
+import { parsePlannedEvidenceTypes } from '../../utils/parsePlannedEvidenceTypes';
 import { ConfirmDeleteModal } from '../ConfirmDeleteModal';
 import {
   goalsQuery,
@@ -97,7 +98,6 @@ function FocusContent({ goalId }: { goalId: string }) {
             ? ('in-progress' as UIStepStatus)
             : ('pending' as UIStepStatus),
       evidenceCount: 0, // Will be enriched below
-      plannedEvidenceTypesJson: (row.plannedEvidenceTypes as string | null) ?? null,
     })),
   [stepRows, currentCardIndex]);
 
@@ -109,18 +109,13 @@ function FocusContent({ goalId }: { goalId: string }) {
     uiSteps.map((step, i) => {
       const stepEvidence = allStepEvidenceRows.filter((e) => e.stepId === step.id);
       const capturedTypes = [...new Set(stepEvidence.map((e) => e.type).filter(Boolean) as string[])];
-      let plannedTypes: string[] | null = null;
-      if (step.plannedEvidenceTypesJson) {
-        try {
-          const parsed = JSON.parse(step.plannedEvidenceTypesJson);
-          if (Array.isArray(parsed)) {
-            plannedTypes = parsed;
-          } else {
-            console.warn('[FocusModeScreen] plannedEvidenceTypes is not an array', { stepId: step.id, raw: step.plannedEvidenceTypesJson });
-          }
-        } catch (error) {
-          console.error('[FocusModeScreen] Failed to parse plannedEvidenceTypes JSON', { stepId: step.id, raw: step.plannedEvidenceTypesJson, error });
-        }
+      const rawPlanned = stepRows[i]?.plannedEvidenceTypes as string | null;
+      const plannedTypes = parsePlannedEvidenceTypes(rawPlanned);
+      if (rawPlanned != null && plannedTypes == null) {
+        console.warn('[FocusModeScreen] Failed to parse plannedEvidenceTypes', {
+          stepId: step.id,
+          plannedEvidenceTypes: rawPlanned,
+        });
       }
       return {
         ...step,
@@ -129,7 +124,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         capturedEvidenceTypes: capturedTypes,
       };
     }),
-  [uiSteps, allStepEvidenceRows, stepEvidenceCounts]);
+  [uiSteps, stepRows, allStepEvidenceRows, stepEvidenceCounts]);
 
   // Timeline + dot steps (memoized to prevent child re-renders on unrelated state changes)
   const timelineSteps = useMemo<MiniTimelineStep[]>(

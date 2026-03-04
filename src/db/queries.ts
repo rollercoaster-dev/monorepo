@@ -11,6 +11,7 @@
  */
 import { NonEmptyString1000, NonEmptyString, dateToDateIso, sqliteTrue, Int } from '@evolu/common';
 import { Logger } from '../shims/rd-logger';
+import { parsePlannedEvidenceTypes } from '../utils/parsePlannedEvidenceTypes';
 import { evolu } from './evolu';
 import {
   GoalId,
@@ -236,24 +237,8 @@ export function canCompleteStep(
   const validEvidence = stepEvidence.filter((e) => e.type !== null);
   if (validEvidence.length === 0) return false;
 
-  if (plannedEvidenceTypesJson === null) return true;
-
-  let plannedTypes: string[];
-  try {
-    plannedTypes = JSON.parse(plannedEvidenceTypesJson);
-    if (!Array.isArray(plannedTypes)) {
-      logger.warn('plannedEvidenceTypes is valid JSON but not an array, treating as any-type', {
-        json: plannedEvidenceTypesJson,
-        parsedType: typeof plannedTypes,
-      });
-      return true;
-    }
-  } catch {
-    logger.warn('Failed to parse plannedEvidenceTypes JSON, treating as any-type', {
-      json: plannedEvidenceTypesJson,
-    });
-    return true;
-  }
+  const plannedTypes = parsePlannedEvidenceTypes(plannedEvidenceTypesJson, logger);
+  if (plannedTypes === null) return true;
 
   return validEvidence.some((e) => plannedTypes.includes(e.type!));
 }
