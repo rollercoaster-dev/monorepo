@@ -1,6 +1,7 @@
 import type { BadgeFrame } from '../types';
 import type { FrameGenerator } from './types';
 import { boldBorderGenerator } from './boldBorder';
+import { guillocheGenerator } from './guilloche';
 
 export { computeFrameParams } from './dataMapper';
 export type { ComputeFrameParamsInput } from './dataMapper';
@@ -8,6 +9,7 @@ export { useFrameParamsForGoal } from './useFrameParamsForGoal';
 
 export type { FrameGeneratorConfig, FrameGenerator } from './types';
 export { boldBorderGenerator } from './boldBorder';
+export { guillocheGenerator } from './guilloche';
 
 /** Placeholder for frame types not yet implemented */
 const unimplemented =
@@ -23,7 +25,7 @@ const unimplemented =
 export const frameRegistry: Record<BadgeFrame, FrameGenerator> = {
   none: () => null,
   boldBorder: boldBorderGenerator,
-  guilloche: unimplemented('guilloche'),
+  guilloche: guillocheGenerator,
   crossHatch: unimplemented('crossHatch'),
   microprint: unimplemented('microprint'),
   rosette: unimplemented('rosette'),

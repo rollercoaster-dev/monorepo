@@ -118,7 +118,7 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[2],
     paddingVertical: theme.space[2],
     minWidth: 72,
-    minHeight: 72,
+    height: 88,
     borderRadius: 0,
     gap: theme.space[1],
   },
