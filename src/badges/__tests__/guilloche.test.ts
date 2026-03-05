@@ -1,5 +1,10 @@
 import React from 'react';
-import { guillocheGenerator, POINTS_PER_WAVE } from '../frames/guilloche';
+import {
+  guillocheGenerator,
+  makeRoundedRectSampler,
+  makeShieldSampler,
+  POINTS_PER_WAVE,
+} from '../frames/guilloche';
 import { frameRegistry } from '../frames';
 import type { FrameGeneratorConfig } from '../frames/types';
 import { BadgeShape } from '../types';
@@ -33,11 +38,41 @@ type SvgPathProps = { stroke: string; fill: string; d: string; opacity: number; 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- React element typing requires any
 type AnyElement = React.ReactElement<any>;
 
-function getChildren(element: AnyElement): React.ReactElement<SvgPathProps>[] {
-  return React.Children.toArray(element.props.children) as React.ReactElement<SvgPathProps>[];
+function flatChildren(element: AnyElement): AnyElement[] {
+  return React.Children.toArray(element.props.children).flatMap((child) => {
+    const el = child as AnyElement;
+    if (el.props?.children) {
+      return [el, ...flatChildren(el)];
+    }
+    return [el];
+  });
+}
+
+function getWavePaths(element: AnyElement): React.ReactElement<SvgPathProps>[] {
+  return flatChildren(element).filter(
+    (el) => el.props?.d !== undefined && el.props?.fill === 'none' && el.props?.stroke !== undefined,
+  ) as React.ReactElement<SvgPathProps>[];
 }
 
 describe('guillocheGenerator', () => {
+  describe('parametric sampler continuity', () => {
+    test('rounded-rect sampler is periodic at t=1 seam', () => {
+      const sampler = makeRoundedRectSampler(SIZE, (INSET + INNER_INSET) / 2);
+      const p0 = sampler(0);
+      const p1 = sampler(1);
+      expect(Math.abs(p0.x - p1.x)).toBeLessThan(0.0001);
+      expect(Math.abs(p0.y - p1.y)).toBeLessThan(0.0001);
+    });
+
+    test('shield sampler is periodic at t=1 seam', () => {
+      const sampler = makeShieldSampler(SIZE, (INSET + INNER_INSET) / 2);
+      const p0 = sampler(0);
+      const p1 = sampler(1);
+      expect(Math.abs(p0.x - p1.x)).toBeLessThan(0.0001);
+      expect(Math.abs(p0.y - p1.y)).toBeLessThan(0.0001);
+    });
+  });
+
   describe('wave count scaling', () => {
     test.each([
       { stepCount: 0, expectedWaves: 3, label: 'minimum clamp' },
@@ -48,9 +83,9 @@ describe('guillocheGenerator', () => {
       const config = makeConfig({ params: { ...defaultParams, stepCount } });
       const result = guillocheGenerator(config);
       expect(result).not.toBeNull();
-      expect(getChildren(result!)).toHaveLength(2);
+      expect(getWavePaths(result!)).toHaveLength(2);
       // Verify actual wave count via C command count in path
-      const path = getChildren(result!)[0].props.d;
+      const path = getWavePaths(result!)[0].props.d;
       const cCount = (path.match(/\bC\b/g) ?? []).length;
       expect(cCount).toBe(expectedWaves * POINTS_PER_WAVE);
     });
@@ -78,26 +113,26 @@ describe('guillocheGenerator', () => {
 
   test('both paths have fill="none"', () => {
     const result = guillocheGenerator(makeConfig())!;
-    for (const child of getChildren(result)) {
+    for (const child of getWavePaths(result)) {
       expect(child.props.fill).toBe('none');
     }
   });
 
   test('strokeColor is applied to both paths', () => {
     const result = guillocheGenerator(makeConfig({ strokeColor: '#ff0000' }))!;
-    for (const child of getChildren(result)) {
+    for (const child of getWavePaths(result)) {
       expect(child.props.stroke).toBe('#ff0000');
     }
   });
 
   test('default strokeColor is black', () => {
     const result = guillocheGenerator(makeConfig())!;
-    expect(getChildren(result)[0].props.stroke).toBe('#000000');
+    expect(getWavePaths(result)[0].props.stroke).toBe('#000000');
   });
 
   test('paths have correct strokeWidth and opacity', () => {
     const result = guillocheGenerator(makeConfig())!;
-    for (const child of getChildren(result)) {
+    for (const child of getWavePaths(result)) {
       expect(child.props.strokeWidth).toBe(1.0);
       expect(child.props.opacity).toBe(0.85);
     }
@@ -105,7 +140,7 @@ describe('guillocheGenerator', () => {
 
   test('paths start with M and end with Z', () => {
     const result = guillocheGenerator(makeConfig())!;
-    for (const child of getChildren(result)) {
+    for (const child of getWavePaths(result)) {
       expect(child.props.d).toMatch(/^M /);
       expect(child.props.d).toMatch(/ Z$/);
     }
@@ -113,8 +148,15 @@ describe('guillocheGenerator', () => {
 
   test('two paths are distinct (wave vs anti-phase wave)', () => {
     const result = guillocheGenerator(makeConfig())!;
-    const children = getChildren(result);
+    const children = getWavePaths(result);
     expect(children[0].props.d).not.toBe(children[1].props.d);
+  });
+
+  test('includes clip path defs for outer-boundary clipping', () => {
+    const result = guillocheGenerator(makeConfig({ shape: BadgeShape.star }))!;
+    const all = flatChildren(result);
+    const hasClipPath = all.some((el) => el.props?.clipPath);
+    expect(hasClipPath).toBe(true);
   });
 
   describe('visual complexity', () => {
@@ -125,11 +167,18 @@ describe('guillocheGenerator', () => {
       const highResult = guillocheGenerator(
         makeConfig({ params: { ...defaultParams, stepCount: 9 } }),
       )!;
-      const lowPath = getChildren(lowResult)[0].props.d;
-      const highPath = getChildren(highResult)[0].props.d;
+      const lowPath = getWavePaths(lowResult)[0].props.d;
+      const highPath = getWavePaths(highResult)[0].props.d;
       // More waves = more C commands = longer path string
       expect(highPath.length).toBeGreaterThan(lowPath.length);
     });
+  });
+
+  test('star shape enforces enough waves to avoid flat edge segments', () => {
+    const result = guillocheGenerator(makeConfig({ shape: BadgeShape.star, params: { ...defaultParams, stepCount: 1 } }))!;
+    const path = getWavePaths(result)[0].props.d;
+    const cCount = (path.match(/\bC\b/g) ?? []).length;
+    expect(cCount).toBe(5 * POINTS_PER_WAVE);
   });
 });
 

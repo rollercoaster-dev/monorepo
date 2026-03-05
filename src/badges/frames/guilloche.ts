@@ -1,5 +1,6 @@
 import React from 'react';
-import { Path } from 'react-native-svg';
+import { ClipPath, Defs, G, Path } from 'react-native-svg';
+import { generateShapePath } from '../shapes/paths';
 import type { BadgeShape } from '../types';
 import { DEFAULT_STROKE_COLOR } from './constants';
 import type { FrameGenerator } from './types';
@@ -25,6 +26,8 @@ export const WAVE_STROKE_WIDTH = 1.0;
 
 /** Opacity for guilloche wave paths — slight transparency emphasizes interlocking */
 export const WAVE_OPACITY = 0.85;
+
+let clipCounter = 0;
 
 // ---------------------------------------------------------------------------
 // Contour samplers
@@ -151,17 +154,19 @@ function arcLengthResample(
   cy: number,
   n: number,
 ): SamplePoint[] {
-  // 1. Dense sampling
+  // 1. Dense sampling in [0, 1) to avoid a duplicate endpoint artifact at t=1.
   const dense: { x: number; y: number }[] = [];
-  for (let i = 0; i <= ARC_LENGTH_DENSITY; i++) {
+  for (let i = 0; i < ARC_LENGTH_DENSITY; i++) {
     dense.push(denseSampler(i / ARC_LENGTH_DENSITY));
   }
+  if (dense.length < 2) return [];
 
-  // 2. Compute cumulative arc length
+  // 2. Compute cumulative arc length on the CLOSED contour.
+  const denseClosed = [...dense, dense[0]];
   const cumLen: number[] = [0];
-  for (let i = 1; i < dense.length; i++) {
-    const dx = dense[i].x - dense[i - 1].x;
-    const dy = dense[i].y - dense[i - 1].y;
+  for (let i = 1; i < denseClosed.length; i++) {
+    const dx = denseClosed[i].x - denseClosed[i - 1].x;
+    const dy = denseClosed[i].y - denseClosed[i - 1].y;
     cumLen.push(cumLen[i - 1] + Math.sqrt(dx * dx + dy * dy));
   }
   const totalLen = cumLen[cumLen.length - 1];
@@ -177,12 +182,15 @@ function arcLengthResample(
     }
     const segLen = cumLen[denseIdx + 1] - cumLen[denseIdx];
     const t = segLen > 0 ? (targetLen - cumLen[denseIdx]) / segLen : 0;
-    const x = dense[denseIdx].x + (dense[denseIdx + 1].x - dense[denseIdx].x) * t;
-    const y = dense[denseIdx].y + (dense[denseIdx + 1].y - dense[denseIdx].y) * t;
+    const pA = denseClosed[denseIdx];
+    const pB = denseClosed[denseIdx + 1];
+    const x = pA.x + (pB.x - pA.x) * t;
+    const y = pA.y + (pB.y - pA.y) * t;
 
-    // Approximate tangent from neighboring dense samples
-    const prev = Math.max(0, denseIdx - 1);
-    const next = Math.min(dense.length - 1, denseIdx + 1);
+    // Approximate tangent from neighboring dense samples, wrapping at seam.
+    const baseIdx = denseIdx % dense.length;
+    const prev = (baseIdx - 1 + dense.length) % dense.length;
+    const next = (baseIdx + 1) % dense.length;
     const tx = dense[next].x - dense[prev].x;
     const ty = dense[next].y - dense[prev].y;
     const tLen = Math.sqrt(tx * tx + ty * ty) || 1;
@@ -218,7 +226,8 @@ export function makeShieldSampler(
   const cx = l + w / 2;
 
   return (param: number) => {
-    const seg = param * 7;
+    const p = ((param % 1) + 1) % 1;
+    const seg = p * 7;
     const s = seg % 1;
     if (seg < 1) {
       const x0 = l + w * 0.075;
@@ -278,7 +287,8 @@ export function makeRoundedRectSampler(
   const cr = Math.min(w, h) * 0.12;
 
   return (param: number) => {
-    const seg = param * 8;
+    const p = ((param % 1) + 1) % 1;
+    const seg = p * 8;
     const s = seg % 1;
     if (seg < 1) {
       return { x: left + cr + (w - 2 * cr) * s, y: top };
@@ -347,11 +357,46 @@ export function catmullRomToCubic(
   p2: { x: number; y: number },
   p3: { x: number; y: number },
 ): [{ x: number; y: number }, { x: number; y: number }] {
-  const t = 1 / 6;
-  return [
-    { x: p1.x + (p2.x - p0.x) * t, y: p1.y + (p2.y - p0.y) * t },
-    { x: p2.x - (p3.x - p1.x) * t, y: p2.y - (p3.y - p1.y) * t },
-  ];
+  // Centripetal Catmull-Rom reduces loop/overshoot artifacts on uneven point spacing.
+  const alpha = 0.5;
+  const epsilon = 1e-6;
+
+  const d01 = Math.max(epsilon, Math.pow(Math.hypot(p1.x - p0.x, p1.y - p0.y), alpha));
+  const d12 = Math.max(epsilon, Math.pow(Math.hypot(p2.x - p1.x, p2.y - p1.y), alpha));
+  const d23 = Math.max(epsilon, Math.pow(Math.hypot(p3.x - p2.x, p3.y - p2.y), alpha));
+
+  const t0 = 0;
+  const t1 = t0 + d01;
+  const t2 = t1 + d12;
+  const t3 = t2 + d23;
+
+  const dt20 = t2 - t0;
+  const dt31 = t3 - t1;
+  const dt21 = t2 - t1;
+
+  if (dt20 <= epsilon || dt31 <= epsilon || dt21 <= epsilon) {
+    const t = 1 / 6;
+    return [
+      { x: p1.x + (p2.x - p0.x) * t, y: p1.y + (p2.y - p0.y) * t },
+      { x: p2.x - (p3.x - p1.x) * t, y: p2.y - (p3.y - p1.y) * t },
+    ];
+  }
+
+  const m1x = (p2.x - p0.x) / dt20;
+  const m1y = (p2.y - p0.y) / dt20;
+  const m2x = (p3.x - p1.x) / dt31;
+  const m2y = (p3.y - p1.y) / dt31;
+
+  const cp1 = {
+    x: p1.x + (m1x * dt21) / 3,
+    y: p1.y + (m1y * dt21) / 3,
+  };
+  const cp2 = {
+    x: p2.x - (m2x * dt21) / 3,
+    y: p2.y - (m2y * dt21) / 3,
+  };
+
+  return [cp1, cp2];
 }
 
 /**
@@ -380,6 +425,219 @@ export function buildWavePaths(
   return [buildPathFromPoints(wave1Pts), buildPathFromPoints(wave2Pts)];
 }
 
+function buildWavePathsLinear(
+  samples: SamplePoint[],
+  waveCount: number,
+  amplitude: number,
+): [string, string] {
+  const n = samples.length;
+  const wave1Pts: { x: number; y: number }[] = new Array(n);
+  const wave2Pts: { x: number; y: number }[] = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const pt = samples[i];
+    const t = (2 * Math.PI * waveCount * i) / n;
+    const offset = Math.sin(t) * amplitude;
+    wave1Pts[i] = { x: pt.x + pt.nx * offset, y: pt.y + pt.ny * offset };
+    wave2Pts[i] = { x: pt.x - pt.nx * offset, y: pt.y - pt.ny * offset };
+  }
+
+  return [buildLinearPathFromPoints(wave1Pts), buildLinearPathFromPoints(wave2Pts)];
+}
+
+type ShapeWaveProfile = {
+  anchorCount: number;
+  useCornerEnvelope: boolean;
+  useLinearPath: boolean;
+  amplitudeScale: number;
+};
+
+function getShapeWaveProfile(shape: BadgeShape): ShapeWaveProfile {
+  switch (shape) {
+    case 'hexagon':
+      return { anchorCount: 6, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
+    case 'diamond':
+      return { anchorCount: 4, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
+    case 'star':
+      return { anchorCount: 10, useCornerEnvelope: true, useLinearPath: false, amplitudeScale: 1 };
+    case 'circle':
+      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: false, amplitudeScale: 1 };
+    case 'roundedRect':
+      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: true, amplitudeScale: 0.75 };
+    case 'shield':
+      return { anchorCount: 0, useCornerEnvelope: false, useLinearPath: true, amplitudeScale: 0.75 };
+    default: {
+      const _exhaustive: never = shape;
+      throw new Error(`Unknown shape: ${_exhaustive}`);
+    }
+  }
+}
+
+function uniformAnchorIndices(anchorCount: number, n: number): number[] {
+  const anchors: number[] = [];
+  for (let i = 0; i < anchorCount; i++) {
+    anchors.push(Math.round((n * i) / anchorCount));
+  }
+  return anchors;
+}
+
+function getShapeWaveAnchorIndices(shape: BadgeShape, n: number): number[] {
+  const profile = getShapeWaveProfile(shape);
+  if (profile.anchorCount === 0) {
+    return [];
+  }
+  return uniformAnchorIndices(profile.anchorCount, n);
+}
+
+function normalizeAnchorIndices(anchorIndices: number[], n: number): number[] {
+  const unique = new Set<number>();
+  for (const index of anchorIndices) {
+    const normalized = ((Math.round(index) % n) + n) % n;
+    unique.add(normalized);
+  }
+  return [...unique].sort((a, b) => a - b);
+}
+
+function distributeHalfWaves(edgeLengths: number[], totalHalfWaves: number): number[] {
+  if (edgeLengths.length === 0 || totalHalfWaves <= 0) {
+    return edgeLengths.map(() => 0);
+  }
+
+  const totalLength = edgeLengths.reduce((sum, edgeLength) => sum + edgeLength, 0);
+  if (totalLength <= 0) {
+    return edgeLengths.map(() => 0);
+  }
+
+  // Rounded cumulative allocation keeps the total exact and distributes naturally by arc length.
+  const allocation = new Array(edgeLengths.length).fill(0);
+  let cumulativeLength = 0;
+  let prevRoundedTarget = 0;
+  for (let i = 0; i < edgeLengths.length; i++) {
+    cumulativeLength += edgeLengths[i];
+    const roundedTarget = Math.round((cumulativeLength / totalLength) * totalHalfWaves);
+    allocation[i] = Math.max(0, roundedTarget - prevRoundedTarget);
+    prevRoundedTarget = roundedTarget;
+  }
+
+  return allocation;
+}
+
+type EdgePhaseSpec = {
+  start: number;
+  length: number;
+  halfWaves: number;
+};
+
+function buildEdgePhaseSpecs(
+  anchorIndices: number[],
+  n: number,
+  totalHalfWaves: number,
+): EdgePhaseSpec[] {
+  const edges: Omit<EdgePhaseSpec, 'halfWaves'>[] = [];
+  for (let i = 0; i < anchorIndices.length; i++) {
+    const start = anchorIndices[i];
+    const end = anchorIndices[(i + 1) % anchorIndices.length];
+    const length = ((end - start) + n) % n;
+    if (length > 0) {
+      edges.push({ start, length });
+    }
+  }
+
+  const halfWavesPerEdge = distributeHalfWaves(
+    edges.map((edge) => edge.length),
+    totalHalfWaves,
+  );
+  return edges.map((edge, i) => ({ ...edge, halfWaves: halfWavesPerEdge[i] }));
+}
+
+function buildAnchoredWavePaths(
+  samples: SamplePoint[],
+  anchorIndices: number[],
+  waveCount: number,
+  amplitude: number,
+  useCornerEnvelope: boolean,
+): [string, string] {
+  const n = samples.length;
+  if (n === 0) {
+    return ['', ''];
+  }
+
+  const anchors = normalizeAnchorIndices(anchorIndices, n);
+  if (anchors.length < 2) {
+    return buildWavePaths(samples, waveCount, amplitude);
+  }
+
+  const totalHalfWaves = waveCount * 2;
+  const edges = buildEdgePhaseSpecs(anchors, n, totalHalfWaves);
+  if (edges.length === 0) {
+    return buildWavePaths(samples, waveCount, amplitude);
+  }
+
+  const wave1Pts: { x: number; y: number }[] = new Array(n);
+  const wave2Pts: { x: number; y: number }[] = new Array(n);
+  let phaseStart = 0;
+
+  for (const edge of edges) {
+    for (let j = 0; j < edge.length; j++) {
+      const index = (edge.start + j) % n;
+      const pt = samples[index];
+      const progress = j / edge.length;
+      const phase = phaseStart + Math.PI * edge.halfWaves * progress;
+      const envelope = useCornerEnvelope ? Math.sin(Math.PI * progress) : 1;
+      const offset = Math.sin(phase) * amplitude * envelope;
+      wave1Pts[index] = { x: pt.x + pt.nx * offset, y: pt.y + pt.ny * offset };
+      wave2Pts[index] = { x: pt.x - pt.nx * offset, y: pt.y - pt.ny * offset };
+    }
+    phaseStart += Math.PI * edge.halfWaves;
+  }
+
+  // Defensive fallback for any index not covered by edge traversal.
+  for (let i = 0; i < n; i++) {
+    if (!wave1Pts[i] || !wave2Pts[i]) {
+      const pt = samples[i];
+      wave1Pts[i] = { x: pt.x, y: pt.y };
+      wave2Pts[i] = { x: pt.x, y: pt.y };
+    }
+  }
+
+  return [buildPathFromPoints(wave1Pts), buildPathFromPoints(wave2Pts)];
+}
+
+function buildShapeAwareWavePaths(
+  shape: BadgeShape,
+  samples: SamplePoint[],
+  waveCount: number,
+  amplitude: number,
+): [string, string] {
+  const profile = getShapeWaveProfile(shape);
+  const anchors = getShapeWaveAnchorIndices(shape, samples.length);
+  if (anchors.length === 0) {
+    if (profile.useLinearPath) {
+      return buildWavePathsLinear(samples, waveCount, amplitude);
+    }
+    return buildWavePaths(samples, waveCount, amplitude);
+  }
+  return buildAnchoredWavePaths(samples, anchors, waveCount, amplitude, profile.useCornerEnvelope);
+}
+
+function makeOuterClip(
+  shape: BadgeShape,
+  size: number,
+  inset: number,
+): { clipId: string; defsElement: React.ReactElement } {
+  const clipId = `guilloche-${++clipCounter}`;
+  const outerPath = generateShapePath(shape, size, inset);
+  const defsElement = React.createElement(
+    Defs,
+    null,
+    React.createElement(
+      ClipPath,
+      { id: clipId },
+      React.createElement(Path, { d: outerPath }),
+    ),
+  );
+  return { clipId, defsElement };
+}
+
 /** Build a closed SVG path string from offset points using Catmull-Rom smoothing */
 export function buildPathFromPoints(pts: { x: number; y: number }[]): string {
   const n = pts.length;
@@ -397,6 +655,19 @@ export function buildPathFromPoints(pts: { x: number; y: number }[]): string {
       `C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)} ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
   }
 
+  commands[n + 1] = 'Z';
+  return commands.join(' ');
+}
+
+function buildLinearPathFromPoints(pts: { x: number; y: number }[]): string {
+  const n = pts.length;
+  if (n < 2) return '';
+  const commands: string[] = new Array(n + 2);
+  commands[0] = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+  for (let i = 1; i < n; i++) {
+    commands[i] = `L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`;
+  }
+  commands[n] = `L ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
   commands[n + 1] = 'Z';
   return commands.join(' ');
 }
@@ -429,13 +700,16 @@ export const guillocheGenerator: FrameGenerator = ({
     return null;
   }
 
-  const waveCount = Math.max(3, Math.min(14, Math.round(params.stepCount * 1.5)));
+  const baseWaveCount = Math.max(3, Math.min(14, Math.round(params.stepCount * 1.5)));
+  const profile = getShapeWaveProfile(shape);
+  const minWaveCountForAnchors = profile.anchorCount > 0 ? Math.ceil(profile.anchorCount / 2) : 3;
+  const waveCount = Math.max(baseWaveCount, minWaveCountForAnchors);
   const bandMidInset = (inset + innerInset) / 2;
-  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO;
+  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO * profile.amplitudeScale;
   const n = waveCount * POINTS_PER_WAVE;
 
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
-  const [wave1, wave2] = buildWavePaths(samples, waveCount, amplitude);
+  const [wave1, wave2] = buildShapeAwareWavePaths(shape, samples, waveCount, amplitude);
 
   const pathProps = {
     fill: 'none' as const,
@@ -443,11 +717,17 @@ export const guillocheGenerator: FrameGenerator = ({
     strokeWidth: WAVE_STROKE_WIDTH,
     opacity: WAVE_OPACITY,
   };
+  const { clipId, defsElement } = makeOuterClip(shape, size, inset);
 
   return React.createElement(
     React.Fragment,
     null,
-    React.createElement(Path, { key: 'guilloche-0', d: wave1, ...pathProps }),
-    React.createElement(Path, { key: 'guilloche-1', d: wave2, ...pathProps }),
+    defsElement,
+    React.createElement(
+      G,
+      { clipPath: `url(#${clipId})` },
+      React.createElement(Path, { key: 'guilloche-0', d: wave1, ...pathProps }),
+      React.createElement(Path, { key: 'guilloche-1', d: wave2, ...pathProps }),
+    ),
   );
 };

@@ -22,17 +22,23 @@ import {
   WAVE_OPACITY,
   sampleShapeContour,
   buildWavePaths,
-  catmullRomToCubic,
   makeRoundedRectSampler,
   makeShieldSampler,
 } from './guilloche';
 
 let clipCounter = 0;
 
-function coreWaveParams(inset: number, innerInset: number, stepCount: number) {
+function shapeAmplitudeScale(shape: BadgeShape): number {
+  if (shape === 'shield' || shape === 'roundedRect') {
+    return 0.75;
+  }
+  return 1;
+}
+
+function coreWaveParams(shape: BadgeShape, inset: number, innerInset: number, stepCount: number) {
   const waveCount = Math.max(3, Math.min(14, Math.round(stepCount * 1.5)));
   const bandMidInset = (inset + innerInset) / 2;
-  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO;
+  const amplitude = (innerInset - inset) * AMPLITUDE_RATIO * shapeAmplitudeScale(shape);
   const n = waveCount * POINTS_PER_WAVE;
   return { waveCount, bandMidInset, amplitude, n };
 }
@@ -72,17 +78,19 @@ function parametricCorners(
 ): number[] {
   const DENSE = 1000;
 
-  // Dense sampling (same as arcLengthResample in guilloche.ts)
+  // Dense sampling in [0, 1) (same closed-loop model as arcLengthResample).
   const dense: { x: number; y: number }[] = [];
-  for (let i = 0; i <= DENSE; i++) {
+  for (let i = 0; i < DENSE; i++) {
     dense.push(denseSampler(i / DENSE));
   }
+  if (dense.length < 2) return [];
 
-  // Cumulative arc length
+  // Cumulative arc length over closed contour
+  const denseClosed = [...dense, dense[0]];
   const cumLen: number[] = [0];
-  for (let i = 1; i < dense.length; i++) {
-    const dx = dense[i].x - dense[i - 1].x;
-    const dy = dense[i].y - dense[i - 1].y;
+  for (let i = 1; i < denseClosed.length; i++) {
+    const dx = denseClosed[i].x - denseClosed[i - 1].x;
+    const dy = denseClosed[i].y - denseClosed[i - 1].y;
     cumLen.push(cumLen[i - 1] + Math.sqrt(dx * dx + dy * dy));
   }
   const totalLen = cumLen[cumLen.length - 1];
@@ -91,7 +99,7 @@ function parametricCorners(
   const corners: number[] = [];
   for (let s = 0; s < segmentCount; s++) {
     const t = s / segmentCount;
-    const denseIdx = Math.round(t * DENSE);
+    const denseIdx = Math.round(t * (DENSE - 1));
     const arcLenAtBoundary = cumLen[denseIdx];
     corners.push(Math.round((arcLenAtBoundary / totalLen) * n));
   }
@@ -204,28 +212,16 @@ function buildPerEdgeWavePaths(
 // ---------------------------------------------------------------------------
 
 /**
- * Build an open SVG subpath (M + cubics, no Z) from a sequence of points.
- * Uses Catmull-Rom smoothing with clamped endpoints — the spline never
- * reaches outside the point sequence, eliminating wrap-around artifacts.
+ * Build an open SVG subpath (M + lines, no Z) from a sequence of points.
+ * Linear interpolation avoids spline overshoot near shape transitions.
  */
 function buildOpenPath(pts: { x: number; y: number }[]): string {
   const m = pts.length;
   if (m < 2) return '';
 
-  const commands: string[] = [
-    `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`,
-  ];
-
-  for (let i = 0; i < m - 1; i++) {
-    // Clamp: duplicate first/last point instead of wrapping
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(m - 1, i + 2)];
-    const [cp1, cp2] = catmullRomToCubic(p0, p1, p2, p3);
-    commands.push(
-      `C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)} ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`,
-    );
+  const commands: string[] = [`M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`];
+  for (let i = 1; i < m; i++) {
+    commands.push(`L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`);
   }
 
   return commands.join(' ');
@@ -270,7 +266,12 @@ export const guillochePerEdge: FrameGenerator = ({
 }) => {
   if (innerInset <= inset) return null;
 
-  const { waveCount, bandMidInset, amplitude, n } = coreWaveParams(inset, innerInset, params.stepCount);
+  const { waveCount, bandMidInset, amplitude, n } = coreWaveParams(
+    shape,
+    inset,
+    innerInset,
+    params.stepCount,
+  );
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
   const corners = getShapeCornerIndices(shape, size, bandMidInset, n);
   const [wave1, wave2] = buildPerEdgeWavePaths(samples, corners, waveCount, amplitude);
@@ -305,7 +306,12 @@ export const guillochePerEdgeWithDots: FrameGenerator = ({
 }) => {
   if (innerInset <= inset) return null;
 
-  const { waveCount, bandMidInset, amplitude, n } = coreWaveParams(inset, innerInset, params.stepCount);
+  const { waveCount, bandMidInset, amplitude, n } = coreWaveParams(
+    shape,
+    inset,
+    innerInset,
+    params.stepCount,
+  );
   const samples = sampleShapeContour(shape, size, bandMidInset, n);
   const corners = getShapeCornerIndices(shape, size, bandMidInset, n);
   const [wave1, wave2] = buildPerEdgeWavePaths(samples, corners, waveCount, amplitude);

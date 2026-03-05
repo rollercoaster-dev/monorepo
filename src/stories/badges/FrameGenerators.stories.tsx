@@ -292,7 +292,7 @@ export const StepCountComparison: Story = {
 // ---------------------------------------------------------------------------
 
 const VARIANT_GENERATORS: { key: string; label: string; generator: FrameGenerator }[] = [
-  { key: 'original', label: 'Original (continuous)', generator: frameRegistry.guilloche },
+  { key: 'original', label: 'Production (shape-aware)', generator: frameRegistry.guilloche },
   { key: 'per-edge', label: 'Per-Edge Segments', generator: guillochePerEdge },
   { key: 'per-edge-dots', label: 'Per-Edge + Corner Dots', generator: guillochePerEdgeWithDots },
 ];
