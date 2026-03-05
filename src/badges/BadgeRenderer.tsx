@@ -1,10 +1,11 @@
 /**
  * BadgeRenderer — renders a full badge from a BadgeDesign configuration.
  *
- * Composes three layers (bottom to top):
+ * Composes four layers (bottom to top):
  * 1. Shadow layer — solid black duplicate of the shape, offset down-right
  * 2. Shape layer — filled background shape with thick border
- * 3. Icon layer — Phosphor icon centered at ~45% of badge diameter
+ * 3. Frame overlay — decorative frame band (boldBorder, guilloche, etc.)
+ * 4. Icon layer — Phosphor icon centered at ~45% of badge diameter
  *
  * The icon color is auto-calculated for WCAG AA contrast against the shape
  * fill color using the existing accessibility utility.
@@ -21,6 +22,8 @@ import type { IconWeight } from 'phosphor-react-native';
 
 import type { BadgeDesign } from './types';
 import { generateShapePath } from './shapes/paths';
+import { FRAME_BAND_RATIO } from './shapes/contours';
+import { FrameOverlay } from './frames/FrameOverlay';
 import { getIconComponent } from './iconRegistry';
 import { getRecommendedTextColor } from '../utils/accessibility';
 
@@ -70,6 +73,7 @@ export function BadgeRenderer({
 
   // Inset shapes by half the stroke width so the stroke doesn't clip
   const inset = strokeWidth / 2;
+  const innerInset = inset + size * FRAME_BAND_RATIO;
 
   // Expand the SVG to include shadow offset so badge doesn't scale down
   const totalSize = size + (hasShadow ? SHADOW_OFFSET : 0);
@@ -134,7 +138,16 @@ export function BadgeRenderer({
         strokeLinejoin="round"
       />
 
-      {/* Layer 3: Frame — not yet implemented (A.6). design.frame is accepted but ignored. */}
+      {/* Layer 3: Frame overlay */}
+      <FrameOverlay
+        frame={design.frame}
+        shape={design.shape}
+        size={size}
+        inset={inset}
+        innerInset={innerInset}
+        params={design.frameParams}
+        strokeColor={theme.colors.border}
+      />
 
       {/* Layer 4: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
       {IconComponent && (

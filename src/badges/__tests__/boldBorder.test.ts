@@ -144,14 +144,11 @@ describe('frameRegistry', () => {
     expect(frameRegistry.boldBorder).toBe(boldBorderGenerator);
   });
 
-  test.each(['none', 'microprint'] as const)(
-    '%s returns null',
-    (frame) => {
-      expect(frameRegistry[frame](makeConfig())).toBeNull();
-    },
-  );
+  test('none returns null', () => {
+    expect(frameRegistry.none(makeConfig())).toBeNull();
+  });
 
-  test.each(['guilloche', 'crossHatch', 'rosette'] as const)(
+  test.each(['guilloche', 'crossHatch', 'rosette', 'microprint'] as const)(
     '%s returns non-null (implemented)',
     (frame) => {
       expect(frameRegistry[frame](makeConfig())).not.toBeNull();

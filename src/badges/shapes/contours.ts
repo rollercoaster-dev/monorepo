@@ -26,7 +26,7 @@ export type ShapeContour = {
 };
 
 /** Frame band width as a fraction of badge size. */
-const FRAME_BAND_RATIO = 0.12;
+export const FRAME_BAND_RATIO = 0.12;
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
