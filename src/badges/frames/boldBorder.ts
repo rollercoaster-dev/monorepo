@@ -1,6 +1,7 @@
 import React from 'react';
 import { Path } from 'react-native-svg';
 import { generateShapePath } from '../shapes/paths';
+import { DEFAULT_STROKE_COLOR } from './constants';
 import type { FrameGenerator } from './types';
 
 /** Proportional gap between concentric rings (fraction of badge size) */
@@ -8,9 +9,6 @@ const RING_SPACING_RATIO = 0.04;
 
 /** Stroke widths per ring, outer to inner (tuple enforces max 3 rings) */
 const STROKE_WIDTHS: [number, number, number] = [2.5, 1.5, 1.0];
-
-/** Fallback stroke color — callers should pass theme.colors.border for proper theming */
-const DEFAULT_STROKE_COLOR = '#000000';
 
 /** stepCount at or above this threshold adds a third ring */
 const THREE_RING_THRESHOLD = 4;

@@ -12,6 +12,7 @@ import React from 'react';
 import { Circle, ClipPath, Defs, G, Path } from 'react-native-svg';
 import type { BadgeShape } from '../types';
 import { generateShapePath } from '../shapes/paths';
+import { DEFAULT_STROKE_COLOR } from './constants';
 import type { FrameGenerator } from './types';
 import {
   type SamplePoint,
@@ -25,12 +26,6 @@ import {
   makeRoundedRectSampler,
   makeShieldSampler,
 } from './guilloche';
-
-// ---------------------------------------------------------------------------
-// Shared
-// ---------------------------------------------------------------------------
-
-const DEFAULT_STROKE_COLOR = '#000000';
 
 let clipCounter = 0;
 

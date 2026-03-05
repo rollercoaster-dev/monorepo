@@ -1,6 +1,7 @@
 import React from 'react';
 import { Path } from 'react-native-svg';
 import type { BadgeShape } from '../types';
+import { DEFAULT_STROKE_COLOR } from './constants';
 import type { FrameGenerator } from './types';
 
 // ---------------------------------------------------------------------------
@@ -9,12 +10,6 @@ import type { FrameGenerator } from './types';
 
 /** A sampled point on the shape contour with outward-facing normal */
 export type SamplePoint = { x: number; y: number; nx: number; ny: number };
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const DEFAULT_STROKE_COLOR = '#000000';
 
 /** Sample points per wave cycle — enough for smooth Catmull-Rom interpolation */
 export const POINTS_PER_WAVE = 24;
