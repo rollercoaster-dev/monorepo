@@ -111,11 +111,13 @@ export function getRecommendedTextColor(background: string): '#000000' | '#FFFFF
  * Safe wrapper around getRecommendedTextColor with fallback.
  * Use this in rendering code where a thrown error would break the UI.
  */
-export function getSafeTextColor(background: string, caller?: string): string {
+export function getSafeTextColor(background: string, caller?: string): '#000000' | '#FFFFFF' {
   try {
     return getRecommendedTextColor(background);
-  } catch {
-    if (__DEV__) console.warn(`[${caller ?? 'getSafeTextColor'}] contrast fallback for`, background);
-    return '#000000';
+  } catch (error) {
+    const tag = caller ?? 'getSafeTextColor';
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[${tag}] contrast calculation failed for "${background}": ${message}. Falling back to #FFFFFF.`);
+    return '#FFFFFF';
   }
 }

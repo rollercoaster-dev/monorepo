@@ -33,7 +33,6 @@ export function MonogramCenter({ monogram, size, fillColor }: MonogramCenterProp
       y={cy}
       textAnchor="middle"
       alignmentBaseline="central"
-      dy="0.35em"
       fontFamily="Anybody"
       fontWeight="bold"
       fontSize={fontSize}
