@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native-svg';
-import { getRecommendedTextColor } from '../../utils/accessibility';
+import { getSafeTextColor } from '../../utils/accessibility';
 
 export interface MonogramCenterProps {
   monogram: string | undefined;
@@ -17,22 +17,13 @@ export const MONOGRAM_SIZE_RATIO_3 = 0.22;
 
 const RATIO_BY_LENGTH = [MONOGRAM_SIZE_RATIO_1, MONOGRAM_SIZE_RATIO_2, MONOGRAM_SIZE_RATIO_3];
 
-function getTextColor(fillColor: string): string {
-  try {
-    return getRecommendedTextColor(fillColor);
-  } catch {
-    if (__DEV__) console.warn('[MonogramCenter] contrast fallback for', fillColor);
-    return '#000000';
-  }
-}
-
 export function MonogramCenter({ monogram, size, fillColor }: MonogramCenterProps) {
   if (!monogram || monogram.trim().length === 0) return null;
 
   const chars = monogram.trim().slice(0, 3);
   const ratio = RATIO_BY_LENGTH[Math.min(chars.length, 3) - 1];
   const fontSize = size * ratio;
-  const textColor = getTextColor(fillColor);
+  const textColor = getSafeTextColor(fillColor, 'MonogramCenter');
   const cx = size / 2;
   const cy = size / 2;
 
