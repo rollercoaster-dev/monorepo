@@ -4,6 +4,7 @@ import {
   MONOGRAM_SIZE_RATIO_2,
   MONOGRAM_SIZE_RATIO_3,
 } from '../text/MonogramCenter';
+import { fontWeight as fontWeightTokens } from '../../themes/tokens';
 
 const SIZE = 256;
 const DARK_FILL = '#1a1a2e';
@@ -74,9 +75,19 @@ describe('MonogramCenter', () => {
 
   // ── Font attributes ──────────────────────────────────────────────────
 
-  it('uses Anybody bold font', () => {
+  it('uses Anybody bold font by default', () => {
     const el = MonogramCenter({ monogram: 'A', size: SIZE, fillColor: DARK_FILL });
     expect(el!.props.fontFamily).toBe('Anybody');
-    expect(el!.props.fontWeight).toBe('bold');
+    expect(el!.props.fontWeight).toBe(fontWeightTokens.bold);
+  });
+
+  it('accepts custom fontFamily', () => {
+    const el = MonogramCenter({ monogram: 'A', size: SIZE, fillColor: DARK_FILL, fontFamily: 'Lexend' });
+    expect(el!.props.fontFamily).toBe('Lexend');
+  });
+
+  it('accepts custom fontWeight', () => {
+    const el = MonogramCenter({ monogram: 'A', size: SIZE, fillColor: DARK_FILL, fontWeight: '500' });
+    expect(el!.props.fontWeight).toBe('500');
   });
 });

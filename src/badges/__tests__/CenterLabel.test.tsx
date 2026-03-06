@@ -55,8 +55,20 @@ describe('CenterLabel', () => {
 
   // ── Font attributes ──────────────────────────────────────────────────
 
-  it('uses Instrument Sans font', () => {
+  it('uses Instrument Sans font by default', () => {
     const el = CenterLabel({ label: 'Test', size: 256, fillColor: DARK_FILL, centerContentSize: 50 });
     expect(el!.props.fontFamily).toBe('Instrument Sans');
+  });
+
+  it('accepts custom fontFamily', () => {
+    const el = CenterLabel({ label: 'Test', size: 256, fillColor: DARK_FILL, centerContentSize: 50, fontFamily: 'Lexend' });
+    expect(el!.props.fontFamily).toBe('Lexend');
+  });
+
+  // ── Label clamping ───────────────────────────────────────────────────
+
+  it('clamps label to 10 characters', () => {
+    const el = CenterLabel({ label: 'This is too long', size: 256, fillColor: DARK_FILL, centerContentSize: 50 });
+    expect(el!.props.children).toBe('This is to');
   });
 });

@@ -8,4 +8,4 @@ export {
 
 export { CenterLabel } from './CenterLabel';
 export type { CenterLabelProps } from './CenterLabel';
-export { CENTER_LABEL_SIZE_RATIO } from './CenterLabel';
+export { CENTER_LABEL_SIZE_RATIO, CENTER_LABEL_MAX_CHARS } from './CenterLabel';

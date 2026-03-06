@@ -1,6 +1,16 @@
 import { getSafeTextColor } from '../accessibility';
 
 describe('getSafeTextColor', () => {
+  let warnSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
   it('returns white for dark background', () => {
     expect(getSafeTextColor('#1a1a2e')).toBe('#FFFFFF');
   });
@@ -15,16 +25,28 @@ describe('getSafeTextColor', () => {
     '#fff',
     '',
   ])('returns #FFFFFF fallback for invalid input: %s', (input) => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation();
     expect(getSafeTextColor(input)).toBe('#FFFFFF');
-    expect(spy).toHaveBeenCalledTimes(1);
-    spy.mockRestore();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
   });
 
   it('includes caller name in warning', () => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation();
-    getSafeTextColor('bad', 'TestCaller');
-    expect(spy).toHaveBeenCalledWith(expect.stringContaining('TestCaller'));
-    spy.mockRestore();
+    getSafeTextColor('invalid-unique', 'TestCaller');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('TestCaller'));
+  });
+
+  it('warns once per caller/background pair', () => {
+    getSafeTextColor('repeat-me', 'RepeatCaller');
+    getSafeTextColor('repeat-me', 'RepeatCaller');
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns again when the caller changes for the same invalid background', () => {
+    getSafeTextColor('shared-invalid', 'CallerOne');
+    getSafeTextColor('shared-invalid', 'CallerTwo');
+
+    expect(warnSpy).toHaveBeenCalledTimes(2);
+    expect(warnSpy).toHaveBeenNthCalledWith(1, expect.stringContaining('CallerOne'));
+    expect(warnSpy).toHaveBeenNthCalledWith(2, expect.stringContaining('CallerTwo'));
   });
 });
