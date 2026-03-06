@@ -1,11 +1,14 @@
 import React from 'react';
 import { Text } from 'react-native-svg';
 import { getSafeTextColor } from '../../utils/accessibility';
+import { fontFamily as fontFamilyTokens } from '../../themes/tokens';
 
 export interface MonogramCenterProps {
   monogram: string | undefined;
   size: number;
   fillColor: string;
+  /** Font family name. Callers should pass theme.fontFamily.headline for a11y variant support. */
+  fontFamily?: string;
 }
 
 /** Font size as fraction of badge diameter — 1 character */
@@ -17,7 +20,7 @@ export const MONOGRAM_SIZE_RATIO_3 = 0.22;
 
 const RATIO_BY_LENGTH = [MONOGRAM_SIZE_RATIO_1, MONOGRAM_SIZE_RATIO_2, MONOGRAM_SIZE_RATIO_3];
 
-export function MonogramCenter({ monogram, size, fillColor }: MonogramCenterProps) {
+export function MonogramCenter({ monogram, size, fillColor, fontFamily = fontFamilyTokens.headline }: MonogramCenterProps) {
   if (!monogram || monogram.trim().length === 0) return null;
 
   const chars = monogram.trim().slice(0, 3);
@@ -33,7 +36,7 @@ export function MonogramCenter({ monogram, size, fillColor }: MonogramCenterProp
       y={cy}
       textAnchor="middle"
       alignmentBaseline="central"
-      fontFamily="Anybody"
+      fontFamily={fontFamily}
       fontWeight="bold"
       fontSize={fontSize}
       fill={textColor}
