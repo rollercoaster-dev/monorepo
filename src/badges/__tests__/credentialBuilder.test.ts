@@ -106,7 +106,7 @@ describe('buildUnsignedCredential', () => {
     expect(evidence).toHaveLength(1);
   });
 
-  it('uses urn:uuid:<id> format for evidence id (not URI)', () => {
+  it('uses urn:ulid:<id> format for evidence id (not URI)', () => {
     const input: CredentialInput = {
       ...BASE_INPUT,
       evidence: [
@@ -115,7 +115,7 @@ describe('buildUnsignedCredential', () => {
     };
     const cred = buildUnsignedCredential(input);
     const evidence = cred['evidence'] as Record<string, unknown>[];
-    expect(evidence[0]['id']).toBe('urn:uuid:ev-01');
+    expect(evidence[0]['id']).toBe('urn:ulid:ev-01');
   });
 
   it('sets genre from evidence type', () => {

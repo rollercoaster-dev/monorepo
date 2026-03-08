@@ -98,7 +98,7 @@ export function buildUnsignedCredential(input: CredentialInput): Record<string, 
     },
     issuedOn: input.issuedOn,
     evidence: input.evidence.map((ev) => ({
-      id: iri(`urn:uuid:${ev.id}`),
+      id: iri(`urn:ulid:${ev.id}`),
       type: ['Evidence'],
       name: ev.stepTitle ?? ev.description ?? ev.type ?? 'Evidence',
       ...(ev.description ? { description: ev.description } : {}),
