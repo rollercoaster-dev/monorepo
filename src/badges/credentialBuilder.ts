@@ -23,6 +23,7 @@ export interface EvidenceRow {
   type: string | null;
   uri: string;
   description: string | null;
+  stepTitle?: string | null;
 }
 
 export interface CredentialInput {
@@ -78,7 +79,11 @@ export function buildUnsignedCredential(input: CredentialInput): Record<string, 
     issuer: iri(input.issuerDid),
     name: input.goal.title,
     description: input.goal.description ?? `Achievement: ${input.goal.title}`,
-    criteria: { narrative: `Complete all steps for: ${input.goal.title}` },
+    criteria: {
+      narrative: input.evidence.length > 0
+        ? `Complete all steps for: ${input.goal.title}. Evidence: ${input.evidence.length} ${input.evidence.length === 1 ? 'item' : 'items'}.`
+        : `Complete all steps for: ${input.goal.title}`,
+    },
   } as unknown as BadgeClassData;
 
   const assertion: AssertionData = {
@@ -93,9 +98,11 @@ export function buildUnsignedCredential(input: CredentialInput): Record<string, 
     },
     issuedOn: input.issuedOn,
     evidence: input.evidence.map((ev) => ({
-      id: ev.uri,
+      id: iri(`urn:uuid:${ev.id}`),
       type: ['Evidence'],
-      name: ev.description ?? ev.type ?? 'Evidence',
+      name: ev.stepTitle ?? ev.description ?? ev.type ?? 'Evidence',
+      ...(ev.description ? { description: ev.description } : {}),
+      ...(ev.type ? { genre: ev.type } : {}),
     })),
   };
 
