@@ -6,7 +6,8 @@
  * 2. Shape layer — filled background shape with thick border
  * 3. Frame overlay — decorative frame band (boldBorder, guilloche, etc.)
  * 4. PathText — coin-style inscriptions following the shape contour
- * 5. Icon layer — Phosphor icon centered at ~45% of badge diameter
+ * 5. Center layer — monogram text (centerMode: 'monogram') OR Phosphor icon
+ *    (centerMode: 'icon'); optional CenterLabel below
  * 6. Banner — neo-brutalist ribbon overlay with text
  *
  * The icon color is auto-calculated for WCAG AA contrast against the shape
@@ -28,8 +29,10 @@ import { FRAME_BAND_RATIO } from './shapes/contours';
 import { FrameOverlay } from './frames/FrameOverlay';
 import { PathText } from './text/PathText';
 import { Banner } from './text/Banner';
+import { MonogramCenter } from './text/MonogramCenter';
+import { CenterLabel } from './text/CenterLabel';
 import { getIconComponent } from './iconRegistry';
-import { getRecommendedTextColor } from '../utils/accessibility';
+import { getSafeTextColor } from '../utils/accessibility';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,19 +94,7 @@ export function BadgeRenderer({
 
   // Calculate icon color for WCAG AA contrast against fill
   const iconColor = useMemo(
-    () => {
-      try {
-        return getRecommendedTextColor(design.color);
-      } catch (error) {
-        if (__DEV__) {
-          console.warn('[BadgeRenderer] Icon color contrast failed, falling back to black', {
-            color: design.color,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-        return '#000000';
-      }
-    },
+    () => getSafeTextColor(design.color, 'BadgeRenderer'),
     [design.color],
   );
 
@@ -167,16 +158,34 @@ export function BadgeRenderer({
         instanceId={pathTextId}
       />
 
-      {/* Layer 5: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
-      {IconComponent && (
-        <G x={iconOffset} y={iconOffset}>
-          <IconComponent
-            size={iconSize}
-            weight={(design.iconWeight ?? 'regular') as IconWeight}
-            color={iconColor}
-          />
-        </G>
+      {/* Layer 5: Center content — monogram OR icon */}
+      {design.centerMode === 'monogram' && design.monogram?.trim() ? (
+        <MonogramCenter
+          monogram={design.monogram}
+          size={size}
+          fillColor={design.color}
+          fontFamily={theme.fontFamily.headline}
+        />
+      ) : (
+        IconComponent && (
+          <G x={iconOffset} y={iconOffset}>
+            <IconComponent
+              size={iconSize}
+              weight={(design.iconWeight ?? 'regular') as IconWeight}
+              color={iconColor}
+            />
+          </G>
+        )
       )}
+
+      {/* Layer 5b: CenterLabel — optional label below center content */}
+      <CenterLabel
+        label={design.centerLabel}
+        size={size}
+        fillColor={design.color}
+        centerContentSize={iconSize}
+        fontFamily={theme.fontFamily.body}
+      />
 
       {/* Layer 6: Banner — neo-brutalist ribbon overlay */}
       <Banner

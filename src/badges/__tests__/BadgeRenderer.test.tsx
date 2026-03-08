@@ -10,7 +10,7 @@ import { renderWithProviders, screen } from '../../__tests__/test-utils';
 import { BadgeRenderer } from '../BadgeRenderer';
 import type { BadgeDesign } from '../types';
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from '../types';
-import { getRecommendedTextColor } from '../../utils/accessibility';
+import { getSafeTextColor } from '../../utils/accessibility';
 
 // Mock the icon registry instead of phosphor-react-native directly.
 // phosphor-react-native v3 changed its export structure, so mocking the
@@ -121,7 +121,7 @@ describe('BadgeRenderer', () => {
     );
 
     const icon = screen.getByLabelText('Trophy icon');
-    const expectedColor = getRecommendedTextColor('#1a1a2e');
+    const expectedColor = getSafeTextColor('#1a1a2e');
     expect(expectedColor).toBe('#FFFFFF');
     expect(icon.props.accessibilityHint).toContain(`color=${expectedColor}`);
   });
@@ -133,7 +133,7 @@ describe('BadgeRenderer', () => {
     );
 
     const icon = screen.getByLabelText('Star icon');
-    const expectedColor = getRecommendedTextColor('#fef3c7');
+    const expectedColor = getSafeTextColor('#fef3c7');
     expect(expectedColor).toBe('#000000');
     expect(icon.props.accessibilityHint).toContain(`color=${expectedColor}`);
   });
@@ -253,6 +253,87 @@ describe('BadgeRenderer', () => {
     // Should render without crashing — just no icon
     const badge = screen.getByTestId('badge-renderer');
     expect(badge).toBeOnTheScreen();
+  });
+
+  describe('monogram mode', () => {
+    it('renders monogram text and hides icon when centerMode is monogram', () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: 'AB', iconName: 'Trophy' })}
+        />,
+      );
+
+      const tree = JSON.stringify(toJSON());
+      // Monogram text should be present
+      expect(tree).toContain('AB');
+      // Icon should NOT be rendered in monogram mode
+      expect(screen.queryByText('Trophy')).toBeNull();
+    });
+
+    it('still renders icon when centerMode is icon', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'icon' as const, iconName: 'Trophy' })}
+        />,
+      );
+
+      expect(screen.getByText('Trophy')).toBeOnTheScreen();
+    });
+
+    it('falls back to icon when centerMode is monogram but monogram is empty', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: '', iconName: 'Trophy' })}
+        />,
+      );
+
+      // Should fall back to icon rendering
+      expect(screen.getByText('Trophy')).toBeOnTheScreen();
+    });
+
+    it('does not crash when centerMode is monogram with unknown iconName', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: 'X', iconName: 'NonExistent' })}
+        />,
+      );
+
+      expect(screen.getByTestId('badge-renderer')).toBeOnTheScreen();
+    });
+  });
+
+  describe('CenterLabel', () => {
+    it('renders the label text when centerLabel is set', () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer design={createDesign({ centerLabel: 'Runner Up' })} showShadow={false} />,
+      );
+
+      expect(JSON.stringify(toJSON())).toContain('Runner Up');
+    });
+
+    it('does not render label text when centerLabel is absent', () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer design={createDesign()} showShadow={false} />,
+      );
+
+      expect(JSON.stringify(toJSON())).not.toContain('Runner Up');
+    });
+
+    it('renders monogram with CenterLabel without errors', () => {
+      const { toJSON } = renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            centerMode: 'monogram' as const,
+            monogram: 'X',
+            centerLabel: 'Novice',
+          })}
+        />,
+      );
+
+      const tree = JSON.stringify(toJSON());
+      expect(tree).toContain('X');
+      expect(tree).toContain('Novice');
+    });
   });
 
   describe('SVG element count', () => {
