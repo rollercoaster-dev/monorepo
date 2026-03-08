@@ -98,6 +98,8 @@ export function CenterModeSelector({
           value={monogram}
           onChangeText={onChangeMonogram}
           maxLength={3}
+          autoCapitalize="characters"
+          autoCorrect={false}
           placeholder="ABC"
           placeholderTextColor={theme.colors.textSecondary}
           style={[
