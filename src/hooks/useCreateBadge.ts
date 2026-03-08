@@ -170,6 +170,7 @@ export function useCreateBadge(goalId: GoalId, options?: UseCreateBadgeOptions):
             type: (ev.type as string | null) ?? null,
             uri: (ev.uri as string | null) ?? '',
             description: (ev.description as string | null) ?? null,
+            stepTitle: (ev.stepTitle as string | null) ?? null,
           })),
         ];
 

@@ -104,27 +104,106 @@ describe('buildUnsignedCredential', () => {
     const cred = buildUnsignedCredential(input);
     const evidence = cred['evidence'] as unknown[];
     expect(evidence).toHaveLength(1);
-    expect((evidence[0] as Record<string, unknown>)['name']).toBe('My photo');
   });
 
-  it('uses evidence type as name fallback when description is null', () => {
+  it('uses urn:ulid:<id> format for evidence id (not URI)', () => {
     const input: CredentialInput = {
       ...BASE_INPUT,
-      evidence: [{ id: 'ev-02', type: 'text', uri: 'content:text;hello', description: null }],
+      evidence: [
+        { id: 'ev-01', type: 'photo', uri: 'file:///photo.jpg', description: 'My photo' },
+      ],
     };
     const cred = buildUnsignedCredential(input);
-    const evidence = cred['evidence'] as unknown[];
-    expect((evidence[0] as Record<string, unknown>)['name']).toBe('text');
+    const evidence = cred['evidence'] as Record<string, unknown>[];
+    expect(evidence[0]['id']).toBe('urn:ulid:ev-01');
   });
 
-  it('falls back to "Evidence" when both description and type are null', () => {
+  it('sets genre from evidence type', () => {
     const input: CredentialInput = {
       ...BASE_INPUT,
-      evidence: [{ id: 'ev-03', type: null, uri: 'content:empty', description: null }],
+      evidence: [
+        { id: 'ev-01', type: 'photo', uri: 'file:///photo.jpg', description: null },
+      ],
     };
     const cred = buildUnsignedCredential(input);
-    const evidence = cred['evidence'] as unknown[];
-    expect((evidence[0] as Record<string, unknown>)['name']).toBe('Evidence');
+    const evidence = cred['evidence'] as Record<string, unknown>[];
+    expect(evidence[0]['genre']).toBe('photo');
+  });
+
+  it('omits genre when type is null', () => {
+    const input: CredentialInput = {
+      ...BASE_INPUT,
+      evidence: [{ id: 'ev-01', type: null, uri: 'content:empty', description: null }],
+    };
+    const cred = buildUnsignedCredential(input);
+    const evidence = cred['evidence'] as Record<string, unknown>[];
+    expect(evidence[0]).not.toHaveProperty('genre');
+  });
+
+  it('includes description as a separate OB3 field when available', () => {
+    const input: CredentialInput = {
+      ...BASE_INPUT,
+      evidence: [
+        { id: 'ev-01', type: 'text', uri: 'content:text;hello', description: 'A detailed note' },
+      ],
+    };
+    const cred = buildUnsignedCredential(input);
+    const evidence = cred['evidence'] as Record<string, unknown>[];
+    expect(evidence[0]['description']).toBe('A detailed note');
+  });
+
+  it.each([
+    { stepTitle: 'Step 1: Code', description: 'My photo', type: 'photo', expected: 'Step 1: Code' },
+    { stepTitle: null, description: 'My photo', type: 'photo', expected: 'My photo' },
+    { stepTitle: null, description: null, type: 'text', expected: 'Learn React Native' },
+    { stepTitle: null, description: null, type: null, expected: 'Learn React Native' },
+  ])('name fallback: stepTitle=$stepTitle, desc=$description, type=$type → $expected',
+    ({ stepTitle, description, type, expected }) => {
+      const input: CredentialInput = {
+        ...BASE_INPUT,
+        evidence: [{ id: 'ev-01', type, uri: 'file:///x', description, stepTitle }],
+      };
+      const cred = buildUnsignedCredential(input);
+      const evidence = cred['evidence'] as Record<string, unknown>[];
+      expect(evidence[0]['name']).toBe(expected);
+    },
+  );
+
+  it('includes evidence count in criteria narrative', () => {
+    const input: CredentialInput = {
+      ...BASE_INPUT,
+      evidence: [
+        { id: 'ev-01', type: 'photo', uri: 'file:///a.jpg', description: null },
+        { id: 'ev-02', type: 'text', uri: 'content:text;x', description: null },
+        { id: 'ev-03', type: 'photo', uri: 'file:///b.jpg', description: null },
+      ],
+    };
+    const cred = buildUnsignedCredential(input);
+    const subject = cred['credentialSubject'] as Record<string, unknown>;
+    const achievement = subject['achievement'] as Record<string, unknown>;
+    const criteria = achievement['criteria'] as Record<string, unknown>;
+    expect(criteria['narrative']).toContain('3 items');
+  });
+
+  it('uses singular "item" for single evidence entry', () => {
+    const input: CredentialInput = {
+      ...BASE_INPUT,
+      evidence: [{ id: 'ev-01', type: 'text', uri: 'content:text;x', description: null }],
+    };
+    const cred = buildUnsignedCredential(input);
+    const subject = cred['credentialSubject'] as Record<string, unknown>;
+    const achievement = subject['achievement'] as Record<string, unknown>;
+    const criteria = achievement['criteria'] as Record<string, unknown>;
+    expect(criteria['narrative']).toContain('1 item');
+    expect(criteria['narrative']).not.toContain('1 items');
+  });
+
+  it('omits evidence count from narrative when evidence is empty (backwards compat)', () => {
+    const cred = buildUnsignedCredential(BASE_INPUT);
+    const subject = cred['credentialSubject'] as Record<string, unknown>;
+    const achievement = subject['achievement'] as Record<string, unknown>;
+    const criteria = achievement['criteria'] as Record<string, unknown>;
+    expect(criteria['narrative']).toBe('Complete all steps for: Learn React Native');
   });
 
   it('passes issuedOn through to the credential', () => {
