@@ -346,6 +346,39 @@ describe('useCreateBadge', () => {
     });
   });
 
+  describe('step evidence includes stepTitle', () => {
+    it('passes stepTitle from step evidence to buildUnsignedCredential', async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === 'mock-goals-query') return [MOCK_GOAL];
+        if (query === 'mock-evidence-query') return [{ id: 'ev-1', type: 'photo', goalId: GOAL_ID }];
+        if (query === 'mock-step-evidence-query')
+          return [{ id: 'ev-2', type: 'text', uri: 'content:text;hello', description: 'A note', stepTitle: 'Wire the box' }];
+        if (query === 'mock-badge-query') return [];
+        return [];
+      });
+
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      expect(mockBadges.buildUnsignedCredential).toHaveBeenCalledWith(
+        expect.objectContaining({
+          evidence: expect.arrayContaining([
+            expect.objectContaining({ stepTitle: 'Wire the box' }),
+          ]),
+        }),
+      );
+    });
+
+    it('sets stepTitle to null for goal-level evidence', async () => {
+      renderHook(() => useCreateBadge(GOAL_ID));
+      await act(async () => {});
+
+      const callArg = mockBadges.buildUnsignedCredential.mock.calls[0][0] as { evidence: Array<Record<string, unknown>> };
+      const goalEvidence = callArg.evidence.find((e) => e.id === 'ev-1');
+      expect(goalEvidence).not.toHaveProperty('stepTitle');
+    });
+  });
+
   describe('idempotency', () => {
     it('does not create a second badge on re-render', async () => {
       const { rerender } = renderHook(() => useCreateBadge(GOAL_ID));
