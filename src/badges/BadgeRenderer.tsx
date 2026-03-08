@@ -17,7 +17,7 @@
  *  - autismFriendly: no shadow
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useId } from 'react';
 import Svg, { G, Path } from 'react-native-svg';
 import { useUnistyles } from 'react-native-unistyles';
 import type { IconWeight } from 'phosphor-react-native';
@@ -67,6 +67,7 @@ export function BadgeRenderer({
   testID = 'badge-renderer',
 }: BadgeRendererProps) {
   const { theme } = useUnistyles();
+  const pathTextId = useId();
 
   // Derive shadow visibility from theme when not explicitly set
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
@@ -163,6 +164,7 @@ export function BadgeRenderer({
         fillColor={design.color}
         inset={innerInset}
         fontFamily={theme.fontFamily.mono}
+        instanceId={pathTextId}
       />
 
       {/* Layer 5: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
@@ -183,6 +185,7 @@ export function BadgeRenderer({
         badgeColor={design.color}
         borderColor={theme.colors.border}
         fontFamily={theme.fontFamily.mono}
+        showShadow={hasShadow}
       />
     </Svg>
   );

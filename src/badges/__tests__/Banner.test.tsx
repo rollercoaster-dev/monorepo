@@ -116,6 +116,14 @@ describe('Banner', () => {
     expect(rects[0].props.fill).toBe('#000000');
   });
 
+  it('omits shadow rect when showShadow is false', () => {
+    const el = Banner(makeProps({ showShadow: false }))!;
+    const rects = findByType(el, 'Rect');
+    // Only the main banner rect, no shadow
+    expect(rects).toHaveLength(1);
+    expect(rects[0].props.stroke).toBeDefined(); // main rect has stroke
+  });
+
   // ── Neo-brutalist styling ──────────────────────────────────────────
 
   it('banner rect has correct border width and no border radius', () => {

@@ -15,16 +15,18 @@ export interface PathTextProps {
   inset?: number;
   /** Font family for inscription. Callers should pass theme.fontFamily.mono for a11y variant support. */
   fontFamily?: string;
+  /** Stable unique identifier for SVG path IDs. Prevents ID collisions across multiple badges. */
+  instanceId?: string;
 }
 
 /** Font size as fraction of badge diameter (~9%, midpoint of 8-10% spec) */
 export const PATH_TEXT_FONT_SIZE_RATIO = 0.09;
 
-/** Fill opacity for path text (WCAG contrast at 70% opacity) */
-export const PATH_TEXT_OPACITY = 0.7;
+/** Fill opacity for path text — kept at 1.0 so getSafeTextColor contrast holds */
+export const PATH_TEXT_OPACITY = 1;
 
-/** Module-scoped counter for unique SVG path IDs across multiple badge instances */
-let pathTextCounter = 0;
+/** Monotonic counter — only used as fallback when no instanceId is provided */
+let nextPathTextId = 0;
 
 export function PathText({
   pathText,
@@ -35,6 +37,7 @@ export function PathText({
   fillColor,
   inset = 0,
   fontFamily = fontFamilyTokens.mono,
+  instanceId,
 }: PathTextProps): React.ReactElement | null {
   const position = pathTextPosition ?? 'top';
   const showTop = position === 'top' || position === 'both';
@@ -46,7 +49,7 @@ export function PathText({
   if (!topText && !bottomText) return null;
 
   const contour = generateContour(shape, size, inset);
-  const id = pathTextCounter++;
+  const id = instanceId ?? String(nextPathTextId++);
   const topId = `pathtext-top-${id}`;
   const bottomId = `pathtext-bottom-${id}`;
   const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO;

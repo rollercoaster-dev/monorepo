@@ -12,6 +12,8 @@ export interface BannerProps {
   borderColor?: string;
   /** Font family for banner text. Callers should pass theme.fontFamily.mono for a11y variant support. */
   fontFamily?: string;
+  /** Whether to show the hard shadow. When false (e.g. highContrast themes), shadow rect is omitted. Default true. */
+  showShadow?: boolean;
 }
 
 /** Banner height as fraction of badge size */
@@ -43,6 +45,7 @@ export function Banner({
   badgeColor,
   borderColor = DEFAULT_BORDER_COLOR,
   fontFamily = fontFamilyTokens.mono,
+  showShadow = true,
 }: BannerProps): React.ReactElement | null {
   if (!banner || !banner.text || banner.text.trim().length === 0) return null;
 
@@ -58,14 +61,16 @@ export function Banner({
 
   return (
     <>
-      {/* Shadow layer — hard shadow, no border radius */}
-      <Rect
-        x={bannerX + BANNER_SHADOW_OFFSET}
-        y={bannerY + BANNER_SHADOW_OFFSET}
-        width={bannerW}
-        height={bannerH}
-        fill="#000000"
-      />
+      {/* Shadow layer — hard shadow, no border radius; hidden in no-shadow themes */}
+      {showShadow && (
+        <Rect
+          x={bannerX + BANNER_SHADOW_OFFSET}
+          y={bannerY + BANNER_SHADOW_OFFSET}
+          width={bannerW}
+          height={bannerH}
+          fill="#000000"
+        />
+      )}
       {/* Banner rect — solid fill, hard border, no border radius */}
       <Rect
         x={bannerX}
