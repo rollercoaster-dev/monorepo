@@ -83,6 +83,27 @@ describe('PathTextEditor', () => {
     expect(screen.getByLabelText('Path text')).toBeOnTheScreen();
   });
 
+  it('uses goalTitle as placeholder for the text input', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} goalTitle="Learn Rust" />,
+    );
+
+    expect(screen.getByLabelText('Path text').props.placeholder).toBe('Learn Rust');
+  });
+
+  it('uses goalTitle as placeholder for the bottom text input', () => {
+    renderWithProviders(
+      <PathTextEditor
+        {...defaultProps}
+        enabled={true}
+        position={PathTextPosition.both}
+        goalTitle="Learn Rust"
+      />,
+    );
+
+    expect(screen.getByLabelText('Path text bottom').props.placeholder).toBe('Learn Rust');
+  });
+
   it('calls onChangeText when text input changes', () => {
     renderWithProviders(<PathTextEditor {...defaultProps} enabled={true} />);
 
@@ -125,6 +146,19 @@ describe('PathTextEditor', () => {
 
     expect(screen.getByLabelText(label).props.accessibilityState).toEqual(
       expect.objectContaining({ checked: true }),
+    );
+  });
+
+  it('marks non-selected positions as unchecked', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.top} />,
+    );
+
+    expect(screen.getByLabelText('Bottom position').props.accessibilityState).toEqual(
+      expect.objectContaining({ checked: false }),
+    );
+    expect(screen.getByLabelText('Both position').props.accessibilityState).toEqual(
+      expect.objectContaining({ checked: false }),
     );
   });
 
