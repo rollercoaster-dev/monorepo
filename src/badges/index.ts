@@ -32,6 +32,12 @@ export type { BadgeRendererProps } from './BadgeRenderer';
 export { IconPicker } from './IconPicker';
 export type { IconPickerProps } from './IconPicker';
 
+export { PathTextEditor } from './PathTextEditor';
+export type { PathTextEditorProps } from './PathTextEditor';
+
+export { BannerEditor } from './BannerEditor';
+export type { BannerEditorProps } from './BannerEditor';
+
 export { getIconComponent, getRegisteredIconNames, ICON_REGISTRY } from './iconRegistry';
 
 export {
