@@ -256,13 +256,16 @@ describe('BadgeRenderer', () => {
   });
 
   describe('monogram mode', () => {
-    it('renders MonogramCenter instead of icon when centerMode is monogram', () => {
-      renderWithProviders(
+    it('renders monogram text and hides icon when centerMode is monogram', () => {
+      const { toJSON } = renderWithProviders(
         <BadgeRenderer
           design={createDesign({ centerMode: 'monogram' as const, monogram: 'AB', iconName: 'Trophy' })}
         />,
       );
 
+      const tree = JSON.stringify(toJSON());
+      // Monogram text should be present
+      expect(tree).toContain('AB');
       // Icon should NOT be rendered in monogram mode
       expect(screen.queryByText('Trophy')).toBeNull();
     });
@@ -274,6 +277,17 @@ describe('BadgeRenderer', () => {
         />,
       );
 
+      expect(screen.getByText('Trophy')).toBeOnTheScreen();
+    });
+
+    it('falls back to icon when centerMode is monogram but monogram is empty', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: '', iconName: 'Trophy' })}
+        />,
+      );
+
+      // Should fall back to icon rendering
       expect(screen.getByText('Trophy')).toBeOnTheScreen();
     });
 
@@ -289,36 +303,24 @@ describe('BadgeRenderer', () => {
   });
 
   describe('CenterLabel', () => {
-    it('adds elements when centerLabel is set', () => {
-      const { toJSON: withLabel } = renderWithProviders(
+    it('renders the label text when centerLabel is set', () => {
+      const { toJSON } = renderWithProviders(
         <BadgeRenderer design={createDesign({ centerLabel: 'Runner Up' })} showShadow={false} />,
       );
-      const withLabelCount = countElements(withLabel());
 
-      const { toJSON: noLabel } = renderWithProviders(
-        <BadgeRenderer design={createDesign()} showShadow={false} />,
-      );
-      const noLabelCount = countElements(noLabel());
-
-      expect(withLabelCount).toBeGreaterThan(noLabelCount);
+      expect(JSON.stringify(toJSON())).toContain('Runner Up');
     });
 
-    it('does not add elements when centerLabel is absent', () => {
-      const { toJSON: withUndefined } = renderWithProviders(
-        <BadgeRenderer design={createDesign({ centerLabel: undefined })} showShadow={false} />,
-      );
-      const undefinedCount = countElements(withUndefined());
-
-      const { toJSON: base } = renderWithProviders(
+    it('does not render label text when centerLabel is absent', () => {
+      const { toJSON } = renderWithProviders(
         <BadgeRenderer design={createDesign()} showShadow={false} />,
       );
-      const baseCount = countElements(base());
 
-      expect(undefinedCount).toBe(baseCount);
+      expect(JSON.stringify(toJSON())).not.toContain('Runner Up');
     });
 
     it('renders monogram with CenterLabel without errors', () => {
-      renderWithProviders(
+      const { toJSON } = renderWithProviders(
         <BadgeRenderer
           design={createDesign({
             centerMode: 'monogram' as const,
@@ -328,7 +330,9 @@ describe('BadgeRenderer', () => {
         />,
       );
 
-      expect(screen.getByTestId('badge-renderer')).toBeOnTheScreen();
+      const tree = JSON.stringify(toJSON());
+      expect(tree).toContain('X');
+      expect(tree).toContain('Novice');
     });
   });
 

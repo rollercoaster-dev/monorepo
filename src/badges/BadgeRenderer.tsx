@@ -159,7 +159,7 @@ export function BadgeRenderer({
       />
 
       {/* Layer 5: Center content — monogram OR icon */}
-      {design.centerMode === 'monogram' ? (
+      {design.centerMode === 'monogram' && design.monogram?.trim() ? (
         <MonogramCenter
           monogram={design.monogram}
           size={size}
