@@ -2,7 +2,6 @@ import React from 'react';
 import { Rect, Text } from 'react-native-svg';
 import type { BannerData } from '../types';
 import { getSafeTextColor } from '../../utils/accessibility';
-import { getRecommendedTextColor } from '../../utils/accessibility';
 import { fontFamily as fontFamilyTokens } from '../../themes/tokens';
 
 export interface BannerProps {
@@ -53,13 +52,8 @@ export function Banner({
   const yRatio = banner.position === 'bottom' ? BANNER_BOTTOM_Y_RATIO : BANNER_CENTER_Y_RATIO;
   const bannerY = size * yRatio - bannerH / 2;
 
-  let bannerFill: string;
-  try {
-    bannerFill = getRecommendedTextColor(badgeColor);
-  } catch {
-    bannerFill = '#000000';
-  }
-  const textFill = getSafeTextColor(bannerFill, 'Banner');
+  const bannerFill = getSafeTextColor(badgeColor, 'Banner:fill');
+  const textFill = getSafeTextColor(bannerFill, 'Banner:text');
   const fontSize = size * BANNER_FONT_SIZE_RATIO;
 
   return (
