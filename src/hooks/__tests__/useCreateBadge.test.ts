@@ -369,7 +369,7 @@ describe('useCreateBadge', () => {
       );
     });
 
-    it('sets stepTitle to null for goal-level evidence', async () => {
+    it('omits stepTitle property for goal-level evidence', async () => {
       renderHook(() => useCreateBadge(GOAL_ID));
       await act(async () => {});
 

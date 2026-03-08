@@ -155,8 +155,8 @@ describe('buildUnsignedCredential', () => {
   it.each([
     { stepTitle: 'Step 1: Code', description: 'My photo', type: 'photo', expected: 'Step 1: Code' },
     { stepTitle: null, description: 'My photo', type: 'photo', expected: 'My photo' },
-    { stepTitle: null, description: null, type: 'text', expected: 'text' },
-    { stepTitle: null, description: null, type: null, expected: 'Evidence' },
+    { stepTitle: null, description: null, type: 'text', expected: 'Learn React Native' },
+    { stepTitle: null, description: null, type: null, expected: 'Learn React Native' },
   ])('name fallback: stepTitle=$stepTitle, desc=$description, type=$type → $expected',
     ({ stepTitle, description, type, expected }) => {
       const input: CredentialInput = {
