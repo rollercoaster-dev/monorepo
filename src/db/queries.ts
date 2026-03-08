@@ -531,8 +531,8 @@ export const evidenceByStepQuery = (stepId: StepId) =>
 
 /**
  * Query all non-deleted step-level evidence for a goal via join.
- * Returns all evidence rows whose step belongs to the given goal.
- * Used to avoid hooks-in-loop when counting/grouping evidence per step.
+ * Returns all evidence rows whose step belongs to the given goal,
+ * plus the step title for OB3 badge evidence naming.
  * @param goalId - Goal ID
  * @returns Query for step evidence ordered by creation date descending
  */
@@ -542,6 +542,7 @@ export const stepEvidenceByGoalQuery = (goalId: GoalId) =>
       .selectFrom('evidence')
       .innerJoin('step', 'step.id', 'evidence.stepId')
       .selectAll('evidence')
+      .select('step.title as stepTitle')
       .where('step.goalId', '=', goalId)
       .where('evidence.isDeleted', 'is', null)
       .where('step.isDeleted', 'is', null)
