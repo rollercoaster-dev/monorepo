@@ -170,34 +170,85 @@ describe('PathTextEditor', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Second text input (both position)
+  // Input visibility per position
   // ---------------------------------------------------------------------------
 
-  it('shows bottom text input when position is both', () => {
-    renderWithProviders(
-      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.both} />,
-    );
-
-    expect(screen.getByLabelText('Path text bottom')).toBeOnTheScreen();
-  });
-
-  it.each([PathTextPosition.top, PathTextPosition.bottom])(
-    'hides bottom text input when position is %s',
+  it.each([PathTextPosition.top, PathTextPosition.both])(
+    'shows top text input when position is %s',
     (pos) => {
       renderWithProviders(
         <PathTextEditor {...defaultProps} enabled={true} position={pos} />,
       );
 
-      expect(screen.queryByLabelText('Path text bottom')).toBeNull();
+      expect(screen.getByLabelText('Path text')).toBeOnTheScreen();
     },
   );
 
-  it('calls onChangeTextBottom when bottom input changes', () => {
+  it('hides top text input when position is bottom', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.bottom} />,
+    );
+
+    expect(screen.queryByLabelText('Path text')).toBeNull();
+  });
+
+  it.each([PathTextPosition.bottom, PathTextPosition.both])(
+    'shows bottom text input when position is %s',
+    (pos) => {
+      renderWithProviders(
+        <PathTextEditor {...defaultProps} enabled={true} position={pos} />,
+      );
+
+      expect(screen.getByLabelText('Path text bottom')).toBeOnTheScreen();
+    },
+  );
+
+  it('hides bottom text input when position is top', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.top} />,
+    );
+
+    expect(screen.queryByLabelText('Path text bottom')).toBeNull();
+  });
+
+  it('both position shows both inputs', () => {
     renderWithProviders(
       <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.both} />,
     );
 
+    expect(screen.getByLabelText('Path text')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Path text bottom')).toBeOnTheScreen();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Callback routing per position
+  // ---------------------------------------------------------------------------
+
+  it('calls onChangeTextBottom when bottom position selected and user types', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.bottom} />,
+    );
+
     fireEvent.changeText(screen.getByLabelText('Path text bottom'), 'WORLD');
     expect(onChangeTextBottom).toHaveBeenCalledWith('WORLD');
+    expect(onChangeText).not.toHaveBeenCalled();
+  });
+
+  it('calls onChangeText for top input in both mode', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.both} />,
+    );
+
+    fireEvent.changeText(screen.getByLabelText('Path text'), 'TOP');
+    expect(onChangeText).toHaveBeenCalledWith('TOP');
+  });
+
+  it('calls onChangeTextBottom for bottom input in both mode', () => {
+    renderWithProviders(
+      <PathTextEditor {...defaultProps} enabled={true} position={PathTextPosition.both} />,
+    );
+
+    fireEvent.changeText(screen.getByLabelText('Path text bottom'), 'BOTTOM');
+    expect(onChangeTextBottom).toHaveBeenCalledWith('BOTTOM');
   });
 });

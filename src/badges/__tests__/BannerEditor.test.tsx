@@ -122,6 +122,16 @@ describe('BannerEditor', () => {
     );
   });
 
+  it('marks non-selected position as unchecked', () => {
+    renderWithProviders(
+      <BannerEditor {...defaultProps} enabled={true} position={BannerPosition.center} />,
+    );
+
+    expect(screen.getByLabelText('Bottom position').props.accessibilityState).toEqual(
+      expect.objectContaining({ checked: false }),
+    );
+  });
+
   it('pressing a position option calls onChangePosition', () => {
     renderWithProviders(<BannerEditor {...defaultProps} enabled={true} />);
 

@@ -91,23 +91,26 @@ export function PathTextEditor({
 
       {enabled && (
         <>
-          <TextInput
-            accessibilityLabel="Path text"
-            value={text}
-            onChangeText={onChangeText}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            placeholder={goalTitle}
-            placeholderTextColor={theme.colors.textSecondary}
-            style={[
-              styles.input,
-              {
-                borderColor: theme.colors.border,
-                color: theme.colors.text,
-                backgroundColor: theme.colors.background,
-              },
-            ]}
-          />
+          {(position === PathTextPosition.top ||
+            position === PathTextPosition.both) && (
+            <TextInput
+              accessibilityLabel="Path text"
+              value={text}
+              onChangeText={onChangeText}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              placeholder={goalTitle}
+              placeholderTextColor={theme.colors.textSecondary}
+              style={[
+                styles.input,
+                {
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                  backgroundColor: theme.colors.background,
+                },
+              ]}
+            />
+          )}
 
           <View
             accessibilityRole="radiogroup"
@@ -151,7 +154,8 @@ export function PathTextEditor({
             })}
           </View>
 
-          {position === PathTextPosition.both && (
+          {(position === PathTextPosition.bottom ||
+            position === PathTextPosition.both) && (
             <TextInput
               accessibilityLabel="Path text bottom"
               value={textBottom}
