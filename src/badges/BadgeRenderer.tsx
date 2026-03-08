@@ -1,11 +1,13 @@
 /**
  * BadgeRenderer — renders a full badge from a BadgeDesign configuration.
  *
- * Composes four layers (bottom to top):
+ * Composes six layers (bottom to top):
  * 1. Shadow layer — solid black duplicate of the shape, offset down-right
  * 2. Shape layer — filled background shape with thick border
  * 3. Frame overlay — decorative frame band (boldBorder, guilloche, etc.)
- * 4. Icon layer — Phosphor icon centered at ~45% of badge diameter
+ * 4. PathText — coin-style inscriptions following the shape contour
+ * 5. Icon layer — Phosphor icon centered at ~45% of badge diameter
+ * 6. Banner — neo-brutalist ribbon overlay with text
  *
  * The icon color is auto-calculated for WCAG AA contrast against the shape
  * fill color using the existing accessibility utility.
@@ -24,6 +26,8 @@ import type { BadgeDesign } from './types';
 import { generateShapePath } from './shapes/paths';
 import { FRAME_BAND_RATIO } from './shapes/contours';
 import { FrameOverlay } from './frames/FrameOverlay';
+import { PathText } from './text/PathText';
+import { Banner } from './text/Banner';
 import { getIconComponent } from './iconRegistry';
 import { getRecommendedTextColor } from '../utils/accessibility';
 
@@ -149,7 +153,19 @@ export function BadgeRenderer({
         strokeColor={theme.colors.border}
       />
 
-      {/* Layer 4: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
+      {/* Layer 4: PathText — coin-style inscriptions along shape contour */}
+      <PathText
+        pathText={design.pathText}
+        pathTextBottom={design.pathTextBottom}
+        pathTextPosition={design.pathTextPosition}
+        shape={design.shape}
+        size={size}
+        fillColor={design.color}
+        inset={innerInset}
+        fontFamily={theme.fontFamily.mono}
+      />
+
+      {/* Layer 5: Icon / Monogram — centerMode: 'monogram' not yet implemented (A.6). */}
       {IconComponent && (
         <G x={iconOffset} y={iconOffset}>
           <IconComponent
@@ -159,6 +175,15 @@ export function BadgeRenderer({
           />
         </G>
       )}
+
+      {/* Layer 6: Banner — neo-brutalist ribbon overlay */}
+      <Banner
+        banner={design.banner}
+        size={size}
+        badgeColor={design.color}
+        borderColor={theme.colors.border}
+        fontFamily={theme.fontFamily.mono}
+      />
     </Svg>
   );
 }
