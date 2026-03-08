@@ -255,6 +255,83 @@ describe('BadgeRenderer', () => {
     expect(badge).toBeOnTheScreen();
   });
 
+  describe('monogram mode', () => {
+    it('renders MonogramCenter instead of icon when centerMode is monogram', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: 'AB', iconName: 'Trophy' })}
+        />,
+      );
+
+      // Icon should NOT be rendered in monogram mode
+      expect(screen.queryByText('Trophy')).toBeNull();
+    });
+
+    it('still renders icon when centerMode is icon', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'icon' as const, iconName: 'Trophy' })}
+        />,
+      );
+
+      expect(screen.getByText('Trophy')).toBeOnTheScreen();
+    });
+
+    it('does not crash when centerMode is monogram with unknown iconName', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({ centerMode: 'monogram' as const, monogram: 'X', iconName: 'NonExistent' })}
+        />,
+      );
+
+      expect(screen.getByTestId('badge-renderer')).toBeOnTheScreen();
+    });
+  });
+
+  describe('CenterLabel', () => {
+    it('adds elements when centerLabel is set', () => {
+      const { toJSON: withLabel } = renderWithProviders(
+        <BadgeRenderer design={createDesign({ centerLabel: 'Runner Up' })} showShadow={false} />,
+      );
+      const withLabelCount = countElements(withLabel());
+
+      const { toJSON: noLabel } = renderWithProviders(
+        <BadgeRenderer design={createDesign()} showShadow={false} />,
+      );
+      const noLabelCount = countElements(noLabel());
+
+      expect(withLabelCount).toBeGreaterThan(noLabelCount);
+    });
+
+    it('does not add elements when centerLabel is absent', () => {
+      const { toJSON: withUndefined } = renderWithProviders(
+        <BadgeRenderer design={createDesign({ centerLabel: undefined })} showShadow={false} />,
+      );
+      const undefinedCount = countElements(withUndefined());
+
+      const { toJSON: base } = renderWithProviders(
+        <BadgeRenderer design={createDesign()} showShadow={false} />,
+      );
+      const baseCount = countElements(base());
+
+      expect(undefinedCount).toBe(baseCount);
+    });
+
+    it('renders monogram with CenterLabel without errors', () => {
+      renderWithProviders(
+        <BadgeRenderer
+          design={createDesign({
+            centerMode: 'monogram' as const,
+            monogram: 'X',
+            centerLabel: 'Novice',
+          })}
+        />,
+      );
+
+      expect(screen.getByTestId('badge-renderer')).toBeOnTheScreen();
+    });
+  });
+
   describe('SVG element count', () => {
     it('stays under 50 elements per badge (with shadow)', () => {
       // With shadow: 1 Svg + 1 shadow Path + 1 shape Path + 1 G + 1 Icon = 5 elements
