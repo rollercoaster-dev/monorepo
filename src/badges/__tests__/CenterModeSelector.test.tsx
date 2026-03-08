@@ -8,7 +8,7 @@ describe('CenterModeSelector', () => {
   const onChangeMonogram = jest.fn();
 
   const defaultProps = {
-    selectedMode: BadgeCenterMode.icon as BadgeCenterMode,
+    selectedMode: BadgeCenterMode.icon,
     monogram: '',
     onSelectMode,
     onChangeMonogram,
