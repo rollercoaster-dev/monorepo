@@ -32,7 +32,7 @@ import { Banner } from './text/Banner';
 import { MonogramCenter } from './text/MonogramCenter';
 import { CenterLabel } from './text/CenterLabel';
 import { getIconComponent } from './iconRegistry';
-import { getRecommendedTextColor } from '../utils/accessibility';
+import { getSafeTextColor } from '../utils/accessibility';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,19 +94,7 @@ export function BadgeRenderer({
 
   // Calculate icon color for WCAG AA contrast against fill
   const iconColor = useMemo(
-    () => {
-      try {
-        return getRecommendedTextColor(design.color);
-      } catch (error) {
-        if (__DEV__) {
-          console.warn('[BadgeRenderer] Icon color contrast failed, falling back to black', {
-            color: design.color,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-        return '#000000';
-      }
-    },
+    () => getSafeTextColor(design.color, 'BadgeRenderer'),
     [design.color],
   );
 

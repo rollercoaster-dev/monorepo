@@ -10,7 +10,7 @@ import { renderWithProviders, screen } from '../../__tests__/test-utils';
 import { BadgeRenderer } from '../BadgeRenderer';
 import type { BadgeDesign } from '../types';
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from '../types';
-import { getRecommendedTextColor } from '../../utils/accessibility';
+import { getSafeTextColor } from '../../utils/accessibility';
 
 // Mock the icon registry instead of phosphor-react-native directly.
 // phosphor-react-native v3 changed its export structure, so mocking the
@@ -121,7 +121,7 @@ describe('BadgeRenderer', () => {
     );
 
     const icon = screen.getByLabelText('Trophy icon');
-    const expectedColor = getRecommendedTextColor('#1a1a2e');
+    const expectedColor = getSafeTextColor('#1a1a2e');
     expect(expectedColor).toBe('#FFFFFF');
     expect(icon.props.accessibilityHint).toContain(`color=${expectedColor}`);
   });
@@ -133,7 +133,7 @@ describe('BadgeRenderer', () => {
     );
 
     const icon = screen.getByLabelText('Star icon');
-    const expectedColor = getRecommendedTextColor('#fef3c7');
+    const expectedColor = getSafeTextColor('#fef3c7');
     expect(expectedColor).toBe('#000000');
     expect(icon.props.accessibilityHint).toContain(`color=${expectedColor}`);
   });
