@@ -56,12 +56,19 @@ jest.mock('../../../stores/pendingDesignStore', () => ({
 jest.mock('react-native-svg', () => {
   const React = require('react');
   const { View } = require('react-native');
+  const stub = (props: Record<string, unknown>) => <View {...props} />;
   return {
     __esModule: true,
-    default: (props: Record<string, unknown>) => <View {...props} />,
-    Svg: (props: Record<string, unknown>) => <View {...props} />,
-    Path: (props: Record<string, unknown>) => <View {...props} />,
-    G: (props: Record<string, unknown>) => <View {...props} />,
+    default: stub,
+    Svg: stub,
+    Path: stub,
+    G: stub,
+    Text: stub,
+    TextPath: stub,
+    Defs: stub,
+    Rect: stub,
+    Circle: stub,
+    ClipPath: stub,
   };
 });
 
@@ -461,5 +468,71 @@ describe('BadgeDesignerScreen — new-goal mode', () => {
     );
     // ActivityIndicator should render (no "Use This Design" button visible)
     expect(screen.queryByText('Use This Design')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Integration tests (#191)
+// ---------------------------------------------------------------------------
+
+describe('BadgeDesignerScreen — integration', () => {
+  it('full happy path: frame + path text + banner → save → verify JSON', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    // Select guilloche frame
+    fireEvent.press(screen.getByLabelText('Guilloche frame'));
+
+    // Enable path text, type text
+    fireEvent.press(screen.getByLabelText('Enable path text'));
+    fireEvent.changeText(screen.getByLabelText('Path text'), 'ACHIEVEMENT');
+
+    // Enable banner, type text
+    fireEvent.press(screen.getByLabelText('Enable banner'));
+    fireEvent.changeText(screen.getByLabelText('Banner text'), 'WINNER');
+
+    // Save
+    fireEvent.press(screen.getByLabelText('Save Design'));
+
+    expect(mockUpdateBadge).toHaveBeenCalledTimes(1);
+    const savedJson = mockUpdateBadge.mock.calls[0][1].design;
+    const parsed = JSON.parse(savedJson);
+    expect(parsed.frame).toBe('guilloche');
+    expect(parsed.pathText).toBe('ACHIEVEMENT');
+    expect(parsed.pathTextPosition).toBe('top');
+    expect(parsed.banner).toEqual(
+      expect.objectContaining({ text: 'WINNER', position: 'center' }),
+    );
+  });
+
+  it('backward compat: legacy design without new fields renders without crash', () => {
+    const legacyDesign = JSON.stringify({
+      shape: 'circle',
+      color: '#a78bfa',
+      iconName: 'Trophy',
+      iconWeight: 'regular',
+      title: 'Legacy Badge',
+    });
+    mockUseQuery.mockReturnValue([makeRow({ design: legacyDesign })]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText(/Badge preview:/)).toBeOnTheScreen();
+    expect(screen.getByLabelText('Save Design')).toBeOnTheScreen();
+  });
+
+  // Note: renderWithProviders uses mocked unistyles so we cannot switch
+  // themes at runtime. This single smoke test verifies the component
+  // renders without crash. Real per-theme visual coverage relies on
+  // Storybook stories viewed on-device.
+  it('renders without crash (smoke test)', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    expect(() => {
+      renderWithProviders(
+        <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+      );
+    }).not.toThrow();
   });
 });
