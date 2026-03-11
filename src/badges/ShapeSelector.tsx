@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useUnistyles } from 'react-native-unistyles';
 
+import { selectorStyles } from './selectorStyles';
 import { BadgeShapeView } from './shapes/BadgeShapeView';
 import { BadgeShape } from './types';
 
@@ -60,7 +61,7 @@ export function ShapeSelector({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerStyle={selectorStyles.row}
       >
         {SHAPES.map((shape) => {
           const isSelected = shape === selectedShape;
@@ -72,7 +73,7 @@ export function ShapeSelector({
               accessibilityLabel={`${SHAPE_LABELS[shape]} shape`}
               accessibilityState={{ checked: isSelected }}
               style={[
-                styles.cell,
+                selectorStyles.cell,
                 {
                   borderColor: isSelected
                     ? resolvedAccent
@@ -89,7 +90,7 @@ export function ShapeSelector({
                 showShadow={false}
               />
               <Text
-                style={[styles.label, { color: theme.colors.textSecondary }]}
+                style={[selectorStyles.label, { color: theme.colors.textSecondary, fontWeight: '500' }]}
                 numberOfLines={1}
               >
                 {SHAPE_LABELS[shape]}
@@ -102,29 +103,3 @@ export function ShapeSelector({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
-const styles = StyleSheet.create((theme) => ({
-  row: {
-    gap: theme.space[3],
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  cell: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.space[2],
-    paddingVertical: theme.space[2],
-    minWidth: 72,
-    height: 88,
-    borderRadius: 0,
-    gap: theme.space[1],
-  },
-  label: {
-    fontSize: 11,
-    fontFamily: theme.fontFamily.body,
-    fontWeight: '500',
-  },
-}));

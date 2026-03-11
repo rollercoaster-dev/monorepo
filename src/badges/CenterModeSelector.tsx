@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { selectorStyles } from './selectorStyles';
 import { BadgeCenterMode } from './types';
 
 // ---------------------------------------------------------------------------
@@ -54,7 +55,7 @@ export function CenterModeSelector({
       accessibilityRole="radiogroup"
       accessibilityLabel="Badge center mode"
     >
-      <View style={styles.row}>
+      <View style={[selectorStyles.row, styles.row]}>
         {MODES.map((mode) => {
           const isSelected = mode === selectedMode;
           return (
@@ -123,9 +124,6 @@ export function CenterModeSelector({
 const styles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: 'row',
-    gap: theme.space[3],
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
   },
   option: {
     alignItems: 'center',

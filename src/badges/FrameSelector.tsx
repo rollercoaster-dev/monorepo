@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { selectorStyles } from './selectorStyles';
 import { BadgeFrame } from './types';
 
 // ---------------------------------------------------------------------------
@@ -69,7 +70,7 @@ export function FrameSelector({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerStyle={selectorStyles.row}
       >
         {FRAMES.map((frame) => {
           const isSelected = frame === selectedFrame;
@@ -81,7 +82,7 @@ export function FrameSelector({
               accessibilityLabel={`${FRAME_LABELS[frame]} frame`}
               accessibilityState={{ checked: isSelected }}
               style={[
-                styles.cell,
+                selectorStyles.cell,
                 {
                   borderColor: isSelected
                     ? resolvedAccent
@@ -106,7 +107,7 @@ export function FrameSelector({
                 </Text>
               </View>
               <Text
-                style={[styles.label, { color: theme.colors.textSecondary }]}
+                style={[selectorStyles.label, { color: theme.colors.textSecondary, fontWeight: '500' }]}
                 numberOfLines={1}
               >
                 {FRAME_LABELS[frame]}
@@ -124,21 +125,6 @@ export function FrameSelector({
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create((theme) => ({
-  row: {
-    gap: theme.space[3],
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  cell: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.space[2],
-    paddingVertical: theme.space[2],
-    minWidth: 72,
-    height: 88,
-    borderRadius: 0,
-    gap: theme.space[1],
-  },
   thumbnail: {
     width: THUMBNAIL_SIZE,
     height: THUMBNAIL_SIZE,
@@ -150,10 +136,5 @@ const styles = StyleSheet.create((theme) => ({
   glyph: {
     fontSize: 24,
     fontWeight: '700',
-  },
-  label: {
-    fontSize: 11,
-    fontFamily: theme.fontFamily.body,
-    fontWeight: '500',
   },
 }));

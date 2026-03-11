@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
+import { selectorStyles } from './selectorStyles';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -58,7 +60,7 @@ export function ColorPicker({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerStyle={selectorStyles.row}
       >
         {swatches.map(({ hex, label }) => {
           const isSelected = hex === selectedColor;
@@ -85,7 +87,7 @@ export function ColorPicker({
               />
               <Text
                 style={[
-                  styles.label,
+                  selectorStyles.label,
                   {
                     color: isSelected
                       ? theme.colors.text
@@ -110,11 +112,6 @@ export function ColorPicker({
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create((theme) => ({
-  row: {
-    gap: theme.space[3],
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
   cell: {
     alignItems: 'center',
     minWidth: 56,
@@ -125,9 +122,5 @@ const styles = StyleSheet.create((theme) => ({
     width: SWATCH_SIZE,
     height: SWATCH_SIZE,
     borderRadius: SWATCH_SIZE / 2,
-  },
-  label: {
-    fontSize: 11,
-    fontFamily: theme.fontFamily.body,
   },
 }));
