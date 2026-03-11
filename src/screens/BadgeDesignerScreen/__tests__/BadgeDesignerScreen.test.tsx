@@ -272,6 +272,123 @@ describe('BadgeDesignerScreen', () => {
     ).toBeOnTheScreen();
     expect(screen.getByLabelText('Save Design')).toBeOnTheScreen();
   });
+
+  // --- New controls from #190 ---
+
+  it('renders FrameSelector', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText('Badge frame')).toBeOnTheScreen();
+  });
+
+  it('renders CenterModeSelector', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText('Badge center mode')).toBeOnTheScreen();
+  });
+
+  it('renders PathTextEditor', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText('Enable path text')).toBeOnTheScreen();
+  });
+
+  it('renders BannerEditor', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText('Enable banner')).toBeOnTheScreen();
+  });
+
+  it('shows icon picker by default (icon mode)', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText(/Selected icon:.*Tap to change/)).toBeOnTheScreen();
+  });
+
+  it('hides icon picker when monogram mode is selected', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    fireEvent.press(screen.getByLabelText('Monogram center'));
+    expect(screen.queryByLabelText(/Selected icon:.*Tap to change/)).toBeNull();
+  });
+
+  it('renders center label input', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.getByLabelText('Center label')).toBeOnTheScreen();
+  });
+
+  it('includes new fields in saved JSON after changes', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    // Select a frame
+    fireEvent.press(screen.getByLabelText('Guilloche frame'));
+
+    // Toggle path text on
+    fireEvent.press(screen.getByLabelText('Enable path text'));
+
+    // Toggle banner on
+    fireEvent.press(screen.getByLabelText('Enable banner'));
+
+    // Save
+    fireEvent.press(screen.getByLabelText('Save Design'));
+
+    const savedJson = mockUpdateBadge.mock.calls[0][1].design;
+    expect(savedJson).toContain('"frame":"guilloche"');
+    expect(savedJson).toContain('"pathText"');
+    expect(savedJson).toContain('"banner"');
+  });
+
+  it('toggle-off clears path text and banner from saved JSON', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    // Enable path text, then disable
+    fireEvent.press(screen.getByLabelText('Enable path text'));
+    fireEvent.press(screen.getByLabelText('Enable path text'));
+
+    // Enable banner, then disable
+    fireEvent.press(screen.getByLabelText('Enable banner'));
+    fireEvent.press(screen.getByLabelText('Enable banner'));
+
+    fireEvent.press(screen.getByLabelText('Save Design'));
+
+    const savedJson = mockUpdateBadge.mock.calls[0][1].design;
+    expect(savedJson).not.toContain('"pathText"');
+    expect(savedJson).not.toContain('"pathTextPosition"');
+    expect(savedJson).not.toContain('"banner"');
+  });
+
+  it('frame change reflected in preview accessibility label', () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDesignerScreen route={mockRoute} navigation={{} as never} />,
+    );
+
+    fireEvent.press(screen.getByLabelText('Guilloche frame'));
+    expect(
+      screen.getByLabelText(/Badge preview:.*guilloche.*frame/),
+    ).toBeOnTheScreen();
+  });
 });
 
 // ---------------------------------------------------------------------------

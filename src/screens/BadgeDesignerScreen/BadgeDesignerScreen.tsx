@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +14,18 @@ import { BadgeRenderer } from '../../badges/BadgeRenderer';
 import { ShapeSelector } from '../../badges/ShapeSelector';
 import { ColorPicker } from '../../badges/ColorPicker';
 import { IconPicker } from '../../badges/IconPicker';
-import { parseBadgeDesign, createDefaultBadgeDesign } from '../../badges/types';
+import { FrameSelector } from '../../badges/FrameSelector';
+import { CenterModeSelector } from '../../badges/CenterModeSelector';
+import { PathTextEditor } from '../../badges/PathTextEditor';
+import { BannerEditor } from '../../badges/BannerEditor';
+import {
+  parseBadgeDesign,
+  createDefaultBadgeDesign,
+  BadgeFrame,
+  BadgeCenterMode,
+  PathTextPosition,
+  BannerPosition,
+} from '../../badges/types';
 import type { BadgeDesign, BadgeShape, BadgeIconWeight } from '../../badges/types';
 import { badgeWithGoalQuery, goalsQuery, updateBadge } from '../../db';
 import type { BadgeId } from '../../db';
@@ -28,6 +39,8 @@ import { styles } from './BadgeDesignerScreen.styles';
 
 const logger = new Logger('BadgeDesignerScreen');
 
+const DEFAULT_BANNER = { text: '', position: BannerPosition.center } as const;
+
 // ---------------------------------------------------------------------------
 // Shared design editor UI (stateless — receives design + callbacks)
 // ---------------------------------------------------------------------------
@@ -35,6 +48,7 @@ const logger = new Logger('BadgeDesignerScreen');
 interface DesignEditorProps {
   currentDesign: BadgeDesign;
   goalColor?: string | null;
+  goalTitle?: string;
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
   saveLabel?: string;
@@ -44,11 +58,15 @@ interface DesignEditorProps {
 function DesignEditor({
   currentDesign,
   goalColor,
+  goalTitle,
   onDesignChange,
   onSave,
   saveLabel = 'Save Design',
   extraFooter,
 }: DesignEditorProps) {
+  const { theme } = useUnistyles();
+
+  // --- Existing handlers ---
   const handleShapeChange = useCallback((shape: BadgeShape) => {
     onDesignChange({ ...currentDesign, shape });
   }, [currentDesign, onDesignChange]);
@@ -65,7 +83,86 @@ function DesignEditor({
     onDesignChange({ ...currentDesign, iconWeight });
   }, [currentDesign, onDesignChange]);
 
-  const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} with ${currentDesign.iconName} icon`;
+  // --- Frame + Center handlers ---
+  const handleFrameChange = useCallback((frame: BadgeFrame) => {
+    onDesignChange({ ...currentDesign, frame });
+  }, [currentDesign, onDesignChange]);
+
+  const handleCenterModeChange = useCallback((centerMode: BadgeCenterMode) => {
+    onDesignChange({ ...currentDesign, centerMode });
+  }, [currentDesign, onDesignChange]);
+
+  const handleMonogramChange = useCallback((monogram: string) => {
+    onDesignChange({ ...currentDesign, monogram });
+  }, [currentDesign, onDesignChange]);
+
+  const handleCenterLabelChange = useCallback((centerLabel: string) => {
+    onDesignChange({ ...currentDesign, centerLabel });
+  }, [currentDesign, onDesignChange]);
+
+  // --- Path text handlers ---
+  const handlePathTextToggle = useCallback((enabled: boolean) => {
+    if (enabled) {
+      onDesignChange({ ...currentDesign, pathText: '', pathTextPosition: PathTextPosition.top });
+    } else {
+      onDesignChange({
+        ...currentDesign,
+        pathText: undefined,
+        pathTextPosition: undefined,
+        pathTextBottom: undefined,
+      });
+    }
+  }, [currentDesign, onDesignChange]);
+
+  const handlePathTextChange = useCallback((pathText: string) => {
+    onDesignChange({ ...currentDesign, pathText });
+  }, [currentDesign, onDesignChange]);
+
+  const handlePathTextBottomChange = useCallback((pathTextBottom: string) => {
+    onDesignChange({ ...currentDesign, pathTextBottom });
+  }, [currentDesign, onDesignChange]);
+
+  const handlePathTextPositionChange = useCallback((pathTextPosition: PathTextPosition) => {
+    onDesignChange({ ...currentDesign, pathTextPosition });
+  }, [currentDesign, onDesignChange]);
+
+  // --- Banner handlers ---
+  const handleBannerToggle = useCallback((enabled: boolean) => {
+    if (enabled) {
+      onDesignChange({ ...currentDesign, banner: { ...DEFAULT_BANNER } });
+    } else {
+      onDesignChange({ ...currentDesign, banner: undefined });
+    }
+  }, [currentDesign, onDesignChange]);
+
+  const handleBannerTextChange = useCallback((text: string) => {
+    onDesignChange({
+      ...currentDesign,
+      banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), text },
+    });
+  }, [currentDesign, onDesignChange]);
+
+  const handleBannerPositionChange = useCallback((position: BannerPosition) => {
+    onDesignChange({
+      ...currentDesign,
+      banner: { ...(currentDesign.banner ?? DEFAULT_BANNER), position },
+    });
+  }, [currentDesign, onDesignChange]);
+
+  // --- Derived UI state ---
+  const frame = currentDesign.frame ?? BadgeFrame.none;
+  const centerMode = currentDesign.centerMode ?? BadgeCenterMode.icon;
+  const monogram = currentDesign.monogram ?? '';
+  const centerLabel = currentDesign.centerLabel ?? '';
+  const pathTextEnabled = currentDesign.pathText !== undefined || currentDesign.pathTextPosition !== undefined;
+  const pathText = currentDesign.pathText ?? '';
+  const pathTextPosition = currentDesign.pathTextPosition ?? PathTextPosition.top;
+  const pathTextBottom = currentDesign.pathTextBottom ?? '';
+  const bannerEnabled = currentDesign.banner != null;
+  const bannerText = currentDesign.banner?.text ?? '';
+  const bannerPosition = currentDesign.banner?.position ?? BannerPosition.center;
+
+  const previewLabel = `Badge preview: ${currentDesign.color} ${currentDesign.shape} ${frame} frame with ${currentDesign.iconName} icon`;
 
   return (
     <ScrollView
@@ -98,13 +195,77 @@ function DesignEditor({
         />
       </View>
 
-      <View style={styles.iconSection}>
-        <Text style={styles.sectionLabel}>Icon</Text>
-        <IconPicker
-          selectedIcon={currentDesign.iconName}
-          selectedWeight={currentDesign.iconWeight}
-          onSelectIcon={handleIconChange}
-          onSelectWeight={handleWeightChange}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Frame</Text>
+        <FrameSelector
+          selectedFrame={frame}
+          onSelectFrame={handleFrameChange}
+          accentColor={currentDesign.color}
+        />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Center</Text>
+        <CenterModeSelector
+          selectedMode={centerMode}
+          monogram={monogram}
+          onSelectMode={handleCenterModeChange}
+          onChangeMonogram={handleMonogramChange}
+          accentColor={currentDesign.color}
+        />
+      </View>
+
+      {centerMode === BadgeCenterMode.icon && (
+        <View style={styles.iconSection}>
+          <Text style={styles.sectionLabel}>Icon</Text>
+          <IconPicker
+            selectedIcon={currentDesign.iconName}
+            selectedWeight={currentDesign.iconWeight}
+            onSelectIcon={handleIconChange}
+            onSelectWeight={handleWeightChange}
+            accentColor={currentDesign.color}
+          />
+        </View>
+      )}
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Center Label</Text>
+        <TextInput
+          accessibilityLabel="Center label"
+          value={centerLabel}
+          onChangeText={handleCenterLabelChange}
+          maxLength={10}
+          placeholder="Optional label"
+          placeholderTextColor={theme.colors.textSecondary}
+          style={styles.centerLabelInput}
+        />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Path Text</Text>
+        <PathTextEditor
+          enabled={pathTextEnabled}
+          text={pathText}
+          textBottom={pathTextBottom}
+          position={pathTextPosition}
+          goalTitle={goalTitle ?? currentDesign.title}
+          onToggle={handlePathTextToggle}
+          onChangeText={handlePathTextChange}
+          onChangeTextBottom={handlePathTextBottomChange}
+          onChangePosition={handlePathTextPositionChange}
+          accentColor={currentDesign.color}
+        />
+      </View>
+
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionLabel}>Banner</Text>
+        <BannerEditor
+          enabled={bannerEnabled}
+          text={bannerText}
+          position={bannerPosition}
+          onToggle={handleBannerToggle}
+          onChangeText={handleBannerTextChange}
+          onChangePosition={handleBannerPositionChange}
           accentColor={currentDesign.color}
         />
       </View>
@@ -164,10 +325,13 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
     );
   }
 
+  const badgeGoalTitle = (badge.goalTitle as string | null | undefined) ?? undefined;
+
   return (
     <DesignEditor
       currentDesign={currentDesign}
       goalColor={goalColor}
+      goalTitle={badgeGoalTitle}
       onDesignChange={setDesign}
       onSave={handleSave}
     />
@@ -220,10 +384,13 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
     );
   }
 
+  const newGoalTitle = goal.title ?? undefined;
+
   return (
     <DesignEditor
       currentDesign={currentDesign}
       goalColor={goalColor}
+      goalTitle={newGoalTitle}
       onDesignChange={setDesign}
       onSave={handleSave}
       saveLabel="Use This Design"

@@ -53,6 +53,18 @@ export const styles = StyleSheet.create((theme) => ({
     width: '100%',
     gap: theme.space[2],
   },
+  centerLabelInput: {
+    marginHorizontal: theme.space[4],
+    minHeight: 44,
+    paddingHorizontal: theme.space[3],
+    borderWidth: theme.borderWidth.medium,
+    borderRadius: 0,
+    ...theme.textStyles.body,
+    fontWeight: '600' as const,
+    borderColor: theme.colors.border,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
+  },
   footer: {
     paddingTop: theme.space[6],
     paddingBottom: theme.space[4],
