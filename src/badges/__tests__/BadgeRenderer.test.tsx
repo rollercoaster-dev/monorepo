@@ -10,6 +10,8 @@ import { renderWithProviders, screen } from '../../__tests__/test-utils';
 import { BadgeRenderer } from '../BadgeRenderer';
 import type { BadgeDesign } from '../types';
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from '../types';
+import { BANNER_HEIGHT_RATIO, BANNER_TOP_VISIBLE_RATIO } from '../text/Banner';
+import { getCenterLabelBottomOverflow } from '../text/CenterLabel';
 import { getSafeTextColor } from '../../utils/accessibility';
 
 // Mock the icon registry instead of phosphor-react-native directly.
@@ -177,6 +179,37 @@ describe('BadgeRenderer', () => {
     const badge = screen.getByTestId('badge-renderer');
     expect(badge.props.width).toBe(200);
     expect(badge.props.height).toBe(200);
+  });
+
+  it('expands upward when a center banner sits above the badge', () => {
+    const size = 200;
+    renderWithProviders(
+      <BadgeRenderer
+        design={createDesign({ banner: { text: 'WINNER', position: 'center' } })}
+        size={size}
+        showShadow={false}
+      />,
+    );
+
+    const badge = screen.getByTestId('badge-renderer');
+    const topOverflow = size * BANNER_HEIGHT_RATIO * (1 - BANNER_TOP_VISIBLE_RATIO);
+    expect(badge.props.width).toBe(size);
+    expect(badge.props.height).toBeCloseTo(size + topOverflow, 5);
+  });
+
+  it('expands downward when the center label sits below the badge', () => {
+    const size = 200;
+    renderWithProviders(
+      <BadgeRenderer
+        design={createDesign({ centerLabel: 'EXPERT' })}
+        size={size}
+        showShadow={false}
+      />,
+    );
+
+    const badge = screen.getByTestId('badge-renderer');
+    expect(badge.props.width).toBe(size);
+    expect(badge.props.height).toBeCloseTo(size + getCenterLabelBottomOverflow(size), 5);
   });
 
   it('icon size scales with badge size (~45%)', () => {

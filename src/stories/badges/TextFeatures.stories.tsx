@@ -204,6 +204,77 @@ export const KitchenSink: Story = {
   ),
 };
 
+const MIXED_LAYOUT_SHAPES = [
+  { shape: BadgeShape.circle, label: 'Circle' },
+  { shape: BadgeShape.shield, label: 'Shield' },
+  { shape: BadgeShape.roundedRect, label: 'Rounded Rect' },
+];
+
+const KITCHEN_SINK_SHAPES = [
+  { shape: BadgeShape.circle, label: 'Circle' },
+  { shape: BadgeShape.shield, label: 'Shield' },
+  { shape: BadgeShape.hexagon, label: 'Hexagon' },
+  { shape: BadgeShape.roundedRect, label: 'Rounded Rect' },
+  { shape: BadgeShape.star, label: 'Star' },
+  { shape: BadgeShape.diamond, label: 'Diamond' },
+];
+
+export const MixedTextLayouts: Story = {
+  render: () => (
+    <ScrollView contentContainerStyle={styles.grid}>
+      <Text style={styles.heading}>Mixed Text Layouts</Text>
+      <View style={styles.row}>
+        {MIXED_LAYOUT_SHAPES.map(({ shape, label }) => (
+          <View key={shape} style={styles.cell}>
+            <BadgeRenderer
+              design={base({
+                shape,
+                centerMode: BadgeCenterMode.monogram,
+                monogram: 'JC',
+                centerLabel: 'EXPERT',
+                pathText: 'SPRING 2026',
+                pathTextPosition: PathTextPosition.both,
+                pathTextBottom: 'ACHIEVEMENT',
+                banner: { text: 'WINNER', position: BannerPosition.center },
+              })}
+              size={180}
+            />
+            <Text style={styles.label}>{label}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  ),
+};
+
+export const KitchenSinkAllShapes: Story = {
+  render: () => (
+    <ScrollView contentContainerStyle={styles.grid}>
+      <Text style={styles.heading}>Kitchen Sink Across All Shapes</Text>
+      <View style={styles.row}>
+        {KITCHEN_SINK_SHAPES.map(({ shape, label }) => (
+          <View key={shape} style={styles.cell}>
+            <BadgeRenderer
+              design={base({
+                shape,
+                centerMode: BadgeCenterMode.monogram,
+                monogram: 'JC',
+                centerLabel: 'EXPERT',
+                pathText: 'SPRING 2026',
+                pathTextPosition: PathTextPosition.both,
+                pathTextBottom: 'ACHIEVEMENT',
+                banner: { text: 'WINNER', position: BannerPosition.center },
+              })}
+              size={180}
+            />
+            <Text style={styles.label}>{label}</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  ),
+};
+
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------

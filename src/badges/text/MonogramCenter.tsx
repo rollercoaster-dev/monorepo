@@ -11,6 +11,10 @@ export interface MonogramCenterProps {
   fontFamily?: string;
   /** Font weight for the center monogram. */
   fontWeight?: string;
+  /** Scale factor from layout density system. Scales font size. Default 1. */
+  scale?: number;
+  /** Center Y position from layout density system. Default size/2. */
+  centerY?: number;
 }
 
 /** Font size as fraction of badge diameter — 1 character */
@@ -28,15 +32,17 @@ export function MonogramCenter({
   fillColor,
   fontFamily = fontFamilyTokens.headline,
   fontWeight = fontWeightTokens.bold,
+  scale = 1,
+  centerY,
 }: MonogramCenterProps) {
   if (!monogram || monogram.trim().length === 0) return null;
 
   const chars = monogram.trim().slice(0, 3);
   const ratio = RATIO_BY_LENGTH[Math.min(chars.length, 3) - 1];
-  const fontSize = size * ratio;
+  const fontSize = size * ratio * scale;
   const textColor = getSafeTextColor(fillColor, 'MonogramCenter');
   const cx = size / 2;
-  const cy = size / 2;
+  const cy = centerY ?? size / 2;
 
   return (
     <Text

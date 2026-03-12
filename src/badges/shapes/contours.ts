@@ -6,7 +6,7 @@
  * (for rosette/element placement).
  */
 
-import type { BadgeShape } from '../types';
+import type { BadgeShape } from "../types";
 import {
   circlePath,
   shieldPath,
@@ -14,7 +14,7 @@ import {
   roundedRectPath,
   starPath,
   diamondPath,
-} from './paths';
+} from "./paths";
 
 /** Geometry metadata for a badge shape, used by frame overlays and text-on-path. */
 export type ShapeContour = {
@@ -22,21 +22,26 @@ export type ShapeContour = {
   innerPath: string;
   textPathTop: string;
   textPathBottom: string;
-  vertices: Array<{ x: number; y: number }>;
+  vertices: { x: number; y: number }[];
 };
 
 /** Frame band width as a fraction of badge size. */
 export const FRAME_BAND_RATIO = 0.12;
 
+/** Default text arc center Y ratios — top arc raised, bottom arc lowered. */
+const TEXT_ARC_TOP_CY_RATIO = 0.8;
+const TEXT_ARC_BOTTOM_CY_RATIO = 1.1;
+
 // ── Helpers ────────────────────────────────────────────────────────────
 
 /**
- * Generate an open arc (no Z) from left to right across the top half.
- * SVG y-axis points down, so sweep-flag=0 (CCW on screen) traces upward
- * through (cx, cy-r) — the top semicircle.
+ * Generate an open arc (no Z) from right to left across the top half.
+ * On web, textPath follows the path direction and react-native-svg does not
+ * expose a reliable side flip, so the upper inscription needs its own
+ * explicit upper semicircle path.
  */
 function topArc(cx: number, cy: number, r: number): string {
-  return `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`;
+  return `M ${cx + r} ${cy} A ${r} ${r} 0 0 1 ${cx - r} ${cy}`;
 }
 
 /**
@@ -55,9 +60,9 @@ function circleContour(size: number, inset: number): ShapeContour {
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.85; // text sits slightly inside outer edge
+  const textR = outerR * 0.8; // text sits slightly inside outer edge
 
-  const vertices: ShapeContour['vertices'] = [];
+  const vertices: ShapeContour["vertices"] = [];
   const vertexR = outerR * 0.8;
   for (let i = 0; i < 8; i++) {
     const angle = (Math.PI / 4) * i; // 45° increments
@@ -70,8 +75,8 @@ function circleContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: circlePath(size, inset),
     innerPath: circlePath(size, innerInset),
-    textPathTop: topArc(cx, cy, textR),
-    textPathBottom: bottomArc(cx, cy, textR),
+    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
+    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
     vertices,
   };
 }
@@ -83,10 +88,10 @@ function hexagonContour(size: number, inset: number): ShapeContour {
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.85;
+  const textR = outerR * 0.8;
 
   // Flat-top hexagon vertices at outer radius (same angles as hexagonPath)
-  const vertices: ShapeContour['vertices'] = [];
+  const vertices: ShapeContour["vertices"] = [];
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 180) * (60 * i - 30);
     vertices.push({
@@ -98,8 +103,8 @@ function hexagonContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: hexagonPath(size, inset),
     innerPath: hexagonPath(size, innerInset),
-    textPathTop: topArc(cx, cy, textR),
-    textPathBottom: bottomArc(cx, cy, textR),
+    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
+    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
     vertices,
   };
 }
@@ -116,8 +121,8 @@ function diamondContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: diamondPath(size, inset),
     innerPath: diamondPath(size, innerInset),
-    textPathTop: topArc(cx, cy, textR),
-    textPathBottom: bottomArc(cx, cy, textR),
+    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
+    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
     vertices: [
       { x: cx, y: cy - outerR }, // top
       { x: cx + outerR, y: cy }, // right
@@ -134,10 +139,10 @@ function starContour(size: number, inset: number): ShapeContour {
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.85;
+  const textR = outerR * 1.0;
 
   // 5 outer tip points (even-indexed from starPath's 10-point pattern)
-  const vertices: ShapeContour['vertices'] = [];
+  const vertices: ShapeContour["vertices"] = [];
   for (let i = 0; i < 5; i++) {
     const angle = (Math.PI / 180) * (72 * i - 90); // -90° starts from top
     vertices.push({
@@ -149,8 +154,8 @@ function starContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: starPath(size, inset),
     innerPath: starPath(size, innerInset),
-    textPathTop: topArc(cx, cy, textR),
-    textPathBottom: bottomArc(cx, cy, textR),
+    textPathTop: topArc(cx, cy * 1.17, textR),
+    textPathBottom: bottomArc(cx, cy * 0.94, textR),
     vertices,
   };
 }
@@ -172,17 +177,16 @@ function shieldContour(size: number, inset: number): ShapeContour {
 
   // Text arcs: use half-width as radius, offset vertically for shield shape
   const textR = (r - l) / 2;
-  const textCenterY = cy * 0.85; // slightly above center for top-heavy shield
 
   return {
     outerPath: shieldPath(size, inset),
     innerPath: shieldPath(size, innerInset),
-    textPathTop: topArc(cx, textCenterY, textR),
-    textPathBottom: bottomArc(cx, cy * 1.15, textR * 0.8),
+    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
+    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR * 0.8),
     vertices: [
-      { x: l, y: shoulderY },  // left shoulder
-      { x: r, y: shoulderY },  // right shoulder
-      { x: cx, y: b },         // bottom point
+      { x: l, y: shoulderY }, // left shoulder
+      { x: r, y: shoulderY }, // right shoulder
+      { x: cx, y: b }, // bottom point
     ],
   };
 }
@@ -203,8 +207,8 @@ function roundedRectContour(size: number, inset: number): ShapeContour {
   return {
     outerPath: roundedRectPath(size, inset),
     innerPath: roundedRectPath(size, innerInset),
-    textPathTop: topArc(cx, cy, textR),
-    textPathBottom: bottomArc(cx, cy, textR),
+    textPathTop: topArc(cx, cy * TEXT_ARC_TOP_CY_RATIO, textR),
+    textPathBottom: bottomArc(cx, cy * TEXT_ARC_BOTTOM_CY_RATIO, textR),
     vertices: [
       { x: l + w * 0.25, y: t + h * 0.25 }, // top-left
       { x: l + w * 0.75, y: t + h * 0.25 }, // top-right

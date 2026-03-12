@@ -4,10 +4,11 @@ import {
   BANNER_HEIGHT_RATIO,
   BANNER_WIDTH_RATIO,
   BANNER_SHADOW_OFFSET,
-  BANNER_CENTER_Y_RATIO,
-  BANNER_BOTTOM_Y_RATIO,
+  BANNER_TOP_VISIBLE_RATIO,
+
   BANNER_FONT_SIZE_RATIO,
   BANNER_BORDER_WIDTH,
+  getBannerTopY,
 } from '../text/Banner';
 import type { BannerProps } from '../text/Banner';
 import type { BannerData } from '../types';
@@ -68,17 +69,35 @@ describe('Banner', () => {
   // ── Position geometry ──────────────────────────────────────────────
 
   it.each([
-    ['center', BANNER_CENTER_Y_RATIO],
-    ['bottom', BANNER_BOTTOM_Y_RATIO],
-  ] as const)('positions banner at correct y for "%s"', (position, yRatio) => {
+    ['center'],
+    ['bottom'],
+  ] as const)('positions banner at correct y for "%s"', (position) => {
     const banner: BannerData = { text: 'TEST', position };
     const el = Banner(makeProps({ banner }))!;
     const rects = findByType(el, 'Rect');
     // Second rect is the main banner (first is shadow)
     const mainRect = rects[1];
-    const expectedH = SIZE * BANNER_HEIGHT_RATIO;
-    const expectedY = SIZE * yRatio - expectedH / 2;
+    const expectedY = getBannerTopY(position, SIZE);
     expect(mainRect.props.y).toBeCloseTo(expectedY, 5);
+  });
+
+  it('keeps only 5% of the center banner inside the badge', () => {
+    const el = Banner(makeProps({ banner: { text: 'TEST', position: 'center' } }))!;
+    const rects = findByType(el, 'Rect');
+    const mainRect = rects[1];
+    const expectedH = SIZE * BANNER_HEIGHT_RATIO;
+    expect(mainRect.props.y).toBeCloseTo(-expectedH * (1 - BANNER_TOP_VISIBLE_RATIO), 5);
+  });
+
+  it('keeps only 5% of the bottom banner inside the badge (mirrors top)', () => {
+    const el = Banner(makeProps({ banner: { text: 'TEST', position: 'bottom' } }))!;
+    const rects = findByType(el, 'Rect');
+    const mainRect = rects[1];
+    const bannerH = SIZE * BANNER_HEIGHT_RATIO;
+    // Bottom banner: top edge at size - bannerH * visibleRatio
+    // So (size - bannerY) / bannerH ≈ visibleRatio (5%)
+    const visibleAboveBadge = SIZE - mainRect.props.y;
+    expect(visibleAboveBadge / bannerH).toBeCloseTo(BANNER_TOP_VISIBLE_RATIO, 2);
   });
 
   // ── Banner dimensions ──────────────────────────────────────────────

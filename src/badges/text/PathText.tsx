@@ -1,5 +1,5 @@
 import React from 'react';
-import { Defs, Path, Text, TextPath } from 'react-native-svg';
+import { Defs, G, Path, Text, TextPath } from 'react-native-svg';
 import type { BadgeShape, PathTextPosition } from '../types';
 import { generateContour } from '../shapes/contours';
 import { getSafeTextColor } from '../../utils/accessibility';
@@ -17,6 +17,8 @@ export interface PathTextProps {
   fontFamily?: string;
   /** Stable unique identifier for SVG path IDs. Prevents ID collisions across multiple badges. */
   instanceId?: string;
+  /** Scale factor applied to font size (from layout density system). Default 1. */
+  fontScale?: number;
 }
 
 /** Font size as fraction of badge diameter (~9%, midpoint of 8-10% spec) */
@@ -38,6 +40,7 @@ export function PathText({
   inset = 0,
   fontFamily = fontFamilyTokens.mono,
   instanceId,
+  fontScale = 1,
 }: PathTextProps): React.ReactElement | null {
   const position = pathTextPosition ?? 'top';
   const showTop = position === 'top' || position === 'both';
@@ -52,8 +55,11 @@ export function PathText({
   const id = instanceId ?? String(nextPathTextId++);
   const topId = `pathtext-top-${id}`;
   const bottomId = `pathtext-bottom-${id}`;
-  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO;
+  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * fontScale;
   const textColor = getSafeTextColor(fillColor, 'PathText');
+  const rotateTransform = `rotate(180 ${size / 2} ${size / 2})`;
+  const renderedTopText = topText;
+  const renderedBottomText = bottomText;
 
   return (
     <>
@@ -61,30 +67,32 @@ export function PathText({
         {topText && <Path id={topId} d={contour.textPathTop} fill="none" />}
         {bottomText && <Path id={bottomId} d={contour.textPathBottom} fill="none" />}
       </Defs>
-      {topText && (
-        <Text
-          fill={textColor}
-          fillOpacity={PATH_TEXT_OPACITY}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-        >
-          <TextPath href={`#${topId}`} startOffset="50%" textAnchor="middle">
-            {topText}
-          </TextPath>
-        </Text>
-      )}
-      {bottomText && (
-        <Text
-          fill={textColor}
-          fillOpacity={PATH_TEXT_OPACITY}
-          fontSize={fontSize}
-          fontFamily={fontFamily}
-        >
-          <TextPath href={`#${bottomId}`} startOffset="50%" textAnchor="middle">
-            {bottomText}
-          </TextPath>
-        </Text>
-      )}
+      <G transform={rotateTransform}>
+        {renderedTopText && (
+          <Text
+            fill={textColor}
+            fillOpacity={PATH_TEXT_OPACITY}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+          >
+            <TextPath href={`#${topId}`} startOffset="50%" textAnchor="middle">
+              {renderedTopText}
+            </TextPath>
+          </Text>
+        )}
+        {renderedBottomText && (
+          <Text
+            fill={textColor}
+            fillOpacity={PATH_TEXT_OPACITY}
+            fontSize={fontSize}
+            fontFamily={fontFamily}
+          >
+            <TextPath href={`#${bottomId}`} startOffset="50%" textAnchor="middle">
+              {renderedBottomText}
+            </TextPath>
+          </Text>
+        )}
+      </G>
     </>
   );
 }

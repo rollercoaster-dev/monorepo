@@ -8,7 +8,13 @@ export {
 
 export { CenterLabel } from './CenterLabel';
 export type { CenterLabelProps } from './CenterLabel';
-export { CENTER_LABEL_SIZE_RATIO, CENTER_LABEL_MAX_CHARS } from './CenterLabel';
+export {
+  CENTER_LABEL_SIZE_RATIO,
+  CENTER_LABEL_TOP_MARGIN_RATIO,
+  CENTER_LABEL_MAX_CHARS,
+  getCenterLabelY,
+  getCenterLabelBottomOverflow,
+} from './CenterLabel';
 
 export { PathText } from './PathText';
 export type { PathTextProps } from './PathText';
@@ -20,8 +26,8 @@ export {
   BANNER_HEIGHT_RATIO,
   BANNER_WIDTH_RATIO,
   BANNER_SHADOW_OFFSET,
-  BANNER_CENTER_Y_RATIO,
-  BANNER_BOTTOM_Y_RATIO,
+  BANNER_TOP_VISIBLE_RATIO,
   BANNER_FONT_SIZE_RATIO,
   BANNER_BORDER_WIDTH,
+  getBannerTopY,
 } from './Banner';

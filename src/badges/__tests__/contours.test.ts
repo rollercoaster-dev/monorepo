@@ -122,10 +122,10 @@ describe('generateContour', () => {
     expect(new Set(paths).size).toBe(ALL_SHAPES.length);
   });
 
-  it('textPathTop uses sweep-flag=0 (top semicircle in SVG coords)', () => {
-    // sweep-flag=0 means CCW on screen, tracing upward through cy-r
+  it('textPathTop uses sweep-flag=1 (CW arc tracing upward through cy-r)', () => {
+    // sweep-flag=1 means CW on screen (right-to-left = upward arc)
     const c = contours['circle'];
-    expect(c.textPathTop).toMatch(/A\s+[\d.]+\s+[\d.]+\s+0\s+0\s+0\s+/);
+    expect(c.textPathTop).toMatch(/A\s+[\d.]+\s+[\d.]+\s+0\s+0\s+1\s+/);
   });
 
   it('textPathBottom uses sweep-flag=0 (bottom semicircle in SVG coords)', () => {

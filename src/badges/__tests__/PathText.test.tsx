@@ -124,6 +124,31 @@ describe('PathText', () => {
     expect(textPaths[0].props.href).toBe(`#${String(defPath!.props.id)}`);
   });
 
+  it('keeps the top path distinct from the bottom path geometry', () => {
+    const el = PathText(makeProps({ pathTextPosition: 'both' }))!;
+    const paths = findByType(el, 'Path');
+    const topPath = paths.find((p) => String(p.props.id ?? '').startsWith('pathtext-top-'));
+    const bottomPath = paths.find((p) => String(p.props.id ?? '').startsWith('pathtext-bottom-'));
+
+    expect(topPath).toBeDefined();
+    expect(bottomPath).toBeDefined();
+    expect(topPath!.props.d).not.toBe(bottomPath!.props.d);
+    expect(topPath!.props.d).toMatch(/A [\d.]+ [\d.]+ 0 0 1 /);
+    expect(bottomPath!.props.d).toMatch(/A [\d.]+ [\d.]+ 0 0 0 /);
+  });
+
+  it('rotates the full path text layer 180 degrees as a single group', () => {
+    const el = PathText(makeProps({ pathTextPosition: 'both' }))!;
+    const groups = findByType(el, 'G');
+    const textPaths = findByType(el, 'TextPath');
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].props.transform).toBe('rotate(180 128 128)');
+    expect(textPaths).toHaveLength(2);
+    expect(textPaths[0].props.children).toBe('TOP TEXT');
+    expect(textPaths[1].props.children).toBe('BOTTOM TEXT');
+  });
+
   // ── Opacity ────────────────────────────────────────────────────────
 
   it('applies PATH_TEXT_OPACITY as fillOpacity', () => {
