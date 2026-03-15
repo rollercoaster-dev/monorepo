@@ -11,7 +11,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
-const { processOAuthCallback, initializeAuth } = useAuth()
+const { processOAuthCallback, completeOAuthExchange } = useAuth()
 
 // State
 const isProcessing = ref(true)
@@ -22,10 +22,7 @@ const error = ref<string | null>(null)
 const processCallback = async () => {
   try {
     const successParam = route.query.success as string
-    const tokenParam = route.query.token as string
-    const refreshTokenParam = route.query.refreshToken as string | undefined
-    const userParam = route.query.user as string
-    const redirectUriParam = route.query.redirect_uri as string
+    const exchangeCodeParam = route.query.code as string | undefined
     const errorParam = route.query.error as string
 
     // Check for OAuth errors
@@ -33,49 +30,17 @@ const processCallback = async () => {
       throw new Error(`OAuth error: ${errorParam}`)
     }
 
-    // Handle backend redirect with auth data
-    if (successParam === 'true' && tokenParam && userParam) {
-      try {
-        // Parse user data
-        const userData = JSON.parse(decodeURIComponent(userParam))
+    // Handle backend redirect with a one-time exchange code.
+    if (successParam === 'true' && exchangeCodeParam) {
+      const redirectTo = await completeOAuthExchange(exchangeCodeParam)
+      isSuccess.value = true
+      isProcessing.value = false
 
-        // Set authentication state manually (similar to useAuth)
-        const authUser = {
-          id: userData.id,
-          username: userData.username,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          avatar: userData.avatar,
-          isAdmin: userData.isAdmin,
-          createdAt: userData.createdAt || new Date().toISOString(),
-          credentials: userData.credentials || [],
-        }
+      setTimeout(() => {
+        router.push(redirectTo)
+      }, 2000)
 
-        // Store auth data in localStorage
-        localStorage.setItem('auth_token', tokenParam)
-        if (refreshTokenParam) {
-          localStorage.setItem('refresh_token', refreshTokenParam)
-        }
-        localStorage.setItem('user_data', JSON.stringify(authUser))
-
-        // Re-initialize shared auth state from localStorage
-        await initializeAuth()
-
-        isSuccess.value = true
-        isProcessing.value = false
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          const redirectTo = redirectUriParam || '/'
-          router.push(redirectTo)
-        }, 2000)
-
-        return
-      } catch (parseError) {
-        console.error('Failed to parse user data:', parseError)
-        throw new Error('Invalid authentication data')
-      }
+      return
     }
 
     // Fallback to original callback processing for API-based flow

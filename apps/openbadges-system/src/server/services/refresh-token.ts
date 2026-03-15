@@ -39,6 +39,7 @@ export async function issueTokenPair(platformUser: {
     Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
   ).toISOString()
 
+  await userService.cleanupExpiredRefreshTokens()
   await userService.storeRefreshToken(platformUser.id, tokenHash, expiresAt)
 
   return { accessToken, refreshToken }
@@ -56,23 +57,26 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
     return null
   }
 
-  // Revoked token was reused — potential token theft. Revoke all tokens for user.
+  if (new Date(stored.expiresAt) < new Date()) {
+    await userService.revokeRefreshToken(oldHash, 'expired')
+    return null
+  }
+
   if (stored.revokedAt) {
-    logger.warn('Revoked refresh token reused, revoking all tokens for user', {
+    logger.info('Refresh token reuse rejected after prior revocation', {
+      userId: stored.userId,
+      revokedReason: stored.revokedReason,
+    })
+    return null
+  }
+
+  const consumed = await userService.consumeRefreshToken(oldHash, 'rotated')
+  if (!consumed) {
+    logger.info('Refresh token rotation skipped because token was already consumed', {
       userId: stored.userId,
     })
-    await userService.revokeAllUserRefreshTokens(stored.userId)
     return null
   }
-
-  // Check expiry
-  if (new Date(stored.expiresAt) < new Date()) {
-    await userService.revokeRefreshToken(oldHash)
-    return null
-  }
-
-  // Revoke the old token (rotation: each token is single-use)
-  await userService.revokeRefreshToken(oldHash)
 
   // Look up user to build new access token
   const user = await userService.getUserById(stored.userId)
@@ -93,7 +97,8 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
 }
 
 export async function revokeRefreshToken(refreshToken: string): Promise<void> {
+  // Best-effort: logout should still succeed even if persistence is unavailable.
   if (!userService) return
   const tokenHash = hashToken(refreshToken)
-  await userService.revokeRefreshToken(tokenHash)
+  await userService.revokeRefreshToken(tokenHash, 'logout')
 }

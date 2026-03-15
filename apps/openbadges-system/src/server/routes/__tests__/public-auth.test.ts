@@ -569,6 +569,7 @@ describe('Public Auth Routes', () => {
       expect(data.success).toBe(true)
       expect(data.token).toBe('mock-jwt-token')
       expect(data.refreshToken).toBe('mock-refresh-token')
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=mock-refresh-token')
     })
   })
 
@@ -622,6 +623,23 @@ describe('Public Auth Routes', () => {
       expect(data.success).toBe(true)
       expect(data.token).toBe('new-access-token')
       expect(data.refreshToken).toBe('new-refresh-token')
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=new-refresh-token')
+    })
+
+    it('accepts the refresh token from an httpOnly cookie', async () => {
+      vi.mocked(rotateRefreshToken).mockResolvedValue({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      })
+
+      const app = createApp()
+      const res = await app.request('/auth/public/refresh', {
+        method: 'POST',
+        headers: { Cookie: 'obs_refresh_token=cookie-refresh-token' },
+      })
+
+      expect(res.status).toBe(200)
+      expect(rotateRefreshToken).toHaveBeenCalledWith('cookie-refresh-token')
     })
   })
 
@@ -630,11 +648,16 @@ describe('Public Auth Routes', () => {
   describe('POST /logout', () => {
     it('returns success even with no body', async () => {
       const app = createApp()
-      const res = await app.request('/auth/public/logout', { method: 'POST' })
+      const res = await app.request('/auth/public/logout', {
+        method: 'POST',
+        headers: { Cookie: 'obs_refresh_token=cookie-refresh-token' },
+      })
 
       expect(res.status).toBe(200)
       const data = await res.json()
       expect(data.success).toBe(true)
+      expect(revokeRefreshToken).toHaveBeenCalledWith('cookie-refresh-token')
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=')
     })
 
     it('revokes refresh token when provided', async () => {
@@ -658,6 +681,7 @@ describe('Public Auth Routes', () => {
       const data = await res.json()
       expect(data.success).toBe(true)
       expect(revokeRefreshToken).not.toHaveBeenCalled()
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=')
     })
   })
 })

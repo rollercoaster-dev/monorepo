@@ -77,6 +77,9 @@ vi.mock('../../services/user', () => ({
     getOAuthProvider: vi.fn(),
     updateOAuthProvider: vi.fn(),
     removeOAuthProvider: vi.fn(),
+    createOAuthLoginExchange: vi.fn(),
+    consumeOAuthLoginExchange: vi.fn(),
+    cleanupExpiredOAuthLoginExchanges: vi.fn(),
   },
 }))
 
@@ -304,7 +307,13 @@ describe('OAuth Routes', () => {
       expect(data.user).toBeDefined()
       expect(data.token).toBe('mock-platform-token')
       expect(data.refreshToken).toBe('mock-refresh-token')
-      expect(issueTokenPair).toHaveBeenCalled()
+      expect(issueTokenPair).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'user-123',
+          username: 'testuser',
+          email: 'test@example.com',
+        })
+      )
       expect(oauthService.removeOAuthSession).toHaveBeenCalledWith('test-state')
     })
 
@@ -494,7 +503,54 @@ describe('OAuth Routes', () => {
 
       expect(res.status).toBe(302)
       expect(res.headers.get('Location')).toContain('/auth/oauth/callback')
-      expect(res.headers.get('Location')).toContain('refreshToken=mock-refresh-token')
+      expect(res.headers.get('Location')).toContain('success=true')
+      expect(res.headers.get('Location')).toContain('code=')
+      expect(res.headers.get('Location')).not.toContain('token=')
+      expect(res.headers.get('Location')).not.toContain('refreshToken=')
+      expect(userService!.createOAuthLoginExchange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accessToken: 'mock-platform-token',
+          refreshToken: 'mock-refresh-token',
+          redirectUri: '/dashboard',
+        })
+      )
+    })
+
+    it('should exchange a one-time login code for auth data', async () => {
+      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue({
+        id: 'exchange-1',
+        code: 'exchange-code',
+        accessToken: 'mock-platform-token',
+        refreshToken: 'mock-refresh-token',
+        userData: JSON.stringify({
+          id: 'user-123',
+          username: 'testuser',
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          isAdmin: false,
+          roles: ['USER'],
+        }),
+        redirectUri: '/dashboard',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        consumedAt: new Date().toISOString(),
+      } as any)
+
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'exchange-code' }),
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.token).toBe('mock-platform-token')
+      expect(data.redirectUri).toBe('/dashboard')
+      expect(data.user.username).toBe('testuser')
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=mock-refresh-token')
     })
 
     it('should return 500 on token exchange error', async () => {

@@ -45,13 +45,18 @@ try {
 }
 const user = ref<User | null>(restoredUser)
 const token = ref<string | null>(localStorage.getItem('auth_token'))
-const refreshTokenValue = ref<string | null>(localStorage.getItem('refresh_token'))
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
 const isPlatformAuthAvailable = ref(false)
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
-const TOKEN_REFRESH_RETRY_MS = 60 * 1000
+let refreshRetryAttempt = 0
+let refreshInFlight: Promise<RefreshAttemptResult> | null = null
+let initializeAuthPromise: Promise<void> | null = null
+let hasInitializedAuth = false
+const TOKEN_REFRESH_RETRY_BASE_MS = 5 * 1000
+const TOKEN_REFRESH_RETRY_MAX_MS = 60 * 1000
+const TOKEN_REFRESH_MAX_RETRIES = 5
 
 // Token validation helpers — module-level so they can be used by the navigation guard
 const LOCAL_SESSION_PREFIX = 'local-session-'
@@ -81,7 +86,10 @@ const isTokenValid = (tokenValue: string | null): boolean => {
   }
 }
 
-type RefreshAttemptResult = 'success' | 'invalid' | 'retryable'
+type RefreshAttemptResult =
+  | { status: 'success' }
+  | { status: 'invalid' }
+  | { status: 'retryable'; retryAfterMs?: number }
 
 function syncUserFromStorage(storedUser: string | null) {
   if (!storedUser) {
@@ -97,10 +105,49 @@ function syncUserFromStorage(storedUser: string | null) {
   }
 }
 
-function getCurrentRefreshToken(): string | null {
-  const storedRefreshToken = localStorage.getItem('refresh_token')
-  refreshTokenValue.value = storedRefreshToken
-  return storedRefreshToken
+function clearLegacyRefreshToken() {
+  localStorage.removeItem('refresh_token')
+}
+
+function resetRefreshRetryState() {
+  refreshRetryAttempt = 0
+}
+
+function normalizeRetryAfterMs(retryAfterHeader: string | null): number | undefined {
+  if (!retryAfterHeader) return undefined
+
+  const retryAfterSeconds = Number.parseInt(retryAfterHeader, 10)
+  if (!Number.isNaN(retryAfterSeconds)) {
+    return Math.max(retryAfterSeconds * 1000, TOKEN_REFRESH_RETRY_BASE_MS)
+  }
+
+  const retryDateMs = Date.parse(retryAfterHeader)
+  if (Number.isNaN(retryDateMs)) return undefined
+
+  return Math.max(retryDateMs - Date.now(), TOKEN_REFRESH_RETRY_BASE_MS)
+}
+
+function persistAccessToken(accessToken: string) {
+  token.value = accessToken
+  localStorage.setItem('auth_token', accessToken)
+  clearLegacyRefreshToken()
+  resetRefreshRetryState()
+  scheduleTokenRefresh(accessToken)
+}
+
+function persistUser(userData: User | null) {
+  user.value = userData
+  if (userData) {
+    localStorage.setItem('user_data', JSON.stringify(userData))
+    return
+  }
+
+  localStorage.removeItem('user_data')
+}
+
+function applyAuthenticatedState(userData: User, accessToken: string) {
+  persistUser(userData)
+  persistAccessToken(accessToken)
 }
 
 function clearStoredAuthState() {
@@ -108,60 +155,80 @@ function clearStoredAuthState() {
     clearTimeout(refreshTimer)
     refreshTimer = null
   }
+  resetRefreshRetryState()
   token.value = null
-  refreshTokenValue.value = null
   user.value = null
   localStorage.removeItem('auth_token')
-  localStorage.removeItem('refresh_token')
+  clearLegacyRefreshToken()
   localStorage.removeItem('user_data')
 }
 
-function scheduleRefreshRetry() {
+function scheduleRefreshRetry(retryAfterMs?: number) {
+  if (refreshRetryAttempt >= TOKEN_REFRESH_MAX_RETRIES) {
+    clearStoredAuthState()
+    return
+  }
+
+  const delayMs =
+    retryAfterMs ??
+    Math.min(TOKEN_REFRESH_RETRY_BASE_MS * 2 ** refreshRetryAttempt, TOKEN_REFRESH_RETRY_MAX_MS)
+  refreshRetryAttempt += 1
+
   if (refreshTimer) clearTimeout(refreshTimer)
   refreshTimer = setTimeout(async () => {
     const result = await performTokenRefresh()
-    if (result === 'success') return
-    if (result === 'retryable') {
-      scheduleRefreshRetry()
+    if (result.status === 'success') return
+    if (result.status === 'retryable') {
+      scheduleRefreshRetry(result.retryAfterMs)
       return
     }
     clearStoredAuthState()
-  }, TOKEN_REFRESH_RETRY_MS)
+  }, delayMs)
 }
 
 // Refresh the access token using the stored refresh token.
 // Returns whether refresh succeeded, should be retried, or is no longer valid.
 async function performTokenRefresh(): Promise<RefreshAttemptResult> {
-  const currentRefreshToken = getCurrentRefreshToken()
-  if (!currentRefreshToken) return 'invalid'
+  if (refreshInFlight) return refreshInFlight
+
+  refreshInFlight = (async (): Promise<RefreshAttemptResult> => {
+    try {
+      const response = await fetch('/api/auth/public/refresh', {
+        method: 'POST',
+        credentials: 'same-origin',
+      })
+
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 401) {
+          return { status: 'invalid' }
+        }
+
+        return {
+          status: 'retryable',
+          retryAfterMs:
+            response.status === 429
+              ? normalizeRetryAfterMs(response.headers.get('Retry-After'))
+              : undefined,
+        }
+      }
+
+      const data = await response.json()
+      if (data.success && data.token) {
+        persistAccessToken(data.token)
+        return { status: 'success' }
+      }
+
+      return { status: 'retryable' }
+    } catch {
+      // Network error — retry later without clearing auth state.
+      return { status: 'retryable' }
+    }
+  })()
 
   try {
-    const response = await fetch('/api/auth/public/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: currentRefreshToken }),
-    })
-
-    if (!response.ok) {
-      if (response.status === 400 || response.status === 401) {
-        return 'invalid'
-      }
-      return 'retryable'
-    }
-
-    const data = await response.json()
-    if (data.success && data.token && data.refreshToken) {
-      token.value = data.token
-      refreshTokenValue.value = data.refreshToken
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('refresh_token', data.refreshToken)
-      scheduleTokenRefresh(data.token)
-      return 'success'
-    }
-    return 'retryable'
-  } catch {
-    // Network error — retry later without clearing auth state.
-    return 'retryable'
+    return await refreshInFlight
+  } finally {
+    refreshInFlight = null
   }
 }
 
@@ -177,9 +244,9 @@ function scheduleTokenRefresh(accessToken: string) {
     const refreshInMs = Math.max(expiresInMs - 5 * 60 * 1000, 0)
     refreshTimer = setTimeout(async () => {
       const result = await performTokenRefresh()
-      if (result === 'success') return
-      if (result === 'retryable') {
-        scheduleRefreshRetry()
+      if (result.status === 'success') return
+      if (result.status === 'retryable') {
+        scheduleRefreshRetry(result.retryAfterMs)
         return
       }
       clearStoredAuthState()
@@ -198,7 +265,7 @@ function clearRefreshTimer() {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', event => {
-    if (!event.key || !['auth_token', 'refresh_token', 'user_data'].includes(event.key)) return
+    if (!event.key || !['auth_token', 'user_data'].includes(event.key)) return
 
     if (event.key === 'auth_token') {
       token.value = event.newValue
@@ -207,10 +274,6 @@ if (typeof window !== 'undefined') {
       } else {
         clearRefreshTimer()
       }
-    }
-
-    if (event.key === 'refresh_token') {
-      refreshTokenValue.value = event.newValue
     }
 
     if (event.key === 'user_data') {
@@ -514,16 +577,7 @@ export const useAuth = () => {
         error.value = 'Registration succeeded but login failed. Please log in manually.'
         return false
       }
-      token.value = platformRes.token
-      if (platformRes.refreshToken) {
-        refreshTokenValue.value = platformRes.refreshToken
-        localStorage.setItem('refresh_token', platformRes.refreshToken)
-      }
-
-      user.value = newUser
-      localStorage.setItem('auth_token', token.value!)
-      localStorage.setItem('user_data', JSON.stringify(newUser))
-      scheduleTokenRefresh(token.value!)
+      applyAuthenticatedState(newUser, platformRes.token)
 
       return true
     } catch (err) {
@@ -589,16 +643,7 @@ export const useAuth = () => {
         error.value = 'Server authentication failed. Please try again.'
         return false
       }
-      token.value = platformRes.token
-      if (platformRes.refreshToken) {
-        refreshTokenValue.value = platformRes.refreshToken
-        localStorage.setItem('refresh_token', platformRes.refreshToken)
-      }
-
-      user.value = foundUser
-      localStorage.setItem('auth_token', token.value!)
-      localStorage.setItem('user_data', JSON.stringify(foundUser))
-      scheduleTokenRefresh(token.value!)
+      applyAuthenticatedState(foundUser, platformRes.token)
 
       return true
     } catch (err) {
@@ -696,19 +741,13 @@ export const useAuth = () => {
         error.value = 'Passkey added but login failed. Please log in manually.'
         return false
       }
-      token.value = platformRes.token
-      if (platformRes.refreshToken) {
-        refreshTokenValue.value = platformRes.refreshToken
-        localStorage.setItem('refresh_token', platformRes.refreshToken)
-      }
-
-      user.value = {
-        ...existingUser,
-        credentials: [...(existingUser.credentials || []), newCredential],
-      }
-      localStorage.setItem('auth_token', token.value!)
-      localStorage.setItem('user_data', JSON.stringify(user.value))
-      scheduleTokenRefresh(token.value!)
+      applyAuthenticatedState(
+        {
+          ...existingUser,
+          credentials: [...(existingUser.credentials || []), newCredential],
+        },
+        platformRes.token
+      )
 
       return true
     } catch (err) {
@@ -737,87 +776,101 @@ export const useAuth = () => {
   // Logout function
   const logout = () => {
     clearRefreshTimer()
-    // Best-effort server-side revocation
-    const currentRefreshToken = getCurrentRefreshToken()
-    if (currentRefreshToken) {
-      fetch('/api/auth/public/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: currentRefreshToken }),
-      }).catch(() => {
-        // Ignore network errors during logout
-      })
-    }
+    fetch('/api/auth/public/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+    }).catch(() => {
+      // Ignore network errors during logout
+    })
     clearStoredAuthState()
     router.push('/auth/login')
   }
 
   // Initialize auth state from localStorage
-  const initializeAuth = async () => {
-    const storedToken = localStorage.getItem('auth_token')
-    const storedUser = localStorage.getItem('user_data')
-
-    if (storedToken && storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser)
-
-        // First check if token is locally valid (handles both JWT expiration and local session age)
-        if (!isTokenValid(storedToken)) {
-          // Access token expired — attempt refresh before clearing state
-          const refreshResult = await performTokenRefresh()
-          if (refreshResult === 'success') {
-            user.value = parsedUser
-            await checkPlatformAuth()
-            return
-          }
-          if (refreshResult === 'retryable') {
-            token.value = storedToken
-            refreshTokenValue.value = localStorage.getItem('refresh_token')
-            user.value = parsedUser
-            scheduleRefreshRetry()
-            await checkPlatformAuth()
-            return
-          }
-          console.warn('Stored session expired and refresh failed, clearing local state')
-          clearStoredAuthState()
-          await checkPlatformAuth()
-          return
-        }
-
-        token.value = storedToken
-        user.value = parsedUser
-
-        // Skip server validation for local sessions (offline-first)
-        if (isLocalSession(storedToken)) {
-          console.info('Using local session (offline mode)')
-          await checkPlatformAuth()
-          return
-        }
-
-        // Schedule proactive refresh for valid JWT tokens
-        scheduleTokenRefresh(storedToken)
-
-        // Best-effort validation for JWT tokens; only clear on explicit unauthorized
-        try {
-          const res = await fetch('/api/auth/validate', {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          })
-          if (res.status === 401 || res.status === 403) {
-            throw new Error('Unauthorized')
-          }
-        } catch (err) {
-          // Keep local session on network/other errors for offline-first support
-          // Log warning so developers are aware of potential stale sessions
-          console.warn('Session validation failed (network error), keeping local session:', err)
-        }
-      } catch {
-        // Clear invalid JSON storage
-        clearStoredAuthState()
-      }
+  const initializeAuth = async (force: boolean = false) => {
+    if (!force && hasInitializedAuth) {
+      await checkPlatformAuth()
+      return
     }
 
-    // Check WebAuthn support
-    await checkPlatformAuth()
+    if (initializeAuthPromise) {
+      return initializeAuthPromise
+    }
+
+    initializeAuthPromise = (async () => {
+      try {
+        const storedToken = localStorage.getItem('auth_token')
+        const storedUser = localStorage.getItem('user_data')
+        clearLegacyRefreshToken()
+
+        if (storedToken && storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser) as User
+
+            // First check if token is locally valid (handles both JWT expiration and local session age)
+            if (!isTokenValid(storedToken)) {
+              // Access token expired — attempt refresh before clearing state
+              const refreshResult = await performTokenRefresh()
+              if (refreshResult.status === 'success') {
+                persistUser(parsedUser)
+                await checkPlatformAuth()
+                return
+              }
+              if (refreshResult.status === 'retryable') {
+                token.value = storedToken
+                persistUser(parsedUser)
+                scheduleRefreshRetry(refreshResult.retryAfterMs)
+                await checkPlatformAuth()
+                return
+              }
+              console.warn('Stored session expired and refresh failed, clearing local state')
+              clearStoredAuthState()
+              await checkPlatformAuth()
+              return
+            }
+
+            token.value = storedToken
+            persistUser(parsedUser)
+
+            // Skip server validation for local sessions (offline-first)
+            if (isLocalSession(storedToken)) {
+              console.info('Using local session (offline mode)')
+              await checkPlatformAuth()
+              return
+            }
+
+            // Schedule proactive refresh for valid JWT tokens
+            scheduleTokenRefresh(storedToken)
+
+            // Best-effort validation for JWT tokens; only clear on explicit unauthorized
+            try {
+              const res = await fetch('/api/auth/validate', {
+                headers: { Authorization: `Bearer ${storedToken}` },
+              })
+              if (res.status === 401 || res.status === 403) {
+                throw new Error('Unauthorized')
+              }
+            } catch (err) {
+              // Keep local session on network/other errors for offline-first support
+              // Log warning so developers are aware of potential stale sessions
+              console.warn('Session validation failed (network error), keeping local session:', err)
+            }
+          } catch {
+            // Clear invalid JSON storage
+            clearStoredAuthState()
+          }
+        }
+
+        // Check WebAuthn support
+        await checkPlatformAuth()
+        hasInitializedAuth = true
+      } finally {
+        hasInitializedAuth = true
+        initializeAuthPromise = null
+      }
+    })()
+
+    return initializeAuthPromise
   }
 
   // Clear error
@@ -1099,7 +1152,6 @@ export const useAuth = () => {
       const result = await response.json()
 
       if (result.success && result.user && result.token) {
-        // Set authentication state
         const userData = {
           id: result.user.id,
           username: result.user.username,
@@ -1112,15 +1164,7 @@ export const useAuth = () => {
           credentials: result.user.credentials || [],
         }
 
-        user.value = userData
-        token.value = result.token
-        localStorage.setItem('auth_token', result.token)
-        localStorage.setItem('user_data', JSON.stringify(userData))
-        if (result.refreshToken) {
-          refreshTokenValue.value = result.refreshToken
-          localStorage.setItem('refresh_token', result.refreshToken)
-        }
-        scheduleTokenRefresh(result.token)
+        applyAuthenticatedState(userData, result.token)
 
         return true
       } else {
@@ -1130,6 +1174,51 @@ export const useAuth = () => {
       console.error('OAuth callback processing failed:', err)
       error.value = err instanceof Error ? err.message : 'OAuth callback processing failed'
       return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const completeOAuthExchange = async (exchangeCode: string): Promise<string> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch('/api/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ code: exchangeCode }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'OAuth exchange failed')
+      }
+
+      const result = await response.json()
+      if (!result.success || !result.user || !result.token) {
+        throw new Error(result.error || 'OAuth exchange failed')
+      }
+
+      const userData = {
+        id: result.user.id,
+        username: result.user.username,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        avatar: result.user.avatar,
+        isAdmin: result.user.isAdmin,
+        createdAt: result.user.createdAt || new Date().toISOString(),
+        credentials: result.user.credentials || [],
+      }
+
+      applyAuthenticatedState(userData, result.token)
+      return result.redirectUri || '/'
+    } catch (err) {
+      console.error('OAuth exchange failed:', err)
+      error.value = err instanceof Error ? err.message : 'OAuth exchange failed'
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -1160,6 +1249,7 @@ export const useAuth = () => {
     setupPasskeyForUser,
     authenticateWithOAuth,
     processOAuthCallback,
+    completeOAuthExchange,
     logout,
     initializeAuth,
     clearError,

@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { z } from 'zod'
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/server'
@@ -7,6 +7,11 @@ import { jwtService } from '../services/jwt'
 import { issueTokenPair, rotateRefreshToken, revokeRefreshToken } from '../services/refresh-token'
 import { generateChallenge, consumeChallenge } from '../services/challenge'
 import { logger } from '../utils/logger'
+import {
+  clearRefreshTokenCookie,
+  getRefreshTokenCookie,
+  setRefreshTokenCookie,
+} from '../utils/auth-cookies'
 
 // Simple rate limiting for user enumeration protection
 const rateLimiter = new Map<string, { count: number; resetTime: number }>()
@@ -29,6 +34,15 @@ function checkRateLimit(ip: string): boolean {
 
   record.count++
   return true
+}
+
+function getClientIP(c: Context): string {
+  const forwardedFor = c.req.header('x-forwarded-for')
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() || 'unknown'
+  }
+
+  return c.req.header('x-real-ip') || 'unknown'
 }
 
 // RP configuration — derive from environment, request origin, or sensible defaults.
@@ -78,7 +92,7 @@ const userCreateSchema = z.object({
 // Public endpoint to check if user exists (for WebAuthn registration)
 publicAuthRoutes.get('/users/lookup', async c => {
   // Rate limiting to prevent user enumeration attacks
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -139,7 +153,7 @@ publicAuthRoutes.get('/users/lookup', async c => {
 // Public endpoint to create new user (for WebAuthn registration)
 publicAuthRoutes.post('/users/register', async c => {
   // Rate limiting to prevent registration abuse
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -198,7 +212,7 @@ publicAuthRoutes.post('/users/register', async c => {
 
 // Generate a challenge for WebAuthn authentication
 publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -226,7 +240,7 @@ publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
 
 // Generate a challenge for WebAuthn registration
 publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -481,6 +495,7 @@ publicAuthRoutes.post('/users/:id/token', async c => {
     }
 
     const { accessToken, refreshToken } = await issueTokenPair(platformUser)
+    setRefreshTokenCookie(c, refreshToken)
 
     return c.json({
       success: true,
@@ -497,21 +512,21 @@ publicAuthRoutes.post('/users/:id/token', async c => {
 // --- Refresh token endpoint ---
 
 const refreshRequestSchema = z.object({
-  refreshToken: z.string().min(1),
+  refreshToken: z.string().min(1).optional(),
 })
 
 publicAuthRoutes.post('/refresh', async c => {
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
 
   try {
-    let body: unknown
+    let body: unknown = {}
     try {
       body = await c.req.json()
     } catch {
-      return c.json({ error: 'Invalid JSON body' }, 400)
+      // Allow cookie-backed refresh requests to omit a JSON body entirely.
     }
 
     const parsed = refreshRequestSchema.safeParse(body)
@@ -519,11 +534,17 @@ publicAuthRoutes.post('/refresh', async c => {
       return c.json({ error: 'Refresh token required' }, 400)
     }
 
-    const result = await rotateRefreshToken(parsed.data.refreshToken)
+    const refreshToken = parsed.data.refreshToken || getRefreshTokenCookie(c)
+    if (!refreshToken) {
+      return c.json({ error: 'Refresh token required' }, 400)
+    }
+
+    const result = await rotateRefreshToken(refreshToken)
     if (!result) {
       return c.json({ error: 'Invalid or expired refresh token' }, 401)
     }
 
+    setRefreshTokenCookie(c, result.refreshToken)
     return c.json({
       success: true,
       token: result.accessToken,
@@ -539,21 +560,26 @@ publicAuthRoutes.post('/refresh', async c => {
 
 publicAuthRoutes.post('/logout', async c => {
   try {
-    let body: unknown
+    let body: unknown = {}
     try {
       body = await c.req.json()
     } catch {
-      return c.json({ success: true })
+      // Allow body-less logout requests to revoke via refresh token cookie.
     }
 
-    const parsed = z.object({ refreshToken: z.string().optional() }).safeParse(body)
-    if (parsed.success && parsed.data.refreshToken) {
-      await revokeRefreshToken(parsed.data.refreshToken)
+    const parsed = z.object({ refreshToken: z.string().min(1).optional() }).safeParse(body)
+    const refreshToken = parsed.success
+      ? parsed.data.refreshToken || getRefreshTokenCookie(c)
+      : undefined
+    if (refreshToken) {
+      await revokeRefreshToken(refreshToken)
     }
 
+    clearRefreshTokenCookie(c)
     return c.json({ success: true })
   } catch (err) {
     logger.error('Error during logout', { error: err })
+    clearRefreshTokenCookie(c)
     return c.json({ success: true })
   }
 })
