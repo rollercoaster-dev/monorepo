@@ -5,6 +5,7 @@ import { logger } from '../utils/logger'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const REFRESH_TOKEN_BYTES = 32
+const ROTATED_TOKEN_REUSE_GRACE_MS = 5 * 1000
 
 function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex')
@@ -63,9 +64,20 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
   }
 
   if (stored.revokedAt) {
+    const revokedAtMs = Date.parse(stored.revokedAt)
+    const withinRotationGraceWindow =
+      stored.revokedReason === 'rotated' &&
+      !Number.isNaN(revokedAtMs) &&
+      Date.now() - revokedAtMs <= ROTATED_TOKEN_REUSE_GRACE_MS
+
+    if (!withinRotationGraceWindow) {
+      await userService.revokeAllUserRefreshTokens(stored.userId, 'compromised')
+    }
+
     logger.info('Refresh token reuse rejected after prior revocation', {
       userId: stored.userId,
       revokedReason: stored.revokedReason,
+      revokedAllTokens: !withinRotationGraceWindow,
     })
     return null
   }

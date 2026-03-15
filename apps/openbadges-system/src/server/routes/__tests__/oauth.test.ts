@@ -553,6 +553,38 @@ describe('OAuth Routes', () => {
       expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=mock-refresh-token')
     })
 
+    it('should reject oauth exchange requests without a code', async () => {
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain('OAuth exchange code required')
+      expect(res.headers.get('set-cookie')).toBeNull()
+    })
+
+    it('should reject expired or consumed oauth exchange codes', async () => {
+      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue(null)
+
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'expired-code' }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain('Invalid or expired OAuth exchange code')
+      expect(res.headers.get('set-cookie')).toBeNull()
+    })
+
     it('should return 500 on token exchange error', async () => {
       const mockSession = {
         id: '1',

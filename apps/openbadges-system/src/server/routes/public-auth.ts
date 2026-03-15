@@ -37,12 +37,19 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function getClientIP(c: Context): string {
-  const forwardedFor = c.req.header('x-forwarded-for')
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0]?.trim() || 'unknown'
+  if (process.env.TRUST_PROXY === 'true') {
+    const forwardedFor = c.req.header('x-forwarded-for')
+    if (forwardedFor) {
+      return forwardedFor.split(',')[0]?.trim() || 'unknown'
+    }
+
+    const realIp = c.req.header('x-real-ip')
+    if (realIp) {
+      return realIp
+    }
   }
 
-  return c.req.header('x-real-ip') || 'unknown'
+  return 'unknown'
 }
 
 // RP configuration — derive from environment, request origin, or sensible defaults.
@@ -568,9 +575,8 @@ publicAuthRoutes.post('/logout', async c => {
     }
 
     const parsed = z.object({ refreshToken: z.string().min(1).optional() }).safeParse(body)
-    const refreshToken = parsed.success
-      ? parsed.data.refreshToken || getRefreshTokenCookie(c)
-      : undefined
+    const bodyRefreshToken = parsed.success ? parsed.data.refreshToken : undefined
+    const refreshToken = bodyRefreshToken || getRefreshTokenCookie(c)
     if (refreshToken) {
       await revokeRefreshToken(refreshToken)
     }

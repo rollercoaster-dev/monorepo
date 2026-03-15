@@ -89,7 +89,7 @@ describe('Refresh Token Service', () => {
       expect(result).toBeNull()
     })
 
-    it('returns null when a revoked token is reused', async () => {
+    it('returns null without global revocation during the rotation grace window', async () => {
       mockUserService.getRefreshTokenByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
@@ -104,6 +104,27 @@ describe('Refresh Token Service', () => {
 
       expect(result).toBeNull()
       expect(mockUserService.consumeRefreshToken).not.toHaveBeenCalled()
+      expect(mockUserService.revokeAllUserRefreshTokens).not.toHaveBeenCalled()
+    })
+
+    it('revokes all active refresh tokens when revoked token reuse looks suspicious', async () => {
+      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+        id: 'rt-1',
+        userId: 'user-1',
+        tokenHash: 'some-hash',
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        revokedAt: new Date(Date.now() - 10_000).toISOString(),
+        revokedReason: 'logout',
+        createdAt: new Date().toISOString(),
+      })
+
+      const result = await rotateRefreshToken('stolen-token')
+
+      expect(result).toBeNull()
+      expect(mockUserService.revokeAllUserRefreshTokens).toHaveBeenCalledWith(
+        'user-1',
+        'compromised'
+      )
     })
 
     it('returns null for expired token and revokes it', async () => {

@@ -23,6 +23,7 @@ const processCallback = async () => {
   try {
     const successParam = route.query.success as string
     const exchangeCodeParam = route.query.code as string | undefined
+    const exchangeStateParam = route.query.state as string | undefined
     const errorParam = route.query.error as string
 
     // Check for OAuth errors
@@ -44,8 +45,8 @@ const processCallback = async () => {
     }
 
     // Fallback to original callback processing for API-based flow
-    const code = route.query.code as string
-    const state = route.query.state as string
+    const code = exchangeCodeParam
+    const state = exchangeStateParam
 
     // Validate required parameters
     if (!code || !state) {

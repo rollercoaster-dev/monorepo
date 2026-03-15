@@ -307,8 +307,11 @@ export class UserService {
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_user_id ON oauth_providers(user_id);
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_provider ON oauth_providers(provider);
         CREATE INDEX IF NOT EXISTS idx_oauth_sessions_state ON oauth_sessions(state);
+        CREATE INDEX IF NOT EXISTS idx_oauth_sessions_expires_at ON oauth_sessions(expires_at);
         CREATE INDEX IF NOT EXISTS idx_oauth_login_exchanges_code ON oauth_login_exchanges(code);
+        CREATE INDEX IF NOT EXISTS idx_oauth_login_exchanges_expiresAt ON oauth_login_exchanges(expiresAt);
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expiresAt ON refresh_tokens(expiresAt);
       `)
 
       console.log('Database initialized successfully')
