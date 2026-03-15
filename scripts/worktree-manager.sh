@@ -16,7 +16,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-GIT_COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
+GIT_COMMON_DIR_RAW="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo ".git")"
+if [[ "$GIT_COMMON_DIR_RAW" = /* ]]; then
+  GIT_COMMON_DIR="$GIT_COMMON_DIR_RAW"
+else
+  GIT_COMMON_DIR="$REPO_ROOT/$GIT_COMMON_DIR_RAW"
+fi
 REPO_NAME="$(basename "$(dirname "$GIT_COMMON_DIR")")"
 WORKTREE_BASE="$HOME/Code/worktrees"
 WORKTREE_TMPDIR_NAME=".tmp"
@@ -122,31 +127,31 @@ ensure_base_dir() {
 
 # get_worktree_path returns the filesystem path for the worktree directory for the given issue number.
 get_worktree_path() {
-  local issue_number=$1
+  local issue_number=${1:-}
   echo "$WORKTREE_BASE/$REPO_NAME-issue-$issue_number"
 }
 
 # get_pr_worktree_path returns the filesystem path for the worktree directory for the given PR number.
 get_pr_worktree_path() {
-  local pr_number=$1
+  local pr_number=${1:-}
   echo "$WORKTREE_BASE/$REPO_NAME-pr-$pr_number"
 }
 
 # sanitize_branch_component normalizes arbitrary text into a branch-safe slug.
 sanitize_branch_component() {
-  local value=$1
+  local value=${1:-}
   echo "$value" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//'
 }
 
 # get_worktree_tmpdir returns the worktree-local temp directory path.
 get_worktree_tmpdir() {
-  local worktree_path=$1
+  local worktree_path=${1:-}
   echo "$worktree_path/$WORKTREE_TMPDIR_NAME"
 }
 
 # run_in_worktree executes a command inside a worktree with a writable local temp dir.
 run_in_worktree() {
-  local worktree_path=$1
+  local worktree_path=${1:-}
   shift
 
   local tmpdir
@@ -161,7 +166,7 @@ run_in_worktree() {
 
 # bootstrap_worktree installs dependencies and prepares a local temp dir for commands.
 bootstrap_worktree() {
-  local worktree_path=$1
+  local worktree_path=${1:-}
   local tmpdir
   tmpdir=$(get_worktree_tmpdir "$worktree_path")
 
@@ -172,6 +177,21 @@ bootstrap_worktree() {
   run_in_worktree "$worktree_path" bun install --silent
 }
 
+# list_managed_worktrees prints issue/pr worktree paths owned by this repository.
+list_managed_worktrees() {
+  git -C "$REPO_ROOT" worktree list --porcelain | while IFS= read -r line; do
+    [[ "$line" == worktree\ * ]] || continue
+
+    local worktree_path base_name
+    worktree_path=${line#worktree }
+    base_name=$(basename "$worktree_path")
+
+    if [[ "$base_name" == "$REPO_NAME-issue-"* || "$base_name" == "$REPO_NAME-pr-"* ]]; then
+      printf '%s\n' "$worktree_path"
+    fi
+  done
+}
+
 #------------------------------------------------------------------------------
 # Commands
 # cmd_create creates a new git worktree for the specified issue (optionally using the provided branch name), installs dependencies in the worktree, and records the worktree and branch in the persistent state.
@@ -179,7 +199,7 @@ bootstrap_worktree() {
 cmd_create() {
   check_prerequisites
 
-  local issue_number=$1
+  local issue_number=${1:-}
   local branch_name=${2:-""}
 
   if [[ -z "$issue_number" ]]; then
@@ -230,7 +250,7 @@ cmd_create() {
 cmd_create_pr() {
   check_prerequisites
 
-  local pr_number=$1
+  local pr_number=${1:-}
   local branch_name=${2:-""}
 
   if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
@@ -294,7 +314,7 @@ cmd_create_pr() {
 
 # cmd_remove removes the worktree for a given issue number, optionally deletes its branch if it is fully merged into main, and updates the tracked state.
 cmd_remove() {
-  local issue_number=$1
+  local issue_number=${1:-}
 
   if [[ -z "$issue_number" ]]; then
     log_error "Usage: worktree-manager.sh remove <issue-number>"
@@ -309,12 +329,20 @@ cmd_remove() {
     exit 0
   fi
 
+  if [[ "$worktree_path" == "$REPO_ROOT" ]]; then
+    log_error "Refusing to remove the current worktree: $worktree_path"
+    exit 1
+  fi
+
   # Get branch name before removing (query worktree directly for reliability)
   local branch_name
   branch_name=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
 
   log_info "Removing worktree for issue #$issue_number..."
-  git -C "$REPO_ROOT" worktree remove "$worktree_path" --force
+  if ! git -C "$REPO_ROOT" worktree remove "$worktree_path" --force; then
+    log_error "Failed to remove worktree for issue #$issue_number"
+    exit 1
+  fi
 
   # Optionally delete the branch if it exists and is fully merged
   if [[ -n "$branch_name" ]]; then
@@ -341,7 +369,7 @@ cmd_list() {
 
 # cmd_path prints the filesystem path for the worktree corresponding to the given issue number; exits with status 1 if the issue number is missing or the worktree does not exist.
 cmd_path() {
-  local issue_number=$1
+  local issue_number=${1:-}
 
   if [[ -z "$issue_number" ]]; then
     log_error "Usage: worktree-manager.sh path <issue-number>"
@@ -361,7 +389,7 @@ cmd_path() {
 
 # cmd_path_pr prints the filesystem path for the worktree corresponding to the given PR number.
 cmd_path_pr() {
-  local pr_number=$1
+  local pr_number=${1:-}
 
   if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
     log_error "Usage: worktree-manager.sh path-pr <pr-number>"
@@ -381,7 +409,7 @@ cmd_path_pr() {
 
 # cmd_rebase rebases the worktree for the specified issue onto origin/main; on conflict it aborts the rebase, reports an error, and returns a non-zero status.
 cmd_rebase() {
-  local issue_number=$1
+  local issue_number=${1:-}
 
   if [[ -z "$issue_number" ]]; then
     log_error "Usage: worktree-manager.sh rebase <issue-number>"
@@ -414,7 +442,7 @@ cmd_rebase() {
 
 # cmd_remove_pr removes the worktree for a given PR number and deletes its local branch if possible.
 cmd_remove_pr() {
-  local pr_number=$1
+  local pr_number=${1:-}
 
   if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
     log_error "Usage: worktree-manager.sh remove-pr <pr-number>"
@@ -429,11 +457,19 @@ cmd_remove_pr() {
     exit 0
   fi
 
+  if [[ "$worktree_path" == "$REPO_ROOT" ]]; then
+    log_error "Refusing to remove the current worktree: $worktree_path"
+    exit 1
+  fi
+
   local branch_name
   branch_name=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
 
   log_info "Removing worktree for PR #$pr_number..."
-  git -C "$REPO_ROOT" worktree remove "$worktree_path" --force
+  if ! git -C "$REPO_ROOT" worktree remove "$worktree_path" --force; then
+    log_error "Failed to remove worktree for PR #$pr_number"
+    exit 1
+  fi
 
   if [[ -n "$branch_name" ]]; then
     git -C "$REPO_ROOT" branch -D "$branch_name" 2>/dev/null || true
@@ -445,7 +481,7 @@ cmd_remove_pr() {
 
 # cmd_bootstrap prepares an existing worktree for use by installing dependencies and creating a local temp dir.
 cmd_bootstrap() {
-  local worktree_path=$1
+  local worktree_path=${1:-}
 
   if [[ -z "$worktree_path" ]]; then
     log_error "Usage: worktree-manager.sh bootstrap <worktree-path>"
@@ -679,7 +715,7 @@ cmd_cleanup_all() {
 
   # List worktrees matching our pattern
   local worktrees
-  worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep -E "$REPO_NAME-(issue|pr)-" | sed 's/worktree //' || true)
+  worktrees=$(list_managed_worktrees)
 
   if [[ -z "$worktrees" ]]; then
     log_info "No worktrees to remove"
@@ -702,15 +738,22 @@ cmd_cleanup_all() {
   local failed_count=0
   while read -r worktree_path; do
     if [[ -n "$worktree_path" ]]; then
-      local issue_number
-      if [[ "$worktree_path" == *"$REPO_NAME-issue-"* ]]; then
-        issue_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-issue-//")
+      if [[ "$worktree_path" == "$REPO_ROOT" ]]; then
+        log_info "Skipping current worktree: $worktree_path"
+        continue
+      fi
+
+      local base_name issue_number
+      base_name=$(basename "$worktree_path")
+
+      if [[ "$base_name" == "$REPO_NAME-issue-"* ]]; then
+        issue_number=${base_name#"$REPO_NAME-issue-"}
         if ! cmd_remove "$issue_number"; then
           ((failed_count++)) || true
         fi
       else
         local pr_number
-        pr_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-pr-//")
+        pr_number=${base_name#"$REPO_NAME-pr-"}
         if ! cmd_remove_pr "$pr_number"; then
           ((failed_count++)) || true
         fi

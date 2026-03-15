@@ -101,7 +101,7 @@ Use `scripts/worktree-manager.sh` to create and bootstrap worktrees instead of c
 
 - `create` and `create-pr` install dependencies inside the new worktree.
 - Every bootstrapped worktree gets a local `.tmp` directory for `TMPDIR`/`TMP`/`TEMP`.
-- Use `worktree-manager.sh exec <path> -- <command>` to run Bun, Vitest, and other tooling with the worktree-local temp dir wired up.
+- Use `scripts/worktree-manager.sh exec <path> -- <command>` to run Bun, Vitest, and other tooling with the worktree-local temp dir wired up.
 
 ## Epic Workflow (`/auto-epic`)
 
