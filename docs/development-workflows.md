@@ -95,6 +95,14 @@ Phase 4: Cleanup → remove worktrees, summary, notification
 
 Run in tmux for SSH observability: `tmux new -s milestone && claude`
 
+### Worktree Setup
+
+Use `scripts/worktree-manager.sh` to create and bootstrap worktrees instead of calling `git worktree add` directly.
+
+- `create` and `create-pr` install dependencies inside the new worktree.
+- Every bootstrapped worktree gets a local `.tmp` directory for `TMPDIR`/`TMP`/`TEMP`.
+- Use `worktree-manager.sh exec <path> -- <command>` to run Bun, Vitest, and other tooling with the worktree-local temp dir wired up.
+
 ## Epic Workflow (`/auto-epic`)
 
 Use for processing epic sub-issues with explicit GitHub dependencies.

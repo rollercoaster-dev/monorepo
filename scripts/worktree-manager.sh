@@ -16,8 +16,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-REPO_NAME="$(basename "$REPO_ROOT")"
+GIT_COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || echo "$REPO_ROOT/.git")"
+REPO_NAME="$(basename "$(dirname "$GIT_COMMON_DIR")")"
 WORKTREE_BASE="$HOME/Code/worktrees"
+WORKTREE_TMPDIR_NAME=".tmp"
 
 # DISABLED: claude-knowledge package removed
 # CLI_CMD="bun $REPO_ROOT/packages/claude-knowledge/src/cli.ts"
@@ -124,6 +126,52 @@ get_worktree_path() {
   echo "$WORKTREE_BASE/$REPO_NAME-issue-$issue_number"
 }
 
+# get_pr_worktree_path returns the filesystem path for the worktree directory for the given PR number.
+get_pr_worktree_path() {
+  local pr_number=$1
+  echo "$WORKTREE_BASE/$REPO_NAME-pr-$pr_number"
+}
+
+# sanitize_branch_component normalizes arbitrary text into a branch-safe slug.
+sanitize_branch_component() {
+  local value=$1
+  echo "$value" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//'
+}
+
+# get_worktree_tmpdir returns the worktree-local temp directory path.
+get_worktree_tmpdir() {
+  local worktree_path=$1
+  echo "$worktree_path/$WORKTREE_TMPDIR_NAME"
+}
+
+# run_in_worktree executes a command inside a worktree with a writable local temp dir.
+run_in_worktree() {
+  local worktree_path=$1
+  shift
+
+  local tmpdir
+  tmpdir=$(get_worktree_tmpdir "$worktree_path")
+  mkdir -p "$tmpdir"
+
+  (
+    cd "$worktree_path"
+    TMPDIR="$tmpdir" TEMP="$tmpdir" TMP="$tmpdir" "$@"
+  )
+}
+
+# bootstrap_worktree installs dependencies and prepares a local temp dir for commands.
+bootstrap_worktree() {
+  local worktree_path=$1
+  local tmpdir
+  tmpdir=$(get_worktree_tmpdir "$worktree_path")
+
+  mkdir -p "$tmpdir"
+  log_info "Prepared worktree-local temp dir: $tmpdir"
+
+  log_info "Installing dependencies in worktree..."
+  run_in_worktree "$worktree_path" bun install --silent
+}
+
 #------------------------------------------------------------------------------
 # Commands
 # cmd_create creates a new git worktree for the specified issue (optionally using the provided branch name), installs dependencies in the worktree, and records the worktree and branch in the persistent state.
@@ -160,7 +208,7 @@ cmd_create() {
     issue_title=$(gh issue view "$issue_number" --json title -q '.title' 2>/dev/null || echo "issue-$issue_number")
     # Sanitize title for branch name
     local sanitized
-    sanitized=$(echo "$issue_title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//' | sed 's/-$//' | cut -c1-40)
+    sanitized=$(sanitize_branch_component "$issue_title" | cut -c1-40)
     branch_name="feat/issue-$issue_number-$sanitized"
   fi
 
@@ -168,15 +216,80 @@ cmd_create() {
   log_info "Creating worktree for issue #$issue_number..."
   git -C "$REPO_ROOT" worktree add -b "$branch_name" "$worktree_path" origin/main --quiet
 
-  # Install dependencies in worktree
-  log_info "Installing dependencies in worktree..."
-  (cd "$worktree_path" && bun install --silent)
+  bootstrap_worktree "$worktree_path"
 
   update_state "$issue_number" "running" "$branch_name"
 
   log_success "Created worktree for issue #$issue_number"
   echo "  Path: $worktree_path"
   echo "  Branch: $branch_name"
+  echo "  Temp dir: $(get_worktree_tmpdir "$worktree_path")"
+}
+
+# cmd_create_pr creates a new git worktree for an existing PR, checks out a local branch at the PR head, and bootstraps the worktree.
+cmd_create_pr() {
+  check_prerequisites
+
+  local pr_number=$1
+  local branch_name=${2:-""}
+
+  if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+    log_error "Usage: worktree-manager.sh create-pr <pr-number> [branch-name]"
+    exit 1
+  fi
+
+  ensure_base_dir
+
+  local worktree_path
+  worktree_path=$(get_pr_worktree_path "$pr_number")
+
+  if [[ -d "$worktree_path" ]]; then
+    log_warn "Worktree for PR #$pr_number already exists at $worktree_path"
+    exit 0
+  fi
+
+  local pr_data
+  if ! pr_data=$(gh pr view "$pr_number" --json title,headRefName 2>/dev/null); then
+    log_error "Unable to load PR #$pr_number metadata"
+    exit 1
+  fi
+
+  local pr_title
+  pr_title=$(echo "$pr_data" | jq -r '.title')
+  local head_ref
+  head_ref=$(echo "$pr_data" | jq -r '.headRefName')
+
+  if [[ -z "$head_ref" || "$head_ref" == "null" ]]; then
+    log_error "PR #$pr_number has no head branch information"
+    exit 1
+  fi
+
+  if [[ -z "$branch_name" ]]; then
+    local sanitized
+    sanitized=$(sanitize_branch_component "$pr_title" | cut -c1-32)
+    branch_name="codex/pr-$pr_number-$sanitized"
+  fi
+
+  log_info "Fetching PR #$pr_number head..."
+  git -C "$REPO_ROOT" fetch origin "pull/$pr_number/head" --quiet
+
+  if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$branch_name"; then
+    git -C "$REPO_ROOT" branch -f "$branch_name" FETCH_HEAD --quiet
+  else
+    git -C "$REPO_ROOT" branch "$branch_name" FETCH_HEAD --quiet
+  fi
+
+  log_info "Creating worktree for PR #$pr_number..."
+  git -C "$REPO_ROOT" worktree add "$worktree_path" "$branch_name" --quiet
+
+  bootstrap_worktree "$worktree_path"
+
+  log_success "Created worktree for PR #$pr_number"
+  echo "  Path: $worktree_path"
+  echo "  Local branch: $branch_name"
+  echo "  PR head branch: $head_ref"
+  echo "  Temp dir: $(get_worktree_tmpdir "$worktree_path")"
+  echo "  Push fixes with: git -C \"$worktree_path\" push origin HEAD:$head_ref"
 }
 
 # cmd_remove removes the worktree for a given issue number, optionally deletes its branch if it is fully merged into main, and updates the tracked state.
@@ -246,6 +359,26 @@ cmd_path() {
   fi
 }
 
+# cmd_path_pr prints the filesystem path for the worktree corresponding to the given PR number.
+cmd_path_pr() {
+  local pr_number=$1
+
+  if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+    log_error "Usage: worktree-manager.sh path-pr <pr-number>"
+    exit 1
+  fi
+
+  local worktree_path
+  worktree_path=$(get_pr_worktree_path "$pr_number")
+
+  if [[ -d "$worktree_path" ]]; then
+    echo "$worktree_path"
+  else
+    log_error "No worktree found for PR #$pr_number"
+    exit 1
+  fi
+}
+
 # cmd_rebase rebases the worktree for the specified issue onto origin/main; on conflict it aborts the rebase, reports an error, and returns a non-zero status.
 cmd_rebase() {
   local issue_number=$1
@@ -277,6 +410,83 @@ cmd_rebase() {
     git -C "$worktree_path" rebase --abort
     return 1
   fi
+}
+
+# cmd_remove_pr removes the worktree for a given PR number and deletes its local branch if possible.
+cmd_remove_pr() {
+  local pr_number=$1
+
+  if [[ -z "$pr_number" ]] || ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
+    log_error "Usage: worktree-manager.sh remove-pr <pr-number>"
+    exit 1
+  fi
+
+  local worktree_path
+  worktree_path=$(get_pr_worktree_path "$pr_number")
+
+  if [[ ! -d "$worktree_path" ]]; then
+    log_warn "No worktree found for PR #$pr_number"
+    exit 0
+  fi
+
+  local branch_name
+  branch_name=$(git -C "$worktree_path" branch --show-current 2>/dev/null || echo "")
+
+  log_info "Removing worktree for PR #$pr_number..."
+  git -C "$REPO_ROOT" worktree remove "$worktree_path" --force
+
+  if [[ -n "$branch_name" ]]; then
+    git -C "$REPO_ROOT" branch -D "$branch_name" 2>/dev/null || true
+    log_info "Deleted local branch: $branch_name"
+  fi
+
+  log_success "Removed worktree for PR #$pr_number"
+}
+
+# cmd_bootstrap prepares an existing worktree for use by installing dependencies and creating a local temp dir.
+cmd_bootstrap() {
+  local worktree_path=$1
+
+  if [[ -z "$worktree_path" ]]; then
+    log_error "Usage: worktree-manager.sh bootstrap <worktree-path>"
+    exit 1
+  fi
+
+  if [[ ! -d "$worktree_path" ]]; then
+    log_error "Worktree path does not exist: $worktree_path"
+    exit 1
+  fi
+
+  check_prerequisites
+  bootstrap_worktree "$worktree_path"
+  log_success "Bootstrapped worktree: $worktree_path"
+}
+
+# cmd_exec runs a command in a worktree with the manager's local temp-dir environment.
+cmd_exec() {
+  local worktree_path=${1:-}
+  shift || true
+
+  if [[ -z "$worktree_path" ]]; then
+    log_error "Usage: worktree-manager.sh exec <worktree-path> -- <command> [args...]"
+    exit 1
+  fi
+
+  if [[ ! -d "$worktree_path" ]]; then
+    log_error "Worktree path does not exist: $worktree_path"
+    exit 1
+  fi
+
+  if [[ ${1:-} == "--" ]]; then
+    shift
+  fi
+
+  if [[ $# -eq 0 ]]; then
+    log_error "Usage: worktree-manager.sh exec <worktree-path> -- <command> [args...]"
+    exit 1
+  fi
+
+  run_in_worktree "$worktree_path" "$@"
 }
 
 # cmd_ci_status checks CI status for a PR with optional blocking wait.
@@ -469,7 +679,7 @@ cmd_cleanup_all() {
 
   # List worktrees matching our pattern
   local worktrees
-  worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep "$REPO_NAME-issue-" | sed 's/worktree //' || true)
+  worktrees=$(git -C "$REPO_ROOT" worktree list --porcelain | grep "worktree" | grep -E "$REPO_NAME-(issue|pr)-" | sed 's/worktree //' || true)
 
   if [[ -z "$worktrees" ]]; then
     log_info "No worktrees to remove"
@@ -493,9 +703,17 @@ cmd_cleanup_all() {
   while read -r worktree_path; do
     if [[ -n "$worktree_path" ]]; then
       local issue_number
-      issue_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-issue-//")
-      if ! cmd_remove "$issue_number"; then
-        ((failed_count++)) || true
+      if [[ "$worktree_path" == *"$REPO_NAME-issue-"* ]]; then
+        issue_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-issue-//")
+        if ! cmd_remove "$issue_number"; then
+          ((failed_count++)) || true
+        fi
+      else
+        local pr_number
+        pr_number=$(basename "$worktree_path" | sed "s/$REPO_NAME-pr-//")
+        if ! cmd_remove_pr "$pr_number"; then
+          ((failed_count++)) || true
+        fi
       fi
     fi
   done <<< "$worktrees"
@@ -520,9 +738,14 @@ Usage: worktree-manager.sh <command> [arguments]
 
 Worktree Commands:
   create <issue> [branch]   Create a new worktree for an issue
+  create-pr <pr> [branch]   Create a bootstrapped worktree for an existing PR
   remove <issue>            Remove a worktree and optionally its branch
+  remove-pr <pr>            Remove a PR worktree and its local branch
   list                      List all worktrees
   path <issue>              Print the path to a worktree
+  path-pr <pr>              Print the path to a PR worktree
+  bootstrap <path>          Install deps and prepare a local temp dir in a worktree
+  exec <path> -- <cmd>      Run a command in a worktree with TMPDIR/TMP/TEMP set locally
   rebase <issue>            Rebase a worktree on main
   cleanup-all [--force]     Remove all worktrees (--force skips confirmation)
 
@@ -537,6 +760,9 @@ Environment Variables:
 Examples:
   worktree-manager.sh create 111
   worktree-manager.sh create 111 feat/my-custom-branch
+  worktree-manager.sh create-pr 788
+  worktree-manager.sh bootstrap ~/Code/worktrees/monorepo-pr-788
+  worktree-manager.sh exec ~/Code/worktrees/monorepo-pr-788 -- bun run type-check
   worktree-manager.sh remove 111
   worktree-manager.sh ci-status 145 --wait
   worktree-manager.sh integration-test
@@ -555,9 +781,14 @@ main() {
   case "$command" in
     # Worktree commands
     create)        cmd_create "$@" ;;
+    create-pr)     cmd_create_pr "$@" ;;
     remove)        cmd_remove "$@" ;;
+    remove-pr)     cmd_remove_pr "$@" ;;
     list)          cmd_list ;;
     path)          cmd_path "$@" ;;
+    path-pr)       cmd_path_pr "$@" ;;
+    bootstrap)     cmd_bootstrap "$@" ;;
+    exec)          cmd_exec "$@" ;;
     rebase)        cmd_rebase "$@" ;;
     cleanup-all)   cmd_cleanup_all "$@" ;;
 
