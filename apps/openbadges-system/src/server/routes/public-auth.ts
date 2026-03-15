@@ -1,11 +1,17 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { z } from 'zod'
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/server'
 import { userService } from '../services/user'
 import { jwtService } from '../services/jwt'
+import { issueTokenPair, rotateRefreshToken, revokeRefreshToken } from '../services/refresh-token'
 import { generateChallenge, consumeChallenge } from '../services/challenge'
 import { logger } from '../utils/logger'
+import {
+  clearRefreshTokenCookie,
+  getRefreshTokenCookie,
+  setRefreshTokenCookie,
+} from '../utils/auth-cookies'
 
 // Simple rate limiting for user enumeration protection
 const rateLimiter = new Map<string, { count: number; resetTime: number }>()
@@ -28,6 +34,22 @@ function checkRateLimit(ip: string): boolean {
 
   record.count++
   return true
+}
+
+function getClientIP(c: Context): string {
+  if (process.env.TRUST_PROXY === 'true') {
+    const forwardedFor = c.req.header('x-forwarded-for')
+    if (forwardedFor) {
+      return forwardedFor.split(',')[0]?.trim() || 'unknown'
+    }
+
+    const realIp = c.req.header('x-real-ip')
+    if (realIp) {
+      return realIp
+    }
+  }
+
+  return 'unknown'
 }
 
 // RP configuration — derive from environment, request origin, or sensible defaults.
@@ -77,7 +99,7 @@ const userCreateSchema = z.object({
 // Public endpoint to check if user exists (for WebAuthn registration)
 publicAuthRoutes.get('/users/lookup', async c => {
   // Rate limiting to prevent user enumeration attacks
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -138,7 +160,7 @@ publicAuthRoutes.get('/users/lookup', async c => {
 // Public endpoint to create new user (for WebAuthn registration)
 publicAuthRoutes.post('/users/register', async c => {
   // Rate limiting to prevent registration abuse
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -197,7 +219,7 @@ publicAuthRoutes.post('/users/register', async c => {
 
 // Generate a challenge for WebAuthn authentication
 publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -225,7 +247,7 @@ publicAuthRoutes.get('/users/:id/challenge/authentication', async c => {
 
 // Generate a challenge for WebAuthn registration
 publicAuthRoutes.get('/users/:id/challenge/registration', async c => {
-  const clientIP = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
+  const clientIP = getClientIP(c)
   if (!checkRateLimit(clientIP)) {
     return c.json({ error: 'Too many requests. Please try again later.' }, 429)
   }
@@ -469,7 +491,7 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       lastUsed: new Date().toISOString(),
     })
 
-    // Generate JWT token
+    // Issue access + refresh token pair
     const platformUser = {
       id: user.id,
       username: user.username,
@@ -479,16 +501,92 @@ publicAuthRoutes.post('/users/:id/token', async c => {
       isAdmin: user.roles.includes('ADMIN'),
     }
 
-    const token = jwtService.generatePlatformToken(platformUser)
+    const { accessToken, refreshToken } = await issueTokenPair(platformUser)
+    setRefreshTokenCookie(c, refreshToken)
 
     return c.json({
       success: true,
-      token,
+      token: accessToken,
+      refreshToken,
       platformId: 'urn:uuid:a504d862-bd64-4e0d-acff-db7955955bc1',
     })
   } catch (err) {
     logger.error('Error generating token', { error: err })
     return c.json({ error: 'Failed to generate token' }, 500)
+  }
+})
+
+// --- Refresh token endpoint ---
+
+const refreshRequestSchema = z.object({
+  refreshToken: z.string().min(1).optional(),
+})
+
+publicAuthRoutes.post('/refresh', async c => {
+  const clientIP = getClientIP(c)
+  if (!checkRateLimit(clientIP)) {
+    return c.json({ error: 'Too many requests. Please try again later.' }, 429)
+  }
+
+  try {
+    let body: unknown = {}
+    try {
+      body = await c.req.json()
+    } catch {
+      // Allow cookie-backed refresh requests to omit a JSON body entirely.
+    }
+
+    const parsed = refreshRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: 'Refresh token required' }, 400)
+    }
+
+    const refreshToken = parsed.data.refreshToken || getRefreshTokenCookie(c)
+    if (!refreshToken) {
+      return c.json({ error: 'Refresh token required' }, 400)
+    }
+
+    const result = await rotateRefreshToken(refreshToken)
+    if (!result) {
+      return c.json({ error: 'Invalid or expired refresh token' }, 401)
+    }
+
+    setRefreshTokenCookie(c, result.refreshToken)
+    return c.json({
+      success: true,
+      token: result.accessToken,
+      refreshToken: result.refreshToken,
+    })
+  } catch (err) {
+    logger.error('Error refreshing token', { error: err })
+    return c.json({ error: 'Failed to refresh token' }, 500)
+  }
+})
+
+// --- Logout endpoint (revoke refresh token) ---
+
+publicAuthRoutes.post('/logout', async c => {
+  try {
+    let body: unknown = {}
+    try {
+      body = await c.req.json()
+    } catch {
+      // Allow body-less logout requests to revoke via refresh token cookie.
+    }
+
+    const parsed = z.object({ refreshToken: z.string().min(1).optional() }).safeParse(body)
+    const bodyRefreshToken = parsed.success ? parsed.data.refreshToken : undefined
+    const refreshToken = bodyRefreshToken || getRefreshTokenCookie(c)
+    if (refreshToken) {
+      await revokeRefreshToken(refreshToken)
+    }
+
+    clearRefreshTokenCookie(c)
+    return c.json({ success: true })
+  } catch (err) {
+    logger.error('Error during logout', { error: err })
+    clearRefreshTokenCookie(c)
+    return c.json({ success: true })
   }
 })
 

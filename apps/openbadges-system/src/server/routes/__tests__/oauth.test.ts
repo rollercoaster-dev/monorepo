@@ -39,6 +39,15 @@ vi.mock('../../services/jwt', () => ({
   },
 }))
 
+vi.mock('../../services/refresh-token', () => ({
+  issueTokenPair: vi.fn(() =>
+    Promise.resolve({
+      accessToken: 'mock-platform-token',
+      refreshToken: 'mock-refresh-token',
+    })
+  ),
+}))
+
 // Mock OAuth service
 vi.mock('../../services/oauth', () => ({
   OAuthService: vi.fn(),
@@ -68,6 +77,9 @@ vi.mock('../../services/user', () => ({
     getOAuthProvider: vi.fn(),
     updateOAuthProvider: vi.fn(),
     removeOAuthProvider: vi.fn(),
+    createOAuthLoginExchange: vi.fn(),
+    consumeOAuthLoginExchange: vi.fn(),
+    cleanupExpiredOAuthLoginExchanges: vi.fn(),
   },
 }))
 
@@ -125,6 +137,7 @@ import { oauthService } from '../../services/oauth'
 import { userService } from '../../services/user'
 import { userSyncService } from '../../services/userSync'
 import { getAuthPayload } from '../../middleware/auth'
+import { issueTokenPair } from '../../services/refresh-token'
 
 function createApp() {
   const app = new Hono()
@@ -293,6 +306,14 @@ describe('OAuth Routes', () => {
       expect(data.success).toBe(true)
       expect(data.user).toBeDefined()
       expect(data.token).toBe('mock-platform-token')
+      expect(data.refreshToken).toBe('mock-refresh-token')
+      expect(issueTokenPair).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'user-123',
+          username: 'testuser',
+          email: 'test@example.com',
+        })
+      )
       expect(oauthService.removeOAuthSession).toHaveBeenCalledWith('test-state')
     })
 
@@ -482,6 +503,86 @@ describe('OAuth Routes', () => {
 
       expect(res.status).toBe(302)
       expect(res.headers.get('Location')).toContain('/auth/oauth/callback')
+      expect(res.headers.get('Location')).toContain('success=true')
+      expect(res.headers.get('Location')).toContain('code=')
+      expect(res.headers.get('Location')).not.toContain('token=')
+      expect(res.headers.get('Location')).not.toContain('refreshToken=')
+      expect(userService!.createOAuthLoginExchange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          accessToken: 'mock-platform-token',
+          refreshToken: 'mock-refresh-token',
+          redirectUri: '/dashboard',
+        })
+      )
+    })
+
+    it('should exchange a one-time login code for auth data', async () => {
+      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue({
+        id: 'exchange-1',
+        code: 'exchange-code',
+        accessToken: 'mock-platform-token',
+        refreshToken: 'mock-refresh-token',
+        userData: JSON.stringify({
+          id: 'user-123',
+          username: 'testuser',
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          isAdmin: false,
+          roles: ['USER'],
+        }),
+        redirectUri: '/dashboard',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        consumedAt: new Date().toISOString(),
+      } as any)
+
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'exchange-code' }),
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.token).toBe('mock-platform-token')
+      expect(data.redirectUri).toBe('/dashboard')
+      expect(data.user.username).toBe('testuser')
+      expect(res.headers.get('set-cookie')).toContain('obs_refresh_token=mock-refresh-token')
+    })
+
+    it('should reject oauth exchange requests without a code', async () => {
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain('OAuth exchange code required')
+      expect(res.headers.get('set-cookie')).toBeNull()
+    })
+
+    it('should reject expired or consumed oauth exchange codes', async () => {
+      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue(null)
+
+      const app = createApp()
+      const res = await app.request('/oauth/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'expired-code' }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain('Invalid or expired OAuth exchange code')
+      expect(res.headers.get('set-cookie')).toBeNull()
     })
 
     it('should return 500 on token exchange error', async () => {

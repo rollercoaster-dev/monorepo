@@ -1,13 +1,20 @@
 import { Hono } from 'hono'
+import { nanoid } from 'nanoid'
+import { z } from 'zod'
 import { oauthService } from '../services/oauth'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
-import { jwtService } from '../services/jwt'
+import { issueTokenPair } from '../services/refresh-token'
 import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import { oauthConfig } from '../config/oauth'
+import { setRefreshTokenCookie } from '../utils/auth-cookies'
 
 const oauthRoutes = new Hono()
+const oauthExchangeRequestSchema = z.object({
+  code: z.string().min(1),
+})
+const OAUTH_LOGIN_EXCHANGE_TTL_MS = 5 * 60 * 1000
 
 // Get available OAuth providers
 oauthRoutes.get('/providers', async c => {
@@ -179,8 +186,8 @@ oauthRoutes.get('/github/callback', async c => {
       logger.error('Error syncing user with badge server', { error: syncError })
     }
 
-    // Generate JWT token for authentication
-    const jwtToken = jwtService.generatePlatformToken({
+    // Issue the same access + refresh token pair used by other auth flows.
+    const { accessToken, refreshToken } = await issueTokenPair({
       id: user.id,
       username: user.username,
       email: user.email,
@@ -194,6 +201,7 @@ oauthRoutes.get('/github/callback', async c => {
     const isApiRequest = acceptHeader && acceptHeader.includes('application/json')
 
     if (isApiRequest) {
+      setRefreshTokenCookie(c, refreshToken)
       // Return JSON response for API requests
       return c.json({
         success: true,
@@ -207,11 +215,16 @@ oauthRoutes.get('/github/callback', async c => {
           isAdmin: user.roles.includes('ADMIN'),
           roles: user.roles,
         },
-        token: jwtToken,
+        token: accessToken,
+        refreshToken,
         redirectUri: session.redirect_uri || '/',
       })
     } else {
-      // Redirect to frontend callback page with authentication data
+      if (!userService) {
+        throw new Error('User service not available')
+      }
+
+      // Redirect to the frontend with a one-time code, then exchange server-side.
       const userData = {
         id: user.id,
         username: user.username,
@@ -223,17 +236,24 @@ oauthRoutes.get('/github/callback', async c => {
         roles: user.roles,
       }
 
-      // Create a secure way to pass auth data to frontend
-      // For now, we'll use URL params (in production, consider using encrypted cookies or session storage)
+      await userService.cleanupExpiredOAuthLoginExchanges()
+      const exchangeCode = nanoid(32)
+      await userService.createOAuthLoginExchange({
+        code: exchangeCode,
+        accessToken,
+        refreshToken,
+        userData: JSON.stringify(userData),
+        redirectUri: session.redirect_uri || '/',
+        expiresAt: new Date(Date.now() + OAUTH_LOGIN_EXCHANGE_TTL_MS).toISOString(),
+      })
+
       const devHost = process.env.DEV_HOST || 'localhost'
       const useHttps = devHost.endsWith('.ts.net')
       const port = process.env.SYSTEM_VITE_PORT || process.env.VITE_PORT || '7777'
       const frontendUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${port}`
       const callbackUrl = new URL('/auth/oauth/callback', frontendUrl)
       callbackUrl.searchParams.set('success', 'true')
-      callbackUrl.searchParams.set('token', jwtToken)
-      callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userData)))
-      callbackUrl.searchParams.set('redirect_uri', session.redirect_uri || '/')
+      callbackUrl.searchParams.set('code', exchangeCode)
 
       return c.redirect(callbackUrl.toString())
     }
@@ -261,6 +281,38 @@ oauthRoutes.get('/github/callback', async c => {
       },
       500
     )
+  }
+})
+
+oauthRoutes.post('/exchange', async c => {
+  if (!userService) {
+    return c.json({ success: false, error: 'User service not available' }, 503)
+  }
+
+  try {
+    const body = await c.req.json().catch(() => null)
+    const parsed = oauthExchangeRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ success: false, error: 'OAuth exchange code required' }, 400)
+    }
+
+    await userService.cleanupExpiredOAuthLoginExchanges()
+    const exchange = await userService.consumeOAuthLoginExchange(parsed.data.code)
+    if (!exchange) {
+      return c.json({ success: false, error: 'Invalid or expired OAuth exchange code' }, 400)
+    }
+
+    setRefreshTokenCookie(c, exchange.refreshToken)
+
+    return c.json({
+      success: true,
+      token: exchange.accessToken,
+      user: JSON.parse(exchange.userData),
+      redirectUri: exchange.redirectUri || '/',
+    })
+  } catch (error) {
+    logger.error('OAuth exchange failed', { error })
+    return c.json({ success: false, error: 'OAuth exchange failed' }, 500)
   }
 })
 
