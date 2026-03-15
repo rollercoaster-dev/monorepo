@@ -39,6 +39,15 @@ vi.mock('../../services/jwt', () => ({
   },
 }))
 
+vi.mock('../../services/refresh-token', () => ({
+  issueTokenPair: vi.fn(() =>
+    Promise.resolve({
+      accessToken: 'mock-platform-token',
+      refreshToken: 'mock-refresh-token',
+    })
+  ),
+}))
+
 // Mock OAuth service
 vi.mock('../../services/oauth', () => ({
   OAuthService: vi.fn(),
@@ -125,6 +134,7 @@ import { oauthService } from '../../services/oauth'
 import { userService } from '../../services/user'
 import { userSyncService } from '../../services/userSync'
 import { getAuthPayload } from '../../middleware/auth'
+import { issueTokenPair } from '../../services/refresh-token'
 
 function createApp() {
   const app = new Hono()
@@ -293,6 +303,8 @@ describe('OAuth Routes', () => {
       expect(data.success).toBe(true)
       expect(data.user).toBeDefined()
       expect(data.token).toBe('mock-platform-token')
+      expect(data.refreshToken).toBe('mock-refresh-token')
+      expect(issueTokenPair).toHaveBeenCalled()
       expect(oauthService.removeOAuthSession).toHaveBeenCalledWith('test-state')
     })
 
@@ -482,6 +494,7 @@ describe('OAuth Routes', () => {
 
       expect(res.status).toBe(302)
       expect(res.headers.get('Location')).toContain('/auth/oauth/callback')
+      expect(res.headers.get('Location')).toContain('refreshToken=mock-refresh-token')
     })
 
     it('should return 500 on token exchange error', async () => {

@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { oauthService } from '../services/oauth'
 import { userService } from '../services/user'
 import { userSyncService } from '../services/userSync'
-import { jwtService } from '../services/jwt'
+import { issueTokenPair } from '../services/refresh-token'
 import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import { oauthConfig } from '../config/oauth'
@@ -179,8 +179,8 @@ oauthRoutes.get('/github/callback', async c => {
       logger.error('Error syncing user with badge server', { error: syncError })
     }
 
-    // Generate JWT token for authentication
-    const jwtToken = jwtService.generatePlatformToken({
+    // Issue the same access + refresh token pair used by other auth flows.
+    const { accessToken, refreshToken } = await issueTokenPair({
       id: user.id,
       username: user.username,
       email: user.email,
@@ -207,7 +207,8 @@ oauthRoutes.get('/github/callback', async c => {
           isAdmin: user.roles.includes('ADMIN'),
           roles: user.roles,
         },
-        token: jwtToken,
+        token: accessToken,
+        refreshToken,
         redirectUri: session.redirect_uri || '/',
       })
     } else {
@@ -231,7 +232,8 @@ oauthRoutes.get('/github/callback', async c => {
       const frontendUrl = useHttps ? `https://${devHost}` : `http://${devHost}:${port}`
       const callbackUrl = new URL('/auth/oauth/callback', frontendUrl)
       callbackUrl.searchParams.set('success', 'true')
-      callbackUrl.searchParams.set('token', jwtToken)
+      callbackUrl.searchParams.set('token', accessToken)
+      callbackUrl.searchParams.set('refreshToken', refreshToken)
       callbackUrl.searchParams.set('user', encodeURIComponent(JSON.stringify(userData)))
       callbackUrl.searchParams.set('redirect_uri', session.redirect_uri || '/')
 

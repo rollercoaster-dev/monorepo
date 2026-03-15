@@ -23,6 +23,7 @@ const processCallback = async () => {
   try {
     const successParam = route.query.success as string
     const tokenParam = route.query.token as string
+    const refreshTokenParam = route.query.refreshToken as string | undefined
     const userParam = route.query.user as string
     const redirectUriParam = route.query.redirect_uri as string
     const errorParam = route.query.error as string
@@ -53,6 +54,9 @@ const processCallback = async () => {
 
         // Store auth data in localStorage
         localStorage.setItem('auth_token', tokenParam)
+        if (refreshTokenParam) {
+          localStorage.setItem('refresh_token', refreshTokenParam)
+        }
         localStorage.setItem('user_data', JSON.stringify(authUser))
 
         // Re-initialize shared auth state from localStorage

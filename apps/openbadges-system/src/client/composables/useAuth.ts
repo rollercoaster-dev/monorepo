@@ -51,6 +51,7 @@ const error = ref<string | null>(null)
 const isWebAuthnSupported = ref(WebAuthnUtils.isSupported())
 const isPlatformAuthAvailable = ref(false)
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
+const TOKEN_REFRESH_RETRY_MS = 60 * 1000
 
 // Token validation helpers — module-level so they can be used by the navigation guard
 const LOCAL_SESSION_PREFIX = 'local-session-'
@@ -80,11 +81,59 @@ const isTokenValid = (tokenValue: string | null): boolean => {
   }
 }
 
+type RefreshAttemptResult = 'success' | 'invalid' | 'retryable'
+
+function syncUserFromStorage(storedUser: string | null) {
+  if (!storedUser) {
+    user.value = null
+    return
+  }
+
+  try {
+    user.value = JSON.parse(storedUser) as User
+  } catch {
+    user.value = null
+    localStorage.removeItem('user_data')
+  }
+}
+
+function getCurrentRefreshToken(): string | null {
+  const storedRefreshToken = localStorage.getItem('refresh_token')
+  refreshTokenValue.value = storedRefreshToken
+  return storedRefreshToken
+}
+
+function clearStoredAuthState() {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
+    refreshTimer = null
+  }
+  token.value = null
+  refreshTokenValue.value = null
+  user.value = null
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('user_data')
+}
+
+function scheduleRefreshRetry() {
+  if (refreshTimer) clearTimeout(refreshTimer)
+  refreshTimer = setTimeout(async () => {
+    const result = await performTokenRefresh()
+    if (result === 'success') return
+    if (result === 'retryable') {
+      scheduleRefreshRetry()
+      return
+    }
+    clearStoredAuthState()
+  }, TOKEN_REFRESH_RETRY_MS)
+}
+
 // Refresh the access token using the stored refresh token.
-// Returns true if refresh succeeded, false otherwise.
-async function performTokenRefresh(): Promise<boolean> {
-  const currentRefreshToken = refreshTokenValue.value
-  if (!currentRefreshToken) return false
+// Returns whether refresh succeeded, should be retried, or is no longer valid.
+async function performTokenRefresh(): Promise<RefreshAttemptResult> {
+  const currentRefreshToken = getCurrentRefreshToken()
+  if (!currentRefreshToken) return 'invalid'
 
   try {
     const response = await fetch('/api/auth/public/refresh', {
@@ -94,8 +143,10 @@ async function performTokenRefresh(): Promise<boolean> {
     })
 
     if (!response.ok) {
-      // Refresh token is invalid/expired — clear auth state
-      return false
+      if (response.status === 400 || response.status === 401) {
+        return 'invalid'
+      }
+      return 'retryable'
     }
 
     const data = await response.json()
@@ -105,12 +156,12 @@ async function performTokenRefresh(): Promise<boolean> {
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('refresh_token', data.refreshToken)
       scheduleTokenRefresh(data.token)
-      return true
+      return 'success'
     }
-    return false
+    return 'retryable'
   } catch {
-    // Network error — don't clear state (offline-first)
-    return false
+    // Network error — retry later without clearing auth state.
+    return 'retryable'
   }
 }
 
@@ -125,16 +176,13 @@ function scheduleTokenRefresh(accessToken: string) {
     // Refresh 5 minutes before expiry, or immediately if less than 5 minutes remain
     const refreshInMs = Math.max(expiresInMs - 5 * 60 * 1000, 0)
     refreshTimer = setTimeout(async () => {
-      const success = await performTokenRefresh()
-      if (!success) {
-        // Refresh failed — clear auth state
-        token.value = null
-        refreshTokenValue.value = null
-        user.value = null
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('refresh_token')
-        localStorage.removeItem('user_data')
+      const result = await performTokenRefresh()
+      if (result === 'success') return
+      if (result === 'retryable') {
+        scheduleRefreshRetry()
+        return
       }
+      clearStoredAuthState()
     }, refreshInMs)
   } catch {
     // Invalid token — skip scheduling
@@ -146,6 +194,29 @@ function clearRefreshTimer() {
     clearTimeout(refreshTimer)
     refreshTimer = null
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', event => {
+    if (!event.key || !['auth_token', 'refresh_token', 'user_data'].includes(event.key)) return
+
+    if (event.key === 'auth_token') {
+      token.value = event.newValue
+      if (event.newValue && isTokenValid(event.newValue) && !isLocalSession(event.newValue)) {
+        scheduleTokenRefresh(event.newValue)
+      } else {
+        clearRefreshTimer()
+      }
+    }
+
+    if (event.key === 'refresh_token') {
+      refreshTokenValue.value = event.newValue
+    }
+
+    if (event.key === 'user_data') {
+      syncUserFromStorage(event.newValue)
+    }
+  })
 }
 
 // Auth state accessor for use outside Vue component context (e.g., navigation guards)
@@ -667,21 +738,17 @@ export const useAuth = () => {
   const logout = () => {
     clearRefreshTimer()
     // Best-effort server-side revocation
-    if (refreshTokenValue.value) {
+    const currentRefreshToken = getCurrentRefreshToken()
+    if (currentRefreshToken) {
       fetch('/api/auth/public/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: refreshTokenValue.value }),
+        body: JSON.stringify({ refreshToken: currentRefreshToken }),
       }).catch(() => {
         // Ignore network errors during logout
       })
     }
-    user.value = null
-    token.value = null
-    refreshTokenValue.value = null
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('refresh_token')
-    localStorage.removeItem('user_data')
+    clearStoredAuthState()
     router.push('/auth/login')
   }
 
@@ -697,19 +764,22 @@ export const useAuth = () => {
         // First check if token is locally valid (handles both JWT expiration and local session age)
         if (!isTokenValid(storedToken)) {
           // Access token expired — attempt refresh before clearing state
-          const refreshed = await performTokenRefresh()
-          if (refreshed) {
+          const refreshResult = await performTokenRefresh()
+          if (refreshResult === 'success') {
             user.value = parsedUser
             await checkPlatformAuth()
             return
           }
+          if (refreshResult === 'retryable') {
+            token.value = storedToken
+            refreshTokenValue.value = localStorage.getItem('refresh_token')
+            user.value = parsedUser
+            scheduleRefreshRetry()
+            await checkPlatformAuth()
+            return
+          }
           console.warn('Stored session expired and refresh failed, clearing local state')
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('user_data')
-          token.value = null
-          refreshTokenValue.value = null
-          user.value = null
+          clearStoredAuthState()
           await checkPlatformAuth()
           return
         }
@@ -742,12 +812,7 @@ export const useAuth = () => {
         }
       } catch {
         // Clear invalid JSON storage
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('refresh_token')
-        localStorage.removeItem('user_data')
-        token.value = null
-        refreshTokenValue.value = null
-        user.value = null
+        clearStoredAuthState()
       }
     }
 
