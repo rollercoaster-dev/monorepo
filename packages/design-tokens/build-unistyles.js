@@ -22,6 +22,15 @@ const OUT = join(ROOT, "build/unistyles");
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Accessibility variant theme files (shared across all builders) */
+const VARIANT_THEMES = [
+  { file: "high-contrast", name: "highContrast" },
+  { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
+  { file: "autism-friendly", name: "autismFriendly" },
+  { file: "low-vision", name: "lowVision" },
+  { file: "low-info", name: "lowInfo" },
+];
+
 /** Convert rem string to px number (1rem = 16px) */
 function remToPx(val) {
   if (typeof val === "number") return val;
@@ -609,13 +618,7 @@ async function buildNarrative() {
     extractThemeNarrative(dark.theme),
   );
 
-  const variantFiles = [
-    { file: "high-contrast", name: "highContrast" },
-    { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
-    { file: "autism-friendly", name: "autismFriendly" },
-    { file: "low-vision", name: "lowVision" },
-    { file: "low-info", name: "lowInfo" },
-  ];
+  const variantFiles = VARIANT_THEMES;
 
   const variants = [];
 
@@ -693,13 +696,7 @@ async function buildVariants() {
 
   const baseLightColors = buildLightColorMap(semantic, colorData);
 
-  const variantFiles = [
-    { file: "high-contrast", name: "highContrast" },
-    { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
-    { file: "autism-friendly", name: "autismFriendly" },
-    { file: "low-vision", name: "lowVision" },
-    { file: "low-info", name: "lowInfo" },
-  ];
+  const variantFiles = VARIANT_THEMES;
 
   const variants = [];
 
@@ -826,7 +823,6 @@ const SEMANTIC_CATEGORIES = [
   {
     file: "tokens/chrome.json",
     name: "Chrome",
-    prefix: "chrome-",
     themeKey: "chrome",
     keys: [
       "chrome-header-bg",
@@ -847,7 +843,6 @@ const SEMANTIC_CATEGORIES = [
   {
     file: "tokens/action.json",
     name: "Action",
-    prefix: "action-",
     themeKey: "action",
     keys: [
       "action-primary-bg",
@@ -871,7 +866,6 @@ const SEMANTIC_CATEGORIES = [
   {
     file: "tokens/surface-border.json",
     name: "SurfaceBorder",
-    prefix: "",
     themeKey: "surfaceBorder",
     keys: [
       "surface-card-bg",
@@ -894,7 +888,6 @@ const SEMANTIC_CATEGORIES = [
   {
     file: "tokens/journey.json",
     name: "Journey",
-    prefix: "journey-",
     themeKey: "journey",
     keys: [
       "journey-goal-bg",
@@ -919,7 +912,6 @@ const SEMANTIC_CATEGORIES = [
   {
     file: "tokens/badge-reward.json",
     name: "BadgeReward",
-    prefix: "reward-",
     themeKey: "badgeReward",
     keys: [
       "reward-badge-chrome-bg",
@@ -972,7 +964,15 @@ async function buildSemanticColors() {
 
   let out = `// Auto-generated from design-tokens. DO NOT EDIT.\n`;
 
-  // For each category, generate interface + light + dark constants
+  // Pre-load all variant theme files once (avoid re-reading inside loops)
+  const variantThemeData = await Promise.all(
+    VARIANT_THEMES.map(async ({ file, name }) => ({
+      name,
+      data: await readJSON(`themes/${file}.json`),
+    })),
+  );
+
+  // For each category: interface + light/dark constants + variant overrides
   for (const cat of SEMANTIC_CATEGORIES) {
     const tokens = categoryData[cat.name];
     const interfaceName = `${cat.name}Colors`;
@@ -984,12 +984,14 @@ async function buildSemanticColors() {
     }
     out += `}\n`;
 
-    // Build light colors (resolve from token refs)
+    // Build light colors (resolve from token refs) — computed once, reused for dark + variants
     const lightMap = {};
     for (const key of cat.keys) {
-      const token = tokens[key];
-      const rawVal = val(token);
-      lightMap[camel(key)] = resolveSemanticRef(rawVal, colorData, semantic);
+      lightMap[camel(key)] = resolveSemanticRef(
+        val(tokens[key]),
+        colorData,
+        semantic,
+      );
     }
 
     out += `\nexport const light${cat.name}Colors: ${interfaceName} = {\n`;
@@ -1007,35 +1009,12 @@ async function buildSemanticColors() {
     out += `\nexport const dark${cat.name}Colors: ${interfaceName} = {\n`;
     out += toTSObject(Object.entries(darkMap));
     out += `\n};\n`;
-  }
 
-  // Build variant overrides (diff against light baseline)
-  const variantFiles = [
-    { file: "high-contrast", name: "highContrast" },
-    { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
-    { file: "autism-friendly", name: "autismFriendly" },
-    { file: "low-vision", name: "lowVision" },
-    { file: "low-info", name: "lowInfo" },
-  ];
-
-  // Generate per-category variant type + constants
-  for (const cat of SEMANTIC_CATEGORIES) {
-    const interfaceName = `${cat.name}Colors`;
-    const tokens = categoryData[cat.name];
-    const lightMap = {};
-    for (const key of cat.keys) {
-      lightMap[camel(key)] = resolveSemanticRef(
-        val(tokens[key]),
-        colorData,
-        semantic,
-      );
-    }
-
+    // Variant overrides (diff against light baseline)
     out += `\nexport type ${cat.name}Override = Partial<${interfaceName}>;\n`;
 
     const catVariants = [];
-    for (const { file, name } of variantFiles) {
-      const data = await readJSON(`themes/${file}.json`);
+    for (const { name, data } of variantThemeData) {
       const themeSemantic = data.theme?.semantic ?? {};
 
       const overrides = {};
