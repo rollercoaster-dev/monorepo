@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.3
+
+### Patch Changes
+
+- Updated dependencies [342e67a]
+  - @rollercoaster-dev/design-tokens@0.1.4
+
 ## 1.3.2
 
 ### Patch Changes
