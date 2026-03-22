@@ -11,12 +11,12 @@
     "$description": "Primary action text"
   },
   "action-primary-hover-bg": {
-    "$value": "{primary-dark}",
+    "$value": "{color.primary-dark}",
     "$type": "color",
     "$description": "Primary action hover background"
   },
   "action-primary-active-bg": {
-    "$value": "{primary-dark}",
+    "$value": "{color.primary-dark}",
     "$type": "color",
     "$description": "Primary action pressed background"
   },
