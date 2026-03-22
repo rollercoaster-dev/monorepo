@@ -1,0 +1,83 @@
+{
+  "$description": "Action semantic tokens — buttons, interactive states, selection",
+  "action-primary-bg": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Primary action background"
+  },
+  "action-primary-fg": {
+    "$value": "{primary-foreground}",
+    "$type": "color",
+    "$description": "Primary action text"
+  },
+  "action-primary-hover-bg": {
+    "$value": "{primary-dark}",
+    "$type": "color",
+    "$description": "Primary action hover background"
+  },
+  "action-primary-active-bg": {
+    "$value": "{primary-dark}",
+    "$type": "color",
+    "$description": "Primary action pressed background"
+  },
+  "action-secondary-bg": {
+    "$value": "{secondary}",
+    "$type": "color",
+    "$description": "Secondary action background"
+  },
+  "action-secondary-fg": {
+    "$value": "{secondary-foreground}",
+    "$type": "color",
+    "$description": "Secondary action text"
+  },
+  "action-secondary-hover-bg": {
+    "$value": "{color.secondary-dark}",
+    "$type": "color",
+    "$description": "Secondary action hover background"
+  },
+  "action-destructive-bg": {
+    "$value": "{destructive}",
+    "$type": "color",
+    "$description": "Destructive action background"
+  },
+  "action-destructive-fg": {
+    "$value": "{destructive-foreground}",
+    "$type": "color",
+    "$description": "Destructive action text"
+  },
+  "action-destructive-hover-bg": {
+    "$value": "{color.error}",
+    "$type": "color",
+    "$description": "Destructive action hover background"
+  },
+  "action-disabled-bg": {
+    "$value": "{bg-disabled}",
+    "$type": "color",
+    "$description": "Disabled action background"
+  },
+  "action-disabled-fg": {
+    "$value": "{text-disabled}",
+    "$type": "color",
+    "$description": "Disabled action text"
+  },
+  "action-disabled-border": {
+    "$value": "{color.gray.300}",
+    "$type": "color",
+    "$description": "Disabled action border"
+  },
+  "action-selection-bg": {
+    "$value": "{highlight}",
+    "$type": "color",
+    "$description": "Selected item background"
+  },
+  "action-selection-fg": {
+    "$value": "{highlight-foreground}",
+    "$type": "color",
+    "$description": "Selected item text"
+  },
+  "action-selection-border": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Selected item border"
+  }
+}
