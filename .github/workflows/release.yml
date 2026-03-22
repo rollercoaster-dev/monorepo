@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.CHANGESETS_TOKEN }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
