@@ -795,7 +795,290 @@ export type { VariantOverride } from './variants';
 
 export { lightNarrative, darkNarrative, narrativeModes, narrativeVariants } from './narrative';
 export type { Narrative, NarrativeOverride } from './narrative';
+
+export {
+  lightChromeColors, darkChromeColors, chromeVariants,
+  lightActionColors, darkActionColors, actionVariants,
+  lightSurfaceBorderColors, darkSurfaceBorderColors, surfaceBorderVariants,
+  lightJourneyColors, darkJourneyColors, journeyVariants,
+  lightBadgeRewardColors, darkBadgeRewardColors, badgeRewardVariants,
+  semanticColorModes,
+} from './semanticColors';
+export type {
+  ChromeColors, ChromeOverride,
+  ActionColors, ActionOverride,
+  SurfaceBorderColors, SurfaceBorderOverride,
+  JourneyColors, JourneyOverride,
+  BadgeRewardColors, BadgeRewardOverride,
+} from './semanticColors';
 `;
+}
+
+// ---------------------------------------------------------------------------
+// semanticColors.ts — new semantic color categories (chrome, action, etc.)
+// ---------------------------------------------------------------------------
+
+/**
+ * Definition of semantic color categories.
+ * Each category maps its token file to a set of keys and their interface property names.
+ */
+const SEMANTIC_CATEGORIES = [
+  {
+    file: "tokens/chrome.json",
+    name: "Chrome",
+    prefix: "chrome-",
+    themeKey: "chrome",
+    keys: [
+      "chrome-header-bg",
+      "chrome-header-fg",
+      "chrome-header-border",
+      "chrome-tab-bar-bg",
+      "chrome-tab-bar-fg",
+      "chrome-tab-bar-active-fg",
+      "chrome-tab-bar-indicator",
+      "chrome-modal-bg",
+      "chrome-modal-fg",
+      "chrome-modal-overlay",
+      "chrome-modal-border",
+      "chrome-top-bar-bg",
+      "chrome-top-bar-fg",
+    ],
+  },
+  {
+    file: "tokens/action.json",
+    name: "Action",
+    prefix: "action-",
+    themeKey: "action",
+    keys: [
+      "action-primary-bg",
+      "action-primary-fg",
+      "action-primary-hover-bg",
+      "action-primary-active-bg",
+      "action-secondary-bg",
+      "action-secondary-fg",
+      "action-secondary-hover-bg",
+      "action-destructive-bg",
+      "action-destructive-fg",
+      "action-destructive-hover-bg",
+      "action-disabled-bg",
+      "action-disabled-fg",
+      "action-disabled-border",
+      "action-selection-bg",
+      "action-selection-fg",
+      "action-selection-border",
+    ],
+  },
+  {
+    file: "tokens/surface-border.json",
+    name: "SurfaceBorder",
+    prefix: "",
+    themeKey: "surfaceBorder",
+    keys: [
+      "surface-card-bg",
+      "surface-card-fg",
+      "surface-sheet-bg",
+      "surface-sheet-fg",
+      "surface-input-bg",
+      "surface-input-fg",
+      "surface-sunken-bg",
+      "surface-elevated-bg",
+      "border-default",
+      "border-strong",
+      "border-subtle",
+      "border-input",
+      "border-focus",
+      "border-destructive",
+      "border-success",
+    ],
+  },
+  {
+    file: "tokens/journey.json",
+    name: "Journey",
+    prefix: "journey-",
+    themeKey: "journey",
+    keys: [
+      "journey-goal-bg",
+      "journey-goal-fg",
+      "journey-goal-border",
+      "journey-step-bg",
+      "journey-step-fg",
+      "journey-step-active-bg",
+      "journey-step-active-fg",
+      "journey-step-complete-bg",
+      "journey-step-complete-fg",
+      "journey-progress-track",
+      "journey-progress-fill",
+      "journey-timeline-line",
+      "journey-timeline-node-bg",
+      "journey-timeline-node-fg",
+      "journey-completion-bg",
+      "journey-completion-fg",
+      "journey-completion-accent",
+    ],
+  },
+  {
+    file: "tokens/badge-reward.json",
+    name: "BadgeReward",
+    prefix: "reward-",
+    themeKey: "badgeReward",
+    keys: [
+      "reward-badge-chrome-bg",
+      "reward-badge-chrome-fg",
+      "reward-badge-chrome-border",
+      "reward-badge-accent-1",
+      "reward-badge-accent-2",
+      "reward-badge-accent-3",
+      "reward-badge-accent-4",
+      "reward-badge-accent-5",
+      "reward-badge-label-bg",
+      "reward-badge-label-fg",
+      "reward-celebration-burst-1",
+      "reward-celebration-burst-2",
+      "reward-celebration-burst-3",
+      "reward-celebration-burst-4",
+      "reward-celebration-text",
+      "reward-level-novice-bg",
+      "reward-level-intermediate-bg",
+      "reward-level-advanced-bg",
+      "reward-level-expert-bg",
+    ],
+  },
+];
+
+/**
+ * Resolve a token value from a category token file, following references through
+ * semantic.json and colors.json.
+ */
+function resolveSemanticRef(value, colorData, semanticData) {
+  if (!value || typeof value !== "string" || !value.startsWith("{"))
+    return value;
+  return resolveRef(value, colorData, semanticData);
+}
+
+/**
+ * Build the semantic colors TypeScript file.
+ * Produces interfaces + light/dark constants + variant overrides for all categories.
+ */
+async function buildSemanticColors() {
+  const colorData = await readJSON("tokens/colors.json");
+  const semantic = await readJSON("tokens/semantic.json");
+  const dark = await readJSON("themes/dark.json");
+
+  // Read all category token files
+  const categoryData = {};
+  for (const cat of SEMANTIC_CATEGORIES) {
+    categoryData[cat.name] = await readJSON(cat.file);
+  }
+
+  let out = `// Auto-generated from design-tokens. DO NOT EDIT.\n`;
+
+  // For each category, generate interface + light + dark constants
+  for (const cat of SEMANTIC_CATEGORIES) {
+    const tokens = categoryData[cat.name];
+    const interfaceName = `${cat.name}Colors`;
+
+    // Build interface
+    out += `\nexport interface ${interfaceName} {\n`;
+    for (const key of cat.keys) {
+      out += `  ${camel(key)}: string;\n`;
+    }
+    out += `}\n`;
+
+    // Build light colors (resolve from token refs)
+    const lightMap = {};
+    for (const key of cat.keys) {
+      const token = tokens[key];
+      const rawVal = val(token);
+      lightMap[camel(key)] = resolveSemanticRef(rawVal, colorData, semantic);
+    }
+
+    out += `\nexport const light${cat.name}Colors: ${interfaceName} = {\n`;
+    out += toTSObject(Object.entries(lightMap));
+    out += `\n};\n`;
+
+    // Build dark colors (from theme semantic section, falling back to light)
+    const darkSemantic = dark.theme?.semantic ?? {};
+    const darkMap = {};
+    for (const key of cat.keys) {
+      const darkVal = darkSemantic[key]?.$value ?? darkSemantic[key];
+      darkMap[camel(key)] = darkVal ?? lightMap[camel(key)];
+    }
+
+    out += `\nexport const dark${cat.name}Colors: ${interfaceName} = {\n`;
+    out += toTSObject(Object.entries(darkMap));
+    out += `\n};\n`;
+  }
+
+  // Build variant overrides (diff against light baseline)
+  const variantFiles = [
+    { file: "high-contrast", name: "highContrast" },
+    { file: "dyslexia-friendly", name: "dyslexiaFriendly" },
+    { file: "autism-friendly", name: "autismFriendly" },
+    { file: "low-vision", name: "lowVision" },
+    { file: "low-info", name: "lowInfo" },
+  ];
+
+  // Generate per-category variant type + constants
+  for (const cat of SEMANTIC_CATEGORIES) {
+    const interfaceName = `${cat.name}Colors`;
+    const tokens = categoryData[cat.name];
+    const lightMap = {};
+    for (const key of cat.keys) {
+      lightMap[camel(key)] = resolveSemanticRef(
+        val(tokens[key]),
+        colorData,
+        semantic,
+      );
+    }
+
+    out += `\nexport type ${cat.name}Override = Partial<${interfaceName}>;\n`;
+
+    const catVariants = [];
+    for (const { file, name } of variantFiles) {
+      const data = await readJSON(`themes/${file}.json`);
+      const themeSemantic = data.theme?.semantic ?? {};
+
+      const overrides = {};
+      for (const key of cat.keys) {
+        const themeVal = themeSemantic[key]?.$value ?? themeSemantic[key];
+        if (themeVal && themeVal !== lightMap[camel(key)]) {
+          overrides[camel(key)] = themeVal;
+        }
+      }
+
+      if (Object.keys(overrides).length > 0) {
+        catVariants.push({ name, overrides });
+      }
+    }
+
+    for (const { name, overrides } of catVariants) {
+      out += `\nexport const ${name}${cat.name}: ${cat.name}Override = {\n`;
+      out += toTSObject(Object.entries(overrides));
+      out += `\n};\n`;
+    }
+
+    out += `\nexport const ${cat.themeKey}Variants = {\n`;
+    for (const { name } of catVariants) {
+      out += `  ${name}: ${name}${cat.name},\n`;
+    }
+    out += `} as const;\n`;
+  }
+
+  // Export combined semantic modes
+  out += `\nexport const semanticColorModes = {\n`;
+  out += `  light: {\n`;
+  for (const cat of SEMANTIC_CATEGORIES) {
+    out += `    ${cat.themeKey}: light${cat.name}Colors,\n`;
+  }
+  out += `  },\n`;
+  out += `  dark: {\n`;
+  for (const cat of SEMANTIC_CATEGORIES) {
+    out += `    ${cat.themeKey}: dark${cat.name}Colors,\n`;
+  }
+  out += `  },\n`;
+  out += `} as const;\n`;
+
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -811,7 +1094,10 @@ async function main() {
     buildColorModes(),
     buildVariants(),
   ]);
-  const narrativeContent = await buildNarrative();
+  const [narrativeContent, semanticColorsContent] = await Promise.all([
+    buildNarrative(),
+    buildSemanticColors(),
+  ]);
 
   const hasSizeL = tokens.includes("export const sizeL");
   const hasLineHeightL = tokens.includes("export const lineHeightL");
@@ -822,11 +1108,12 @@ async function main() {
     writeFile(join(OUT, "colorModes.ts"), colorModes),
     writeFile(join(OUT, "variants.ts"), variantsContent),
     writeFile(join(OUT, "narrative.ts"), narrativeContent),
+    writeFile(join(OUT, "semanticColors.ts"), semanticColorsContent),
     writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL, hasLineHeightL)),
   ]);
 
   console.log(
-    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, index",
+    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, semanticColors, index",
   );
 }
 
