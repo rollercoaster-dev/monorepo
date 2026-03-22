@@ -1,0 +1,68 @@
+{
+  "$description": "Chrome and app-shell semantic tokens — headers, tab bars, modals, top bars",
+  "chrome-header-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "App header background"
+  },
+  "chrome-header-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "App header text"
+  },
+  "chrome-header-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "App header bottom border"
+  },
+  "chrome-tab-bar-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Tab bar background"
+  },
+  "chrome-tab-bar-fg": {
+    "$value": "{muted-foreground}",
+    "$type": "color",
+    "$description": "Tab bar inactive text"
+  },
+  "chrome-tab-bar-active-fg": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Tab bar active/selected text"
+  },
+  "chrome-tab-bar-indicator": {
+    "$value": "{primary}",
+    "$type": "color",
+    "$description": "Tab bar active indicator"
+  },
+  "chrome-modal-bg": {
+    "$value": "{card}",
+    "$type": "color",
+    "$description": "Modal content background"
+  },
+  "chrome-modal-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Modal content text"
+  },
+  "chrome-modal-overlay": {
+    "$value": "rgba(0, 0, 0, 0.5)",
+    "$type": "color",
+    "$description": "Modal backdrop overlay"
+  },
+  "chrome-modal-border": {
+    "$value": "{border}",
+    "$type": "color",
+    "$description": "Modal border"
+  },
+  "chrome-top-bar-bg": {
+    "$value": "{background}",
+    "$type": "color",
+    "$description": "Status/top bar background"
+  },
+  "chrome-top-bar-fg": {
+    "$value": "{foreground}",
+    "$type": "color",
+    "$description": "Status/top bar text"
+  }
+}
