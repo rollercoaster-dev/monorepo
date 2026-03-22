@@ -106,6 +106,18 @@ interface UserCredentialRow {
   type: string
 }
 
+export interface RefreshToken {
+  id: string
+  userId: string
+  tokenHash: string
+  expiresAt: string
+  revokedAt: string | null
+  revokedReason: RefreshTokenRevokeReason | null
+  createdAt: string
+}
+
+export type RefreshTokenRevokeReason = 'rotated' | 'expired' | 'logout' | 'compromised'
+
 export interface OAuthSession {
   id: string
   state: string
@@ -114,6 +126,18 @@ export interface OAuthSession {
   provider: string
   created_at: string
   expires_at: string
+}
+
+export interface OAuthLoginExchange {
+  id: string
+  code: string
+  accessToken: string
+  refreshToken: string
+  userData: string
+  redirectUri?: string
+  createdAt: string
+  expiresAt: string
+  consumedAt: string | null
 }
 
 export class UserService {
@@ -241,6 +265,40 @@ export class UserService {
         );
       `)
 
+      // Create refresh tokens table
+      this.getDb().exec(`
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          id TEXT PRIMARY KEY,
+          userId TEXT NOT NULL,
+          tokenHash TEXT NOT NULL UNIQUE,
+          expiresAt TEXT NOT NULL,
+          revokedAt TEXT,
+          revokedReason TEXT,
+          createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+        );
+      `)
+
+      try {
+        this.getDb().exec(`ALTER TABLE refresh_tokens ADD COLUMN revokedReason TEXT`)
+      } catch {
+        // Column already exists
+      }
+
+      this.getDb().exec(`
+        CREATE TABLE IF NOT EXISTS oauth_login_exchanges (
+          id TEXT PRIMARY KEY,
+          code TEXT NOT NULL UNIQUE,
+          accessToken TEXT NOT NULL,
+          refreshToken TEXT NOT NULL,
+          userData TEXT NOT NULL,
+          redirectUri TEXT,
+          createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          expiresAt TEXT NOT NULL,
+          consumedAt TEXT
+        );
+      `)
+
       // Create indexes for better performance
       this.getDb().exec(`
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -249,6 +307,11 @@ export class UserService {
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_user_id ON oauth_providers(user_id);
         CREATE INDEX IF NOT EXISTS idx_oauth_providers_provider ON oauth_providers(provider);
         CREATE INDEX IF NOT EXISTS idx_oauth_sessions_state ON oauth_sessions(state);
+        CREATE INDEX IF NOT EXISTS idx_oauth_sessions_expires_at ON oauth_sessions(expires_at);
+        CREATE INDEX IF NOT EXISTS idx_oauth_login_exchanges_code ON oauth_login_exchanges(code);
+        CREATE INDEX IF NOT EXISTS idx_oauth_login_exchanges_expiresAt ON oauth_login_exchanges(expiresAt);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expiresAt ON refresh_tokens(expiresAt);
       `)
 
       console.log('Database initialized successfully')
@@ -270,8 +333,8 @@ export class UserService {
     return this.getDb().prepare(sql).all(params)
   }
 
-  private generateId(): string {
-    return 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2)
+  private generateId(prefix: string = 'user'): string {
+    return `${prefix}_` + Date.now().toString(36) + Math.random().toString(36).substr(2)
   }
 
   private parseUser(row: unknown): User {
@@ -294,7 +357,7 @@ export class UserService {
   }
 
   async createUser(userData: CreateUserData): Promise<User> {
-    const id = this.generateId()
+    const id = this.generateId('user')
     const now = new Date().toISOString()
 
     const sql = `
@@ -587,11 +650,82 @@ export class UserService {
     return true
   }
 
+  // Refresh token management
+  async storeRefreshToken(
+    userId: string,
+    tokenHash: string,
+    expiresAt: string
+  ): Promise<RefreshToken> {
+    const id = this.generateId('refresh_token')
+    const now = new Date().toISOString()
+
+    this.runQuery(
+      `INSERT INTO refresh_tokens (id, userId, tokenHash, expiresAt, createdAt) VALUES (?, ?, ?, ?, ?)`,
+      [id, userId, tokenHash, expiresAt, now]
+    )
+
+    return {
+      id,
+      userId,
+      tokenHash,
+      expiresAt,
+      revokedAt: null,
+      revokedReason: null,
+      createdAt: now,
+    }
+  }
+
+  async getRefreshTokenByHash(tokenHash: string): Promise<RefreshToken | null> {
+    const row = this.getQuery('SELECT * FROM refresh_tokens WHERE tokenHash = ?', [tokenHash])
+    return row ? (row as RefreshToken) : null
+  }
+
+  async consumeRefreshToken(
+    tokenHash: string,
+    revokedReason: RefreshTokenRevokeReason
+  ): Promise<boolean> {
+    const row = this.getDb()
+      .prepare(
+        `UPDATE refresh_tokens
+         SET revokedAt = ?, revokedReason = ?
+         WHERE tokenHash = ? AND revokedAt IS NULL
+         RETURNING tokenHash`
+      )
+      .get(new Date().toISOString(), revokedReason, tokenHash)
+
+    return Boolean(row)
+  }
+
+  async revokeRefreshToken(
+    tokenHash: string,
+    revokedReason: RefreshTokenRevokeReason = 'logout'
+  ): Promise<void> {
+    this.runQuery(
+      'UPDATE refresh_tokens SET revokedAt = ?, revokedReason = ? WHERE tokenHash = ? AND revokedAt IS NULL',
+      [new Date().toISOString(), revokedReason, tokenHash]
+    )
+  }
+
+  async revokeAllUserRefreshTokens(
+    userId: string,
+    revokedReason: RefreshTokenRevokeReason = 'compromised'
+  ): Promise<void> {
+    this.runQuery(
+      'UPDATE refresh_tokens SET revokedAt = ?, revokedReason = ? WHERE userId = ? AND revokedAt IS NULL',
+      [new Date().toISOString(), revokedReason, userId]
+    )
+  }
+
+  async cleanupExpiredRefreshTokens(): Promise<void> {
+    const now = new Date().toISOString()
+    this.runQuery('DELETE FROM refresh_tokens WHERE expiresAt < ?', [now])
+  }
+
   // OAuth provider management
   async createOAuthProvider(
     oauthProvider: Omit<OAuthProvider, 'id' | 'created_at' | 'updated_at'>
   ): Promise<OAuthProvider> {
-    const id = this.generateId()
+    const id = this.generateId('oauth_provider')
     const now = new Date().toISOString()
 
     const sql = `
@@ -696,7 +830,7 @@ export class UserService {
   async createOAuthSession(
     session: Omit<OAuthSession, 'id' | 'created_at'>
   ): Promise<OAuthSession> {
-    const id = this.generateId()
+    const id = this.generateId('oauth_session')
     const now = new Date().toISOString()
 
     const sql = `
@@ -736,6 +870,56 @@ export class UserService {
   async cleanupExpiredOAuthSessions(): Promise<void> {
     const now = new Date().toISOString()
     this.runQuery('DELETE FROM oauth_sessions WHERE expires_at < ?', [now])
+  }
+
+  async createOAuthLoginExchange(
+    exchange: Omit<OAuthLoginExchange, 'id' | 'createdAt' | 'consumedAt'>
+  ): Promise<OAuthLoginExchange> {
+    const id = this.generateId('oauth_exchange')
+    const now = new Date().toISOString()
+
+    this.runQuery(
+      `INSERT INTO oauth_login_exchanges
+         (id, code, accessToken, refreshToken, userData, redirectUri, createdAt, expiresAt, consumedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+      [
+        id,
+        exchange.code,
+        exchange.accessToken,
+        exchange.refreshToken,
+        exchange.userData,
+        exchange.redirectUri || null,
+        now,
+        exchange.expiresAt,
+      ]
+    )
+
+    return {
+      id,
+      ...exchange,
+      redirectUri: exchange.redirectUri,
+      createdAt: now,
+      consumedAt: null,
+    }
+  }
+
+  async consumeOAuthLoginExchange(code: string): Promise<OAuthLoginExchange | null> {
+    const now = new Date().toISOString()
+    const row = this.getDb()
+      .prepare(
+        `UPDATE oauth_login_exchanges
+         SET consumedAt = ?
+         WHERE code = ? AND consumedAt IS NULL AND expiresAt >= ?
+         RETURNING *`
+      )
+      .get(now, code, now)
+
+    return row ? (row as OAuthLoginExchange) : null
+  }
+
+  async cleanupExpiredOAuthLoginExchanges(): Promise<void> {
+    const now = new Date().toISOString()
+    this.runQuery('DELETE FROM oauth_login_exchanges WHERE expiresAt < ?', [now])
   }
 
   async close(): Promise<void> {
