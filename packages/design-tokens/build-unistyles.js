@@ -799,6 +799,7 @@ export {
   lightSurfaceBorderColors, darkSurfaceBorderColors, surfaceBorderVariants,
   lightJourneyColors, darkJourneyColors, journeyVariants,
   lightBadgeRewardColors, darkBadgeRewardColors, badgeRewardVariants,
+  lightTypographyRoleColors, darkTypographyRoleColors, typographyRoleVariants,
   semanticColorModes,
 } from './semanticColors';
 export type {
@@ -807,6 +808,7 @@ export type {
   SurfaceBorderColors, SurfaceBorderOverride,
   JourneyColors, JourneyOverride,
   BadgeRewardColors, BadgeRewardOverride,
+  TypographyRoleColors, TypographyRoleOverride,
 } from './semanticColors';
 `;
 }
@@ -934,6 +936,12 @@ const SEMANTIC_CATEGORIES = [
       "reward-level-advanced-bg",
       "reward-level-expert-bg",
     ],
+  },
+  {
+    file: "tokens/typography-roles.json",
+    name: "TypographyRole",
+    themeKey: "typographyRole",
+    keys: ["typo-caption-color"],
   },
 ];
 
