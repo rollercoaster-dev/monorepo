@@ -930,6 +930,8 @@ const SEMANTIC_CATEGORIES = [
       "reward-celebration-burst-2",
       "reward-celebration-burst-3",
       "reward-celebration-burst-4",
+      "reward-celebration-burst-5",
+      "reward-celebration-burst-6",
       "reward-celebration-text",
       "reward-level-novice-bg",
       "reward-level-intermediate-bg",

@@ -21,9 +21,9 @@
     "$description": "Bottom sheet / popover text"
   },
   "surface-input-bg": {
-    "$value": "{input}",
+    "$value": "{card}",
     "$type": "color",
-    "$description": "Input field background"
+    "$description": "Input field background — matches backgroundSecondary"
   },
   "surface-input-fg": {
     "$value": "{foreground}",
@@ -43,7 +43,7 @@
   "border-default": {
     "$value": "{border}",
     "$type": "color",
-    "$description": "Default border color"
+    "$description": "Default border color — strong neo-brutalist stroke"
   },
   "border-strong": {
     "$value": "{color.black}",
@@ -56,9 +56,9 @@
     "$description": "Subtle/secondary border"
   },
   "border-input": {
-    "$value": "{color.gray.300}",
+    "$value": "{border}",
     "$type": "color",
-    "$description": "Input field border"
+    "$description": "Input field border — matches default border (neo-brutalist)"
   },
   "border-focus": {
     "$value": "{ring}",

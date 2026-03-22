@@ -21,44 +21,44 @@
     "$description": "Primary action pressed background"
   },
   "action-secondary-bg": {
-    "$value": "{secondary}",
+    "$value": "{card}",
     "$type": "color",
-    "$description": "Secondary action background"
+    "$description": "Secondary action background — neutral surface"
   },
   "action-secondary-fg": {
-    "$value": "{secondary-foreground}",
+    "$value": "{foreground}",
     "$type": "color",
     "$description": "Secondary action text"
   },
   "action-secondary-hover-bg": {
-    "$value": "{color.secondary-dark}",
+    "$value": "{muted}",
     "$type": "color",
     "$description": "Secondary action hover background"
   },
   "action-destructive-bg": {
-    "$value": "{destructive}",
+    "$value": "{color.warning}",
     "$type": "color",
-    "$description": "Destructive action background"
+    "$description": "Destructive action background — amber warning tone"
   },
   "action-destructive-fg": {
-    "$value": "{destructive-foreground}",
+    "$value": "{foreground}",
     "$type": "color",
-    "$description": "Destructive action text"
+    "$description": "Destructive action text — dark on amber"
   },
   "action-destructive-hover-bg": {
-    "$value": "{color.error}",
+    "$value": "{color.warning}",
     "$type": "color",
     "$description": "Destructive action hover background"
   },
   "action-disabled-bg": {
     "$value": "{bg-disabled}",
     "$type": "color",
-    "$description": "Disabled action background"
+    "$description": "Disabled action background (native-rd uses opacity instead)"
   },
   "action-disabled-fg": {
     "$value": "{text-disabled}",
     "$type": "color",
-    "$description": "Disabled action text"
+    "$description": "Disabled action text (native-rd uses opacity instead)"
   },
   "action-disabled-border": {
     "$value": "{color.gray.300}",
@@ -66,12 +66,12 @@
     "$description": "Disabled action border"
   },
   "action-selection-bg": {
-    "$value": "{highlight}",
+    "$value": "{primary}",
     "$type": "color",
-    "$description": "Selected item background"
+    "$description": "Selected item background — brand blue"
   },
   "action-selection-fg": {
-    "$value": "{highlight-foreground}",
+    "$value": "{primary-foreground}",
     "$type": "color",
     "$description": "Selected item text"
   },

@@ -3,7 +3,7 @@
   "chrome-header-bg": {
     "$value": "{card}",
     "$type": "color",
-    "$description": "App header background"
+    "$description": "App header background (hidden in native-rd, used by web)"
   },
   "chrome-header-fg": {
     "$value": "{foreground}",
@@ -16,22 +16,22 @@
     "$description": "App header bottom border"
   },
   "chrome-tab-bar-bg": {
-    "$value": "{card}",
+    "$value": "{color.accent-purple}",
     "$type": "color",
-    "$description": "Tab bar background"
+    "$description": "Tab bar background — brand purple"
   },
   "chrome-tab-bar-fg": {
-    "$value": "{muted-foreground}",
+    "$value": "{color.gray.800}",
     "$type": "color",
-    "$description": "Tab bar inactive text"
+    "$description": "Tab bar inactive text — contrast-computed on purple"
   },
   "chrome-tab-bar-active-fg": {
-    "$value": "{primary}",
+    "$value": "{color.black}",
     "$type": "color",
-    "$description": "Tab bar active/selected text"
+    "$description": "Tab bar active/selected text — contrast-computed on purple"
   },
   "chrome-tab-bar-indicator": {
-    "$value": "{primary}",
+    "$value": "{color.black}",
     "$type": "color",
     "$description": "Tab bar active indicator"
   },
@@ -56,13 +56,13 @@
     "$description": "Modal border"
   },
   "chrome-top-bar-bg": {
-    "$value": "{background}",
+    "$value": "{color.accent-yellow}",
     "$type": "color",
-    "$description": "Status/top bar background"
+    "$description": "Status/top bar background — brand yellow"
   },
   "chrome-top-bar-fg": {
-    "$value": "{foreground}",
+    "$value": "{color.black}",
     "$type": "color",
-    "$description": "Status/top bar text"
+    "$description": "Status/top bar text — dark on yellow"
   }
 }

@@ -1,9 +1,9 @@
 {
   "$description": "Journey semantic tokens — goals, steps, progress, completion, timeline",
   "journey-goal-bg": {
-    "$value": "{color.accent-yellow}",
+    "$value": "{color.warning}",
     "$type": "color",
-    "$description": "Goal card background"
+    "$description": "Goal card background — amber warning tone"
   },
   "journey-goal-fg": {
     "$value": "{color.black}",
@@ -38,7 +38,7 @@
   "journey-step-complete-bg": {
     "$value": "{success}",
     "$type": "color",
-    "$description": "Completed step indicator background"
+    "$description": "Completed step indicator background — green in dots, blue in timeline"
   },
   "journey-step-complete-fg": {
     "$value": "{success-foreground}",
@@ -46,9 +46,9 @@
     "$description": "Completed step indicator text"
   },
   "journey-progress-track": {
-    "$value": "{color.gray.200}",
+    "$value": "{color.gray.100}",
     "$type": "color",
-    "$description": "Progress bar track background"
+    "$description": "Progress bar track background — matches backgroundTertiary"
   },
   "journey-progress-fill": {
     "$value": "{primary}",
@@ -56,9 +56,9 @@
     "$description": "Progress bar fill"
   },
   "journey-timeline-line": {
-    "$value": "{border}",
+    "$value": "{muted-foreground}",
     "$type": "color",
-    "$description": "Timeline connector line"
+    "$description": "Timeline connector line — dashed muted stroke"
   },
   "journey-timeline-node-bg": {
     "$value": "{card}",

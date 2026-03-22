@@ -1,14 +1,14 @@
 {
   "$description": "Badge and reward semantic tokens — badge chrome, accents, palette, celebration",
   "reward-badge-chrome-bg": {
-    "$value": "{card}",
+    "$value": "{color.accent-purple}",
     "$type": "color",
-    "$description": "Badge card chrome background"
+    "$description": "Badge card chrome background — brand purple"
   },
   "reward-badge-chrome-fg": {
-    "$value": "{foreground}",
+    "$value": "{color.white}",
     "$type": "color",
-    "$description": "Badge card chrome text"
+    "$description": "Badge card chrome text — light on purple"
   },
   "reward-badge-chrome-border": {
     "$value": "{border}",
@@ -51,24 +51,34 @@
     "$description": "Badge label text"
   },
   "reward-celebration-burst-1": {
-    "$value": "{color.accent-yellow}",
+    "$value": "{color.primary-dark}",
     "$type": "color",
-    "$description": "Celebration particle color 1"
+    "$description": "Celebration particle — blue"
   },
   "reward-celebration-burst-2": {
-    "$value": "{color.accent-orange}",
+    "$value": "{color.accent-yellow}",
     "$type": "color",
-    "$description": "Celebration particle color 2"
+    "$description": "Celebration particle — yellow"
   },
   "reward-celebration-burst-3": {
-    "$value": "{color.accent-purple}",
+    "$value": "#16a34a",
     "$type": "color",
-    "$description": "Celebration particle color 3"
+    "$description": "Celebration particle — green"
   },
   "reward-celebration-burst-4": {
-    "$value": "{color.accent-teal}",
+    "$value": "{color.accent-purple}",
     "$type": "color",
-    "$description": "Celebration particle color 4"
+    "$description": "Celebration particle — purple"
+  },
+  "reward-celebration-burst-5": {
+    "$value": "#f97316",
+    "$type": "color",
+    "$description": "Celebration particle — orange"
+  },
+  "reward-celebration-burst-6": {
+    "$value": "{color.error}",
+    "$type": "color",
+    "$description": "Celebration particle — red"
   },
   "reward-celebration-text": {
     "$value": "{foreground}",
