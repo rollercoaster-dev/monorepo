@@ -208,9 +208,7 @@ async function decompressP256PublicKey(
 
     return uncompressed;
   } catch (error) {
-    logger.error(
-      `Failed to decompress P-256 key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to decompress P-256 key", { error });
     return null;
   }
 }
@@ -335,9 +333,7 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
     logger.error(`Unsupported multicodec prefix: 0x${codecValue.toString(16)}`);
     return null;
   } catch (error) {
-    logger.error(
-      `Failed to resolve did:key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to resolve did:key", { error });
     return null;
   }
 }
@@ -474,9 +470,7 @@ async function extractPublicKeyFromVerificationMethod(
     );
     return null;
   } catch (error) {
-    logger.error(
-      `Failed to extract public key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to extract public key", { error });
     return null;
   }
 }
@@ -570,9 +564,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
     // Extract public key from verification method
     return await extractPublicKeyFromVerificationMethod(verificationMethod);
   } catch (error) {
-    logger.error(
-      `Failed to resolve did:web: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to resolve did:web", { error });
     return null;
   }
 }

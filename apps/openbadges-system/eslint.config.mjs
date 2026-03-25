@@ -191,9 +191,9 @@ export default [
     },
   },
 
-  // Scripts are CLI tools, not application code
+  // Scripts are CLI tools, not application code — JS scripts use CommonJS sourceType
   {
-    files: ['scripts/**/*.{ts,js,cjs,mjs}'],
+    files: ['scripts/**/*.{js,cjs,mjs}'],
     languageOptions: {
       globals: {
         console: 'readonly',
@@ -218,9 +218,16 @@ export default [
           varsIgnorePattern: '^_',
         },
       ],
-      // Allow lexical declarations in case blocks (common pattern in this codebase)
       'no-case-declarations': 'off',
       'no-undef': 'off',
+    },
+  },
+
+  // TS scripts use ES modules but still need relaxed rules
+  {
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];

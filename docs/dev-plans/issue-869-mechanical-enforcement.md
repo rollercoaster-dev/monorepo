@@ -66,8 +66,8 @@ Add mechanical enforcement for four code-quality rules currently marked `doc-onl
 **Commit**: `feat(config): promote no-console to error in shared ESLint config`
 **Changes**:
 
-- [ ] In `base` config: change `'no-console': ['warn', { allow: ['warn', 'error'] }]` to `'no-console': 'error'` (ban all console methods)
-- [ ] In `vue` config: same change to `no-console`
+- [ ] In `base` config: change `'no-console': ['warn', { allow: ['warn', 'error'] }]` to `'no-console': 'error'` (ban all console methods in server/library code)
+- [ ] In `vue` config: change to `'no-console': ['error', { allow: ['warn', 'error'] }]` (allow `console.warn`/`console.error` in client-side code since `rd-logger` is not available in the browser)
 - [ ] Add a new exported config object `test` (or document override pattern) that sets `'no-console': 'off'` so test configs can easily opt out
 - [ ] Verify no existing `.ts` or `.vue` source files (non-test) use raw `console.*` — research confirms the codebase uses `rd-logger` aliases (`nlog`, `nerror`, `nwarn`) already, so no fixup needed
 
@@ -145,7 +145,7 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
   4. If >= 90 days: outputs a warning line (does NOT `exit 1`)
   5. Summarizes how many docs are stale
 - [ ] Make threshold configurable via env var `DOCS_FRESHNESS_THRESHOLD_DAYS` (default: 90)
-- [ ] Use `actions/checkout@v4` (match existing CI pattern but note `ci.yml` uses `v6` — match the repo's convention)
+- [ ] Use `actions/checkout@v6` (match the repo's established convention)
 - [ ] Job name: `Docs Freshness Check`
 
 ### Step 6: Update golden-principles.md with lint-enforced status
