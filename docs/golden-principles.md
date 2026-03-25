@@ -23,7 +23,7 @@ console.log("Server started on port", port);
 
 **Rationale:** Structured logging enables consistent formatting, log levels, and machine-parseable output. `console.*` produces unstructured text that is hard to filter in production.
 
-**Status:** doc-only (lint rule tracked in #869)
+**Status:** lint-enforced (`no-console: error` in shared-config, PR #869)
 
 ---
 
@@ -90,7 +90,7 @@ button {
 
 **Rationale:** Packages are published independently and must not depend on application code. Upward dependencies create circular imports and break the publish pipeline.
 
-**Status:** doc-only (lint enforcement tracked in #869)
+**Status:** lint-enforced (`no-restricted-imports` in package ESLint configs, PR #869)
 
 ---
 
@@ -124,6 +124,30 @@ const part = value.substr(0, 10);
 **Rationale:** `substr` is deprecated in the ECMAScript specification. `substring` is the standard replacement with equivalent functionality.
 
 **Status:** doc-only (lint rule could be added via `no-restricted-properties`)
+
+---
+
+### 8. PascalCase for Vue component files
+
+**DO:** Name Vue component files in PascalCase (e.g., `BadgeCard.vue`, `ProfileViewer.vue`).
+
+**DON'T:** Use kebab-case or camelCase for component files in `components/` directories.
+
+**Rationale:** PascalCase matches the component name used in templates and imports. Consistent naming makes components easy to find via file search.
+
+**Status:** lint-enforced (`vue/match-component-file-name` in shared-config, PR #869)
+
+---
+
+### 9. Track docs freshness in docs/index.md
+
+**DO:** Add new key documentation files to `docs/index.md` with a verification date. Update the date when you verify a doc is still accurate.
+
+**DON'T:** Let docs go stale without review. The CI `docs-freshness` job warns when any tracked doc has not been verified in 90+ days.
+
+**Rationale:** Documentation drifts from reality over time. Periodic verification ensures docs remain useful and accurate. The 90-day threshold is configurable.
+
+**Status:** ci-enforced (`docs-freshness.yml` workflow, PR #869)
 
 ## Escalation Path
 
