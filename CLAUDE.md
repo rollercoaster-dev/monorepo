@@ -78,6 +78,7 @@ Use after completing relevant work:
 
 ## Documentation
 
+- [Documentation Index](docs/index.md) - full catalog of all docs with freshness status
 - [Architecture Overview](docs/architecture/overview.md) - package map, dependency directions, prohibited imports
 - [Golden Principles](docs/golden-principles.md) - mechanical coding rules drawn from PR reviews
 - [Development Workflows](docs/development-workflows.md) - gates, agents, plugins

@@ -339,7 +339,7 @@ Read 50 files, Grep 30 patterns inline
 # GOOD - isolated subagent returns compact result
 
 Task(issue-researcher): "Analyze issue 123"
-→ Returns: { plan_path: ".claude/dev-plans/issue-123.md" }
+→ Returns: { plan_path: "docs/plans/active/issue-123.md" }
 ```
 
 ### Don't: Shared State Between Components

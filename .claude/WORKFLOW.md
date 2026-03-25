@@ -43,7 +43,7 @@ The `issue-researcher` agent:
 1. Fetches issue details
 2. Analyzes codebase
 3. Creates development plan
-4. Saves to `.claude/dev-plans/issue-108.md`
+4. Saves to `docs/plans/active/issue-108.md`
 5. Updates board status to "In Progress"
 
 ### 3. Implement the Plan
@@ -269,8 +269,8 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`
 │   └── pr-review-checker/
 ├── templates/           # Templates
 │   └── dev-plan.md
-├── dev-plans/           # Stored development plans
-│   └── issue-<number>.md
+├── dev-plans/           # Redirect → docs/plans/ (see README)
+│   └── README.md
 ├── settings.json        # Team settings
 ├── WORKFLOW.md          # This file
 └── settings.local.json  # Personal settings (not committed)
