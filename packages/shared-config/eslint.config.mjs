@@ -110,6 +110,7 @@ export const vue = [
     },
     rules: {
       // Vue-specific rules
+      'vue/match-component-file-name': ['error', { extensions: ['vue'], shouldMatchCase: true }],
       'vue/no-mutating-props': 'error',
       'vue/require-default-prop': 'warn',
       'vue/require-prop-types': 'error',
