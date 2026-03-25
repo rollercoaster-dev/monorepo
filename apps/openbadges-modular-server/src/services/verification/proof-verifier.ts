@@ -332,9 +332,7 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
       return null;
     }
 
-    logger.error(
-      `Unsupported multicodec prefix: 0x${codecValue.toString(16)}`,
-    );
+    logger.error(`Unsupported multicodec prefix: 0x${codecValue.toString(16)}`);
     return null;
   } catch (error) {
     logger.error(
