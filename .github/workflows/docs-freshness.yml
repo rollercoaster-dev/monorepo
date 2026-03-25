@@ -38,6 +38,9 @@ jobs:
           echo "Checking docs freshness (threshold: ${THRESHOLD} days)"
           echo "================================================"
 
+          # Extract only the CI Freshness Tracking table section (last section in the file)
+          SECTION=$(sed -n '/^## CI Freshness Tracking/,$p' "$INDEX_FILE")
+
           # Parse the markdown table rows (skip header and separator)
           while IFS='|' read -r _ file description last_verified _; do
             # Trim whitespace
@@ -70,7 +73,7 @@ jobs:
             else
               echo "  OK: ${file} — verified ${last_verified} (${days_since} days ago)"
             fi
-          done < "$INDEX_FILE"
+          done <<< "$SECTION"
 
           echo ""
           echo "================================================"
