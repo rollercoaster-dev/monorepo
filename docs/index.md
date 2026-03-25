@@ -11,6 +11,8 @@ Full catalog of all documentation in this repository, organized by topic.
 
 Freshness is relative to 2026-03-25. Re-audit periodically.
 
+**Excluded:** `docs/dev-plans/` — transient agent workspace, not cataloged. Active plans live in `docs/plans/active/`.
+
 ---
 
 ## Vision & Strategy
