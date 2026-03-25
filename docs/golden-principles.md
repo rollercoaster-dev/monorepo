@@ -14,7 +14,7 @@ const logger = createLogger("MyModule");
 logger.info("Server started", { port: 8888 });
 ```
 
-**DON'T:** Use `console.log`, `console.error`, `console.warn`, or any `console.*` method.
+**DON'T:** Use `console.log` or other `console.*` methods for application logging. (`console.warn` and `console.error` are currently allowed by ESLint but should still prefer `rd-logger` for consistency.)
 
 ```typescript
 // WRONG
@@ -123,7 +123,7 @@ const part = value.substr(0, 10);
 
 **Rationale:** `substr` is deprecated in the ECMAScript specification. `substring` is the standard replacement with equivalent functionality.
 
-**Status:** lint-enforceable (`no-restricted-syntax` or `no-restricted-properties`)
+**Status:** doc-only (lint rule could be added via `no-restricted-properties`)
 
 ## Escalation Path
 
