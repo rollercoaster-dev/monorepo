@@ -13,14 +13,14 @@
 
 Observable criteria derived from the issue. These describe what success looks like from a user/system perspective — not generic checklists.
 
-- [ ] Running `bun run lint` on the monorepo fails when a package under `packages/*` imports from `apps/*`
-- [ ] Running `bun run lint` fails when `shared-config`, `design-tokens`, or `openbadges-types` import any workspace package
-- [ ] Running `bun run lint` fails on `console.log(...)` or `console.debug(...)` in any `.ts` or `.vue` file outside of `*.test.ts` / `*.spec.ts`
-- [ ] Running `bun run lint` fails on `.vue` component files not named in PascalCase (within `src/components/` directories)
-- [ ] The CI pipeline includes a `docs-freshness` job that warns (does not fail) when a doc in `docs/index.md` has not been verified in 90+ days
-- [ ] The docs freshness job runs on PRs and on a weekly schedule
-- [ ] `docs/golden-principles.md` has all four enforced rules marked `lint-enforced` with the PR number
-- [ ] `docs/index.md` exists with verification date metadata for tracked docs
+- [x] Running `bun run lint` on the monorepo fails when a package under `packages/*` imports from `apps/*`
+- [x] Running `bun run lint` fails when `shared-config`, `design-tokens`, or `openbadges-types` import any workspace package
+- [x] Running `bun run lint` fails on `console.log(...)` or `console.debug(...)` in any `.ts` or `.vue` file outside of `*.test.ts` / `*.spec.ts`
+- [x] Running `bun run lint` fails on `.vue` component files not named in PascalCase (within `src/components/` directories)
+- [x] The CI pipeline includes a `docs-freshness` job that warns (does not fail) when a doc in `docs/index.md` has not been verified in 90+ days
+- [x] The docs freshness job runs on PRs and on a weekly schedule
+- [x] `docs/golden-principles.md` has all four enforced rules marked `lint-enforced` with the PR number
+- [x] `docs/index.md` exists with verification date metadata for tracked docs
 
 ## Dependencies
 
@@ -66,10 +66,10 @@ Add mechanical enforcement for four code-quality rules currently marked `doc-onl
 **Commit**: `feat(config): promote no-console to error in shared ESLint config`
 **Changes**:
 
-- [ ] In `base` config: change `'no-console': ['warn', { allow: ['warn', 'error'] }]` to `'no-console': 'error'` (ban all console methods in server/library code)
-- [ ] In `vue` config: change to `'no-console': ['error', { allow: ['warn', 'error'] }]` (allow `console.warn`/`console.error` in client-side code since `rd-logger` is not available in the browser)
-- [ ] Add a new exported config object `test` (or document override pattern) that sets `'no-console': 'off'` so test configs can easily opt out
-- [ ] Verify no existing `.ts` or `.vue` source files (non-test) use raw `console.*` — research confirms the codebase uses `rd-logger` aliases (`nlog`, `nerror`, `nwarn`) already, so no fixup needed
+- [x] In `base` config: change `'no-console': ['warn', { allow: ['warn', 'error'] }]` to `'no-console': 'error'` (ban all console methods in server/library code)
+- [x] In `vue` config: change to `'no-console': ['error', { allow: ['warn', 'error'] }]` (allow `console.warn`/`console.error` in client-side code since `rd-logger` is not available in the browser)
+- [x] Add a new exported config object `test` (or document override pattern) that sets `'no-console': 'off'` so test configs can easily opt out
+- [x] Verify no existing `.ts` or `.vue` source files (non-test) use raw `console.*` — research confirms the codebase uses `rd-logger` aliases (`nlog`, `nerror`, `nwarn`) already, so no fixup needed
 
 > Note: `openbadges-modular-server/eslint.config.mjs` already sets `'no-console': 'error'` locally. After this change, it inherits from shared-config and the local override becomes redundant (but harmless). No change needed there.
 
@@ -79,10 +79,10 @@ Add mechanical enforcement for four code-quality rules currently marked `doc-onl
 **Commit**: `feat(config): enforce PascalCase Vue component file names`
 **Changes**:
 
-- [ ] Add `'vue/match-component-file-name': ['error', { extensions: ['vue'], shouldMatchCase: true }]` to the `vue` config's rules block
-- [ ] Verify existing Vue component files in `packages/openbadges-ui/src/components/` are all PascalCase — confirmed: `BadgeClassCard.vue`, `AccessibilitySettings.vue`, etc. are compliant
-- [ ] Verify `apps/openbadges-system/src/client/components/` — confirmed: `Auth/LoginForm.vue`, `Badge/BadgeCard.vue`, etc. are compliant
-- [ ] Document in the rule comment that page files (`pages/**/*.vue`) use lowercase by vue-router convention and this rule targets `components/` only — configure `ignores` or path pattern if needed to exclude `pages/**`
+- [x] Add `'vue/match-component-file-name': ['error', { extensions: ['vue'], shouldMatchCase: true }]` to the `vue` config's rules block
+- [x] Verify existing Vue component files in `packages/openbadges-ui/src/components/` are all PascalCase — confirmed: `BadgeClassCard.vue`, `AccessibilitySettings.vue`, etc. are compliant
+- [x] Verify `apps/openbadges-system/src/client/components/` — confirmed: `Auth/LoginForm.vue`, `Badge/BadgeCard.vue`, etc. are compliant
+- [x] Document in the rule comment that page files (`pages/**/*.vue`) use lowercase by vue-router convention and this rule targets `components/` only — configure `ignores` or path pattern if needed to exclude `pages/**`
 
 > Note: `pages/**/*.vue` files (e.g., `admin/badges.vue`) are vue-router file-based routing artifacts. They intentionally use lowercase. The `vue/match-component-file-name` rule applies to component name vs. filename — pages typically don't declare a component name, so the rule will not trigger. Verify this assumption during implementation.
 
@@ -92,13 +92,13 @@ Add mechanical enforcement for four code-quality rules currently marked `doc-onl
 **Commit**: `feat(config): add import boundary lint rules for foundation packages`
 **Changes**:
 
-- [ ] In each foundation package ESLint config, add `no-restricted-imports` rule that bans any `@rollercoaster-dev/*` or local workspace package imports with a message: `"Foundation packages must not import from workspace packages. See docs/architecture/overview.md#prohibited-import-directions"`
-- [ ] `openbadges-types`: ban `@rollercoaster-dev/rd-logger`, `@rollercoaster-dev/openbadges-core`, `@rollercoaster-dev/openbadges-ui`, `@rollercoaster-dev/design-tokens`, and `apps/*` path patterns
-- [ ] `rd-logger`: same ban on all workspace packages (it is a foundation package)
-- [ ] `design-tokens`: ban on all workspace packages
-- [ ] `shared-config`: ban on all workspace packages
-- [ ] Check `packages/openbadges-core/eslint.config.mjs` and `packages/openbadges-ui/eslint.config.mjs`: add rule banning `apps/*` imports
-- [ ] Add remediation message to each `no-restricted-imports` entry pointing to the architecture overview
+- [x] In each foundation package ESLint config, add `no-restricted-imports` rule that bans any `@rollercoaster-dev/*` or local workspace package imports with a message: `"Foundation packages must not import from workspace packages. See docs/architecture/overview.md#prohibited-import-directions"`
+- [x] `openbadges-types`: ban `@rollercoaster-dev/rd-logger`, `@rollercoaster-dev/openbadges-core`, `@rollercoaster-dev/openbadges-ui`, `@rollercoaster-dev/design-tokens`, and `apps/*` path patterns
+- [x] `rd-logger`: same ban on all workspace packages (it is a foundation package)
+- [x] `design-tokens`: ban on all workspace packages
+- [x] `shared-config`: ban on all workspace packages
+- [x] Check `packages/openbadges-core/eslint.config.mjs` and `packages/openbadges-ui/eslint.config.mjs`: add rule banning `apps/*` imports
+- [x] Add remediation message to each `no-restricted-imports` entry pointing to the architecture overview
 
 ### Step 4: Create docs/index.md with verification metadata
 
@@ -106,8 +106,8 @@ Add mechanical enforcement for four code-quality rules currently marked `doc-onl
 **Commit**: `docs: create docs index with verification date tracking`
 **Changes**:
 
-- [ ] Create `docs/index.md` as a registry of key documentation files with `Last Verified` dates
-- [ ] Use a markdown table format:
+- [x] Create `docs/index.md` as a registry of key documentation files with `Last Verified` dates
+- [x] Use a markdown table format:
 
 ```markdown
 # Docs Index
@@ -128,7 +128,7 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
 | CLAUDE.md                     | Project instructions for Claude Code      | 2026-03-25    |
 ```
 
-- [ ] The date format is `YYYY-MM-DD` (ISO 8601) for unambiguous parsing
+- [x] The date format is `YYYY-MM-DD` (ISO 8601) for unambiguous parsing
 
 ### Step 5: Add docs freshness CI workflow
 
@@ -136,17 +136,17 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
 **Commit**: `ci: add docs freshness warning job`
 **Changes**:
 
-- [ ] Create `.github/workflows/docs-freshness.yml`
-- [ ] Trigger on: `pull_request` and `schedule` (weekly, e.g., `cron: '0 9 * * 1'`)
-- [ ] Single job: checkout repo, run a shell script that:
+- [x] Create `.github/workflows/docs-freshness.yml`
+- [x] Trigger on: `pull_request` and `schedule` (weekly, e.g., `cron: '0 9 * * 1'`)
+- [x] Single job: checkout repo, run a shell script that:
   1. Reads `docs/index.md`
-  2. Parses each row in the tracked documents table
+  2. Parses the "CI Freshness Tracking" section table rows (scoped via `sed` to avoid other tables)
   3. Computes days since `Last Verified` date
   4. If >= 90 days: outputs a warning line (does NOT `exit 1`)
   5. Summarizes how many docs are stale
-- [ ] Make threshold configurable via env var `DOCS_FRESHNESS_THRESHOLD_DAYS` (default: 90)
-- [ ] Use `actions/checkout@v6` (match the repo's established convention)
-- [ ] Job name: `Docs Freshness Check`
+- [x] Make threshold configurable via env var `DOCS_FRESHNESS_THRESHOLD_DAYS` (default: 90)
+- [x] Use `actions/checkout@v6` (match the repo's established convention)
+- [x] Job name: `Docs Freshness Check`
 
 ### Step 6: Update golden-principles.md with lint-enforced status
 
@@ -154,19 +154,19 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
 **Commit**: `docs(principles): mark logging and boundary rules as lint-enforced`
 **Changes**:
 
-- [ ] Rule 1 (rd-logger logging): update status from `doc-only (lint rule tracked in #869)` to `lint-enforced (PR #<this-pr>)`
-- [ ] Rule 5 (package dependency directions): update status from `doc-only (lint enforcement tracked in #869)` to `lint-enforced (PR #<this-pr>)`
-- [ ] Add a new Rule entry for file naming conventions (PascalCase Vue components), marked `lint-enforced`
-- [ ] Add a new Rule entry for docs freshness (90-day warning CI), marked `ci-enforced`
+- [x] Rule 1 (rd-logger logging): update status from `doc-only (lint rule tracked in #869)` to `lint-enforced (PR #876)`
+- [x] Rule 5 (package dependency directions): update status from `doc-only (lint enforcement tracked in #869)` to `lint-enforced (PR #876)`
+- [x] Add a new Rule entry for file naming conventions (PascalCase Vue components), marked `lint-enforced`
+- [x] Add a new Rule entry for docs freshness (90-day warning CI), marked `ci-enforced`
 
 ## Testing Strategy
 
-- [ ] Run `bun run lint` from monorepo root after Step 1 and confirm it passes (no false positives)
-- [ ] Manually introduce a `console.log` in a source file, run `bun run lint`, confirm it errors
-- [ ] Manually create a `mycomponent.vue` file in a components dir, run `bun run lint`, confirm it errors (or skip if `vue/match-component-file-name` doesn't trigger on files without component name declaration)
-- [ ] Manually add a workspace import to `openbadges-types`, run `bun run lint`, confirm it errors
-- [ ] Verify the docs-freshness script logic by setting a test date older than 90 days in `docs/index.md` and running the script locally
-- [ ] Run full CI via PR to verify all jobs pass and docs-freshness job appears in checks
+- [x] Run `bun run lint` from monorepo root after Step 1 and confirm it passes (no false positives)
+- [x] Manually introduce a `console.log` in a source file, run `bun run lint`, confirm it errors
+- [x] Manually create a `mycomponent.vue` file in a components dir, run `bun run lint`, confirm it errors (or skip if `vue/match-component-file-name` doesn't trigger on files without component name declaration)
+- [x] Manually add a workspace import to `openbadges-types`, run `bun run lint`, confirm it errors
+- [x] Verify the docs-freshness script logic by setting a test date older than 90 days in `docs/index.md` and running the script locally
+- [x] Run full CI via PR to verify all jobs pass and docs-freshness job appears in checks
 
 ## Not in Scope
 
@@ -179,6 +179,7 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-03-25] Rebase conflict: `docs/index.md` — main had a comprehensive doc catalog (from #874), PR had a minimal CI tracking table. Resolved by keeping main's catalog and appending the CI Freshness Tracking section at the bottom.
+- [2026-03-25] CI failure: `docs-freshness.yml` parser read every table in `docs/index.md`, hitting non-date values from the Freshness Criteria table. Fixed by scoping parser with `sed -n '/^## CI Freshness Tracking/,$p'`.
+- [2026-03-25] CodeRabbit review fixes: (1) ESLint scripts override split into JS/TS — JS keeps `sourceType: 'script'`, TS gets separate override for `no-console: off` only. (2) proof-verifier.ts logger calls changed from template literals to `{ error }` context pattern. (3) Dev plan updated to clarify base vs vue `no-console` and correct `actions/checkout` to v6.
+- [2026-03-25] CodeRabbit false positive: suggested importing `@/server/utils/logger` into client-side `backpack.vue` — `rd-logger` is server-only, and the vue ESLint config already allows `console.warn`/`console.error` in browser code.
