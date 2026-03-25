@@ -43,7 +43,7 @@
 
 **SQLite:**
 
-- Uses better-sqlite3 with WAL mode and optimized pragmas
+- Uses bun:sqlite with WAL mode and optimized pragmas
 - Connection pooling managed through singleton pattern
 - Prepared statements for performance
 - Supports in-memory databases for testing

@@ -14,7 +14,7 @@ Observable criteria derived from the issue:
 - [ ] `docs/index.md` exists, lists every file currently in `docs/` with path, one-line description, last verified date, owner, and freshness status
 - [ ] `docs/plans/active/` and `docs/plans/completed/` directories exist with a README explaining the convention
 - [ ] Existing plans in `docs/plans/` are moved to `docs/plans/completed/` (all three are historical, none are active)
-- [ ] `.claude/dev-plans/` files are relocated to `docs/plans/completed/`
+- [ ] `.claude/dev-plans/README.md` is updated to redirect readers to `docs/plans/`
 - [ ] `.claude/WORKFLOW.md` references to `.claude/dev-plans/` are updated to new path
 - [ ] Root `CLAUDE.md` is at or under 150 lines and references `docs/index.md` as the documentation entry point
 - [ ] `apps/openbadges-modular-server/CLAUDE.md` (229 lines) and `apps/openbadges-system/CLAUDE.md` (253 lines) are reduced to 100 lines or fewer, with extracted content moved to topic-specific docs
