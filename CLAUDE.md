@@ -78,6 +78,8 @@ Use after completing relevant work:
 
 ## Documentation
 
+- [Architecture Overview](docs/architecture/overview.md) - package map, dependency directions, prohibited imports
+- [Golden Principles](docs/golden-principles.md) - mechanical coding rules drawn from PR reviews
 - [Development Workflows](docs/development-workflows.md) - gates, agents, plugins
 - [Publishing Guide](docs/publishing-guide.md) - npm, Docker, Changesets
 - [Monorepo Structure](docs/monorepo-structure.md) - deps, packages, env vars
