@@ -11,13 +11,13 @@ Rollercoaster.dev is a Bun + Turborepo monorepo for Open Badges credentialing. T
 | `shared-config` | `@rollercoaster-dev/shared-config` | ESLint, TypeScript, Prettier configs shared across all packages. Internal only (not published). |
 | `design-tokens` | `@rollercoaster-dev/design-tokens` | Design tokens (CSS, JS, Tailwind, Tamagui). Defines colors, spacing, typography, shadows.       |
 
-### Core Layer (depend only on foundation)
+### Core Layer
 
-| Package            | npm Name                             | Role                                                                          |
-| ------------------ | ------------------------------------ | ----------------------------------------------------------------------------- |
-| `openbadges-types` | `openbadges-types`                   | TypeScript type definitions for Open Badges 2.0 and 3.0 specifications.       |
-| `rd-logger`        | `@rollercoaster-dev/rd-logger`       | Structured logging with neurodivergent-friendly formatting.                   |
-| `openbadges-core`  | `@rollercoaster-dev/openbadges-core` | Shared core library for Open Badges functionality (cryptography, validation). |
+| Package            | npm Name                             | Role                                                                                                                         |
+| ------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `openbadges-types` | `openbadges-types`                   | TypeScript type definitions for Open Badges 2.0 and 3.0 specifications.                                                      |
+| `rd-logger`        | `@rollercoaster-dev/rd-logger`       | Structured logging with neurodivergent-friendly formatting.                                                                  |
+| `openbadges-core`  | `@rollercoaster-dev/openbadges-core` | Shared core library for Open Badges functionality (cryptography, validation). Depends on `rd-logger` and `openbadges-types`. |
 
 ### UI Layer
 
@@ -45,9 +45,14 @@ Arrows show "depends on" (runtime). Dev-only dependencies (`shared-config`) omit
                     │openbadges-ui├─────────────┘
                     └──────┬──────┘
                            │
-  ┌────────────────────────┼────────────────────────┐
-  │                        │                        │
-  ▼                        ▼                        ▼
+  ┌────────────────────────┼──────────────────────────────────┐
+  │                        │                                  │
+  │              ┌─────────┴──────────┐                       │
+  │              │   openbadges-core  │                       │
+  │              │(rd-logger + types) │                       │
+  │              └────────────────────┘                       │
+  │                                                           │
+  ▼                     ▼                                     ▼
 ┌─────────────────┐  ┌───────────┐  ┌──────────────────────────┐
 │openbadges-system│  │ rd-logger │  │openbadges-modular-server │
 │  (uses all 4)   │  └───────────┘  │  (rd-logger + types)     │
@@ -56,7 +61,7 @@ Arrows show "depends on" (runtime). Dev-only dependencies (`shared-config`) omit
 
 ### Full Dependency Table
 
-Every workspace dependency, verified from `package.json` files.
+Every dependency on monorepo packages, verified from `package.json` files. Some packages use published npm versions rather than `workspace:*` protocol.
 
 | Package                     | Runtime Dependencies                                              | Dev Dependencies |
 | --------------------------- | ----------------------------------------------------------------- | ---------------- |
@@ -64,7 +69,7 @@ Every workspace dependency, verified from `package.json` files.
 | `design-tokens`             | —                                                                 | —                |
 | `openbadges-types`          | —                                                                 | `shared-config`  |
 | `rd-logger`                 | —                                                                 | `shared-config`  |
-| `openbadges-core`           | —                                                                 | `shared-config`  |
+| `openbadges-core`           | `rd-logger`, `openbadges-types`                                   | `shared-config`  |
 | `openbadges-ui`             | `design-tokens`, `openbadges-types`                               | `shared-config`  |
 | `openbadges-modular-server` | `rd-logger`, `openbadges-types`                                   | `shared-config`  |
 | `openbadges-system`         | `rd-logger`, `openbadges-types`, `openbadges-ui`, `design-tokens` | `shared-config`  |
@@ -88,7 +93,7 @@ These constraints maintain layering. Enforcement is tracked in issue #869.
 
 ### Types
 
-`openbadges-types` defines the OB 2.0/3.0 type system. It is consumed by `openbadges-ui`, `openbadges-modular-server`, and `openbadges-system`. Any package that handles badge data should depend on `openbadges-types` for type safety.
+`openbadges-types` defines the OB 2.0/3.0 type system. It is consumed by `openbadges-core`, `openbadges-ui`, `openbadges-modular-server`, and `openbadges-system`. Any package that handles badge data should depend on `openbadges-types` for type safety.
 
 ### Design Tokens
 
