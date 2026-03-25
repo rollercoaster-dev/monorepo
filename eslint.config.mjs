@@ -96,6 +96,56 @@ export default [
     },
   },
 
+  // Import boundary rules — foundation packages must not import workspace packages
+  // See docs/architecture/overview.md#prohibited-import-directions
+  {
+    files: ['packages/openbadges-types/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: '@rollercoaster-dev/rd-logger', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: '@rollercoaster-dev/openbadges-core', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: 'openbadges-ui', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: '@rollercoaster-dev/design-tokens', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+        ],
+      }],
+    },
+  },
+  {
+    files: ['packages/rd-logger/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'openbadges-types', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: '@rollercoaster-dev/openbadges-core', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: 'openbadges-ui', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+          { name: '@rollercoaster-dev/design-tokens', message: 'Foundation package: no workspace imports. See docs/architecture/overview.md' },
+        ],
+      }],
+    },
+  },
+  {
+    files: ['packages/openbadges-core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: 'openbadges-ui', message: 'Core package: must not import UI layer. See docs/architecture/overview.md' },
+          { name: '@rollercoaster-dev/design-tokens', message: 'Core package: must not import design-tokens. See docs/architecture/overview.md' },
+        ],
+      }],
+    },
+  },
+  {
+    files: ['packages/openbadges-ui/**/*.ts', 'packages/openbadges-ui/**/*.vue'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          { name: '@rollercoaster-dev/openbadges-core', message: 'UI package: must not import core. See docs/architecture/overview.md' },
+        ],
+      }],
+    },
+  },
+
   // rd-logger IS the logging implementation — transports/adapters legitimately use console.*
   {
     files: ['packages/rd-logger/**/transports/**/*.ts', 'packages/rd-logger/**/adapters/**/*.ts'],

@@ -18,6 +18,32 @@ export default [
 
       // Allow namespace for declaration merging
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+
+      // Foundation package: must not import any workspace packages
+      // See docs/architecture/overview.md#prohibited-import-directions
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'openbadges-types',
+              message: 'rd-logger is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: '@rollercoaster-dev/openbadges-core',
+              message: 'rd-logger is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: 'openbadges-ui',
+              message: 'rd-logger is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: '@rollercoaster-dev/design-tokens',
+              message: 'rd-logger is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+          ],
+        },
+      ],
     },
   },
   {
