@@ -163,7 +163,7 @@ export class UserService {
         this.db.exec('PRAGMA foreign_keys = ON')
         this.initializeDatabase()
       } catch (error) {
-        console.error('Failed to initialize database:', error)
+        logger.error('Failed to initialize database:', { error })
         throw new Error('Database unavailable')
       }
     }
@@ -317,7 +317,7 @@ export class UserService {
 
       logger.info('Database initialized successfully')
     } catch (error) {
-      console.error('Error initializing database:', error)
+      logger.error('Error initializing database:', { error })
       throw error
     }
   }
@@ -938,10 +938,9 @@ try {
   userService = new UserService()
   logger.info('User service initialized successfully')
 } catch (error) {
-  console.warn(
-    'User service disabled due to database initialization error:',
-    (error as Error).message
-  )
+  logger.warn('User service disabled due to database initialization error:', {
+    error: (error as Error).message,
+  })
   userService = null
 }
 

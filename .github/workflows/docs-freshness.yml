@@ -7,6 +7,10 @@ on:
     # Weekly on Monday at 9:00 UTC
     - cron: "0 9 * * 1"
 
+concurrency:
+  group: docs-freshness-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOCS_FRESHNESS_THRESHOLD_DAYS: 90
 
