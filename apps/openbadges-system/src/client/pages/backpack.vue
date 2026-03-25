@@ -255,23 +255,20 @@ function handlePageChange(page: number) {
   currentPage.value = page
 }
 
-function handleBadgeVerified(badge: DisplayBadge) {
-  console.log('Badge verified:', badge)
+function handleBadgeVerified(_badge: DisplayBadge) {
+  // TODO: Implement badge verification display
 }
 
-function handleShareBadge(badge: DisplayBadge) {
+function handleShareBadge(_badge: DisplayBadge) {
   // TODO: Implement individual badge sharing
-  console.log('Share badge:', badge)
 }
 
-function handleDownloadBadge(badge: DisplayBadge) {
+function handleDownloadBadge(_badge: DisplayBadge) {
   // TODO: Implement badge download
-  console.log('Download badge:', badge)
 }
 
 function exportBadges(format: 'json' | 'pdf' | 'png') {
   // TODO: Implement badge export
-  console.log('Export badges as:', format)
   successMessage.value = `Badges exported as ${format.toUpperCase()}`
   showExportMenu.value = false
 }

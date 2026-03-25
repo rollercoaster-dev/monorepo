@@ -834,7 +834,7 @@ export const useAuth = () => {
 
             // Skip server validation for local sessions (offline-first)
             if (isLocalSession(storedToken)) {
-              console.info('Using local session (offline mode)')
+              console.warn('Using local session (offline mode)')
               await checkPlatformAuth()
               return
             }

@@ -21,6 +21,31 @@ export default [
     rules: {
       // Allow namespace for Open Badges type organization
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+      // Foundation package: must not import any workspace packages
+      // See docs/architecture/overview.md#prohibited-import-directions
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@rollercoaster-dev/rd-logger',
+              message: 'openbadges-types is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: '@rollercoaster-dev/openbadges-core',
+              message: 'openbadges-types is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: 'openbadges-ui',
+              message: 'openbadges-types is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+            {
+              name: '@rollercoaster-dev/design-tokens',
+              message: 'openbadges-types is a foundation package and must not import workspace packages. See docs/architecture/overview.md',
+            },
+          ],
+        },
+      ],
     },
   },
   {

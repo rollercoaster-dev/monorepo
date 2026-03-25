@@ -105,7 +105,6 @@ export class ConsoleTransport implements Transport {
     consoleOutput += divider;
 
     // Output to console
-    // eslint-disable-next-line no-console
     console.log(consoleOutput);
   }
 }

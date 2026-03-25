@@ -106,3 +106,19 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 | ---------------------------------------------------------------------- | --------------------------------------------- | ------------- | ----------------- | --------- |
 | [mockups/openbadges-system-ui.html](mockups/openbadges-system-ui.html) | Full-page UI mockup (HTML)                    | 2026-01-17    | openbadges-system | current   |
 | [mockups/openbadges-system-ui/](mockups/openbadges-system-ui/)         | Multi-page UI mockup set (6 HTML pages + CSS) | 2026-02-06    | openbadges-system | current   |
+
+---
+
+## CI Freshness Tracking
+
+The CI `docs-freshness` job warns when a doc has not been verified in 90+ days.
+To mark a doc as verified: update the "Last Verified" date to today's date.
+
+| File                          | Description                                          | Last Verified |
+| ----------------------------- | ---------------------------------------------------- | ------------- |
+| docs/architecture/overview.md | Architecture map and package dependencies            | 2026-03-25    |
+| docs/golden-principles.md     | Mechanical lint rules and review-derived conventions | 2026-03-25    |
+| docs/development-workflows.md | Dev workflow gates and agents                        | 2026-03-25    |
+| docs/monorepo-structure.md    | Monorepo package structure                           | 2026-03-25    |
+| docs/publishing-guide.md      | npm, Docker, and Changesets publishing               | 2026-03-25    |
+| CLAUDE.md                     | Project instructions for Claude Code                 | 2026-03-25    |

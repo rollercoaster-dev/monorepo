@@ -45,10 +45,16 @@ export const base = [
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/consistent-type-imports': 'error',
 
-      // General
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // General — ban all console.* in packages (use rd-logger instead)
+      'no-console': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
   prettier, // Must be last to disable conflicting rules
@@ -104,6 +110,7 @@ export const vue = [
     },
     rules: {
       // Vue-specific rules
+      'vue/match-component-file-name': ['error', { extensions: ['vue'], shouldMatchCase: true }],
       'vue/no-mutating-props': 'error',
       'vue/require-default-prop': 'warn',
       'vue/require-prop-types': 'error',
@@ -174,11 +181,17 @@ export const vue = [
     },
   },
   {
-    // General rules for all files
+    // General rules for all files — ban console.log/debug/info/trace, allow warn/error (no browser rd-logger)
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
   prettier, // Must be last to disable conflicting rules

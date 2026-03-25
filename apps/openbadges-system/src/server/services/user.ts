@@ -1,6 +1,7 @@
 import { Database } from 'bun:sqlite'
 import { join } from 'path'
 import { existsSync, mkdirSync } from 'fs'
+import { logger } from '../utils/logger'
 
 export interface User {
   id: string
@@ -162,7 +163,7 @@ export class UserService {
         this.db.exec('PRAGMA foreign_keys = ON')
         this.initializeDatabase()
       } catch (error) {
-        console.error('Failed to initialize database:', error)
+        logger.error('Failed to initialize database:', { error })
         throw new Error('Database unavailable')
       }
     }
@@ -314,9 +315,9 @@ export class UserService {
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expiresAt ON refresh_tokens(expiresAt);
       `)
 
-      console.log('Database initialized successfully')
+      logger.info('Database initialized successfully')
     } catch (error) {
-      console.error('Error initializing database:', error)
+      logger.error('Error initializing database:', { error })
       throw error
     }
   }
@@ -935,12 +936,11 @@ let userService: UserService | null = null
 
 try {
   userService = new UserService()
-  console.log('User service initialized successfully')
+  logger.info('User service initialized successfully')
 } catch (error) {
-  console.warn(
-    'User service disabled due to database initialization error:',
-    (error as Error).message
-  )
+  logger.warn('User service disabled due to database initialization error:', {
+    error: (error as Error).message,
+  })
   userService = null
 }
 

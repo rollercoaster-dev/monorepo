@@ -8,6 +8,8 @@
  * @see https://www.w3.org/TR/did-core/
  */
 
+import { logger } from "../../utils/logging/logger.service";
+
 import type * as jose from "jose";
 import type { Shared } from "openbadges-types";
 import type { VerificationCheck } from "./types.js";
@@ -74,7 +76,7 @@ async function resolveDIDWeb(didWeb: string): Promise<DIDDocument | null> {
 
     return didDocument;
   } catch (error) {
-    console.error("did:web resolution failed:", error);
+    logger.error("did:web resolution failed:", { error });
     return null;
   }
 }
@@ -114,7 +116,7 @@ function resolveDIDKey(didKey: string): DIDDocument | null {
       assertionMethod: [`${didKey}#key-1`],
     };
   } catch (error) {
-    console.error("did:key resolution failed:", error);
+    logger.error("did:key resolution failed:", { error });
     return null;
   }
 }
@@ -151,7 +153,7 @@ export async function resolveIssuerDID(
     }
   } catch (error) {
     // Log error but return null for graceful handling
-    console.error("DID resolution failed:", error);
+    logger.error("DID resolution failed:", { error });
     return null;
   }
 }
@@ -182,7 +184,7 @@ async function fetchJWKSFromURI(
 
     return jwks;
   } catch (error) {
-    console.error("JWKS fetch failed:", error);
+    logger.error("JWKS fetch failed:", { error });
     return null;
   }
 }

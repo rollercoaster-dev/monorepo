@@ -109,7 +109,7 @@ export default [
 
   // Test environment
   {
-    files: ['**/*.test.ts', '**/*.spec.ts', 'src/test/**/*.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.setup.ts', 'src/test/**/*.ts'],
     languageOptions: {
       globals: {
         global: 'readonly',
@@ -130,7 +130,8 @@ export default [
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any type in tests for flexibility with mocks
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
     },
   },
 
@@ -190,7 +191,7 @@ export default [
     },
   },
 
-  // Node/CommonJS scripts (cjs/js) in scripts directory
+  // Scripts are CLI tools, not application code — JS scripts use CommonJS sourceType
   {
     files: ['scripts/**/*.{js,cjs,mjs}'],
     languageOptions: {
@@ -217,9 +218,16 @@ export default [
           varsIgnorePattern: '^_',
         },
       ],
-      // Allow lexical declarations in case blocks (common pattern in this codebase)
       'no-case-declarations': 'off',
       'no-undef': 'off',
+    },
+  },
+
+  // TS scripts use ES modules but still need relaxed rules
+  {
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ];

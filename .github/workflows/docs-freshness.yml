@@ -1,0 +1,83 @@
+name: Docs Freshness Check
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly on Monday at 9:00 UTC
+    - cron: "0 9 * * 1"
+
+concurrency:
+  group: docs-freshness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCS_FRESHNESS_THRESHOLD_DAYS: 90
+
+jobs:
+  docs-freshness:
+    name: Docs Freshness Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Check docs freshness
+        run: |
+          THRESHOLD=${DOCS_FRESHNESS_THRESHOLD_DAYS:-90}
+          INDEX_FILE="docs/index.md"
+          TODAY=$(date +%s)
+          STALE_COUNT=0
+          TOTAL_COUNT=0
+
+          if [ ! -f "$INDEX_FILE" ]; then
+            echo "::warning::docs/index.md not found — skipping freshness check"
+            exit 0
+          fi
+
+          echo "Checking docs freshness (threshold: ${THRESHOLD} days)"
+          echo "================================================"
+
+          # Extract only the CI Freshness Tracking table section (last section in the file)
+          SECTION=$(sed -n '/^## CI Freshness Tracking/,$p' "$INDEX_FILE")
+
+          # Parse the markdown table rows (skip header and separator)
+          while IFS='|' read -r _ file description last_verified _; do
+            # Trim whitespace
+            file=$(echo "$file" | xargs)
+            last_verified=$(echo "$last_verified" | xargs)
+
+            # Skip empty, header, or separator rows
+            [ -z "$file" ] && continue
+            echo "$file" | grep -q "^-" && continue
+            echo "$file" | grep -qi "^File" && continue
+
+            TOTAL_COUNT=$((TOTAL_COUNT + 1))
+
+            # Parse the date
+            if ! verified_epoch=$(date -d "$last_verified" +%s 2>/dev/null); then
+              # macOS date fallback
+              verified_epoch=$(date -jf "%Y-%m-%d" "$last_verified" +%s 2>/dev/null)
+            fi
+
+            if [ -z "$verified_epoch" ]; then
+              echo "::warning file=${file}::Could not parse date: ${last_verified}"
+              continue
+            fi
+
+            days_since=$(( (TODAY - verified_epoch) / 86400 ))
+
+            if [ "$days_since" -ge "$THRESHOLD" ]; then
+              STALE_COUNT=$((STALE_COUNT + 1))
+              echo "::warning file=${file}::Stale doc: ${file} — last verified ${last_verified} (${days_since} days ago, threshold: ${THRESHOLD})"
+            else
+              echo "  OK: ${file} — verified ${last_verified} (${days_since} days ago)"
+            fi
+          done <<< "$SECTION"
+
+          echo ""
+          echo "================================================"
+          echo "Total tracked: ${TOTAL_COUNT}, Stale: ${STALE_COUNT}"
+
+          # Never fail — this is informational only
+          exit 0

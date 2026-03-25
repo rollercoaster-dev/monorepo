@@ -16,6 +16,7 @@ import type {
   VerificationMethodResolver,
 } from "./types.js";
 import type { Shared } from "openbadges-types";
+import { logger } from "../../utils/logging/logger.service";
 
 // =============================================================================
 // Helper Functions (defined first to avoid no-use-before-define)
@@ -207,9 +208,7 @@ async function decompressP256PublicKey(
 
     return uncompressed;
   } catch (error) {
-    console.error(
-      `Failed to decompress P-256 key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to decompress P-256 key", { error });
     return null;
   }
 }
@@ -262,7 +261,7 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
     const keyPart = didKey.replace(/^did:key:/, "").split("#")[0];
 
     if (!keyPart) {
-      console.error("Invalid did:key format: missing key part");
+      logger.error("Invalid did:key format: missing key part");
       return null;
     }
 
@@ -279,7 +278,7 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
     if (codecValue === MULTICODEC_ED25519_PUB) {
       // Ed25519 public key (32 bytes)
       if (publicKeyBytes.length !== 32) {
-        console.error(
+        logger.error(
           `Invalid Ed25519 public key length: expected 32, got ${publicKeyBytes.length}`,
         );
         return null;
@@ -301,7 +300,7 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
         // Compressed format - need to decompress
         const uncompressedKey = await decompressP256PublicKey(publicKeyBytes);
         if (!uncompressedKey) {
-          console.error("Failed to decompress P-256 public key");
+          logger.error("Failed to decompress P-256 public key");
           return null;
         }
 
@@ -325,20 +324,16 @@ async function resolveDidKey(didKey: string): Promise<CryptoKey | null> {
         );
       }
 
-      console.error(
+      logger.error(
         `Invalid P-256 public key length: expected 33 or 65, got ${publicKeyBytes.length}`,
       );
       return null;
     }
 
-    console.error(
-      `Unsupported multicodec prefix: 0x${codecValue.toString(16)}`,
-    );
+    logger.error(`Unsupported multicodec prefix: 0x${codecValue.toString(16)}`);
     return null;
   } catch (error) {
-    console.error(
-      `Failed to resolve did:key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to resolve did:key", { error });
     return null;
   }
 }
@@ -401,7 +396,7 @@ async function extractPublicKeyFromVerificationMethod(
     if (vm.publicKeyJwk) {
       const imported = await jose.importJWK(vm.publicKeyJwk);
       if (imported instanceof Uint8Array) {
-        console.error("Expected CryptoKey but got Uint8Array from importJWK");
+        logger.error("Expected CryptoKey but got Uint8Array from importJWK");
         return null;
       }
       return imported;
@@ -466,18 +461,16 @@ async function extractPublicKeyFromVerificationMethod(
         );
       }
 
-      console.error(`Unsupported verification method type: ${vm.type}`);
+      logger.error(`Unsupported verification method type: ${vm.type}`);
       return null;
     }
 
-    console.error(
+    logger.error(
       "Verification method has no publicKeyJwk or publicKeyMultibase",
     );
     return null;
   } catch (error) {
-    console.error(
-      `Failed to extract public key: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to extract public key", { error });
     return null;
   }
 }
@@ -506,7 +499,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
     const parts = didPart.replace(/^did:web:/, "").split(":");
 
     if (parts.length === 0 || !parts[0]) {
-      console.error("Invalid did:web format: missing domain");
+      logger.error("Invalid did:web format: missing domain");
       return null;
     }
 
@@ -534,7 +527,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
     });
 
     if (!response.ok) {
-      console.error(
+      logger.error(
         `Failed to fetch DID document from ${url}: ${response.status} ${response.statusText}`,
       );
       return null;
@@ -544,7 +537,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
 
     // Validate DID document
     if (!didDocument.id) {
-      console.error("Invalid DID document: missing 'id' field");
+      logger.error("Invalid DID document: missing 'id' field");
       return null;
     }
 
@@ -554,7 +547,7 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
       : findDefaultVerificationMethod(didDocument);
 
     if (!verificationMethodId) {
-      console.error("No verification method found in DID document");
+      logger.error("No verification method found in DID document");
       return null;
     }
 
@@ -564,16 +557,14 @@ async function resolveDidWeb(didWeb: string): Promise<CryptoKey | null> {
     );
 
     if (!verificationMethod) {
-      console.error(`Verification method not found: ${verificationMethodId}`);
+      logger.error(`Verification method not found: ${verificationMethodId}`);
       return null;
     }
 
     // Extract public key from verification method
     return await extractPublicKeyFromVerificationMethod(verificationMethod);
   } catch (error) {
-    console.error(
-      `Failed to resolve did:web: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    logger.error("Failed to resolve did:web", { error });
     return null;
   }
 }
@@ -591,10 +582,10 @@ async function resolveJWKS(_jwksUrl: string): Promise<CryptoKey | null> {
     // Create remote JWKS - returns a function for jose.jwtVerify
     // However, we can't use it directly here without a key ID
     // This needs to be refactored when we implement full JWKS support
-    console.warn(`JWKS resolution requires key ID: ${_jwksUrl}`);
+    logger.warn(`JWKS resolution requires key ID: ${_jwksUrl}`);
     return null;
   } catch (error) {
-    console.error(
+    logger.error(
       `Failed to create remote JWKS: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
     return null;
@@ -622,7 +613,7 @@ export async function resolveVerificationMethod(
     try {
       return await customResolver(verificationMethod);
     } catch (error) {
-      console.error(
+      logger.error(
         `Custom verification method resolver failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       return null;
@@ -637,7 +628,7 @@ export async function resolveVerificationMethod(
     try {
       return await resolveDidKey(vmString);
     } catch (error) {
-      console.error(
+      logger.error(
         `DID key resolution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       return null;
@@ -649,7 +640,7 @@ export async function resolveVerificationMethod(
     try {
       return await resolveDidWeb(vmString);
     } catch (error) {
-      console.error(
+      logger.error(
         `DID web resolution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       return null;
@@ -661,7 +652,7 @@ export async function resolveVerificationMethod(
     try {
       return await resolveJWKS(vmString);
     } catch (error) {
-      console.error(
+      logger.error(
         `JWKS resolution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       return null;
@@ -669,7 +660,7 @@ export async function resolveVerificationMethod(
   }
 
   // Unsupported verification method format
-  console.error(`Unsupported verification method format: ${vmString}`);
+  logger.error(`Unsupported verification method format: ${vmString}`);
   return null;
 }
 
@@ -936,7 +927,7 @@ async function verifyEd25519Signature2020(
 
     return isValid;
   } catch (error) {
-    console.error(
+    logger.error(
       `Ed25519 verification error: ${error instanceof Error ? error.message : "Unknown"}`,
     );
     return false;
@@ -1019,7 +1010,7 @@ async function verifyEcdsaSecp256k1Signature2019(
 
     return isValid;
   } catch (error) {
-    console.error(
+    logger.error(
       `ECDSA secp256k1 verification error: ${error instanceof Error ? error.message : "Unknown"}`,
     );
     return false;
@@ -1072,7 +1063,7 @@ async function verifyJsonWebSignature2020(
 
     return true;
   } catch (error) {
-    console.error(
+    logger.error(
       `JsonWebSignature2020 verification error: ${error instanceof Error ? error.message : "Unknown"}`,
     );
     return false;
