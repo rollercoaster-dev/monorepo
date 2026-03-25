@@ -109,7 +109,7 @@ export default [
 
   // Test environment
   {
-    files: ['**/*.test.ts', '**/*.spec.ts', 'src/test/**/*.ts'],
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.setup.ts', 'src/test/**/*.ts'],
     languageOptions: {
       globals: {
         global: 'readonly',
@@ -130,7 +130,8 @@ export default [
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any type in tests for flexibility with mocks
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
     },
   },
 
@@ -190,9 +191,9 @@ export default [
     },
   },
 
-  // Node/CommonJS scripts (cjs/js) in scripts directory
+  // Scripts are CLI tools, not application code
   {
-    files: ['scripts/**/*.{js,cjs,mjs}'],
+    files: ['scripts/**/*.{ts,js,cjs,mjs}'],
     languageOptions: {
       globals: {
         console: 'readonly',

@@ -21,6 +21,13 @@ export default [
     },
   },
   {
+    // rd-logger IS the logging implementation — transports and adapters legitimately use console.*
+    files: ['**/transports/**/*.ts', '**/adapters/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
     languageOptions: {
       globals: {

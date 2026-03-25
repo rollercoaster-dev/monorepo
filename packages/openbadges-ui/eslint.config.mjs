@@ -18,4 +18,11 @@ export default [
       },
     },
   },
+  {
+    // Story and example files are dev-only demos, not production code
+    files: ['**/*.story.vue', 'examples/**/*.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ];

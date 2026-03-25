@@ -96,9 +96,25 @@ export default [
     },
   },
 
+  // rd-logger IS the logging implementation — transports/adapters legitimately use console.*
+  {
+    files: ['packages/rd-logger/**/transports/**/*.ts', 'packages/rd-logger/**/adapters/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  // Scripts, stories, and examples are not application code
+  {
+    files: ['**/scripts/**/*.ts', '**/*.story.vue', '**/examples/**/*.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
   // Test globals for test files across all packages
   {
-    files: ['**/test/**/*.ts', '**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts'],
+    files: ['**/test/**/*.ts', '**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*.ts', '**/*.test.setup.ts'],
     languageOptions: {
       globals: {
         describe: 'readonly',
@@ -113,6 +129,9 @@ export default [
         console: 'readonly',
         global: 'readonly',
       },
+    },
+    rules: {
+      'no-console': 'off',
     },
   },
 
