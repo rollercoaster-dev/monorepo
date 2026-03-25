@@ -57,6 +57,8 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 
 | Path | Description | Last Modified | Owner | Freshness |
 | ---- | ----------- | ------------- | ----- | --------- |
+| [architecture/overview.md](architecture/overview.md) | Package map, dependency directions, prohibited imports | 2026-03-25 | repo | current |
+| [golden-principles.md](golden-principles.md) | Mechanical coding rules drawn from PR reviews | 2026-03-25 | repo | current |
 | [design/DESIGN_LANGUAGE.md](design/DESIGN_LANGUAGE.md) | Design language specification | 2026-02-06 | openbadges-ui | current |
 | [design/issuer-model.md](design/issuer-model.md) | Issuer domain model design | 2026-01-16 | openbadges-server | current |
 | [SYSTEM-REVIEW.md](SYSTEM-REVIEW.md) | System health review and architecture audit | 2025-11-29 | repo | stale |
