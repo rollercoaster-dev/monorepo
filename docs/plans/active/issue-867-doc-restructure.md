@@ -32,14 +32,14 @@ Establish a navigable, auditable documentation system for the monorepo. This mea
 
 ## Decisions
 
-| ID | Decision | Alternatives Considered | Rationale |
-|----|----------|------------------------|-----------|
-| D1 | All three existing `docs/plans/` files go to `completed/` | Put some in `active/` | `2026-01-29-planning-graph-phase2-design.md` (Jan 2026), `directory-components-plan.md` and `server-side-badge-filtering-plan.md` (Nov 2025) — all reference shipped features; none is actively in-flight |
-| D2 | `.claude/dev-plans/` holds only one file (`README.md`); the README itself is what needs updating, not a migration of many files | Rename or move the directory | The directory currently has one README — no plans to migrate. The README must be updated to point to `docs/plans/` going forward |
-| D3 | Extract `openbadges-modular-server/CLAUDE.md` architecture section to `apps/openbadges-modular-server/docs/architecture.md` | Extract to monorepo `docs/` | Keeps app-level docs co-located with the app |
-| D4 | Extract `openbadges-system/CLAUDE.md` architecture section to `apps/openbadges-system/docs/architecture.md` | Same as above | Same rationale — app-specific detail lives with the app |
-| D5 | `docs/vision/harness-engineering.md` created as a stub with the milestone description as content | Skip entirely | The issue and milestone both reference it; creating a stub unblocks future issues that depend on it |
-| D6 | Freshness threshold: stale = not updated in 90+ days from today (2026-03-25), so cutoff = 2025-12-25 | 60 days | Matches the criteria stated in the issue; any file last modified before 2025-12-25 is `stale` |
+| ID  | Decision                                                                                                                        | Alternatives Considered      | Rationale                                                                                                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | All three existing `docs/plans/` files go to `completed/`                                                                       | Put some in `active/`        | `2026-01-29-planning-graph-phase2-design.md` (Jan 2026), `directory-components-plan.md` and `server-side-badge-filtering-plan.md` (Nov 2025) — all reference shipped features; none is actively in-flight |
+| D2  | `.claude/dev-plans/` holds only one file (`README.md`); the README itself is what needs updating, not a migration of many files | Rename or move the directory | The directory currently has one README — no plans to migrate. The README must be updated to point to `docs/plans/` going forward                                                                          |
+| D3  | Extract `openbadges-modular-server/CLAUDE.md` architecture section to `apps/openbadges-modular-server/docs/architecture.md`     | Extract to monorepo `docs/`  | Keeps app-level docs co-located with the app                                                                                                                                                              |
+| D4  | Extract `openbadges-system/CLAUDE.md` architecture section to `apps/openbadges-system/docs/architecture.md`                     | Same as above                | Same rationale — app-specific detail lives with the app                                                                                                                                                   |
+| D5  | `docs/vision/harness-engineering.md` created as a stub with the milestone description as content                                | Skip entirely                | The issue and milestone both reference it; creating a stub unblocks future issues that depend on it                                                                                                       |
+| D6  | Freshness threshold: stale = not updated in 90+ days from today (2026-03-25), so cutoff = 2025-12-25                            | 60 days                      | Matches the criteria stated in the issue; any file last modified before 2025-12-25 is `stale`                                                                                                             |
 
 ## Affected Areas
 
@@ -161,45 +161,45 @@ Below is the complete catalog data gathered during research, to be used when wri
 
 **Freshness cutoff**: 2025-12-25 (90 days before 2026-03-25)
 
-| Path | Description | Last Modified | Owner | Freshness |
-|------|-------------|---------------|-------|-----------|
-| `docs/VISION.md` | Project vision and product direction | 2026-02-03 | repo | current |
-| `docs/ROADMAP.md` | Milestone roadmap and priority ordering | 2026-01-16 | repo | current |
-| `docs/issue-themes.md` | Thematic groupings of GitHub issues | 2026-01-16 | repo | current |
-| `docs/SYSTEM-REVIEW.md` | System health review and architecture audit | 2025-11-29 | repo | stale |
-| `docs/development-workflows.md` | Agent workflows, gates, and automation | 2026-03-15 | repo | current |
-| `docs/publishing-guide.md` | npm, Docker, and Changeset publishing | 2026-01-11 | repo | current |
-| `docs/monorepo-structure.md` | Package dependencies, env vars, structure | 2026-02-06 | repo | current |
-| `docs/package-audit.md` | Package dependency audit and optimization | 2026-02-03 | repo | current |
-| `docs/context-engineering-best-practices.md` | Claude Code prompting and context guidelines | 2026-01-11 | repo | current |
-| `docs/BUN-MIGRATION-PLAN.md` | Bun migration plan and tracking | 2025-11-29 | repo | stale |
-| `docs/MIGRATION-AGENTS.md` | Migration agent design and usage | 2025-11-29 | repo | stale |
-| `docs/vision/harness-engineering.md` | Harness Engineering milestone vision | 2026-03-25 (new) | repo | current |
-| `docs/vision/learning-graph.md` | Learning graph architecture vision | 2026-01-28 | repo | current |
-| `docs/vision/planning-graph.md` | Planning graph architecture vision | 2026-02-03 | repo | current |
-| `docs/plans/active/README.md` | Convention for active development plans | 2026-03-25 (new) | repo | current |
-| `docs/plans/completed/README.md` | Convention for completed plan archive | 2026-03-25 (new) | repo | current |
-| `docs/plans/completed/2026-01-29-planning-graph-phase2-design.md` | Planning graph Phase 2 design plan | 2026-01-29 | repo | current |
-| `docs/plans/completed/directory-components-plan.md` | Directory components feature plan | 2025-11-29 | repo | stale |
-| `docs/plans/completed/server-side-badge-filtering-plan.md` | Server-side badge filtering plan | 2025-11-29 | repo | stale |
-| `docs/analysis/milestone-analysis.md` | Milestone dependency and scope analysis | 2026-01-16 | repo | current |
-| `docs/design/DESIGN_LANGUAGE.md` | Design language specification | 2026-02-06 | openbadges-ui | current |
-| `docs/design/issuer-model.md` | Issuer domain model design | 2026-01-16 | openbadges-server | current |
-| `docs/research/BADGE_DESIGN_ANALYSIS.md` | Badge design research and analysis | 2025-11-29 | openbadges-ui | stale |
-| `docs/research/BADGE_VISUAL_EFFECTS_RESEARCH.md` | Badge visual effects research | 2025-11-29 | openbadges-ui | stale |
-| `docs/research/OPENBADGES_BADGE_BUILDER_CONCEPT.md` | Badge Builder concept and architecture | 2025-11-29 | openbadges-system | stale |
-| `docs/migrations/ARCHIVED-original-migration-agent.md` | Archived original migration agent design | 2025-11-29 | repo | stale |
-| `docs/migrations/MIGRATION_PLAN_openbadges-system.md` | openbadges-system Bun migration plan | 2025-11-29 | openbadges-system | stale |
-| `docs/migrations/MIGRATION_PLAN_rd-logger.md` | rd-logger Bun migration plan | 2025-11-29 | rd-logger | stale |
-| `docs/migrations/README.md` | Migrations directory guide | 2025-11-29 | repo | stale |
-| `docs/learnings/README.md` | Learnings index and usage guide | 2025-12-29 | repo | current |
-| `docs/learnings/bun-hono/README.md` | Bun + Hono learnings index | 2025-12-29 | repo | current |
-| `docs/learnings/general/README.md` | General development learnings | 2025-12-29 | repo | current |
-| `docs/learnings/openbadges/README.md` | OpenBadges-specific learnings | 2025-12-29 | repo | current |
-| `docs/learnings/typescript/README.md` | TypeScript learnings | 2025-12-29 | repo | current |
-| `docs/learnings/vue/README.md` | Vue 3 learnings | 2025-12-29 | repo | current |
-| `docs/mockups/openbadges-system-ui.html` | Full-page UI mockup (HTML) | 2026-01-17 | openbadges-system | current |
-| `docs/landing/LANDING-PAGE-FLOW.md` | Landing page flow design | 2026-01-16 | repo | current |
+| Path                                                              | Description                                  | Last Modified    | Owner             | Freshness |
+| ----------------------------------------------------------------- | -------------------------------------------- | ---------------- | ----------------- | --------- |
+| `docs/VISION.md`                                                  | Project vision and product direction         | 2026-02-03       | repo              | current   |
+| `docs/ROADMAP.md`                                                 | Milestone roadmap and priority ordering      | 2026-01-16       | repo              | current   |
+| `docs/issue-themes.md`                                            | Thematic groupings of GitHub issues          | 2026-01-16       | repo              | current   |
+| `docs/SYSTEM-REVIEW.md`                                           | System health review and architecture audit  | 2025-11-29       | repo              | stale     |
+| `docs/development-workflows.md`                                   | Agent workflows, gates, and automation       | 2026-03-15       | repo              | current   |
+| `docs/publishing-guide.md`                                        | npm, Docker, and Changeset publishing        | 2026-01-11       | repo              | current   |
+| `docs/monorepo-structure.md`                                      | Package dependencies, env vars, structure    | 2026-02-06       | repo              | current   |
+| `docs/package-audit.md`                                           | Package dependency audit and optimization    | 2026-02-03       | repo              | current   |
+| `docs/context-engineering-best-practices.md`                      | Claude Code prompting and context guidelines | 2026-01-11       | repo              | current   |
+| `docs/BUN-MIGRATION-PLAN.md`                                      | Bun migration plan and tracking              | 2025-11-29       | repo              | stale     |
+| `docs/MIGRATION-AGENTS.md`                                        | Migration agent design and usage             | 2025-11-29       | repo              | stale     |
+| `docs/vision/harness-engineering.md`                              | Harness Engineering milestone vision         | 2026-03-25 (new) | repo              | current   |
+| `docs/vision/learning-graph.md`                                   | Learning graph architecture vision           | 2026-01-28       | repo              | current   |
+| `docs/vision/planning-graph.md`                                   | Planning graph architecture vision           | 2026-02-03       | repo              | current   |
+| `docs/plans/active/README.md`                                     | Convention for active development plans      | 2026-03-25 (new) | repo              | current   |
+| `docs/plans/completed/README.md`                                  | Convention for completed plan archive        | 2026-03-25 (new) | repo              | current   |
+| `docs/plans/completed/2026-01-29-planning-graph-phase2-design.md` | Planning graph Phase 2 design plan           | 2026-01-29       | repo              | current   |
+| `docs/plans/completed/directory-components-plan.md`               | Directory components feature plan            | 2025-11-29       | repo              | stale     |
+| `docs/plans/completed/server-side-badge-filtering-plan.md`        | Server-side badge filtering plan             | 2025-11-29       | repo              | stale     |
+| `docs/analysis/milestone-analysis.md`                             | Milestone dependency and scope analysis      | 2026-01-16       | repo              | current   |
+| `docs/design/DESIGN_LANGUAGE.md`                                  | Design language specification                | 2026-02-06       | openbadges-ui     | current   |
+| `docs/design/issuer-model.md`                                     | Issuer domain model design                   | 2026-01-16       | openbadges-server | current   |
+| `docs/research/BADGE_DESIGN_ANALYSIS.md`                          | Badge design research and analysis           | 2025-11-29       | openbadges-ui     | stale     |
+| `docs/research/BADGE_VISUAL_EFFECTS_RESEARCH.md`                  | Badge visual effects research                | 2025-11-29       | openbadges-ui     | stale     |
+| `docs/research/OPENBADGES_BADGE_BUILDER_CONCEPT.md`               | Badge Builder concept and architecture       | 2025-11-29       | openbadges-system | stale     |
+| `docs/migrations/ARCHIVED-original-migration-agent.md`            | Archived original migration agent design     | 2025-11-29       | repo              | stale     |
+| `docs/migrations/MIGRATION_PLAN_openbadges-system.md`             | openbadges-system Bun migration plan         | 2025-11-29       | openbadges-system | stale     |
+| `docs/migrations/MIGRATION_PLAN_rd-logger.md`                     | rd-logger Bun migration plan                 | 2025-11-29       | rd-logger         | stale     |
+| `docs/migrations/README.md`                                       | Migrations directory guide                   | 2025-11-29       | repo              | stale     |
+| `docs/learnings/README.md`                                        | Learnings index and usage guide              | 2025-12-29       | repo              | current   |
+| `docs/learnings/bun-hono/README.md`                               | Bun + Hono learnings index                   | 2025-12-29       | repo              | current   |
+| `docs/learnings/general/README.md`                                | General development learnings                | 2025-12-29       | repo              | current   |
+| `docs/learnings/openbadges/README.md`                             | OpenBadges-specific learnings                | 2025-12-29       | repo              | current   |
+| `docs/learnings/typescript/README.md`                             | TypeScript learnings                         | 2025-12-29       | repo              | current   |
+| `docs/learnings/vue/README.md`                                    | Vue 3 learnings                              | 2025-12-29       | repo              | current   |
+| `docs/mockups/openbadges-system-ui.html`                          | Full-page UI mockup (HTML)                   | 2026-01-17       | openbadges-system | current   |
+| `docs/landing/LANDING-PAGE-FLOW.md`                               | Landing page flow design                     | 2026-01-16       | repo              | current   |
 
 ## Testing Strategy
 
@@ -213,13 +213,13 @@ This issue is pure documentation — no runtime behavior changes.
 
 ## Not in Scope
 
-| Item | Reason | Follow-up |
-|------|--------|-----------|
-| Updating `apps/docs/` references that may exist within app source code | Out of scope; this issue targets CLAUDE.md and docs/, not source code | None |
-| Deleting `.claude/dev-plans/` directory | The README serves as a redirect pointer; deleting it would break the agent skill contract which expects to write there — needs a separate skill update | Future Harness Engineering issue |
-| Auditing `.claude/rules/` or `.claude/skills/` content | Out of scope for this issue; separate Harness Engineering concern | Future issue |
-| Writing content for the learnings subdirectories (beyond their existing READMEs) | No content files exist there yet; out of scope | Future issue |
-| `docs/vision/harness-engineering.md` as a full vision doc | Stub only — full authoring is a separate effort | Harness Engineering milestone |
+| Item                                                                             | Reason                                                                                                                                                 | Follow-up                        |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| Updating `apps/docs/` references that may exist within app source code           | Out of scope; this issue targets CLAUDE.md and docs/, not source code                                                                                  | None                             |
+| Deleting `.claude/dev-plans/` directory                                          | The README serves as a redirect pointer; deleting it would break the agent skill contract which expects to write there — needs a separate skill update | Future Harness Engineering issue |
+| Auditing `.claude/rules/` or `.claude/skills/` content                           | Out of scope for this issue; separate Harness Engineering concern                                                                                      | Future issue                     |
+| Writing content for the learnings subdirectories (beyond their existing READMEs) | No content files exist there yet; out of scope                                                                                                         | Future issue                     |
+| `docs/vision/harness-engineering.md` as a full vision doc                        | Stub only — full authoring is a separate effort                                                                                                        | Harness Engineering milestone    |
 
 ## Discovery Log
 
@@ -233,25 +233,25 @@ This issue is pure documentation — no runtime behavior changes.
 
 ### CLAUDE.md Line Counts
 
-| File | Lines | Limit | Status |
-|------|-------|-------|--------|
-| `CLAUDE.md` (root) | 89 | 150 | Within limit — only needs `docs/index.md` pointer |
-| `apps/openbadges-modular-server/CLAUDE.md` | 229 | 100 | 129 lines over — extract Architecture Overview |
-| `apps/openbadges-system/CLAUDE.md` | 253 | 100 | 153 lines over — extract Architecture Overview |
-| `packages/design-tokens/CLAUDE.md` | 85 | 100 | Within limit |
-| `packages/openbadges-core/CLAUDE.md` | 117 | 100 | 17 lines over — remove "Current Status" section |
-| `packages/openbadges-types/CLAUDE.md` | 61 | 100 | Within limit |
-| `packages/openbadges-ui/CLAUDE.md` | 47 | 100 | Within limit |
-| `packages/rd-logger/CLAUDE.md` | 47 | 100 | Within limit |
-| `packages/shared-config/CLAUDE.md` | 53 | 100 | Within limit |
+| File                                       | Lines | Limit | Status                                            |
+| ------------------------------------------ | ----- | ----- | ------------------------------------------------- |
+| `CLAUDE.md` (root)                         | 89    | 150   | Within limit — only needs `docs/index.md` pointer |
+| `apps/openbadges-modular-server/CLAUDE.md` | 229   | 100   | 129 lines over — extract Architecture Overview    |
+| `apps/openbadges-system/CLAUDE.md`         | 253   | 100   | 153 lines over — extract Architecture Overview    |
+| `packages/design-tokens/CLAUDE.md`         | 85    | 100   | Within limit                                      |
+| `packages/openbadges-core/CLAUDE.md`       | 117   | 100   | 17 lines over — remove "Current Status" section   |
+| `packages/openbadges-types/CLAUDE.md`      | 61    | 100   | Within limit                                      |
+| `packages/openbadges-ui/CLAUDE.md`         | 47    | 100   | Within limit                                      |
+| `packages/rd-logger/CLAUDE.md`             | 47    | 100   | Within limit                                      |
+| `packages/shared-config/CLAUDE.md`         | 53    | 100   | Within limit                                      |
 
 ### Existing docs/plans/ Files — Classification
 
-| File | Last Modified | Classification | Rationale |
-|------|---------------|----------------|-----------|
-| `2026-01-29-planning-graph-phase2-design.md` | 2026-01-29 | completed | Planning graph feature was shipped (#629, merged Jan 2026) |
-| `directory-components-plan.md` | 2025-11-29 | completed | Directory components shipped (#105, Nov 2025) |
-| `server-side-badge-filtering-plan.md` | 2025-11-29 | completed | Server-side filtering shipped (#107, Nov 2025) |
+| File                                         | Last Modified | Classification | Rationale                                                  |
+| -------------------------------------------- | ------------- | -------------- | ---------------------------------------------------------- |
+| `2026-01-29-planning-graph-phase2-design.md` | 2026-01-29    | completed      | Planning graph feature was shipped (#629, merged Jan 2026) |
+| `directory-components-plan.md`               | 2025-11-29    | completed      | Directory components shipped (#105, Nov 2025)              |
+| `server-side-badge-filtering-plan.md`        | 2025-11-29    | completed      | Server-side filtering shipped (#107, Nov 2025)             |
 
 ### Missing Referenced File
 
