@@ -336,6 +336,16 @@ oauthRoutes.delete('/:provider', requireAuth, async c => {
       )
     }
 
+    if (!provider) {
+      return c.json(
+        {
+          success: false,
+          error: 'Provider required',
+        },
+        400
+      )
+    }
+
     // Check if user can unlink this provider (self or admin)
     const authPayload = getAuthPayload(c)
     if (authPayload?.sub !== userId && authPayload?.metadata?.isAdmin !== true) {
@@ -371,6 +381,15 @@ oauthRoutes.delete('/:provider', requireAuth, async c => {
 oauthRoutes.get('/user/:userId/providers', requireAuth, async c => {
   try {
     const userId = c.req.param('userId')
+    if (!userId) {
+      return c.json(
+        {
+          success: false,
+          error: 'User ID required',
+        },
+        400
+      )
+    }
 
     // Check if user can view this user's providers (self or admin)
     const authPayload = getAuthPayload(c)
