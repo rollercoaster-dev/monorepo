@@ -180,6 +180,11 @@ export type VerifyCredentialRequestDto = z.infer<
  * Schema for verify baked image request body
  * Accepts base64-encoded image data with optional verification options
  */
+/** Strip data URI prefix (e.g. "data:image/png;base64,...") if present */
+function stripDataUriPrefix(val: string): string {
+  return val.includes(",") ? val.split(",")[1] || "" : val;
+}
+
 export const VerifyBakedImageRequestSchema = z.object({
   /**
    * Base64-encoded image data (PNG or SVG)
@@ -191,20 +196,15 @@ export const VerifyBakedImageRequestSchema = z.object({
     .min(100, "Image data too small - minimum 100 characters")
     .refine(
       (val) => {
-        // Strip data URI prefix before size check
-        const base64Data = val.includes(",") ? val.split(",")[1] : val;
-        // Base64 encodes 3 bytes as 4 chars; approximate decoded size
-        const decodedSize = Math.ceil(((base64Data || "").length * 3) / 4);
+        const base64Data = stripDataUriPrefix(val);
+        const decodedSize = Math.ceil((base64Data.length * 3) / 4);
         return decodedSize <= 10 * 1024 * 1024;
       },
       { message: "Decoded image too large - maximum 10MB" },
     )
     .refine(
       (val) => {
-        // Strip data URI prefix if present
-        const base64Data = val.includes(",") ? val.split(",")[1] : val;
-        // Validate base64 format
-        return /^[A-Za-z0-9+/]*={0,2}$/.test(base64Data || "");
+        return /^[A-Za-z0-9+/]*={0,2}$/.test(stripDataUriPrefix(val));
       },
       { message: "Invalid base64 encoding" },
     ),

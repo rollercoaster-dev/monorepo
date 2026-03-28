@@ -270,7 +270,6 @@ export class VerificationController {
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      // Re-throw — extraction errors are already caught above
       throw error;
     }
   }

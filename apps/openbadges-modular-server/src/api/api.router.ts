@@ -251,6 +251,7 @@ export function createVersionedRouter(
   credentialsController?: CredentialsController,
 ): Hono {
   const router = new Hono();
+  const imageRateLimit = createImageProcessingRateLimitMiddleware();
 
   // Issuer routes
   // Robust Issuer CRUD routes with error handling and logging
@@ -1220,7 +1221,7 @@ export function createVersionedRouter(
 
   // Bake credential into image (only if credentialsController is provided)
   if (credentialsController) {
-    router.post("/credentials/:id/bake", requireAuth(), createImageProcessingRateLimitMiddleware(), async (c) => {
+    router.post("/credentials/:id/bake", requireAuth(), imageRateLimit, async (c) => {
       const id = c.req.param("id");
       try {
         // Parse and validate request body
@@ -1553,7 +1554,7 @@ export function createVersionedRouter(
     // Stricter rate limit applied due to memory-intensive image processing.
     router.post(
       "/verify/baked",
-      createImageProcessingRateLimitMiddleware(),
+      imageRateLimit,
       validateVerifyBakedImageMiddleware(),
       async (c) => {
         try {
