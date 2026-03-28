@@ -9,8 +9,10 @@ import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import { oauthConfig } from '../config/oauth'
 import { setRefreshTokenCookie } from '../utils/auth-cookies'
+import { OAuthLoginExchangeRepository } from '../../../database/repositories'
 
 const oauthRoutes = new Hono()
+const oauthLoginExchangeRepository = new OAuthLoginExchangeRepository()
 const oauthExchangeRequestSchema = z.object({
   code: z.string().min(1),
 })
@@ -220,10 +222,6 @@ oauthRoutes.get('/github/callback', async c => {
         redirectUri: session.redirect_uri || '/',
       })
     } else {
-      if (!userService) {
-        throw new Error('User service not available')
-      }
-
       // Redirect to the frontend with a one-time code, then exchange server-side.
       const userData = {
         id: user.id,
@@ -236,9 +234,9 @@ oauthRoutes.get('/github/callback', async c => {
         roles: user.roles,
       }
 
-      await userService.cleanupExpiredOAuthLoginExchanges()
+      await oauthLoginExchangeRepository.deleteExpired()
       const exchangeCode = nanoid(32)
-      await userService.createOAuthLoginExchange({
+      await oauthLoginExchangeRepository.create({
         code: exchangeCode,
         accessToken,
         refreshToken,
@@ -285,10 +283,6 @@ oauthRoutes.get('/github/callback', async c => {
 })
 
 oauthRoutes.post('/exchange', async c => {
-  if (!userService) {
-    return c.json({ success: false, error: 'User service not available' }, 503)
-  }
-
   try {
     const body = await c.req.json().catch(() => null)
     const parsed = oauthExchangeRequestSchema.safeParse(body)
@@ -296,8 +290,8 @@ oauthRoutes.post('/exchange', async c => {
       return c.json({ success: false, error: 'OAuth exchange code required' }, 400)
     }
 
-    await userService.cleanupExpiredOAuthLoginExchanges()
-    const exchange = await userService.consumeOAuthLoginExchange(parsed.data.code)
+    await oauthLoginExchangeRepository.deleteExpired()
+    const exchange = await oauthLoginExchangeRepository.consume(parsed.data.code)
     if (!exchange) {
       return c.json({ success: false, error: 'Invalid or expired OAuth exchange code' }, 400)
     }
