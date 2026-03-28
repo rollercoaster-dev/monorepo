@@ -74,6 +74,9 @@ import { RepositoryFactory } from "../infrastructure/repository.factory";
 import { createSecurityMiddleware } from "../utils/security/security.middleware";
 import { createImageProcessingRateLimitMiddleware } from "../utils/security/middleware/rate-limit.middleware";
 import { createStaticAssetsRouter } from "./static-assets.middleware";
+
+// Shared across all versioned routers so v2 + v3 share one rate limit bucket
+const imageRateLimit = createImageProcessingRateLimitMiddleware();
 import { requireAuth } from "../auth/middleware/rbac.middleware";
 import {
   sendApiError,
@@ -251,7 +254,6 @@ export function createVersionedRouter(
   credentialsController?: CredentialsController,
 ): Hono {
   const router = new Hono();
-  const imageRateLimit = createImageProcessingRateLimitMiddleware();
 
   // Issuer routes
   // Robust Issuer CRUD routes with error handling and logging

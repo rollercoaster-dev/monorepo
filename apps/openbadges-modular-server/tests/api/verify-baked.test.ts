@@ -3,16 +3,17 @@
  *
  * Tests the verify baked image endpoint which extracts credentials from
  * baked images (PNG/SVG) and verifies them.
+ *
+ * Uses mock.module() to mock unbake() and verify() so the real
+ * VerificationController.verifyBakedImage() logic is exercised.
  */
 
 import { describe, expect, it, beforeEach, mock } from "bun:test";
 import type { Shared } from "openbadges-types";
 import { VerifyBakedImageRequestSchema } from "../../src/api/dtos/verify.dto";
-import { VerificationController } from "../../src/api/controllers/verification.controller";
 import type { VerificationResult } from "../../src/services/verification/types";
 
 // 1x1 red pixel PNG base64 padded to exceed 100-char DTO minimum.
-// The padding is not valid PNG data but passes the base64 regex check.
 const SAMPLE_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg" +
   "AAAAAAAAAA";
@@ -37,6 +38,26 @@ const SAMPLE_CREDENTIAL = {
     type: "AchievementSubject",
   },
 };
+
+// --- Module mocks ---
+// Mock the baking service (unbake) and verification service (verify)
+// so VerificationController.verifyBakedImage() runs real logic.
+
+const mockUnbake = mock();
+const mockVerify = mock();
+
+mock.module("@/services/baking/baking.service", () => ({
+  unbake: mockUnbake,
+}));
+
+mock.module("@/services/verification/verification.service", () => ({
+  verify: mockVerify,
+}));
+
+// Must import AFTER mock.module() calls
+const { VerificationController } = await import(
+  "../../src/api/controllers/verification.controller"
+);
 
 describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   describe("DTO Validation", () => {
@@ -65,8 +86,6 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
     });
 
     it("should reject image data that's too large", () => {
-      // Generate a string that decodes to > 10MB
-      // 10MB decoded = ~13.4MB base64 encoded
       const largeBase64 = "A".repeat(14 * 1024 * 1024);
       const result = VerifyBakedImageRequestSchema.safeParse({
         image: largeBase64,
@@ -111,38 +130,35 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   });
 
   describe("Successful Verification Flow", () => {
-    let controller: VerificationController;
+    let controller: InstanceType<typeof VerificationController>;
 
     beforeEach(() => {
+      mockUnbake.mockReset();
+      mockVerify.mockReset();
       controller = new VerificationController();
     });
 
     it("should extract and verify credential from PNG image", async () => {
-      // Mock the unbake and verify imports used by the controller
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          credential: SAMPLE_CREDENTIAL,
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 50,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "png",
+      });
+      mockVerify.mockResolvedValue({
+        isValid: true,
+        status: "valid",
+        checks: {
+          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          status: [],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 50 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
@@ -150,34 +166,26 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       expect(result.isValid).toBe(true);
       expect(result.status).toBe("valid");
       expect(result.metadata?.sourceFormat).toBe("png");
-      expect(verifyBakedImage).toHaveBeenCalledTimes(1);
+      expect(result.metadata?.extractionAttempted).toBe(true);
+      expect(result.metadata?.extractionSucceeded).toBe(true);
+      expect(mockUnbake).toHaveBeenCalledTimes(1);
+      expect(mockVerify).toHaveBeenCalledTimes(1);
     });
 
     it("should extract and verify credential from SVG image", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          credential: SAMPLE_CREDENTIAL,
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 30,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "svg",
-          },
-        }),
-      );
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "svg",
+      });
+      mockVerify.mockResolvedValue({
+        isValid: true,
+        status: "valid",
+        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 30 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_SVG_BASE64,
       });
@@ -187,118 +195,78 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
     });
 
     it("should include extraction metadata in response", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 25,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "png",
+      });
+      mockVerify.mockResolvedValue({
+        isValid: true,
+        status: "valid",
+        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 25 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
 
-      expect(result.metadata).toBeDefined();
       expect(result.metadata?.extractionAttempted).toBe(true);
       expect(result.metadata?.extractionSucceeded).toBe(true);
       expect(result.metadata?.sourceFormat).toBe("png");
     });
 
-    it("should return verification result with valid credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          credential: SAMPLE_CREDENTIAL,
-          credentialId: "urn:uuid:test-credential-123" as Shared.IRI,
-          issuer: "did:example:issuer123" as Shared.IRI,
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [{ check: "revocation", description: "Check revocation status", passed: true }],
-            temporal: [{ check: "expiration", description: "Check credential expiration", passed: true }],
-            issuer: [{ check: "issuer", description: "Verify issuer", passed: true }],
-            schema: [{ check: "schema", description: "Validate credential schema", passed: true }],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 100,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+    it("should return verification result with credential", async () => {
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "png",
+      });
+      mockVerify.mockResolvedValue({
+        isValid: true,
+        status: "valid",
+        credentialId: "urn:uuid:test-credential-123" as Shared.IRI,
+        issuer: "did:example:issuer123" as Shared.IRI,
+        checks: {
+          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          status: [{ check: "revocation", description: "Check revocation", passed: true }],
+          temporal: [{ check: "expiration", description: "Check expiration", passed: true }],
+          issuer: [{ check: "issuer", description: "Verify issuer", passed: true }],
+          schema: [{ check: "schema", description: "Validate schema", passed: true }],
+          general: [],
+        },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 100 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
 
       expect(result.isValid).toBe(true);
-      expect(result.status).toBe("valid");
       expect(result.credential).toBeDefined();
       expect(result.credentialId).toBe("urn:uuid:test-credential-123" as Shared.IRI);
-      expect(result.issuer).toBe("did:example:issuer123" as Shared.IRI);
       expect(result.checks.proof).toHaveLength(1);
-      expect(result.checks.schema).toHaveLength(1);
     });
   });
 
   describe("Extraction Failures", () => {
-    let controller: VerificationController;
+    let controller: InstanceType<typeof VerificationController>;
 
     beforeEach(() => {
+      mockUnbake.mockReset();
+      mockVerify.mockReset();
       controller = new VerificationController();
     });
 
-    it("should handle PNG image without baked credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [
-              {
-                check: "extraction",
-                description: "Extract credential from baked image",
-                passed: false,
-                error: "No credential data found in image",
-              },
-            ],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 0,
-            extractionAttempted: true,
-            extractionSucceeded: false,
-            sourceFormat: "png",
-          },
-        }),
-      );
+    it("should handle image without baked credential", async () => {
+      mockUnbake.mockResolvedValue({
+        found: false,
+        credential: undefined,
+        sourceFormat: "png",
+      });
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
@@ -309,130 +277,38 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       expect(result.checks.general).toHaveLength(1);
       expect(result.checks.general[0].check).toBe("extraction");
       expect(result.checks.general[0].passed).toBe(false);
-    });
-
-    it("should handle SVG image without baked credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [
-              {
-                check: "extraction",
-                description: "Extract credential from baked image",
-                passed: false,
-                error: "No credential data found in image",
-              },
-            ],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 0,
-            extractionAttempted: true,
-            extractionSucceeded: false,
-            sourceFormat: "svg",
-          },
-        }),
-      );
-
-      controller.verifyBakedImage = verifyBakedImage;
-      const result = await controller.verifyBakedImage({
-        image: SAMPLE_SVG_BASE64,
-      });
-
-      expect(result.isValid).toBe(false);
-      expect(result.metadata?.sourceFormat).toBe("svg");
-      expect(result.metadata?.extractionSucceeded).toBe(false);
+      expect(mockVerify).not.toHaveBeenCalled();
     });
 
     it("should handle unsupported image format", async () => {
-      // JPEG-like data (starts with FF D8)
+      mockUnbake.mockRejectedValue(
+        new Error("Unsupported image format: unable to detect PNG or SVG format"),
+      );
+
+      // JPEG-like data
       const jpegBase64 = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
         .toString("base64")
         .padEnd(100, "A");
 
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [
-              {
-                check: "extraction",
-                description: "Extract credential from baked image",
-                passed: false,
-                error: "Invalid or corrupted badge data",
-              },
-            ],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 0,
-            extractionAttempted: true,
-            extractionSucceeded: false,
-          },
-        }),
-      );
-
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: jpegBase64,
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.checks.general[0].error).toContain(
-        "Invalid or corrupted badge data",
-      );
+      expect(result.checks.general[0].error).toContain("Invalid or corrupted badge data");
+      expect(result.metadata?.extractionAttempted).toBe(true);
+      expect(result.metadata?.extractionSucceeded).toBe(false);
     });
 
     it("should handle corrupt image data", async () => {
-      // Starts with PNG signature but has corrupted data after
-      const corruptPng = Buffer.from([
-        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 0xff, 0xff,
-      ])
+      mockUnbake.mockRejectedValue(
+        new Error("Invalid iTXt chunk: missing keyword terminator"),
+      );
+
+      const corruptPng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 0xff, 0xff])
         .toString("base64")
         .padEnd(100, "A");
 
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [
-              {
-                check: "extraction",
-                description: "Extract credential from baked image",
-                passed: false,
-                error: "Invalid or corrupted badge data",
-              },
-            ],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 0,
-            extractionAttempted: true,
-            extractionSucceeded: false,
-          },
-        }),
-      );
-
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: corruptPng,
       });
@@ -444,84 +320,61 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   });
 
   describe("Verification Failures", () => {
-    let controller: VerificationController;
+    let controller: InstanceType<typeof VerificationController>;
 
     beforeEach(() => {
+      mockUnbake.mockReset();
+      mockVerify.mockReset();
       controller = new VerificationController();
+      // All verification failure tests start with a successful extraction
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "png",
+      });
     });
 
     it("should detect invalid signature in baked credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [
-              {
-                check: "proof",
-                description: "Verify cryptographic proof",
-                passed: false,
-                error: "Invalid cryptographic proof",
-              },
-            ],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 75,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+      mockVerify.mockResolvedValue({
+        isValid: false,
+        status: "invalid",
+        checks: {
+          proof: [{ check: "proof", description: "Verify proof", passed: false, error: "Invalid cryptographic proof" }],
+          status: [],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 75 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.status).toBe("invalid");
       expect(result.checks.proof[0].passed).toBe(false);
       expect(result.metadata?.extractionSucceeded).toBe(true);
     });
 
     it("should detect expired credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [],
-            temporal: [
-              {
-                check: "expiration",
-                description: "Check credential expiration",
-                passed: false,
-                error: "Credential has expired",
-              },
-            ],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 60,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+      mockVerify.mockResolvedValue({
+        isValid: false,
+        status: "invalid",
+        checks: {
+          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          status: [],
+          temporal: [{ check: "expiration", description: "Check expiration", passed: false, error: "Credential has expired" }],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 60 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
@@ -532,36 +385,21 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
     });
 
     it("should detect revoked credential", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [
-              {
-                check: "revocation",
-                description: "Check revocation status",
-                passed: false,
-                error: "Credential has been revoked",
-              },
-            ],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 80,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
+      mockVerify.mockResolvedValue({
+        isValid: false,
+        status: "invalid",
+        checks: {
+          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          status: [{ check: "revocation", description: "Check revocation", passed: false, error: "Credential has been revoked" }],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 80 },
+      } satisfies VerificationResult);
 
-      controller.verifyBakedImage = verifyBakedImage;
       const result = await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
       });
@@ -573,129 +411,63 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   });
 
   describe("Verification Options", () => {
-    let controller: VerificationController;
+    let controller: InstanceType<typeof VerificationController>;
 
     beforeEach(() => {
+      mockUnbake.mockReset();
+      mockVerify.mockReset();
       controller = new VerificationController();
+      mockUnbake.mockResolvedValue({
+        found: true,
+        credential: SAMPLE_CREDENTIAL,
+        sourceFormat: "png",
+      });
+      mockVerify.mockResolvedValue({
+        isValid: true,
+        status: "valid",
+        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        verifiedAt: new Date().toISOString(),
+        metadata: { durationMs: 20 },
+      } satisfies VerificationResult);
     });
 
-    it("should respect skipProofVerification option", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 20,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
-
-      controller.verifyBakedImage = verifyBakedImage;
-      const result = await controller.verifyBakedImage({
+    it("should forward skipProofVerification to verify()", async () => {
+      await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
         options: { skipProofVerification: true },
       });
 
-      expect(result.isValid).toBe(true);
-      expect(result.checks.proof).toHaveLength(0);
-      expect(verifyBakedImage).toHaveBeenCalledWith({
-        image: SAMPLE_PNG_BASE64,
-        options: { skipProofVerification: true },
-      });
+      expect(mockVerify).toHaveBeenCalledWith(
+        SAMPLE_CREDENTIAL,
+        expect.objectContaining({ skipProofVerification: true }),
+      );
     });
 
-    it("should respect allowExpired option", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [],
-            temporal: [
-              {
-                check: "expiration",
-                description: "Check credential expiration (expired but allowed)",
-                passed: true,
-              },
-            ],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 40,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
-      );
-
-      controller.verifyBakedImage = verifyBakedImage;
-      const result = await controller.verifyBakedImage({
+    it("should forward allowExpired to verify()", async () => {
+      await controller.verifyBakedImage({
         image: SAMPLE_PNG_BASE64,
         options: { allowExpired: true },
       });
 
-      expect(result.isValid).toBe(true);
-      expect(verifyBakedImage).toHaveBeenCalledWith({
-        image: SAMPLE_PNG_BASE64,
-        options: { allowExpired: true },
-      });
-    });
-
-    it("should respect skipStatusCheck option", async () => {
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          checks: {
-            proof: [{ check: "proof", description: "Verify cryptographic proof", passed: true }],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 30,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
+      expect(mockVerify).toHaveBeenCalledWith(
+        SAMPLE_CREDENTIAL,
+        expect.objectContaining({ allowExpired: true }),
       );
-
-      controller.verifyBakedImage = verifyBakedImage;
-      const result = await controller.verifyBakedImage({
-        image: SAMPLE_PNG_BASE64,
-        options: { skipStatusCheck: true },
-      });
-
-      expect(result.isValid).toBe(true);
-      expect(result.checks.status).toHaveLength(0);
-      expect(verifyBakedImage).toHaveBeenCalledWith({
-        image: SAMPLE_PNG_BASE64,
-        options: { skipStatusCheck: true },
-      });
     });
 
-    it("should pass through all verification options", async () => {
+    it("should forward skipStatusCheck to verify()", async () => {
+      await controller.verifyBakedImage({
+        image: SAMPLE_PNG_BASE64,
+        options: { skipStatusCheck: true },
+      });
+
+      expect(mockVerify).toHaveBeenCalledWith(
+        SAMPLE_CREDENTIAL,
+        expect.objectContaining({ skipStatusCheck: true }),
+      );
+    });
+
+    it("should forward all verification options to verify()", async () => {
       const allOptions = {
         skipProofVerification: true,
         skipStatusCheck: true,
@@ -706,39 +478,15 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         allowRevoked: true,
       };
 
-      const verifyBakedImage = mock(
-        async (): Promise<VerificationResult> => ({
-          isValid: true,
-          status: "valid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 10,
-            extractionAttempted: true,
-            extractionSucceeded: true,
-            sourceFormat: "png",
-          },
-        }),
+      await controller.verifyBakedImage({
+        image: SAMPLE_PNG_BASE64,
+        options: allOptions,
+      });
+
+      expect(mockVerify).toHaveBeenCalledWith(
+        SAMPLE_CREDENTIAL,
+        allOptions,
       );
-
-      controller.verifyBakedImage = verifyBakedImage;
-      const result = await controller.verifyBakedImage({
-        image: SAMPLE_PNG_BASE64,
-        options: allOptions,
-      });
-
-      expect(result.isValid).toBe(true);
-      expect(verifyBakedImage).toHaveBeenCalledWith({
-        image: SAMPLE_PNG_BASE64,
-        options: allOptions,
-      });
     });
   });
 });
