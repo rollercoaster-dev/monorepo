@@ -78,6 +78,28 @@ export interface OAuthSessions {
   expires_at: string
 }
 
+export interface RefreshTokens {
+  id: string
+  user_id: string
+  token_hash: string
+  expires_at: string
+  revoked_at: string | null
+  revoked_reason: string | null
+  created_at: string
+}
+
+export interface OAuthLoginExchanges {
+  id: string
+  code: string
+  access_token: string
+  refresh_token: string
+  user_data: string
+  redirect_uri: string | null
+  created_at: string
+  expires_at: string
+  consumed_at: string | null
+}
+
 export interface DatabaseSchema {
   users: Users
   posts: Posts
@@ -87,6 +109,8 @@ export interface DatabaseSchema {
   user_sessions: UserSessions
   oauth_providers: OAuthProviders
   oauth_sessions: OAuthSessions
+  refresh_tokens: RefreshTokens
+  oauth_login_exchanges: OAuthLoginExchanges
 }
 
 // Use this interface to define the Kysely instance
