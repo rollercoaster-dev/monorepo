@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { getDatabaseInstance } from '../factory'
 import type { OAuthLoginExchanges } from '../schema'
 
@@ -17,10 +18,14 @@ function generateId(): string {
   return 'oauth_exchange_' + Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
-function mapRow(row: OAuthLoginExchanges): OAuthLoginExchange {
+function hashCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex')
+}
+
+function mapRow(row: OAuthLoginExchanges, code: string): OAuthLoginExchange {
   return {
     id: row.id,
-    code: row.code,
+    code,
     accessToken: row.access_token,
     refreshToken: row.refresh_token,
     userData: row.user_data,
@@ -43,7 +48,7 @@ export class OAuthLoginExchangeRepository {
       .insertInto('oauth_login_exchanges')
       .values({
         id,
-        code: data.code,
+        code_hash: hashCode(data.code),
         access_token: data.accessToken,
         refresh_token: data.refreshToken,
         user_data: data.userData,
@@ -69,13 +74,13 @@ export class OAuthLoginExchangeRepository {
     const row = await db
       .updateTable('oauth_login_exchanges')
       .set({ consumed_at: now })
-      .where('code', '=', code)
+      .where('code_hash', '=', hashCode(code))
       .where('consumed_at', 'is', null)
       .where('expires_at', '>=', now)
       .returningAll()
       .executeTakeFirst()
 
-    return row ? mapRow(row) : null
+    return row ? mapRow(row, code) : null
   }
 
   async deleteExpired(): Promise<void> {

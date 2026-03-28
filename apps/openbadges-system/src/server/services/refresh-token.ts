@@ -83,16 +83,22 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
     return null
   }
 
+  // Look up user before consuming the token — if the user service is unavailable
+  // or the user was deleted, we must not destroy a valid token we cannot replace.
+  if (!userService) {
+    logger.error('Cannot rotate refresh token: user service is unavailable')
+    return null
+  }
+  const user = await userService.getUserById(stored.userId)
+  if (!user) {
+    return null
+  }
+
   const consumed = await refreshTokenRepository.consume(oldHash, 'rotated')
   if (!consumed) {
     logger.info('Refresh token rotation skipped because token was already consumed', {
       userId: stored.userId,
     })
-    return null
-  }
-
-  const user = await userService!.getUserById(stored.userId)
-  if (!user) {
     return null
   }
 

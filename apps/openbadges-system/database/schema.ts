@@ -90,7 +90,7 @@ export interface RefreshTokens {
 
 export interface OAuthLoginExchanges {
   id: string
-  code: string
+  code_hash: string
   access_token: string
   refresh_token: string
   user_data: string

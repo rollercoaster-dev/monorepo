@@ -79,6 +79,7 @@ export class RefreshTokenRepository {
       .set({ revoked_at: now, revoked_reason: revokedReason })
       .where('token_hash', '=', tokenHash)
       .where('revoked_at', 'is', null)
+      .where('expires_at', '>=', now)
       .returning('id')
       .executeTakeFirst()
 
