@@ -13,6 +13,7 @@
 import type { OB2, OB3 } from "openbadges-types";
 import { bakePNG, unbakePNG } from "./png/png-baking.service.js";
 import { bakeSVG, unbakeSVG } from "./svg/svg-baking.service.js";
+import { isPNG } from "./png/chunk-utils.js";
 import type {
   ImageFormat,
   BakeOptions,
@@ -20,12 +21,6 @@ import type {
   UnbakeResult,
   BakingService,
 } from "./types.js";
-
-/**
- * PNG signature bytes (magic number)
- * @see https://www.w3.org/TR/PNG/#5PNG-file-signature
- */
-const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
 /**
  * SVG detection patterns
@@ -36,26 +31,6 @@ const SVG_PATTERNS = {
   doctype: /<!DOCTYPE\s+svg/i,
   svgElement: /<svg[\s>]/i,
 };
-
-/**
- * Check if image data is a PNG image
- *
- * @param imageData - The image data to check
- * @returns True if the data starts with PNG signature
- */
-function isPNG(imageData: Buffer): boolean {
-  if (imageData.length < 8) {
-    return false;
-  }
-
-  for (let i = 0; i < 8; i++) {
-    if (imageData[i] !== PNG_SIGNATURE[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 /**
  * Check if image data is an SVG image

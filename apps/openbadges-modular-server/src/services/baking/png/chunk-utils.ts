@@ -16,6 +16,23 @@ export interface Chunk {
   data: Uint8Array;
 }
 
+/** PNG signature bytes (magic number) */
+const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+
+/**
+ * Check if a buffer is a valid PNG image
+ *
+ * @param buffer - The buffer to check
+ * @returns True if the buffer starts with the PNG signature
+ */
+export function isPNG(buffer: Buffer): boolean {
+  if (buffer.length < 8) return false;
+  for (let i = 0; i < 8; i++) {
+    if (buffer[i] !== PNG_SIGNATURE[i]) return false;
+  }
+  return true;
+}
+
 /**
  * Extract all chunks from a PNG buffer
  *
