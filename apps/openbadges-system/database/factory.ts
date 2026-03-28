@@ -82,7 +82,11 @@ class DatabaseFactory {
   static createDatabase(config: DatabaseConfig): Kysely<DatabaseSchema> {
     if (config.type === 'sqlite') {
       const sqliteConfig = config.sqlite!
-      const sqlite = new Database(sqliteConfig.filename, sqliteConfig.options)
+      const sqlite = new Database(sqliteConfig.filename, {
+        ...sqliteConfig.options,
+        // eslint-disable-next-line no-console
+        verbose: sqliteConfig.options?.verbose ? console.log : undefined,
+      })
 
       // Enable foreign key constraints
       sqlite.pragma('foreign_keys = ON')
