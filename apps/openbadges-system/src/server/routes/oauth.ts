@@ -234,7 +234,13 @@ oauthRoutes.get('/github/callback', async c => {
         roles: user.roles,
       }
 
-      await oauthLoginExchangeRepository.deleteExpired()
+      // Best-effort cleanup — should not block the exchange creation
+      try {
+        await oauthLoginExchangeRepository.deleteExpired()
+      } catch (error) {
+        logger.warn('Failed to clean up expired OAuth login exchanges', { error })
+      }
+
       const exchangeCode = nanoid(32)
       await oauthLoginExchangeRepository.create({
         code: exchangeCode,
@@ -265,8 +271,6 @@ oauthRoutes.get('/github/callback', async c => {
         errorMessage = 'GitHub token exchange failed - check client credentials'
       } else if (error.message.includes('GitHub API error')) {
         errorMessage = 'GitHub API error - check access token'
-      } else if (error.message.includes('User service not available')) {
-        errorMessage = 'User service not available'
       } else {
         errorMessage = `OAuth error: ${error.message}`
       }
@@ -290,7 +294,13 @@ oauthRoutes.post('/exchange', async c => {
       return c.json({ success: false, error: 'OAuth exchange code required' }, 400)
     }
 
-    await oauthLoginExchangeRepository.deleteExpired()
+    // Best-effort cleanup
+    try {
+      await oauthLoginExchangeRepository.deleteExpired()
+    } catch (error) {
+      logger.warn('Failed to clean up expired OAuth login exchanges', { error })
+    }
+
     const exchange = await oauthLoginExchangeRepository.consume(parsed.data.code)
     if (!exchange) {
       return c.json({ success: false, error: 'Invalid or expired OAuth exchange code' }, 400)

@@ -39,7 +39,13 @@ export async function issueTokenPair(platformUser: {
     Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  await refreshTokenRepository.deleteExpired()
+  // Best-effort cleanup — should not block token issuance
+  try {
+    await refreshTokenRepository.deleteExpired()
+  } catch (error) {
+    logger.warn('Failed to clean up expired refresh tokens', { error })
+  }
+
   await refreshTokenRepository.store(platformUser.id, tokenHash, expiresAt)
 
   return { accessToken, refreshToken }
@@ -103,6 +109,11 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
 }
 
 export async function revokeRefreshToken(refreshToken: string): Promise<void> {
-  const tokenHash = hashToken(refreshToken)
-  await refreshTokenRepository.revoke(tokenHash, 'logout')
+  // Best-effort: logout should still succeed even if persistence is unavailable.
+  try {
+    const tokenHash = hashToken(refreshToken)
+    await refreshTokenRepository.revoke(tokenHash, 'logout')
+  } catch (error) {
+    logger.warn('Failed to revoke refresh token during logout', { error })
+  }
 }
