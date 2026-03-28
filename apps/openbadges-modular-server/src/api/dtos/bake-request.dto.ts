@@ -39,9 +39,16 @@ export const BakeRequestSchema = z.object({
   image: z
     .string()
     .min(1, "Image data cannot be empty")
-    .refine((val) => val.length <= MAX_IMAGE_SIZE, {
-      message: `Image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB`,
-    })
+    .refine(
+      (val) => {
+        // Base64 encodes 3 bytes as 4 chars; approximate decoded size
+        const decodedSize = Math.ceil((val.length * 3) / 4);
+        return decodedSize <= MAX_IMAGE_SIZE;
+      },
+      {
+        message: `Decoded image must be less than ${MAX_IMAGE_SIZE / (1024 * 1024)}MB`,
+      },
+    )
     .refine((val) => base64Pattern.test(val), {
       message: "Image must be valid base64 encoded data",
     }),

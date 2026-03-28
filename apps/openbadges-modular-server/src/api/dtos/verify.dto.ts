@@ -189,7 +189,16 @@ export const VerifyBakedImageRequestSchema = z.object({
   image: z
     .string()
     .min(100, "Image data too small - minimum 100 characters")
-    .max(10 * 1024 * 1024, "Image data too large - maximum 10MB")
+    .refine(
+      (val) => {
+        // Strip data URI prefix before size check
+        const base64Data = val.includes(",") ? val.split(",")[1] : val;
+        // Base64 encodes 3 bytes as 4 chars; approximate decoded size
+        const decodedSize = Math.ceil(((base64Data || "").length * 3) / 4);
+        return decodedSize <= 10 * 1024 * 1024;
+      },
+      { message: "Decoded image too large - maximum 10MB" },
+    )
     .refine(
       (val) => {
         // Strip data URI prefix if present
