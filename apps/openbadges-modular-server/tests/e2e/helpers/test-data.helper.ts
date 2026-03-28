@@ -152,33 +152,58 @@ export class TestDataHelper {
   /**
    * Create a test assertion
    * @param badgeClassId Badge class ID to associate with the assertion
-   * @param customData Custom data to override defaults
+   * @param options.format "ob2" for OB2 Assertion (default), "ob3" for OB3 VerifiableCredential
+   * @param options.customData Custom data to override defaults
    * @returns Created assertion ID and data
    */
   static async createAssertion(
     badgeClassId: string,
-    customData = {},
+    options: {
+      format?: "ob2" | "ob3";
+      customData?: Record<string, unknown>;
+    } = {},
   ): Promise<{ id: string; data: Record<string, unknown> }> {
-    // Generate a hashed recipient identity
-    const email = `recipient-${Date.now()}@example.com`;
-    const salt = crypto.randomBytes(16).toString("hex");
-    const hashedIdentity = `sha256$${crypto
-      .createHash("sha256")
-      .update(email + salt)
-      .digest("hex")}`;
+    const { format = "ob2", customData = {} } = options;
 
-    const assertionData = {
-      type: "Assertion",
-      badge: badgeClassId,
-      recipient: {
-        type: "email",
-        identity: hashedIdentity,
-        hashed: true,
-        salt,
-      },
-      issuedOn: new Date().toISOString(),
-      ...customData,
-    };
+    let assertionData: Record<string, unknown>;
+
+    if (format === "ob3") {
+      // OB3-compatible: uses mailto IRI recipient (unhashed) so the bake
+      // endpoint detects the credential as OB3. The assertion type stays
+      // "Assertion" because the server's creation endpoint validates OB2 schema.
+      const email = `recipient-${Date.now()}@example.com`;
+      assertionData = {
+        type: "Assertion",
+        badge: badgeClassId,
+        recipient: {
+          type: "email",
+          identity: `mailto:${email}`,
+          hashed: false,
+        },
+        issuedOn: new Date().toISOString(),
+        ...customData,
+      };
+    } else {
+      // OB2 Assertion format — hashed email recipient
+      const email = `recipient-${Date.now()}@example.com`;
+      const salt = crypto.randomBytes(16).toString("hex");
+      const hashedIdentity = `sha256$${crypto
+        .createHash("sha256")
+        .update(email + salt)
+        .digest("hex")}`;
+      assertionData = {
+        type: "Assertion",
+        badge: badgeClassId,
+        recipient: {
+          type: "email",
+          identity: hashedIdentity,
+          hashed: true,
+          salt,
+        },
+        issuedOn: new Date().toISOString(),
+        ...customData,
+      };
+    }
 
     const res = await fetch(`${this.apiUrl}/v3/assertions`, {
       method: "POST",

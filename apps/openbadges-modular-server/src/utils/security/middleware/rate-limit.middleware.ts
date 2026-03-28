@@ -4,6 +4,7 @@
  * This middleware applies rate limiting to API endpoints to prevent abuse.
  */
 
+import type { Context } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { logger } from "../../logging/logger.service";
@@ -12,55 +13,80 @@ import { logger } from "../../logging/logger.service";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 /**
+ * Resolve the client IP from request headers with proxy support.
+ */
+function resolveClientIp(c: Context): string {
+  const forwardedFor = c.req.header("x-forwarded-for");
+  if (forwardedFor && !isDevelopment) {
+    return forwardedFor.split(",")[0]?.trim() || "unknown-ip";
+  }
+
+  try {
+    return (
+      c.req.raw.headers.get("cf-connecting-ip") || // Cloudflare
+      c.req.raw.headers.get("x-real-ip") || // Nginx
+      c.req.raw.headers.get("x-forwarded-for")?.split(",")[0] || // Generic proxy
+      "unknown-ip"
+    );
+  } catch (error) {
+    logger.error("Error getting IP address for rate limiting", { error });
+    return "unknown-ip";
+  }
+}
+
+/**
  * Rate limiting configuration
  *
  * In development:
  * - Higher limits (500 requests per minute)
- * - Simple text response
  *
  * In production:
  * - Stricter limits (100 requests per minute)
- * - More detailed error response
  * - IP-based rate limiting with proxy support
  */
 export function createRateLimitMiddleware(): MiddlewareHandler {
   return rateLimiter({
-    windowMs: 60 * 1000, // 1 minute window
-    limit: isDevelopment ? 500 : 100, // requests per window
-    standardHeaders: "draft-6", // RateLimit-* headers
-    keyGenerator: (c) => {
-      // Get client IP, with support for proxy headers
-      const forwardedFor = c.req.header("x-forwarded-for");
-      if (forwardedFor && !isDevelopment) {
-        // In production, trust the X-Forwarded-For header
-        return forwardedFor.split(",")[0]?.trim() || "unknown-ip";
-      }
-
-      // Try to get IP from request
-      try {
-        // Get IP from request (implementation depends on the environment)
-        const ip =
-          c.req.raw.headers.get("cf-connecting-ip") || // Cloudflare
-          c.req.raw.headers.get("x-real-ip") || // Nginx
-          c.req.raw.headers.get("x-forwarded-for")?.split(",")[0] || // Generic proxy
-          "unknown-ip";
-        return ip;
-      } catch (error) {
-        logger.error("Error getting IP address for rate limiting", { error });
-        return "unknown-ip";
-      }
-    },
-    // Custom handler for when rate limit is exceeded
+    windowMs: 60 * 1000,
+    limit: isDevelopment ? 500 : 100,
+    standardHeaders: "draft-6",
+    keyGenerator: resolveClientIp,
     handler: (c) => {
-      const response = {
-        error: "Too Many Requests",
-        message: "You have exceeded the rate limit. Please try again later.",
-        status: 429,
-      };
+      return c.json(
+        {
+          error: "Too Many Requests",
+          message: "You have exceeded the rate limit. Please try again later.",
+          status: 429,
+        },
+        429,
+        { "Retry-After": "60" },
+      );
+    },
+  });
+}
 
-      return c.json(response, 429, {
-        "Retry-After": "60", // Suggest retry after 1 minute
-      });
+/**
+ * Stricter rate limit for image-processing endpoints
+ *
+ * Image baking/verification is memory-intensive, so apply a lower
+ * limit (20 req/min in production) to prevent resource abuse.
+ */
+export function createImageProcessingRateLimitMiddleware(): MiddlewareHandler {
+  return rateLimiter({
+    windowMs: 60 * 1000,
+    limit: isDevelopment ? 100 : 20,
+    standardHeaders: "draft-6",
+    keyGenerator: resolveClientIp,
+    handler: (c) => {
+      return c.json(
+        {
+          error: "Too Many Requests",
+          message:
+            "Image processing rate limit exceeded. Please try again later.",
+          status: 429,
+        },
+        429,
+        { "Retry-After": "60" },
+      );
     },
   });
 }

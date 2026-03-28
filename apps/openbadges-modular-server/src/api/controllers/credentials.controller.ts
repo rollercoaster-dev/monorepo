@@ -8,7 +8,7 @@
 import type { AssertionRepository } from "../../domains/assertion/assertion.repository";
 import type { BadgeClassRepository } from "../../domains/badgeClass/badgeClass.repository";
 import type { IssuerRepository } from "../../domains/issuer/issuer.repository";
-import type { Issuer } from "../../domains/issuer/issuer.entity";
+import { Issuer } from "../../domains/issuer/issuer.entity";
 import type { BakingService } from "../../services/baking/types";
 import type { BakeRequestDto, BakeResponseDto } from "../dtos";
 import { BadRequestError } from "../../infrastructure/errors/bad-request.error";
@@ -126,8 +126,6 @@ export class CredentialsController {
         logger.debug("Using embedded issuer from badge class", {
           issuerId: badgeClass.issuer.id,
         });
-        // Import Issuer entity to create from embedded data
-        const { Issuer } = await import("../../domains/issuer/issuer.entity");
         issuer = Issuer.create({
           id: badgeClass.issuer.id,
           name: badgeClass.issuer.name,
