@@ -158,17 +158,22 @@ export class TestDataHelper {
    */
   static async createAssertion(
     badgeClassId: string,
-    options: { format?: "ob2" | "ob3"; customData?: Record<string, unknown> } = {},
+    options: {
+      format?: "ob2" | "ob3";
+      customData?: Record<string, unknown>;
+    } = {},
   ): Promise<{ id: string; data: Record<string, unknown> }> {
     const { format = "ob2", customData = {} } = options;
 
     let assertionData: Record<string, unknown>;
 
     if (format === "ob3") {
-      // OB3 VerifiableCredential format — uses mailto IRI recipient
+      // OB3-compatible: uses mailto IRI recipient (unhashed) so the bake
+      // endpoint detects the credential as OB3. The assertion type stays
+      // "Assertion" because the server's creation endpoint validates OB2 schema.
       const email = `recipient-${Date.now()}@example.com`;
       assertionData = {
-        type: ["VerifiableCredential", "OpenBadgeCredential"],
+        type: "Assertion",
         badge: badgeClassId,
         recipient: {
           type: "email",

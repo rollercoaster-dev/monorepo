@@ -1223,40 +1223,45 @@ export function createVersionedRouter(
 
   // Bake credential into image (only if credentialsController is provided)
   if (credentialsController) {
-    router.post("/credentials/:id/bake", requireAuth(), imageRateLimit, async (c) => {
-      const id = c.req.param("id");
-      try {
-        // Parse and validate request body
-        const rawBody = await c.req.json();
-        const validation = BakeRequestSchema.safeParse(rawBody);
+    router.post(
+      "/credentials/:id/bake",
+      requireAuth(),
+      imageRateLimit,
+      async (c) => {
+        const id = c.req.param("id");
+        try {
+          // Parse and validate request body
+          const rawBody = await c.req.json();
+          const validation = BakeRequestSchema.safeParse(rawBody);
 
-        if (!validation.success) {
-          throw new BadRequestError(
-            `Invalid bake request: ${validation.error.errors.map((e) => e.message).join(", ")}`,
-          );
-        }
+          if (!validation.success) {
+            throw new BadRequestError(
+              `Invalid bake request: ${validation.error.errors.map((e) => e.message).join(", ")}`,
+            );
+          }
 
-        const body = validation.data as BakeRequestDto;
+          const body = validation.data as BakeRequestDto;
 
-        // Call controller to bake credential
-        const result = await credentialsController.bakeCredential(id, body);
+          // Call controller to bake credential
+          const result = await credentialsController.bakeCredential(id, body);
 
-        if (!result) {
-          return sendNotFoundError(c, "Credential", {
+          if (!result) {
+            return sendNotFoundError(c, "Credential", {
+              endpoint: "POST /credentials/:id/bake",
+              id,
+            });
+          }
+
+          return c.json(result);
+        } catch (error) {
+          return sendApiError(c, error, {
             endpoint: "POST /credentials/:id/bake",
             id,
+            body: await c.req.json().catch(() => ({})),
           });
         }
-
-        return c.json(result);
-      } catch (error) {
-        return sendApiError(c, error, {
-          endpoint: "POST /credentials/:id/bake",
-          id,
-          body: await c.req.json().catch(() => ({})),
-        });
-      }
-    });
+      },
+    );
   }
 
   router.post(

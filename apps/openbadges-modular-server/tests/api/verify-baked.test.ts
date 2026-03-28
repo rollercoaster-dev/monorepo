@@ -55,9 +55,8 @@ mock.module("@/services/verification/verification.service", () => ({
 }));
 
 // Must import AFTER mock.module() calls
-const { VerificationController } = await import(
-  "../../src/api/controllers/verification.controller"
-);
+const { VerificationController } =
+  await import("../../src/api/controllers/verification.controller");
 
 describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   describe("DTO Validation", () => {
@@ -148,7 +147,9 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         isValid: true,
         status: "valid",
         checks: {
-          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          proof: [
+            { check: "proof", description: "Verify proof", passed: true },
+          ],
           status: [],
           temporal: [],
           issuer: [],
@@ -181,7 +182,14 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       mockVerify.mockResolvedValue({
         isValid: true,
         status: "valid",
-        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        checks: {
+          proof: [],
+          status: [],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
         verifiedAt: new Date().toISOString(),
         metadata: { durationMs: 30 },
       } satisfies VerificationResult);
@@ -203,7 +211,14 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       mockVerify.mockResolvedValue({
         isValid: true,
         status: "valid",
-        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        checks: {
+          proof: [],
+          status: [],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
         verifiedAt: new Date().toISOString(),
         metadata: { durationMs: 25 },
       } satisfies VerificationResult);
@@ -229,11 +244,29 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         credentialId: "urn:uuid:test-credential-123" as Shared.IRI,
         issuer: "did:example:issuer123" as Shared.IRI,
         checks: {
-          proof: [{ check: "proof", description: "Verify proof", passed: true }],
-          status: [{ check: "revocation", description: "Check revocation", passed: true }],
-          temporal: [{ check: "expiration", description: "Check expiration", passed: true }],
-          issuer: [{ check: "issuer", description: "Verify issuer", passed: true }],
-          schema: [{ check: "schema", description: "Validate schema", passed: true }],
+          proof: [
+            { check: "proof", description: "Verify proof", passed: true },
+          ],
+          status: [
+            {
+              check: "revocation",
+              description: "Check revocation",
+              passed: true,
+            },
+          ],
+          temporal: [
+            {
+              check: "expiration",
+              description: "Check expiration",
+              passed: true,
+            },
+          ],
+          issuer: [
+            { check: "issuer", description: "Verify issuer", passed: true },
+          ],
+          schema: [
+            { check: "schema", description: "Validate schema", passed: true },
+          ],
           general: [],
         },
         verifiedAt: new Date().toISOString(),
@@ -246,7 +279,9 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
 
       expect(result.isValid).toBe(true);
       expect(result.credential).toBeDefined();
-      expect(result.credentialId).toBe("urn:uuid:test-credential-123" as Shared.IRI);
+      expect(result.credentialId).toBe(
+        "urn:uuid:test-credential-123" as Shared.IRI,
+      );
       expect(result.checks.proof).toHaveLength(1);
     });
   });
@@ -282,7 +317,9 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
 
     it("should handle unsupported image format", async () => {
       mockUnbake.mockRejectedValue(
-        new Error("Unsupported image format: unable to detect PNG or SVG format"),
+        new Error(
+          "Unsupported image format: unable to detect PNG or SVG format",
+        ),
       );
 
       // JPEG-like data
@@ -295,7 +332,9 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.checks.general[0].error).toContain("Invalid or corrupted badge data");
+      expect(result.checks.general[0].error).toContain(
+        "Invalid or corrupted badge data",
+      );
       expect(result.metadata?.extractionAttempted).toBe(true);
       expect(result.metadata?.extractionSucceeded).toBe(false);
     });
@@ -305,7 +344,9 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         new Error("Invalid iTXt chunk: missing keyword terminator"),
       );
 
-      const corruptPng = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 0xff, 0xff])
+      const corruptPng = Buffer.from([
+        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 0xff, 0xff,
+      ])
         .toString("base64")
         .padEnd(100, "A");
 
@@ -339,7 +380,14 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         isValid: false,
         status: "invalid",
         checks: {
-          proof: [{ check: "proof", description: "Verify proof", passed: false, error: "Invalid cryptographic proof" }],
+          proof: [
+            {
+              check: "proof",
+              description: "Verify proof",
+              passed: false,
+              error: "Invalid cryptographic proof",
+            },
+          ],
           status: [],
           temporal: [],
           issuer: [],
@@ -364,9 +412,18 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         isValid: false,
         status: "invalid",
         checks: {
-          proof: [{ check: "proof", description: "Verify proof", passed: true }],
+          proof: [
+            { check: "proof", description: "Verify proof", passed: true },
+          ],
           status: [],
-          temporal: [{ check: "expiration", description: "Check expiration", passed: false, error: "Credential has expired" }],
+          temporal: [
+            {
+              check: "expiration",
+              description: "Check expiration",
+              passed: false,
+              error: "Credential has expired",
+            },
+          ],
           issuer: [],
           schema: [],
           general: [],
@@ -389,8 +446,17 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         isValid: false,
         status: "invalid",
         checks: {
-          proof: [{ check: "proof", description: "Verify proof", passed: true }],
-          status: [{ check: "revocation", description: "Check revocation", passed: false, error: "Credential has been revoked" }],
+          proof: [
+            { check: "proof", description: "Verify proof", passed: true },
+          ],
+          status: [
+            {
+              check: "revocation",
+              description: "Check revocation",
+              passed: false,
+              error: "Credential has been revoked",
+            },
+          ],
           temporal: [],
           issuer: [],
           schema: [],
@@ -425,7 +491,14 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
       mockVerify.mockResolvedValue({
         isValid: true,
         status: "valid",
-        checks: { proof: [], status: [], temporal: [], issuer: [], schema: [], general: [] },
+        checks: {
+          proof: [],
+          status: [],
+          temporal: [],
+          issuer: [],
+          schema: [],
+          general: [],
+        },
         verifiedAt: new Date().toISOString(),
         metadata: { durationMs: 20 },
       } satisfies VerificationResult);
@@ -483,10 +556,7 @@ describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
         options: allOptions,
       });
 
-      expect(mockVerify).toHaveBeenCalledWith(
-        SAMPLE_CREDENTIAL,
-        allOptions,
-      );
+      expect(mockVerify).toHaveBeenCalledWith(SAMPLE_CREDENTIAL, allOptions);
     });
   });
 });

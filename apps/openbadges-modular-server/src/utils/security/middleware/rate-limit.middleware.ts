@@ -54,8 +54,7 @@ export function createRateLimitMiddleware(): MiddlewareHandler {
       return c.json(
         {
           error: "Too Many Requests",
-          message:
-            "You have exceeded the rate limit. Please try again later.",
+          message: "You have exceeded the rate limit. Please try again later.",
           status: 429,
         },
         429,
