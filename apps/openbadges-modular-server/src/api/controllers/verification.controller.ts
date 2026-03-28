@@ -141,7 +141,46 @@ export class VerificationController {
       });
 
       // Extract credential from baked image
-      const unbakeResult = await unbake(imageBuffer);
+      // Wrap unbake in its own try/catch so any extraction error
+      // (chunk parsing, JSON parse, unsupported format) returns a
+      // structured failure instead of propagating as a 500.
+      let unbakeResult;
+      try {
+        unbakeResult = await unbake(imageBuffer);
+      } catch (extractionError) {
+        logger.warn("Credential extraction failed", {
+          error:
+            extractionError instanceof Error
+              ? extractionError.message
+              : String(extractionError),
+        });
+
+        return {
+          isValid: false,
+          status: "invalid",
+          checks: {
+            proof: [],
+            status: [],
+            temporal: [],
+            issuer: [],
+            schema: [],
+            general: [
+              {
+                check: "extraction",
+                description: "Extract credential from baked image",
+                passed: false,
+                error: "Invalid or corrupted badge data",
+              },
+            ],
+          },
+          verifiedAt: new Date().toISOString(),
+          metadata: {
+            durationMs: 0,
+            extractionAttempted: true,
+            extractionSucceeded: false,
+          },
+        };
+      }
 
       logger.debug("Unbake completed", {
         found: unbakeResult.found,
@@ -231,48 +270,7 @@ export class VerificationController {
         stack: error instanceof Error ? error.stack : undefined,
       });
 
-      // If it's an extraction/format error or corruption, return structured error
-      // Handle various corruption indicators:
-      // - Unsupported image format errors
-      // - SyntaxError (JSON parsing failures)
-      // - Messages containing "corrupted" or "invalid"
-      // - Buffer/parsing errors
-      const isCorruptionError =
-        error instanceof Error &&
-        (error.message.includes("Unsupported image format") ||
-          error.message.includes("corrupted") ||
-          error.message.includes("invalid") ||
-          error instanceof SyntaxError);
-
-      if (isCorruptionError) {
-        return {
-          isValid: false,
-          status: "invalid",
-          checks: {
-            proof: [],
-            status: [],
-            temporal: [],
-            issuer: [],
-            schema: [],
-            general: [
-              {
-                check: "extraction",
-                description: "Extract credential from baked image",
-                passed: false,
-                error: "Invalid or corrupted badge data",
-              },
-            ],
-          },
-          verifiedAt: new Date().toISOString(),
-          metadata: {
-            durationMs: 0,
-            extractionAttempted: true,
-            extractionSucceeded: false,
-          },
-        };
-      }
-
-      // Re-throw for other errors
+      // Re-throw — extraction errors are already caught above
       throw error;
     }
   }
