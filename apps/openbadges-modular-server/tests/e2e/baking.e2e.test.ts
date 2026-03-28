@@ -147,13 +147,7 @@ describe("Baking API - E2E", () => {
       // Step 3: Create test credential with OB3-compatible recipient (mailto: IRI format)
       const { id: credentialId } = await TestDataHelper.createAssertion(
         badgeClassId,
-        {
-          recipient: {
-            type: "email",
-            identity: `mailto:recipient-${Date.now()}@example.com`,
-            hashed: false,
-          },
-        },
+        { format: "ob3" },
       );
       logger.info("Created test credential", { credentialId });
 
@@ -283,13 +277,7 @@ describe("Baking API - E2E", () => {
       // Step 3: Create test credential with OB3-compatible recipient (mailto: IRI format)
       const { id: credentialId } = await TestDataHelper.createAssertion(
         badgeClassId,
-        {
-          recipient: {
-            type: "email",
-            identity: `mailto:recipient-${Date.now()}@example.com`,
-            hashed: false,
-          },
-        },
+        { format: "ob3" },
       );
       logger.info("Created test credential", { credentialId });
 
@@ -419,13 +407,7 @@ describe("Baking API - E2E", () => {
       // Step 3: Create test credential with OB3-compatible recipient (mailto: IRI format)
       const { id: credentialId } = await TestDataHelper.createAssertion(
         badgeClassId,
-        {
-          recipient: {
-            type: "email",
-            identity: `mailto:recipient-${Date.now()}@example.com`,
-            hashed: false,
-          },
-        },
+        { format: "ob3" },
       );
       logger.info("Created test credential", { credentialId });
 
