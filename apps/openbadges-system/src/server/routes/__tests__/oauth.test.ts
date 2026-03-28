@@ -77,10 +77,20 @@ vi.mock('../../services/user', () => ({
     getOAuthProvider: vi.fn(),
     updateOAuthProvider: vi.fn(),
     removeOAuthProvider: vi.fn(),
-    createOAuthLoginExchange: vi.fn(),
-    consumeOAuthLoginExchange: vi.fn(),
-    cleanupExpiredOAuthLoginExchanges: vi.fn(),
   },
+}))
+
+// Mock OAuthLoginExchangeRepository
+const { mockOAuthLoginExchangeRepository } = vi.hoisted(() => ({
+  mockOAuthLoginExchangeRepository: {
+    create: vi.fn(),
+    consume: vi.fn(),
+    deleteExpired: vi.fn(),
+  },
+}))
+
+vi.mock('../../../../database/repositories', () => ({
+  OAuthLoginExchangeRepository: vi.fn(() => mockOAuthLoginExchangeRepository),
 }))
 
 // Mock userSyncService
@@ -507,7 +517,7 @@ describe('OAuth Routes', () => {
       expect(res.headers.get('Location')).toContain('code=')
       expect(res.headers.get('Location')).not.toContain('token=')
       expect(res.headers.get('Location')).not.toContain('refreshToken=')
-      expect(userService!.createOAuthLoginExchange).toHaveBeenCalledWith(
+      expect(mockOAuthLoginExchangeRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           accessToken: 'mock-platform-token',
           refreshToken: 'mock-refresh-token',
@@ -517,7 +527,7 @@ describe('OAuth Routes', () => {
     })
 
     it('should exchange a one-time login code for auth data', async () => {
-      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue({
+      mockOAuthLoginExchangeRepository.consume.mockResolvedValue({
         id: 'exchange-1',
         code: 'exchange-code',
         accessToken: 'mock-platform-token',
@@ -569,7 +579,7 @@ describe('OAuth Routes', () => {
     })
 
     it('should reject expired or consumed oauth exchange codes', async () => {
-      vi.mocked(userService!.consumeOAuthLoginExchange).mockResolvedValue(null)
+      mockOAuthLoginExchangeRepository.consume.mockResolvedValue(null)
 
       const app = createApp()
       const res = await app.request('/oauth/exchange', {
