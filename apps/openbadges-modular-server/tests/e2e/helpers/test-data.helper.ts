@@ -178,6 +178,7 @@ export class TestDataHelper {
         recipient: {
           type: "email",
           identity: `mailto:${email}`,
+          hashed: false,
         },
         issuedOn: new Date().toISOString(),
         ...customData,
