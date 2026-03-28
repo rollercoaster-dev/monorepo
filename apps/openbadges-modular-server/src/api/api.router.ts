@@ -72,6 +72,7 @@ import { createUserRouter } from "./user.router";
 import { createAuthRouter } from "./auth.router";
 import { RepositoryFactory } from "../infrastructure/repository.factory";
 import { createSecurityMiddleware } from "../utils/security/security.middleware";
+import { createImageProcessingRateLimitMiddleware } from "../utils/security/middleware/rate-limit.middleware";
 import { createStaticAssetsRouter } from "./static-assets.middleware";
 import { requireAuth } from "../auth/middleware/rbac.middleware";
 import {
@@ -1219,7 +1220,7 @@ export function createVersionedRouter(
 
   // Bake credential into image (only if credentialsController is provided)
   if (credentialsController) {
-    router.post("/credentials/:id/bake", requireAuth(), async (c) => {
+    router.post("/credentials/:id/bake", requireAuth(), createImageProcessingRateLimitMiddleware(), async (c) => {
       const id = c.req.param("id");
       try {
         // Parse and validate request body
@@ -1549,9 +1550,10 @@ export function createVersionedRouter(
     // POST /v3/verify/baked - Verify a baked image credential
     // This endpoint extracts a credential from a baked image (PNG or SVG) and verifies it
     // NOTE: Intentionally unauthenticated - follows same security model as POST /v3/verify
-    // Rate limiting should be applied at the infrastructure level (reverse proxy/CDN).
+    // Stricter rate limit applied due to memory-intensive image processing.
     router.post(
       "/verify/baked",
+      createImageProcessingRateLimitMiddleware(),
       validateVerifyBakedImageMiddleware(),
       async (c) => {
         try {
