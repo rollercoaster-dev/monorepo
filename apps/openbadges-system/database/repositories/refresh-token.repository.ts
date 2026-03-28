@@ -14,7 +14,7 @@ export interface RefreshToken {
 export type RefreshTokenRevokeReason = 'rotated' | 'expired' | 'logout' | 'compromised'
 
 function generateId(): string {
-  return 'refresh_token_' + Date.now().toString(36) + Math.random().toString(36).substr(2)
+  return 'refresh_token_' + Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
 function mapRow(row: RefreshTokens): RefreshToken {

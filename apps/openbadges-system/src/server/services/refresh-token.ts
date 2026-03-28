@@ -85,8 +85,7 @@ export async function rotateRefreshToken(oldRefreshToken: string): Promise<Token
     return null
   }
 
-  // Look up user to build new access token (still uses userService for user lookup)
-  const user = await userService?.getUserById(stored.userId)
+  const user = await userService!.getUserById(stored.userId)
   if (!user) {
     return null
   }

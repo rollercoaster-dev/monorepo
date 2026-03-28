@@ -14,7 +14,7 @@ export interface OAuthLoginExchange {
 }
 
 function generateId(): string {
-  return 'oauth_exchange_' + Date.now().toString(36) + Math.random().toString(36).substr(2)
+  return 'oauth_exchange_' + Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
 function mapRow(row: OAuthLoginExchanges): OAuthLoginExchange {
