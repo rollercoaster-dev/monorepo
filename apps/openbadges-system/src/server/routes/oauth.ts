@@ -9,8 +9,10 @@ import { requireAdmin, requireAuth, getAuthPayload } from '../middleware/auth'
 import { logger } from '../utils/logger'
 import { oauthConfig } from '../config/oauth'
 import { setRefreshTokenCookie } from '../utils/auth-cookies'
+import { OAuthLoginExchangeRepository } from '../../../database/repositories'
 
 const oauthRoutes = new Hono()
+const oauthLoginExchangeRepository = new OAuthLoginExchangeRepository()
 const oauthExchangeRequestSchema = z.object({
   code: z.string().min(1),
 })
@@ -220,10 +222,6 @@ oauthRoutes.get('/github/callback', async c => {
         redirectUri: session.redirect_uri || '/',
       })
     } else {
-      if (!userService) {
-        throw new Error('User service not available')
-      }
-
       // Redirect to the frontend with a one-time code, then exchange server-side.
       const userData = {
         id: user.id,
@@ -236,9 +234,15 @@ oauthRoutes.get('/github/callback', async c => {
         roles: user.roles,
       }
 
-      await userService.cleanupExpiredOAuthLoginExchanges()
+      // Best-effort cleanup — should not block the exchange creation
+      try {
+        await oauthLoginExchangeRepository.deleteExpired()
+      } catch (error) {
+        logger.warn('Failed to clean up expired OAuth login exchanges', { error })
+      }
+
       const exchangeCode = nanoid(32)
-      await userService.createOAuthLoginExchange({
+      await oauthLoginExchangeRepository.create({
         code: exchangeCode,
         accessToken,
         refreshToken,
@@ -267,8 +271,6 @@ oauthRoutes.get('/github/callback', async c => {
         errorMessage = 'GitHub token exchange failed - check client credentials'
       } else if (error.message.includes('GitHub API error')) {
         errorMessage = 'GitHub API error - check access token'
-      } else if (error.message.includes('User service not available')) {
-        errorMessage = 'User service not available'
       } else {
         errorMessage = `OAuth error: ${error.message}`
       }
@@ -285,10 +287,6 @@ oauthRoutes.get('/github/callback', async c => {
 })
 
 oauthRoutes.post('/exchange', async c => {
-  if (!userService) {
-    return c.json({ success: false, error: 'User service not available' }, 503)
-  }
-
   try {
     const body = await c.req.json().catch(() => null)
     const parsed = oauthExchangeRequestSchema.safeParse(body)
@@ -296,8 +294,14 @@ oauthRoutes.post('/exchange', async c => {
       return c.json({ success: false, error: 'OAuth exchange code required' }, 400)
     }
 
-    await userService.cleanupExpiredOAuthLoginExchanges()
-    const exchange = await userService.consumeOAuthLoginExchange(parsed.data.code)
+    // Best-effort cleanup
+    try {
+      await oauthLoginExchangeRepository.deleteExpired()
+    } catch (error) {
+      logger.warn('Failed to clean up expired OAuth login exchanges', { error })
+    }
+
+    const exchange = await oauthLoginExchangeRepository.consume(parsed.data.code)
     if (!exchange) {
       return c.json({ success: false, error: 'Invalid or expired OAuth exchange code' }, 400)
     }

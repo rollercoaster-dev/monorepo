@@ -1,16 +1,22 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import crypto from 'crypto'
 
-const { mockUserService } = vi.hoisted(() => ({
+const { mockRefreshTokenRepository, mockUserService } = vi.hoisted(() => ({
+  mockRefreshTokenRepository: {
+    store: vi.fn(),
+    findByHash: vi.fn(),
+    deleteExpired: vi.fn(),
+    consume: vi.fn(),
+    revoke: vi.fn(),
+    revokeAllForUser: vi.fn(),
+  },
   mockUserService: {
-    storeRefreshToken: vi.fn(),
-    getRefreshTokenByHash: vi.fn(),
-    cleanupExpiredRefreshTokens: vi.fn(),
-    consumeRefreshToken: vi.fn(),
-    revokeRefreshToken: vi.fn(),
-    revokeAllUserRefreshTokens: vi.fn(),
     getUserById: vi.fn(),
   },
+}))
+
+vi.mock('../../../../database/repositories', () => ({
+  RefreshTokenRepository: vi.fn(() => mockRefreshTokenRepository),
 }))
 
 vi.mock('../user', () => ({
@@ -53,7 +59,7 @@ describe('Refresh Token Service', () => {
 
   describe('issueTokenPair', () => {
     it('returns an access token and refresh token', async () => {
-      mockUserService.storeRefreshToken.mockResolvedValue({})
+      mockRefreshTokenRepository.store.mockResolvedValue({})
 
       const result = await issueTokenPair(mockUser)
 
@@ -63,12 +69,12 @@ describe('Refresh Token Service', () => {
     })
 
     it('stores the refresh token hash in the database', async () => {
-      mockUserService.storeRefreshToken.mockResolvedValue({})
+      mockRefreshTokenRepository.store.mockResolvedValue({})
 
       const result = await issueTokenPair(mockUser)
 
-      expect(mockUserService.storeRefreshToken).toHaveBeenCalledOnce()
-      const callArgs = mockUserService.storeRefreshToken.mock.calls[0]!
+      expect(mockRefreshTokenRepository.store).toHaveBeenCalledOnce()
+      const callArgs = mockRefreshTokenRepository.store.mock.calls[0]!
       const [userId, storedHash, expiresAt] = callArgs
       expect(userId).toBe('user-1')
       // Verify the stored hash matches the returned token
@@ -83,14 +89,14 @@ describe('Refresh Token Service', () => {
 
   describe('rotateRefreshToken', () => {
     it('returns null for unknown token', async () => {
-      mockUserService.getRefreshTokenByHash.mockResolvedValue(null)
+      mockRefreshTokenRepository.findByHash.mockResolvedValue(null)
 
       const result = await rotateRefreshToken('unknown-token')
       expect(result).toBeNull()
     })
 
     it('returns null without global revocation during the rotation grace window', async () => {
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
         tokenHash: 'some-hash',
@@ -103,12 +109,12 @@ describe('Refresh Token Service', () => {
       const result = await rotateRefreshToken('stolen-token')
 
       expect(result).toBeNull()
-      expect(mockUserService.consumeRefreshToken).not.toHaveBeenCalled()
-      expect(mockUserService.revokeAllUserRefreshTokens).not.toHaveBeenCalled()
+      expect(mockRefreshTokenRepository.consume).not.toHaveBeenCalled()
+      expect(mockRefreshTokenRepository.revokeAllForUser).not.toHaveBeenCalled()
     })
 
     it('revokes all active refresh tokens when revoked token reuse looks suspicious', async () => {
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
         tokenHash: 'some-hash',
@@ -121,14 +127,14 @@ describe('Refresh Token Service', () => {
       const result = await rotateRefreshToken('stolen-token')
 
       expect(result).toBeNull()
-      expect(mockUserService.revokeAllUserRefreshTokens).toHaveBeenCalledWith(
+      expect(mockRefreshTokenRepository.revokeAllForUser).toHaveBeenCalledWith(
         'user-1',
         'compromised'
       )
     })
 
     it('returns null for expired token and revokes it', async () => {
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
         tokenHash: 'some-hash',
@@ -141,14 +147,14 @@ describe('Refresh Token Service', () => {
       const result = await rotateRefreshToken('expired-token')
 
       expect(result).toBeNull()
-      expect(mockUserService.revokeRefreshToken).toHaveBeenCalledWith(
+      expect(mockRefreshTokenRepository.revoke).toHaveBeenCalledWith(
         hashToken('expired-token'),
         'expired'
       )
     })
 
-    it('returns null if user no longer exists', async () => {
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+    it('returns null if user no longer exists without consuming the token', async () => {
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'deleted-user',
         tokenHash: 'some-hash',
@@ -158,19 +164,19 @@ describe('Refresh Token Service', () => {
         createdAt: new Date().toISOString(),
       })
       mockUserService.getUserById.mockResolvedValue(null)
-      mockUserService.consumeRefreshToken.mockResolvedValue(true)
 
       const result = await rotateRefreshToken('valid-token')
 
       expect(result).toBeNull()
-      expect(mockUserService.consumeRefreshToken).toHaveBeenCalled()
+      // Token should NOT be consumed — we can't issue a replacement
+      expect(mockRefreshTokenRepository.consume).not.toHaveBeenCalled()
     })
 
     it('rotates successfully: revokes old token and issues new pair', async () => {
       const oldToken = 'old-refresh-token'
       const oldHash = hashToken(oldToken)
 
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
         tokenHash: oldHash,
@@ -179,24 +185,24 @@ describe('Refresh Token Service', () => {
         revokedReason: null,
         createdAt: new Date().toISOString(),
       })
-      mockUserService.consumeRefreshToken.mockResolvedValue(true)
+      mockRefreshTokenRepository.consume.mockResolvedValue(true)
       mockUserService.getUserById.mockResolvedValue(mockUser)
-      mockUserService.storeRefreshToken.mockResolvedValue({})
+      mockRefreshTokenRepository.store.mockResolvedValue({})
 
       const result = await rotateRefreshToken(oldToken)
 
       expect(result).not.toBeNull()
       expect(result!.accessToken).toBe('mock-access-token')
       expect(result!.refreshToken).toBeTruthy()
-      expect(mockUserService.consumeRefreshToken).toHaveBeenCalledWith(oldHash, 'rotated')
+      expect(mockRefreshTokenRepository.consume).toHaveBeenCalledWith(oldHash, 'rotated')
       // New token should be stored
-      expect(mockUserService.storeRefreshToken).toHaveBeenCalledOnce()
+      expect(mockRefreshTokenRepository.store).toHaveBeenCalledOnce()
     })
 
     it('returns null when another request already consumed the token', async () => {
       const oldToken = 'old-refresh-token'
 
-      mockUserService.getRefreshTokenByHash.mockResolvedValue({
+      mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'user-1',
         tokenHash: hashToken(oldToken),
@@ -205,12 +211,12 @@ describe('Refresh Token Service', () => {
         revokedReason: null,
         createdAt: new Date().toISOString(),
       })
-      mockUserService.consumeRefreshToken.mockResolvedValue(false)
+      mockRefreshTokenRepository.consume.mockResolvedValue(false)
 
       const result = await rotateRefreshToken(oldToken)
 
       expect(result).toBeNull()
-      expect(mockUserService.storeRefreshToken).not.toHaveBeenCalled()
+      expect(mockRefreshTokenRepository.store).not.toHaveBeenCalled()
     })
   })
 
@@ -219,7 +225,7 @@ describe('Refresh Token Service', () => {
       const token = 'token-to-revoke'
       await revokeRefreshToken(token)
 
-      expect(mockUserService.revokeRefreshToken).toHaveBeenCalledWith(hashToken(token), 'logout')
+      expect(mockRefreshTokenRepository.revoke).toHaveBeenCalledWith(hashToken(token), 'logout')
     })
   })
 })
