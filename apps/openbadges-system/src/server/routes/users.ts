@@ -97,6 +97,7 @@ userRoutes.get('/:id', requireSelfOrAdminFromParam('id'), async c => {
   }
   try {
     const userId = c.req.param('id')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
     const user = await userService.getUserById(userId)
     if (!user) return c.json({ error: 'User not found' }, 404)
     return c.json(user)
@@ -113,6 +114,7 @@ userRoutes.put('/:id', requireSelfOrAdminFromParam('id'), async c => {
   }
   try {
     const userId = c.req.param('id')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
     let body: unknown
     try {
       body = await c.req.json()
@@ -139,6 +141,7 @@ userRoutes.delete('/:id', requireAdmin, async c => {
   }
   try {
     const userId = c.req.param('id')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
     await userService.deleteUser(userId)
     return c.json({ success: true })
   } catch (err) {
@@ -154,6 +157,7 @@ userRoutes.post('/:id/credentials', requireSelfOrAdminFromParam('id'), async c =
   }
   try {
     const userId = c.req.param('id')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
     let body: unknown
     try {
       body = await c.req.json()
@@ -179,6 +183,7 @@ userRoutes.get('/:id/credentials', requireSelfOrAdminFromParam('id'), async c =>
   }
   try {
     const userId = c.req.param('id')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
     const credentials = await userService.getUserCredentials(userId)
     return c.json(credentials)
   } catch (err) {
@@ -195,6 +200,8 @@ userRoutes.delete('/:id/credentials/:credentialId', requireSelfOrAdminFromParam(
   try {
     const userId = c.req.param('id')
     const credentialId = c.req.param('credentialId')
+    if (!userId) return c.json({ error: 'User ID required' }, 400)
+    if (!credentialId) return c.json({ error: 'Credential ID required' }, 400)
     await userService.removeUserCredential(userId, credentialId)
     return c.json({ success: true })
   } catch (err) {
