@@ -153,7 +153,7 @@ describe('Refresh Token Service', () => {
       )
     })
 
-    it('returns null if user no longer exists', async () => {
+    it('returns null if user no longer exists without consuming the token', async () => {
       mockRefreshTokenRepository.findByHash.mockResolvedValue({
         id: 'rt-1',
         userId: 'deleted-user',
@@ -164,12 +164,12 @@ describe('Refresh Token Service', () => {
         createdAt: new Date().toISOString(),
       })
       mockUserService.getUserById.mockResolvedValue(null)
-      mockRefreshTokenRepository.consume.mockResolvedValue(true)
 
       const result = await rotateRefreshToken('valid-token')
 
       expect(result).toBeNull()
-      expect(mockRefreshTokenRepository.consume).toHaveBeenCalled()
+      // Token should NOT be consumed — we can't issue a replacement
+      expect(mockRefreshTokenRepository.consume).not.toHaveBeenCalled()
     })
 
     it('rotates successfully: revokes old token and issues new pair', async () => {
