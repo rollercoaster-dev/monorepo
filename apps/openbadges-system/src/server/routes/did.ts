@@ -138,6 +138,9 @@ didRoutes.get('/users/:id/did', requireSelfOrAdminFromParam('id'), async c => {
 
   try {
     const userId = c.req.param('id')
+    if (!userId) {
+      return c.json({ error: 'User ID required' }, 400)
+    }
     const userRecord = await userService.getUserById(userId)
 
     if (!userRecord) {
