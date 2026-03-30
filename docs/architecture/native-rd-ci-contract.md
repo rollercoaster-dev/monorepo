@@ -16,13 +16,14 @@ its own ESLint config (`apps/native-rd/eslint.config.js`).
 
 ## CI Workflow Boundary
 
-| Check              | Root CI (`ci.yml`)                              | Native CI (`ci-native-rd.yml`) |
-| ------------------ | ----------------------------------------------- | ------------------------------ |
-| Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached)       | Always (filter=native-rd)      |
-| TypeScript         | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd)      |
-| Jest tests         | Not run                                         | Always (`jest --ci`)           |
-| Prettier format    | via `format:check`                              | Not run (delegated to root)    |
-| Build              | via `turbo build`                               | Not run (no build step)        |
+| Check              | Root CI (`ci.yml`)                              | Native CI (`ci-native-rd.yml`) | E2E CI (`e2e-native-rd.yml`)      |
+| ------------------ | ----------------------------------------------- | ------------------------------ | --------------------------------- |
+| Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached)       | Always (filter=native-rd)      | Not run                           |
+| TypeScript         | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd)      | Not run                           |
+| Jest tests         | Not run                                         | Always (`jest --ci`)           | Not run                           |
+| Prettier format    | via `format:check`                              | Not run (delegated to root)    | Not run                           |
+| Build              | via `turbo build`                               | Not run (no build step)        | Not run                           |
+| Maestro E2E flows  | Not run                                         | Not run                        | Always (self-hosted macOS runner) |
 
 `ci.yml` triggers on ALL PRs; `ci-native-rd.yml` triggers only when `apps/native-rd/**`
 or its workspace deps change. When both trigger on a native-rd PR the lint and type-check
@@ -60,6 +61,18 @@ cd apps/native-rd && bun run lint
   debugging tool but is not used in CI.
 - All tests run in Node via the React Native Jest environment
   (`react-native/jest/react-native-env.js`)
+
+## E2E Workflow
+
+`e2e-native-rd.yml` runs on `[self-hosted, macOS, e2e]` (Mac Mini). It requires:
+
+- Maestro CLI installed on the runner
+- A booted iOS Simulator with `com.joe.rd.native-rd` installed
+
+Setup procedure: `docs/infrastructure/mac-mini-runner-setup.md`
+
+The exit-0 fallback in `run-e2e.sh` remains in place until the self-hosted runner is
+live. Once the runner is online, the fallback will be removed (tracked in epic #889).
 
 ## What Does NOT Apply to native-rd
 
