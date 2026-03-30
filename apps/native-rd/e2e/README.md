@@ -51,7 +51,7 @@ appId: com.joe.rd.native-rd
 
 Each flow YAML file has a `# Status: required` or `# Status: optional` comment header.
 
-A flow qualifies as **required** (CI-blocking) when it meets ALL three criteria:
+A flow qualifies as **required** when it meets ALL three criteria (CI integration is tracked in epic #889):
 
 1. **Outcome assertions** — It has assertions that verify outcomes, not just that actions were performed
 2. **Stable feature** — It tests a stable, implemented feature (not aspirational)

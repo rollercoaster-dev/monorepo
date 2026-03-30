@@ -8,4 +8,5 @@ appId: com.joe.rd.native-rd
 - assertVisible: "Settings"
 - assertVisible: "Pick what feels right"
 - tapOn: "Night Ride"
-- assertVisible: "Dark mode"
+- assertVisible:
+    id: "selected-theme"
