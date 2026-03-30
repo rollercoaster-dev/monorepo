@@ -8,48 +8,69 @@ Related: Issue #895, Epic #889
 ## Prerequisites
 
 - macOS 14+ (Sonoma or later)
-- Admin account for initial setup (will create a dedicated runner user)
-- Apple ID (for Xcode license acceptance)
+- Admin account for initial setup
+- **Xcode** (full install from App Store — the iOS Simulator SDK is required,
+  CLI Tools alone are not enough)
+- **Homebrew** (`brew` — for installing Maestro and CocoaPods)
+- **`gh` CLI** (`brew install gh`, authenticated with `gh auth login`)
 - Network access to github.com
 
 ## Part 1: Admin Setup (as your admin user)
 
 These steps require admin/sudo privileges. Run them from your normal admin account.
 
-### 1.1 Install Xcode Command Line Tools
+### 1.1 Xcode
+
+Install Xcode from the App Store (or via `mas install 497799835`). Then:
 
 ```bash
-xcode-select --install
+# Point xcode-select to the full Xcode.app (not just CLI Tools)
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 sudo xcodebuild -license accept
 ```
 
-### 1.2 Create Dedicated Runner User
+`npx expo run:ios` needs the iOS Simulator SDK, which ships with Xcode.app — not
+with the standalone Command Line Tools.
 
-Create a non-admin `runner` user account. The runner process should never run as an
-admin user.
-
-```bash
-sudo sysadminctl -addUser runner -fullName "GitHub Runner" -password "<secure-password>" -home /Users/runner
-```
-
-### 1.3 Install Homebrew (system-wide) and Maestro
-
-If Homebrew isn't already installed:
+### 1.2 Homebrew, Maestro, and CocoaPods
 
 ```bash
+# Install Homebrew if not already present
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Maestro (E2E test runner)
+brew install maestro
+
+# CocoaPods (Expo runs `pod install` during native builds)
+brew install cocoapods
 ```
 
-Install Maestro (available to all users):
+### 1.3 Make Homebrew tools available to the runner user
+
+The GitHub Actions runner does not source `~/.zshrc`. To ensure Homebrew-installed
+tools (`maestro`, `pod`) are on PATH for all users including the runner service:
 
 ```bash
-brew install maestro
+# Add Homebrew to the system-wide PATH
+echo '/opt/homebrew/bin' | sudo tee /etc/paths.d/homebrew
 ```
 
-### 1.4 Install the Runner Service
+This takes effect for new shells and launchd services.
+
+### 1.4 Create Dedicated Runner User
+
+Create a non-admin `runner` user account. The runner process should never run as
+admin.
+
+```bash
+sudo sysadminctl -addUser runner -fullName "GitHub Runner" \
+  -password "<secure-password>" -home /Users/runner
+```
+
+### 1.5 Install and Register the Runner Service
 
 The `svc.sh` scripts require sudo. Download and configure the runner as admin,
-then install the service. The service itself will run as the `runner` user.
+then install the service. The service runs as the `runner` user.
 
 ```bash
 sudo mkdir -p /Users/runner/actions-runner
@@ -58,7 +79,8 @@ cd /Users/runner/actions-runner
 
 # Download the latest runner package
 RUNNER_VERSION=$(gh api repos/actions/runner/releases/latest --jq '.tag_name' | sed 's/^v//')
-sudo -u runner curl -o actions-runner.tar.gz -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-osx-arm64-${RUNNER_VERSION}.tar.gz"
+sudo -u runner curl -o actions-runner.tar.gz -L \
+  "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-osx-arm64-${RUNNER_VERSION}.tar.gz"
 sudo -u runner tar xzf actions-runner.tar.gz
 
 # Get a registration token
@@ -87,28 +109,28 @@ Switch to the runner user for simulator and app setup:
 su - runner
 ```
 
-### 2.1 Boot iOS Simulator
+### 2.1 Verify tools are on PATH
 
-List available runtimes and devices:
+```bash
+which maestro    # → /opt/homebrew/bin/maestro
+which pod        # → /opt/homebrew/bin/pod
+xcode-select -p  # → /Applications/Xcode.app/Contents/Developer
+xcrun --find simctl  # should return a path
+```
+
+If `maestro` or `pod` are not found, check that `/etc/paths.d/homebrew` exists
+and contains `/opt/homebrew/bin`, then open a new shell.
+
+### 2.2 Boot iOS Simulator
 
 ```bash
 xcrun simctl list runtimes
 xcrun simctl list devices
-```
-
-Boot a simulator (e.g., iPhone 16):
-
-```bash
 xcrun simctl boot "iPhone 16"
-```
-
-Verify the simulator is booted:
-
-```bash
 xcrun simctl list devices | grep Booted
 ```
 
-### 2.2 Build and Install the App
+### 2.3 Build and Install the App
 
 From the monorepo root:
 
@@ -117,13 +139,13 @@ cd apps/native-rd
 npx expo run:ios
 ```
 
-Verify the app `com.joe.rd.native-rd` is installed on the simulator:
+Verify the app is installed:
 
 ```bash
 xcrun simctl listapps booted | grep "com.joe.rd.native-rd"
 ```
 
-### 2.3 Verify Runner is Online
+### 2.4 Verify Runner is Online
 
 Confirm the runner appears as **Online** at:
 `github.com/rollercoaster-dev/monorepo/settings/actions/runners`
@@ -143,14 +165,17 @@ It should show labels: `self-hosted`, `macOS`, `e2e`.
 
 ## Verification Checklist
 
+All checks below should be run as the `runner` user unless noted.
+
 - [ ] Runner user is non-admin
-- [ ] `xcode-select -p` returns a valid path
-- [ ] `maestro --version` works (as runner user)
-- [ ] `xcrun simctl list devices | grep Booted` shows a device (as runner user)
+- [ ] `xcode-select -p` → `/Applications/Xcode.app/Contents/Developer`
+- [ ] `which maestro` → `/opt/homebrew/bin/maestro`
+- [ ] `which pod` → `/opt/homebrew/bin/pod`
+- [ ] `xcrun simctl list devices | grep Booted` shows a device
 - [ ] `com.joe.rd.native-rd` installs on the simulator
 - [ ] Runner shows as **Online** in GitHub repo settings
 - [ ] Labels are `self-hosted, macOS, e2e`
-- [ ] `sudo ./svc.sh status` shows the service running
+- [ ] `sudo ./svc.sh status` shows the service running (as admin)
 
 ## Troubleshooting
 
@@ -169,6 +194,18 @@ Check logs:
 
 ```bash
 cat /Users/runner/actions-runner/_diag/Runner_*.log | tail -50
+```
+
+### Homebrew tools not found by runner
+
+```bash
+# Verify /etc/paths.d/homebrew exists
+cat /etc/paths.d/homebrew  # should show /opt/homebrew/bin
+
+# Restart the runner service to pick up PATH changes
+cd /Users/runner/actions-runner
+sudo ./svc.sh stop
+sudo ./svc.sh start
 ```
 
 ### Simulator Won't Boot
