@@ -25,6 +25,7 @@ const ajv = new Ajv({
 });
 
 // Add format validators (uri, email, etc.)
+// @ts-expect-error ajv-formats bundles its own ajv copy; types are structurally identical but TS treats protected members as nominal across packages (bun lacks scoped overrides — oven-sh/bun#6608)
 addFormats(ajv);
 
 /**
