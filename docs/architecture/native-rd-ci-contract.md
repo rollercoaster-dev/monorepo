@@ -25,8 +25,11 @@ its own ESLint config (`apps/native-rd/eslint.config.js`).
 | Build              | via `turbo build`                               | Not run (no build step)        |
 
 `ci.yml` triggers on ALL PRs; `ci-native-rd.yml` triggers only when `apps/native-rd/**`
-or its workspace deps change. When both trigger on a native-rd PR, turbo caches the lint
-and type-check results, so the redundant runs complete cheaply.
+or its workspace deps change. When both trigger on a native-rd PR the lint and type-check
+for native-rd run twice (once in each workflow). Turbo caches per-package within a single
+run, but there is no remote cache configured, so the two workflows do not share results.
+The duplicated work is cheap (~seconds) because lint and type-check for a single package
+are fast.
 
 ## Pre-commit Behavior
 
