@@ -25,8 +25,6 @@ const ajv = new Ajv({
 });
 
 // Add format validators (uri, email, etc.)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- error is environment-dependent (bun resolves one or two ajv copies); @ts-ignore needed because @ts-expect-error fails in CI where only one copy exists
-// @ts-ignore ajv-formats bundles its own ajv copy; types are structurally identical but TS treats protected members as nominal across packages (oven-sh/bun#6608)
 addFormats(ajv);
 
 /**
