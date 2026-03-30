@@ -6,6 +6,7 @@ Resolves issue #888.
 ## Validation Environments
 
 native-rd has a different toolchain from the rest of the monorepo:
+
 - Test runner: Jest 30 + babel-jest (not bun test)
 - Lint: eslint-config-expo + six local rules (not shared-config Vue/TS rules)
 - Types: TypeScript strict, RN-aware tsconfig
@@ -15,13 +16,13 @@ its own ESLint config (`apps/native-rd/eslint.config.js`).
 
 ## CI Workflow Boundary
 
-| Check | Root CI (`ci.yml`) | Native CI (`ci-native-rd.yml`) |
-|---|---|---|
-| Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached) | Always (filter=native-rd) |
-| TypeScript | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd) |
-| Jest tests | Not run | Always (`jest --ci`) |
-| Prettier format | via `format:check` | Not run (delegated to root) |
-| Build | via `turbo build` | Not run (no build step) |
+| Check              | Root CI (`ci.yml`)                              | Native CI (`ci-native-rd.yml`) |
+| ------------------ | ----------------------------------------------- | ------------------------------ |
+| Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached)       | Always (filter=native-rd)      |
+| TypeScript         | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd)      |
+| Jest tests         | Not run                                         | Always (`jest --ci`)           |
+| Prettier format    | via `format:check`                              | Not run (delegated to root)    |
+| Build              | via `turbo build`                               | Not run (no build step)        |
 
 `ci.yml` triggers on ALL PRs; `ci-native-rd.yml` triggers only when `apps/native-rd/**`
 or its workspace deps change. When both trigger on a native-rd PR, turbo caches the lint
@@ -30,11 +31,13 @@ and type-check results, so the redundant runs complete cheaply.
 ## Pre-commit Behavior
 
 Root `lint-staged` configuration:
+
 - `apps/native-rd/**/*.{ts,tsx,js,jsx}`: Prettier only (no root ESLint)
 - All other TS/TSX/JS/JSX/Vue: root ESLint + Prettier
 - JSON, YAML, MD, CSS: Prettier only
 
 Root ESLint does NOT run on native-rd source files because:
+
 - Root config uses Vue/TS rules incompatible with Expo/React-Native globals
 - Root config does not load eslint-config-expo or the six local plugin rules
 - Running root ESLint on native files can block commits for false positives
