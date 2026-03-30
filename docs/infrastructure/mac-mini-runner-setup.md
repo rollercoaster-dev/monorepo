@@ -112,8 +112,9 @@ Or retrieve it from: `github.com/rollercoaster-dev/monorepo/settings/actions/run
 ```bash
 mkdir ~/actions-runner && cd ~/actions-runner
 
-# Download the latest runner package (check GitHub for current version)
-curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/latest/download/actions-runner-osx-arm64-2.323.0.tar.gz
+# Download the latest runner package
+RUNNER_VERSION=$(gh api repos/actions/runner/releases/latest --jq '.tag_name' | sed 's/^v//')
+curl -o actions-runner.tar.gz -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-osx-arm64-${RUNNER_VERSION}.tar.gz"
 tar xzf actions-runner.tar.gz
 
 # Configure with labels
