@@ -79,8 +79,9 @@ cd /Users/runner/actions-runner
 
 # Download the latest runner package
 RUNNER_VERSION=$(gh api repos/actions/runner/releases/latest --jq '.tag_name' | sed 's/^v//')
+ARCH=$(uname -m); [ "$ARCH" = "arm64" ] && ARCH_STR="arm64" || ARCH_STR="x64"
 sudo -u runner curl -o actions-runner.tar.gz -L \
-  "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-osx-arm64-${RUNNER_VERSION}.tar.gz"
+  "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-osx-${ARCH_STR}-${RUNNER_VERSION}.tar.gz"
 sudo -u runner tar xzf actions-runner.tar.gz
 
 # Get a registration token
