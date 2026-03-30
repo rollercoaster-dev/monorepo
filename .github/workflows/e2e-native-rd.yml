@@ -1,0 +1,76 @@
+# E2E tests for native-rd using Maestro on a self-hosted macOS runner.
+# Requires Maestro CLI installed on the runner.
+# See docs/infrastructure/mac-mini-runner-setup.md for provisioning.
+name: E2E - Native RD
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/native-rd/**"
+      - "packages/design-tokens/**"
+      - "packages/openbadges-core/**"
+      - "packages/openbadges-types/**"
+      - "bun.lock"
+      - ".github/workflows/e2e-native-rd.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/native-rd/**"
+      - "packages/design-tokens/**"
+      - "packages/openbadges-core/**"
+      - "packages/openbadges-types/**"
+      - "bun.lock"
+      - ".github/workflows/e2e-native-rd.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-native-rd:
+    name: Maestro E2E (native-rd)
+    runs-on: [self-hosted, macOS, e2e]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build workspace dependencies
+        run: bun run turbo build --filter=native-rd^...
+
+      - name: Boot iOS Simulator
+        run: xcrun simctl boot "iPhone 16" || true
+
+      - name: Build and install app
+        working-directory: apps/native-rd
+        run: npx expo run:ios --no-install
+
+      - name: Run Maestro E2E flows
+        working-directory: apps/native-rd
+        run: bun run test:e2e
+
+      - name: Upload Maestro screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-screenshots
+          path: apps/native-rd/.maestro/screenshots/
+          retention-days: 7
