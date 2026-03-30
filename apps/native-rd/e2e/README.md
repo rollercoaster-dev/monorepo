@@ -49,7 +49,7 @@ appId: com.joe.rd.native-rd
 
 ## Required vs Optional Flows
 
-Each flow YAML file has a `## Status: required` or `## Status: optional` comment header.
+Each flow YAML file has a `# Status: required` or `# Status: optional` comment header.
 
 A flow qualifies as **required** (CI-blocking) when it meets ALL three criteria:
 

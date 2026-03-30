@@ -1,7 +1,7 @@
 appId: com.joe.rd.native-rd
 ---
 # Theme switcher — verify "Night Ride" selection takes effect
-# ## Status: required
+# Status: required
 # Criteria: stable feature, outcome assertion present, deterministic
 - launchApp
 - tapOn: "S"
