@@ -1,7 +1,14 @@
-import { Logger, QueryLogger } from '@rollercoaster-dev/rd-logger'
+import { Logger, QueryLogger, JsonFormatter } from '@rollercoaster-dev/rd-logger'
+
+const logToFile = process.env.LOG_TO_FILE === 'true'
+const logFilePath = process.env.LOG_FILE_PATH || '.tmp/server.log'
+const useJsonFormat = process.env.LOG_FORMAT === 'json'
 
 export const logger = new Logger({
   level: (process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info',
+  logToFile,
+  logFilePath,
+  ...(useJsonFormat && { formatter: new JsonFormatter() }),
 })
 
 // QueryLogger for potential future Kysely integration
