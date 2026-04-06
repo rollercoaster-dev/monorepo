@@ -27,19 +27,26 @@ This monorepo uses:
 
 ## 📁 Structure
 
+<!-- Keep in sync: when adding apps/ or packages/ workspaces, update this section and CLAUDE.md -->
+
 ```
 monorepo/
-├── apps/                           # Applications
+├── apps/                           # Deployable applications (web, mobile, docs)
 │   ├── openbadges-system/         # Primary badge system (Vue 3 + Bun/Hono)
 │   ├── openbadges-modular-server/ # Stateless OB 2.0/3.0 API (Docker)
+│   ├── native-rd/                 # Mobile goal tracker + badge portfolio (Expo/React Native)
 │   └── docs/                      # Living documentation (wiki structure)
-├── packages/                       # Shared libraries
+├── packages/                       # Shared libraries consumed by apps or published to npm
+│   ├── design-tokens/             # Design system tokens (@rollercoaster-dev/design-tokens)
+│   ├── openbadges-core/           # Shared OB3 core library (@rollercoaster-dev/openbadges-core)
 │   ├── rd-logger/                 # Structured logging (@rollercoaster-dev/rd-logger)
 │   ├── openbadges-types/          # TypeScript types (openbadges-types)
 │   ├── openbadges-ui/             # Vue components (openbadges-ui)
 │   └── shared-config/             # Shared build/lint configurations
 └── experiments/                    # Research & prototypes
 ```
+
+> **Boundary rule:** `apps/` contains deployable applications (web, mobile, docs). `packages/` contains shared libraries consumed by apps or published to npm. If it runs standalone, it's an app; if it's imported, it's a package.
 
 ## 🚀 Getting Started
 
@@ -144,8 +151,15 @@ bun test
   - Publishes Docker images to GitHub Container Registry
   - Domain-driven design, multi-database support
 
+- **native-rd**: Mobile goal tracker and badge portfolio (Expo/React Native)
+  - Local-first data with Evolu (SQLite + CRDT)
+  - Self-signed OB3 credentials with Ed25519 signing
+  - 14 neurodivergent-friendly themes via design-tokens
+
 ### Published Packages (npm)
 
+- **@rollercoaster-dev/design-tokens**: Design system tokens (CSS, JS, Tailwind, React Native Unistyles) with 8 accessibility themes
+- **@rollercoaster-dev/openbadges-core**: Shared OB3 core library for credential building and signing
 - **@rollercoaster-dev/rd-logger**: Structured logging with ADHD-friendly formatting
 - **openbadges-types**: TypeScript definitions for Open Badges 2.0 and 3.0
 - **openbadges-ui**: Vue 3 component library with 7 neurodivergent-friendly themes
@@ -160,11 +174,14 @@ Migration from multiple repositories is **complete** (December 2025).
 
 All packages are published to npm and applications are fully operational:
 
+- ✅ @rollercoaster-dev/design-tokens (CSS, JS, Tailwind, Unistyles)
+- ✅ @rollercoaster-dev/openbadges-core v0.1.1
 - ✅ @rollercoaster-dev/rd-logger v0.3.4
 - ✅ openbadges-types v3.2.3
 - ✅ openbadges-ui v1.3.0
 - ✅ openbadges-modular-server (Docker on GHCR)
 - ✅ openbadges-system (Vue 3 + Bun/Hono)
+- ✅ native-rd (Expo/React Native)
 
 ## 📚 Documentation
 
