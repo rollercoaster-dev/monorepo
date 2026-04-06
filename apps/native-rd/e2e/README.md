@@ -51,7 +51,9 @@ appId: com.joe.rd.native-rd
 
 Each flow YAML file has a `# Status: required` or `# Status: optional` comment header.
 
-A flow qualifies as **required** when it meets ALL three criteria (CI integration is tracked in epic #889):
+A flow qualifies as **required** when it meets ALL three criteria:
+
+> **Note:** CI enforcement for required flows is not yet implemented — `scripts/run-e2e.sh` currently runs all flows unfiltered and Maestro is not executed in CI (only Jest unit tests run via `test:ci`). CI integration is tracked in epic #889.
 
 1. **Outcome assertions** — It has assertions that verify outcomes, not just that actions were performed
 2. **Stable feature** — It tests a stable, implemented feature (not aspirational)
