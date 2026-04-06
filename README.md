@@ -29,7 +29,7 @@ This monorepo uses:
 
 <!-- Keep in sync: when adding apps/ or packages/ workspaces, update this section and AGENTS.md -->
 
-```
+```text
 monorepo/
 ├── apps/                           # Deployable applications (web, mobile, docs)
 │   ├── openbadges-system/         # Primary badge system (Vue 3 + Bun/Hono)
@@ -154,11 +154,11 @@ bun test
 - **native-rd**: Mobile goal tracker and badge portfolio (Expo/React Native)
   - Local-first data with Evolu (SQLite + CRDT)
   - Self-signed OB3 credentials with Ed25519 signing
-  - 14 neurodivergent-friendly themes via design-tokens
+  - 14 themes (2 color modes × 7 variants composed from design-tokens)
 
 ### Published Packages (npm)
 
-- **@rollercoaster-dev/design-tokens**: Design system tokens (CSS, JS, Tailwind, React Native Unistyles) with 8 accessibility themes
+- **@rollercoaster-dev/design-tokens**: Design system tokens (CSS, JS, Tailwind, React Native Unistyles) with 8 base theme files (light/dark + 6 accessibility variants)
 - **@rollercoaster-dev/openbadges-core**: Shared OB3 core library for credential building and signing
 - **@rollercoaster-dev/rd-logger**: Structured logging with ADHD-friendly formatting
 - **openbadges-types**: TypeScript definitions for Open Badges 2.0 and 3.0
