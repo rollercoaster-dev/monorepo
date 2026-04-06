@@ -30,15 +30,8 @@ jobs:
       - name: Setup Node.js (for npm CLI with OIDC)
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Update npm for OIDC trusted publishing
-        run: |
-          # Workaround: pre-installed npm can be broken on GH runners (missing promise-retry).
-          # Use node to run npm's CLI directly from the downloaded tarball instead.
-          npm cache clean --force 2>/dev/null || true
-          node "$(which npx)" --yes npm@11 install -g npm@11
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
