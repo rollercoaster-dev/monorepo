@@ -5,6 +5,7 @@ import {
   QueryLogger,
   ConsoleTransport,
   FileTransport,
+  safeStringify,
   type Transport,
 } from '@rollercoaster-dev/rd-logger'
 
@@ -21,18 +22,31 @@ class NdjsonFileTransport implements Transport {
   name = 'ndjson-file'
   private stream: fs.WriteStream | null = null
   private filePath: string
+  private initFailed = false
 
   constructor(filePath: string) {
     this.filePath = filePath
   }
 
   log(level: string, message: string, timestamp: string, context: Record<string, unknown>): void {
-    if (!this.stream) {
-      const dir = path.dirname(this.filePath)
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-      this.stream = fs.createWriteStream(this.filePath, { flags: 'a' })
+    if (!this.stream && !this.initFailed) {
+      try {
+        const dir = path.dirname(this.filePath)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+        this.stream = fs.createWriteStream(this.filePath, { flags: 'a' })
+        this.stream.on('error', err => {
+          console.error(`NdjsonFileTransport write error: ${err.message}`)
+          this.stream = null
+        })
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error(`NdjsonFileTransport init failed for "${this.filePath}": ${msg}`)
+        this.initFailed = true
+        return
+      }
     }
-    this.stream.write(JSON.stringify({ level, message, timestamp, ...context }) + '\n')
+    if (!this.stream) return
+    this.stream.write(safeStringify({ level, message, timestamp, ...context }) + '\n')
   }
 
   cleanup(): void {
