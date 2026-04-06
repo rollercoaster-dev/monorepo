@@ -136,6 +136,51 @@ pr-review-toolkit:silent-failure-hunter
 openbadges-compliance-reviewer
 ```
 
+## Agent Observability Tools
+
+### Visual Validation
+
+Use the visual-validation skill to verify UI changes by booting the app, navigating key pages, taking screenshots, and checking for errors.
+
+**When to use:** After implementing UI changes, before creating a PR.
+
+**How to invoke:**
+
+- In `/auto-issue`: pass `--visual` flag
+- Manually: `Skill(visual-validation)` or say "run visual validation"
+
+**What it produces:**
+
+- Screenshots of key pages (home, badges, badge create) saved to `.tmp/screenshots/`
+- Browser console error/warning summary
+- Server-side error/warning summary from structured logs
+
+**Limitation:** Requires a browser-capable environment (local dev, not CI).
+
+### Agent-Readable Server Logs
+
+The `openbadges-system` dev server can write structured JSON logs for agent consumption.
+
+**Environment variables:**
+
+| Variable        | Value  | Effect                                           |
+| --------------- | ------ | ------------------------------------------------ |
+| `LOG_TO_FILE`   | `true` | Enables file logging alongside console           |
+| `LOG_FORMAT`    | `json` | Switches to NDJSON format (one JSON object/line) |
+| `LOG_FILE_PATH` | path   | Log file location (default: `.tmp/server.log`)   |
+
+**Example boot command:**
+
+```bash
+LOG_TO_FILE=true LOG_FORMAT=json LOG_FILE_PATH=.tmp/server.log bun run dev
+```
+
+The visual-validation skill sets these automatically.
+
+**Reading logs:** Use the `Read` tool on `.tmp/server.log`. Each line is a JSON object with `level`, `message`, `timestamp`, and context fields. Filter for `"level":"error"` or `"level":"warn"` entries.
+
+**Per-worktree isolation:** Each worktree has its own `.tmp/` directory (created by `worktree-manager.sh bootstrap`), so parallel runs write to separate log files with no cross-contamination.
+
 ## Agent & Plugin Architecture
 
 This project uses a **plugin-first architecture** - official Claude Code plugins handle common workflows, with custom agents only for domain-specific needs.
