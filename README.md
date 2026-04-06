@@ -27,7 +27,7 @@ This monorepo uses:
 
 ## 📁 Structure
 
-<!-- Keep in sync: when adding apps/ or packages/ workspaces, update this section and CLAUDE.md -->
+<!-- Keep in sync: when adding apps/ or packages/ workspaces, update this section and AGENTS.md -->
 
 ```
 monorepo/
