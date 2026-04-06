@@ -75,7 +75,7 @@ For each page:
 
 1. `mcp__playwright__browser_navigate` to the URL
 2. Wait for the page to settle (use `mcp__playwright__browser_wait_for` with `networkidle` or a short timeout)
-3. `mcp__playwright__browser_take_screenshot` and save to `.tmp/screenshots/<name>.png`
+3. `mcp__playwright__browser_take_screenshot` and save to `.tmp/screenshots/<name>`
 4. `mcp__playwright__browser_console_messages` to capture any errors or warnings
 
 ### Step 5: Read Server Logs
@@ -100,7 +100,7 @@ lsof -ti:$HONO_PORT | xargs kill 2>/dev/null
 
 Output a structured summary:
 
-```
+```text
 VISUAL VALIDATION SUMMARY
 
 Pages Visited:

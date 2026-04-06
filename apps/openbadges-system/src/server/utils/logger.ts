@@ -46,7 +46,7 @@ class NdjsonFileTransport implements Transport {
       }
     }
     if (!this.stream) return
-    this.stream.write(safeStringify({ level, message, timestamp, ...context }) + '\n')
+    this.stream.write(safeStringify({ ...context, level, message, timestamp }) + '\n')
   }
 
   cleanup(): void {
