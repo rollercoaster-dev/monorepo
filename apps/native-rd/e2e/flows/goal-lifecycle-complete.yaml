@@ -1,0 +1,52 @@
+appId: com.joe.rd.native-rd
+---
+# Goal lifecycle flow — create goal, choose badge design, add step, complete step with evidence, and save final goal evidence note
+# Status: required
+# Criteria: stable feature, outcome assertions at each transition, deterministic selectors for lifecycle actions
+- launchApp
+- assertVisible: "Goals"
+- tapOn:
+    id: "create-new-goal"
+- assertVisible: "New Goal"
+- tapOn:
+    id: "new-goal-title"
+- inputText:
+    id: "new-goal-title"
+    text: "Plan community archive exhibit"
+- tapOn:
+    id: "create-goal"
+- assertVisible: "Design Badge"
+- scrollUntilVisible:
+    element:
+      id: "use-this-design"
+    direction: DOWN
+- tapOn:
+    id: "use-this-design"
+- assertVisible: "Edit Goal"
+- tapOn:
+    id: "new-step-title-input"
+- inputText: "Draft exhibit outline"
+- pressKey: enter
+- assertVisible: "Draft exhibit outline"
+- assertVisible: "1 step"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: "start-working"
+    direction: DOWN
+- tapOn:
+    id: "start-working"
+- assertVisible: "Focus Mode"
+- assertVisible: "Add a quick text note"
+- tapOn: "Add a quick text note"
+- inputText: "Outlined the key sections and supporting artifacts."
+- tapOn: "Submit quick note"
+- hideKeyboard
+- tapOn: "Mark complete"
+- assertVisible: "One last thing!"
+- tapOn:
+    id: "completion-note-input"
+- inputText: "Finished the archive exhibit plan and documented the result."
+- tapOn:
+    id: "save-completion-note"
+- assertVisible: "You did it!"
