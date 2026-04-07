@@ -137,6 +137,14 @@ bun run build
 bun test
 ```
 
+For `native-rd`, use native build commands instead of `expo start`:
+
+```bash
+# From the monorepo root
+bun run native:ios
+bun run native:android
+```
+
 ## 📦 Packages & Applications
 
 ### Applications
@@ -155,6 +163,7 @@ bun test
   - Local-first data with Evolu (SQLite + CRDT)
   - Self-signed OB3 credentials with Ed25519 signing
   - 14 themes (2 color modes × 7 variants composed from design-tokens)
+  - Operational launch and verification notes live in `docs/architecture/native-rd-ci-contract.md`
 
 ### Published Packages (npm)
 

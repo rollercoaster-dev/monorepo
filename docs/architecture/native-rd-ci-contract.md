@@ -61,6 +61,40 @@ cd apps/native-rd && bun run lint
 - All tests run in Node via the React Native Jest environment
   (`react-native/jest/react-native-env.js`)
 
+## Local Launch Contract
+
+- Treat `npx expo run:ios` / `bun run ios` as the canonical local iOS start path.
+- Treat `npx expo run:android` / `bun run android` as the canonical local Android start path.
+- Do not treat `expo start` as the primary launch command for this app. `native-rd`
+  depends on native modules and is intended to run as a native build/dev client app.
+- The root monorepo wrapper `bun run native:ios` is expected to delegate to
+  `cd apps/native-rd && bash scripts/run-ios.sh`.
+
+## Monorepo Verification Notes
+
+Verified on April 7, 2026:
+
+- Bun workspace wiring is correct: `native-rd` is discoverable as a workspace package.
+- Turbo task wiring is correct: `bun run turbo build --filter=native-rd` and
+  `bun run turbo type-check --filter=native-rd` both succeed.
+- The package-level `build` script is intentionally a no-op because this Expo app does
+  not emit a standard monorepo build artifact.
+- The generated native `ios/` directory is expected to remain untracked; it is ignored
+  in `apps/native-rd/.gitignore`.
+- The stabilized iOS launch path is `scripts/run-ios.sh`, used by both
+  `bun run ios` in `apps/native-rd` and `bun run native:ios` from the monorepo root.
+- The shared `ios:device` script is expected to receive its target device via
+  `IOS_DEVICE_ID`, rather than hardcoding a contributor-specific UDID.
+
+Launcher implementation note:
+
+- Expo-managed CocoaPods installation proved flaky in this monorepo because Bun could
+  launch the command with a temporary Node shim and npm-compat environment variables
+  that broke `expo-modules-autolinking`.
+- `scripts/run-ios.sh` avoids that path by selecting a real Node binary, clearing
+  Bun-injected `npm_*` variables, running `pod install --repo-update --ansi`
+  directly, and then delegating to `expo run:ios --no-install`.
+
 ## What Does NOT Apply to native-rd
 
 The following root-level checks do not run for native-rd (by design):
