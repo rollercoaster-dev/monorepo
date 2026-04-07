@@ -285,6 +285,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 accessible
                 accessibilityLabel="Write about your achievement"
                 accessibilityHint="Type a reflection about what you accomplished"
+                testID="completion-note-input"
               />
               <Button
                 label="Save Note"
@@ -292,6 +293,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 disabled={!canSaveNote}
                 loading={savingNote}
                 variant="primary"
+                testID="save-completion-note"
               />
             </View>
 

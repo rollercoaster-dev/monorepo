@@ -301,6 +301,7 @@ function EditContent({
           <Button
             label={cameFromFocus ? "Back to Focus" : "Start Working"}
             onPress={handleNavigate}
+            testID={cameFromFocus ? "back-to-focus" : "start-working"}
           />
         </View>
 

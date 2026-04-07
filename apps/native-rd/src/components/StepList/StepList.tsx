@@ -380,6 +380,7 @@ export function StepList({
                 blurOnSubmit={false}
                 accessibilityLabel="Add a new step"
                 accessibilityHint="Type a step title and press return to add"
+                testID="new-step-title-input"
               />
             </View>
             <Pressable
@@ -387,6 +388,7 @@ export function StepList({
               onPress={handleNewStepSubmit}
               accessibilityRole="button"
               accessibilityLabel="Add step"
+              testID="add-step-button"
             >
               <RNText style={styles.addStepButtonText}>+</RNText>
             </Pressable>

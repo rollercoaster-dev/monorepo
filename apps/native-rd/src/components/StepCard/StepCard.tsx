@@ -192,6 +192,7 @@ export function StepCard({
               accessible
               accessibilityLabel="Add a quick text note"
               accessibilityHint="Submits as text evidence for this step"
+              testID="current-step-quick-note-input"
             />
             <Pressable
               onPress={handleQuickNoteSubmit}
@@ -199,6 +200,7 @@ export function StepCard({
               accessible
               accessibilityRole="button"
               accessibilityLabel="Submit quick note"
+              testID="current-step-submit-quick-note"
             >
               <Text style={styles.quickNoteButtonText}>Add</Text>
             </Pressable>

@@ -62,6 +62,7 @@ interface DesignEditorProps {
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
   saveLabel?: string;
+  saveTestID?: string;
   extraFooter?: React.ReactNode;
 }
 
@@ -72,6 +73,7 @@ function DesignEditor({
   onDesignChange,
   onSave,
   saveLabel = "Save Design",
+  saveTestID,
   extraFooter,
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
@@ -334,7 +336,7 @@ function DesignEditor({
       </View>
 
       <View style={styles.footer}>
-        <Button label={saveLabel} onPress={onSave} />
+        <Button label={saveLabel} onPress={onSave} testID={saveTestID} />
         {extraFooter}
       </View>
     </ScrollView>
@@ -478,11 +480,13 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       onDesignChange={setDesign}
       onSave={handleSave}
       saveLabel="Use This Design"
+      saveTestID="use-this-design"
       extraFooter={
         <Button
           label="Skip — Use Default"
           variant="secondary"
           onPress={handleSkip}
+          testID="skip-default-design"
         />
       }
     />
