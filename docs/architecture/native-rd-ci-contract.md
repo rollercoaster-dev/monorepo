@@ -68,7 +68,7 @@ cd apps/native-rd && bun run lint
 - Do not treat `expo start` as the primary launch command for this app. `native-rd`
   depends on native modules and is intended to run as a native build/dev client app.
 - The root monorepo wrapper `bun run native:ios` is expected to delegate to
-  `cd apps/native-rd && bun run ios`.
+  `cd apps/native-rd && bash scripts/run-ios.sh`.
 
 ## Monorepo Verification Notes
 
@@ -83,6 +83,8 @@ Verified on April 7, 2026:
   in `apps/native-rd/.gitignore`.
 - The stabilized iOS launch path is `scripts/run-ios.sh`, used by both
   `bun run ios` in `apps/native-rd` and `bun run native:ios` from the monorepo root.
+- The shared `ios:device` script is expected to receive its target device via
+  `IOS_DEVICE_ID`, rather than hardcoding a contributor-specific UDID.
 
 Launcher implementation note:
 

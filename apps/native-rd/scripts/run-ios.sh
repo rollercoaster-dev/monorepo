@@ -27,9 +27,7 @@ resolve_node_bin() {
   return 1
 }
 
-NODE_BIN="$(resolve_node_bin)"
-
-if [ ! -x "${NODE_BIN}" ]; then
+if ! NODE_BIN="$(resolve_node_bin)"; then
   echo "Error: Node.js is required to run native-rd on iOS." >&2
   exit 1
 fi
@@ -63,4 +61,9 @@ echo "Installing iOS pods directly before Expo launch..."
 )
 
 echo "Launching iOS app with Expo (skipping Expo-managed install step)..."
+
+if [ -n "${IOS_DEVICE_ID:-}" ]; then
+  exec npx expo run:ios --no-install --device "${IOS_DEVICE_ID}" "$@"
+fi
+
 exec npx expo run:ios --no-install "$@"

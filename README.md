@@ -163,8 +163,7 @@ bun run native:android
   - Local-first data with Evolu (SQLite + CRDT)
   - Self-signed OB3 credentials with Ed25519 signing
   - 14 themes (2 color modes × 7 variants composed from design-tokens)
-  - Verified in-monorepo on April 7, 2026: Bun workspace wiring and Turbo build/type-check are healthy
-  - `bun run native:ios` now uses a stabilized wrapper that installs pods directly before handing off to Expo
+  - Operational launch and verification notes live in `docs/architecture/native-rd-ci-contract.md`
 
 ### Published Packages (npm)
 

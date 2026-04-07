@@ -6,7 +6,7 @@
   "scripts": {
     "start": "expo start",
     "ios": "bash scripts/run-ios.sh",
-    "ios:device": "bash scripts/run-ios.sh --device 00008150-00194C6E1480401C",
+    "ios:device": "IOS_DEVICE_ID=\"${IOS_DEVICE_ID:?Set IOS_DEVICE_ID}\" bash scripts/run-ios.sh",
     "android": "expo run:android",
     "web": "expo start --web",
     "type-check": "tsc --noEmit",

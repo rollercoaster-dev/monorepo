@@ -19,6 +19,7 @@ bun run ios
 
 ```bash
 bun run ios                # iOS Simulator via Expo native build
+IOS_DEVICE_ID=<udid> bun run ios:device
 bun run android            # Android Emulator via Expo native build
 bun run start:worktree     # Metro on a worktree-safe port
 ```
@@ -50,15 +51,16 @@ Current implementation note:
 
 ## Commands
 
-| Command                  | What it does                                    |
-| ------------------------ | ----------------------------------------------- |
-| `bun run ios`            | Build and run the iOS dev client                |
-| `bun run android`        | Build and run the Android dev client            |
-| `bun run start:worktree` | Start Metro on a worktree-safe port             |
-| `npx jest --no-coverage` | Run tests (use this, not `bun test` — it hangs) |
-| `npx tsc --noEmit`       | Type-check                                      |
-| `bun run lint`           | Lint                                            |
-| `bun run build`          | Monorepo build placeholder (no app artifact)    |
+| Command                                   | What it does                                          |
+| ----------------------------------------- | ----------------------------------------------------- |
+| `bun run ios`                             | Build and run the iOS dev client                      |
+| `IOS_DEVICE_ID=<udid> bun run ios:device` | Build and run the iOS dev client on a specific device |
+| `bun run android`                         | Build and run the Android dev client                  |
+| `bun run start:worktree`                  | Start Metro on a worktree-safe port                   |
+| `npx jest --no-coverage`                  | Run tests (use this, not `bun test` — it hangs)       |
+| `npx tsc --noEmit`                        | Type-check                                            |
+| `bun run lint`                            | Lint                                                  |
+| `bun run build`                           | Monorepo build placeholder (no app artifact)          |
 
 ---
 
