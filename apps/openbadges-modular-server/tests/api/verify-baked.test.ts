@@ -8,7 +8,7 @@
  * VerificationController.verifyBakedImage() logic is exercised.
  */
 
-import { describe, expect, it, beforeEach, mock } from "bun:test";
+import { afterAll, describe, expect, it, beforeEach, mock } from "bun:test";
 import type { Shared } from "openbadges-types";
 import { VerifyBakedImageRequestSchema } from "../../src/api/dtos/verify.dto";
 import type { VerificationResult } from "../../src/services/verification/types";
@@ -53,6 +53,12 @@ mock.module("@/services/baking/baking.service", () => ({
 mock.module("@/services/verification/verification.service", () => ({
   verify: mockVerify,
 }));
+
+// Restore mocked modules after all tests complete so verify.test.ts
+// gets the real verification service when run in the same bun worker.
+afterAll(() => {
+  mock.restore();
+});
 
 // Must import AFTER mock.module() calls
 const { VerificationController } =
