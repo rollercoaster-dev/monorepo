@@ -31,7 +31,7 @@ Fix 9 failing VerificationController unit tests by preventing mock state from `v
 
 Nine tests in `tests/api/verify.test.ts` under `describe("VerificationController")` consistently return:
 
-```
+```text
 status: "valid", isValid: true, credentialId: undefined, issuer: undefined, durationMs: 20
 ```
 
