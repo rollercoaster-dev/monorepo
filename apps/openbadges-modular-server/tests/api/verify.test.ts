@@ -9,13 +9,22 @@
  * This prevents the did:web resolver from making HTTP requests.
  */
 
-import { describe, expect, it } from "bun:test";
-import { VerificationController } from "../../src/api/controllers/verification.controller";
+import { describe, expect, it, mock } from "bun:test";
 import {
   VerifyCredentialRequestSchema,
   VerificationOptionsSchema,
 } from "../../src/api/dtos/verify.dto";
 import type { Shared } from "openbadges-types";
+
+// Restore any module mocks leaked from other test files sharing this
+// bun worker process (bun 1.3.7 runs same-directory files in one worker).
+mock.restore();
+
+// Dynamic import AFTER mock.restore() so we get the real verification service,
+// not a stale mock from verify-baked.test.ts.
+const { VerificationController } = await import(
+  "../../src/api/controllers/verification.controller"
+);
 
 describe("Verify Credential Endpoint", () => {
   describe("DTO Validation", () => {
