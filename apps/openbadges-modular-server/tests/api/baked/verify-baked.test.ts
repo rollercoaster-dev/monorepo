@@ -8,10 +8,10 @@
  * VerificationController.verifyBakedImage() logic is exercised.
  */
 
-import { describe, expect, it, beforeEach, mock } from "bun:test";
+import { afterAll, describe, expect, it, beforeEach, mock } from "bun:test";
 import type { Shared } from "openbadges-types";
-import { VerifyBakedImageRequestSchema } from "../../src/api/dtos/verify.dto";
-import type { VerificationResult } from "../../src/services/verification/types";
+import { VerifyBakedImageRequestSchema } from "../../../src/api/dtos/verify.dto";
+import type { VerificationResult } from "../../../src/services/verification/types";
 
 // 1x1 red pixel PNG base64 padded to exceed 100-char DTO minimum.
 const SAMPLE_PNG_BASE64 =
@@ -54,9 +54,15 @@ mock.module("@/services/verification/verification.service", () => ({
   verify: mockVerify,
 }));
 
+// Restore mocked modules after all tests complete so verify.test.ts
+// gets the real verification service when run in the same bun worker.
+afterAll(() => {
+  mock.restore();
+});
+
 // Must import AFTER mock.module() calls
 const { VerificationController } =
-  await import("../../src/api/controllers/verification.controller");
+  await import("../../../src/api/controllers/verification.controller");
 
 describe("POST /v3/verify/baked - Verify Baked Image Endpoint", () => {
   describe("DTO Validation", () => {
