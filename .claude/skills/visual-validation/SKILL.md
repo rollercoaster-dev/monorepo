@@ -27,7 +27,6 @@ HONO_PORT=$((8888 + (ISSUE_NUMBER % 100)))
 export SYSTEM_VITE_PORT=$VITE_PORT
 export SYSTEM_SERVER_PORT=$HONO_PORT
 export LOG_TO_FILE=true
-export LOG_FORMAT=json
 export LOG_FILE_PATH=.tmp/server.log
 ```
 
@@ -40,7 +39,7 @@ Start the dev server in the background:
 ```bash
 cd <worktree-root>/apps/openbadges-system
 SYSTEM_VITE_PORT=$VITE_PORT SYSTEM_SERVER_PORT=$HONO_PORT \
-  LOG_TO_FILE=true LOG_FORMAT=json LOG_FILE_PATH=.tmp/server.log \
+  LOG_TO_FILE=true LOG_FILE_PATH=.tmp/server.log \
   bun run dev
 ```
 

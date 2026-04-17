@@ -4,14 +4,12 @@ import {
   Logger,
   QueryLogger,
   ConsoleTransport,
-  FileTransport,
   safeStringify,
   type Transport,
 } from '@rollercoaster-dev/rd-logger'
 
 const logToFile = process.env.LOG_TO_FILE === 'true'
 const logFilePath = process.env.LOG_FILE_PATH || '.tmp/server.log'
-const useJsonFormat = process.env.LOG_FORMAT === 'json'
 
 /**
  * Minimal NDJSON file transport for agent-readable logs.
@@ -57,16 +55,7 @@ class NdjsonFileTransport implements Transport {
 
 function buildTransports(): Transport[] | undefined {
   if (!logToFile) return undefined // let Logger use its defaults
-
-  const transports: Transport[] = [new ConsoleTransport()]
-
-  if (useJsonFormat) {
-    transports.push(new NdjsonFileTransport(logFilePath))
-  } else {
-    transports.push(new FileTransport({ filePath: logFilePath }))
-  }
-
-  return transports
+  return [new ConsoleTransport(), new NdjsonFileTransport(logFilePath)]
 }
 
 export const logger = new Logger({

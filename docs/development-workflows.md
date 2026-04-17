@@ -163,16 +163,15 @@ The `openbadges-system` dev server can write structured JSON logs for agent cons
 
 **Environment variables:**
 
-| Variable        | Value  | Effect                                           |
-| --------------- | ------ | ------------------------------------------------ |
-| `LOG_TO_FILE`   | `true` | Enables file logging alongside console           |
-| `LOG_FORMAT`    | `json` | Switches to NDJSON format (one JSON object/line) |
-| `LOG_FILE_PATH` | path   | Log file location (default: `.tmp/server.log`)   |
+| Variable        | Value  | Effect                                                        |
+| --------------- | ------ | ------------------------------------------------------------- |
+| `LOG_TO_FILE`   | `true` | Enables NDJSON file logging alongside console (one JSON/line) |
+| `LOG_FILE_PATH` | path   | Log file location (default: `.tmp/server.log`)                |
 
 **Example boot command:**
 
 ```bash
-LOG_TO_FILE=true LOG_FORMAT=json LOG_FILE_PATH=.tmp/server.log bun run dev
+LOG_TO_FILE=true LOG_FILE_PATH=.tmp/server.log bun run dev
 ```
 
 The visual-validation skill sets these automatically.
