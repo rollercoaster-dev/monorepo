@@ -8,16 +8,12 @@ A neurodiversity-first goal tracker and Open Badges portfolio app for iOS and An
 
 ## Quick Start
 
+This is a dev client app — it must be run as a native build, not via Expo Go.
+
 ```bash
 bun install
-npx expo start
-```
-
-### Device/Simulator
-
-```bash
-npx expo start --ios       # iOS Simulator
-npx expo start --android   # Android Emulator
+npx expo run:ios       # iOS Simulator (native build)
+npx expo run:android   # Android Emulator (native build)
 ```
 
 ---
@@ -147,4 +143,4 @@ Badges are self-signed [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0)
 
 No issuer server. No account. The badge is yours.
 
-See [openbadges-core architecture](docs/architecture/openbadges-core.md) for the planned extraction from the monorepo.
+See [openbadges-core architecture](docs/architecture/openbadges-core.md) for architecture details. The `@rollercoaster-dev/openbadges-core` package lives at `packages/openbadges-core/` in the monorepo and is declared as a `workspace:*` dependency.

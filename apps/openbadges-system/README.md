@@ -180,7 +180,7 @@ Key environment variables:
 PORT=8888
 
 # Badge Server Integration
-OPENBADGES_SERVER_URL=http://localhost:3000
+OPENBADGES_SERVER_URL=http://localhost:3666
 OPENBADGES_AUTH_ENABLED=true
 OPENBADGES_AUTH_MODE=docker   # 'docker' for Basic auth (default), 'oauth' for JWT
 OPENBADGES_PROXY_PUBLIC=false # Set true to bypass auth on /api/bs/*

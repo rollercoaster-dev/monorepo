@@ -30,6 +30,7 @@ This monorepo uses:
 ```
 monorepo/
 ├── apps/                           # Applications
+│   ├── native-rd/                 # React Native iOS/Android app (Expo)
 │   ├── openbadges-system/         # Primary badge system (Vue 3 + Bun/Hono)
 │   ├── openbadges-modular-server/ # Stateless OB 2.0/3.0 API (Docker)
 │   └── docs/                      # Living documentation (wiki structure)
@@ -37,6 +38,8 @@ monorepo/
 │   ├── rd-logger/                 # Structured logging (@rollercoaster-dev/rd-logger)
 │   ├── openbadges-types/          # TypeScript types (openbadges-types)
 │   ├── openbadges-ui/             # Vue components (openbadges-ui)
+│   ├── openbadges-core/           # Core badge logic (@rollercoaster-dev/openbadges-core)
+│   ├── design-tokens/             # Design tokens (@rollercoaster-dev/design-tokens)
 │   └── shared-config/             # Shared build/lint configurations
 └── experiments/                    # Research & prototypes
 ```
@@ -134,6 +137,10 @@ bun test
 
 ### Applications
 
+- **native-rd**: React Native iOS/Android app for goal tracking and Open Badges
+  - Expo 54, local-first (Evolu/SQLite), self-signed OB3 credentials
+  - 14 neurodivergent-friendly themes (2 color modes × 7 variants)
+
 - **openbadges-system**: Primary badge issuance and management application
   - Full-stack Vue 3 + Bun/Hono
   - Self-signed badges, local-first storage
@@ -149,9 +156,11 @@ bun test
 - **@rollercoaster-dev/rd-logger**: Structured logging with ADHD-friendly formatting
 - **openbadges-types**: TypeScript definitions for Open Badges 2.0 and 3.0
 - **openbadges-ui**: Vue 3 component library with 7 neurodivergent-friendly themes
+- **@rollercoaster-dev/openbadges-core**: Shared badge baking, crypto, and credential logic
 
 ### Internal Packages
 
+- **@rollercoaster-dev/design-tokens**: Design tokens shared across web and native
 - **shared-config**: Shared ESLint, Prettier, and TypeScript configurations
 
 ## 🔄 Migration Status
@@ -162,9 +171,11 @@ All packages are published to npm and applications are fully operational:
 
 - ✅ @rollercoaster-dev/rd-logger v0.3.4
 - ✅ openbadges-types v3.2.3
-- ✅ openbadges-ui v1.3.0
+- ✅ openbadges-ui v1.3.3
+- ✅ @rollercoaster-dev/openbadges-core v0.1.1
 - ✅ openbadges-modular-server (Docker on GHCR)
 - ✅ openbadges-system (Vue 3 + Bun/Hono)
+- ✅ native-rd (React Native / Expo)
 
 ## 📚 Documentation
 
@@ -176,7 +187,7 @@ Documentation is available in `apps/docs/`:
 
 **Quick Links:**
 
-- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
+- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/11)
 - [All Issues](https://github.com/rollercoaster-dev/monorepo/issues)
 - [CLAUDE.md](CLAUDE.md) - Detailed monorepo context for Claude Code
 
@@ -190,7 +201,7 @@ Individual packages and applications maintain their original licenses. See each 
 
 ## 🔗 Links
 
-- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/10)
+- [Project Board](https://github.com/orgs/rollercoaster-dev/projects/11)
 - [Issues](https://github.com/rollercoaster-dev/monorepo/issues)
 - [Rollercoaster.dev](https://rollercoaster.dev)
 
