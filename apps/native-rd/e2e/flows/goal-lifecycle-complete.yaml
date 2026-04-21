@@ -67,14 +67,15 @@ appId: com.joe.rd.native-rd
     direction: DOWN
 - tapOn:
     id: "save-completion-note"
-# Assert on the BadgeEarnedModal's composed accessibilityLabel. The modal
-# auto-appears once badgeStatus === "done" and occludes the celebration
-# headline ("You did it!"), so `assertVisible` on that text hit-test-fails.
-# The outer card wraps `accessible + accessibilityLabel="Badge earned"`, which
-# collapses nested button text into one a11y node — asserting on the composed
-# label is the correct handle (per the maestro-e2e skill's "match the full
-# composed accessibilityLabel" rule). Its presence proves the pipeline: save →
-# evidence persisted → phase transitioned to celebration → badge created.
+# Assert on the BadgeEarnedModal's rendered image testID. The modal auto-
+# appears once badgeStatus === "done" and occludes the celebration headline.
+# In E2E mode the outer card's a11y grouping is dropped (EXPO_PUBLIC_E2E_MODE
+# gate), so the nested testID is reachable. `badge-earned-image` is only
+# rendered on the non-placeholder branch (imageUri !== PLACEHOLDER_IMAGE_URI),
+# so asserting on it proves the whole pipeline: save → evidence persisted →
+# phase transitioned → badge created AND baked to a real PNG (not the solid-
+# color fallback).
 - extendedWaitUntil:
-    visible: "Badge earned"
+    visible:
+      id: "badge-earned-image"
     timeout: 15000
