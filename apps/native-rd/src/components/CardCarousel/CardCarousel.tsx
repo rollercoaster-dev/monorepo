@@ -6,6 +6,7 @@ import {
   PanResponder,
   Platform,
   useWindowDimensions,
+  type AccessibilityActionEvent,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -98,11 +99,12 @@ function AnimatedCard({
   }));
 
   const isCenter = position === "center";
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
   return (
     <Animated.View
       style={animatedStyle}
-      accessible={isCenter}
+      accessible={!isE2E && isCenter}
       accessibilityElementsHidden={!isCenter}
       importantForAccessibility={isCenter ? "yes" : "no-hide-descendants"}
     >
@@ -193,27 +195,31 @@ export function CardCarousel({
     }),
   ).current;
 
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+  const containerA11yProps = isE2E
+    ? ({ accessible: false } as const)
+    : ({
+        accessible: true,
+        accessibilityRole: "adjustable",
+        accessibilityLabel,
+        accessibilityValue: {
+          now: safeIndex,
+          min: 0,
+          max: children.length - 1,
+          text: `Card ${safeIndex + 1} of ${children.length}`,
+        },
+        accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
+        onAccessibilityAction: (event: AccessibilityActionEvent) => {
+          if (event.nativeEvent.actionName === "increment" && !isLast) {
+            onIndexChange(safeIndex + 1);
+          } else if (event.nativeEvent.actionName === "decrement" && !isFirst) {
+            onIndexChange(safeIndex - 1);
+          }
+        },
+      } as const);
+
   return (
-    <View
-      style={styles.container}
-      accessible
-      accessibilityRole="adjustable"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityValue={{
-        now: safeIndex,
-        min: 0,
-        max: children.length - 1,
-        text: `Card ${safeIndex + 1} of ${children.length}`,
-      }}
-      accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-      onAccessibilityAction={(event) => {
-        if (event.nativeEvent.actionName === "increment" && !isLast) {
-          onIndexChange(safeIndex + 1);
-        } else if (event.nativeEvent.actionName === "decrement" && !isFirst) {
-          onIndexChange(safeIndex - 1);
-        }
-      }}
-    >
+    <View style={styles.container} {...containerA11yProps}>
       {/* Track + overlay arrows */}
       <View style={styles.trackWrapper}>
         <View style={styles.track} {...panResponder.panHandlers}>
