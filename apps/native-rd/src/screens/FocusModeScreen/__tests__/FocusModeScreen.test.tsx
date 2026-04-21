@@ -511,7 +511,6 @@ describe("FocusModeScreen", () => {
     fireEvent.press(screen.getByLabelText("Submit quick note"));
     expect(mockCreateEvidence).toHaveBeenCalledWith({
       stepId: "step-1",
-      goalId: "goal-1",
       type: "text",
       uri: "content:text;My reflection",
       description: "My reflection",
