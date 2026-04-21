@@ -247,7 +247,10 @@ function CompletionContent({ goalId }: { goalId: string }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View
             style={styles.card}
             accessible
@@ -273,20 +276,21 @@ function CompletionContent({ goalId }: { goalId: string }) {
               <Text variant="label" style={styles.inlineNoteLabel}>
                 Write about what you accomplished
               </Text>
-              <TextInput
-                ref={textInputRef}
-                style={styles.inlineNoteInput}
-                placeholder="What did you accomplish?"
-                value={noteText}
-                onChangeText={setNoteText}
-                multiline
-                textAlignVertical="top"
-                maxLength={MAX_NOTE_LENGTH}
-                accessible
-                accessibilityLabel="Write about your achievement"
-                accessibilityHint="Type a reflection about what you accomplished"
-                testID="completion-note-input"
-              />
+              <View testID="completion-note-input">
+                <TextInput
+                  ref={textInputRef}
+                  style={styles.inlineNoteInput}
+                  placeholder="What did you accomplish?"
+                  value={noteText}
+                  onChangeText={setNoteText}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={MAX_NOTE_LENGTH}
+                  accessible
+                  accessibilityLabel="Write about your achievement"
+                  accessibilityHint="Type a reflection about what you accomplished"
+                />
+              </View>
               <Button
                 label="Save Note"
                 onPress={handleSaveInlineNote}

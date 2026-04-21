@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
+import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
 import Animated from "react-native-reanimated";
 import { useUnistyles } from "react-native-unistyles";
 import { Card } from "../Card";
@@ -96,6 +96,7 @@ export function StepCard({
   const [quickNoteText, setQuickNoteText] = useState("");
 
   const handleQuickNoteSubmit = () => {
+    Keyboard.dismiss();
     const trimmed = quickNoteText.trim();
     if (trimmed && onQuickNote) {
       onQuickNote(trimmed);

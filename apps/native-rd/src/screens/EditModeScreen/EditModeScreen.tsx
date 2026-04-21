@@ -236,6 +236,7 @@ function EditContent({
       <KeyboardAwareScrollView
         contentContainerStyle={styles.scrollContent}
         bottomOffset={40}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Title */}
         <View style={styles.section}>

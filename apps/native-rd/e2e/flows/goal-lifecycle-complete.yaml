@@ -3,7 +3,12 @@ appId: com.joe.rd.native-rd
 # Goal lifecycle flow — create goal, choose badge design, add step, complete step with evidence, and save final goal evidence note
 # Status: required
 # Criteria: stable feature, outcome assertions at each transition, deterministic selectors for lifecycle actions
-- launchApp
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- assertVisible: "Pick what feels right"
+- tapOn: "The Full Ride. Standard theme"
+- tapOn: "Get Started"
 - assertVisible: "Goals"
 - tapOn:
     id: "create-new-goal"
@@ -26,7 +31,8 @@ appId: com.joe.rd.native-rd
 - tapOn:
     id: "new-step-title-input"
 - inputText: "Draft exhibit outline"
-- pressKey: enter
+- tapOn:
+    id: "add-step-button"
 - assertVisible: "Draft exhibit outline"
 - assertVisible: "1 step"
 - hideKeyboard
@@ -37,16 +43,25 @@ appId: com.joe.rd.native-rd
 - tapOn:
     id: "start-working"
 - assertVisible: "Focus Mode"
-- assertVisible: "Add a quick text note"
-- tapOn: "Add a quick text note"
-- inputText: "Outlined the key sections and supporting artifacts."
-- tapOn: "Submit quick note"
-- hideKeyboard
-- tapOn: "Mark complete"
-- assertVisible: "One last thing!"
+- assertVisible:
+    id: "current-step-quick-note-input"
+- tapOn:
+    id: "current-step-quick-note-input"
+- inputText:
+    id: "current-step-quick-note-input"
+    text: "Outlined the key sections and supporting artifacts."
+- pressKey: enter
+- tapOn:
+    text: "Mark complete.*"
+- assertVisible:
+    id: "completion-note-input"
 - tapOn:
     id: "completion-note-input"
 - inputText: "Finished the archive exhibit plan and documented the result."
+- scrollUntilVisible:
+    element:
+      id: "save-completion-note"
+    direction: DOWN
 - tapOn:
     id: "save-completion-note"
 - assertVisible: "You did it!"
