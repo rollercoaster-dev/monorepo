@@ -58,12 +58,23 @@ appId: com.joe.rd.native-rd
 - tapOn:
     id: "completion-note-input"
 - inputText: "Finished the archive exhibit plan and documented the result."
+# Dismiss the soft keyboard by tapping the static header — Maestro's `hideKeyboard`
+# cannot find a dismiss affordance here, and the keyboard intercepts the save tap.
+- tapOn: "One last thing!"
 - scrollUntilVisible:
     element:
       id: "save-completion-note"
     direction: DOWN
 - tapOn:
     id: "save-completion-note"
+# Assert on the BadgeEarnedModal's composed accessibilityLabel. The modal
+# auto-appears once badgeStatus === "done" and occludes the celebration
+# headline ("You did it!"), so `assertVisible` on that text hit-test-fails.
+# The outer card wraps `accessible + accessibilityLabel="Badge earned"`, which
+# collapses nested button text into one a11y node — asserting on the composed
+# label is the correct handle (per the maestro-e2e skill's "match the full
+# composed accessibilityLabel" rule). Its presence proves the pipeline: save →
+# evidence persisted → phase transitioned to celebration → badge created.
 - extendedWaitUntil:
-    visible: "You did it!"
+    visible: "Badge earned"
     timeout: 15000
