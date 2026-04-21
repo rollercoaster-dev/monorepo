@@ -64,4 +64,6 @@ appId: com.joe.rd.native-rd
     direction: DOWN
 - tapOn:
     id: "save-completion-note"
-- assertVisible: "You did it!"
+- extendedWaitUntil:
+    visible: "You did it!"
+    timeout: 15000

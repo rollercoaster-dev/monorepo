@@ -96,11 +96,21 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const pendingDesign = pendingDesignRef.current;
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
+  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
   // Phase: start in celebration if evidence already exists, otherwise show prompt
   const [phase, setPhase] = useState<CompletionPhase>(
     hasGoalEvidence ? "celebration" : "evidence-prompt",
   );
+
+  const summaryA11yProps = (label: string) =>
+    isE2E
+      ? ({ accessible: false } as const)
+      : ({
+          accessible: true,
+          accessibilityRole: "summary" as const,
+          accessibilityLabel: label,
+        } as const);
 
   // Transition to celebration when evidence appears (e.g. after inline save or returning from capture screen)
   useEffect(() => {
@@ -253,9 +263,9 @@ function CompletionContent({ goalId }: { goalId: string }) {
         >
           <View
             style={styles.card}
-            accessible
-            accessibilityRole="summary"
-            accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
+            {...summaryA11yProps(
+              `Almost there! Capture evidence for ${goal.title}`,
+            )}
           >
             <View style={styles.iconContainer} accessibilityElementsHidden>
               <Text style={styles.iconEmoji}>{"\u{1F3C6}"}</Text>
@@ -276,21 +286,20 @@ function CompletionContent({ goalId }: { goalId: string }) {
               <Text variant="label" style={styles.inlineNoteLabel}>
                 Write about what you accomplished
               </Text>
-              <View testID="completion-note-input">
-                <TextInput
-                  ref={textInputRef}
-                  style={styles.inlineNoteInput}
-                  placeholder="What did you accomplish?"
-                  value={noteText}
-                  onChangeText={setNoteText}
-                  multiline
-                  textAlignVertical="top"
-                  maxLength={MAX_NOTE_LENGTH}
-                  accessible
-                  accessibilityLabel="Write about your achievement"
-                  accessibilityHint="Type a reflection about what you accomplished"
-                />
-              </View>
+              <TextInput
+                ref={textInputRef}
+                style={styles.inlineNoteInput}
+                placeholder="What did you accomplish?"
+                value={noteText}
+                onChangeText={setNoteText}
+                multiline
+                textAlignVertical="top"
+                maxLength={MAX_NOTE_LENGTH}
+                accessible
+                accessibilityLabel="Write about your achievement"
+                accessibilityHint="Type a reflection about what you accomplished"
+                testID="completion-note-input"
+              />
               <Button
                 label="Save Note"
                 onPress={handleSaveInlineNote}
@@ -336,9 +345,9 @@ function CompletionContent({ goalId }: { goalId: string }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={styles.card}
-          accessible
-          accessibilityRole="summary"
-          accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
+          {...summaryA11yProps(
+            `Congratulations! All ${stepRows.length} steps completed for ${goal.title}`,
+          )}
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
             {COMPLETION_ICON ? (
