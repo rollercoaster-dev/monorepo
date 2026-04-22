@@ -27,10 +27,10 @@ appId: com.joe.rd.native-rd
     id: "use-this-design"
 - assertVisible: "Edit Goal"
 - tapOn:
-    id: "new-step-title-input"
+    id: "step-list-new-step-input"
 - inputText: "Draft exhibit outline"
 - tapOn:
-    id: "add-step-button"
+    id: "step-list-add-step-button"
 - assertVisible: "Draft exhibit outline"
 - assertVisible: "1 step"
 - hideKeyboard
@@ -42,9 +42,9 @@ appId: com.joe.rd.native-rd
     id: "start-working"
 - assertVisible: "Focus Mode"
 - assertVisible:
-    id: "current-step-quick-note-input"
+    id: "step-card-quick-note-input"
 - tapOn:
-    id: "current-step-quick-note-input"
+    id: "step-card-quick-note-input"
 - inputText: "Outlined the key sections and supporting artifacts."
 - pressKey: enter
 - tapOn:
@@ -59,10 +59,10 @@ appId: com.joe.rd.native-rd
 - tapOn: "One last thing!"
 - scrollUntilVisible:
     element:
-      id: "save-completion-note"
+      id: "completion-save-note-button"
     direction: DOWN
 - tapOn:
-    id: "save-completion-note"
+    id: "completion-save-note-button"
 # Assert on the BadgeEarnedModal's rendered image testID. The modal auto-
 # appears once badgeStatus === "done" and occludes the celebration headline.
 # In E2E mode the outer card's a11y grouping is dropped (EXPO_PUBLIC_E2E_MODE

@@ -6,11 +6,10 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   AccessibilityInfo,
 } from "react-native";
-import { Buffer } from "buffer";
 import type { ImageSourcePropType } from "react-native";
+import { Buffer } from "buffer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
@@ -53,6 +52,7 @@ import {
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
@@ -101,21 +101,11 @@ function CompletionContent({
   const allBadges = useQuery(badgesQuery);
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
-  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
   // Phase: start in celebration if evidence already exists, otherwise show prompt
   const [phase, setPhase] = useState<CompletionPhase>(
     hasGoalEvidence ? "celebration" : "evidence-prompt",
   );
-
-  const summaryA11yProps = (label: string) =>
-    isE2E
-      ? ({ accessible: false } as const)
-      : ({
-          accessible: true,
-          accessibilityRole: "summary" as const,
-          accessibilityLabel: label,
-        } as const);
 
   // Transition to celebration when evidence appears (e.g. after inline save or returning from capture screen)
   useEffect(() => {
@@ -258,20 +248,13 @@ function CompletionContent({
   // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
             style={styles.card}
-            {...summaryA11yProps(
-              `Almost there! Capture evidence for ${goal.title}`,
-            )}
+            accessible={false}
+            accessibilityRole="summary"
+            accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
           >
             <View style={styles.iconContainer} accessibilityElementsHidden>
               <Text style={styles.iconEmoji}>{"\u{1F3C6}"}</Text>
@@ -301,10 +284,10 @@ function CompletionContent({
                 multiline
                 textAlignVertical="top"
                 maxLength={MAX_NOTE_LENGTH}
+                testID="completion-note-input"
                 accessible
                 accessibilityLabel="Write about your achievement"
                 accessibilityHint="Type a reflection about what you accomplished"
-                testID="completion-note-input"
               />
               <Button
                 label="Save Note"
@@ -312,7 +295,7 @@ function CompletionContent({
                 disabled={!canSaveNote}
                 loading={savingNote}
                 variant="primary"
-                testID="save-completion-note"
+                testID="completion-save-note-button"
               />
             </View>
 
@@ -351,9 +334,9 @@ function CompletionContent({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={styles.card}
-          {...summaryA11yProps(
-            `Congratulations! All ${stepRows.length} steps completed for ${goal.title}`,
-          )}
+          accessible={false}
+          accessibilityRole="summary"
+          accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >
           <View style={styles.iconContainer} accessibilityElementsHidden>
             {COMPLETION_ICON ? (

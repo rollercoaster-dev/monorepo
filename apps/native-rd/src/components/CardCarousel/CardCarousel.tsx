@@ -6,7 +6,6 @@ import {
   PanResponder,
   Platform,
   useWindowDimensions,
-  type AccessibilityActionEvent,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -99,14 +98,13 @@ function AnimatedCard({
   }));
 
   const isCenter = position === "center";
-  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
   return (
     <Animated.View
       style={animatedStyle}
-      accessible={!isE2E && isCenter}
+      accessible={false}
       accessibilityElementsHidden={!isCenter}
-      importantForAccessibility={isCenter ? "yes" : "no-hide-descendants"}
+      importantForAccessibility={isCenter ? "no" : "no-hide-descendants"}
     >
       {children}
     </Animated.View>
@@ -195,31 +193,8 @@ export function CardCarousel({
     }),
   ).current;
 
-  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
-  const containerA11yProps = isE2E
-    ? ({ accessible: false } as const)
-    : ({
-        accessible: true,
-        accessibilityRole: "adjustable",
-        accessibilityLabel,
-        accessibilityValue: {
-          now: safeIndex,
-          min: 0,
-          max: children.length - 1,
-          text: `Card ${safeIndex + 1} of ${children.length}`,
-        },
-        accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
-        onAccessibilityAction: (event: AccessibilityActionEvent) => {
-          if (event.nativeEvent.actionName === "increment" && !isLast) {
-            onIndexChange(safeIndex + 1);
-          } else if (event.nativeEvent.actionName === "decrement" && !isFirst) {
-            onIndexChange(safeIndex - 1);
-          }
-        },
-      } as const);
-
   return (
-    <View style={styles.container} {...containerA11yProps}>
+    <View style={styles.container}>
       {/* Track + overlay arrows */}
       <View style={styles.trackWrapper}>
         <View style={styles.track} {...panResponder.panHandlers}>
@@ -244,6 +219,7 @@ export function CardCarousel({
             accessible
             accessibilityRole="button"
             accessibilityLabel="Previous card"
+            accessibilityHint={`Moves to the previous item in ${accessibilityLabel}`}
             accessibilityState={{ disabled: isFirst }}
           >
             <Text style={styles.arrowText}>&#8249;</Text>
@@ -259,6 +235,7 @@ export function CardCarousel({
             accessible
             accessibilityRole="button"
             accessibilityLabel="Next card"
+            accessibilityHint={`Moves to the next item in ${accessibilityLabel}`}
             accessibilityState={{ disabled: isLast }}
           >
             <Text style={styles.arrowText}>&#8250;</Text>
