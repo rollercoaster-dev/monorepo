@@ -15,9 +15,7 @@ appId: com.joe.rd.native-rd
 - assertVisible: "New Goal"
 - tapOn:
     id: "new-goal-title"
-- inputText:
-    id: "new-goal-title"
-    text: "Plan community archive exhibit"
+- inputText: "Plan community archive exhibit"
 - tapOn:
     id: "create-goal"
 - assertVisible: "Design Badge"
@@ -47,9 +45,7 @@ appId: com.joe.rd.native-rd
     id: "current-step-quick-note-input"
 - tapOn:
     id: "current-step-quick-note-input"
-- inputText:
-    id: "current-step-quick-note-input"
-    text: "Outlined the key sections and supporting artifacts."
+- inputText: "Outlined the key sections and supporting artifacts."
 - pressKey: enter
 - tapOn:
     text: "Mark complete.*"

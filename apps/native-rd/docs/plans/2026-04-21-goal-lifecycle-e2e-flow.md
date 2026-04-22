@@ -32,9 +32,9 @@ We also need to codify the non-obvious Maestro/iOS/Expo lessons discovered in th
 - **`424a5213` fix(native-rd): run jest with node wrapper** (landed by user)
   - Routes Jest test scripts through `scripts/jest-node.sh` to bypass the Bun/isolated-node_modules × jest-runtime incompatibility
 
-### 🟡 In progress
+### ✅ Current state
 
-- **Flow run is 95% green.** Everything from `clearState` through onboarding, goal creation, badge design, step add, Focus Mode, quick-note + Mark Complete, completion-note typing, and save-button tap **completes successfully** on an `EXPO_PUBLIC_E2E_MODE=true` build. The only remaining failure is the final `assertVisible: "You did it!"` — the save tap is being intercepted by the on-screen keyboard (user's observation), so `handleSaveInlineNote` never fires → no evidence created → no phase transition → celebration screen never renders.
+- **Flow green end-to-end as of 2026-04-21 16:29** on an `EXPO_PUBLIC_E2E_MODE=true` build. See Item A below for the keyboard-intercept fix that closed the last 5%, and the remaining-items list above for two additional changes (final-assertion occlusion and a stacked badge-rendering bug) that were uncovered during verification and fixed on the same branch.
 
 ### ⏳ Remaining
 
@@ -63,12 +63,11 @@ We also need to codify the non-obvious Maestro/iOS/Expo lessons discovered in th
   - Pros: zero app change; contained to the flow.
   - Cons: fragile (depends on header staying that label); the earlier `- hideKeyboard` step already failed here so Maestro's dismiss affordance isn't finding a hook — static tap is the advised fallback per Maestro's own error message.
 
-**Recommended: A1 (submit-on-return) + A3 (tap header) as belt-and-suspenders.** A1 improves real UX; A3 keeps the flow resilient if the app's submit behavior ever changes.
+**Landed: A3 only (tap static header to dismiss keyboard).** A1 was rejected for this input because it's `multiline` — `onSubmitEditing` only fires with `blurOnSubmit={true}`, which forces Return to submit instead of inserting a newline. That's a real UX regression on a reflection field where users often want paragraphs. If a real-user dismiss affordance is ever needed, an `InputAccessoryView` "Done" button is the clean iOS pattern — out of scope for this plan.
 
-### Files to modify
+### Files modified
 
-- `apps/native-rd/src/screens/CompletionFlowScreen/CompletionFlowScreen.tsx` (for A1): add `onSubmitEditing`, `blurOnSubmit`, and `returnKeyType="done"` to the completion TextInput
-- `apps/native-rd/e2e/flows/goal-lifecycle-complete.yaml` (for A3): insert `- tapOn: "One last thing!"` between the `inputText` and the `scrollUntilVisible: save-completion-note` steps; optionally swap the save-button `tapOn` for `pressKey: enter` if A1 is in place
+- `apps/native-rd/e2e/flows/goal-lifecycle-complete.yaml`: inserted `- tapOn: "One last thing!"` between the `inputText` and the `scrollUntilVisible: save-completion-note` steps.
 
 ### Verification
 

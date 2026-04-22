@@ -148,9 +148,10 @@ Fixes in order of preference:
 | -------------------------- | ------------------------------------------------------------- |
 | Taps on interactive elems  | `testID` (survives label/copy changes)                        |
 | Assertions on user-visible | `assertVisible: "literal text"` (resilient to test refactors) |
+| Assertions on non-text UI  | `testID` for images / icons / rendered assets                 |
 | Labeled wrappers / cards   | Composed `accessibilityLabel` as visible string               |
 
-Don't assert on testIDs — they're an implementation detail. Don't tap on visible text if a testID is available — copy changes cascade into flow breakage.
+For user-visible copy, don't assert on testIDs — they're an implementation detail and hide when the user-visible string diverges from the contract. For non-text UI (images, rendered assets, icons) assert on a stable `testID`: there's no literal-text handle, and the testID is the only selector that also distinguishes "rendered the real thing" from "rendered a placeholder" (see `badge-earned-image` in `goal-lifecycle-complete.yaml` — the testID only appears on the non-placeholder branch). Don't tap on visible text if a testID is available — copy changes cascade into flow breakage.
 
 ---
 
