@@ -132,8 +132,6 @@ Deliver three agent-facing capabilities that make `openbadges-system` legible to
 
 ## Discovery Log
 
-Runtime discoveries made during implementation. Starts empty — populated by the implement skill as work progresses.
+Runtime discoveries made during implementation.
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-04-23] **`safeStringify` hardcoded 2-space indent broke NDJSON output.** End-to-end test of the skill surfaced that `NdjsonFileTransport` was emitting pretty-printed multi-line JSON (~5 lines per entry) instead of NDJSON. Root cause: `packages/rd-logger/src/core/utils.ts:safeStringify` called `JSON.stringify(obj, replacer, 2)` with no way to disable indentation. D2's reasoning ("inline custom transport is sufficient") missed that the helper the transport falls back on has the same hardcode one layer down. Fix: extended `safeStringify` with an optional `indent` parameter (default 2, backward-compatible). The transport now passes `0`. Lesson: when planning to work around a hardcoded default, check whether the helpers you pivot to share the same hardcode.

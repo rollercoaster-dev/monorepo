@@ -112,4 +112,11 @@ describe("Pattern Detection", () => {
     expect(result).toContain('"password": "[REDACTED]"');
     expect(result).toContain('"normal": "visible"');
   });
+
+  it("should produce compact output (single line, no indent) when indent=0", () => {
+    const obj = { level: "info", message: "hello", nested: { a: 1 } };
+    const result = safeStringify(obj, true, 0);
+    expect(result).not.toContain("\n");
+    expect(result).toBe('{"level":"info","message":"hello","nested":{"a":1}}');
+  });
 });
