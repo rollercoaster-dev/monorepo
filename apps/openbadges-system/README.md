@@ -148,7 +148,7 @@ import { ObBadgeCard, ObBadgeList } from 'openbadges-ui'
 3. **Token Verification**: Badge server verifies JWTs via JWKS endpoint
 
 ```
-User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3000)
+User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3666)
 ```
 
 ### API Authorization

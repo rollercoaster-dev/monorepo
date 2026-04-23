@@ -46,7 +46,11 @@ cd monorepo
 bun install
 ```
 
-Then from this directory:
+Then switch to this app's directory:
+
+```bash
+cd apps/openbadges-modular-server
+```
 
 1. Configure environment variables:
 
@@ -73,7 +77,7 @@ bun run dev  # Development mode with hot reloading
 bun run start  # Production mode
 ```
 
-The API will be available at http://localhost:3000 (or the port specified in your `.env` file).
+The API will be available at http://localhost:3666 (or the port specified in your `.env` file).
 
 ### Verifying Installation
 
