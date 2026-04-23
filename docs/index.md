@@ -6,10 +6,10 @@ Full catalog of all documentation in this repository, organized by topic.
 
 | Status    | Meaning                                            |
 | --------- | -------------------------------------------------- |
-| `current` | Updated within the last 90 days (after 2025-12-25) |
-| `stale`   | Not updated in 90+ days (before 2025-12-25)        |
+| `current` | Updated within the last 90 days (after 2026-01-23) |
+| `stale`   | Not updated in 90+ days (before 2026-01-23)        |
 
-Freshness is relative to 2026-03-25. Re-audit periodically.
+Freshness is relative to 2026-04-23. Re-audit periodically.
 
 **Excluded:** `docs/dev-plans/` — transient agent workspace, not cataloged. Active plans live in `docs/plans/active/`.
 
@@ -20,8 +20,8 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 | Path                                                           | Description                             | Last Modified | Owner | Freshness |
 | -------------------------------------------------------------- | --------------------------------------- | ------------- | ----- | --------- |
 | [VISION.md](VISION.md)                                         | Project vision and product direction    | 2026-02-03    | repo  | current   |
-| [ROADMAP.md](ROADMAP.md)                                       | Milestone roadmap and priority ordering | 2026-01-16    | repo  | current   |
-| [issue-themes.md](issue-themes.md)                             | Thematic groupings of GitHub issues     | 2026-01-16    | repo  | current   |
+| [ROADMAP.md](ROADMAP.md)                                       | Milestone roadmap and priority ordering | 2026-01-16    | repo  | stale     |
+| [issue-themes.md](issue-themes.md)                             | Thematic groupings of GitHub issues     | 2026-01-16    | repo  | stale     |
 | [vision/harness-engineering.md](vision/harness-engineering.md) | Harness Engineering milestone vision    | 2026-03-25    | repo  | current   |
 | [vision/learning-graph.md](vision/learning-graph.md)           | Learning graph architecture vision      | 2026-01-28    | repo  | current   |
 | [vision/planning-graph.md](vision/planning-graph.md)           | Planning graph architecture vision      | 2026-02-03    | repo  | current   |
@@ -31,9 +31,9 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 | Path                                                                           | Description                                  | Last Modified | Owner | Freshness |
 | ------------------------------------------------------------------------------ | -------------------------------------------- | ------------- | ----- | --------- |
 | [development-workflows.md](development-workflows.md)                           | Agent workflows, gates, and automation       | 2026-03-15    | repo  | current   |
-| [publishing-guide.md](publishing-guide.md)                                     | npm, Docker, and Changeset publishing        | 2026-01-11    | repo  | current   |
-| [monorepo-structure.md](monorepo-structure.md)                                 | Package dependencies, env vars, structure    | 2026-02-06    | repo  | current   |
-| [context-engineering-best-practices.md](context-engineering-best-practices.md) | Claude Code prompting and context guidelines | 2026-01-11    | repo  | current   |
+| [publishing-guide.md](publishing-guide.md)                                     | npm, Docker, and Changeset publishing        | 2026-04-23    | repo  | current   |
+| [monorepo-structure.md](monorepo-structure.md)                                 | Package dependencies, env vars, structure    | 2026-04-23    | repo  | current   |
+| [context-engineering-best-practices.md](context-engineering-best-practices.md) | Claude Code prompting and context guidelines | 2026-01-11    | repo  | stale     |
 | [package-audit.md](package-audit.md)                                           | Package dependency audit and optimization    | 2026-02-03    | repo  | current   |
 
 ## Plans
@@ -57,12 +57,12 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 
 | Path                                                         | Description                                            | Last Modified | Owner             | Freshness |
 | ------------------------------------------------------------ | ------------------------------------------------------ | ------------- | ----------------- | --------- |
-| [architecture/overview.md](architecture/overview.md)         | Package map, dependency directions, prohibited imports | 2026-03-25    | repo              | current   |
+| [architecture/overview.md](architecture/overview.md)         | Package map, dependency directions, prohibited imports | 2026-04-23    | repo              | current   |
 | [golden-principles.md](golden-principles.md)                 | Mechanical coding rules drawn from PR reviews          | 2026-03-25    | repo              | current   |
 | [design/DESIGN_LANGUAGE.md](design/DESIGN_LANGUAGE.md)       | Design language specification                          | 2026-02-06    | openbadges-ui     | current   |
-| [design/issuer-model.md](design/issuer-model.md)             | Issuer domain model design                             | 2026-01-16    | openbadges-server | current   |
+| [design/issuer-model.md](design/issuer-model.md)             | Issuer domain model design                             | 2026-01-16    | openbadges-server | stale     |
 | [SYSTEM-REVIEW.md](SYSTEM-REVIEW.md)                         | System health review and architecture audit            | 2025-11-29    | repo              | stale     |
-| [landing/LANDING-PAGE-FLOW.md](landing/LANDING-PAGE-FLOW.md) | Landing page flow design                               | 2026-01-16    | repo              | current   |
+| [landing/LANDING-PAGE-FLOW.md](landing/LANDING-PAGE-FLOW.md) | Landing page flow design                               | 2026-01-16    | repo              | stale     |
 
 ## Research
 
@@ -76,7 +76,7 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 
 | Path                                                             | Description                             | Last Modified | Owner | Freshness |
 | ---------------------------------------------------------------- | --------------------------------------- | ------------- | ----- | --------- |
-| [analysis/milestone-analysis.md](analysis/milestone-analysis.md) | Milestone dependency and scope analysis | 2026-01-16    | repo  | current   |
+| [analysis/milestone-analysis.md](analysis/milestone-analysis.md) | Milestone dependency and scope analysis | 2026-01-16    | repo  | stale     |
 
 ## Migrations
 
@@ -93,12 +93,12 @@ Freshness is relative to 2026-03-25. Re-audit periodically.
 
 | Path                                                             | Description                     | Last Modified | Owner | Freshness |
 | ---------------------------------------------------------------- | ------------------------------- | ------------- | ----- | --------- |
-| [learnings/README.md](learnings/README.md)                       | Learnings index and usage guide | 2025-12-29    | repo  | current   |
-| [learnings/bun-hono/README.md](learnings/bun-hono/README.md)     | Bun + Hono learnings index      | 2025-12-29    | repo  | current   |
-| [learnings/general/README.md](learnings/general/README.md)       | General development learnings   | 2025-12-29    | repo  | current   |
-| [learnings/openbadges/README.md](learnings/openbadges/README.md) | OpenBadges-specific learnings   | 2025-12-29    | repo  | current   |
-| [learnings/typescript/README.md](learnings/typescript/README.md) | TypeScript learnings            | 2025-12-29    | repo  | current   |
-| [learnings/vue/README.md](learnings/vue/README.md)               | Vue 3 learnings                 | 2025-12-29    | repo  | current   |
+| [learnings/README.md](learnings/README.md)                       | Learnings index and usage guide | 2025-12-29    | repo  | stale     |
+| [learnings/bun-hono/README.md](learnings/bun-hono/README.md)     | Bun + Hono learnings index      | 2025-12-29    | repo  | stale     |
+| [learnings/general/README.md](learnings/general/README.md)       | General development learnings   | 2025-12-29    | repo  | stale     |
+| [learnings/openbadges/README.md](learnings/openbadges/README.md) | OpenBadges-specific learnings   | 2025-12-29    | repo  | stale     |
+| [learnings/typescript/README.md](learnings/typescript/README.md) | TypeScript learnings            | 2025-12-29    | repo  | stale     |
+| [learnings/vue/README.md](learnings/vue/README.md)               | Vue 3 learnings                 | 2025-12-29    | repo  | stale     |
 
 ## Mockups
 
@@ -116,9 +116,9 @@ To mark a doc as verified: update the "Last Verified" date to today's date.
 
 | File                          | Description                                          | Last Verified |
 | ----------------------------- | ---------------------------------------------------- | ------------- |
-| docs/architecture/overview.md | Architecture map and package dependencies            | 2026-03-25    |
+| docs/architecture/overview.md | Architecture map and package dependencies            | 2026-04-23    |
 | docs/golden-principles.md     | Mechanical lint rules and review-derived conventions | 2026-03-25    |
 | docs/development-workflows.md | Dev workflow gates and agents                        | 2026-03-25    |
-| docs/monorepo-structure.md    | Monorepo package structure                           | 2026-03-25    |
-| docs/publishing-guide.md      | npm, Docker, and Changesets publishing               | 2026-03-25    |
+| docs/monorepo-structure.md    | Monorepo package structure                           | 2026-04-23    |
+| docs/publishing-guide.md      | npm, Docker, and Changesets publishing               | 2026-04-23    |
 | CLAUDE.md                     | Project instructions for Claude Code                 | 2026-03-25    |
