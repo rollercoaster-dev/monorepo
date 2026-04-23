@@ -174,8 +174,8 @@ Goal creation should use the normalized fields this way:
 
 1. Accept a URL, JSON paste, JSON file, PNG, or SVG.
 2. If URL, fetch with `Accept: application/ld+json, application/json, text/html`.
-3. If the result is JSON, detect shape by `type`, `@context`, and known provider fields.
-4. If the result is HTML, try known fallbacks:
+3. For JSON results, detect shape by `type`, `@context`, and known provider fields.
+4. For HTML responses, try known fallbacks:
    - append `.json` for Badgr-style public badge URLs
    - parse `<script type="application/ld+json">`
    - parse known embedded provider data, starting with Credly
