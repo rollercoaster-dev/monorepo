@@ -91,14 +91,14 @@ No manual version bumps required for builds to trigger.
 docker pull ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
 
 # Run with SQLite (default)
-docker run -p 3000:3000 \
+docker run -p 3666:3666 \
   -e NODE_ENV=production \
   -e DB_TYPE=sqlite \
   -v $(pwd)/data:/data \
   ghcr.io/rollercoaster-dev/openbadges-modular-server:latest
 
 # Run with PostgreSQL
-docker run -p 3000:3000 \
+docker run -p 3666:3666 \
   -e NODE_ENV=production \
   -e DB_TYPE=postgresql \
   -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \

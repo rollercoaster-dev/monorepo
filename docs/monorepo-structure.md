@@ -59,11 +59,13 @@ Each package has its own `CLAUDE.md` with package-specific patterns.
 monorepo/
 ├── apps/
 │   ├── openbadges-modular-server/  # OB 2.0/3.0 API (Bun/Hono)
-│   └── openbadges-system/          # Vue 3 + Bun/Hono full-stack
+│   ├── openbadges-system/          # Vue 3 + Bun/Hono full-stack
+│   └── native-rd/                  # Expo / React Native goal tracker + badge portfolio
 ├── packages/
 │   ├── design-tokens/              # Design tokens → CSS, JS, Unistyles (@rollercoaster-dev/design-tokens)
 │   ├── rd-logger/                  # Logging (@rollercoaster-dev/rd-logger)
 │   ├── openbadges-types/           # OB types (openbadges-types)
+│   ├── openbadges-core/            # OB3 core library (@rollercoaster-dev/openbadges-core)
 │   ├── openbadges-ui/              # Vue components (openbadges-ui)
 │   └── shared-config/              # Build configs (internal)
 ├── scripts/                        # Build/maintenance scripts
