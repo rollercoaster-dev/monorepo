@@ -1,0 +1,16 @@
+appId: com.joe.rd.native-rd
+---
+# Lina's Quiet Victory — create a goal, verify Design Badge screen appears
+# Status: required
+# Criteria: stable feature (goal creation + badge designer), outcome assertion present, deterministic
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- assertVisible: "Goals"
+- tapOn:
+    id: "create-new-goal"
+- assertVisible: "New Goal"
+- tapOn: "What do you want to learn?"
+- inputText: "Reorganize Local History section"
+- tapOn: "Create Goal"
+- assertVisible: "Design Badge"

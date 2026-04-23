@@ -11,6 +11,7 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  testID?: string;
 }
 
 const labelStyleMap = {
@@ -34,6 +35,7 @@ export function Button({
   size = "md",
   disabled = false,
   loading = false,
+  testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -45,6 +47,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
+      testID={testID}
       style={({ pressed }) => [
         styles.pressable(size),
         variantStyleMap[variant],

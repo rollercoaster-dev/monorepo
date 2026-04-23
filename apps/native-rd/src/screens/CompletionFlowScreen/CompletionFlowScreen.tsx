@@ -6,10 +6,10 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   AccessibilityInfo,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
+import { Buffer } from "buffer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
@@ -52,6 +52,7 @@ import {
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
@@ -80,7 +81,15 @@ const MAX_NOTE_LENGTH = 1000;
 
 type CompletionPhase = "evidence-prompt" | "celebration";
 
-function CompletionContent({ goalId }: { goalId: string }) {
+function CompletionContent({
+  goalId,
+  pendingDesignJson,
+  pendingCapturedPng,
+}: {
+  goalId: string;
+  pendingDesignJson: string | undefined;
+  pendingCapturedPng: Buffer | undefined;
+}) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -90,10 +99,6 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
   const allBadges = useQuery(badgesQuery);
-
-  // consume() reads and deletes — prevents accumulation in the in-memory Map
-  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
-  const pendingDesign = pendingDesignRef.current;
 
   const hasGoalEvidence = goalEvidenceRows.length > 0;
 
@@ -116,7 +121,8 @@ function CompletionContent({ goalId }: { goalId: string }) {
   const { status: badgeStatus, error: badgeError } = useCreateBadge(
     goalId as GoalId,
     {
-      ...(pendingDesign ? { design: pendingDesign } : {}),
+      ...(pendingDesignJson ? { design: pendingDesignJson } : {}),
+      ...(pendingCapturedPng ? { capturedPng: pendingCapturedPng } : {}),
       enabled: phase === "celebration",
     },
   );
@@ -242,15 +248,11 @@ function CompletionContent({ goalId }: { goalId: string }) {
   // Evidence prompt phase — capture evidence before celebration
   if (phase === "evidence-prompt") {
     return (
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View
             style={styles.card}
-            accessible
+            accessible={false}
             accessibilityRole="summary"
             accessibilityLabel={`Almost there! Capture evidence for ${goal.title}`}
           >
@@ -282,6 +284,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 multiline
                 textAlignVertical="top"
                 maxLength={MAX_NOTE_LENGTH}
+                testID="completion-note-input"
                 accessible
                 accessibilityLabel="Write about your achievement"
                 accessibilityHint="Type a reflection about what you accomplished"
@@ -292,6 +295,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
                 disabled={!canSaveNote}
                 loading={savingNote}
                 variant="primary"
+                testID="completion-save-note-button"
               />
             </View>
 
@@ -330,7 +334,7 @@ function CompletionContent({ goalId }: { goalId: string }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View
           style={styles.card}
-          accessible
+          accessible={false}
           accessibilityRole="summary"
           accessibilityLabel={`Congratulations! All ${stepRows.length} steps completed for ${goal.title}`}
         >
@@ -465,6 +469,18 @@ function CompletionContent({ goalId }: { goalId: string }) {
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
   const { theme } = useUnistyles();
+  const { goalId } = route.params;
+
+  // Consume the pending design ONCE at this level — outside the inner Suspense
+  // boundary so the ref survives inner remounts when Evolu queries resolve.
+  // (An inner useRef inside CompletionContent was re-running consume() on every
+  // Suspense-triggered remount; the first remount ate the entry and the
+  // later mount whose useCreateBadge effect actually fires saw nothing.)
+  const pendingDesignRef = useRef(pendingDesignStore.consume(goalId));
+  const pendingDesign = pendingDesignRef.current;
+  const pendingCapturedPngRef = useRef(
+    pendingDesign ? Buffer.from(pendingDesign.pngBase64, "base64") : undefined,
+  );
 
   return (
     <SafeAreaView
@@ -491,7 +507,11 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
           }
         >
-          <CompletionContent goalId={route.params.goalId} />
+          <CompletionContent
+            goalId={goalId}
+            pendingDesignJson={pendingDesign?.designJson}
+            pendingCapturedPng={pendingCapturedPngRef.current}
+          />
         </Suspense>
       </ErrorBoundary>
       <ModeIndicator mode="complete" />
