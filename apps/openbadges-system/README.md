@@ -148,7 +148,7 @@ import { ObBadgeCard, ObBadgeList } from 'openbadges-ui'
 3. **Token Verification**: Badge server verifies JWTs via JWKS endpoint
 
 ```
-User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3000)
+User → GitHub OAuth → Main App (8888) → JWT → Badge Server (3666)
 ```
 
 ### API Authorization
@@ -180,7 +180,7 @@ Key environment variables:
 PORT=8888
 
 # Badge Server Integration
-OPENBADGES_SERVER_URL=http://localhost:3000
+OPENBADGES_SERVER_URL=http://localhost:3666
 OPENBADGES_AUTH_ENABLED=true
 OPENBADGES_AUTH_MODE=docker   # 'docker' for Basic auth (default), 'oauth' for JWT
 OPENBADGES_PROXY_PUBLIC=false # Set true to bypass auth on /api/bs/*
