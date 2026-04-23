@@ -20,17 +20,16 @@
     "verbatimModuleSyntax": false,
     "emitDeclarationOnly": true,
 
-    /* Path Aliases */
-    "baseUrl": ".",
+    /* Path Aliases (resolved relative to this tsconfig) */
     "paths": {
-      "@/*": ["src/*"],
-      "@core/*": ["src/core/*"],
-      "@domains/*": ["src/domains/*"],
-      "@infrastructure/*": ["src/infrastructure/*"],
-      "@utils/*": ["src/utils/*"],
-      "@config/*": ["src/config/*"],
-      "@types/*": ["src/types/*"],
-      "@tests/*": ["tests/*"]
+      "@/*": ["./src/*"],
+      "@core/*": ["./src/core/*"],
+      "@domains/*": ["./src/domains/*"],
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@config/*": ["./src/config/*"],
+      "@types/*": ["./src/types/*"],
+      "@tests/*": ["./tests/*"]
     },
 
     /* Override shared-config's strict mode for gradual migration */

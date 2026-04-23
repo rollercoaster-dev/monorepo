@@ -6,15 +6,14 @@
     "allowJs": true,
     "jsx": "preserve",
 
-    /* Path aliases for cleaner imports */
-    "baseUrl": ".",
+    /* Path aliases for cleaner imports (resolved relative to this tsconfig) */
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@composables/*": ["src/composables/*"],
-      "@services/*": ["src/services/*"],
-      "@utils/*": ["src/utils/*"],
-      "@types/*": ["src/types/*"]
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@composables/*": ["./src/composables/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"]
     },
 
     /* Override shared-config for declaration output */

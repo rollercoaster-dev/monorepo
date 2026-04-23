@@ -31,6 +31,7 @@ describe("useFlashOnIncrease", () => {
 
   it("starts with zero opacity", () => {
     const { result } = renderHook(() => useFlashOnIncrease(0));
-    expect(result.current.opacity).toBe(0);
+    const style = result.current as unknown as { opacity: number };
+    expect(style.opacity).toBe(0);
   });
 });
