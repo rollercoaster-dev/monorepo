@@ -19,9 +19,13 @@ bun --filter <pkg> <cmd>   # Run command in specific package
 
 ```text
 apps/
-  openbadges-modular-server/  # OB 2.0/3.0 API server (Bun/Hono)
   openbadges-system/          # Vue 3 + Bun/Hono full-stack app
+  openbadges-modular-server/  # OB 2.0/3.0 API server (Bun/Hono)
+  native-rd/                  # Expo/React Native goal tracker + badge portfolio
+  docs/                       # Living documentation (wiki structure)
 packages/
+  design-tokens/              # Design system tokens (npm published)
+  openbadges-core/            # Shared OB3 core library (npm published)
   rd-logger/                  # Structured logging (npm published)
   openbadges-types/           # OB TypeScript types (npm published)
   openbadges-ui/              # Vue 3 components (npm published)
