@@ -13,7 +13,6 @@ A Vue 3 component library for implementing Open Badges functionality, with a foc
 - **Framework-Agnostic Core Logic**: Business logic is decoupled from UI components
 - **Accessibility First**: Follows WCAG guidelines with support for various accessibility needs
 - **Themeable**: Uses CSS variables for easy customization
-- **PrimeVue Integration**: Built on PrimeVue in unstyled mode for maximum flexibility
 - **Histoire Integration**: Includes Histoire for component development and documentation
 
 ## Installation
@@ -61,7 +60,7 @@ import "openbadges-ui/dist/style.css";
 
 const app = createApp(App);
 
-// Use the plugin (configures PrimeVue in unstyled mode)
+// Use the plugin (registers all components globally)
 app.use(OpenBadgesUIPlugin);
 
 app.mount("#app");
@@ -296,8 +295,6 @@ bun run test:coverage
 # Watch mode
 bun run test:watch
 ```
-
-**Test Results:** ✅ 195/195 tests passing (100%)
 
 **Important:** Always use `bun run test` (not `bun test`). The difference:
 

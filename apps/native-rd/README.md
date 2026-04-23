@@ -8,6 +8,8 @@ A neurodiversity-first goal tracker and Open Badges portfolio app for iOS and An
 
 ## Quick Start
 
+This is a dev client app — it must be run as a native build, not via Expo Go.
+
 ```bash
 cd /path/to/monorepo
 bun install
@@ -57,10 +59,15 @@ Current implementation note:
 | `IOS_DEVICE_ID=<udid> bun run ios:device` | Build and run the iOS dev client on a specific device |
 | `bun run android`                         | Build and run the Android dev client                  |
 | `bun run start:worktree`                  | Start Metro on a worktree-safe port                   |
-| `npx jest --no-coverage`                  | Run tests (use this, not `bun test` — it hangs)       |
+| `bun run test`                            | Run Jest tests through the Node wrapper               |
 | `npx tsc --noEmit`                        | Type-check                                            |
 | `bun run lint`                            | Lint                                                  |
 | `bun run build`                           | Monorepo build placeholder (no app artifact)          |
+
+`native-rd` uses Jest, not Bun's test runner. The package test scripts run
+`scripts/jest-node.sh` so Jest executes under real Node even though the monorepo
+sets `[run] bun = true` for other package CLIs. Do not replace this wrapper with
+plain `jest` or `bun test`; that reintroduces Bun/Jest runtime failures.
 
 ---
 
@@ -177,4 +184,4 @@ Badges are self-signed [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0)
 
 No issuer server. No account. The badge is yours.
 
-See [openbadges-core architecture](docs/architecture/openbadges-core.md) for the planned extraction from the monorepo.
+See [openbadges-core architecture](docs/architecture/openbadges-core.md) for architecture details. The `@rollercoaster-dev/openbadges-core` package lives at `packages/openbadges-core/` in the monorepo and is declared as a `workspace:*` dependency.

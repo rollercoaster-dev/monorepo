@@ -31,34 +31,35 @@ A stateless, modular API server for issuing and managing Open Badges, with robus
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (v1.0.0 or higher)
+- [Bun](https://bun.sh/) >= 1.3.7
 - One of the following databases:
   - [SQLite](https://www.sqlite.org/) (included with Bun, no additional setup required)
   - [PostgreSQL](https://www.postgresql.org/) (v12 or higher, optional for production use)
 
 ### Quick Start
 
-1. Clone the repository:
+This app is part of the [Rollercoaster.dev monorepo](https://github.com/rollercoaster-dev/monorepo). Install from the monorepo root:
 
 ```bash
-git clone https://github.com/rollercoaster-dev/openbadges-modular-server.git
-cd openbadges-modular-server
-```
-
-2. Install dependencies:
-
-```bash
+gh repo clone rollercoaster-dev/monorepo
+cd monorepo
 bun install
 ```
 
-3. Configure environment variables:
+Then switch to this app's directory:
+
+```bash
+cd apps/openbadges-modular-server
+```
+
+1. Configure environment variables:
 
 ```bash
 cp .env.example .env
 # Edit .env with your configuration (SQLite is used by default)
 ```
 
-4. Run database migrations:
+2. Run database migrations:
 
 ```bash
 # For SQLite (default)
@@ -68,7 +69,7 @@ bun run db:migrate
 DB_TYPE=postgresql bun run db:migrate
 ```
 
-5. Start the server:
+3. Start the server:
 
 ```bash
 bun run dev  # Development mode with hot reloading
@@ -76,7 +77,7 @@ bun run dev  # Development mode with hot reloading
 bun run start  # Production mode
 ```
 
-The API will be available at http://localhost:3000 (or the port specified in your `.env` file).
+The API will be available at http://localhost:3666 (or the port specified in your `.env` file).
 
 ### Verifying Installation
 
