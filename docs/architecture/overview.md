@@ -31,6 +31,7 @@ Rollercoaster.dev is a Bun + Turborepo monorepo for Open Badges credentialing. T
 | --------------------------- | ------------------------------------------------------------------------ |
 | `openbadges-modular-server` | OB 2.0/3.0 API server (Bun/Hono). Badge issuing, verification, hosting.  |
 | `openbadges-system`         | Full-stack app (Vue 3 + Bun/Hono). Badge management UI, backpack, admin. |
+| `native-rd`                 | Expo / React Native goal tracker with embedded badge portfolio.          |
 
 ## Dependency Directions
 
