@@ -43,11 +43,11 @@ The important trust language is: **"This native-rd badge was created from / alig
 
 Open Badges already has the concept we need, but naming differs by version.
 
-| Version | Opportunity object | Awarded object | Useful fields for native-rd |
-| --- | --- | --- | --- |
-| Open Badges 2.0 | `BadgeClass` | `Assertion` | `id`, `name`, `description`, `image`, `criteria`, `issuer`, `alignment`, `tags` |
-| Open Badges 3.0 | `Achievement` | `OpenBadgeCredential` / `AchievementCredential` | `id`, `name`, `description`, `criteria`, `image`, `creator`, `alignment`, `resultDescription` |
-| Credly public pages | Badge template | Issued badge | `name`, `description`, `image_url`, `issuer`, `skills`, `alignments`, `badge_template_activities`, `url` |
+| Version             | Opportunity object | Awarded object                                  | Useful fields for native-rd                                                                              |
+| ------------------- | ------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Open Badges 2.0     | `BadgeClass`       | `Assertion`                                     | `id`, `name`, `description`, `image`, `criteria`, `issuer`, `alignment`, `tags`                          |
+| Open Badges 3.0     | `Achievement`      | `OpenBadgeCredential` / `AchievementCredential` | `id`, `name`, `description`, `criteria`, `image`, `creator`, `alignment`, `resultDescription`            |
+| Credly public pages | Badge template     | Issued badge                                    | `name`, `description`, `image_url`, `issuer`, `skills`, `alignments`, `badge_template_activities`, `url` |
 
 The Open Badges 2.0 specification defines `BadgeClass` as information about the accomplishment recognized by a badge, with fields for name, description, image, criteria, issuer, alignments, and tags. It also states that `Criteria` is where would-be recipients learn what is required to be recognized with the badge.
 
@@ -68,11 +68,11 @@ The missing concept is a **source opportunity** separate from the completed loca
 
 Recommended model:
 
-| Concept | Purpose |
-| --- | --- |
-| `importedBadgeOpportunity` | Raw and normalized data imported from an external badge definition. |
-| `goal.importedOpportunityId` | Optional link from a native-rd goal to the imported source. |
-| `badge.sourceOpportunityId` | Optional link from the earned native-rd badge back to the opportunity that seeded it. |
+| Concept                      | Purpose                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| `importedBadgeOpportunity`   | Raw and normalized data imported from an external badge definition.                   |
+| `goal.importedOpportunityId` | Optional link from a native-rd goal to the imported source.                           |
+| `badge.sourceOpportunityId`  | Optional link from the earned native-rd badge back to the opportunity that seeded it. |
 
 This keeps the current earned badge flow intact. It adds a source record that can be shown during goal creation and cited after the badge is earned.
 
@@ -143,32 +143,32 @@ native-rd should still support OB3 `Achievement` input because it is the current
 
 Normalize all imports into one internal shape before creating the goal draft.
 
-| Native-rd field | OB2 `BadgeClass` | OB3 `Achievement` | Credly template |
-| --- | --- | --- | --- |
-| `sourceUrl` | pasted URL or `id` | pasted URL or `id` | `url` |
-| `sourceType` | `openbadges-v2-badge-class` | `openbadges-v3-achievement` | `credly-template` |
-| `sourceId` | `id` | `id` | `id` |
-| `title` | `name` | `name` | `name` |
-| `description` | `description` | `description` | `description` |
-| `criteriaText` | `criteria.narrative` | `criteria.narrative` | `badge_template_activities[].title` |
-| `criteriaUrl` | `criteria.id` | `criteria.id` | activity URLs when present |
-| `imageUrl` | `image` or `image.id` | `image` or `image.id` | `image_url` |
-| `issuerName` | issuer profile `name` | creator/issuer profile `name` | issuer organization `name` |
-| `issuerUrl` | issuer profile `url` or `id` | creator/issuer profile `url` or `id` | organization vanity URL |
-| `tags` | `tags` | extension or alignment-derived tags | `skills[].name` |
-| `alignments` | `alignment` | `alignment` | `alignments` |
-| `rawJson` | full source JSON | full source JSON | extracted public JSON |
+| Native-rd field | OB2 `BadgeClass`             | OB3 `Achievement`                    | Credly template                     |
+| --------------- | ---------------------------- | ------------------------------------ | ----------------------------------- |
+| `sourceUrl`     | pasted URL or `id`           | pasted URL or `id`                   | `url`                               |
+| `sourceType`    | `openbadges-v2-badge-class`  | `openbadges-v3-achievement`          | `credly-template`                   |
+| `sourceId`      | `id`                         | `id`                                 | `id`                                |
+| `title`         | `name`                       | `name`                               | `name`                              |
+| `description`   | `description`                | `description`                        | `description`                       |
+| `criteriaText`  | `criteria.narrative`         | `criteria.narrative`                 | `badge_template_activities[].title` |
+| `criteriaUrl`   | `criteria.id`                | `criteria.id`                        | activity URLs when present          |
+| `imageUrl`      | `image` or `image.id`        | `image` or `image.id`                | `image_url`                         |
+| `issuerName`    | issuer profile `name`        | creator/issuer profile `name`        | issuer organization `name`          |
+| `issuerUrl`     | issuer profile `url` or `id` | creator/issuer profile `url` or `id` | organization vanity URL             |
+| `tags`          | `tags`                       | extension or alignment-derived tags  | `skills[].name`                     |
+| `alignments`    | `alignment`                  | `alignment`                          | `alignments`                        |
+| `rawJson`       | full source JSON             | full source JSON                     | extracted public JSON               |
 
 Goal creation should use the normalized fields this way:
 
-| Goal draft field | Source |
-| --- | --- |
-| Goal title | Imported badge name |
-| Goal description | Imported badge description plus optional criteria reference |
-| Goal image/design seed | Imported image URL, if allowed by policy |
-| Reference panel | Criteria, issuer, source URL, skills, alignments |
-| Steps | Created by the user in native-rd |
-| Evidence requirements | Created by the user in native-rd |
+| Goal draft field       | Source                                                      |
+| ---------------------- | ----------------------------------------------------------- |
+| Goal title             | Imported badge name                                         |
+| Goal description       | Imported badge description plus optional criteria reference |
+| Goal image/design seed | Imported image URL, if allowed by policy                    |
+| Reference panel        | Criteria, issuer, source URL, skills, alignments            |
+| Steps                  | Created by the user in native-rd                            |
+| Evidence requirements  | Created by the user in native-rd                            |
 
 ## Import Algorithm
 
@@ -251,14 +251,14 @@ The preview should show:
 
 ## Risks
 
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Public badge metadata is inconsistent across platforms. | Some imports will be sparse or fail. | Use adapter-based import and preview before creating a goal. |
-| Provider pages are not stable APIs. | Credly parsing may break. | Treat provider adapters as best-effort and store raw source snapshots. |
-| Criteria can be too vague or too long. | Users may not know how to make steps. | Show criteria as reference text and keep step creation user-owned. |
-| Imported image reuse may have licensing constraints. | We may copy artwork we should only reference. | Decide whether to cache images, hotlink, or require user confirmation. |
-| Issuer trust can be misrepresented. | Users/viewers may think the external issuer awarded the badge. | Use clear wording and source attribution in UI and credential metadata. |
-| Local-first import needs network at import time. | Offline users cannot fetch a URL immediately. | Allow JSON/file/image import and store source snapshots for later offline use. |
+| Risk                                                    | Impact                                                         | Mitigation                                                                     |
+| ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Public badge metadata is inconsistent across platforms. | Some imports will be sparse or fail.                           | Use adapter-based import and preview before creating a goal.                   |
+| Provider pages are not stable APIs.                     | Credly parsing may break.                                      | Treat provider adapters as best-effort and store raw source snapshots.         |
+| Criteria can be too vague or too long.                  | Users may not know how to make steps.                          | Show criteria as reference text and keep step creation user-owned.             |
+| Imported image reuse may have licensing constraints.    | We may copy artwork we should only reference.                  | Decide whether to cache images, hotlink, or require user confirmation.         |
+| Issuer trust can be misrepresented.                     | Users/viewers may think the external issuer awarded the badge. | Use clear wording and source attribution in UI and credential metadata.        |
+| Local-first import needs network at import time.        | Offline users cannot fetch a URL immediately.                  | Allow JSON/file/image import and store source snapshots for later offline use. |
 
 ## Open Questions
 
