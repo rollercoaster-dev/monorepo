@@ -20,7 +20,7 @@ its own ESLint config (`apps/native-rd/eslint.config.js`).
 | ------------------ | ----------------------------------------------- | ------------------------------ |
 | Lint (`expo lint`) | via `turbo lint` (scope-filtered, cached)       | Always (filter=native-rd)      |
 | TypeScript         | via `turbo type-check` (scope-filtered, cached) | Always (filter=native-rd)      |
-| Jest tests         | Not run                                         | Always (`jest --ci`)           |
+| Jest tests         | Not run                                         | Always (`bun run test:ci`)     |
 | Prettier format    | via `format:check`                              | Not run (delegated to root)    |
 | Build              | via `turbo build`                               | Not run (no build step)        |
 
@@ -54,12 +54,27 @@ cd apps/native-rd && bun run lint
 ## Test Contract
 
 - Test runner: Jest 30 with `babel-jest` transform (not bun test)
-- Test command for CI: `bun run test:ci` (`jest --ci`) from `apps/native-rd/`
+- Test command for CI: `bun run test:ci` from `apps/native-rd/`
 - Test discovery: `src/**/__tests__/**/*.test.{ts,tsx}`
-- The smoke command (`bun run test:ci:smoke` = `jest --listTests`) is retained as a
+- The smoke command (`bun run test:ci:smoke`) is retained as a
   debugging tool but is not used in CI.
 - All tests run in Node via the React Native Jest environment
   (`react-native/jest/react-native-env.js`)
+- The Jest package scripts intentionally call `scripts/jest-node.sh`, not `jest`
+  directly. The monorepo `bunfig.toml` sets `[run] bun = true`, which prepends a
+  Bun-provided `node` shim to `PATH` for package CLIs. Running Jest through that
+  shim crashes in `jest-runtime` before tests load with:
+  `TypeError: Attempted to assign to readonly property` in
+  `_getMockedNativeModule`.
+- `scripts/jest-node.sh` strips Bun's temporary `bun-node-*` shim from `PATH`,
+  unsets Bun's `NODE`/`npm_node_execpath` values, prefers a `mise` Node when
+  available, and then executes `node node_modules/.bin/jest`. This keeps
+  native-rd on Jest while leaving the rest of the monorepo free to use Bun's
+  runtime and `bun test`.
+- Expo packages that ship ESM through Bun's isolated `.bun/.../node_modules/`
+  layout must be listed in `transformIgnorePatterns`. In particular,
+  `expo/virtual/env.js` requires the `expo` package allowlist entry in
+  `apps/native-rd/jest.config.js`.
 
 ## Local Launch Contract
 
