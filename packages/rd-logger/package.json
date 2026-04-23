@@ -54,7 +54,7 @@
     "@types/supertest": "6.0.3",
     "elysia": "^1.0.0",
     "express": "^4.19.2",
-    "hono": "^4.5.2",
+    "hono": "^4.12.14",
     "on-finished": "^2.4.1",
     "supertest": "7.1.4"
   },
