@@ -10,6 +10,7 @@ import { captureBadge } from "../../badges/captureBadge";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 
@@ -60,6 +61,15 @@ const DEFAULT_BANNER = { text: "", position: BannerPosition.center } as const;
  */
 const PREVIEW_OVERLAY_HEIGHT = 200;
 
+/**
+ * Bottom tab bar height (matches `TabNavigator.tsx#tabBarStyle.height`).
+ * The screen lives inside the BottomTabNavigator, so we manually pad the
+ * scroll content to clear that band — importing `useBottomTabBarHeight`
+ * from `@react-navigation/bottom-tabs` would pull in ESM that needs Babel
+ * transform setup, which complicates the Jest config for marginal gain.
+ */
+const TAB_BAR_HEIGHT = 56;
+
 // ---------------------------------------------------------------------------
 // Shared design editor UI (stateless — receives design + callbacks)
 // ---------------------------------------------------------------------------
@@ -102,6 +112,11 @@ function DesignEditor({
   // appears to scroll with content but actually floats above topBar (z-index).
   const scrollY = useRef(new Animated.Value(0)).current;
   const [topBarHeight, setTopBarHeight] = useState(64);
+  // The screen sits inside a BottomTab navigator; pad the form's bottom by
+  // the tab-bar height (+ home-indicator safe-area inset) so the Save button
+  // isn't covered when fully scrolled.
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   // --- Existing handlers ---
   const handleShapeChange = useCallback(
@@ -267,7 +282,10 @@ function DesignEditor({
       <Animated.ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: topBarHeight + PREVIEW_OVERLAY_HEIGHT },
+          {
+            paddingTop: topBarHeight + PREVIEW_OVERLAY_HEIGHT,
+            paddingBottom: tabBarHeight + 16,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         onScroll={Animated.event(
