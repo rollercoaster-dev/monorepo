@@ -196,6 +196,62 @@ Make the badge designer's frame and path-text controls produce visually correct 
 - [ ] Confirm flow passes through all assertions: navigation into designer, frame/color/shape state propagation, save round-trip via Badges tab re-entry.
 - [ ] If any selectors break (e.g. text changes after fixes), update the flow to match.
 
+### Phase 1.5 — Always-visible badge preview (side quest)
+
+**Motivation**: While verifying Phase 1 visually, the user observed that scrolling
+to interact with form controls (Frame, Color, Path Text) hides the badge preview
+entirely. Editing without live feedback is frustrating and works against the
+ND-friendly "predictable, immediate-feedback" goal of the app.
+
+**Approach**: Hoist the preview into an absolutely-positioned overlay above the
+ScrollView. Bind its `translateY` to the ScrollView's scroll offset via
+`Animated.event` with `useNativeDriver`. Preview slides over `topBar` at exact
+scroll rate; form sections continue to scroll _under_ `topBar` as today. No
+scaling, no parallax, no layout animation — pure z-index + scroll-bound translate.
+
+**Why this approach over alternatives**:
+
+- **Hoist + static (Option A)** — Simpler but takes ~200px of screen permanently;
+  preview never reaches the topBar area, so we waste vertical space.
+- **Collapsing parallax header** — Looks cool but introduces motion that conflicts
+  with `autismFriendly` / `lowInfo` variants and `useReducedMotion()`. Not worth
+  the a11y plumbing for a side quest.
+- **`stickyHeaderIndices={[0]}`** — Works but pins the preview at full size below
+  topBar; doesn't allow the preview to overlap topBar (which is the user's
+  preferred behavior).
+
+**Modified files**:
+
+- `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.tsx`
+- `apps/native-rd/src/screens/BadgeDesignerScreen/BadgeDesignerScreen.styles.ts`
+
+#### Step 1.5.1: Layout restructure with scroll-bound preview overlay
+
+**Commit**: `feat(native-rd): keep badge preview always visible while editing`
+
+**Changes**:
+
+- [ ] Pull `previewContainer` out of the ScrollView into a sibling
+      `Animated.View` overlay positioned `absolute, top: topBarBottom`.
+- [ ] Add `scrollY = useRef(new Animated.Value(0)).current` in `DesignEditor`.
+- [ ] Replace `<ScrollView>` with `<Animated.ScrollView>` and bind
+      `onScroll={Animated.event([{nativeEvent:{contentOffset:{y:scrollY}}}], {useNativeDriver:true})}`,
+      `scrollEventThrottle={16}`.
+- [ ] Overlay style: `transform: [{ translateY: Animated.multiply(scrollY, -1) }]`,
+      `zIndex: 2`, `pointerEvents: "none"` so back-button taps pass through when
+      the preview is covering topBar.
+- [ ] Add `paddingTop: PREVIEW_HEIGHT` to ScrollView's `contentContainerStyle`
+      so form starts below the preview at rest.
+- [ ] Verify: `previewRef` stays attached to the inner View — `captureBadge`
+      flow unaffected.
+- [ ] Verify: BadgeDesignerScreen tests still pass (33/33).
+- [ ] Simulator visual check: scroll up → preview slides over topBar → back
+      button still tappable while covered.
+
+**Risk**: `useNativeDriver: true` for `translateY` is safe; transforms are
+GPU-friendly. Tests use accessibility-label queries, not layout positions, so
+they're unaffected.
+
 ## Out of Scope
 
 - E2E seed mechanism (deep-link + `EXPO_PUBLIC_E2E_MODE` gate to bypass the 30-second goal-lifecycle setup). Tracked as a separate follow-up; the current `runFlow:` setup is the minimal-effort working answer.
