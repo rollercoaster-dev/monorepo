@@ -116,7 +116,7 @@ export const vue = [
       'vue/require-prop-types': 'error',
       'vue/no-unused-components': 'error',
       'vue/no-v-html': 'warn',
-      'vue/component-tags-order': ['error', { order: ['script', 'template', 'style'] }],
+      'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
       'vue/multi-word-component-names': 'off',
 
       // Disable base rule in favor of TypeScript version
