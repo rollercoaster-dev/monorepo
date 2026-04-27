@@ -52,11 +52,6 @@ export function PathText({
   if (!topText && !bottomText) return null;
 
   const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * fontScale;
-  // Pass text into contour generation so each arc is sized to its inscription
-  // and centered on the badge's vertical axis. This replaces the previous
-  // approach of generating fixed half-circles + relying on textPath's
-  // startOffset="50%" / textAnchor="middle" to center text — which was
-  // unreliable on react-native-svg + iOS.
   const contour = generateContour(shape, size, inset, {
     topText,
     bottomText,

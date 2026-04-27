@@ -401,7 +401,10 @@ function DesignEditor({
 
       <View
         style={styles.topBar}
-        onLayout={(e) => setTopBarHeight(e.nativeEvent.layout.height)}
+        onLayout={(e) => {
+          const next = e.nativeEvent.layout.height;
+          setTopBarHeight((prev) => (prev === next ? prev : next));
+        }}
       >
         <IconButton
           icon={<Text variant="headline">{"\u2190"}</Text>}
