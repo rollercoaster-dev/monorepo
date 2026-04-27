@@ -174,6 +174,8 @@ describe("PathText", () => {
     // rotation transform is removed and the texts render at the SVG root.
     const el = PathText(makeProps({ pathTextPosition: "both" }))!;
     const textPaths = findByType(el, "TextPath");
+    const groups = findByType(el, "G");
+    expect(groups).toHaveLength(0);
     expect(textPaths).toHaveLength(2);
     expect(textPaths[0].props.children).toBe("TOP TEXT");
     expect(textPaths[1].props.children).toBe("BOTTOM TEXT");

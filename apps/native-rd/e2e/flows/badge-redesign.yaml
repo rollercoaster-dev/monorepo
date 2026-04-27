@@ -54,7 +54,8 @@ appId: com.joe.rd.native-rd
 # After save, BadgeDesignerContentBadge calls navigation.goBack() — we
 # return to whichever screen pushed the designer (CompletionFlowScreen).
 # Re-enter the designer through the Badges tab to verify persistence.
-- tapOn: "B"
+- tapOn:
+    id: "tab-BadgesTab"
 - assertVisible: "Badges"
 - tapOn:
     text: "Badge: Plan community archive exhibit.*"

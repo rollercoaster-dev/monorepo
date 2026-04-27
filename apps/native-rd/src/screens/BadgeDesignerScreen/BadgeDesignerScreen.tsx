@@ -143,10 +143,13 @@ function DesignEditor({
       if (frame === BadgeFrame.none) {
         onDesignChange({ ...currentDesign, frame, frameParams: undefined });
       } else {
+        // Fall back to the design's existing frameParams during the
+        // hydration window so a re-selected frame doesn't regress to a
+        // params-less state and silently render no ring.
         onDesignChange({
           ...currentDesign,
           frame,
-          frameParams: derivedFrameParams ?? undefined,
+          frameParams: derivedFrameParams ?? currentDesign.frameParams,
         });
       }
     },
