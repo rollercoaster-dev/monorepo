@@ -29,9 +29,6 @@ export const styles = StyleSheet.create((theme) => ({
     width: 48,
   },
   scrollContent: {
-    // paddingBottom is set inline at the call site using the dynamic tab-bar
-    // height — the BottomTabNavigator covers the bottom of the scroll view,
-    // and we want the Save button to clear that band.
     gap: theme.space[4],
     alignItems: "center",
   },

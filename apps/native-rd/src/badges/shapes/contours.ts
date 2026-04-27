@@ -17,20 +17,14 @@ import {
 } from "./paths";
 import { measureTextWidth } from "../text/measureTextWidth";
 
-/**
- * Optional text-aware sizing inputs for arc generation. When provided,
- * the top/bottom inscription arcs span an angular range sized to the
- * text width, centered on the badge's vertical axis. When omitted, both
- * arcs default to half-circles (legacy behavior — preserves existing
- * non-text callers like rosette frame generation and unit tests).
- */
+/** Text-aware arc sizing inputs. */
 export type ContourTextOpts = {
   topText?: string;
   bottomText?: string;
   fontSize?: number;
 };
 
-/** Maximum arc sweep — keeps long text from wrapping the full half-circle. */
+/** Caps sweep below 180° so the arc endpoints don't meet at 6 o'clock. */
 const MAX_ARC_ANGLE = 0.9 * Math.PI;
 
 /** Geometry metadata for a badge shape, used by frame overlays and text-on-path. */
@@ -78,13 +72,9 @@ function arcAngleForText(text: string, fontSize: number, r: number): number {
 }
 
 /**
- * Inscription arc, sized to text and centered on the badge's vertical axis.
- *
- * `side="top"`: arc centered at -π/2 (12 o'clock), sweep-flag=1 (CW over top).
- * `side="bottom"`: arc centered at +π/2 (6 o'clock), sweep-flag=0 (CCW under).
- *
- * Both directions yield a path written left-to-right so SVG textPath reads
- * naturally — no 180° rotation needed for the bottom inscription.
+ * `side="top"`: arc centered at -π/2 (12 o'clock), sweep-flag=1.
+ * `side="bottom"`: arc centered at +π/2 (6 o'clock), sweep-flag=0.
+ * Both written left-to-right so SVG textPath reads naturally.
  */
 function arcSized(
   cx: number,
@@ -131,36 +121,39 @@ function circleContour(
   return {
     outerPath: circlePath(size, inset),
     innerPath: circlePath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts),
-    textPathBottom: pickArc("bottom", cx, cy, textR, size, opts),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices,
   };
 }
 
-/**
- * Choose between text-sized arc (when caller supplied a text inscription)
- * and the legacy half-circle. Each shape contour delegates here instead of
- * repeating the conditional inline.
- */
-function pickArc(
-  side: "top" | "bottom",
-  cx: number,
-  cy: number,
-  textR: number,
-  size: number,
-  opts: ContourTextOpts | undefined,
-  legacyCyRatio: number = side === "top"
-    ? TEXT_ARC_TOP_CY_RATIO
-    : TEXT_ARC_BOTTOM_CY_RATIO,
-): string {
-  const text = side === "top" ? opts?.topText : opts?.bottomText;
+type PickArcConfig = {
+  side: "top" | "bottom";
+  cx: number;
+  cy: number;
+  textR: number;
+  size: number;
+  opts: ContourTextOpts | undefined;
+  /** Override the per-side legacy cy multiplier (only used when no text is given). */
+  legacyCyRatio?: number;
+};
+
+function pickArc(c: PickArcConfig): string {
+  const text = c.side === "top" ? c.opts?.topText : c.opts?.bottomText;
   if (text) {
-    const fontSize = opts?.fontSize ?? size * 0.09;
-    const angle = arcAngleForText(text, fontSize, textR);
-    return arcSized(cx, cy, textR, angle, side);
+    const rawFontSize = c.opts?.fontSize;
+    const fontSize =
+      Number.isFinite(rawFontSize) && (rawFontSize as number) > 0
+        ? (rawFontSize as number)
+        : c.size * 0.09;
+    const angle = arcAngleForText(text, fontSize, c.textR);
+    return arcSized(c.cx, c.cy, c.textR, angle, c.side);
   }
-  const legacy = side === "top" ? topArc : bottomArc;
-  return legacy(cx, cy * legacyCyRatio, textR);
+  const legacyCyRatio =
+    c.legacyCyRatio ??
+    (c.side === "top" ? TEXT_ARC_TOP_CY_RATIO : TEXT_ARC_BOTTOM_CY_RATIO);
+  const legacy = c.side === "top" ? topArc : bottomArc;
+  return legacy(c.cx, c.cy * legacyCyRatio, c.textR);
 }
 
 // ── Hexagon ────────────────────────────────────────────────────────────
@@ -189,8 +182,8 @@ function hexagonContour(
   return {
     outerPath: hexagonPath(size, inset),
     innerPath: hexagonPath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts),
-    textPathBottom: pickArc("bottom", cx, cy, textR, size, opts),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices,
   };
 }
@@ -211,8 +204,8 @@ function diamondContour(
   return {
     outerPath: diamondPath(size, inset),
     innerPath: diamondPath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts),
-    textPathBottom: pickArc("bottom", cx, cy, textR, size, opts),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices: [
       { x: cx, y: cy - outerR }, // top
       { x: cx + outerR, y: cy }, // right
@@ -248,8 +241,24 @@ function starContour(
   return {
     outerPath: starPath(size, inset),
     innerPath: starPath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts, 1.17),
-    textPathBottom: pickArc("bottom", cx, cy, textR, size, opts, 0.94),
+    textPathTop: pickArc({
+      side: "top",
+      cx,
+      cy,
+      textR,
+      size,
+      opts,
+      legacyCyRatio: 1.17,
+    }),
+    textPathBottom: pickArc({
+      side: "bottom",
+      cx,
+      cy,
+      textR,
+      size,
+      opts,
+      legacyCyRatio: 0.94,
+    }),
     vertices,
   };
 }
@@ -279,8 +288,15 @@ function shieldContour(
   return {
     outerPath: shieldPath(size, inset),
     innerPath: shieldPath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts),
-    textPathBottom: pickArc("bottom", cx, cy, textR * 0.8, size, opts),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({
+      side: "bottom",
+      cx,
+      cy,
+      textR: textR * 0.8,
+      size,
+      opts,
+    }),
     vertices: [
       { x: l, y: shoulderY }, // left shoulder
       { x: r, y: shoulderY }, // right shoulder
@@ -309,8 +325,8 @@ function roundedRectContour(
   return {
     outerPath: roundedRectPath(size, inset),
     innerPath: roundedRectPath(size, innerInset),
-    textPathTop: pickArc("top", cx, cy, textR, size, opts),
-    textPathBottom: pickArc("bottom", cx, cy, textR, size, opts),
+    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathBottom: pickArc({ side: "bottom", cx, cy, textR, size, opts }),
     vertices: [
       { x: l + w * 0.25, y: t + h * 0.25 }, // top-left
       { x: l + w * 0.75, y: t + h * 0.25 }, // top-right

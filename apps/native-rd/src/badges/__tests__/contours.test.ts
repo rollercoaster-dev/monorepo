@@ -208,4 +208,71 @@ describe("text-aware arc sizing", () => {
 
     expect(short.textPathBottom).not.toBe(long.textPathBottom);
   });
+
+  // Text-awareness must apply to every shape — a refactor that drops `opts`
+  // from one generator's signature would otherwise silently fall back to
+  // the legacy half-circle for that shape only.
+  test.each(ALL_SHAPES)(
+    "%s: top arc geometry depends on topText (text-aware applies to all shapes)",
+    (shape) => {
+      const noText = generateContour(shape, SIZE, 0);
+      const withText = (
+        generateContour as unknown as (
+          shape: string,
+          size: number,
+          inset: number,
+          opts?: { topText?: string },
+        ) => ShapeContour
+      )(shape, SIZE, 0, { topText: "INSCRIBED" });
+      expect(withText.textPathTop).not.toBe(noText.textPathTop);
+    },
+  );
+
+  test.each(ALL_SHAPES)(
+    "%s: bottom arc geometry depends on bottomText",
+    (shape) => {
+      const noText = generateContour(shape, SIZE, 0);
+      const withText = (
+        generateContour as unknown as (
+          shape: string,
+          size: number,
+          inset: number,
+          opts?: { bottomText?: string },
+        ) => ShapeContour
+      )(shape, SIZE, 0, { bottomText: "INSCRIBED" });
+      expect(withText.textPathBottom).not.toBe(noText.textPathBottom);
+    },
+  );
+
+  // The PR's central claim: removing the 180° rotation works because both
+  // arcs are written left-to-right. Pin start.x < end.x for both sides so
+  // a regression that flips a sweep flag is caught directly.
+  it("text-sized arcs are written left-to-right", () => {
+    const c = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "TOP", bottomText: "BOTTOM" });
+
+    const parseEndpoints = (d: string) => {
+      const match = d.match(
+        /^M\s+([-\d.]+)\s+([-\d.]+)\s+A\s+[-\d.]+\s+[-\d.]+\s+0\s+0\s+[01]\s+([-\d.]+)\s+([-\d.]+)/,
+      );
+      if (!match) throw new Error(`unparseable arc: ${d}`);
+      return {
+        startX: Number(match[1]),
+        startY: Number(match[2]),
+        endX: Number(match[3]),
+        endY: Number(match[4]),
+      };
+    };
+
+    const top = parseEndpoints(c.textPathTop);
+    const bottom = parseEndpoints(c.textPathBottom);
+    expect(top.startX).toBeLessThan(top.endX);
+    expect(bottom.startX).toBeLessThan(bottom.endX);
+  });
 });

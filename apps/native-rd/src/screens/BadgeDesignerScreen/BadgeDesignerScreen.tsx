@@ -55,18 +55,13 @@ const logger = new Logger("BadgeDesignerScreen");
 
 const DEFAULT_BANNER = { text: "", position: BannerPosition.center } as const;
 
-/**
- * Vertical space reserved beneath the topBar for the preview overlay at rest.
- * 160 (badge size) + ~32 padding + ~4 border + ~4 shadow buffer.
- */
+/** Reserved space below topBar for the floating preview overlay at rest. */
 const PREVIEW_OVERLAY_HEIGHT = 200;
 
 /**
- * Bottom tab bar height (matches `TabNavigator.tsx#tabBarStyle.height`).
- * The screen lives inside the BottomTabNavigator, so we manually pad the
- * scroll content to clear that band — importing `useBottomTabBarHeight`
- * from `@react-navigation/bottom-tabs` would pull in ESM that needs Babel
- * transform setup, which complicates the Jest config for marginal gain.
+ * Hardcoded rather than read via `useBottomTabBarHeight` from
+ * `@react-navigation/bottom-tabs`: that import pulls in ESM that needs
+ * extra Babel-transform whitelisting in the Jest config for marginal gain.
  */
 const TAB_BAR_HEIGHT = 56;
 
@@ -78,7 +73,7 @@ interface DesignEditorProps {
   currentDesign: BadgeDesign;
   goalColor?: string | null;
   goalTitle?: string;
-  derivedFrameParams: FrameDataParams;
+  derivedFrameParams: FrameDataParams | null;
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
   onBack: () => void;
@@ -108,13 +103,8 @@ function DesignEditor({
 }: DesignEditorProps) {
   const { theme } = useUnistyles();
 
-  // Scroll-bound preview overlay: scrollY drives translateY so the preview
-  // appears to scroll with content but actually floats above topBar (z-index).
   const scrollY = useRef(new Animated.Value(0)).current;
   const [topBarHeight, setTopBarHeight] = useState(64);
-  // The screen sits inside a BottomTab navigator; pad the form's bottom by
-  // the tab-bar height (+ home-indicator safe-area inset) so the Save button
-  // isn't covered when fully scrolled.
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
@@ -156,7 +146,7 @@ function DesignEditor({
         onDesignChange({
           ...currentDesign,
           frame,
-          frameParams: derivedFrameParams,
+          frameParams: derivedFrameParams ?? undefined,
         });
       }
     },
@@ -476,8 +466,8 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const goalColor = badge?.goalColor as string | null | undefined;
 
   const derivedFrameParams = useFrameParamsForGoal(
-    (badge?.goalId as GoalId | undefined) ?? ("" as GoalId),
-    (badge?.createdAt as string | undefined) ?? "",
+    (badge?.goalId as GoalId | null | undefined) ?? null,
+    (badge?.createdAt as string | null | undefined) ?? null,
     (badge?.completedAt as string | null | undefined) ?? null,
   );
 
@@ -550,7 +540,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
 
   const derivedFrameParams = useFrameParamsForGoal(
     goalId as GoalId,
-    (goal?.createdAt as string | undefined) ?? "",
+    (goal?.createdAt as string | null | undefined) ?? null,
     null,
   );
 
