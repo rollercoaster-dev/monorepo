@@ -1,5 +1,5 @@
 import React from "react";
-import { Defs, G, Path, Text, TextPath } from "react-native-svg";
+import { Defs, Path, Text, TextPath } from "react-native-svg";
 import type { BadgeShape, PathTextPosition } from "../types";
 import { generateContour } from "../shapes/contours";
 import { getSafeTextColor } from "../../utils/accessibility";
@@ -51,15 +51,21 @@ export function PathText({
 
   if (!topText && !bottomText) return null;
 
-  const contour = generateContour(shape, size, inset);
+  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * fontScale;
+  // Pass text into contour generation so each arc is sized to its inscription
+  // and centered on the badge's vertical axis. This replaces the previous
+  // approach of generating fixed half-circles + relying on textPath's
+  // startOffset="50%" / textAnchor="middle" to center text — which was
+  // unreliable on react-native-svg + iOS.
+  const contour = generateContour(shape, size, inset, {
+    topText,
+    bottomText,
+    fontSize,
+  });
   const id = instanceId ?? String(nextPathTextId++);
   const topId = `pathtext-top-${id}`;
   const bottomId = `pathtext-bottom-${id}`;
-  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * fontScale;
   const textColor = getSafeTextColor(fillColor, "PathText");
-  const rotateTransform = `rotate(180 ${size / 2} ${size / 2})`;
-  const renderedTopText = topText;
-  const renderedBottomText = bottomText;
 
   return (
     <>
@@ -69,36 +75,26 @@ export function PathText({
           <Path id={bottomId} d={contour.textPathBottom} fill="none" />
         )}
       </Defs>
-      <G transform={rotateTransform}>
-        {renderedTopText && (
-          <Text
-            fill={textColor}
-            fillOpacity={PATH_TEXT_OPACITY}
-            fontSize={fontSize}
-            fontFamily={fontFamily}
-          >
-            <TextPath href={`#${topId}`} startOffset="50%" textAnchor="middle">
-              {renderedTopText}
-            </TextPath>
-          </Text>
-        )}
-        {renderedBottomText && (
-          <Text
-            fill={textColor}
-            fillOpacity={PATH_TEXT_OPACITY}
-            fontSize={fontSize}
-            fontFamily={fontFamily}
-          >
-            <TextPath
-              href={`#${bottomId}`}
-              startOffset="50%"
-              textAnchor="middle"
-            >
-              {renderedBottomText}
-            </TextPath>
-          </Text>
-        )}
-      </G>
+      {topText && (
+        <Text
+          fill={textColor}
+          fillOpacity={PATH_TEXT_OPACITY}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+        >
+          <TextPath href={`#${topId}`}>{topText}</TextPath>
+        </Text>
+      )}
+      {bottomText && (
+        <Text
+          fill={textColor}
+          fillOpacity={PATH_TEXT_OPACITY}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+        >
+          <TextPath href={`#${bottomId}`}>{bottomText}</TextPath>
+        </Text>
+      )}
     </>
   );
 }
