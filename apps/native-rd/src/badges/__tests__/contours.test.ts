@@ -141,3 +141,71 @@ describe("generateContour", () => {
     expect(largeSpread).toBeLessThan(smallSpread);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// TDD: bug #2 — path text appears bunched on right side, not centered.
+// User-supplied screenshot shows "PATH TOP"/"PATH BOTTOM" running along
+// the right hemisphere of the badge instead of curving across the top
+// and bottom.
+//
+// Diagnosis: generateContour produces a fixed half-circle for both top
+// and bottom arcs, regardless of text. PathText.tsx then relies on SVG
+// textPath's `startOffset="50%"` + `textAnchor="middle"` to center the
+// text along that fixed path. On react-native-svg + iOS this positioning
+// is not reliably honored, so text starts at the path's start point
+// (cx + r, ...) — the right side — and reads along the arc from there.
+//
+// Fix direction (per design intent — "the arcs need to be centered which
+// means they need to know their length"): arc geometry must be a
+// function of the text content so the path spans the exact angular
+// range needed for the text and is positioned symmetrically around the
+// badge's vertical centerline. That makes rendering correct
+// independent of textPath positioning quirks.
+// ─────────────────────────────────────────────────────────────────────
+describe("text-aware arc sizing", () => {
+  it("top arc geometry varies with the text it must contain", () => {
+    // Today, generateContour ignores text — short and long inscriptions
+    // get the same fixed half-circle path. A correctly centered arc
+    // must span an angular range proportional to text length, so these
+    // two calls must produce different `textPathTop` strings.
+    const short = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "AB" });
+    const long = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { topText: "ACHIEVEMENT UNLOCKED" });
+
+    expect(short.textPathTop).not.toBe(long.textPathTop);
+  });
+
+  it("bottom arc geometry varies with the text it must contain", () => {
+    const short = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { bottomText: "X" });
+    const long = (
+      generateContour as unknown as (
+        shape: string,
+        size: number,
+        inset: number,
+        opts?: { topText?: string; bottomText?: string },
+      ) => ShapeContour
+    )("circle", SIZE, 0, { bottomText: "MMXXVI ANNUAL EDITION" });
+
+    expect(short.textPathBottom).not.toBe(long.textPathBottom);
+  });
+});
