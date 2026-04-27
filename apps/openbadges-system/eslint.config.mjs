@@ -148,8 +148,6 @@ export default [
       // Disable no-undef for Vue files — TypeScript handles this more accurately,
       // and vue-eslint-parser doesn't recognize custom compiler macros like definePage
       'no-undef': 'off',
-      // Disable deprecated rule, use vue/block-order instead
-      'vue/component-tags-order': 'off',
       // Script-first order matches Prettier and Vue 3 Composition API convention
       'vue/block-order': [
         'error',
