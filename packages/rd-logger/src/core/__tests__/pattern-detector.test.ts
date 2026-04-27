@@ -112,4 +112,26 @@ describe("Pattern Detection", () => {
     expect(result).toContain('"password": "[REDACTED]"');
     expect(result).toContain('"normal": "visible"');
   });
+
+  it("should produce compact output (single line, no indent) when indent=0", () => {
+    const obj = { level: "info", message: "hello", nested: { a: 1 } };
+    const result = safeStringify(obj, true, 0);
+    expect(result).not.toContain("\n");
+    expect(result).toBe('{"level":"info","message":"hello","nested":{"a":1}}');
+  });
+
+  it("should default to 2-space indent when indent is omitted (backward compat)", () => {
+    const obj = { level: "info", nested: { a: 1 } };
+    const result = safeStringify(obj);
+    expect(result).toContain("\n  ");
+    expect(result).toBe(
+      '{\n  "level": "info",\n  "nested": {\n    "a": 1\n  }\n}',
+    );
+  });
+
+  it("should honor explicit indent values other than 0/2", () => {
+    const obj = { a: 1 };
+    const result = safeStringify(obj, true, 4);
+    expect(result).toBe('{\n    "a": 1\n}');
+  });
 });
