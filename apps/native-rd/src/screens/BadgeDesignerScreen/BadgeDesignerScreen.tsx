@@ -22,6 +22,7 @@ import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
+import { useFrameParamsForGoal } from "../../badges/frames";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
 import { BannerEditor } from "../../badges/BannerEditor";
@@ -37,9 +38,10 @@ import type {
   BadgeDesign,
   BadgeShape,
   BadgeIconWeight,
+  FrameDataParams,
 } from "../../badges/types";
 import { badgeWithGoalQuery, goalsQuery, updateBadge } from "../../db";
-import type { BadgeId } from "../../db";
+import type { BadgeId, GoalId } from "../../db";
 import { pendingDesignStore } from "../../stores/pendingDesignStore";
 import { Logger } from "../../shims/rd-logger";
 import type {
@@ -60,6 +62,7 @@ interface DesignEditorProps {
   currentDesign: BadgeDesign;
   goalColor?: string | null;
   goalTitle?: string;
+  derivedFrameParams: FrameDataParams;
   onDesignChange: (design: BadgeDesign) => void;
   onSave: () => void;
   saveLabel?: string;
@@ -75,6 +78,7 @@ function DesignEditor({
   currentDesign,
   goalColor,
   goalTitle,
+  derivedFrameParams,
   onDesignChange,
   onSave,
   saveLabel = "Save Design",
@@ -118,9 +122,17 @@ function DesignEditor({
   // --- Frame + Center handlers ---
   const handleFrameChange = useCallback(
     (frame: BadgeFrame) => {
-      onDesignChange({ ...currentDesign, frame });
+      if (frame === BadgeFrame.none) {
+        onDesignChange({ ...currentDesign, frame, frameParams: undefined });
+      } else {
+        onDesignChange({
+          ...currentDesign,
+          frame,
+          frameParams: derivedFrameParams,
+        });
+      }
     },
-    [currentDesign, onDesignChange],
+    [currentDesign, derivedFrameParams, onDesignChange],
   );
 
   const handleCenterModeChange = useCallback(
@@ -386,6 +398,12 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
   const currentDesign = design ?? initialDesign;
   const goalColor = badge?.goalColor as string | null | undefined;
 
+  const derivedFrameParams = useFrameParamsForGoal(
+    (badge?.goalId as GoalId | undefined) ?? ("" as GoalId),
+    (badge?.createdAt as string | undefined) ?? "",
+    (badge?.completedAt as string | null | undefined) ?? null,
+  );
+
   const handleSave = useCallback(() => {
     if (!currentDesign) return;
     try {
@@ -424,6 +442,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
       currentDesign={currentDesign}
       goalColor={goalColor}
       goalTitle={badgeGoalTitle}
+      derivedFrameParams={derivedFrameParams}
       onDesignChange={setDesign}
       onSave={handleSave}
     />
@@ -450,6 +469,12 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
   const currentDesign = design ?? initialDesign;
 
   const goalColor = (goal?.color as string | null) ?? null;
+
+  const derivedFrameParams = useFrameParamsForGoal(
+    goalId as GoalId,
+    (goal?.createdAt as string | undefined) ?? "",
+    null,
+  );
 
   const previewRef = useRef<View | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -506,6 +531,7 @@ function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
       currentDesign={currentDesign}
       goalColor={goalColor}
       goalTitle={newGoalTitle}
+      derivedFrameParams={derivedFrameParams}
       onDesignChange={setDesign}
       onSave={handleSave}
       saveLabel="Use This Design"
