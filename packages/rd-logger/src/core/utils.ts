@@ -8,9 +8,14 @@ import {
  * Safely stringify objects for logging, handling circular references and sensitive data
  * @param obj Object to stringify
  * @param detectPatterns Whether to detect and redact sensitive data patterns
+ * @param indent Indentation (number of spaces). Pass 0 for compact output (e.g. NDJSON). Default 2.
  * @returns String representation of the object
  */
-export function safeStringify(obj: any, detectPatterns = true): string {
+export function safeStringify(
+  obj: any,
+  detectPatterns = true,
+  indent: number = 2,
+): string {
   const seen = new Set();
   return JSON.stringify(
     obj,
@@ -39,7 +44,7 @@ export function safeStringify(obj: any, detectPatterns = true): string {
 
       return value;
     },
-    2,
+    indent,
   );
 }
 
