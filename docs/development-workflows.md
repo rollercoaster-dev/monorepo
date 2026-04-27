@@ -180,6 +180,10 @@ The visual-validation skill sets these automatically.
 
 **Per-worktree isolation:** Each worktree has its own `.tmp/` directory (created by `worktree-manager.sh bootstrap`), so parallel runs write to separate log files with no cross-contamination.
 
+**Trust model:** `LOG_FILE_PATH` is treated as trusted operator input. The server writes to whatever path you provide and will fail loudly at boot if the path cannot be opened. There is no traversal protection — keep the value relative to the worktree (the default `.tmp/server.log` does this).
+
+**Failure mode:** If `LOG_TO_FILE=true` is set but the file cannot be opened, the server fails to boot rather than running with a missing log file. This is deliberate: a silent log gap would mislead any agent reading the file.
+
 ## Agent & Plugin Architecture
 
 This project uses a **plugin-first architecture** - official Claude Code plugins handle common workflows, with custom agents only for domain-specific needs.

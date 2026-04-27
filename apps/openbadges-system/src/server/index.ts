@@ -12,7 +12,7 @@ import { requireAuth } from './middleware/auth'
 import { oauthConfig, validateOAuthConfig } from './config/oauth'
 import { jwtService } from './services/jwt'
 import { openApiConfig } from './openapi'
-import { logger } from './utils/logger'
+import { logger, flushLogs } from './utils/logger'
 import { userService } from './services/user'
 
 // Define a simpler JSON value type to avoid deep type recursion
@@ -464,6 +464,22 @@ logger.info('Server is running', {
   server: baseUrl,
   docs: `${baseUrl}/docs`,
 })
+
+// Flush file-backed logs before exit so agents reading `.tmp/server.log`
+// see the last lines written before SIGINT/SIGTERM. Bun delivers these
+// signals to the same process that owns the dev server.
+let shuttingDown = false
+async function shutdown(signal: 'SIGINT' | 'SIGTERM'): Promise<void> {
+  if (shuttingDown) return
+  shuttingDown = true
+  try {
+    await flushLogs()
+  } finally {
+    process.exit(signal === 'SIGINT' ? 130 : 143)
+  }
+}
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
 
 // Export for Bun to pick up
 export default {
