@@ -1,11 +1,17 @@
-import React from "react";
-import { Pressable, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Pressable, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { shadowStyle } from "../styles/shadows";
 import { getRecommendedTextColor } from "../utils/accessibility";
+import { useAnimationPref } from "../hooks/useAnimationPref";
 import { BadgesIcon, GoalsIcon, PlusIcon, SettingsIcon } from "./icons";
 import type { RootTabParamList } from "./types";
 
@@ -18,6 +24,9 @@ const TAB_LABELS: Record<RouteName, string> = {
 };
 
 const ICON_SIZE = 22;
+const COLLAPSED_WIDTH = 44;
+const EXPANDED_WIDTH = 110;
+const MORPH_DURATION = 220;
 
 function TabIcon({ name, color }: { name: RouteName; color: string }) {
   if (name === "GoalsTab") return <GoalsIcon color={color} size={ICON_SIZE} />;
@@ -26,13 +35,91 @@ function TabIcon({ name, color }: { name: RouteName; color: string }) {
   return <SettingsIcon color={color} size={ICON_SIZE} />;
 }
 
+interface AnimatedTabProps {
+  name: RouteName;
+  label: string;
+  isActive: boolean;
+  activeColor: string;
+  inactiveColor: string;
+  duration: number;
+  onPress: () => void;
+}
+
+function AnimatedTab({
+  name,
+  label,
+  isActive,
+  activeColor,
+  inactiveColor,
+  duration,
+  onPress,
+}: AnimatedTabProps) {
+  const progress = useSharedValue(isActive ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isActive ? 1 : 0, { duration });
+  }, [isActive, duration, progress]);
+
+  const containerStyle = useAnimatedStyle(() => {
+    const width =
+      COLLAPSED_WIDTH + (EXPANDED_WIDTH - COLLAPSED_WIDTH) * progress.value;
+    return { width };
+  });
+
+  const labelStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    // Hide text from layout when fully collapsed to avoid mid-animation overflow.
+    width: progress.value === 0 ? 0 : undefined,
+  }));
+
+  const iconColor = isActive ? activeColor : inactiveColor;
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isActive }}
+      testID={`tab-${name}`}
+      onPress={onPress}
+    >
+      <Animated.View
+        style={[
+          styles.tab,
+          isActive ? styles.tabActive : styles.tabCollapsed,
+          containerStyle,
+        ]}
+      >
+        <TabIcon name={name} color={iconColor} />
+        <Animated.Text
+          numberOfLines={1}
+          style={[styles.label, { color: activeColor }, labelStyle]}
+        >
+          {label}
+        </Animated.Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
+  const { shouldAnimate } = useAnimationPref();
+  const duration = shouldAnimate ? MORPH_DURATION : 0;
 
   const activeRoute = state.routes[state.index];
   const activeName = activeRoute.name as RouteName;
   const showFab = activeName !== "SettingsTab";
+
+  const fabOpacity = useSharedValue(showFab ? 1 : 0);
+  useEffect(() => {
+    fabOpacity.value = withTiming(showFab ? 1 : 0, { duration });
+  }, [showFab, duration, fabOpacity]);
+  const fabStyle = useAnimatedStyle(() => ({
+    opacity: fabOpacity.value,
+    width: fabOpacity.value === 0 ? 0 : COLLAPSED_WIDTH,
+    marginLeft: fabOpacity.value === 0 ? 0 : 4,
+  }));
 
   const activeColor = getRecommendedTextColor(theme.colors.accentPurple);
   const inactiveColor = theme.colors.text;
@@ -62,32 +149,23 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
           };
 
           return (
-            <Pressable
+            <AnimatedTab
               key={route.key}
-              accessibilityRole="tab"
-              accessibilityLabel={label}
-              accessibilityState={{ selected: isActive }}
-              testID={`tab-${route.name}`}
+              name={name}
+              label={label}
+              isActive={isActive}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
+              duration={duration}
               onPress={onPress}
-              style={[
-                styles.tab,
-                isActive ? styles.tabActive : styles.tabCollapsed,
-              ]}
-            >
-              <TabIcon
-                name={name}
-                color={isActive ? activeColor : inactiveColor}
-              />
-              {isActive ? (
-                <Text style={[styles.label, { color: activeColor }]}>
-                  {label}
-                </Text>
-              ) : null}
-            </Pressable>
+            />
           );
         })}
 
-        {showFab ? (
+        <Animated.View
+          style={fabStyle}
+          pointerEvents={showFab ? "auto" : "none"}
+        >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="New goal"
@@ -101,7 +179,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
           >
             <PlusIcon color={theme.colors.text} size={20} />
           </Pressable>
-        ) : null}
+        </Animated.View>
       </View>
     </View>
   );
@@ -132,15 +210,14 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     flexDirection: "row" as const,
+    overflow: "hidden" as const,
   },
-  tabCollapsed: {
-    width: 44,
-  },
+  tabCollapsed: {},
   tabActive: {
     backgroundColor: theme.colors.accentPurple,
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     gap: 8,
   },
   label: {
@@ -150,15 +227,14 @@ const styles = StyleSheet.create((theme) => ({
     letterSpacing: theme.letterSpacing.tight,
   },
   fab: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: COLLAPSED_WIDTH,
+    height: COLLAPSED_WIDTH,
+    borderRadius: COLLAPSED_WIDTH / 2,
     backgroundColor: theme.colors.accentYellow,
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    marginLeft: 4,
     ...shadowStyle(theme, "hardSm"),
   },
 }));
