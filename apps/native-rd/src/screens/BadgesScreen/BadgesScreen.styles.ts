@@ -15,7 +15,7 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.chrome.chromeTopBarBg,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],

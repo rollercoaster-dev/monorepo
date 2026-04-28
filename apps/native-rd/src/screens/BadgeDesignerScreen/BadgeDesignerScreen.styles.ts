@@ -17,13 +17,13 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
-    backgroundColor: theme.colors.accentYellow,
+    backgroundColor: theme.chrome.chromeTopBarBg,
     zIndex: 2,
     ...shadowStyle(theme, "hardMd"),
   },
   topBarTitle: {
     ...theme.textStyles.title,
-    color: theme.colors.text,
+    color: theme.chrome.chromeTopBarFg,
   },
   spacer: {
     width: 48,

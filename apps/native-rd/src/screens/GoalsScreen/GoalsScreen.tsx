@@ -125,7 +125,7 @@ export function GoalsScreen() {
   return (
     <SafeAreaView
       edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.colors.accentYellow }}
+      style={{ flex: 1, backgroundColor: theme.chrome.chromeTopBarBg }}
     >
       <View style={styles.header}>
         <Text variant="display">Goals</Text>
