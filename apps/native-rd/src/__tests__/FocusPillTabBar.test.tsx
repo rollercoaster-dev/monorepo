@@ -104,22 +104,16 @@ describe("FocusPillTabBar", () => {
     expect(screen.queryByTestId("tab-fab-new-goal")).toBeOnTheScreen();
   });
 
-  it("hides the FAB from interaction when Settings is active", () => {
+  it("hides the FAB entirely when Settings is active", () => {
     const { props } = buildProps({ activeIndex: 2 });
     renderWithProviders(<FocusPillTabBar {...props} />);
-
-    // The Pressable still mounts (its fade-out animation owns the lifecycle),
-    // but the wrapper disables pointer events so it isn't focusable/tappable.
-    const wrapper = screen.getByTestId("tab-fab-wrapper");
-    expect(wrapper.props.pointerEvents).toBe("none");
+    expect(screen.queryByTestId("tab-fab-new-goal")).toBeNull();
   });
 
-  it("FAB wrapper allows interaction when Goals is active", () => {
+  it("renders the FAB when Goals is active", () => {
     const { props } = buildProps({ activeIndex: 0 });
     renderWithProviders(<FocusPillTabBar {...props} />);
-    expect(screen.getByTestId("tab-fab-wrapper").props.pointerEvents).toBe(
-      "auto",
-    );
+    expect(screen.getByTestId("tab-fab-new-goal")).toBeOnTheScreen();
   });
 
   it("FAB has the correct accessibility label", () => {
