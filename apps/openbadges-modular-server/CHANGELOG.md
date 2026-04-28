@@ -1,5 +1,12 @@
 ## [1.0.2](https://github.com/rollercoaster-dev/openbadges-modular-server/compare/v1.0.1...v1.0.2) (2025-07-25)
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [ac80a78]
+  - @rollercoaster-dev/rd-logger@0.4.0
+
 ### Bug Fixes
 
 - **docker:** resolve container startup failures and improve robustness ([#90](https://github.com/rollercoaster-dev/openbadges-modular-server/issues/90)) ([54dc4d8](https://github.com/rollercoaster-dev/openbadges-modular-server/commit/54dc4d89dcdc8a6057bc6cd8bd32c1b5208f2a51))

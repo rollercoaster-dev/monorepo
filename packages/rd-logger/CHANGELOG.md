@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- ac80a78: Add optional `indent` parameter to `safeStringify`. Default remains `2` (pretty-printed) for backward compatibility; pass `0` for compact single-line output suitable for NDJSON file logs.
+
 ## 0.3.4
 
 ### Patch Changes
