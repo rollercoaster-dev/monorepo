@@ -165,6 +165,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
         <Animated.View
           style={fabStyle}
           pointerEvents={showFab ? "auto" : "none"}
+          testID="tab-fab-wrapper"
         >
           <Pressable
             accessibilityRole="button"
