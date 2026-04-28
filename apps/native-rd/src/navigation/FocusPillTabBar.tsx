@@ -175,15 +175,18 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
           <View style={styles.leftGroup}>{renderTab(goals, "GoalsTab")}</View>
 
           <View style={styles.center}>
-            {showFab ? (
+            {showFab && goals ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="New goal"
                 testID="tab-fab-new-goal"
                 onPress={() =>
-                  navigation.dispatch(
-                    CommonActions.navigate("GoalsTab", { screen: "NewGoal" }),
-                  )
+                  navigation.dispatch({
+                    ...CommonActions.navigate(goals.route.name, {
+                      screen: "NewGoal",
+                    }),
+                    target: state.key,
+                  })
                 }
                 style={styles.fab}
               >
@@ -230,6 +233,8 @@ const styles = StyleSheet.create((theme) => {
       flexDirection: "row" as const,
       alignItems: "center" as const,
       gap: 12,
+      // Lifts the bar so its top half breaks above the tab bar slot —
+      // half the pill's outer height (height + top + bottom border).
       marginTop: -(PILL_HEIGHT / 2 + theme.borderWidth.medium),
     },
     pill: { ...pillBase, flex: 1 },

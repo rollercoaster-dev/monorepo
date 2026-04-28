@@ -77,7 +77,7 @@ describe("FocusPillTabBar", () => {
     expectAccessibleLabel(settings, "Settings");
   });
 
-  it("marks the active tab with selected state", () => {
+  it("marks the active tab with selected state and shows only its label", () => {
     const { props } = buildProps({ activeIndex: 1 });
     renderWithProviders(<FocusPillTabBar {...props} />);
 
@@ -90,6 +90,10 @@ describe("FocusPillTabBar", () => {
     expectAccessibleState(screen.getByTestId("tab-SettingsTab"), {
       selected: false,
     });
+
+    expect(screen.getByText("Badges")).toBeOnTheScreen();
+    expect(screen.queryByText("Goals")).toBeNull();
+    expect(screen.queryByText("Settings")).toBeNull();
   });
 
   it("renders the New Goal FAB when Goals or Badges is active", () => {
@@ -110,12 +114,6 @@ describe("FocusPillTabBar", () => {
     expect(screen.queryByTestId("tab-fab-new-goal")).toBeNull();
   });
 
-  it("renders the FAB when Goals is active", () => {
-    const { props } = buildProps({ activeIndex: 0 });
-    renderWithProviders(<FocusPillTabBar {...props} />);
-    expect(screen.getByTestId("tab-fab-new-goal")).toBeOnTheScreen();
-  });
-
   it("FAB has the correct accessibility label", () => {
     const { props } = buildProps();
     renderWithProviders(<FocusPillTabBar {...props} />);
@@ -124,8 +122,8 @@ describe("FocusPillTabBar", () => {
     expectAccessibleRole(fab, "button");
   });
 
-  it("FAB navigates to the NewGoal screen inside GoalsTab", () => {
-    const { props, dispatch } = buildProps();
+  it("FAB navigates to NewGoal inside GoalsTab even when on a different tab", () => {
+    const { props, dispatch } = buildProps({ activeIndex: 1 });
     renderWithProviders(<FocusPillTabBar {...props} />);
 
     fireEvent.press(screen.getByTestId("tab-fab-new-goal"));
@@ -138,22 +136,27 @@ describe("FocusPillTabBar", () => {
     );
   });
 
-  it("pressing an inactive tab dispatches navigate", () => {
-    const { props, dispatch, emit } = buildProps({ activeIndex: 0 });
-    renderWithProviders(<FocusPillTabBar {...props} />);
+  it.each([
+    { from: 0, to: "BadgesTab", testId: "tab-BadgesTab" },
+    { from: 0, to: "SettingsTab", testId: "tab-SettingsTab" },
+    { from: 2, to: "GoalsTab", testId: "tab-GoalsTab" },
+    { from: 2, to: "BadgesTab", testId: "tab-BadgesTab" },
+  ])(
+    "pressing inactive $to dispatches navigate (from index $from)",
+    ({ from, to, testId }) => {
+      const { props, dispatch, emit } = buildProps({ activeIndex: from });
+      renderWithProviders(<FocusPillTabBar {...props} />);
 
-    fireEvent.press(screen.getByTestId("tab-BadgesTab"));
+      fireEvent.press(screen.getByTestId(testId));
 
-    expect(emit).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "tabPress", target: "BadgesTab-1" }),
-    );
-    expect(dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "NAVIGATE",
-        target: "tab",
-      }),
-    );
-  });
+      expect(emit).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "tabPress", target: `${to}-1` }),
+      );
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "NAVIGATE", target: "tab" }),
+      );
+    },
+  );
 
   it("pressing the already-active tab does not dispatch navigate", () => {
     const { props, dispatch } = buildProps({ activeIndex: 0 });
