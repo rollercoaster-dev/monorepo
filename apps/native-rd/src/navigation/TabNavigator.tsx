@@ -11,7 +11,15 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          elevation: 0,
+        },
+        tabBarBackground: () => null,
+      }}
       tabBar={(props) => <FocusPillTabBar {...props} />}
     >
       <Tab.Screen name="GoalsTab" component={GoalsStack} />
