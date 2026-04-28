@@ -96,23 +96,23 @@ describe("FocusPillTabBar", () => {
     expect(screen.queryByText("Settings")).toBeNull();
   });
 
-  it("renders the New Goal FAB when Goals or Badges is active", () => {
-    const { props: goalsProps } = buildProps({ activeIndex: 0 });
-    const { rerender } = renderWithProviders(
-      <FocusPillTabBar {...goalsProps} />,
-    );
-    expect(screen.queryByTestId("tab-fab-new-goal")).toBeOnTheScreen();
-
-    const { props: badgesProps } = buildProps({ activeIndex: 1 });
-    rerender(<FocusPillTabBar {...badgesProps} />);
-    expect(screen.queryByTestId("tab-fab-new-goal")).toBeOnTheScreen();
-  });
-
-  it("hides the FAB entirely when Settings is active", () => {
-    const { props } = buildProps({ activeIndex: 2 });
-    renderWithProviders(<FocusPillTabBar {...props} />);
-    expect(screen.queryByTestId("tab-fab-new-goal")).toBeNull();
-  });
+  it.each([
+    { activeIndex: 0, activeTab: "Goals", visible: true },
+    { activeIndex: 1, activeTab: "Badges", visible: true },
+    { activeIndex: 2, activeTab: "Settings", visible: false },
+  ])(
+    "FAB is $visible when $activeTab is active",
+    ({ activeIndex, visible }) => {
+      const { props } = buildProps({ activeIndex });
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      const fab = screen.queryByTestId("tab-fab-new-goal");
+      if (visible) {
+        expect(fab).toBeOnTheScreen();
+      } else {
+        expect(fab).toBeNull();
+      }
+    },
+  );
 
   it("FAB has the correct accessibility label", () => {
     const { props } = buildProps();
@@ -153,7 +153,11 @@ describe("FocusPillTabBar", () => {
         expect.objectContaining({ type: "tabPress", target: `${to}-1` }),
       );
       expect(dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "NAVIGATE", target: "tab" }),
+        expect.objectContaining({
+          type: "NAVIGATE",
+          target: "tab",
+          payload: expect.objectContaining({ name: to }),
+        }),
       );
     },
   );
