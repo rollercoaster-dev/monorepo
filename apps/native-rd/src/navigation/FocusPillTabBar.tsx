@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   LayoutAnimation,
   type LayoutAnimationConfig,
   Platform,
   Pressable,
-  Text,
+  Text as RNText,
   UIManager,
   View,
 } from "react-native";
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { GearSix, Medal, Target } from "phosphor-react-native";
+import { Text } from "../components/Text";
 import { shadowStyle } from "../styles/shadows";
 import { getRecommendedTextColor } from "../utils/accessibility";
 import { useAnimationPref } from "../hooks/useAnimationPref";
@@ -29,6 +30,7 @@ const TAB_LABELS: Record<RouteName, string> = {
 const ICON_SIZE = 24;
 const ICON_WEIGHT = "bold" as const;
 const MORPH_DURATION = 220;
+const PILL_HEIGHT = 64;
 
 if (
   Platform.OS === "android" &&
@@ -86,9 +88,12 @@ function TabButton({
     >
       <TabIcon name={name} color={isActive ? activeColor : inactiveColor} />
       {isActive ? (
-        <Text numberOfLines={1} style={[styles.label, { color: activeColor }]}>
+        <RNText
+          numberOfLines={1}
+          style={[styles.label, { color: activeColor }]}
+        >
           {label}
-        </Text>
+        </RNText>
       ) : null}
     </Pressable>
   );
@@ -103,12 +108,15 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const activeName = activeRoute.name as RouteName;
   const showFab = activeName !== "SettingsTab";
 
-  const activeColor = getRecommendedTextColor(theme.colors.accentPurple);
+  const activeColor = useMemo(
+    () => getRecommendedTextColor(theme.colors.accentPurple),
+    [theme.colors.accentPurple],
+  );
   const inactiveColor = theme.colors.text;
 
   useEffect(() => {
     if (shouldAnimate) LayoutAnimation.configureNext(morphConfig);
-  }, [state.index, showFab, shouldAnimate]);
+  }, [state.index, shouldAnimate]);
 
   const findRoute = (name: RouteName) => {
     const idx = state.routes.findIndex((r) => r.name === name);
@@ -179,7 +187,9 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
                 }
                 style={styles.fab}
               >
-                <Text style={styles.plusIcon}>+</Text>
+                <Text variant="headline" style={styles.plusIcon}>
+                  +
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -199,95 +209,84 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
-  container: {
-    backgroundColor: "transparent",
-    overflow: "visible" as const,
-  },
-  bar: {
+const styles = StyleSheet.create((theme) => {
+  const pillBase = {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 12,
-    marginTop: -34,
-  },
-  pill: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    height: 64,
+    height: PILL_HEIGHT,
     paddingHorizontal: 8,
     borderRadius: 999,
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
     backgroundColor: theme.colors.background,
     ...shadowStyle(theme, "hardMd"),
-  },
-  leftGroup: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 6,
-  },
-  center: {
-    width: 56,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  rightGroup: {
-    flex: 1,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "flex-end" as const,
-  },
-  tab: {
-    height: 48,
-    borderRadius: 999,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    flexDirection: "row" as const,
-  },
-  tabCollapsed: {
-    width: 48,
-  },
-  tabActive: {
-    backgroundColor: theme.colors.accentPurple,
-    borderColor: theme.colors.border,
-    borderWidth: theme.borderWidth.medium,
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  label: {
-    fontFamily: theme.fontFamily.body,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
-    letterSpacing: theme.letterSpacing.tight,
-  },
-  fab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.accentYellow,
-    borderColor: theme.colors.border,
-    borderWidth: theme.borderWidth.medium,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  plusIcon: {
-    fontFamily: theme.fontFamily.headline,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: 24,
-    lineHeight: 28,
-    color: theme.colors.text,
-  },
-  settingsPill: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    height: 64,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-    borderColor: theme.colors.border,
-    borderWidth: theme.borderWidth.medium,
-    backgroundColor: theme.colors.background,
-    ...shadowStyle(theme, "hardMd"),
-  },
-}));
+  };
+  return {
+    container: {
+      backgroundColor: "transparent",
+      overflow: "visible" as const,
+    },
+    bar: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 12,
+      marginTop: -(PILL_HEIGHT / 2 + theme.borderWidth.medium),
+    },
+    pill: { ...pillBase, flex: 1 },
+    settingsPill: pillBase,
+    leftGroup: {
+      flex: 1,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 6,
+    },
+    center: {
+      width: 56,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    rightGroup: {
+      flex: 1,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "flex-end" as const,
+    },
+    tab: {
+      height: 48,
+      borderRadius: 999,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      flexDirection: "row" as const,
+    },
+    tabCollapsed: {
+      width: 48,
+    },
+    tabActive: {
+      backgroundColor: theme.colors.accentPurple,
+      borderColor: theme.colors.border,
+      borderWidth: theme.borderWidth.medium,
+      paddingHorizontal: 16,
+      gap: 8,
+    },
+    label: {
+      fontFamily: theme.fontFamily.body,
+      fontWeight: theme.fontWeight.bold,
+      fontSize: theme.size.sm,
+      letterSpacing: theme.letterSpacing.tight,
+    },
+    fab: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.accentYellow,
+      borderColor: theme.colors.border,
+      borderWidth: theme.borderWidth.medium,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    plusIcon: {
+      fontSize: 24,
+      lineHeight: 28,
+    },
+  };
+});
