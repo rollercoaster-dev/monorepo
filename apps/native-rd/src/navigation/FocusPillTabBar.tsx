@@ -196,13 +196,14 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create((theme) => ({
   container: {
-    paddingTop: theme.space[2],
     backgroundColor: "transparent",
+    overflow: "visible" as const,
   },
   pill: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     height: 64,
+    marginTop: -34,
     paddingHorizontal: 8,
     borderRadius: 999,
     borderColor: theme.colors.border,
