@@ -12,7 +12,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
-import { GearSix, Medal, Plus, Target } from "phosphor-react-native";
+import { GearSix, Medal, Target } from "phosphor-react-native";
 import { shadowStyle } from "../styles/shadows";
 import { getRecommendedTextColor } from "../utils/accessibility";
 import { useAnimationPref } from "../hooks/useAnimationPref";
@@ -162,33 +162,38 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
     >
-      <View style={styles.pill}>
-        <View style={styles.leftGroup}>
-          {renderTab(goals, "GoalsTab")}
-          {renderTab(badges, "BadgesTab")}
+      <View style={styles.bar}>
+        <View style={styles.pill}>
+          <View style={styles.leftGroup}>{renderTab(goals, "GoalsTab")}</View>
+
+          <View style={styles.center}>
+            {showFab ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="New goal"
+                testID="tab-fab-new-goal"
+                onPress={() =>
+                  navigation.dispatch(
+                    CommonActions.navigate("GoalsTab", { screen: "NewGoal" }),
+                  )
+                }
+                style={styles.fab}
+              >
+                <Text style={styles.plusIcon}>+</Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          <View style={styles.rightGroup}>
+            {renderTab(badges, "BadgesTab")}
+          </View>
         </View>
 
-        <View style={styles.center}>
-          {showFab ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="New goal"
-              testID="tab-fab-new-goal"
-              onPress={() =>
-                navigation.dispatch(
-                  CommonActions.navigate("GoalsTab", { screen: "NewGoal" }),
-                )
-              }
-              style={styles.fab}
-            >
-              <Plus color={theme.colors.text} size={22} weight={ICON_WEIGHT} />
-            </Pressable>
-          ) : null}
-        </View>
-
-        <View style={styles.rightGroup}>
-          {renderTab(settings, "SettingsTab")}
-        </View>
+        {settings ? (
+          <View style={styles.settingsPill}>
+            {renderTab(settings, "SettingsTab")}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -199,11 +204,17 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: "transparent",
     overflow: "visible" as const,
   },
+  bar: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    marginTop: -34,
+  },
   pill: {
+    flex: 1,
     flexDirection: "row" as const,
     alignItems: "center" as const,
     height: 64,
-    marginTop: -34,
     paddingHorizontal: 8,
     borderRadius: 999,
     borderColor: theme.colors.border,
@@ -260,5 +271,23 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: theme.borderWidth.medium,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  plusIcon: {
+    fontFamily: theme.fontFamily.headline,
+    fontWeight: theme.fontWeight.bold,
+    fontSize: 24,
+    lineHeight: 28,
+    color: theme.colors.text,
+  },
+  settingsPill: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    height: 64,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    borderColor: theme.colors.border,
+    borderWidth: theme.borderWidth.medium,
+    backgroundColor: theme.colors.background,
+    ...shadowStyle(theme, "hardMd"),
   },
 }));
