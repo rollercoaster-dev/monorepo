@@ -254,14 +254,7 @@ export function StepList({
                   />
                   {onDeleteStep && (
                     <IconButton
-                      icon={
-                        <Text
-                          variant="body"
-                          style={{ color: theme.colors.textMuted }}
-                        >
-                          ✕
-                        </Text>
-                      }
+                      icon={<Text variant="body">✕</Text>}
                       onPress={() => onDeleteStep(step.id)}
                       size="sm"
                       tone="ghost"
@@ -333,14 +326,7 @@ export function StepList({
                     </Pressable>
                     {onDeleteStep && (
                       <IconButton
-                        icon={
-                          <Text
-                            variant="body"
-                            style={{ color: theme.colors.textMuted }}
-                          >
-                            ✕
-                          </Text>
-                        }
+                        icon={<Text variant="body">✕</Text>}
                         onPress={() => onDeleteStep(step.id)}
                         size="sm"
                         tone="ghost"
