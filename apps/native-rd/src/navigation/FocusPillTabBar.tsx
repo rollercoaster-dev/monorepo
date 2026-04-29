@@ -119,7 +119,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
     () => getRecommendedTextColor(theme.colors.accentPurple),
     [theme.colors.accentPurple],
   );
-  const inactiveColor = theme.colors.text;
+  const inactiveColor = theme.colors.textSecondary;
 
   useEffect(() => {
     if (shouldAnimate) LayoutAnimation.configureNext(morphConfig);
