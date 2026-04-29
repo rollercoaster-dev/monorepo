@@ -221,8 +221,8 @@ Preserved as `git stash@{0}` on this worktree: `"WIP: simple swap accentYellow t
 
 ### Step-level verdict
 
-- **Step 1 (compose chrome)** — `theme.chrome.*` is currently read by 6 screens migrated in Step 2 (Badges, Settings, FocusMode, TimelineJourney, BadgeDesigner, IconPickerModal). Only `GoalsScreen` opted out and now uses `theme.colors.accentPurple` / `accentPurpleFg` instead (commit `047efa05`). The chrome plumbing is not dead, but the design intent ("brand-prominent identity band") still does not match what those screens want visually in dark theme. Plan: migrate the remaining 6 screens off `chromeTopBarBg` to the same `accentPurple` pair, then the chrome composition layer can be removed.
-- **Step 2 (migrate `accentYellow` → `chromeTopBarBg`)** — partially superseded. GoalsScreen leads the way with `accentPurple` / `accentPurpleFg`; the other 6 screens are pending migration.
+- **Step 1 (compose chrome)** — `theme.chrome.*` is now read by **zero** screens. All 7 screens that originally targeted the brand chrome band (Badges, Settings, FocusMode, TimelineJourney, BadgeDesigner, IconPickerModal, Goals) use `theme.colors.accentPurple` / `accentPurpleFg`. The chrome composition layer in `compose.ts` is dead code — safe to remove in a follow-up.
+- **Step 2 (migrate `accentYellow` → `chromeTopBarBg`)** — **fully superseded.** All 7 screens use `accentPurple` / `accentPurpleFg`.
 - **Step 3 (flatten 14 → 7 themes)** — still useful, independent of chrome.
 - **Step 4 (reduce adapter)** — still useful, independent of chrome.
 - **Step 5 (docs)** — still useful, but with the chrome-composition language removed.

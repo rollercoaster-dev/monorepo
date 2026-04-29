@@ -115,7 +115,7 @@ The chrome cluster pattern is consistent: every screen has a `SafeAreaView` with
 
 **D1. Top-of-screen yellow → `chromeTopBarBg`.** Confirmed. The `SafeAreaView` + screen `header` band is the chrome top-bar role.
 
-**D2. Per-theme `chromeTopBarBg` values are correct as-shipped.** Reviewed all 7 themes against the top-bar's functional role (identity surface, differentiates from `chromeHeaderBg`/cards below, carries title text at AAA contrast):
+**D2. ~~Per-theme `chromeTopBarBg` values are correct as-shipped.~~ — SUPERSEDED.** A dark-theme visual test exposed that the package's `chromeTopBarBg` (yellow carryover into dark) clashes with the dark navy body. The chrome composition layer was abandoned for native-rd headers; screens now use `theme.colors.accentPurple` / `accentPurpleFg`. See the [plan doc Learnings](../plans/2026-04-28-design-token-simplification-and-chrome.md#learnings--2026-04-28-after-attempting-steps-1-and-2). Original review preserved below for historical context:
 
 | Theme            | `chromeTopBarBg`       | `chromeTopBarFg` | Status                                                                                                                        |
 | ---------------- | ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |

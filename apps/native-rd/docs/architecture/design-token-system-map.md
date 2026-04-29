@@ -1,14 +1,16 @@
 # Design Token System — Current State Map
 
-**Status:** Snapshot, 2026-04-28
+**Status:** Pre-migration snapshot, 2026-04-28
 **Companion to:** [design-token-system.md](./design-token-system.md) (intended architecture)
 **Purpose:** ground-truth diagram of how design tokens actually flow from JSON to a `theme.colors.X` reference in a screen, and where the friction is.
+
+> This map captures the **pre-migration** state. After PR #935, `chromeColors` is composed into `ComposedTheme.chrome` (commit `7c817ca6`) but no screens read it — header chrome moved to `theme.colors.accentPurple` / `accentPurpleFg` instead. See the [plan doc Learnings](../plans/2026-04-28-design-token-simplification-and-chrome.md#learnings--2026-04-28-after-attempting-steps-1-and-2) for context.
 
 ---
 
 ## End-to-end data flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │ packages/design-tokens/                                             │
 │                                                                     │
