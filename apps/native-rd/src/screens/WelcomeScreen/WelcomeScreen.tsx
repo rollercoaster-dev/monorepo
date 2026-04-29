@@ -70,7 +70,12 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         <ThemeChipGrid />
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.footer,
+          { paddingBottom: theme.space[2] + insets.bottom },
+        ]}
+      >
         <Button label="Get Started" onPress={onGetStarted} size="lg" />
         <Text variant="caption" style={styles.footnote}>
           You can change this anytime in Settings.
