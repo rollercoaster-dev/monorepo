@@ -120,10 +120,16 @@ describe("IconButton", () => {
       const theme = composeTheme("dark", "default");
       unistylesMock.useUnistyles.mockReturnValue({ theme });
 
+      // Source the caller-passed color from a token so the test obeys the
+      // monorepo's no-raw-colors rule. Pick a token that is guaranteed to
+      // differ from resolveIconColor(theme, "primary") so the override
+      // assertion remains meaningful.
+      const callerColor = theme.surfaceBorder.borderDestructive;
+
       renderWithProviders(
         <IconButton
           icon={
-            <Text testID="icon-target" style={{ color: "#ff00ff" }}>
+            <Text testID="icon-target" style={{ color: callerColor }}>
               ·
             </Text>
           }
@@ -138,7 +144,7 @@ describe("IconButton", () => {
         ? Object.assign({}, ...icon.props.style.flat(Infinity).filter(Boolean))
         : icon.props.style;
       expect(flatStyle.color).toBe(resolveIconColor(theme, "primary"));
-      expect(flatStyle.color).not.toBe("#ff00ff");
+      expect(flatStyle.color).not.toBe(callerColor);
     });
   });
 });

@@ -11,7 +11,9 @@ import {
 export type { IconButtonSize, IconButtonTone };
 
 export interface IconButtonProps {
-  icon: React.ReactNode;
+  // ReactElement (not ReactNode) so callers can't pass strings/fragments/arrays
+  // that would silently bypass injectIconColor and leak un-toned icons.
+  icon: React.ReactElement;
   onPress: () => void;
   size?: IconButtonSize;
   tone?: IconButtonTone;
@@ -37,10 +39,9 @@ interface InjectableIconProps {
 }
 
 function injectIconColor(
-  icon: React.ReactNode,
+  icon: React.ReactElement,
   color: string,
-): React.ReactNode {
-  if (!React.isValidElement(icon)) return icon;
+): React.ReactElement {
   const element = icon as React.ReactElement<InjectableIconProps>;
   return React.cloneElement(element, {
     color,
