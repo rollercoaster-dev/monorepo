@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import type { ComposedTheme } from "../../themes/compose";
 
 export type IconButtonSize = "sm" | "md" | "lg";
 export type IconButtonTone =
@@ -31,30 +32,26 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center" as const,
     hitSlop: hitSlopValues[size],
   }),
-  // Chrome: sits on top of the app's purple chrome band (header / tab bar).
-  // Transparent so the band shows through; foreground reads against the band.
+  // Chrome and ghost are both transparent so the surface they sit on shows
+  // through; the difference is which token the foreground resolves against.
   toneChrome: {
     backgroundColor: "transparent",
   },
-  // Ghost: transparent inline control on the current page surface.
   toneGhost: {
     backgroundColor: "transparent",
   },
-  // Surface: raised neutral control on cards / page surfaces.
   toneSurface: {
     backgroundColor: theme.action.actionSecondaryBg,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.surfaceBorder.borderDefault,
     ...shadowStyle(theme, "cardElevationSmall"),
   },
-  // Primary: prominent accented action.
   tonePrimary: {
     backgroundColor: theme.action.actionPrimaryBg,
     borderWidth: theme.borderWidth.medium,
     borderColor: theme.surfaceBorder.borderDefault,
     ...shadowStyle(theme, "cardElevationSmall"),
   },
-  // Destructive: destructive action treatment.
   toneDestructive: {
     backgroundColor: theme.action.actionDestructiveBg,
     borderWidth: theme.borderWidth.medium,
@@ -69,19 +66,10 @@ export const styles = StyleSheet.create((theme) => ({
   },
 }));
 
-// Resolve the foreground color for icons inside an IconButton. Lives in the
-// styles module so call sites never reach for a token to set icon color
-// themselves.
+// Lives in the styles module so call sites never reach for a token to set
+// icon color themselves.
 export function resolveIconColor(
-  theme: {
-    chrome: { chromeTabBarFg: string };
-    surfaceBorder: { surfaceCardFg: string };
-    action: {
-      actionSecondaryFg: string;
-      actionPrimaryFg: string;
-      actionDestructiveFg: string;
-    };
-  },
+  theme: Pick<ComposedTheme, "chrome" | "action" | "surfaceBorder">,
   tone: IconButtonTone,
 ): string {
   switch (tone) {
@@ -89,7 +77,6 @@ export function resolveIconColor(
       // Foreground on the app's purple chrome band — same role as tab bar text.
       return theme.chrome.chromeTabBarFg;
     case "ghost":
-      // Inline on the current page surface.
       return theme.surfaceBorder.surfaceCardFg;
     case "surface":
       return theme.action.actionSecondaryFg;

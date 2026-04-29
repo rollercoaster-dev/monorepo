@@ -123,7 +123,6 @@ export function composeTheme(
     };
   }
 
-  // Compose chrome: base from colorMode, then variant overrides
   const baseChrome =
     colorMode === "light" ? lightChromeColors : darkChromeColors;
   let chrome: Chrome = { ...baseChrome };
@@ -131,7 +130,6 @@ export function composeTheme(
     chrome = { ...chrome, ...variantDef.chrome };
   }
 
-  // Compose action: base from colorMode, then variant overrides
   const baseAction =
     colorMode === "light" ? lightActionColors : darkActionColors;
   let action: Action = { ...baseAction };
@@ -139,7 +137,6 @@ export function composeTheme(
     action = { ...action, ...variantDef.action };
   }
 
-  // Compose surfaceBorder: base from colorMode, then variant overrides
   const baseSurfaceBorder =
     colorMode === "light" ? lightSurfaceBorderColors : darkSurfaceBorderColors;
   let surfaceBorder: SurfaceBorder = { ...baseSurfaceBorder };
