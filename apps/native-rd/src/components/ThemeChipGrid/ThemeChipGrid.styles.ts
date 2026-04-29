@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-const CHIP_HEIGHT = 72; // square-ish on 4-col grid; ≥44 touch target
+const CHIP_HEIGHT = 72;
 
 export const styles = StyleSheet.create((theme) => ({
   grid: {
@@ -10,8 +10,6 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
   },
   chip: {
-    // 4 columns with theme.space[2] gap. width set as a percentage so wrap
-    // produces a clean 4 + 3 layout from the 7 themeOptions.
     width: `${(100 - 3 * 2) / 4}%`,
     height: CHIP_HEIGHT,
     borderRadius: theme.radius.md,

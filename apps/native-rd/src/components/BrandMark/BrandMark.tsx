@@ -11,16 +11,12 @@ export interface BrandMarkProps {
 export function BrandMark({ size = 56 }: BrandMarkProps) {
   const { theme } = useUnistyles();
   const stroke = 2;
-  const path = shieldPath(size, stroke / 2);
-  const iconSize = size;
-  const iconLeft = 0;
-  const iconTop = 0;
 
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
         <Path
-          d={path}
+          d={shieldPath(size, stroke / 2)}
           fill={theme.colors.backgroundSecondary}
           stroke={theme.colors.border}
           strokeWidth={stroke}
@@ -30,10 +26,10 @@ export function BrandMark({ size = 56 }: BrandMarkProps) {
         source={require("../../../assets/adaptive-icon.png")}
         style={{
           position: "absolute",
-          left: iconLeft,
-          top: iconTop,
-          width: iconSize,
-          height: iconSize,
+          left: 0,
+          top: 0,
+          width: size,
+          height: size,
         }}
         resizeMode="contain"
       />

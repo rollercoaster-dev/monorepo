@@ -12,11 +12,6 @@ import { size, lineHeight } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
 import { styles } from "./ThemeSwitcher.styles";
 
-/**
- * Build preview styles for a card using the card's own theme so each option
- * renders a fully-themed mini-mockup of app UI (label + description + a
- * sample card with badge, title, meta, and a primary CTA pill).
- */
 function previewStyles(themeId: ThemeName) {
   const cardTheme = themes[themeId];
   const { variant } = parseThemeName(themeId);

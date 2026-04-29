@@ -1,11 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
-import { themes, type ThemeName } from "../../themes/compose";
+import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { styles } from "./ThemeChipGrid.styles";
 
-// Swatches derive from each theme's composed colors so chips automatically
-// stay in sync with the actual palette in design-tokens.
 interface ChipSwatch {
   bg: string;
   stripe1: string;
@@ -19,12 +17,10 @@ function getSwatch(themeName: ThemeName): ChipSwatch {
     bg: c.background,
     stripe1: c.accentPurple,
     stripe2: c.text,
-    isDarkBase: themeName.startsWith("dark-"),
+    isDarkBase: parseThemeName(themeName).colorMode === "dark",
   };
 }
 
-// Stripe widths as flex-basis percentages, matching the prototype's
-// per-variant proportions (stripe1, stripe2, stripe3-fills-rest).
 const stripeWidths: Record<ThemeName, [number, number]> = {
   "light-default": [30, 25],
   "dark-default": [30, 25],
@@ -65,7 +61,6 @@ export function ThemeChipGrid() {
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected }}
             accessibilityLabel={`${option.label}. ${option.description}`}
-            testID={isSelected ? "selected-chip" : undefined}
             style={[
               styles.chip,
               isSelected ? styles.chipSelected : styles.chipUnselected,
