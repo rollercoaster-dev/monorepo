@@ -200,6 +200,7 @@ export function StepCard({
             checked={isCompleted}
             onToggle={handleCheckboxPress}
             label={checkboxLabel}
+            disabled={isBlocked}
             accessibilityHint={checkboxA11yHint}
           />
         </View>

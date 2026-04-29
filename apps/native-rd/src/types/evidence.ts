@@ -12,32 +12,58 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
     : EvidenceType.file;
 }
 
-export const EVIDENCE_OPTIONS: {
+export interface EvidenceOption {
   type: EvidenceTypeValue;
   label: string;
+  shortLabel: string;
   icon: string;
-}[] = [
-  { type: EvidenceType.photo, label: "Take Photo", icon: "\u{1F4F7}" },
-  { type: EvidenceType.video, label: "Record Video", icon: "\u{1F3AC}" },
+}
+
+export const EVIDENCE_OPTIONS: EvidenceOption[] = [
+  {
+    type: EvidenceType.photo,
+    label: "Take Photo",
+    shortLabel: "Photo",
+    icon: "\u{1F4F7}",
+  },
+  {
+    type: EvidenceType.video,
+    label: "Record Video",
+    shortLabel: "Video",
+    icon: "\u{1F3AC}",
+  },
   {
     type: EvidenceType.voice_memo,
     label: "Record Voice Memo",
+    shortLabel: "Voice Memo",
     icon: "\u{1F3A4}",
   },
-  { type: EvidenceType.text, label: "Write a Note", icon: "\u{1F4DD}" },
-  { type: EvidenceType.link, label: "Add Link", icon: "\u{1F517}" },
-  { type: EvidenceType.file, label: "Attach File", icon: "\u{1F4CE}" },
+  {
+    type: EvidenceType.text,
+    label: "Write a Note",
+    shortLabel: "Note",
+    icon: "\u{1F4DD}",
+  },
+  {
+    type: EvidenceType.link,
+    label: "Add Link",
+    shortLabel: "Link",
+    icon: "\u{1F517}",
+  },
+  {
+    type: EvidenceType.file,
+    label: "Attach File",
+    shortLabel: "File",
+    icon: "\u{1F4CE}",
+  },
 ];
 
 export const EVIDENCE_CAPTURE_OPTIONS: {
   type: EvidenceTypeValue;
   label: string;
   icon: string;
-}[] = [
-  { type: EvidenceType.photo, label: "Photo", icon: "\u{1F4F7}" },
-  { type: EvidenceType.video, label: "Video", icon: "\u{1F3AC}" },
-  { type: EvidenceType.voice_memo, label: "Voice Memo", icon: "\u{1F3A4}" },
-  { type: EvidenceType.text, label: "Note", icon: "\u{1F4DD}" },
-  { type: EvidenceType.link, label: "Link", icon: "\u{1F517}" },
-  { type: EvidenceType.file, label: "File", icon: "\u{1F4CE}" },
-];
+}[] = EVIDENCE_OPTIONS.map(({ type, shortLabel, icon }) => ({
+  type,
+  label: shortLabel,
+  icon,
+}));

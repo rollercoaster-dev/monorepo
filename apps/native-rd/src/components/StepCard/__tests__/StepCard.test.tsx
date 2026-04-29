@@ -229,7 +229,7 @@ describe("StepCard", () => {
     expect(screen.queryByText(/requires/i)).toBeNull();
   });
 
-  it("checkbox remains actionable when blocked", () => {
+  it("checkbox is accessible-disabled when blocked but still tappable for evidence capture", () => {
     renderWithProviders(
       <StepCard
         step={makeStep({
@@ -240,7 +240,7 @@ describe("StepCard", () => {
       />,
     );
     const checkbox = screen.getByRole("checkbox");
-    expect(checkbox.props.accessibilityState?.disabled).toBe(false);
+    expect(checkbox.props.accessibilityState?.disabled).toBe(true);
   });
 
   it("tapping blocked checkbox calls onEvidenceTap instead of onToggleComplete", () => {
@@ -495,7 +495,7 @@ describe("StepCard", () => {
     expect(screen.getByLabelText("Add Voice Memo evidence")).toBeOnTheScreen();
     expect(
       screen.getByRole("checkbox").props.accessibilityState?.disabled,
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("does not render chips or block completion when plannedEvidenceTypes is empty array", () => {

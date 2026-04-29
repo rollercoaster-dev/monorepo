@@ -292,13 +292,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         const plannedTypes =
           (step.plannedEvidenceTypes as string | null) ?? null;
 
-        // Gate: only check evidence when step has planned types configured.
-        // canCompleteStep rejects zero-evidence steps regardless of planned types,
-        // which would be a regression for steps without evidence requirements.
-        if (
-          plannedTypes !== null &&
-          !canCompleteStep(plannedTypes, stepEvidence)
-        ) {
+        if (!canCompleteStep(plannedTypes, stepEvidence)) {
           showToast({
             message: "Add evidence before completing this step",
             duration: 3000,
