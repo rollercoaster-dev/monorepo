@@ -454,7 +454,7 @@ function FocusContent({ goalId }: { goalId: string }) {
           {goal.title}
         </Text>
         <IconButton
-          icon={<Pencil color={theme.colors.text} size={20} weight="bold" />}
+          icon={<Pencil color={theme.colors.text} size={20} weight="fill" />}
           onPress={handleEditPress}
           accessibilityLabel="Edit goal"
           size="sm"
