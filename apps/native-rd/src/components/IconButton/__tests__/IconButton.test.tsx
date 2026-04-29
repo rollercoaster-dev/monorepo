@@ -5,7 +5,12 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
-import { IconButton } from "../IconButton";
+import { IconButton, type IconButtonTone } from "../IconButton";
+import { resolveIconColor } from "../IconButton.styles";
+import { composeTheme } from "../../../themes/compose";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const unistylesMock = require("react-native-unistyles");
 
 describe("IconButton", () => {
   it("renders the icon and is accessible", () => {
@@ -45,5 +50,95 @@ describe("IconButton", () => {
     );
     fireEvent.press(screen.getByRole("button", { name: "Add" }));
     expect(onPress).not.toHaveBeenCalled();
+  });
+
+  describe("tone × theme matrix — owns icon foreground color", () => {
+    // Representative themes covering both color modes plus the a11y variants
+    // most likely to push the action/surfaceBorder/chrome tokens away from
+    // their light-default values.
+    const themes = [
+      composeTheme("light", "default"),
+      composeTheme("dark", "default"),
+      composeTheme("light", "highContrast"),
+      composeTheme("dark", "highContrast"),
+      composeTheme("light", "dyslexia"),
+    ] as const;
+    const themeNames = [
+      "light-default",
+      "dark-default",
+      "light-highContrast",
+      "dark-highContrast",
+      "light-dyslexia",
+    ] as const;
+    const tones: IconButtonTone[] = [
+      "chrome",
+      "ghost",
+      "surface",
+      "primary",
+      "destructive",
+    ];
+
+    afterEach(() => {
+      // Reset to the default theme returned by the mock
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: unistylesMock.mockTheme,
+      });
+    });
+
+    test.each(
+      themes.flatMap((theme, themeIdx) =>
+        tones.map((tone) => [themeNames[themeIdx], theme, tone] as const),
+      ),
+    )(
+      "%s %s tone injects resolved icon color (caller passes none)",
+      (_themeName, theme, tone) => {
+        unistylesMock.useUnistyles.mockReturnValue({ theme });
+
+        const expected = resolveIconColor(theme, tone);
+
+        renderWithProviders(
+          <IconButton
+            icon={<Text testID="icon-target">·</Text>}
+            tone={tone}
+            onPress={jest.fn()}
+            accessibilityLabel={`${tone} button`}
+          />,
+        );
+
+        const icon = screen.getByTestId("icon-target");
+        const flatStyle = Array.isArray(icon.props.style)
+          ? Object.assign(
+              {},
+              ...icon.props.style.flat(Infinity).filter(Boolean),
+            )
+          : icon.props.style;
+        expect(flatStyle.color).toBe(expected);
+      },
+    );
+
+    it("overrides any color the caller passed on the icon", () => {
+      const theme = composeTheme("dark", "default");
+      unistylesMock.useUnistyles.mockReturnValue({ theme });
+
+      renderWithProviders(
+        <IconButton
+          icon={
+            <Text testID="icon-target" style={{ color: "#ff00ff" }}>
+              ·
+            </Text>
+          }
+          tone="primary"
+          onPress={jest.fn()}
+          accessibilityLabel="primary button"
+        />,
+      );
+
+      const icon = screen.getByTestId("icon-target");
+      const flatStyle = Array.isArray(icon.props.style)
+        ? Object.assign({}, ...icon.props.style.flat(Infinity).filter(Boolean))
+        : icon.props.style;
+      expect(flatStyle.color).toBe(resolveIconColor(theme, "primary"));
+      expect(flatStyle.color).not.toBe("#ff00ff");
+    });
   });
 });
