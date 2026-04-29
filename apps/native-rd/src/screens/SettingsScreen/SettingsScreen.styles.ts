@@ -5,10 +5,6 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollContainer: {
     backgroundColor: theme.colors.background,
   },

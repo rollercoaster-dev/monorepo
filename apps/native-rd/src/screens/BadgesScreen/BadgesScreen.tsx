@@ -69,17 +69,15 @@ export function BadgesScreen() {
   return (
     <View style={styles.screen}>
       <ScreenHeader title="Badges" />
-      <View style={styles.container}>
-        <ErrorBoundary>
-          <Suspense
-            fallback={
-              <ActivityIndicator style={styles.loadingIndicator} size="large" />
-            }
-          >
-            <BadgeList />
-          </Suspense>
-        </ErrorBoundary>
-      </View>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <ActivityIndicator style={styles.loadingIndicator} size="large" />
+          }
+        >
+          <BadgeList />
+        </Suspense>
+      </ErrorBoundary>
     </View>
   );
 }
