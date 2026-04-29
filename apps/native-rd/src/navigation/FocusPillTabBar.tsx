@@ -299,6 +299,10 @@ const styles = StyleSheet.create((theme) => {
     plusIcon: {
       fontSize: 24,
       lineHeight: 28,
+      // FAB bg is accentYellow (#ffe50c) in both modes; dark fg pairs with
+      // it at ~17:1. theme.colors.text would flip to #fafafa in dark and
+      // give ~1.1:1, so we lock the contrast value here.
+      color: "#0a0a0a",
     },
   };
 });
