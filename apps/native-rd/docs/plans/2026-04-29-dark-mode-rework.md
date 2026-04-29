@@ -199,16 +199,9 @@ Component-side migration: every `shadowStyle(theme, "hardMd")` on cards / list r
    - Migrate ~20 component call sites from `hardMd` → `cardElevation`, ~5 from `hardLg` → `modalElevation`.
    - Visual: dark cards lose shadows entirely; dark modals get black hard shadow.
 
-4. **`docs(native-rd): document shadow-vs-border policy and dark visual baseline`**
+4. **`docs(native-rd): document shadow-vs-border policy`**
    - Update `docs/architecture/design-token-system-map.md` with the new shadow/border policy.
-   - Capture visual baseline at `docs/architecture/visual-baseline-2026-04-29-dark/`:
-     - `goals-dark.png`
-     - `focus-mode-dark.png`
-     - `timeline-dark.png`
-     - `badge-designer-dark.png`
-     - `badges-dark.png`
-     - `settings-dark.png`
-   - Compare side-by-side with light baselines to verify "no regressions in light variants" (#934 ACs).
+   - Visual verification done on-device during rebuild; no static baseline captures required.
 
 5. **(Optional) `fix(design-tokens): desaturate yellow surface backgrounds in dark`**
    - Only if v1 baseline shows visible vibration on `narrative.climb.bg` or `journey-goal-bg`.
@@ -222,7 +215,7 @@ Component-side migration: every `shadowStyle(theme, "hardMd")` on cards / list r
 - [ ] ~~Audit across 6 dark variants~~ → out of scope (variants stay untouched)
 - [x] Document shadow-vs-border policy → slice 4
 - [x] Updated tokens documented in `apps/native-rd/docs/architecture/` → slice 4
-- [x] Visual baseline screenshots → slice 4
+- [ ] ~~Visual baseline screenshots~~ → dropped; on-device rebuild verification only
 - [x] Contrast tests pass for interactive elements per WCAG AA → R3
 - [x] No regressions in light variants → light mode untouched throughout
 

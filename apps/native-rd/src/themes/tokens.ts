@@ -57,10 +57,11 @@ export const shadow: AppShadow = {
   cardElevationSmall: _shadow.hardSm,
   modalElevation: _shadow.hardLg,
 };
-export const darkShadowOverrides: Record<SemanticShadowKey, ShadowSpec> = {
+export const darkShadowOverrides: Partial<
+  Record<SemanticShadowKey, ShadowSpec>
+> = {
   cardElevation: cardEmpty,
   cardElevationSmall: cardEmpty,
-  modalElevation: _shadow.hardLg,
 };
 
 export type Space = typeof space;
