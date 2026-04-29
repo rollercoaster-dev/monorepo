@@ -379,10 +379,11 @@ export function updateStep(
 }
 
 /**
- * Mark step as completed with current timestamp
- * @param id - Step ID
- * @returns Update command
- * @throws Error if timestamp generation fails
+ * Mark step as completed after evidence gating.
+ *
+ * Throws if {@link canCompleteStep} would reject the supplied evidence,
+ * with a message that distinguishes "no evidence at all" from "no
+ * evidence matching the planned types".
  */
 export function completeStep(
   id: StepId,

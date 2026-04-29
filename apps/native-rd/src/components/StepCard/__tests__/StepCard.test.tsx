@@ -293,6 +293,49 @@ describe("StepCard", () => {
     expect(onQuickEvidence).toHaveBeenCalledWith("file");
   });
 
+  it("hides quick evidence actions when onQuickEvidence callback is not provided", () => {
+    const { onQuickEvidence: _omit, ...propsWithoutQuickEvidence } =
+      defaultProps;
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+        })}
+        {...propsWithoutQuickEvidence}
+      />,
+    );
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+  });
+
+  it("renders no quick evidence actions when all non-text planned types are captured", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo", "video"],
+          capturedEvidenceTypes: ["photo", "video"],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+    expect(screen.queryByLabelText("Add Video evidence")).toBeNull();
+  });
+
+  it("renders no quick evidence actions when step is completed", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          status: "completed",
+          plannedEvidenceTypes: ["photo"],
+          capturedEvidenceTypes: [],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.queryByLabelText("Add Photo evidence")).toBeNull();
+  });
+
   // --- Quick note ---
 
   it("renders quick-note input when text is a planned type and not yet captured", () => {

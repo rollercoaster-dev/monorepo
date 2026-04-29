@@ -65,6 +65,7 @@ import type {
 import {
   validateEvidenceType,
   type EvidenceTypeValue,
+  type QuickEvidenceType,
 } from "../../types/evidence";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
@@ -356,7 +357,14 @@ function FocusContent({ goalId }: { goalId: string }) {
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
     setIsFABMenuOpen(false);
     const routeName = EVIDENCE_ROUTE_MAP[type];
-    if (!routeName) return;
+    if (!routeName) {
+      logger.error("No capture route mapped for evidence type", { type });
+      showToast({
+        message: `Could not open ${type} capture screen`,
+        duration: 3000,
+      });
+      return;
+    }
 
     navigation.navigate(routeName, {
       goalId,
@@ -364,10 +372,17 @@ function FocusContent({ goalId }: { goalId: string }) {
     });
   };
 
-  const handleQuickEvidence = (stepId: string, type: EvidenceTypeValue) => {
+  const handleQuickEvidence = (stepId: string, type: QuickEvidenceType) => {
     setIsFABMenuOpen(false);
     const routeName = EVIDENCE_ROUTE_MAP[type];
-    if (!routeName) return;
+    if (!routeName) {
+      logger.error("No capture route mapped for evidence type", { type });
+      showToast({
+        message: `Could not open ${type} capture screen`,
+        duration: 3000,
+      });
+      return;
+    }
 
     navigation.navigate(routeName, {
       goalId,

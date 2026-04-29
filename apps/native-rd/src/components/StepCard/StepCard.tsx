@@ -19,7 +19,8 @@ import {
   EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
   validateEvidenceType,
-  type EvidenceTypeValue,
+  type EvidenceCaptureOption,
+  type QuickEvidenceType,
 } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { styles } from "./StepCard.styles";
@@ -43,7 +44,7 @@ export interface StepCardProps {
   onEvidenceTap: () => void;
   onQuickNote?: (text: string) => void;
   onQuickNoteFocus?: () => void;
-  onQuickEvidence?: (type: EvidenceTypeValue) => void;
+  onQuickEvidence?: (type: QuickEvidenceType) => void;
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
@@ -67,12 +68,16 @@ function getMissingEvidenceOption(
   return EVIDENCE_OPTIONS.find((o) => o.type === missing) ?? null;
 }
 
+type QuickEvidenceCaptureOption = EvidenceCaptureOption & {
+  readonly type: QuickEvidenceType;
+};
+
 function getMissingQuickEvidenceOptions(
   plannedTypes: string[],
   capturedTypes: string[],
-) {
+): readonly QuickEvidenceCaptureOption[] {
   return EVIDENCE_CAPTURE_OPTIONS.filter(
-    (option) =>
+    (option): option is QuickEvidenceCaptureOption =>
       option.type !== EvidenceType.text &&
       plannedTypes.includes(option.type) &&
       !capturedTypes.includes(option.type),
@@ -107,7 +112,6 @@ export function StepCard({
     ? getMissingEvidenceOption(plannedTypes!, capturedTypes)
     : null;
 
-  // Quick-note: show when text is planned, not yet captured, and step is not complete
   const showQuickNote =
     !isCompleted &&
     hasPlannedTypes &&
@@ -204,12 +208,12 @@ export function StepCard({
           />
         </View>
 
-        {quickEvidenceOptions.length > 0 && (
+        {onQuickEvidence && quickEvidenceOptions.length > 0 && (
           <View style={styles.quickActionsRow}>
             {quickEvidenceOptions.map((option) => (
               <Pressable
                 key={option.type}
-                onPress={() => onQuickEvidence?.(option.type)}
+                onPress={() => onQuickEvidence(option.type)}
                 style={styles.quickActionButton}
                 testID={`step-card-quick-evidence-${option.type}`}
                 accessible

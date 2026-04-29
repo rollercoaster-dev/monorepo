@@ -5,6 +5,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { FABMenu } from "../FABMenu";
+import { EVIDENCE_CAPTURE_OPTIONS } from "../../../types/evidence";
 
 const defaultProps = {
   isOpen: true,
@@ -14,15 +15,17 @@ const defaultProps = {
 describe("FABMenu", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders all supported capture evidence types when open", () => {
+  test.each(EVIDENCE_CAPTURE_OPTIONS.map((o) => [o.type, o.label] as const))(
+    "renders capture option for %s",
+    (_type, label) => {
+      renderWithProviders(<FABMenu {...defaultProps} />);
+      expect(screen.getByText(label)).toBeOnTheScreen();
+    },
+  );
+
+  it("does not render Screenshot (no capture route exists)", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
-    expect(screen.getByText("Photo")).toBeOnTheScreen();
     expect(screen.queryByText("Screenshot")).not.toBeOnTheScreen();
-    expect(screen.getByText("Video")).toBeOnTheScreen();
-    expect(screen.getByText("Note")).toBeOnTheScreen();
-    expect(screen.getByText("Voice Memo")).toBeOnTheScreen();
-    expect(screen.getByText("Link")).toBeOnTheScreen();
-    expect(screen.getByText("File")).toBeOnTheScreen();
   });
 
   it("renders nothing when closed", () => {
@@ -44,6 +47,8 @@ describe("FABMenu", () => {
 
   it("menu items have menuitem role", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
-    expect(screen.getAllByRole("menuitem")).toHaveLength(6);
+    expect(screen.getAllByRole("menuitem")).toHaveLength(
+      EVIDENCE_CAPTURE_OPTIONS.length,
+    );
   });
 });

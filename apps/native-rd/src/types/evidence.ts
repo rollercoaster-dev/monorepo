@@ -3,6 +3,16 @@ import { EvidenceType } from "../db";
 export type EvidenceTypeValue =
   (typeof EvidenceType)[keyof typeof EvidenceType];
 
+/**
+ * Subset of evidence types reachable through quick-action buttons on a
+ * blocked step card. `text` is excluded because the quick-note input
+ * is the dedicated entry point for text evidence.
+ */
+export type QuickEvidenceType = Exclude<
+  EvidenceTypeValue,
+  typeof EvidenceType.text
+>;
+
 const VALID_EVIDENCE_TYPES = new Set<string>(Object.values(EvidenceType));
 
 /** Validate a string as an EvidenceTypeValue, falling back to 'file' for unknown values. */
@@ -13,13 +23,13 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
 }
 
 export interface EvidenceOption {
-  type: EvidenceTypeValue;
-  label: string;
-  shortLabel: string;
-  icon: string;
+  readonly type: EvidenceTypeValue;
+  readonly label: string;
+  readonly shortLabel: string;
+  readonly icon: string;
 }
 
-export const EVIDENCE_OPTIONS: EvidenceOption[] = [
+export const EVIDENCE_OPTIONS: readonly EvidenceOption[] = [
   {
     type: EvidenceType.photo,
     label: "Take Photo",
@@ -58,12 +68,15 @@ export const EVIDENCE_OPTIONS: EvidenceOption[] = [
   },
 ];
 
-export const EVIDENCE_CAPTURE_OPTIONS: {
-  type: EvidenceTypeValue;
-  label: string;
-  icon: string;
-}[] = EVIDENCE_OPTIONS.map(({ type, shortLabel, icon }) => ({
-  type,
-  label: shortLabel,
-  icon,
-}));
+export interface EvidenceCaptureOption {
+  readonly type: EvidenceTypeValue;
+  readonly label: string;
+  readonly icon: string;
+}
+
+export const EVIDENCE_CAPTURE_OPTIONS: readonly EvidenceCaptureOption[] =
+  EVIDENCE_OPTIONS.map(({ type, shortLabel, icon }) => ({
+    type,
+    label: shortLabel,
+    icon,
+  }));

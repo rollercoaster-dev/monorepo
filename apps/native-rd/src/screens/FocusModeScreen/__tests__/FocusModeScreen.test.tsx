@@ -445,10 +445,35 @@ describe("FocusModeScreen", () => {
       ],
     });
     renderWithProviders(<FocusModeScreen {...routeProps} />);
-    // Step has matching evidence (photo), so StepCard is not blocked — press goes to handleToggleStep
-    // But canCompleteStep returns false, so completeStep should NOT be called
     fireEvent.press(screen.getByText("Mark complete"));
     expect(mockCompleteStep).not.toHaveBeenCalled();
+  });
+
+  it("calls completeStep for a step with no planned types and no evidence", () => {
+    mockCanCompleteStep.mockReturnValue(true);
+    setupQueries({
+      steps: [
+        {
+          id: "step-1",
+          title: "Read docs",
+          status: "pending",
+          ordinal: 0,
+          plannedEvidenceTypes: null,
+        },
+        {
+          id: "step-2",
+          title: "Practice",
+          status: "completed",
+          ordinal: 1,
+          plannedEvidenceTypes: null,
+        },
+      ],
+      stepEvidence: [],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+    fireEvent.press(screen.getByText("Mark complete"));
+    expect(mockCanCompleteStep).toHaveBeenCalledWith(null, []);
+    expect(mockCompleteStep).toHaveBeenCalledWith("step-1", null, []);
   });
 
   it("calls completeStep when canCompleteStep returns true", () => {
