@@ -67,13 +67,13 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingTop: theme.space[3],
     paddingBottom: theme.space[2],
-    borderTopWidth: theme.borderWidth.thin,
+    borderTopWidth: theme.borderWidth.medium,
     borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.colors.accentPurple,
     gap: theme.space[2],
   },
   footnote: {
     textAlign: "center",
-    color: theme.colors.textSecondary,
+    color: theme.colors.accentPurpleFg,
   },
 }));

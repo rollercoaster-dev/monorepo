@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
@@ -16,10 +16,10 @@ export interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
   const { theme } = useUnistyles();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView
-      edges={["bottom"]}
+    <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <HeaderBand>
@@ -70,12 +70,12 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         <ThemeChipGrid />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <Button label="Get Started" onPress={onGetStarted} size="lg" />
         <Text variant="caption" style={styles.footnote}>
           You can change this anytime in Settings.
         </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
