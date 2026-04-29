@@ -1,12 +1,26 @@
 import { StyleSheet } from "react-native-unistyles";
 import { palette } from "../../themes/palette";
+import { PILL_HEIGHT } from "../../navigation/FocusPillTabBar";
 
 /**
- * Collapsed height of the EvidenceDrawer in points.
- * Used as both the CSS minHeight for the handle area and the
- * Reanimated shared value initial/collapsed target — keep them in sync.
+ * The FocusPillTabBar lifts its pill ~half its height above the tab bar
+ * slot (see FocusPillTabBar.tsx). The hardcoded `2` matches
+ * `theme.borderWidth.medium`; it isn't theme-themable in practice and
+ * theme isn't available at module top-level.
  */
+const PILL_LIFT = PILL_HEIGHT / 2 + 2;
+
+/** Visible peek height above the lifted pill — the area where the handle,
+ * label, and FAB sit. */
 export const PEEK_HEIGHT = 56;
+
+/**
+ * Collapsed total height of the EvidenceDrawer. Includes the visible peek
+ * plus the lift area that's hidden behind the lifted FocusPillTabBar — the
+ * extra height keeps the drawer's bg from leaving a transparent strip at
+ * the bottom while keeping the handle/label/FAB visible above the pill.
+ */
+export const DRAWER_CLOSED_HEIGHT = PEEK_HEIGHT + PILL_LIFT;
 
 export const styles = StyleSheet.create((theme) => ({
   overlay: {
