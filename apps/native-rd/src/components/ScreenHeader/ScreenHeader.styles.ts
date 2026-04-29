@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
-const SPACER_WIDTH = 36;
+const SPACER_WIDTH = 44;
 
 export const styles = StyleSheet.create((theme) => ({
   band: (insetTop: number) => ({
@@ -20,10 +20,11 @@ export const styles = StyleSheet.create((theme) => ({
   },
   subLabel: {
     color: theme.colors.accentPurpleFg,
+    fontWeight: theme.fontWeight.bold,
   },
   backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
+    fontSize: 22,
+    fontWeight: theme.fontWeight.black,
     color: theme.colors.accentPurpleFg,
   },
   spacer: {

@@ -15,15 +15,15 @@ export function ScreenSubHeader({ label, onBack }: ScreenSubHeaderProps) {
     <HeaderBand>
       <IconButton
         icon={
-          <Text variant="body" style={styles.backIcon}>
-            {"<"}
+          <Text variant="headline" style={styles.backIcon}>
+            {"\u2190"}
           </Text>
         }
         onPress={onBack}
-        size="sm"
+        variant="ghost"
         accessibilityLabel="Go back"
       />
-      <Text variant="label" style={styles.subLabel} accessibilityRole="header">
+      <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
       </Text>
       <View style={styles.spacer} />
