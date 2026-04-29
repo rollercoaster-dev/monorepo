@@ -264,7 +264,7 @@ export function StepList({
                       }
                       onPress={() => onDeleteStep(step.id)}
                       size="sm"
-                      variant="ghost"
+                      tone="ghost"
                       accessibilityLabel={`Delete "${step.title}"`}
                     />
                   )}
@@ -343,7 +343,7 @@ export function StepList({
                         }
                         onPress={() => onDeleteStep(step.id)}
                         size="sm"
-                        variant="ghost"
+                        tone="ghost"
                         accessibilityLabel={`Delete "${step.title}"`}
                       />
                     )}

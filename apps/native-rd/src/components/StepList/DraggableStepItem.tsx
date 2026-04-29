@@ -144,7 +144,7 @@ export function DraggableStepItem({
                   }
                   onPress={onDeleteStep}
                   size="sm"
-                  variant="ghost"
+                  tone="ghost"
                   accessibilityLabel={`Delete "${step.title}"`}
                 />
               )}
