@@ -1107,10 +1107,6 @@ async function main() {
     writeFile(join(OUT, "semanticColors.ts"), semanticColorsContent),
     writeFile(join(OUT, "index.ts"), buildIndex(hasSizeL, hasLineHeightL)),
   ]);
-
-  console.warn(
-    "Built build/unistyles/ with palette, tokens, colorModes, variants, narrative, semanticColors, index",
-  );
 }
 
 main().catch((err) => {
