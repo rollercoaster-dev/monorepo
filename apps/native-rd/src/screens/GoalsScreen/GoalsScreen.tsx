@@ -123,12 +123,11 @@ export function GoalsScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.chrome.chromeTopBarBg }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
-        <Text variant="display">Goals</Text>
+        <Text variant="display" style={styles.headerTitle}>
+          Goals
+        </Text>
         <IconButton
           icon={
             <Text variant="headline" style={styles.addIcon}>

@@ -6,6 +6,13 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.accentPurple,
+  },
+  headerTitle: {
+    color: theme.colors.accentPurpleFg,
+  },
   scrollContent: {
     padding: theme.space[4],
     paddingBottom: theme.space[12],
@@ -15,7 +22,7 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.chrome.chromeTopBarBg,
+    backgroundColor: theme.colors.accentPurple,
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
