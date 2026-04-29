@@ -16,7 +16,6 @@ import {
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Pencil } from "phosphor-react-native";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -63,8 +62,10 @@ import type {
   CaptureScreenName,
 } from "../../navigation/types";
 import {
+  EVIDENCE_OPTIONS,
   validateEvidenceType,
   type EvidenceTypeValue,
+  type QuickEvidenceType,
 } from "../../types/evidence";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
 import { deleteEvidenceFile } from "../../utils/evidenceCleanup";
@@ -86,9 +87,15 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.file]: "CaptureFile",
 };
 
+function getEvidenceTypeLabel(type: EvidenceTypeValue): string {
+  return (
+    EVIDENCE_OPTIONS.find((option) => option.type === type)?.shortLabel ??
+    type.replace("_", " ")
+  );
+}
+
 function FocusContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
-  const { theme } = useUnistyles();
   const { showToast, hideToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
@@ -292,13 +299,7 @@ function FocusContent({ goalId }: { goalId: string }) {
         const plannedTypes =
           (step.plannedEvidenceTypes as string | null) ?? null;
 
-        // Gate: only check evidence when step has planned types configured.
-        // canCompleteStep rejects zero-evidence steps regardless of planned types,
-        // which would be a regression for steps without evidence requirements.
-        if (
-          plannedTypes !== null &&
-          !canCompleteStep(plannedTypes, stepEvidence)
-        ) {
+        if (!canCompleteStep(plannedTypes, stepEvidence)) {
           showToast({
             message: "Add evidence before completing this step",
             duration: 3000,
@@ -362,11 +363,38 @@ function FocusContent({ goalId }: { goalId: string }) {
   const handleSelectEvidenceType = (type: EvidenceTypeValue) => {
     setIsFABMenuOpen(false);
     const routeName = EVIDENCE_ROUTE_MAP[type];
-    if (!routeName) return;
+    if (!routeName) {
+      logger.error("No capture route mapped for evidence type", { type });
+      const label = getEvidenceTypeLabel(type);
+      showToast({
+        message: `Could not open ${label} capture screen`,
+        duration: 3000,
+      });
+      return;
+    }
 
     navigation.navigate(routeName, {
       goalId,
       stepId: isGoalCard ? undefined : stepRows[currentCardIndex]?.id,
+    });
+  };
+
+  const handleQuickEvidence = (stepId: string, type: QuickEvidenceType) => {
+    setIsFABMenuOpen(false);
+    const routeName = EVIDENCE_ROUTE_MAP[type];
+    if (!routeName) {
+      logger.error("No capture route mapped for evidence type", { type });
+      const label = getEvidenceTypeLabel(type);
+      showToast({
+        message: `Could not open ${label} capture screen`,
+        duration: 3000,
+      });
+      return;
+    }
+
+    navigation.navigate(routeName, {
+      goalId,
+      stepId,
     });
   };
 
@@ -454,8 +482,9 @@ function FocusContent({ goalId }: { goalId: string }) {
           {goal.title}
         </Text>
         <IconButton
-          icon={<Pencil color={theme.colors.text} size={20} weight="bold" />}
+          icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
+          tone="ghost"
           accessibilityLabel="Edit goal"
           size="sm"
         />
@@ -502,6 +531,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                 onEvidenceTap={handleEvidenceTap}
                 onQuickNote={(text) => handleQuickNote(step.id, text)}
                 onQuickNoteFocus={handleQuickNoteFocus}
+                onQuickEvidence={(type) => handleQuickEvidence(step.id, type)}
               />
             )),
             <GoalEvidenceCard
