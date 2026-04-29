@@ -30,7 +30,7 @@ const TAB_LABELS: Record<RouteName, string> = {
 const ICON_SIZE = 24;
 const ICON_WEIGHT = "bold" as const;
 const MORPH_DURATION = 220;
-const PILL_HEIGHT = 64;
+export const PILL_HEIGHT = 64;
 
 if (
   Platform.OS === "android" &&
@@ -226,13 +226,15 @@ const styles = StyleSheet.create((theme) => {
   };
   return {
     container: {
-      backgroundColor: "transparent",
+      backgroundColor: theme.colors.accentPurple,
+      borderTopWidth: theme.borderWidth.medium,
+      borderTopColor: theme.colors.border,
       overflow: "visible" as const,
     },
     bar: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
-      gap: 12,
+      gap: 3,
       // Lifts the bar so its top half breaks above the tab bar slot —
       // half the pill's outer height (height + top + bottom border).
       marginTop: -(PILL_HEIGHT / 2 + theme.borderWidth.medium),
