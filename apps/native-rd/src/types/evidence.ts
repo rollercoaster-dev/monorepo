@@ -28,3 +28,16 @@ export const EVIDENCE_OPTIONS: {
   { type: EvidenceType.link, label: "Add Link", icon: "\u{1F517}" },
   { type: EvidenceType.file, label: "Attach File", icon: "\u{1F4CE}" },
 ];
+
+export const EVIDENCE_CAPTURE_OPTIONS: {
+  type: EvidenceTypeValue;
+  label: string;
+  icon: string;
+}[] = [
+  { type: EvidenceType.photo, label: "Photo", icon: "\u{1F4F7}" },
+  { type: EvidenceType.video, label: "Video", icon: "\u{1F3AC}" },
+  { type: EvidenceType.voice_memo, label: "Voice Memo", icon: "\u{1F3A4}" },
+  { type: EvidenceType.text, label: "Note", icon: "\u{1F4DD}" },
+  { type: EvidenceType.link, label: "Link", icon: "\u{1F517}" },
+  { type: EvidenceType.file, label: "File", icon: "\u{1F4CE}" },
+];

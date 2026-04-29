@@ -14,10 +14,10 @@ const defaultProps = {
 describe("FABMenu", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("renders all 7 evidence types when open", () => {
+  it("renders all supported capture evidence types when open", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
     expect(screen.getByText("Photo")).toBeOnTheScreen();
-    expect(screen.getByText("Screenshot")).toBeOnTheScreen();
+    expect(screen.queryByText("Screenshot")).not.toBeOnTheScreen();
     expect(screen.getByText("Video")).toBeOnTheScreen();
     expect(screen.getByText("Note")).toBeOnTheScreen();
     expect(screen.getByText("Voice Memo")).toBeOnTheScreen();
@@ -44,6 +44,6 @@ describe("FABMenu", () => {
 
   it("menu items have menuitem role", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
-    expect(screen.getAllByRole("menuitem")).toHaveLength(7);
+    expect(screen.getAllByRole("menuitem")).toHaveLength(6);
   });
 });

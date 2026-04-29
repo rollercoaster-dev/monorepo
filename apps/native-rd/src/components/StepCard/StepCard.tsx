@@ -16,6 +16,7 @@ import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import {
+  EVIDENCE_CAPTURE_OPTIONS,
   EVIDENCE_OPTIONS,
   validateEvidenceType,
   type EvidenceTypeValue,
@@ -42,6 +43,7 @@ export interface StepCardProps {
   onEvidenceTap: () => void;
   onQuickNote?: (text: string) => void;
   onQuickNoteFocus?: () => void;
+  onQuickEvidence?: (type: EvidenceTypeValue) => void;
 }
 
 const statusToVariant: Record<StepCardStatus, StatusBadgeVariant> = {
@@ -65,6 +67,18 @@ function getMissingEvidenceOption(
   return EVIDENCE_OPTIONS.find((o) => o.type === missing) ?? null;
 }
 
+function getMissingQuickEvidenceOptions(
+  plannedTypes: string[],
+  capturedTypes: string[],
+) {
+  return EVIDENCE_CAPTURE_OPTIONS.filter(
+    (option) =>
+      option.type !== EvidenceType.text &&
+      plannedTypes.includes(option.type) &&
+      !capturedTypes.includes(option.type),
+  );
+}
+
 export function StepCard({
   step,
   stepIndex,
@@ -73,6 +87,7 @@ export function StepCard({
   onEvidenceTap,
   onQuickNote,
   onQuickNoteFocus,
+  onQuickEvidence,
 }: StepCardProps) {
   const { theme } = useUnistyles();
   const isCompleted = step.status === "completed";
@@ -99,6 +114,10 @@ export function StepCard({
     plannedTypes.includes(EvidenceType.text) &&
     !capturedTypes.includes(EvidenceType.text) &&
     !!onQuickNote;
+  const quickEvidenceOptions =
+    !isCompleted && hasPlannedTypes && onQuickEvidence
+      ? getMissingQuickEvidenceOptions(plannedTypes, capturedTypes)
+      : [];
 
   const [quickNoteText, setQuickNoteText] = useState("");
 
@@ -181,10 +200,33 @@ export function StepCard({
             checked={isCompleted}
             onToggle={handleCheckboxPress}
             label={checkboxLabel}
-            disabled={isBlocked}
             accessibilityHint={checkboxA11yHint}
           />
         </View>
+
+        {quickEvidenceOptions.length > 0 && (
+          <View style={styles.quickActionsRow}>
+            {quickEvidenceOptions.map((option) => (
+              <Pressable
+                key={option.type}
+                onPress={() => onQuickEvidence?.(option.type)}
+                style={styles.quickActionButton}
+                testID={`step-card-quick-evidence-${option.type}`}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${option.label} evidence`}
+              >
+                <Text
+                  style={styles.quickActionIcon}
+                  accessibilityElementsHidden
+                >
+                  {option.icon}
+                </Text>
+                <Text style={styles.quickActionText}>{option.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         {showQuickNote && (
           <View style={styles.quickNoteSection}>

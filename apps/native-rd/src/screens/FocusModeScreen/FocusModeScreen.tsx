@@ -370,6 +370,17 @@ function FocusContent({ goalId }: { goalId: string }) {
     });
   };
 
+  const handleQuickEvidence = (stepId: string, type: EvidenceTypeValue) => {
+    setIsFABMenuOpen(false);
+    const routeName = EVIDENCE_ROUTE_MAP[type];
+    if (!routeName) return;
+
+    navigation.navigate(routeName, {
+      goalId,
+      stepId,
+    });
+  };
+
   const handleRequestDeleteEvidence = (id: string) => {
     setPendingDeleteId(id);
   };
@@ -502,6 +513,7 @@ function FocusContent({ goalId }: { goalId: string }) {
                 onEvidenceTap={handleEvidenceTap}
                 onQuickNote={(text) => handleQuickNote(step.id, text)}
                 onQuickNoteFocus={handleQuickNoteFocus}
+                onQuickEvidence={(type) => handleQuickEvidence(step.id, type)}
               />
             )),
             <GoalEvidenceCard

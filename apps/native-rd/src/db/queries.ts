@@ -241,14 +241,14 @@ export function canCompleteStep(
   plannedEvidenceTypesJson: string | null,
   stepEvidence: Array<{ type: string | null }>,
 ): boolean {
-  const validEvidence = stepEvidence.filter((e) => e.type !== null);
-  if (validEvidence.length === 0) return false;
-
   const plannedTypes = parsePlannedEvidenceTypes(
     plannedEvidenceTypesJson,
     logger,
   );
   if (plannedTypes === null) return true;
+
+  const validEvidence = stepEvidence.filter((e) => e.type !== null);
+  if (validEvidence.length === 0) return false;
 
   return validEvidence.some((e) => plannedTypes.includes(e.type!));
 }
