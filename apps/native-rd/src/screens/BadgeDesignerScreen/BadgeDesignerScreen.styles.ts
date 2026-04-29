@@ -6,6 +6,10 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.accentPurple,
+  },
   topBar: {
     position: "absolute",
     top: 0,
@@ -17,13 +21,13 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
     paddingBottom: theme.space[4],
-    backgroundColor: theme.chrome.chromeTopBarBg,
+    backgroundColor: theme.colors.accentPurple,
     zIndex: 2,
     ...shadowStyle(theme, "hardMd"),
   },
   topBarTitle: {
     ...theme.textStyles.title,
-    color: theme.chrome.chromeTopBarFg,
+    color: theme.colors.accentPurpleFg,
   },
   spacer: {
     width: 48,

@@ -659,10 +659,7 @@ export function BadgeDesignerScreen({
   }
 
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme.chrome.chromeTopBarBg }}
-    >
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <ErrorBoundary>
         <Suspense
           fallback={
