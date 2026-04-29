@@ -229,7 +229,7 @@ const styles = StyleSheet.create((theme) => {
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
     backgroundColor: theme.colors.background,
-    ...shadowStyle(theme, "hardMd"),
+    ...shadowStyle(theme, "cardElevation"),
   };
   return {
     container: {
