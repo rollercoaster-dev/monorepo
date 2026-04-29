@@ -231,7 +231,8 @@ function serializePlannedTypes(
  * Check if a step has sufficient evidence to be completed.
  *
  * If plannedEvidenceTypes is set (non-null JSON array), at least one
- * evidence item must match a planned type. If null, any evidence suffices.
+ * evidence item must match a planned type. If null, no step evidence is
+ * required.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step

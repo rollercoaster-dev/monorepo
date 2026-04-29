@@ -23,9 +23,11 @@ describe("FABMenu", () => {
     },
   );
 
-  it("does not render Screenshot (no capture route exists)", () => {
+  it("renders only supported capture options", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
-    expect(screen.queryByText("Screenshot")).not.toBeOnTheScreen();
+    expect(screen.getAllByRole("menuitem")).toHaveLength(
+      EVIDENCE_CAPTURE_OPTIONS.length,
+    );
   });
 
   it("renders nothing when closed", () => {
@@ -47,8 +49,6 @@ describe("FABMenu", () => {
 
   it("menu items have menuitem role", () => {
     renderWithProviders(<FABMenu {...defaultProps} />);
-    expect(screen.getAllByRole("menuitem")).toHaveLength(
-      EVIDENCE_CAPTURE_OPTIONS.length,
-    );
+    expect(screen.getAllByRole("menuitem").length).toBeGreaterThan(0);
   });
 });

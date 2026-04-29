@@ -63,6 +63,7 @@ import type {
   CaptureScreenName,
 } from "../../navigation/types";
 import {
+  EVIDENCE_OPTIONS,
   validateEvidenceType,
   type EvidenceTypeValue,
   type QuickEvidenceType,
@@ -86,6 +87,13 @@ const EVIDENCE_ROUTE_MAP: Partial<
   [EvidenceType.link]: "CaptureLink",
   [EvidenceType.file]: "CaptureFile",
 };
+
+function getEvidenceTypeLabel(type: EvidenceTypeValue): string {
+  return (
+    EVIDENCE_OPTIONS.find((option) => option.type === type)?.shortLabel ??
+    type.replace("_", " ")
+  );
+}
 
 function FocusContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
@@ -359,8 +367,9 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
+      const label = getEvidenceTypeLabel(type);
       showToast({
-        message: `Could not open ${type} capture screen`,
+        message: `Could not open ${label} capture screen`,
         duration: 3000,
       });
       return;
@@ -377,8 +386,9 @@ function FocusContent({ goalId }: { goalId: string }) {
     const routeName = EVIDENCE_ROUTE_MAP[type];
     if (!routeName) {
       logger.error("No capture route mapped for evidence type", { type });
+      const label = getEvidenceTypeLabel(type);
       showToast({
-        message: `Could not open ${type} capture screen`,
+        message: `Could not open ${label} capture screen`,
         duration: 3000,
       });
       return;

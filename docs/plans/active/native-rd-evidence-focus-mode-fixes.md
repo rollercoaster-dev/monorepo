@@ -7,7 +7,7 @@ Fix the current mismatch between step evidence requirements, focus-mode step com
 The review identified three existing issues:
 
 - Steps with `plannedEvidenceTypes = null` are intended to complete without evidence in focus mode, but `completeStep` still rejects them.
-- The focus-mode evidence menu exposes Screenshot even though no screenshot capture route exists.
+- Screenshot exists as a partial evidence type even though no screenshot capture route exists.
 - Blocked step completion controls are announced as disabled while still being intentionally pressable.
 
 The implementation will also add quick evidence actions on step cards so users can jump directly to the missing planned evidence type, similar to the existing quick-note flow.
@@ -22,6 +22,10 @@ The implementation will also add quick evidence actions on step cards so users c
 - `apps/native-rd/src/db/__tests__/queries.step.test.ts`
 - `apps/native-rd/src/components/StepCard/StepCard.tsx`
 - `apps/native-rd/src/components/StepCard/__tests__/StepCard.test.tsx`
+- `apps/native-rd/src/db/schema.ts`
+- `apps/native-rd/src/constants/evidenceIcons.ts`
+- `apps/native-rd/src/utils/evidenceCleanup.ts`
+- `apps/native-rd/src/utils/evidenceViewers.tsx`
 - `apps/native-rd/src/components/FABMenu/FABMenu.tsx`
 - `apps/native-rd/src/components/FABMenu/__tests__/FABMenu.test.tsx` if present, otherwise add focused coverage where the menu is already exercised
 - `apps/native-rd/src/screens/FocusModeScreen/FocusModeScreen.tsx`
@@ -42,11 +46,11 @@ The implementation will also add quick evidence actions on step cards so users c
   - planned types with wrong evidence still cannot complete
   - planned types with matching evidence can complete
 
-### Step 2: Remove non-actionable Screenshot shortcut
+### Step 2: Remove unsupported Screenshot evidence type
 
-**Commit:** `fix(native-rd): hide unsupported screenshot evidence action`
+**Commit:** `fix(native-rd): remove unsupported screenshot evidence type`
 
-- Remove Screenshot from the focus-mode FAB menu until a real capture screen exists.
+- Remove Screenshot from the supported evidence type enum and runtime helper maps.
 - Prefer deriving menu items from the shared supported evidence option list so picker/menu behavior cannot drift again.
 - Add or update tests to verify only actionable evidence types are shown.
 
@@ -58,7 +62,7 @@ The implementation will also add quick evidence actions on step cards so users c
 - For missing planned photo, video, voice memo, link, and file evidence, show compact quick action buttons on the step card.
 - Pressing a quick action navigates directly to the matching capture screen with `{ goalId, stepId }`.
 - Keep the drawer and full evidence FAB as the broader add/view evidence path.
-- Do not add Screenshot quick action unless a capture route is implemented.
+- Do not add Screenshot quick action unless a supported evidence type and capture route are implemented.
 
 ### Step 4: Fix blocked completion accessibility
 
