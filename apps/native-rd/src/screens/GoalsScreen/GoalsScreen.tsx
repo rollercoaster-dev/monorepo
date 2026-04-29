@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
@@ -119,8 +118,6 @@ function GoalList() {
 
 export function GoalsScreen() {
   const navigation = useNavigation<Nav>();
-  // Subscribe to theme changes to trigger re-renders
-  const { theme } = useUnistyles();
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -139,12 +136,7 @@ export function GoalsScreen() {
           testID="create-new-goal"
         />
       </View>
-      <View
-        style={[
-          styles.scrollContent,
-          { flex: 1, backgroundColor: theme.colors.background },
-        ]}
-      >
+      <View style={styles.scrollContent}>
         <ErrorBoundary>
           <Suspense
             fallback={

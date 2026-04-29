@@ -14,6 +14,8 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.accentPurpleFg,
   },
   scrollContent: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
     padding: theme.space[4],
     paddingBottom: theme.space[12],
     gap: theme.space[4],
