@@ -62,13 +62,13 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@rollercoaster-dev/shared-config": "workspace:*",
     "@types/pg": "^8.11.13",
-    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript-eslint/parser": "^8.59.1",
     "drizzle-kit": "^0.30.6",
     "get-port": "^7.1.0",
     "lint-staged": "^15.5.1"
   },
   "peerDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^6.0.0"
   },
   "dependencies": {
     "@hono/zod-openapi": "^0.19.6",

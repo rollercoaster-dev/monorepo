@@ -15,10 +15,11 @@
     "allowJs": true,
 
     /* Module resolution for Bun */
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "emitDeclarationOnly": true,
+    "types": ["bun"],
 
     /* Path Aliases (resolved relative to this tsconfig) */
     "paths": {
@@ -35,7 +36,6 @@
     /* Override shared-config's strict mode for gradual migration */
     "strict": false,
     "noUncheckedIndexedAccess": false,
-    "ignoreDeprecations": "5.0",
 
     /* Local unused variable checking (ESLint handles this) */
     "noUnusedLocals": true,

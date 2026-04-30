@@ -2,15 +2,20 @@
 
 /**
  * Branded type for IRI (Internationalized Resource Identifier)
- * This provides nominal typing for strings that should be valid IRIs
+ * This provides nominal typing for strings that should be valid IRIs.
+ *
+ * Uses a string-literal brand rather than `unique symbol` so that bundled
+ * declaration output (rollup-plugin-dts) and downstream consumers (vue-tsc)
+ * can name the type when emitting inferred declarations.
  */
-export type IRI = string & { readonly __brand: unique symbol };
+export type IRI = string & { readonly __brand: "IRI" };
 
 /**
  * Branded type for DateTime in ISO 8601 format
- * This provides nominal typing for strings that should be valid ISO 8601 dates
+ * This provides nominal typing for strings that should be valid ISO 8601 dates.
+ * See `IRI` above for why a literal brand is used instead of `unique symbol`.
  */
-export type DateTime = string & { readonly __brand: unique symbol };
+export type DateTime = string & { readonly __brand: "DateTime" };
 
 // For backward compatibility, provide type aliases for the original types
 export type IRIString = string;
