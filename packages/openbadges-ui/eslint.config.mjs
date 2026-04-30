@@ -3,7 +3,7 @@ import { vue } from '@rollercoaster-dev/shared-config/eslint';
 export default [
   ...vue,
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.d.ts'],
+    ignores: ['dist/**', 'histoire-dist/**', 'node_modules/**', 'coverage/**', '*.d.ts'],
   },
   {
     files: ['**/*.ts', '**/*.vue'],

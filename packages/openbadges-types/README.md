@@ -6,7 +6,7 @@ A comprehensive TypeScript types package for Open Badges 2.0 and 3.0 specificati
 
 [![npm version](https://img.shields.io/npm/v/openbadges-types.svg)](https://www.npmjs.com/package/openbadges-types)
 [![license](https://img.shields.io/npm/l/openbadges-types.svg)](https://github.com/rollercoaster-dev/monorepo/blob/main/packages/openbadges-types/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.0+-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.5+-blue)](https://www.typescriptlang.org/)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/rollercoaster-dev/monorepo/publish-packages.yml?branch=main&label=ci)](https://github.com/rollercoaster-dev/monorepo/actions)
 
 ## Table of Contents

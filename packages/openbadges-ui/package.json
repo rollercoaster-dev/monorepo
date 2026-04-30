@@ -90,7 +90,7 @@
     "vite": "^4.5.14",
     "vitest": "^0.34.0",
     "vue": "^3.0.0",
-    "vue-tsc": "^3.0.1"
+    "vue-tsc": "^3.2.7"
   },
   "publishConfig": {
     "access": "public"
