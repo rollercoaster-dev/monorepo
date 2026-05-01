@@ -28,8 +28,8 @@ export const BANNER_WIDTH_RATIO = 0.8;
 /** Hard shadow offset in pixels (neo-brutalist) */
 export const BANNER_SHADOW_OFFSET = 2;
 
-/** Fraction of the banner that remains visible above the badge edge for the 'top' strap position */
-export const BANNER_TOP_VISIBLE_RATIO = 0.05;
+/** Negative ratio leaves a small gap between the banner and the badge edge. */
+export const BANNER_TOP_VISIBLE_RATIO = -0.12;
 
 /** Font size as fraction of badge size */
 export const BANNER_FONT_SIZE_RATIO = 0.1;

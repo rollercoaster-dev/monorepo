@@ -40,6 +40,8 @@ const PATH_POSITIONS = [...Object.values(PathTextPosition), undefined] as const;
 const BANNER_POSITIONS = [...Object.values(BannerPosition), undefined] as const;
 const SIZES = [80, 200, 400] as const;
 const BOTTOM_LABEL_FLAGS = [false, true] as const;
+const MIN_BANNER_EDGE_GAP_RATIO = 0.02;
+const MAX_BOTTOM_LABEL_GAP_RATIO = 0.08;
 
 type MatrixRow = {
   shape: (typeof SHAPES)[number];
@@ -147,6 +149,31 @@ describe("badge layout invariants — full matrix", () => {
         expect(boxes.bottomLabel.y).toBeGreaterThan(
           boxes.shape.y + boxes.shape.h,
         );
+
+        const bottomBanner =
+          boxes.banner && design.banner?.position === "bottom"
+            ? boxes.banner
+            : null;
+        const precedingBottom = bottomBanner
+          ? bottomBanner.y + bottomBanner.h
+          : boxes.shape.y + boxes.shape.h;
+        if (row.shape !== BadgeShape.star || bottomBanner) {
+          expect(boxes.bottomLabel.y - precedingBottom).toBeLessThanOrEqual(
+            row.size * MAX_BOTTOM_LABEL_GAP_RATIO,
+          );
+        }
+      }
+
+      if (boxes.banner && design.banner?.position === "top") {
+        expect(
+          boxes.shape.y - (boxes.banner.y + boxes.banner.h),
+        ).toBeGreaterThanOrEqual(row.size * MIN_BANNER_EDGE_GAP_RATIO);
+      }
+
+      if (boxes.banner && design.banner?.position === "bottom") {
+        expect(
+          boxes.banner.y - (boxes.shape.y + boxes.shape.h),
+        ).toBeGreaterThanOrEqual(row.size * MIN_BANNER_EDGE_GAP_RATIO);
       }
 
       expect(boxIsInside(centerContentBox(boxes), boxes.shape)).toBe(true);
@@ -254,5 +281,30 @@ describe("badge layout invariants — edge cases", () => {
       boxes.banner!.y + boxes.banner!.h,
     );
     expect(boxesOverlap(boxes.banner!, boxes.bottomLabel!)).toBe(false);
+  });
+
+  it("diamond top path text clears the top vertex and frame", () => {
+    const size = 256;
+    const design: BadgeDesign = {
+      shape: "diamond",
+      frame: "boldBorder",
+      color: "#a78bfa",
+      iconName: "Trophy",
+      iconWeight: "regular",
+      title: "Test Badge",
+      centerMode: "icon",
+      pathText: "TOP PATH",
+      pathTextBottom: "BOTTOM TEST",
+      pathTextPosition: "both",
+      banner: { text: "BAZINGA! YOOP", position: "bottom" },
+      bottomLabel: "FfdasdgagA",
+    };
+    const boxes = getBadgeLayoutBoxes(design, size);
+
+    expect(boxes.pathTextTop).not.toBeNull();
+    expect(boxes.pathTextTop!.y).toBeGreaterThanOrEqual(size * 0.22);
+    expect(boxesOverlap(boxes.pathTextTop!, centerContentBox(boxes))).toBe(
+      false,
+    );
   });
 });

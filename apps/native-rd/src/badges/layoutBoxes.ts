@@ -79,6 +79,9 @@ export const DEFAULT_STROKE_WIDTH = 3;
 /** Hard-shadow offset applied to the badge silhouette. */
 export const SHADOW_OFFSET = 5;
 
+/** Extra viewport breathing room for curved text glyph ascenders/descenders. */
+export const PATH_TEXT_VIEWBOX_PADDING_RATIO = 0.04;
+
 export type LayoutBoxesOptions = {
   /** Stroke width used for the shape border. Default 3 (renderer default). */
   strokeWidth?: number;
@@ -203,6 +206,8 @@ export function getBadgeLayoutBoxes(
     hasBottomLabel,
     bottomLabelExtraOffset,
     shape: design.shape,
+    pathTextTop,
+    pathTextBottom,
   });
 
   return {
@@ -274,6 +279,8 @@ type ViewBoxInputs = {
   hasBottomLabel: boolean;
   bottomLabelExtraOffset: number;
   shape: BadgeDesign["shape"];
+  pathTextTop: Box | null;
+  pathTextBottom: Box | null;
 };
 
 function buildViewBox({
@@ -285,6 +292,8 @@ function buildViewBox({
   hasBottomLabel,
   bottomLabelExtraOffset,
   shape,
+  pathTextTop,
+  pathTextBottom,
 }: ViewBoxInputs): Box {
   const shadow = hasShadow ? SHADOW_OFFSET : 0;
   const bannerOverflow = banner
@@ -294,15 +303,26 @@ function buildViewBox({
     ? getBottomLabelBottomOverflow(size, bottomLabelScale) +
       bottomLabelExtraOffset
     : 0;
+  const pathTextPadding = size * PATH_TEXT_VIEWBOX_PADDING_RATIO;
+  const pathTextTopOverflow = pathTextTop
+    ? Math.max(0, pathTextPadding - pathTextTop.y)
+    : 0;
+  const pathTextBottomOverflow = pathTextBottom
+    ? Math.max(0, pathTextBottom.y + pathTextBottom.h + pathTextPadding - size)
+    : 0;
 
   return {
     x: 0,
-    y: -bannerOverflow.top,
+    y: -Math.max(bannerOverflow.top, pathTextTopOverflow),
     w: size + shadow,
     h:
       size +
       shadow +
-      bannerOverflow.top +
-      Math.max(bannerOverflow.bottom, bottomLabelBottomOverflow),
+      Math.max(bannerOverflow.top, pathTextTopOverflow) +
+      Math.max(
+        bannerOverflow.bottom,
+        bottomLabelBottomOverflow,
+        pathTextBottomOverflow,
+      ),
   };
 }

@@ -55,18 +55,19 @@ export function getPathTextRadius(
   const outerR = size / 2 - inset;
   switch (shape) {
     case "circle":
-    case "hexagon":
-      return outerR * 0.8;
-    case "diamond":
       return outerR * 0.7;
+    case "hexagon":
+      return outerR * 0.62;
+    case "diamond":
+      return outerR * 0.55;
     case "star":
-      return outerR * 1.0;
+      return outerR * (side === "bottom" ? 1.12 : 1.08);
     case "shield": {
       const half = (size - inset * 2) / 2;
-      return side === "bottom" ? half * 0.8 : half;
+      return half * (side === "bottom" ? 0.72 : 0.74);
     }
     case "roundedRect":
-      return (size - inset * 2) / 2;
+      return outerR * 0.7;
   }
 }
 
@@ -137,7 +138,7 @@ function circleContour(
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.8; // text sits slightly inside outer edge
+  const textR = getPathTextRadius("circle", size, inset);
 
   const vertices: ShapeContour["vertices"] = [];
   const vertexR = outerR * 0.8;
@@ -198,7 +199,7 @@ function hexagonContour(
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.8;
+  const textR = getPathTextRadius("hexagon", size, inset);
 
   // Flat-top hexagon vertices at outer radius (same angles as hexagonPath)
   const vertices: ShapeContour["vertices"] = [];
@@ -230,7 +231,7 @@ function diamondContour(
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 0.7; // tighter arc for diamond's narrow shape
+  const textR = getPathTextRadius("diamond", size, inset);
 
   return {
     outerPath: diamondPath(size, inset),
@@ -257,7 +258,8 @@ function starContour(
   const cy = size / 2;
   const outerR = size / 2 - inset;
   const innerInset = inset + size * FRAME_BAND_RATIO;
-  const textR = outerR * 1.0;
+  const textRTop = getPathTextRadius("star", size, inset, "top");
+  const textRBottom = getPathTextRadius("star", size, inset, "bottom");
 
   // 5 outer tip points (even-indexed from starPath's 10-point pattern)
   const vertices: ShapeContour["vertices"] = [];
@@ -276,7 +278,7 @@ function starContour(
       side: "top",
       cx,
       cy,
-      textR,
+      textR: textRTop,
       size,
       opts,
       legacyCyRatio: 1.17,
@@ -285,7 +287,7 @@ function starContour(
       side: "bottom",
       cx,
       cy,
-      textR,
+      textR: textRBottom,
       size,
       opts,
       legacyCyRatio: 0.94,
@@ -314,17 +316,18 @@ function shieldContour(
   const shoulderY = t + h * 0.1;
 
   // Text arcs: use half-width as radius, offset vertically for shield shape
-  const textR = (r - l) / 2;
+  const textRTop = getPathTextRadius("shield", size, inset, "top");
+  const textRBottom = getPathTextRadius("shield", size, inset, "bottom");
 
   return {
     outerPath: shieldPath(size, inset),
     innerPath: shieldPath(size, innerInset),
-    textPathTop: pickArc({ side: "top", cx, cy, textR, size, opts }),
+    textPathTop: pickArc({ side: "top", cx, cy, textR: textRTop, size, opts }),
     textPathBottom: pickArc({
       side: "bottom",
       cx,
       cy,
-      textR: textR * 0.8,
+      textR: textRBottom,
       size,
       opts,
     }),
@@ -351,7 +354,7 @@ function roundedRectContour(
   const t = inset;
   const w = size - inset * 2;
   const h = size - inset * 2;
-  const textR = w / 2;
+  const textR = getPathTextRadius("roundedRect", size, inset);
 
   return {
     outerPath: roundedRectPath(size, inset),

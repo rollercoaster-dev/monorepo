@@ -4,7 +4,14 @@
  * Verifies path validity, inner < outer geometry, correct vertex counts,
  * open text arcs, and bounding-box containment for all 6 badge shapes.
  */
-import { generateContour, type ShapeContour } from "../shapes/contours";
+import {
+  FRAME_BAND_RATIO,
+  generateContour,
+  getPathTextRadius,
+  type ShapeContour,
+} from "../shapes/contours";
+import { getBadgeLayoutMetrics, ICON_SIZE_RATIO } from "../layout";
+import { PATH_TEXT_FONT_SIZE_RATIO } from "../text/PathText";
 import { BadgeShape } from "../types";
 
 const SIZE = 256;
@@ -48,6 +55,7 @@ const ALL_SHAPES: BadgeShape[] = [
   "star",
   "diamond",
 ];
+const NON_STAR_SHAPES = ALL_SHAPES.filter((shape) => shape !== BadgeShape.star);
 
 describe("generateContour", () => {
   const contours: Record<string, ShapeContour> = {};
@@ -243,6 +251,58 @@ describe("text-aware arc sizing", () => {
       expect(withText.textPathBottom).not.toBe(noText.textPathBottom);
     },
   );
+
+  test.each(NON_STAR_SHAPES)(
+    "%s: text radius contracts inside the frame band",
+    (shape) => {
+      const innerFrameRadius = SIZE / 2 - INSET - SIZE * FRAME_BAND_RATIO;
+      expect(getPathTextRadius(shape, SIZE, INSET, "top")).toBeLessThan(
+        innerFrameRadius,
+      );
+      expect(getPathTextRadius(shape, SIZE, INSET, "bottom")).toBeLessThan(
+        innerFrameRadius,
+      );
+    },
+  );
+
+  it("star text radius expands outside the frame band", () => {
+    const outerR = SIZE / 2 - INSET;
+    expect(getPathTextRadius("star", SIZE, INSET, "top")).toBeGreaterThan(
+      outerR,
+    );
+    expect(getPathTextRadius("star", SIZE, INSET, "bottom")).toBeGreaterThan(
+      outerR,
+    );
+  });
+
+  test.each(ALL_SHAPES)("%s: path text clears the center icon", (shape) => {
+    const metrics = getBadgeLayoutMetrics(
+      {
+        shape,
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "Test Badge",
+        centerMode: "icon",
+        pathText: "TOP",
+        pathTextBottom: "BOTTOM",
+        pathTextPosition: "both",
+      },
+      SIZE,
+      INSET,
+      INSET + SIZE * FRAME_BAND_RATIO,
+    );
+    const iconHalf = (SIZE * ICON_SIZE_RATIO * metrics.centerContentScale) / 2;
+    const textHalf =
+      (SIZE * PATH_TEXT_FONT_SIZE_RATIO * metrics.pathTextFontScale) / 2;
+    expect(
+      getPathTextRadius(shape, SIZE, INSET, "top") - textHalf,
+    ).toBeGreaterThan(iconHalf);
+    expect(
+      getPathTextRadius(shape, SIZE, INSET, "bottom") - textHalf,
+    ).toBeGreaterThan(iconHalf);
+  });
 
   // The PR's central claim: removing the 180° rotation works because both
   // arcs are written left-to-right. Pin start.x < end.x for both sides so
