@@ -1,7 +1,7 @@
 # Badge Component Test System + Field Rename Refactor
 
 **Date:** 2026-05-01
-**Status:** Phase 0 complete — Phases 1-4 pending
+**Status:** Phases 0 + 1 complete — Phases 2-4 pending
 **Owner:** Joe
 
 ## Context
@@ -68,8 +68,9 @@ Mechanical rename, foundation for everything else. One PR.
 
 ---
 
-### Phase 1 — Extract testable layout primitives
+### Phase 1 — Extract testable layout primitives ✅
 
+**Status:** Complete (2026-05-01).
 Centralise geometry so tests can assert against pure functions, not rendered SVG.
 
 **New function in `badges/layout.ts`** (or co-located as `badges/layoutBoxes.ts`):
@@ -103,6 +104,15 @@ Implementation reuses existing exports rather than re-deriving:
 - `ICON_SIZE_RATIO = 0.45` from `BadgeRenderer.tsx` — **lift to `layout.ts`**
 
 `BadgeRenderer.tsx` is then refactored to consume `getBadgeLayoutBoxes` so renderer and tests share one source of truth. Behaviour must be unchanged — verified by snapshot of existing renderer test output.
+
+**Outcome (2026-05-01):**
+
+- Three atomic commits:
+  1. `12b0da20` — lift `ICON_SIZE_RATIO` into `layout.ts`, export `getPathTextRadius` from `shapes/contours.ts` (per-shape radii preserved exactly, including shield's bottom 0.8 reduction).
+  2. `4742e5c0` — add `getBadgeLayoutBoxes(design, size, options?)` returning a pure `LayoutBoxes` description (viewBox, shape, frame, iconOrMonogram, pathTextTop/Bottom, banner, bottomLabel, density). 21 unit tests cover viewport math, shape/frame, icon/monogram positioning, path text bands, banner positions, bottom-label star offset, density propagation.
+  3. `c429c034` — refactor `BadgeRenderer` to consume `getBadgeLayoutBoxes`. The boxes return type was extended with `metrics`, `inset`, `innerInset`, `bannerTopVisibleRatio`, `bottomLabelExtraOffset` so the renderer needs only a single call.
+- Net delta: −63/+41 lines in renderer (duplicate viewport math removed); 644 → 677 badge + designer tests, all green.
+- Behaviour unchanged: existing renderer/Banner/BottomLabel/PathText/screen tests pass without modification.
 
 ---
 
