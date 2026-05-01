@@ -7,6 +7,7 @@
 import {
   FRAME_BAND_RATIO,
   generateContour,
+  getPathTextCenterY,
   getPathTextRadius,
   type ShapeContour,
 } from "../shapes/contours";
@@ -56,6 +57,146 @@ const ALL_SHAPES: BadgeShape[] = [
   "diamond",
 ];
 const NON_STAR_SHAPES = ALL_SHAPES.filter((shape) => shape !== BadgeShape.star);
+const RENDER_STROKE_INSET = 1.5;
+
+type Point = { x: number; y: number };
+
+function shapePolygon(shape: BadgeShape, size: number, inset: number): Point[] {
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = size / 2 - inset;
+
+  if (shape === BadgeShape.hexagon) {
+    return Array.from({ length: 6 }, (_, i) => {
+      const angle = (Math.PI / 180) * (60 * i - 30);
+      return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+    });
+  }
+
+  if (shape === BadgeShape.diamond) {
+    return [
+      { x: cx, y: cy - r },
+      { x: cx + r, y: cy },
+      { x: cx, y: cy + r },
+      { x: cx - r, y: cy },
+    ];
+  }
+
+  if (shape === BadgeShape.star) {
+    const innerR = r * 0.4;
+    return Array.from({ length: 10 }, (_, i) => {
+      const pointR = i % 2 === 0 ? r : innerR;
+      const angle = (Math.PI / 180) * (36 * i - 90);
+      return {
+        x: cx + pointR * Math.cos(angle),
+        y: cy + pointR * Math.sin(angle),
+      };
+    });
+  }
+
+  throw new Error(`shapePolygon does not model ${shape}`);
+}
+
+function pointInPolygon(point: Point, polygon: Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const a = polygon[i]!;
+    const b = polygon[j]!;
+    const crosses =
+      a.y > point.y !== b.y > point.y &&
+      point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function distanceToSegment(point: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSq = dx * dx + dy * dy;
+  if (lengthSq === 0) return Math.hypot(point.x - a.x, point.y - a.y);
+  const t = Math.max(
+    0,
+    Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq),
+  );
+  return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
+}
+
+function distanceToPolygon(point: Point, polygon: Point[]): number {
+  let min = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < polygon.length; i++) {
+    min = Math.min(
+      min,
+      distanceToSegment(point, polygon[i]!, polygon[(i + 1) % polygon.length]!),
+    );
+  }
+  return min;
+}
+
+function parseArc(d: string): { start: Point; end: Point; r: number } {
+  const match = d.match(
+    /^M\s+([-\d.]+)\s+([-\d.]+)\s+A\s+([-\d.]+)\s+[-\d.]+\s+0\s+0\s+[01]\s+([-\d.]+)\s+([-\d.]+)/,
+  );
+  if (!match) throw new Error(`unparseable arc: ${d}`);
+  return {
+    start: { x: Number(match[1]), y: Number(match[2]) },
+    r: Number(match[3]),
+    end: { x: Number(match[4]), y: Number(match[5]) },
+  };
+}
+
+function sampleArc(
+  d: string,
+  size: number,
+  sampleCount = 48,
+  centerY = size / 2,
+): Point[] {
+  const { start, end, r } = parseArc(d);
+  const cx = size / 2;
+  const cy = centerY;
+  const startAngle = Math.atan2(start.y - cy, start.x - cx);
+  const endAngle = Math.atan2(end.y - cy, end.x - cx);
+
+  return Array.from({ length: sampleCount + 1 }, (_, i) => {
+    const t = i / sampleCount;
+    const angle = startAngle + (endAngle - startAngle) * t;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+}
+
+function pathTextFixture(shape: BadgeShape, size = SIZE) {
+  const design = {
+    shape,
+    frame: "boldBorder" as const,
+    color: "#a78bfa",
+    iconName: "Trophy",
+    iconWeight: "regular" as const,
+    title: "Test Badge",
+    centerMode: "icon" as const,
+    pathText: "TOP PATH",
+    pathTextBottom: "BOTTOM TEST",
+    pathTextPosition: "both" as const,
+    banner: { text: "BAZINGA! YOOP", position: "bottom" as const },
+    bottomLabel: "FfdasdgagA",
+  };
+  const innerInset = RENDER_STROKE_INSET + size * FRAME_BAND_RATIO;
+  const metrics = getBadgeLayoutMetrics(
+    design,
+    size,
+    RENDER_STROKE_INSET,
+    innerInset,
+  );
+  const fontSize = size * PATH_TEXT_FONT_SIZE_RATIO * metrics.pathTextFontScale;
+  return {
+    contour: generateContour(shape, size, metrics.pathTextInset, {
+      topText: design.pathText,
+      bottomText: design.pathTextBottom,
+      fontSize,
+    }),
+    fontSize,
+    innerInset,
+  };
+}
 
 describe("generateContour", () => {
   const contours: Record<string, ShapeContour> = {};
@@ -334,5 +475,45 @@ describe("text-aware arc sizing", () => {
     const bottom = parseEndpoints(c.textPathBottom);
     expect(top.startX).toBeLessThan(top.endX);
     expect(bottom.startX).toBeLessThan(bottom.endX);
+  });
+});
+
+describe("path text shape-intersection clearance", () => {
+  test.each([BadgeShape.hexagon, BadgeShape.diamond])(
+    "%s top text band stays inside the inner frame boundary",
+    (shape) => {
+      const { contour, fontSize, innerInset } = pathTextFixture(shape);
+      const innerFrame = shapePolygon(shape, SIZE, innerInset);
+      const textBandRadius = fontSize;
+
+      for (const point of sampleArc(
+        contour.textPathTop,
+        SIZE,
+        48,
+        getPathTextCenterY(shape, SIZE, "top"),
+      )) {
+        const clearance = distanceToPolygon(point, innerFrame);
+        expect(pointInPolygon(point, innerFrame)).toBe(true);
+        expect(clearance).toBeGreaterThan(textBandRadius);
+      }
+    },
+  );
+
+  it("star top text band stays outside the star silhouette", () => {
+    const { contour, fontSize } = pathTextFixture(BadgeShape.star);
+    const outerStar = shapePolygon(BadgeShape.star, SIZE, RENDER_STROKE_INSET);
+    const textBandRadius = fontSize * 0.1;
+
+    const centralTextSpan = sampleArc(
+      contour.textPathTop,
+      SIZE,
+      48,
+      getPathTextCenterY(BadgeShape.star, SIZE, "top"),
+    ).slice(20, 29);
+    for (const point of centralTextSpan) {
+      const clearance = distanceToPolygon(point, outerStar);
+      expect(pointInPolygon(point, outerStar)).toBe(false);
+      expect(clearance).toBeGreaterThan(textBandRadius);
+    }
   });
 });

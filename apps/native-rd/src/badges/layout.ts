@@ -39,7 +39,7 @@ const SHAPE_CENTER_CONTENT_SCALE: Record<BadgeShape, number> = {
   hexagon: 0.86,
   roundedRect: 1,
   star: 1,
-  diamond: 0.75,
+  diamond: 0.55,
 };
 
 function hasVisibleTopBanner(design: BadgeDesign) {

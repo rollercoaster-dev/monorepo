@@ -38,7 +38,7 @@ export const BANNER_FONT_SIZE_RATIO = 0.1;
 export const BANNER_BORDER_WIDTH = 2;
 
 const DEFAULT_BORDER_COLOR = "#000000";
-const STAR_BANNER_TOP_VISIBLE_RATIO = -0.3;
+const STAR_BANNER_TOP_VISIBLE_RATIO = -0.45;
 
 export function getBannerTopY(
   position: BannerData["position"],
@@ -59,7 +59,6 @@ export function getBannerTopVisibleRatio(
   position: BannerData["position"],
   shape?: BadgeShape,
 ): number {
-  if (position !== "top") return BANNER_TOP_VISIBLE_RATIO;
   return shape === BadgeShape.star
     ? STAR_BANNER_TOP_VISIBLE_RATIO
     : BANNER_TOP_VISIBLE_RATIO;

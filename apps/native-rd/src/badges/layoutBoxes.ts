@@ -14,7 +14,11 @@ import {
   type BadgeLayoutDensity,
   type BadgeLayoutMetrics,
 } from "./layout";
-import { FRAME_BAND_RATIO, getPathTextRadius } from "./shapes/contours";
+import {
+  FRAME_BAND_RATIO,
+  getPathTextCenterY,
+  getPathTextRadius,
+} from "./shapes/contours";
 import {
   BANNER_TOP_VISIBLE_RATIO,
   getBannerBox,
@@ -236,7 +240,7 @@ function buildPathTextBox(
   side: "top" | "bottom",
 ): Box {
   const r = getPathTextRadius(design.shape, size, inset, side);
-  const cy = size / 2;
+  const cy = getPathTextCenterY(design.shape, size, side);
   // Bound the arc band as a slim horizontal strip at the apex (y = cy ± r),
   // thickened by fontSize. Width spans the full arc diameter — a conservative
   // bounding box approximation since the text actually traces a curve.
