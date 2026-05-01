@@ -50,6 +50,23 @@ Keep solutions simple and focused. Only make changes directly requested.
 - Reuse existing patterns; minimum complexity needed
 - **Fix issues now** - When reviews identify problems, fix immediately. No tech debt.
 
+## Product Planning Methodology
+
+**When the user asks to plan a product, rebuild, feature, or package, follow the documented methodology — do not invent your own sequence.**
+
+Canonical doc: [`apps/docs/processes/product-planning.md`](apps/docs/processes/product-planning.md)
+
+Sequence: **User Stories → Vision Docs → Design Docs → ADRs / Planning → Build.** Each phase feeds the next. Stories come first, always.
+
+Key rules agents get wrong and **must not**:
+
+- Never refuse to write a user story because "the feature / tool / CLI doesn't exist yet." Stories are forward-looking by design — they are how the project decides what to build.
+- Never jump to implementation, vision, or design before stories are solid.
+- Never treat stories as specs. They are narrative, present-tense, actor-driven. Specs come later.
+- Never delete a story; mark it _needs rework_ and move on.
+
+Read `apps/docs/processes/product-planning.md` before engaging in any planning conversation.
+
 ## Workflows
 
 | Command                  | Use Case                         |
