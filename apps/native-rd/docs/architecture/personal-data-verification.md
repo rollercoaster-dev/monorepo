@@ -70,7 +70,7 @@ W3C Verifiable Credentials guidance warns that `credentialSubject` data can expo
 
 References:
 
-- [W3C Verifiable Credentials Data Model v2.0 — Privacy Considerations](https://www.w3.org/TR/vc-data-model/#privacy-considerations)
+- [W3C Verifiable Credentials Data Model v2.0 — Privacy Considerations](https://www.w3.org/TR/vc-data-model-2.0/#privacy-considerations)
 - [1EdTech Open Badges 3.0 Implementation Guide — Including additional recipient profile information](https://www.imsglobal.org/spec/ob/v3p0/impl/#including-additional-recipient-profile-information)
 
 ---

@@ -1,6 +1,6 @@
 # Privacy Policy — rollercoaster.dev
 
-**Last updated:** 2026-02-15
+**Last updated:** 2026-05-01
 
 ## Summary
 
