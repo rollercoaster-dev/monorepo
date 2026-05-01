@@ -16,6 +16,28 @@ export * from "./validateWithSchema";
 export * from "./type-guards";
 export * from "./utils";
 
+// Top-level type re-exports.
+//
+// Without these, downstream Vue consumers using `OB2.Assertion` /
+// `OB3.VerifiableCredential` etc. through this package's namespace exports
+// fail vue-tsc declaration emit with TS4023 ("has or is using name 'X' but
+// cannot be named") — vue-tsc cannot find a top-level identifier to print.
+// OB3 wins for names shared between versions (Profile is OB3.Profile here);
+// OB2 forms remain accessible via `OB2.Profile`.
+export type {
+  Assertion,
+  BadgeClass,
+  RevocationList,
+  CryptographicKey,
+} from "./v2/index";
+
+export type {
+  Achievement,
+  VerifiableCredential,
+  Issuer,
+  Profile,
+} from "./v3/index";
+
 // Type to determine which Open Badges version to use
 
 export enum OpenBadgesVersion {

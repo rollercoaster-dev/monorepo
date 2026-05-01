@@ -1,5 +1,12 @@
 ## [1.0.2](https://github.com/rollercoaster-dev/openbadges-modular-server/compare/v1.0.1...v1.0.2) (2025-07-25)
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [5810c0b]
+  - openbadges-types@4.0.0
+
 ## 1.0.3
 
 ### Patch Changes

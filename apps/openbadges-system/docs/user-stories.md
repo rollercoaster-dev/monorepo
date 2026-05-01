@@ -40,19 +40,19 @@ From [native-rd design-principles.md](../../native-rd/docs/vision/design-princip
 - **ND-first, not ND-friendly.** 7 themes (light / dark / high contrast / large text / dyslexia / low vision / autism-friendly) ship from day one. Spec compliance (OB3, W3C VC) over shortcuts.
 - **Character moments, selectively.** Empty states, first-time milestones, returns after long absence speak with personality ("First one. (noted.)", "No badges yet. What have you been up to?"). Buttons, errors, and verification stay direct and clear.
 
-## Open questions — unresolved before stories can be finalized
+## Story-writing prompts — write target-state stories to answer these
 
-These shape multiple stories and need your call before rewriting:
+Per [product-planning methodology](../../docs/processes/product-planning.md), stories are forward-looking by design. The unknowns below are not blockers — they are prompts. Write the story of the target experience; the story is how the answer gets defined. Each prompt names what's currently fuzzy and which existing stories it touches.
 
-1. **Is `rollercoaster.dev` a personal product, an institutional reference implementation, or both?** The [native-rd product vision](../../native-rd/docs/vision/product-vision.md) frames the monorepo as _institutional_ infrastructure and native-rd as _personal_. The rollercoaster.dev landing page features four personal users (Lina, Eva, Malik, Carmen). This conversation has treated rollercoaster.dev as Joe's personal product first, with institutional adoption as a later and optional extension. The old vision doc may be stale. Decision affects Stories 4 (makerspace), 7 (EdTech), and the scope of Iteration B on the web.
-2. **Does rollercoaster.dev allow badge creation on the web, or is it a "view/share/verify only" surface that relies on native-rd for creation?** Previous draft of Story 1 assumed the latter; author feedback says that's wrong — the web is a full product. Needs explicit confirmation so Iteration A stories can be written correctly.
-3. **How does web identity work?** Passkeys (matches native-rd)? Something simpler for the earner? How does a user on the web prove they're the same earner as on their phone, without a central account server?
-4. **OB3 cryptosuite for web launch** — match native-rd's current `eddsa-raw-json-iteration-a` (and upgrade together in Iteration D), or go spec-compliant `eddsa-rdfc-2022` from day one on the web since it's greenfield?
-5. **openbadges-modular-server's role.** Native-rd's plan is to extract `openbadges-core` _from_ `openbadges-modular-server`. If rollercoaster.dev is local-first and the reference implementation, does the web app even need the modular server, or does it use `openbadges-core` as a library directly, same as native-rd?
+1. **Personal vs institutional surface.** The [native-rd product vision](../../native-rd/docs/vision/product-vision.md) frames the monorepo as _institutional_ infrastructure and native-rd as _personal_, but rollercoaster.dev's landing page features four personal users (Lina, Eva, Malik, Carmen). Write both a personal-earner story for `rollercoaster.dev` _and_ an institutional-operator story; the pair will reveal whether the product is one, the other, or both. Touches Stories 4 (makerspace), 7 (EdTech), and Iteration B scope.
+2. **Badge creation on the web.** Earlier drafts treated the web as view/share/verify only. Write the story of an earner creating a badge on `rollercoaster.dev` end-to-end. If the story feels right, web creation is in Iteration A; if it feels forced, the web is downstream of native-rd. Touches Iteration A scope.
+3. **Web identity for a self-issuing earner.** Write the story of a user proving they are the same earner across phone and web without a central account server — passkeys, device pairing, key import, whatever the narrative demands. The story defines the requirements, not the other way around.
+4. **OB3 cryptosuite at web launch.** Write the story of a third party verifying a badge issued from `rollercoaster.dev` on day one. The friction (or lack of it) tells you whether to match native-rd's `eddsa-raw-json-iteration-a` and upgrade together in Iteration D, or to ship spec-compliant `eddsa-rdfc-2022` from launch since the web is greenfield.
+5. **openbadges-modular-server's role.** Native-rd plans to extract `openbadges-core` _from_ `openbadges-modular-server`. Write parallel stories: one where rollercoaster.dev consumes `openbadges-core` as a library (same as native-rd), and one where it talks to a running `openbadges-modular-server`. The stories will surface which integration mode the product needs — or whether both ship.
 
 ---
 
-> The individual stories below are from draft v0.1 and have **not yet been re-homed** into the corrected iteration framework above. Several are currently mis-labeled and at least one (Story 4 — makerspace) may not belong in this file depending on Open Question #1. They remain for reference until the open questions are resolved.
+> The individual stories below are from draft v0.1 and have **not yet been re-homed** into the corrected iteration framework above. Several are currently mis-labeled and at least one (Story 4 — makerspace) may not belong in this file depending on prompt #1 above. They remain for reference until the prompts have been worked through and the stories rewritten.
 
 ---
 

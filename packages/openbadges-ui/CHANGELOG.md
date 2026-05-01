@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [5810c0b]
+  - openbadges-types@4.0.0
+
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies [274cbf3]
+  - @rollercoaster-dev/design-tokens@0.2.0
+
 ## 1.3.3
 
 ### Patch Changes
