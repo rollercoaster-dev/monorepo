@@ -53,7 +53,7 @@ Build the native app in four iterations. Each iteration ships as a usable, compl
 | Evidence: file                         | Done      | `CaptureFile` with mime/size validation                                                                                                     |
 | Mark steps complete                    | Done      | `FocusModeScreen` toggle                                                                                                                    |
 | Mark goal complete + earn badge        | Done      | `CompletionFlowScreen` → `useCreateBadge` (Ed25519 signing, PNG baking)                                                                     |
-| OB3 signing                            | Partial   | Uses `eddsa-raw-json-iteration-a` cryptosuite, not spec-compliant `eddsa-rdfc-2022` (intentional — full compliance deferred to Iteration D) |
+| OB3 signing                            | Partial   | Not externally verifiable — 6 spec gaps tracked in [OB3 Compliance Status](../architecture/ob3-compliance-status.md). Full compliance deferred to Iteration D. |
 | Badge designer                         | Done      | Shape, color, icon, weight; new-goal and redesign modes                                                                                     |
 | View badges list                       | Done      | `BadgesScreen`                                                                                                                              |
 | View badge + evidence                  | Partial   | `BadgeDetailScreen` shows badge image + credential metadata but does NOT surface the goal's evidence                                        |
@@ -173,7 +173,7 @@ A.5 (Phase 1) is complete — basic badge designer with shape, color, icon, and 
 - Mentor role — a verified badge holder can verify others in that domain
 - Badge import — receive a badge issued by an institutional server (monorepo federation)
 - Optional cloud community features (discovery, public profiles)
-- Upgrade OB3 proof from `eddsa-raw-json-iteration-a` to spec-compliant `eddsa-rdfc-2022` cryptosuite
+- Full OB3 spec compliance — close all 6 gaps tracked in [OB3 Compliance Status](../architecture/ob3-compliance-status.md): cryptosuite upgrade to `eddsa-rdfc-2022`, RDFC-1.0 canonicalization, spec-compliant `did:key` encoding, and 4 schema-shape fixes (top-level `name`/`issuanceDate`, `creator` as object, `proof` as array)
 
 **Not in scope:**
 

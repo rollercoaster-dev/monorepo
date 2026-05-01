@@ -269,7 +269,7 @@ Verification, OB2 serialization, bitstring utilities, and SVG baking can come la
 | PNG baking             | Yes                    |                   |
 | KeyProvider interface  | Yes                    |                   |
 | Platform configuration | Yes                    |                   |
-| Verification           |                        | Yes (iteration D) |
+| Verification           |                        | Yes (iteration D) — see [OB3 Compliance Status](./ob3-compliance-status.md) |
 | JWT proofs             |                        | Yes               |
 | SVG baking             |                        | Yes               |
 | OB2 serialization      |                        | Yes               |
