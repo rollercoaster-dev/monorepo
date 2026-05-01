@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.5
+
+### Patch Changes
+
+- Updated dependencies [5810c0b]
+  - openbadges-types@4.0.0
+
 ## 1.3.4
 
 ### Patch Changes

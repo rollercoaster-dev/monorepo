@@ -1,6 +1,6 @@
 {
   "name": "openbadges-ui",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Vue 3 component library for implementing Open Badges functionality with accessibility and customization",
   "homepage": "https://rollercoaster-dev.github.io/openbadges-ui/",
   "main": "dist/openbadges-ui.umd.js",
