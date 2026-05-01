@@ -28,7 +28,7 @@ export const BANNER_WIDTH_RATIO = 0.8;
 /** Hard shadow offset in pixels (neo-brutalist) */
 export const BANNER_SHADOW_OFFSET = 2;
 
-/** Y-center ratio for 'center' position */
+/** Fraction of the banner that remains visible above the badge edge for the 'top' strap position */
 export const BANNER_TOP_VISIBLE_RATIO = 0.05;
 
 /** Font size as fraction of badge size */
@@ -51,7 +51,7 @@ export function getBannerTopY(
     return size - bannerH * topVisibleRatio;
   }
 
-  // "center" now behaves like a top strap: 95% of the banner sits above the badge.
+  // Top strap: 95% of the banner sits above the badge.
   return -bannerH * (1 - topVisibleRatio);
 }
 
@@ -59,7 +59,7 @@ export function getBannerTopVisibleRatio(
   position: BannerData["position"],
   shape?: BadgeShape,
 ): number {
-  if (position !== "center") return BANNER_TOP_VISIBLE_RATIO;
+  if (position !== "top") return BANNER_TOP_VISIBLE_RATIO;
   return shape === "star"
     ? STAR_BANNER_TOP_VISIBLE_RATIO
     : BANNER_TOP_VISIBLE_RATIO;

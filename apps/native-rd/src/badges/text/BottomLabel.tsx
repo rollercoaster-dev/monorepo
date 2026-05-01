@@ -3,7 +3,7 @@ import { Text } from "react-native-svg";
 import { getSafeTextColor } from "../../utils/accessibility";
 import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
-export interface CenterLabelProps {
+export interface BottomLabelProps {
   label: string | undefined;
   size: number;
   fillColor: string;
@@ -15,41 +15,41 @@ export interface CenterLabelProps {
 }
 
 /** Font size as fraction of badge diameter (~15%) */
-export const CENTER_LABEL_SIZE_RATIO = 0.15;
+export const BOTTOM_LABEL_SIZE_RATIO = 0.15;
 
 /** Gap between badge bottom and the outside label, as a fraction of badge size */
-export const CENTER_LABEL_TOP_MARGIN_RATIO = 0.03;
+export const BOTTOM_LABEL_TOP_MARGIN_RATIO = 0.03;
 
-/** Maximum characters for center label */
-export const CENTER_LABEL_MAX_CHARS = 10;
+/** Maximum characters for bottom label */
+export const BOTTOM_LABEL_MAX_CHARS = 10;
 
-export function getCenterLabelY(size: number, scale = 1): number {
-  const fontSize = size * CENTER_LABEL_SIZE_RATIO * scale;
-  const topMargin = size * CENTER_LABEL_TOP_MARGIN_RATIO;
+export function getBottomLabelY(size: number, scale = 1): number {
+  const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+  const topMargin = size * BOTTOM_LABEL_TOP_MARGIN_RATIO;
   return size + topMargin + fontSize / 2;
 }
 
-export function getCenterLabelBottomOverflow(size: number, scale = 1): number {
-  const fontSize = size * CENTER_LABEL_SIZE_RATIO * scale;
-  const topMargin = size * CENTER_LABEL_TOP_MARGIN_RATIO;
+export function getBottomLabelBottomOverflow(size: number, scale = 1): number {
+  const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+  const topMargin = size * BOTTOM_LABEL_TOP_MARGIN_RATIO;
   return topMargin + fontSize;
 }
 
-export function CenterLabel({
+export function BottomLabel({
   label,
   size,
   fillColor,
   extraOffset = 0,
   fontFamily = fontFamilyTokens.body,
   scale = 1,
-}: CenterLabelProps) {
+}: BottomLabelProps) {
   if (!label || label.trim().length === 0) return null;
 
-  const text = label.trim().slice(0, CENTER_LABEL_MAX_CHARS);
-  const fontSize = size * CENTER_LABEL_SIZE_RATIO * scale;
-  const textColor = getSafeTextColor(fillColor, "CenterLabel");
+  const text = label.trim().slice(0, BOTTOM_LABEL_MAX_CHARS);
+  const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
+  const textColor = getSafeTextColor(fillColor, "BottomLabel");
   const cx = size / 2;
-  const cy = getCenterLabelY(size, scale) + extraOffset;
+  const cy = getBottomLabelY(size, scale) + extraOffset;
 
   return (
     <Text

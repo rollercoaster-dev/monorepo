@@ -7,7 +7,7 @@
  * 3. Frame overlay — decorative frame band (boldBorder, guilloche, etc.)
  * 4. PathText — coin-style inscriptions following the shape contour
  * 5. Center layer — monogram text (centerMode: 'monogram') OR Phosphor icon
- *    (centerMode: 'icon'); optional CenterLabel below
+ *    (centerMode: 'icon'); optional BottomLabel rendered below the badge
  * 6. Banner — neo-brutalist ribbon overlay with text
  *
  * The icon color is auto-calculated for WCAG AA contrast against the shape
@@ -36,7 +36,7 @@ import {
   getBannerTopVisibleRatio,
 } from "./text/Banner";
 import { MonogramCenter } from "./text/MonogramCenter";
-import { CenterLabel, getCenterLabelBottomOverflow } from "./text/CenterLabel";
+import { BottomLabel, getBottomLabelBottomOverflow } from "./text/BottomLabel";
 import { getIconComponent } from "./iconRegistry";
 import { getSafeTextColor } from "../utils/accessibility";
 
@@ -64,7 +64,7 @@ const SHADOW_OFFSET = 5;
 
 /** Icon size as a fraction of badge size */
 const ICON_SIZE_RATIO = 0.45;
-const STAR_CENTER_LABEL_EXTRA_OFFSET_RATIO = 0.18;
+const STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO = 0.18;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -97,9 +97,9 @@ export function BadgeRenderer({
   const bannerTopVisibleRatio = design.banner
     ? getBannerTopVisibleRatio(design.banner.position, design.shape)
     : BANNER_TOP_VISIBLE_RATIO;
-  const centerLabelExtraOffset =
-    design.shape === "star" && design.centerLabel?.trim()
-      ? size * STAR_CENTER_LABEL_EXTRA_OFFSET_RATIO
+  const bottomLabelExtraOffset =
+    design.shape === "star" && design.bottomLabel?.trim()
+      ? size * STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO
       : 0;
 
   // Expand the SVG to include shadow offset so badge doesn't scale down
@@ -114,15 +114,15 @@ export function BadgeRenderer({
     design.banner?.position !== "bottom" ? bannerOverflowAmount : 0;
   const bannerBottomOverflow =
     design.banner?.position === "bottom" ? bannerOverflowAmount : 0;
-  const centerLabelBottomOverflow = design.centerLabel?.trim()
-    ? getCenterLabelBottomOverflow(size, layout.centerLabelScale) +
-      centerLabelExtraOffset
+  const bottomLabelBottomOverflow = design.bottomLabel?.trim()
+    ? getBottomLabelBottomOverflow(size, layout.bottomLabelScale) +
+      bottomLabelExtraOffset
     : 0;
   const totalHeight =
     size +
     (hasShadow ? SHADOW_OFFSET : 0) +
     bannerTopOverflow +
-    Math.max(bannerBottomOverflow, centerLabelBottomOverflow);
+    Math.max(bannerBottomOverflow, bottomLabelBottomOverflow);
 
   // Generate the shape path
   const pathD = useMemo(
@@ -222,14 +222,14 @@ export function BadgeRenderer({
         )
       )}
 
-      {/* Layer 5b: CenterLabel — optional label below center content */}
-      <CenterLabel
-        label={design.centerLabel}
+      {/* Layer 5b: BottomLabel — optional label rendered below the badge */}
+      <BottomLabel
+        label={design.bottomLabel}
         size={size}
         fillColor={design.color}
-        extraOffset={centerLabelExtraOffset}
+        extraOffset={bottomLabelExtraOffset}
         fontFamily={theme.fontFamily.body}
-        scale={layout.centerLabelScale}
+        scale={layout.bottomLabelScale}
       />
 
       {/* Layer 6: Banner — neo-brutalist ribbon overlay */}
