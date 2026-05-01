@@ -9,6 +9,9 @@
 
 import type { Box, LayoutBoxes } from "../layoutBoxes";
 
+/** Plain 2D point used by polygon and arc-sample helpers. */
+export type Point = { x: number; y: number };
+
 /**
  * Boxes are treated as half-open rectangles `[x, x+w) × [y, y+h)`. Two boxes
  * touching exactly along an edge are NOT considered overlapping — useful for
@@ -147,4 +150,52 @@ export function forEachPair(
       fn(boxes[i]!, boxes[j]!);
     }
   }
+}
+
+/**
+ * Ray-casting point-in-polygon test. The polygon is closed implicitly — the
+ * last vertex connects back to the first. Boundary points are not guaranteed
+ * to land on a particular side; callers should use a small inset/outset on the
+ * polygon rather than trusting boundary classification.
+ */
+export function pointInPolygon(p: Point, verts: Point[]): boolean {
+  let inside = false;
+  for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+    const vi = verts[i]!;
+    const vj = verts[j]!;
+    const intersect =
+      vi.y > p.y !== vj.y > p.y &&
+      p.x < ((vj.x - vi.x) * (p.y - vi.y)) / (vj.y - vi.y) + vi.x;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Sample N+1 points along the actual rendered text arc — mirrors the geometry
+ * in `arcSized` from `shapes/contours.ts`. The arc spans `angle` radians,
+ * centered at the apex (-π/2 for top-side text, +π/2 for bottom-side text).
+ *
+ * Use `MAX_ARC_ANGLE` (0.9π) for the worst-case visible sweep; longer text is
+ * clamped to that ceiling by the renderer.
+ */
+export function arcSamplePoints(
+  cx: number,
+  cy: number,
+  r: number,
+  angle: number,
+  side: "top" | "bottom",
+  n = 24,
+): Point[] {
+  const half = angle / 2;
+  const baseAngle = side === "top" ? -Math.PI / 2 : Math.PI / 2;
+  const start = baseAngle + (side === "top" ? -half : half);
+  const end = baseAngle + (side === "top" ? half : -half);
+  const out: Point[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const a = start + (end - start) * t;
+    out.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+  }
+  return out;
 }

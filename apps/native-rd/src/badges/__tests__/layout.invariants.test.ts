@@ -22,7 +22,9 @@ import {
   type BadgeDesign,
 } from "../types";
 import { getBadgeLayoutBoxes } from "../layoutBoxes";
+import { getPathTextCenterY, getPathTextRadius } from "../shapes/contours";
 import {
+  arcSamplePoints,
   boxIsInside,
   boxesOverlap,
   cartesian,
@@ -281,6 +283,105 @@ describe("badge layout invariants — edge cases", () => {
       boxes.banner!.y + boxes.banner!.h,
     );
     expect(boxesOverlap(boxes.banner!, boxes.bottomLabel!)).toBe(false);
+  });
+
+  // ── Curved text vs. actual shape geometry ─────────────────────────────
+  // The matrix above checks bounding-box containment, which is too loose for
+  // concave shapes. These cases sample the actual rendered text arc and run
+  // point-in-polygon tests against the shape outline so we catch text that
+  // crosses the rendered frame stroke or escapes the silhouette through a
+  // concavity (e.g. between star points).
+
+  // The visual bar we're enforcing: glyph caps must not escape the badge
+  // canvas (the viewBox AABB). Text crossing into the frame BAND is OK because
+  // text z-orders above the frame's decorative pattern (waves, hatching,
+  // microprint, etc.) — visually clean as long as it doesn't punch through the
+  // outer rim. Star is the exception only in shape outline (text rides outside
+  // the silhouette by design), but the same outer-canvas containment applies.
+  // Worst-case rendered sweep — `arcAngleForText` clamps to 0.9π regardless of
+  // string length. Mirroring that constant here means the sample arc covers
+  // the full angular range any rendered text would actually occupy.
+  const MAX_ARC_ANGLE = 0.9 * Math.PI;
+
+  describe("curved text vs shape geometry", () => {
+    // Geometry-only check, so we sample sizes between the matrix's anchor
+    // points (80/200/400) — 128 and 160 catch the BadgeDesigner preview
+    // (size=160) and the BadgeCard list view's typical mid-size renders, where
+    // the text radius hasn't yet shrunk enough to clear the frame band.
+    const GEOMETRY_SIZES = [80, 128, 160, 200, 400] as const;
+    const cases = cartesian({
+      shape: SHAPES,
+      frame: FRAMES,
+      pathTextPosition: ["top", "bottom", "both"] as const,
+      size: GEOMETRY_SIZES,
+    });
+
+    test.each(
+      cases.map(
+        (c) =>
+          [
+            `${c.shape}/${c.frame}/path:${c.pathTextPosition}/size:${c.size}`,
+            c,
+          ] as const,
+      ),
+    )("%s", (label, { shape, frame, pathTextPosition, size }) => {
+      const design: BadgeDesign = {
+        shape,
+        frame,
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "Test Badge",
+        centerMode: "icon",
+        pathText: "CURVED TEXT TOP",
+        pathTextBottom: "CURVED TEXT BOTTOM",
+        pathTextPosition,
+      };
+      const boxes = getBadgeLayoutBoxes(design, size);
+      // The canvas (viewBox) is what defines "off the badge" — frame band
+      // intersection is fine because text renders on top.
+
+      const checkSide = (side: "top" | "bottom") => {
+        const baselineR = getPathTextRadius(
+          shape,
+          size,
+          boxes.metrics.pathTextInset,
+          side,
+        );
+        const cy = getPathTextCenterY(shape, size, side);
+        const cx = size / 2;
+        // textPath with the default `dominantBaseline="alphabetic"` puts the
+        // baseline ON the arc; glyph extent above is approximated as
+        // `fontSize / 2` to match what `buildPathTextBox` uses for the box
+        // height — keeping the sampling honest about the same envelope the
+        // layout claims to provide.
+        const fontSize = size * 0.09 * (boxes.metrics.pathTextFontScale ?? 1);
+        const r = baselineR + fontSize / 2;
+        const samples = arcSamplePoints(cx, cy, r, MAX_ARC_ANGLE, side);
+
+        for (const p of samples) {
+          // The viewBox is an AABB that already grows to fit shadows, banners,
+          // and any expanded path-text bounds (see `buildViewBox`). If a glyph
+          // cap lands outside the viewBox, the badge cannot draw it — that is
+          // the only visual contract worth enforcing here.
+          if (!boxIsInside({ x: p.x, y: p.y, w: 0, h: 0 }, boxes.viewBox)) {
+            throw new Error(
+              `[${label}] pathText${side === "top" ? "Top" : "Bottom"} ` +
+                `glyph cap escapes the canvas at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})\n` +
+                `  shape: ${shape}, r: ${r.toFixed(1)}, cy: ${cy.toFixed(1)}\n` +
+                `  viewBox: ${JSON.stringify(boxes.viewBox)}`,
+            );
+          }
+        }
+      };
+
+      if (pathTextPosition === "top" || pathTextPosition === "both") {
+        checkSide("top");
+      }
+      if (pathTextPosition === "bottom" || pathTextPosition === "both") {
+        checkSide("bottom");
+      }
+    });
   });
 
   it("diamond top path text clears the top vertex and frame", () => {
