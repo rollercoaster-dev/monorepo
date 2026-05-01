@@ -22,7 +22,11 @@ import {
   type BadgeDesign,
 } from "../types";
 import { getBadgeLayoutBoxes } from "../layoutBoxes";
-import { getPathTextCenterY, getPathTextRadius } from "../shapes/contours";
+import {
+  MAX_ARC_ANGLE,
+  getPathTextCenterY,
+  getPathTextRadius,
+} from "../shapes/contours";
 import {
   arcSamplePoints,
   boxIsInside,
@@ -138,7 +142,10 @@ describe("badge layout invariants — full matrix", () => {
 
       // --- Foreground non-overlap ---
       forEachPair(collectForegroundBoxes(boxes), (a, b) => {
-        if (boxesOverlap(a.box, b.box) && !isAllowedOverlap(a.name, b.name)) {
+        if (
+          boxesOverlap(a.box, b.box) &&
+          !isAllowedOverlap(row.shape, a.name, b.name)
+        ) {
           throw new Error(
             `[${label}] unexpected overlap: ${a.name} ↔ ${b.name}\n` +
               `  ${a.name} = ${JSON.stringify(a.box)}\n` +
@@ -302,11 +309,6 @@ describe("badge layout invariants — edge cases", () => {
   // microprint, etc.) — visually clean as long as it doesn't punch through the
   // outer rim. Star is the exception only in shape outline (text rides outside
   // the silhouette by design), but the same outer-canvas containment applies.
-  // Worst-case rendered sweep — `arcAngleForText` clamps to 0.9π regardless of
-  // string length. Mirroring that constant here means the sample arc covers
-  // the full angular range any rendered text would actually occupy.
-  const MAX_ARC_ANGLE = 0.9 * Math.PI;
-
   describe("curved text vs shape geometry", () => {
     // Geometry-only check, so we sample sizes between the matrix's anchor
     // points (80/200/400) — 128 and 160 catch the BadgeDesigner preview
@@ -342,8 +344,6 @@ describe("badge layout invariants — edge cases", () => {
         pathTextPosition,
       };
       const boxes = getBadgeLayoutBoxes(design, size);
-      // The canvas (viewBox) is what defines "off the badge" — frame band
-      // intersection is fine because text renders on top.
 
       const checkSide = (side: "top" | "bottom") => {
         const sideBox =

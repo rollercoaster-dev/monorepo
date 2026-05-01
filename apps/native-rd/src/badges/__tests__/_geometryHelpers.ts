@@ -8,8 +8,8 @@
  */
 
 import type { Box, LayoutBoxes } from "../layoutBoxes";
+import type { BadgeShape } from "../types";
 
-/** Plain 2D point used by polygon and arc-sample helpers. */
 export type Point = { x: number; y: number };
 
 /**
@@ -135,30 +135,45 @@ export function collectForegroundBoxes(boxes: LayoutBoxes): NamedBox[] {
 }
 
 /**
- * Pair-name allow-list for known-OK AABB overlaps. The matrix uses axis-aligned
- * bounding boxes which are conservatively oversized for curved layers (path
- * text arcs, banner ribbons that hug the silhouette). When the bboxes touch
- * each other but the rendered geometry doesn't, we record the pair here so a
- * regression in the structural layout still trips the matrix while precision
- * floats don't.
+ * Allow-list for known-OK AABB overlaps. The matrix uses axis-aligned bounding
+ * boxes which are conservatively oversized for curved layers (path text arcs,
+ * banner ribbons that hug the silhouette). When bboxes touch each other but
+ * the rendered geometry doesn't, we record the pair here.
+ *
+ * Keyed by `BadgeShape` so a real regression on a non-star shape (e.g. shield
+ * top banner ↔ pathTextTop) still trips the matrix.
  */
-const ALLOWED_OVERLAP_PAIRS: ReadonlyArray<[BoxName, BoxName]> = [
+const ALLOWED_OVERLAPS_BY_SHAPE: Partial<
+  Record<BadgeShape, ReadonlyArray<readonly [BoxName, BoxName]>>
+> = {
   // Star path text and banner both sit above/below the silhouette in the
   // negative-y region outside the badge canvas, so their bboxes can touch by
-  // sub-pixel amounts at small sizes (size 80 with a top banner). The actual
+  // sub-pixel amounts at small sizes (e.g. 80 with a top banner). The actual
   // glyphs trace the arc and never collide with the banner ribbon.
-  ["pathTextTop", "banner"],
-  ["pathTextBottom", "banner"],
-];
+  star: [
+    ["pathTextTop", "banner"],
+    ["pathTextBottom", "banner"],
+  ],
+};
 
-const allowedPairKey = (a: BoxName, b: BoxName): string =>
-  [a, b].sort().join("↔");
-const ALLOWED_OVERLAP_KEYS = new Set(
-  ALLOWED_OVERLAP_PAIRS.map(([a, b]) => allowedPairKey(a, b)),
-);
+function pairContains(
+  pair: readonly [BoxName, BoxName],
+  a: BoxName,
+  b: BoxName,
+): boolean {
+  return (pair[0] === a && pair[1] === b) || (pair[0] === b && pair[1] === a);
+}
 
-export function isAllowedOverlap(a: BoxName, b: BoxName): boolean {
-  return ALLOWED_OVERLAP_KEYS.has(allowedPairKey(a, b));
+export function isAllowedOverlap(
+  shape: BadgeShape,
+  a: BoxName,
+  b: BoxName,
+): boolean {
+  return (
+    ALLOWED_OVERLAPS_BY_SHAPE[shape]?.some((pair) =>
+      pairContains(pair, a, b),
+    ) ?? false
+  );
 }
 
 export function forEachBox(

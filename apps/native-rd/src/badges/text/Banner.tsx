@@ -59,6 +59,10 @@ export function getBannerTopVisibleRatio(
   position: BannerData["position"],
   shape?: BadgeShape,
 ): number {
+  void position;
+  // Star uses the same lift on both top and bottom positions because its
+  // points cut close to either edge of the badge, so the banner needs the
+  // extra clearance regardless of side.
   return shape === BadgeShape.star
     ? STAR_BANNER_TOP_VISIBLE_RATIO
     : BANNER_TOP_VISIBLE_RATIO;

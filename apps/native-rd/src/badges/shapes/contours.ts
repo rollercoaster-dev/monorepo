@@ -25,7 +25,7 @@ export type ContourTextOpts = {
 };
 
 /** Caps sweep below 180° so the arc endpoints don't meet at 6 o'clock. */
-const MAX_ARC_ANGLE = 0.9 * Math.PI;
+export const MAX_ARC_ANGLE = 0.9 * Math.PI;
 
 /** Geometry metadata for a badge shape, used by frame overlays and text-on-path. */
 export type ShapeContour = {
@@ -71,17 +71,33 @@ export function getPathTextRadius(
   }
 }
 
+/**
+ * Per-shape vertical offset (absolute pixels) applied to the path-text arc
+ * center. Calibrated against the BadgeDesigner preview at size=160. The
+ * offsets are kept as pixels — not ratios — because they're balanced against
+ * the frame-band thickness, which is itself a ratio of `size`.
+ *
+ * Star's larger top lift reflects that its text rides in the empty corners
+ * between points (outside the silhouette) rather than inside the frame band.
+ */
+const PATH_TEXT_CENTER_Y_OFFSET: Record<
+  BadgeShape,
+  { top: number; bottom: number }
+> = {
+  circle: { top: -4, bottom: 3 },
+  hexagon: { top: -4, bottom: 3 },
+  diamond: { top: -4, bottom: 3 },
+  shield: { top: -4, bottom: 3 },
+  roundedRect: { top: -4, bottom: 3 },
+  star: { top: -8, bottom: 3 },
+};
+
 export function getPathTextCenterY(
   shape: BadgeShape,
   size: number,
   side: "top" | "bottom" = "top",
 ): number {
-  const cy = size / 2;
-  if (side === "bottom") return cy + 3;
-  // Star rides between its points and needs the extra lift; every other shape
-  // is happiest with a smaller lift so glyph caps don't punch into the frame
-  // band at preview sizes.
-  return cy + (shape === "star" ? -8 : -4);
+  return size / 2 + PATH_TEXT_CENTER_Y_OFFSET[shape][side];
 }
 
 /** Default text arc center Y ratios — top arc raised, bottom arc lowered. */

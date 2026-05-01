@@ -472,3 +472,30 @@ describe("path text shape-intersection clearance", () => {
     }
   });
 });
+
+describe("getPathTextCenterY", () => {
+  // Pinning per-shape offsets prevents an accidental future tweak from
+  // silently shifting one shape's text into the frame band — visual
+  // regressions surface as a one-line failure here instead of a wall of
+  // matrix overlap errors.
+  const SIZE = 200;
+  const cy = SIZE / 2;
+  const expected: Record<BadgeShape, { top: number; bottom: number }> = {
+    circle: { top: cy - 4, bottom: cy + 3 },
+    hexagon: { top: cy - 4, bottom: cy + 3 },
+    diamond: { top: cy - 4, bottom: cy + 3 },
+    shield: { top: cy - 4, bottom: cy + 3 },
+    roundedRect: { top: cy - 4, bottom: cy + 3 },
+    star: { top: cy - 8, bottom: cy + 3 },
+  };
+
+  test.each(ALL_SHAPES)(
+    "%s: top and bottom offsets match the table",
+    (shape) => {
+      expect(getPathTextCenterY(shape, SIZE, "top")).toBe(expected[shape].top);
+      expect(getPathTextCenterY(shape, SIZE, "bottom")).toBe(
+        expected[shape].bottom,
+      );
+    },
+  );
+});
