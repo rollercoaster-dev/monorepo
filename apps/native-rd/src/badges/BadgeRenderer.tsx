@@ -62,35 +62,37 @@ export function BadgeRenderer({
   const { theme } = useUnistyles();
   const pathTextId = useId();
 
-  // Derive shadow visibility from theme when not explicitly set
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
 
-  // High contrast / lowVision: thicker borders (autismFriendly also has opacity 0 but is NOT high contrast)
+  // highContrast / lowVision use thicker borders (autismFriendly is also no-shadow but uses normal borders).
   const isHighContrast =
     theme.variant === "highContrast" || theme.variant === "lowVision";
   const strokeWidth = isHighContrast ? 4 : 3;
 
-  // Single source of truth for geometry — viewport, icon position, scales,
-  // inset/innerInset all flow from getBadgeLayoutBoxes so renderer + tests
-  // can't drift.
-  const boxes = getBadgeLayoutBoxes(design, size, { strokeWidth, hasShadow });
-  const { inset, innerInset, viewBox, iconOrMonogram, metrics: layout } = boxes;
-  const bannerTopVisibleRatio = boxes.bannerTopVisibleRatio;
-  const bottomLabelExtraOffset = boxes.bottomLabelExtraOffset;
+  const boxes = useMemo(
+    () => getBadgeLayoutBoxes(design, size, { strokeWidth, hasShadow }),
+    [design, size, strokeWidth, hasShadow],
+  );
+  const {
+    inset,
+    innerInset,
+    viewBox,
+    iconOrMonogram,
+    metrics: layout,
+    bannerTopVisibleRatio,
+    bottomLabelExtraOffset,
+  } = boxes;
 
-  // Generate the shape path
   const pathD = useMemo(
     () => generateShapePath(design.shape, size, inset),
     [design.shape, size, inset],
   );
 
-  // Calculate icon color for WCAG AA contrast against fill
   const iconColor = useMemo(
     () => getSafeTextColor(design.color, "BadgeRenderer"),
     [design.color],
   );
 
-  // Icon sizing — centered at ~45% of badge diameter, scaled by layout density
   const iconSize = iconOrMonogram.size;
   const iconOffsetX = iconOrMonogram.cx - iconSize / 2;
   const iconOffsetY = iconOrMonogram.cy - iconSize / 2;

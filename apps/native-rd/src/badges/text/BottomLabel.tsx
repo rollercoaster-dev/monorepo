@@ -1,5 +1,6 @@
 import React from "react";
 import { Text } from "react-native-svg";
+import { BadgeShape } from "../types";
 import { getSafeTextColor } from "../../utils/accessibility";
 import { fontFamily as fontFamilyTokens } from "../../themes/tokens";
 
@@ -22,6 +23,21 @@ export const BOTTOM_LABEL_TOP_MARGIN_RATIO = 0.03;
 
 /** Maximum characters for bottom label */
 export const BOTTOM_LABEL_MAX_CHARS = 10;
+
+/**
+ * Star badges have a deep concavity at the bottom, so the bottom label is
+ * nudged further down to clear the points. Expressed as a fraction of size.
+ */
+export const STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO = 0.18;
+
+export function getBottomLabelExtraOffset(
+  shape: BadgeShape,
+  size: number,
+): number {
+  return shape === BadgeShape.star
+    ? size * STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO
+    : 0;
+}
 
 export function getBottomLabelY(size: number, scale = 1): number {
   const fontSize = size * BOTTOM_LABEL_SIZE_RATIO * scale;
