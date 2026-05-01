@@ -68,12 +68,26 @@ export function cartesian<T extends Record<string, readonly unknown[]>>(
 }
 
 /**
+ * Names of the rectangular layers we collect for invariant checks. Keeping
+ * this as a closed string-literal union (rather than `string`) means typos in
+ * the allow-list below fail at compile time.
+ */
+export type BoxName =
+  | "shape"
+  | "frame"
+  | "pathTextTop"
+  | "pathTextBottom"
+  | "banner"
+  | "bottomLabel"
+  | "iconOrMonogram";
+
+/**
  * The set of named, non-null boxes inside a `LayoutBoxes`. Notably, the
  * `iconOrMonogram` center content is converted to a small symbolic box around
  * its center point — this is an approximation but it lets the same overlap
  * machinery treat it like the other layers.
  */
-export type NamedBox = { name: string; box: Box };
+export type NamedBox = { name: BoxName; box: Box };
 
 export function collectBoxes(boxes: LayoutBoxes): NamedBox[] {
   const out: NamedBox[] = [];
@@ -138,7 +152,7 @@ export function forEachPair(
  * (see the plan: "matrix pins current behaviour first; tuning is a
  * separate concern", `2026-05-01-badge-test-system-and-field-rename.md`).
  */
-const ALLOWED_OVERLAPS: ReadonlyArray<readonly [string, string]> = [
+const ALLOWED_OVERLAPS: ReadonlyArray<readonly [BoxName, BoxName]> = [
   ["frame", "shape"],
   ["pathTextTop", "frame"],
   ["pathTextBottom", "frame"],
@@ -153,7 +167,7 @@ const ALLOWED_OVERLAPS: ReadonlyArray<readonly [string, string]> = [
   ["iconOrMonogram", "frame"],
 ];
 
-export function isAllowedOverlap(a: string, b: string): boolean {
+export function isAllowedOverlap(a: BoxName, b: BoxName): boolean {
   return ALLOWED_OVERLAPS.some(
     ([x, y]) => (a === x && b === y) || (a === y && b === x),
   );
