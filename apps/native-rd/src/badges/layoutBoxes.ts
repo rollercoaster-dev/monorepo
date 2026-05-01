@@ -19,6 +19,7 @@ import {
   getBadgeLayoutMetrics,
   ICON_SIZE_RATIO,
   type BadgeLayoutDensity,
+  type BadgeLayoutMetrics,
 } from "./layout";
 import { FRAME_BAND_RATIO, getPathTextRadius } from "./shapes/contours";
 import {
@@ -65,6 +66,16 @@ export type LayoutBoxes = {
   bottomLabel: Box | null;
   /** Resolved layout density — exposed for tests asserting density transitions. */
   density: BadgeLayoutDensity;
+  /** Full layout metrics — surfaced so the renderer can consume scales without a second computation. */
+  metrics: BadgeLayoutMetrics;
+  /** Stroke half-width used as the outer inset. */
+  inset: number;
+  /** Inner inset (outer inset + frame band). */
+  innerInset: number;
+  /** Banner top-visible-ratio used (resolved with shape-specific star override). */
+  bannerTopVisibleRatio: number;
+  /** Star-shape extra offset applied to the bottom label, when applicable. */
+  bottomLabelExtraOffset: number;
 };
 
 /** Renderer-default stroke width (matches BadgeRenderer's non-highContrast path). */
@@ -188,6 +199,14 @@ export function getBadgeLayoutBoxes(
     shape: design.shape,
   });
 
+  const bannerTopVisibleRatio = design.banner
+    ? getBannerTopVisibleRatio(design.banner.position, design.shape)
+    : BANNER_TOP_VISIBLE_RATIO;
+  const bottomLabelExtraOffset =
+    design.shape === "star" && design.bottomLabel?.trim()
+      ? size * STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO
+      : 0;
+
   return {
     viewBox,
     shape: shapeBox,
@@ -198,6 +217,11 @@ export function getBadgeLayoutBoxes(
     banner: bannerBox,
     bottomLabel: bottomLabelBox,
     density: metrics.density,
+    metrics,
+    inset,
+    innerInset,
+    bannerTopVisibleRatio,
+    bottomLabelExtraOffset,
   };
 }
 

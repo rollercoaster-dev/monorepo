@@ -5,7 +5,7 @@ export type BadgeLayoutDensity = "default" | "balanced" | "compact";
 /** Center icon size as a fraction of badge size, before density scaling. */
 export const ICON_SIZE_RATIO = 0.45;
 
-type BadgeLayoutMetrics = {
+export type BadgeLayoutMetrics = {
   density: BadgeLayoutDensity;
   centerY: number;
   centerContentScale: number;

@@ -25,18 +25,12 @@ import type { IconWeight } from "phosphor-react-native";
 
 import type { BadgeDesign } from "./types";
 import { generateShapePath } from "./shapes/paths";
-import { FRAME_BAND_RATIO } from "./shapes/contours";
-import { getBadgeLayoutMetrics, ICON_SIZE_RATIO } from "./layout";
+import { getBadgeLayoutBoxes, SHADOW_OFFSET } from "./layoutBoxes";
 import { FrameOverlay } from "./frames/FrameOverlay";
 import { PathText } from "./text/PathText";
-import {
-  Banner,
-  BANNER_HEIGHT_RATIO,
-  BANNER_TOP_VISIBLE_RATIO,
-  getBannerTopVisibleRatio,
-} from "./text/Banner";
+import { Banner } from "./text/Banner";
 import { MonogramCenter } from "./text/MonogramCenter";
-import { BottomLabel, getBottomLabelBottomOverflow } from "./text/BottomLabel";
+import { BottomLabel } from "./text/BottomLabel";
 import { getIconComponent } from "./iconRegistry";
 import { getSafeTextColor } from "../utils/accessibility";
 
@@ -54,15 +48,6 @@ export interface BadgeRendererProps {
   /** Test ID for testing */
   testID?: string;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Shadow offset in logical pixels (down-right) */
-const SHADOW_OFFSET = 5;
-
-const STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO = 0.18;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -85,42 +70,13 @@ export function BadgeRenderer({
     theme.variant === "highContrast" || theme.variant === "lowVision";
   const strokeWidth = isHighContrast ? 4 : 3;
 
-  // Inset shapes by half the stroke width so the stroke doesn't clip
-  const inset = strokeWidth / 2;
-  const innerInset = inset + size * FRAME_BAND_RATIO;
-
-  // Adaptive layout density — scales text/content when badge gets crowded
-  const layout = getBadgeLayoutMetrics(design, size, inset, innerInset);
-
-  const bannerTopVisibleRatio = design.banner
-    ? getBannerTopVisibleRatio(design.banner.position, design.shape)
-    : BANNER_TOP_VISIBLE_RATIO;
-  const bottomLabelExtraOffset =
-    design.shape === "star" && design.bottomLabel?.trim()
-      ? size * STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO
-      : 0;
-
-  // Expand the SVG to include shadow offset so badge doesn't scale down
-  const totalWidth = size + (hasShadow ? SHADOW_OFFSET : 0);
-  const bannerOverflowAmount = design.banner
-    ? size *
-      BANNER_HEIGHT_RATIO *
-      layout.bannerScale *
-      (1 - bannerTopVisibleRatio)
-    : 0;
-  const bannerTopOverflow =
-    design.banner?.position !== "bottom" ? bannerOverflowAmount : 0;
-  const bannerBottomOverflow =
-    design.banner?.position === "bottom" ? bannerOverflowAmount : 0;
-  const bottomLabelBottomOverflow = design.bottomLabel?.trim()
-    ? getBottomLabelBottomOverflow(size, layout.bottomLabelScale) +
-      bottomLabelExtraOffset
-    : 0;
-  const totalHeight =
-    size +
-    (hasShadow ? SHADOW_OFFSET : 0) +
-    bannerTopOverflow +
-    Math.max(bannerBottomOverflow, bottomLabelBottomOverflow);
+  // Single source of truth for geometry — viewport, icon position, scales,
+  // inset/innerInset all flow from getBadgeLayoutBoxes so renderer + tests
+  // can't drift.
+  const boxes = getBadgeLayoutBoxes(design, size, { strokeWidth, hasShadow });
+  const { inset, innerInset, viewBox, iconOrMonogram, metrics: layout } = boxes;
+  const bannerTopVisibleRatio = boxes.bannerTopVisibleRatio;
+  const bottomLabelExtraOffset = boxes.bottomLabelExtraOffset;
 
   // Generate the shape path
   const pathD = useMemo(
@@ -135,20 +91,18 @@ export function BadgeRenderer({
   );
 
   // Icon sizing — centered at ~45% of badge diameter, scaled by layout density
-  const iconSize = Math.round(
-    size * ICON_SIZE_RATIO * layout.centerContentScale,
-  );
-  const iconOffsetX = (size - iconSize) / 2;
-  const iconOffsetY = layout.centerY - iconSize / 2;
+  const iconSize = iconOrMonogram.size;
+  const iconOffsetX = iconOrMonogram.cx - iconSize / 2;
+  const iconOffsetY = iconOrMonogram.cy - iconSize / 2;
 
   // Resolve icon component
   const IconComponent = getIconComponent(design.iconName);
 
   return (
     <Svg
-      width={totalWidth}
-      height={totalHeight}
-      viewBox={`0 ${-bannerTopOverflow} ${totalWidth} ${totalHeight}`}
+      width={viewBox.w}
+      height={viewBox.h}
+      viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
       accessibilityRole="image"
       accessibilityLabel={`${design.title} badge, ${design.shape} shape`}
       testID={testID}
