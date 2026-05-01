@@ -16,7 +16,7 @@ The credentials are real OB3-shaped Verifiable Credentials and verify locally in
 
 ## Validator outcome (2026-05-01)
 
-```
+```text
 Outcome:   ERROR
 Errors:    6
 Warnings:  0
