@@ -26,7 +26,7 @@ import type { IconWeight } from "phosphor-react-native";
 import type { BadgeDesign } from "./types";
 import { generateShapePath } from "./shapes/paths";
 import { FRAME_BAND_RATIO } from "./shapes/contours";
-import { getBadgeLayoutMetrics } from "./layout";
+import { getBadgeLayoutMetrics, ICON_SIZE_RATIO } from "./layout";
 import { FrameOverlay } from "./frames/FrameOverlay";
 import { PathText } from "./text/PathText";
 import {
@@ -62,8 +62,6 @@ export interface BadgeRendererProps {
 /** Shadow offset in logical pixels (down-right) */
 const SHADOW_OFFSET = 5;
 
-/** Icon size as a fraction of badge size */
-const ICON_SIZE_RATIO = 0.45;
 const STAR_BOTTOM_LABEL_EXTRA_OFFSET_RATIO = 0.18;
 
 // ---------------------------------------------------------------------------
