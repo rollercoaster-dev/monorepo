@@ -346,6 +346,10 @@ describe("badge layout invariants — edge cases", () => {
       // intersection is fine because text renders on top.
 
       const checkSide = (side: "top" | "bottom") => {
+        const sideBox =
+          side === "top" ? boxes.pathTextTop : boxes.pathTextBottom;
+        if (!sideBox) return;
+
         const baselineR = getPathTextRadius(
           shape,
           size,
@@ -354,37 +358,27 @@ describe("badge layout invariants — edge cases", () => {
         );
         const cy = getPathTextCenterY(shape, size, side);
         const cx = size / 2;
-        // textPath with the default `dominantBaseline="alphabetic"` puts the
-        // baseline ON the arc; glyph extent above is approximated as
-        // `fontSize / 2` to match what `buildPathTextBox` uses for the box
-        // height — keeping the sampling honest about the same envelope the
-        // layout claims to provide.
-        const fontSize = size * 0.09 * (boxes.metrics.pathTextFontScale ?? 1);
-        const r = baselineR + fontSize / 2;
+        // textPath default baseline puts glyphs ON the arc; the layout's
+        // pathText box height is `fontSize`, so half that approximates the
+        // outward glyph extent. Using `sideBox.h` keeps the sampling tied to
+        // the same envelope the layout actually exposes.
+        const r = baselineR + sideBox.h / 2;
         const samples = arcSamplePoints(cx, cy, r, MAX_ARC_ANGLE, side);
 
         for (const p of samples) {
-          // The viewBox is an AABB that already grows to fit shadows, banners,
-          // and any expanded path-text bounds (see `buildViewBox`). If a glyph
-          // cap lands outside the viewBox, the badge cannot draw it — that is
-          // the only visual contract worth enforcing here.
-          if (!boxIsInside({ x: p.x, y: p.y, w: 0, h: 0 }, boxes.viewBox)) {
-            throw new Error(
-              `[${label}] pathText${side === "top" ? "Top" : "Bottom"} ` +
-                `glyph cap escapes the canvas at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})\n` +
-                `  shape: ${shape}, r: ${r.toFixed(1)}, cy: ${cy.toFixed(1)}\n` +
-                `  viewBox: ${JSON.stringify(boxes.viewBox)}`,
-            );
+          if (boxIsInside({ x: p.x, y: p.y, w: 0, h: 0 }, boxes.viewBox)) {
+            continue;
           }
+          throw new Error(
+            `[${label}] pathText${side === "top" ? "Top" : "Bottom"} ` +
+              `glyph cap escapes the canvas at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})\n` +
+              `  shape: ${shape}, r: ${r.toFixed(1)}, cy: ${cy.toFixed(1)}\n` +
+              `  viewBox: ${JSON.stringify(boxes.viewBox)}`,
+          );
         }
       };
 
-      if (pathTextPosition === "top" || pathTextPosition === "both") {
-        checkSide("top");
-      }
-      if (pathTextPosition === "bottom" || pathTextPosition === "both") {
-        checkSide("bottom");
-      }
+      for (const side of ["top", "bottom"] as const) checkSide(side);
     });
   });
 

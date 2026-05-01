@@ -14,6 +14,8 @@ import {
 import { getBadgeLayoutMetrics, ICON_SIZE_RATIO } from "../layout";
 import { PATH_TEXT_FONT_SIZE_RATIO } from "../text/PathText";
 import { BadgeShape } from "../types";
+import { type Point, pointInPolygon } from "./_geometryHelpers";
+import { outlinePolygon } from "./_shapePolygons";
 
 const SIZE = 256;
 const INSET = 2;
@@ -58,57 +60,6 @@ const ALL_SHAPES: BadgeShape[] = [
 ];
 const NON_STAR_SHAPES = ALL_SHAPES.filter((shape) => shape !== BadgeShape.star);
 const RENDER_STROKE_INSET = 1.5;
-
-type Point = { x: number; y: number };
-
-function shapePolygon(shape: BadgeShape, size: number, inset: number): Point[] {
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - inset;
-
-  if (shape === BadgeShape.hexagon) {
-    return Array.from({ length: 6 }, (_, i) => {
-      const angle = (Math.PI / 180) * (60 * i - 30);
-      return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-    });
-  }
-
-  if (shape === BadgeShape.diamond) {
-    return [
-      { x: cx, y: cy - r },
-      { x: cx + r, y: cy },
-      { x: cx, y: cy + r },
-      { x: cx - r, y: cy },
-    ];
-  }
-
-  if (shape === BadgeShape.star) {
-    const innerR = r * 0.4;
-    return Array.from({ length: 10 }, (_, i) => {
-      const pointR = i % 2 === 0 ? r : innerR;
-      const angle = (Math.PI / 180) * (36 * i - 90);
-      return {
-        x: cx + pointR * Math.cos(angle),
-        y: cy + pointR * Math.sin(angle),
-      };
-    });
-  }
-
-  throw new Error(`shapePolygon does not model ${shape}`);
-}
-
-function pointInPolygon(point: Point, polygon: Point[]): boolean {
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const a = polygon[i]!;
-    const b = polygon[j]!;
-    const crosses =
-      a.y > point.y !== b.y > point.y &&
-      point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x;
-    if (crosses) inside = !inside;
-  }
-  return inside;
-}
 
 function distanceToSegment(point: Point, a: Point, b: Point): number {
   const dx = b.x - a.x;
@@ -483,7 +434,7 @@ describe("path text shape-intersection clearance", () => {
     "%s top text band stays inside the inner frame boundary",
     (shape) => {
       const { contour, fontSize, innerInset } = pathTextFixture(shape);
-      const innerFrame = shapePolygon(shape, SIZE, innerInset);
+      const innerFrame = outlinePolygon(shape, SIZE, innerInset);
       const textBandRadius = fontSize;
 
       for (const point of sampleArc(
@@ -501,7 +452,11 @@ describe("path text shape-intersection clearance", () => {
 
   it("star top text band stays outside the star silhouette", () => {
     const { contour, fontSize } = pathTextFixture(BadgeShape.star);
-    const outerStar = shapePolygon(BadgeShape.star, SIZE, RENDER_STROKE_INSET);
+    const outerStar = outlinePolygon(
+      BadgeShape.star,
+      SIZE,
+      RENDER_STROKE_INSET,
+    );
     const textBandRadius = fontSize * 0.1;
 
     const centralTextSpan = sampleArc(
