@@ -101,6 +101,7 @@ export default [
         Request: 'readonly',
         Response: 'readonly',
         ReadableStream: 'readonly',
+        TextEncoder: 'readonly',
         console: 'readonly',
         Bun: 'readonly',
       },
