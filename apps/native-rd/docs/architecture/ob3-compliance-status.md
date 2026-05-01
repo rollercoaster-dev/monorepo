@@ -35,74 +35,75 @@ Each gap below is a real validator error, mapped to the line of code that produc
 
 ### 1. `creator` is a string, not an object
 
-| | |
-|---|---|
-| Validator | `$.credentialSubject.achievement.creator: string found, object expected` |
-| Source | [`credentialBuilder.ts:87`](../../src/badges/credentialBuilder.ts) — `badgeClass.issuer = iri(input.issuerDid)` |
-| Cause | `serializeOB3` projects the bare DID string into `achievement.creator`. OB3 requires a Profile object. |
-| Fix scope | Schema-shape only. No crypto changes. |
+|           |                                                                                                                 |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
+| Validator | `$.credentialSubject.achievement.creator: string found, object expected`                                        |
+| Source    | [`credentialBuilder.ts:87`](../../src/badges/credentialBuilder.ts) — `badgeClass.issuer = iri(input.issuerDid)` |
+| Cause     | `serializeOB3` projects the bare DID string into `achievement.creator`. OB3 requires a Profile object.          |
+| Fix scope | Schema-shape only. No crypto changes.                                                                           |
 
 ### 2. `proof` is an object, not an array
 
-| | |
-|---|---|
-| Validator | `$.proof: object found, array expected` |
-| Source | [`useCreateBadge.ts:193-216`](../../src/hooks/useCreateBadge.ts) |
-| Cause | A single proof object is attached. The OB3 schema requires `proof: [{...}]`. |
-| Fix scope | Schema-shape only. |
+|           |                                                                              |
+| --------- | ---------------------------------------------------------------------------- |
+| Validator | `$.proof: object found, array expected`                                      |
+| Source    | [`useCreateBadge.ts:193-216`](../../src/hooks/useCreateBadge.ts)             |
+| Cause     | A single proof object is attached. The OB3 schema requires `proof: [{...}]`. |
+| Fix scope | Schema-shape only.                                                           |
 
 ### 3. Missing top-level `name`
 
-| | |
-|---|---|
-| Validator | `$: required property 'name' not found` |
-| Cause | `serializeOB3` does not surface a top-level `name` on the credential envelope. Only `credentialSubject.achievement.name` is set. |
-| Fix scope | Schema-shape only. |
+|           |                                                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Validator | `$: required property 'name' not found`                                                                                          |
+| Cause     | `serializeOB3` does not surface a top-level `name` on the credential envelope. Only `credentialSubject.achievement.name` is set. |
+| Fix scope | Schema-shape only.                                                                                                               |
 
 ### 4. Missing top-level `issuanceDate`
 
-| | |
-|---|---|
-| Validator | `$: required property 'issuanceDate' not found` |
-| Cause | `assertion.issuedOn` is set but not surfaced as the VC envelope's `issuanceDate`. |
-| Fix scope | Schema-shape only. |
+|           |                                                                                   |
+| --------- | --------------------------------------------------------------------------------- |
+| Validator | `$: required property 'issuanceDate' not found`                                   |
+| Cause     | `assertion.issuedOn` is set but not surfaced as the VC envelope's `issuanceDate`. |
+| Fix scope | Schema-shape only.                                                                |
 
 ### 5. Non-standard cryptosuite
 
-| | |
-|---|---|
-| Validator | `No proof with type any of ("Ed25519Signature2020", "DataIntegrityProof" with cryptosuite attr of "eddsa-rdfc-2022" or "eddsa-2022") or proof purpose "assertionMethod" found` |
-| Source | [`useCreateBadge.ts:200-205`](../../src/hooks/useCreateBadge.ts) |
-| Cause | Cryptosuite is `eddsa-raw-json-iteration-a`. Signature is over raw `JSON.stringify(credential)`, not RDFC-1.0 canonicalized form. `proofValue` is bare base64url, not multibase `u…`-prefixed. |
-| Fix scope | Crypto. Requires RDFC-1.0 canonicalization (W3C Data Integrity), multibase encoding, cryptosuite rename. |
+|           |                                                                                                                                                                                                |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Validator | `No proof with type any of ("Ed25519Signature2020", "DataIntegrityProof" with cryptosuite attr of "eddsa-rdfc-2022" or "eddsa-2022") or proof purpose "assertionMethod" found`                 |
+| Source    | [`useCreateBadge.ts:200-205`](../../src/hooks/useCreateBadge.ts)                                                                                                                               |
+| Cause     | Cryptosuite is `eddsa-raw-json-iteration-a`. Signature is over raw `JSON.stringify(credential)`, not RDFC-1.0 canonicalized form. `proofValue` is bare base64url, not multibase `u…`-prefixed. |
+| Fix scope | Crypto. Requires RDFC-1.0 canonicalization (W3C Data Integrity), multibase encoding, cryptosuite rename.                                                                                       |
 
 ### 6. Umbrella `oneOf` failure
 
-| | |
-|---|---|
+|           |                                                                |
+| --------- | -------------------------------------------------------------- |
 | Validator | `$: must be valid to one and only one schema, but 0 are valid` |
-| Cause | Consequence of 1–5. Resolves automatically once they're fixed. |
+| Cause     | Consequence of 1–5. Resolves automatically once they're fixed. |
 
 ### 7. Non-resolvable `did:key` (related, not flagged by this validator)
 
-| | |
-|---|---|
-| Source | [`credentialBuilder.ts:51-56`](../../src/badges/credentialBuilder.ts) |
-| Cause | `did:key:${publicKeyJwk.x}` uses raw base64url, not the spec-required multibase (`z…`) + multicodec (`0xed01`) Ed25519 encoding. The DID will not resolve, so signature verification fails even after the cryptosuite is fixed. |
-| Also | Achievement IDs append a path segment to the DID (`credentialBuilder.ts:76-78`); `did:key` DIDs do not support paths. Use HTTPS URIs instead. |
-| Fix scope | Crypto / identifier. Bundled with #5. |
+|           |                                                                                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source    | [`credentialBuilder.ts:51-56`](../../src/badges/credentialBuilder.ts)                                                                                                                                                           |
+| Cause     | `did:key:${publicKeyJwk.x}` uses raw base64url, not the spec-required multibase (`z…`) + multicodec (`0xed01`) Ed25519 encoding. The DID will not resolve, so signature verification fails even after the cryptosuite is fixed. |
+| Also      | Achievement IDs append a path segment to the DID (`credentialBuilder.ts:76-78`); `did:key` DIDs do not support paths. Use HTTPS URIs instead.                                                                                   |
+| Fix scope | Crypto / identifier. Bundled with #5.                                                                                                                                                                                           |
 
 ---
 
 ## Iteration mapping
 
-| Gap | Iteration | Why deferred |
-|---|---|---|
-| 1–4 (schema shape) | D, but cheap | Could ship earlier as a "shape-compliant but signature-invalid" intermediate. |
-| 5 + 7 (cryptosuite + did:key) | D | Requires RDFC-1.0 canonicalization + multibase + DID resolution. Real work. |
-| 6 | D | Auto-resolves with 1–5. |
+| Gap                           | Iteration    | Why deferred                                                                  |
+| ----------------------------- | ------------ | ----------------------------------------------------------------------------- |
+| 1–4 (schema shape)            | D, but cheap | Could ship earlier as a "shape-compliant but signature-invalid" intermediate. |
+| 5 + 7 (cryptosuite + did:key) | D            | Requires RDFC-1.0 canonicalization + multibase + DID resolution. Real work.   |
+| 6                             | D            | Auto-resolves with 1–5.                                                       |
 
 A reasonable two-PR split:
+
 1. **PR A — Schema shape:** errors 1–4. Pure JSON shape, no crypto. Closes most validator probes; only `EmbeddedProofProbe` stays red.
 2. **PR B — Cryptosuite + did:key:** errors 5 + 7. Closes the loop.
 
