@@ -236,20 +236,20 @@ After Phase 3 the user reviews the matrix story. Two outcomes:
 After each phase:
 
 ```bash
-# From repo root
+# From apps/native-rd (bun test segfaults on this suite — use jest)
 bun run type-check
 bun run lint
-bun test --testPathPatterns badges  # native-rd badge tests only
+npx jest --no-coverage --testPathPatterns badges  # native-rd badge tests only
 ```
 
 **Phase 0 specific:**
 
-- `bun test --testPathPatterns "BadgeDesignerScreen|BadgeRenderer|Banner|CenterLabel|layout|types"` — all green with renamed identifiers
+- `npx jest --no-coverage --testPathPatterns "BadgeDesignerScreen|BadgeRenderer|Banner|BottomLabel|layout|types"` — all green with renamed identifiers
 - Manually open `BadgeDesignerScreen` (`npx expo run:ios`) and confirm UI form labels say "Bottom label" / "Top banner"
 
 **Phase 2 specific:**
 
-- `bun test --testPathPatterns layout.invariants` runs in < 2s
+- `npx jest --no-coverage --testPathPatterns layout.invariants` runs in < 2s
 - Deliberately break a centering offset in `layout.ts` and confirm tests fail with a useful message
 - Confirm allow-listed overlaps (e.g. icon ↔ shape) are not flagged as failures
 
