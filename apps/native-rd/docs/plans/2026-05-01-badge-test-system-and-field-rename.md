@@ -1,7 +1,7 @@
 # Badge Component Test System + Field Rename Refactor
 
 **Date:** 2026-05-01
-**Status:** Phases 0 + 1 complete — Phases 2-4 pending
+**Status:** Phases 0 + 1 + 2 complete — Phases 3-4 pending
 **Owner:** Joe
 
 ## Context
@@ -116,7 +116,9 @@ Implementation reuses existing exports rather than re-deriving:
 
 ---
 
-### Phase 2 — Logic-only invariant test matrix
+### Phase 2 — Logic-only invariant test matrix ✅
+
+**Status:** Complete (2026-05-01).
 
 **New file: `badges/__tests__/layout.invariants.test.ts`**
 
@@ -166,6 +168,15 @@ test.each(matrix)("layout invariants: %s", (design, size) => {
 - Banner with longest legal text on each shape
 
 Performance target: full matrix < 2s. If slower, sample size set down to `[200]`.
+
+**Outcome (2026-05-01):**
+
+- Two atomic commits:
+  1. `84f8a233` — `__tests__/_geometryHelpers.ts`: `boxesOverlap`, `boxIsInside`, `cartesian`, `collectBoxes` (treating `iconOrMonogram` as a symbolic square box around its centre), `forEachBox`/`forEachPair`, plus the named-pair allow-list. Allow-list extends the issue's enumerated set with `banner ↔ bottomLabel` (current behaviour: bottom-position banner and the bottom label both occupy the strip below the badge — see `layoutBoxes.ts:buildViewBox` `Math.max(bannerOverflow.bottom, bottomLabelBottomOverflow)`), `banner ↔ frame`, `banner ↔ pathText*`, `iconOrMonogram ↔ frame`, and `pathText* ↔ shape`. The matrix pins current behaviour; tuning the bottom-collision is a separate concern.
+  2. `d4fc3085` — `__tests__/layout.invariants.test.ts`: 5208-row cartesian matrix plus three edge-case suites (long top + long bottom path text per shape, 3-char monogram at smallest size per shape, longest banner text on each shape × position).
+- Full matrix + edge cases run in ~1.6s on dev hardware (well under the 2s budget).
+- Verified by deliberately setting `SHAPE_CENTER_Y_OFFSET.circle = 0.15`: 198 cases failed with diagnostics like `pathTextBottom ↔ iconOrMonogram` plus full bbox dumps for both layers.
+- All 5853 badge tests still green; `bun run type-check` and `bun run lint` clean.
 
 ---
 
