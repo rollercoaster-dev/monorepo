@@ -18,6 +18,18 @@ The app stores the following data **locally on your device only**:
 
 All data is stored in a local SQLite database managed by Evolu. Nothing is transmitted to external servers.
 
+## Personal Data on Badges
+
+Badges do not require a name, email address, account, or public profile. Current badges identify the badge subject with a locally generated cryptographic identifier, not with personal contact information.
+
+A future version may let you optionally add identity details, such as a display name, full name, email address, website, or profile image. If added, this information will remain under your control:
+
+- It will be optional.
+- It will be stored locally unless you choose an opt-in sync or sharing feature.
+- It will not be added to badges by default.
+- You will be shown what identity fields are included before a badge is signed, exported, or shared.
+- Existing exported or shared badge copies may not be recallable, because recipients can keep their own copies.
+
 ## What Data We Collect
 
 **None.**
