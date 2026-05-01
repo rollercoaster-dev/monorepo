@@ -48,9 +48,9 @@ export function boxIsInside(inner: Box, outer: Box): boolean {
  */
 export function cartesian<T extends Record<string, readonly unknown[]>>(
   axes: T,
-): Array<{ [K in keyof T]: T[K][number] }> {
+): { [K in keyof T]: T[K][number] }[] {
   type Combo = { [K in keyof T]: T[K][number] };
-  const keys = Object.keys(axes) as Array<keyof T>;
+  const keys = Object.keys(axes) as (keyof T)[];
 
   return keys.reduce<Combo[]>(
     (acc, key) => {
@@ -69,8 +69,8 @@ export function cartesian<T extends Record<string, readonly unknown[]>>(
 
 /**
  * Names of the rectangular layers we collect for invariant checks. Keeping
- * this as a closed string-literal union (rather than `string`) means typos in
- * the allow-list below fail at compile time.
+ * this as a closed string-literal union (rather than `string`) means collected
+ * layers and diagnostics stay tied to known layout concepts.
  */
 export type BoxName =
   | "shape"
@@ -89,6 +89,17 @@ export type BoxName =
  */
 export type NamedBox = { name: BoxName; box: Box };
 
+/** Convert the center point + glyph size into a rectangular box for checks. */
+export function centerContentBox(boxes: LayoutBoxes): Box {
+  const c = boxes.iconOrMonogram;
+  return {
+    x: c.cx - c.size / 2,
+    y: c.cy - c.size / 2,
+    w: c.size,
+    h: c.size,
+  };
+}
+
 export function collectBoxes(boxes: LayoutBoxes): NamedBox[] {
   const out: NamedBox[] = [];
   out.push({ name: "shape", box: boxes.shape });
@@ -101,20 +112,23 @@ export function collectBoxes(boxes: LayoutBoxes): NamedBox[] {
   if (boxes.bottomLabel)
     out.push({ name: "bottomLabel", box: boxes.bottomLabel });
 
-  // Treat the icon/monogram as a square box centered on (cx, cy) for the
-  // purposes of containment + overlap checks. Size is the glyph size.
-  const c = boxes.iconOrMonogram;
   out.push({
     name: "iconOrMonogram",
-    box: {
-      x: c.cx - c.size / 2,
-      y: c.cy - c.size / 2,
-      w: c.size,
-      h: c.size,
-    },
+    box: centerContentBox(boxes),
   });
 
   return out;
+}
+
+/**
+ * Foreground layers are the pieces that should not collide with each other.
+ * Shape and frame are structural/background boxes, so they are checked with
+ * explicit containment/position assertions instead of pairwise overlap.
+ */
+export function collectForegroundBoxes(boxes: LayoutBoxes): NamedBox[] {
+  return collectBoxes(boxes).filter(
+    ({ name }) => name !== "shape" && name !== "frame",
+  );
 }
 
 export function forEachBox(
@@ -125,50 +139,12 @@ export function forEachBox(
 }
 
 export function forEachPair(
-  boxes: LayoutBoxes,
+  boxes: NamedBox[],
   fn: (a: NamedBox, b: NamedBox) => void,
 ): void {
-  const list = collectBoxes(boxes);
-  for (let i = 0; i < list.length; i++) {
-    for (let j = i + 1; j < list.length; j++) {
-      fn(list[i]!, list[j]!);
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      fn(boxes[i]!, boxes[j]!);
     }
   }
-}
-
-/**
- * Allow-listed overlaps. These are pairs that the design intentionally
- * stacks — the frame overlay sits on the shape, the path text rides the
- * frame band, the banner straddles the badge edge, and the icon/monogram
- * is inscribed inside the shape.
- *
- * Order-independent: pass either ordering of names.
- *
- * `banner ↔ bottomLabel` is allow-listed because the current layout pins
- * a bottom-positioned banner and the bottom label to the same strip below
- * the badge edge (see `layoutBoxes.ts:buildViewBox` — both contribute to
- * `Math.max(bannerOverflow.bottom, bottomLabelBottomOverflow)`). The matrix
- * pins current behaviour; tuning that collision is tracked separately
- * (see the plan: "matrix pins current behaviour first; tuning is a
- * separate concern", `2026-05-01-badge-test-system-and-field-rename.md`).
- */
-const ALLOWED_OVERLAPS: ReadonlyArray<readonly [BoxName, BoxName]> = [
-  ["frame", "shape"],
-  ["pathTextTop", "frame"],
-  ["pathTextBottom", "frame"],
-  ["pathTextTop", "shape"],
-  ["pathTextBottom", "shape"],
-  ["banner", "shape"],
-  ["banner", "frame"],
-  ["banner", "pathTextTop"],
-  ["banner", "pathTextBottom"],
-  ["banner", "bottomLabel"],
-  ["iconOrMonogram", "shape"],
-  ["iconOrMonogram", "frame"],
-];
-
-export function isAllowedOverlap(a: BoxName, b: BoxName): boolean {
-  return ALLOWED_OVERLAPS.some(
-    ([x, y]) => (a === x && b === y) || (a === y && b === x),
-  );
 }

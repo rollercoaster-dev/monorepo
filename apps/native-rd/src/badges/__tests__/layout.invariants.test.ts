@@ -6,8 +6,8 @@
  * rendering any SVG. Intended to catch regressions across all ~432 badge
  * permutations cheaply (target: full matrix < 2s).
  *
- * The allow-list in `_geometryHelpers.ts` documents the intentional layer
- * stacking (frame overlays shape, path text rides the frame band, etc.).
+ * Structural boxes (shape/frame) are checked for containment and explicit
+ * positional relationships; foreground boxes are checked for non-overlap.
  *
  * Edge-case tests live at the bottom — they are NOT part of the matrix to
  * keep the matrix permutations bounded.
@@ -26,10 +26,11 @@ import {
   boxIsInside,
   boxesOverlap,
   cartesian,
+  centerContentBox,
   collectBoxes,
+  collectForegroundBoxes,
   forEachBox,
   forEachPair,
-  isAllowedOverlap,
 } from "./_geometryHelpers";
 
 const SHAPES = Object.values(BadgeShape);
@@ -130,9 +131,8 @@ describe("badge layout invariants — full matrix", () => {
         }
       });
 
-      // --- Non-overlap (with allow-list) ---
-      forEachPair(boxes, (a, b) => {
-        if (isAllowedOverlap(a.name, b.name)) return;
+      // --- Foreground non-overlap ---
+      forEachPair(collectForegroundBoxes(boxes), (a, b) => {
         if (boxesOverlap(a.box, b.box)) {
           throw new Error(
             `[${label}] unexpected overlap: ${a.name} ↔ ${b.name}\n` +
@@ -148,6 +148,8 @@ describe("badge layout invariants — full matrix", () => {
           boxes.shape.y + boxes.shape.h,
         );
       }
+
+      expect(boxIsInside(centerContentBox(boxes), boxes.shape)).toBe(true);
     },
   );
 });
@@ -193,19 +195,11 @@ describe("badge layout invariants — edge cases", () => {
       monogram: "ABC",
     };
     const boxes = getBadgeLayoutBoxes(design, 80);
+    const monogramBox = centerContentBox(boxes);
+
     expect(boxes.iconOrMonogram.cx).toBeCloseTo(40, 1);
     expect(boxes.iconOrMonogram.size).toBeGreaterThan(0);
-    expect(
-      boxIsInside(
-        {
-          x: boxes.iconOrMonogram.cx - boxes.iconOrMonogram.size / 2,
-          y: boxes.iconOrMonogram.cy - boxes.iconOrMonogram.size / 2,
-          w: boxes.iconOrMonogram.size,
-          h: boxes.iconOrMonogram.size,
-        },
-        boxes.viewBox,
-      ),
-    ).toBe(true);
+    expect(boxIsInside(monogramBox, boxes.shape)).toBe(true);
   });
 
   // Banner with the longest legal text on every shape, in both positions.
@@ -238,5 +232,27 @@ describe("badge layout invariants — edge cases", () => {
         expect(named.filter((n) => n.name === "banner")).toHaveLength(1);
       },
     );
+  });
+
+  test.each(SHAPES)("bottom banner clears bottom label (%s)", (shape) => {
+    const design: BadgeDesign = {
+      shape,
+      frame: "boldBorder",
+      color: "#a78bfa",
+      iconName: "Trophy",
+      iconWeight: "regular",
+      title: "Test Badge",
+      centerMode: "icon",
+      banner: { text: "MAXIMUM ELITE", position: "bottom" },
+      bottomLabel: "Certified",
+    };
+    const boxes = getBadgeLayoutBoxes(design, 200);
+
+    expect(boxes.banner).not.toBeNull();
+    expect(boxes.bottomLabel).not.toBeNull();
+    expect(boxes.bottomLabel!.y).toBeGreaterThanOrEqual(
+      boxes.banner!.y + boxes.banner!.h,
+    );
+    expect(boxesOverlap(boxes.banner!, boxes.bottomLabel!)).toBe(false);
   });
 });

@@ -69,7 +69,7 @@ export type LayoutBoxes = {
   innerInset: number;
   /** Banner top-visible-ratio used (with star-shape override applied for top-position banners). */
   bannerTopVisibleRatio: number;
-  /** Star-shape extra offset applied to the bottom label, when applicable. */
+  /** Extra offset applied to the bottom label to clear star points or a bottom banner. */
   bottomLabelExtraOffset: number;
 };
 
@@ -171,8 +171,15 @@ export function getBadgeLayoutBoxes(
     ? getBannerBox(visibleBanner, size, metrics.bannerScale, design.shape)
     : null;
 
+  const bottomBannerClearance =
+    visibleBanner?.position === "bottom" && bannerBox
+      ? bannerBox.y + bannerBox.h - size
+      : 0;
   const bottomLabelExtraOffset = hasBottomLabel
-    ? getBottomLabelExtraOffset(design.shape, size)
+    ? Math.max(
+        getBottomLabelExtraOffset(design.shape, size),
+        bottomBannerClearance,
+      )
     : 0;
   const bottomLabelBox: Box | null = hasBottomLabel
     ? buildBottomLabelBox(
