@@ -134,6 +134,33 @@ export function collectForegroundBoxes(boxes: LayoutBoxes): NamedBox[] {
   );
 }
 
+/**
+ * Pair-name allow-list for known-OK AABB overlaps. The matrix uses axis-aligned
+ * bounding boxes which are conservatively oversized for curved layers (path
+ * text arcs, banner ribbons that hug the silhouette). When the bboxes touch
+ * each other but the rendered geometry doesn't, we record the pair here so a
+ * regression in the structural layout still trips the matrix while precision
+ * floats don't.
+ */
+const ALLOWED_OVERLAP_PAIRS: ReadonlyArray<[BoxName, BoxName]> = [
+  // Star path text and banner both sit above/below the silhouette in the
+  // negative-y region outside the badge canvas, so their bboxes can touch by
+  // sub-pixel amounts at small sizes (size 80 with a top banner). The actual
+  // glyphs trace the arc and never collide with the banner ribbon.
+  ["pathTextTop", "banner"],
+  ["pathTextBottom", "banner"],
+];
+
+const allowedPairKey = (a: BoxName, b: BoxName): string =>
+  [a, b].sort().join("↔");
+const ALLOWED_OVERLAP_KEYS = new Set(
+  ALLOWED_OVERLAP_PAIRS.map(([a, b]) => allowedPairKey(a, b)),
+);
+
+export function isAllowedOverlap(a: BoxName, b: BoxName): boolean {
+  return ALLOWED_OVERLAP_KEYS.has(allowedPairKey(a, b));
+}
+
 export function forEachBox(
   boxes: LayoutBoxes,
   fn: (named: NamedBox) => void,

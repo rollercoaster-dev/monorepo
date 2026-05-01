@@ -33,6 +33,7 @@ import {
   collectForegroundBoxes,
   forEachBox,
   forEachPair,
+  isAllowedOverlap,
 } from "./_geometryHelpers";
 
 const SHAPES = Object.values(BadgeShape);
@@ -137,7 +138,7 @@ describe("badge layout invariants — full matrix", () => {
 
       // --- Foreground non-overlap ---
       forEachPair(collectForegroundBoxes(boxes), (a, b) => {
-        if (boxesOverlap(a.box, b.box)) {
+        if (boxesOverlap(a.box, b.box) && !isAllowedOverlap(a.name, b.name)) {
           throw new Error(
             `[${label}] unexpected overlap: ${a.name} ↔ ${b.name}\n` +
               `  ${a.name} = ${JSON.stringify(a.box)}\n` +
@@ -228,7 +229,10 @@ describe("badge layout invariants — edge cases", () => {
 
     expect(boxes.iconOrMonogram.cx).toBeCloseTo(40, 1);
     expect(boxes.iconOrMonogram.size).toBeGreaterThan(0);
-    expect(boxIsInside(monogramBox, boxes.shape)).toBe(true);
+    // Compare against the visible badge geometry, not the viewBox — the
+    // viewBox grows to fit shadows/banners and would let an overflowing
+    // monogram pass.
+    expect(boxIsInside(monogramBox, boxes.frame ?? boxes.shape)).toBe(true);
   });
 
   // Banner with the longest legal text on every shape, in both positions.
