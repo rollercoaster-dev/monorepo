@@ -13,9 +13,19 @@
       "require": "./dist/openbadges-ui.umd.js"
     },
     "./styles": {
-      "import": "./dist/style.css"
+      "types": "./src/styles.d.ts",
+      "import": "./dist/openbadges-ui.css"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./dist/openbadges-ui.css": {
+      "types": "./src/styles.d.ts",
+      "import": "./dist/openbadges-ui.css",
+      "default": "./dist/openbadges-ui.css"
+    },
+    "./dist/style.css": {
+      "types": "./src/styles.d.ts",
+      "import": "./dist/openbadges-ui.css",
+      "default": "./dist/openbadges-ui.css"
+    }
   },
   "files": [
     "dist",
@@ -23,13 +33,13 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --emitDeclarationOnly && bun scripts/fix-aliases.js",
+    "build": "vite build && tsc -p tsconfig.build.json --emitDeclarationOnly && bun scripts/fix-aliases.js",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{js,ts,vue}\"",
     "format:check": "prettier --check \"src/**/*.{js,ts,vue}\"",
-    "type-check": "vue-tsc --noEmit",
+    "type-check": "vue-tsc --noEmit && vue-tsc --noEmit -p tsconfig.test.json",
     "check": "bun run lint --fix && bun run type-check",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -79,6 +89,7 @@
   "devDependencies": {
     "@histoire/plugin-vue": "^0.17.6",
     "@rollercoaster-dev/shared-config": "workspace:*",
+    "@types/node": "^25.6.0",
     "@types/uuid": "^9.0.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vitest/coverage-istanbul": "^4.1.5",

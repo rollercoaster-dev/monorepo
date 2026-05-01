@@ -49,9 +49,17 @@ export default defineConfig(({ mode }) => {
           main: resolve(__dirname, 'index.html'),
         },
         output: {
-          manualChunks: {
-            vue: ['vue', 'vue-router', 'pinia'],
-            vendor: ['@vueuse/core'],
+          manualChunks(id) {
+            if (
+              id.includes('node_modules/vue') ||
+              id.includes('node_modules/vue-router') ||
+              id.includes('node_modules/pinia')
+            ) {
+              return 'vue'
+            }
+            if (id.includes('node_modules/@vueuse/core')) {
+              return 'vendor'
+            }
           },
         },
       },
@@ -91,7 +99,7 @@ export default defineConfig(({ mode }) => {
             const url = useHttps
               ? `https://${host}/`
               : `http://${host}:${server.config.server.port}/`
-            console.log(`\n  ➜  Dev URL: ${url}\n`)
+            process.stdout.write(`\n  ➜  Dev URL: ${url}\n`)
           })
         },
       },

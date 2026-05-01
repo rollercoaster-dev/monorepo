@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": [
+    "env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ],
+  "exclude": [
+    "src/**/*.stories.ts",
+    "src/**/*.story.vue",
+    "src/**/*.mock.ts",
+    "src/**/__tests__/**",
+    "tests/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

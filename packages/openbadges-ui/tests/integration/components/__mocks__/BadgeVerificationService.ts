@@ -2,6 +2,10 @@
 import { vi } from "vitest";
 import type { VerificationResult } from "../../../../src/services/BadgeVerificationService";
 
+type VerifyBadgeMock = ReturnType<
+  typeof vi.fn<(badge: unknown) => Promise<VerificationResult>>
+>;
+
 const defaultResult: VerificationResult = {
   isValid: true,
   errors: [],
@@ -21,8 +25,12 @@ const defaultResult: VerificationResult = {
   },
 };
 
-export const BadgeVerificationService = {
-  verifyBadge: vi.fn().mockResolvedValue(defaultResult),
+const verifyBadge: VerifyBadgeMock =
+  vi.fn<(badge: unknown) => Promise<VerificationResult>>();
+verifyBadge.mockResolvedValue(defaultResult);
+
+export const BadgeVerificationService: { verifyBadge: VerifyBadgeMock } = {
+  verifyBadge,
 };
 
 // Helper function to set up default successful verification result
