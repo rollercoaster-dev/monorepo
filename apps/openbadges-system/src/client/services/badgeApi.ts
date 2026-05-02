@@ -91,7 +91,7 @@ export const badgeApi = {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Failed to fetch issuers')
+      throw new Error('Failed to fetch issuers', { cause: error })
     }
   },
 
@@ -118,7 +118,7 @@ export const badgeApi = {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Failed to fetch issuer')
+      throw new Error('Failed to fetch issuer', { cause: error })
     }
   },
 
@@ -146,7 +146,7 @@ export const badgeApi = {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Failed to fetch badge classes')
+      throw new Error('Failed to fetch badge classes', { cause: error })
     }
   },
 
@@ -173,7 +173,7 @@ export const badgeApi = {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Failed to fetch badge class')
+      throw new Error('Failed to fetch badge class', { cause: error })
     }
   },
 
@@ -204,7 +204,7 @@ export const badgeApi = {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Failed to fetch badge classes for issuer')
+      throw new Error('Failed to fetch badge classes for issuer', { cause: error })
     }
   },
 }

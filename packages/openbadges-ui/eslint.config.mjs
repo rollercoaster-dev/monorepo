@@ -6,6 +6,18 @@ export default [
     ignores: ['dist/**', 'histoire-dist/**', 'node_modules/**', 'coverage/**', '*.d.ts'],
   },
   {
+    files: ['src/**/*.{ts,vue}', 'examples/**/*.js'],
+    languageOptions: {
+      globals: {
+        alert: 'readonly',
+        Event: 'readonly',
+        HTMLElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLSelectElement: 'readonly',
+      },
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.vue'],
     rules: {
       // UI package: must not import from apps

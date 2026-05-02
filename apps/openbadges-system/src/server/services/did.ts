@@ -370,7 +370,9 @@ export class DIDService {
     try {
       didDocument = JSON.parse(user.didDocument)
     } catch (error) {
-      throw new Error(`Invalid DID Document JSON for user ${maskedId}`)
+      throw new Error(`Invalid DID Document JSON for user ${maskedId}`, {
+        cause: error,
+      })
     }
 
     // Get verification method ID

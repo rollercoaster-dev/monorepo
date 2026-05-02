@@ -20,6 +20,20 @@ updates:
         patterns:
           - "*"
         dependency-type: "production"
+    ignore:
+      # Pinned pending decision on the rd-logger Express adapter (issue tracking
+      # whether we keep the adapter and bump to Express 5 or drop it entirely).
+      # Express 4 → 5 is a breaking change in middleware/error-handling APIs and
+      # the adapter would need a real port + a major rd-logger release.
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/express"
+        update-types: ["version-update:semver-major"]
+      # @hono/node-server is only consumed by rd-logger's own Hono adapter
+      # integration test; the v1 → v2 jump is breaking and lives in the same
+      # adapter-fate decision.
+      - dependency-name: "@hono/node-server"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
     commit-message:

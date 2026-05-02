@@ -176,7 +176,7 @@ export class OpenBadgesService {
   async makeAuthenticatedRequest(
     user: User,
     endpoint: string,
-    // eslint-disable-next-line no-undef
+
     options: RequestInit = {}
   ): Promise<Response> {
     let token: string
@@ -228,7 +228,7 @@ export class OpenBadgesService {
    * Make public API request (no authentication required)
    * Uses platform API endpoints that proxy to the badge server
    */
-  // eslint-disable-next-line no-undef
+
   async makePublicRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
     try {
       const response = await fetch(endpoint, {
@@ -248,7 +248,9 @@ export class OpenBadgesService {
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Network error. Please check your connection and try again.')
+      throw new Error('Network error. Please check your connection and try again.', {
+        cause: error,
+      })
     }
   }
 
