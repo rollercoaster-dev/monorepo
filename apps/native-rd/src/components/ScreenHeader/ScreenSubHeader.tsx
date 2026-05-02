@@ -31,7 +31,8 @@ export function ScreenSubHeader({
       <Text variant="title" style={styles.subLabel} accessibilityRole="header">
         {label}
       </Text>
-      {/* Spacer balances the back button so the label stays centered. */}
+      {/* Trailing slot: render `right` if provided, otherwise an empty
+          spacer matching the back-button width so the label stays centered. */}
       {right ?? <View style={styles.spacer} />}
     </HeaderBand>
   );

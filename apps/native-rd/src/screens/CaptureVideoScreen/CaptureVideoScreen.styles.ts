@@ -62,13 +62,17 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.error,
   },
-  // Anchored at the row's horizontal center then nudged right so the flip
-  // sits adjacent to the record button. Absolute positioning keeps the
-  // record button at exact center regardless of flip presence.
+  // Anchored at the row's center then nudged right so the flip sits
+  // adjacent to the record button. Absolute positioning keeps the record
+  // button at exact horizontal center regardless of flip presence.
+  // `top` accounts for the row's asymmetric vertical padding so the flip's
+  // vertical center matches the record button's center (alignItems on the
+  // parent doesn't apply to absolutely-positioned children).
   flipButton: {
     position: "absolute",
     left: "50%",
     marginLeft: RECORD_BUTTON_SIZE / 2 + FLIP_BUTTON_GAP,
+    top: theme.space[4] + (RECORD_BUTTON_SIZE - FLIP_BUTTON_SIZE) / 2,
     width: FLIP_BUTTON_SIZE,
     height: FLIP_BUTTON_SIZE,
     borderRadius: FLIP_BUTTON_SIZE / 2,
