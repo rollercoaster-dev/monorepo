@@ -30,7 +30,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write '{src,test}/**/*.ts'",
     "format:check": "prettier --check '{src,test}/**/*.ts'",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit --tsBuildInfoFile .turbo/type-check.tsbuildinfo",
     "test": "bun test",
     "test:unit": "bun run test",
     "test:integration": "echo 'No integration tests'",
@@ -69,7 +69,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "ajv": "^8.17.1",
+    "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1"
   },
   "publishConfig": {

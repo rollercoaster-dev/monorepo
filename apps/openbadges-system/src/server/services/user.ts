@@ -140,7 +140,7 @@ export class UserService {
         this.initializeDatabase()
       } catch (error) {
         logger.error('Failed to initialize database:', { error })
-        throw new Error('Database unavailable')
+        throw new Error('Database unavailable', { cause: error })
       }
     }
     return this.db
