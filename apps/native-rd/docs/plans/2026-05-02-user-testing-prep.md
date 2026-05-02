@@ -15,17 +15,17 @@
 
 ## Status Snapshot
 
-| Area | State | Notes |
-| --- | --- | --- |
-| Apple Developer Program | ✅ Enrolled | Confirmed 2026-05-02 |
-| Crash / bug reporting | ❌ Not started | No Sentry, no in-app feedback, no crash logger |
-| TestFlight build pipeline | ❌ Not started | EAS not initialised; no `eas.json` |
-| App Store Connect record | ❌ Not started | Bundle ID, slug, display name still TBD |
-| Privacy policy | 🟡 Drafted, unhosted | `docs/launch/privacy-policy.md` — contact email + public URL TBD |
-| Quality dashboard | 🟡 Stale | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since |
-| Foundations review | 🟡 Stale | Same — see `docs/quality/foundations-review-phase1.md` |
-| Tech debt log | 🟡 Stale | 5 HIGH-severity items still listed OPEN; need re-verification |
-| Google Play account | ❌ Not started | Personal account €25 + 14-day / 12-tester closed test required |
+| Area                      | State                | Notes                                                                                   |
+| ------------------------- | -------------------- | --------------------------------------------------------------------------------------- |
+| Apple Developer Program   | ✅ Enrolled          | Confirmed 2026-05-02                                                                    |
+| Crash / bug reporting     | ❌ Not started       | No Sentry, no in-app feedback, no crash logger                                          |
+| TestFlight build pipeline | ❌ Not started       | EAS not initialised; no `eas.json`                                                      |
+| App Store Connect record  | ❌ Not started       | Bundle ID, slug, display name still TBD                                                 |
+| Privacy policy            | 🟡 Drafted, unhosted | `docs/launch/privacy-policy.md` — contact email + public URL TBD                        |
+| Quality dashboard         | 🟡 Stale             | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since |
+| Foundations review        | 🟡 Stale             | Same — see `docs/quality/foundations-review-phase1.md`                                  |
+| Tech debt log             | 🟡 Stale             | 5 HIGH-severity items still listed OPEN; need re-verification                           |
+| Google Play account       | ❌ Not started       | Personal account €25 + 14-day / 12-tester closed test required                          |
 
 ---
 
@@ -63,7 +63,7 @@ Each phase has **one clear deliverable**. Don't start the next phase until the c
 - [ ] a11y: `accessibilityLabel`, 44pt touch target (per native-rd a11y contract)
 - [ ] Component test for the form (matches existing `__tests__/` convention)
 
-**Note:** TestFlight users can also submit feedback via Apple's native screenshot-share — this is *additional*, not redundant. The in-app button covers Android later and gives non-TestFlight builds a path too.
+**Note:** TestFlight users can also submit feedback via Apple's native screenshot-share — this is _additional_, not redundant. The in-app button covers Android later and gives non-TestFlight builds a path too.
 
 ### Phase 3 — TestFlight build pipeline
 
@@ -138,29 +138,29 @@ See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
 
 All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
 
-| Phase | Issue | Title |
-| --- | --- | --- |
-| 1 | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) | feat(native-rd): integrate Sentry for crash reporting |
-| 2 | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) | feat(native-rd): in-app Report a Bug button via Sentry feedback API |
-| 3B | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build |
-| 3C | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
-| 4 | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass |
-| 5 | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email |
-| 6 | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification |
-| 7 | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start |
+| Phase | Issue                                                            | Title                                                                    |
+| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1     | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) | feat(native-rd): integrate Sentry for crash reporting                    |
+| 2     | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) | feat(native-rd): in-app Report a Bug button via Sentry feedback API      |
+| 3B    | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build           |
+| 3C    | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
+| 4     | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                        |
+| 5     | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email   |
+| 6     | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification  |
+| 7     | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start     |
 
 ---
 
 ## Open Decisions (block specific phases)
 
-| Decision | Blocks | Default if undecided |
-| --- | --- | --- |
-| Bundle ID `com.joe.rd.native-rd` final? | Phase 3B | Keep as-is |
-| Expo slug `native-rd` final? | Phase 3B | Keep as-is |
-| Display name capitalisation | Phase 3C | `Rollercoaster.dev` |
-| Feedback contact email | Phase 2 + 3C + 5 | TBD |
-| Privacy policy host URL | Phase 5 | TBD |
-| Hashed user ID strategy for Sentry `setUser` | Phase 1 | ULID hash from existing user record |
+| Decision                                     | Blocks           | Default if undecided                |
+| -------------------------------------------- | ---------------- | ----------------------------------- |
+| Bundle ID `com.joe.rd.native-rd` final?      | Phase 3B         | Keep as-is                          |
+| Expo slug `native-rd` final?                 | Phase 3B         | Keep as-is                          |
+| Display name capitalisation                  | Phase 3C         | `Rollercoaster.dev`                 |
+| Feedback contact email                       | Phase 2 + 3C + 5 | TBD                                 |
+| Privacy policy host URL                      | Phase 5          | TBD                                 |
+| Hashed user ID strategy for Sentry `setUser` | Phase 1          | ULID hash from existing user record |
 
 ---
 
@@ -177,7 +177,7 @@ All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Te
 
 ## Update Log
 
-| Date | Change | By |
-| --- | --- | --- |
-| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus. | Joe + Claude |
+| Date       | Change                                                                  | By           |
+| ---------- | ----------------------------------------------------------------------- | ------------ |
+| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.    | Joe + Claude |
 | 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11. | Joe + Claude |
