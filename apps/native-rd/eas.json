@@ -40,9 +40,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "REPLACE_WITH_FEEDBACK_EMAIL_FROM_PHASE_3A",
+        "appleId": "info@rollercoaster.dev",
         "ascAppId": "REPLACE_AFTER_PHASE_3C_APP_STORE_CONNECT_RECORD",
-        "appleTeamId": "REPLACE_FROM_DEVELOPER_PORTAL_MEMBERSHIP_PAGE"
+        "appleTeamId": "86VL756N99"
       },
       "android": {
         "serviceAccountKeyPath": "./play-service-account.json",
