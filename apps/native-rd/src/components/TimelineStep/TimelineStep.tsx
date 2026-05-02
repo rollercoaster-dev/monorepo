@@ -19,6 +19,7 @@ export interface TimelineStepProps {
   stepIndex: number;
   evidence: EvidenceItemData[];
   onNodePress: (stepIndex: number) => void;
+  onEvidencePress?: (evidenceId: string) => void;
   defaultExpanded?: boolean;
 }
 
@@ -39,6 +40,7 @@ export function TimelineStep({
   stepIndex,
   evidence,
   onNodePress,
+  onEvidencePress,
   defaultExpanded = false,
 }: TimelineStepProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -82,11 +84,19 @@ export function TimelineStep({
           <View style={styles.evidenceSection}>
             {evidence.length > 0 ? (
               evidence.map((ev) => (
-                <View
+                <Pressable
                   key={ev.id}
                   style={styles.evidenceCard}
+                  onPress={
+                    onEvidencePress ? () => onEvidencePress(ev.id) : undefined
+                  }
+                  disabled={!onEvidencePress}
                   accessible
+                  accessibilityRole={onEvidencePress ? "button" : undefined}
                   accessibilityLabel={`${ev.type} evidence: ${ev.label}`}
+                  accessibilityHint={
+                    onEvidencePress ? "Tap to view evidence" : undefined
+                  }
                 >
                   <Text style={styles.evidenceIcon}>
                     {EVIDENCE_TYPE_ICONS[ev.type] ?? "\u{1F4C4}"}
@@ -94,7 +104,7 @@ export function TimelineStep({
                   <Text style={styles.evidenceLabel} numberOfLines={1}>
                     {ev.label}
                   </Text>
-                </View>
+                </Pressable>
               ))
             ) : (
               <Text style={styles.noEvidence}>No evidence yet</Text>
