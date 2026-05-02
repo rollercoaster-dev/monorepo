@@ -5,7 +5,10 @@ import {
   VIEWER_STRIP_THUMB_WIDTH,
 } from "../ViewerStripThumb";
 import type { ViewerEvidence } from "../../hooks/useAllEvidenceForGoal";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./ViewerThumbnailStrip.styles";
+
+const logger = new Logger("ViewerThumbnailStrip");
 
 export interface ViewerThumbnailStripProps {
   evidence: ViewerEvidence[];
@@ -23,9 +26,9 @@ export function ViewerThumbnailStrip({
 }: ViewerThumbnailStripProps) {
   const listRef = useRef<FlatList<ViewerEvidence>>(null);
 
-  // Auto-scroll the active thumb into the centre when activeIndex changes.
   useEffect(() => {
     if (activeIndex < 0 || activeIndex >= evidence.length) return;
+    // Defer to next tick so FlatList has laid out items before scrollToIndex.
     const id = setTimeout(() => {
       listRef.current?.scrollToIndex({
         index: activeIndex,
@@ -72,9 +75,10 @@ export function ViewerThumbnailStrip({
         contentContainerStyle={styles.content}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         getItemLayout={getItemLayout}
-        // If scrollToIndex tries to land on a not-yet-rendered item,
-        // fall back to scrollToOffset so we don't crash.
+        // scrollToIndex throws on virtualized items; fall back to offset.
+        // Frequent firings indicate getItemLayout has drifted from real width.
         onScrollToIndexFailed={(info) => {
+          logger.warn("scrollToIndex failed; falling back to offset", info);
           listRef.current?.scrollToOffset({
             offset: ITEM_FULL_WIDTH * info.index,
             animated: true,

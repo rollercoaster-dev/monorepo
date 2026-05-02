@@ -1,4 +1,5 @@
 import React from "react";
+import { AccessibilityInfo } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -112,5 +113,43 @@ describe("EvidenceViewerScreen", () => {
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("clamps activeIndex and announces when evidence is removed mid-view", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => undefined);
+    mockUseAllEvidenceForGoal.mockReturnValue(ITEMS);
+    const { rerender } = renderWithProviders(
+      <EvidenceViewerScreen {...routeProps} />,
+    );
+    expect(screen.getByText("2 / 2")).toBeOnTheScreen();
+
+    // Re-render with the active item removed.
+    mockUseAllEvidenceForGoal.mockReturnValue([ITEMS[0]]);
+    rerender(<EvidenceViewerScreen {...routeProps} />);
+
+    // Strip is hidden for single-item lists, so just verify the announcement.
+    expect(announce).toHaveBeenCalledWith(
+      "Evidence was removed. Showing the next available item.",
+    );
+    announce.mockRestore();
+  });
+
+  it("announces when all evidence is removed mid-view", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => undefined);
+    mockUseAllEvidenceForGoal.mockReturnValue(ITEMS);
+    const { rerender } = renderWithProviders(
+      <EvidenceViewerScreen {...routeProps} />,
+    );
+
+    mockUseAllEvidenceForGoal.mockReturnValue([]);
+    rerender(<EvidenceViewerScreen {...routeProps} />);
+
+    expect(screen.getByText("No evidence to view.")).toBeOnTheScreen();
+    expect(announce).toHaveBeenCalledWith("All evidence was removed.");
+    announce.mockRestore();
   });
 });

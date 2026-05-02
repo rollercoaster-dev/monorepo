@@ -61,7 +61,6 @@ export function EvidenceContent({ evidence }: EvidenceContentProps) {
         <LinkContent uri={evidence.uri ?? ""} description={evidence.title} />
       );
     case EvidenceType.file:
-    default:
       return (
         <FileContent
           uri={evidence.uri ?? ""}
@@ -69,5 +68,11 @@ export function EvidenceContent({ evidence }: EvidenceContentProps) {
           metadata={evidence.metadata}
         />
       );
+    default:
+      return assertNever(evidence.type);
   }
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled evidence type: ${value as string}`);
 }

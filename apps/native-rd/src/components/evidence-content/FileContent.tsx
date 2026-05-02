@@ -3,7 +3,10 @@ import { View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { openFile, tryParseJSON } from "../../utils/evidenceViewers";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./FileContent.styles";
+
+const logger = new Logger("FileContent");
 
 export interface FileContentProps {
   uri: string;
@@ -33,6 +36,12 @@ export function FileContent({ uri, description, metadata }: FileContentProps) {
   const filename = getFilename(uri, metadata);
   const mimeType = getMimeType(metadata);
 
+  function handleOpen() {
+    openFile(uri, metadata).catch((error) => {
+      logger.error("Unhandled rejection from openFile", { uri, error });
+    });
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -48,11 +57,7 @@ export function FileContent({ uri, description, metadata }: FileContentProps) {
             {description}
           </Text>
         ) : null}
-        <Button
-          label="Open"
-          onPress={() => openFile(uri, metadata)}
-          variant="primary"
-        />
+        <Button label="Open" onPress={handleOpen} variant="primary" />
       </View>
     </View>
   );

@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { AccessibilityInfo, ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -12,8 +12,7 @@ import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
 
-// Measured tab bar height. Reading via `useBottomTabBarHeight` would pull in
-// ESM that needs extra Babel transform whitelisting in Jest config.
+// Hardcoded; useBottomTabBarHeight requires extra Jest ESM transform config.
 const TAB_BAR_HEIGHT = 12;
 
 function ViewerContent({
@@ -31,11 +30,25 @@ function ViewerContent({
   }, [evidence, initialEvidenceId]);
 
   const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const previousLength = useRef(evidence.length);
 
-  // If the underlying list shrinks (e.g. evidence deleted while viewing),
-  // clamp to a valid index instead of rendering nothing.
+  // Clamp + announce when evidence is deleted while viewing. Without the
+  // announcement the user is silently shifted to a different item.
   useEffect(() => {
-    if (activeIndex >= evidence.length && evidence.length > 0) {
+    const prev = previousLength.current;
+    previousLength.current = evidence.length;
+    if (
+      evidence.length < prev &&
+      activeIndex >= evidence.length &&
+      evidence.length > 0
+    ) {
+      setActiveIndex(evidence.length - 1);
+      AccessibilityInfo.announceForAccessibility(
+        "Evidence was removed. Showing the next available item.",
+      );
+    } else if (evidence.length < prev && evidence.length === 0) {
+      AccessibilityInfo.announceForAccessibility("All evidence was removed.");
+    } else if (activeIndex >= evidence.length && evidence.length > 0) {
       setActiveIndex(evidence.length - 1);
     }
   }, [evidence.length, activeIndex]);

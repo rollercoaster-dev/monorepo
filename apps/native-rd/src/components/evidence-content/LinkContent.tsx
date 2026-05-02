@@ -3,7 +3,10 @@ import { View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { openLinkInBrowser } from "../../utils/evidenceViewers";
+import { Logger } from "../../shims/rd-logger";
 import { styles } from "./LinkContent.styles";
+
+const logger = new Logger("LinkContent");
 
 export interface LinkContentProps {
   uri: string;
@@ -11,6 +14,15 @@ export interface LinkContentProps {
 }
 
 export function LinkContent({ uri, description }: LinkContentProps) {
+  function handleOpen() {
+    openLinkInBrowser(uri).catch((error) => {
+      logger.error("Unhandled rejection from openLinkInBrowser", {
+        uri,
+        error,
+      });
+    });
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -29,7 +41,7 @@ export function LinkContent({ uri, description }: LinkContentProps) {
         </Text>
         <Button
           label="Open in browser"
-          onPress={() => openLinkInBrowser(uri)}
+          onPress={handleOpen}
           variant="primary"
         />
       </View>

@@ -7,6 +7,9 @@ import { VideoPlayerModal } from "../components/VideoPlayerModal";
 import { AudioPlayerModal } from "../components/AudioPlayerModal";
 import { TEXT_EVIDENCE_PREFIX } from "../db";
 import type { Evidence } from "../components/EvidenceThumbnail";
+import { Logger } from "../shims/rd-logger";
+
+const logger = new Logger("evidenceViewers");
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -51,7 +54,7 @@ export async function openLinkInBrowser(uri: string): Promise<void> {
       Alert.alert("Cannot open link", `Unable to open: ${uri}`);
     }
   } catch (error) {
-    console.error("[evidenceViewers] Failed to open link", { uri, error });
+    logger.error("Failed to open link", { uri, error });
     Alert.alert("Cannot open link", `Failed to open: ${uri}`);
   }
 }
@@ -84,7 +87,7 @@ export async function openFile(uri: string, metadata?: string) {
 
     await Sharing.shareAsync(uri, options);
   } catch (error) {
-    console.error("[evidenceViewers] Failed to open file", { uri, error });
+    logger.error("Failed to open file", { uri, error });
     Alert.alert("Cannot open file", "Something went wrong opening the file.");
   }
 }
@@ -152,9 +155,7 @@ export function useEvidenceViewer() {
         break;
       case "link":
         if (evidence.uri) {
-          Linking.openURL(evidence.uri).catch(() => {
-            Alert.alert("Cannot open link", `Unable to open: ${evidence.uri}`);
-          });
+          openLinkInBrowser(evidence.uri);
         }
         break;
       case "file":

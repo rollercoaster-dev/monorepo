@@ -33,4 +33,23 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     textAlign: "center",
   },
+  errorBlock: {
+    alignItems: "center",
+    gap: theme.space[3],
+  },
+  retryButton: {
+    paddingVertical: theme.space[2],
+    paddingHorizontal: theme.space[4],
+    // eslint-disable-next-line local/no-raw-colors -- chrome over media canvas
+    borderColor: "white",
+    borderWidth: theme.borderWidth.medium,
+    borderRadius: theme.radius.sm,
+  },
+  retryLabel: {
+    // eslint-disable-next-line local/no-raw-colors -- chrome over media canvas
+    color: "white",
+    fontSize: theme.size.sm,
+    fontWeight: theme.fontWeight.bold,
+    fontFamily: theme.fontFamily.body,
+  },
 }));
