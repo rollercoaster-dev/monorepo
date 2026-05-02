@@ -101,10 +101,8 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    const saveButtons = screen.getAllByLabelText("Save Note");
-    for (const btn of saveButtons) {
-      expect(btn.props.accessibilityState?.disabled).toBe(true);
-    }
+    const saveButton = screen.getByLabelText("Save Note");
+    expect(saveButton.props.accessibilityState?.disabled).toBe(true);
   });
 
   it("enables Save button when content is entered", () => {
@@ -115,12 +113,8 @@ describe("CaptureTextNote", () => {
       screen.getByLabelText("Note content"),
       "My first note",
     );
-    // The footer Save Note button should now be enabled
-    const saveButtons = screen.getAllByLabelText("Save Note");
-    const enabledButton = saveButtons.find(
-      (btn) => btn.props.accessibilityState?.disabled !== true,
-    );
-    expect(enabledButton).toBeDefined();
+    const saveButton = screen.getByLabelText("Save Note");
+    expect(saveButton.props.accessibilityState?.disabled).not.toBe(true);
   });
 
   it("updates character counter as user types", () => {

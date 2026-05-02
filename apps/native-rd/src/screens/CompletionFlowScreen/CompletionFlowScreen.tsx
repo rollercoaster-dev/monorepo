@@ -12,7 +12,6 @@ import type { ImageSourcePropType } from "react-native";
 import { Buffer } from "buffer";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
-import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
@@ -467,7 +466,6 @@ function CompletionContent({
 
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   const navigation = useNavigation();
-  const { theme } = useUnistyles();
   const { goalId } = route.params;
 
   // Consume the pending design ONCE at this level — outside the inner Suspense
@@ -482,7 +480,7 @@ export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={styles.container}>
       <ScreenSubHeader label="Complete" onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense

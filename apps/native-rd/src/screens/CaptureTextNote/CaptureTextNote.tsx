@@ -75,7 +75,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={styles.container}>
       <ScreenSubHeader
         label="Write a Note"
         onBack={() => navigation.goBack()}

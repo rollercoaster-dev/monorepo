@@ -1,5 +1,9 @@
 import { StyleSheet } from "react-native-unistyles";
 
+const RECORD_BUTTON_SIZE = 72;
+const FLIP_BUTTON_SIZE = 44;
+const FLIP_BUTTON_GAP = 16;
+
 export const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
@@ -37,9 +41,9 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
   },
   recordButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: RECORD_BUTTON_SIZE,
+    height: RECORD_BUTTON_SIZE,
+    borderRadius: RECORD_BUTTON_SIZE / 2,
     borderWidth: 4,
     borderColor: theme.colors.border,
     alignItems: "center",
@@ -58,13 +62,16 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     backgroundColor: theme.colors.error,
   },
+  // Anchored at the row's horizontal center then nudged right so the flip
+  // sits adjacent to the record button. Absolute positioning keeps the
+  // record button at exact center regardless of flip presence.
   flipButton: {
     position: "absolute",
     left: "50%",
-    marginLeft: 72 / 2 + 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    marginLeft: RECORD_BUTTON_SIZE / 2 + FLIP_BUTTON_GAP,
+    width: FLIP_BUTTON_SIZE,
+    height: FLIP_BUTTON_SIZE,
+    borderRadius: FLIP_BUTTON_SIZE / 2,
     backgroundColor: theme.colors.backgroundTertiary,
     alignItems: "center",
     justifyContent: "center",

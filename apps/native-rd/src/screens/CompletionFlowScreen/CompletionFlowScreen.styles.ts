@@ -3,6 +3,10 @@ import { shadowStyle } from "../../styles/shadows";
 import { palette } from "../../themes/adapter";
 
 export const styles = StyleSheet.create((theme) => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   scrollContent: {
     flexGrow: 1,
     alignItems: "center",
