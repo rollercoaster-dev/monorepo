@@ -32,7 +32,7 @@ Remaining blockers before inviting testers:
 - [x] Generate app icon assets from the RD logo
 - [x] Set Expo app display name to `Rollercoaster.dev`
 - [ ] Decide whether to keep iOS bundle ID as `com.joe.rd.native-rd`
-- [ ] Decide whether to keep Expo slug as `native-rd`
+- [x] Decide whether to keep Expo slug as `native-rd` — changed to `rollercoasterdev` during `eas init` on 2026-05-02
 - [ ] Decide final App Store display name spelling and capitalization
 
 ### Apple Account

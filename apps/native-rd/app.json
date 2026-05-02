@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Rollercoaster.dev",
-    "slug": "native-rd",
+    "slug": "rollercoasterdev",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +29,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffe50c"
       },
-      "package": "com.joe.rd.nativerd"
+      "package": "com.joe.rd.nativerd",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -70,6 +75,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d7a5b9b4-48b0-460b-ab51-912e11cebd10"
+      }
+    },
+    "owner": "rollercoasterdev"
   }
 }
