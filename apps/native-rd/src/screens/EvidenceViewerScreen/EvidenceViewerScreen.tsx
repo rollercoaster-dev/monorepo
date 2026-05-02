@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -10,6 +11,10 @@ import { useAllEvidenceForGoal } from "../../hooks/useAllEvidenceForGoal";
 import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
+
+// Hardcoded — matches BadgeDesignerScreen. Reading via `useBottomTabBarHeight`
+// would pull in ESM that needs extra Babel transform whitelisting in Jest config.
+const TAB_BAR_HEIGHT = 56;
 
 function ViewerContent({
   goalId,
@@ -68,10 +73,13 @@ function ViewerContent({
 
 export function EvidenceViewerScreen({ route }: EvidenceViewerScreenProps) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { goalId, initialEvidenceId } = route.params;
 
   return (
-    <View style={styles.screen}>
+    <View
+      style={[styles.screen, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom }]}
+    >
       <ScreenSubHeader label="Evidence" onBack={() => navigation.goBack()} />
       <ErrorBoundary>
         <Suspense
