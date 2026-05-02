@@ -9,13 +9,6 @@ import { AudioContent } from "./AudioContent";
 import { LinkContent } from "./LinkContent";
 import { FileContent } from "./FileContent";
 
-export { PhotoContent } from "./PhotoContent";
-export { TextContent } from "./TextContent";
-export { VideoContent } from "./VideoContent";
-export { AudioContent } from "./AudioContent";
-export { LinkContent } from "./LinkContent";
-export { FileContent } from "./FileContent";
-
 export interface EvidenceContentProps {
   evidence: Evidence;
 }

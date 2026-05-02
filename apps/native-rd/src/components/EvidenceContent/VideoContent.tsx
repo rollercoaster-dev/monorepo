@@ -64,6 +64,8 @@ export function VideoContent({ uri }: VideoContentProps) {
     setRetryToken((t) => t + 1);
   }, []);
 
+  const handlePlayerError = useCallback(() => setError(true), []);
+
   return (
     <View style={styles.container}>
       <View style={styles.videoContainer}>
@@ -87,7 +89,7 @@ export function VideoContent({ uri }: VideoContentProps) {
             key={retryToken}
             uri={uri}
             retryToken={retryToken}
-            onError={() => setError(true)}
+            onError={handlePlayerError}
           />
         )}
       </View>

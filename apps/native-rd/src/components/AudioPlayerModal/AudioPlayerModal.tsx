@@ -2,7 +2,7 @@ import React from "react";
 import { View, Modal, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "../Text";
-import { AudioContent } from "../evidence-content/AudioContent";
+import { AudioContent } from "../EvidenceContent/AudioContent";
 import { styles } from "./AudioPlayerModal.styles";
 
 export interface AudioPlayerModalProps {

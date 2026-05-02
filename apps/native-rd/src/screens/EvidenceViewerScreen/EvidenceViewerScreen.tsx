@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Text } from "../../components/Text";
-import { EvidenceContent } from "../../components/evidence-content";
+import { EvidenceContent } from "../../components/EvidenceContent";
 import { ViewerThumbnailStrip } from "../../components/ViewerThumbnailStrip";
 import { useAllEvidenceForGoal } from "../../hooks/useAllEvidenceForGoal";
 import type { GoalId } from "../../db";
