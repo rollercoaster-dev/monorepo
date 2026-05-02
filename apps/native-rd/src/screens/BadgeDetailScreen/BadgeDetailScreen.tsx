@@ -5,6 +5,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  type LayoutChangeEvent,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -59,7 +60,47 @@ function extractCriteriaNarrative(credential: string | null): string | null {
   }
 }
 
-function BadgeDetailContent({ badgeId }: { badgeId: string }) {
+/**
+ * Header band rendered between the ScrollView and the floating preview so
+ * document order matches the visual stack: scroll content (back) → topBar
+ * (middle) → preview overlay (front). Relying on document order rather than
+ * just `zIndex` keeps the layering robust across RN platforms / versions
+ * where parent stacking contexts can override sibling zIndex resolution.
+ */
+function DetailTopBar({
+  onBack,
+  onLayout,
+}: {
+  onBack: () => void;
+  onLayout: (e: LayoutChangeEvent) => void;
+}) {
+  return (
+    <View style={styles.topBar} onLayout={onLayout}>
+      {/* Title intentionally omitted — the badge floats over the band and
+          any header text would peek out behind it. */}
+      <HeaderBand>
+        <IconButton
+          icon={
+            <Text variant="headline" style={styles.backIcon}>
+              {"\u2190"}
+            </Text>
+          }
+          onPress={onBack}
+          tone="chrome"
+          accessibilityLabel="Go back"
+        />
+      </HeaderBand>
+    </View>
+  );
+}
+
+function BadgeDetailContent({
+  badgeId,
+  onTopBarLayout,
+}: {
+  badgeId: string;
+  onTopBarLayout: (e: LayoutChangeEvent) => void;
+}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
   // Pin the floating preview right below the notch — matches the Designer's
@@ -106,9 +147,15 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   if (!badge) {
     return (
-      <View style={styles.centered}>
-        <Text variant="body">Badge not found</Text>
-      </View>
+      <>
+        <View style={styles.centered}>
+          <Text variant="body">Badge not found</Text>
+        </View>
+        <DetailTopBar
+          onBack={() => navigation.goBack()}
+          onLayout={onTopBarLayout}
+        />
+      </>
     );
   }
 
@@ -139,7 +186,14 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         <Text style={styles.title}>{goalTitle}</Text>
 
         {hasIdentityChip ? (
-          <View style={styles.identityChip} accessibilityLabel="Goal identity">
+          <View
+            style={styles.identityChip}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={
+              goalIcon ? `Goal identity: ${goalIcon}` : "Goal color indicator"
+            }
+          >
             {goalIcon ? <Text style={styles.chipIcon}>{goalIcon}</Text> : null}
             {goalColor ? (
               <View
@@ -217,6 +271,15 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         />
       </ScrollView>
 
+      {/* Document order matters: topBar must render between the ScrollView
+          and the previewOverlay so the visual stack (scroll → header →
+          floating badge) holds even on platforms where sibling zIndex is
+          ignored. */}
+      <DetailTopBar
+        onBack={() => navigation.goBack()}
+        onLayout={onTopBarLayout}
+      />
+
       <View
         style={[styles.previewOverlay, { top: insets.top }]}
         pointerEvents="none"
@@ -256,43 +319,38 @@ export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
   const { badgeId } = route.params;
   const [topBarHeight, setTopBarHeight] = useState(64);
 
+  const handleTopBarLayout = (e: LayoutChangeEvent) => {
+    const next = e.nativeEvent.layout.height;
+    setTopBarHeight((prev) => (prev === next ? prev : next));
+  };
+
   return (
     <View style={styles.screen}>
       <ErrorBoundary>
         <Suspense
           fallback={
-            <ActivityIndicator
-              style={[styles.loadingIndicator, { marginTop: topBarHeight }]}
-              size="large"
-            />
+            <>
+              {/* Header stays mounted during data load so the user can still
+                  go back; once content resolves, BadgeDetailContent renders
+                  its own DetailTopBar between the ScrollView and the
+                  preview to preserve the stacking order. */}
+              <DetailTopBar
+                onBack={() => navigation.goBack()}
+                onLayout={handleTopBarLayout}
+              />
+              <ActivityIndicator
+                style={[styles.loadingIndicator, { marginTop: topBarHeight }]}
+                size="large"
+              />
+            </>
           }
         >
-          <BadgeDetailContent badgeId={badgeId} />
+          <BadgeDetailContent
+            badgeId={badgeId}
+            onTopBarLayout={handleTopBarLayout}
+          />
         </Suspense>
       </ErrorBoundary>
-
-      <View
-        style={styles.topBar}
-        onLayout={(e) => {
-          const next = e.nativeEvent.layout.height;
-          setTopBarHeight((prev) => (prev === next ? prev : next));
-        }}
-      >
-        {/* Title intentionally omitted — the badge floats over the band and
-            any header text would peek out behind it. */}
-        <HeaderBand>
-          <IconButton
-            icon={
-              <Text variant="headline" style={styles.backIcon}>
-                {"\u2190"}
-              </Text>
-            }
-            onPress={() => navigation.goBack()}
-            tone="chrome"
-            accessibilityLabel="Go back"
-          />
-        </HeaderBand>
-      </View>
     </View>
   );
 }
