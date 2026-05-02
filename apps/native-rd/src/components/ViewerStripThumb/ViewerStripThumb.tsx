@@ -1,7 +1,10 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "../Text";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import {
+  EVIDENCE_TYPE_ICONS,
+  EVIDENCE_TYPE_LABELS,
+} from "../../constants/evidenceIcons";
 import type { ViewerEvidence } from "../../hooks/useAllEvidenceForGoal";
 import { styles } from "./ViewerStripThumb.styles";
 
@@ -27,7 +30,7 @@ export function ViewerStripThumb({
       onPress={onPress}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={`${evidence.type} evidence: ${evidence.title}, from ${sourceLabel}`}
+      accessibilityLabel={`${EVIDENCE_TYPE_LABELS[evidence.type] ?? evidence.type} evidence: ${evidence.title}, from ${sourceLabel}`}
       accessibilityState={{ selected: isActive }}
       style={({ pressed }) => [
         styles.container(isActive),

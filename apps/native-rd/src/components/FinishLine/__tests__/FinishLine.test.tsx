@@ -1,5 +1,9 @@
 import React from "react";
-import { renderWithProviders, screen } from "../../../__tests__/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  fireEvent,
+} from "../../../__tests__/test-utils";
 import { FinishLine } from "../FinishLine";
 import type { EvidenceItemData } from "../../EvidenceDrawer";
 
@@ -39,5 +43,15 @@ describe("FinishLine", () => {
     expect(
       screen.getByLabelText("photo evidence: Final photo"),
     ).toBeOnTheScreen();
+  });
+
+  it("calls onEvidencePress with evidence id when an evidence card is tapped", () => {
+    const onEvidencePress = jest.fn();
+    renderWithProviders(
+      <FinishLine goalEvidence={evidence} onEvidencePress={onEvidencePress} />,
+    );
+    fireEvent.press(screen.getByLabelText("photo evidence: Final photo"));
+    expect(onEvidencePress).toHaveBeenCalledWith("ev-1");
+    expect(onEvidencePress).toHaveBeenCalledTimes(1);
   });
 });

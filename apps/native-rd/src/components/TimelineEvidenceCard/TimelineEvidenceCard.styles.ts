@@ -17,11 +17,11 @@ export const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.space[1],
   }),
   icon: {
-    fontSize: 14,
+    fontSize: theme.size.sm,
   },
   label: {
     flex: 1,
-    fontSize: 13,
+    fontSize: theme.size.xs,
     color: theme.colors.text,
   },
 }));

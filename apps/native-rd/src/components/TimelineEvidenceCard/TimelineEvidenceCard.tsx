@@ -1,7 +1,10 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import type { EvidenceItemData } from "../EvidenceDrawer";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import {
+  EVIDENCE_TYPE_ICONS,
+  EVIDENCE_TYPE_LABELS,
+} from "../../constants/evidenceIcons";
 import { styles } from "./TimelineEvidenceCard.styles";
 
 export interface TimelineEvidenceCardProps {
@@ -21,7 +24,7 @@ export function TimelineEvidenceCard({
       onPress={() => onPress(evidence.id)}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={`${evidence.type} evidence: ${evidence.label}`}
+      accessibilityLabel={`${EVIDENCE_TYPE_LABELS[evidence.type] ?? evidence.type} evidence: ${evidence.label}`}
       accessibilityHint="Tap to view evidence"
     >
       <Text style={styles.icon}>

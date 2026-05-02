@@ -53,7 +53,9 @@ appId: com.joe.rd.native-rd
 - tapOn:
     id: "step-card-quick-note-add-button"
 
-# Add a link via the FAB menu so the viewer dispatcher hits a non-text branch
+# Add a second text note. Both items are text type, so the viewer only
+# exercises the text branch in this flow; non-text branches are covered by
+# unit tests on EvidenceContent.
 - tapOn:
     id: "step-card-quick-note-input"
 - inputText: "Second piece of evidence"

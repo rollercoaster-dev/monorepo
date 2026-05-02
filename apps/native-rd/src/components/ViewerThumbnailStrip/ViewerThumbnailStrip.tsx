@@ -19,6 +19,8 @@ export interface ViewerThumbnailStripProps {
 const THUMB_GAP = 8;
 const ITEM_FULL_WIDTH = VIEWER_STRIP_THUMB_WIDTH + THUMB_GAP;
 
+const ThumbSeparator = () => <View style={styles.separator} />;
+
 export function ViewerThumbnailStrip({
   evidence,
   activeIndex,
@@ -73,7 +75,7 @@ export function ViewerThumbnailStrip({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.content}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={ThumbSeparator}
         getItemLayout={getItemLayout}
         // scrollToIndex throws on virtualized items; fall back to offset.
         // Frequent firings indicate getItemLayout has drifted from real width.

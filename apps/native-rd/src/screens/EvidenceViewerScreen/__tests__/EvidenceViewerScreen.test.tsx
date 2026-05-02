@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import type { EvidenceViewerScreenProps } from "../../../navigation/types";
 
 const mockGoBack = jest.fn();
 jest.mock("@react-navigation/native", () => {
@@ -32,9 +33,10 @@ const baseRoute = {
   params: { goalId: "goal-1", initialEvidenceId: "ev-2" },
 };
 
-const routeProps = {
+// Screen only destructures `route`; an empty navigation stub is enough.
+const routeProps: EvidenceViewerScreenProps = {
   route: baseRoute,
-  navigation: {} as any,
+  navigation: {} as EvidenceViewerScreenProps["navigation"],
 };
 
 const ITEMS = [
