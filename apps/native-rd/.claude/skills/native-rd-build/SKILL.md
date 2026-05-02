@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # native-rd Build Playbook
@@ -24,7 +24,7 @@ Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 54 + RN 0.
 
 | Target                         | Local command                                              | EAS profile                                              | Status                                                                                            |
 | ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                 | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-02]` local sim                                                                 |
+| iOS Simulator (dev client)     | `bun run ios` (with `IOS_DEVICE_ID` empty)                 | `eas build -p ios --profile development`                 | `[VERIFIED 2026-05-02]` local sim + EAS development profile (cloud build)                         |
 | iOS Device (dev client)        | `bun run ios` (or `IOS_DEVICE_ID=… bun run ios:device`)    | `eas build -p ios --profile development` (then sideload) | `[VERIFIED 2026-05-02]` local device                                                              |
 | iOS Release (local sim)        | `npx expo run:ios --configuration Release`                 | n/a                                                      | `[VERIFIED 2026-05-02]` per `docs/plans/2026-05-02-expo-doctor-build-validation.md`               |
 | iOS Release (local device)     | `npx expo run:ios --configuration Release --device <udid>` | n/a                                                      | `[UNTESTED]`                                                                                      |
@@ -167,7 +167,9 @@ Key behaviors:
 - **`preview` profile** — extends development but **iOS is device-targeted** (signed IPA you can sideload via TestFlight or direct install). `distribution: internal` = no public store.
 - **`production` profile** — App Store IPA + Play Store AAB.
 
-### Running EAS builds — `[UNTESTED]` happy path
+### Running EAS builds
+
+`[VERIFIED 2026-05-02]` for `--profile development` (iOS); `[UNTESTED]` for the rest.
 
 ```bash
 cd apps/native-rd
@@ -175,7 +177,7 @@ cd apps/native-rd
 # Auth (one-time per machine)
 eas login
 
-# Build
+# Build (full cloud build — slow first time)
 eas build --platform ios --profile development      # cloud build, simulator
 eas build --platform ios --profile preview          # cloud build, device IPA
 eas build --platform ios --profile production       # cloud build, App Store
@@ -187,6 +189,25 @@ eas build --platform ios --profile preview --local
 ```
 
 Build artifacts are downloadable from the EAS dashboard or via `eas build:list`.
+
+### Faster dev iteration: `eas build:dev`
+
+`[UNTESTED]` — surfaced as a tip by EAS CLI on 2026-05-02 after first dev build.
+
+For day-to-day dev-client work, prefer `eas build:dev` over `eas build --profile development`. It:
+
+1. Computes a **fingerprint** of your native config (`Podfile`, native deps, plugins) and checks for a matching cached dev build on EAS.
+2. If a compatible build exists → downloads + installs it directly (~30 sec, no rebuild).
+3. If not → runs a fresh `eas build` then auto-installs when done.
+
+```bash
+eas build:dev                 # picks platform from current selection or prompts
+eas build:dev -p ios          # explicit
+```
+
+Why this matters: JS-only changes don't invalidate the native fingerprint, so the **same dev build can be reused indefinitely** while you iterate on JS. Only a change to native deps/plugins/Podfile triggers a rebuild. This is the workflow EAS expects you to use during development — `eas build --profile development` is the lower-level command underneath.
+
+Promote to `[VERIFIED]` after first successful invocation.
 
 ### Submitting — `[BROKEN]`
 
