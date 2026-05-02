@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # native-rd Build Playbook
@@ -329,6 +329,39 @@ This error does **not** apply to Release builds — those embed `main.jsbundle` 
 - SDK mismatches for **Jest** and **TypeScript** — **documented exceptions, do NOT downgrade** to satisfy the doctor
 
 Don't take expo-doctor warnings at face value. Cross-reference against the validation plan.
+
+---
+
+## Gotcha 6 — Metro resolver cache poisoned after `bun add` / `bunx expo install`
+
+`[VERIFIED 2026-05-02]`
+
+**Symptom (red error screen on the dev client, not a build error):**
+
+```
+UnableToResolveError Unable to resolve module react-native-quick-crypto from
+  /Users/.../apps/native-rd/index.ts:
+react-native-quick-crypto could not be found within the project or in these directories:
+  node_modules
+  ../../node_modules
+```
+
+The module **is** installed (`apps/native-rd/node_modules/<pkg>/package.json` exists, `node -e 'require.resolve("<pkg>")'` succeeds) but Metro insists it can't be found.
+
+**Cause:** When `bun add` or `bunx expo install` runs while Metro is alive (e.g. you installed a new package without first killing the dev server), Metro's resolver caches a "module not found" result for any package whose `node_modules` symlink wasn't yet present at the moment of first resolution. Subsequent reloads keep returning the cached negative result even after the package is installed. Bun's `.bun/<pkg>@<hash>/node_modules/...` symlink farm seems to make this worse than a regular `npm install`.
+
+**Fix:**
+
+```bash
+pkill -f metro 2>/dev/null
+pkill -f "expo start" 2>/dev/null
+rm -rf apps/native-rd/.expo                    # clears Expo's local Metro state
+cd apps/native-rd && npx expo start --dev-client --clear
+```
+
+Then **shake the device** → Reload. Metro re-bundles from scratch (slow first reload — "Bundler cache is empty, rebuilding"). After that, resolutions are correct.
+
+Best practice: always kill Metro **before** running `bun add` / `bunx expo install`, then restart with `--clear`. Saves a debugging round trip.
 
 ---
 
