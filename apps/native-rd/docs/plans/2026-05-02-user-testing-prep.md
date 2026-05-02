@@ -34,17 +34,22 @@ This stance can be revisited if/when scaling past closed beta requires more tele
 
 ## Status Snapshot
 
-| Area                      | State                   | Notes                                                                                             |
-| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
-| Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                              |
-| Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                 |
-| TestFlight build pipeline | ❌ Not started          | EAS not initialised; no `eas.json`                                                                |
-| App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                           |
-| Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL |
-| Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since           |
-| Foundations review        | 🟡 Stale                | Same — see `docs/quality/foundations-review-phase1.md`                                            |
-| Tech debt log             | 🟡 Stale                | 5 HIGH-severity items still listed OPEN; need re-verification                                     |
-| Google Play account       | ❌ Not started          | Personal account €25 + 14-day / 12-tester closed test required                                    |
+**Readiness review, 2026-05-02:** not ready to invite testers yet. The main blocker is build/distribution prep: EAS is not initialised, no standalone TestFlight build exists, and no physical-device validation has been completed. Local code health is acceptable for closed-beta prep (`type-check`, Jest, lint with warnings only, and a11y audit passed), but the installed simulator build used for E2E review was a dev build without an embedded JS bundle, so Maestro failed at launch with "No script URL provided." Treat E2E as unverified until a production-like build is installed.
+
+The only non-build app-behavior blocker found in this review is badge creation when signing key setup fails: `useUserKey` can surface SecureStore/key-generation errors while `useCreateBadge` remains in transient loading. Track in [#982](https://github.com/rollercoaster-dev/monorepo/issues/982).
+
+| Area                      | State                   | Notes                                                                                                               |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                                                |
+| Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                                   |
+| TestFlight build pipeline | ❌ Not started          | EAS not initialised; no `eas.json`                                                                                  |
+| App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                                             |
+| Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL                   |
+| Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since                             |
+| Foundations review        | 🟡 Stale                | Same — see `docs/quality/foundations-review-phase1.md`                                                              |
+| Tech debt log             | 🟡 Stale                | 5 HIGH-severity items still listed OPEN; need re-verification                                                       |
+| Badge creation error path | 🟡 Issue opened         | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) — avoid endless loading if signing key setup fails |
+| Google Play account       | ❌ Not started          | Personal account €25 + 14-day / 12-tester closed test required                                                      |
 
 ---
 
@@ -134,14 +139,15 @@ See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
 
 All open phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
 
-| Phase | Issue                                                            | Title                                                                    |
-| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 3B    | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build           |
-| 3C    | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
-| 4     | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                        |
-| 5     | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email   |
-| 6     | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification  |
-| 7     | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start     |
+| Phase        | Issue                                                            | Title                                                                    |
+| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 3B           | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build           |
+| 3C           | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
+| 4            | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                        |
+| 5            | [#976](https://github.com/rollercoaster-dev/monorepo/issues/976) | docs(native-rd): host privacy policy publicly + finalise contact email   |
+| 6            | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification  |
+| 7            | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start     |
+| App behavior | [#982](https://github.com/rollercoaster-dev/monorepo/issues/982) | fix(native-rd): prevent badge creation from hanging when key setup fails |
 
 **Closed:**
 
@@ -180,3 +186,4 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 | 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                    | Joe + Claude |
 | 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                 | Joe + Claude |
 | 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins. | Joe + Claude |
+| 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.     | Codex        |
