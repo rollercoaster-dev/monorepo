@@ -42,7 +42,7 @@ The only non-build app-behavior blocker found in this review is badge creation w
 | ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                                                |
 | Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                                   |
-| TestFlight build pipeline | ❌ Not started          | EAS not initialised; no `eas.json`                                                                                  |
+| TestFlight build pipeline | 🟡 In progress          | EAS initialised; `eas.json` added; dev cloud build verified. First production build + `eas submit` still pending.   |
 | App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                                             |
 | Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL                   |
 | Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since                             |
@@ -187,3 +187,4 @@ All open phases are tracked as GitHub issues under milestone [**`native-rd: User
 | 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                 | Joe + Claude |
 | 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins. | Joe + Claude |
 | 2026-05-02 | User-testing readiness review: build/distribution prep remains the primary blocker; local gates pass; E2E unverified on standalone build; opened #982 for the one non-build badge creation blocker.     | Codex        |
+| 2026-05-02 | Status snapshot updated: TestFlight build pipeline now 🟡 In progress (EAS initialised, `eas.json` added in PR #985, dev cloud build verified). Production build + `eas submit` still pending.          | Joe + Claude |
