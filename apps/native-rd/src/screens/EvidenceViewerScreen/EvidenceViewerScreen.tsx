@@ -14,7 +14,7 @@ import { styles } from "./EvidenceViewerScreen.styles";
 
 // Measured tab bar height. Reading via `useBottomTabBarHeight` would pull in
 // ESM that needs extra Babel transform whitelisting in Jest config.
-const TAB_BAR_HEIGHT = 16;
+const TAB_BAR_HEIGHT = 12;
 
 function ViewerContent({
   goalId,
