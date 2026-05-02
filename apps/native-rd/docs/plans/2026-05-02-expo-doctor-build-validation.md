@@ -26,6 +26,8 @@ Local validation already confirmed:
 - Metro symlink override warning
 - SDK mismatches for Jest and TypeScript, which are documented exceptions for this repo and not part of the native readiness fix
 
+After a clean reinstall of the app-local dependencies, the duplicate native-module warning still reproduces under the Bun workspace layout. Treat that as a local tool/layout warning for now, not an app-code regression.
+
 ## Implementation Plan
 
 - Add the missing native peer dependencies required by the current app graph.
