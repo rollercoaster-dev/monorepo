@@ -58,7 +58,7 @@ Use:
 - `expo-localization` for locale discovery, supported locale declarations, per-app language support, and RTL configuration.
 - `i18next` for resources, fallback, interpolation, plurals, and locale-aware formatting hooks.
 - `react-i18next` for component integration through `useTranslation`.
-- Bundled TypeScript translation resources under `src/i18n/`, not remote bundles, for offline behavior and type inference.
+- Bundled JSON translation resources under `src/i18n/`, not remote bundles, for offline behavior and translation-tool compatibility. Type safety is layered on via i18next module augmentation.
 
 Install from the app directory so Expo picks the SDK-compatible native module:
 
@@ -302,15 +302,15 @@ Based on a code scan of `apps/native-rd/src` on 2026-05-02:
 
 These are upper bounds. Many literals are not user-facing (test fixtures, story names, internal IDs).
 
-| Phase | Files touched | Effort (focused dev) |
-| --- | --- | --- |
-| 1. Foundation: deps, `src/i18n/`, language selection, mocks, pseudo locale | ~10 new + 2 modified | 1–2 days |
-| 2. Shared labels: `common.actions`, evidence types, theme, status, shared a11y | ~25–30 files | 1–2 days |
-| 3. High-traffic screens: Welcome, Goals, Focus, NewGoal, Settings | ~5 screens + tests | 2 days |
-| 4. Capture flows: photo, video, voice, text, file, link + permission denials | ~8 screens + tests | 2 days |
-| 5. Badge surfaces: list, detail, designer | ~6 files | 1–2 days |
-| 6. Native locale files (only when adding a real second language) | `app.json` + `locales/*.json` | 0.5 day |
-| 7. QA gates: unit tests, pseudo-locale snapshot pass, manual iOS/Android | tests | 1–2 days |
+| Phase                                                                          | Files touched                 | Effort (focused dev) |
+| ------------------------------------------------------------------------------ | ----------------------------- | -------------------- |
+| 1. Foundation: deps, `src/i18n/`, language selection, mocks, pseudo locale     | ~10 new + 2 modified          | 1–2 days             |
+| 2. Shared labels: `common.actions`, evidence types, theme, status, shared a11y | ~25–30 files                  | 1–2 days             |
+| 3. High-traffic screens: Welcome, Goals, Focus, NewGoal, Settings              | ~5 screens + tests            | 2 days               |
+| 4. Capture flows: photo, video, voice, text, file, link + permission denials   | ~8 screens + tests            | 2 days               |
+| 5. Badge surfaces: list, detail, designer                                      | ~6 files                      | 1–2 days             |
+| 6. Native locale files (only when adding a real second language)               | `app.json` + `locales/*.json` | 0.5 day              |
+| 7. QA gates: unit tests, pseudo-locale snapshot pass, manual iOS/Android       | tests                         | 1–2 days             |
 
 **Total: ~1.5–2 weeks of focused work**, longer if interleaved with other priorities. Most of the diff is mechanical (literal → `t()`) but generates significant test churn — every `getByText("Save")`-style assertion eventually needs a translation lookup or a stable test-id.
 
