@@ -97,18 +97,17 @@ describe("CaptureTextNote", () => {
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
-  it("disables Save buttons when content is empty", () => {
+  it("disables Save button when content is empty", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    // There are two save buttons (top bar + footer)
     const saveButtons = screen.getAllByLabelText("Save Note");
     for (const btn of saveButtons) {
       expect(btn.props.accessibilityState?.disabled).toBe(true);
     }
   });
 
-  it("enables Save buttons when content is entered", () => {
+  it("enables Save button when content is entered", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
