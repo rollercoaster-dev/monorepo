@@ -10,7 +10,7 @@ Cross-cutting knowledge that applies across the monorepo.
 
 ## Learnings in this Directory
 
-<!-- Add links to learning documents as they're created -->
+- [Dependabot Upgrade Gotchas](dependabot-upgrade-gotchas.md)
 
 ## Common Topics
 
