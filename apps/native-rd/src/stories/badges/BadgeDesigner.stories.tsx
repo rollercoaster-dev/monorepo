@@ -21,8 +21,7 @@ import {
   createDefaultBadgeDesign,
 } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
-
-const BADGE_CANVAS_BACKGROUND = "#ffffff";
+import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 // ---------------------------------------------------------------------------
 // Helpers

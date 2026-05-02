@@ -225,6 +225,37 @@ describe("StepCard", () => {
     ).toBeOnTheScreen();
   });
 
+  it("stays blocked when only some of multiple planned types are captured (regression: PR #987)", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo", "video", "text"],
+          capturedEvidenceTypes: ["photo"],
+        })}
+        {...defaultProps}
+      />,
+    );
+    // Earlier `some(...)` logic would have unblocked the step after the
+    // first capture; with `every` semantics it remains blocked until all
+    // planned types are present.
+    expect(screen.getByText("Add evidence to complete")).toBeOnTheScreen();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
+  it("unblocks only after every planned type has been captured", () => {
+    renderWithProviders(
+      <StepCard
+        step={makeStep({
+          plannedEvidenceTypes: ["photo", "text"],
+          capturedEvidenceTypes: ["photo", "text"],
+        })}
+        {...defaultProps}
+      />,
+    );
+    expect(screen.getByRole("checkbox")).toBeOnTheScreen();
+    expect(screen.queryByText("Add evidence to complete")).toBeNull();
+  });
+
   it("shows checkbox (not prompt) when evidence matches planned type", () => {
     renderWithProviders(
       <StepCard

@@ -87,9 +87,13 @@ export function StepCard({
   const plannedTypes = step.plannedEvidenceTypes ?? null;
   const capturedTypes = step.capturedEvidenceTypes ?? [];
   const hasPlannedTypes = plannedTypes !== null && plannedTypes.length > 0;
+  // Block until EVERY planned evidence type has been captured. Using `some`
+  // here would unblock the step after a single capture, which lets users
+  // mark a multi-evidence step complete without supplying all the planned
+  // pieces and breaks the evidence-gated completion contract.
   const isBlocked =
     !isCompleted && hasPlannedTypes
-      ? !plannedTypes.some((t) => capturedTypes.includes(t))
+      ? plannedTypes.some((t) => !capturedTypes.includes(t))
       : false;
 
   const blockerOption = isBlocked

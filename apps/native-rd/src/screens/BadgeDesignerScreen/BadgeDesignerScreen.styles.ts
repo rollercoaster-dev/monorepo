@@ -1,7 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
-
-const BADGE_CANVAS_BACKGROUND = "#ffffff";
+import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 export const styles = StyleSheet.create((theme) => ({
   editorRoot: {

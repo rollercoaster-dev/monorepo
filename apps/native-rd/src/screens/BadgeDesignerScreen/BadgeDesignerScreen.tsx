@@ -340,6 +340,7 @@ function DesignEditor({
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionLabel}>Bottom Label</Text>
           <TextInput
+            accessibilityRole="text"
             accessibilityLabel="Bottom label"
             value={bottomLabel}
             onChangeText={handleBottomLabelChange}

@@ -40,10 +40,14 @@ export function useUserKey(): UserKeyState {
   const settings = rows[0] ?? null;
   const didInit = useRef(false);
   const isGenerating = useRef(false);
-  // Track which keyIds we've already verified so we don't probe SecureStore
-  // on every render. Reset when settings.keyId changes (e.g. after self-heal).
+  // The most recently completed verification — if storedKeyId still matches
+  // this, we skip the probe. Reset implicitly when storedKeyId changes.
   const verifiedKeyId = useRef<string | null>(null);
-  const isVerifying = useRef(false);
+  // The keyId the verification effect *intends* to verify (the latest one
+  // requested). Used to (a) skip starting a duplicate probe for the same
+  // keyId and (b) detect stale resolutions from a previous keyId so they
+  // don't poison state for the current one.
+  const pendingKeyId = useRef<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
@@ -59,6 +63,12 @@ export function useUserKey(): UserKeyState {
   // Verify the stored keyId still resolves in SecureStore. If the underlying
   // key data has been wiped (iOS keychain reset, app reinstall, bundle id
   // change), clear the orphan so the generation effect below can re-run.
+  //
+  // Race protection: track which keyId is currently being verified so a late
+  // resolution from a previous keyId can't poison state for a replacement
+  // keyId. Without this guard, settings.keyId could change mid-verification
+  // and the stale promise would set verified=true / clear-orphan against
+  // the wrong key.
   useEffect(() => {
     const storedKeyId = (settings?.keyId as string | null | undefined) ?? null;
 
@@ -69,35 +79,43 @@ export function useUserKey(): UserKeyState {
 
     // Already verified this exact keyId — nothing to do.
     if (verifiedKeyId.current === storedKeyId) return;
-    if (isVerifying.current) return;
+    // Already probing this exact keyId — let the in-flight call finish.
+    if (pendingKeyId.current === storedKeyId) return;
 
-    isVerifying.current = true;
+    // Mark this keyId as the latest intent BEFORE awaiting. If a newer
+    // settings.keyId arrives mid-flight, pendingKeyId will move on and the
+    // older promise's resolution will fail the staleness check below.
+    const verifyingKeyId = storedKeyId;
+    pendingKeyId.current = storedKeyId;
+    setVerified(false);
 
     (async () => {
       try {
-        await keyProvider.getPublicKey(storedKeyId);
-        verifiedKeyId.current = storedKeyId;
+        await keyProvider.getPublicKey(verifyingKeyId);
+        // Stale-result guard: if settings.keyId changed during verification,
+        // discard this result rather than marking a different key verified.
+        if (pendingKeyId.current !== verifyingKeyId) return;
+        verifiedKeyId.current = verifyingKeyId;
         setVerified(true);
       } catch (err) {
+        if (pendingKeyId.current !== verifyingKeyId) return;
         const message = err instanceof Error ? err.message : String(err);
         // Distinguish orphan ("not found") from transient store errors so
         // we don't wipe a valid keyId during a flaky SecureStore read.
         if (message.includes("not found")) {
           logger.warn(
             "Stored keyId orphaned in SecureStore — clearing so a fresh keypair can be generated",
-            { keyId: storedKeyId },
+            { keyId: verifyingKeyId },
           );
           clearUserSettingsKey(settings.id);
         } else {
           logger.error("Failed to verify stored keyId", {
-            keyId: storedKeyId,
+            keyId: verifyingKeyId,
             error: err,
           });
           setError(`Key verification failed: ${message}`);
         }
         setVerified(false);
-      } finally {
-        isVerifying.current = false;
       }
     })();
   }, [settings]);

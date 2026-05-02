@@ -197,6 +197,48 @@ describe("useUserKey", () => {
 
       expect(mockKeyProvider.getPublicKey).toHaveBeenCalledTimes(1);
     });
+
+    it("ignores a late resolution from a previous keyId (race: settings.keyId changes mid-verification)", async () => {
+      // First probe (for keyId-A) hangs; we'll resolve it manually after the
+      // settings.keyId has flipped to keyId-B so the late result is stale.
+      let resolveFirstProbe: (jwk: JsonWebKey) => void = () => {};
+      mockKeyProvider.getPublicKey.mockImplementationOnce(
+        () =>
+          new Promise<JsonWebKey>((resolve) => {
+            resolveFirstProbe = resolve;
+          }),
+      );
+      // Second probe (for keyId-B) resolves immediately.
+      mockKeyProvider.getPublicKey.mockResolvedValueOnce({
+        kty: "OKP",
+        crv: "Ed25519",
+        x: "B",
+      });
+
+      mockUseQuery.mockReturnValue([{ id: MOCK_SETTINGS_ID, keyId: "key-A" }]);
+
+      const { result, rerender } = renderHook(() => useUserKey());
+      await act(async () => {}); // first probe is now in-flight
+
+      // Settings updates: keyId rotates to "key-B" before the first probe
+      // resolves. Re-render with new settings reference.
+      mockUseQuery.mockReturnValue([{ id: MOCK_SETTINGS_ID, keyId: "key-B" }]);
+      rerender(() => useUserKey());
+      await act(async () => {}); // second probe resolves, isReady -> true for key-B
+
+      expect(result.current.keyId).toBe("key-B");
+      expect(result.current.isReady).toBe(true);
+
+      // Now the stale first probe resolves with key-A's data.
+      await act(async () => {
+        resolveFirstProbe({ kty: "OKP", crv: "Ed25519", x: "A" });
+      });
+
+      // The late result must NOT clobber the verified key-B state.
+      expect(result.current.keyId).toBe("key-B");
+      expect(result.current.isReady).toBe(true);
+      expect(mockClearUserSettingsKey).not.toHaveBeenCalled();
+    });
   });
 
   describe("when SecureStore is unavailable", () => {
