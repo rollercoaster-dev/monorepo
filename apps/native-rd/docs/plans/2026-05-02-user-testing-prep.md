@@ -2,72 +2,65 @@
 
 **Created:** 2026-05-02
 **Owner:** Joe
-**Goal:** Get native-rd into the hands of real testers (iOS TestFlight first, Google Play closed test soon after) with a working bug-report pipeline and a verified-solid codebase.
+**Goal:** Get native-rd into the hands of real testers (iOS TestFlight first, Google Play closed test soon after) without compromising the "no data collected" privacy promise.
 
 ---
 
 ## The Single Next Thing
 
-> **Phase 1 — Wire Sentry into native-rd.**
-> Don't pre-stage anything else. When this is done, come back to this doc and pick up Phase 2.
+> **Phase 3 — Sitting A: lock the bundle ID, slug, display name, and feedback email.**
+> Pure decisions, no tooling. When done, move to Sitting B (EAS Build).
+
+---
+
+## Bug Reporting Strategy
+
+**Closed beta uses platform built-ins. No third-party crash reporting, no in-app code, no privacy-policy compromise.**
+
+| Channel         | Tool                                                                                                                                                                                            | Privacy posture                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| iOS testers     | TestFlight 3-finger screenshot feedback + automatic crash reports → App Store Connect                                                                                                           | Apple collects under their privacy terms; testers accepted these when joining TestFlight       |
+| Android testers | Play Console built-in tester feedback + automatic crash reports                                                                                                                                 | Google collects under their privacy terms; testers accepted these when joining the closed test |
+| Privacy policy  | "We collect no data ourselves. If you install via TestFlight or Google Play, those platforms collect crash reports under their own privacy policies, which you accepted when joining the test." | Honest and accurate                                                                            |
+
+**What we explicitly chose not to do:**
+
+- **No Sentry** — its core function is data collection, incompatible with the "What Data We Collect — None" promise in `docs/launch/privacy-policy.md`
+- **No in-app bug-report button** — TestFlight's screenshot feedback covers iOS; Play Console covers Android. Adding our own button is unnecessary code and unnecessary privacy surface.
+
+This stance can be revisited if/when scaling past closed beta requires more telemetry. Closed beta does not.
 
 ---
 
 ## Status Snapshot
 
-| Area                      | State                | Notes                                                                                   |
-| ------------------------- | -------------------- | --------------------------------------------------------------------------------------- |
-| Apple Developer Program   | ✅ Enrolled          | Confirmed 2026-05-02                                                                    |
-| Crash / bug reporting     | ❌ Not started       | No Sentry, no in-app feedback, no crash logger                                          |
-| TestFlight build pipeline | ❌ Not started       | EAS not initialised; no `eas.json`                                                      |
-| App Store Connect record  | ❌ Not started       | Bundle ID, slug, display name still TBD                                                 |
-| Privacy policy            | 🟡 Drafted, unhosted | `docs/launch/privacy-policy.md` — contact email + public URL TBD                        |
-| Quality dashboard         | 🟡 Stale             | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since |
-| Foundations review        | 🟡 Stale             | Same — see `docs/quality/foundations-review-phase1.md`                                  |
-| Tech debt log             | 🟡 Stale             | 5 HIGH-severity items still listed OPEN; need re-verification                           |
-| Google Play account       | ❌ Not started       | Personal account €25 + 14-day / 12-tester closed test required                          |
+| Area                      | State                   | Notes                                                                                             |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| Apple Developer Program   | ✅ Enrolled             | Confirmed 2026-05-02                                                                              |
+| Crash / bug reporting     | ✅ Covered by platforms | TestFlight (iOS) + Play Console (Android) — no in-app code needed                                 |
+| TestFlight build pipeline | ❌ Not started          | EAS not initialised; no `eas.json`                                                                |
+| App Store Connect record  | ❌ Not started          | Bundle ID, slug, display name still TBD                                                           |
+| Privacy policy            | 🟡 Drafted, unhosted    | `docs/launch/privacy-policy.md` — needs platform-disclosure sentence + contact email + public URL |
+| Quality dashboard         | 🟡 Stale                | `docs/quality/grades.md` last updated 2026-02-28 — 2 months old, much has shipped since           |
+| Foundations review        | 🟡 Stale                | Same — see `docs/quality/foundations-review-phase1.md`                                            |
+| Tech debt log             | 🟡 Stale                | 5 HIGH-severity items still listed OPEN; need re-verification                                     |
+| Google Play account       | ❌ Not started          | Personal account €25 + 14-day / 12-tester closed test required                                    |
 
 ---
 
 ## Phases
 
-Each phase has **one clear deliverable**. Don't start the next phase until the current one is done. If a phase feels too big, it's probably two phases — split it.
+Each phase has **one clear deliverable**. Supporting prep (privacy policy, quality refresh) can run in parallel as long as it doesn't complete a later phase's deliverable.
 
 ### Phase 0 — Apple Developer Program ✅ DONE
 
 - [x] Enrolment approved
 
-### Phase 1 — Sentry crash reporting (in progress)
-
-**Deliverable:** crashes from a dev/preview build of native-rd appear in a Sentry project dashboard, with readable stack traces.
-
-- [ ] Create Sentry project (React Native platform)
-- [ ] Install `@sentry/react-native` (Expo SDK 54 compatible)
-- [ ] Add Sentry config plugin to `app.json`
-- [ ] Initialise in `App.tsx` (production-only via `!__DEV__` guard)
-- [ ] Wire pseudonymous `Sentry.setUser({ id: hashedId })` to existing user identity
-- [ ] Add `beforeSend` filter (initial noise classes: offline `NetworkError`, `AbortError`, dev-only events)
-- [ ] Configure source map upload via EAS Build hook (**non-negotiable** — without this, stack traces are unreadable)
-- [ ] Verify end-to-end: trigger a forced crash in a preview build, confirm symbolicated trace lands in Sentry
-
-**Why this is Phase 1:** silent native crashes are invisible without it; the integration is the same for iOS and Android, so this work carries forward to Phase 6.
-
-### Phase 2 — In-app "Report a Bug" entry point
-
-**Deliverable:** a single button in Settings that opens a feedback form; submission attaches to the current Sentry session.
-
-- [ ] Add Settings row "Report a Bug"
-- [ ] Form screen: name (optional), email (optional), description (required)
-- [ ] Submit via `Sentry.captureFeedback({ name, email, message })`
-- [ ] Confirmation toast on success; error path on failure
-- [ ] a11y: `accessibilityLabel`, 44pt touch target (per native-rd a11y contract)
-- [ ] Component test for the form (matches existing `__tests__/` convention)
-
-**Note:** TestFlight users can also submit feedback via Apple's native screenshot-share — this is _additional_, not redundant. The in-app button covers Android later and gives non-TestFlight builds a path too.
-
 ### Phase 3 — TestFlight build pipeline
 
-Reorganised from the 25-item TestFlight readiness doc into three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` for the granular Apple admin steps.
+Three focused sittings. See `docs/plans/2026-04-28-ios-testflight-readiness.md` for granular Apple admin steps.
+
+> **Note on phase numbering:** Phases 1 and 2 (Sentry + in-app bug button) were dropped on 2026-05-02 in favour of platform built-ins; their numbers are intentionally skipped to preserve the existing issue references (#973–#978).
 
 #### Sitting A — Decisions only (no tooling)
 
@@ -91,7 +84,7 @@ Reorganised from the 25-item TestFlight readiness doc into three focused sitting
 - [ ] Beta app description drafted
 - [ ] What-to-test instructions drafted
 - [ ] Export compliance answered
-- [ ] Privacy nutrition labels filled
+- [ ] Privacy nutrition labels filled (declare no data collection by us; TestFlight's collection is Apple's, not ours)
 - [ ] Internal testing group created
 - [ ] First TestFlight submission via `eas submit --platform ios`
 
@@ -104,10 +97,13 @@ Reorganised from the 25-item TestFlight readiness doc into three focused sitting
 - [ ] Local DB persistence across app restart
 - [ ] Badge creation/export flow
 - [ ] App icon + splash verified
-- [ ] Sentry receives a deliberate test crash from this build
+- [ ] Force a deliberate test crash; confirm it appears in App Store Connect → TestFlight → Crashes
 
 ### Phase 5 — Privacy + legal (parallel with Phase 3, before submission)
 
+**The 14-day clock for Phase 7 starts when you create the closed track in Play Console — not before. Phase 5 can complete independently of Phase 7.**
+
+- [ ] Add platform-disclosure sentence to `docs/launch/privacy-policy.md`: "If you install via TestFlight or Google Play, those platforms collect crash reports under their own privacy policies."
 - [ ] Add contact email to `docs/launch/privacy-policy.md`
 - [ ] Host privacy policy publicly (`https://rollercoaster.dev/privacy` or similar)
 - [ ] Permission copy reviewed (camera, photos, microphone)
@@ -124,9 +120,9 @@ Reorganised from the 25-item TestFlight readiness doc into three focused sitting
 ### Phase 7 — Android (after first iOS testers are running)
 
 - [ ] Google Play Console personal account (~€25)
-- [ ] Closed testing track created
+- [ ] Closed testing track created in Play Console — **the 14-day clock starts here**
 - [ ] Recruit 12 testers (Google Group / email list, opt-in)
-- [ ] **Start the 14-day clock immediately** (longest lead-time item)
+- [ ] Testers stay opted in for 14 consecutive days
 - [ ] Android EAS profile + first build
 - [ ] Apply for production access after 14 days
 
@@ -136,12 +132,10 @@ See `docs/launch/app-store-launch-plan.md` for the full Google Play context.
 
 ## Tracked Issues
 
-All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
+All open phases are tracked as GitHub issues under milestone [**`native-rd: User Testing Prep`**](https://github.com/rollercoaster-dev/monorepo/milestone/29) on project board #11 (Monorepo Development). One issue per atomic deliverable, scoped to fit a single PR.
 
 | Phase | Issue                                                            | Title                                                                    |
 | ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 1     | [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) | feat(native-rd): integrate Sentry for crash reporting                    |
-| 2     | [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) | feat(native-rd): in-app Report a Bug button via Sentry feedback API      |
 | 3B    | [#973](https://github.com/rollercoaster-dev/monorepo/issues/973) | chore(native-rd): EAS Build setup + first iOS production build           |
 | 3C    | [#974](https://github.com/rollercoaster-dev/monorepo/issues/974) | chore(native-rd): App Store Connect record + first TestFlight submission |
 | 4     | [#975](https://github.com/rollercoaster-dev/monorepo/issues/975) | chore(native-rd): physical iPhone validation pass                        |
@@ -149,18 +143,22 @@ All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Te
 | 6     | [#977](https://github.com/rollercoaster-dev/monorepo/issues/977) | chore(native-rd): refresh quality dashboard + tech-debt re-verification  |
 | 7     | [#978](https://github.com/rollercoaster-dev/monorepo/issues/978) | chore(native-rd): Google Play closed-test setup + 14-day clock start     |
 
+**Closed:**
+
+- [#971](https://github.com/rollercoaster-dev/monorepo/issues/971) Sentry integration — incompatible with no-data-collected privacy promise
+- [#972](https://github.com/rollercoaster-dev/monorepo/issues/972) In-app Report a Bug button — TestFlight + Play Console built-ins cover this
+
 ---
 
 ## Open Decisions (block specific phases)
 
-| Decision                                     | Blocks           | Default if undecided                |
-| -------------------------------------------- | ---------------- | ----------------------------------- |
-| Bundle ID `com.joe.rd.native-rd` final?      | Phase 3B         | Keep as-is                          |
-| Expo slug `native-rd` final?                 | Phase 3B         | Keep as-is                          |
-| Display name capitalisation                  | Phase 3C         | `Rollercoaster.dev`                 |
-| Feedback contact email                       | Phase 2 + 3C + 5 | TBD                                 |
-| Privacy policy host URL                      | Phase 5          | TBD                                 |
-| Hashed user ID strategy for Sentry `setUser` | Phase 1          | ULID hash from existing user record |
+| Decision                                | Blocks       | Default if undecided |
+| --------------------------------------- | ------------ | -------------------- |
+| Bundle ID `com.joe.rd.native-rd` final? | Phase 3B     | Keep as-is           |
+| Expo slug `native-rd` final?            | Phase 3B     | Keep as-is           |
+| Display name capitalisation             | Phase 3C     | `Rollercoaster.dev`  |
+| Feedback contact email                  | Phase 3C + 5 | TBD                  |
+| Privacy policy host URL                 | Phase 5      | TBD                  |
 
 ---
 
@@ -168,7 +166,7 @@ All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Te
 
 - `docs/plans/2026-04-28-ios-testflight-readiness.md` — granular TestFlight admin checklist (referenced by Phase 3)
 - `docs/launch/app-store-launch-plan.md` — full iOS + Google Play launch strategy
-- `docs/launch/privacy-policy.md` — privacy policy draft
+- `docs/launch/privacy-policy.md` — privacy policy draft (needs platform-disclosure sentence — Phase 5)
 - `docs/quality/grades.md` — quality dashboard (stale, refreshed in Phase 6)
 - `docs/quality/tech-debt.md` — known debt log (stale, refreshed in Phase 6)
 - `docs/quality/foundations-review-phase1.md` — Feb 2026 codebase health review (stale)
@@ -177,7 +175,8 @@ All 8 phases are tracked as GitHub issues under milestone [**`native-rd: User Te
 
 ## Update Log
 
-| Date       | Change                                                                  | By           |
-| ---------- | ----------------------------------------------------------------------- | ------------ |
-| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.    | Joe + Claude |
-| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11. | Joe + Claude |
+| Date       | Change                                                                                                                                                                                                  | By           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 2026-05-02 | Doc created. Phase 0 confirmed done. Phase 1 selected as next focus.                                                                                                                                    | Joe + Claude |
+| 2026-05-02 | Milestone #29 + 8 issues (#971–#978) created and linked to project #11.                                                                                                                                 | Joe + Claude |
+| 2026-05-02 | Dropped Phases 1 (Sentry) and 2 (in-app bug button) — incompatible with the "no data collected" privacy promise. Closed #971 and #972. Bug reporting now relies on TestFlight + Play Console built-ins. | Joe + Claude |
