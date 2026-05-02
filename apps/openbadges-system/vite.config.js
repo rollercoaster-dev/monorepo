@@ -49,17 +49,9 @@ export default defineConfig(({ mode }) => {
           main: resolve(__dirname, 'index.html'),
         },
         output: {
-          manualChunks(id) {
-            if (
-              id.includes('node_modules/vue') ||
-              id.includes('node_modules/vue-router') ||
-              id.includes('node_modules/pinia')
-            ) {
-              return 'vue'
-            }
-            if (id.includes('node_modules/@vueuse/core')) {
-              return 'vendor'
-            }
+          manualChunks: {
+            vue: ['vue', 'vue-router', 'pinia'],
+            vendor: ['@vueuse/core'],
           },
         },
       },

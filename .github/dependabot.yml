@@ -34,6 +34,31 @@ updates:
       # adapter-fate decision.
       - dependency-name: "@hono/node-server"
         update-types: ["version-update:semver-major"]
+      # Vite 7+ / Vitest 4 cause CI failures for our apps:
+      # - Vite 8 stricter ESM resolution breaks zod's named exports under our
+      #   server vitest config (z.object → undefined).
+      # - Vitest 4's new forks-by-default worker pool times out under Bun.
+      # Tracked in the vite/vitest migration issue; remove these ignores when
+      # the migration lands.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-vue"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-istanbul"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/ui"
+        update-types: ["version-update:semver-major"]
+      # Plugins whose latest majors require Vite 7+; pinned alongside Vite.
+      - dependency-name: "vite-plugin-vue-inspector"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-auto-import"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-vue-components"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "unplugin-vue-router"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
     commit-message:
