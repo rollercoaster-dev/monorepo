@@ -5,7 +5,7 @@ const THUMB_WIDTH = 76;
 const THUMB_HEIGHT = 76;
 
 export const styles = StyleSheet.create((theme) => ({
-  container: (source: "step" | "goal", isActive: boolean) => ({
+  container: (isActive: boolean) => ({
     width: THUMB_WIDTH,
     height: THUMB_HEIGHT,
     flexDirection: "column" as const,
@@ -18,16 +18,23 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: isActive ? theme.borderWidth.thick : theme.borderWidth.thin,
     borderColor: isActive ? theme.colors.text : theme.colors.border,
     borderRadius: theme.radius.sm,
-    // Source indicator: bottom border for step, left border for goal-level
-    borderBottomWidth: source === "step" ? 4 : undefined,
-    borderBottomColor: source === "step" ? palette.blue600 : undefined,
-    borderLeftWidth: source === "goal" ? 4 : undefined,
-    borderLeftColor: source === "goal" ? palette.yellow300 : undefined,
+    overflow: "hidden",
   }),
   pressed: {
     opacity: 0.7,
     transform: [{ scale: 0.97 }],
   },
+  // Small colored dot in the top-right corner indicating evidence source
+  // (yellow = goal-level, blue = step-level), mirroring Timeline node colors.
+  sourceDot: (source: "step" | "goal") => ({
+    position: "absolute" as const,
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: source === "goal" ? palette.yellow300 : palette.blue600,
+  }),
   icon: {
     fontSize: 22,
   },

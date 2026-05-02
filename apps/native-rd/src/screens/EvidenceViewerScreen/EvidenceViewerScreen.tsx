@@ -12,9 +12,9 @@ import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
 
-// Hardcoded — matches BadgeDesignerScreen. Reading via `useBottomTabBarHeight`
-// would pull in ESM that needs extra Babel transform whitelisting in Jest config.
-const TAB_BAR_HEIGHT = 56;
+// Measured tab bar height. Reading via `useBottomTabBarHeight` would pull in
+// ESM that needs extra Babel transform whitelisting in Jest config.
+const TAB_BAR_HEIGHT = 16;
 
 function ViewerContent({
   goalId,

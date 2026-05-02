@@ -30,10 +30,14 @@ export function ViewerStripThumb({
       accessibilityLabel={`${evidence.type} evidence: ${evidence.title}, from ${sourceLabel}`}
       accessibilityState={{ selected: isActive }}
       style={({ pressed }) => [
-        styles.container(evidence.source, isActive),
+        styles.container(isActive),
         pressed && styles.pressed,
       ]}
     >
+      <View
+        style={styles.sourceDot(evidence.source)}
+        accessibilityElementsHidden
+      />
       <Text style={styles.icon} accessibilityElementsHidden>
         {icon}
       </Text>
