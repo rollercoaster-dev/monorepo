@@ -5,20 +5,6 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[2],
-  },
-  backIcon: {
-    fontSize: 18,
-    fontWeight: theme.fontWeight.bold,
-  },
-  spacer: {
-    width: theme.space[12],
-  },
   content: {
     flex: 1,
   },
@@ -46,9 +32,9 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: theme.space[4],
+    paddingTop: theme.space[4],
+    paddingBottom: theme.space[16],
     paddingHorizontal: theme.space[4],
-    gap: theme.space[6],
   },
   recordButton: {
     width: 72,
@@ -73,6 +59,9 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.error,
   },
   flipButton: {
+    position: "absolute",
+    left: "50%",
+    marginLeft: 72 / 2 + 16,
     width: 44,
     height: 44,
     borderRadius: 22,
