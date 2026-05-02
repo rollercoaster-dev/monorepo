@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { TimelineNode } from "../TimelineNode";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { StepStatus } from "../../types/steps";
 import type { EvidenceItemData } from "../EvidenceDrawer";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { styles } from "./TimelineStep.styles";
 
 export interface TimelineStepData {
@@ -19,7 +19,7 @@ export interface TimelineStepProps {
   stepIndex: number;
   evidence: EvidenceItemData[];
   onNodePress: (stepIndex: number) => void;
-  onEvidencePress?: (evidenceId: string) => void;
+  onEvidencePress: (evidenceId: string) => void;
   defaultExpanded?: boolean;
 }
 
@@ -84,27 +84,11 @@ export function TimelineStep({
           <View style={styles.evidenceSection}>
             {evidence.length > 0 ? (
               evidence.map((ev) => (
-                <Pressable
+                <TimelineEvidenceCard
                   key={ev.id}
-                  style={styles.evidenceCard}
-                  onPress={
-                    onEvidencePress ? () => onEvidencePress(ev.id) : undefined
-                  }
-                  disabled={!onEvidencePress}
-                  accessible
-                  accessibilityRole={onEvidencePress ? "button" : undefined}
-                  accessibilityLabel={`${ev.type} evidence: ${ev.label}`}
-                  accessibilityHint={
-                    onEvidencePress ? "Tap to view evidence" : undefined
-                  }
-                >
-                  <Text style={styles.evidenceIcon}>
-                    {EVIDENCE_TYPE_ICONS[ev.type] ?? "\u{1F4C4}"}
-                  </Text>
-                  <Text style={styles.evidenceLabel} numberOfLines={1}>
-                    {ev.label}
-                  </Text>
-                </Pressable>
+                  evidence={ev}
+                  onPress={onEvidencePress}
+                />
               ))
             ) : (
               <Text style={styles.noEvidence}>No evidence yet</Text>

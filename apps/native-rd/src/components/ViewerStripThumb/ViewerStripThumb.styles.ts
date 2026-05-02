@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { palette } from "../../themes/palette";
+import type { EvidenceSource } from "../../hooks/useAllEvidenceForGoal";
 
 const THUMB_WIDTH = 76;
 const THUMB_HEIGHT = 76;
@@ -24,9 +25,8 @@ export const styles = StyleSheet.create((theme) => ({
     opacity: 0.7,
     transform: [{ scale: 0.97 }],
   },
-  // Small colored dot in the top-right corner indicating evidence source
-  // (yellow = goal-level, blue = step-level), mirroring Timeline node colors.
-  sourceDot: (source: "step" | "goal") => ({
+  // Mirrors TimelineNode colors: yellow=goal, blue=step.
+  sourceDot: (source: EvidenceSource) => ({
     position: "absolute" as const,
     top: 4,
     right: 4,

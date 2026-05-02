@@ -14,7 +14,6 @@ export interface ViewerThumbnailStripProps {
 }
 
 const THUMB_GAP = 8;
-// VIEWER_STRIP_THUMB_WIDTH + gap; matches styles.separator marginRight
 const ITEM_FULL_WIDTH = VIEWER_STRIP_THUMB_WIDTH + THUMB_GAP;
 
 export function ViewerThumbnailStrip({

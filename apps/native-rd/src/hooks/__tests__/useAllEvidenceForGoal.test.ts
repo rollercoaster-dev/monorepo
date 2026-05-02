@@ -15,7 +15,6 @@ jest.mock("../../db", () => ({
     __brand: "stepEvidenceByGoal",
     id,
   }),
-  stepsByGoalQuery: (id: string) => ({ __brand: "stepsByGoal", id }),
   EvidenceType: {
     photo: "photo",
     text: "text",
@@ -35,31 +34,30 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-/**
- * Configure mockUseQuery to dispatch on the query brand. Each call to
- * useQuery passes the result of one of the query factories above.
- */
+interface StepEvidenceRow {
+  id: string;
+  stepId: string;
+  type: string;
+  description?: string | null;
+  uri?: string | null;
+  metadata?: string | null;
+  stepTitle?: string | null;
+  stepOrdinal?: number | null;
+}
+
+interface GoalEvidenceRow {
+  id: string;
+  type: string;
+  description?: string | null;
+  uri?: string | null;
+  metadata?: string | null;
+}
+
 function setupQueries(args: {
-  steps: Array<{ id: string; title?: string; ordinal?: number | null }>;
-  stepEvidence: Array<{
-    id: string;
-    stepId: string;
-    type: string;
-    description?: string | null;
-    uri?: string | null;
-    metadata?: string | null;
-    stepTitle?: string;
-  }>;
-  goalEvidence: Array<{
-    id: string;
-    type: string;
-    description?: string | null;
-    uri?: string | null;
-    metadata?: string | null;
-  }>;
+  stepEvidence: StepEvidenceRow[];
+  goalEvidence: GoalEvidenceRow[];
 }) {
   mockUseQuery.mockImplementation((q: { __brand: string }) => {
-    if (q.__brand === "stepsByGoal") return args.steps;
     if (q.__brand === "stepEvidenceByGoal") return args.stepEvidence;
     if (q.__brand === "evidenceByGoal") return args.goalEvidence;
     return [];
@@ -68,22 +66,39 @@ function setupQueries(args: {
 
 describe("useAllEvidenceForGoal", () => {
   it("returns empty array when no evidence exists", () => {
-    setupQueries({ steps: [], stepEvidence: [], goalEvidence: [] });
+    setupQueries({ stepEvidence: [], goalEvidence: [] });
     const { result } = renderHook(() => useAllEvidenceForGoal(goalId));
     expect(result.current).toEqual([]);
   });
 
   it("orders step evidence by step ordinal then preserves createdAt-desc within step", () => {
     setupQueries({
-      steps: [
-        { id: "step-a", title: "Step A", ordinal: 0 },
-        { id: "step-b", title: "Step B", ordinal: 1 },
-      ],
       // Query orders by createdAt desc, so newer items first
       stepEvidence: [
-        { id: "ev-b2", stepId: "step-b", type: "photo", description: "B-new" },
-        { id: "ev-b1", stepId: "step-b", type: "text", description: "B-old" },
-        { id: "ev-a1", stepId: "step-a", type: "voice_memo", description: "A" },
+        {
+          id: "ev-b2",
+          stepId: "step-b",
+          stepOrdinal: 1,
+          stepTitle: "Step B",
+          type: "photo",
+          description: "B-new",
+        },
+        {
+          id: "ev-b1",
+          stepId: "step-b",
+          stepOrdinal: 1,
+          stepTitle: "Step B",
+          type: "text",
+          description: "B-old",
+        },
+        {
+          id: "ev-a1",
+          stepId: "step-a",
+          stepOrdinal: 0,
+          stepTitle: "Step A",
+          type: "voice_memo",
+          description: "A",
+        },
       ],
       goalEvidence: [],
     });
@@ -97,9 +112,15 @@ describe("useAllEvidenceForGoal", () => {
 
   it("places goal-level evidence after all step evidence", () => {
     setupQueries({
-      steps: [{ id: "step-a", title: "Step A", ordinal: 0 }],
       stepEvidence: [
-        { id: "ev-step", stepId: "step-a", type: "photo", description: "S" },
+        {
+          id: "ev-step",
+          stepId: "step-a",
+          stepOrdinal: 0,
+          stepTitle: "Step A",
+          type: "photo",
+          description: "S",
+        },
       ],
       goalEvidence: [
         { id: "ev-goal-2", type: "text", description: "Newer goal" },
@@ -116,9 +137,15 @@ describe("useAllEvidenceForGoal", () => {
 
   it("annotates source and stepTitle for accessibility", () => {
     setupQueries({
-      steps: [{ id: "step-a", title: "First Step", ordinal: 0 }],
       stepEvidence: [
-        { id: "ev-1", stepId: "step-a", type: "photo", description: "Photo" },
+        {
+          id: "ev-1",
+          stepId: "step-a",
+          stepOrdinal: 0,
+          stepTitle: "First Step",
+          type: "photo",
+          description: "Photo",
+        },
       ],
       goalEvidence: [{ id: "ev-2", type: "text", description: "Goal note" }],
     });
@@ -139,9 +166,15 @@ describe("useAllEvidenceForGoal", () => {
 
   it("falls back to type when description is missing", () => {
     setupQueries({
-      steps: [{ id: "step-a", title: "A", ordinal: 0 }],
       stepEvidence: [
-        { id: "ev-1", stepId: "step-a", type: "photo", description: null },
+        {
+          id: "ev-1",
+          stepId: "step-a",
+          stepOrdinal: 0,
+          stepTitle: "A",
+          type: "photo",
+          description: null,
+        },
       ],
       goalEvidence: [],
     });

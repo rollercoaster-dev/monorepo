@@ -42,6 +42,20 @@ export function mimeToUTI(mimeType: string): string {
   return map[mimeType] ?? "public.item";
 }
 
+export async function openLinkInBrowser(uri: string): Promise<void> {
+  try {
+    const canOpen = await Linking.canOpenURL(uri);
+    if (canOpen) {
+      await Linking.openURL(uri);
+    } else {
+      Alert.alert("Cannot open link", `Unable to open: ${uri}`);
+    }
+  } catch (error) {
+    console.error("[evidenceViewers] Failed to open link", { uri, error });
+    Alert.alert("Cannot open link", `Failed to open: ${uri}`);
+  }
+}
+
 export async function openFile(uri: string, metadata?: string) {
   try {
     const { File } = await import("expo-file-system");

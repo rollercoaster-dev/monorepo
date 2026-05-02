@@ -1,5 +1,5 @@
 import React from "react";
-import { TEXT_EVIDENCE_PREFIX } from "../../db";
+import { EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { Evidence } from "../EvidenceThumbnail";
 import { tryParseJSON } from "../../utils/evidenceViewers";
 import { PhotoContent } from "./PhotoContent";
@@ -20,19 +20,15 @@ export interface EvidenceContentProps {
   evidence: Evidence;
 }
 
-/**
- * Render the appropriate content component for an evidence item, based on
- * its `type`. Unknown types fall through to FileContent.
- */
 export function EvidenceContent({ evidence }: EvidenceContentProps) {
   switch (evidence.type) {
-    case "photo":
+    case EvidenceType.photo:
       return (
         <PhotoContent uri={evidence.uri ?? null} description={evidence.title} />
       );
-    case "video":
+    case EvidenceType.video:
       return <VideoContent uri={evidence.uri ?? null} />;
-    case "text": {
+    case EvidenceType.text: {
       const text = evidence.uri?.startsWith(TEXT_EVIDENCE_PREFIX)
         ? evidence.uri.slice(TEXT_EVIDENCE_PREFIX.length)
         : evidence.title;
@@ -43,7 +39,7 @@ export function EvidenceContent({ evidence }: EvidenceContentProps) {
         />
       );
     }
-    case "voice_memo": {
+    case EvidenceType.voice_memo: {
       if (!evidence.uri) {
         return (
           <FileContent
@@ -60,11 +56,11 @@ export function EvidenceContent({ evidence }: EvidenceContentProps) {
           : undefined;
       return <AudioContent uri={evidence.uri} durationMs={durationMs} />;
     }
-    case "link":
+    case EvidenceType.link:
       return (
         <LinkContent uri={evidence.uri ?? ""} description={evidence.title} />
       );
-    case "file":
+    case EvidenceType.file:
     default:
       return (
         <FileContent

@@ -24,6 +24,7 @@ const baseProps = {
   stepIndex: 0,
   evidence,
   onNodePress: jest.fn(),
+  onEvidencePress: jest.fn(),
 };
 
 describe("TimelineStep", () => {

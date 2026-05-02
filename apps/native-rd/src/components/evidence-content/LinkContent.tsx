@@ -1,26 +1,13 @@
 import React from "react";
-import { View, Linking, Alert } from "react-native";
+import { View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
+import { openLinkInBrowser } from "../../utils/evidenceViewers";
 import { styles } from "./LinkContent.styles";
 
 export interface LinkContentProps {
   uri: string;
   description?: string;
-}
-
-async function openLink(uri: string) {
-  try {
-    const canOpen = await Linking.canOpenURL(uri);
-    if (canOpen) {
-      await Linking.openURL(uri);
-    } else {
-      Alert.alert("Cannot open link", `Unable to open: ${uri}`);
-    }
-  } catch (error) {
-    console.error("[LinkContent] Failed to open link", { uri, error });
-    Alert.alert("Cannot open link", `Failed to open: ${uri}`);
-  }
 }
 
 export function LinkContent({ uri, description }: LinkContentProps) {
@@ -42,7 +29,7 @@ export function LinkContent({ uri, description }: LinkContentProps) {
         </Text>
         <Button
           label="Open in browser"
-          onPress={() => openLink(uri)}
+          onPress={() => openLinkInBrowser(uri)}
           variant="primary"
         />
       </View>
