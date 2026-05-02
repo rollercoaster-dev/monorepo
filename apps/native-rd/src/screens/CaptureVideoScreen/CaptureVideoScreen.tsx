@@ -116,6 +116,47 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     cameraRef.current.stopRecording();
   }, [isRecording]);
 
+  const handleGoBack = useCallback(() => {
+    if (isRecording) {
+      Alert.alert(
+        "Discard recording?",
+        "You're still recording. Going back will stop and discard the video.",
+        [
+          { text: "Keep Recording", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              cameraRef.current?.stopRecording();
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+              navigation.goBack();
+            },
+          },
+        ],
+      );
+      return;
+    }
+    if (recordedUri) {
+      Alert.alert(
+        "Discard recording?",
+        "You have an unsaved video. Going back will discard it.",
+        [
+          { text: "Keep", style: "cancel" },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => navigation.goBack(),
+          },
+        ],
+      );
+      return;
+    }
+    navigation.goBack();
+  }, [isRecording, recordedUri, navigation]);
+
   const handleToggleRecording = useCallback(() => {
     if (isRecording) {
       handleStopRecording();
@@ -189,10 +230,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label="Record Video"
-        onBack={() => navigation.goBack()}
-      />
+      <ScreenSubHeader label="Record Video" onBack={handleGoBack} />
 
       {!permissionsLoaded ? (
         <View style={styles.permissionContainer}>
