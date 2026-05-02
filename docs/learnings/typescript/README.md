@@ -10,7 +10,7 @@ Accumulated knowledge about TypeScript patterns in this project.
 
 ## Learnings in this Directory
 
-<!-- Add links to learning documents as they're created -->
+- [Declaration Build Tsconfig](declaration-build-tsconfig.md)
 
 ## Common Topics
 

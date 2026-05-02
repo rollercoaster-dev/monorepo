@@ -56,7 +56,7 @@
     "express": "^4.19.2",
     "hono": "^4.12.16",
     "on-finished": "^2.4.1",
-    "supertest": "7.1.4"
+    "supertest": "7.2.2"
   },
   "dependencies": {
     "chalk": "^5.4.1",

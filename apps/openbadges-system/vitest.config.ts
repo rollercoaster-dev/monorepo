@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // Client-focused config; server tests use vitest.server.config.ts
 export default defineConfig({
@@ -25,6 +28,11 @@ export default defineConfig({
         'src/server/**',
         '**/*.d.ts',
         '**/*.config.{js,ts}',
+        // App entry point: imports `vue-router/auto-routes`, a virtual module
+        // provided by unplugin-vue-router. Bun's resolver hits vue-router 5's
+        // strict exports map before the plugin can intercept, so istanbul
+        // instrumentation fails when it walks main.ts.
+        'src/client/main.ts',
       ],
     },
   },

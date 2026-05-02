@@ -91,7 +91,7 @@ export default defineConfig(({ mode }) => {
             const url = useHttps
               ? `https://${host}/`
               : `http://${host}:${server.config.server.port}/`
-            console.log(`\n  ➜  Dev URL: ${url}\n`)
+            process.stdout.write(`\n  ➜  Dev URL: ${url}\n`)
           })
         },
       },
